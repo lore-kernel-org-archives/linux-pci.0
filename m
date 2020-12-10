@@ -2,117 +2,89 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3BD1C0018C
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B24C4361B
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78B4722E01
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 012DD22E00
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Dec 2020 19:59:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393558AbgLJTnh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Dec 2020 14:43:37 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:56826 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404286AbgLJTnN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:43:13 -0500
-Message-Id: <20201210194043.769108348@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1607629349;
+        id S2390321AbgLJT7T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Dec 2020 14:59:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55722 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404336AbgLJT7N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2020 14:59:13 -0500
+Received: from ssl.serverraum.org (ssl.serverraum.org [IPv6:2a01:4f8:151:8464::1:2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D462C0613CF
+        for <linux-pci@vger.kernel.org>; Thu, 10 Dec 2020 11:58:33 -0800 (PST)
+Received: from ssl.serverraum.org (web.serverraum.org [172.16.0.2])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ssl.serverraum.org (Postfix) with ESMTPSA id 7E8E223E5D;
+        Thu, 10 Dec 2020 20:58:20 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=walle.cc; s=mail2016061301;
+        t=1607630307;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RkpDEDsz36bMGIvl/YLs0noKGbsbwyBTWfWGyYCIvwI=;
-        b=FjXt0gBZbmoGEhW+JUNun0TgRlpWk5UHUbF8b/SYgA73R5qt2FK9Tl9JCUAhz1x+5ISxmb
-        8V7v08WHaUsVznntzV+P4bCrHHh6loow5ZaaQC5qCuEudPhwVHK22AOQesI0Ecsqkh8veP
-        Qwn4/oD2Zv3hZttfcTXroXZBKsSviSPS/hfZ0fieRb3ZsJsiILx4Kdfz9zR7w+K2srUSyp
-        sVcjXZizv2IhQYS+ESc7LfjgqYgvOCII1d3ugOhi6vPvk7jAG3wwmOOag6qx9YOR3B1IuO
-        KQi2Ohrd/6vH+kL/8yvl1XW4GpaahKbPHYgPc32mGshR05m6gXPFbQzdssR1DQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1607629349;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RkpDEDsz36bMGIvl/YLs0noKGbsbwyBTWfWGyYCIvwI=;
-        b=tNp+xNMz1hLFIiRaZEJhoV6X6hTrUYtKO/6Uex9oEhysEt44+COqeNeDA5dBz+L1+ts6Sq
-        70KNBmuAKx0cHoAw==
-Date:   Thu, 10 Dec 2020 20:25:48 +0100
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        afzal mohammed <afzal.mohd.ma@gmail.com>,
-        linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
-        linux-arm-kernel@lists.infradead.org,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
-        Chris Wilson <chris@chris-wilson.co.uk>,
-        Wambui Karuga <wambui.karugax@gmail.com>,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-gpio@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-pci@vger.kernel.org,
-        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Tariq Toukan <tariqt@nvidia.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org
-Subject: [patch 12/30] s390/irq: Use irq_desc_kstat_cpu() in show_msi_interrupt()
-References: <20201210192536.118432146@linutronix.de>
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fMhg82S0rwUSrDpQiFh0ST2pjTuKrxogeVcd6fb/BYU=;
+        b=dnygdpHM2m3GMfxdC9krsKYEPRMHmLSimDuAfuHkp9B+WvhENOP1JGuIC1hgvaWYW8vooR
+        cObG9mXNSlEl+RbJyAQXjAEUjMNUxeXXJK+9oWx4GAVScYKHglUMULZJH+oHRC4twGtl11
+        /qZ1HdnbCMHzriG18csTWpg2CJ/KS0c=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-transfer-encoding: 8-bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 10 Dec 2020 20:58:20 +0100
+From:   Michael Walle <michael@walle.cc>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Vladimir Oltean <olteanv@gmail.com>, lorenzo.pieralisi@arm.com,
+        kw@linux.com, heiko@sntech.de, benh@kernel.crashing.org,
+        shawn.lin@rock-chips.com, paulus@samba.org,
+        thomas.petazzoni@bootlin.com, jonnyc@amazon.com,
+        toan@os.amperecomputing.com, will@kernel.org, robh@kernel.org,
+        f.fainelli@gmail.com, mpe@ellerman.id.au, michal.simek@xilinx.com,
+        linux-rockchip@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com, jonathan.derrick@intel.com,
+        linux-pci@vger.kernel.org, rjui@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org, Jonathan.Cameron@huawei.com,
+        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+        sbranden@broadcom.com, wangzhou1@hisilicon.com,
+        rrichter@marvell.com, linuxppc-dev@lists.ozlabs.org,
+        nsaenzjulienne@suse.de,
+        Alexandru Marginean <alexm.osslist@gmail.com>
+Subject: Re: [PATCH v6 0/5] PCI: Unify ECAM constants in native PCI Express
+ drivers
+In-Reply-To: <20201210173809.GA37355@bjorn-Precision-5520>
+References: <20201210173809.GA37355@bjorn-Precision-5520>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <194550494fde93c6eb840eabf59bde38@walle.cc>
+X-Sender: michael@walle.cc
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The irq descriptor is already there, no need to look it up again.
+Am 2020-12-10 18:38, schrieb Bjorn Helgaas:
+> On Wed, Dec 09, 2020 at 10:29:04PM +0200, Vladimir Oltean wrote:
+>> On Wed, Dec 09, 2020 at 04:40:52PM +0100, Michael Walle wrote:
+>> > Hopefully my mail client won't mess up the output that much.
+>> 
+>> I can reproduce on my LS1028A as well. The following fixes the bug for
+>> me. I did not follow the discussion and see if it is helpful for 
+>> others.
+>> I don't understand how the bug came to be. There might be more to it
+>> than what I'm seeing. If it's just what I'm seeing, then the patch was
+>> pretty broken to begin with.
+> 
+> I squashed the fix below into a pci/ecam branch for v5.11, thanks!
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: Heiko Carstens <hca@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org
----
- arch/s390/kernel/irq.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+FWIW
+Tested-by: Michael Walle <michael@walle.cc>
 
---- a/arch/s390/kernel/irq.c
-+++ b/arch/s390/kernel/irq.c
-@@ -124,7 +124,7 @@ static void show_msi_interrupt(struct se
- 	raw_spin_lock_irqsave(&desc->lock, flags);
- 	seq_printf(p, "%3d: ", irq);
- 	for_each_online_cpu(cpu)
--		seq_printf(p, "%10u ", kstat_irqs_cpu(irq, cpu));
-+		seq_printf(p, "%10u ", irq_desc_kstat_irq(desc, cpu));
- 
- 	if (desc->irq_data.chip)
- 		seq_printf(p, " %8s", desc->irq_data.chip->name);
-
+-michael
