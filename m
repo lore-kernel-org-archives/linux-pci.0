@@ -2,126 +2,159 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84BB3C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Dec 2020 00:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 893F7C4743E
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Dec 2020 01:01:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CF8223358
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Dec 2020 00:55:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FC6C23770
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Dec 2020 01:01:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390981AbgLLAq5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Dec 2020 19:46:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55218 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389612AbgLLAqq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 19:46:46 -0500
-Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C8C2C061794
-        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 16:46:06 -0800 (PST)
-Received: by mail-lf1-x143.google.com with SMTP id w13so15885713lfd.5
-        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 16:46:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1p8BkEtCdcNBP/TpCqa88TfNrEdwTBnXM61elkmQDlU=;
-        b=vPmJzs+nnMzMYiLeSl4C70AwwAUmtSXcRtz7EHFhXOG3+HSYoFdEGzQYdbnIfuLhe1
-         cpLA6/bKDco/ZW56K0yojauLy12p9RMJ4MYQUMAZkQKn1JGQikvuaZfR0PCAwR/VHwqu
-         l8KSlmgfW9XQH81QbMWcZWDg6fTfP5u9gInsHFToPISthtmCvix2Zi4MyAVk8WOEDUbJ
-         6rVaVkrA8lMaHHNzl8tzPLP3FKzwRwCbx4UWePv66IKRrK3BWVszh2/HuHa0/BXzK05/
-         +RmxfJa60vjGUHEMlcdmB6LQFBStfB7tIZX79j1mfET935nYYecl+y81TGJ83zzfgTnD
-         hTzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=1p8BkEtCdcNBP/TpCqa88TfNrEdwTBnXM61elkmQDlU=;
-        b=RdOPd1ge/gI6/qInnVD4PzfkGSTmp3+Cf7L7lselzqJy3JysW4FlE5tcU2uhm++QUe
-         PmrwOGeVZUEkqiCDa8KYOSH+aqsOgcrp/OoswiDx0sgu/Ztp3nvIy2T1D6LjOw72SCXD
-         iLdgXPbU6iXIE4GOK/WdTaAxFBLZ+8JaTyyls/+eMLxyqXWIHfYJE9LTxEasUcNcJAc5
-         rK/FAwjRLZxlgs7973yUCkzqWOaEW4eZJiQGszETMX7nQpQAqIgxy+R/TB6kerjAqVrH
-         +0GN2HdIUgZKMGNED+DmtwNAPGn6jS8Cp/fN2jnDn8s3MMi2YQOzXTi73lR/I/phOCVS
-         WBsQ==
-X-Gm-Message-State: AOAM532LixpbFtbkz24z68kVZcQmjx4nExZ8gucuntO8KwA5UDlmbWYu
-        Paqf8KNclTynqORGgRixxE33ywERYD5eqlb6naguzg==
-X-Google-Smtp-Source: ABdhPJw+G3KfJG3M7IoDnPiDCepv2YgkNV/jArpapqMifWmjCRwgJbTiMDpguzIYWZxJHM0zdf1udksfd+uvUSH+FdI=
-X-Received: by 2002:a05:651c:205b:: with SMTP id t27mr2692550ljo.368.1607733964618;
- Fri, 11 Dec 2020 16:46:04 -0800 (PST)
-MIME-Version: 1.0
-References: <20201210192536.118432146@linutronix.de> <20201210194044.065003856@linutronix.de>
-In-Reply-To: <20201210194044.065003856@linutronix.de>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Sat, 12 Dec 2020 01:45:53 +0100
-Message-ID: <CACRpkdbKZzaTq+Am6q38Ya5wuUjiMbLE5g2i8bb_mJEWTkXgCg@mail.gmail.com>
-Subject: Re: [patch 15/30] pinctrl: nomadik: Use irq_has_action()
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
+        id S2404425AbgLKOU5 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Dec 2020 09:20:57 -0500
+Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:46056 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2406084AbgLKOUs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 09:20:48 -0500
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-53-s0AncPC_O7qxZEyLU7X13A-1; Fri, 11 Dec 2020 14:19:07 +0000
+X-MC-Unique: s0AncPC_O7qxZEyLU7X13A-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
+ Server (TLS) id 15.0.1347.2; Fri, 11 Dec 2020 14:19:05 +0000
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Fri, 11 Dec 2020 14:19:05 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Thomas Gleixner' <tglx@linutronix.de>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        LKML <linux-kernel@vger.kernel.org>
+CC:     Peter Zijlstra <peterz@infradead.org>,
         Marc Zyngier <maz@kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        afzal mohammed <afzal.mohd.ma@gmail.com>,
-        linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
         Jani Nikula <jani.nikula@linux.intel.com>,
         Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
         David Airlie <airlied@linux.ie>,
         Daniel Vetter <daniel@ffwll.ch>,
+        "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        afzal mohammed <afzal.mohd.ma@gmail.com>,
+        "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
         Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
         Chris Wilson <chris@chris-wilson.co.uk>,
         Wambui Karuga <wambui.karugax@gmail.com>,
-        intel-gfx <intel-gfx@lists.freedesktop.org>,
-        "open list:DRM PANEL DRIVERS" <dri-devel@lists.freedesktop.org>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        "Linus Walleij" <linus.walleij@linaro.org>,
+        "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
         Lee Jones <lee.jones@linaro.org>, Jon Mason <jdmason@kudzu.us>,
         Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        Allen Hubbe <allenbh@gmail.com>,
+        "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
+        "Michal Simek" <michal.simek@xilinx.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Tariq Toukan <tariqt@nvidia.com>,
+        "Tariq Toukan" <tariqt@nvidia.com>,
         "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        netdev <netdev@vger.kernel.org>, linux-rdma@vger.kernel.org,
+        "Jakub Kicinski" <kuba@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
         Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
+        "Leon Romanovsky" <leon@kernel.org>,
         Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Juergen Gross <jgross@suse.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+Subject: RE: [patch 14/30] drm/i915/pmu: Replace open coded kstat_irqs() copy
+Thread-Topic: [patch 14/30] drm/i915/pmu: Replace open coded kstat_irqs() copy
+Thread-Index: AQHWz72qwjNpP0n0UkWT70W8RrLS8qnx7xrw
+Date:   Fri, 11 Dec 2020 14:19:05 +0000
+Message-ID: <d6cbfa118490459bb0671394f00323fc@AcuMS.aculab.com>
+References: <20201210192536.118432146@linutronix.de>
+ <20201210194043.957046529@linutronix.de>
+ <ad05af1a-5463-2a80-0887-7629721d6863@linux.intel.com>
+ <87y2i4h54i.fsf@nanos.tec.linutronix.de>
+In-Reply-To: <87y2i4h54i.fsf@nanos.tec.linutronix.de>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
+MIME-Version: 1.0
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 10, 2020 at 8:42 PM Thomas Gleixner <tglx@linutronix.de> wrote:
+From: Thomas Gleixner
+> Sent: 11 December 2020 12:58
+..
+> > After my failed hasty sketch from last night I had a different one which
+> > was kind of heuristics based (re-reading the upper dword and retrying if
+> > it changed on 32-bit).
+> 
+> The problem is that there will be two seperate modifications for the low
+> and high word. Several ways how the compiler can translate this, but the
+> problem is the same for all of them:
+> 
+> CPU 0                           CPU 1
+>         load low
+>         load high
+>         add  low, 1
+>         addc high, 0
+>         store low               load high
+> --> NMI                         load low
+>                                 load high and compare
+>         store high
+> 
+> You can't catch that. If this really becomes an issue you need a
+> sequence counter around it.
 
-> Let the core code do the fiddling with irq_desc.
->
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-gpio@vger.kernel.org
+Or just two copies of the high word.
+Provided the accesses are sequenced:
+writer:
+	load high:low
+	add small_value,high:low
+	store high
+	store low
+	store high_copy
+reader:
+	load high_copy
+	load low
+	load high
+	if (high != high_copy)
+		low = 0;
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+The read value is always stale, so it probably doesn't
+matter that the value you have is one that is between the
+value when you started and that when you finished.
 
-I suppose you will funnel this directly to Torvalds, else tell me and
-I'll apply it to my tree.
+	David
 
-Yours,
-Linus Walleij
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
+
