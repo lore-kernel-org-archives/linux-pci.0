@@ -2,163 +2,232 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E095C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 15:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A9A4C4361B
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 15:42:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1104E20657
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 15:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8FDE23332
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 15:42:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406351AbgLKOo7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Dec 2020 09:44:59 -0500
-Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:16398 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2405723AbgLKOo1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 09:44:27 -0500
-Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
-        by mx0a-0014ca01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0BBEbhIT027452;
-        Fri, 11 Dec 2020 06:42:49 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=proofpoint;
- bh=f9DRWxCFqsKZQERU4C60DZdlvKytV1SYLYjdR9xq2Ss=;
- b=X6wiwZTRy3w4LyJ6ETmZFrC9omZNNzE6gf9wbik8ckrRCVF6/8BJNUtMovaEZk5ufdYN
- rYGTQo6AEzH5AGUAvaWKdb8SQrqdtwRBev5bSIDHw1re8VOYCfoQ0F5PZfBmNW5abTMv
- CAyoL5WY+n/z2tMYk4oMnkphLYyJom9ehWfmFJuPzpNjiW6huseTAxVWsnXUX3oENDUF
- p1BRWWEpak1cL8tUn838oV2/9CXGLolm3miOYIGPv+fU7JpkJ0QMXDIbKmEnPz9Ue9kQ
- 8xOG8cbkQEkvoOY+HzaBrrnO64LDPhItk9SrbpwjfhnYyDoFV6ZXfD5bqnDKqeQL9iML fQ== 
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2107.outbound.protection.outlook.com [104.47.70.107])
-        by mx0a-0014ca01.pphosted.com with ESMTP id 3587n35mgh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 11 Dec 2020 06:42:48 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TijZKfWX4K6krzS4cazRObBYlZfP/IUpivKm4Q61a8qKaXwGGorKg9G/4U+rvJYPQtsckWDh4ESz+Zi8vjDl8fRXeY3WVgLs852x/pzcdJTJDTcGAfXwLg8vtCtXFDdl0tSyKD9eePvrIjLBDb9gWhNk5k1jfHMp477QzSLJ1zQyGlxH3ifLNV17ijfF8w3aO18B9JmcUHAFCmJyIMX5wjJfZED013taQiNyFT8PkPNqmH9JLpLlZbeK4youbgijM99beWbMuSW3Bdhq3ZCMF2BLJt7Tw55zGLxIjEo0B1hNs9yRfegW0ksdbCAw0NlaJ8WQQU/K2avMPusoSjS5Ew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=f9DRWxCFqsKZQERU4C60DZdlvKytV1SYLYjdR9xq2Ss=;
- b=dkHcBx5vJX031MHJcc524M4JzB6rg5urwDwI7Z7PEhNpcbG5nK/dPJCm9bDLlteBgnE3VK2Lh1zmo+HKpPHvRXxxsVBfBZIqOWSWfBPKpd+q+Cj2IY26Zn21/YDOxIqm4VrWLDqP/BDYodfnKs0fNdn0ixspxYXmiM69JFzvYi4M38Ykf1vm71ao6a2u95gMtfMyDK17RKHDCAqferkslXFuaHitKMlPsnUVKcC8JAixOoPRaLcAsb5aZtEgxC+edJEpNpfoEO/2LDVpParWxFUVS1O9T+LpklUAJUKcyOtoT31vmpQLJxovQSRfC9lPlhamhCqh444D5APxUY3ECQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 158.140.1.148) smtp.rcpttodomain=google.com smtp.mailfrom=cadence.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=cadence.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=f9DRWxCFqsKZQERU4C60DZdlvKytV1SYLYjdR9xq2Ss=;
- b=UYNccWMBovp2Ai+MZrBWcOWC1msdeRQ6r65g6ODkbjZAQNiQBVTPKKfw6843lqo4Bp+dr1Jydc4r1ivzxMAWmJfvQSFWVaGlQtaRTGarcmZ9hM4ZZacvM/gbkyT4oc8bUzaqSYPswvR2+N70wP1zhvzgq9Vrj6BFRgJR7dYFRuM=
-Received: from BN3PR03CA0095.namprd03.prod.outlook.com (2603:10b6:400:4::13)
- by MN2PR07MB6637.namprd07.prod.outlook.com (2603:10b6:208:164::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3654.12; Fri, 11 Dec
- 2020 14:42:46 +0000
-Received: from BN8NAM12FT059.eop-nam12.prod.protection.outlook.com
- (2603:10b6:400:4:cafe::e0) by BN3PR03CA0095.outlook.office365.com
- (2603:10b6:400:4::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3654.12 via Frontend
- Transport; Fri, 11 Dec 2020 14:42:46 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 158.140.1.148)
- smtp.mailfrom=cadence.com; google.com; dkim=none (message not signed)
- header.d=none;google.com; dmarc=pass action=none header.from=cadence.com;
-Received-SPF: Pass (protection.outlook.com: domain of cadence.com designates
- 158.140.1.148 as permitted sender) receiver=protection.outlook.com;
- client-ip=158.140.1.148; helo=sjmaillnx2.cadence.com;
-Received: from sjmaillnx2.cadence.com (158.140.1.148) by
- BN8NAM12FT059.mail.protection.outlook.com (10.13.183.55) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3676.10 via Frontend Transport; Fri, 11 Dec 2020 14:42:45 +0000
-Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
-        by sjmaillnx2.cadence.com (8.14.4/8.14.4) with ESMTP id 0BBEgg2Q007333
-        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK);
-        Fri, 11 Dec 2020 06:42:44 -0800
-X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
-Received: from maileu3.global.cadence.com (10.160.88.99) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3; Fri, 11 Dec 2020 15:42:42 +0100
-Received: from vleu-orange.cadence.com (10.160.88.83) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Fri, 11 Dec 2020 15:42:42 +0100
-Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
-        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id 0BBEgfd5003890;
-        Fri, 11 Dec 2020 15:42:41 +0100
-Received: (from nadeem@localhost)
-        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id 0BBEgeZR003885;
-        Fri, 11 Dec 2020 15:42:40 +0100
-From:   Nadeem Athani <nadeem@cadence.com>
-To:     <tjoseph@cadence.com>, <lorenzo.pieralisi@arm.com>,
-        <robh@kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kishon@ti.com>, <devicetree@vger.kernel.org>
-CC:     <nadeem@cadence.com>, <mparab@cadence.com>, <sjakhade@cadence.com>,
-        <pthombar@cadence.com>
-Subject: [PATCH v4 0/2] PCI: cadence: Retrain Link to work around Gen2
-Date:   Fri, 11 Dec 2020 15:42:34 +0100
-Message-ID: <20201211144236.3825-1-nadeem@cadence.com>
-X-Mailer: git-send-email 2.15.0
+        id S2392162AbgLKPA0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Dec 2020 10:00:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60134 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2436895AbgLKPAW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Dec 2020 10:00:22 -0500
+X-Gm-Message-State: AOAM532F1r2X6PpGL4uvgcTAAHdUcHB4fkR5alYvk07B9aAlWFgpTEly
+        CCmh/qXebHctqV5idHqLxB32GCi1QjBsktA84g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1607698173;
+        bh=6DkU9ooSDWgagrJRUIYO/X3sDJ4hfhxHbpDrECTwLvQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=kiaK+zGqvoYEXNx3YataqbgjDJZa9/RmAI/sdNtc4w68aS/w3e7TKOJ5LCC2YYYnb
+         8HHAfFXS343YtkM/9vvh8laXZ+Zfg9a9cTcHB/kQxvNaJjAoTkrgCv1pB/JWBP61lf
+         TSnbGrfDHJEUWmnP9E2gLFhDXyDpkNERsr4NH7mdK58ArU0gAmjxnMTrejLSxBSw3y
+         vB9UmMD6xt7Vu+nXEDD2RJJ35UjED9QsVjPw7PHxnr07oQo5dWt8NAgT6toowTtfK6
+         Tbuup4Y9DDg6PDFAca8hkAoCuQdvCv8e5herLXVbaO9hBMAZAIwl0rEaIoYmVXaEEm
+         zNlaxGJMm+agg==
+X-Google-Smtp-Source: ABdhPJwsBGHilePCX91/B+68HXzQwCke1MqxmJdd0ufB0PJoG0TAj7RNnkbSayd8FT/j3NwjznYhZmQUUCk3hgmztV8=
+X-Received: by 2002:a17:906:ae43:: with SMTP id lf3mr10466222ejb.130.1607698169358;
+ Fri, 11 Dec 2020 06:49:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-OrganizationHeadersPreserved: maileu3.global.cadence.com
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 47f934f4-4107-410a-8ee3-08d89de30639
-X-MS-TrafficTypeDiagnostic: MN2PR07MB6637:
-X-Microsoft-Antispam-PRVS: <MN2PR07MB6637BA61DA27CE887CF501ACD8CA0@MN2PR07MB6637.namprd07.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8q0fysLNU1kVkbsjjSnSdQ8rLD8ndxlQ0/wWm3mII1lY13CQjdkLvk9ddjagYRQ/D+3XNnnHXCQ5kNsMC//7MdPkfSzIgmtMeMnBGXeBcGFxoYjeFosI/PagEtEbn3ODimX2ldPaIxS6Nxfsva9rQFoFrRB/d20jYrjTkX/1Vt9PrIVqocRTnX/DS17NLwFptWV4JL9R1wTddVUt+dhAH+rp7QG1Qc1l+DO/6JhVUbVJTUT18k76RpwzcVclAao6u+McNBoz3V5jJmzGPyaxFzKKxPuPoOXddzAm80leGD0LEA8n6dx3t8T0KEaPXcSZcKhHkTqtBlnpmsXacZnWqVZ6pKlghhQrVgkcl1bJRWOZLDVTKrfgYg/nGoeHN1DYmALORy4jYHWCL+FmHEs1/A4Mb9KdjIVQi2rhcHFy9ikiq0/GtoqvWBzp/B/fre5kLQBaQq6fAW76YCd4tzrJrg==
-X-Forefront-Antispam-Report: CIP:158.140.1.148;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:sjmaillnx2.cadence.com;PTR:unknown.Cadence.COM;CAT:NONE;SFS:(4636009)(376002)(346002)(136003)(36092001)(46966005)(426003)(83380400001)(5660300002)(2616005)(1076003)(86362001)(36756003)(42186006)(36906005)(336012)(7636003)(4326008)(47076004)(54906003)(356005)(6666004)(8936002)(82310400003)(70586007)(508600001)(70206006)(2906002)(34020700004)(107886003)(186003)(26005)(110136005)(8676002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Dec 2020 14:42:45.9108
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 47f934f4-4107-410a-8ee3-08d89de30639
-X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[158.140.1.148];Helo=[sjmaillnx2.cadence.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM12FT059.eop-nam12.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR07MB6637
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2020-12-11_03:2020-12-11,2020-12-11 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 mlxscore=0
- clxscore=1011 phishscore=0 mlxlogscore=999 priorityscore=1501
- suspectscore=0 impostorscore=0 malwarescore=0 adultscore=0 spamscore=0
- lowpriorityscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2009150000 definitions=main-2012110096
+References: <20201124210228.GA589610@bjorn-Precision-5520> <42ebcbe2-7d24-558a-3c33-beb7818d5516@nvidia.com>
+ <49e3a6a4-9621-0734-99f1-b4f616dbcb7d@nvidia.com>
+In-Reply-To: <49e3a6a4-9621-0734-99f1-b4f616dbcb7d@nvidia.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Fri, 11 Dec 2020 08:49:16 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqK7EtRhGhd20P2raj1C4GLOoBQ55ngY+BvygRE-61E+9A@mail.gmail.com>
+Message-ID: <CAL_JsqK7EtRhGhd20P2raj1C4GLOoBQ55ngY+BvygRE-61E+9A@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: dwc: Add support to configure for ECRC
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "amurray@thegoodpenguin.co.uk" <amurray@thegoodpenguin.co.uk>,
+        "treding@nvidia.com" <treding@nvidia.com>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Cadence controller will not initiate autonomous speed change if strapped as
-Gen2. The Retrain Link bit is set as quirk to enable this speed change.
-Adding a quirk flag based on a new compatible string. In future IP 
-revisions this will not be applicable.
+On Fri, Dec 11, 2020 at 7:58 AM Vidya Sagar <vidyas@nvidia.com> wrote:
+>
+> Hi Lorenzo,
+> Apologies to bug you, but wondering if you have any further comments on
+> this patch that I need to take care of?
 
-Version history:
-Changes in v4:
-- Added a quirk flag based on a new compatible string.
-- Change of api for link up: cdns_pcie_host_wait_for_link().
-Changes in v3:
-- To set retrain link bit,checking device capability & link status.
-- 32bit read in place of 8bit.
-- Minor correction in patch comment.
-- Change in variable & macro name.
-Changes in v2:
-- 16bit read in place of 8bit.
+You can check the status of your patches in Patchwork:
 
-Nadeem Athani (2):
-  dt-bindings: pci: Retrain Link to work around Gen2 training defect.
-  PCI: cadence: Retrain Link to work around Gen2 training defect.
+https://patchwork.kernel.org/project/linux-pci/patch/20201111121145.7015-1-vidyas@nvidia.com/
 
- .../bindings/pci/cdns,cdns-pcie-host.yaml          |  4 +-
- drivers/pci/controller/cadence/pcie-cadence-host.c | 67 ++++++++++++++++------
- drivers/pci/controller/cadence/pcie-cadence-plat.c | 13 +++++
- drivers/pci/controller/cadence/pcie-cadence.h      | 11 +++-
- 4 files changed, 76 insertions(+), 19 deletions(-)
+If it's in 'New' state and delegated to Lorenzo or Bjorn, it's in
+their queue. You can shorten the queue by reviewing stuff in front of
+you. :)
 
--- 
-2.15.0
+Rob
 
+>
+> Thanks,
+> Vidya Sagar
+>
+> On 12/3/2020 5:40 PM, Vidya Sagar wrote:
+> >
+> >
+> > On 11/25/2020 2:32 AM, Bjorn Helgaas wrote:
+> >> External email: Use caution opening links or attachments
+> >>
+> >>
+> >> On Tue, Nov 24, 2020 at 03:50:01PM +0530, Vidya Sagar wrote:
+> >>> Hi Bjorn,
+> >>> Please let me know if this patch needs any further modifications
+> >>
+> >> I'm fine with it, but of course Lorenzo will take care of it.
+> > Thanks Bjorn.
+> >
+> > Hi Lorenzo,
+> > Please let me know if you have any comments for this patch.
+> >
+> > Thanks,
+> > Vidya Sagar
+> >
+> >>
+> >>> On 11/12/2020 10:32 PM, Vidya Sagar wrote:
+> >>>> External email: Use caution opening links or attachments
+> >>>>
+> >>>>
+> >>>> On 11/12/2020 3:59 AM, Bjorn Helgaas wrote:
+> >>>>> External email: Use caution opening links or attachments
+> >>>>>
+> >>>>>
+> >>>>> On Wed, Nov 11, 2020 at 10:21:46PM +0530, Vidya Sagar wrote:
+> >>>>>>
+> >>>>>>
+> >>>>>> On 11/11/2020 9:57 PM, Jingoo Han wrote:
+> >>>>>>> External email: Use caution opening links or attachments
+> >>>>>>>
+> >>>>>>>
+> >>>>>>> On 11/11/20, 7:12 AM, Vidya Sagar wrote:
+> >>>>>>>>
+> >>>>>>>> DesignWare core has a TLP digest (TD) override bit in
+> >>>>>>>> one of the control
+> >>>>>>>> registers of ATU. This bit also needs to be programmed for
+> >>>>>>>> proper ECRC
+> >>>>>>>> functionality. This is currently identified as an issue
+> >>>>>>>> with DesignWare
+> >>>>>>>> IP version 4.90a.
+> >>>>>>>>
+> >>>>>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> >>>>>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>>>>>>> ---
+> >>>>>>>> V2:
+> >>>>>>>> * Addressed Bjorn's comments
+> >>>>>>>>
+> >>>>>>>>     drivers/pci/controller/dwc/pcie-designware.c | 52
+> >>>>>>>> ++++++++++++++++++--
+> >>>>>>>>     drivers/pci/controller/dwc/pcie-designware.h |  1 +
+> >>>>>>>>     2 files changed, 49 insertions(+), 4 deletions(-)
+> >>>>>>>>
+> >>>>>>>> diff --git
+> >>>>>>>> a/drivers/pci/controller/dwc/pcie-designware.c
+> >>>>>>>> b/drivers/pci/controller/dwc/pcie-designware.c
+> >>>>>>>> index c2dea8fc97c8..ec0d13ab6bad 100644
+> >>>>>>>> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> >>>>>>>> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> >>>>>>>> @@ -225,6 +225,46 @@ static void
+> >>>>>>>> dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index,
+> >>>>>>>> u32 reg,
+> >>>>>>>>          dw_pcie_writel_atu(pci, offset + reg, val);
+> >>>>>>>>     }
+> >>>>>>>>
+> >>>>>>>> +static inline u32 dw_pcie_enable_ecrc(u32 val)
+> >>>>>>>
+> >>>>>>> What is the reason to use inline here?
+> >>>>>>
+> >>>>>> Actually, I wanted to move the programming part inside the
+> >>>>>> respective APIs
+> >>>>>> but then I wanted to give some details as well in comments so to
+> >>>>>> avoid
+> >>>>>> duplication, I came up with this function. But, I'm making it
+> >>>>>> inline for
+> >>>>>> better code optimization by compiler.
+> >>>>>
+> >>>>> I don't really care either way, but I'd be surprised if the compiler
+> >>>>> didn't inline this all by itself even without the explicit "inline".
+> >>>> I just checked it and you are right that compiler is indeed inlining it
+> >>>> without explicitly mentioning 'inline'.
+> >>>> I hope it is ok to leave it that way.
+> >>>>
+> >>>>>
+> >>>>>>>> +{
+> >>>>>>>> +     /*
+> >>>>>>>> +      * DesignWare core version 4.90A has this strange design
+> >>>>>>>> issue
+> >>>>>>>> +      * where the 'TD' bit in the Control register-1 of
+> >>>>>>>> the ATU outbound
+> >>>>>>>> +      * region acts like an override for the ECRC
+> >>>>>>>> setting i.e. the presence
+> >>>>>>>> +      * of TLP Digest(ECRC) in the outgoing TLPs is
+> >>>>>>>> solely determined by
+> >>>>>>>> +      * this bit. This is contrary to the PCIe spec
+> >>>>>>>> which says that the
+> >>>>>>>> +      * enablement of the ECRC is solely determined by
+> >>>>>>>> the AER registers.
+> >>>>>>>> +      *
+> >>>>>>>> +      * Because of this, even when the ECRC is enabled through AER
+> >>>>>>>> +      * registers, the transactions going through ATU
+> >>>>>>>> won't have TLP Digest
+> >>>>>>>> +      * as there is no way the AER sub-system could
+> >>>>>>>> program the TD bit which
+> >>>>>>>> +      * is specific to DesignWare core.
+> >>>>>>>> +      *
+> >>>>>>>> +      * The best way to handle this scenario is to program the
+> >>>>>>>> TD bit
+> >>>>>>>> +      * always. It affects only the traffic from root
+> >>>>>>>> port to downstream
+> >>>>>>>> +      * devices.
+> >>>>>>>> +      *
+> >>>>>>>> +      * At this point,
+> >>>>>>>> +      * When ECRC is enabled in AER registers,
+> >>>>>>>> everything works normally
+> >>>>>>>> +      * When ECRC is NOT enabled in AER registers, then,
+> >>>>>>>> +      * on Root Port:- TLP Digest (DWord size) gets
+> >>>>>>>> appended to each packet
+> >>>>>>>> +      *                even through it is not required.
+> >>>>>>>> Since downstream
+> >>>>>>>> +      *                TLPs are mostly for
+> >>>>>>>> configuration accesses and BAR
+> >>>>>>>> +      *                accesses, they are not in
+> >>>>>>>> critical path and won't
+> >>>>>>>> +      *                have much negative effect on the
+> >>>>>>>> performance.
+> >>>>>>>> +      * on End Point:- TLP Digest is received for
+> >>>>>>>> some/all the packets coming
+> >>>>>>>> +      *                from the root port. TLP Digest
+> >>>>>>>> is ignored because,
+> >>>>>>>> +      *                as per the PCIe Spec r5.0 v1.0 section
+> >>>>>>>> 2.2.3
+> >>>>>>>> +      *                "TLP Digest Rules", when an
+> >>>>>>>> endpoint receives TLP
+> >>>>>>>> +      *                Digest when its ECRC check
+> >>>>>>>> functionality is disabled
+> >>>>>>>> +      *                in AER registers, received TLP
+> >>>>>>>> Digest is just ignored.
+> >>>>>>>> +      * Since there is no issue or error reported
+> >>>>>>>> either side, best way to
+> >>>>>>>> +      * handle the scenario is to program TD bit by default.
+> >>>>>>>> +      */
+> >>>>>>>> +
+> >>>>>>>> +     return val | PCIE_ATU_TD;
+> >>>>>>>> +}
