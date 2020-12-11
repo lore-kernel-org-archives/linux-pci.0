@@ -2,128 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.2 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9CDC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 20:38:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A6FEC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:07:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE44423137
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 20:38:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E43F624078
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:07:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389638AbgLKStO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Dec 2020 13:49:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56250 "EHLO
+        id S2392884AbgLKTda (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Dec 2020 14:33:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394097AbgLKSsO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 13:48:14 -0500
-Received: from mail-pl1-x64a.google.com (mail-pl1-x64a.google.com [IPv6:2607:f8b0:4864:20::64a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13443C0619D7
-        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 10:46:48 -0800 (PST)
-Received: by mail-pl1-x64a.google.com with SMTP id t14so5177107plr.15
-        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 10:46:48 -0800 (PST)
+        with ESMTP id S2393685AbgLKTdQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 14:33:16 -0500
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30055C061793
+        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 11:32:36 -0800 (PST)
+Received: by mail-pl1-x641.google.com with SMTP id x12so4619771plr.10
+        for <linux-pci@vger.kernel.org>; Fri, 11 Dec 2020 11:32:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=D6dzW9Nv9PxzQobvhFlQDWUjMujzTJKPO9b+q7PtBxA=;
-        b=j80QiI4Ul6UgEkfC+jupmsvTxkEELd8wbgUjUZ6N8GZBz3X4UojppIFANKFCwEcr0b
-         hjg7atDwt+r6dl376cixss8x61cmNs3p6kdE0NH0HxFb1RFB4vQfxhmnXPW46RXzb3jX
-         w/C2Yv2wPOS6QjdjcS5NeKPbqbdp8shMph/o4hHfNZ5sJb5N3Ar0+qPkmusVLmg+5im/
-         FXu/NZwu9TMocoPetDYE2QWKb90ZDlr4lbZ3N2VjoMkHvJaSPTfqO5DKNCfYjLKaMtOp
-         PjFKT07Sh00XUoerVDLql1CWKexmWjEKEMlFf7a6DuR4Wtg99akEQhhQl7HctgCVr2eD
-         quKA==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9QrTgvGnEakPURCqXO9kVzpnI7sAnsn5QLKAoF8jKto=;
+        b=YlRVVR0J3SWrOJLo/jmkZifU0GgnWNus/X2mN9j9Dpcm7OnTYCv0w8dDeiXJOhRtKq
+         qntCWLVR/OxbTujk2vmdnbE+xvAC7RGanwD7OUpSCuC6myv5NZOsA1/lV5o5GCQIcu3w
+         ysXWmzmxZxCXJMR5DqDqZeAn155foWYOHtnKY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=D6dzW9Nv9PxzQobvhFlQDWUjMujzTJKPO9b+q7PtBxA=;
-        b=ZeIaonoLIU5OdgcKINbQKqfKhu4PqsLIKwVz+A6uBoRAB3ZwC3EP+Z64Nh6DJl1nDx
-         ev6pgjjLr3RYBo42gx4/FS/ESrBheCVwF5b+znAI0XKamqhtFgTIuBux1AP+m9qNc6bu
-         0tB55HKuYN5QZoh3GACZ34KzBUSyAMlHzdTTqsq3zatx8HYMiNPxUeRituFJQoJWXU/Z
-         8jRMHsORVYbYZFFi0bw+2yo4yy5R/cdEcWvrlwB0jb7DmEjfKsj1Y2Q0bNfn5kl4xQSx
-         sIeO2n5+FmRMull+UZGwYotXMv/3O7ts6u14z2e9lSod5H9fLEBhzMXZF/NsmlMVQTiV
-         DuGA==
-X-Gm-Message-State: AOAM530XbIwdhauq2UdBKdaLbMpvJittfl/FQCChB0FWztMKFWjSpmB4
-        2wCYh3/LPRQuGjf4BNfQqNZ4kB11zF2WC7LgvJo=
-X-Google-Smtp-Source: ABdhPJzTxDOAZu/cl6nSaAjpW3k/LNI+wnG91vRp8xhL+7QirY0I3Vi1skb6ONtaVKsVxERXnDfxMhqkc0oDgftg5yE=
-Sender: "samitolvanen via sendgmr" 
-        <samitolvanen@samitolvanen1.mtv.corp.google.com>
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:f693:9fff:fef4:1b6d])
- (user=samitolvanen job=sendgmr) by 2002:a17:902:bb8c:b029:d9:261:5809 with
- SMTP id m12-20020a170902bb8cb02900d902615809mr3908181pls.29.1607712407508;
- Fri, 11 Dec 2020 10:46:47 -0800 (PST)
-Date:   Fri, 11 Dec 2020 10:46:23 -0800
-In-Reply-To: <20201211184633.3213045-1-samitolvanen@google.com>
-Message-Id: <20201211184633.3213045-7-samitolvanen@google.com>
-Mime-Version: 1.0
-References: <20201211184633.3213045-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.29.2.576.ga3fc446d84-goog
-Subject: [PATCH v9 06/16] kbuild: lto: add a default list of used symbols
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Masahiro Yamada <masahiroy@kernel.org>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9QrTgvGnEakPURCqXO9kVzpnI7sAnsn5QLKAoF8jKto=;
+        b=eIEYPzHNtu5lEiYz8bQoIf1CgZo6/+XKcz8vNITIzh7I0Qp/aNWF3g5vBn5ZFr5xju
+         doe903zCsGGxLZy4FTnvMfUHKcsdaxHwf7j4ZOhtgBUCnHn7kPsKag6TLcEPqn0eNsNO
+         yxU1WiU7R4+l+L6Y27GouGnyqvY78+4FnkintOaQXYBEsdWiEFCV+k07X6eg5tSREd7u
+         sjJ2wBU6ws47MoKy+B43L3UfeQbg+OIz8CzreZi63qRpsHBXlynFlrXdKn9wFu7M0h88
+         TFXkcrVK8U7yGXHA7BlMkfxEmxPXa9uphwn+ZJlt/4yUWmzaIBQdC16cmNNdK2aeHy4v
+         Tzgw==
+X-Gm-Message-State: AOAM530E392pBV5KxwNSconfn/1geoKQ7+QeXnnULAyz7PM+t6Au07VD
+        EXTqUbIcJoPUwkjPvhVUzVdp9g==
+X-Google-Smtp-Source: ABdhPJxsthqMVhRTxK9zln6OgOykAvCX/6nw+GaT6GPANSQFH6ft5S0zc7PNaBcACeYW35bsdNRUig==
+X-Received: by 2002:a17:902:123:b029:da:420e:aab0 with SMTP id 32-20020a1709020123b02900da420eaab0mr12377208plb.30.1607715155648;
+        Fri, 11 Dec 2020 11:32:35 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id s65sm10821175pgb.78.2020.12.11.11.32.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Dec 2020 11:32:34 -0800 (PST)
+Date:   Fri, 11 Dec 2020 11:32:33 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     Sami Tolvanen <samitolvanen@google.com>
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
-        Will Deacon <will@kernel.org>
-Cc:     Josh Poimboeuf <jpoimboe@redhat.com>,
+        Will Deacon <will@kernel.org>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
         Peter Zijlstra <peterz@infradead.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Paul E. McKenney" <paulmck@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         clang-built-linux@googlegroups.com,
         kernel-hardening@lists.openwall.com, linux-arch@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sami Tolvanen <samitolvanen@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v9 06/16] kbuild: lto: add a default list of used symbols
+Message-ID: <202012111131.E41AFFCDB@keescook>
+References: <20201211184633.3213045-1-samitolvanen@google.com>
+ <20201211184633.3213045-7-samitolvanen@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201211184633.3213045-7-samitolvanen@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With CONFIG_LTO_CLANG, LLVM bitcode has not yet been compiled into a
-binary when the .mod files are generated, which means they don't yet
-contain references to certain symbols that will be present in the final
-binaries. This includes intrinsic functions, such as memcpy, memmove,
-and memset [1], and stack protector symbols [2]. This change adds a
-default symbol list to use with CONFIG_TRIM_UNUSED_KSYMS when Clang's
-LTO is used.
+On Fri, Dec 11, 2020 at 10:46:23AM -0800, Sami Tolvanen wrote:
+> With CONFIG_LTO_CLANG, LLVM bitcode has not yet been compiled into a
+> binary when the .mod files are generated, which means they don't yet
+> contain references to certain symbols that will be present in the final
+> binaries. This includes intrinsic functions, such as memcpy, memmove,
+> and memset [1], and stack protector symbols [2]. This change adds a
+> default symbol list to use with CONFIG_TRIM_UNUSED_KSYMS when Clang's
+> LTO is used.
+> 
+> [1] https://llvm.org/docs/LangRef.html#standard-c-c-library-intrinsics
+> [2] https://llvm.org/docs/LangRef.html#llvm-stackprotector-intrinsic
+> 
+> Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 
-[1] https://llvm.org/docs/LangRef.html#standard-c-c-library-intrinsics
-[2] https://llvm.org/docs/LangRef.html#llvm-stackprotector-intrinsic
+Reviewed-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
----
- init/Kconfig                | 1 +
- scripts/lto-used-symbollist | 5 +++++
- 2 files changed, 6 insertions(+)
- create mode 100644 scripts/lto-used-symbollist
+> ---
+>  init/Kconfig                | 1 +
+>  scripts/lto-used-symbollist | 5 +++++
+>  2 files changed, 6 insertions(+)
+>  create mode 100644 scripts/lto-used-symbollist
+> 
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 0872a5a2e759..e88c919c1bf1 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -2297,6 +2297,7 @@ config TRIM_UNUSED_KSYMS
+>  config UNUSED_KSYMS_WHITELIST
+>  	string "Whitelist of symbols to keep in ksymtab"
+>  	depends on TRIM_UNUSED_KSYMS
+> +	default "scripts/lto-used-symbollist" if LTO_CLANG
+>  	help
+>  	  By default, all unused exported symbols will be un-exported from the
+>  	  build when TRIM_UNUSED_KSYMS is selected.
+> diff --git a/scripts/lto-used-symbollist b/scripts/lto-used-symbollist
+> new file mode 100644
+> index 000000000000..38e7bb9ebaae
+> --- /dev/null
+> +++ b/scripts/lto-used-symbollist
+> @@ -0,0 +1,5 @@
+> +memcpy
+> +memmove
+> +memset
+> +__stack_chk_fail
+> +__stack_chk_guard
+> -- 
+> 2.29.2.576.ga3fc446d84-goog
+> 
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 0872a5a2e759..e88c919c1bf1 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -2297,6 +2297,7 @@ config TRIM_UNUSED_KSYMS
- config UNUSED_KSYMS_WHITELIST
- 	string "Whitelist of symbols to keep in ksymtab"
- 	depends on TRIM_UNUSED_KSYMS
-+	default "scripts/lto-used-symbollist" if LTO_CLANG
- 	help
- 	  By default, all unused exported symbols will be un-exported from the
- 	  build when TRIM_UNUSED_KSYMS is selected.
-diff --git a/scripts/lto-used-symbollist b/scripts/lto-used-symbollist
-new file mode 100644
-index 000000000000..38e7bb9ebaae
---- /dev/null
-+++ b/scripts/lto-used-symbollist
-@@ -0,0 +1,5 @@
-+memcpy
-+memmove
-+memset
-+__stack_chk_fail
-+__stack_chk_guard
+bikeshed: Should this filename use some kind of extension, like
+lto-user-symbols.txt or .list, to make it more human-friendly?
+
 -- 
-2.29.2.576.ga3fc446d84-goog
-
+Kees Cook
