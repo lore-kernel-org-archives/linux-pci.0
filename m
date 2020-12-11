@@ -2,104 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC449C4361B
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0C4C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:55:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E1AC24078
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:23:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87B2923B85
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Dec 2020 21:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388123AbgLKUSX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Dec 2020 15:18:23 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:48294 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388074AbgLKUST (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 15:18:19 -0500
-Received: from 89-77-60-66.dynamic.chello.pl (89.77.60.66) (HELO kreacher.localnet)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.530)
- id 2f2b1a0f38d96bcd; Fri, 11 Dec 2020 21:17:36 +0100
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux PCI <linux-pci@vger.kernel.org>
-Cc:     Daniel Scally <djrscally@gmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH] PCI: ACPI: Fix up ACPI companion lookup for device 0 on the root bus
-Date:   Fri, 11 Dec 2020 21:17:35 +0100
-Message-ID: <4673285.9aE2nYKHPr@kreacher>
+        id S2394705AbgLKVJG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Dec 2020 16:09:06 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:37572 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391366AbgLKVIv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Dec 2020 16:08:51 -0500
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1607720888;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HhSZk3JoDjyQOLMPOFgRgzwUyrTACu0UGSGM/7NvY6I=;
+        b=ODjND6hv3nPITeDJOTxlIhVMHSqc6z+V97F+ULhmNWUDUg4MeWWcc8/RjfBSpJ+3E7KGvI
+        7u3oIQ1T0blXK7tiZjRPA+EmHIW9gpYRAbWAbVY6gfKBefi2hgLwHuva9Pr5DzcIfb4zGY
+        SuyetRvP8eIvO7dEK0SnW5NkAhYPqinzrr4Dc4PuL6rLfSElkjk6Dm5HgGKkZSl8lMyVVb
+        GCj6eMo+nj1M3TWtminM7NXFXEDFn7q5iOiTlBNVs+z2wkgYrK9LnDALIH7BFq1ID6L7rE
+        ud/rYvRghXbFi0znwvlxBBbwl+qtg9iLqpnrT1m9/JCtlXDnnHPHRcYj9dijAA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1607720888;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HhSZk3JoDjyQOLMPOFgRgzwUyrTACu0UGSGM/7NvY6I=;
+        b=jd0RTQztrN1EtCKge/4M0pzHQ/MU02TRkL1ocrE3lvW4v9ht90/z6O6t5eEalNoD9uJ0/m
+        DmETqLTaJjhHPNAQ==
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        afzal mohammed <afzal.mohd.ma@gmail.com>,
+        linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
+        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Wambui Karuga <wambui.karugax@gmail.com>,
+        intel-gfx <intel-gfx@lists.freedesktop.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        "open list\:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Tariq Toukan <tariqt@nvidia.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "open list\:HFI1 DRIVER" <linux-rdma@vger.kernel.org>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [patch 03/30] genirq: Move irq_set_lockdep_class() to core
+In-Reply-To: <CAHp75Vc-2OjE2uwvNRiyLMQ8GSN3P7SehKD-yf229_7ocaktiw@mail.gmail.com>
+References: <20201210192536.118432146@linutronix.de> <20201210194042.860029489@linutronix.de> <CAHp75Vc-2OjE2uwvNRiyLMQ8GSN3P7SehKD-yf229_7ocaktiw@mail.gmail.com>
+Date:   Fri, 11 Dec 2020 22:08:07 +0100
+Message-ID: <87h7osgifc.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Dec 11 2020 at 19:53, Andy Shevchenko wrote:
 
-In some cases acpi_pci_find_companion() returns an incorrect device
-object as the ACPI companion for device 0 on the root bus (bus 0).
+> On Thu, Dec 10, 2020 at 10:14 PM Thomas Gleixner <tglx@linutronix.de> wrote:
+>>
+>> irq_set_lockdep_class() is used from modules and requires irq_to_desc() to
+>> be exported. Move it into the core code which lifts another requirement for
+>> the export.
+>
+> ...
+>
+>> +       if (IS_ENABLED(CONFIG_LOCKDEP))
+>> +               __irq_set_lockdep_class(irq, lock_class, request_class);
 
-On the affected systems that device is the PCI interface to the
-host bridge and the "ACPI companion" returned for it corresponds
-to a non-PCI device located in the SoC (e.g. a sensor on an I2C
-bus).  As a result of this, the ACPI device object "attached"
-to PCI device 00:00.0 cannot be used for enumerating the device
-that is really represented by it which (of course) is problematic.
-
-Address that issue by preventing acpi_pci_find_companion() from
-returning a device object with a valid _HID (which by the spec
-should not be present uder ACPI device objects corresponding to
-PCI devices) for PCI device 00:00.0.
-
-Link: https://lore.kernel.org/linux-acpi/1409ba0c-1580-dc09-e6fe-a0c9bcda6462@gmail.com/
-Reported-by: Daniel Scally <djrscally@gmail.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c |   20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -1162,14 +1162,32 @@ void acpi_pci_remove_bus(struct pci_bus
- static struct acpi_device *acpi_pci_find_companion(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	struct acpi_device *adev;
- 	bool check_children;
- 	u64 addr;
- 
- 	check_children = pci_is_bridge(pci_dev);
- 	/* Please ref to ACPI spec for the syntax of _ADR */
- 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
--	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
-+	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
- 				      check_children);
-+	/*
-+	 * There may be ACPI device objects in the ACPI namespace that are
-+	 * children of the device object representing the host bridge, but don't
-+	 * represent PCI devices.  Both _HID and _ADR may be present for them,
-+	 * even though that is against the specification (for example, see
-+	 * Section 6.1 of ACPI 6.3), but in many cases the _ADR returns 0 which
-+	 * appears to indicate that they should not be taken into consideration
-+	 * as potential companions of PCI devices on the root bus.
-+	 *
-+	 * To catch this special case, disregard the returned device object if
-+	 * it has a valid _HID, addr is 0 and the PCI device at hand is on the
-+	 * root bus.
-+	 */
-+	if (adev && adev->pnp.type.platform_id && !addr && !pci_dev->bus->parent)
-+		return NULL;
-+
-+	return adev;
- }
- 
- /**
-
-
-
+You are right. Let me fix that.
