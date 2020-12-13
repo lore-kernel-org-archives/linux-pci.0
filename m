@@ -2,50 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF49C4361B
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Dec 2020 05:11:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB713C0018C
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Dec 2020 11:25:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA703230FF
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Dec 2020 05:11:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9738B22C7D
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Dec 2020 11:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725938AbgLMFLW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Dec 2020 00:11:22 -0500
-Received: from mga07.intel.com ([134.134.136.100]:48309 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725876AbgLMFLV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 13 Dec 2020 00:11:21 -0500
-IronPort-SDR: rh7TJDJfqv00PM8ZyUZoA9i9TFFMIzelb+/rEY4DB8kKgx++sSfcYcbSK/ukoPa5HebaaHeaqg
- XyEsw9wHytDA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9833"; a="238690323"
-X-IronPort-AV: E=Sophos;i="5.78,415,1599548400"; 
-   d="scan'208";a="238690323"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2020 21:09:34 -0800
-IronPort-SDR: VULFeSzlvORzFoLgMzzy83Dkw5iWbIcQdw2eC8to6i6A4W1bakbFTJT8XWn/pQC/r0Q6N3i8Tc
- qj8Uhf0YayJw==
-X-IronPort-AV: E=Sophos;i="5.78,415,1599548400"; 
-   d="scan'208";a="366436241"
-Received: from ascinco-mobl1.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.212.175.177])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2020 21:09:34 -0800
-Subject: Re: [PATCH v8 1/2] PCI/ERR: Call pci_bus_reset() before calling
- ->slot_reset() callback
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, knsathya@kernel.org
-References: <b464e4c8b3022ce3e0c69e64456619fc86378c15.1603740826.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-From:   "Kuppuswamy, Sathyanarayanan" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Message-ID: <d12dd711-cdaf-0a79-8deb-e2381b79163b@linux.intel.com>
-Date:   Sat, 12 Dec 2020 21:09:32 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1727393AbgLMLYv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Dec 2020 06:24:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50368 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725864AbgLMLYv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Dec 2020 06:24:51 -0500
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C27F6C0613CF;
+        Sun, 13 Dec 2020 03:24:10 -0800 (PST)
+Received: by mail-ej1-x642.google.com with SMTP id 6so3980368ejz.5;
+        Sun, 13 Dec 2020 03:24:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=IW66fMc7VTs1PtxS+22ry7ms1/9mizOXCdVTfKV5hpo=;
+        b=bQn+oB1JoyeFOF0nG/mlAluMS+9oNaqRxA17ZBM9Oe3AOE8/JG6goH/EB1c4QkEda4
+         T1lTzWqlfslNfkdjp202c07yMWPNGbIBbpqQZ+AzfJmqs+Kgj+dLxGZ+wWZGA5mc0NdB
+         BijFlgEZnvzEJb3MGQPxQa2/dgeJuYhDvxuwz6QAxAIoRHfwl22d5quEoZXOhJp6a+qE
+         ETivnglunAiRLTbK3ng7taHfwUqrNTJL3Mef8dDWPaAGgN2enm8bDppfomcBBDdM6fOw
+         jt/C5/9LwS2YQBDgMwgsJ0z4C3ZaAE2+qiQJ4375nfTotPFrKA5zulfu7Q8I9D/Awk7+
+         1yaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=IW66fMc7VTs1PtxS+22ry7ms1/9mizOXCdVTfKV5hpo=;
+        b=BVBMTCn3Bvu5bU8u22YwrSx8UYIrLr1dn/Gtu7QCctWasiftRQClF1RfJ4Jide5z2/
+         oEbevEBznY4HqoeALxnXi/snXKW4lE+iHGRP/WO6+Sf4tO8t8uUs+qLpaH1MwAHNpjST
+         7cICSEyp2srchAP8d7jtWgTMNvk6g/WDXK0iLlUM6eQ1yOK5eqfCPXl6wejZhIxn8spN
+         OtxPSqA6Zsp1kiSzRKxsKsc7prwux91PXGcVki2CZ9dR5KijWb8tZJ8Nhx4OgeqeJJ2n
+         5rYbYMBo9KQMgbYy4+1+7tclWUFLaU25ryFUH+kBxqSkZXQQAooPRicLP8pJtpMyntbE
+         VKCg==
+X-Gm-Message-State: AOAM531B7l7ilylRnx7vVwCRaWZ3ILOCQdDgyAMfMKyzuFnW395gUQT8
+        1sE6TCaMzKMc6W+DxYtzQ4c=
+X-Google-Smtp-Source: ABdhPJynlxi2QKNBVsllMFmw4nuD/o/QttB0CiO5OzyzZ7oeGscU5QYtBXumKqp3eM2r1PK4665luQ==
+X-Received: by 2002:a17:906:a2d0:: with SMTP id by16mr18015254ejb.207.1607858649230;
+        Sun, 13 Dec 2020 03:24:09 -0800 (PST)
+Received: from [192.168.0.107] ([77.127.34.194])
+        by smtp.gmail.com with ESMTPSA id de12sm12533753edb.82.2020.12.13.03.24.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 13 Dec 2020 03:24:08 -0800 (PST)
+Subject: Re: [patch 20/30] net/mlx4: Replace irq_to_desc() abuse
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Tariq Toukan <tariqt@nvidia.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        afzal mohammed <afzal.mohd.ma@gmail.com>,
+        linux-parisc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
+        linux-arm-kernel@lists.infradead.org,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Wambui Karuga <wambui.karugax@gmail.com>,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-gpio@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        linux-pci@vger.kernel.org,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        xen-devel@lists.xenproject.org
+References: <20201210192536.118432146@linutronix.de>
+ <20201210194044.580936243@linutronix.de>
+From:   Tariq Toukan <ttoukan.linux@gmail.com>
+Message-ID: <01e427f9-7238-d6a8-25ec-8585914d32df@gmail.com>
+Date:   Sun, 13 Dec 2020 13:24:00 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-In-Reply-To: <b464e4c8b3022ce3e0c69e64456619fc86378c15.1603740826.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20201210194044.580936243@linutronix.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -55,68 +122,30 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 10/26/20 12:37 PM, Kuppuswamy Sathyanarayanan wrote:
-> Currently if report_error_detected() or report_mmio_enabled()
-> functions requests PCI_ERS_RESULT_NEED_RESET, current
-> pcie_do_recovery() implementation does not do the requested
-> explicit device reset, but instead just calls the
-> report_slot_reset() on all affected devices. Notifying about the
-> reset via report_slot_reset() without doing the actual device
-> reset is incorrect. So call pci_bus_reset() before triggering
-> ->slot_reset() callback.
-Gentle ping! Any comments on this patch set?
+On 12/10/2020 9:25 PM, Thomas Gleixner wrote:
+> No driver has any business with the internals of an interrupt
+> descriptor. Storing a pointer to it just to use yet another helper at the
+> actual usage site to retrieve the affinity mask is creative at best. Just
+> because C does not allow encapsulation does not mean that the kernel has no
+> limits.
 > 
-> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> Reviewed-by: Sinan Kaya <okaya@kernel.org>
-> Reviewed-by: Ashok Raj <ashok.raj@intel.com>
+> Retrieve a pointer to the affinity mask itself and use that. It's still
+> using an interface which is usually not for random drivers, but definitely
+> less hideous than the previous hack.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Tariq Toukan <tariqt@nvidia.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-rdma@vger.kernel.org
 > ---
->   Changes since v7:
->    * Rebased on top of v5.10-rc1.
-> 
->   Changes since v6:
->    * None.
-> 
->   Changes since v5:
->    * Added Ashok's Reviewed-by tag.
-> 
->   Changes since v4:
->    * Added check for pci_reset_bus() return value.
-> 
->   drivers/pci/pcie/err.c | 12 +++++++-----
->   1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index c543f419d8f9..315a4d559c4c 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -152,6 +152,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->   {
->   	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
->   	struct pci_bus *bus;
-> +	int ret;
->   
->   	/*
->   	 * Error recovery runs on all subordinates of the first downstream port.
-> @@ -181,11 +182,12 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->   	}
->   
->   	if (status == PCI_ERS_RESULT_NEED_RESET) {
-> -		/*
-> -		 * TODO: Should call platform-specific
-> -		 * functions to reset slot before calling
-> -		 * drivers' slot_reset callbacks?
-> -		 */
-> +		ret = pci_reset_bus(dev);
-> +		if (ret < 0) {
-> +			pci_err(dev, "Failed to reset %d\n", ret);
-> +			status = PCI_ERS_RESULT_DISCONNECT;
-> +			goto failed;
-> +		}
->   		status = PCI_ERS_RESULT_RECOVERED;
->   		pci_dbg(dev, "broadcast slot_reset message\n");
->   		pci_walk_bus(bus, report_slot_reset, &status);
+>   drivers/net/ethernet/mellanox/mlx4/en_cq.c   |    8 +++-----
+>   drivers/net/ethernet/mellanox/mlx4/en_rx.c   |    6 +-----
+>   drivers/net/ethernet/mellanox/mlx4/mlx4_en.h |    3 ++-
+>   3 files changed, 6 insertions(+), 11 deletions(-)
 > 
 
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+Reviewed-by: Tariq Toukan <tariqt@nvidia.com>
+
+Thanks for your patch.
