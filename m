@@ -2,160 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC1C8C2BB9A
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Dec 2020 16:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5E0C4361B
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Dec 2020 17:41:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77ED922571
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Dec 2020 16:02:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B56E72222B
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Dec 2020 17:41:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730561AbgLOQCY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Dec 2020 11:02:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43470 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730535AbgLOQCU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Dec 2020 11:02:20 -0500
-X-Gm-Message-State: AOAM530+4WJ1aG2hHbP2t37mSuwJ4oT6bskNspQcGZOlpNFJlddUhzfI
-        9Td3TZ/mr6qAb8wbPiSdwGyEC/ufBzVhzkEabQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608048098;
-        bh=qkXORLSczMYIGgm4TRmpzxFMYrqSUAG1qScBIBBvO2w=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=TSkGPz9HS3BEF456KrpHsjgNO20bDWQLM4lQEIoSbIHtACo/crOcu+YrpYKLoWdZe
-         b89EgoXiEDy1bMkwyRq14RINWg2h+0hafcJrfrLT7Gw5t+dFVSh+v+KnLH5RGhrQ20
-         PJx/P4/SmbRZUMKcVDHscxd7a/bL/sMXPFCqA+E37fmZjZH0fxdl8rLBRSYPKSbrwF
-         31vIOkLk8OCPu2ezZAQBpRq1m+E1v6Cb8LUeeg5/U+0k2+seZ31InssUubTg8quqts
-         7GEbHO97MnCR2jxeGCW1tH8xSiDAKz50rO9rcMkaADP4wUfq2bi5cQkTduqMkFrrpS
-         95O/zhdwXrxPg==
-X-Google-Smtp-Source: ABdhPJwdWryKXagk9cpZnUkyQ2HJtEyx7PK81m9x3dkM+ArsS56YV4eOyna5XThKS7LWtESiqA706YAJEkxFslJwtzc=
-X-Received: by 2002:a17:906:d784:: with SMTP id pj4mr26750000ejb.360.1608048097128;
- Tue, 15 Dec 2020 08:01:37 -0800 (PST)
-MIME-Version: 1.0
-References: <20201111153559.19050-1-kishon@ti.com> <20201111153559.19050-12-kishon@ti.com>
-In-Reply-To: <20201111153559.19050-12-kishon@ti.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Tue, 15 Dec 2020 10:01:25 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+iUU0aR950fvQ7+uenBT5MVbCEU9cDg+vfyO=VugpTZA@mail.gmail.com>
-Message-ID: <CAL_Jsq+iUU0aR950fvQ7+uenBT5MVbCEU9cDg+vfyO=VugpTZA@mail.gmail.com>
-Subject: Re: [PATCH v8 11/18] PCI: cadence: Implement ->msi_map_irq() ops
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-ntb@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        id S1731125AbgLORbm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Dec 2020 12:31:42 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:46030 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731099AbgLORbk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Dec 2020 12:31:40 -0500
+Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 1B761C04D1;
+        Tue, 15 Dec 2020 17:30:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1608053439; bh=QhfdybhEKKsdh03ZRqoA38J1K4xZmvB7mprbfS+QAtg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=lpnzoeb3aLciSQsSXIEOo5WyivchZBcY7eFPXAXiyeo5ld/YAXbjJnLbkzxjU9yQZ
+         Xqt+rYXYGRYjQRQB8wt7XDjlp4GlambRN8YRHJWIBJ2/pnrvKRqDCaptShfTOc8d+o
+         W2zO5h/ZbIIBiOqmQyulAPYhR7VnVTbNtHZA5FvMWVDSb7f5mZlRI8vlry4CVFy+Xv
+         WUv3cWPaZRhhqjdta62qM27tBaELCUeMPRCuXsTj71FBTWsm3Z5TUOdwSHj4GuE7MN
+         780h1sqWS6ZXIS1MlOCiqES27O2yeKCm52DCgNnnAlpGIhD/ROgkq0g6+qflb1WAkC
+         V6G3Hkp2xTgpQ==
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 9F3D5A005C;
+        Tue, 15 Dec 2020 17:30:37 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 04/15] PCI: Add pci_find_vsec_capability() to find a specific VSEC
+Date:   Tue, 15 Dec 2020 18:30:13 +0100
+Message-Id: <cc4b62f333342df8e029b175079203cfe2bd095c.1608053262.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1608053262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1608053262.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1608053262.git.gustavo.pimentel@synopsys.com>
+References: <cover.1608053262.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 11, 2020 at 9:37 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
-> Implement ->msi_map_irq() ops in order to map physical address to
-> MSI address and return MSI data.
->
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  .../pci/controller/cadence/pcie-cadence-ep.c  | 53 +++++++++++++++++++
->  1 file changed, 53 insertions(+)
->
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> index 84cc58dc8512..1fe6b8baca97 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> @@ -382,6 +382,57 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
->         return 0;
->  }
->
-> +static int cdns_pcie_ep_map_msi_irq(struct pci_epc *epc, u8 fn,
-> +                                   phys_addr_t addr, u8 interrupt_num,
-> +                                   u32 entry_size, u32 *msi_data,
-> +                                   u32 *msi_addr_offset)
-> +{
-> +       struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
-> +       u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
-> +       struct cdns_pcie *pcie = &ep->pcie;
-> +       u64 pci_addr, pci_addr_mask = 0xff;
-> +       u16 flags, mme, data, data_mask;
-> +       u8 msi_count;
-> +       int ret;
-> +       int i;
-> +
+Add pci_find_vsec_capability() that crawls through the device config
+space searching in all Vendor-Specific Extended Capabilities for a
+particular capability ID.
 
+Vendor-Specific Extended Capability (VSEC) is a PCIe capability (acts
+like a wrapper) specified by PCI-SIG that allows the vendor to create
+their own and specific capability in the device config space.
 
-> +       /* Check whether the MSI feature has been enabled by the PCI host. */
-> +       flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_FLAGS);
-> +       if (!(flags & PCI_MSI_FLAGS_ENABLE))
-> +               return -EINVAL;
-> +
-> +       /* Get the number of enabled MSIs */
-> +       mme = (flags & PCI_MSI_FLAGS_QSIZE) >> 4;
-> +       msi_count = 1 << mme;
-> +       if (!interrupt_num || interrupt_num > msi_count)
-> +               return -EINVAL;
-> +
-> +       /* Compute the data value to be written. */
-> +       data_mask = msi_count - 1;
-> +       data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_DATA_64);
-> +       data = data & ~data_mask;
-> +
-> +       /* Get the PCI address where to write the data into. */
-> +       pci_addr = cdns_pcie_ep_fn_readl(pcie, fn, cap + PCI_MSI_ADDRESS_HI);
-> +       pci_addr <<= 32;
-> +       pci_addr |= cdns_pcie_ep_fn_readl(pcie, fn, cap + PCI_MSI_ADDRESS_LO);
-> +       pci_addr &= GENMASK_ULL(63, 2);
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/pci/pci.c             | 29 +++++++++++++++++++++++++++++
+ include/linux/pci.h           |  1 +
+ include/uapi/linux/pci_regs.h |  5 +++++
+ 3 files changed, 35 insertions(+)
 
-Wouldn't all of the above be the same code for any endpoint driver? We
-just need endpoint config space accessors for the same 32-bit only
-access issues. Not asking for that in this series, but if that's the
-direction we should go.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6d4d5a2..235d0b2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -623,6 +623,35 @@ u64 pci_get_dsn(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_get_dsn);
+ 
++/**
++ * pci_find_vsec_capability - Find a vendor-specific extended capability
++ * @dev: PCI device to query
++ * @cap: vendor-specific capability id code
++ *
++ * Returns the address of the vendor-specific structure that matches the
++ * requested capability id code within the device's PCI configuration space
++ * or 0 if it does not find a match.
++ */
++int pci_find_vsec_capability(struct pci_dev *dev, int vsec_cap_id)
++{
++	u32 header;
++	int vsec;
++
++	vsec = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VNDR);
++	while (vsec) {
++		if (pci_read_config_dword(dev, vsec + 0x4,
++					  &header) == PCIBIOS_SUCCESSFUL &&
++		    PCI_VSEC_CAP_ID(header) == vsec_cap_id)
++			break;
++
++		vsec = pci_find_next_ext_capability(dev, vsec,
++						    PCI_EXT_CAP_ID_VNDR);
++	}
++
++	return vsec;
++}
++EXPORT_SYMBOL_GPL(pci_find_vsec_capability);
++
+ static int __pci_find_next_ht_cap(struct pci_dev *dev, int pos, int ht_cap)
+ {
+ 	int rc, ttl = PCI_FIND_CAP_TTL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 22207a7..effecb0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1067,6 +1067,7 @@ int pci_find_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
+ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
++int pci_find_vsec_capability(struct pci_dev *dev, int vsec_cap_id);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index a95d55f..f5d17be 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -730,6 +730,11 @@
+ #define PCI_EXT_CAP_DSN_SIZEOF	12
+ #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
+ 
++/* Vendor-Specific Extended Capabilities */
++#define PCI_VSEC_CAP_ID(header)		(header & 0x0000ffff)
++#define PCI_VSEC_CAP_REV(header)	((header >> 16) & 0xf)
++#define PCI_VSEC_CAP_LEN(header)	((header >> 20) & 0xffc)
++
+ /* Advanced Error Reporting */
+ #define PCI_ERR_UNCOR_STATUS	4	/* Uncorrectable Error Status */
+ #define  PCI_ERR_UNC_UND	0x00000001	/* Undefined */
+-- 
+2.7.4
 
-> +
-> +       for (i = 0; i < interrupt_num; i++) {
-> +               ret = cdns_pcie_ep_map_addr(epc, fn, addr,
-> +                                           pci_addr & ~pci_addr_mask,
-> +                                           entry_size);
-> +               if (ret)
-> +                       return ret;
-> +               addr = addr + entry_size;
-> +       }
-> +
-> +       *msi_data = data;
-> +       *msi_addr_offset = pci_addr & pci_addr_mask;
-> +
-> +       return 0;
-> +}
-> +
->  static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn,
->                                       u16 interrupt_num)
->  {
-> @@ -481,6 +532,7 @@ static const struct pci_epc_features cdns_pcie_epc_features = {
->         .linkup_notifier = false,
->         .msi_capable = true,
->         .msix_capable = true,
-> +       .align = 256,
->  };
->
->  static const struct pci_epc_features*
-> @@ -500,6 +552,7 @@ static const struct pci_epc_ops cdns_pcie_epc_ops = {
->         .set_msix       = cdns_pcie_ep_set_msix,
->         .get_msix       = cdns_pcie_ep_get_msix,
->         .raise_irq      = cdns_pcie_ep_raise_irq,
-> +       .map_msi_irq    = cdns_pcie_ep_map_msi_irq,
->         .start          = cdns_pcie_ep_start,
->         .get_features   = cdns_pcie_ep_get_features,
->  };
-> --
-> 2.17.1
->
