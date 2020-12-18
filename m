@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C32EAC2D0E4
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3189EC3526B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9675C23B54
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 065EB23B54
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728528AbgLRRnP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728579AbgLRRnP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 18 Dec 2020 12:43:15 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:38588 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:38590 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727967AbgLRRnO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:43:14 -0500
+        id S1727981AbgLRRnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Dec 2020 12:43:15 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 3BB15413BA;
-        Fri, 18 Dec 2020 17:41:21 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 5BDBD412EC;
+        Fri, 18 Dec 2020 17:41:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1608313280; x=1610127681; bh=/htqB/0rYGM6bOltjMUumNTM/7sIZv8Pvtx
-        4XF2+xgg=; b=FcK8cCIwE2jE6mt7pYenjiVrVnUdmweG5BDXsACp1AH1Y8IG8A/
-        muEFyrbnOdSkh0L1kPpWTaifm4K8xpegGOHj16Z0AseVXXnlW6RVxb+w0DMwzmXa
-        K6MJ9jDoqZVpNlH2T2Kmjjn9gZ3C2H1lV4YbDKKdyxrnCt9FPxHiCV6k=
+        1608313282; x=1610127683; bh=0bEjkx9ssfVEMvJrSYLU+CqcgBfmVLRsI4V
+        2h/RC0J0=; b=th44KhD3NR4x8+fNrTD8KtS6p5Hz9HNlZGeOhcPyJmllnuRDfEy
+        5BeZEYh932ch6LIeHNMDv/ce9riA8oJ4VCkGK40UkpCIprxIMVcox5sxN6KyuJC9
+        vTZGCxvAmVL+JyEla7ggeekv6+eGpF+6DkwteT8XAHCfPm+bB9qTqMlY=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id FspDviXVrF6B; Fri, 18 Dec 2020 20:41:20 +0300 (MSK)
+        with ESMTP id 1k_t8HD_hBOL; Fri, 18 Dec 2020 20:41:22 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id C6CFB413C2;
-        Fri, 18 Dec 2020 20:41:08 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 55341413CB;
+        Fri, 18 Dec 2020 20:41:09 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
- Dec 2020 20:41:08 +0300
+ Dec 2020 20:41:09 +0300
 From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
@@ -50,11 +50,10 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v9 15/26] x86/PCI/ACPI: Fix up PCIBIOS_MIN_MEM if value computed from e820 is invalid
-Date:   Fri, 18 Dec 2020 20:40:00 +0300
-Message-ID: <20201218174011.340514-16-s.miroshnichenko@yadro.com>
+        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH v9 17/26] PCI: hotplug: Don't disable the released bridge windows immediately
+Date:   Fri, 18 Dec 2020 20:40:02 +0300
+Message-ID: <20201218174011.340514-18-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
 References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
@@ -68,56 +67,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The value of PCIBIOS_MIN_MEM reported by BIOS 1.3 on Supermicro H11SSL-i
-via e820__setup_pci_gap():
+On a hotplug event with enabled BAR movement, calculating new BAR layout
+and bridge windows takes some time. During this procedure, the structures
+representing these windows are released: marked for a recalculation.
 
-  [mem 0xebff1000-0xfe9fffff] available for PCI devices
+When the new bridge window values are ready, they are written to the bridge
+registers via pci_setup_bridges().
 
-is only suitable for a single root complex out of four (0000:00):
+Currently, bridge's registers are updated immediately after releasing a
+window to disable it. But if a driver doesn't yet support movable BARs, it
+doesn't stop MEM transactions during the hotplug, so disabled bridge
+windows will break them.
 
-  pci_bus 0000:00: root bus resource [mem 0xec000000-0xefffffff window]
-  pci_bus 0000:20: root bus resource [mem 0xeb800000-0xebefffff window]
-  pci_bus 0000:40: root bus resource [mem 0xeb200000-0xeb5fffff window]
-  pci_bus 0000:60: root bus resource [mem 0xe8b00000-0xeaffffff window]
+Let the bridge windows remain operating after releasing, as they will be
+updated to the new values in the end of a hotplug event.
 
-That makes the AMD EPYC 7251 unable to assign BARs of devices hot-added in
-those three unlucky RCs (0000:20, 0000:40 and 0000:60).
-
-If there are apertures that end below the current PCIBIOS_MIN_MEM (which is
-a variable pci_mem_start on x86), adjust it to the aperture's start.
-
-CC: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- arch/x86/pci/acpi.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/pci/setup-bus.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 948656069cdd..9eccb26d0bf3 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -299,6 +299,21 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
- 	int status;
- 
- 	status = acpi_pci_probe_root_resources(ci);
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		struct resource *res = entry->res;
-+
-+		if (!(res->flags & IORESOURCE_MEM) ||
-+		    res->end > pci_mem_start ||
-+		    res->start == 0xa0000)
-+			continue;
-+
-+		dev_warn(&ci->root->device->dev, "Fix up PCI start address: %lx -> %llx\n",
-+			 pci_mem_start, res->start);
-+
-+		pci_mem_start = res->start;
-+	}
-+
- 	if (pci_use_crs) {
- 		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
- 			if (resource_is_pcicfg_ioport(entry->res))
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ab58b999ac6d..f98772474421 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1649,7 +1649,8 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		/* Avoiding touch the one without PREF */
+ 		if (type & IORESOURCE_PREFETCH)
+ 			type = IORESOURCE_PREFETCH;
+-		__pci_setup_bridge(bus, type);
++		if (!pci_can_move_bars)
++			__pci_setup_bridge(bus, type);
+ 		/* For next child res under same bridge */
+ 		r->flags = old_flags;
+ 	}
 -- 
 2.24.1
 
