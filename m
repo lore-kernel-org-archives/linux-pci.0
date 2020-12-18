@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA04C3526F
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B24C4361B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E90223B79
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FC3C23B54
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733009AbgLRRmh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Dec 2020 12:42:37 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:38580 "EHLO mta-01.yadro.com"
+        id S1728006AbgLRRmu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Dec 2020 12:42:50 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:38566 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732985AbgLRRmh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:42:37 -0500
+        id S1726220AbgLRRmt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Dec 2020 12:42:49 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 06245413F6;
-        Fri, 18 Dec 2020 17:41:17 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 9DCE64120A;
+        Fri, 18 Dec 2020 17:41:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1608313275; x=1610127676; bh=fyaAplP259bXMQg284z40tJLExuGU1ZfPpZ
-        M2BWBDGw=; b=pVeDUE///2lfgHAFE31d2AK5U55CkLtziYACr4BVUx9t8UcLMF+
-        qwyjQnu+TxXMB5LH++XT52GKhkNzElUHVuXTL6Z1MozEY+uHt0lwatyMOpLrahDU
-        Pje7HKWRW1XRNDNvgUMPn8dr8QfET8B8+Aw405jZFUXOPlUEVzENIuFo=
+        1608313283; x=1610127684; bh=yUQ/qeNM7/P1CLLD+3cl1iPEn6wC6ShgeR8
+        iUomRcFU=; b=HtOZukoxQW96sAXc8+u1lwPp+bX7+KVJk4utowLFbFVMrONY169
+        QS6lIK8ht5RZ5NYghJrOkDMXNXpnsJCqqmVhu8/oZi7v/p/7Mpo8yx0nUDMJv4vI
+        DtJZGfwOhk2hFt68uz+UA7eNiqf4kIjZcHOfB27r+pMVh1rGUaL9zbzc=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id zt-7b6M5sz3i; Fri, 18 Dec 2020 20:41:15 +0300 (MSK)
+        with ESMTP id QAFJnZ6eNGvt; Fri, 18 Dec 2020 20:41:23 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 6773441385;
-        Fri, 18 Dec 2020 20:41:08 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 8A24A413CF;
+        Fri, 18 Dec 2020 20:41:09 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
- Dec 2020 20:41:08 +0300
+ Dec 2020 20:41:09 +0300
 From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
@@ -51,9 +51,9 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
         Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v9 13/26] PCI: hotplug: Add support of fixed BARs to pci_assign_resource()
-Date:   Fri, 18 Dec 2020 20:39:58 +0300
-Message-ID: <20201218174011.340514-14-s.miroshnichenko@yadro.com>
+Subject: [PATCH v9 18/26] PCI: pciehp: Trigger a domain rescan on hp events when enabled movable BARs
+Date:   Fri, 18 Dec 2020 20:40:03 +0300
+Message-ID: <20201218174011.340514-19-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
 References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
@@ -67,142 +67,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixed BARs must be assigned within a bridge window first, before movable
-BARs and neighboring bridge windows. Currently they are assigned last by
-pdev_assign_fixed_resources().
+With movable BARs, hot-adding a device is not a local event for its bridge,
+but it affects the whole RC: BARs and bridge windows can be substantially
+rearranged. So instead of trying to fit the new devices into pre-allocated
+reserved gaps, initiate a full domain rescan.
 
-Let the fixed BARs be handled by pci_assign_resource() in the same way as
-it does for movable ones, assigning them in correct order, unifying the
-code.
-
-Allow matching IORESOURCE_PCI_FIXED prefetchable BARs to non-prefetchable
-windows, so they follow the same rules as non-flagged fixed BARs.
+The pci_rescan_bus() covers all the operations of the replaced functions:
+ - assigning new bus numbers, as the pci_hp_add_bridge() does it;
+ - allocating BARs -- pci_assign_unassigned_bridge_resources();
+ - configuring MPS settings -- pcie_bus_configure_settings();
+ - binding devices to their drivers -- pci_bus_add_devices().
 
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 43 -----------------------------------------
- drivers/pci/setup-res.c | 41 +++++++++++++++++++++++++++++++++++++--
- 2 files changed, 39 insertions(+), 45 deletions(-)
+ drivers/pci/hotplug/pciehp_pci.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3dadadea10d6..6055f15e3ac3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1358,47 +1358,6 @@ void pci_bus_size_bridges(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index d17f3bf36f70..6d4c1ef38210 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -58,6 +58,11 @@ int pciehp_configure_device(struct controller *ctrl)
+ 		goto out;
+ 	}
  
--static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
--{
--	int i;
--	struct resource *parent_r;
--	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
--			     IORESOURCE_PREFETCH;
--
--	pci_bus_for_each_resource(b, parent_r, i) {
--		if (!parent_r)
--			continue;
--
--		if ((r->flags & mask) == (parent_r->flags & mask) &&
--		    resource_contains(parent_r, r))
--			request_resource(parent_r, r);
--	}
--}
--
--/*
-- * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they are
-- * skipped by pbus_assign_resources_sorted().
-- */
--static void pdev_assign_fixed_resources(struct pci_dev *dev)
--{
--	int i;
--
--	for (i = 0; i <  PCI_NUM_RESOURCES; i++) {
--		struct pci_bus *b;
--		struct resource *r = &dev->resource[i];
--
--		if (r->parent || !(r->flags & IORESOURCE_PCI_FIXED) ||
--		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
--			continue;
--
--		b = dev->bus;
--		while (b && !r->parent) {
--			assign_fixed_resource_on_bus(b, r);
--			b = b->parent;
--		}
--	}
--}
--
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head)
-@@ -1409,8 +1368,6 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		pdev_assign_fixed_resources(dev);
--
- 		b = dev->subordinate;
- 		if (!b)
- 			continue;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index ee192e731119..6ffda8b94c52 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -333,14 +333,51 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 	return ret;
- }
- 
-+static int assign_fixed_resource_on_bus(struct pci_dev *dev, int resno)
-+{
-+	int i;
-+	struct resource *parent_r;
-+	unsigned long mask = IORESOURCE_TYPE_BITS;
-+	struct resource *r = dev->resource + resno;
-+
-+	/*
-+	 * If we have a shadow copy in RAM, the PCI device doesn't respond
-+	 * to the shadow range
-+	 */
-+	if (r->flags & IORESOURCE_ROM_SHADOW)
-+		return 0;
-+
-+	pci_bus_for_each_resource(dev->bus, parent_r, i) {
-+		if (!parent_r)
-+			continue;
-+
-+		if ((r->flags & mask) != (parent_r->flags & mask))
-+			continue;
-+
-+		if (parent_r->flags & IORESOURCE_PREFETCH &&
-+		    !(r->flags & IORESOURCE_PREFETCH))
-+			continue;
-+
-+		if (resource_contains(parent_r, r)) {
-+			if (!request_resource(parent_r, r)) {
-+				pci_info(dev, "BAR %d: assigned fixed %pR\n", resno, r);
-+				return 0;
-+			}
-+		}
++	if (pci_can_move_bars) {
++		pci_rescan_bus(parent);
++		goto out;
 +	}
 +
-+	pci_err(dev, "BAR %d: failed to assign fixed %pR\n", resno, r);
-+	return -ENOSPC;
-+}
-+
- int pci_assign_resource(struct pci_dev *dev, int resno)
- {
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t align, size;
- 	int ret;
+ 	for_each_pci_bridge(dev, parent)
+ 		pci_hp_add_bridge(dev);
  
--	if (res->flags & IORESOURCE_PCI_FIXED)
--		return 0;
-+	if (res->flags && pci_dev_bar_fixed(dev, res))
-+		return assign_fixed_resource_on_bus(dev, resno);
- 
- 	res->flags |= IORESOURCE_UNSET;
- 	align = pci_resource_alignment(dev, res);
 -- 
 2.24.1
 
