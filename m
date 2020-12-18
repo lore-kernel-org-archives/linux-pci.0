@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25182C3526D
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8960C2BBD5
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D181523B85
+	by mail.kernel.org (Postfix) with ESMTP id B2ABD23B7D
 	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732032AbgLRRlx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Dec 2020 12:41:53 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:37916 "EHLO mta-01.yadro.com"
+        id S1731636AbgLRRlv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Dec 2020 12:41:51 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:37876 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725939AbgLRRlx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:41:53 -0500
+        id S1726057AbgLRRlv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Dec 2020 12:41:51 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A1E99413DA;
-        Fri, 18 Dec 2020 17:41:10 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 05733413C8;
+        Fri, 18 Dec 2020 17:41:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1608313269; x=1610127670; bh=6k4cKOs9PPwIpn1f3t+mizlaNU15OcNpPql
-        ckDUhPrk=; b=YSzs3M2kTilvy9IyFC3ChVOZMK96vBgWQ21D5ssxU1QSEt/heLX
-        AbHsu5flllJzoQKJ9EfNJhB7stndQ/DQqkTvnMS6hNkkuQ7psLHXPlS8mhh+pKqX
-        acryMNNH/htA4N+QHRaWGkkjDTvWbC7RpZag0A/H7/0lvEecHxGEm1Io=
+        1608313267; x=1610127668; bh=vlhDGWs84jnDn9lker3XX/X6kdDT1STUvKr
+        Mzdw7AQ0=; b=U2inflNqwtIgmlPeeDSyU5RoTBZUcUjrVs540Tuc2ntT6K25n4a
+        X92sRuCyjJBeO5OwqC59Bg4iBMwxIkCab36FcGRDTwXNaTnkHF6wh/8+UZsegkx4
+        i6YzxyjVbzlRiZZMqTh2Q9P6kog+Z9+vaNqCntABo9zmwql7zWy2a7Ng=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id cJ3C7YPJcQ_g; Fri, 18 Dec 2020 20:41:09 +0300 (MSK)
+        with ESMTP id t1wUiKuRBgiS; Fri, 18 Dec 2020 20:41:07 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 8494F413A8;
-        Fri, 18 Dec 2020 20:41:07 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 6D9F34137C;
+        Fri, 18 Dec 2020 20:41:06 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
@@ -50,10 +50,12 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v9 04/26] PCI: Add version of release_child_resources() aware of fixed BARs
-Date:   Fri, 18 Dec 2020 20:39:49 +0300
-Message-ID: <20201218174011.340514-5-s.miroshnichenko@yadro.com>
+        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Marta Rybczynska <mrybczyn@kalray.eu>
+Subject: [PATCH v9 01/26] PCI: Fix race condition in pci_enable/disable_device()
+Date:   Fri, 18 Dec 2020 20:39:46 +0300
+Message-ID: <20201218174011.340514-2-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
 References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
@@ -67,93 +69,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When release_child_resources() is applied to a bridge window, it zeroes the
-.start field of children BARs, but the STARTALIGN flag remains set, leaving
-the resource in a state not valid for later re-assignment. So replace this
-flag with SIZEALIGN.
+This is a yet another approach to fix an old [1-2] concurrency issue, when:
+ - two or more devices are being hot-added into a bridge which was
+   initially empty;
+ - a bridge with two or more devices is being hot-added;
+ - the BIOS/bootloader/firmware doesn't pre-enable bridges during boot;
 
-Fixed BARs must preserve their offset and size: those marked with PCI_FIXED
-or bound by drivers without support of the movable BARs feature.
+The problem is that a bridge is reported as enabled before the MEM/IO bits
+are actually written to the PCI_COMMAND register, so another driver thread
+starts memory requests through the not-yet-enabled bridge:
 
-Add the pci_release_child_resources() to replace release_child_resources()
-in handling the described PCI-specific cases.
+ CPU0                                        CPU1
 
+ pci_enable_device_mem()                     pci_enable_device_mem()
+   pci_enable_bridge()                         pci_enable_bridge()
+     pci_is_enabled()
+       return false;
+     atomic_inc_return(enable_cnt)
+     Start actual enabling the bridge
+     ...                                         pci_is_enabled()
+     ...                                           return true;
+     ...                                     Start memory requests <-- FAIL
+     ...
+     Set the PCI_COMMAND_MEMORY bit <-- Must wait for this
+
+Protect the pci_enable_bridge(), similarly to the previous solution from
+commit 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges"),
+but adding per-device mutexes.
+
+To prevent false positives from the lockdep, use a lock_nested() with a
+"depth" of a bridge within the PCI topology.
+
+CC: Srinath Mannam <srinath.mannam@broadcom.com>
+CC: Marta Rybczynska <mrybczyn@kalray.eu>
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
----
- drivers/pci/setup-bus.c | 53 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 52 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2ce636937c6e..bc342eaa98e8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1520,6 +1520,56 @@ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- 	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
- 	 IORESOURCE_MEM_64)
+[1] https://lore.kernel.org/linux-pci/1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com/T/#u
+    [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
+
+[2] https://lore.kernel.org/linux-pci/744877924.5841545.1521630049567.JavaMail.zimbra@kalray.eu/T/#u
+    [RFC PATCH] nvme: avoid race-conditions when enabling devices
+---
+ drivers/pci/pci.c   | 16 ++++++++++++++++
+ drivers/pci/probe.c |  1 +
+ include/linux/pci.h |  1 +
+ 3 files changed, 18 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b9fecc25d213..076b908127fe 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1844,11 +1844,25 @@ int pci_reenable_device(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_reenable_device);
  
-+/*
-+ * Similar to generic release_child_resources(), but aware of fixed BARs and the
-+ * STARTALIGN flag.
-+ */
-+static void pci_release_child_resources(struct pci_bus *bus, struct resource *r)
++#ifdef CONFIG_PROVE_LOCKING
++static int pci_bridge_depth(struct pci_dev *dev)
 +{
-+	struct pci_dev *dev;
++	struct pci_dev *bridge = pci_upstream_bridge(dev);
 +
-+	if (!pci_can_move_bars)
-+		return release_child_resources(r);
++	if (!bridge)
++		return 0;
 +
-+	if (!bus || !r)
-+		return;
-+
-+	r->child = NULL;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		int i;
-+
-+		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+			struct resource *tmp = &dev->resource[i];
-+			resource_size_t size = resource_size(tmp);
-+
-+			if (!tmp->flags || !tmp->parent)
-+				continue;
-+
-+			tmp->parent = NULL;
-+			tmp->sibling = NULL;
-+
-+			pci_release_child_resources(dev->subordinate, tmp);
-+
-+			tmp->flags &= ~IORESOURCE_STARTALIGN;
-+			tmp->flags |= IORESOURCE_SIZEALIGN;
-+
-+			if (pci_dev_bar_fixed(dev, tmp)) {
-+				pci_dbg(dev, "release fixed BAR %d %pR (%s), keep its flags, base and size\n",
-+					i, tmp, tmp->name);
-+				continue;
-+			}
-+
-+			pci_dbg(dev, "release BAR %d %pR (%s)\n", i, tmp, tmp->name);
-+
-+			if (i >= PCI_BRIDGE_RESOURCES)
-+				tmp->flags = 0;
-+			tmp->start = 0;
-+			tmp->end = size - 1;
-+		}
-+	}
++	return 1 + pci_bridge_depth(bridge);
 +}
++#endif /* CONFIG_PROVE_LOCKING */
 +
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					 unsigned long type)
+ static void pci_enable_bridge(struct pci_dev *dev)
  {
-@@ -1560,7 +1610,8 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		return;
+ 	struct pci_dev *bridge;
+ 	int retval;
  
- 	/* If there are children, release them all */
--	release_child_resources(r);
-+	pci_release_child_resources(bus, r);
++	mutex_lock_nested(&dev->enable_mutex, pci_bridge_depth(dev));
 +
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		pci_info(dev, "resource %d %pR released\n",
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+@@ -1856,6 +1870,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (pci_is_enabled(dev)) {
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
++		mutex_unlock(&dev->enable_mutex);
+ 		return;
+ 	}
+ 
+@@ -1864,6 +1879,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		pci_err(dev, "Error enabling bridge (%d), continuing\n",
+ 			retval);
+ 	pci_set_master(dev);
++	mutex_unlock(&dev->enable_mutex);
+ }
+ 
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 953f15abc850..2f9631287719 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2240,6 +2240,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 	dev->dev.type = &pci_dev_type;
+ 	dev->bus = pci_bus_get(bus);
++	mutex_init(&dev->enable_mutex);
+ 
+ 	return dev;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b32126d26997..81d54889bd51 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -455,6 +455,7 @@ struct pci_dev {
+ 	unsigned int	no_command_memory:1;	/* No PCI_COMMAND_MEMORY */
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
++	struct mutex	enable_mutex;
+ 
+ 	u32		saved_config_space[16]; /* Config space saved at suspend time */
+ 	struct hlist_head saved_cap_space;
 -- 
 2.24.1
 
