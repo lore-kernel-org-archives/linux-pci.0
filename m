@@ -2,126 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B2C4C2BBD5
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 122B1C3526B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 22:51:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F32F323B54
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEA3423B98
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 22:51:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731636AbgLRRnS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Dec 2020 12:43:18 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:38598 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727967AbgLRRnS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:43:18 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 20805413D6;
-        Fri, 18 Dec 2020 17:41:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1608313293; x=1610127694; bh=6+JB6ailJ7ODm11KjGiL514scFTPER5Q1H2
-        hndZUQfI=; b=iQlj6ZsUib11ooJwdmi6JN5wyEpC/wJR6tuFeZrHsAOU99eyz+4
-        c2bN9IuhhwM2zqu4DsZzKmit2U/h09oF8nGAQzJn5iw1sFCfmxqSRAeNJ1hoNlEc
-        o+L4sVtGd7LKztZmIh85G58sYKvxuY0aLHl3O+XAsL4igc7cMR1foRgg=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id scIF4c0UVia7; Fri, 18 Dec 2020 20:41:33 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 3586741396;
-        Fri, 18 Dec 2020 20:41:11 +0300 (MSK)
-Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
- (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
- Dec 2020 20:41:10 +0300
-From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-To:     <linux-pci@vger.kernel.org>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Stefan Roese <sr@denx.de>, Andy Lavr <andy.lavr@gmail.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        David Laight <David.Laight@ACULAB.COM>,
-        Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v9 25/26] PCI: Add a message for updating BARs
-Date:   Fri, 18 Dec 2020 20:40:10 +0300
-Message-ID: <20201218174011.340514-26-s.miroshnichenko@yadro.com>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
-References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.17.15.136]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-03.corp.yadro.com (172.17.100.103)
+        id S1726209AbgLRWva (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Dec 2020 17:51:30 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:52252 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725880AbgLRWv1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2020 17:51:27 -0500
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20201218225043epoutp01b0ede7438de370b4d8c50f82c2b1a6a3~R8UpuKL000591505915epoutp01T
+        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2020 22:50:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20201218225043epoutp01b0ede7438de370b4d8c50f82c2b1a6a3~R8UpuKL000591505915epoutp01T
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1608331843;
+        bh=qmJ6MBsH2JlVTRk0oWIBvfavnlcYbg8BSsz4vkManxU=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=OFsbGKIOohHt3WPTazQexfw+Qm/zYiia2yGwcLIQUCYO5GUCG9ycnfutbLu7Y9gBS
+         4zJeOZpC+8n5+6+rdaZx22eLv6gWp7HHosDFNPWGysjxLCgiP1LQ0TUMKGTaQXa7ey
+         vi4ew3R3/FHOv8ewh3FJv6i41Sied30EBaZshxwM=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20201218225042epcas5p4de74e4f1d0d64ff06f330eb322c83faf~R8UonJfzi2377123771epcas5p4-;
+        Fri, 18 Dec 2020 22:50:42 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8D.D1.33964.2423DDF5; Sat, 19 Dec 2020 07:50:42 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20201218153422epcas5p42f09cbf8e40b3d68e3c037256e54d97c~R2XqHAEXd0338803388epcas5p41;
+        Fri, 18 Dec 2020 15:34:22 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20201218153422epsmtrp218f4b169215282c1a6400f93f3c4fa6b~R2XqGUJPS0358503585epsmtrp2b;
+        Fri, 18 Dec 2020 15:34:22 +0000 (GMT)
+X-AuditID: b6c32a4b-ea1ff700000184ac-ce-5fdd3242564c
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B6.7F.08745.DFBCCDF5; Sat, 19 Dec 2020 00:34:22 +0900 (KST)
+Received: from ubuntu.sa.corp.samsungelectronics.net (unknown
+        [107.108.83.125]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20201218153420epsmtip2af3d10892d030863cd035a092a86b5f8~R2XomA0270089100891epsmtip2Y;
+        Fri, 18 Dec 2020 15:34:20 +0000 (GMT)
+From:   Shradha Todi <shradha.t@samsung.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com,
+        pankaj.dubey@samsung.com, Shradha Todi <shradha.t@samsung.com>
+Subject: [PATCH] PCI: dwc: Change size to u64 for EP outbound iATU
+Date:   Fri, 18 Dec 2020 21:04:08 +0530
+Message-Id: <1608305648-31816-1-git-send-email-shradha.t@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFIsWRmVeSWpSXmKPExsWy7bCmpq6T0d14g643GhZLmjIsdt3tYLdY
+        8WUmu8XlXXPYLM7OO85m8eb3C3aLRVu/sFv837OD3aL3cK0Dp8eaeWsYPXbOusvusWBTqcem
+        VZ1sHn1bVjF6bNn/mdHj8ya5APYoLpuU1JzMstQifbsEroyVK9sZC/7yVPyY+IW5gfEeVxcj
+        J4eEgInEpWuf2bsYuTiEBHYzSiw+uJARwvnEKLG7bQsLhPOZUeLplkuMMC3Lj96HatnFKHHi
+        5D82CKeFSeLG6j1MIFVsAloSjV+7mEFsEQFricPtW8CKmAX2MEr8WHQfrEhYwEni0YNbYGNZ
+        BFQlvl37zAZi8wq4Sjzt3cUGsU5O4ua5TmaQZgmBY+wSR569ZIJIuEj8Of6aFcIWlnh1fAs7
+        hC0l8fndXqjmfImpF54CPcEBZFdILO+pgwjbSxy4MgcszCygKbF+lz5EWFZi6ql1YNOZBfgk
+        en8/gdrEK7FjHoytLPHl7x4WCFtSYt6xy1AXeEisugFxspBArETnrSOsExhlZyFsWMDIuIpR
+        MrWgODc9tdi0wDgvtVyvODG3uDQvXS85P3cTIzg5aHnvYHz04IPeIUYmDsZDjBIczEoivKEP
+        bscL8aYkVlalFuXHF5XmpBYfYpTmYFES51X6cSZOSCA9sSQ1OzW1ILUIJsvEwSnVwGTFf9vJ
+        bUdIQX+/5I4PkbEJPlpZf1luKpg8FzxjzP5r9oIuMR42ZTkp4WKNqauY5/zdfshKYrvWl2sa
+        V/KLy2qnJqY9P2S22HL97L+KS/fff1jy55yxvxnbUk3h/jatsNTTVZFiMa6zbWetXLdwYtGp
+        /m93RTqiC1+XdnWbaV5WzbXrFKyWfzKjoXbRzIWlGe78ylG/3x+2u2mu+JnZV6H31PRK3+rm
+        K2kMEj1NN9US/7zyZJZ0Zlsc1LpSsrndz3J2VtqvfVdZCrXDL380WtP29M0a/RfbGF1rLSMq
+        vv/g/fakfWfAmZMH1glum+l54aSPS9yjzwK7twlMnVlU8n0v37WdL959Fdnl6rLnkBJLcUai
+        oRZzUXEiAOwK/wp9AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprALMWRmVeSWpSXmKPExsWy7bCSvO6/03fiDZ40Mlssacqw2HW3g91i
+        xZeZ7BaXd81hszg77zibxZvfL9gtFm39wm7xf88Odovew7UOnB5r5q1h9Ng56y67x4JNpR6b
+        VnWyefRtWcXosWX/Z0aPz5vkAtijuGxSUnMyy1KL9O0SuDJWrmxnLPjLU/Fj4hfmBsZ7XF2M
+        nBwSAiYSy4/eZwexhQR2MEpMn24EEZeU+HxxHROELSyx8t9zoBouoJomJomnd5vBEmwCWhKN
+        X7uYQWwRAVuJ+48ms4IUMQscYZToeXCXDSQhLOAk8ejBLUYQm0VAVeLbtc9gcV4BV4mnvbvY
+        IDbISdw818k8gZFnASPDKkbJ1ILi3PTcYsMCo7zUcr3ixNzi0rx0veT83E2M4EDT0trBuGfV
+        B71DjEwcjIcYJTiYlUR4Qx/cjhfiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2
+        ampBahFMlomDU6qBaf2uc6f5DyRGlq1Zw9wjPOP6pg+/vlkYeKzcdItZlHEphw/PHHeTaiWN
+        VRsqZLT8r60R2H8mS8FOO3Lig94ZJXcDClONU/xC8hV1eKOmRohs4DSX9i1hqAxvXnIwJ37Z
+        +6cN96LDGt9kCHOc15pj8iwlYQJv85TwQ7vmVfhxPQxe1V9p+K3viq/HpqJTTfse2f791Ob4
+        SzvtS9fquDfhbetbdd9ImClySli96Fn5gVFXs/tOL7NOQ/qXub/27DV58GVS6b2C6y8++cWq
+        LIkTKGOLfLfxS1qP8V6dD1Zps5qzbvB8N1uU8W7yvcYZeRmXfjDXF3TqxmQ8n5qYElL89cWK
+        01FeK/xeP5v8w/qBEktxRqKhFnNRcSIAO7Vu2KMCAAA=
+X-CMS-MailID: 20201218153422epcas5p42f09cbf8e40b3d68e3c037256e54d97c
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20201218153422epcas5p42f09cbf8e40b3d68e3c037256e54d97c
+References: <CGME20201218153422epcas5p42f09cbf8e40b3d68e3c037256e54d97c@epcas5p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new debug message for changing a BAR value of a device:
+Since outbound iATU permits size to be greater than
+4GB for which the support is also available, allow
+EP function to send u64 size instead of truncating
+to u32.
 
-[    1.851161] pci 0003:0a:00.1: BAR 0 updated: 0x60200c2000000 -> 0x6020142000000
-
-Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+Signed-off-by: Shradha Todi <shradha.t@samsung.com>
 ---
- drivers/pci/setup-res.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+ drivers/pci/controller/dwc/pcie-designware.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 83a491f6a2c2..5fed21aed9b8 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -27,7 +27,8 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	struct pci_bus_region region;
- 	bool disable;
- 	u16 cmd;
--	u32 new, check, mask;
-+	u32 new, check, mask, old;
-+	u64 old_start;
- 	int reg;
- 	struct resource *res = dev->resource + resno;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 7eba3b2..6298212 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -325,7 +325,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
  
-@@ -96,6 +97,9 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 				      cmd & ~PCI_COMMAND_MEMORY);
- 	}
- 
-+	pci_read_config_dword(dev, reg, &old);
-+	old_start = old & mask;
-+
- 	pci_write_config_dword(dev, reg, new);
- 	pci_read_config_dword(dev, reg, &check);
- 
-@@ -105,6 +109,9 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	}
- 
- 	if (res->flags & IORESOURCE_MEM_64) {
-+		pci_read_config_dword(dev, reg + 4, &old);
-+		old_start |= (u64)old << 32;
-+
- 		new = region.start >> 16 >> 16;
- 		pci_write_config_dword(dev, reg + 4, new);
- 		pci_read_config_dword(dev, reg + 4, &check);
-@@ -116,6 +123,11 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 
- 	if (disable)
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+
-+	if (old_start != region.start)
-+		pci_info(dev, "BAR %d updated: %#llx -> %#llx\n", resno,
-+			 (unsigned long long)old_start,
-+			 (unsigned long long)region.start);
- }
- 
- void pci_update_resource(struct pci_dev *dev, int resno)
+ void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+ 				  int type, u64 cpu_addr, u64 pci_addr,
+-				  u32 size)
++				  u64 size)
+ {
+ 	__dw_pcie_prog_outbound_atu(pci, func_no, index, type,
+ 				    cpu_addr, pci_addr, size);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 28b72fb..bb33f28 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -307,7 +307,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+ 			       u64 size);
+ void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+ 				  int type, u64 cpu_addr, u64 pci_addr,
+-				  u32 size);
++				  u64 size);
+ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+ 			     int bar, u64 cpu_addr,
+ 			     enum dw_pcie_as_type as_type);
 -- 
-2.24.1
+2.7.4
 
