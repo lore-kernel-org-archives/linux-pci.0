@@ -2,186 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C1AC3526B
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B58FFC4361B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A065523B76
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75DB423B75
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:42:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729999AbgLRRcR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Dec 2020 12:32:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37076 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727787AbgLRRcR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:32:17 -0500
-X-Gm-Message-State: AOAM530eYzdjIS03DeU23l1QN0UavYealEGwaEVsaREi6cWhayzQadiG
-        Qq/APuihaVTN2/VnS0yyYq4Xtr6Ws7wgbfp7Mg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608312696;
-        bh=BGGQyU71jC8PHb+t5FSRSX4kcxy5gG40URfePe8J9nU=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=cC9AQytUFvAovKozDhlHSzCa40u9b51UDDu9DY6VQsEs2qwlTb7/eZ+duGTl5G1MJ
-         ltk1VO2sg5dTfQ9/rD8rASKJc+I7GyP3U29GCpmR4vNcsvQhuTGV9xRWhbP9HVb3Cr
-         GHcvUq6DPgtaiTnrm90fWn6uZTlOzXGvAz3ugrDpPpOwC9zbdWaT0hryRuRTgrwTal
-         8RHDiRRFV4faBB8B+E/aBqM+Qyr+AtKu47VmmKqT+pQW+ygXcKYgIsnYFKtt1PlFsj
-         2kRsozrN5SM3jDENsG6+VwteAIt6IsjRhBdaQHFUKX3GBUBFmwd3KMIUCI0udLN/Mh
-         Rfjes/c6AAKKA==
-X-Google-Smtp-Source: ABdhPJx+/RIAdMo/5KCMW4U0Xhm+Ecu8VxfrvTtPK9bsliEAA6f3bzT1/rBR+63O/WV/mn7yv7B+sDblEkk6WewuJ5I=
-X-Received: by 2002:a17:906:d87:: with SMTP id m7mr5100609eji.108.1608312694596;
- Fri, 18 Dec 2020 09:31:34 -0800 (PST)
+        id S1728303AbgLRRlv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Dec 2020 12:41:51 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:37900 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728147AbgLRRlu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Dec 2020 12:41:50 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 6F806413CD;
+        Fri, 18 Dec 2020 17:41:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :references:in-reply-to:x-mailer:message-id:date:date:subject
+        :subject:from:from:received:received:received; s=mta-01; t=
+        1608313268; x=1610127669; bh=W7zcvbVJmLFtBKGNQFYRu7td+56m3Kd/9dF
+        l39M0Org=; b=iLUSPGXzahlGftaQ5771vVhjXgoB4UwPfqCxggAclgyA7P17OZb
+        lTfsYmNUvb9g9gBnf/BFLw1BJ1lWyP1ntYvOHmbq9XgV1sRopRlyZVGHbigYyvKu
+        rDDYDKUftOANmaNIDwxyD9TP79bhDfmrRwXiaWOdsQLITRJNzV+HHgT0=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id RBAXJFHrNrA4; Fri, 18 Dec 2020 20:41:08 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 73C7E412E1;
+        Fri, 18 Dec 2020 20:41:07 +0300 (MSK)
+Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
+ (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
+ Dec 2020 20:41:05 +0300
+From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+To:     <linux-pci@vger.kernel.org>
+CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Stefan Roese <sr@denx.de>, Andy Lavr <andy.lavr@gmail.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        David Laight <David.Laight@ACULAB.COM>,
+        Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
+        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH v9 02/26] PCI: Ensure a bridge has I/O and MEM access for hot-added devices
+Date:   Fri, 18 Dec 2020 20:39:47 +0300
+Message-ID: <20201218174011.340514-3-s.miroshnichenko@yadro.com>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
+References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
 MIME-Version: 1.0
-References: <20201215070009.27937-1-kishon@ti.com> <CAL_JsqJzi7JkMcd4NZewA=w8q6BsCkrhW3JcED63R=EyE3v29Q@mail.gmail.com>
- <1ec78477-dadc-cbef-406f-568f44b6c62d@ti.com> <CAL_JsqLepmopGObX_r+7gtR+keaNtEAA3WA1j697T4jAWP8DHA@mail.gmail.com>
- <96ca64cb-ec3a-bb83-2de3-775034ba844b@ti.com>
-In-Reply-To: <96ca64cb-ec3a-bb83-2de3-775034ba844b@ti.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Fri, 18 Dec 2020 11:31:22 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+fP4CcxVm89YkUYDK9eX2j8Yac97nMCLnxGnMakopc7g@mail.gmail.com>
-Message-ID: <CAL_Jsq+fP4CcxVm89YkUYDK9eX2j8Yac97nMCLnxGnMakopc7g@mail.gmail.com>
-Subject: Re: [PATCH v5] PCI: cadence: Retrain Link to work around Gen2
- training defect.
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Tom Joseph <tjoseph@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Nadeem Athani <nadeem@cadence.com>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Milind Parab <mparab@cadence.com>,
-        Swapnil Kashinath Jakhade <sjakhade@cadence.com>,
-        Parshuram Raju Thombare <pthombar@cadence.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.17.15.136]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-03.corp.yadro.com (172.17.100.103)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Dec 18, 2020 at 8:42 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
-> Hi Rob,
->
-> On 16/12/20 10:31 pm, Rob Herring wrote:
-> > On Wed, Dec 16, 2020 at 9:01 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> >>
-> >> Hi Rob,
-> >>
-> >> On 15/12/20 9:23 pm, Rob Herring wrote:
-> >>> On Tue, Dec 15, 2020 at 1:00 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> >>>>
-> >>>> From: Nadeem Athani <nadeem@cadence.com>
-> >>>>
-> >>>> Cadence controller will not initiate autonomous speed change if strapped as
-> >>>> Gen2. The Retrain Link bit is set as quirk to enable this speed change.
-> >>>>
-> >>>> Signed-off-by: Nadeem Athani <nadeem@cadence.com>
-> >>>> [kishon@ti.com: Enable the workaround for TI's J721E SoC]
-> >>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> >>>> ---
-> >>>> Hi Lorenzo,
-> >>>> The previous version of the patch can be found at [1].
-> >>>> I slightly re-worked the patch from Nadeem
-> >>>> *) Removed additional Link Up Check
-> >>>> *) Removed quirk from pcie-cadence-plat.c
-> >>>> *) Also removed additional compatible
-> >>>>    "cdns,cdns-pcie-host-quirk-retrain" added in that series
-> >>>> *) Enabled the quirk for J721E
-> >>>> [1] -> http://lore.kernel.org/r/20201211144236.3825-1-nadeem@cadence.com
-> >>>>
-> >>>>  drivers/pci/controller/cadence/pci-j721e.c    |  3 +
-> >>>>  .../controller/cadence/pcie-cadence-host.c    | 67 ++++++++++++++-----
-> >>>>  drivers/pci/controller/cadence/pcie-cadence.h | 11 ++-
-> >>>>  3 files changed, 62 insertions(+), 19 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-> >>>> index dac1ac8a7615..baf729850cb1 100644
-> >>>> --- a/drivers/pci/controller/cadence/pci-j721e.c
-> >>>> +++ b/drivers/pci/controller/cadence/pci-j721e.c
-> >>>> @@ -64,6 +64,7 @@ enum j721e_pcie_mode {
-> >>>>
-> >>>>  struct j721e_pcie_data {
-> >>>>         enum j721e_pcie_mode    mode;
-> >>>> +       bool                    quirk_retrain_flag;
-> >>>>  };
-> >>>>
-> >>>>  static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
-> >>>> @@ -280,6 +281,7 @@ static struct pci_ops cdns_ti_pcie_host_ops = {
-> >>>>
-> >>>>  static const struct j721e_pcie_data j721e_pcie_rc_data = {
-> >>>>         .mode = PCI_MODE_RC,
-> >>>> +       .quirk_retrain_flag = true,
-> >>>>  };
-> >>>>
-> >>>>  static const struct j721e_pcie_data j721e_pcie_ep_data = {
-> >>>> @@ -388,6 +390,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
-> >>>>
-> >>>>                 bridge->ops = &cdns_ti_pcie_host_ops;
-> >>>>                 rc = pci_host_bridge_priv(bridge);
-> >>>> +               rc->quirk_retrain_flag = data->quirk_retrain_flag;
-> >>>>
-> >>>>                 cdns_pcie = &rc->pcie;
-> >>>>                 cdns_pcie->dev = dev;
-> >>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-> >>>> index 811c1cb2e8de..773c0d1137ed 100644
-> >>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-> >>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-> >>>> @@ -77,6 +77,50 @@ static struct pci_ops cdns_pcie_host_ops = {
-> >>>>         .write          = pci_generic_config_write,
-> >>>>  };
-> >>>>
-> >>>> +static int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie)
-> >>>> +{
-> >>>> +       struct device *dev = pcie->dev;
-> >>>> +       int retries;
-> >>>> +
-> >>>> +       /* Check if the link is up or not */
-> >>>> +       for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-> >>>> +               if (cdns_pcie_link_up(pcie)) {
-> >>>> +                       dev_info(dev, "Link up\n");
-> >>>> +                       return 0;
-> >>>> +               }
-> >>>> +               usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-> >>>> +       }
-> >>>> +
-> >>>> +       return -ETIMEDOUT;
-> >>>> +}
-> >>>> +
-> >>>> +static void cdns_pcie_retrain(struct cdns_pcie *pcie)
-> >>>> +{
-> >>>> +       u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-> >>>> +       u16 lnk_stat, lnk_ctl;
-> >>>> +
-> >>>> +       /*
-> >>>> +        * Set retrain bit if current speed is 2.5 GB/s,
-> >>>> +        * but the PCIe root port support is > 2.5 GB/s.
-> >>>
-> >>> If you don't have the retrain quirk, wouldn't this condition never
-> >>> happen and then the function is just a nop? So this could just be
-> >>> called unconditionally.
-> >>
-> >> Yeah, but only for the quirk we have to retrain to go to GEN2 speed
-> >> mode. Else the HW will automatically retrain and go to GEN2.
-> >
-> > Again, so you don't need a flag for this. Comparing the speed is
-> > enough. IOW, all you need is:
-> >
-> > if (current speed < advertised speed)
-> >   do retrain
-> >
-> > The question is the condition ever true and you don't want to do a
-> > retrain? I could see higher speeds being unstable or something, but
->
-> For all GEN1 cards there will be re-train (since the Cadence IP RC is
-> GEN2 or more say). This is going to be true for older Cadence IPs and
-> newer Cadence IPs (where Cadence has enabled HW re-training).
->
-> The quirk will prevent SW re-training for newer Cadence IPs when a GEN1
-> card is connected.
+During hot-adding a device, its bridge may be already pci_is_enabled(), but
+without the I/O and/or MEM access bits, which may be required by this new
+device: these bits are set during first enabling the bridge, and they must
+be checked again.
 
-Okay, got it.
+When hot-adding to the following bridge:
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+  +-[0020:00]---00.0-[01-0d]----00.0-[02-0d]----04.0-[03-0d]--   <-   00.0
+
+this patch sets up the MEM bit in the downstream port 0020:02:04.0, needed
+for 0020:08:00.0:
+
+  [ 1037.698206] pci 0020:00:00.0: PCI bridge to [bus 01-0d]
+  [ 1037.698785] pci 0020:00:00.0:   bridge window [mem 0x3fe800000000-0x3fe8017fffff]
+  [ 1037.698874] pci 0020:00:00.0:   bridge window [mem 0x240000000000-0x2400ffffffff 64bit pref]
+  [ 1037.699002] pcieport 0020:02:04.0: enabling device (0545 -> 0547)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  [ 1037.699114] pcieport 0020:03:00.0: enabling device (0540 -> 0542)
+  [ 1037.699198] pciehp 0020:04:09.0:pcie204: Slot #41 AttnBtn+ PwrCtrl+ MRL- AttnInd+ PwrInd+ HotPlug+ Surprise- Interlock- NoCompl- LLActRep+
+  [ 1037.699285] pciehp 0020:04:09.0:pcie204: Slot(41): Card present
+  [ 1037.699346] pciehp 0020:04:09.0:pcie204: Slot(41): Already enabled
+
+Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+---
+ drivers/pci/pci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 076b908127fe..b7bbc462a0b3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1868,6 +1868,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		pci_enable_bridge(bridge);
+ 
+ 	if (pci_is_enabled(dev)) {
++		retval = pci_reenable_device(dev);
++		if (retval)
++			pci_err(dev, "Error reenabling bridge, continuing\n");
++
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
+ 		mutex_unlock(&dev->enable_mutex);
+-- 
+2.24.1
+
