@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA9C5C3526C
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C2D4C4361B
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92C9923B54
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1922723B54
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 17:43:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729999AbgLRRnQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1730270AbgLRRnQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 18 Dec 2020 12:43:16 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:38594 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:38596 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728303AbgLRRnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Dec 2020 12:43:15 -0500
+        id S1727967AbgLRRnQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Dec 2020 12:43:16 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 1DEFF413C6;
-        Fri, 18 Dec 2020 17:41:31 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 7409C413D5;
+        Fri, 18 Dec 2020 17:41:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1608313286; x=1610127687; bh=q1nRneZFbxTjerthzgu+a2DaENJ6zgP/ikt
-        PPRLbAr0=; b=KrhnxaIu7jZR0kOoT0/LrAz+0SRbiDQhEqg0er38zt9JFtdQbi5
-        A5b+mwz90cQk/jgsAP6g/30x18zndsbYPIp13VzagmmIyWDZ6YyyjtBuY9pW2Iz+
-        VQLbeG0xx5KXeat2pwlB6m/d/PIahcKBKZJ/M1ZCHhyCvYf99OALr8pM=
+        1608313292; x=1610127693; bh=cLgLn4rXA1xiaAB3ENuZEne5ERVt5u32Jus
+        mMyXwWHM=; b=fWEezA475dRWxuKNqbIf1tW5G5lCL3v3YDTS0Qhv27i6xC9Me21
+        K/0cwxljMltO4inYY1SvxrENm+7iNii2kmawyz3zqOWMoAcNITOQ72okdt6rd1Ut
+        k4jLEgONfLP/KoUk2SX4CGzXGdBf0xIDssIiJZ+08F8Gp/pip7u5gt/g=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id iEx8a77-hEw5; Fri, 18 Dec 2020 20:41:26 +0300 (MSK)
+        with ESMTP id 7Rbb2F7mdMFZ; Fri, 18 Dec 2020 20:41:32 +0300 (MSK)
 Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 016A7413D8;
+        by mta-01.yadro.com (Postfix) with ESMTPS id EB213413E0;
         Fri, 18 Dec 2020 20:41:10 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-03.corp.yadro.com
  (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 18
- Dec 2020 20:41:09 +0300
+ Dec 2020 20:41:10 +0300
 From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
@@ -50,10 +50,11 @@ CC:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
         David Laight <David.Laight@ACULAB.COM>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v9 20/26] PCI: hotplug: Retry bus assignment without reserved space
-Date:   Fri, 18 Dec 2020 20:40:05 +0300
-Message-ID: <20201218174011.340514-21-s.miroshnichenko@yadro.com>
+        Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
+        <linux-nvme@lists.infradead.org>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v9 24/26] nvme-pci: Handle movable BARs
+Date:   Fri, 18 Dec 2020 20:40:09 +0300
+Message-ID: <20201218174011.340514-25-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
 References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
@@ -67,108 +68,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A hot-added bridge with many hotplug-capable ports may request reserving
-more IO space than the machine has. This could be overridden with the
-"hpiosize=" kernel argument though.
+Hot-added devices can affect the existing ones by moving their BARs. The
+PCI subsystem will inform the NVME driver about this by invoking the
+.rescan_prepare() and .rescan_done() hooks, so the BARs can by re-mapped.
 
-But when BARs are movable, no need to reserve space anymore: new BARs are
-allocated not from reserved gaps, but via rearranging the existing BARs.
-Requesting a precise amount of space for bridge windows increases the
-chances of adding the new bridge successfully.
+Tested under the "randrw" mode of the fio tool, and when using an NVME
+drive as a root filesystem storage. Before the hot-adding:
 
-Still, fixed BARs may interfere with an allocation, preventing it from
-happening. So it makes sense to reserve some space when it is possible, so
-movable BARs can be moved a bit more effectively later.
+  % sudo cat /proc/iomem
+  ...
+                3fe800000000-3fe8007fffff : PCI Bus 0020:0b
+                  3fe800000000-3fe8007fffff : PCI Bus 0020:18
+                    3fe800000000-3fe8000fffff : 0020:18:00.0
+                      3fe800000000-3fe8000fffff : nvme
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+                    3fe800100000-3fe80017ffff : 0020:18:00.0
+  ...
 
-If a BAR allocation fails with additional bridge size, retry without them.
+Then another NVME drive was hot-added, so BARs of the 0020:18:00.0 are
+moved:
 
+  % sudo cat /proc/iomem
+    ...
+                3fe800000000-3fe800ffffff : PCI Bus 0020:0b
+                  3fe800000000-3fe8007fffff : PCI Bus 0020:10
+                    3fe800000000-3fe800003fff : 0020:10:00.0
+                      3fe800000000-3fe800003fff : nvme
+                    3fe800010000-3fe80001ffff : 0020:10:00.0
+                  3fe800800000-3fe800ffffff : PCI Bus 0020:18
+                    3fe800800000-3fe8008fffff : 0020:18:00.0
+                      3fe800800000-3fe8008fffff : nvme
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+                    3fe800900000-3fe80097ffff : 0020:18:00.0
+    ...
+
+During the rescanning, both READ and WRITE speeds drop to zero for a while
+due to driver's pause, then restore.
+
+Cc: linux-nvme@lists.infradead.org
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.h       | 1 +
- drivers/pci/probe.c     | 9 +++++++++
- drivers/pci/setup-bus.c | 9 +++++++--
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/nvme/host/pci.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f7460ddd196a..685284c57a28 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -207,6 +207,7 @@ extern unsigned long pci_hotplug_io_size;
- extern unsigned long pci_hotplug_mmio_size;
- extern unsigned long pci_hotplug_mmio_pref_size;
- extern unsigned long pci_hotplug_bus_size;
-+extern bool pci_hotplug_expand;
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index b4385cb0ff60..7993062b11b6 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1656,7 +1656,7 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
  
- /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b8873ee82a4b..24793766b4b7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -41,6 +41,7 @@ EXPORT_SYMBOL(pci_root_buses);
-  * were assigned before the rescan.
-  */
- static bool pci_try_failed_bars = true;
-+bool pci_hotplug_expand = true;
- bool pci_init_done;
- 
- static LIST_HEAD(pci_domain_busn_res_list);
-@@ -3542,6 +3543,13 @@ static void pci_reassign_root_bus_resources(struct pci_bus *root)
- 		if (pci_bus_check_bars_assigned(root, pci_try_failed_bars))
- 			break;
- 
-+		if (pci_hotplug_expand) {
-+			dev_warn(&root->dev, "failed to assign all BARs, retry without additional window size\n");
-+
-+			pci_hotplug_expand = false;
-+			continue;
-+		}
-+
- 		if (pci_try_failed_bars) {
- 			dev_warn(&root->dev, "failed to assign all BARs, retry without those failed before\n");
- 
-@@ -3564,6 +3572,7 @@ static void pci_reassign_root_bus_resources(struct pci_bus *root)
- 	} while (true);
- 
- 	pci_try_failed_bars = true;
-+	pci_hotplug_expand = true;
+-	if (size <= dev->bar_mapped_size)
++	if (dev->bar && size <= dev->bar_mapped_size)
+ 		return 0;
+ 	if (size > pci_resource_len(pdev, 0))
+ 		return -ENOMEM;
+@@ -3152,6 +3152,28 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	flush_work(&dev->ctrl.reset_work);
  }
  
- /**
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f98772474421..4b37815a9fcf 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1058,6 +1058,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	resource_size_t children_add_size = 0;
- 	resource_size_t children_add_align = 0;
- 	resource_size_t add_align = 0;
-+	bool size0_can_add = pci_can_move_bars && !realloc_head;
- 	int idx;
- 	struct resource *fixed_range;
- 	resource_size_t fixed_size;
-@@ -1141,7 +1142,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0, 0, resource_size(b_res), min_align);
-+	size0 = calculate_memsize(size, min_size,
-+				  size0_can_add ? add_size : 0,
-+				  size0_can_add ? children_add_size : 0,
-+				  resource_size(b_res), min_align);
++static bool nvme_bar_fixed(struct pci_dev *pdev, int resno)
++{
++	return false;
++}
 +
- 	add_align = max(min_align, add_align);
- 	size1 = (!realloc_head || (realloc_head && !add_size && !children_add_size)) ? size0 :
- 		calculate_memsize(size, min_size, add_size, children_add_size,
-@@ -1316,7 +1321,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
++static void nvme_rescan_prepare(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	nvme_dev_disable(dev, true);
++	nvme_dev_unmap(dev);
++	dev->bar = NULL;
++}
++
++static void nvme_rescan_done(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	nvme_dev_map(dev);
++	nvme_reset_ctrl(&dev->ctrl);
++}
++
+ static const struct pci_error_handlers nvme_err_handler = {
+ 	.error_detected	= nvme_error_detected,
+ 	.slot_reset	= nvme_slot_reset,
+@@ -3238,6 +3260,9 @@ static struct pci_driver nvme_driver = {
+ #endif
+ 	.sriov_configure = pci_sriov_configure_simple,
+ 	.err_handler	= &nvme_err_handler,
++	.rescan_prepare	= nvme_rescan_prepare,
++	.rescan_done	= nvme_rescan_done,
++	.bar_fixed	= nvme_bar_fixed,
+ };
  
- 	case PCI_HEADER_TYPE_BRIDGE:
- 		pci_bridge_check_ranges(bus);
--		if (bus->self->is_hotplug_bridge) {
-+		if (bus->self->is_hotplug_bridge && pci_hotplug_expand) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mmio_size = pci_hotplug_mmio_size;
- 			additional_mmio_pref_size = pci_hotplug_mmio_pref_size;
+ static int __init nvme_init(void)
 -- 
 2.24.1
 
