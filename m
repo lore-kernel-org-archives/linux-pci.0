@@ -2,149 +2,151 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C4BC2D0E4
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 22:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D79C4361B
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Dec 2020 00:28:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3E5623B99
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Dec 2020 22:51:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A83623B99
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Dec 2020 00:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726244AbgLRWvl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Dec 2020 17:51:41 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:27384 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725880AbgLRWvk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2020 17:51:40 -0500
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20201218225058epoutp020f2a434fb0be040aea753660ac5aa0c7~R8U3ERaSE3229732297epoutp02x
-        for <linux-pci@vger.kernel.org>; Fri, 18 Dec 2020 22:50:58 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20201218225058epoutp020f2a434fb0be040aea753660ac5aa0c7~R8U3ERaSE3229732297epoutp02x
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1608331858;
-        bh=Z2NFqj8VfHHzdtjUbgSEQIilQ+fIwqpC7aWCnUGTR2g=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=FQ2BdZmaClWsZG5XIV2kbR5+0zSn6PrSVZRoc2KnOtmX1K3BKvGbCftk5HihBUcsh
-         z3PeIH4O3LBxnM+wukxZxpnnVJOeAZVQlTQexYi4VgncaQKc+FytYOrZ+7z//Tm4n/
-         1Y4j+IoWhTr+8hkkXYedJHvbPAq3YrC4l4FiKAyQ=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20201218225057epcas5p4f495fd8fe622e1dbeb9cfab70bd3233f~R8U2VnzOw0934509345epcas5p4s;
-        Fri, 18 Dec 2020 22:50:57 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C1.E1.33964.1523DDF5; Sat, 19 Dec 2020 07:50:57 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20201218154704epcas5p1446559adbd4a5b267a4c940b5f744970~R2ivw4tl20804008040epcas5p1r;
-        Fri, 18 Dec 2020 15:47:04 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20201218154704epsmtrp17777a88462abe3c39565ad1005f6c9ba~R2ivwE9EO1669016690epsmtrp1M;
-        Fri, 18 Dec 2020 15:47:04 +0000 (GMT)
-X-AuditID: b6c32a4b-ea1ff700000184ac-e0-5fdd32514028
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        EF.83.13470.8FECCDF5; Sat, 19 Dec 2020 00:47:04 +0900 (KST)
-Received: from ubuntu.sa.corp.samsungelectronics.net (unknown
-        [107.108.83.125]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20201218154702epsmtip1d520d154f76a28cbaf8a63578d78876a~R2iuiKap72025720257epsmtip1Y;
-        Fri, 18 Dec 2020 15:47:02 +0000 (GMT)
-From:   Shradha Todi <shradha.t@samsung.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     kishon@ti.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        pankaj.dubey@samsung.com, Shradha Todi <shradha.t@samsung.com>,
-        Sriram Dash <sriram.dash@samsung.com>
-Subject: [PATCH v2] PCI: endpoint: Fix NULL pointer dereference for
- ->get_features()
-Date:   Fri, 18 Dec 2020 21:15:16 +0530
-Message-Id: <1608306316-32096-1-git-send-email-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrJIsWRmVeSWpSXmKPExsWy7bCmum6g0d14g4a1EhZLmjIsLjztYbO4
-        vGsOm8XZecfZLN78fsFusWjrF3aL3sO1FjfWsztweKyZt4bRY8GmUo++LasYPY7f2M7k8XmT
-        XABrFJdNSmpOZllqkb5dAlfGkjVf2Aou81b8vjuNqYHxJXcXIyeHhICJRMvxL6xdjFwcQgK7
-        GSXm3f/CBuF8YpT4sewQC0iVkMA3Rokvh41gOppn3WOBKNrLKHH7+CuojhYmifWzHjGBVLEJ
-        aEk0fu1iBrFFBKwlDrdvAStiFljDKLFq6SqwhLBAmMSqCwfYQWwWAVWJ/zN72EBsXgFXiYPz
-        D7FBrJOTuHmukxmkWUJgE7vEtiXbWSASLhJ7Nt5mhrCFJV4d38IOYUtJvOxvg7LzJaZeeApU
-        zwFkV0gs76mDCNtLHLgyByzMLKApsX6XPkRYVmLqqXVg9zML8En0/n7CBBHnldgxD8ZWlvjy
-        dw/UBZIS845dZoWwPSTOtm9lgoRWrMTG/xMYJzDKzkLYsICRcRWjZGpBcW56arFpgXFearle
-        cWJucWleul5yfu4mRnDsa3nvYHz04IPeIUYmDsZDjBIczEoivKEPbscL8aYkVlalFuXHF5Xm
-        pBYfYpTmYFES51X6cSZOSCA9sSQ1OzW1ILUIJsvEwSnVwHSnZdOjmc4ntxZN/iCWdsno8Y6D
-        e8I8w5T667uiNhQoWgT93+/74LHdY+4rPKH9SZICPP+rZA59CS+o+i7+7P7jjczNMySKOLeJ
-        vLvux7Rbw4lj1owQ3ubE4JAVu7atWCZ2OUbqz2ujpKzUhal88aZWmuu+7uP2OiAzLcCmi3mn
-        RtrlGt/Z1b5Wv10PtKhZfDgmX+vZJR5o6/KQiSnk65drng42Plx/L95yljW5f0Xm4qv7/gwW
-        F9xnH764RvnYzopV75vco39Kt7ExbdFnbb7K8njrc5V/v7ZPF1eatEhz6RnBF06rn/u+E1nu
-        dombK8Ug2ang6tMf+owKv4L+3Qh8HJOdkXhcqCtd7L6dpBJLcUaioRZzUXEiALdJnt9sAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpkluLIzCtJLcpLzFFi42LZdlhJTvfHuTvxBj+62CyWNGVYXHjaw2Zx
-        edccNouz846zWbz5/YLdYtHWL+wWvYdrLW6sZ3fg8Fgzbw2jx4JNpR59W1Yxehy/sZ3J4/Mm
-        uQDWKC6blNSczLLUIn27BK6MJWu+sBVc5q34fXcaUwPjS+4uRk4OCQETieZZ91i6GLk4hAR2
-        M0r0np7DCpGQlPh8cR0ThC0ssfLfc3aIoiYmiemNi5hBEmwCWhKNX7vAbBEBW4n7jyazghQx
-        C2xilHh6uYsNJCEsECKx59RBsKksAqoS/2f2gMV5BVwlDs4/xAaxQU7i5rlO5gmMPAsYGVYx
-        SqYWFOem5xYbFhjmpZbrFSfmFpfmpesl5+duYgSHkpbmDsbtqz7oHWJk4mA8xCjBwawkwhv6
-        4Ha8EG9KYmVValF+fFFpTmrxIUZpDhYlcd4LXSfjhQTSE0tSs1NTC1KLYLJMHJxSDUzGH3Zc
-        POYR5rpJ4/SejmnhP2+n6m3q95Dd+yVlYfvtWhatFi+ZkHXJiQ8yUmfvl5O11WE26K05dLZN
-        +LtcAVfftoy2U5xR+wI/pT76pWgR9NFo0jZbpl9HL/37eVw+wf/yvpM+B5LZA64bRjz0n5N4
-        6nlD7Yo1m7MEKquezNm/R3UD3/un9zolrthtSNA/kPPt97SPVXnip0Ml2D694T998/SJXCbJ
-        WNnXj07P7ln3oTWjq7cqVGZbUfl+D23lrmdFFjpv5z4r0u9k6FFd0DG/M7duZqZS9b38Mm3N
-        D5o1zRyVa1/u3vPs++zzeq+lTsVc0y4ontbwS0v/tdKRK/s+VPsfaqqdv7Xdq+q35WElluKM
-        REMt5qLiRAA8rxwrlAIAAA==
-X-CMS-MailID: 20201218154704epcas5p1446559adbd4a5b267a4c940b5f744970
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20201218154704epcas5p1446559adbd4a5b267a4c940b5f744970
-References: <CGME20201218154704epcas5p1446559adbd4a5b267a4c940b5f744970@epcas5p1.samsung.com>
+        id S1726173AbgLSA2C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Dec 2020 19:28:02 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53494 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725939AbgLSA2B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Dec 2020 19:28:01 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0BJ0OqMf019161;
+        Fri, 18 Dec 2020 16:27:17 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=ImY7P1oS1VczfP/s/GTB6zDSm8fFai9bAiH3SN5S3qY=;
+ b=PzJsljh8xTSZzvonqRYGU/63ru9A3sCWLe3jB09G3M7un4PoHedi+JexeYYGqO2QLEEB
+ 3DFUyvuKVts/lbLbpz+3RSn2Y/4z1VA0QIXEq9EBwrCHnlqG4lslPoz5L5EmnpurEm14
+ d9WFNZbwNrwn7BpEB3ph2gQLJwUvX4loJgJU4Mvrp8iU9PLO7rSpikWkDRUKZBh9tS+T
+ iiNXviSZG6G0rm+hCm8XyvGMVKRHf1oxBYnQcOE48goMV7b+8X5ewt839FJrCO4FkMxR
+ myPtOALq3LnMfZeHqJCNXNf4RHnxFkY2eccJON+DuOHyPGaGE73RldagP1o6lMmlQWcm lw== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 35gq80jakk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 18 Dec 2020 16:27:17 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 18 Dec
+ 2020 16:27:15 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 18 Dec 2020 16:27:16 -0800
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id D2CBF3F7041;
+        Fri, 18 Dec 2020 16:27:15 -0800 (PST)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 0BJ0RFNe010588;
+        Fri, 18 Dec 2020 16:27:15 -0800
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Fri, 18 Dec 2020 16:27:15 -0800
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "Girish Basrur" <GBasrur@marvell.com>,
+        Quinn Tran <qutran@marvell.com>
+Subject: Re: [EXT] Re: VPD blacklist of Marvell QLogic 1077/2261
+In-Reply-To: <20201217174821.GA9644@bjorn-Precision-5520>
+Message-ID: <alpine.LRH.2.21.9999.2012181625140.28924@irv1user01.caveonetworks.com>
+References: <20201217174821.GA9644@bjorn-Precision-5520>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2020-12-18_14:2020-12-18,2020-12-18 signatures=0
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-get_features ops of pci_epc_ops may return NULL, causing NULL pointer
-dereference in pci_epf_test_bind function. Let us add a check for
-pci_epc_feature pointer in pci_epf_test_bind before we access it to
-avoid any such NULL pointer dereference and return -ENOTSUPP in case
-pci_epc_feature is not found.
+On Thu, 17 Dec 2020, 9:48am, Bjorn Helgaas wrote:
 
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Signed-off-by: Sriram Dash <sriram.dash@samsung.com>
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
-v2:
- rebase on v1
- v1: https://lore.kernel.org/patchwork/patch/1208269/
+> ----------------------------------------------------------------------
+> On Wed, Dec 16, 2020 at 04:44:47PM -0800, Arun Easi wrote:
+> > Hi Bjorn,
+> > 
+> > This is regarding the blacklisting of one of the Marvell QLogic FC
+> > adapter (1077/2261) on VPD area access. The commit that did was
+> > this:
+> > 
+> > --8<-- pruned commit message --8<--
+> > | commit 0d5370d1d85251e5893ab7c90a429464de2e140b
+> > | Author: Ethan Zhao <ethan.zhao@oracle.com>
+> > | Date:   Mon Feb 27 17:08:44 2017 +0900
+> > | 
+> > |     PCI: Prevent VPD access for QLogic ISP2722
+> > |     Call Trace:
+> > |      <NMI>  [<ffffffff817193de>] dump_stack+0x63/0x81
+> > |      [<ffffffff81714072>] panic+0xd0/0x20e
+> > |      [<ffffffff8101c8b4>] do_nmi+0xf4/0x170
+> > |      <<EOE>>  [<ffffffff815db4b3>] raw_pci_read+0x23/0x40
+> > |      [<ffffffff815db4fc>] pci_read+0x2c/0x30
+> > |      [<ffffffff8136f612>] pci_user_read_config_word+0x72/0x110
+> > |      [<ffffffff8136f746>] pci_vpd_pci22_wait+0x96/0x130
+> > |      [<ffffffff8136ff9b>] pci_vpd_pci22_read+0xdb/0x1a0
+> > |      [<ffffffff8136ea30>] pci_read_vpd+0x20/0x30
+> > 
+> > 
+> > https://urldefense.proofpoint.com/v2/url?u=https-3A__git.kernel.org_pub_scm_linux_kernel_git_torvalds_linux.git_commit_-3Fid-3D0d5370d1d85251e5893ab7c90a429464de2e140b&d=DwIBAg&c=nKjWec2b6R0mOyPaz7xtfQ&r=P-q_Qkt75qFy33SvdD2nAxAyN87eO1d-mFO-lqNOomw&m=ELM92cQ6_T7TDXwxkSNKe9OLqFeqz7taCSqUM65T0s0&s=FIa8kmuzs8pePhWEFklKpu49_i72T5mJMZgLp1QrEg0&e= 
+> > 
+> > While investigating the original report of the issue, I found an
+> > interesting information that may explain why Ethan Zhao was
+> > hitting the NMI/crash.
+> > 
+> > If you notice the stack referred in the commit, you could see that
+> > a bunch of old vpd access functions, pci_vpd_pci22*, were referred.
+> > When these functions were in use (these functions were renamed
+> > around 2016 Feb by f1cd93f9aabe), there was a critical VPD
+> > access bug missing; missing in fact most of the life of those
+> > functions.
+> > 
+> > This one:
+> >     104daa71b396: PCI: Determine actual VPD size on first access
+> > 
+> > Without this patch, a read of the vpd sysfs file can access area
+> > outside of VPD space, which is not allowed by the spec.
+> > 
+> > My guess here is that, Ethan, when trying to access VPD of the QLogic
+> > 1077/2261 adapter, was using a kernel that had the bug present and
+> > it led up to the NMI/crash he was observing on his machine.
+> > 
+> > We had an early firmware that returned CA on VPD access beyond
+> > bounds that is known to NMI some servers. The FW has since changed to
+> > not clear the VPD flag upon out-of-bound access.
+> > 
+> > In light of the above, plus the fact that I did try the
+> > experiment on multiple setups and was not able to reproduce the
+> > issue, would you be willing to revert the above patch? If so, I
+> > could send a git revert (or equivalent) patch of the commit.
+> > 
+> > This blacklisting is preventing multiple customers from accessing
+> > the VPD area of the said production adapter and making their life
+> > a bit difficult.
+> > 
+> > Regards,
+> > -Arun
+> > 
+> > Old discussion of the topic:
+> >     https://urldefense.proofpoint.com/v2/url?u=https-3A__lkml.org_lkml_2019_5_21_991&d=DwIBAg&c=nKjWec2b6R0mOyPaz7xtfQ&r=P-q_Qkt75qFy33SvdD2nAxAyN87eO1d-mFO-lqNOomw&m=ELM92cQ6_T7TDXwxkSNKe9OLqFeqz7taCSqUM65T0s0&s=1vnPz2Y-ziZnOVBFLuc9QupJeVDdtUUJTMJrNknSe7o&e= 
+> 
+> It makes sense to revert 0d5370d1d852 ("PCI: Prevent VPD access for
+> QLogic ISP2722") as long as the resulting kernel works correctly on
+> all versions of the 2722 firmware.  We have to assume some customers
+> still have the old firmware on their adapters.
+> 
+> Bjorn
+> 
 
- drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+Thanks Bjorn. I'll post the patch with a stable cc of v4.6+, which has the 
+VPD size check available.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 66723d5..f1842e6 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -835,13 +835,16 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 		return -EINVAL;
- 
- 	epc_features = pci_epc_get_features(epc, epf->func_no);
--	if (epc_features) {
--		linkup_notifier = epc_features->linkup_notifier;
--		core_init_notifier = epc_features->core_init_notifier;
--		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
--		pci_epf_configure_bar(epf, epc_features);
-+	if (!epc_features) {
-+		dev_err(&epf->dev, "epc_features not implemented\n");
-+		return -EOPNOTSUPP;
- 	}
- 
-+	linkup_notifier = epc_features->linkup_notifier;
-+	core_init_notifier = epc_features->core_init_notifier;
-+	test_reg_bar = pci_epc_get_first_free_bar(epc_features);
-+	pci_epf_configure_bar(epf, epc_features);
-+
- 	epf_test->test_reg_bar = test_reg_bar;
- 	epf_test->epc_features = epc_features;
- 
--- 
-2.7.4
-
+Regards,
+-Arun
