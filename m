@@ -2,101 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61992C433E9
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 10:02:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C48FFC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 16:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 131AA230FC
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 10:02:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8135922CA1
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 16:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726221AbgLUKCX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Dec 2020 05:02:23 -0500
-Received: from foss.arm.com ([217.140.110.172]:48292 "EHLO foss.arm.com"
+        id S1725883AbgLUQH3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Dec 2020 11:07:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725854AbgLUKCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Dec 2020 05:02:23 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 01EE91FB;
-        Mon, 21 Dec 2020 02:01:37 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 01B2A3F718;
-        Mon, 21 Dec 2020 02:01:35 -0800 (PST)
-Date:   Mon, 21 Dec 2020 10:01:29 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: Always allocate MSI addresses in 32bit space
-Message-ID: <20201221100129.GA15846@e121166-lin.cambridge.arm.com>
-References: <20201016120431.7062-1-marek.vasut@gmail.com>
- <20201210181133.GA3766@e121166-lin.cambridge.arm.com>
- <83135f6f-8a98-4537-0df5-91a06af07955@gmail.com>
- <20201214160829.GA3623@e121166-lin.cambridge.arm.com>
- <d7279eff-2129-f58c-baed-aa805f26429d@gmail.com>
+        id S1725777AbgLUQH3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Dec 2020 11:07:29 -0500
+X-Gm-Message-State: AOAM532JhukNF2wFfQjyw2lIFW8Edpju8iI2N9UH47mmSMZi4rNhBrHO
+        LVVPTzjZKwM5Bi0B8EG3bhfJYgEDFeUJGHfkVg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1608566808;
+        bh=bt012kUB8DBMRxTaaQcKv/3tMYUHD4Nw6aawgMmHUko=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=TnxfTS8U0vqfogcSANriPHtm51UD673sYV6CkOKq4hcl3Ksevxgp0ygieebJY4/If
+         pNzt10zLjAXXOEEUCjupemId2CTpCEoJSYKAg6MdwO8v0Znu4CRgcEtZ9cF29aMkuD
+         CoUBU5n63wd2whhukNyY6zp4/TyCRGhgE/Y069+ayHHbIBNqSOyB9mlMGebdIsci05
+         VPa3oaZ79xskWusXM6tK4JUBqZ+DNuMd1u2QamJKqBKaCqIB6NTqih1OQjkMAppYDp
+         AEWGiNSXxVYpVulFgbrlzJL6OLqJHcCrQb55LsJFkD1HmvHvIXZxD4BuyPMbdUDc5W
+         9uwKEx/9nsZeA==
+X-Google-Smtp-Source: ABdhPJxnNNNtEFi3KK3l8ixLB/cEKyNoL8+FsKA7VfV5dCYFytLwMhwqHe1WNExSWS+FKn5YOdQBT5XJ8ckRGB6IDYg=
+X-Received: by 2002:a05:6402:1841:: with SMTP id v1mr16788882edy.194.1608566806574;
+ Mon, 21 Dec 2020 08:06:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d7279eff-2129-f58c-baed-aa805f26429d@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+References: <CGME20201218153043epcas5p1831d9bc440e9e05609792f19dfeb4012@epcas5p1.samsung.com>
+ <1608305434-31685-1-git-send-email-shradha.t@samsung.com>
+In-Reply-To: <1608305434-31685-1-git-send-email-shradha.t@samsung.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 21 Dec 2020 09:06:33 -0700
+X-Gmail-Original-Message-ID: <CAL_JsqKdzu8EgY-pqxH+ZyDh3ALJGccqgPuj=cc==SGbMvYZJw@mail.gmail.com>
+Message-ID: <CAL_JsqKdzu8EgY-pqxH+ZyDh3ALJGccqgPuj=cc==SGbMvYZJw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: dwc: Add upper limit address for outbound iATU
+To:     Shradha Todi <shradha.t@samsung.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Pankaj Dubey <pankaj.dubey@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Dec 16, 2020 at 06:49:54PM +0100, Marek Vasut wrote:
-> On 12/14/20 5:08 PM, Lorenzo Pieralisi wrote:
-> > On Sat, Dec 12, 2020 at 08:13:54PM +0100, Marek Vasut wrote:
-> > > On 12/10/20 7:11 PM, Lorenzo Pieralisi wrote:
-> > > 
-> > > [...]
-> > > 
-> > > > > diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-> > > > > index 1194d5f3341b..ac5c7d7573a6 100644
-> > > > > --- a/drivers/pci/controller/pcie-rcar-host.c
-> > > > > +++ b/drivers/pci/controller/pcie-rcar-host.c
-> > > > > @@ -753,7 +753,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie_host *host)
-> > > > >    	}
-> > > > >    	/* setup MSI data target */
-> > > > > -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> > > > > +	msi->pages = __get_free_pages(GFP_KERNEL | GFP_DMA32, 0);
-> > > > 
-> > > > This does not do what you want on !CONFIG_ZONE_DMA32 (ie arm LPAE).
-> > > 
-> > > How come? I would expect GFP_DMA32 allocates a buffer below 4 GiB in any
-> > > case.
-> > 
-> > For ARM LPAE allocation falls back to ZONE_NORMAL that happens to work
-> > because if there is memory > 4GB it ends up in ZONE_HIGHMEM, so this
-> > patch should still work on ARM LPAE too.
-> > 
-> > Regardless, thoughts above the alternative approach (that saves you
-> > a page allocation) ?
-> 
-> Since this is a bugfix, I would prefer it to be minimal.
+On Sun, Dec 20, 2020 at 6:56 PM Shradha Todi <shradha.t@samsung.com> wrote:
+>
+> The size parameter is unsigned long type which can accept
+> size > 4GB. In that case, the upper limit address must be
+> programmed. Add support to program the upper limit
+> address and set INCREASE_REGION_SIZE in case size > 4GB.
 
-Yes, I agree with you on that.
+Not all DWC h/w versions have the upper register and bit. Is it safe
+to write to the non-existent register?
 
-> Also, in case there was some yet undiscovered hardware bug which would
-> let the MSI write through, having unused memory as the MSI destination
-> address would only lead to write into that memory -- instead of a
-> write into some other address.
-> 
-> Changing this to some hard-coded address (any suggestions?) can be a
-> subsequent patch.
+>
+> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
+>  drivers/pci/controller/dwc/pcie-designware.h | 1 +
+>  2 files changed, 7 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 28c56a1..7eba3b2 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -290,12 +290,16 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+>                            upper_32_bits(cpu_addr));
+>         dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
+>                            lower_32_bits(cpu_addr + size - 1));
+> +       dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_LIMIT,
+> +                          upper_32_bits(cpu_addr + size - 1));
 
-The idea was taking the address from the host controller inbound window
-(ie an address outside the dma-ranges ~(dma-ranges) and < 4GB), it
-should not matter which one. I agree though that this can be a
-subsequent patch even though usually we send for -rc* only fixes for
-patches that hit the previous merge window - this seems a quite
-longstanding (I traced it back to v3.16) one so it would wait till
-v5.12, there is time to refactor it.
+If not safe, perhaps only write if non-zero.
 
-Thanks,
-Lorenzo
+>         dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
+>                            lower_32_bits(pci_addr));
+>         dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
+>                            upper_32_bits(pci_addr));
+> -       dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
+> -                          PCIE_ATU_FUNC_NUM(func_no));
+> +       val = type | PCIE_ATU_FUNC_NUM(func_no);
+> +       val = upper_32_bits(size - 1) ?
+> +               val | PCIE_ATU_INCREASE_REGION_SIZE : val;
+> +       dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
+>         dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
+>
+>         /*
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index b09329b..28b72fb 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -106,6 +106,7 @@
+>  #define PCIE_ATU_DEV(x)                        FIELD_PREP(GENMASK(23, 19), x)
+>  #define PCIE_ATU_FUNC(x)               FIELD_PREP(GENMASK(18, 16), x)
+>  #define PCIE_ATU_UPPER_TARGET          0x91C
+> +#define PCIE_ATU_UPPER_LIMIT           0x924
+>
+>  #define PCIE_MISC_CONTROL_1_OFF                0x8BC
+>  #define PCIE_DBI_RO_WR_EN              BIT(0)
+> --
+> 2.7.4
+>
