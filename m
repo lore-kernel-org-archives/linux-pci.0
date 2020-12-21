@@ -2,122 +2,112 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FFD7C433DB
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 17:57:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6F8C433E9
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 18:22:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B29A22B51
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 17:57:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11E9222D08
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 18:22:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725818AbgLUR5b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Dec 2020 12:57:31 -0500
-Received: from mail-ua1-f50.google.com ([209.85.222.50]:35414 "EHLO
-        mail-ua1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725782AbgLUR5a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2020 12:57:30 -0500
-Received: by mail-ua1-f50.google.com with SMTP id y21so3567688uag.2;
-        Mon, 21 Dec 2020 09:57:14 -0800 (PST)
+        id S1726112AbgLUSWB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Dec 2020 13:22:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51528 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726057AbgLUSWB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2020 13:22:01 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9833C0613D6;
+        Mon, 21 Dec 2020 10:21:20 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id s26so25880887lfc.8;
+        Mon, 21 Dec 2020 10:21:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sWyYMYoogTI0qEcPT7ewbmd4Di2kxWT27aivbJmhx28=;
+        b=c8IRniwyiglKPVZFlpYSUzsKnpyYHZUumx0BgM9yzOuWuh/xrwae2gFez/R6GkI4T2
+         Gk2dN+mCH5LKqsnlmg53XF6BKZTCYvssMmXchhIb2I1pWNWhuMMU32wxNZkI56NRLR8n
+         rN185Qyp+QL7SFnNV1zfBvGedZq5jjF0pbxRYx+TCd5bGdr3H9guwM1EdVS7GeiZhDwL
+         vUj2GwTwqAj242pHOCeS3LoVckq0l8MnXm73bPMIWTWsAqlUQTyl9QuQnG0pDMBMX/Op
+         I0m+SX7i/ABxCA1L2er3Kr1vKQvKnFqqiV0tt5ufh/7onCwGkoDn6IMt74Yoc0EFhH54
+         UiFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=MrAF3XcfgmbCY17OqyOzfLrhkI98KCYJDR2DMtLfdY8=;
-        b=FARL21fepaGwlqbh/znW1t6ArcgYhrw+vNSqHVaHhhpo12JPUl6ZgqPMfJovTSkS1V
-         YRZweEnvWbfysQwqaJaBhUsQEruNg/YIqjIhXc3ko4T+y0czYl5jzOJ0hfQuExluwubW
-         ncZ6DYd09EWUET9T3FIkl/QhY4G0cYZFKyskfQSkx89JirSj9SgbDXzbVqai1OrdbHN5
-         Xe2JVYjhVNrUsL9I/dfxDq+notIe/d88ifeo8V9/PS0lryRGl0WG2+36t7UI37NJBTcd
-         K2fNFt9wjRTM0c5zBAlOhUOeVofj1wiW0PBJy/pHaYbyYuJcAPmiScGJYqU7t13G7+He
-         dk6g==
-X-Gm-Message-State: AOAM532NMv9GRv9x+BOjE8Qe3nBdYdq2SRZDOfTRFTP2h2hHfY6lv4TU
-        1KxGhCON57ztne31MZvtGgHg0WxijSaBHElZADc=
-X-Google-Smtp-Source: ABdhPJzVdL7B8bTZxy+rQMk6er8L4T5ie68H4w9L1UEygB7FM35lOkrdx7hEzcfKNr2eDQb6J0Pb9eQgDYeA07DY5rA=
-X-Received: by 2002:ab0:1e4a:: with SMTP id n10mr13442742uak.98.1608573409390;
- Mon, 21 Dec 2020 09:56:49 -0800 (PST)
+        bh=sWyYMYoogTI0qEcPT7ewbmd4Di2kxWT27aivbJmhx28=;
+        b=jQ5J9NzILOP2ruarW/u2dJ5duPvTvmKxugyuwH9Xz1I5BM+cKDX7hNTQDxHh38fSyB
+         2la7paFUWki2/nDt8J1ln05Uv6lByeFfnyVORDukI3onWAUU0mGb6zAjKYGGpJK+M8IT
+         A44+WkOMMWGcuPFNepuYjvU8HDp8gmg7SKVPiUucOJYq14AUCVE+zdOy8TtlnHfrMbb1
+         J2nHkBigxJripd1lI2xo9cKpHe6WkHfOMJC8Vuva9iskBJFgRmKNUOV8n8GKPnRDnVG2
+         S1V6rB2RRiA9NWWW22OHntCsu3KEMEmeINyExKQwQ3Fmd4V+wo4qwcZ2w4eNS4yMHfp1
+         RoJw==
+X-Gm-Message-State: AOAM533jgeMPe+brDq2E6YBcJKSOf60RpOJRzZsE5xSalTb1pZRptOC0
+        DmrAXIpOt+CzirK1GS7IUvM6Oi7Ev3mQwbeimWkqJoqbEaI=
+X-Google-Smtp-Source: ABdhPJxU8ZS9Uqf73qEiCIFLa3Wey/Dnx2XDW3bpW4IPhdA/deXrAGBCmmPpxsiN47g/sORvF4vuVoBnwSS1EL7P3wE=
+X-Received: by 2002:a17:906:6c8b:: with SMTP id s11mr15761117ejr.187.1608564530691;
+ Mon, 21 Dec 2020 07:28:50 -0800 (PST)
 MIME-Version: 1.0
-References: <20201214060621.1102931-1-kai.heng.feng@canonical.com>
- <20201216124726.2842197-1-kai.heng.feng@canonical.com> <s5h5z51oj12.wl-tiwai@suse.de>
- <CAAd53p6kORC1GsW5zt+=0=J5ki43iriO-OqtFvf5W67LWhyyhA@mail.gmail.com>
- <s5hzh2dn3oa.wl-tiwai@suse.de> <CAAd53p6Ef2zFX_t3y1c6O7BmHnxYGtGSfgzXAMQSom1ainWXzg@mail.gmail.com>
- <s5hsg85n2km.wl-tiwai@suse.de> <s5hmtydn0yg.wl-tiwai@suse.de>
- <CAAd53p6MMFh=HCNF9pyrJc9hVMZWFe7_8MvBcBHVWARqHU_TTA@mail.gmail.com>
- <s5h7dpfk06y.wl-tiwai@suse.de> <CAAd53p53w0H6tsb4JgQtFTkYinniicTYBs2uk7tc=heP2dM_Cw@mail.gmail.com>
-In-Reply-To: <CAAd53p53w0H6tsb4JgQtFTkYinniicTYBs2uk7tc=heP2dM_Cw@mail.gmail.com>
-From:   Ilia Mirkin <imirkin@alum.mit.edu>
-Date:   Mon, 21 Dec 2020 12:56:38 -0500
-Message-ID: <CAKb7UvjWX7xbwMKtnad5EVy16nY1M-A13YJeRWyUwHzemcVswA@mail.gmail.com>
-Subject: Re: [Nouveau] [PATCH v2] ALSA: hda: Continue to probe when codec
- probe fails
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     Takashi Iwai <tiwai@suse.de>,
-        "moderated list:SOUND" <alsa-devel@alsa-project.org>,
-        Kai Vehmanen <kai.vehmanen@linux.intel.com>,
-        nouveau <nouveau@lists.freedesktop.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
-        tiwai@suse.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Mike Rapoport <rppt@kernel.org>
+References: <20201004162908.3216898-1-martin.blumenstingl@googlemail.com>
+ <20201004162908.3216898-4-martin.blumenstingl@googlemail.com>
+ <CACRpkdZo-U_cAhbKb4E+d+p+5FenXkGYW0RXxyk4M5uyEPCpzw@mail.gmail.com> <CAFBinCCLubmDvxfabQHx2-ucgAsm1NArMUrtPx-UA2nX5xoFFA@mail.gmail.com>
+In-Reply-To: <CAFBinCCLubmDvxfabQHx2-ucgAsm1NArMUrtPx-UA2nX5xoFFA@mail.gmail.com>
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date:   Mon, 21 Dec 2020 16:28:39 +0100
+Message-ID: <CAFBinCAZXJ2=fTQuAUyW1hNeJDHY3_pxo4UhxUaOZC=i1bpFxw@mail.gmail.com>
+Subject: Re: [RFC PATCH 3/3] gpio: ej1x8: Add GPIO driver for Etron Tech Inc. EJ168/EJ188/EJ198
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     linux-usb <linux-usb@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 21, 2020 at 11:33 AM Kai-Heng Feng
-<kai.heng.feng@canonical.com> wrote:
->
-> [+Cc nouveau]
->
-> On Fri, Dec 18, 2020 at 4:06 PM Takashi Iwai <tiwai@suse.de> wrote:
-> [snip]
-> > > Quite possibly the system doesn't power up HDA controller when there's
-> > > no external monitor.
-> > > So when it's connected to external monitor, it's still needed for HDMI audio.
-> > > Let me ask the user to confirm this.
-> >
-> > Yeah, it's the basic question whether the HD-audio is supposed to work
-> > on this machine at all.  If yes, the current approach we take makes
-> > less sense - instead we should rather make the HD-audio controller
-> > working.
->
-> Yea, confirmed that the Nvidia HDA works when HDMI is connected prior boot.
->
-> > > > - The second problem is that pci_enable_device() ignores the error
-> > > >   returned from pci_set_power_state() if it's -EIO.  And the
-> > > >   inaccessible access error returns -EIO, although it's rather a fatal
-> > > >   problem.  So the driver believes as the PCI device gets enabled
-> > > >   properly.
-> > >
-> > > This was introduced in 2005, by Alan's 11f3859b1e85 ("[PATCH] PCI: Fix
-> > > regression in pci_enable_device_bars") to fix UHCI controller.
-> > >
-> > > >
-> > > > - The third problem is that HD-audio driver blindly believes the
-> > > >   codec_mask read from the register even if it's a read failure as I
-> > > >   already showed.
-> > >
-> > > This approach has least regression risk.
-> >
-> > Yes, but it assumes that HD-audio is really non-existent.
->
-> I really don't know any good approach to address this.
-> On Windows, HDA PCI is "hidden" until HDMI cable is plugged, then the
-> driver will flag the magic bit to make HDA audio appear on the PCI
-> bus.
-> IIRC the current approach is to make nouveau and device link work.
+Hi Linus,
 
-I don't have the full context of this discussion, but the kernel
-force-enables the HDA subfunction nowadays, irrespective of nouveau or
-nvidia or whatever:
+On Wed, Oct 7, 2020 at 9:44 PM Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+[...]
+> > As noted on the earlier patches I think this should be folded into the
+> > existing XHCI USB driver in drivers/usb/host/xhci-pci.c or, if that
+> > gets messy, as a separate bolt-on, something like
+> > xhci-pci-gpio.[c|h] in the drivers/usb/host/* directory.
+> > You can use a Kconfig symbol for the GPIO portions or not.
+> OK, I will do that if there are no objections from other developers
+> I am intending to place the relevant code in xhci-pci-etron.c, similar
+> to what we already have with xhci-pci-renesas.c
+I tried this and unfortunately there's a catch.
+the nice thing about having a separate GPIO driver means that the
+xhci-pci driver doesn't need to know about it.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/quirks.c?h=v5.10#n5267
+I implemented xhci-pci-etron.c and gave it a Kconfig option.
+xhci-pci is then calling into xhci-pci-etron (through some
+etron_xhci_pci_probe function).
+unfortunately this means that xhci-pci now depends on xhci-pci-etron.
+for xhci-pci-renesas this is fine (I think) because that part of the
+code is needed to get the xHCI controller going
+but for xhci-pci-etron this is a different story: the GPIO controller
+is entirely optional and only used on few devices
 
-Cheers,
+my goal is (at some point in the future) to have the GPIO driver in OpenWrt.
+I am not sure if they would accept a patch where xhci-pci would then
+pull in the dependencies for that Etron controller, even though most
+boards don't need it.
 
-  -ilia
+Please let me know if you have any idea on how to solve this.
+
+
+Best regards,
+Martin
