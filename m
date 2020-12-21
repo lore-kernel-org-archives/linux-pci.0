@@ -2,152 +2,338 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B93C433E6
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 01:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C504C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 05:08:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A5EA22D74
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 01:57:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEF1C22CB2
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Dec 2020 05:08:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726597AbgLUB5B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 20 Dec 2020 20:57:01 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:34990 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726550AbgLUB5B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Dec 2020 20:57:01 -0500
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20201221015617epoutp02bf040ac041ba02a68faccdc3902ae520~SmJPHw_S52285822858epoutp02z
-        for <linux-pci@vger.kernel.org>; Mon, 21 Dec 2020 01:56:17 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20201221015617epoutp02bf040ac041ba02a68faccdc3902ae520~SmJPHw_S52285822858epoutp02z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1608515777;
-        bh=HHY714gpTNqhRK+2ne6SAdB/8zhLKmusVu9UemBgfOQ=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=ckRdPMZUitaIRHl6HajLEeziN7DQNbrA6+Zxoo8KXnS7Ws8X/klRxxQfDLbBa/QCg
-         ZD1o60uM3NJamgmR0ZVJ4RqeAjdk5FnEquPtr2CQKwbZwLGWwpy5W2hFovfW6JYcqv
-         WpkZqTUAigX2BqAKzqCscuvimzcTWqzchsM/u28Q=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20201221015616epcas5p40e32f02f65249230b9da0d656c9bcaad~SmJOg52kd0316603166epcas5p4e;
-        Mon, 21 Dec 2020 01:56:16 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        02.6F.15682.0C000EF5; Mon, 21 Dec 2020 10:56:16 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20201218153043epcas5p1831d9bc440e9e05609792f19dfeb4012~R2Uey-x_I2069420694epcas5p1Y;
-        Fri, 18 Dec 2020 15:30:43 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20201218153043epsmtrp1222eb8e3f70d9fb3300dea7325daf3ee~R2UeyKmiB0867408674epsmtrp1U;
-        Fri, 18 Dec 2020 15:30:43 +0000 (GMT)
-X-AuditID: b6c32a49-8d5ff70000013d42-7a-5fe000c0e79b
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        18.23.13470.32BCCDF5; Sat, 19 Dec 2020 00:30:43 +0900 (KST)
-Received: from ubuntu.sa.corp.samsungelectronics.net (unknown
-        [107.108.83.125]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20201218153042epsmtip20ee57576c2d407996080862711d6b12e~R2UdYn1o40251902519epsmtip2q;
-        Fri, 18 Dec 2020 15:30:42 +0000 (GMT)
-From:   Shradha Todi <shradha.t@samsung.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com,
-        pankaj.dubey@samsung.com, Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH] PCI: dwc: Add upper limit address for outbound iATU
-Date:   Fri, 18 Dec 2020 21:00:34 +0530
-Message-Id: <1608305434-31685-1-git-send-email-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBIsWRmVeSWpSXmKPExsWy7bCmlu4BhgfxBtf2qFssacqw2HW3g91i
-        xZeZ7BaXd81hszg77zibxZvfL9gtFm39wm7xf88Odovew7UOnB5r5q1h9Ng56y67x4JNpR6b
-        VnWyefRtWcXosWX/Z0aPz5vkAtijuGxSUnMyy1KL9O0SuDIeX/rGUtAiUNHx4h9jA+Mt3i5G
-        Tg4JAROJw32fGbsYuTiEBHYzSpzetI8FJCEk8IlR4v45VojEN0aJ5n1zWGE6NnVNYIdI7GWU
-        WPz/BFRHC5PEiV4XEJtNQEui8WsXM4gtImAtcbh9CxtIA7PAHkaJH4vuM4EkhAVcJJadWAzW
-        zCKgKnGxaReYzSvgKvHyxUpmiG1yEjfPdTKDNEsInGKX2D7rNyNEwkXi0t9Z7BC2sMSr41ug
-        bCmJl/1tUHa+xNQLT4GGcgDZFRLLe+ogwvYSB67MAQszC2hKrN+lDxGWlZh6ah3YacwCfBK9
-        v58wQcR5JXbMg7GVJb783cMCYUtKzDt2GRooHhIzfuyChkOsxPql71kmMMrOQtiwgJFxFaNk
-        akFxbnpqsWmBYV5quV5xYm5xaV66XnJ+7iZGcGLQ8tzBePfBB71DjEwcjIcYJTiYlUR4zaTu
-        xwvxpiRWVqUW5ccXleakFh9ilOZgURLnVfpxJk5IID2xJDU7NbUgtQgmy8TBKdXAtND0+tyu
-        Z852UetPtcduObxg/Z1X99tkD/5LLWCqdqjfsKtqb8H8iw84zxv+ybXMTLS3kREteDw7Sf/n
-        US75a2vTlA4v+73gCf+mKVOuzZBp8+BcVRh7xPTPhAvheen793MvnPFbepdfT7KYlgWDF9+T
-        EKmr5gtKy0Pt18n1X+I89r296OFHsRN/Ak7ELHnl7mmwlP+R/KUntruvy4ce+HTZyGjDuvzl
-        qyQid9+4yxdse/5xutmd69OC7Pqi86dz9ci+rz2adllq+ZF0YW3nE5felvVmRDI6n2hzWMrH
-        EyO9ueeQ8q27AW+e92zK6NGYbvjvvOla47aIwoPfI3++vZC27o1i3q0zclF33oV/yVFiKc5I
-        NNRiLipOBADkgbq+ewMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprILMWRmVeSWpSXmKPExsWy7bCSvK7y6TvxBlf26Fosacqw2HW3g91i
-        xZeZ7BaXd81hszg77zibxZvfL9gtFm39wm7xf88Odovew7UOnB5r5q1h9Ng56y67x4JNpR6b
-        VnWyefRtWcXosWX/Z0aPz5vkAtijuGxSUnMyy1KL9O0SuDIeX/rGUtAiUNHx4h9jA+Mt3i5G
-        Tg4JAROJTV0T2LsYuTiEBHYzSsz7tYAVIiEp8fniOiYIW1hi5b/nUEVNTBK9By4zgyTYBLQk
-        Gr92gdkiArYS9x9NZgUpYhY4wijR8+AuG0hCWMBFYtmJxSwgNouAqsTFpl1gNq+Aq8TLFyuZ
-        ITbISdw818k8gZFnASPDKkbJ1ILi3PTcYsMCw7zUcr3ixNzi0rx0veT83E2M4FDT0tzBuH3V
-        B71DjEwcjIcYJTiYlUR4Qx/cjhfiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2
-        ampBahFMlomDU6qBaYnktpinM8r1nC5dO/16xfe/E+N/fX2ezvzp63F/iy61U98iLItPR0bx
-        tVh4l5UvNd3/4MXPY+nC3VNK9opNiu7fuX53gW7xuc/nIg/zvbcykfqmaGYXpW6Re1L/5Y3F
-        zD+y66ZsfBbJxv1E4OuVd+uFA8XKuBaqxh2wXROlqyn47WLOizrjYy6qhq8e/G55wSKcHJGS
-        Uxpw99J8+Xsr/u7Kl47eYnxjddbuvKyL99/PM1i2xVtMzGbZ6b7cR1Yn//5rX7v66VnmfYvY
-        Z2Tvf+zrdLTQT//RrR8PhOpuJnJPF0+K+af8XZ338NurZzletrXsOLHtd6dElHVFibXPIZu1
-        SazppqGLzy72ylxT8UWJpTgj0VCLuag4EQDNMhWNpAIAAA==
-X-CMS-MailID: 20201218153043epcas5p1831d9bc440e9e05609792f19dfeb4012
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20201218153043epcas5p1831d9bc440e9e05609792f19dfeb4012
-References: <CGME20201218153043epcas5p1831d9bc440e9e05609792f19dfeb4012@epcas5p1.samsung.com>
+        id S1727434AbgLUFHq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Dec 2020 00:07:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40712 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726325AbgLUFHq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Dec 2020 00:07:46 -0500
+Received: from mail-vs1-xe2e.google.com (mail-vs1-xe2e.google.com [IPv6:2607:f8b0:4864:20::e2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C19DC061282
+        for <linux-pci@vger.kernel.org>; Sun, 20 Dec 2020 21:07:06 -0800 (PST)
+Received: by mail-vs1-xe2e.google.com with SMTP id x26so4734149vsq.1
+        for <linux-pci@vger.kernel.org>; Sun, 20 Dec 2020 21:07:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=c2sv3VkK2By/nwrygpkYVYn6xWRD6GwhccQNwKSBn4w=;
+        b=lG0l2N+YGGhJ5oCJ9JR6Pg+HbQ76IrvYULahKaWv4R8NzZPMc70xVFw1uC6D2pNUqs
+         3VTIRjsfE2A1L9rfCR8h9hz12sovUmCiwHhuITtvbB9nqEAXk6qgaQsY8monhGNhiN+l
+         h4DplYe0I1Vbviao54AAS+oWIvnsilSn6wWFQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=c2sv3VkK2By/nwrygpkYVYn6xWRD6GwhccQNwKSBn4w=;
+        b=BeA6I0lq0jvmp3nMGRmTdTWzxvOncIvGdDqgkvv2UHKvUj+tkn223/po6OyhmEwzPU
+         kX9kOjlmxbZB0h0MuOHmyn/c8T+ND2qosPFcU3h4UYEXK+iFstBDw0J2msC9umonw9f2
+         +PhcJimSZZHEj2Dw+e+iAA9jBLsSF7ETwC8e11LQqVr9p4avLdler8LcxVOcvOXccyBT
+         ZG4AQehsJEAdBPQ1rPADqzIRzC8P6IAWWKsXG1ZA0nMbq6jv2DlAeUfmARuuHjgn0Nu3
+         yYPaEvA3ezkpAFuNvVEd2juK/tg0/pJ2uX6YuD0rZorCGM2C8gKB2AEut37QntdVDJNL
+         12jg==
+X-Gm-Message-State: AOAM532VVxkC3O4T5CcAKbtASzE3avfsPdcR9qPa72dhvnW4Inm27anJ
+        adsWXV2CsGYNKAjkhm8Q/uLuKldU0+AjNejbWMsBYU016wJn+g==
+X-Google-Smtp-Source: ABdhPJyIouX3buCUZ98Imsh5w5akAiycF/we7iirOQojEj+Pe8P9M9Aglq/IXG0MUde1d3b37rDVQIfcviqjMwgt26Q=
+X-Received: by 2002:a67:6182:: with SMTP id v124mr11122635vsb.16.1608517105056;
+ Sun, 20 Dec 2020 18:18:25 -0800 (PST)
+MIME-Version: 1.0
+References: <20201202133813.6917-1-jianjun.wang@mediatek.com> <20201202133813.6917-3-jianjun.wang@mediatek.com>
+In-Reply-To: <20201202133813.6917-3-jianjun.wang@mediatek.com>
+From:   Nicolas Boichat <drinkcat@chromium.org>
+Date:   Mon, 21 Dec 2020 10:18:14 +0800
+Message-ID: <CANMq1KCSWf4PDMVhxFiLHOHe3dFqZbq1gzn4ph8aApVMX56MDg@mail.gmail.com>
+Subject: Re: [v5,2/3] PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-pci@vger.kernel.org,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>,
+        Devicetree List <devicetree@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+        Sj Huang <sj.huang@mediatek.com>, youlin.pei@mediatek.com,
+        Chuanjia Liu <chuanjia.liu@mediatek.com>,
+        qizhong.cheng@mediatek.com, sin_jieyang@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The size parameter is unsigned long type which can accept
-size > 4GB. In that case, the upper limit address must be
-programmed. Add support to program the upper limit
-address and set INCREASE_REGION_SIZE in case size > 4GB.
+On Wed, Dec 2, 2020 at 9:39 PM Jianjun Wang <jianjun.wang@mediatek.com> wrote:
+>
+> MediaTek's PCIe host controller has three generation HWs, the new
+> generation HW is an individual bridge, it supports Gen3 speed and
+> up to 256 MSI interrupt numbers for multi-function devices.
+>
+> Add support for new Gen3 controller which can be found on MT8192.
+>
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- drivers/pci/controller/dwc/pcie-designware.c | 8 ++++++--
- drivers/pci/controller/dwc/pcie-designware.h | 1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
+FWIW, I looked at Rob and Bjorn's comments on v4, and they seem to
+have been addressed (with one small nit highlighted below).
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 28c56a1..7eba3b2 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -290,12 +290,16 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 			   upper_32_bits(cpu_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
- 			   lower_32_bits(cpu_addr + size - 1));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_LIMIT,
-+			   upper_32_bits(cpu_addr + size - 1));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
- 			   lower_32_bits(pci_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
- 			   upper_32_bits(pci_addr));
--	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
--			   PCIE_ATU_FUNC_NUM(func_no));
-+	val = type | PCIE_ATU_FUNC_NUM(func_no);
-+	val = upper_32_bits(size - 1) ?
-+		val | PCIE_ATU_INCREASE_REGION_SIZE : val;
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
- 
- 	/*
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index b09329b..28b72fb 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -106,6 +106,7 @@
- #define PCIE_ATU_DEV(x)			FIELD_PREP(GENMASK(23, 19), x)
- #define PCIE_ATU_FUNC(x)		FIELD_PREP(GENMASK(18, 16), x)
- #define PCIE_ATU_UPPER_TARGET		0x91C
-+#define PCIE_ATU_UPPER_LIMIT		0x924
- 
- #define PCIE_MISC_CONTROL_1_OFF		0x8BC
- #define PCIE_DBI_RO_WR_EN		BIT(0)
--- 
-2.7.4
+> ---
+> This patch dependents on "PCI: Export pci_pio_to_address() for module use"[1]
+> to build as a kernel module.
+>
+> This interface will be used by PCI host drivers for PIO translation,
+> export it to support compiling those drivers as kernel modules.
+>
+> [1]http://lists.infradead.org/pipermail/linux-mediatek/2020-December/019504.html
+> ---
+>  drivers/pci/controller/Kconfig              |   13 +
+>  drivers/pci/controller/Makefile             |    1 +
+>  drivers/pci/controller/pcie-mediatek-gen3.c | 1039 +++++++++++++++++++
+>  3 files changed, 1053 insertions(+)
+>  create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
+>
+> [snip]
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+> new file mode 100644
+> index 000000000000..d30ea734ac0a
+> --- /dev/null
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+> @@ -0,0 +1,1039 @@
+> [snip]
+> +static int mtk_pcie_set_trans_table(struct mtk_pcie_port *port,
+> +                                   resource_size_t cpu_addr,
+> +                                   resource_size_t pci_addr,
+> +                                   resource_size_t size,
+> +                                   unsigned long type, int num)
+> +{
+> +       void __iomem *table;
+> +       u32 val = 0;
 
+You don't need to init val to 0.
+
+> +
+> +       if (num >= PCIE_MAX_TRANS_TABLES) {
+> +               dev_notice(port->dev, "not enough translate table[%d] for addr: %#llx, limited to [%d]\n",
+> +                          num, (unsigned long long) cpu_addr,
+> +                          PCIE_MAX_TRANS_TABLES);
+> +               return -ENODEV;
+> +       }
+> +
+> +       table = port->base + PCIE_TRANS_TABLE_BASE_REG +
+> +               num * PCIE_ATR_TLB_SET_OFFSET;
+> +
+> +       writel(lower_32_bits(cpu_addr) | PCIE_ATR_SIZE(fls(size) - 1), table);
+> +       writel(upper_32_bits(cpu_addr), table + PCIE_ATR_SRC_ADDR_MSB_OFFSET);
+> +       writel(lower_32_bits(pci_addr), table + PCIE_ATR_TRSL_ADDR_LSB_OFFSET);
+> +       writel(upper_32_bits(pci_addr), table + PCIE_ATR_TRSL_ADDR_MSB_OFFSET);
+> +
+> +       if (type == IORESOURCE_IO)
+> +               val = PCIE_ATR_TYPE_IO | PCIE_ATR_TLP_TYPE_IO;
+> +       else
+> +               val = PCIE_ATR_TYPE_MEM | PCIE_ATR_TLP_TYPE_MEM;
+> +
+> +       writel(val, table + PCIE_ATR_TRSL_PARAM_OFFSET);
+> +
+> +       return 0;
+> +}
+> +
+> +static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+> +{
+> +       struct resource_entry *entry;
+> +       struct pci_host_bridge *host = pci_host_bridge_from_priv(port);
+> +       unsigned int table_index = 0;
+> +       int err;
+> +       u32 val;
+> +
+> +       /* Set as RC mode */
+> +       val = readl(port->base + PCIE_SETTING_REG);
+> +       val |= PCIE_RC_MODE;
+> +       writel(val, port->base + PCIE_SETTING_REG);
+> +
+> +       /* Set class code */
+> +       val = readl(port->base + PCIE_PCI_IDS_1);
+> +       val &= ~GENMASK(31, 8);
+> +       val |= PCI_CLASS(PCI_CLASS_BRIDGE_PCI << 8);
+> +       writel(val, port->base + PCIE_PCI_IDS_1);
+> +
+> +       /* Assert all reset signals */
+> +       val = readl(port->base + PCIE_RST_CTRL_REG);
+> +       val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB;
+> +       writel(val, port->base + PCIE_RST_CTRL_REG);
+> +
+> +       /* De-assert reset signals */
+> +       val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
+> +       writel(val, port->base + PCIE_RST_CTRL_REG);
+> +
+> +       /* Delay 100ms to wait the reference clocks become stable */
+> +       usleep_range(100 * 1000, 120 * 1000);
+
+Any reason not to use msleep(100)?
+
+> +
+> +       /* De-assert PERST# signal */
+> +       val &= ~PCIE_PE_RSTB;
+> +       writel(val, port->base + PCIE_RST_CTRL_REG);
+> +
+> +       /* Check if the link is up or not */
+> +       err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_REG, val,
+> +                       !!(val & PCIE_PORT_LINKUP), 20,
+> +                       50 * USEC_PER_MSEC);
+> +       if (err) {
+> +               val = readl(port->base + PCIE_LTSSM_STATUS_REG);
+> +               dev_notice(port->dev, "PCIe link down, ltssm reg val: %#x\n",
+> +                          val);
+> +               return err;
+> +       }
+> +
+> +       /* Set PCIe translation windows */
+> +       resource_list_for_each_entry(entry, &host->windows) {
+> +               struct resource *res = entry->res;
+> +               unsigned long type = resource_type(res);
+> +               resource_size_t cpu_addr;
+> +               resource_size_t pci_addr;
+> +               resource_size_t size;
+> +               const char *range_type;
+> +
+> +               if (type == IORESOURCE_IO) {
+> +                       cpu_addr = pci_pio_to_address(res->start);
+> +                       range_type = "IO";
+> +               } else if (type == IORESOURCE_MEM) {
+> +                       cpu_addr = res->start;
+> +                       range_type = "MEM";
+> +               } else {
+> +                       continue;
+> +               }
+> +
+> +               pci_addr = res->start - entry->offset;
+> +               size = resource_size(res);
+> +               err = mtk_pcie_set_trans_table(port, cpu_addr, pci_addr, size,
+> +                                              type, table_index);
+> +               if (err)
+> +                       return err;
+> +
+> +               dev_dbg(port->dev, "set %s trans window[%d]: cpu_addr = %#llx, pci_addr = %#llx, size = %#llx\n",
+> +                       range_type, table_index, (unsigned long long) cpu_addr,
+> +                       (unsigned long long) pci_addr,
+> +                       (unsigned long long) size);
+> +
+> +               table_index++;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> [snip]
+> +static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
+> +                                             msi_alloc_info_t *arg)
+> +{
+> +       struct msi_desc *entry = arg->desc;
+> +       struct mtk_pcie_port *port = info->chip_data;
+> +       int hwirq;
+> +
+> +       mutex_lock(&port->lock);
+> +
+> +       hwirq = bitmap_find_free_region(port->msi_irq_in_use, PCIE_MSI_IRQS_NUM,
+> +                                       order_base_2(entry->nvec_used));
+> +       if (hwirq < 0) {
+> +               mutex_unlock(&port->lock);
+> +               return -ENOSPC;
+> +       }
+> +
+> +       mutex_unlock(&port->lock);
+> +
+> +       return hwirq;
+
+Code is good, but I had to look twice to make sure the mutex is
+unlocked. Is the following marginally better?
+
+hwirq = ...;
+
+mutex_unlock(&port->lock);
+
+if (hwirq < 0)
+   return -ENOSPC;
+
+return hwirq;
+
+> +}
+> +
+> [snip]
+> +static void mtk_pcie_msi_handler(struct irq_desc *desc)
+> +{
+> +       struct mtk_pcie_msi *msi_info = irq_desc_get_handler_data(desc);
+> +       struct irq_chip *irqchip = irq_desc_get_chip(desc);
+> +       unsigned long msi_enable, msi_status;
+> +       unsigned int virq;
+> +       irq_hw_number_t bit, hwirq;
+> +
+> +       chained_irq_enter(irqchip, desc);
+> +
+> +       msi_enable = readl(msi_info->base + PCIE_MSI_ENABLE_OFFSET);
+> +       while ((msi_status = readl(msi_info->base + PCIE_MSI_STATUS_OFFSET))) {
+> +               msi_status &= msi_enable;
+
+I don't know much about MSI, but what happens if you have a bit that
+is set in PCIE_MSI_STATUS_OFFSET register, but not in msi_enable?
+Sounds like you'll just spin-loop forever without acknowledging the
+interrupt.
+
+> +               for_each_set_bit(bit, &msi_status, PCIE_MSI_IRQS_PER_SET) {
+> +                       hwirq = bit + msi_info->index * PCIE_MSI_IRQS_PER_SET;
+> +                       virq = irq_find_mapping(msi_info->domain, hwirq);
+> +                       generic_handle_irq(virq);
+> +               }
+> +       }
+> +
+> +       chained_irq_exit(irqchip, desc);
+> +}
+> +
+> [snip]
+> +static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
+> +{
+> +       struct mtk_pcie_port *port = dev_get_drvdata(dev);
+> +       int err;
+> +       u32 val;
+> +
+> +       /* Trigger link to L2 state */
+> +       err = mtk_pcie_turn_off_link(port);
+> +       if (err) {
+> +               dev_notice(port->dev, "can not enter L2 state\n");
+
+Rob suggested dev_error here.
+
+(and IMHO, or lot of the other dev_notice above should probably get dev_error)
+
+> +               return err;
+> +       }
+> +
+> +       /* Pull down the PERST# pin */
+> +       val = readl(port->base + PCIE_RST_CTRL_REG);
+> +       val |= PCIE_PE_RSTB;
+> +       writel(val, port->base + PCIE_RST_CTRL_REG);
+> +
+> +       dev_dbg(port->dev, "enter L2 state success");
+> +
+> +       clk_bulk_disable_unprepare(port->num_clks, port->clks);
+> +
+> +       phy_power_off(port->phy);
+> +
+> +       return 0;
+> +}
+> +
+> [snip]
