@@ -2,105 +2,204 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F86C433E6
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 03:00:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC19C433E9
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 11:07:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DA2820715
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 03:00:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E63F5222F9
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 11:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728964AbgLWC7X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Dec 2020 21:59:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46328 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728876AbgLWCUI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Dec 2020 21:20:08 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 41B4122D73;
-        Wed, 23 Dec 2020 02:19:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608689993;
-        bh=dbXis86xDPTQu+i1OtGK9IHLf/s7gH+4ybqoclpUXCI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sAiltPmwOvjn2PScHFcpzxf45AxxFGAEeaNEhTfnRwhMC1rVfFZTN404ZA2scd5Ta
-         CTOWmcmr+K2R8qKIqxYslYn02ajge2txPiuJo5ry+AoSJNmshK70ZU70bF5wFcsdZx
-         Am5lvdEhB/LsJzGF3U9tccSLOtfvOWQk4yJwFOZLg/6uqwgQCGjN1/S1XDR24xMrrd
-         h3x+hjdal+OnaVnJqflbazCZSDkGpU0WlpU8GEhDwbsSRvzhAdQhsOx/LdI8tUf4VH
-         Gm5sRC2sEOEJd3lLc9DXbRiZrBZ1POvFRg0XSeLXOGj6npxnMKfHbHrAVdO074FW5d
-         9nXH+fClwqApw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sami Tolvanen <samitolvanen@google.com>,
-        Sedat Dilek <sedat.dilek@gmail.com>,
-        Borislav Petkov <bp@alien8.de>, Borislav Petkov <bp@suse.de>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 5.4 077/130] x86/pci: Fix the function type for check_reserved_t
-Date:   Tue, 22 Dec 2020 21:17:20 -0500
-Message-Id: <20201223021813.2791612-77-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201223021813.2791612-1-sashal@kernel.org>
-References: <20201223021813.2791612-1-sashal@kernel.org>
+        id S1728526AbgLWLHQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Dec 2020 06:07:16 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:2921 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728330AbgLWLHN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2020 06:07:13 -0500
+Received: from dggeme706-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4D19Np5Fdnz57Zh;
+        Wed, 23 Dec 2020 19:05:46 +0800 (CST)
+Received: from [10.174.60.228] (10.174.60.228) by
+ dggeme706-chm.china.huawei.com (10.1.199.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1913.5; Wed, 23 Dec 2020 19:06:29 +0800
+Subject: Re: [v2] PCI: Add pci reset quirk for Huawei Intelligent NIC virtual
+ function
+To:     Alex Williamson <alex.williamson@redhat.com>
+CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Yinshi (Stone)" <yin.yinshi@huawei.com>,
+        "Wangxiaoyun (Cloud)" <cloud.wangxiaoyun@huawei.com>,
+        zengweiliang zengweiliang <zengweiliang.zengweiliang@huawei.com>,
+        "Chenlizhong (IT Chip)" <chenlizhong@huawei.com>
+References: <20201202113450.2283-1-chiqijun@huawei.com>
+ <20201210143130.6c62df86@omen.home>
+From:   Chiqijun <chiqijun@huawei.com>
+Message-ID: <dd9af6b6-6242-df9e-958a-7b6139d3087d@huawei.com>
+Date:   Wed, 23 Dec 2020 19:06:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201210143130.6c62df86@omen.home>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.60.228]
+X-ClientProxiedBy: dggeme704-chm.china.huawei.com (10.1.199.100) To
+ dggeme706-chm.china.huawei.com (10.1.199.102)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sami Tolvanen <samitolvanen@google.com>
 
-[ Upstream commit 83321c335dccba262a57378361d63da96b8166d6 ]
 
-e820__mapped_all() is passed as a callback to is_mmconf_reserved(),
-which expects a function of type:
+On 2020/12/11 5:31, Alex Williamson wrote:
+> On Wed, 2 Dec 2020 19:34:50 +0800
+> Chiqijun <chiqijun@huawei.com> wrote:
+> 
+>> When multiple VFs do FLR at the same time, the firmware is
+>> processed serially, resulting in some VF FLRs being delayed more
+>> than 100ms, when the virtual machine restarts and the device
+>> driver is loaded, the firmware is doing the corresponding VF
+>> FLR, causing the driver to fail to load.
+>>
+>> To solve this problem, add host and firmware status synchronization
+>> during FLR.
+>>
+>> Signed-off-by: Chiqijun <chiqijun@huawei.com>
+>> ---
+>> v2:
+>>   - Update comments
+>>   - Use the HINIC_VF_FLR_CAP_BIT_SHIFT and HINIC_VF_FLR_PROC_BIT_SHIFT
+>>     macro instead of the magic number
+>> ---
+>>   drivers/pci/quirks.c | 75 ++++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 75 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index f70692ac79c5..c9ad55709d03 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3912,6 +3912,79 @@ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
+>>   	return 0;
+>>   }
+>>   
+>> +#define PCI_DEVICE_ID_HINIC_VF      0x375E
+>> +#define HINIC_VF_FLR_TYPE           0x1000
+>> +#define HINIC_VF_FLR_CAP_BIT_SHIFT  6
+>> +#define HINIC_VF_OP                 0xE80
+>> +#define HINIC_VF_FLR_PROC_BIT_SHIFT 10
+>> +#define HINIC_OPERATION_TIMEOUT     15000
+>> +
+>> +/* Device-specific reset method for Huawei Intelligent NIC virtual functions */
+>> +static int reset_hinic_vf_dev(struct pci_dev *pdev, int probe)
+>> +{
+>> +	unsigned long timeout;
+>> +	void __iomem *bar;
+>> +	u16 old_command;
+>> +	u32 val;
+>> +
+>> +	if (probe)
+>> +		return 0;
+>> +
+>> +	bar = pci_iomap(pdev, 0, 0);
+>> +	if (!bar)
+>> +		return -ENOTTY;
+>> +
+>> +	pci_read_config_word(pdev, PCI_COMMAND, &old_command);
+>> +
+>> +	/*
+>> +	 * FLR cap bit bit30, FLR processing bit: bit18, to avoid big-endian
+>> +	 * conversion the big-endian bit6, bit10 is directly operated here.
+>> +	 *
+>> +	 * Get and check firmware capabilities.
+>> +	 */
+>> +	val = readl(bar + HINIC_VF_FLR_TYPE);
+>> +	if (!(val & (1UL << HINIC_VF_FLR_CAP_BIT_SHIFT))) {
+>> +		pci_iounmap(pdev, bar);
+>> +		return -ENOTTY;
+>> +	}
+>> +
+>> +	/*
+>> +	 * Set the processing bit for the start of FLR, which will be cleared
+>> +	 * by the firmware after FLR is completed.
+>> +	 */
+>> +	val = readl(bar + HINIC_VF_OP);
+>> +	val = val | (1UL << HINIC_VF_FLR_PROC_BIT_SHIFT);
+>> +	writel(val, bar + HINIC_VF_OP);
+>> +
+>> +	/* Perform the actual device function reset */
+>> +	pcie_flr(pdev);
+>> +
+>> +	pci_write_config_word(pdev, PCI_COMMAND,
+>> +			      old_command | PCI_COMMAND_MEMORY);
+> 
+> 
+> This quirk is specific to VFs, so isn't this command register handling
+> here, further above, and restore below unnecessary?  VF memory space is
+> controlled by the VF MSE bit on the PF.  On the VF this bit is
+> hardwired to zero.  If that weren't the case then both the above
+> read/write to the BAR without testing the memory bit, and the below
+> polling of the BAR to watch for the reset to complete would be pretty
+> troubling.  Thanks,
+> 
+> Alex
+> 
 
-  typedef bool (*check_reserved_t)(u64 start, u64 end, unsigned type);
+Apologies for the delayed response.
+You are right, the MSE bit in the VF configuration space is hardwired to 
+zero, the MSE bit set here is useless.
+But Huawei Intelligent NIC device must capture BDF after FLR to respond 
+to BAR read requests, we still need to issue a configure write request 
+here to let the device capture BDF.
+I will add a comment in the next patch and remove the setthing of 
+PCI_COMMAND_MEMORY bit to avoid misunderstanding, and just read the 
+PCI_COMMAND and write it back.
 
-However, e820__mapped_all() accepts enum e820_type as the last argument
-and this type mismatch trips indirect call checking with Clang's
-Control-Flow Integrity (CFI).
+Thanks.
 
-As is_mmconf_reserved() only passes enum e820_type values for the
-type argument, change the typedef and the unused type argument in
-is_acpi_reserved() to enum e820_type to fix the type mismatch.
-
-Reported-by: Sedat Dilek <sedat.dilek@gmail.com>
-Suggested-by: Borislav Petkov <bp@alien8.de>
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Signed-off-by: Borislav Petkov <bp@suse.de>
-Link: https://lkml.kernel.org/r/20201130193900.456726-1-samitolvanen@google.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- arch/x86/pci/mmconfig-shared.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 6fa42e9c4e6fa..234998f196d4d 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -425,7 +425,7 @@ static acpi_status find_mboard_resource(acpi_handle handle, u32 lvl,
- 	return AE_OK;
- }
- 
--static bool is_acpi_reserved(u64 start, u64 end, unsigned not_used)
-+static bool is_acpi_reserved(u64 start, u64 end, enum e820_type not_used)
- {
- 	struct resource mcfg_res;
- 
-@@ -442,7 +442,7 @@ static bool is_acpi_reserved(u64 start, u64 end, unsigned not_used)
- 	return mcfg_res.flags;
- }
- 
--typedef bool (*check_reserved_t)(u64 start, u64 end, unsigned type);
-+typedef bool (*check_reserved_t)(u64 start, u64 end, enum e820_type type);
- 
- static bool __ref is_mmconf_reserved(check_reserved_t is_reserved,
- 				     struct pci_mmcfg_region *cfg,
--- 
-2.27.0
-
+> 
+>> +
+>> +	/* Waiting for device reset complete */
+>> +	timeout = jiffies + msecs_to_jiffies(HINIC_OPERATION_TIMEOUT);
+>> +	do {
+>> +		val = readl(bar + HINIC_VF_OP);
+>> +		if (!(val & (1UL << HINIC_VF_FLR_PROC_BIT_SHIFT)))
+>> +			goto reset_complete;
+>> +		msleep(20);
+>> +	} while (time_before(jiffies, timeout));
+>> +
+>> +	val = readl(bar + HINIC_VF_OP);
+>> +	if (!(val & (1UL << HINIC_VF_FLR_PROC_BIT_SHIFT)))
+>> +		goto reset_complete;
+>> +
+>> +	pci_warn(pdev, "Reset dev timeout, flr ack reg: %x\n",
+>> +		 be32_to_cpu(val));
+>> +
+>> +reset_complete:
+>> +	pci_write_config_word(pdev, PCI_COMMAND, old_command);
+>> +	pci_iounmap(pdev, bar);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>>   	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>>   		 reset_intel_82599_sfp_virtfn },
+>> @@ -3923,6 +3996,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>>   	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
+>>   	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>>   		reset_chelsio_generic_dev },
+>> +	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>> +		reset_hinic_vf_dev },
+>>   	{ 0 }
+>>   };
+>>   
+> 
+> .
+> 
