@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B634C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7D71C433E9
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:59:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2354223DB
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9072922EBF
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:59:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728261AbgLXL6Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Dec 2020 06:58:16 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:41600 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726746AbgLXL6Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2020 06:58:16 -0500
+        id S1728528AbgLXL7C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Dec 2020 06:59:02 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:43462 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726746AbgLXL7B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2020 06:59:01 -0500
 Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBvRIA086889;
-        Thu, 24 Dec 2020 05:57:27 -0600
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBvHqJ052084;
+        Thu, 24 Dec 2020 05:57:17 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1608811047;
-        bh=wQTq7FhKu7M5hoDmCgbENkxGmB7RVPt1BHM/ptKQwmE=;
+        s=ti-com-17Q1; t=1608811037;
+        bh=pW+3Nkkfv15OxmYOKkSjlpKQ8IkjEw2ZblHzX+3dit8=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=r7FACEs8Zjnm425OkXaQfsJUUH1T8nNYXh1Hgho4RW/s4hSSEQ2ZNBKiLMbK+iz8O
-         84dsiv9oxy8FFtqfv0jJjoSVBhD9U09gAf9mwrf7yucbXErUTQgp+oNnIf5tv5YvmH
-         d8GfCgHzGlSdie6PJmguR5NZjevJOnTa3xqA70xY=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BOBvROX117625
+        b=Vgh61y9w6Up/HJhhv+RJaqSuosjJRs/GtYUreT0o1vce5vWsbUYaCkc7ndYoANQuo
+         urkG3KaWFaN3WFGb4tggjDCBo15vRYkryoqg+mtVy6bGc8QOeRUNSni62Il+ij3ZGv
+         Kr6tSZ9peTeATB9JZWDk+5cZfkUZ6a7D6YRzrw3Y=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BOBvH7X117455
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Dec 2020 05:57:27 -0600
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 24 Dec 2020 05:57:17 -0600
+Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 24
- Dec 2020 05:57:27 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2020 05:57:17 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 24 Dec 2020 05:57:27 -0600
+ Frontend Transport; Thu, 24 Dec 2020 05:57:17 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBv0Hu006549;
-        Thu, 24 Dec 2020 05:57:22 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBv0Hs006549;
+        Thu, 24 Dec 2020 05:57:12 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -53,9 +53,9 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 4/4] PCI: j721e: Add support to provide refclk to PCIe connector
-Date:   Thu, 24 Dec 2020 17:26:58 +0530
-Message-ID: <20201224115658.2795-5-kishon@ti.com>
+Subject: [PATCH 2/4] dt-bindings: pci: ti,j721e: Add host mode dt-bindings for TI's AM64 SoC
+Date:   Thu, 24 Dec 2020 17:26:56 +0530
+Message-ID: <20201224115658.2795-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20201224115658.2795-1-kishon@ti.com>
 References: <20201224115658.2795-1-kishon@ti.com>
@@ -66,69 +66,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to provide refclk to PCIe connector.
+Add host mode dt-bindings for TI's AM64 SoC. This is the same IP used in
+J7200, however AM64 is a non-coherent architecture.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/cadence/pci-j721e.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ .../devicetree/bindings/pci/ti,j721e-pci-host.yaml     | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index dac1ac8a7615..8ec6d9c3e164 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -6,6 +6,7 @@
-  * Author: Kishon Vijay Abraham I <kishon@ti.com>
-  */
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index 7607018a115b..77118dba415e 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -16,12 +16,17 @@ allOf:
+ properties:
+   compatible:
+     oneOf:
+-      - description: PCIe controller in J7200
++      - const: ti,am64-pcie-host
++      - const: ti,j7200-pcie-host
++      - const: ti,j721e-pcie-host
++      - description: PCIe controller in AM64
+         items:
++          - const: ti,am64-pcie-host
+           - const: ti,j7200-pcie-host
+           - const: ti,j721e-pcie-host
+-      - description: PCIe controller in J721E
++      - description: PCIe controller in J7200
+         items:
++          - const: ti,j7200-pcie-host
+           - const: ti,j721e-pcie-host
  
-+#include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
- #include <linux/io.h>
-@@ -50,6 +51,7 @@ enum link_status {
- 
- struct j721e_pcie {
- 	struct device		*dev;
-+	struct clk		*refclk;
- 	u32			mode;
- 	u32			num_lanes;
- 	struct cdns_pcie	*cdns_pcie;
-@@ -310,6 +312,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 	struct cdns_pcie_ep *ep;
- 	struct gpio_desc *gpiod;
- 	void __iomem *base;
-+	struct clk *clk;
- 	u32 num_lanes;
- 	u32 mode;
- 	int ret;
-@@ -408,6 +411,19 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 			goto err_get_sync;
- 		}
- 
-+		clk = devm_clk_get_optional(dev, "pcie_refclk");
-+		if (IS_ERR(clk)) {
-+			dev_err(dev, "failed to get pcie_refclk\n");
-+			goto err_pcie_setup;
-+		}
-+
-+		ret = clk_prepare_enable(clk);
-+		if (ret) {
-+			dev_err(dev, "failed to enable pcie_refclk\n");
-+			goto err_get_sync;
-+		}
-+		pcie->refclk = clk;
-+
- 		/*
- 		 * "Power Sequencing and Reset Signal Timings" table in
- 		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 3.0
-@@ -476,6 +492,7 @@ static int j721e_pcie_remove(struct platform_device *pdev)
- 	struct cdns_pcie *cdns_pcie = pcie->cdns_pcie;
- 	struct device *dev = &pdev->dev;
- 
-+	clk_disable_unprepare(pcie->refclk);
- 	cdns_pcie_disable_phy(cdns_pcie);
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
+   reg:
+@@ -87,7 +92,6 @@ required:
+   - vendor-id
+   - device-id
+   - msi-map
+-  - dma-coherent
+   - dma-ranges
+   - ranges
+   - reset-gpios
 -- 
 2.17.1
 
