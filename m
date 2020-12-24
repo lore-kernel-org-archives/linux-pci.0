@@ -2,84 +2,124 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD4EC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 21:05:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07FBBC433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 00:06:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 82C932246B
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Dec 2020 21:05:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBCC522518
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 00:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729036AbgLWVF0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Dec 2020 16:05:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46162 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727605AbgLWVF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Dec 2020 16:05:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BB2C82246B;
-        Wed, 23 Dec 2020 21:04:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1608757486;
-        bh=EvlI3xLiJ6AxG6iBz0S4MmgXorYn8mIuiSvkee7Dqo8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=SWl8PyIctLq3cEmM8IL7CqcOM7RYgf9r3RqewM7n8qlbUvtnhMguXwr748VzmNqh9
-         AKjdk3v6LCx6EYluWvmc0gTvMYYKqkFsyY6CJub1MPTneazXqMQ511QPwGmnFcTyZj
-         ijxphozqVkwg2VmYbtomnv5Qzfr6g/R4X8IGTUGZSGIg89Jpeh36sPYZOGZ94RI6GL
-         RAknVayAIGlqJP8wD/2GSp8GptdPxsgoVSbdTKzd+6edhh0YYAg6UFnGoav+0dBYn3
-         NYGD3JYcCSUGbVjUPvvo/oYr2O2tUk71moeyDtum6ZrkAtV8feiVeljeGNLOHmPXan
-         0LhGP/mLC0A1g==
-Date:   Wed, 23 Dec 2020 15:04:44 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>
-Cc:     linux-pci@vger.kernel.org, Krzysztof Wilczynski <kw@linux.com>
-Subject: Re: pcie-rockchip-ep.c coverity issue #1437163
-Message-ID: <20201223210444.GA322275@bjorn-Precision-5520>
+        id S1727802AbgLXAGE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Dec 2020 19:06:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38428 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727134AbgLXAGE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Dec 2020 19:06:04 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D33FC06179C;
+        Wed, 23 Dec 2020 16:05:24 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id z12so236052pjn.1;
+        Wed, 23 Dec 2020 16:05:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=RhZlddu07uH3DLklMw0cBddTSdM+bobz0Y1cqIi2B9g=;
+        b=BoLGCo1YoGlKEnaXPlQNCxQ/u0PB0gs67txWhm79Ddo51R2SS02sccAA7P/B5JnW2N
+         6M58LLKJHBColG9D8zykXo4z2CIvap1umNT8bnLu8PS4NnfLGJajS7pOZ3xWEU1BcJxg
+         C2CEdIjHg7o0BBxIfK8uxnA4xTQIZzty/G5nWnE7x9l6qLuGMlgINt7G488Qs1ZUyxn1
+         UBv7BfsqCBAQR48tyX0Q/lUa4oM6OSq9FMQl9PPHVAkpu0gHpUkxxaSBe0YKxD3RKQdD
+         P7HruDmRLAqHqWjHrS70Wtbx4we45d6A0hH2mkpWeK4FxomAyKD9raDUvF3oS3W7q6jG
+         RrUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RhZlddu07uH3DLklMw0cBddTSdM+bobz0Y1cqIi2B9g=;
+        b=QE+1fr6UR9b79/o8n/cSYk+jZfWVCYlXjvz7K4JR2OzNvXmhabGJOhdTN+HjmWqEPw
+         ESSy96CPT8i/bPPWHnhSqfi6SELcKHM8af76oh9IaQ6KMpmTcmPfK7VjifTjsWSwzOk/
+         drq23Tp65bxhtaNJh7kTNjNHoNSIWF+yiXC8HWnkZ5yYKDfKlwWmtyM8OoFYDYZZ0rzI
+         iG6PdpV75Rb0dws/OAeg1KNiqrArRCl7VnnB7CAK6krEOG1xHnR4o53rIB4yVcEa7WFx
+         Aqpgo7EmdZPb05KDX8TcAMIy5gLlAofKz2UTfJObzDXp47GQa6BtnSX/6YcFxByiKFAZ
+         s+5A==
+X-Gm-Message-State: AOAM531F711AD3l1lK7Z7MhJ42RxaXgmJB+jweGEo7y4KLQZEb3utq6v
+        BTLULE+4DB72t04oo6c4aL8=
+X-Google-Smtp-Source: ABdhPJxujcHk5jTktWJsfdUCcIHT46rpxPni05SSBnh/KI9n6TsNOAdATpq3I6FAPpO4G3brj+JxoA==
+X-Received: by 2002:a17:90a:4689:: with SMTP id z9mr1826941pjf.87.1608768323630;
+        Wed, 23 Dec 2020 16:05:23 -0800 (PST)
+Received: from [10.230.29.27] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id f126sm24006772pfa.58.2020.12.23.16.05.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Dec 2020 16:05:22 -0800 (PST)
+Subject: Re: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset
+ controller
+To:     Jim Quinlan <jim2101024@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>
+References: <20201216214106.32851-1-james.quinlan@broadcom.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <92084293-d2fd-1663-0f6a-a10f01e23066@gmail.com>
+Date:   Wed, 23 Dec 2020 16:05:18 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <60a290a9-678b-b08d-25b4-8299f2f2c916@rock-chips.com>
+In-Reply-To: <20201216214106.32851-1-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Krzysztof]
 
-On Wed, Oct 28, 2020 at 08:34:45AM +0800, Shawn Lin wrote:
-> On 2020/10/28 0:16, Bjorn Helgaas wrote:
-> > Hi Shawn,
-> > 
-> > Please take a look at this issue reported by Coverity:
-> > 
-> > 332 static int rockchip_pcie_ep_get_msi(struct pci_epc *epc, u8 fn)
-> > 333 {
-> > 334        struct rockchip_pcie_ep *ep = epc_get_drvdata(epc);
-> > 335        struct rockchip_pcie *rockchip = &ep->rockchip;
-> > 336        u16 flags;
-> > 337
-> > 338        flags = rockchip_pcie_read(rockchip,
-> > 339                                   ROCKCHIP_PCIE_EP_FUNC_BASE(fn) +
-> > 340                                   ROCKCHIP_PCIE_EP_MSI_CTRL_REG);
-> > 
-> > CID 1437163 (#2 of 2): Operands don't affect result
-> > (CONSTANT_EXPRESSION_RESULT) result_independent_of_operands: flags &
-> > (65536UL /* 1UL << 16 */) is always 0 regardless of the values of its
-> > operands. This occurs as the logical operand of !.
-> > 
-> > 341        if (!(flags & ROCKCHIP_PCIE_EP_MSI_CTRL_ME))
-> > 342                return -EINVAL;
+
+On 12/16/2020 1:41 PM, Jim Quinlan wrote:
+> v3 -- discard commit from v2; instead rely on the new function
+>       reset_control_rearm provided in a recent commit [1] applied
+>       to reset/next.
+>    -- New commit to correct pcie-brcmstb.c usage of a reset controller
+>       to use reset/rearm verses deassert/assert.
 > 
-> Actually it should be BIT(0) instead of BIT(16),
-> I will fix it, thanks.
+> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
+>       reset because the reset call only fires once per lifetime and we need
+>       to reset after every resume from S2 or S3.
+>    -- Split the use of "ahci" and "rescal" controllers in separate fields
+>       to keep things simple.
+> 
+> v1 -- original
+> 
+> 
+> [1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
+>     found at git://git.pengutronix.de/git/pza/linux.git
+>     branch reset/shared-retrigger
 
-Just a quick reminder about this and the similar issue in
-rockchip_pcie_ep_send_msi_irq().
+The changes in that branch above have now landed in Linus' tree with:
 
-Your response above didn't seem to make it to the archive, so maybe
-your patch to fix it also got lost?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557acb3d2cd9c82de19f944f6cc967a347735385
 
-Krzysztof also pointed out that rockchip_pcie_read() returns u32,
-while flags is only u16.
+It would be good if we could get both patches applied via the same tree
+or within the same cycle to avoid having either PCIe or SATA broken on
+these platforms.
 
-Bjorn
+Thanks!
+-- 
+Florian
