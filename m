@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D9BC433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94574C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABB20224B1
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60EA622288
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Dec 2020 11:58:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727865AbgLXL55 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Dec 2020 06:57:57 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:43436 "EHLO
+        id S1728082AbgLXL6L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Dec 2020 06:58:11 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:43472 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726591AbgLXL55 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2020 06:57:57 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBv7h2052020;
-        Thu, 24 Dec 2020 05:57:07 -0600
+        with ESMTP id S1726746AbgLXL6L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Dec 2020 06:58:11 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBvMlM052125;
+        Thu, 24 Dec 2020 05:57:22 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1608811027;
-        bh=bDPoCuBi3kgmclo0TxNZWprdvDYs5f0BkCsZXnq5/6c=;
-        h=From:To:CC:Subject:Date;
-        b=J8XU076PjjxUnZ2iE0K86PD7L4TKSJGhYvLc/m7g35bS8MN8BFB+Qe2QkPNZ5bgrC
-         bFx8DB1Kjby3pOElKKCEDaSn4aAeqKr5fjARWx3wmaCs+O974jOh03xlop7P3sxLHR
-         icA1CNRqM5ZSQIW+chcQjGEfD1D8emHORRRnShT4=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BOBv6Ri020110
+        s=ti-com-17Q1; t=1608811042;
+        bh=ekIjBsGEy8ttVisERONWFmyGyUxpFsUO4LLaUm07A6A=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=p6nk/JL/5qWdqdkMT3uZ1EPdm9BDQrfpwb4hGQX1cGDUcywFWtAUDTi0fDDxNsse6
+         GqutUzh/JAPxe6lYYhZqlNJUOdafFQ7VOeWmu54q5upgBiv9rzia11ngZGJbTPs+YO
+         wwFeeJ6v66anRm7FQekO9YcxFB9LuCnKirOZPcmY=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0BOBvMBO109218
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Dec 2020 05:57:06 -0600
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 24 Dec 2020 05:57:22 -0600
+Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 24
- Dec 2020 05:57:06 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ Dec 2020 05:57:22 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 24 Dec 2020 05:57:06 -0600
+ Frontend Transport; Thu, 24 Dec 2020 05:57:22 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBv0Hq006549;
-        Thu, 24 Dec 2020 05:57:01 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0BOBv0Ht006549;
+        Thu, 24 Dec 2020 05:57:17 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -53,10 +53,12 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH 0/4] AM64: Add PCIe bindings and driver support
-Date:   Thu, 24 Dec 2020 17:26:54 +0530
-Message-ID: <20201224115658.2795-1-kishon@ti.com>
+Subject: [PATCH 3/4] dt-bindings: pci: ti,j721e: Add endpoint mode dt-bindings for TI's AM64 SoC
+Date:   Thu, 24 Dec 2020 17:26:57 +0530
+Message-ID: <20201224115658.2795-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201224115658.2795-1-kishon@ti.com>
+References: <20201224115658.2795-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -64,26 +66,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-AM64 uses the same PCIe controller as in J7200, however AM642 EVM
-doesn't have a clock generator (unlike J7200 base board). Here
-the clock from the SERDES has to be routed to the PCIE connector.
-This series provides an option for the pci-j721e.c driver to
-drive reference clock output to the connector.
+Add endpoint mode dt-bindings for TI's AM64 SoC. This is the same IP
+used in J7200, however AM64 is a non-coherent architecture.
 
-Kishon Vijay Abraham I (4):
-  dt-bindings: PCI: ti,j721e: Add binding to represent refclk to the
-    connector
-  dt-bindings: pci: ti,j721e: Add host mode dt-bindings for TI's AM64
-    SoC
-  dt-bindings: pci: ti,j721e: Add endpoint mode dt-bindings for TI's
-    AM64 SoC
-  PCI: j721e: Add support to provide refclk to PCIe connector
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ .../devicetree/bindings/pci/ti,j721e-pci-ep.yaml       | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
- .../bindings/pci/ti,j721e-pci-ep.yaml         | 10 ++++---
- .../bindings/pci/ti,j721e-pci-host.yaml       | 27 ++++++++++++++-----
- drivers/pci/controller/cadence/pci-j721e.c    | 17 ++++++++++++
- 3 files changed, 44 insertions(+), 10 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+index d06f0c4464c6..447c8fe0f09e 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+@@ -16,12 +16,17 @@ allOf:
+ properties:
+   compatible:
+     oneOf:
+-      - description: PCIe EP controller in J7200
++      - const: ti,am64-pcie-ep
++      - const: ti,j7200-pcie-ep
++      - const: ti,j721e-pcie-ep
++      - description: PCIe EP controller in AM64
+         items:
++          - const: ti,am64-pcie-ep
+           - const: ti,j7200-pcie-ep
+           - const: ti,j721e-pcie-ep
+-      - description: PCIe EP controller in J721E
++      - description: PCIe EP controller in J7200
+         items:
++          - const: ti,j7200-pcie-ep
+           - const: ti,j721e-pcie-ep
+ 
+   reg:
+@@ -66,7 +71,6 @@ required:
+   - power-domains
+   - clocks
+   - clock-names
+-  - dma-coherent
+   - max-functions
+   - phys
+   - phy-names
 -- 
 2.17.1
 
