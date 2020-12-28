@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD9AC433E6
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 05:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C97DDC433E6
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 06:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E217207D0
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 05:44:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85E4D221F9
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 06:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727860AbgL1Foi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Dec 2020 00:44:38 -0500
-Received: from mailbackend.panix.com ([166.84.1.89]:40765 "EHLO
+        id S1728003AbgL1GbH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Dec 2020 01:31:07 -0500
+Received: from mailbackend.panix.com ([166.84.1.89]:51016 "EHLO
         mailbackend.panix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726657AbgL1Foi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Dec 2020 00:44:38 -0500
+        with ESMTP id S1726511AbgL1GbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Dec 2020 01:31:07 -0500
 Received: from xps-7390 (cpe-23-242-39-94.socal.res.rr.com [23.242.39.94])
-        by mailbackend.panix.com (Postfix) with ESMTPSA id 4D46134tzFzfFY;
-        Mon, 28 Dec 2020 00:43:51 -0500 (EST)
+        by mailbackend.panix.com (Postfix) with ESMTPSA id 4D472h4wLnzg13;
+        Mon, 28 Dec 2020 01:30:20 -0500 (EST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=panix.com; s=panix;
-        t=1609134232; bh=C49VBnc7b16ypJBbXONSWN2vexJOG7VxxTVZAqMLwJ0=;
+        t=1609137021; bh=rqwwdRE/V+Ax8uR0N/Jf/w4DFnhxOTyyJ01rCAeMMHY=;
         h=Date:From:Reply-To:To:cc:Subject:In-Reply-To:References;
-        b=Njg6F5jd9B5hah4ch2aWcVebBe1hcTvbJC3JQgN8wPqq5uA5ThYz7aH/Tvin3xIxa
-         f8MHRnYS4/3a3XxSzTFxP6S8xID3CbSpCndpECGjXEyBKUBWZn47zIIEcdPF8uEm8T
-         sT7Qv2q1+ptilFm6A8evL2cefcKiUf0lQ2wQ4BSY=
-Date:   Sun, 27 Dec 2020 21:43:49 -0800 (PST)
+        b=HB1IKYwHu0ICvhA5ESYu9KAOTKZH1Q7Bc4dnYb9IHg5QXyxGqVwgmd8g2BZjrX26A
+         xLplP/fTZxsHcvH9eNwIkRu2fcl+Jqqryk9X/Qlxqxm/yySw2Lbmq+4FjsrkTQ+/Kq
+         VV+c31IHEiQQaFN4dhL3FV3+9pAkeqzFWnWlOaEo=
+Date:   Sun, 27 Dec 2020 22:30:19 -0800 (PST)
 From:   "Kenneth R. Crudup" <kenny@panix.com>
 Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
@@ -35,9 +35,9 @@ cc:     Vidya Sagar <vidyas@nvidia.com>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Subject: Re: Commit 4257f7e0 ("PCI/ASPM: Save/restore L1SS Capability for
  suspend/resume") causing hibernate resume failures
-In-Reply-To: <20201228040513.GA611645@bjorn-Precision-5520>
-Message-ID: <88d569d8-09c-6bfc-c246-f4989bfbc1@panix.com>
-References: <20201228040513.GA611645@bjorn-Precision-5520>
+In-Reply-To: <88d569d8-09c-6bfc-c246-f4989bfbc1@panix.com>
+Message-ID: <cb32b83e-108b-47e5-812-9c26712de9a0@panix.com>
+References: <20201228040513.GA611645@bjorn-Precision-5520> <88d569d8-09c-6bfc-c246-f4989bfbc1@panix.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
@@ -45,28 +45,11 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
-OK, got more info:
+On Sun, 27 Dec 2020, Kenneth R. Crudup wrote:
 
-On Sun, 27 Dec 2020, Bjorn Helgaas wrote:
+> I'll try your patch after the revert and see if anything changes.
 
-> If it's convenient, can you try the patch below?  If the debug patch
-> doesn't help:
-
->   - Are you seeing the hibernate/resume problem when on AC or on
->     battery?
-
-OK, so:
-
-- on TLP, before your patch, it panic()s on AC, but not on battery
-- on TLP, with your patch, it panic()s on battery, but NOT on AC
-- if TLP is masked, it still panic()s, but I forget if AC or battery
-- even if I mask TLP, with your commit in place it panic()s
-
->   - If you revert 4257f7e008ea, does hibernate/resume work fine?  Both
->     with the tlp tweak and without?
-
-Definitely with the revert everything works. I'll try your patch after the
-revert and see if anything changes.
+I just realized today's patch makes no sense if it's reverted, so nevermind.
 
 	-Kenny
 
