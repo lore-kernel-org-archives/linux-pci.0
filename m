@@ -2,170 +2,265 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C63E7C433DB
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 14:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 295CDC433E6
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 15:13:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9528C207CC
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 14:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC982207A1
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Dec 2020 15:13:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438262AbgL1OGx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Dec 2020 09:06:53 -0500
-Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:42286 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2438243AbgL1OGw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Dec 2020 09:06:52 -0500
-Received: from pps.filterd (m0042333.ppops.net [127.0.0.1])
-        by mx0b-0014ca01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 0BSDxjlP024446;
-        Mon, 28 Dec 2020 06:05:36 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=proofpoint;
- bh=5hHljOtJnlFAaO8/lUeFxGThMVRoMQEDoJYwAmqTI5E=;
- b=R/gZ8xAcdOKhsxj3FidMw20JOc1u/ZQqahDihPTn0OWUO+DoteZZ5bnOZgsOB/PEdaUm
- Yvk+PTIz9g853/vvVJR/6Z59BY99mEhetsZZ5rBtf2fSEFBn3ncXpB+t8oQTfQU+9K/2
- c3U+GBAblbA+QBhdryepgw0bRMbnso4SIyx8idiPfa+YXKBLrGMnW95IowraLwZns1Gc
- XPFWuFEUYTgIetuGY4OeKQbBSwFyB0QIhd6q93IMmoeK2dvyGL+QOgAla+OLfwXXehGu
- IL8A1S6pgGXb91w3k+oULqVQggZZMPnUw/4zTyPaKwXvG+VVWaw/RPme0dnVz4tLdrZ4 vw== 
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2040.outbound.protection.outlook.com [104.47.66.40])
-        by mx0b-0014ca01.pphosted.com with ESMTP id 35p1n43hsp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 28 Dec 2020 06:05:36 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=A2YfSHfK29fkuHQN/vufR+XldT//pk4XQgtT93OEh8qK8eQXKg4Z4o5xnazlXJcw+QAy+irLJ2uv9eo2m0q+qIw4hL8/ETtsRDNmfIFi/0xNfXscetBeNAXb8dFLu0qaw+Z3aItyLvIMZjjz7lkHv1PwH2Udbpv9hu0+1+rd532VUfAX2lifPRYyi44ENSd4FRjypr13OVffZlk2vmYvq10ZwJvUDt7uVio48cWbPEJ7iKns0Kb1FtAYkCq/T0FvQDxTtAKV70ErR2V1kwUEAYyuSYU6fN6gS1Ra7Gdyi1Ctec/ucjGoJqgrzA9ZLwpJENyHkcvUpmBizKebBuL6wA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5hHljOtJnlFAaO8/lUeFxGThMVRoMQEDoJYwAmqTI5E=;
- b=R2cR9gA04K+1UQjQZMaw6MHc+xxPcvA/gBomsCrdKk8dTcimV7t4pt7nxBMpcXI7xtprz5rbm4d5B4BwQgrmE8Z7Uk0g1dVf5qnK/Drw+smossvB2ZpdQa4rbzqOdqZX/EfJ13cQ9DlnqJ7MLy7N9D/95nfHiy7QvFaUeCta2m9Gu/R6Qkl0AgYlqoHkjs6H+G8tjXCKT+Fih4/VBcfSgnsEfJye0DC8ll+YxS0Bqzu7ywfp5LJs8Q1NjTR3NwQ3l4APpoDK1yK5jl9o+r1CztpPxD7Aj3Gi4Zlly+37FlFP3EmT4v7XVs9MWcB2z58nNFFz5GunvpFCe+bB/xPlGA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 64.207.220.244) smtp.rcpttodomain=google.com smtp.mailfrom=cadence.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=cadence.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5hHljOtJnlFAaO8/lUeFxGThMVRoMQEDoJYwAmqTI5E=;
- b=KHSaamopsQAVGklKqEENZDdt5YelY5c65UwK7O6FxzuxxzZkVKM3mZotKXKvCFj8CKj+ltVnqa2HzP1fT7TQLjSHSwL191O9buxZ2CSjsc5TVkixR2wczDaDQWAmkbbudGZPd425/vzLZFI8G60VhqTubQ+R92e847twVIxdoLA=
-Received: from DM5PR07CA0025.namprd07.prod.outlook.com (2603:10b6:3:16::11) by
- CY4PR07MB3575.namprd07.prod.outlook.com (2603:10b6:910:7a::38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3676.25; Mon, 28 Dec 2020 14:05:32 +0000
-Received: from DM6NAM12FT022.eop-nam12.prod.protection.outlook.com
- (2603:10b6:3:16:cafe::64) by DM5PR07CA0025.outlook.office365.com
- (2603:10b6:3:16::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3700.27 via Frontend
- Transport; Mon, 28 Dec 2020 14:05:32 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 64.207.220.244)
- smtp.mailfrom=cadence.com; google.com; dkim=none (message not signed)
- header.d=none;google.com; dmarc=pass action=none header.from=cadence.com;
-Received-SPF: Pass (protection.outlook.com: domain of cadence.com designates
- 64.207.220.244 as permitted sender) receiver=protection.outlook.com;
- client-ip=64.207.220.244; helo=wcmailrelayl01.cadence.com;
-Received: from wcmailrelayl01.cadence.com (64.207.220.244) by
- DM6NAM12FT022.mail.protection.outlook.com (10.13.179.152) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3700.20 via Frontend Transport; Mon, 28 Dec 2020 14:05:31 +0000
-Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
-        by wcmailrelayl01.cadence.com (8.14.7/8.14.4) with ESMTP id 0BSE5SJQ045194
-        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=OK);
-        Mon, 28 Dec 2020 06:05:29 -0800
-X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
-Received: from maileu3.global.cadence.com (10.160.88.99) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3; Mon, 28 Dec 2020 15:05:27 +0100
-Received: from vleu-orange.cadence.com (10.160.88.83) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Mon, 28 Dec 2020 15:05:27 +0100
-Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
-        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id 0BSE5RmV014700;
-        Mon, 28 Dec 2020 15:05:27 +0100
-Received: (from nadeem@localhost)
-        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id 0BSE5OQc014699;
-        Mon, 28 Dec 2020 15:05:24 +0100
-From:   Nadeem Athani <nadeem@cadence.com>
-To:     <tjoseph@cadence.com>, <lorenzo.pieralisi@arm.com>,
-        <robh@kernel.org>, <bhelgaas@google.com>, <kishon@ti.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        id S2441095AbgL1PN2 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Dec 2020 10:13:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58266 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2441084AbgL1PN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Dec 2020 10:13:26 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4F814223E8;
+        Mon, 28 Dec 2020 15:12:45 +0000 (UTC)
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=wait-a-minute.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1ktuCQ-004F2a-KF; Mon, 28 Dec 2020 15:12:43 +0000
+Date:   Mon, 28 Dec 2020 15:12:41 +0000
+Message-ID: <87bleeotg6.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     <youlin.pei@mediatek.com>, <devicetree@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <qizhong.cheng@mediatek.com>, <chuanjia.liu@mediatek.com>,
+        <linux-pci@vger.kernel.org>, <drinkcat@chromium.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        <linux-kernel@vger.kernel.org>, <sin_jieyang@mediatek.com>,
+        Sj Huang <sj.huang@mediatek.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <nadeem@cadence.com>, <mparab@cadence.com>, <sjakhade@cadence.com>,
-        <pthombar@cadence.com>
-Subject: [PATCH v6 0/2] PCI: cadence: Retrain Link to work around Gen2
-Date:   Mon, 28 Dec 2020 15:05:08 +0100
-Message-ID: <20201228140510.14641-1-nadeem@cadence.com>
-X-Mailer: git-send-email 2.15.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-OrganizationHeadersPreserved: maileu3.global.cadence.com
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a14a07d7-5dae-4ebc-b92e-08d8ab39a370
-X-MS-TrafficTypeDiagnostic: CY4PR07MB3575:
-X-Microsoft-Antispam-PRVS: <CY4PR07MB3575F25F05847E8B89B11581D8D90@CY4PR07MB3575.namprd07.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 1mB0SHJ0wWPzhckzyguezMpHPzDFN1gjzy0rN8aE+XIGme/TcFilsBrmITnstJnqeUl1g5aLcM3qizbqT5SVX3VWZSi207jPqZ0ELZbcGRKW12dCxKFZWZaCUgLhhybSGulfsbLnasohSKuqZVEs/4j8YTiU+l5AJQK1YqyPaBnRoa5HS+GaWNeDZlJb3V6Fu3uPhcVsSITiJMT+C/eS8xjJ+v0HdXgrMxwta86VvI8EsOKYftqhIa35/UREkZJaLZ2LV6ELdqD4p+57xkJi+Opj72GE120xuq/cc6PhK6hPChiSNGPWjdfz4uxeYnUB3v4cP0OCpBuoKkFAh3R2cEkhln1Y++qFzaWdiHqqwm47Mv80EQleybDfOthFj0I9w0hEb1Yi/3UdxD/L/TlER/Cua4uCQoETp2XysoVq39O9kH5lcPi3x0kpwJ610LOEci3xPCliOV/Of0kfeL+9h7d9QTIeGxyg3bOGkjcU/HhCxDvFNj/b2c3v/dNFKlQK
-X-Forefront-Antispam-Report: CIP:64.207.220.244;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:wcmailrelayl01.cadence.com;PTR:ErrorRetry;CAT:NONE;SFS:(4636009)(396003)(346002)(136003)(376002)(39860400002)(36092001)(46966006)(110136005)(36906005)(186003)(81166007)(82740400003)(8676002)(26005)(8936002)(36756003)(107886003)(336012)(6666004)(426003)(356005)(2906002)(5660300002)(1076003)(4326008)(82310400003)(83380400001)(54906003)(2616005)(42186006)(70586007)(47076005)(86362001)(478600001)(316002)(70206006)(2101003);DIR:OUT;SFP:1101;
-X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Dec 2020 14:05:31.5435
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: a14a07d7-5dae-4ebc-b92e-08d8ab39a370
-X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[64.207.220.244];Helo=[wcmailrelayl01.cadence.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM12FT022.eop-nam12.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR07MB3575
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2020-12-28_11:2020-12-28,2020-12-28 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0
- priorityscore=1501 impostorscore=0 lowpriorityscore=0 bulkscore=0
- spamscore=0 phishscore=0 mlxscore=0 clxscore=1015 adultscore=0
- malwarescore=0 suspectscore=0 mlxlogscore=934 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2012280088
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [v6,3/4] PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192
+In-Reply-To: <1609156917.14736.171.camel@mhfsdcap03>
+References: <20201225100308.27052-1-jianjun.wang@mediatek.com>
+        <20201225100308.27052-4-jianjun.wang@mediatek.com>
+        <87ft3tpu67.wl-maz@kernel.org>
+        <1609156917.14736.171.camel@mhfsdcap03>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: jianjun.wang@mediatek.com, youlin.pei@mediatek.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com, qizhong.cheng@mediatek.com, chuanjia.liu@mediatek.com, linux-pci@vger.kernel.org, drinkcat@chromium.org, ryder.lee@mediatek.com, linux-kernel@vger.kernel.org, sin_jieyang@mediatek.com, sj.huang@mediatek.com, robh+dt@kernel.org, linux-mediatek@lists.infradead.org, p.zabel@pengutronix.de, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org, matthias.bgg@gmail.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Cadence controller will not initiate autonomous speed change if strapped 
-as Gen2. The Retrain Link bit is set as quirk to enable this speed change.
-Adding a quirk flag for defective IP. In future IP revisions this will not
-be applicable.
+On Mon, 28 Dec 2020 12:01:57 +0000,
+Jianjun Wang <jianjun.wang@mediatek.com> wrote:
+> 
+> On Fri, 2020-12-25 at 19:22 +0000, Marc Zyngier wrote:
 
-Version history:
-Changes in v6:
-- Move the position of function cdns_pcie_host_wait_for_link to remove
-  compilation error. No changes in code. Separate patch for this.
-Changes in v5:
-- Remove the compatible string based setting of quirk flag.
-- Removed additional Link Up Check
-- Removed quirk from pcie-cadence-plat.c and added in pci-j721e.c
-Changes in v4:
-- Added a quirk flag based on a new compatible string.
-- Change of api for link up: cdns_pcie_host_wait_for_link().
-Changes in v3:
-- To set retrain link bit,checking device capability & link status.
-- 32bit read in place of 8bit.
-- Minor correction in patch comment.
-- Change in variable & macro name.
-Changes in v2:
-- 16bit read in place of 8bit.
+Dropped	<Project_Global_Chrome_Upstream_Group@mediatek.com>, as it
+bounces:
 
-Nadeem Athani (2):
-  PCI: cadence: Retrain Link to work around Gen2 training defect.
-  PCI: cadence: Retrain Link to work around Gen2 training defect.
+<Project_Global_Chrome_Upstream_Group@mediatek.com>: host
+    mailgw01.mediatek.com[216.200.240.184] said: 550 Relaying mail to
+    project_global_chrome_upstream_group@mediatek.com is not allowed (in reply
+    to RCPT TO command)
 
- drivers/pci/controller/cadence/pci-j721e.c         |  3 +
- drivers/pci/controller/cadence/pcie-cadence-host.c | 65 ++++++++++++++++------
- drivers/pci/controller/cadence/pcie-cadence.h      | 11 +++-
- 3 files changed, 61 insertions(+), 18 deletions(-)
+Please make sure you don't Cc email addresses that cannot accept email
+form the outside world.
+
+[...]
+
+> > > +/**
+> > > + * struct mtk_pcie_msi - MSI information for each set
+> > > + * @base: IO mapped register base
+> > > + * @irq: MSI set Interrupt number
+> > > + * @index: MSI set number
+> > > + * @msg_addr: MSI message address
+> > > + * @domain: IRQ domain
+> > > + */
+> > > +struct mtk_pcie_msi {
+> > > +	void __iomem *base;
+> > > +	unsigned int irq;
+> > > +	int index;
+> > > +	phys_addr_t msg_addr;
+> > > +	struct irq_domain *domain;
+> > > +};
+> > 
+> > This looks odd. You seem to say that this covers a set if MSIs, and
+> > yet the irq field here clearly isn't part of a set. Is that per MSI
+> > instead? Either way, something is not quite as it should be.
+> > 
+> 
+> Appreciate all these comments, please allow me to explain the MSI
+> interrupt design in this HW.
+> 
+> The HW design of MSI interrupts will be like the following:
+> 
+>                   +-----+
+>                   | GIC |
+>                   +-----+
+>                      ^
+>                      |
+>                      |[port->irq]
+>                      |
+>              +-+-+-+-+-+-+-+-+
+>              |0|1|2|3|4|5|6|7|[PCIe intc]
+>              +-+-+-+-+-+-+-+-+
+>               ^ ^           ^
+>               | |    ...    |[msi_info->irq]
+>       +-------+ +------+    +-----------+
+>       |                |                |
+> +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
+> |0|1|...|30|31|  |0|1|...|30|31|  |0|1|...|30|31|[MSI sets]
+> +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
+>  ^ ^      ^  ^    ^ ^      ^  ^    ^ ^      ^  ^
+>  | |      |  |    | |      |  |    | |      |  | [MSI irq]
+>  | |      |  |    | |      |  |    | |      |  |
+> 
+>   (MSI SET0)       (MSI SET1)  ...   (MSI SET7)
+> 
+
+Thanks, that's really helpful. You should consider adding this to the
+driver code, as part of the documentation.
+
+> In software parts, the port->msi_top_domain is created to maintains 8
+> MSI IRQs from the PCIe intc layer, its hardware IRQ will be mapped to
+> msi_info->irq by irq_create_mapping.
+> 
+> The port->msi_domain contains 256 MSI IRQs in total, it consist of 8 MSI
+> sets, and each MSI set contains 32 MSI IRQs.
+> 
+> The structure of mtk_pcie_msi is used to describe the MSI set, I think
+> it will be more convenient and comply with the HW design when use this
+> structure, we can get the information of MSI set directly, instead of
+> calculated by port->base.
+> 
+> When a MSI interrupt is received, the interrupt handle flow will be like
+> the following:
+> 
+>               mtk_pcie_irq_handler (port->irq)
+>                         |
+>                         |(find mapping in msi_top_domain)
+>                         |
+>                         v
+>                 mtk_pcie_msi_handler (msi_info->irq)
+>                         |
+>                         |(find mapping in msi_domain)
+>                         |
+>                         v
+>                  handle_edge_irq  (MSI irq)
+>                         |
+>                         |
+>                         v
+>             (dispatch to device handler)
+> 
+> Yes, I had to admit that it's not a quite good solution of irqdomains,
+> since the local irq domain is partial coupled with the standard PCI MSI
+> irqdomain.
+> 
+> Should I need to create another irqdomain to maintain the MSI sets
+> layer, and set it as the parent domain of PCI MSI domain? I really need
+> your suggestions, thanks a lot.
+
+<rant>
+My first suggestion would be to go back to whoever put this HW block
+together and make sure they never write a line of RTL ever again.
+Programming using copy/paste is bad enough, but doing the same thing
+with HW is just terrible.
+</rant>
+
+Ideally, you would model the whole thing as 8 distinct MSI
+controllers, as that is effectively what they are. Evidently, this
+would cause all kind of issues when associating PCI devices with their
+MSI domain, so let's not do that.
+
+So what we want is to have a single MSI domain (with 256 entries,
+hence covering all sets), and compute the hwirq from the level below,
+depending on the interrupt PCIe interrupt, and the index of the MSI in
+the status register for this PCIe interrupt. I think you have most of
+the information already, you just need to simplify the way you keep
+track of it, and maybe come up with better names for the various
+blocks.
+
+I expect you would need something like this:
+
+struct mtk_msi_set {
+	void __iomem		*base;
+	phys_addr_t		msg_addr;
+};
+
+struct mtk_pcie_port {
+[...]
+	int 			base_irq;
+	struct mtk_msi_set	msi_sets[8];
+[...]
+};
+
+The assumption is that you can build the bottom MSI domain hwirq as:
+
+    hwirq = set_idx * 32 + set_status_bit;
+
+From that, you can directly go back from a hwirq to a set, and index
+the msi_sets[] array to find the relevant information.
+
+Another assumption is that all 8 cascade interrupts are contiguous
+(which is pretty easy to guarantee), meaning that you can directly use
+the PCIe interrupt to compute the set number.
+
+With all that, you can directly keep a pointer from the bottom MSI
+domain irq_data structures to the mtk_pcie_port structure, providing
+you with all the information you need.
+
+Once you will have moved the various bits at the right place, and used
+the established MSI abstractions, things should just work.
+
+[...]
+
+> > > +static void mtk_intx_eoi(struct irq_data *data)
+> > > +{
+> > > +	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+> > > +	unsigned long hwirq;
+> > > +
+> > > +	/**
+> > > +	 * As an emulated level IRQ, its interrupt status will remain
+> > > +	 * until the corresponding de-assert message is received; hence that
+> > > +	 * the status can only be cleared when the interrupt has been serviced.
+> > > +	 */
+> > > +	hwirq = data->hwirq + PCIE_INTX_SHIFT;
+> > > +	writel(BIT(hwirq), port->base + PCIE_INT_STATUS_REG);
+> > 
+> > All of this is the description of a level interrupt, so this is pretty
+> > much devoid of any information as to *why* you need to write to clear
+> > this bit. What happens if the interrupt is still asserted because
+> > nothing has handled it? Without any further information, this looks
+> > terribly wrong.
+> 
+> Sorry, this comment should be used to describe the mtk_intx_eoi
+> function, it cause misunderstandings at this place. I just want to add
+> the comment to explain that why this interrupt needs to be acked at the
+> end of interrupt. I will move it to the front of mtk_intx_eoi in the
+> next version.
+
+Is it an ack or an eoi? These are two different things, and really
+depends on your HW. Please find out which one it is, and we will work
+out a way to handle it.
+
+Thanks,
+
+	M.
 
 -- 
-2.15.0
-
+Without deviation from the norm, progress is not possible.
