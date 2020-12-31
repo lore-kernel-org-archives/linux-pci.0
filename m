@@ -2,213 +2,187 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B2ECC433DB
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 09:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFF5DC433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 10:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2DCD2158C
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 09:54:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4C93222F9
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 10:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbgLaJxr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Dec 2020 04:53:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33844 "EHLO
+        id S1726480AbgLaKTV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Dec 2020 05:19:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726314AbgLaJxq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Dec 2020 04:53:46 -0500
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04D29C061573;
-        Thu, 31 Dec 2020 01:53:05 -0800 (PST)
-Received: by mail-wr1-x42d.google.com with SMTP id y17so19652216wrr.10;
-        Thu, 31 Dec 2020 01:53:05 -0800 (PST)
+        with ESMTP id S1726155AbgLaKTV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Dec 2020 05:19:21 -0500
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7C2EC061575;
+        Thu, 31 Dec 2020 02:18:40 -0800 (PST)
+Received: by mail-pg1-x52a.google.com with SMTP id i5so12905504pgo.1;
+        Thu, 31 Dec 2020 02:18:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=YF71dzy+MFxNw65yBM8dHFE8HiMyhHIt7kgx+93oEvA=;
-        b=ZkmXxVyiZJwiIB92DWc6kvIpONqpOxBzvqX6it06fm5cV3WUlLW00u0SiRsKQzzqz3
-         kAn2v+Qv6nr2UvE6REIimEnA3Lo043b/jLtkzogv3qzBoQ4MCDSLBAlkvoPoSR08ucfO
-         KX8cKtY/uYc84/laXlGnIv2a//Ro3B9NXxyg82SavYuAfFC4JbJxIlRwiYNNkt2tIF8N
-         jVb1PXvBg7sG8nM35CY9Gp+UL3pFzkm3Z+YLur/UVieTbSVezSCcq1QXb1z9csQNuzRg
-         oCViYFtBoTxo33EOIBVLUu+F5hoS6A6InizKrjaopWfV/ol9fSUPVT3YUa8ym7JtIUNS
-         6nXw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=wt9aTWsCxTK7BCW3efLWqM4G7L9tFvgWhfSlVEaResA=;
+        b=fspu6YW/lHUq6ophkaJE7TRHExxHRWfEDUYUMRj5a4s2+pQQRpa9nEjW9mlx2TlayK
+         zXpX4/J7dhktZJotqLAYGLd2y240jq2Y7z0e+5o1VPCXxFZIbRxt+9kevPafIzi9AuY7
+         D+fSr1LoMLn8oLp96udArYLDe+DEvTRz8KSYTPbmJ0D08RatDNtc0gUhKEttodQYGA9V
+         Z22sdm8c68Tk6OQjhNKxSv887MnH8Ua2Vg0OtOUgtGrGN0ANHNhenYjXliFqOs+vnXb/
+         UzNDDrnb8/WsdJjBnKsLVdZykPhBxTFi5IiknrnqlZtjIt99x0bwgRAaY7FZfkbpUphD
+         Lfrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=YF71dzy+MFxNw65yBM8dHFE8HiMyhHIt7kgx+93oEvA=;
-        b=Fp5QOwL8bqkUXdw62vl2Lvfbcg8bTMvrmfUol1lt5+6OzurcbTrJOeJgy3khboS6K9
-         cLy5aXbQ8rF1mZffEdi7f2qajpCBkUEnKHLu3NTNShzi3H6QESdhxAEFhgo1Ou7pMfPj
-         ttT/+XW4RVKXeD1TSfaKT74S0qv25bftDWEu2i+lDBf/U81pQ7xw8FvnRwL15v+8UdoL
-         o8bz1Yp0X5/IhbpxztsxaChfUYaVkEUbL7oD6WPJnnLvFlnDerqoVOMRW2FatdO5PUT1
-         J0PDhz6kyNvhhfpzcJ+Jhq5Tuu4rOUAVCE6Bt14zRiACuWfTn33FDVrbIxjY79Y0qwVR
-         /jdw==
-X-Gm-Message-State: AOAM531MYoW0P4UBNF36n0QLnYL0vIc+I1ODMjKxp7q7dA2owDmMdiZ3
-        wa/iKD03g5h6N9tPu6WepcoXpqxqdlc=
-X-Google-Smtp-Source: ABdhPJwHyntrAOW2pMt13fbOqm8KshfuKwbX4RGFJrnNyjLYzkeYS1/dvuhGBE+t3EIV5a9KznUddw==
-X-Received: by 2002:a05:6000:108b:: with SMTP id y11mr63362507wrw.379.1609408384292;
-        Thu, 31 Dec 2020 01:53:04 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f06:5500:d936:bdcf:7b64:bfc4? (p200300ea8f065500d936bdcf7b64bfc4.dip0.t-ipconnect.de. [2003:ea:8f06:5500:d936:bdcf:7b64:bfc4])
-        by smtp.googlemail.com with ESMTPSA id 189sm11752920wma.22.2020.12.31.01.53.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 31 Dec 2020 01:53:03 -0800 (PST)
-Subject: Re: Time to re-enable Runtime PM per default for PCI devcies?
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kai Heng Feng <kai.heng.feng@canonical.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <79940973-b631-90f9-dbc4-9579c6000816@gmail.com>
- <20201117163817.GA1397220@bjorn-Precision-5520>
- <CAJZ5v0ipMJ1gCB7okpROG_yAUi5Q8LknqeH+Jpdrjbb4D_vfuQ@mail.gmail.com>
- <9ca0fb46-9e65-31e2-103f-1c98ce8362c7@gmail.com>
- <20201231040735.GA2075@wunner.de>
- <4eb10092-e3f9-c9be-2dec-e6de8aeedf97@gmail.com>
-Message-ID: <5c618c30-b389-4545-e9c4-9fcec729b80d@gmail.com>
-Date:   Thu, 31 Dec 2020 10:52:58 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
-MIME-Version: 1.0
-In-Reply-To: <4eb10092-e3f9-c9be-2dec-e6de8aeedf97@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=wt9aTWsCxTK7BCW3efLWqM4G7L9tFvgWhfSlVEaResA=;
+        b=lSKDLYFF4nKF4A640D1HJZftJhM6+AE6mN4u+mPqO8BE9Knoyn+juv9tIzmSdP4Gr1
+         4lXw+Gf3ELZhSiamJZUnGCTHMS9y4aRp5pdS92wReouNWFvlwQq2d+cSz+RLnOv1m4DC
+         W6BVlffRVJH1ZQIrJavgom9/Rl6/4NV8M87Fgui+046E1ZJrCH0OpDuhgGX4ou+VzLZD
+         Tjp8JX4u5L3HzNgH9Ti8DGGC2b+PFFwJKK618OYFdRp5dhWjuOnZgSguOcfJMQJ1CxXe
+         QVvpKSzDgL/tNZBpreftg/ZpzN6UzrHEsfPxvyeOg0PVulg0Ohp3YTFhRv6EQNkcppFo
+         1Aaw==
+X-Gm-Message-State: AOAM532oqNNEUQiuWPbeepK1ZZ9ytyBM3jPdwKE+rNldQqoOYzsLxmTL
+        bdDlyXKt5wAel11xkxk4r78=
+X-Google-Smtp-Source: ABdhPJw5KXc3ZEYv5eTvl93pa6DdukkfZWQ7S9owJ3qhd5bekszmoRBHslBh11Nohgeq2eheG7iQPw==
+X-Received: by 2002:a63:4d59:: with SMTP id n25mr37051821pgl.122.1609409920399;
+        Thu, 31 Dec 2020 02:18:40 -0800 (PST)
+Received: from sh05419pcu.spreadtrum.com ([117.18.48.82])
+        by smtp.gmail.com with ESMTPSA id a141sm45470937pfa.189.2020.12.31.02.18.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 31 Dec 2020 02:18:39 -0800 (PST)
+From:   Hongtao Wu <wuht06@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hongtao Wu <billows.wu@unisoc.com>
+Subject: [PATCH v5 1/2] dt-bindings: PCI: sprd: Document Unisoc PCIe RC host controller
+Date:   Thu, 31 Dec 2020 18:18:24 +0800
+Message-Id: <1609409905-30721-2-git-send-email-wuht06@gmail.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1609409905-30721-1-git-send-email-wuht06@gmail.com>
+References: <1609409905-30721-1-git-send-email-wuht06@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31.12.2020 10:38, Heiner Kallweit wrote:
-> On 31.12.2020 05:07, Lukas Wunner wrote:
->> On Wed, Dec 30, 2020 at 11:56:04PM +0100, Heiner Kallweit wrote:
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -3024,7 +3024,9 @@ void pci_pm_init(struct pci_dev *dev)
->>>  	u16 status;
->>>  	u16 pmc;
->>>  
->>> -	pm_runtime_forbid(&dev->dev);
->>> +	if (pci_acpi_forbid_runtime_pm())
->>> +		pm_runtime_forbid(&dev->dev);
->>> +
->>
->> Generic PCI code usually does not call ACPI-specific functions directly,
->> but rather through a pci_platform_pm_ops callback.
->>
->> FWIW, if platform_pci_power_manageable() returns true, it can probably
->> be assumed that allowing runtime PM by default is okay.  So as a first
->> step, you may want to call that instead of adding a new callback.
->>
-> I don't think that's sufficient. Most likely all the broken old systems
-> return true for platform_pci_power_manageable(). So yes, most likely
-> we'd need a new callback if we want to have the platform ops abstraction.
-> But it could be an optional callback, something like: forbid_runtime_pm
-> The question is just: is it worth it?
-> 
-> By the way: pci_set_platform_pm() returns an error if a callback isn't
-> set, but no existing caller bothers to check the return code.
-> 
->> Thanks,
->>
->> Lukas
->>
-> Heiner
-> 
+From: Hongtao Wu <billows.wu@unisoc.com>
 
-This would be the version with the abstraction.
+This series adds PCIe bindings for Unisoc SoCs.
+This controller is based on DesignWare PCIe IP.
 
+Signed-off-by: Hongtao Wu <billows.wu@unisoc.com>
 ---
- drivers/pci/pci-acpi.c | 6 ++++++
- drivers/pci/pci.c      | 9 ++++++++-
- drivers/pci/pci.h      | 5 ++++-
- 3 files changed, 18 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/pci/sprd-pcie.yaml         | 93 ++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 53502a751..b57a79af7 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1108,6 +1108,11 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
- 	return !!adev->power.flags.dsw_present;
- }
- 
-+static bool acpi_pci_forbid_runtime_pm(void)
-+{
-+	return acpi_gbl_FADT.header.revision < 6;
-+}
+diff --git a/Documentation/devicetree/bindings/pci/sprd-pcie.yaml b/Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+new file mode 100644
+index 0000000..ede06a8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/sprd-pcie.yaml
+@@ -0,0 +1,93 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/sprd-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
- static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.bridge_d3 = acpi_pci_bridge_d3,
- 	.is_manageable = acpi_pci_power_manageable,
-@@ -1117,6 +1122,7 @@ static const struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.choose_state = acpi_pci_choose_state,
- 	.set_wakeup = acpi_pci_wakeup,
- 	.need_resume = acpi_pci_need_resume,
-+	.forbid_runtime_pm = acpi_pci_forbid_runtime_pm,
- };
- 
- void acpi_pci_add_bus(struct pci_bus *bus)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b9fecc25d..3af832b7f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -982,6 +982,12 @@ static inline bool platform_pci_need_resume(struct pci_dev *dev)
- 	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
- }
- 
-+static inline bool platform_pci_forbid_runtime_pm(void)
-+{
-+	return pci_platform_pm && pci_platform_pm->forbid_runtime_pm ?
-+	       pci_platform_pm->forbid_runtime_pm() : false;
-+}
++title: SoC PCIe Host Controller Device Tree Bindings
 +
- static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
- {
- 	if (pci_platform_pm && pci_platform_pm->bridge_d3)
-@@ -3024,7 +3030,8 @@ void pci_pm_init(struct pci_dev *dev)
- 	u16 status;
- 	u16 pmc;
- 
--	pm_runtime_forbid(&dev->dev);
-+	if (platform_pci_forbid_runtime_pm())
-+		pm_runtime_forbid(&dev->dev);
- 	pm_runtime_set_active(&dev->dev);
- 	pm_runtime_enable(&dev->dev);
- 	device_enable_async_suspend(&dev->dev);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5c5936509..d2d406ee4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -71,8 +71,10 @@ int pci_bus_error_reset(struct pci_dev *dev);
-  *		 suspended) needs to be resumed to be configured for system
-  *		 wakeup.
-  *
-+ * @forbid_runtime_pm: returns true in case of known issues breaking runtime pm
-+ *
-  * If given platform is generally capable of power managing PCI devices, all of
-- * these callbacks are mandatory.
-+ * these callbacks are mandatory (except forbid_runtime_pm).
-  */
- struct pci_platform_pm_ops {
- 	bool (*bridge_d3)(struct pci_dev *dev);
-@@ -83,6 +85,7 @@ struct pci_platform_pm_ops {
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
- 	int (*set_wakeup)(struct pci_dev *dev, bool enable);
- 	bool (*need_resume)(struct pci_dev *dev);
-+	bool (*forbid_runtime_pm)(void);
- };
- 
- int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
--- 
-2.29.2
-
++maintainers:
++  - Hongtao Wu <billows.wu@unisoc.com>
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: sprd,ums9520-pcie
++
++  reg:
++    minItems: 2
++    items:
++      - description: Controller control and status registers.
++      - description: PCIe configuration registers.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: config
++
++  ranges:
++    maxItems: 2
++
++  num-lanes:
++    maximum: 1
++    description: Number of lanes to use for this port.
++
++  interrupts:
++    minItems: 1
++    description: Builtin MSI controller and PCIe host controller.
++
++  interrupt-names:
++    items:
++      - const: msi
++
++  sprd,regmap-aon:
++    $ref: '/schemas/types.yaml#/definitions/phandle'
++    description:
++      Phandle to the AON system controller node (to access the
++      AON_ACCESS_PCIE_EN register on ums9520).
++  sprd,regmap-pmu:
++    $ref: '/schemas/types.yaml#/definitions/phandle'
++    description:
++      Phandle to the PMU system controller node (to access the PERST_N_ASSERT
++      register on ums9520).
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - num-lanes
++  - ranges
++  - interrupts
++  - interrupt-names
++
++additionalProperties: true
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    ipa {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie0: pcie@2b100000 {
++            compatible = "sprd,ums9520-pcie";
++            reg = <0x0 0x2b100000 0x0 0x2000>,
++                  <0x2 0x00000000 0x0 0x2000>;
++            reg-names = "dbi", "config";
++            #address-cells = <3>;
++            #size-cells = <2>;
++            device_type = "pci";
++            ranges = <0x01000000 0x0 0x00000000 0x2 0x00002000 0x0 0x00010000>,
++                     <0x03000000 0x0 0x10000000 0x2 0x10000000 0x1 0xefffffff>;
++            num-lanes = <1>;
++            interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi";
++
++            sprd,regmap-aon = <&aon_regs>;
++            sprd,regmap-pmu = <&pmu_regs>;
++        };
++    };
+--
+2.7.4
 
