@@ -2,122 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 594BCC43331
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 10:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23577C433E9
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 12:38:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F08E222F9
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 10:19:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D353622483
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Dec 2020 12:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgLaKTS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Dec 2020 05:19:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37816 "EHLO
+        id S1726356AbgLaMiW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Dec 2020 07:38:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726155AbgLaKTR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Dec 2020 05:19:17 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B012C061573;
-        Thu, 31 Dec 2020 02:18:37 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id n25so12900758pgb.0;
-        Thu, 31 Dec 2020 02:18:37 -0800 (PST)
+        with ESMTP id S1726563AbgLaMiW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Dec 2020 07:38:22 -0500
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDC92C061575
+        for <linux-pci@vger.kernel.org>; Thu, 31 Dec 2020 04:37:41 -0800 (PST)
+Received: by mail-lf1-x12b.google.com with SMTP id o19so43876847lfo.1
+        for <linux-pci@vger.kernel.org>; Thu, 31 Dec 2020 04:37:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=9R2jGV3ELt7e4yRKD7ul8p29a+2uSNEqBXC3W5gt1Gk=;
-        b=en66T6zNOVQmN1ObDfufH9C8UVy2z+bsJ3I8JkCTQqM8q2a8CkGzcFGs9d6deSfMFG
-         YBcGQ/VDd+dz0fqig7f+kCgdrbxvnpENOPWqX4+XBFRJfHFSgcv8fzoO3i6xa9i0ZMdl
-         Eu+aNtXzr6SRRhntTSLvEqqA8Iz9JI9LSZAvajlsP51WjK+irf6EHwsXDiKYz7nQIRgA
-         5HNDPOMzVUPn/AChwjuTHmwFbARkkQ90k1j++gPZJFxVdG9KyolFO2SVW8triwEdXxau
-         Nq2sgJemiZbYFLPM90meD3ga02JrqE1gcwwoQPYb7t5x7QHkjK/FBqglm3hMrXaYcqlp
-         EXzQ==
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FRvyjzrInJpr3JKYBPCGmHtSIznRuodhBrrQbM80/4I=;
+        b=VmmjIU5Ul+tMl2tDQKoP+sb1H0ZpnytOlddmTpnhtAbZjE8gaQU4t/IeRTRMZ5TLsZ
+         PakilYaLK2ZLnFKkF65UcE22481MPO6enwqz/C+rjTWahfokwrjbxBe+16GSneEEGDHZ
+         /MSQJ0ol2LX/Sdh+WY6m99mCM6IFdv0AB3He+8/Jvctbee1u0OVLDlWFhEa4Y4sJBTTC
+         Kb+yZJq0XcSPgh8qK0UCnUvft1i6bU60GLdfkY1HNfGBGvjFk1mJr9pMAJgOqiEBZ97U
+         tQL+DTuAXiu4aPdSQsQs1aZeSzbmSMOnveg4lU8NHjz74nte75/e8GRaKoqeN22rvmts
+         v6EA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=9R2jGV3ELt7e4yRKD7ul8p29a+2uSNEqBXC3W5gt1Gk=;
-        b=DQV0HKQsmrs84cseQaLxD3dPRdRln8jrnCx9LTRPzC/NQC/vF/d4uWpIZoPyPgaf7t
-         EbWi/VZhd47rj4PlqeIj5YCN+Bgi/RDgiL4TcolLcV+jqZqle56/yyaEsMB4tFtYLTpL
-         udGepxcZ5ttT1Lb/+bJONzv20KIslvCM0PPpQHxb4E6Yi4G9OKO+ZHPbl0IOJWJynAB5
-         E3PVpFvQEq+i2BkbOseCs6qZaimQGVX0kHut9TH1/WX3Vooe4kkPS2gZaYtym0/Gs6A/
-         hNn3BkpdmaRpQIGBRqk9+MHiqG6mR/dxfQqoLciU/xIZpa4DtX2REd6bsz1IFejeDF59
-         vZng==
-X-Gm-Message-State: AOAM532i4i9Y00PYu+B1HEMh9BNZCBIlGyGMkDdMpRaH/kOLOHFsDegT
-        yy4vQqPPI1JBEeOPLcVQ0xUQsOibEFE=
-X-Google-Smtp-Source: ABdhPJzJoXvuqusBd5m0e3oR2Tr8yOJqQ0B3YLY9VN4xQnBxERuNBhD3a8nHuatRl2rj7k+5QI7C9g==
-X-Received: by 2002:a62:c1c4:0:b029:1a7:efe9:163c with SMTP id i187-20020a62c1c40000b02901a7efe9163cmr30994880pfg.47.1609409916508;
-        Thu, 31 Dec 2020 02:18:36 -0800 (PST)
-Received: from sh05419pcu.spreadtrum.com ([117.18.48.82])
-        by smtp.gmail.com with ESMTPSA id a141sm45470937pfa.189.2020.12.31.02.18.31
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 31 Dec 2020 02:18:35 -0800 (PST)
-From:   Hongtao Wu <wuht06@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Hongtao Wu <billows.wu@unisoc.com>
-Subject: [PATCH v5 0/2] PCI: Add new Unisoc PCIe driver
-Date:   Thu, 31 Dec 2020 18:18:23 +0800
-Message-Id: <1609409905-30721-1-git-send-email-wuht06@gmail.com>
-X-Mailer: git-send-email 2.7.4
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FRvyjzrInJpr3JKYBPCGmHtSIznRuodhBrrQbM80/4I=;
+        b=MFfxwK9EdK3VHokGJ6PAsPL+ykyXi4JfFv60Pd4HjMdX32Wdu+eW6ZKHsZtBxxs5+s
+         v4NZyefsM/bg/9NPJaocSkavO8mSC+f0mPaHdOCCau9tgYMEAdxvqFFXDK5T+rn67LQX
+         G6ErIkcwj6rU5dhITMvF/HyLwyRGGbp54hr0XZO/WE9Pa6Q1FhE0W+r2GTn/1xRs8ddE
+         tAUQDMOl+ya+d78sXooxeAQrMmZ8GQUJIz75SVAoDgtbdcfzY0r3T9AFhzO1uaKQKWFb
+         PpJOLNQrQXhlukRNo3WvEQqEQdnP/++7CwZZUaziTOCygil7jbPblYf2eJrlBywSM5Pl
+         0CZw==
+X-Gm-Message-State: AOAM5330ouR4teRGvwhj2cvpWE/vOaWazfvDumC4F8i7wlCXOdbVFc9u
+        m3HuVXoJXtQIhXBzTFwvt9aJLQ==
+X-Google-Smtp-Source: ABdhPJwZfUAXME/RWsxQic66C4+o11KELhLx7q5JEgO0B4MxXcmjdKKLZxArx/G0ndiU0iRoGzpakA==
+X-Received: by 2002:a05:651c:c1:: with SMTP id 1mr29848841ljr.124.1609418260317;
+        Thu, 31 Dec 2020 04:37:40 -0800 (PST)
+Received: from eriador.lumag.spb.ru ([94.25.228.115])
+        by smtp.gmail.com with ESMTPSA id o11sm6228624lfi.267.2020.12.31.04.37.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Dec 2020 04:37:39 -0800 (PST)
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-arm-msm@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v3 0/2] PCI: qcom: fix PCIe support on sm8250
+Date:   Thu, 31 Dec 2020 15:37:29 +0300
+Message-Id: <20201231123731.651908-1-dmitry.baryshkov@linaro.org>
+X-Mailer: git-send-email 2.29.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hongtao Wu <billows.wu@unisoc.com>
+Some sm8250 platforms require additional clock to be enabled for PCIe to
+function. In case it is disabled, PCIe access will result in IOMMU
+timeouts. Add device tree binding and driver support for this clock.
 
-This series adds PCIe controller driver for Unisoc SoCs.
-This controller is based on DesignWare PCIe IP.
+Changes since v2:
+ - Split this clock handling from qcom_pcie_get_resources_2_7_0()
+ - Change comment to point that the clock is required rather than
+   optional
 
-Changes from v1:
-1) Test this patch on top of Rob Herring's 40 part series of DWC clean-ups:
-   https://lore.kernel.org/linux-pci/20200821035420.380495-1-robh@kernel.org/
+Changes since v1:
+ - Added Fixes: tags, as respective patches have hit the upstream Linux
+   tree.
 
-2) Delete empty function
-
-3) Document property "sprd,pcie-poweron-syscons" and
-   'sprd,pcie-poweroff-syscons'
-
-4) Delete runtime suspend/resume function
-
-5) Add COMPILE_TEST which CONFIG_PCIE_SPRD depends on
-
-Changes from v2:
-1) Change RC mode to host mode in drivers/pci/controller/dwc/Kconfig
-
-2) Change Signed-off-by from Billows Wu to Hongtao Wu
-
-Changes from v3:
-1) Split the property 'sprd,pcie-poweron-syscons' and
-   'sprd,pcie-poweroff-syscons' into reset, power domains, phy and so on.
-
-2) Delete the function to get resource 'msi' and 'dbi' which were parsed by the
-   DW core.
-
-3) Delete the function 'sprd_pcie_host_init', because the DW core has done it.
-
-Changes from v4:
-1) Install 'yamllint' and upgrade dt-schema in order to solve the yamllint and
-   dtschema/dtc warnings/errors.
-
-Hongtao Wu (2):
-  dt-bindings: PCI: sprd: Document Unisoc PCIe RC host controller
-  PCI: sprd: Add support for Unisoc SoCs' PCIe controller
-
- .../devicetree/bindings/pci/sprd-pcie.yaml         |  93 +++++++
- drivers/pci/controller/dwc/Kconfig                 |  12 +
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pcie-sprd.c             | 293 +++++++++++++++++++++
- 4 files changed, 399 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-sprd.c
-
---
-2.7.4
 
