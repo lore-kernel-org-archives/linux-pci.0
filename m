@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEF2C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E04B1C4332E
 	for <linux-pci@archiver.kernel.org>; Sun,  3 Jan 2021 08:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23D18208C7
+	by mail.kernel.org (Postfix) with ESMTP id BC8412080D
 	for <linux-pci@archiver.kernel.org>; Sun,  3 Jan 2021 08:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726289AbhACIZ2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 3 Jan 2021 03:25:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43432 "EHLO mail.kernel.org"
+        id S1726511AbhACIZf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 3 Jan 2021 03:25:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43594 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725829AbhACIZ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 3 Jan 2021 03:25:27 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AC6612080D;
-        Sun,  3 Jan 2021 08:24:45 +0000 (UTC)
+        id S1725829AbhACIZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 3 Jan 2021 03:25:34 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D3276208C7;
+        Sun,  3 Jan 2021 08:24:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609662286;
-        bh=SCUPa5CjLPZTftht/C8AD6ge/LKIqPYJxn5ORp7KbYM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=hXppJJJb8oMO/IU/WbBnrDq+9iZTjEBUB8OoVfwF80I5BrUXdo4gjDCAGu+mIr8tq
-         r2l5LRbCyqmS3qAr8DP+0J2rThaZ0FvTNox1z7kAm5nX698yd+EQ2GGK8pxqZqCAr9
-         5gwzzHX+KImA5tf3qv8bTs7Ouc8nbBY8ObXRZicTUg6fTno53zAqMTyZUPOigFvpQi
-         LmeawltxWlipUyLHUCHz0YRbrwNRtlp+r9uVyzeewJ1o97JXmUVyOuG8oGtkaLthSF
-         OdFAHwmE6S9OpBefWTwUjT3iz/K6u+s/LnKSz/fteL7BdYZ11GL18gLNnxfvjoMecI
-         SOrhdjmnLbWvw==
+        s=k20201202; t=1609662293;
+        bh=+yd9TuWRXHGsFJoZI63O/bIebwy94R+CRXZFXnWYgo8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CelT3ANDHl40Oa178duxrifFyxZn+r16a7ankDD9T3XBrcfQq0oE75EJmiOuN1E4u
+         /zEUQT/EoGWm+U3JlNx8eS5sFa3nL+echm95EJeoq/4UezX0Q9fObOpzmEXlzwKbPD
+         PHfW8tQBWEoLevk0Y479rlLDpDcjHAk6o2UU2VVwLiDrUBrlANK1NxpdGHqI7aGmfs
+         nqDQ+fU3NsTAbmhLFr7LA1JF0+8TsCWmBeuOF77oduWxyAwUiPONKC/TdZt6DVN2V0
+         Ji1TdudzhrMIIXrcXrqqXzNiUJTpmKhRkUnj+6Omu/MVTW+QC5/xgQ+EQWzxql3+ck
+         pKx/xkYmXtF+Q==
 From:   Leon Romanovsky <leon@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Saeed Mahameed <saeedm@nvidia.com>
@@ -38,10 +38,12 @@ Cc:     Leon Romanovsky <leonro@nvidia.com>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Jakub Kicinski <kuba@kernel.org>, linux-pci@vger.kernel.org,
         linux-rdma@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH mlx5-next 0/4] Dynamically assign MSI-X vectors count
-Date:   Sun,  3 Jan 2021 10:24:36 +0200
-Message-Id: <20210103082440.34994-1-leon@kernel.org>
+Subject: [PATCH mlx5-next 3/4] net/mlx5: Dynamically assign MSI-X vectors count
+Date:   Sun,  3 Jan 2021 10:24:39 +0200
+Message-Id: <20210103082440.34994-4-leon@kernel.org>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210103082440.34994-1-leon@kernel.org>
+References: <20210103082440.34994-1-leon@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -50,68 +52,181 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-Hi,
-
 The number of MSI-X vectors is PCI property visible through lspci, that
-field is read-only and configured by the device.
-
-The static assignment of an amount of MSI-X vectors doesn't allow utilize
-the newly created VF because it is not known to the device the future load
-and configuration where that VF will be used.
-
-The VFs are created on the hypervisor and forwarded to the VMs that have
-different properties (for example number of CPUs).
+field is read-only and configured by the device. The static assignment
+of an amount of MSI-X vectors doesn't allow utilize the newly created
+VF because it is not known to the device the future load and configuration
+where that VF will be used.
 
 To overcome the inefficiency in the spread of such MSI-X vectors, we
 allow the kernel to instruct the device with the needed number of such
-vectors, before VF is initialized and bounded to the driver.
+vectors.
 
-Before this series:
+Such change immediately increases the amount of MSI-X vectors for the
+system with 2 VFs from 12 vectors per-VF, to be 32 vectors per-VF.
+
+Before this patch:
 [root@server ~]# lspci -vs 0000:08:00.2
 08:00.2 Ethernet controller: Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function]
 ....
 	Capabilities: [9c] MSI-X: Enable- Count=12 Masked-
 
-Configuration script:
-1. Start fresh
-echo 0 > /sys/bus/pci/devices/0000\:08\:00.0/sriov_numvfs
-modprobe -q -r mlx5_ib mlx5_core
-2. Ensure that driver doesn't run and it is safe to change MSI-X
-echo 0 > /sys/bus/pci/devices/0000\:08\:00.0/sriov_drivers_autoprobe
-3. Load driver for the PF
-modprobe mlx5_core
-4. Configure one of the VFs with new number
-echo 2 > /sys/bus/pci/devices/0000\:08\:00.0/sriov_numvfs
-echo 21 > /sys/bus/pci/devices/0000\:08\:00.2/vf_msix_vec
-
-After this series:
+After this patch:
 [root@server ~]# lspci -vs 0000:08:00.2
 08:00.2 Ethernet controller: Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function]
 ....
-	Capabilities: [9c] MSI-X: Enable- Count=21 Masked-
+	Capabilities: [9c] MSI-X: Enable- Count=32 Masked-
 
-
-Thanks
-
-Leon Romanovsky (4):
-  PCI: Configure number of MSI-X vectors for SR-IOV VFs
-  net/mlx5: Add dynamic MSI-X capabilities bits
-  net/mlx5: Dynamically assign MSI-X vectors count
-  net/mlx5: Allow to the users to configure number of MSI-X vectors
-
- Documentation/ABI/testing/sysfs-bus-pci       | 16 +++++
- .../net/ethernet/mellanox/mlx5/core/main.c    |  5 ++
- .../ethernet/mellanox/mlx5/core/mlx5_core.h   |  6 ++
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ .../net/ethernet/mellanox/mlx5/core/main.c    |  4 ++
+ .../ethernet/mellanox/mlx5/core/mlx5_core.h   |  5 ++
  .../net/ethernet/mellanox/mlx5/core/pci_irq.c | 62 +++++++++++++++++++
- .../net/ethernet/mellanox/mlx5/core/sriov.c   | 49 ++++++++++++++-
- drivers/pci/iov.c                             | 57 +++++++++++++++++
- drivers/pci/msi.c                             | 30 +++++++++
- drivers/pci/pci-sysfs.c                       |  1 +
- drivers/pci/pci.h                             |  1 +
- include/linux/mlx5/mlx5_ifc.h                 | 11 +++-
- include/linux/pci.h                           |  8 +++
- 11 files changed, 243 insertions(+), 3 deletions(-)
+ .../net/ethernet/mellanox/mlx5/core/sriov.c   | 14 ++++-
+ 4 files changed, 83 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index c08315b51fd3..8269cfbfc69d 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -567,6 +567,10 @@ static int handle_hca_cap(struct mlx5_core_dev *dev, void *set_ctx)
+ 	if (MLX5_CAP_GEN_MAX(dev, mkey_by_name))
+ 		MLX5_SET(cmd_hca_cap, set_hca_cap, mkey_by_name, 1);
+
++	if (MLX5_CAP_GEN_MAX(dev, num_total_dynamic_vf_msix))
++		MLX5_SET(cmd_hca_cap, set_hca_cap, num_total_dynamic_vf_msix,
++			 MLX5_CAP_GEN_MAX(dev, num_total_dynamic_vf_msix));
++
+ 	return set_caps(dev, set_ctx, MLX5_SET_HCA_CAP_OP_MOD_GENERAL_DEVICE);
+ }
+
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.h b/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.h
+index 0a0302ce7144..5babb4434a87 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.h
++++ b/drivers/net/ethernet/mellanox/mlx5/core/mlx5_core.h
+@@ -172,6 +172,11 @@ int mlx5_irq_attach_nb(struct mlx5_irq_table *irq_table, int vecidx,
+ 		       struct notifier_block *nb);
+ int mlx5_irq_detach_nb(struct mlx5_irq_table *irq_table, int vecidx,
+ 		       struct notifier_block *nb);
++
++int mlx5_set_msix_vec_count(struct mlx5_core_dev *dev, int devfn,
++			    int msix_vec_count);
++int mlx5_get_default_msix_vec_count(struct mlx5_core_dev *dev, int num_vfs);
++
+ struct cpumask *
+ mlx5_irq_get_affinity_mask(struct mlx5_irq_table *irq_table, int vecidx);
+ struct cpu_rmap *mlx5_irq_get_rmap(struct mlx5_irq_table *table);
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/pci_irq.c b/drivers/net/ethernet/mellanox/mlx5/core/pci_irq.c
+index 6fd974920394..135078e8dd55 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/pci_irq.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/pci_irq.c
+@@ -55,6 +55,68 @@ static struct mlx5_irq *mlx5_irq_get(struct mlx5_core_dev *dev, int vecidx)
+ 	return &irq_table->irq[vecidx];
+ }
+
++int mlx5_get_default_msix_vec_count(struct mlx5_core_dev *dev, int num_vfs)
++{
++	int num_vf_msix, min_msix, max_msix;
++
++	num_vf_msix = MLX5_CAP_GEN(dev, num_total_dynamic_vf_msix);
++	if (!num_vf_msix)
++		return 0;
++
++	min_msix = MLX5_CAP_GEN(dev, min_dynamic_vf_msix_table_size);
++	max_msix = MLX5_CAP_GEN(dev, max_dynamic_vf_msix_table_size);
++
++	return max(min(num_vf_msix / num_vfs, max_msix), min_msix);
++}
++
++/**
++ * mlx5_set_msix_vec_count() - Set dynamically allocated MSI-X to the VF
++ * @dev - PF to work on
++ * @function_id - internal PCI VF function id
++ * @msix_vec_count - Number of MSI-X to set
++ **/
++int mlx5_set_msix_vec_count(struct mlx5_core_dev *dev, int function_id,
++			    int msix_vec_count)
++{
++	int sz = MLX5_ST_SZ_BYTES(set_hca_cap_in);
++	int num_vf_msix, min_msix, max_msix;
++	void *hca_cap, *cap;
++	int ret;
++
++	num_vf_msix = MLX5_CAP_GEN(dev, num_total_dynamic_vf_msix);
++	if (!num_vf_msix)
++		return 0;
++
++	if (!MLX5_CAP_GEN(dev, vport_group_manager) || !mlx5_core_is_pf(dev))
++		return -EOPNOTSUPP;
++
++	min_msix = MLX5_CAP_GEN(dev, min_dynamic_vf_msix_table_size);
++	max_msix = MLX5_CAP_GEN(dev, max_dynamic_vf_msix_table_size);
++
++	if (msix_vec_count < min_msix)
++		return -EINVAL;
++
++	if (msix_vec_count > max_msix)
++		return -EOVERFLOW;
++
++	hca_cap = kzalloc(sz, GFP_KERNEL);
++	if (!hca_cap)
++		return -ENOMEM;
++
++	cap = MLX5_ADDR_OF(set_hca_cap_in, hca_cap, capability);
++	MLX5_SET(cmd_hca_cap, cap, dynamic_msix_table_size, msix_vec_count);
++
++	MLX5_SET(set_hca_cap_in, hca_cap, opcode, MLX5_CMD_OP_SET_HCA_CAP);
++	MLX5_SET(set_hca_cap_in, hca_cap, other_function, 1);
++	MLX5_SET(set_hca_cap_in, hca_cap, function_id, function_id);
++
++	MLX5_SET(set_hca_cap_in, hca_cap, op_mod,
++		 MLX5_SET_HCA_CAP_OP_MOD_GENERAL_DEVICE << 1);
++	ret = mlx5_cmd_exec_in(dev, set_hca_cap, hca_cap);
++	kfree(hca_cap);
++	return ret;
++}
++
+ int mlx5_irq_attach_nb(struct mlx5_irq_table *irq_table, int vecidx,
+ 		       struct notifier_block *nb)
+ {
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/sriov.c b/drivers/net/ethernet/mellanox/mlx5/core/sriov.c
+index 3094d20297a9..c59efb1e7a26 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/sriov.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/sriov.c
+@@ -71,8 +71,7 @@ static int sriov_restore_guids(struct mlx5_core_dev *dev, int vf)
+ static int mlx5_device_enable_sriov(struct mlx5_core_dev *dev, int num_vfs)
+ {
+ 	struct mlx5_core_sriov *sriov = &dev->priv.sriov;
+-	int err;
+-	int vf;
++	int err, vf, num_msix_count;
+
+ 	if (!MLX5_ESWITCH_MANAGER(dev))
+ 		goto enable_vfs_hca;
+@@ -85,12 +84,23 @@ static int mlx5_device_enable_sriov(struct mlx5_core_dev *dev, int num_vfs)
+ 	}
+
+ enable_vfs_hca:
++	num_msix_count = mlx5_get_default_msix_vec_count(dev, num_vfs);
+ 	for (vf = 0; vf < num_vfs; vf++) {
+ 		err = mlx5_core_enable_hca(dev, vf + 1);
+ 		if (err) {
+ 			mlx5_core_warn(dev, "failed to enable VF %d (%d)\n", vf, err);
+ 			continue;
+ 		}
++
++		err = mlx5_set_msix_vec_count(dev, vf + 1, num_msix_count);
++		if (err) {
++			mlx5_core_warn(
++				dev,
++				"failed to set MSI-X vector counts VF %d, err %d\n",
++				vf, err);
++			continue;
++		}
++
+ 		sriov->vfs_ctx[vf].enabled = 1;
+ 		if (MLX5_CAP_GEN(dev, port_type) == MLX5_CAP_PORT_TYPE_IB) {
+ 			err = sriov_restore_guids(dev, vf);
 --
 2.29.2
 
