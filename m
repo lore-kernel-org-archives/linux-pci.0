@@ -2,112 +2,154 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F1D3C4332B
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 12:44:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A7CC433E9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 13:14:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5023F224D4
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 12:44:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10C24207B1
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 13:14:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727051AbhADMno (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Jan 2021 07:43:44 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:56494 "EHLO
+        id S1726670AbhADNN4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Jan 2021 08:13:56 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:35252 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727019AbhADMnn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2021 07:43:43 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 104CfwsB098481;
-        Mon, 4 Jan 2021 06:41:58 -0600
+        with ESMTP id S1725830AbhADNNz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2021 08:13:55 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 104DD2hh108940;
+        Mon, 4 Jan 2021 07:13:02 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1609764118;
-        bh=pW+3Nkkfv15OxmYOKkSjlpKQ8IkjEw2ZblHzX+3dit8=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=AKt/lhY0m29zqJN9KO05LwQipGxH1RVVYyYFtO7tp2VHQKUjuSdvOqjjZRC4+ilfd
-         5Lolq1uWdxseCo8rjYCljMbgOQhzuG6XOGG+o48Sm3I8eoLjNZ/HrCbpX1NB0ePUOV
-         kvkgSuS0jA/d0GQkxA5CA4Drj0mp2Sv1OMo45kdA=
+        s=ti-com-17Q1; t=1609765982;
+        bh=PniDc9QWWr+VJ0de9ADs3ktmUYpcGrHXEordESznxd8=;
+        h=From:Subject:To:CC:References:Date:In-Reply-To;
+        b=AeSxBlvH+CO76UEm/uFeQBDGOEOW3/LMnpglLZBKb2IRH/Hl2uFVnr8YZJJmiQutx
+         fOSY936VSiRI8aKbKsx+KDfrnu1Kx4HeETNPq+3swsuKxZcG6RgMbba1vGLqi/4/aU
+         OPkhzCdnR5P9l6my/QlQfSIoj93PWbgHbTnUgMjA=
 Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 104CfwnS080776
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 104DD2Gd042173
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 4 Jan 2021 06:41:58 -0600
-Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE103.ent.ti.com
+        Mon, 4 Jan 2021 07:13:02 -0600
+Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE103.ent.ti.com
  (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 4 Jan
- 2021 06:41:17 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+ 2021 07:13:01 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 4 Jan 2021 06:41:17 -0600
-Received: from a0393678-ssd.ent.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 104Cf3bi034579;
-        Mon, 4 Jan 2021 06:41:13 -0600
+ Frontend Transport; Mon, 4 Jan 2021 07:13:01 -0600
+Received: from [10.250.235.36] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 104DCuxB085196;
+        Mon, 4 Jan 2021 07:12:57 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Tom Joseph <tjoseph@cadence.com>,
+Subject: Re: [PATCH v8 11/18] PCI: cadence: Implement ->msi_map_irq() ops
+To:     Rob Herring <robh@kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Nadeem Athani <nadeem@cadence.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 2/4] dt-bindings: pci: ti,j721e: Add host mode dt-bindings for TI's AM64 SoC
-Date:   Mon, 4 Jan 2021 18:11:01 +0530
-Message-ID: <20210104124103.30930-3-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210104124103.30930-1-kishon@ti.com>
-References: <20210104124103.30930-1-kishon@ti.com>
+        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        <linux-ntb@googlegroups.com>
+References: <20201111153559.19050-1-kishon@ti.com>
+ <20201111153559.19050-12-kishon@ti.com>
+ <CAL_Jsq+iUU0aR950fvQ7+uenBT5MVbCEU9cDg+vfyO=VugpTZA@mail.gmail.com>
+Message-ID: <992b5423-89a2-a03b-539d-a9b2822f598a@ti.com>
+Date:   Mon, 4 Jan 2021 18:42:55 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAL_Jsq+iUU0aR950fvQ7+uenBT5MVbCEU9cDg+vfyO=VugpTZA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add host mode dt-bindings for TI's AM64 SoC. This is the same IP used in
-J7200, however AM64 is a non-coherent architecture.
+Hi Rob,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- .../devicetree/bindings/pci/ti,j721e-pci-host.yaml     | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+On 15/12/20 9:31 pm, Rob Herring wrote:
+> On Wed, Nov 11, 2020 at 9:37 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>
+>> Implement ->msi_map_irq() ops in order to map physical address to
+>> MSI address and return MSI data.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  .../pci/controller/cadence/pcie-cadence-ep.c  | 53 +++++++++++++++++++
+>>  1 file changed, 53 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> index 84cc58dc8512..1fe6b8baca97 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> @@ -382,6 +382,57 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn,
+>>         return 0;
+>>  }
+>>
+>> +static int cdns_pcie_ep_map_msi_irq(struct pci_epc *epc, u8 fn,
+>> +                                   phys_addr_t addr, u8 interrupt_num,
+>> +                                   u32 entry_size, u32 *msi_data,
+>> +                                   u32 *msi_addr_offset)
+>> +{
+>> +       struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+>> +       u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
+>> +       struct cdns_pcie *pcie = &ep->pcie;
+>> +       u64 pci_addr, pci_addr_mask = 0xff;
+>> +       u16 flags, mme, data, data_mask;
+>> +       u8 msi_count;
+>> +       int ret;
+>> +       int i;
+>> +
+> 
+> 
+>> +       /* Check whether the MSI feature has been enabled by the PCI host. */
+>> +       flags = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_FLAGS);
+>> +       if (!(flags & PCI_MSI_FLAGS_ENABLE))
+>> +               return -EINVAL;
+>> +
+>> +       /* Get the number of enabled MSIs */
+>> +       mme = (flags & PCI_MSI_FLAGS_QSIZE) >> 4;
+>> +       msi_count = 1 << mme;
+>> +       if (!interrupt_num || interrupt_num > msi_count)
+>> +               return -EINVAL;
+>> +
+>> +       /* Compute the data value to be written. */
+>> +       data_mask = msi_count - 1;
+>> +       data = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_MSI_DATA_64);
+>> +       data = data & ~data_mask;
+>> +
+>> +       /* Get the PCI address where to write the data into. */
+>> +       pci_addr = cdns_pcie_ep_fn_readl(pcie, fn, cap + PCI_MSI_ADDRESS_HI);
+>> +       pci_addr <<= 32;
+>> +       pci_addr |= cdns_pcie_ep_fn_readl(pcie, fn, cap + PCI_MSI_ADDRESS_LO);
+>> +       pci_addr &= GENMASK_ULL(63, 2);
+> 
+> Wouldn't all of the above be the same code for any endpoint driver? We
+> just need endpoint config space accessors for the same 32-bit only
+> access issues. Not asking for that in this series, but if that's the
+> direction we should go.
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index 7607018a115b..77118dba415e 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -16,12 +16,17 @@ allOf:
- properties:
-   compatible:
-     oneOf:
--      - description: PCIe controller in J7200
-+      - const: ti,am64-pcie-host
-+      - const: ti,j7200-pcie-host
-+      - const: ti,j721e-pcie-host
-+      - description: PCIe controller in AM64
-         items:
-+          - const: ti,am64-pcie-host
-           - const: ti,j7200-pcie-host
-           - const: ti,j721e-pcie-host
--      - description: PCIe controller in J721E
-+      - description: PCIe controller in J7200
-         items:
-+          - const: ti,j7200-pcie-host
-           - const: ti,j721e-pcie-host
- 
-   reg:
-@@ -87,7 +92,6 @@ required:
-   - vendor-id
-   - device-id
-   - msi-map
--  - dma-coherent
-   - dma-ranges
-   - ranges
-   - reset-gpios
--- 
-2.17.1
+Do you mean "endpoint" variant of pci_generic_config_read() which takes
+function number and capability offset? That could be done but we have to
+add support to traverse the linked list of capabilities though the
+capabilities are going to be at a fixed location for a given IP.
 
+Also in some cases, the writes are to a different register than the
+configuration space registers like vendor_id in Cadence EP should be
+written to Local Management register instead of the configuration space
+register.
+
+Thank You,
+Kishon
