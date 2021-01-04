@@ -2,87 +2,74 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF47DC433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 22:34:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A3BC43332
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 23:03:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F5132251E
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 22:34:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B5F72256F
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Jan 2021 23:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726260AbhADWd5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Jan 2021 17:33:57 -0500
-Received: from hera.aquilenet.fr ([185.233.100.1]:40124 "EHLO
-        hera.aquilenet.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726256AbhADWd5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2021 17:33:57 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by hera.aquilenet.fr (Postfix) with ESMTP id 9ACAD5E7;
-        Mon,  4 Jan 2021 23:33:15 +0100 (CET)
-X-Virus-Scanned: Debian amavisd-new at aquilenet.fr
-Received: from hera.aquilenet.fr ([127.0.0.1])
-        by localhost (hera.aquilenet.fr [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fz4CyzIeWsiw; Mon,  4 Jan 2021 23:33:14 +0100 (CET)
-Received: from function.youpi.perso.aquilenet.fr (lfbn-bor-1-56-204.w90-50.abo.wanadoo.fr [90.50.148.204])
-        by hera.aquilenet.fr (Postfix) with ESMTPSA id BAE108A;
-        Mon,  4 Jan 2021 23:33:14 +0100 (CET)
-Received: from samy by function.youpi.perso.aquilenet.fr with local (Exim 4.94)
-        (envelope-from <samuel.thibault@ens-lyon.org>)
-        id 1kwYPZ-000tPK-I9; Mon, 04 Jan 2021 23:33:13 +0100
-Date:   Mon, 4 Jan 2021 23:33:13 +0100
-From:   Samuel Thibault <samuel.thibault@ens-lyon.org>
-To:     Keith Busch <kbusch@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: Are AER corrected errors worrying?
-Message-ID: <20210104223313.plaaph3erefjw3rd@function>
-Mail-Followup-To: Samuel Thibault <samuel.thibault@ens-lyon.org>,
-        Keith Busch <kbusch@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-References: <20210101224028.4akud7meibjavvtf@function>
- <20210104184435.GE1024941@dhcp-10-100-145-180.wdc.com>
- <20210104201247.5k47gueib3cw4sfr@function>
- <20210104213648.enkuq5e2o6adbiur@function>
+        id S1727276AbhADXDv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Jan 2021 18:03:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52506 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727191AbhADXDr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Jan 2021 18:03:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0C42322581;
+        Mon,  4 Jan 2021 23:03:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1609801387;
+        bh=NXwP1ErKyVJODnA/aF275bllkVjGP9RBRQ1wzKV26FM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=amu7uWsHmLuJzrq+ON928FZE2SqIcsShInYhnf8uGlJCXlWXSgV5aUVhoPGtGAxBa
+         pgNNhIp4xqzYjF/kX74xhTxrc6FYRpNK6xC/U0BnkvhPBmBgS4TC/fdAv52KvYlxqh
+         +Z0l9iXoxMQb9CBuqVx2+GzjRmPoI/jiTevrjAnIfgHNadaqoig4nlovXVQS8OhdO6
+         cocT7NoPleBWi1s8GoVafQmf5GQI2PPU28RG6eq0b3UI1MbShz5xifARhOXo5vivS1
+         JbRbpPPd1Ina5UwapYEKCHCi1P5I7m55KWvePXfKvz/g1/kuqVoJ4ds76gsW6rmx02
+         kZX4IfFmd8L8w==
+From:   Keith Busch <kbusch@kernel.org>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Keith Busch <kbusch@kernel.org>,
+        Sean V Kelley <sean.v.kelley@intel.com>
+Subject: [PATCHv2 2/5] PCI/AER: Actually get the root port
+Date:   Mon,  4 Jan 2021 15:02:57 -0800
+Message-Id: <20210104230300.1277180-3-kbusch@kernel.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20210104230300.1277180-1-kbusch@kernel.org>
+References: <20210104230300.1277180-1-kbusch@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210104213648.enkuq5e2o6adbiur@function>
-Organization: I am not organized
-User-Agent: NeoMutt/20170609 (1.8.3)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Samuel Thibault, le lun. 04 janv. 2021 22:36:48 +0100, a ecrit:
-> Samuel Thibault, le lun. 04 janv. 2021 21:12:47 +0100, a ecrit:
-> > Keith Busch, le lun. 04 janv. 2021 10:44:35 -0800, a ecrit:
-> > > PCI also has automatic link power savings that you can disable with
-> > > parameter "pcie_aspm=off".
-> > 
-> > I'll try that if I still see errors with the nvme_core parameter.
-> 
-> I'm on it.
+The pci_dev parameter given to aer_root_reset() may be a downstream port
+rather than the root port. Get the root port from the provided device in
+order to clear the root's aer status.
 
-(FTR It switched these lines)
+Acked-by: Sean V Kelley <sean.v.kelley@intel.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+---
+ drivers/pci/pcie/aer.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-02:00.0 Non-Volatile memory controller: Sandisk Corp WD Black SN750 / PC SN730 NVMe SSD (prog-if 02 [NVM Express])
-	[...]
-	Capabilities: [c0] Express (v2) Endpoint, MSI 00
-		[...]
-		DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-	->	DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-		DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
-	->	DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr- TransPend-
-	[...]
-	Capabilities: [100 v2] Advanced Error Reporting
-		CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
-	->	CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
-	[...]
-	Capabilities: [900 v1] L1 PM Substates
-		[...]
-		L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1- ASPM_L1.2+ ASPM_L1.1-
-			T_CommonMode=0us LTR1.2_Threshold=163840ns
-		->	T_CommonMode=0us LTR1.2_Threshold=81920ns
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 77b0f2c45bc0..3fd4aaaa627e 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1388,7 +1388,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	if (type == PCI_EXP_TYPE_RC_END)
+ 		root = dev->rcec;
+ 	else
+-		root = dev;
++		root = pcie_find_root_port(dev);
+ 
+ 	/*
+ 	 * If the platform retained control of AER, an RCiEP may not have
+-- 
+2.24.1
 
-Samuel
