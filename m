@@ -2,73 +2,87 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3052CC433E6
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jan 2021 10:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE262C433E6
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jan 2021 13:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D070B22482
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jan 2021 10:01:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A688122B30
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jan 2021 13:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728016AbhAEKBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jan 2021 05:01:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727768AbhAEKBn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Jan 2021 05:01:43 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 505FE20739;
-        Tue,  5 Jan 2021 10:01:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609840863;
-        bh=fl36DTv2HFF+3AErrEcVkIXvTzoCJTTN10qAMRZyCyA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fYU1zxe+c/RByYIbFcQOYdSDTQfY7jddZX8YNVGRNns58KGOqMGwvKOQD0T9+hWk4
-         MhVy+87ZBBIoB6N+zSQGMW6o8zUms9r4oE10Y7aquuAzMmosZoJGR/CkbUEz8EvVNg
-         p2YOPZEblHlmiH0avWlXBI/SDdPvCj3w5OZb2TL4Sh8B4OtMEqh+vsPevF4l+bZauY
-         GGSEaWTCC0qlW+u+ds+WlxibtG9lGnvBWQ3u5MYMNINqCvVLtFHen/X5ebL2WFVHqQ
-         LR+y0NaElpmQAQyW8OVXIOAUmjd5w62JKknfd/Nzz3xaWMpi9smxjBzIkNXGwFiaV+
-         1sE/z8pDi37ew==
-Date:   Tue, 5 Jan 2021 12:00:58 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King - ARM Linux <linux@armlinux.org.uk>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI: Disable parity checking if broken_parity_status
- is set
-Message-ID: <20210105100058.GQ31158@unreal>
-References: <a6f09e1b-4076-59d1-a4e3-05c5955bfff2@gmail.com>
- <a4249b65-b63c-9f9e-818c-9f5bf2e802a9@gmail.com>
+        id S1730336AbhAENov (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jan 2021 08:44:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49726 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730161AbhAENou (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2021 08:44:50 -0500
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAC3DC061574
+        for <linux-pci@vger.kernel.org>; Tue,  5 Jan 2021 05:44:09 -0800 (PST)
+Received: by mail-wr1-x429.google.com with SMTP id c5so36214080wrp.6
+        for <linux-pci@vger.kernel.org>; Tue, 05 Jan 2021 05:44:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mUhdkztHJYfj4ts/wyIOknJ7qzjcn2uJGVM5qK+3CQU=;
+        b=iPVTSsBwwjGyoqIbexKl5FsgUy7kU3RFisePUjWeuWQ5FG3P8Vz+NsVvcmYTJXjHU/
+         RQcVKc9txFoAp7pnMkg5//gYZpls2+JnOraibK6aVfaN4wC/AlK4IkdvbcvM+jjlORLu
+         ycizsWQ40v6b7fBeaQD19xfRZEMWwJb0Enwl3gTVxiwPk3sgL0vGL2Z42nx3pbse5bSd
+         rAEVItjgh/1pM6gsI3Ne5RaZyzhejiXHbp6wtBY2bwJ4QFGm3x+1kERe9i30GKtHI65I
+         8NJvVpfLJXuqL4PDnGrs8TUt/c9IHQ7JvJ7l3bT/gw3hCwB7J3cbralNclOoj6NvxRRB
+         jKXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mUhdkztHJYfj4ts/wyIOknJ7qzjcn2uJGVM5qK+3CQU=;
+        b=WTewIxITqT2ECuFGOQPjQrqAb6QNSRPp9jwiwfBYrumunhdUD9vBN1RJGW7KxLaABA
+         eNwcVugu6nauXC1egP1cOdUEd+kRHsaC1gKFaAOLtPF13SEY8b9ZaKywXm4vabsrCJEY
+         BzRu5qjArgzpR2cmLTfhnOVa4LV/tRewNz3DIPnw5dLt/9JLkAwhJr0LCCW2s3IGAtzp
+         nOswJvEEN5d932tISQnPiKsxhIKmyG+v7uoaeijf4xNOQE6VWE2vcLuAYzIjCxPqQv3w
+         QfFf3yQ/do5Bqny93qxdvBmEUYi2uWr31ecBWEX0yXatlm71HuIuidcH4GcpVglFPjDZ
+         02Bg==
+X-Gm-Message-State: AOAM530DUvomWjP+0A3Aa6bVrCvJt2DIlguSOnTMqKbeF3daWpdFk7Q9
+        xI8PdoPOVJcVBZiPCgUi3qEwimFpD4k=
+X-Google-Smtp-Source: ABdhPJy6xlAThV+5qXmAyY1HeEGVnLN3jEG+J3dPe2Hvce+eVmaFPsjIPhEtJb/Kb423IPcqjcCROg==
+X-Received: by 2002:a05:6000:222:: with SMTP id l2mr73339059wrz.392.1609854248788;
+        Tue, 05 Jan 2021 05:44:08 -0800 (PST)
+Received: from abel.fritz.box ([2a02:908:1252:fb60:3137:60b9:8d8f:7f55])
+        by smtp.gmail.com with ESMTPSA id l20sm102191243wrh.82.2021.01.05.05.44.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Jan 2021 05:44:08 -0800 (PST)
+From:   "=?UTF-8?q?Christian=20K=C3=B6nig?=" 
+        <ckoenig.leichtzumerken@gmail.com>
+X-Google-Original-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+To:     bhelgaas@google.com
+Cc:     devspam@moreofthesa.me.uk, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
+Subject: A PCI quirk for resizeable BAR 0 on Navi10
+Date:   Tue,  5 Jan 2021 14:44:00 +0100
+Message-Id: <20210105134404.1545-1-christian.koenig@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a4249b65-b63c-9f9e-818c-9f5bf2e802a9@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 05, 2021 at 10:41:26AM +0100, Heiner Kallweit wrote:
-> If we know that a device has broken parity checking, then disable it.
-> This avoids quirks like in r8169 where on the first parity error
-> interrupt parity checking will be disabled if broken_parity_status
-> is set. Make pci_quirk_broken_parity() public so that it can be used
-> by platform code, e.g. for Thecus N2100.
->
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> ---
->  drivers/pci/quirks.c | 17 +++++++++++------
->  include/linux/pci.h  |  2 ++
->  2 files changed, 13 insertions(+), 6 deletions(-)
->
+Hi Bjorn,
 
-Thanks,
-Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+Darren stumbled over an AMD GPU with nonsense in it's resizeable BAR capability dword.
+
+This is most likely fixable with a VBIOS update, but we already sold quite a bunch of those boards with the problem.
+
+The driver still loads without this, but the performance isn't the best.
+
+Do you have any objection to merge this through the drm branch?
+
+Thanks in advance,
+Christian.
+
+
