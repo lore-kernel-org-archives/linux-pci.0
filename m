@@ -7,168 +7,157 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA728C433DB
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 10:53:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32112C433E6
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 10:53:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B566E23105
+	by mail.kernel.org (Postfix) with ESMTP id F20E223110
 	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 10:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727092AbhAFKwy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jan 2021 05:52:54 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:42200 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726463AbhAFKwx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jan 2021 05:52:53 -0500
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210106105211epoutp02d367bfc019d3005326e702a8b939b2bf~XnxtJHcqZ1858318583epoutp02h
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jan 2021 10:52:11 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210106105211epoutp02d367bfc019d3005326e702a8b939b2bf~XnxtJHcqZ1858318583epoutp02h
+        id S1727146AbhAFKxF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jan 2021 05:53:05 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:15195 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726195AbhAFKxE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jan 2021 05:53:04 -0500
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210106105222epoutp0441697165c7a636c9d67c306cf2497974~Xnx3E9kVy1218812188epoutp04B
+        for <linux-pci@vger.kernel.org>; Wed,  6 Jan 2021 10:52:22 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210106105222epoutp0441697165c7a636c9d67c306cf2497974~Xnx3E9kVy1218812188epoutp04B
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1609930331;
-        bh=S5F4hqYTLpsu9Adtr3Hc5YMY+HoQSI660uecHx9eVrs=;
+        s=mail20170921; t=1609930342;
+        bh=cIQaJtOHcRr1hOe5xiVBlUoUJ8Ww27E+DGEh1wg5s0w=;
         h=From:To:Cc:Subject:Date:References:From;
-        b=o6UC2Pvrusu8HVCnXvI7eSsi7vg+nXbwZpYDvXY6qA1v0H+ysluSGLhEcEqQu+n59
-         uXcrF+rW7cXBBDwCQxehSiRAQ8EFU6U3mW8Ab80w7i61v2BQY4PnOTI5jq/u5cSI+t
-         tXgNJP1X6U/PBm+Nupod43NHFquP5B6Dax5cCqFw=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20210106105210epcas5p3596faff7fde2384f6cebe2087f7e47be~XnxsqQvv40505705057epcas5p3B;
-        Wed,  6 Jan 2021 10:52:10 +0000 (GMT)
+        b=vO2Qhi556UH+atPlMVmdPlnj7FaIU94HGt7jj9QmJo/nToyUscV70MlDVLp68phFl
+         qbV9N0O2TCs5tZKJ/RUbyZsKvrLJQe50amWcyDARemb2dwv3CmtgqjDeGFQ6FYM0fE
+         31Eu0f///ywRj8OuEMG+rTpUzZzAcRtY9AqwpK6c=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20210106105221epcas5p48a32f6f1dc6ee99192e215d63f93c0aa~Xnx2hcvx60440204402epcas5p4g;
+        Wed,  6 Jan 2021 10:52:21 +0000 (GMT)
 Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CF.B8.33964.A5695FF5; Wed,  6 Jan 2021 19:52:10 +0900 (KST)
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        65.BA.50652.56695FF5; Wed,  6 Jan 2021 19:52:21 +0900 (KST)
 Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20210106103829epcas5p20a5c8aa2ae8bd6d8d555dad1aa265a1c~XnlvpW86v2797727977epcas5p2R;
-        Wed,  6 Jan 2021 10:38:29 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20210106105019epcas5p377bdbff5cd9e14e5107ccbf2b87b5754~XnwFRXjgH1840318403epcas5p3f;
+        Wed,  6 Jan 2021 10:50:19 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20210106103829epsmtrp12d6f4a4901baea3150fd47155c2e20bc~Xnlvof7P50070200702epsmtrp1Z;
-        Wed,  6 Jan 2021 10:38:29 +0000 (GMT)
-X-AuditID: b6c32a4b-eb7ff700000184ac-dc-5ff5965a9f95
+        20210106105019epsmtrp1e13e77c8d196083fe8a6e040c0b4add7~XnwFQgSvS0573305733epsmtrp1T;
+        Wed,  6 Jan 2021 10:50:19 +0000 (GMT)
+X-AuditID: b6c32a4a-6b3ff7000000c5dc-f3-5ff596653c29
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        DA.DF.13470.52395FF5; Wed,  6 Jan 2021 19:38:29 +0900 (KST)
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        35.27.08745.BE595FF5; Wed,  6 Jan 2021 19:50:19 +0900 (KST)
 Received: from ubuntu.sa.corp.samsungelectronics.net (unknown
         [107.108.83.125]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20210106103827epsmtip1fa6f13763881b0f339c000bb8db10a15~Xnlt45sH62781227812epsmtip1I;
-        Wed,  6 Jan 2021 10:38:27 +0000 (GMT)
+        20210106105017epsmtip1fc9990cda5e1491abc9900f9c68816ed~XnwDHoFCs3243232432epsmtip1q;
+        Wed,  6 Jan 2021 10:50:17 +0000 (GMT)
 From:   Shradha Todi <shradha.t@samsung.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        robh@kernel.org, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
         pankaj.dubey@samsung.com, sriram.dash@samsung.com,
         niyas.ahmed@samsung.com, p.rajanbabu@samsung.com,
         l.mehra@samsung.com, hari.tv@samsung.com,
         Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH v3] PCI: endpoint: Fix NULL pointer dereference for
- ->get_features()
-Date:   Wed,  6 Jan 2021 16:08:10 +0530
-Message-Id: <1609929490-18921-1-git-send-email-shradha.t@samsung.com>
+Subject: [PATCH v2] PCI: dwc: Add upper limit address for outbound iATU
+Date:   Wed,  6 Jan 2021 16:20:10 +0530
+Message-Id: <1609930210-19227-1-git-send-email-shradha.t@samsung.com>
 X-Mailer: git-send-email 2.7.4
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrNIsWRmVeSWpSXmKPExsWy7bCmum7UtK/xBl9u6Fosacqw+DhtJZPF
-        hac9bBZ3nt9gtLi8aw6bxdl5x9ks3vx+wW7xZMojVoujG4MtFm39wm7Re7jW4sZ6dgcejzXz
-        1jB6LNhU6tG3ZRWjx/Eb25k8Pm+SC2CN4rJJSc3JLEst0rdL4Mpo3XeHpeCSSEXLrvVMDYy3
-        BLsYOTkkBEwkjrRuZuxi5OIQEtjNKPH6+D92kISQwCdGiTMroiES3xgl/i1azgjT8XHaVBaI
-        xF5GiSUNJ5kgnBYmidaeBSwgVWwCWhKNX7uYQWwRAWuJw+1b2ECKmAX+MEr03G8AGyUsECbx
-        8c9KNhCbRUBV4srZjUwgNq+Aq8T0I4vYINbJSdw818kM0iwhcIpd4sKZmcwQCReJfxv6mSBs
-        YYlXx7ewQ9hSEi/726DsfImpF54CXcQBZFdILO+pgwjbSxy4MgcszCygKbF+lz5EWFZi6ql1
-        YBOZBfgken8/gZrOK7FjHoytLPHl7x4WCFtSYt6xy6wQtofErKP3GEFGCgnESvw+ETeBUXYW
-        woIFjIyrGCVTC4pz01OLTQuM81LL9YoTc4tL89L1kvNzNzGC04OW9w7GRw8+6B1iZOJgPMQo
-        wcGsJMJrcexLvBBvSmJlVWpRfnxRaU5q8SFGaQ4WJXHeHQYP4oUE0hNLUrNTUwtSi2CyTByc
-        Ug1MnlPv/Iqqcp/SXlybnSnewnVqjqhNdGBTwoHPwRyrlxl/NXpvsN/IX2Tvxe9WzcfOX7FM
-        uV2ve4B3zwM1zguODTOObwnRESouO/fW/Wn9tJYky00axuYt29NXby0U65S/Z8W5Yue6HY2T
-        3K59uHQ2xq7z1Otrzc9m34nfsSfw0PR9tneU+Bs3sJb9nPwv6GOEDocYY8B3g8Ync09Uz2h5
-        cUBE7eDeXbfm+uzcEdxkv2bqp1+n+FN8mF5MEOZN7G+6M6PuVcg/iSUT9Zb23P3z7Lbq/Q13
-        N0odND+1jjvp1oaTniX7jz3SnTHT3OXs3sUT9X5ap91jtNaS8zwVJpBWln5yh/XEaF6xF1Nc
-        Tuz9E63EUpyRaKjFXFScCACLttJXfgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCLMWRmVeSWpSXmKPExsWy7bCSnK7q5K/xBism81osacqw+DhtJZPF
-        hac9bBZ3nt9gtLi8aw6bxdl5x9ks3vx+wW7xZMojVoujG4MtFm39wm7Re7jW4sZ6dgcejzXz
-        1jB6LNhU6tG3ZRWjx/Eb25k8Pm+SC2CN4rJJSc3JLEst0rdL4Mpo3XeHpeCSSEXLrvVMDYy3
-        BLsYOTkkBEwkPk6bytLFyMUhJLCbUWL53rVMEAlJic8X10HZwhIr/z1nhyhqYpL4POsJO0iC
-        TUBLovFrFzOILSJgK3H/0WRWkCJmgQ4mid9Xr4ElhAVCJD5+7wGbxCKgKnHl7EYwm1fAVWL6
-        kUVsEBvkJG6e62SewMizgJFhFaNkakFxbnpusWGBYV5quV5xYm5xaV66XnJ+7iZGcMBpae5g
-        3L7qg94hRiYOxkOMEhzMSiK8Fse+xAvxpiRWVqUW5ccXleakFh9ilOZgURLnvdB1Ml5IID2x
-        JDU7NbUgtQgmy8TBKdXA5PrF4tls5jeHT6q8aSszXn9aJeDZ/ND+Asfnv81amiwj0mWvVvHP
-        cngQ7/Yt+lS4aPyZP/cl5r9Yl9Mf9UPn6KuAoAVPLnQdzzjaKX2K/cTKCWUZvM1rDpwKz755
-        1zCcRVtuq5g1S+ycEEWVjIeKR54u5lz11ltFeuFsU92jodzTfLbddnWNbloh2uN8lPWM1pXp
-        v6TvB0xcEdn/esbpK78LZ4Y3/lyzQqNgTVZH0RYJLWV37jDdovde5lvbV+yKyLuxT5XJ4J70
-        kcdR0duf2VzXXJt6N33HTp0fqRy/jFxtH3sF1E6s38jksFap7lGUpWL5bPEfjiK5uaGGsf31
-        OlNMNVhikvK1yyYVrBJTYinOSDTUYi4qTgQAeI9beacCAAA=
-X-CMS-MailID: 20210106103829epcas5p20a5c8aa2ae8bd6d8d555dad1aa265a1c
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpkleLIzCtJLcpLzFFi42LZdlhTXTd12td4g8OXhC2WNGVY7LrbwW7x
+        cdpKJosVX2ayW9x5foPR4vKuOWwWZ+cdZ7N48/sFu8WTKY9YLY5uDLZYtPULu8X/PTvYLXoP
+        11rcWM/uwOexZt4aRo+ds+6yeyzYVOqxaVUnm0ffllWMHlv2f2b0+LxJLoA9issmJTUnsyy1
+        SN8ugStjwr4W9oI3ghVdb16xNjBO5+9i5OSQEDCRmLlwHlsXIxeHkMBuRok5T39BOZ8YJT5N
+        /ckM4XxmlJi0exUzTMuKmZdZIBK7GCV2tm2BclqYJD5eucoIUsUmoCXR+LULrENEwFricPsW
+        sLnMAluZJM4uXsgGkhAWcJfY9uo0WAOLgKrEn/ZJ7CA2r4CrxNoJs5gg1slJ3DzXCXaHhMBb
+        don757dC3eEi8fHNS1YIW1ji1fEt7BC2lMTL/jYoO19i6oWnQOdxANkVEst76iDC9hIHrswB
+        CzMLaEqs36UPEZaVmHpqHdhaZgE+id7fT6BO4JXYMQ/GVpb48ncPC4QtKTHv2GWoCzwkFn89
+        ABYXEoiVmLL+L+sERtlZCBsWMDKuYpRMLSjOTU8tNi0wykst1ytOzC0uzUvXS87P3cQITiVa
+        XjsYHz74oHeIkYmD8RCjBAezkgivxbEv8UK8KYmVValF+fFFpTmpxYcYpTlYlMR5dxg8iBcS
+        SE8sSc1OTS1ILYLJMnFwSjUwrdkmuGznJXP/OLnffHVPNO4eP9TW8m1C0+1/a918b8yvUL2r
+        E75JXv/tEbbu6MPsepYnm1l2beDu7ebTMcpRzc/Zt2ZPzFvvrwWi9cWZMYv4n8s27WgMNMi/
+        bxyju3zJWrazvAU8xxV2hUxs/yYq4z5p0/Emm+r1H7rrLrnssrrBtGlnwGbe596sLWfS689I
+        NtraSBl1Lw15zrxD/IvwOu4Y0dmHlaeu/rldd0fDxOCHZ++wh530a/xh2Wc75Wo9e2gpl1Hz
+        81VTjutqN6ic9a4QNPX9v3Tx8jMrW+Jsk1YmN/Cs8H7VsuGWhOldma+LPZKOrnz/NaZsm+7y
+        d9zNsccbT2aGqCw8uU9ko66lEktxRqKhFnNRcSIAU5ASFJQDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrBLMWRmVeSWpSXmKPExsWy7bCSnO7rqV/jDU49U7VY0pRhsetuB7vF
+        x2krmSxWfJnJbnHn+Q1Gi8u75rBZnJ13nM3ize8X7BZPpjxitTi6Mdhi0dYv7Bb/9+xgt+g9
+        XGtxYz27A5/HmnlrGD12zrrL7rFgU6nHplWdbB59W1YxemzZ/5nR4/MmuQD2KC6blNSczLLU
+        In27BK6MCfta2AveCFZ0vXnF2sA4nb+LkZNDQsBEYsXMyyxdjFwcQgI7GCXmnrnIBpGQlPh8
+        cR0ThC0ssfLfc3aIoiYmiVOtjWAJNgEticavXcwgtoiArcT9R5NZQYqYBQ4zSXzsfwiWEBZw
+        l9j26jQjiM0ioCrxp30SO4jNK+AqsXbCLKgNchI3z3UyT2DkWcDIsIpRMrWgODc9t9iwwCgv
+        tVyvODG3uDQvXS85P3cTIzgwtbR2MO5Z9UHvECMTB+MhRgkOZiURXotjX+KFeFMSK6tSi/Lj
+        i0pzUosPMUpzsCiJ817oOhkvJJCeWJKanZpakFoEk2Xi4JRqYDLul/r7Qyg5eWWqIGd17z61
+        Rt8Vn8J/vVcq3rPyF8PXZ6cfTFycwLX/+Q2++S//ak3eJ3WpdtX+7zercp34W7gK42pcdsxl
+        /M10ka29sHjV2R38pn+/SGkWqAcnv2cMMtm1NrF+f/IHwXOvdRfPL3t4s8RsUeSxw0oRiRpu
+        6d3Busp/NR483N/Nuf3tqsauV9UPwkW+r/dZu1zozELVzDytPoXdVk8Wn4/lE15x0OvGUpkb
+        phcmpNwt0fxix+R43+78vtJP+QuqDTuLI058SPe8O9sp9fOr6KMiYU+42p9wJLzri3l4M0FO
+        7w7L+3N3f8ZLbMhnkc2y3+9wXzfGpEB/jWLS+788gsdT/SNrniixFGckGmoxFxUnAgD2cGq3
+        uwIAAA==
+X-CMS-MailID: 20210106105019epcas5p377bdbff5cd9e14e5107ccbf2b87b5754
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20210106103829epcas5p20a5c8aa2ae8bd6d8d555dad1aa265a1c
-References: <CGME20210106103829epcas5p20a5c8aa2ae8bd6d8d555dad1aa265a1c@epcas5p2.samsung.com>
+X-CMS-RootMailID: 20210106105019epcas5p377bdbff5cd9e14e5107ccbf2b87b5754
+References: <CGME20210106105019epcas5p377bdbff5cd9e14e5107ccbf2b87b5754@epcas5p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-get_features ops of pci_epc_ops may return NULL, causing NULL pointer
-dereference in pci_epf_test_bind function. Let us add a check for
-pci_epc_feature pointer in pci_epf_test_bind before we access it to avoid
-any such NULL pointer dereference and return -ENOTSUPP in case
-pci_epc_feature is not found.
+The size parameter is unsigned long type which can accept size > 4GB. In
+that case, the upper limit address must be programmed. Add support to
+program the upper limit address and set INCREASE_REGION_SIZE in case size >
+4GB.
 
-When the patch is not applied and EPC features is not implemented in the
-platform driver, we see the following dump due to kernel NULL pointer
-dereference.
-
-[  105.135936] Call trace:
-[  105.138363]  pci_epf_test_bind+0xf4/0x388
-[  105.142354]  pci_epf_bind+0x3c/0x80
-[  105.145817]  pci_epc_epf_link+0xa8/0xcc
-[  105.149632]  configfs_symlink+0x1a4/0x48c
-[  105.153616]  vfs_symlink+0x104/0x184
-[  105.157169]  do_symlinkat+0x80/0xd4
-[  105.160636]  __arm64_sys_symlinkat+0x1c/0x24
-[  105.164885]  el0_svc_common.constprop.3+0xb8/0x170
-[  105.169649]  el0_svc_handler+0x70/0x88
-[  105.173377]  el0_svc+0x8/0x640
-[  105.176411] Code: d2800581 b9403ab9 f9404ebb 8b394f60 (f9400400)
-[  105.182478] ---[ end trace a438e3c5a24f9df0 ]---
-
-Fixes: 2c04c5b8eef79 ("PCI: pci-epf-test: Use pci_epc_get_features() to get
-EPC features")
-
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Signed-off-by: Sriram Dash <sriram.dash@samsung.com>
 Signed-off-by: Shradha Todi <shradha.t@samsung.com>
 ---
-v2: https://lkml.org/lkml/2020/12/18/691
-v3:
-   Addressed Bjorn's comment to enhance commit message by adding fixes tag
+v1: https://lkml.org/lkml/2020/12/20/187
+v2:
+   Addressed Rob's review comment and added PCI version check condition to
+   avoid writing to reserved registers.
 
- drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 +++++++--
+ drivers/pci/controller/dwc/pcie-designware.h | 1 +
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index e4e51d8..1b30774 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -830,13 +830,16 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 		return -EINVAL;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 74590c7..1d62ca9 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -290,12 +290,17 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 			   upper_32_bits(cpu_addr));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
+ 			   lower_32_bits(cpu_addr + size - 1));
++	if (pci->version >= 0x460A)
++		dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_LIMIT,
++				   upper_32_bits(cpu_addr + size - 1));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
+ 			   lower_32_bits(pci_addr));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
+ 			   upper_32_bits(pci_addr));
+-	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type |
+-			   PCIE_ATU_FUNC_NUM(func_no));
++	val = type | PCIE_ATU_FUNC_NUM(func_no);
++	val = ((upper_32_bits(size - 1)) && (pci->version >= 0x460A)) ?
++		val | PCIE_ATU_INCREASE_REGION_SIZE : val;
++	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
  
- 	epc_features = pci_epc_get_features(epc, epf->func_no);
--	if (epc_features) {
--		linkup_notifier = epc_features->linkup_notifier;
--		core_init_notifier = epc_features->core_init_notifier;
--		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
--		pci_epf_configure_bar(epf, epc_features);
-+	if (!epc_features) {
-+		dev_err(&epf->dev, "epc_features not implemented\n");
-+		return -EOPNOTSUPP;
- 	}
+ 	/*
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 8b905a2..7da79eb 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -102,6 +102,7 @@
+ #define PCIE_ATU_DEV(x)			FIELD_PREP(GENMASK(23, 19), x)
+ #define PCIE_ATU_FUNC(x)		FIELD_PREP(GENMASK(18, 16), x)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
++#define PCIE_ATU_UPPER_LIMIT		0x924
  
-+	linkup_notifier = epc_features->linkup_notifier;
-+	core_init_notifier = epc_features->core_init_notifier;
-+	test_reg_bar = pci_epc_get_first_free_bar(epc_features);
-+	pci_epf_configure_bar(epf, epc_features);
-+
- 	epf_test->test_reg_bar = test_reg_bar;
- 	epf_test->epc_features = epc_features;
- 
+ #define PCIE_MISC_CONTROL_1_OFF		0x8BC
+ #define PCIE_DBI_RO_WR_EN		BIT(0)
 -- 
 2.7.4
 
