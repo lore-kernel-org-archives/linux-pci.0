@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3915BC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 580B6C4332B
 	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0733320449
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3812022B37
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726523AbhAFNrI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726432AbhAFNrI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 6 Jan 2021 08:47:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50854 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:50826 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726195AbhAFNrH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1725890AbhAFNrH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 6 Jan 2021 08:47:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9553223121;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6BE6D2311E;
         Wed,  6 Jan 2021 13:46:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1609940786;
-        bh=zxCR5IPMVyUtLgw9iNAvhL1NSsx2Ep3Yv/Co5D5pP1o=;
+        bh=tYKdxArNM4nHAHfgzQ+s9wREa9C4OBkvvuMWxCIRM50=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WfIA1I7JwmXFyLWbQfb1NMwLZkm/cTbJZ2IDXvHEDEXQtU5mGhKhO2Djrq/abFzw7
-         YNLgMAmHaFEX+YimPat/a9qBoFM5q3U9CYQzWgCTcE31H143GIHu/qnmFexPHkYvl3
-         dBTijGo8jBTEe2Hl+RYxZoTHKyr2U+SCxZv1uW8RxKjsjFzIOcSUpnfmCrvOcAu1rv
-         vz7HctMfKC5mjNRMUcG384HE+4kVUImguBmFej2tqrkUSRmQQea5Vb1QVRzXrSaY/L
-         VSeglprmcdDyMzDubZOWYNcSqN9JlM1ChTSyoQqRNJ6QsNo9Ad4ugb3gT0j5dcmLHc
-         58EPdukbI/+3w==
+        b=d8OlBfLIAVBEcTXbyTmWAbDjrXox/N/ncOzpWyUyxwAr7m1JZ1rAwvQ+mIkGBT/L4
+         cuYC6eqbEZQKw/lYye7CNXjJ7TovOPnGeBiWlUCccC0dLtvxht861vvQBWLyAvgg+E
+         80NYRIIoUDu/3Sn/XbhFEgAHgXL8y9HiBQ4qLOwbyUeTctqDa3bp8BLd3fQuMf6YPq
+         hMRJSTXD9i7XLhWNJ9sXfFdmd07LDYCdCX9rG7Jr8/1C2BGpQjg3N1shbDrDJ6rodp
+         fTXkkRFuZC2OsvbGeSR+rMdRtoYPxQ3nEb3JXSzChmK95SZ9zOTwbhoe4pojbOCEZs
+         7tDgGqtoSwPrw==
 Received: by wens.tw (Postfix, from userid 1000)
-        id 757B35FBCC; Wed,  6 Jan 2021 21:46:24 +0800 (CST)
+        id 63E3D5FBBF; Wed,  6 Jan 2021 21:46:24 +0800 (CST)
 From:   Chen-Yu Tsai <wens@kernel.org>
 To:     Shawn Lin <shawn.lin@rock-chips.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -44,9 +44,9 @@ Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
         linux-rockchip@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: [PATCH v3 4/4] arm64: dts: rockchip: rk3399: Add NanoPi M4B
-Date:   Wed,  6 Jan 2021 21:46:17 +0800
-Message-Id: <20210106134617.391-5-wens@kernel.org>
+Subject: [PATCH v3 2/4] dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
+Date:   Wed,  6 Jan 2021 21:46:15 +0800
+Message-Id: <20210106134617.391-3-wens@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210106134617.391-1-wens@kernel.org>
 References: <20210106134617.391-1-wens@kernel.org>
@@ -77,86 +77,25 @@ Additional changes specific to the M4B:
   - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
     but only 1T1R (down from 2T2R) for WiFi
 
-Add a new dts file for the new board revision that shows the difference
-against the original.
+Add a compatible string for the new board revision.
 
 Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 ---
- arch/arm64/boot/dts/rockchip/Makefile         |  1 +
- .../boot/dts/rockchip/rk3399-nanopi-m4b.dts   | 52 +++++++++++++++++++
- 2 files changed, 53 insertions(+)
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
+ Documentation/devicetree/bindings/arm/rockchip.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/rockchip/Makefile b/arch/arm64/boot/dts/rockchip/Makefile
-index 1ab55a124a87..622d320ddd13 100644
---- a/arch/arm64/boot/dts/rockchip/Makefile
-+++ b/arch/arm64/boot/dts/rockchip/Makefile
-@@ -33,6 +33,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-kobol-helios64.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-leez-p710.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopc-t4.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4.dtb
-+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-m4b.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-nanopi-neo4.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-orangepi.dtb
- dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-pinebook-pro.dtb
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-new file mode 100644
-index 000000000000..72182c58cc46
---- /dev/null
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi-m4b.dts
-@@ -0,0 +1,52 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-+/*
-+ * FriendlyElec NanoPi M4B board device tree source
-+ *
-+ * Copyright (c) 2020 Chen-Yu Tsai <wens@csie.org>
-+ */
-+
-+/dts-v1/;
-+#include "rk3399-nanopi-m4.dts"
-+
-+/ {
-+	model = "FriendlyElec NanoPi M4B";
-+	compatible = "friendlyarm,nanopi-m4b", "rockchip,rk3399";
-+
-+	adc-keys {
-+		compatible = "adc-keys";
-+		io-channels = <&saradc 1>;
-+		io-channel-names = "buttons";
-+		keyup-threshold-microvolt = <1500000>;
-+		poll-interval = <100>;
-+
-+		recovery {
-+			label = "Recovery";
-+			linux,code = <KEY_VENDOR>;
-+			press-threshold-microvolt = <18000>;
-+		};
-+	};
-+};
-+
-+/* No USB type-C PD power manager */
-+/delete-node/ &fusb0;
-+
-+&i2c4 {
-+	status = "disabled";
-+};
-+
-+&u2phy0_host {
-+	phy-supply = <&vcc5v0_usb2>;
-+};
-+
-+&u2phy0_otg {
-+	phy-supply = <&vbus_typec>;
-+};
-+
-+&u2phy1_otg {
-+	phy-supply = <&vcc5v0_usb1>;
-+};
-+
-+&vbus_typec {
-+	enable-active-high;
-+	gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-+};
+diff --git a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
+index ef4544ad6f82..773fd4c531ed 100644
+--- a/Documentation/devicetree/bindings/arm/rockchip.yaml
++++ b/Documentation/devicetree/bindings/arm/rockchip.yaml
+@@ -132,6 +132,7 @@ properties:
+           - enum:
+               - friendlyarm,nanopc-t4
+               - friendlyarm,nanopi-m4
++              - friendlyarm,nanopi-m4b
+               - friendlyarm,nanopi-neo4
+           - const: rockchip,rk3399
+ 
 -- 
 2.29.2
 
