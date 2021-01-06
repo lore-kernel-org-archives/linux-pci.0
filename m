@@ -2,100 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 580B6C4332B
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB40C433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3812022B37
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 855C922BE8
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbhAFNrI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jan 2021 08:47:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50826 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725890AbhAFNrH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Jan 2021 08:47:07 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6BE6D2311E;
-        Wed,  6 Jan 2021 13:46:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609940786;
-        bh=tYKdxArNM4nHAHfgzQ+s9wREa9C4OBkvvuMWxCIRM50=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d8OlBfLIAVBEcTXbyTmWAbDjrXox/N/ncOzpWyUyxwAr7m1JZ1rAwvQ+mIkGBT/L4
-         cuYC6eqbEZQKw/lYye7CNXjJ7TovOPnGeBiWlUCccC0dLtvxht861vvQBWLyAvgg+E
-         80NYRIIoUDu/3Sn/XbhFEgAHgXL8y9HiBQ4qLOwbyUeTctqDa3bp8BLd3fQuMf6YPq
-         hMRJSTXD9i7XLhWNJ9sXfFdmd07LDYCdCX9rG7Jr8/1C2BGpQjg3N1shbDrDJ6rodp
-         fTXkkRFuZC2OsvbGeSR+rMdRtoYPxQ3nEb3JXSzChmK95SZ9zOTwbhoe4pojbOCEZs
-         7tDgGqtoSwPrw==
-Received: by wens.tw (Postfix, from userid 1000)
-        id 63E3D5FBBF; Wed,  6 Jan 2021 21:46:24 +0800 (CST)
-From:   Chen-Yu Tsai <wens@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
-        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH v3 2/4] dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
-Date:   Wed,  6 Jan 2021 21:46:15 +0800
-Message-Id: <20210106134617.391-3-wens@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210106134617.391-1-wens@kernel.org>
-References: <20210106134617.391-1-wens@kernel.org>
+        id S1726437AbhAFN4u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jan 2021 08:56:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51872 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726362AbhAFN4u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jan 2021 08:56:50 -0500
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6656C06134D;
+        Wed,  6 Jan 2021 05:56:09 -0800 (PST)
+Received: by mail-ej1-x634.google.com with SMTP id 6so5140111ejz.5;
+        Wed, 06 Jan 2021 05:56:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=L8x/QpDCOUcMRuqo00P8LxlArLustwPLlO30ZOy3cg0=;
+        b=HrsqvrMkSiNlal5pnhXdSHTDUyklbYpc96+CDKtUTuxGtALOkaGFkcaL569bP/4IZX
+         7TJEckWk8JvkWrFjbFW6QryzGSJyzFOynxHuzpOklkS6J4Ml4YkYMYOFBGzHUjT6w5Ab
+         Fd/j1eOkAKwDBBUKl08n3Ml+WhqSHcr142PQA4nPvTpHuOGNvf2Ls2eWPlaXR/cVM0cl
+         pE9TJC4HiEfeHvI8db7MAXONW7hGc5hRUN72dv919vtfGAX83CzVKcoC6qL6oYyeX9hs
+         /m9Xb4dpmYO+ThCqGAkZ8ft6fCRlf076VhbcAWmUfKbliaYis+UeWl7WaJOZJhzO8MB7
+         5qQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=L8x/QpDCOUcMRuqo00P8LxlArLustwPLlO30ZOy3cg0=;
+        b=HdBrXsDYwtJRe07iW6hSh7ai8rT68bMomWBKBufVGGwNf4ESSaucl0lr/pTBVQh66p
+         Fl7uDTCCe7qOhpfqBHph142gb+6iPg07P4pRx3y0z2EoGaJ54ZvehBrD00WeXigxXQAW
+         RfJxMzybwk9PybpHxEyS0x9eLbNW0WKYOwlX2znriH1tE1TY5WeyXbDMM9oK4PdjxCA3
+         vgf8hsb/0w6MzENqdNy6B637R09qyNDo/FSYcvZDgv2hkkq2yNYG3ksNL4MYPghXs9tr
+         vps8tM7QPcMdOzWt6dOig4AYPmCFZ9fT+XXbctrrmrYGSEwju//manZZm6buBxJO/d4M
+         IJJw==
+X-Gm-Message-State: AOAM533yhDvdQfhyhkZwaVryH2EQq/brEckpt5dAnCwbJxaK00TxsM+e
+        nBbdClnDaykUk38QmcpkCTo=
+X-Google-Smtp-Source: ABdhPJzAguu+fAPoftCt0iGkrQ7CsjxmqlmnyPNRllt6NGxY3xB/MWJfDtyYRzkuM1M8IcgGpNr5eQ==
+X-Received: by 2002:a17:906:1796:: with SMTP id t22mr2815872eje.372.1609941368582;
+        Wed, 06 Jan 2021 05:56:08 -0800 (PST)
+Received: from localhost.localdomain (p200300f13711ec00428d5cfffeb99db8.dip0.t-ipconnect.de. [2003:f1:3711:ec00:428d:5cff:feb9:9db8])
+        by smtp.googlemail.com with ESMTPSA id pg9sm1282862ejb.102.2021.01.06.05.56.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Jan 2021 05:56:08 -0800 (PST)
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To:     lorenzo.pieralisi@arm.com, robh@kernel.org,
+        linux-pci@vger.kernel.org
+Cc:     bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH] PCI: dwc/intel-gw: Fix enabling the legacy PCI interrupt lines
+Date:   Wed,  6 Jan 2021 14:55:40 +0100
+Message-Id: <20210106135540.48420-1-martin.blumenstingl@googlemail.com>
+X-Mailer: git-send-email 2.30.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen-Yu Tsai <wens@csie.org>
+The legacy PCI interrupt lines need to be enabled using PCIE_APP_IRNEN
+bits 13 (INTA), 14 (INTB), 15 (INTC) and 16 (INTD). The old code however
+was taking (for example) "13" as raw value instead of taking BIT(13).
+Define the legacy PCI interrupt bits using the BIT() macro and then use
+these in PCIE_APP_IRN_INT.
 
-The NanoPi M4B is a minor revision of the original M4.
-
-The differences against the original Nanopi M4 that are common with the
-other M4V2 revision include:
-
-  - microphone header removed
-  - power button added
-  - recovery button added
-
-Additional changes specific to the M4B:
-
-  - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
-    USB 2.0 ports
-  - ADB toggle switch added; this changes the top USB 3.0 host port to
-    a peripheral port
-  - Type-C port no longer supports data or PD
-  - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
-    but only 1T1R (down from 2T2R) for WiFi
-
-Add a compatible string for the new board revision.
-
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+Fixes: ed22aaaede44 ("PCI: dwc: intel: PCIe RC controller driver")
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- Documentation/devicetree/bindings/arm/rockchip.yaml | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-intel-gw.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/arm/rockchip.yaml b/Documentation/devicetree/bindings/arm/rockchip.yaml
-index ef4544ad6f82..773fd4c531ed 100644
---- a/Documentation/devicetree/bindings/arm/rockchip.yaml
-+++ b/Documentation/devicetree/bindings/arm/rockchip.yaml
-@@ -132,6 +132,7 @@ properties:
-           - enum:
-               - friendlyarm,nanopc-t4
-               - friendlyarm,nanopi-m4
-+              - friendlyarm,nanopi-m4b
-               - friendlyarm,nanopi-neo4
-           - const: rockchip,rk3399
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 0cedd1f95f37..ae96bfbb6c83 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -39,6 +39,10 @@
+ #define PCIE_APP_IRN_PM_TO_ACK		BIT(9)
+ #define PCIE_APP_IRN_LINK_AUTO_BW_STAT	BIT(11)
+ #define PCIE_APP_IRN_BW_MGT		BIT(12)
++#define PCIE_APP_IRN_INTA		BIT(13)
++#define PCIE_APP_IRN_INTB		BIT(14)
++#define PCIE_APP_IRN_INTC		BIT(15)
++#define PCIE_APP_IRN_INTD		BIT(16)
+ #define PCIE_APP_IRN_MSG_LTR		BIT(18)
+ #define PCIE_APP_IRN_SYS_ERR_RC		BIT(29)
+ #define PCIE_APP_INTX_OFST		12
+@@ -48,10 +52,8 @@
+ 	PCIE_APP_IRN_RX_VDM_MSG | PCIE_APP_IRN_SYS_ERR_RC | \
+ 	PCIE_APP_IRN_PM_TO_ACK | PCIE_APP_IRN_MSG_LTR | \
+ 	PCIE_APP_IRN_BW_MGT | PCIE_APP_IRN_LINK_AUTO_BW_STAT | \
+-	(PCIE_APP_INTX_OFST + PCI_INTERRUPT_INTA) | \
+-	(PCIE_APP_INTX_OFST + PCI_INTERRUPT_INTB) | \
+-	(PCIE_APP_INTX_OFST + PCI_INTERRUPT_INTC) | \
+-	(PCIE_APP_INTX_OFST + PCI_INTERRUPT_INTD))
++	PCIE_APP_IRN_INTA | PCIE_APP_IRN_INTB | \
++	PCIE_APP_IRN_INTC | PCIE_APP_IRN_INTD)
  
+ #define BUS_IATU_OFFSET			SZ_256M
+ #define RESET_INTERVAL_MS		100
 -- 
-2.29.2
+2.30.0
 
