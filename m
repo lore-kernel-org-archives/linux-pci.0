@@ -2,87 +2,102 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F85C433E0
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 11:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9EB0C43331
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4AAA223117
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 11:40:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B21C522B40
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jan 2021 13:47:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726641AbhAFLkk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jan 2021 06:40:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53540 "EHLO mail.kernel.org"
+        id S1726671AbhAFNrJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jan 2021 08:47:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50870 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725789AbhAFLkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Jan 2021 06:40:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4B2F923100;
-        Wed,  6 Jan 2021 11:39:58 +0000 (UTC)
+        id S1726287AbhAFNrH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Jan 2021 08:47:07 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A13AC23122;
+        Wed,  6 Jan 2021 13:46:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609933199;
-        bh=oVQy0WCzmrrM0N7SmWHba1flnwvWAZk0QOZxQDNRFeY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=p9P2ZBPUp/btO/65Rs74MhMBR0vz9xgr5BeOKTOxIedNJpUE/jN8pGoUQr7xaWfRT
-         FpgRPgYGnnUEh3nqB9N3xI6685F9kGvz9a0GEM30GMiDhAiEcccA0Wu9Ny3TVWoYe/
-         f9xUD1H66EUj1/gRlh17WIT3uN1TeWDRN1Q4VZ0TtKMSMpQWZyLTcxk8oEfNKQ54V/
-         BVGjLUWvnPpo1sV25vUhxEELP3yOrg72DxRyE+TutKs5elgpqdx6Mrb0BCXCyQosLP
-         wmrTiPBmHesIARF6gRZ1wHpowjPh3+Cesfeh3FLEtGEtb4v9QWKB3LfnTbSpB41B2P
-         SPWhLALexbjzg==
-Date:   Wed, 6 Jan 2021 13:39:51 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Shradha Todi <shradha.t@samsung.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        pankaj.dubey@samsung.com, sriram.dash@samsung.com,
-        niyas.ahmed@samsung.com, p.rajanbabu@samsung.com,
-        l.mehra@samsung.com, hari.tv@samsung.com
-Subject: Re: [PATCH v3] PCI: endpoint: Fix NULL pointer dereference for
- ->get_features()
-Message-ID: <20210106113951.GW31158@unreal>
-References: <CGME20210106103829epcas5p20a5c8aa2ae8bd6d8d555dad1aa265a1c@epcas5p2.samsung.com>
- <1609929490-18921-1-git-send-email-shradha.t@samsung.com>
+        s=k20201202; t=1609940786;
+        bh=XD4KOQ/rP8RIBZGRRQa+2iWBuRRUBOqeoHg48inz8OI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Tlr6Pvqxj2kK3acALn0W8ypJ/FllP+6V+SUZmRRWiqCXfTUo2U3mO6adiM8P407U+
+         1fILbXiuAcbPUSA8YTd6CWZaOlpfGyKSHQDlfP07QDT8ovvvClL/8GEcFDt6bGHIeo
+         gY3OQzHpscGdiFHExP/dgLbqTNpTcdLbEfkg8x5y9nmtcuI/xbnU2SEdx0lhpuCnRs
+         fn+fmr1kTu+xYNn1jGcDZRcuPdgJ3ogSqHAMgVjx5v/Y3JWrQrx3nwn9E1niBBrIJN
+         GuJ2Ly+3SSqlHBCkhPevfflVNEbwrn+DHJ9jsEKJIu1EvvOvWWj3ly6cxgQfGk+0pd
+         pI9RqsZiMqxZg==
+Received: by wens.tw (Postfix, from userid 1000)
+        id 5C1C55F7EF; Wed,  6 Jan 2021 21:46:24 +0800 (CST)
+From:   Chen-Yu Tsai <wens@kernel.org>
+To:     Shawn Lin <shawn.lin@rock-chips.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>
+Cc:     Chen-Yu Tsai <wens@csie.org>, Robin Murphy <robin.murphy@arm.com>,
+        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: [PATCH v3 1/4] PCI: rockchip: Make 'ep-gpios' DT property optional
+Date:   Wed,  6 Jan 2021 21:46:14 +0800
+Message-Id: <20210106134617.391-2-wens@kernel.org>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210106134617.391-1-wens@kernel.org>
+References: <20210106134617.391-1-wens@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1609929490-18921-1-git-send-email-shradha.t@samsung.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 06, 2021 at 04:08:10PM +0530, Shradha Todi wrote:
-> get_features ops of pci_epc_ops may return NULL, causing NULL pointer
-> dereference in pci_epf_test_bind function. Let us add a check for
-> pci_epc_feature pointer in pci_epf_test_bind before we access it to avoid
-> any such NULL pointer dereference and return -ENOTSUPP in case
-> pci_epc_feature is not found.
->
-> When the patch is not applied and EPC features is not implemented in the
-> platform driver, we see the following dump due to kernel NULL pointer
-> dereference.
->
-> [  105.135936] Call trace:
-> [  105.138363]  pci_epf_test_bind+0xf4/0x388
-> [  105.142354]  pci_epf_bind+0x3c/0x80
-> [  105.145817]  pci_epc_epf_link+0xa8/0xcc
-> [  105.149632]  configfs_symlink+0x1a4/0x48c
-> [  105.153616]  vfs_symlink+0x104/0x184
-> [  105.157169]  do_symlinkat+0x80/0xd4
-> [  105.160636]  __arm64_sys_symlinkat+0x1c/0x24
-> [  105.164885]  el0_svc_common.constprop.3+0xb8/0x170
-> [  105.169649]  el0_svc_handler+0x70/0x88
-> [  105.173377]  el0_svc+0x8/0x640
-> [  105.176411] Code: d2800581 b9403ab9 f9404ebb 8b394f60 (f9400400)
-> [  105.182478] ---[ end trace a438e3c5a24f9df0 ]---
->
-> Fixes: 2c04c5b8eef79 ("PCI: pci-epf-test: Use pci_epc_get_features() to get
-> EPC features")
->
-> Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+From: Chen-Yu Tsai <wens@csie.org>
 
-Please no space between Fixes line and SOB.
-Also please don't break Fixes lines.
+The Rockchip PCIe controller DT binding clearly states that 'ep-gpios' is
+an optional property. And indeed there are boards that don't require it.
 
-Thanks
+Make the driver follow the binding by using devm_gpiod_get_optional()
+instead of devm_gpiod_get().
+
+Fixes: e77f847df54c ("PCI: rockchip: Add Rockchip PCIe controller support")
+Fixes: 956cd99b35a8 ("PCI: rockchip: Separate common code from RC driver")
+Fixes: 964bac9455be ("PCI: rockchip: Split out rockchip_pcie_parse_dt() to parse DT")
+Signed-off-by: Chen-Yu Tsai <wens@csie.org>
+---
+Heiko, I dropped you reviewed-by due to the error message change
+
+Changes since v2:
+  - Fix error message for failed GPIO
+
+Changes since v1:
+  - Rewrite subject to match existing convention and reference
+    'ep-gpios' DT property instead of the 'ep_gpio' field
+---
+ drivers/pci/controller/pcie-rockchip.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rockchip.c b/drivers/pci/controller/pcie-rockchip.c
+index 904dec0d3a88..90c957e3bc73 100644
+--- a/drivers/pci/controller/pcie-rockchip.c
++++ b/drivers/pci/controller/pcie-rockchip.c
+@@ -118,9 +118,10 @@ int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	}
+ 
+ 	if (rockchip->is_rc) {
+-		rockchip->ep_gpio = devm_gpiod_get(dev, "ep", GPIOD_OUT_HIGH);
++		rockchip->ep_gpio = devm_gpiod_get_optional(dev, "ep", GPIOD_OUT_HIGH);
+ 		if (IS_ERR(rockchip->ep_gpio)) {
+-			dev_err(dev, "missing ep-gpios property in node\n");
++			dev_err_probe(dev, PTR_ERR(rockchip->ep_gpio),
++				      "failed to get ep GPIO\n");
+ 			return PTR_ERR(rockchip->ep_gpio);
+ 		}
+ 	}
+-- 
+2.29.2
+
