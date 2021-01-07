@@ -2,59 +2,62 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CD6C433DB
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 17:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A6CC433DB
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 17:52:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98AF323403
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 17:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1C67233FD
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 17:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727753AbhAGRvj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jan 2021 12:51:39 -0500
+        id S1728118AbhAGRwD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jan 2021 12:52:03 -0500
 Received: from mail-dm6nam10on2080.outbound.protection.outlook.com ([40.107.93.80]:54976
         "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726780AbhAGRvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Jan 2021 12:51:38 -0500
+        id S1728066AbhAGRwD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Jan 2021 12:52:03 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lOzi0BF94itj6Ey+x2poxw/Nm8Q94jbfkk1VgguvMZH3DpyaXafmFz5SKddCYGzQQWBut6JsmL/hGqMoS7UWdorsWZSlvmSn83CvvbD6GIEXm3j+iqX1KiVWhGmMrf8PJQ2azw3vEDmPftry1HZRoGqqXDNg8yeDZb5DIyamfASzcNf/NHrXfp5dELD3SpxblksnuwLEyZTPAfcUb6nqtG+KF3mAxG6eTfhKpl6PZ3Hz0648k8T7Q7/4Z2630Uixcy+nxN7h4PkeHw6C7ugHffiioPk9kZ4aWeiI57X9GjVImHpantUQ/WYicYCIyOPyRsyQ2qr0uVcszcgLpOOP/A==
+ b=cXSBxPqa7RkT9eZ+9VrcKB+u3O352xiObA06KhsjiukdbFD4y5UBYpSzUBCjUh0g+YzsNwQAc1EW8AWf1PWryuYQOfWalJ52bbeg1rmyWqWc1CcTm588oOt3Rhsg/jiuzDLd9tzNNgdhwW0x2QiqHAGo0CkZieqajDWOX0Acohe66Jjt/7n06aicGUcrCUQENU/VO3w6upgNZlRGQ5Y6FlpRroNiJVUaX8ts3VXOI3QB/VP6GrTp99Vi43XH4yKMcJdACAJA0aOWEhkUaTaZZDUrEfaJm+CEf2HS1aBMqWWsztMYSh1YofF8oIhga5VrF8xygl24Adad7aWX0Yxgaw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LWxLjz4LseBfUY3MCQckcJBAJIwDZcJnJWBT+aGHAA8=;
- b=cpF3T/Ydmolm5yUKsNr7u5ZREkBqY7tGFm7klLqZT2kursSNUvm4b1+XE/+vkpowj8eQQU/xPCN7Nx0rsWQSX7Gl1ve7q9Kcxo9hVZk6GNPy1lIQQWGzQo7KikJnFViit8bZIi2IwgKgGpe9ZXFMKJGeIh1CxlAEkMvxa0QICkH08Y3BbK536VYoW+4NQDJ+8kbiZyyRMzewMux04M4JCs+YZTtvvmGR8E4Xjf2sSdxSKcZgwFFLoNG3yXUXKj8nQ8zgGrNUPuHyP8sVtaZX+gKWHfJntI/UQKaWF+ZMmWB2AnH3lNzUNDndKOHGFSxUD2DVr8St0X1cdvCtTwjXrw==
+ bh=sg/CDzXyze3tWUJxj0mz1HiBNVrEWG7Jo2YIZ4wHVUk=;
+ b=lRAbROB/o7M3+hXHDCtR4qjyDcFabWowkDQ42dDDGR5v7mnOrGYceD7m2C00hMPfOtYgJxIBFmCEoRuk980zmdYfR5KtjDVCej4QEwT5TajVXShCoiluWFX6eBIrmm15gA6nb91ygQs2h6tNDQZui2lIzFh/YeC1kdNCeLEjZjVXHSGftSXtKe5nxfHMvnyVxBjEdCcBRf6qfLyhPxOd3TwiSnbGBSxdiKM4TuWji+R9jSiI2vjECE8i0HjGoWlzNy84GFHFbRxswyIVYcjmmVYwoOpUOg47UAWT9Sz4IIiwWnLMH7dOPK32XZFy9eCNgXXVZKObDtXRWxW+X2toPg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=amdcloud.onmicrosoft.com; s=selector2-amdcloud-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LWxLjz4LseBfUY3MCQckcJBAJIwDZcJnJWBT+aGHAA8=;
- b=cHIUCyY3s2b/Hqn8jaw5mhuvlQ3NtABKa3Eu2NhkI3KfODjyHk/GgTqwalEXoHF1ae0rF6udSwjVMvF3xhPvPUX4KKosNEeTEZyxks2spcgvi7yMJklRLG1YOZ9D2AI4zriIkc671SHYIOnZA3YbVc7ggFgiUjKuGPlmbz2bF30=
+ bh=sg/CDzXyze3tWUJxj0mz1HiBNVrEWG7Jo2YIZ4wHVUk=;
+ b=fC9Pd8JQuIWgGTx0qc0tFEvyoP3CgaJ4qKoF97572WQNwYRmi/zpWCe1wkZc66cmo5YrmWAfOekMQZlugs64F7QNRZDljqoC8eLj6+U9KAjyX1bJ89qsAymHzJN42fLvHtQDRcUP/AFr3Ynrm5/Jo/0a3s17e3WESx8Zb9yF64U=
 Authentication-Results: google.com; dkim=none (message not signed)
  header.d=none;google.com; dmarc=none action=none header.from=amd.com;
 Received: from DM6PR12MB3916.namprd12.prod.outlook.com (2603:10b6:5:1ca::21)
  by DM6PR12MB3066.namprd12.prod.outlook.com (2603:10b6:5:11a::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6; Thu, 7 Jan
- 2021 17:50:46 +0000
+ 2021 17:50:50 +0000
 Received: from DM6PR12MB3916.namprd12.prod.outlook.com
  ([fe80::f872:3677:28c3:660b]) by DM6PR12MB3916.namprd12.prod.outlook.com
  ([fe80::f872:3677:28c3:660b%5]) with mapi id 15.20.3721.024; Thu, 7 Jan 2021
- 17:50:46 +0000
+ 17:50:50 +0000
 From:   Nirmoy Das <nirmoy.das@amd.com>
 To:     bhelgaas@google.com
 Cc:     ckoenig.leichtzumerken@gmail.com, linux-pci@vger.kernel.org,
         dri-devel@lists.freedesktop.org, devspam@moreofthesa.me.uk,
-        Nirmoy Das <nirmoy.das@amd.com>
-Subject: [PATCH 0/4] A PCI quirk for resizable BAR 0 on Navi10
-Date:   Thu,  7 Jan 2021 18:50:13 +0100
-Message-Id: <20210107175017.15893-1-nirmoy.das@amd.com>
+        Nirmoy Das <nirmoy.das@amd.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+Subject: [PATCH 2/4] PCI: Add pci_rebar_bytes_to_size()
+Date:   Thu,  7 Jan 2021 18:50:15 +0100
+Message-Id: <20210107175017.15893-3-nirmoy.das@amd.com>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210107175017.15893-1-nirmoy.das@amd.com>
+References: <20210107175017.15893-1-nirmoy.das@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [217.86.111.165]
@@ -63,76 +66,98 @@ X-ClientProxiedBy: AM0PR03CA0093.eurprd03.prod.outlook.com
  (2603:10b6:5:1ca::21)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from brihaspati.fritz.box (217.86.111.165) by AM0PR03CA0093.eurprd03.prod.outlook.com (2603:10a6:208:69::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6 via Frontend Transport; Thu, 7 Jan 2021 17:50:44 +0000
+Received: from brihaspati.fritz.box (217.86.111.165) by AM0PR03CA0093.eurprd03.prod.outlook.com (2603:10a6:208:69::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6 via Frontend Transport; Thu, 7 Jan 2021 17:50:48 +0000
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 6b55d7d7-9e20-4c6b-6070-08d8b334c2fb
+X-MS-Office365-Filtering-Correlation-Id: 1659d772-1a1e-4a33-07b1-08d8b334c536
 X-MS-TrafficTypeDiagnostic: DM6PR12MB3066:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR12MB30660235526160DFD6B9D3108BAF0@DM6PR12MB3066.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-Microsoft-Antispam-PRVS: <DM6PR12MB3066DD336F5BC4B6F31333308BAF0@DM6PR12MB3066.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:586;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PwhmuoR+vRidJI814P89aSnzZIRcxVrYdNOuvMptBy8HP7oZE/+WFcloyEAOcvEfPsb+H0M7ZRbWv00a8NaG8q1npQNw+Kuno4ycLfUOcA+9zN13wxqvO8COzRmoWVGpDO/dvxIPUrbmngPbaMtvgFKa2E9BVuM/vnl8JduKBF5l2NwdXemZZ2Uu8oXhFhw2zqj0I3yX0Rxf/VJrcshc98DBc8hrW/5YETg5TD1gra6vOb+YNzDIQpKKKE6WsWd/jTaICo0Mp5AHSXclKmsEZ0U3U9KqZoKjTchQkf/3zYVPWudpIIQhBfSb56ryoCY58WH4ektPSFHT/QZiTa/Y45XCJmq9baziKYUsKlL1JA1hMsx6BYF+d976ipxAFx+Za7T4RYTToSSgJuS8uEBgTkxa8x+WICb6/7PuMxR9tlAOZR6vyFW3xGP+lyzXHlbjV9GEgUBG/nZH/wX+YXBbxg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3916.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(346002)(376002)(136003)(39860400002)(396003)(966005)(4326008)(6916009)(316002)(1076003)(478600001)(6486002)(36756003)(26005)(66476007)(66556008)(5660300002)(8936002)(66946007)(2616005)(4744005)(16526019)(44832011)(2906002)(52116002)(6506007)(8676002)(86362001)(6666004)(956004)(6512007)(186003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?dktTOENKZytKSmR6cHlkUDg1bzQyMHRqMHBkYi9RSkYyRWpneEtkdkRibmIv?=
- =?utf-8?B?YmQ4WmJrU09IQVhtK1B4SmJ5MEkyOVEzVjZ3SVhoS1NxVlcwZzB2ZG9vYW9S?=
- =?utf-8?B?cUJmOE5HZmhESHZFQmNTeFVoY3V0ZE9JcVplNnlWdzRzOFNXVVRacEI0N0J3?=
- =?utf-8?B?bWphb0xYcmRzMDQ4ZHFSdFZONVRTTkhkeExDN1NrZFErK1VISWk1UWZxU0pn?=
- =?utf-8?B?L25GZ01hdnVHNXo0eDNaMmw2SlA1SjR1ZW9OdnhCM2o3bEo1T3d0RU0zWkR5?=
- =?utf-8?B?dlFtaVNnZ3p4eDI5RU5HbmRMbDVxc1BpMWdoRTVrSERVVkxLenIrbUp6UmM2?=
- =?utf-8?B?eHJTK2RVWmJhZXBJT09HcjdjTkQ1djdURVZvWUVsU2tGb21xRFJra0tLQ2hK?=
- =?utf-8?B?cGFIemhxZjNlWHZBUGtnVVNiTUNNSXllR01qbVFoWWdDZ25QYzNtclR0M1ZJ?=
- =?utf-8?B?amdjQ3dQRE9weHJ6Uld4MFFTUksrMW9zbkw5akxldFArY2kwUkx1MGY0bnB1?=
- =?utf-8?B?Z2E4bnpVWmI0UDd2Q0lvaTROckU4NnZ4bldBaW02dXVlOXFRTVplUTdIMHFo?=
- =?utf-8?B?dFk3c0twMWdwUjd4c2hNYXk0SE5ySFl5aFhEY0xRM2NhZXRFU0ZuRUpsbS9E?=
- =?utf-8?B?YUx5Nnpjc0N1SWJtQUhCT0xBSldEa0UzL2tQNEVldGFoM1VhcXp2Ry9nTmhU?=
- =?utf-8?B?OVVHbmRqZDJYdUhyaDg4VDNIem15WUQ5NXpoVEh1N2JQNDVIQ3NUQkQzR2RQ?=
- =?utf-8?B?VytBNEZ1WUpkOTdYM3BlSlNtbTlpZGkraW9scVRGTDNyYzR5a29jNVo1SkZM?=
- =?utf-8?B?QWhocjVqVDQ4SzNTdzJ3eldVcXBjWXZteC81RnBIZlhSa1lVZzR1Tm91eHdZ?=
- =?utf-8?B?KzNXbmMzajgvbWtSbys5TllZUHlOd3JBUWMrOUZoSFk1eXNsZ250TGhEVk0x?=
- =?utf-8?B?enp0MU1lN2trUnQvcGVVNmQ0Yk8xdVlJYWlncjM0aDlJSWh2UXB2Unlzd1VR?=
- =?utf-8?B?TUc5UWJYZ2VIcVhEajl2RTZNNGRwd2FZbXJGWGx5Vm9qcVlSQVNQRit1dU5m?=
- =?utf-8?B?MXJZWWZiQ1BWK2JORDBtc2crT1JMY2srTUJETW4rQXV2bzNBUWRTbUE5K2NJ?=
- =?utf-8?B?bm1sb0xWRWNMYlZHc2EwdDAwUUc0T216TVFZdUlzMllEVEk1OVBVZ0ZISkZS?=
- =?utf-8?B?VUgvc05nUFY1TE94Y2YweGp3VHM3S29EQzlOR1phWlhTMDRicVZOeWl2T2w1?=
- =?utf-8?B?WlhuTzBNcmIrUllCMzZBVHREREFBeWNQd1QzaW5LMXhnU091VDdUUklhZmsv?=
- =?utf-8?Q?fbr54K+SLLeI/5A86SGg73q3uRSvVGAfNq?=
+X-Microsoft-Antispam-Message-Info: 8fZVVfVQKUhK4jHgy0xx2FcF5EODaYXNclS8auonvf6NDsJnnpZhztuNSHp/N6VmU6EAiTBsP9NNZRtdd268f2SnW9Q18Zg1A8MbJUFD0zqtejNYn89P+XLsbnaE/0+JYFJFtjuTWP299mswkTFuw5BNMVgLbCslxytGijBmOakD8tVBeWIaSA2cCSIZrEUBG2uod1zPeO5d5OLlop/5k/TYhkD5U9TWOJalyBlY0+8a0cuOYaRIAOMfboz2xrg7iii62QMe1jCNL6yHfYr1CxnM5Dfc/IYnK3xxLuA8iW9hI10GEpqsQd7oVAFOmDIz087AsxImzn5EAi+pXVZ7gU3bS8lIoYiJgbNzQ/bFIP6W+jLC7OS2NcEWyp2k8qmCyXGFKFur6G2eHzPq+1mWjQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3916.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(346002)(376002)(136003)(39860400002)(396003)(4326008)(6916009)(316002)(1076003)(66574015)(83380400001)(478600001)(6486002)(54906003)(36756003)(26005)(66476007)(66556008)(5660300002)(8936002)(66946007)(2616005)(16526019)(44832011)(2906002)(52116002)(6506007)(8676002)(86362001)(6666004)(956004)(6512007)(186003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?ajJyWnJpTWpISVpCa2xXYksxUUJqVzFpMHZFN053ZkYzYWFLU29BTjBkUGhF?=
+ =?utf-8?B?aGc1WXlzTWkydjNrOGxqdTRocjdpQTNFakFqNFZPeEpWa3VjYmFTc1BlRUJr?=
+ =?utf-8?B?YzZ1YUhZMStMWnl4eXFSRFFSMURqdU1GVytmZTJ3UHFkTC9VbE5vb1ZuVXNy?=
+ =?utf-8?B?ZThaTzUzVTVmL0NkaE5STjR4a0pHeWhEclpqWkhZcWJTNlRDQUJJbjFMTkFH?=
+ =?utf-8?B?MmtweDJlNHczUk5VSW1aZFJ3eU5BRHBJNjkyaG1nTnpJMTV6bWZtSEFmSTdF?=
+ =?utf-8?B?RE1LTThBanA2V3NLMk91Z2xkVnc4NlBteTYxY2J6VkIvVXB6QmRWQkJvWWF1?=
+ =?utf-8?B?RnlqS25pWjl0TlZSeTJuS3lQT1VWcHNiVUlqWVlicFp4c052UHhXd1Mrek1S?=
+ =?utf-8?B?dHpha1lwcEpOMy9OY2UzdWFwVEYvaXE3NWJUZ1kxWDdnTXo0UU9NSUFQVmRh?=
+ =?utf-8?B?SEVqOUhRckFzVExaclNTV2JDRHhKUDZNckdnV3BPTFBKQStxc3p5VGFSWlo3?=
+ =?utf-8?B?QW5jOHlJWHhrKzllZ3UzZGY1bFZVcFY4K01jK0hZZnU4djVjUGxpUHYyWUdM?=
+ =?utf-8?B?TmQ4SDFtcm4xVnk4c1dFM2M0elF4UG91WHZyTFM5V0pWZklYWWFzL2E0L2ZN?=
+ =?utf-8?B?dk1YN2tMZlA2WVVDSHlaZFloRW1LbHdtRFIvUC9xZTNyN0pqK1N6djZHc2FT?=
+ =?utf-8?B?dHhwQjhJZFQxTkc5WS9GcStTOWp4Q2NBOG1IcTQrbGVrbVlQbUNxcmFhZTRX?=
+ =?utf-8?B?c2RzOTNMQ3lmSGhJY1FMODdNOFdLKzRkeHZOSlVCSjZ2OXQvNlNlZGk5Wkc4?=
+ =?utf-8?B?c1JoQ2VSYU9UT1g4VjdpSThGSk94bE5CdWNsektNaWlHMEJvNkN3U3FyN1Nh?=
+ =?utf-8?B?ejB6OGQ2YWNGRWZOMmNzelpHT2RTSTBWb2pOZlJtdkk3NE5tRFFYdG85dFQ1?=
+ =?utf-8?B?NGovMEp3Tnd5UWhFOCticUJmaHdvKzNpYkJWS0RKMmlnRzkwNzIweFR1NXNh?=
+ =?utf-8?B?VUhYTE83UGh0dVRLdHpsczB2RW9XcHRNWmtwNmxzb3NWUzZrOHRuYm5icUxY?=
+ =?utf-8?B?eERkYUlOTTJmcjNWM3Y3bWMzTy9mbGhIQ1YvTVpuYTJUV3diV1NYb3hjU1FT?=
+ =?utf-8?B?a04xNTlOQ3k2Y1dkWHlIYXJjZFUwRk1JcnBFYktLRTJHMHdTai9ZNEpCYSs0?=
+ =?utf-8?B?RWVaNmhIbWJvU1kxSDhWYlFsNzhtenZTVko2cWFVajR2eklKRndzKzZuR29h?=
+ =?utf-8?B?VzV4RHR6MHI4N0JldXRFODhpam44ZE1BR0ducXVYSEg5R255dE43UHNZUXZJ?=
+ =?utf-8?Q?fhHJbS2zEG8yj1EaaIs5IN1PyWt9VdspsN?=
 X-OriginatorOrg: amd.com
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3916.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2021 17:50:46.2731
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2021 17:50:50.0039
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b55d7d7-9e20-4c6b-6070-08d8b334c2fb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1659d772-1a1e-4a33-07b1-08d8b334c536
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cxMM5twa+XggW0MAkM1R4VC+JODTmBJffczbEwj76bJ8+2Qj+05Cft8ktLnpJINKveCQAQLo0R9Q/qDvM1+vrg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: cvmwmxmnAHZyZeyNm+GhAqb96CSZkvyjrdQvBLiS+FL7R7PgdhYzE0pXLLBEkidf24ITTHsPCF8xKc2vogT67A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3066
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+Users of pci_resize_resource() need a way to calculate bar size
+from desired bytes. Add a helper function and export it so that
+modular drivers can use it.
 
-I cleaned up the patch series[1] that Christian sent
-earlier to fix wrongly exported resizable bar
-capability dword by VBIOS of RX 5600  XT Pulse card.
+Signed-off-by: Darren Salt <devspam@moreofthesa.me.uk>
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Nirmoy Das <nirmoy.das@amd.com>
+---
+ drivers/pci/pci.c   | 2 +-
+ include/linux/pci.h | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-I didn't split #2 patch instead merged amdgpu changes
-of #2 patch to #3 patch and removed changes related to
-pci_rebar_size_to_bytes() as it isn't needed anymore.
-
-Apart from that I clean up rest of the patches as you suggested.
-
-Please let me know if I missed something.
-
-Regards,
-Nirmoy
-
-
-[1] https://www.spinics.net/lists/linux-pci/msg103422.html
-
---
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ef80ed451415..16216186b51c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1648,7 +1648,7 @@ static void pci_restore_rebar_state(struct pci_dev *pdev)
+ 		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+ 		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
+ 		res = pdev->resource + bar_idx;
+-		size = ilog2(resource_size(res)) - 20;
++		size = pci_rebar_bytes_to_size(resource_size(res));
+ 		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
+ 		ctrl |= size << PCI_REBAR_CTRL_BAR_SHIFT;
+ 		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9999040cfad9..77fed01523e0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1226,6 +1226,12 @@ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+ void pci_release_resource(struct pci_dev *dev, int resno);
++static inline int pci_rebar_bytes_to_size(u64 bytes)
++{
++	bytes = roundup_pow_of_two(bytes);
++	return max(ilog2(bytes), 20) - 20;
++}
++
+ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
+ int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+-- 
 2.29.2
 
