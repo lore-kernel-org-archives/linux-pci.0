@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE07BC433E6
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 09:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 842D3C433E6
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 09:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9741B23120
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 09:03:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 376DD23339
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jan 2021 09:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727449AbhAGJDg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jan 2021 04:03:36 -0500
-Received: from mail-eopbgr00075.outbound.protection.outlook.com ([40.107.0.75]:48622
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        id S1727477AbhAGJD4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jan 2021 04:03:56 -0500
+Received: from mail-eopbgr60045.outbound.protection.outlook.com ([40.107.6.45]:21197
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726992AbhAGJDe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Jan 2021 04:03:34 -0500
+        id S1725974AbhAGJDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Jan 2021 04:03:55 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QqVfACrXxsjhnzn8umIG6Mmus+pkR211/m//d7Qk+n/VO3rw25jyhKtcZerojGLjsHWROl+YYPKAZxGSJ+82lA63wld8j1Ihoy/xU8q+DW677LKjf3vNId7cFV9ZsfnbSc/emrfV+SSZizTLrB7z3KNx1t/KDXioMPy6IeZs6vL+cC/p755Cjx20f8V3yxLMMv9yCNbbZZUsK6fpXanMyT9V6zjwz1JEcy3cXdO6ijYIGHCixdHr3Fz5wRwIdun6g2GnSdN+OmHz7/sLBEqadCgev+ac/PscZrXTAYrUL2t7wuiH6oYIXxrSjADxb8Z3DH4zjlK21mUKvJgcNaQGRA==
+ b=btUTveu2aB2KcacHYIHToP5IevIQWh1cl1Q0mQeNjB/Ga4VK9Vl8qAqN4e3zdypXs4zLRuoZWJ4uFXuJUTLfV47x1veaQzGn/gyNpkZocrihF4PSTr8bvYVDv/fI1nsjWidRBL84NI1QiQVT8DCDulKytzYjVqFI58aS3/kRBhATz920YF+YLXsXbppUFW2Jba0pjihPsx8FHuRdUwiRWhgxGSQxgFRAYjNZC9elOFWJ7gOVbkv0Z+VEo2HTqj9acOvoUnZf9TR3iAhwGWQHOxnoghb8h5aEITzjPSaxn2XdyoxSwKpfcpHxeccK86ltBxt7kc8J8tQ78hjY017sbA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=njWXmtWIYlqC6XrTHOvke4uyaMFHp9xiOMLNny1pViM=;
- b=RAjfH//xZaa3hZuNEzc2yCG3YXN5Ax+iYZKAcQn1AIOC4sj82e11gRn/NjRzUcwcyxqFRBXfm3nLtYMetgNHmwnMtmdKUCcVTwOYpSIGBL5p1EF7ZvjAfTtQ/VaHhe57K3XZBpbwLT3/0hjfRDwSDE+1BkBLDV7o8ZZN2hywLucV1ZvXlwB1SQmf8EWqc3p1bQDsuUwqjXBQ1jFsgS8RwPas5Kk5ouO8ImUaWm8FUUm1o6rgwNm7RR4pjcNkEnNi2YmM8qApepCsH5L8RNQb+ClVjulNgYaeIHCrkEHVXN1OKs5P9sMtcNAKODlgRe82GA6ICt7oeSl/pV4d8j41Fg==
+ bh=3xiPIgsBGQsk1PW8W4Xz5jofW0uyIXaYgyx8QZ1CJKg=;
+ b=E8+1Rw+MLS2DCwTdNpS1Cqu8x4pG7vTIIt+ew6ZYlVirKTACWENynH+kUidioXA2WUPe3oDFD6l+bd1ngdqkQwqlTTXiWH9ww575/yje6aRWDWgaFb4EzIcKCbnTxi811hxUUfh/DDfSZ2Gcyikdc4y+iLPha/xDTpz8+5uX+he1LEjns7E8cvbKDhkEe1TC/GrOPYZpXw3fZBzdvxC/8/Qmb3lS/INlg6hhCkSK3y5NYUyOMV56NaOa8LSCAtLIKlDim94GNnVSA9r4+M3Y691hp2tsjbCIsaN4qbzO+R9kiyXScWASoiVtz/Jrcu0r5n9INO7FEUnJ6rspgoGE9Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=njWXmtWIYlqC6XrTHOvke4uyaMFHp9xiOMLNny1pViM=;
- b=AB2jHIGx3sQ9DsOFCjd9f+9ylbRrZH3rhJxT+cPq+8nObMiMpuVapM/rh0QJluHyCZ/K4MgBUxjtI1e/CnSxJbkbnEfxPjXalgFKwGjMnIhkeIJoDf5VhLGZxolCRiIBA8pYAnz8omzL6xE0N/pZgMETHlEeG8iNo8tm/G4ZfqI=
+ bh=3xiPIgsBGQsk1PW8W4Xz5jofW0uyIXaYgyx8QZ1CJKg=;
+ b=fyP9qisPLhKtdCDZjYW0BwmygQcXALX+dynvDwYyJ/xCKEeRB1DsNwgcvKhiq3tjUu9+GW1OYo+JmHYm6jULLzhsVwmlAjaTuT/Y+KAzCMOz2wXxRqZDv4AdplF9I63yEIW7fiSvLzhVm67CgBP2EvDpz0qzrUmmINBATN1vh8U=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=nxp.com;
 Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com (2603:10a6:7:85::27)
- by HE1PR0402MB2731.eurprd04.prod.outlook.com (2603:10a6:3:d7::20) with
+ by HE1PR0401MB2297.eurprd04.prod.outlook.com (2603:10a6:3:23::25) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6; Thu, 7 Jan
- 2021 09:02:42 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3721.22; Thu, 7 Jan
+ 2021 09:02:59 +0000
 Received: from HE1PR0402MB3371.eurprd04.prod.outlook.com
  ([fe80::3194:64d6:5a70:a91d]) by HE1PR0402MB3371.eurprd04.prod.outlook.com
  ([fe80::3194:64d6:5a70:a91d%4]) with mapi id 15.20.3721.024; Thu, 7 Jan 2021
- 09:02:42 +0000
+ 09:02:59 +0000
 From:   Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
@@ -54,9 +54,9 @@ To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 Cc:     kishon@ti.com, minghuan.Lian@nxp.com, jesper.nilsson@axis.com,
         jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         hayashi.kunihiko@socionext.com, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH 1/4] PCI: dwc: Change to use an array to store the structure of functions
-Date:   Thu,  7 Jan 2021 17:11:20 +0800
-Message-Id: <20210107091123.8616-2-Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 4/4] PCI: dwc: Change the parameter of function dw_pcie_ep_reset_bar()
+Date:   Thu,  7 Jan 2021 17:11:23 +0800
+Message-Id: <20210107091123.8616-5-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210107091123.8616-1-Zhiqiang.Hou@nxp.com>
 References: <20210107091123.8616-1-Zhiqiang.Hou@nxp.com>
@@ -67,154 +67,209 @@ X-ClientProxiedBy: SG2PR06CA0085.apcprd06.prod.outlook.com
  (2603:10a6:7:85::27)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (119.31.174.73) by SG2PR06CA0085.apcprd06.prod.outlook.com (2603:1096:3:14::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6 via Frontend Transport; Thu, 7 Jan 2021 09:02:37 +0000
+Received: from localhost.localdomain (119.31.174.73) by SG2PR06CA0085.apcprd06.prod.outlook.com (2603:1096:3:14::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6 via Frontend Transport; Thu, 7 Jan 2021 09:02:54 +0000
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 288821b6-242d-48ec-9eca-08d8b2eafe14
-X-MS-TrafficTypeDiagnostic: HE1PR0402MB2731:
+X-MS-Office365-Filtering-Correlation-Id: cbc4fba3-675b-48e1-458b-08d8b2eb0815
+X-MS-TrafficTypeDiagnostic: HE1PR0401MB2297:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <HE1PR0402MB27315E5206D4937CE5277F4C84AF0@HE1PR0402MB2731.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-Microsoft-Antispam-PRVS: <HE1PR0401MB2297F2EE23F4E25F21C4445884AF0@HE1PR0401MB2297.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:369;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7Zm9cG2xHegqcGL3LztZZCLl4MAutESxNmLPwZW+wnnwJgqwVTVhLRG7yE+aGSpuwoeHxcVZGkvzSAPrLBiA7/hHXZRozp7pCrZysEdvbA4fj3HJUMEJfE9+1skRsXJ14vyS2wMWsYl+T1mbkkcc9nfsaDgqudDPJC5K77PIwyB7Uq171je7ld+BZYe+JqQ52FWoePXWByvXMerOr4XQNuTQYfAXBX9P6ly8q/Nfp46XPluFvY9VjjaFfoTk0nwhS/MlOtmwf3iwjK0FaZFymSXeZBBkoHNJOsqhF5ZlrHD817KSoPtdwhPa8S8uiaGRfhFrEhOAaK8QkiwHwOQkfzlOO7OSghKxueFPlWUhS76jn0p+04yICanpIT36eYa9BZwuCFmVshFNrRzshEMnIo8qbIveCweYDNHlbF2xhGhmlTigXKolyGewqQMtGdfg
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HE1PR0402MB3371.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39860400002)(366004)(376002)(396003)(346002)(2616005)(66946007)(16526019)(66476007)(66556008)(186003)(52116002)(86362001)(69590400011)(478600001)(956004)(7416002)(2906002)(26005)(8676002)(316002)(6486002)(8936002)(4326008)(6506007)(6666004)(1076003)(83380400001)(5660300002)(6512007)(36756003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?IiWtDNM/C4+hZk+SK/Uk7b8JRuKTse5yMpGPKgVuFy9D4vnwJuxtbWY+Rt+j?=
- =?us-ascii?Q?H3RCUoHKVKQKmvZoQlSuxI2W9Rd29VsjWAhHaSCgoms8sNoBJBBMSyZfD2jM?=
- =?us-ascii?Q?TSi5afLeAcx6Z88aM1QD3ilLS5KIoZXSZ3FyizpA5NQoWgdBLfXXbBs6aw5S?=
- =?us-ascii?Q?nEN2ELtkm/YD9H98/kDIt3lzEmTTPq9LwaSgTS650zAw5B/Mcuv2fu9Fc0l7?=
- =?us-ascii?Q?+twZ5aC161qIkBdlGOGLbOMUthcCGSvAyx/4HIwCi2i24EZu6O5/c84X4cIi?=
- =?us-ascii?Q?6vkZZV9peiAr4mBFEelZpFdrIO32X6XpbEw+6VOOtwE1kpxr7SCk1Y2UjmbI?=
- =?us-ascii?Q?gIszgr27ZvCKfAearYi8swtirOlZGaQsZJwLkbdEYLp41gbIPtKzUHgFpDNd?=
- =?us-ascii?Q?hW2/AWdWet9Q0vlnE4U2RIJPsineFSy9wvGZDL0dDk0VY4+KDe4HiCYsnl+B?=
- =?us-ascii?Q?edSi2UHaRTMHpnZTXZnCEKYlfOAaCYvbZkVUORxeki2NeTynknkPsVc7fMq6?=
- =?us-ascii?Q?PUQUozhcXHPeb8XAxhopuvypOwrwAqPHI+VjSxVECyGnyjWm17h39rSCpnZd?=
- =?us-ascii?Q?vaiQ8n0Z9aPRdBM/ckNnt8Kmf72dKYzDCISkLkgJvMfI6sIDFKaXr3q2Xs8y?=
- =?us-ascii?Q?RSqdMfMfkH8B4DF3bjtLdvFLfsJ45Ek/ne+aLHfKYG0tuY0FDHmc7IoSDLuk?=
- =?us-ascii?Q?JUtadnbzkObTkcTs1+93X9CotxYgYCcy+B83/sIdVHUBjMK1g8Hff5EN5kc+?=
- =?us-ascii?Q?rGM9z5OYvi86twyYgr8hjg4uVHWtQ8i/7JirKEubghjGX4MvTsCvvPVivMDD?=
- =?us-ascii?Q?kRZ4HzXKmf3eAJb+D18viOeayCH768VQ+fKsg7l18wjoh1EGnxkTfn2JjVtm?=
- =?us-ascii?Q?hq2JxtFKejLUWB+EZtYxfo+7Y0EJeiGlv2/4RbsiEnvCCLc8EMVmgh2zmTOc?=
- =?us-ascii?Q?5Zvza/cZiie54lWgxVB+DI02Oqbdt+PuGlhlRyXojjSr43JKIfFHP8sbnHMc?=
- =?us-ascii?Q?ly5b?=
+X-Microsoft-Antispam-Message-Info: BBwmz8AuVOjhAmdtnvw9184nLvypVFtYDiNNfViIw3jU2dgo3IwkIGkyl4jyKkJg2ja2JrAIpWC3+KuYla0aECRO9+0yJxq3nh502L3I1Jd6YBL+ARuGEzNt4KC98kB5oJ/YVs766vIoj+LbENgLpHFHp4aMhl6bsaehN2oa4yGYjECqLXXwuEyvdsX75g+K1/y6IpRS7kEPjuaww5z/Ad6kJM61mmzhVo+usD4AO2gmYQU/3tT3zSe67zO/uznGWu61AvCC7gS0BniAE4cwrY9gSbUJQGil84L/wHIvq7t/y7d06B6tH7vchGpGtNYs6hmGNcQQyzBlKBkNiIBkB8tzm5BuM1vLHND5t9bsn1gy0ktgm+xQEAK3pRKx4XNBAIkr5e5ymk2krX8tzoM/a3YRVX+JsPdlalGEIh8Hjskmyp0zPBuJBrK7+MkdO1o03y2NM6zcMEZ0wsiTDoFptg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HE1PR0402MB3371.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(39860400002)(366004)(136003)(346002)(36756003)(956004)(8676002)(86362001)(2616005)(2906002)(6512007)(478600001)(6666004)(4326008)(66556008)(1076003)(26005)(83380400001)(6486002)(66476007)(52116002)(5660300002)(7416002)(316002)(69590400011)(186003)(6506007)(16526019)(66946007)(8936002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?UZ/egG3x5lQlHrJW4+1CDqt8OsE6TnN5zw6LV2CEAh8zmnj1I7LW1OxmjD0m?=
+ =?us-ascii?Q?O7u3VVBchEeMFlLy85qdyeZ0IvFI8SKlJzejBei367k51uLEZc1q0q62XQcZ?=
+ =?us-ascii?Q?KVkJllO/VuSWuhxnEHAasRCsEz3efF/MDN3zkWDCB4NBDmZSfkNKVtFuQQxm?=
+ =?us-ascii?Q?Bgi1UWsUuzz5bxiHEXn0iYvy7jze0/S+PYU35BJeYURBFbBT+4vt+zV8n1SU?=
+ =?us-ascii?Q?ktSHGvXGLkc3oEUyWNsqWpR3swwWUw1xeXpcUL3Lciii9F3NdiSufegZw5TX?=
+ =?us-ascii?Q?MZvbbyv3NrVsDQhJL7+nZoe/CJObk7ojreR+WnKftEiMToj7Z6Z5NlMPq171?=
+ =?us-ascii?Q?RbxPQMkUjK2+2BAmwyQbMnLbi6DXRNKB5zvgcPx/RBWC1hYZ7bAFwXiz0O7+?=
+ =?us-ascii?Q?tK97KbRgYYb1dfLLnTvLdJoPMqEGaqftFe2eyDOPcOf42o3RQ2SmUnqQ/Qv8?=
+ =?us-ascii?Q?KhdP4zd/ppr1ueQvKaJr+3/uPAoASMsFnFeooBBUSIAfpUGxeijYk1ellhVb?=
+ =?us-ascii?Q?1KIAYq3GgP3TuSXJxmnqn6tim1XO4xLHVSPf/1tfqbcJ+fWofyQMz1FuY0t9?=
+ =?us-ascii?Q?/GggbGr7i4nvuL/WTEvjlYFfNsrGEi+OcTzSoC9AoWRUvi/v7H2aV9vh+HKb?=
+ =?us-ascii?Q?33xcYehBCUBRzpFOxmzOdZeps1/0mpyTNBV0psHIhJJ6wxclA/dC6Xrarbm8?=
+ =?us-ascii?Q?CQnxVRHnA3Qm5lzJGUk0ODJHczT9Ft5aWYJslTV9C8M05+AqUjI66iwMa4rY?=
+ =?us-ascii?Q?9jKckZudeLrF6d5HXIVprgndDByt/Kg3lxx0IHuXN+n/Q13sZeXr+XjZ4P3j?=
+ =?us-ascii?Q?2hwyrgnJsfkQrQ3TTlLacHjYJym/RN8bi4R78aMBxM/ZjvlIA5sqPYm1zr19?=
+ =?us-ascii?Q?cm2xSe0O0Q33u+4xT4IxjsJCMN21Hm6cIWA+2iAADkb70cpHsDrE3RlxAEmR?=
+ =?us-ascii?Q?2I0P4Y4WzDQqZGkgQOmdGiFJ6QIkz4HrLryNK2912sbuQgorSRzYOiS8+pJO?=
+ =?us-ascii?Q?F0S/?=
 X-OriginatorOrg: nxp.com
 X-MS-Exchange-CrossTenant-AuthSource: HE1PR0402MB3371.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2021 09:02:42.6591
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2021 09:02:59.3336
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-Network-Message-Id: 288821b6-242d-48ec-9eca-08d8b2eafe14
+X-MS-Exchange-CrossTenant-Network-Message-Id: cbc4fba3-675b-48e1-458b-08d8b2eb0815
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: w0shk5+4n2/fOszcTICdk28rxgJL6jk5TyErWiOP8EdFL+2IxmJK94OmBBNgVUdv9AoQ6Yv6zrASK1zQNZJyGg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0402MB2731
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3xO0LTLwCU3pOgqw07eButTHF+zYgTdnIau1LCj7dYWvHWKCMu8m+pfAFexDAad45pn5AvAQ88B2ffhvrp0yUQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HE1PR0401MB2297
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-As there isn't dynamically adding and deleting a function's structure,
-the list_head is not necessary for this case. Array is easier and
-more efficient to search.
+This helper is endpoint mode specific, so change to use a pointer of
+'struct dw_pcie_ep' as the parameter.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 33 ++++++++-----------
- drivers/pci/controller/dwc/pcie-designware.h  |  3 +-
- 2 files changed, 15 insertions(+), 21 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c          |  2 +-
+ drivers/pci/controller/dwc/pci-layerscape-ep.c   |  2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c        |  2 +-
+ drivers/pci/controller/dwc/pcie-designware-ep.c  | 16 +++++++---------
+ .../pci/controller/dwc/pcie-designware-plat.c    |  3 +--
+ drivers/pci/controller/dwc/pcie-designware.h     |  5 +++--
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c    |  3 +--
+ 7 files changed, 15 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index b105af63854a..12726c63366f 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -383,7 +383,7 @@ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	enum pci_barno bar;
+ 
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+-		dw_pcie_ep_reset_bar(pci, bar);
++		dw_pcie_ep_reset_bar(ep, bar);
+ 
+ 	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
+ }
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index 0f5e4104c06c..dcee95e16139 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -62,7 +62,7 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return;
+ 
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+-		dw_pcie_ep_reset_bar(pci, bar);
++		dw_pcie_ep_reset_bar(ep, bar);
+ 
+ 	pcie->ls_epc->msi_capable = ep_func->msi_cap ? true : false;
+ 	pcie->ls_epc->msix_capable = ep_func->msix_cap ? true : false;
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index 597c282f586c..f833daf6d422 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -348,7 +348,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	artpec6_pcie_wait_for_phy(artpec6_pcie);
+ 
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+-		dw_pcie_ep_reset_bar(pci, bar);
++		dw_pcie_ep_reset_bar(ep, bar);
+ }
+ 
+ static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
 diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index bcd1cd9ba8c8..e583700b5ba3 100644
+index d8eb9a984547..2dc960e74fd0 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -34,12 +34,8 @@ EXPORT_SYMBOL_GPL(dw_pcie_ep_init_notify);
- struct dw_pcie_ep_func *
- dw_pcie_ep_get_func_from_ep(struct dw_pcie_ep *ep, u8 func_no)
- {
--	struct dw_pcie_ep_func *ep_func;
--
--	list_for_each_entry(ep_func, &ep->func_list, list) {
--		if (ep_func->func_no == func_no)
--			return ep_func;
--	}
-+	if (func_no < ep->epc->max_functions)
-+		return ep->funcs + func_no;
- 
- 	return NULL;
+@@ -49,11 +49,11 @@ static unsigned int dw_pcie_ep_get_func_cfg_addr(struct dw_pcie_ep *ep,
+ 	return 0;
  }
-@@ -675,9 +671,9 @@ EXPORT_SYMBOL_GPL(dw_pcie_ep_init_complete);
  
- int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+-static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, u8 func_no,
++static void __dw_pcie_ep_reset_bar(struct dw_pcie_ep *ep, u8 func_no,
+ 				   enum pci_barno bar, int flags)
  {
-+	u8 i;
- 	int ret;
- 	void *addr;
--	u8 func_no;
- 	struct resource *res;
- 	struct pci_epc *epc;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-@@ -685,9 +681,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct device_node *np = dev->of_node;
- 	const struct pci_epc_features *epc_features;
--	struct dw_pcie_ep_func *ep_func;
+ 	u32 reg;
+-	struct dw_pcie_ep *ep = &pci->ep;
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct dw_pcie_ep_func *func = dw_pcie_ep_get_func_from_ep(ep, func_no);
+ 
+ 	if (!func)
+@@ -70,14 +70,12 @@ static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, u8 func_no,
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ }
+ 
+-void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++void dw_pcie_ep_reset_bar(struct dw_pcie_ep *ep, enum pci_barno bar)
+ {
+-	u8 func_no, funcs;
 -
--	INIT_LIST_HEAD(&ep->func_list);
-+	struct dw_pcie_ep_func *funcs;
+-	funcs = pci->ep.epc->max_functions;
++	u8 func_no;
  
- 	if (!pci->dbi_base) {
- 		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -750,18 +744,19 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	if (ret < 0)
- 		epc->max_functions = 1;
+-	for (func_no = 0; func_no < funcs; func_no++)
+-		__dw_pcie_ep_reset_bar(pci, func_no, bar, 0);
++	for (func_no = 0; func_no < ep->epc->max_functions; func_no++)
++		__dw_pcie_ep_reset_bar(ep, func_no, bar, 0);
+ }
  
--	for (func_no = 0; func_no < epc->max_functions; func_no++) {
--		ep_func = devm_kzalloc(dev, sizeof(*ep_func), GFP_KERNEL);
--		if (!ep_func)
--			return -ENOMEM;
-+	funcs = devm_kcalloc(dev, epc->max_functions, sizeof(*funcs),
-+			     GFP_KERNEL);
-+	if (!funcs)
-+		return -ENOMEM;
-+
-+	ep->funcs = funcs;
+ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie_ep *ep, u8 func_no,
+@@ -208,7 +206,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
+ 	enum pci_barno bar = epf_bar->barno;
+ 	u32 atu_index = ep->bar_to_atu[bar];
  
--		ep_func->func_no = func_no;
--		ep_func->msi_cap = dw_pcie_ep_find_capability(ep, func_no,
-+	for (i = 0; i < epc->max_functions; i++) {
-+		funcs[i].func_no = i;
-+		funcs[i].msi_cap = dw_pcie_ep_find_capability(ep, i,
- 							      PCI_CAP_ID_MSI);
--		ep_func->msix_cap = dw_pcie_ep_find_capability(ep, func_no,
-+		funcs[i].msix_cap = dw_pcie_ep_find_capability(ep, i,
- 							       PCI_CAP_ID_MSIX);
--
--		list_add_tail(&ep_func->list, &ep->func_list);
- 	}
+-	__dw_pcie_ep_reset_bar(pci, func_no, bar, epf_bar->flags);
++	__dw_pcie_ep_reset_bar(ep, func_no, bar, epf_bar->flags);
  
- 	if (ep->ops->ep_init)
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+ 	clear_bit(atu_index, ep->ib_window_map);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 9b397c807261..49d51584a547 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -47,11 +47,10 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 
+ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+-	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	enum pci_barno bar;
+ 
+ 	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+-		dw_pcie_ep_reset_bar(pci, bar);
++		dw_pcie_ep_reset_bar(ep, bar);
+ }
+ 
+ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 98710bf5ab0e..16d239c4d09b 100644
+index b8cbe266e01c..10ba09237def 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -221,7 +221,6 @@ struct dw_pcie_ep_ops {
- };
+@@ -415,7 +415,7 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u16 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
+ 				       u16 interrupt_num);
+-void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
++void dw_pcie_ep_reset_bar(struct dw_pcie_ep *ep, enum pci_barno bar);
+ struct dw_pcie_ep_func *
+ dw_pcie_ep_get_func_from_ep(struct dw_pcie_ep *ep, u8 func_no);
+ #else
+@@ -465,7 +465,8 @@ static inline int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep,
+ 	return 0;
+ }
  
- struct dw_pcie_ep_func {
--	struct list_head	list;
- 	u8			func_no;
- 	u8			msi_cap;	/* MSI capability offset */
- 	u8			msix_cap;	/* MSI-X capability offset */
-@@ -229,7 +228,7 @@ struct dw_pcie_ep_func {
+-static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++static inline void dw_pcie_ep_reset_bar(struct dw_pcie_ep *ep,
++					enum pci_barno bar)
+ {
+ }
  
- struct dw_pcie_ep {
- 	struct pci_epc		*epc;
--	struct list_head	func_list;
-+	struct dw_pcie_ep_func	*funcs;
- 	const struct dw_pcie_ep_ops *ops;
- 	phys_addr_t		phys_base;
- 	size_t			addr_size;
+diff --git a/drivers/pci/controller/dwc/pcie-uniphier-ep.c b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+index 69810c6b0d58..21e185bf90d6 100644
+--- a/drivers/pci/controller/dwc/pcie-uniphier-ep.c
++++ b/drivers/pci/controller/dwc/pcie-uniphier-ep.c
+@@ -134,11 +134,10 @@ static void uniphier_pcie_stop_link(struct dw_pcie *pci)
+ 
+ static void uniphier_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+-	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	enum pci_barno bar;
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+-		dw_pcie_ep_reset_bar(pci, bar);
++		dw_pcie_ep_reset_bar(ep, bar);
+ }
+ 
+ static int uniphier_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep)
 -- 
 2.17.1
 
