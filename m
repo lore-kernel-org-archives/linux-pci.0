@@ -2,66 +2,90 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B431AC433E0
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Jan 2021 09:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F29BC433E0
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Jan 2021 09:40:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7573923A3A
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Jan 2021 09:26:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0399A23A60
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Jan 2021 09:40:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726607AbhAIJ0b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 9 Jan 2021 04:26:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37210 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726557AbhAIJ0a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jan 2021 04:26:30 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77131C061786
-        for <linux-pci@vger.kernel.org>; Sat,  9 Jan 2021 01:25:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=orTrwl6mDAQHr3qpvUBQdkm781G49tmCK2vydKoShek=; b=UwQt0S0ZTez3nYn6wqD4k/xQyg
-        oovrXB/K0vpV1JZiwhqQj1Z11RB1FRONgP9z5FT19CugTW+kUMY3fFfUUMrL3e/LeJ9oJx4cWy9XB
-        wBiLpGKwChJAXwT8NnJFh3kU4r4uxpP1tL+saoOO9kRd01AcQ3BhdUjrU2qTREpp7X9Q3EC+IaOGL
-        fSK7AvLp8274SkrwZdCswjgXOXse5gaUALd4DYZR8vT9PD3u4nwz06dNq4suk3A06E4yWGlvUeyKr
-        Ro1UHnY5q8es01SI36HIcp9yrbBbMEBmHG0Tm4V3J0k5iomw0++9icz7l0o+aZ1D41tD+bKaTpcxo
-        PKC4WJWg==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1kyAUb-000PHa-89; Sat, 09 Jan 2021 09:25:08 +0000
-Date:   Sat, 9 Jan 2021 09:25:05 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christian K??nig <ckoenig.leichtzumerken@gmail.com>
-Cc:     bhelgaas@google.com, devspam@moreofthesa.me.uk,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] pci: export pci_rebar_get_possible_sizes
-Message-ID: <20210109092505.GA95206@infradead.org>
-References: <20210105134404.1545-1-christian.koenig@amd.com>
- <20210105134404.1545-2-christian.koenig@amd.com>
+        id S1726899AbhAIJkd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 9 Jan 2021 04:40:33 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:10864 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726897AbhAIJkd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Jan 2021 04:40:33 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4DCZfh6vSgz7Gw8;
+        Sat,  9 Jan 2021 17:38:52 +0800 (CST)
+Received: from linux-ioko.site (10.78.228.23) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.498.0; Sat, 9 Jan 2021 17:39:49 +0800
+From:   Dongdong Liu <liudongdong3@huawei.com>
+To:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [RFC PATCH 1/3] PCI: Add 10-Bit Tag register definitions
+Date:   Sat, 9 Jan 2021 17:11:21 +0800
+Message-ID: <1610183483-2061-2-git-send-email-liudongdong3@huawei.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1610183483-2061-1-git-send-email-liudongdong3@huawei.com>
+References: <1610183483-2061-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210105134404.1545-2-christian.koenig@amd.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-Originating-IP: [10.78.228.23]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 05, 2021 at 02:44:01PM +0100, Christian K??nig wrote:
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e578d34095e9..ef80ed451415 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3579,6 +3579,7 @@ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
->  	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
->  	return (cap & PCI_REBAR_CAP_SIZES) >> 4;
->  }
-> +EXPORT_SYMBOL(pci_rebar_get_possible_sizes);
+Add 10-Bit Tag register definitions for use in subsequen patches.
+See the PCIe 5.0 spec, sec 7.5.3.15 and 9.3.3.2.
 
-EXPORT_SYMBOL_GPL please for such internals.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ include/uapi/linux/pci_regs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e709ae8..cf1ddb8 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -648,6 +648,8 @@
+ #define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
+ #define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
+ #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
++#define  PCI_EXP_DEVCAP2_10BIT_TAG_COMP 0x00010000 /* 10-Bit Tag Completer Supported */
++#define  PCI_EXP_DEVCAP2_10BIT_TAG_REQ  0x00020000 /* 10-Bit Tag Requester Supported */
+ #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+ #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
+@@ -661,6 +663,7 @@
+ #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+ #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+ #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
++#define  PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN 0x1000 /* 10-Bit Tag Requester Enable */
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* Enable OBFF Message type A */
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
+ #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+@@ -931,6 +934,7 @@
+ /* Single Root I/O Virtualization */
+ #define PCI_SRIOV_CAP		0x04	/* SR-IOV Capabilities */
+ #define  PCI_SRIOV_CAP_VFM	0x00000001  /* VF Migration Capable */
++#define  PCI_SRIOV_CAP_VF_10BIT_TAG_REQ	0x00000004 /* VF 10-Bit Tag Requester Supported */
+ #define  PCI_SRIOV_CAP_INTR(x)	((x) >> 21) /* Interrupt Message Number */
+ #define PCI_SRIOV_CTRL		0x08	/* SR-IOV Control */
+ #define  PCI_SRIOV_CTRL_VFE	0x0001	/* VF Enable */
+@@ -938,6 +942,7 @@
+ #define  PCI_SRIOV_CTRL_INTR	0x0004	/* VF Migration Interrupt Enable */
+ #define  PCI_SRIOV_CTRL_MSE	0x0008	/* VF Memory Space Enable */
+ #define  PCI_SRIOV_CTRL_ARI	0x0010	/* ARI Capable Hierarchy */
++#define  PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN 0x0020 /* VF 10-Bit Tag Requester Enable */
+ #define PCI_SRIOV_STATUS	0x0a	/* SR-IOV Status */
+ #define  PCI_SRIOV_STATUS_VFM	0x0001	/* VF Migration Status */
+ #define PCI_SRIOV_INITIAL_VF	0x0c	/* Initial VFs */
+-- 
+1.9.1
+
