@@ -2,99 +2,139 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EED8DC43331
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 13:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36970C433E6
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 16:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF44222283
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 13:52:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04C942250E
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 16:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387636AbhAKNwr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Jan 2021 08:52:47 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:11089 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729223AbhAKNwf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2021 08:52:35 -0500
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4DDw886PGQzMHxq;
-        Mon, 11 Jan 2021 21:50:32 +0800 (CST)
-Received: from linux-ioko.site (10.78.228.23) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.498.0; Mon, 11 Jan 2021 21:51:44 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-To:     <mj@ucw.cz>
-CC:     <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH] lspci: Decode VF 10-Bit Tag Requester
-Date:   Mon, 11 Jan 2021 21:23:15 +0800
-Message-ID: <1610371395-31766-1-git-send-email-liudongdong3@huawei.com>
-X-Mailer: git-send-email 1.9.1
+        id S1732849AbhAKQhv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Jan 2021 11:37:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43460 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732244AbhAKQhv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Jan 2021 11:37:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D4E120B1F;
+        Mon, 11 Jan 2021 16:37:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610383030;
+        bh=otGJuyIa9vFyZVEEoFSX8ezfjOBJvmAPRERlGFysvAI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Aj5jWPI6LnL8Cfxup+FJ8+cO30qpnmMtjgQGeZA0VMBi0kMHIUQ6kEnBsEKoVw10i
+         DOw5jCcOx02t0xKwYTXsnLGa8aCHaED0AYcANxpCSvF+s3LdemAVJ+7TFxDj19AepV
+         +Xw8QOKyjiF5wWY+MiM1Jfty1/5sdnS1XcR/DGo+/loLK9E7qBUWpog+wWCZshYQb7
+         xF46LUwFaa6euSlR3CfhNNMB6NTYG8FcOxq6Uo3Bk4pZevmFV64YtsAuKh6cLFQ5YY
+         ylqvpiydcQCNlCUTJ1/sgEgpUREDEGstgVOVoD0yZhNLAUBXq+9iVl8cyaWprM6MvW
+         Njmr1GK6hV1nw==
+Date:   Mon, 11 Jan 2021 08:37:08 -0800
+From:   Keith Busch <kbusch@kernel.org>
+To:     Hinko Kocevar <hinko.kocevar@ess.eu>
+Cc:     "Kelley, Sean V" <sean.v.kelley@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCHv2 0/5] aer handling fixups
+Message-ID: <20210111163708.GA1458209@dhcp-10-100-145-180.wdc.com>
+References: <20210104230300.1277180-1-kbusch@kernel.org>
+ <bcc440b0-0ab9-c25f-e7d5-f7ce65db5019@ess.eu>
+ <4242a9a9-c881-0af4-1cab-396931fee420@ess.eu>
+ <20210105183302.GA1278205@dhcp-10-100-145-180.wdc.com>
+ <B31F8CA9-D62B-4488-B4C1-EB31E9117203@intel.com>
+ <20210107214236.GA1284006@dhcp-10-100-145-180.wdc.com>
+ <70f2288d-2d1e-df82-d107-e977e1f50dca@ess.eu>
+ <c3117c51-144f-ae59-ad68-bdc5532d12cb@ess.eu>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.78.228.23]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c3117c51-144f-ae59-ad68-bdc5532d12cb@ess.eu>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Decode VF 10-Bit Tag Requester Supported and Enable bit
-in SR-IOV Capabilities Register.
+On Mon, Jan 11, 2021 at 02:39:20PM +0100, Hinko Kocevar wrote:
+> Testing this patch a bit more (without the 5/5) resulted in the same CPU
+> lockup:
+> 
+> watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [irq/122-aerdrv:128]
+> 
+> as I initially reported with the 5/5 of this patch included.
+> 
+> It seems more infrequent, though. For example, after reboot this is not
+> observed and the recovery process is successful, whereas when 5/5 is also
+> used every recovery resulted in CPU lockup.
 
-Sample output:
-  IOVCap: Migration-, 10BitTagReq+, Interrupt Message Number: 000
-  IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy- 10BitTagReq+
+I am assuming this soft lockup is still when restoring the downstream
+port's virtual channel capability. Your initial sighting indicates that
+it doesn't appear to be a deadlock, but the stack trace never existed
+pci_restore_vc_state() either. I did not find any obvious issues here
+just from code inspection, so if you could try applying the following
+patch and send the kernel messages output, that would help.
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 ---
- lib/header.h | 2 ++
- ls-ecaps.c   | 8 ++++----
- 2 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/lib/header.h b/lib/header.h
-index 170e5c1..bff49c2 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -1126,6 +1126,7 @@
- /* Single Root I/O Virtualization */
- #define PCI_IOV_CAP		0x04	/* SR-IOV Capability Register */
- #define  PCI_IOV_CAP_VFM	0x00000001 /* VF Migration Capable */
-+#define  PCI_IOV_CAP_VF_10BIT_TAG_REQ 0x00000004 /* VF 10-Bit Tag Requester Supported */
- #define  PCI_IOV_CAP_IMN(x)	((x) >> 21) /* VF Migration Interrupt Message Number */
- #define PCI_IOV_CTRL		0x08	/* SR-IOV Control Register */
- #define  PCI_IOV_CTRL_VFE	0x0001	/* VF Enable */
-@@ -1133,6 +1134,7 @@
- #define  PCI_IOV_CTRL_VFMIE	0x0004	/* VF Migration Interrupt Enable */
- #define  PCI_IOV_CTRL_MSE	0x0008	/* VF MSE */
- #define  PCI_IOV_CTRL_ARI	0x0010	/* ARI Capable Hierarchy */
-+#define  PCI_IOV_CTRL_VF_10BIT_TAG_REQ_EN 0x0020 /* VF 10-Bit Tag Requester Enable */
- #define PCI_IOV_STATUS		0x0a	/* SR-IOV Status Register */
- #define  PCI_IOV_STATUS_MS	0x0001	/* VF Migration Status */
- #define PCI_IOV_INITIALVF	0x0c	/* Number of VFs that are initially associated */
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 99c55ff..9b50aec 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -369,13 +369,13 @@ cap_sriov(struct device *d, int where)
-     return;
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index 5fc59ac31145..4834af7eb582 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -28,6 +28,7 @@ static void pci_vc_save_restore_dwords(struct pci_dev *dev, int pos,
+ {
+ 	int i;
  
-   l = get_conf_long(d, where + PCI_IOV_CAP);
--  printf("\t\tIOVCap:\tMigration%c, Interrupt Message Number: %03x\n",
--	FLAG(l, PCI_IOV_CAP_VFM), PCI_IOV_CAP_IMN(l));
-+  printf("\t\tIOVCap:\tMigration%c, 10BitTagReq%c, Interrupt Message Number: %03x\n",
-+	FLAG(l, PCI_IOV_CAP_VFM), FLAG(l, PCI_IOV_CAP_VF_10BIT_TAG_REQ), PCI_IOV_CAP_IMN(l));
-   w = get_conf_word(d, where + PCI_IOV_CTRL);
--  printf("\t\tIOVCtl:\tEnable%c Migration%c Interrupt%c MSE%c ARIHierarchy%c\n",
-+  printf("\t\tIOVCtl:\tEnable%c Migration%c Interrupt%c MSE%c ARIHierarchy%c 10BitTagReq%c\n",
- 	FLAG(w, PCI_IOV_CTRL_VFE), FLAG(w, PCI_IOV_CTRL_VFME),
- 	FLAG(w, PCI_IOV_CTRL_VFMIE), FLAG(w, PCI_IOV_CTRL_MSE),
--	FLAG(w, PCI_IOV_CTRL_ARI));
-+	FLAG(w, PCI_IOV_CTRL_ARI), FLAG(w, PCI_IOV_CTRL_VF_10BIT_TAG_REQ_EN));
-   w = get_conf_word(d, where + PCI_IOV_STATUS);
-   printf("\t\tIOVSta:\tMigration%c\n", FLAG(w, PCI_IOV_STATUS_MS));
-   w = get_conf_word(d, where + PCI_IOV_INITIALVF);
--- 
-1.9.1
-
++	pci_warn(dev, "%s: pos:%d dwords:%d\n", __func__, pos, dwords);
+ 	for (i = 0; i < dwords; i++, buf++) {
+ 		if (save)
+ 			pci_read_config_dword(dev, pos + (i * 4), buf);
+@@ -110,6 +111,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 	if (!pci_is_pcie(dev) || !pcie_downstream_port(dev))
+ 		return;
+ 
++	pci_warn(dev, "%s: pos:%d res:%d\n", __func__, pos, res);
++
+ 	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
+ 	status_pos = pos + PCI_VC_RES_STATUS + (res * PCI_CAP_VC_PER_VC_SIZEOF);
+ 
+@@ -165,6 +168,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 	if (link && !pci_wait_for_pending(link, status_pos2,
+ 					  PCI_VC_RES_STATUS_NEGO))
+ 		pci_err(link, "VC%d negotiation stuck pending\n", id);
++
++	pci_warn(dev, "%s: pos:%d res:%d return\n", __func__, pos, res);
+ }
+ 
+ /**
+@@ -190,6 +195,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 	int i, len = 0;
+ 	u8 *buf = save_state ? (u8 *)save_state->cap.data : NULL;
+ 
++	pci_warn(dev, "%s: buf:%d pos:%d\n", __func__, buf != NULL, pos);
+ 	/* Sanity check buffer size for save/restore */
+ 	if (buf && save_state->cap.size !=
+ 	    pci_vc_do_save_buffer(dev, pos, NULL, save)) {
+@@ -278,6 +284,8 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 		pci_read_config_dword(dev, pos + PCI_VC_RES_CAP +
+ 				      (i * PCI_CAP_VC_PER_VC_SIZEOF), &cap);
+ 		parb_offset = ((cap & PCI_VC_RES_CAP_ARB_OFF) >> 24) * 16;
++		pci_warn(dev, "%s: i:%d evcc:%d parb_offset:%d\n", __func__, i,
++			 evcc, parb_offset);
+ 		if (parb_offset) {
+ 			int size, parb_phases = 0;
+ 
+@@ -332,6 +340,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 		len += 4;
+ 	}
+ 
++	pci_warn(dev, "%s: len:%d\n", __func__, len);
+ 	return buf ? 0 : len;
+ }
+ 
+@@ -399,6 +408,7 @@ void pci_restore_vc_state(struct pci_dev *dev)
+ 		if (!save_state || !pos)
+ 			continue;
+ 
++		pci_warn(dev, "%s: i:%d pos:%d\n", __func__, i, pos);
+ 		pci_vc_do_save_buffer(dev, pos, save_state, false);
+ 	}
+ }
+--
