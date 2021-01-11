@@ -2,139 +2,244 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36970C433E6
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 16:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDEC0C433E9
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 19:32:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04C942250E
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 16:37:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B62522CAD
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 19:32:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732849AbhAKQhv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Jan 2021 11:37:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43460 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732244AbhAKQhv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Jan 2021 11:37:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D4E120B1F;
-        Mon, 11 Jan 2021 16:37:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610383030;
-        bh=otGJuyIa9vFyZVEEoFSX8ezfjOBJvmAPRERlGFysvAI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Aj5jWPI6LnL8Cfxup+FJ8+cO30qpnmMtjgQGeZA0VMBi0kMHIUQ6kEnBsEKoVw10i
-         DOw5jCcOx02t0xKwYTXsnLGa8aCHaED0AYcANxpCSvF+s3LdemAVJ+7TFxDj19AepV
-         +Xw8QOKyjiF5wWY+MiM1Jfty1/5sdnS1XcR/DGo+/loLK9E7qBUWpog+wWCZshYQb7
-         xF46LUwFaa6euSlR3CfhNNMB6NTYG8FcOxq6Uo3Bk4pZevmFV64YtsAuKh6cLFQ5YY
-         ylqvpiydcQCNlCUTJ1/sgEgpUREDEGstgVOVoD0yZhNLAUBXq+9iVl8cyaWprM6MvW
-         Njmr1GK6hV1nw==
-Date:   Mon, 11 Jan 2021 08:37:08 -0800
-From:   Keith Busch <kbusch@kernel.org>
-To:     Hinko Kocevar <hinko.kocevar@ess.eu>
-Cc:     "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCHv2 0/5] aer handling fixups
-Message-ID: <20210111163708.GA1458209@dhcp-10-100-145-180.wdc.com>
-References: <20210104230300.1277180-1-kbusch@kernel.org>
- <bcc440b0-0ab9-c25f-e7d5-f7ce65db5019@ess.eu>
- <4242a9a9-c881-0af4-1cab-396931fee420@ess.eu>
- <20210105183302.GA1278205@dhcp-10-100-145-180.wdc.com>
- <B31F8CA9-D62B-4488-B4C1-EB31E9117203@intel.com>
- <20210107214236.GA1284006@dhcp-10-100-145-180.wdc.com>
- <70f2288d-2d1e-df82-d107-e977e1f50dca@ess.eu>
- <c3117c51-144f-ae59-ad68-bdc5532d12cb@ess.eu>
+        id S2391025AbhAKTbd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Jan 2021 14:31:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46302 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388953AbhAKTbb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2021 14:31:31 -0500
+Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54037C06179F;
+        Mon, 11 Jan 2021 11:30:51 -0800 (PST)
+Received: by mail-il1-x136.google.com with SMTP id t3so272041ilh.9;
+        Mon, 11 Jan 2021 11:30:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JIuxxLTazDRWAXeqaTZImGLR40cYEqjTEL+0/lNjsHM=;
+        b=ddiuZoQyx8zsdtXYgkYr5nTtmJfpxqxIoDp3A5TH/5/wKII8axPm2hpGjTSHXmYOCK
+         9qInhRPT1rQUPRcVVxo62GtHj6WbuFh92btRIqe0PS3Js+lRw8thBNydopd9V9AYjTsT
+         jb59KwIVxep6Wzj5DlnP+Va3sieRHfIuHKOy5z+QsFkHvPnUalNwqTUP1OPW2d08TTz2
+         1v5iFtUV210+FnU7jl24sWqLFQuQD0MQ1uO+UOuSYTkY+t1dLbQ3yGR9LqcGT1Ag/VKd
+         DpVQAZLtADfr/KRNHdfhaYATr47pJz4ZKOYbmVVqS2plWAlcmZrqsYNpayIlc9B+JBTl
+         buUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JIuxxLTazDRWAXeqaTZImGLR40cYEqjTEL+0/lNjsHM=;
+        b=mXdX2WQwH58fe54ETw7VZiMtYHgR7k1qo8oZTyf8hdlX2ZERLMp4WA3T/VPVw4IjB+
+         wpx8XyIxvIhJwjOYV/bA1bLBlPfBeXEnEdog5fJpYywjrfWfcEQ6QH4t9LOh+3Wgfunz
+         b75QMIeNcBCfmZaH0YHA89MkBgPLMF/lG9xmsnaSTCil7QVg/HDoqpvMwR6HL7TDIg/M
+         0I81dtg13RlSvT/2Gynyqg9NvJSI+6kJ0QxWRjvFLp/pkImuETnqk38dilBzCaedhr51
+         dscpAVGgzytUNNc2dFKI7DTqouC5jysR3Jn7CUf1FuhqlpGpRdRBjflzIXbU/aUpCuxO
+         h6mQ==
+X-Gm-Message-State: AOAM5310OExH0ML7+YpHlCpHta79pO/7jTHZGhejMuGHwtAjjJh1NbHE
+        yiAUtgjzW7u7LrDRuKuInQfKwE4r90zZqghBSfg=
+X-Google-Smtp-Source: ABdhPJwUv3o30ee0xhxr+qCCY6492nIyVe3Bb3yl8+KqecTXDCTETIlUv4lR3/1oLfRqmBqIaUL7aR0JHu7jLZrK3eQ=
+X-Received: by 2002:a92:d210:: with SMTP id y16mr640881ily.97.1610393450675;
+ Mon, 11 Jan 2021 11:30:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c3117c51-144f-ae59-ad68-bdc5532d12cb@ess.eu>
+References: <20210110150727.1965295-1-leon@kernel.org> <20210110150727.1965295-3-leon@kernel.org>
+In-Reply-To: <20210110150727.1965295-3-leon@kernel.org>
+From:   Alexander Duyck <alexander.duyck@gmail.com>
+Date:   Mon, 11 Jan 2021 11:30:39 -0800
+Message-ID: <CAKgT0Uczu6cULPsVjFuFVmir35SpL-bs0hosbfH-T5sZLZ78BQ@mail.gmail.com>
+Subject: Re: [PATCH mlx5-next v1 2/5] PCI: Add SR-IOV sysfs entry to read
+ number of MSI-X vectors
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leonro@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-rdma@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 11, 2021 at 02:39:20PM +0100, Hinko Kocevar wrote:
-> Testing this patch a bit more (without the 5/5) resulted in the same CPU
-> lockup:
-> 
-> watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [irq/122-aerdrv:128]
-> 
-> as I initially reported with the 5/5 of this patch included.
-> 
-> It seems more infrequent, though. For example, after reboot this is not
-> observed and the recovery process is successful, whereas when 5/5 is also
-> used every recovery resulted in CPU lockup.
+On Sun, Jan 10, 2021 at 7:10 AM Leon Romanovsky <leon@kernel.org> wrote:
+>
+> From: Leon Romanovsky <leonro@nvidia.com>
+>
+> Some SR-IOV capable devices provide an ability to configure specific
+> number of MSI-X vectors on their VF prior driver is probed on that VF.
+>
+> In order to make management easy, provide new read-only sysfs file that
+> returns a total number of possible to configure MSI-X vectors.
+>
+> cat /sys/bus/pci/devices/.../sriov_vf_total_msix
+>   = 0 - feature is not supported
+>   > 0 - total number of MSI-X vectors to consume by the VFs
+>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
+>  Documentation/ABI/testing/sysfs-bus-pci | 14 +++++++++++
+>  drivers/pci/iov.c                       | 31 +++++++++++++++++++++++++
+>  drivers/pci/pci.h                       |  3 +++
+>  include/linux/pci.h                     |  2 ++
+>  4 files changed, 50 insertions(+)
+>
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 05e26e5da54e..64e9b700acc9 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -395,3 +395,17 @@ Description:
+>                 The file is writable if the PF is bound to a driver that
+>                 supports the ->sriov_set_msix_vec_count() callback and there
+>                 is no driver bound to the VF.
+> +
+> +What:          /sys/bus/pci/devices/.../sriov_vf_total_msix
 
-I am assuming this soft lockup is still when restoring the downstream
-port's virtual channel capability. Your initial sighting indicates that
-it doesn't appear to be a deadlock, but the stack trace never existed
-pci_restore_vc_state() either. I did not find any obvious issues here
-just from code inspection, so if you could try applying the following
-patch and send the kernel messages output, that would help.
+In this case I would drop the "vf" and just go with sriov_total_msix
+since now you are referring to a global value instead of a per VF
+value.
 
----
-diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-index 5fc59ac31145..4834af7eb582 100644
---- a/drivers/pci/vc.c
-+++ b/drivers/pci/vc.c
-@@ -28,6 +28,7 @@ static void pci_vc_save_restore_dwords(struct pci_dev *dev, int pos,
- {
- 	int i;
- 
-+	pci_warn(dev, "%s: pos:%d dwords:%d\n", __func__, pos, dwords);
- 	for (i = 0; i < dwords; i++, buf++) {
- 		if (save)
- 			pci_read_config_dword(dev, pos + (i * 4), buf);
-@@ -110,6 +111,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
- 	if (!pci_is_pcie(dev) || !pcie_downstream_port(dev))
- 		return;
- 
-+	pci_warn(dev, "%s: pos:%d res:%d\n", __func__, pos, res);
-+
- 	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
- 	status_pos = pos + PCI_VC_RES_STATUS + (res * PCI_CAP_VC_PER_VC_SIZEOF);
- 
-@@ -165,6 +168,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
- 	if (link && !pci_wait_for_pending(link, status_pos2,
- 					  PCI_VC_RES_STATUS_NEGO))
- 		pci_err(link, "VC%d negotiation stuck pending\n", id);
-+
-+	pci_warn(dev, "%s: pos:%d res:%d return\n", __func__, pos, res);
- }
- 
- /**
-@@ -190,6 +195,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 	int i, len = 0;
- 	u8 *buf = save_state ? (u8 *)save_state->cap.data : NULL;
- 
-+	pci_warn(dev, "%s: buf:%d pos:%d\n", __func__, buf != NULL, pos);
- 	/* Sanity check buffer size for save/restore */
- 	if (buf && save_state->cap.size !=
- 	    pci_vc_do_save_buffer(dev, pos, NULL, save)) {
-@@ -278,6 +284,8 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 		pci_read_config_dword(dev, pos + PCI_VC_RES_CAP +
- 				      (i * PCI_CAP_VC_PER_VC_SIZEOF), &cap);
- 		parb_offset = ((cap & PCI_VC_RES_CAP_ARB_OFF) >> 24) * 16;
-+		pci_warn(dev, "%s: i:%d evcc:%d parb_offset:%d\n", __func__, i,
-+			 evcc, parb_offset);
- 		if (parb_offset) {
- 			int size, parb_phases = 0;
- 
-@@ -332,6 +340,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 		len += 4;
- 	}
- 
-+	pci_warn(dev, "%s: len:%d\n", __func__, len);
- 	return buf ? 0 : len;
- }
- 
-@@ -399,6 +408,7 @@ void pci_restore_vc_state(struct pci_dev *dev)
- 		if (!save_state || !pos)
- 			continue;
- 
-+		pci_warn(dev, "%s: i:%d pos:%d\n", __func__, i, pos);
- 		pci_vc_do_save_buffer(dev, pos, save_state, false);
- 	}
- }
---
+> +Date:          January 2021
+> +Contact:       Leon Romanovsky <leonro@nvidia.com>
+> +Description:
+> +               This file is associated with the SR-IOV PFs.
+> +               It returns a total number of possible to configure MSI-X
+> +               vectors on the enabled VFs.
+> +
+> +               The values returned are:
+> +                * > 0 - this will be total number possible to consume by VFs,
+> +                * = 0 - feature is not supported
+> +
+> +               If no SR-IOV VFs are enabled, this value will return 0.
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 42c0df4158d1..0a6ddf3230fd 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -394,12 +394,22 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+>         return count;
+>  }
+>
+> +static ssize_t sriov_vf_total_msix_show(struct device *dev,
+> +                                       struct device_attribute *attr,
+> +                                       char *buf)
+> +{
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       return sprintf(buf, "%d\n", pdev->sriov->vf_total_msix);
+> +}
+> +
+
+You display it as a signed value, but unsigned values are not
+supported, correct?
+
+>  static DEVICE_ATTR_RO(sriov_totalvfs);
+>  static DEVICE_ATTR_RW(sriov_numvfs);
+>  static DEVICE_ATTR_RO(sriov_offset);
+>  static DEVICE_ATTR_RO(sriov_stride);
+>  static DEVICE_ATTR_RO(sriov_vf_device);
+>  static DEVICE_ATTR_RW(sriov_drivers_autoprobe);
+> +static DEVICE_ATTR_RO(sriov_vf_total_msix);
+>
+>  static struct attribute *sriov_dev_attrs[] = {
+>         &dev_attr_sriov_totalvfs.attr,
+> @@ -408,6 +418,7 @@ static struct attribute *sriov_dev_attrs[] = {
+>         &dev_attr_sriov_stride.attr,
+>         &dev_attr_sriov_vf_device.attr,
+>         &dev_attr_sriov_drivers_autoprobe.attr,
+> +       &dev_attr_sriov_vf_total_msix.attr,
+>         NULL,
+>  };
+>
+> @@ -658,6 +669,7 @@ static void sriov_disable(struct pci_dev *dev)
+>                 sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>
+>         iov->num_VFs = 0;
+> +       iov->vf_total_msix = 0;
+>         pci_iov_set_numvfs(dev, 0);
+>  }
+>
+> @@ -1116,6 +1128,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+>
+> +/**
+> + * pci_sriov_set_vf_total_msix - set total number of MSI-X vectors for the VFs
+> + * @dev: the PCI PF device
+> + * @numb: the total number of MSI-X vector to consume by the VFs
+> + *
+> + * Sets the number of MSI-X vectors that is possible to consume by the VFs.
+> + * This interface is complimentary part of the pci_set_msix_vec_count()
+> + * that will be used to configure the required number on the VF.
+> + */
+> +void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb)
+> +{
+> +       if (!dev->is_physfn || !dev->driver ||
+> +           !dev->driver->sriov_set_msix_vec_count)
+> +               return;
+> +
+> +       dev->sriov->vf_total_msix = numb;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_sriov_set_vf_total_msix);
+> +
+
+This seems broken. What validation is being done on the numb value?
+You pass it as int, and your documentation all refers to tests for >=
+0, but isn't a signed input a possibility as well? Also "numb" doesn't
+make for a good abbreviation as it is already a word of its own. It
+might make more sense to use count or something like that rather than
+trying to abbreviate number.
+
+
+>  /**
+>   * pci_sriov_configure_simple - helper to configure SR-IOV
+>   * @dev: the PCI device
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 1fd273077637..0fbe291eb0f2 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -327,6 +327,9 @@ struct pci_sriov {
+>         u16             subsystem_device; /* VF subsystem device */
+>         resource_size_t barsz[PCI_SRIOV_NUM_BARS];      /* VF BAR size */
+>         bool            drivers_autoprobe; /* Auto probing of VFs by driver */
+> +       int             vf_total_msix;  /* Total number of MSI-X vectors the VFs
+> +                                        * can consume
+> +                                        */
+>  };
+>
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index a17cfc28eb66..fd9ff1f42a09 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2074,6 +2074,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>  int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+>  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+> +void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb);
+>
+>  /* Arch may override these (weak) */
+>  int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs);
+> @@ -2114,6 +2115,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+>  { return 0; }
+>  static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+> +static inline void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb) {}
+>  #endif
+>
+>  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+> --
+> 2.29.2
+>
