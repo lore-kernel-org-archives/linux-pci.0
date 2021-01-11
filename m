@@ -2,136 +2,107 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D8CC433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 09:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75689C433DB
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 10:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8184922A85
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 09:54:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47ABD223E4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Jan 2021 10:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728780AbhAKJyS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Jan 2021 04:54:18 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36854 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728444AbhAKJyR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2021 04:54:17 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10B9WFen015032;
-        Mon, 11 Jan 2021 04:53:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id; s=pp1;
- bh=O1aHWxRMTkGLyiDkpdEfZ0bQIlK6a4X0sjNLBBGtuPo=;
- b=tVc2CdFZHRkIB8GyIMv18nMK5VTg8eVzQ99cuVKSuKaFbFr1PtBI5DHq72/D9VsY0r66
- xN4Eav/HVK2qPGHnf7ErUV+sUgqX37dFpEidEGxIu8e/r7oN42Cw1Ye92oKdbA0GKOso
- PdAYdhgecBmWWNDXKjV4NvyoZVeyJJtQU9Kx6zM8WHS2P/pICQZJXhMmumKU/dgoQkGx
- /4JlfV2idvw7CYteEysgv1q7E6QptNX0RqCfSTHJt/akjU2F1strWGYIIm7r7UdkhTRv
- pvtcnPrGlbxqI+gZsHEv86cVI1FTeNMkH+RG4RgVJKOjNB2ZiWiwK5tlofTz+f/k2OL7 bA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 360kg6srer-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 04:53:37 -0500
-Received: from m0098393.ppops.net (m0098393.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 10B9WrB3016974;
-        Mon, 11 Jan 2021 04:53:36 -0500
-Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 360kg6srbs-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 04:53:36 -0500
-Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
-        by ppma06ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10B9W44V006893;
-        Mon, 11 Jan 2021 09:39:01 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma06ams.nl.ibm.com with ESMTP id 35ydrd9qsb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Jan 2021 09:39:01 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10B9cwt524445398
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Jan 2021 09:38:58 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 71FC4AE055;
-        Mon, 11 Jan 2021 09:38:58 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 29C2DAE045;
-        Mon, 11 Jan 2021 09:38:58 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 11 Jan 2021 09:38:58 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org, Pierre Morel <pmorel@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        Viktor Mihajlovski <mihajlov@linux.ibm.com>
-Subject: [RFC 0/1] PCI: s390 global attribute "UID Checking"
-Date:   Mon, 11 Jan 2021 10:38:56 +0100
-Message-Id: <20210111093857.24070-1-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
- definitions=2021-01-09_13:2021-01-07,2021-01-09 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
- mlxlogscore=999 mlxscore=0 priorityscore=1501 adultscore=0 suspectscore=0
- malwarescore=0 phishscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2101110055
+        id S1728950AbhAKKPV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Jan 2021 05:15:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39346 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725843AbhAKKPU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2021 05:15:20 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 513DEC061786;
+        Mon, 11 Jan 2021 02:14:40 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1610360078;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vdITQROn2Urg2SWnxxpWECg8/2piMq1rysKQi+Js6AM=;
+        b=UnYkeRyOrRU1KtT5e+L+fQ3h1X+pI6IQmvvPVQCyBzb6fOAslMZh9kmf6riX6Uc0jR5HAW
+        kLM9jzvLqGc+Imjy/0I2rAsMH2VpuQIdJ98CwfEhcoTYCCXiQ/XwFpRt6Jep7zrPxwT0va
+        Xwof1xtTH5Z/PeoiWTuI7XI6GZ2R5aGzpohXNnayNbUAXzj5+Rf7t2lNRSQCuUkrunBvvh
+        E6YQGrr8aPBg88a1jm3tkQeNaO9yiXQdYW2cQM+bbmj0FEDrh39+sh5VynpFZhESsKImAx
+        DwV8ajINKrlorxI1UlTNWgwAXJMXRe809J7/lTBl2XxW6BUf7G/4P1Qx4lUTcA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1610360078;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vdITQROn2Urg2SWnxxpWECg8/2piMq1rysKQi+Js6AM=;
+        b=X4gUVuzYQlznnJ4rBpJlj0pVo1A0rJo22Rpjt8+XaTFqV54Id4MU7M5oqDy1KDl8a6a4jG
+        +hpoSFj00cPTvyCg==
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        dri-devel@lists.freedesktop.org,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Saeed Mahameed <saeedm@nvidia.com>, netdev@vger.kernel.org,
+        Will Deacon <will@kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>,
+        linux-s390@vger.kernel.org,
+        afzal mohammed <afzal.mohd.ma@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        xen-devel@lists.xenproject.org, Leon Romanovsky <leon@kernel.org>,
+        linux-rdma@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
+        Helge Deller <deller@gmx.de>,
+        Russell King <linux@armlinux.org.uk>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        linux-pci@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Wambui Karuga <wambui.karugax@gmail.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Juergen Gross <jgross@suse.com>,
+        David Airlie <airlied@linux.ie>, linux-gpio@vger.kernel.org,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
+        linux-parisc@vger.kernel.org,
+        Pankaj Bharadiya <pankaj.laxminarayan.bharadiya@intel.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Tariq Toukan <tariqt@nvidia.com>, Jon Mason <jdmason@kudzu.us>,
+        linux-ntb@googlegroups.com, intel-gfx@lists.freedesktop.org,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [patch 02/30] genirq: Move status flag checks to core
+In-Reply-To: <20201227192049.GA195845@roeck-us.net>
+References: <20201210192536.118432146@linutronix.de> <20201210194042.703779349@linutronix.de> <20201227192049.GA195845@roeck-us.net>
+Date:   Mon, 11 Jan 2021 11:14:38 +0100
+Message-ID: <87im837pbl.fsf@nanos.tec.linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn, Hi Kernel Hackers,
+On Sun, Dec 27 2020 at 11:20, Guenter Roeck wrote:
+> On Thu, Dec 10, 2020 at 08:25:38PM +0100, Thomas Gleixner wrote:
+> Yes, but that means that irq_check_status_bit() may be called from modules,
+> but it is not exported, resulting in build errors such as the following.
+>
+> arm64:allmodconfig:
+>
+> ERROR: modpost: "irq_check_status_bit" [drivers/perf/arm_spe_pmu.ko] undefined!
 
-With the below patch I'm proposing to expose a global (i.e. not device
-bound) runtime attribute of the s390 PCI implementation (zPCI) called
-"UID Checking".  You can find some background information on what this
-attribute means and why it is important at the end of this mail. The
-reason I'm writing to you about it however is that this is the first
-global PCI attribute we would like to expose to user space and I'm
-searching for a good place to put it.
-The proposed patch uses "/sys/bus/pci/zpci/uid_checking" which from
-our perspective would be a great choice but I realize that there
-currently are no platform specific attributes directly under
-"/sys/bus/pci" so this clearly requires some discussion. What's your
-thought on this and do you know of any other platform specific global
-PCI attributes as I couldn't find any?
+Duh. Yes, that lacks an export obviously.
 
-Best regards,
-Niklas Schnelle
+Thanks,
 
-Background:
-On s390 OSs always run under at least a machine level hypervisor
-(LPAR).  Simpliefied by usually running from SAN this makes VM
-migration possible at every level. For PCI this has created the need
-to allow PCI IDs to be stable across machines and to be partly user
-defined such that the setup of an existing VM on one machine can be
-recreated on another machine.
-In particular the Domain part of the PCI ID can be user defined by
-setting a per device value called UID. Since this was a late addition
-and isn't used by all OSs and since UIDs need to be unique if used as
-Domains, there is an additional global platform supplied runtime value
-called "UID Checking".  This value indicates if UIDs are guaranteed to
-be unique and set which triggers Linux to use the UIDs as PCI Domains
-otherwise PCI Domains are simply incremented as necessary.
-This "UID Checking" setting is thus very important e.g. when deciding
-how network interface names are generated as it indicates if the
-domain part of the PCI ID will remain stable across reboots and
-migrations.  Once exposed we will propose a patch to udev/systemd to
-use the "UID Checking" attribute to prefer network interface names
-which can be guaranteed to be stable and re-creatable for migration.
-
-Niklas Schnelle (1):
-  s390/pci: expose UID checking state in sysfs
-
- Documentation/ABI/testing/sysfs-bus-pci | 11 ++++++++
- arch/s390/include/asm/pci.h             |  3 +++
- arch/s390/pci/pci.c                     |  4 +++
- arch/s390/pci/pci_sysfs.c               | 34 +++++++++++++++++++++++++
- 4 files changed, 52 insertions(+)
-
--- 
-2.17.1
-
+        tglx
