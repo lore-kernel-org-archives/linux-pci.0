@@ -2,136 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C54E3C433DB
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B322C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:44:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B07123121
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:37:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E91F823125
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:44:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438029AbhALVhM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Jan 2021 16:37:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53722 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436668AbhALUHV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2021 15:07:21 -0500
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9267BC061786
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jan 2021 12:06:40 -0800 (PST)
-Received: by mail-ej1-x634.google.com with SMTP id g20so5316564ejb.1
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jan 2021 12:06:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8/Bid2Bzf98jE1/ALAKGTMu2+XIpeX//lGOiyhOAPLE=;
-        b=vhrrzDmitO32JAO3cpPHjbqdMSMUZDuwupYPaErRNdmyLCV9CGhPdYK6oTrgJG74+m
-         I9dA7oEIptk1EhB30sBwuzhsn5ped+8hrj1SEpOIehrqgvt9hLGZusi5QYNsLyb0Ojr7
-         B5CZvlBXkQak1yX5cCoTDYZjpURO/BDj90CBV2xV11nCqustJMw6QGBur7B+HWFMThJz
-         1UOpx1uPYSC7PIQzDXmNwWVBl2xqVAawLUUMn5pIwD3C/PuDUKVuv9cePx/NSJz7tGiC
-         JaIZx/W2kwjLwrF97+S1fQrkm406AotYB5qwe5dQ+9CSge06C4wEogikQR+XPc1DtPae
-         9wSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8/Bid2Bzf98jE1/ALAKGTMu2+XIpeX//lGOiyhOAPLE=;
-        b=TDRrlPU//QysJrrEXSvkSlgttSHjE19WWcHQ5GlQkw9EVdd85PNAIrFwSu8vWAomWU
-         g3fr3pdmq3shu+v4nnuIOwlfFFG1WE6xMgbWGLqrYRvg+sFo8pLZ3t7uG1XeUHNKM4K8
-         rqIRGjHmyLll2qHOUqZsTWXcY4Gc0KK0T8JAGoMIsA24Pzk696z6xMAvnL1ZcIv1eeTB
-         lsC4SJY8gI1kB9LWiOs8LKaoP4AR5PKfa+giaRGP9Khn7MRij98j843lOJs6043ReVZU
-         Sog1YS2MQUoL0OYirkZn4adXKT3DKt3sDCI+gBuwKuHVL4GpVFzgaIfEWQoTJFzeSco3
-         GGvg==
-X-Gm-Message-State: AOAM530kfkM82PwcnTURXGIzDOOV97NvnTW5SJRwURecQBcLEOxP+hsw
-        MOhdoZu+EgHp3dF1UUJNxDKprSV8AB0z0z3tzs9o7g==
-X-Google-Smtp-Source: ABdhPJyfN4mVkZqUgmpVifgODbiKiUV7zPHfN/mvTykoOz6wGwySd2pfuLRTAFzoWqiTJ14Yjd/67QsQSjvEqEh7UX8=
-X-Received: by 2002:a17:906:2707:: with SMTP id z7mr357027ejc.418.1610481999273;
- Tue, 12 Jan 2021 12:06:39 -0800 (PST)
+        id S1729007AbhALVnv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Jan 2021 16:43:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2405566AbhALVhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Jan 2021 16:37:17 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 730C723102;
+        Tue, 12 Jan 2021 21:36:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610487396;
+        bh=nkb3u9pf9yQMGIPyswxyCO0Px53gLOaH0dhJ7L6TPkM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=NcxiiEOfWj9HOVrCBrp9VtkT1NBUCvdlN+dgVvFpPWW9JEqRa347v2mhU/bYXNEPK
+         FrxjuQozMo3c8tknVEpGisVTHnEMndS2YwIS4Epj9RZCPea7omsE3sp7U25k5Qaixe
+         TN/51ORUcfLwlkBfQhkEcUpkJ5uaPksPjDTWTgB6TavTcEItBqbIGNvJX0mbuvZPjB
+         NcJzBN1bj3HW7mRP+VRtf18x9+XAIrJ0TCxqPAV47zCiDOUOvU+xuetqxUTJnnF2vI
+         bdGjoxulwev2XK5zlCDYAXoLBCnwhKOz3g2Edjka5fFl4Xwr1Ea6yjxy/Z0nwH0PB/
+         8Lj70ePoqniLA==
+Date:   Tue, 12 Jan 2021 15:36:35 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     mingchuang.qiao@mediatek.com
+Cc:     bhelgaas@google.com, matthias.bgg@gmail.com,
+        kerun.zhu@mediatek.com, linux-pci@vger.kernel.org,
+        lambert.wang@mediatek.com, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, haijun.liu@mediatek.com,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] pci: avoid unsync of LTR mechanism configuration
+Message-ID: <20210112213635.GA1854447@bjorn-Precision-5520>
 MIME-Version: 1.0
-References: <20210111225121.820014-1-ben.widawsky@intel.com>
- <20210111225121.820014-5-ben.widawsky@intel.com> <20210112190103.00004644@Huawei.com>
-In-Reply-To: <20210112190103.00004644@Huawei.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 12 Jan 2021 12:06:30 -0800
-Message-ID: <CAPcyv4iGVPgu_c0GOYTuAQyFJgfMuU5S45Ukd968+DV--Y6miw@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 04/16] cxl/mem: Introduce a driver for
- CXL-2.0-Type-3 endpoints
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org, Ira Weiny" <ira.weiny@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Jon Masters <jcm@jonmasters.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        daniel.lll@alibaba-inc.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210112072739.31624-1-mingchuang.qiao@mediatek.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 11:03 AM Jonathan Cameron
-<Jonathan.Cameron@huawei.com> wrote:
->
-> On Mon, 11 Jan 2021 14:51:08 -0800
-> Ben Widawsky <ben.widawsky@intel.com> wrote:
->
-> > From: Dan Williams <dan.j.williams@intel.com>
-> >
-> > The CXL.mem protocol allows a device to act as a provider of "System
-> > RAM" and/or "Persistent Memory" that is fully coherent as if the memory
-> > was attached to the typical CPU memory controller.
-> >
-> > With the CXL-2.0 specification a PCI endpoint can implement a "Type-3"
-> > device interface and give the operating system control over "Host
-> > Managed Device Memory". See section 2.3 Type 3 CXL Device.
-> >
-> > The memory range exported by the device may optionally be described by
-> > the platform firmware memory map, or by infrastructure like LIBNVDIMM to
-> > provision persistent memory capacity from one, or more, CXL.mem devices.
-> >
-> > A pre-requisite for Linux-managed memory-capacity provisioning is this
-> > cxl_mem driver that can speak the mailbox protocol defined in section
-> > 8.2.8.4 Mailbox Registers.
-> >
-> > For now just land the driver boiler-plate and fill it in with
-> > functionality in subsequent commits.
-> >
-> > Link: https://www.computeexpresslink.org/download-the-specification
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
->
-> Just one passing comment inline.
->
-> > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> > new file mode 100644
-> > index 000000000000..005404888942
-> > --- /dev/null
-> > +++ b/drivers/cxl/mem.c
-> > @@ -0,0 +1,69 @@
-> > +// SPDX-License-Identifier: GPL-2.0-only
-> > +/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
-> > +#include <linux/module.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/io.h>
-> > +#include "acpi.h"
-> > +#include "pci.h"
-> > +
-> > +static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
->
-> Is it worth pulling this out to a utility library now as we are going
-> to keep needing this for CXL devices?
-> Arguably, with a vendor_id parameter it might make sense to have
-> it as a utility function for pci rather than CXL alone.
+Note subject line tips at https://lore.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
 
-Sure, cxl_mem_dvsec() can move to a central location, but I'd wait for
-the first incremental user to split it out.
+On Tue, Jan 12, 2021 at 03:27:39PM +0800, mingchuang.qiao@mediatek.com wrote:
+> From: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+> 
+> In pci bus scan flow, the LTR mechanism enable bit of DEVCTL2 register
+> is configured in pci_configure_ltr(). If device and it's bridge both
+> support LTR mechanism, LTR mechanism of device and it's bridge will
+> be enabled in DEVCTL2 register. And the flag pci_dev->ltr_path will
+> be set as 1.
+
+s/it's/its/ twice above.
+It's == It is.
+Its == belonging to 'it'.
+Weird, I know, but that's English for you :)
+
+> For some pcie products, pcie link becomes down when device reset. And then
+> the LTR mechanism enable bit of bridge will become 0 based on description
+> in PCIE r4.0, sec 7.8.16. However, the pci_dev->ltr_path value of bridge
+> is still 1. Remove and rescan flow could be triggered to recover after
+> device reset. In the bus rescan flow, the LTR mechanism of device will be
+> enabled in pci_configure_ltr() due to ltr_path of its bridge is still 1.
+
+s/pcie/PCIe/ twice above.
+s/PCIE/PCIe/; also reference r5.0 instead of r4.0 if possible.
+
+This sounds like a general problem of most device config bits being
+cleared by reset.  Usually these are restored by pci_restore_state().
+Is that function missing a restore for PCI_EXP_DEVCTL2?  I'd rather
+have a general-purpose way of restoring all the config state than
+little pieces scattered all over.
+
+> When device's LTR mechanism is enabled, device will send LTR message to
+> bridge. Bridge receives the device's LTR message and found bridge's LTR
+> mechanism is disabled. Then the bridge will generate unsupported request
+> and other error handling flow will be triggered such as AER Non-Fatal
+> error handling.
+> 
+> This patch is used to avoid this unsupported request and make the bridge's
+> ltr_path value is aligned with DEVCTL2 register value. Check bridge
+> register value if aligned with ltr_path in pci_configure_ltr(). If
+> register value is disable and the ltr_path is 1, we need configure
+> the register value as enable.
+> 
+> Signed-off-by: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+> ---
+>  drivers/pci/probe.c | 18 +++++++++++++++---
+>  1 file changed, 15 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 953f15abc850..49355cf4af54 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2132,9 +2132,21 @@ static void pci_configure_ltr(struct pci_dev *dev)
+>  	 * Complex and all intermediate Switches indicate support for LTR.
+>  	 * PCIe r4.0, sec 6.18.
+>  	 */
+> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    ((bridge = pci_upstream_bridge(dev)) &&
+> -	      bridge->ltr_path)) {
+> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
+> +		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+> +					 PCI_EXP_DEVCTL2_LTR_EN);
+> +		dev->ltr_path = 1;
+> +		return;
+> +	}
+> +
+> +	bridge = pci_upstream_bridge(dev);
+> +	if (bridge && bridge->ltr_path) {
+> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl);
+> +		if (!(ctl & PCI_EXP_DEVCTL2_LTR_EN)) {
+> +			pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
+> +						 PCI_EXP_DEVCTL2_LTR_EN);
+> +		}
+> +
+>  		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+>  					 PCI_EXP_DEVCTL2_LTR_EN);
+>  		dev->ltr_path = 1;
+> -- 
+> 2.18.0
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
