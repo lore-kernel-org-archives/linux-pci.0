@@ -4,132 +4,274 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B322C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C45C433E9
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E91F823125
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:44:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5456223122
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729007AbhALVnv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Jan 2021 16:43:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41958 "EHLO mail.kernel.org"
+        id S2438037AbhALVhN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Jan 2021 16:37:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37448 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405566AbhALVhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Jan 2021 16:37:17 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 730C723102;
-        Tue, 12 Jan 2021 21:36:36 +0000 (UTC)
+        id S2437021AbhALUmp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Jan 2021 15:42:45 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D8DC522DFA;
+        Tue, 12 Jan 2021 20:42:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610487396;
-        bh=nkb3u9pf9yQMGIPyswxyCO0Px53gLOaH0dhJ7L6TPkM=;
+        s=k20201202; t=1610484124;
+        bh=Jx8pGRlLDrjjP+Fq9/Sw3nurTHY381O0KfCYsbhOLjU=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=NcxiiEOfWj9HOVrCBrp9VtkT1NBUCvdlN+dgVvFpPWW9JEqRa347v2mhU/bYXNEPK
-         FrxjuQozMo3c8tknVEpGisVTHnEMndS2YwIS4Epj9RZCPea7omsE3sp7U25k5Qaixe
-         TN/51ORUcfLwlkBfQhkEcUpkJ5uaPksPjDTWTgB6TavTcEItBqbIGNvJX0mbuvZPjB
-         NcJzBN1bj3HW7mRP+VRtf18x9+XAIrJ0TCxqPAV47zCiDOUOvU+xuetqxUTJnnF2vI
-         bdGjoxulwev2XK5zlCDYAXoLBCnwhKOz3g2Edjka5fFl4Xwr1Ea6yjxy/Z0nwH0PB/
-         8Lj70ePoqniLA==
-Date:   Tue, 12 Jan 2021 15:36:35 -0600
+        b=hmuhtYsSE/btYpfJ94B8LaWcLD9ErTUIN2+BXv88yC4i3IQBP6xlJ9pCR1vkYjtAy
+         Jm2SUYw0GYpN0ahpJwzopvIERhZcwHEiStN2Iuv97Wqd/ItJDG+zcWinAV1JrtJoAO
+         3JtZPfcsEyJaDsAMDKg7go05aLazEAvAEM6uXb8SAmYO425wplrF9wMjuW88DHKVG0
+         j7JSxZAn/XQ5TpciFJkGfapGzI7njDy4+pSrOSsQZyeSC7RVgUQr81HEnUKcdMAsov
+         g1GyC/c6IuUNjIW47mWiOKajE+mGJ+4HDmLpfzIOlibm4Ko2qURrMlu4zW521dbl/G
+         dKy7eyhxSdaqQ==
+Date:   Tue, 12 Jan 2021 14:42:02 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     mingchuang.qiao@mediatek.com
-Cc:     bhelgaas@google.com, matthias.bgg@gmail.com,
-        kerun.zhu@mediatek.com, linux-pci@vger.kernel.org,
-        lambert.wang@mediatek.com, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, haijun.liu@mediatek.com,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pci: avoid unsync of LTR mechanism configuration
-Message-ID: <20210112213635.GA1854447@bjorn-Precision-5520>
+To:     Ian Kumlien <ian.kumlien@gmail.com>
+Cc:     kai.heng.feng@canonical.com, linux-pci@vger.kernel.org,
+        alexander.duyck@gmail.com, refactormyself@gmail.com,
+        puranjay12@gmail.com
+Subject: Re: [PATCH 1/3] PCI/ASPM: Use the path max in L1 ASPM latency check
+Message-ID: <20210112204202.GA1489918@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210112072739.31624-1-mingchuang.qiao@mediatek.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201024205548.1837770-1-ian.kumlien@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Note subject line tips at https://lore.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
-
-On Tue, Jan 12, 2021 at 03:27:39PM +0800, mingchuang.qiao@mediatek.com wrote:
-> From: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+On Sat, Oct 24, 2020 at 10:55:46PM +0200, Ian Kumlien wrote:
+> Make pcie_aspm_check_latency comply with the PCIe spec, specifically:
+> "5.4.1.2.2. Exit from the L1 State"
 > 
-> In pci bus scan flow, the LTR mechanism enable bit of DEVCTL2 register
-> is configured in pci_configure_ltr(). If device and it's bridge both
-> support LTR mechanism, LTR mechanism of device and it's bridge will
-> be enabled in DEVCTL2 register. And the flag pci_dev->ltr_path will
-> be set as 1.
-
-s/it's/its/ twice above.
-It's == It is.
-Its == belonging to 'it'.
-Weird, I know, but that's English for you :)
-
-> For some pcie products, pcie link becomes down when device reset. And then
-> the LTR mechanism enable bit of bridge will become 0 based on description
-> in PCIE r4.0, sec 7.8.16. However, the pci_dev->ltr_path value of bridge
-> is still 1. Remove and rescan flow could be triggered to recover after
-> device reset. In the bus rescan flow, the LTR mechanism of device will be
-> enabled in pci_configure_ltr() due to ltr_path of its bridge is still 1.
-
-s/pcie/PCIe/ twice above.
-s/PCIE/PCIe/; also reference r5.0 instead of r4.0 if possible.
-
-This sounds like a general problem of most device config bits being
-cleared by reset.  Usually these are restored by pci_restore_state().
-Is that function missing a restore for PCI_EXP_DEVCTL2?  I'd rather
-have a general-purpose way of restoring all the config state than
-little pieces scattered all over.
-
-> When device's LTR mechanism is enabled, device will send LTR message to
-> bridge. Bridge receives the device's LTR message and found bridge's LTR
-> mechanism is disabled. Then the bridge will generate unsupported request
-> and other error handling flow will be triggered such as AER Non-Fatal
-> error handling.
+> Which makes it clear that each switch is required to initiate a
+> transition within 1μs from receiving it, accumulating this latency and
+> then we have to wait for the slowest link along the path before
+> entering L0 state from L1.
 > 
-> This patch is used to avoid this unsupported request and make the bridge's
-> ltr_path value is aligned with DEVCTL2 register value. Check bridge
-> register value if aligned with ltr_path in pci_configure_ltr(). If
-> register value is disable and the ltr_path is 1, we need configure
-> the register value as enable.
+> The current code doesn't take the maximum latency into account.
 > 
-> Signed-off-by: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+> From the example:
+>    +----------------+
+>    |                |
+>    |  Root complex  |
+>    |                |
+>    |    +-----+     |
+>    |    |32 μs|     |
+>    +----------------+
+>            |
+>            |  Link 1
+>            |
+>    +----------------+
+>    |     |8 μs|     |
+>    |     +----+     |
+>    |    Switch A    |
+>    |     +----+     |
+>    |     |8 μs|     |
+>    +----------------+
+>            |
+>            |  Link 2
+>            |
+>    +----------------+
+>    |    |32 μs|     |
+>    |    +-----+     |
+>    |    Switch B    |
+>    |    +-----+     |
+>    |    |32 μs|     |
+>    +----------------+
+>            |
+>            |  Link 3
+>            |
+>    +----------------+
+>    |     |8μs|      |
+>    |     +---+      |
+>    |   Endpoint C   |
+>    |                |
+>    |                |
+>    +----------------+
+> 
+> Links 1, 2 and 3 are all in L1 state - endpoint C initiates the
+> transition to L0 at time T. Since switch B takes 32 μs to exit L1 on
+> it's ports, Link 3 will transition to L0 at T+32 (longest time
+> considering T+8 for endpoint C and T+32 for switch B).
+> 
+> Switch B is required to initiate a transition from the L1 state on it's
+> upstream port after no more than 1 μs from the beginning of the
+> transition from L1 state on the downstream port. Therefore, transition from
+> L1 to L0 will begin on link 2 at T+1, this will cascade up the path.
+> 
+> The path will exit L1 at T+34.
+> 
+> On my specific system:
+> 03:00.0 Ethernet controller: Intel Corporation I211 Gigabit Network Connection (rev 03)
+> 04:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. Device 816e (rev 1a)
+> 
+>             Exit latency       Acceptable latency
+> Tree:       L1       L0s       L1       L0s
+> ----------  -------  -----     -------  ------
+> 00:01.2     <32 us   -
+> | 01:00.0   <32 us   -
+> |- 02:03.0  <32 us   -
+> | \03:00.0  <16 us   <2us      <64 us   <512ns
+> |
+> \- 02:04.0  <32 us   -
+>   \04:00.0  <64 us   unlimited <64 us   <512ns
+> 
+> 04:00.0's latency is the same as the maximum it allows so as we walk the path
+> the first switchs startup latency will pass the acceptable latency limit
+> for the link, and as a side-effect it fixes my issues with 03:00.0.
+
+I don't think this is quite right.  We're looking at the path to
+04:00.0, which includes two Links and one Switch:
+
+The upstream Link:
+  00:01.2 AMD Root Port               L1 Exit Latency <32us
+  01:00.0 AMD Switch Upstream Port    L1 Exit Latency <32us
+
+The downstream Link:
+  02:04.0 AMD Switch Downstream Port  L1 Exit Latency <32us
+  04:00.0 Realtek Endpoint            L1 Exit Latency <64us, Acceptable 64us
+
+If both Links are in L1 and 04:00.0 needs to use the Link at time T,
+I think the following events are relevant:
+
+  T        04:00.0 initiates L1 exit on downstream Link
+  T+1us    01:00.0 initiates L1 exit on upstream Link
+  T+33us   upstream Link is in L0 (32us after initiating exit)
+  T+64us   downstream Link is in L0 (64us after initiating exit)
+
+The upstream Link's L1 exit latency is completely covered by the
+downstream Link's, so 04:00.0 *should* only see its own exit latency
+(64us), which it claims to be able to tolerate.
+
+This patch computes "l1_max_latency + l1_switch_latency", which is
+64us + 1us in this case.  I don't think it's correct to add the 1us
+here because that delay is only relevant to the upstream Link.  We
+should add it to the *upstream Link's* exit latency, but even with
+that, its exit latency is only 33us from 04:00.0's point of view.
+
+> Without this patch, 03:00.0 misbehaves and only gives me ~40 mbit/s over
+> links with 6 or more hops. With this patch I'm back to a maximum of ~933
+> mbit/s.
+> 
+> The original code path did:
+> 04:00:0-02:04.0 max latency 64    -> ok
+> 02:04.0-01:00.0 max latency 32 +1 -> ok
+> 01:00.0-00:01.2 max latency 32 +2 -> ok
+> 
+> And thus didn't see any L1 ASPM latency issues.
+> 
+> The new code does:
+> 04:00:0-02:04.0 max latency 64    -> ok
+> 02:04.0-01:00.0 max latency 64 +1 -> latency exceeded
+> 01:00.0-00:01.2 max latency 64 +2 -> latency exceeded
+> 
+> It correctly identifies the issue.
+> 
+> For reference, pcie information:
+> https://bugzilla.kernel.org/show_bug.cgi?id=209725
+> 
+> Kai-Heng Feng has a machine that will not boot with ASPM without this patch,
+> information is documented here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=209671
+> 
+> Signed-off-by: Ian Kumlien <ian.kumlien@gmail.com>
+> Tested-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > ---
->  drivers/pci/probe.c | 18 +++++++++++++++---
->  1 file changed, 15 insertions(+), 3 deletions(-)
+>  drivers/pci/pcie/aspm.c | 22 ++++++++++++++--------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 953f15abc850..49355cf4af54 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2132,9 +2132,21 @@ static void pci_configure_ltr(struct pci_dev *dev)
->  	 * Complex and all intermediate Switches indicate support for LTR.
->  	 * PCIe r4.0, sec 6.18.
->  	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -	    ((bridge = pci_upstream_bridge(dev)) &&
-> -	      bridge->ltr_path)) {
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-> +		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-> +					 PCI_EXP_DEVCTL2_LTR_EN);
-> +		dev->ltr_path = 1;
-> +		return;
-> +	}
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 253c30cc1967..c03ead0f1013 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -434,7 +434,7 @@ static void pcie_get_aspm_reg(struct pci_dev *pdev,
+>  
+>  static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>  {
+> -	u32 latency, l1_switch_latency = 0;
+> +	u32 latency, l1_max_latency = 0, l1_switch_latency = 0;
+>  	struct aspm_latency *acceptable;
+>  	struct pcie_link_state *link;
+>  
+> @@ -456,10 +456,14 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>  		if ((link->aspm_capable & ASPM_STATE_L0S_DW) &&
+>  		    (link->latency_dw.l0s > acceptable->l0s))
+>  			link->aspm_capable &= ~ASPM_STATE_L0S_DW;
 > +
-> +	bridge = pci_upstream_bridge(dev);
-> +	if (bridge && bridge->ltr_path) {
-> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl);
-> +		if (!(ctl & PCI_EXP_DEVCTL2_LTR_EN)) {
-> +			pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-> +						 PCI_EXP_DEVCTL2_LTR_EN);
+>  		/*
+>  		 * Check L1 latency.
+> -		 * Every switch on the path to root complex need 1
+> -		 * more microsecond for L1. Spec doesn't mention L0s.
+> +		 *
+> +		 * PCIe r5.0, sec 5.4.1.2.2 states:
+> +		 * A Switch is required to initiate an L1 exit transition on its
+> +		 * Upstream Port Link after no more than 1 μs from the beginning of an
+> +		 * L1 exit transition on any of its Downstream Port Links.
+>  		 *
+>  		 * The exit latencies for L1 substates are not advertised
+>  		 * by a device.  Since the spec also doesn't mention a way
+> @@ -469,11 +473,13 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>  		 * L1 exit latencies advertised by a device include L1
+>  		 * substate latencies (and hence do not do any check).
+>  		 */
+> -		latency = max_t(u32, link->latency_up.l1, link->latency_dw.l1);
+> -		if ((link->aspm_capable & ASPM_STATE_L1) &&
+> -		    (latency + l1_switch_latency > acceptable->l1))
+> -			link->aspm_capable &= ~ASPM_STATE_L1;
+> -		l1_switch_latency += 1000;
+> +		if (link->aspm_capable & ASPM_STATE_L1) {
+> +			latency = max_t(u32, link->latency_up.l1, link->latency_dw.l1);
+> +			l1_max_latency = max_t(u32, latency, l1_max_latency);
+> +			if (l1_max_latency + l1_switch_latency > acceptable->l1)
+> +				link->aspm_capable &= ~ASPM_STATE_L1;
+> +			l1_switch_latency += 1000;
 > +		}
-> +
->  		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->  					 PCI_EXP_DEVCTL2_LTR_EN);
->  		dev->ltr_path = 1;
-> -- 
-> 2.18.0
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+This is pretty subtle but I *think* the existing code is actually
+correct.  The exit latency of a downstream Link overlaps all except
+1us of the latency of the next upstream Link, so I don't think we have
+to add the total Switch delay to the max Link exit latency.  We only
+have to add the Switch delays downstream of Link X to Link X's exit
+latency.
+
+Also, I think we should accumulate the 1us Switch latency for *all*
+Switches as the existing code does.  For the case where a Switch's
+Upstream Port is L1-capable but the Downstream Port is not, this patch
+doesn't add any l1_switch_latency.  That assumes the Switch can start
+the upstream L1 exit instantly upon receipt of a TLP at the Downstream
+Port.  I think we should assume it takes the same time (up to 1us) to
+start that exit as it would if the Downstream Port were in L1.
+
+>  		link = link->parent;
+>  	}
+
+My guess is the real problem is the Switch is advertising incorrect
+exit latencies.  If the Switch advertised "<64us" exit latency for its
+Upstream Port, we'd compute "64us exit latency + 1us Switch delay =
+65us", which is more than either 03:00.0 or 04:00.0 can tolerate, so
+we would disable L1 on that upstream Link.
+
+Working around this would require some sort of quirk to override the
+values read from the Switch, which is a little messy.  Here's what I'm
+thinking (not asking you to do this; just trying to think of an
+approach):
+
+  - Configure common clock earlier, in pci_configure_device(), because
+    this changes the "read-only" L1 exit latencies in Link
+    Capabilities.
+
+  - Cache Link Capabilities in the pci_dev.
+
+  - Add a quirk to override the cached values for the Switch based on
+    Vendor/Device ID and probably DMI motherboard/BIOS info.
+
+Bjorn
