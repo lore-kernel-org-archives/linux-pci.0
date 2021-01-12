@@ -2,104 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A26C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 07:47:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96722C43219
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 09:02:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E3DC22DFA
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 07:47:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F7AA230FB
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 09:02:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732979AbhALHrC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Jan 2021 02:47:02 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:16999 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728301AbhALHrC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2021 02:47:02 -0500
-X-UUID: 24e798f4b0ea4cce96fdcb61e9f4df16-20210112
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=QbDUDErbElo9ALLdM2zsuGqQjEHnckJhZ/HcIVbACVo=;
-        b=YnEnpfKLUzlzFsCJU57SyXdYsE9u2kGaw4zQUU9hv5NepmInCSsBPM61BKKX8vgB0pkh70SVJHN3TWjDORay/xscQayvc2dRqgnlDKDNnmfUzi16AgOXyeJQSR1ugktU6VjlKgL0sDvGvJgXdUcoQLK0v5WSX+OZMt7FeaIyzXE=;
-X-UUID: 24e798f4b0ea4cce96fdcb61e9f4df16-20210112
-Received: from mtkcas36.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
-        (envelope-from <mingchuang.qiao@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 297226364; Tue, 12 Jan 2021 15:35:33 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N1.mediatek.inc
- (172.27.4.69) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 12 Jan
- 2021 15:35:27 +0800
-Received: from mcddlt001.mediatek.inc (10.19.240.15) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 12 Jan 2021 15:35:26 +0800
-From:   <mingchuang.qiao@mediatek.com>
-To:     <bhelgaas@google.com>, <matthias.bgg@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <mingchuang.qiao@mediatek.com>, <haijun.liu@mediatek.com>,
-        <lambert.wang@mediatek.com>, <kerun.zhu@mediatek.com>
-Subject: [PATCH] pci: avoid unsync of LTR mechanism configuration
-Date:   Tue, 12 Jan 2021 15:27:39 +0800
-Message-ID: <20210112072739.31624-1-mingchuang.qiao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S2405803AbhALJCD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Jan 2021 04:02:03 -0500
+Received: from mail-lj1-f171.google.com ([209.85.208.171]:35620 "EHLO
+        mail-lj1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405799AbhALJCD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2021 04:02:03 -0500
+Received: by mail-lj1-f171.google.com with SMTP id p13so2021199ljg.2;
+        Tue, 12 Jan 2021 01:01:46 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=haCXkiEdHtQn5zcL0eeYqZrMblZ/rhEiT3dh2wlTt4U=;
+        b=sYcwzjav/fBkwBvxLlTLdjkPWbCvlRweeQ/WV7IQALoRgJaKglrw6QbkIZhX2ioWbM
+         +NP8tf+aFdeTcpe7wvGOiUt81LDFO4rGoLl3Qkb3sU8XUcc7ivQfoz2bUwq2sqqvbU75
+         ZTqSnGOEHmFjfj4621yI1dYYoApWkBB2cNVPc1exgn6Fk6VcablSXGE0jTOXukWaS4sq
+         c6fXClviYHSMGS/xHR0yHIPRFJe3T9Q1qSdjPlFs08USsoQafTDfzTpDo7lfr84eKSvi
+         7A2P+AkMNjf1dWk26wlWSyW0AkMlD4y+KGQACsKGXB+W9yLvEFfWgkxY3uOtx7Opy571
+         qygg==
+X-Gm-Message-State: AOAM531V5WbljG7Qz9xd1IWbhX2FD9CU1R30JeLg9344HvcGv4BxblLe
+        h8yq+HC8n6H4cxvilwqNeDx8r7d+dv3cpw==
+X-Google-Smtp-Source: ABdhPJzEBGdx89BKmB8bHuXXvLUiH6SB24L853o2jEqMjVRy/Ew7V1ZW7ayyhebCIrjUC82DPP8toQ==
+X-Received: by 2002:a2e:9d95:: with SMTP id c21mr1620526ljj.51.1610442080558;
+        Tue, 12 Jan 2021 01:01:20 -0800 (PST)
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com. [209.85.167.46])
+        by smtp.gmail.com with ESMTPSA id l84sm310130lfd.75.2021.01.12.01.01.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 Jan 2021 01:01:19 -0800 (PST)
+Received: by mail-lf1-f46.google.com with SMTP id u25so2232066lfc.2;
+        Tue, 12 Jan 2021 01:01:19 -0800 (PST)
+X-Received: by 2002:a19:c783:: with SMTP id x125mr1692517lff.303.1610442079205;
+ Tue, 12 Jan 2021 01:01:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 138AEC170CF7C40068F5BD0D97B5ACAE2C5FB55A940A1E8A4148BCCA5D1A30852000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+References: <20210106134617.391-1-wens@kernel.org> <20210106134617.391-3-wens@kernel.org>
+In-Reply-To: <20210106134617.391-3-wens@kernel.org>
+From:   Chen-Yu Tsai <wens@csie.org>
+Date:   Tue, 12 Jan 2021 17:01:07 +0800
+X-Gmail-Original-Message-ID: <CAGb2v67qXN1FX7cupTvVZrM8XRA4LWxVkfFbWh220CWrU7tyAg@mail.gmail.com>
+Message-ID: <CAGb2v67qXN1FX7cupTvVZrM8XRA4LWxVkfFbWh220CWrU7tyAg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/4] dt-bindings: arm: rockchip: Add FriendlyARM NanoPi M4B
+To:     Chen-Yu Tsai <wens@kernel.org>
+Cc:     Shawn Lin <shawn.lin@rock-chips.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Johan Jonker <jbx6244@gmail.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RnJvbTogTWluZ2NodWFuZyBRaWFvIDxtaW5nY2h1YW5nLnFpYW9AbWVkaWF0ZWsuY29tPg0KDQpJ
-biBwY2kgYnVzIHNjYW4gZmxvdywgdGhlIExUUiBtZWNoYW5pc20gZW5hYmxlIGJpdCBvZiBERVZD
-VEwyIHJlZ2lzdGVyDQppcyBjb25maWd1cmVkIGluIHBjaV9jb25maWd1cmVfbHRyKCkuIElmIGRl
-dmljZSBhbmQgaXQncyBicmlkZ2UgYm90aA0Kc3VwcG9ydCBMVFIgbWVjaGFuaXNtLCBMVFIgbWVj
-aGFuaXNtIG9mIGRldmljZSBhbmQgaXQncyBicmlkZ2Ugd2lsbA0KYmUgZW5hYmxlZCBpbiBERVZD
-VEwyIHJlZ2lzdGVyLiBBbmQgdGhlIGZsYWcgcGNpX2Rldi0+bHRyX3BhdGggd2lsbA0KYmUgc2V0
-IGFzIDEuDQoNCkZvciBzb21lIHBjaWUgcHJvZHVjdHMsIHBjaWUgbGluayBiZWNvbWVzIGRvd24g
-d2hlbiBkZXZpY2UgcmVzZXQuIEFuZCB0aGVuDQp0aGUgTFRSIG1lY2hhbmlzbSBlbmFibGUgYml0
-IG9mIGJyaWRnZSB3aWxsIGJlY29tZSAwIGJhc2VkIG9uIGRlc2NyaXB0aW9uDQppbiBQQ0lFIHI0
-LjAsIHNlYyA3LjguMTYuIEhvd2V2ZXIsIHRoZSBwY2lfZGV2LT5sdHJfcGF0aCB2YWx1ZSBvZiBi
-cmlkZ2UNCmlzIHN0aWxsIDEuIFJlbW92ZSBhbmQgcmVzY2FuIGZsb3cgY291bGQgYmUgdHJpZ2dl
-cmVkIHRvIHJlY292ZXIgYWZ0ZXINCmRldmljZSByZXNldC4gSW4gdGhlIGJ1cyByZXNjYW4gZmxv
-dywgdGhlIExUUiBtZWNoYW5pc20gb2YgZGV2aWNlIHdpbGwgYmUNCmVuYWJsZWQgaW4gcGNpX2Nv
-bmZpZ3VyZV9sdHIoKSBkdWUgdG8gbHRyX3BhdGggb2YgaXRzIGJyaWRnZSBpcyBzdGlsbCAxLg0K
-DQpXaGVuIGRldmljZSdzIExUUiBtZWNoYW5pc20gaXMgZW5hYmxlZCwgZGV2aWNlIHdpbGwgc2Vu
-ZCBMVFIgbWVzc2FnZSB0bw0KYnJpZGdlLiBCcmlkZ2UgcmVjZWl2ZXMgdGhlIGRldmljZSdzIExU
-UiBtZXNzYWdlIGFuZCBmb3VuZCBicmlkZ2UncyBMVFINCm1lY2hhbmlzbSBpcyBkaXNhYmxlZC4g
-VGhlbiB0aGUgYnJpZGdlIHdpbGwgZ2VuZXJhdGUgdW5zdXBwb3J0ZWQgcmVxdWVzdA0KYW5kIG90
-aGVyIGVycm9yIGhhbmRsaW5nIGZsb3cgd2lsbCBiZSB0cmlnZ2VyZWQgc3VjaCBhcyBBRVIgTm9u
-LUZhdGFsDQplcnJvciBoYW5kbGluZy4NCg0KVGhpcyBwYXRjaCBpcyB1c2VkIHRvIGF2b2lkIHRo
-aXMgdW5zdXBwb3J0ZWQgcmVxdWVzdCBhbmQgbWFrZSB0aGUgYnJpZGdlJ3MNCmx0cl9wYXRoIHZh
-bHVlIGlzIGFsaWduZWQgd2l0aCBERVZDVEwyIHJlZ2lzdGVyIHZhbHVlLiBDaGVjayBicmlkZ2UN
-CnJlZ2lzdGVyIHZhbHVlIGlmIGFsaWduZWQgd2l0aCBsdHJfcGF0aCBpbiBwY2lfY29uZmlndXJl
-X2x0cigpLiBJZg0KcmVnaXN0ZXIgdmFsdWUgaXMgZGlzYWJsZSBhbmQgdGhlIGx0cl9wYXRoIGlz
-IDEsIHdlIG5lZWQgY29uZmlndXJlDQp0aGUgcmVnaXN0ZXIgdmFsdWUgYXMgZW5hYmxlLg0KDQpT
-aWduZWQtb2ZmLWJ5OiBNaW5nY2h1YW5nIFFpYW8gPG1pbmdjaHVhbmcucWlhb0BtZWRpYXRlay5j
-b20+DQotLS0NCiBkcml2ZXJzL3BjaS9wcm9iZS5jIHwgMTggKysrKysrKysrKysrKysrLS0tDQog
-MSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL3BjaS9wcm9iZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0KaW5kZXgg
-OTUzZjE1YWJjODUwLi40OTM1NWNmNGFmNTQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9wcm9i
-ZS5jDQorKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQpAQCAtMjEzMiw5ICsyMTMyLDIxIEBAIHN0
-YXRpYyB2b2lkIHBjaV9jb25maWd1cmVfbHRyKHN0cnVjdCBwY2lfZGV2ICpkZXYpDQogCSAqIENv
-bXBsZXggYW5kIGFsbCBpbnRlcm1lZGlhdGUgU3dpdGNoZXMgaW5kaWNhdGUgc3VwcG9ydCBmb3Ig
-TFRSLg0KIAkgKiBQQ0llIHI0LjAsIHNlYyA2LjE4Lg0KIAkgKi8NCi0JaWYgKHBjaV9wY2llX3R5
-cGUoZGV2KSA9PSBQQ0lfRVhQX1RZUEVfUk9PVF9QT1JUIHx8DQotCSAgICAoKGJyaWRnZSA9IHBj
-aV91cHN0cmVhbV9icmlkZ2UoZGV2KSkgJiYNCi0JICAgICAgYnJpZGdlLT5sdHJfcGF0aCkpIHsN
-CisJaWYgKHBjaV9wY2llX3R5cGUoZGV2KSA9PSBQQ0lfRVhQX1RZUEVfUk9PVF9QT1JUKSB7DQor
-CQlwY2llX2NhcGFiaWxpdHlfc2V0X3dvcmQoZGV2LCBQQ0lfRVhQX0RFVkNUTDIsDQorCQkJCQkg
-UENJX0VYUF9ERVZDVEwyX0xUUl9FTik7DQorCQlkZXYtPmx0cl9wYXRoID0gMTsNCisJCXJldHVy
-bjsNCisJfQ0KKw0KKwlicmlkZ2UgPSBwY2lfdXBzdHJlYW1fYnJpZGdlKGRldik7DQorCWlmIChi
-cmlkZ2UgJiYgYnJpZGdlLT5sdHJfcGF0aCkgew0KKwkJcGNpZV9jYXBhYmlsaXR5X3JlYWRfZHdv
-cmQoYnJpZGdlLCBQQ0lfRVhQX0RFVkNUTDIsICZjdGwpOw0KKwkJaWYgKCEoY3RsICYgUENJX0VY
-UF9ERVZDVEwyX0xUUl9FTikpIHsNCisJCQlwY2llX2NhcGFiaWxpdHlfc2V0X3dvcmQoYnJpZGdl
-LCBQQ0lfRVhQX0RFVkNUTDIsDQorCQkJCQkJIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pOw0KKwkJ
-fQ0KKw0KIAkJcGNpZV9jYXBhYmlsaXR5X3NldF93b3JkKGRldiwgUENJX0VYUF9ERVZDVEwyLA0K
-IAkJCQkJIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pOw0KIAkJZGV2LT5sdHJfcGF0aCA9IDE7DQot
-LSANCjIuMTguMA0K
+On Wed, Jan 6, 2021 at 9:46 PM Chen-Yu Tsai <wens@kernel.org> wrote:
+>
+> From: Chen-Yu Tsai <wens@csie.org>
+>
+> The NanoPi M4B is a minor revision of the original M4.
+>
+> The differences against the original Nanopi M4 that are common with the
+> other M4V2 revision include:
+>
+>   - microphone header removed
+>   - power button added
+>   - recovery button added
+>
+> Additional changes specific to the M4B:
+>
+>   - USB 3.0 hub removed; board now has 2x USB 3.0 type-A ports and 2x
+>     USB 2.0 ports
+>   - ADB toggle switch added; this changes the top USB 3.0 host port to
+>     a peripheral port
+>   - Type-C port no longer supports data or PD
+>   - WiFi/Bluetooth combo chip switched to AP6256, which supports BT 5.0
+>     but only 1T1R (down from 2T2R) for WiFi
+>
+> Add a compatible string for the new board revision.
+>
+> Signed-off-by: Chen-Yu Tsai <wens@csie.org>
 
+This was
+
+Acked-by: Rob Herring <robh@kernel.org>
+
+back in v2.
