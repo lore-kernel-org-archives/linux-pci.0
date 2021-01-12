@@ -2,289 +2,298 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05AD9C4332D
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9263AC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:49:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C633323123
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 675C72078E
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Jan 2021 21:49:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438033AbhALVhN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Jan 2021 16:37:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32794 "EHLO
+        id S2393268AbhALVtM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Jan 2021 16:49:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437002AbhALUl0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2021 15:41:26 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20C63C061575
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jan 2021 12:40:46 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id q22so5430014eja.2
-        for <linux-pci@vger.kernel.org>; Tue, 12 Jan 2021 12:40:46 -0800 (PST)
+        with ESMTP id S2392300AbhALVgF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2021 16:36:05 -0500
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F98C0617A7;
+        Tue, 12 Jan 2021 13:35:02 -0800 (PST)
+Received: by mail-io1-xd2d.google.com with SMTP id u26so7294411iof.3;
+        Tue, 12 Jan 2021 13:35:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=Ct93Q3jRetKhaczI+6WcmnjHIFRP3Fo82VEGV+KynCk=;
-        b=T1cZ3JpkSXggl/Jkc5Ldu1myuVwPhCGRR6lqhbhAHv3xS6v+mjC6VwXUiCcBHC25JI
-         sb9pXAcR2De4/gHbvIQK58ATkuAIMTf8m0ZgZE26P2jThxM+b/ywIX6Gu2z+FyH0wWqI
-         8DFVg8H/XJthxJXuQvnTjakrBLaohUIK39TJ9dp1Wu2Tev0vDanE1M6tvq6gbTsrMYZi
-         fRb5OXVvMxBBACwBd5AVcfcv78E2i85gV9iyy6Vtoj0CfpbmHYeTroe17RJ5ajvbGH6H
-         k6CV8KJlnlEiKHnr/nVg+5HGrZtBNr0EowWx6PE5j9SDR6LkSOrpI1J1zsWPXsZ8PQed
-         7L0w==
+        bh=sDeAqm+LFH/+YEjj7tR7t+NLtygzAyr4AwNJQrZj4o8=;
+        b=d3KS/b6o4l1X7mT9/yVOtc79XKM/ftjmGKrR+8dcVWGzgzUZva3IjKiBby3kIFdDeJ
+         gYiwgydpo6taTF0jDTtpzkTEoH101w9+AAOtfpkWEm8GByCs/1pNFbdqsoRgWxr3xPlP
+         Ufw2tDxiZEV2DqpadhIIRyM2BZh97qigG20ujKG+yHOMzTpMGXJFESvTZvbKtGOL794t
+         a6q84vcoKRyxDin0I7IYDfOF93K6DkleGQm0qH4Z08Ll69k73IeWY1RHcupliweOggD0
+         f8SepEg4fBhVbN8tgwHkCWcvkUg4j6zh8/YIennY9c8syFXhmS5jN3xQl1EpgNQ5YcuH
+         hREA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Ct93Q3jRetKhaczI+6WcmnjHIFRP3Fo82VEGV+KynCk=;
-        b=i9vCipGjmcJ/HX0f1lCROuYvPrhCZWiEuUqXw9j46uo5LALXigafGIytSzt9T+QK80
-         yDr+gzkhosU+DpggleodHBAG2p8RtOk1nq2b1N+P7IDrEnyo8nkk3fnpbGLjBYac4yr5
-         tFMWzxSdyHayqlaow9J6lLEJtfbvM7ndg9nZowYPXRCByujGIpwWT9RuTT+gaZiD6xAX
-         nkFnLYaAJk3BSx3QHfBPKWWKbYVum8J0xMydb7nT5ZLHKVp/UwV9zd+DF+fiTFmxG+vT
-         T8xSjLbwXg7/WN7GPsISRlsT42QROMB/N30/F7TP1qAmNOo+J91NxBloWHjBfCMoxe4N
-         egRw==
-X-Gm-Message-State: AOAM531ihzKmTUbdcJ3gc5G1lHlKl5hfUwmEE+0qo6XoQPnc7G7NP8pg
-        NSOKVnsRm0Xe8yCJVGhQ7YAo9JlEVsui5FkU6s1o6g==
-X-Google-Smtp-Source: ABdhPJzHdcTzIjQRpyGIEfN0AC0DGdj1ibAM+dEAeusNPr+hYVUdYuvlpZNheWMWFHBf12PCInMSBiFgFRDLAzCahKY=
-X-Received: by 2002:a17:907:d8e:: with SMTP id go14mr439401ejc.472.1610484044797;
- Tue, 12 Jan 2021 12:40:44 -0800 (PST)
+        bh=sDeAqm+LFH/+YEjj7tR7t+NLtygzAyr4AwNJQrZj4o8=;
+        b=AT3dcmDuBqFplj2IlfGB2Avz6c+pBW0cE8K9mpVZ7X4wP6YCCN2cdiwdjD/gJXZ8r/
+         XCs4kWBbP24od4PK6ZYVZ5pUuNB24vqemB6Y5BqfQbBcsuM0AGmE7sv+Rp0nHOxH0MUU
+         3Ex1jZpKaIVfZOKBHOqbUM5oAAMkZzbwx2y8OrObH2behu5Tio/chgN5S4Wg2y0Vpvde
+         yY3+2MkWPVj2tf4iOyyhzrb25b6waTry8WPvErHL7t6PqC5NBi2DtsodXSy/V6jbof2e
+         QHOm24O3L5/TQUHEZ3Q+lafzz5t7zB5/hQk2Zo4tKyqqbL+FLQ0D+9tCPYA4zr3CmCki
+         vH9A==
+X-Gm-Message-State: AOAM533VO2wioTO/02SnUnJxs08NOEAM/7CqKS5z5rMqlLUDK1PA7V9O
+        O8yL4STjq2Lr8GTIIImnV5MCL2NU45wlB0K5POM=
+X-Google-Smtp-Source: ABdhPJzjn/TNYAGAH6/SXpllAAMU5SXgaWLsv3NEdJpo5dqEL96pcE0w+cXeO3MWP28fnIjqwgn2BDVfncP71gze6FQ=
+X-Received: by 2002:a5e:9812:: with SMTP id s18mr846974ioj.138.1610487301573;
+ Tue, 12 Jan 2021 13:35:01 -0800 (PST)
 MIME-Version: 1.0
-References: <20210111225121.820014-1-ben.widawsky@intel.com>
- <20210111225121.820014-6-ben.widawsky@intel.com> <20210112191342.00006aad@Huawei.com>
- <20210112192115.vhxjz3cr5vwjshwf@intel.com>
-In-Reply-To: <20210112192115.vhxjz3cr5vwjshwf@intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 12 Jan 2021 12:40:35 -0800
-Message-ID: <CAPcyv4iDoFdBn7UkvRpAunLY=TM7vWnH77P3nGKStBfJ9YdwKA@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 05/16] cxl/mem: Map memory device registers
-To:     Ben Widawsky <ben.widawsky@intel.com>
-Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        linux-cxl@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Jon Masters <jcm@jonmasters.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        daniel.lll@alibaba-inc.com
+References: <20210110150727.1965295-1-leon@kernel.org> <20210110150727.1965295-3-leon@kernel.org>
+ <CAKgT0Uczu6cULPsVjFuFVmir35SpL-bs0hosbfH-T5sZLZ78BQ@mail.gmail.com> <20210112065601.GD4678@unreal>
+In-Reply-To: <20210112065601.GD4678@unreal>
+From:   Alexander Duyck <alexander.duyck@gmail.com>
+Date:   Tue, 12 Jan 2021 13:34:50 -0800
+Message-ID: <CAKgT0UdndGdA3xONBr62hE-_RBdL-fq6rHLy0PrdsuMn1936TA@mail.gmail.com>
+Subject: Re: [PATCH mlx5-next v1 2/5] PCI: Add SR-IOV sysfs entry to read
+ number of MSI-X vectors
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-rdma@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 12, 2021 at 11:21 AM Ben Widawsky <ben.widawsky@intel.com> wrote:
+On Mon, Jan 11, 2021 at 10:56 PM Leon Romanovsky <leon@kernel.org> wrote:
 >
-> On 21-01-12 19:13:42, Jonathan Cameron wrote:
-> > On Mon, 11 Jan 2021 14:51:09 -0800
-> > Ben Widawsky <ben.widawsky@intel.com> wrote:
-> >
-> > > All the necessary bits are initialized in order to find and map the
-> > > register space for CXL Memory Devices. This is accomplished by using the
-> > > Register Locator DVSEC (CXL 2.0 - 8.1.9.1) to determine which PCI BAR to
-> > > use, and how much of an offset from that BAR should be added.
+> On Mon, Jan 11, 2021 at 11:30:39AM -0800, Alexander Duyck wrote:
+> > On Sun, Jan 10, 2021 at 7:10 AM Leon Romanovsky <leon@kernel.org> wrote:
 > > >
-> > > If the memory device registers are found and mapped a new internal data
-> > > structure tracking device state is allocated.
+> > > From: Leon Romanovsky <leonro@nvidia.com>
 > > >
-> > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> >
-> > Some issues with managed allocations being manually freed in remove.
-> > It shouldn't be necessary to do that.
-> >
+> > > Some SR-IOV capable devices provide an ability to configure specific
+> > > number of MSI-X vectors on their VF prior driver is probed on that VF.
+> > >
+> > > In order to make management easy, provide new read-only sysfs file that
+> > > returns a total number of possible to configure MSI-X vectors.
+> > >
+> > > cat /sys/bus/pci/devices/.../sriov_vf_total_msix
+> > >   = 0 - feature is not supported
+> > >   > 0 - total number of MSI-X vectors to consume by the VFs
+> > >
+> > > Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 > > > ---
-> > >  drivers/cxl/cxl.h |  17 ++++++++
-> > >  drivers/cxl/mem.c | 100 +++++++++++++++++++++++++++++++++++++++++++++-
-> > >  drivers/cxl/pci.h |  14 +++++++
-> > >  3 files changed, 130 insertions(+), 1 deletion(-)
-> > >  create mode 100644 drivers/cxl/cxl.h
+> > >  Documentation/ABI/testing/sysfs-bus-pci | 14 +++++++++++
+> > >  drivers/pci/iov.c                       | 31 +++++++++++++++++++++++++
+> > >  drivers/pci/pci.h                       |  3 +++
+> > >  include/linux/pci.h                     |  2 ++
+> > >  4 files changed, 50 insertions(+)
 > > >
-> > > diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> > > new file mode 100644
-> > > index 000000000000..d81d0ba4617c
-> > > --- /dev/null
-> > > +++ b/drivers/cxl/cxl.h
-> > > @@ -0,0 +1,17 @@
-> > > +/* SPDX-License-Identifier: GPL-2.0-only */
-> > > +/* Copyright(c) 2020 Intel Corporation. */
+> > > diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> > > index 05e26e5da54e..64e9b700acc9 100644
+> > > --- a/Documentation/ABI/testing/sysfs-bus-pci
+> > > +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> > > @@ -395,3 +395,17 @@ Description:
+> > >                 The file is writable if the PF is bound to a driver that
+> > >                 supports the ->sriov_set_msix_vec_count() callback and there
+> > >                 is no driver bound to the VF.
 > > > +
-> > > +#ifndef __CXL_H__
-> > > +#define __CXL_H__
-> > > +
-> > > +/**
-> > > + * struct cxl_mem - A CXL memory device
-> > > + * @pdev: The PCI device associated with this CXL device.
-> > > + * @regs: IO mappings to the device's MMIO
-> > > + */
-> > > +struct cxl_mem {
-> > > +   struct pci_dev *pdev;
-> > > +   void __iomem *regs;
-> > > +};
-> > > +
-> > > +#endif
-> > > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> > > index 005404888942..8301db34d2ff 100644
-> > > --- a/drivers/cxl/mem.c
-> > > +++ b/drivers/cxl/mem.c
-> > > @@ -5,6 +5,58 @@
-> > >  #include <linux/io.h>
-> > >  #include "acpi.h"
-> > >  #include "pci.h"
-> > > +#include "cxl.h"
-> > > +
-> > > +/**
-> > > + * cxl_mem_create() - Create a new &struct cxl_mem.
-> > > + * @pdev: The pci device associated with the new &struct cxl_mem.
-> > > + * @reg_lo: Lower 32b of the register locator
-> > > + * @reg_hi: Upper 32b of the register locator.
-> > > + *
-> > > + * Return: The new &struct cxl_mem on success, NULL on failure.
-> > > + *
-> > > + * Map the BAR for a CXL memory device. This BAR has the memory device's
-> > > + * registers for the device as specified in CXL specification.
-> > > + */
-> > > +static struct cxl_mem *cxl_mem_create(struct pci_dev *pdev, u32 reg_lo,
-> > > +                                 u32 reg_hi)
-> > > +{
-> > > +   struct device *dev = &pdev->dev;
-> > > +   struct cxl_mem *cxlm;
-> > > +   void __iomem *regs;
-> > > +   u64 offset;
-> > > +   u8 bar;
-> > > +   int rc;
-> > > +
-> > > +   offset = ((u64)reg_hi << 32) | (reg_lo & CXL_REGLOC_ADDR_MASK);
-> > > +   bar = (reg_lo >> CXL_REGLOC_BIR_SHIFT) & CXL_REGLOC_BIR_MASK;
-> > > +
-> > > +   /* Basic sanity check that BAR is big enough */
-> > > +   if (pci_resource_len(pdev, bar) < offset) {
-> > > +           dev_err(dev, "BAR%d: %pr: too small (offset: %#llx)\n", bar,
-> > > +                   &pdev->resource[bar], (unsigned long long)offset);
-> > > +           return NULL;
-> > > +   }
-> > > +
-> > > +   rc = pcim_iomap_regions(pdev, BIT(bar), pci_name(pdev));
-> > > +   if (rc != 0) {
-> > > +           dev_err(dev, "failed to map registers\n");
-> > > +           return NULL;
-> > > +   }
-> > > +
-> > > +   cxlm = devm_kzalloc(&pdev->dev, sizeof(*cxlm), GFP_KERNEL);
-> > > +   if (!cxlm) {
-> > > +           dev_err(dev, "No memory available\n");
-> > > +           return NULL;
-> > > +   }
-> > > +
-> > > +   regs = pcim_iomap_table(pdev)[bar];
-> > > +   cxlm->pdev = pdev;
-> > > +   cxlm->regs = regs + offset;
-> > > +
-> > > +   dev_dbg(dev, "Mapped CXL Memory Device resource\n");
-> > > +   return cxlm;
-> > > +}
-> > >
-> > >  static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
-> > >  {
-> > > @@ -33,7 +85,8 @@ static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
-> > >  static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> > >  {
-> > >     struct device *dev = &pdev->dev;
-> > > -   int rc, regloc;
-> > > +   struct cxl_mem *cxlm;
-> > > +   int rc, regloc, i;
-> > >
-> > >     rc = cxl_bus_acquire(pdev);
-> > >     if (rc != 0) {
-> > > @@ -41,15 +94,59 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> > >             return rc;
-> > >     }
-> > >
-> > > +   rc = pcim_enable_device(pdev);
-> > > +   if (rc)
-> > > +           return rc;
-> > > +
-> > >     regloc = cxl_mem_dvsec(pdev, PCI_DVSEC_ID_CXL_REGLOC);
-> > >     if (!regloc) {
-> > >             dev_err(dev, "register location dvsec not found\n");
-> > >             return -ENXIO;
-> > >     }
-> > > +   regloc += 0xc; /* Skip DVSEC + reserved fields */
-> > > +
-> > > +   rc = -ENXIO;
-> > > +   for (i = regloc; i < regloc + 0x24; i += 8) {
-> > > +           u32 reg_lo, reg_hi;
-> > > +           u8 reg_type;
-> > > +
-> > > +           /* "register low and high" contain other bits */
-> > > +           pci_read_config_dword(pdev, i, &reg_lo);
-> > > +           pci_read_config_dword(pdev, i + 4, &reg_hi);
-> > > +
-> > > +           reg_type =
-> > > +                   (reg_lo >> CXL_REGLOC_RBI_SHIFT) & CXL_REGLOC_RBI_MASK;
-> > > +
-> > > +           if (reg_type == CXL_REGLOC_RBI_MEMDEV) {
-> > > +                   rc = 0;
-> > > +                   cxlm = cxl_mem_create(pdev, reg_lo, reg_hi);
-> > > +                   if (!cxlm)
-> > > +                           rc = -ENODEV;
-> > > +                   break;
-> > > +           }
-> > > +   }
-> > > +
-> > > +   if (rc)
-> > > +           return rc;
-> > >
-> > > +   pci_set_drvdata(pdev, cxlm);
-> > After below cleanup, not needed yet..
+> > > +What:          /sys/bus/pci/devices/.../sriov_vf_total_msix
 > >
-> > >     return 0;
+> > In this case I would drop the "vf" and just go with sriov_total_msix
+> > since now you are referring to a global value instead of a per VF
+> > value.
+>
+> This field indicates the amount of MSI-X available for VFs, it doesn't
+> include PFs. The missing "_vf_" will mislead users who will believe that
+> it is all MSI-X vectors available for this device. They will need to take
+> into consideration amount of PF MSI-X in order to calculate the VF distribution.
+>
+> So I would leave "_vf_" here.
+
+The problem is you aren't indicating how many are available for an
+individual VF though, you are indicating how many are available for
+use by SR-IOV to give to the VFs. The fact that you are dealing with a
+pool makes things confusing in my opinion. For example sriov_vf_device
+describes the device ID that will be given to each VF.
+
+> >
+> > > +Date:          January 2021
+> > > +Contact:       Leon Romanovsky <leonro@nvidia.com>
+> > > +Description:
+> > > +               This file is associated with the SR-IOV PFs.
+> > > +               It returns a total number of possible to configure MSI-X
+> > > +               vectors on the enabled VFs.
+> > > +
+> > > +               The values returned are:
+> > > +                * > 0 - this will be total number possible to consume by VFs,
+> > > +                * = 0 - feature is not supported
+> > > +
+> > > +               If no SR-IOV VFs are enabled, this value will return 0.
+> > > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > > index 42c0df4158d1..0a6ddf3230fd 100644
+> > > --- a/drivers/pci/iov.c
+> > > +++ b/drivers/pci/iov.c
+> > > @@ -394,12 +394,22 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+> > >         return count;
 > > >  }
 > > >
-> > > +static void cxl_mem_remove(struct pci_dev *pdev)
+> > > +static ssize_t sriov_vf_total_msix_show(struct device *dev,
+> > > +                                       struct device_attribute *attr,
+> > > +                                       char *buf)
 > > > +{
-> > > +   struct cxl_mem *cxlm;
+> > > +       struct pci_dev *pdev = to_pci_dev(dev);
 > > > +
-> > > +   cxlm = pci_get_drvdata(pdev);
-> > > +   if (!cxlm)
-> > > +           return;
+> > > +       return sprintf(buf, "%d\n", pdev->sriov->vf_total_msix);
+> > > +}
 > > > +
-> > > +   kfree(cxlm);
 > >
-> > There is bunch of unwinding here that I'd expect to see in error paths
-> > for probe but it's not there...  Which made me wonder.
-> > So pcim_iounmap_regions is a managed interface, why are call it by
-> > hand?  Same is true of the allocation of cxlm above.  So currently this
-> > remove isn't doing anything useful.
+> > You display it as a signed value, but unsigned values are not
+> > supported, correct?
+>
+> Right, I made it similar to the vf_msix_set. I can change.
+>
 > >
+> > >  static DEVICE_ATTR_RO(sriov_totalvfs);
+> > >  static DEVICE_ATTR_RW(sriov_numvfs);
+> > >  static DEVICE_ATTR_RO(sriov_offset);
+> > >  static DEVICE_ATTR_RO(sriov_stride);
+> > >  static DEVICE_ATTR_RO(sriov_vf_device);
+> > >  static DEVICE_ATTR_RW(sriov_drivers_autoprobe);
+> > > +static DEVICE_ATTR_RO(sriov_vf_total_msix);
+> > >
+> > >  static struct attribute *sriov_dev_attrs[] = {
+> > >         &dev_attr_sriov_totalvfs.attr,
+> > > @@ -408,6 +418,7 @@ static struct attribute *sriov_dev_attrs[] = {
+> > >         &dev_attr_sriov_stride.attr,
+> > >         &dev_attr_sriov_vf_device.attr,
+> > >         &dev_attr_sriov_drivers_autoprobe.attr,
+> > > +       &dev_attr_sriov_vf_total_msix.attr,
+> > >         NULL,
+> > >  };
+> > >
+> > > @@ -658,6 +669,7 @@ static void sriov_disable(struct pci_dev *dev)
+> > >                 sysfs_remove_link(&dev->dev.kobj, "dep_link");
+> > >
+> > >         iov->num_VFs = 0;
+> > > +       iov->vf_total_msix = 0;
+> > >         pci_iov_set_numvfs(dev, 0);
+> > >  }
+> > >
+> > > @@ -1116,6 +1128,25 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev)
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> > >
+> > > +/**
+> > > + * pci_sriov_set_vf_total_msix - set total number of MSI-X vectors for the VFs
+> > > + * @dev: the PCI PF device
+> > > + * @numb: the total number of MSI-X vector to consume by the VFs
+> > > + *
+> > > + * Sets the number of MSI-X vectors that is possible to consume by the VFs.
+> > > + * This interface is complimentary part of the pci_set_msix_vec_count()
+> > > + * that will be used to configure the required number on the VF.
+> > > + */
+> > > +void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb)
+> > > +{
+> > > +       if (!dev->is_physfn || !dev->driver ||
+> > > +           !dev->driver->sriov_set_msix_vec_count)
+> > > +               return;
 > > > +
-> > > +   pcim_iounmap_regions(pdev, ~0);
-> > > +   pci_set_drvdata(pdev, NULL);
+> > > +       dev->sriov->vf_total_msix = numb;
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(pci_sriov_set_vf_total_msix);
+> > > +
 > >
-> > This hasn't been needed for a long time. Example of removal of similar...
-> > http://patchwork.ozlabs.org/project/netdev/patch/005801ceaec1$6b8d3320$42a79960$%25han@samsung.com/
-> >
+> > This seems broken. What validation is being done on the numb value?
+> > You pass it as int, and your documentation all refers to tests for >=
+> > 0, but isn't a signed input a possibility as well? Also "numb" doesn't
+> > make for a good abbreviation as it is already a word of its own. It
+> > might make more sense to use count or something like that rather than
+> > trying to abbreviate number.
 >
-> Thanks. I copy pasted it from a driver that obviously hasn't been updated yet
-> :-)
->
-> The kfree is still necessary though, right? Earlier in development, I just freed
-> it immediately after creation (this patch is obviously not super useful
-> functionally, but serves nicely for review).
->
-> So we can remove the actual allocation from this patch and move it to later if
-> you think it makes a big difference. My preference is to just leave it doing the
-> kfree and call it good.
+> "Broken" is a nice word to describe misunderstanding.
 
-devm obviates the need for a cxl_mem_remove() to undo cxl_mem_probe()
-actions. This was all devm clean in v2. The other allocation done in
-the probe path is cxl_memdev() allocation, but that is undone by a
-devm_add_action_or_reset() to unregister the device along with typical
-device reference count rules.
+Would you prefer "lacking input validation".
+
+I see all this code in there checking for is_physfn and driver and
+sriov_set_msix_vec_count before allowing the setting of vf_total_msix.
+It just seems like a lot of validation is taking place on the wrong
+things if you are just going to be setting a value reporting the total
+number of MSI-X vectors in use for SR-IOV.
+
+In addition this value seems like a custom purpose being pushed into
+the PCIe code since there isn't anything that defaults the value. It
+seems like at a minimum there should be something that programs a
+default value for both of these new fields that are being added so
+that you pull the maximum number of VFs when SR-IOV is enabled, the
+maximum number of MSI-X vectors from a single VF, and then the default
+value for this should be the multiple of the two which can then be
+overridden later.
+
+> The vf_total_msix is not set by the users and used solely by the drivers
+> to advertise their capability. This field is needed to give a way to
+> calculate how much MSI-X VFs can get. The driver code is part of the
+> kernel and like any other kernel code, it is trusted.
+>
+> I'm checking < 0 in another _set_ routine to make sure that we will be
+> able to extend this sysfs entry if at some point of time negative vector
+> count will make sense.
+
+I would rather have a strict interface that doesn't allow for
+unintended flexibility. Out-of-tree drivers tend to exploit that kind
+of stuff and it is problematic when it can occur.
+
+> "Count" instead of "numb" is fine by me.
+> >
+> >
+> > >  /**
+> > >   * pci_sriov_configure_simple - helper to configure SR-IOV
+> > >   * @dev: the PCI device
+> > > diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> > > index 1fd273077637..0fbe291eb0f2 100644
+> > > --- a/drivers/pci/pci.h
+> > > +++ b/drivers/pci/pci.h
+> > > @@ -327,6 +327,9 @@ struct pci_sriov {
+> > >         u16             subsystem_device; /* VF subsystem device */
+> > >         resource_size_t barsz[PCI_SRIOV_NUM_BARS];      /* VF BAR size */
+> > >         bool            drivers_autoprobe; /* Auto probing of VFs by driver */
+> > > +       int             vf_total_msix;  /* Total number of MSI-X vectors the VFs
+> > > +                                        * can consume
+> > > +                                        */
+> > >  };
+> > >
+> > >  /**
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index a17cfc28eb66..fd9ff1f42a09 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -2074,6 +2074,7 @@ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> > >  int pci_sriov_configure_simple(struct pci_dev *dev, int nr_virtfn);
+> > >  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+> > >  void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+> > > +void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb);
+> > >
+> > >  /* Arch may override these (weak) */
+> > >  int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs);
+> > > @@ -2114,6 +2115,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+> > >  static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+> > >  { return 0; }
+> > >  static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+> > > +static inline void pci_sriov_set_vf_total_msix(struct pci_dev *dev, int numb) {}
+> > >  #endif
+> > >
+> > >  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+> > > --
+> > > 2.29.2
+> > >
