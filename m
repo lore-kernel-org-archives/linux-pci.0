@@ -2,235 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E116DC43332
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BED9C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4060235FF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58A7923359
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728279AbhANCNM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 21:13:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41294 "EHLO mail.kernel.org"
+        id S1729136AbhAMVaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 16:30:04 -0500
+Received: from halon.esss.lu.se ([194.47.240.54]:12561 "EHLO halon.esss.lu.se"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725888AbhAMVtK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jan 2021 16:49:10 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A018E22B37;
-        Wed, 13 Jan 2021 21:48:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610574504;
-        bh=AoAdoj3dhenJpoTSS8I+rn2vHApxce6VRzZdAFQW6Ig=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=arwcqJkVdMSnlMHpeSZTgD6Dpr64G//8Yhz9ThDmwNespzgCt+1h+lf+4dczNb6Qj
-         iF+L8jVjOZXK9mfTtcTDBipxdMWZs6E93Fn+0mlMAoVkCz08eDDugicd3KuRTzEIGo
-         kPoceFbmSfb3btrKL3I2y14Q+tVkA9XDaEyN3zu+JBf+OGn5pt46GcJC6yVJJZ2tgQ
-         3D30SraIoJp0tFXZFpTyb3kPF2+ioNNCMIzgJxkGwg0ghfMjqjbmTdZqS4PO9gIx8H
-         3lBZ1rwCItkBAgGEx6ZYjfTH4i0CMQoSJ9GQwOBj/RkpOeykeurlun8L9xnDkftJnb
-         pnAHn73lYeTdw==
-Date:   Wed, 13 Jan 2021 15:48:22 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Victor Ding <victording@google.com>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ben Chuang <ben.chuang@genesyslogic.com.tw>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        linux-mmc@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH 2/2] mmc: sdhci-pci-gli: Disable ASPM during a suspension
-Message-ID: <20210113214822.GA1923207@bjorn-Precision-5520>
+        id S1729131AbhAMV2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jan 2021 16:28:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ess.eu; s=dec2019;
+        h=content-transfer-encoding:content-type:in-reply-to:mime-version:date:
+         message-id:from:references:to:subject:from;
+        bh=O1B7NYN3uJwWqPKw2mE7UxrsEioPERPl3yB6ASaVYVw=;
+        b=tkAQt+zBUqx058cmBBjs6dUZWg4hqUMyZ3twmPzU/Hdl4BDpDGgA8gl7UUIF5mWQJ4I4mAsljMTql
+         p4L5MWrbDYMzDv7vi2IFREfqKGGr0VGNcUpahlPqOd6Ghz7U6x253EWQLNRMIo88nYXFRQowe0qfg4
+         YsPJrEIzy+xdQdQBDxRS9by7hJHbs/tBoGXxiAZlRl7RlFUJ3WGMULKawjgEhGw36WeLHg+95bm3ek
+         sDyIFoM2MiaSXK2X4lC8UDIsFaq1//GPSyBA/YJKPH8OF+VmhWGRscUq3KVBCzdn1aHRU7CLCEjZ4u
+         KU5solBnMzudhaxTbQhsUDAQNACzcyg==
+Received: from mail.esss.lu.se (it-exch16-4.esss.lu.se [10.0.42.134])
+        by halon.esss.lu.se (Halon) with ESMTPS
+        id 21631d44-55e6-11eb-93c8-005056a66d10;
+        Wed, 13 Jan 2021 22:27:25 +0100 (CET)
+Received: from [192.168.0.6] (194.47.241.248) by it-exch16-4.esss.lu.se
+ (10.0.42.134) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 13 Jan
+ 2021 22:27:30 +0100
+Subject: Re: /proc/iomem and /proc/ioports show 0 for address range
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <375ef4e6-b9a1-d4f2-81b6-582f2152820d@ess.eu>
+ <ae1da3a0-11d3-b1dd-601c-3169e783fcb4@infradead.org>
+From:   Hinko Kocevar <hinko.kocevar@ess.eu>
+Message-ID: <a1a5dcd9-de5f-46ea-10fe-b81693277ed5@ess.eu>
+Date:   Wed, 13 Jan 2021 22:27:30 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANqTbdYYSAvpzN2oaPSb2PUCE=rssj19GueTZmkvmukQWj9vUw@mail.gmail.com>
+In-Reply-To: <ae1da3a0-11d3-b1dd-601c-3169e783fcb4@infradead.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [194.47.241.248]
+X-ClientProxiedBy: it-exch16-4.esss.lu.se (10.0.42.134) To
+ it-exch16-4.esss.lu.se (10.0.42.134)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Rafael, suspend/resume expert]
 
-On Wed, Jan 13, 2021 at 01:16:23PM +1100, Victor Ding wrote:
-> On Wed, Jan 13, 2021 at 9:38 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jan 12, 2021 at 04:02:05AM +0000, Victor Ding wrote:
-> > > GL9750 has a 3100us PortTPowerOnTime; however, it enters L1.2 after
-> > > only ~4us inactivity per PCIe trace. During a suspend/resume process,
-> > > PCI access operations are frequently longer than 4us apart.
-> > > Therefore, the device frequently enters and leaves L1.2 during this
-> > > process, causing longer than desirable suspend/resume time. The total
-> > > time cost due to this L1.2 exit latency could add up to ~200ms.
-> > >
-> > > Considering that PCI access operations are fairly close to each other
-> > > (though sometimes > 4us), the actual time the device could stay in
-> > > L1.2 is negligible. Therefore, the little power-saving benefit from
-> > > ASPM during suspend/resume does not overweight the performance
-> > > degradation caused by long L1.2 exit latency.
-> > >
-> > > Therefore, this patch proposes to disable ASPM during a suspend/resume
-> > > process.
-> >
-> > This sounds like an interesting idea, but it doesn't seem like
-> > anything that's really device-dependent.  Drivers should not need to
-> > be involved in PCI configuration at this level, and they shouldn't
-> > read/write registers like PCI_EXP_LNKCTL directly.
-> >
-> > If we need to disable ASPM during suspend, I'd rather do it in the PCI
-> > core so all devices can benefit and drivers don't need to worry about
-> > it.
-> >
-> Good point. In theory all devices could encounter this issue, and it
-> more-likely occurs on those with low entry timer but high exit latency.
-> GL9750 is the only one I have access to that has such characteristics.
+
+On 1/13/21 7:45 PM, Randy Dunlap wrote:
+> On 1/13/21 2:29 AM, Hinko Kocevar wrote:
+>> [I noticed this while working on PCI devices; not sure which kernel list would be best for this, though]
+>>
+>> I noticed that my system shows address range for iomem and ioports as all 0. Sometimes (after a power cycle) the addresses are proper, albeit I have not been able to see that in a while now, after performing numerous reboots in the last coupe of days.
+>>
+>> FWIW, I think the list of devices (names, count) looks the same in both cases. The system seems to work in both cases; at least I have not seen any complaints in kernel logs, OTOH, not sure what the error message would be.
+>>
+>> What may be the reason for not getting the proper addresses listed?
 > 
-> I think we should have ASPM disabled during suspend, or at least part
-> of the suspend process*, mainly for two reasons:
-> 1. Power saving is expected to be little. During suspend/resume, we
->     frequently access PCI registers, making it unlikely to stay in low
->     power states;
-> 2. It could cause performance degradation. Unfortunate timing could
->     put the device into low power states and wake it up very soon after;
->     resulting noticeable delays.
-> * By "part if the suspend process", I refer [suspend/resume]_noirq, where
-> there are frequent PCI register accesses and suffers most from this issue.
+> config STRICT_DEVMEM
+> 	bool "Filter access to /dev/mem"
 > 
-> Ideally, the entry time could be tune so that it is long enough that the
-> device would not go into low power states during suspend; however, it
-> may not be feasible mainly because:
-> 1. Hardware limitations;
-> 2. The best timing for suspend/resume may not be the best timing for other
->     tasks. Considering suspend/resume is a rare task, we probably do not
->     want to sacrifice other tasks;
-> 3. If the goal is to avoid entering low power states during suspend, it might
->     be better just to disable it.
+> and
 > 
-> What do you think?
+> config IO_STRICT_DEVMEM
+> 	bool "Filter I/O access to /dev/mem"
+> 
+> so what are your CONFIG_STRICT_DEVMEM and CONFIG_IO_STRICT_DEVMEM set to?
 
-I think we should look at disabling ASPM for all devices during
-suspend.  I really don't want to put this kind of gunk in individual
-drivers.  If we *have* to put something in drivers, it should be using
-interfaces like pci_disable_link_state() instead of writing
-PCI_EXP_LNKCTL directly.
+Yeah, they're set. Did not notice that since I'm using some CentOS stock 
+config.
 
-I *would* be interested in more details about this issue you're seeing
-with GS9750, though.  It will help the case for a core change if we
-can open a bugzilla.kernel.org issue with some of the details like the
-L1 exit latency (from "lspci -vv") and details of the activities that
-lead to these delays.  Typical L1 exit latencies are <100us, so to see
-200ms of delay would mean ~2000 L1.2 exits, which is higher than I
-would expect.
+> 
+> What do you see in /proc/iomem and /proc/ioports if you are admin/root?
+> That should be non-zero values.
 
-> > > Signed-off-by: Victor Ding <victording@google.com>
-> > > ---
-> > >
-> > >  drivers/mmc/host/sdhci-pci-core.c |  2 +-
-> > >  drivers/mmc/host/sdhci-pci-gli.c  | 46 +++++++++++++++++++++++++++++--
-> > >  drivers/mmc/host/sdhci-pci.h      |  1 +
-> > >  3 files changed, 46 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/mmc/host/sdhci-pci-core.c b/drivers/mmc/host/sdhci-pci-core.c
-> > > index 9552708846ca..fd7544a498c0 100644
-> > > --- a/drivers/mmc/host/sdhci-pci-core.c
-> > > +++ b/drivers/mmc/host/sdhci-pci-core.c
-> > > @@ -67,7 +67,7 @@ static int sdhci_pci_init_wakeup(struct sdhci_pci_chip *chip)
-> > >       return 0;
-> > >  }
-> > >
-> > > -static int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip)
-> > > +int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip)
-> > >  {
-> > >       int i, ret;
-> > >
-> > > diff --git a/drivers/mmc/host/sdhci-pci-gli.c b/drivers/mmc/host/sdhci-pci-gli.c
-> > > index 9887485a4134..c7b788b0e22e 100644
-> > > --- a/drivers/mmc/host/sdhci-pci-gli.c
-> > > +++ b/drivers/mmc/host/sdhci-pci-gli.c
-> > > @@ -109,6 +109,12 @@
-> > >
-> > >  #define GLI_MAX_TUNING_LOOP 40
-> > >
-> > > +#ifdef CONFIG_PM_SLEEP
-> > > +struct gli_host {
-> > > +     u16 linkctl_saved;
-> > > +};
-> > > +#endif
-> > > +
-> > >  /* Genesys Logic chipset */
-> > >  static inline void gl9750_wt_on(struct sdhci_host *host)
-> > >  {
-> > > @@ -577,14 +583,48 @@ static u32 sdhci_gl9750_readl(struct sdhci_host *host, int reg)
-> > >  }
-> > >
-> > >  #ifdef CONFIG_PM_SLEEP
-> > > +static int sdhci_pci_gli_suspend(struct sdhci_pci_chip *chip)
-> > > +{
-> > > +     int ret;
-> > > +     struct sdhci_pci_slot *slot = chip->slots[0];
-> > > +     struct pci_dev *pdev = slot->chip->pdev;
-> > > +     struct gli_host *gli_host = sdhci_pci_priv(slot);
-> > > +
-> > > +     ret = pcie_capability_read_word(pdev, PCI_EXP_LNKCTL,
-> > > +                     &gli_host->linkctl_saved);
-> > > +     if (ret)
-> > > +             goto exit;
-> > > +
-> > > +     ret = pcie_capability_write_word(pdev, PCI_EXP_LNKCTL,
-> > > +                     gli_host->linkctl_saved & ~PCI_EXP_LNKCTL_ASPMC);
-> > > +     if (ret)
-> > > +             goto exit;
-> > > +
-> > > +     ret = sdhci_pci_suspend_host(chip);
-> > > +
-> > > +exit:
-> > > +     return ret;
-> > > +}
-> > > +
-> > >  static int sdhci_pci_gli_resume(struct sdhci_pci_chip *chip)
-> > >  {
-> > > +     int ret;
-> > >       struct sdhci_pci_slot *slot = chip->slots[0];
-> > > +     struct pci_dev *pdev = slot->chip->pdev;
-> > > +     struct gli_host *gli_host = sdhci_pci_priv(slot);
-> > >
-> > > -     pci_free_irq_vectors(slot->chip->pdev);
-> > > +     pci_free_irq_vectors(pdev);
-> > >       gli_pcie_enable_msi(slot);
-> > >
-> > > -     return sdhci_pci_resume_host(chip);
-> > > +     ret = sdhci_pci_resume_host(chip);
-> > > +     if (ret)
-> > > +             goto exit;
-> > > +
-> > > +     ret = pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
-> > > +                     PCI_EXP_LNKCTL_ASPMC, gli_host->linkctl_saved);
-> > > +
-> > > +exit:
-> > > +     return ret;
-> > >  }
-> > >
-> > >  static int sdhci_cqhci_gli_resume(struct sdhci_pci_chip *chip)
-> > > @@ -834,7 +874,9 @@ const struct sdhci_pci_fixes sdhci_gl9750 = {
-> > >       .probe_slot     = gli_probe_slot_gl9750,
-> > >       .ops            = &sdhci_gl9750_ops,
-> > >  #ifdef CONFIG_PM_SLEEP
-> > > +     .suspend        = sdhci_pci_gli_suspend,
-> > >       .resume         = sdhci_pci_gli_resume,
-> > > +     .priv_size      = sizeof(struct gli_host),
-> > >  #endif
-> > >  };
-> > >
-> > > diff --git a/drivers/mmc/host/sdhci-pci.h b/drivers/mmc/host/sdhci-pci.h
-> > > index d0ed232af0eb..16187a265e63 100644
-> > > --- a/drivers/mmc/host/sdhci-pci.h
-> > > +++ b/drivers/mmc/host/sdhci-pci.h
-> > > @@ -187,6 +187,7 @@ static inline void *sdhci_pci_priv(struct sdhci_pci_slot *slot)
-> > >  }
-> > >
-> > >  #ifdef CONFIG_PM_SLEEP
-> > > +int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip);
-> > >  int sdhci_pci_resume_host(struct sdhci_pci_chip *chip);
-> > >  #endif
-> > >  int sdhci_pci_enable_dma(struct sdhci_host *host);
-> > > --
-> > > 2.30.0.284.gd98b1dd5eaa7-goog
-> > >
+You are right. Using sudo shows the values.
+
+Thanks!
+
+> 
+>> This likely poses any issues for userspace tools that would look at those /proc files, OTOH, I wonder if would kernel suffer in any way as well?
+> 
+> Yes, it could affect userspace.
+> 
+>> Kernel version is 5.10.0 (pci git tree).
+>>
+>> [dev@bd-cpu18 ~]$ cat /proc/iomem
+>> 00000000-00000000 : Reserved
+>> 00000000-00000000 : System RAM
+>> 00000000-00000000 : Reserved
+>> 00000000-00000000 : PCI Bus 0000:00
+>> 00000000-00000000 : Video ROM
+>> 00000000-00000000 : Reserved
+>>    00000000-00000000 : System ROM
+>> 00000000-00000000 : System RAM
+>>    00000000-00000000 : Kernel code
+>>    00000000-00000000 : Kernel rodata
+>>    00000000-00000000 : Kernel data
+>>    00000000-00000000 : Kernel bss
+> 
+> 
