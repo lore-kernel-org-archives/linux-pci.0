@@ -2,115 +2,164 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BED9C433DB
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59FFBC4332B
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58A7923359
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E69823343
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:15:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729136AbhAMVaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 16:30:04 -0500
-Received: from halon.esss.lu.se ([194.47.240.54]:12561 "EHLO halon.esss.lu.se"
+        id S1728342AbhANCOj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 21:14:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39792 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729131AbhAMV2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jan 2021 16:28:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ess.eu; s=dec2019;
-        h=content-transfer-encoding:content-type:in-reply-to:mime-version:date:
-         message-id:from:references:to:subject:from;
-        bh=O1B7NYN3uJwWqPKw2mE7UxrsEioPERPl3yB6ASaVYVw=;
-        b=tkAQt+zBUqx058cmBBjs6dUZWg4hqUMyZ3twmPzU/Hdl4BDpDGgA8gl7UUIF5mWQJ4I4mAsljMTql
-         p4L5MWrbDYMzDv7vi2IFREfqKGGr0VGNcUpahlPqOd6Ghz7U6x253EWQLNRMIo88nYXFRQowe0qfg4
-         YsPJrEIzy+xdQdQBDxRS9by7hJHbs/tBoGXxiAZlRl7RlFUJ3WGMULKawjgEhGw36WeLHg+95bm3ek
-         sDyIFoM2MiaSXK2X4lC8UDIsFaq1//GPSyBA/YJKPH8OF+VmhWGRscUq3KVBCzdn1aHRU7CLCEjZ4u
-         KU5solBnMzudhaxTbQhsUDAQNACzcyg==
-Received: from mail.esss.lu.se (it-exch16-4.esss.lu.se [10.0.42.134])
-        by halon.esss.lu.se (Halon) with ESMTPS
-        id 21631d44-55e6-11eb-93c8-005056a66d10;
-        Wed, 13 Jan 2021 22:27:25 +0100 (CET)
-Received: from [192.168.0.6] (194.47.241.248) by it-exch16-4.esss.lu.se
- (10.0.42.134) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Wed, 13 Jan
- 2021 22:27:30 +0100
-Subject: Re: /proc/iomem and /proc/ioports show 0 for address range
-To:     Randy Dunlap <rdunlap@infradead.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <375ef4e6-b9a1-d4f2-81b6-582f2152820d@ess.eu>
- <ae1da3a0-11d3-b1dd-601c-3169e783fcb4@infradead.org>
-From:   Hinko Kocevar <hinko.kocevar@ess.eu>
-Message-ID: <a1a5dcd9-de5f-46ea-10fe-b81693277ed5@ess.eu>
-Date:   Wed, 13 Jan 2021 22:27:30 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+        id S1729087AbhAMV1N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jan 2021 16:27:13 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 08C8720DD4;
+        Wed, 13 Jan 2021 21:25:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610573125;
+        bh=CnNxb+8yGGrLBAdxm2EQDAH/OEkEdMsqk9sG6FYEJhM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=eLUDRnQEWM7PadLAq9Mxy0LQgQSTTIRG2PFDBR1vmeo59UTtBYUPPzA+x5daVASKK
+         QebCIIOTKjo3xCN5j3hjYDqlvtT4JCvJ6U8deVhBK+/F/AlZZR4tLIWraC0ALEDx19
+         o1Xw6SVLODjDiefwPnbD9yKWmpoF5jyQfSDOnIeTJX16brh7nZjzZ0KtagDMMvf+ru
+         IpOLmHL2eOVgqvIKpWF4tiJzuHCKNK4LnD7vVpd5aLHaWyfnrhHQw35WjqW648Pw4C
+         8fMjICRch3UpWJzLjx4eWAZKjF/oQYLZg490gUlbHgioBxaabEzeLCWjii3rsLlAbb
+         k8DS5SP1imY7g==
+Date:   Wed, 13 Jan 2021 15:25:23 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Heiner Kallweit <hkallweit1@gmail.com>
+Cc:     Lennert Buytenhek <kernel@wantstofly.org>,
+        Russell King - ARM Linux <linux@armlinux.org.uk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        David Miller <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH v3 1/3] PCI: Disable parity checking if broken_parity is
+ set
+Message-ID: <20210113212523.GA1933362@bjorn-Precision-5520>
 MIME-Version: 1.0
-In-Reply-To: <ae1da3a0-11d3-b1dd-601c-3169e783fcb4@infradead.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [194.47.241.248]
-X-ClientProxiedBy: it-exch16-4.esss.lu.se (10.0.42.134) To
- it-exch16-4.esss.lu.se (10.0.42.134)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8e9c5b3a-f239-8d8d-08e5-015ec38dd3a0@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Wed, Jan 13, 2021 at 09:52:23PM +0100, Heiner Kallweit wrote:
+> On 06.01.2021 20:34, Heiner Kallweit wrote:
+> > On 06.01.2021 20:22, Bjorn Helgaas wrote:
+> >> On Wed, Jan 06, 2021 at 06:50:22PM +0100, Heiner Kallweit wrote:
+> >>> If we know that a device has broken parity checking, then disable it.
+> >>> This avoids quirks like in r8169 where on the first parity error
+> >>> interrupt parity checking will be disabled if broken_parity_status
+> >>> is set. Make pci_quirk_broken_parity() public so that it can be used
+> >>> by platform code, e.g. for Thecus N2100.
+> >>>
+> >>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+> >>> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+> >>
+> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>
+> >> This series should all go together.  Let me know if you want me to do
+> >> anything more (would require acks for arm and r8169, of course).
+> >>
+> > Right. For r8169 I'm the maintainer myself and agreed with Jakub that
+> > the r8169 patch will go through the PCI tree.
+> > 
+> > Regarding the arm/iop32x part:
+> > MAINTAINERS file lists Lennert as maintainer, let me add him.
+> > Strange thing is that the MAINTAINERS entry for arm/iop32x has no
+> > F entry, therefore the get_maintainers scripts will never list him
+> > as addressee. The script lists Russell as "odd fixer".
+> > @Lennert: Please provide a patch to add the missing F entry.
+> > 
+> > ARM/INTEL IOP32X ARM ARCHITECTURE
+> > M:	Lennert Buytenhek <kernel@wantstofly.org>
+> > L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> > S:	Maintained
+> 
+> Bjorn, I saw that you set the series to "not applicable". Is this because
+> of the missing ack for the arm part?
 
+No, it's because I screwed up.  I use "not applicable" when I expect
+patches to go via another tree.  I just missed your note about merging
+via the PCI tree.  I'll take a look soon.
 
-On 1/13/21 7:45 PM, Randy Dunlap wrote:
-> On 1/13/21 2:29 AM, Hinko Kocevar wrote:
->> [I noticed this while working on PCI devices; not sure which kernel list would be best for this, though]
->>
->> I noticed that my system shows address range for iomem and ioports as all 0. Sometimes (after a power cycle) the addresses are proper, albeit I have not been able to see that in a while now, after performing numerous reboots in the last coupe of days.
->>
->> FWIW, I think the list of devices (names, count) looks the same in both cases. The system seems to work in both cases; at least I have not seen any complaints in kernel logs, OTOH, not sure what the error message would be.
->>
->> What may be the reason for not getting the proper addresses listed?
+> I checked and Lennert's last kernel contribution is from 2015. Having said
+> that the maintainer's entry may be outdated. Not sure who else would be
+> entitled to ack this patch. The change is simple enough, could you take
+> it w/o an ack? 
+> Alternatively, IIRC Russell has got such a device. Russell, would it
+> be possible that you test that there's still no false-positive parity
+> errors with this series?
 > 
-> config STRICT_DEVMEM
-> 	bool "Filter access to /dev/mem"
 > 
-> and
-> 
-> config IO_STRICT_DEVMEM
-> 	bool "Filter I/O access to /dev/mem"
-> 
-> so what are your CONFIG_STRICT_DEVMEM and CONFIG_IO_STRICT_DEVMEM set to?
-
-Yeah, they're set. Did not notice that since I'm using some CentOS stock 
-config.
-
-> 
-> What do you see in /proc/iomem and /proc/ioports if you are admin/root?
-> That should be non-zero values.
-
-You are right. Using sudo shows the values.
-
-Thanks!
-
-> 
->> This likely poses any issues for userspace tools that would look at those /proc files, OTOH, I wonder if would kernel suffer in any way as well?
-> 
-> Yes, it could affect userspace.
-> 
->> Kernel version is 5.10.0 (pci git tree).
->>
->> [dev@bd-cpu18 ~]$ cat /proc/iomem
->> 00000000-00000000 : Reserved
->> 00000000-00000000 : System RAM
->> 00000000-00000000 : Reserved
->> 00000000-00000000 : PCI Bus 0000:00
->> 00000000-00000000 : Video ROM
->> 00000000-00000000 : Reserved
->>    00000000-00000000 : System ROM
->> 00000000-00000000 : System RAM
->>    00000000-00000000 : Kernel code
->>    00000000-00000000 : Kernel rodata
->>    00000000-00000000 : Kernel data
->>    00000000-00000000 : Kernel bss
-> 
+> > 
+> >>> ---
+> >>>  drivers/pci/quirks.c | 17 +++++++++++------
+> >>>  include/linux/pci.h  |  2 ++
+> >>>  2 files changed, 13 insertions(+), 6 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >>> index 653660e3b..ab54e26b8 100644
+> >>> --- a/drivers/pci/quirks.c
+> >>> +++ b/drivers/pci/quirks.c
+> >>> @@ -205,17 +205,22 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
+> >>>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+> >>>  				PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
+> >>>  
+> >>> +void pci_quirk_broken_parity(struct pci_dev *dev)
+> >>> +{
+> >>> +	u16 cmd;
+> >>> +
+> >>> +	dev->broken_parity_status = 1;	/* This device gives false positives */
+> >>> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> >>> +	pci_write_config_word(dev, PCI_COMMAND, cmd & ~PCI_COMMAND_PARITY);
+> >>> +}
+> >>> +
+> >>>  /*
+> >>>   * The Mellanox Tavor device gives false positive parity errors.  Mark this
+> >>>   * device with a broken_parity_status to allow PCI scanning code to "skip"
+> >>>   * this now blacklisted device.
+> >>>   */
+> >>> -static void quirk_mellanox_tavor(struct pci_dev *dev)
+> >>> -{
+> >>> -	dev->broken_parity_status = 1;	/* This device gives false positives */
+> >>> -}
+> >>> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR, quirk_mellanox_tavor);
+> >>> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE, quirk_mellanox_tavor);
+> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR, pci_quirk_broken_parity);
+> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE, pci_quirk_broken_parity);
+> >>>  
+> >>>  /*
+> >>>   * Deal with broken BIOSes that neglect to enable passive release,
+> >>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >>> index b32126d26..161dcc474 100644
+> >>> --- a/include/linux/pci.h
+> >>> +++ b/include/linux/pci.h
+> >>> @@ -1916,6 +1916,8 @@ enum pci_fixup_pass {
+> >>>  	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
+> >>>  };
+> >>>  
+> >>> +void pci_quirk_broken_parity(struct pci_dev *dev);
+> >>> +
+> >>>  #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
+> >>>  #define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
+> >>>  				    class_shift, hook)			\
+> >>> -- 
+> >>> 2.30.0
+> >>>
+> >>>
+> >>>
+> > 
 > 
