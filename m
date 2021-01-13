@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E567C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C52D9C4332D
 	for <linux-pci@archiver.kernel.org>; Wed, 13 Jan 2021 11:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09DCB233ED
+	by mail.kernel.org (Postfix) with ESMTP id 8719B233ED
 	for <linux-pci@archiver.kernel.org>; Wed, 13 Jan 2021 11:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726184AbhAMLlm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 06:41:42 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:60724 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725901AbhAMLlk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2021 06:41:40 -0500
-X-UUID: 581784e97650406c829ba59661b656b4-20210113
-X-UUID: 581784e97650406c829ba59661b656b4-20210113
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        id S1726398AbhAMLlq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 06:41:46 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:34873 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725372AbhAMLlp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2021 06:41:45 -0500
+X-UUID: 44ac158b0788455b9472110cc5bb09d9-20210113
+X-UUID: 44ac158b0788455b9472110cc5bb09d9-20210113
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <jianjun.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1518733740; Wed, 13 Jan 2021 19:40:55 +0800
+        with ESMTP id 693322507; Wed, 13 Jan 2021 19:40:58 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 13 Jan 2021 19:40:54 +0800
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 13 Jan 2021 19:40:56 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 13 Jan 2021 19:40:53 +0800
+ Transport; Wed, 13 Jan 2021 19:40:55 +0800
 From:   Jianjun Wang <jianjun.wang@mediatek.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>, <maz@kernel.org>,
@@ -47,9 +47,9 @@ CC:     Philipp Zabel <p.zabel@pengutronix.de>,
         <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>,
         <drinkcat@chromium.org>, <Rex-BC.Chen@mediatek.com>,
         <anson.chuang@mediatek.com>
-Subject: [v7,1/7] dt-bindings: PCI: mediatek-gen3: Add YAML schema
-Date:   Wed, 13 Jan 2021 19:39:55 +0800
-Message-ID: <20210113114001.5804-2-jianjun.wang@mediatek.com>
+Subject: [v7,3/7] PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192
+Date:   Wed, 13 Jan 2021 19:39:57 +0800
+Message-ID: <20210113114001.5804-4-jianjun.wang@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20210113114001.5804-1-jianjun.wang@mediatek.com>
 References: <20210113114001.5804-1-jianjun.wang@mediatek.com>
@@ -60,194 +60,526 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add YAML schemas documentation for Gen3 PCIe controller on
-MediaTek SoCs.
+MediaTek's PCIe host controller has three generation HWs, the new
+generation HW is an individual bridge, it supports Gen3 speed and
+compatible with Gen2, Gen1 speed.
+
+Add support for new Gen3 controller which can be found on MT8192.
 
 Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
 Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../bindings/pci/mediatek-pcie-gen3.yaml      | 172 ++++++++++++++++++
- 1 file changed, 172 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+ drivers/pci/controller/Kconfig              |  13 +
+ drivers/pci/controller/Makefile             |   1 +
+ drivers/pci/controller/pcie-mediatek-gen3.c | 463 ++++++++++++++++++++
+ 3 files changed, 477 insertions(+)
+ create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 64e2f5e379aa..b242b17025b3 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -242,6 +242,19 @@ config PCIE_MEDIATEK
+ 	  Say Y here if you want to enable PCIe controller support on
+ 	  MediaTek SoCs.
+ 
++config PCIE_MEDIATEK_GEN3
++	tristate "MediaTek Gen3 PCIe controller"
++	depends on ARCH_MEDIATEK || COMPILE_TEST
++	depends on PCI_MSI_IRQ_DOMAIN
++	help
++	  Adds support for PCIe Gen3 MAC controller for MediaTek SoCs.
++	  This PCIe controller is compatible with Gen3, Gen2 and Gen1 speed,
++	  and support up to 256 MSI interrupt numbers for
++	  multi-function devices.
++
++	  Say Y here if you want to enable Gen3 PCIe controller support on
++	  MediaTek SoCs.
++
+ config PCIE_TANGO_SMP8759
+ 	bool "Tango SMP8759 PCIe controller (DANGEROUS)"
+ 	depends on ARCH_TANGO && PCI_MSI && OF
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 04c6edc285c5..df5d77d72a9d 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -27,6 +27,7 @@ obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+ obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+ obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
++obj-$(CONFIG_PCIE_MEDIATEK_GEN3) += pcie-mediatek-gen3.o
+ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+ obj-$(CONFIG_VMD) += vmd.o
+ obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
 new file mode 100644
-index 000000000000..f133fb0184f1
+index 000000000000..c00ea7c167de
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -0,0 +1,172 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/mediatek-pcie-gen3.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -0,0 +1,463 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * MediaTek PCIe host controller driver.
++ *
++ * Copyright (c) 2020 MediaTek Inc.
++ * Author: Jianjun Wang <jianjun.wang@mediatek.com>
++ */
 +
-+title: Gen3 PCIe controller on MediaTek SoCs
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/iopoll.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_clk.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
++#include <linux/reset.h>
 +
-+maintainers:
-+  - Jianjun Wang <jianjun.wang@mediatek.com>
++#include "../pci.h"
 +
-+description: |+
-+  PCIe Gen3 MAC controller for MediaTek SoCs, it supports Gen3 speed
-+  and compatible with Gen2, Gen1 speed.
++#define PCIE_SETTING_REG		0x80
++#define PCIE_PCI_IDS_1			0x9c
++#define PCI_CLASS(class)		(class << 8)
++#define PCIE_RC_MODE			BIT(0)
 +
-+  This PCIe controller supports up to 256 MSI vectors, the MSI hardware
-+  block diagram is as follows:
++#define PCIE_CFGNUM_REG			0x140
++#define PCIE_CFG_DEVFN(devfn)		((devfn) & GENMASK(7, 0))
++#define PCIE_CFG_BUS(bus)		(((bus) << 8) & GENMASK(15, 8))
++#define PCIE_CFG_BYTE_EN(bytes)		(((bytes) << 16) & GENMASK(19, 16))
++#define PCIE_CFG_FORCE_BYTE_EN		BIT(20)
++#define PCIE_CFG_OFFSET_ADDR		0x1000
++#define PCIE_CFG_HEADER(bus, devfn) \
++	(PCIE_CFG_BUS(bus) | PCIE_CFG_DEVFN(devfn))
 +
-+                    +-----+
-+                    | GIC |
-+                    +-----+
-+                       ^
-+                       |
-+                   port->irq
-+                       |
-+               +-+-+-+-+-+-+-+-+
-+               |0|1|2|3|4|5|6|7| (PCIe intc)
-+               +-+-+-+-+-+-+-+-+
-+                ^ ^           ^
-+                | |    ...    |
-+        +-------+ +------+    +-----------+
-+        |                |                |
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+  |0|1|...|30|31|  |0|1|...|30|31|  |0|1|...|30|31| (MSI sets)
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+   ^ ^      ^  ^    ^ ^      ^  ^    ^ ^      ^  ^
-+   | |      |  |    | |      |  |    | |      |  |  (MSI vectors)
-+   | |      |  |    | |      |  |    | |      |  |
++#define PCIE_RST_CTRL_REG		0x148
++#define PCIE_MAC_RSTB			BIT(0)
++#define PCIE_PHY_RSTB			BIT(1)
++#define PCIE_BRG_RSTB			BIT(2)
++#define PCIE_PE_RSTB			BIT(3)
 +
-+    (MSI SET0)       (MSI SET1)  ...   (MSI SET7)
++#define PCIE_LTSSM_STATUS_REG		0x150
 +
-+  With 256 MSI vectors supported, the MSI vectors are composed of 8 sets,
-+  each set has its own address for MSI message, and supports 32 MSI vectors
-+  to generate interrupt.
++#define PCIE_LINK_STATUS_REG		0x154
++#define PCIE_PORT_LINKUP		BIT(8)
 +
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
++#define PCIE_TRANS_TABLE_BASE_REG	0x800
++#define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
++#define PCIE_ATR_TRSL_ADDR_LSB_OFFSET	0x8
++#define PCIE_ATR_TRSL_ADDR_MSB_OFFSET	0xc
++#define PCIE_ATR_TRSL_PARAM_OFFSET	0x10
++#define PCIE_ATR_TLB_SET_OFFSET		0x20
 +
-+properties:
-+  compatible:
-+    const: mediatek,mt8192-pcie
++#define PCIE_MAX_TRANS_TABLES		8
++#define PCIE_ATR_EN			BIT(0)
++#define PCIE_ATR_SIZE(size) \
++	(((((size) - 1) << 1) & GENMASK(6, 1)) | PCIE_ATR_EN)
++#define PCIE_ATR_ID(id)			((id) & GENMASK(3, 0))
++#define PCIE_ATR_TYPE_MEM		PCIE_ATR_ID(0)
++#define PCIE_ATR_TYPE_IO		PCIE_ATR_ID(1)
++#define PCIE_ATR_TLP_TYPE(type)		(((type) << 16) & GENMASK(18, 16))
++#define PCIE_ATR_TLP_TYPE_MEM		PCIE_ATR_TLP_TYPE(0)
++#define PCIE_ATR_TLP_TYPE_IO		PCIE_ATR_TLP_TYPE(2)
 +
-+  reg:
-+    maxItems: 1
++/**
++ * struct mtk_pcie_port - PCIe port information
++ * @dev: pointer to PCIe device
++ * @base: IO mapped register base
++ * @reg_base: Physical register base
++ * @mac_reset: mac reset control
++ * @phy_reset: phy reset control
++ * @phy: PHY controller block
++ * @clks: PCIe clocks
++ * @num_clks: PCIe clocks count for this port
++ */
++struct mtk_pcie_port {
++	struct device *dev;
++	void __iomem *base;
++	phys_addr_t reg_base;
++	struct reset_control *mac_reset;
++	struct reset_control *phy_reset;
++	struct phy *phy;
++	struct clk_bulk_data *clks;
++	int num_clks;
++};
 +
-+  interrupts:
-+    maxItems: 1
++/**
++ * mtk_pcie_config_tlp_header
++ * @bus: PCI bus to query
++ * @devfn: device/function number
++ * @where: offset in config space
++ * @size: data size in TLP header
++ *
++ * Set byte enable field and device information in configuration TLP header.
++ */
++static void mtk_pcie_config_tlp_header(struct pci_bus *bus, unsigned int devfn,
++					int where, int size)
++{
++	struct mtk_pcie_port *port = bus->sysdata;
++	int bytes;
++	u32 val;
 +
-+  ranges:
-+    minItems: 1
-+    maxItems: 8
++	bytes = (GENMASK(size - 1, 0) & 0xf) << (where & 0x3);
 +
-+  resets:
-+    minItems: 1
-+    maxItems: 2
++	val = PCIE_CFG_FORCE_BYTE_EN | PCIE_CFG_BYTE_EN(bytes) |
++	      PCIE_CFG_HEADER(bus->number, devfn);
 +
-+  reset-names:
-+    anyOf:
-+      - const: mac
-+      - const: phy
++	writel_relaxed(val, port->base + PCIE_CFGNUM_REG);
++}
 +
-+  clocks:
-+    maxItems: 6
++static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
++				      int where)
++{
++	struct mtk_pcie_port *port = bus->sysdata;
 +
-+  clock-names:
-+    items:
-+      - const: pl_250m
-+      - const: tl_26m
-+      - const: tl_96m
-+      - const: tl_32k
-+      - const: peri_26m
-+      - const: top_133m
++	return port->base + PCIE_CFG_OFFSET_ADDR + where;
++}
 +
-+  assigned-clocks:
-+    maxItems: 1
++static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 *val)
++{
++	mtk_pcie_config_tlp_header(bus, devfn, where, size);
 +
-+  assigned-clock-parents:
-+    maxItems: 1
++	return pci_generic_config_read32(bus, devfn, where, size, val);
++}
 +
-+  phys:
-+    maxItems: 1
++static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 val)
++{
++	mtk_pcie_config_tlp_header(bus, devfn, where, size);
 +
-+  '#interrupt-cells':
-+    const: 1
++	if (size <= 2)
++		val <<= (where & 0x3) * 8;
 +
-+  interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    properties:
-+      '#address-cells':
-+        const: 0
-+      '#interrupt-cells':
-+        const: 1
-+      interrupt-controller: true
++	return pci_generic_config_write32(bus, devfn, where, 4, val);
++}
 +
-+    required:
-+      - '#address-cells'
-+      - '#interrupt-cells'
-+      - interrupt-controller
++static struct pci_ops mtk_pcie_ops = {
++	.map_bus = mtk_pcie_map_bus,
++	.read  = mtk_pcie_config_read,
++	.write = mtk_pcie_config_write,
++};
 +
-+    additionalProperties: false
++static int mtk_pcie_set_trans_table(struct mtk_pcie_port *port,
++				    resource_size_t cpu_addr,
++				    resource_size_t pci_addr,
++				    resource_size_t size,
++				    unsigned long type, int num)
++{
++	void __iomem *table;
++	u32 val;
 +
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+  - ranges
-+  - clocks
-+  - '#interrupt-cells'
-+  - interrupt-controller
++	if (num >= PCIE_MAX_TRANS_TABLES) {
++		dev_err(port->dev, "not enough translate table[%d] for addr: %#llx, limited to [%d]\n",
++			num, (unsigned long long) cpu_addr,
++			PCIE_MAX_TRANS_TABLES);
++		return -ENODEV;
++	}
 +
-+unevaluatedProperties: false
++	table = port->base + PCIE_TRANS_TABLE_BASE_REG +
++		num * PCIE_ATR_TLB_SET_OFFSET;
 +
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
++	writel_relaxed(lower_32_bits(cpu_addr) | PCIE_ATR_SIZE(fls(size) - 1),
++		       table);
++	writel_relaxed(upper_32_bits(cpu_addr),
++		       table + PCIE_ATR_SRC_ADDR_MSB_OFFSET);
++	writel_relaxed(lower_32_bits(pci_addr),
++		       table + PCIE_ATR_TRSL_ADDR_LSB_OFFSET);
++	writel_relaxed(upper_32_bits(pci_addr),
++		       table + PCIE_ATR_TRSL_ADDR_MSB_OFFSET);
 +
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
++	if (type == IORESOURCE_IO)
++		val = PCIE_ATR_TYPE_IO | PCIE_ATR_TLP_TYPE_IO;
++	else
++		val = PCIE_ATR_TYPE_MEM | PCIE_ATR_TLP_TYPE_MEM;
 +
-+        pcie: pcie@11230000 {
-+            compatible = "mediatek,mt8192-pcie";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            reg = <0x00 0x11230000 0x00 0x4000>;
-+            reg-names = "pcie-mac";
-+            interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH 0>;
-+            bus-range = <0x00 0xff>;
-+            ranges = <0x82000000 0x00 0x12000000 0x00
-+                      0x12000000 0x00 0x1000000>;
-+            clocks = <&infracfg 44>,
-+                     <&infracfg 40>,
-+                     <&infracfg 43>,
-+                     <&infracfg 97>,
-+                     <&infracfg 99>,
-+                     <&infracfg 111>;
-+            clock-names = "pl_250m", "tl_26m", "tl_96m",
-+                          "tl_32k", "peri_26m", "top_133m";
-+            assigned-clocks = <&topckgen 50>;
-+            assigned-clock-parents = <&topckgen 91>;
++	writel_relaxed(val, table + PCIE_ATR_TRSL_PARAM_OFFSET);
 +
-+            phys = <&pciephy>;
-+            phy-names = "pcie-phy";
-+            resets = <&infracfg_rst 0>;
-+            reset-names = "phy";
++	return 0;
++}
 +
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+                            <0 0 0 2 &pcie_intc 1>,
-+                            <0 0 0 3 &pcie_intc 2>,
-+                            <0 0 0 4 &pcie_intc 3>;
-+            pcie_intc: interrupt-controller {
-+                      #address-cells = <0>;
-+                      #interrupt-cells = <1>;
-+                      interrupt-controller;
-+            };
-+        };
-+    };
++static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
++{
++	struct resource_entry *entry;
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(port);
++	unsigned int table_index = 0;
++	int err;
++	u32 val;
++
++	/* Set as RC mode */
++	val = readl_relaxed(port->base + PCIE_SETTING_REG);
++	val |= PCIE_RC_MODE;
++	writel_relaxed(val, port->base + PCIE_SETTING_REG);
++
++	/* Set class code */
++	val = readl_relaxed(port->base + PCIE_PCI_IDS_1);
++	val &= ~GENMASK(31, 8);
++	val |= PCI_CLASS(PCI_CLASS_BRIDGE_PCI << 8);
++	writel_relaxed(val, port->base + PCIE_PCI_IDS_1);
++
++	/* Assert all reset signals */
++	val = readl_relaxed(port->base + PCIE_RST_CTRL_REG);
++	val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB;
++	writel_relaxed(val, port->base + PCIE_RST_CTRL_REG);
++
++	/* De-assert reset signals */
++	val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
++	writel_relaxed(val, port->base + PCIE_RST_CTRL_REG);
++
++	/* Delay 100ms to wait the reference clocks become stable */
++	msleep(100);
++
++	/* De-assert PERST# signal */
++	val &= ~PCIE_PE_RSTB;
++	writel_relaxed(val, port->base + PCIE_RST_CTRL_REG);
++
++	/* Check if the link is up or not */
++	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_REG, val,
++				 !!(val & PCIE_PORT_LINKUP), 20,
++				 50 * USEC_PER_MSEC);
++	if (err) {
++		val = readl_relaxed(port->base + PCIE_LTSSM_STATUS_REG);
++		dev_err(port->dev, "PCIe link down, ltssm reg val: %#x\n", val);
++		return err;
++	}
++
++	/* Set PCIe translation windows */
++	resource_list_for_each_entry(entry, &host->windows) {
++		struct resource *res = entry->res;
++		unsigned long type = resource_type(res);
++		resource_size_t cpu_addr;
++		resource_size_t pci_addr;
++		resource_size_t size;
++		const char *range_type;
++
++		if (type == IORESOURCE_IO) {
++			cpu_addr = pci_pio_to_address(res->start);
++			range_type = "IO";
++		} else if (type == IORESOURCE_MEM) {
++			cpu_addr = res->start;
++			range_type = "MEM";
++		} else {
++			continue;
++		}
++
++		pci_addr = res->start - entry->offset;
++		size = resource_size(res);
++		err = mtk_pcie_set_trans_table(port, cpu_addr, pci_addr, size,
++					       type, table_index);
++		if (err)
++			return err;
++
++		dev_dbg(port->dev, "set %s trans window[%d]: cpu_addr = %#llx, pci_addr = %#llx, size = %#llx\n",
++			range_type, table_index, (unsigned long long) cpu_addr,
++			(unsigned long long) pci_addr,
++			(unsigned long long) size);
++
++		table_index++;
++	}
++
++	return 0;
++}
++
++static int mtk_pcie_clk_init(struct mtk_pcie_port *port)
++{
++	int ret;
++
++	port->num_clks = devm_clk_bulk_get_all(port->dev, &port->clks);
++	if (port->num_clks < 0) {
++		dev_err(port->dev, "failed to get PCIe clock\n");
++		return port->num_clks;
++	}
++
++	ret = clk_bulk_prepare_enable(port->num_clks, port->clks);
++	if (ret) {
++		dev_err(port->dev, "failed to enable PCIe clocks\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int mtk_pcie_power_up(struct mtk_pcie_port *port)
++{
++	struct device *dev = port->dev;
++	int err;
++
++	port->phy_reset = devm_reset_control_get_optional_exclusive(dev, "phy");
++	if (IS_ERR(port->phy_reset))
++		return PTR_ERR(port->phy_reset);
++
++	/* PHY power on and enable pipe clock */
++	port->phy = devm_phy_optional_get(dev, "pcie-phy");
++	if (IS_ERR(port->phy))
++		return PTR_ERR(port->phy);
++
++	reset_control_deassert(port->phy_reset);
++
++	err = phy_init(port->phy);
++	if (err) {
++		dev_err(dev, "failed to initialize PCIe phy\n");
++		goto err_phy_init;
++	}
++
++	err = phy_power_on(port->phy);
++	if (err) {
++		dev_err(dev, "failed to power on PCIe phy\n");
++		goto err_phy_on;
++	}
++
++	port->mac_reset = devm_reset_control_get_optional_exclusive(dev, "mac");
++	if (IS_ERR(port->mac_reset)) {
++		err = PTR_ERR(port->mac_reset);
++		goto err_mac_rst;
++	}
++
++	reset_control_deassert(port->mac_reset);
++
++	/* MAC power on and enable transaction layer clocks */
++	pm_runtime_enable(dev);
++	pm_runtime_get_sync(dev);
++
++	err = mtk_pcie_clk_init(port);
++	if (err) {
++		dev_err(dev, "clock init failed\n");
++		goto err_clk_init;
++	}
++
++	return 0;
++
++err_clk_init:
++	pm_runtime_put_sync(dev);
++	pm_runtime_disable(dev);
++	reset_control_assert(port->mac_reset);
++err_mac_rst:
++	phy_power_off(port->phy);
++err_phy_on:
++	phy_exit(port->phy);
++err_phy_init:
++	reset_control_assert(port->phy_reset);
++
++	return err;
++}
++
++static void mtk_pcie_power_down(struct mtk_pcie_port *port)
++{
++	clk_bulk_disable_unprepare(port->num_clks, port->clks);
++
++	pm_runtime_put_sync(port->dev);
++	pm_runtime_disable(port->dev);
++	reset_control_assert(port->mac_reset);
++
++	phy_power_off(port->phy);
++	phy_exit(port->phy);
++	reset_control_assert(port->phy_reset);
++}
++
++static int mtk_pcie_setup(struct mtk_pcie_port *port)
++{
++	struct device *dev = port->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *regs;
++	int err;
++
++	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pcie-mac");
++	port->base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(port->base)) {
++		dev_err(dev, "failed to map register base\n");
++		return PTR_ERR(port->base);
++	}
++
++	port->reg_base = regs->start;
++
++	/* Don't touch the hardware registers before power up */
++	err = mtk_pcie_power_up(port);
++	if (err)
++		return err;
++
++	/* Try link up */
++	err = mtk_pcie_startup_port(port);
++	if (err) {
++		dev_err(dev, "PCIe startup failed\n");
++		goto err_setup;
++	}
++
++	dev_info(dev, "PCIe link up success!\n");
++
++	return 0;
++
++err_setup:
++	mtk_pcie_power_down(port);
++
++	return err;
++}
++
++static int mtk_pcie_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct mtk_pcie_port *port;
++	struct pci_host_bridge *host;
++	int err;
++
++	host = devm_pci_alloc_host_bridge(dev, sizeof(*port));
++	if (!host)
++		return -ENOMEM;
++
++	port = pci_host_bridge_priv(host);
++
++	port->dev = dev;
++	platform_set_drvdata(pdev, port);
++
++	err = mtk_pcie_setup(port);
++	if (err)
++		return err;
++
++	host->ops = &mtk_pcie_ops;
++	host->sysdata = port;
++
++	err = pci_host_probe(host);
++	if (err) {
++		mtk_pcie_power_down(port);
++		return err;
++	}
++
++	return 0;
++}
++
++static int mtk_pcie_remove(struct platform_device *pdev)
++{
++	struct mtk_pcie_port *port = platform_get_drvdata(pdev);
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(port);
++
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(host->bus);
++	pci_remove_root_bus(host->bus);
++	pci_unlock_rescan_remove();
++
++	mtk_pcie_power_down(port);
++
++	return 0;
++}
++
++static const struct of_device_id mtk_pcie_of_match[] = {
++	{ .compatible = "mediatek,mt8192-pcie" },
++	{},
++};
++
++static struct platform_driver mtk_pcie_driver = {
++	.probe = mtk_pcie_probe,
++	.remove = mtk_pcie_remove,
++	.driver = {
++		.name = "mtk-pcie",
++		.of_match_table = mtk_pcie_of_match,
++	},
++};
++
++module_platform_driver(mtk_pcie_driver);
++MODULE_LICENSE("GPL v2");
 -- 
 2.25.1
 
