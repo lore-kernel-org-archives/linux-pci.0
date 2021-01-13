@@ -2,212 +2,235 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A31EC4332B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E116DC43332
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 418EF2343E
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4060235FF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727833AbhANBls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:41:48 -0500
-Received: from mga04.intel.com ([192.55.52.120]:56665 "EHLO mga04.intel.com"
+        id S1728279AbhANCNM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 21:13:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41294 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727184AbhANBlp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jan 2021 20:41:45 -0500
-IronPort-SDR: rTSuQnKhQFVcZWqhxtJCCvBzjAmfc7Brk0Fjxf7qlrEAJ2S4rgiTQbAqtLctpkjv1IeRAlftzM
- j1O9PUBig1yA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9863"; a="175714772"
-X-IronPort-AV: E=Sophos;i="5.79,345,1602572400"; 
-   d="scan'208";a="175714772"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 17:38:32 -0800
-IronPort-SDR: wxb+MIQIs1FT2a1uMpvv5Cq8bB2sNzYIToEKc887iA0TcQmFB6Si8qUMU7epSgRVO8FaAzOjH7
- hFV/JsDj5x3Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,345,1602572400"; 
-   d="scan'208";a="569582552"
-Received: from allen-box.sh.intel.com ([10.239.159.28])
-  by fmsmga006.fm.intel.com with ESMTP; 13 Jan 2021 17:38:24 -0800
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-To:     tglx@linutronix.de, ashok.raj@intel.com, kevin.tian@intel.com,
-        dave.jiang@intel.com, megha.dey@intel.com, dwmw2@infradead.org
-Cc:     alex.williamson@redhat.com, bhelgaas@google.com,
-        dan.j.williams@intel.com, will@kernel.org, joro@8bytes.org,
-        dmaengine@vger.kernel.org, eric.auger@redhat.com,
-        jacob.jun.pan@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
-        kwankhede@nvidia.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        maz@kernel.org, mona.hossain@intel.com, netanelg@mellanox.com,
-        parav@mellanox.com, pbonzini@redhat.com, rafael@kernel.org,
-        samuel.ortiz@intel.com, sanjay.k.kumar@intel.com,
-        shahafs@mellanox.com, tony.luck@intel.com, vkoul@kernel.org,
-        yan.y.zhao@linux.intel.com, yi.l.liu@intel.com, leon@kernel.org,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        David Woodhouse <dwmw@amazon.co.uk>
-Subject: [RFC PATCH v3 2/2] platform-msi: Add platform check for subdevice irq domain
-Date:   Thu, 14 Jan 2021 09:30:03 +0800
-Message-Id: <20210114013003.297050-3-baolu.lu@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210114013003.297050-1-baolu.lu@linux.intel.com>
-References: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+        id S1725888AbhAMVtK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jan 2021 16:49:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A018E22B37;
+        Wed, 13 Jan 2021 21:48:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610574504;
+        bh=AoAdoj3dhenJpoTSS8I+rn2vHApxce6VRzZdAFQW6Ig=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=arwcqJkVdMSnlMHpeSZTgD6Dpr64G//8Yhz9ThDmwNespzgCt+1h+lf+4dczNb6Qj
+         iF+L8jVjOZXK9mfTtcTDBipxdMWZs6E93Fn+0mlMAoVkCz08eDDugicd3KuRTzEIGo
+         kPoceFbmSfb3btrKL3I2y14Q+tVkA9XDaEyN3zu+JBf+OGn5pt46GcJC6yVJJZ2tgQ
+         3D30SraIoJp0tFXZFpTyb3kPF2+ioNNCMIzgJxkGwg0ghfMjqjbmTdZqS4PO9gIx8H
+         3lBZ1rwCItkBAgGEx6ZYjfTH4i0CMQoSJ9GQwOBj/RkpOeykeurlun8L9xnDkftJnb
+         pnAHn73lYeTdw==
+Date:   Wed, 13 Jan 2021 15:48:22 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Victor Ding <victording@google.com>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ben Chuang <ben.chuang@genesyslogic.com.tw>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        linux-mmc@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH 2/2] mmc: sdhci-pci-gli: Disable ASPM during a suspension
+Message-ID: <20210113214822.GA1923207@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANqTbdYYSAvpzN2oaPSb2PUCE=rssj19GueTZmkvmukQWj9vUw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pci_subdevice_msi_create_irq_domain() should fail if the underlying
-platform is not able to support IMS (Interrupt Message Storage). Otherwise,
-the isolation of interrupt is not guaranteed.
+[+cc Rafael, suspend/resume expert]
 
-For x86, IMS is only supported on bare metal for now. We could enable it
-in the virtualization environments in the future if interrupt HYPERCALL
-domain is supported or the hardware has the capability of interrupt
-isolation for subdevices.
+On Wed, Jan 13, 2021 at 01:16:23PM +1100, Victor Ding wrote:
+> On Wed, Jan 13, 2021 at 9:38 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jan 12, 2021 at 04:02:05AM +0000, Victor Ding wrote:
+> > > GL9750 has a 3100us PortTPowerOnTime; however, it enters L1.2 after
+> > > only ~4us inactivity per PCIe trace. During a suspend/resume process,
+> > > PCI access operations are frequently longer than 4us apart.
+> > > Therefore, the device frequently enters and leaves L1.2 during this
+> > > process, causing longer than desirable suspend/resume time. The total
+> > > time cost due to this L1.2 exit latency could add up to ~200ms.
+> > >
+> > > Considering that PCI access operations are fairly close to each other
+> > > (though sometimes > 4us), the actual time the device could stay in
+> > > L1.2 is negligible. Therefore, the little power-saving benefit from
+> > > ASPM during suspend/resume does not overweight the performance
+> > > degradation caused by long L1.2 exit latency.
+> > >
+> > > Therefore, this patch proposes to disable ASPM during a suspend/resume
+> > > process.
+> >
+> > This sounds like an interesting idea, but it doesn't seem like
+> > anything that's really device-dependent.  Drivers should not need to
+> > be involved in PCI configuration at this level, and they shouldn't
+> > read/write registers like PCI_EXP_LNKCTL directly.
+> >
+> > If we need to disable ASPM during suspend, I'd rather do it in the PCI
+> > core so all devices can benefit and drivers don't need to worry about
+> > it.
+> >
+> Good point. In theory all devices could encounter this issue, and it
+> more-likely occurs on those with low entry timer but high exit latency.
+> GL9750 is the only one I have access to that has such characteristics.
+> 
+> I think we should have ASPM disabled during suspend, or at least part
+> of the suspend process*, mainly for two reasons:
+> 1. Power saving is expected to be little. During suspend/resume, we
+>     frequently access PCI registers, making it unlikely to stay in low
+>     power states;
+> 2. It could cause performance degradation. Unfortunate timing could
+>     put the device into low power states and wake it up very soon after;
+>     resulting noticeable delays.
+> * By "part if the suspend process", I refer [suspend/resume]_noirq, where
+> there are frequent PCI register accesses and suffers most from this issue.
+> 
+> Ideally, the entry time could be tune so that it is long enough that the
+> device would not go into low power states during suspend; however, it
+> may not be feasible mainly because:
+> 1. Hardware limitations;
+> 2. The best timing for suspend/resume may not be the best timing for other
+>     tasks. Considering suspend/resume is a rare task, we probably do not
+>     want to sacrifice other tasks;
+> 3. If the goal is to avoid entering low power states during suspend, it might
+>     be better just to disable it.
+> 
+> What do you think?
 
-Cc: David Woodhouse <dwmw@amazon.co.uk>
-Cc: Leon Romanovsky <leon@kernel.org>
-Cc: Kevin Tian <kevin.tian@intel.com>
-Suggested-by: Thomas Gleixner <tglx@linutronix.de>
-Link: https://lore.kernel.org/linux-pci/87pn4nk7nn.fsf@nanos.tec.linutronix.de/
-Link: https://lore.kernel.org/linux-pci/877dqrnzr3.fsf@nanos.tec.linutronix.de/
-Link: https://lore.kernel.org/linux-pci/877dqqmc2h.fsf@nanos.tec.linutronix.de/
-Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
----
- arch/x86/pci/common.c       | 71 +++++++++++++++++++++++++++++++++++++
- drivers/base/platform-msi.c |  8 +++++
- include/linux/msi.h         |  1 +
- 3 files changed, 80 insertions(+)
+I think we should look at disabling ASPM for all devices during
+suspend.  I really don't want to put this kind of gunk in individual
+drivers.  If we *have* to put something in drivers, it should be using
+interfaces like pci_disable_link_state() instead of writing
+PCI_EXP_LNKCTL directly.
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 3507f456fcd0..9deb826fb242 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -12,6 +12,7 @@
- #include <linux/init.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/iommu.h>
- 
- #include <asm/acpi.h>
- #include <asm/segment.h>
-@@ -724,3 +725,73 @@ struct pci_dev *pci_real_dma_dev(struct pci_dev *dev)
- 	return dev;
- }
- #endif
-+
-+/*
-+ * We want to figure out which context we are running in. But the hardware
-+ * does not introduce a reliable way (instruction, CPUID leaf, MSR, whatever)
-+ * which can be manipulated by the VMM to let the OS figure out where it runs.
-+ * So we go with the below probably on_bare_metal() function as a replacement
-+ * for definitely on_bare_metal() to go forward only for the very simple reason
-+ * that this is the only option we have.
-+ */
-+static const char * const vmm_vendor_name[] = {
-+	"QEMU", "Bochs", "KVM", "Xen", "VMware", "VMW", "VMware Inc.",
-+	"innotek GmbH", "Oracle Corporation", "Parallels", "BHYVE"
-+};
-+
-+static void read_type0_virtual_machine(const struct dmi_header *dm, void *p)
-+{
-+	u8 *data = (u8 *)dm + 0x13;
-+
-+	/* BIOS Information (Type 0) */
-+	if (dm->type != 0 || dm->length < 0x14)
-+		return;
-+
-+	/* Bit 4 of BIOS Characteristics Extension Byte 2*/
-+	if (*data & BIT(4))
-+		*((bool *)p) = true;
-+}
-+
-+static bool smbios_virtual_machine(void)
-+{
-+	bool bit_present = false;
-+
-+	dmi_walk(read_type0_virtual_machine, &bit_present);
-+
-+	return bit_present;
-+}
-+
-+static bool on_bare_metal(struct device *dev)
-+{
-+	int i;
-+
-+	if (boot_cpu_has(X86_FEATURE_HYPERVISOR))
-+		return false;
-+
-+	if (smbios_virtual_machine())
-+		return false;
-+
-+	if (iommu_capable(dev->bus, IOMMU_CAP_VIOMMU))
-+		return false;
-+
-+	for (i = 0; i < ARRAY_SIZE(vmm_vendor_name); i++)
-+		if (dmi_match(DMI_SYS_VENDOR, vmm_vendor_name[i]))
-+			return false;
-+
-+	pr_info("System running on bare metal, report to bugzilla.kernel.org if not the case.");
-+
-+	return true;
-+}
-+
-+bool arch_support_pci_device_ims(struct pci_dev *pdev)
-+{
-+	/*
-+	 * When we are running in a VMM context, the device IMS could only be
-+	 * enabled when the underlying hardware supports interrupt isolation
-+	 * of the subdevice, or any mechanism (trap, hypercall) is added so
-+	 * that changes in the interrupt message store could be managed by the
-+	 * VMM. For now, we only support the device IMS when we are running on
-+	 * the bare metal.
-+	 */
-+	return on_bare_metal(&pdev->dev);
-+}
-diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
-index 8432a1bf4e28..88e5fe4dae67 100644
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -512,6 +512,11 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
- 
-+bool __weak arch_support_pci_device_ims(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
- /**
-  * pci_subdevice_msi_create_irq_domain - Create an irq domain for subdevices
-  * @pdev:	Pointer to PCI device for which the subdevice domain is created
-@@ -523,6 +528,9 @@ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
- 	struct irq_domain *domain, *pdev_msi;
- 	struct fwnode_handle *fn;
- 
-+	if (!arch_support_pci_device_ims(pdev))
-+		return NULL;
-+
- 	/*
- 	 * Retrieve the MSI domain of the underlying PCI device's MSI
- 	 * domain. The PCI device domain's parent domain is also the parent
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index f319d7c6a4ef..6fda81c4b859 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -478,6 +478,7 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
- 						struct irq_domain *parent);
- 
- # ifdef CONFIG_PCI
-+bool arch_support_pci_device_ims(struct pci_dev *pdev);
- struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
- 						       struct msi_domain_info *info);
- # endif
--- 
-2.25.1
+I *would* be interested in more details about this issue you're seeing
+with GS9750, though.  It will help the case for a core change if we
+can open a bugzilla.kernel.org issue with some of the details like the
+L1 exit latency (from "lspci -vv") and details of the activities that
+lead to these delays.  Typical L1 exit latencies are <100us, so to see
+200ms of delay would mean ~2000 L1.2 exits, which is higher than I
+would expect.
 
+> > > Signed-off-by: Victor Ding <victording@google.com>
+> > > ---
+> > >
+> > >  drivers/mmc/host/sdhci-pci-core.c |  2 +-
+> > >  drivers/mmc/host/sdhci-pci-gli.c  | 46 +++++++++++++++++++++++++++++--
+> > >  drivers/mmc/host/sdhci-pci.h      |  1 +
+> > >  3 files changed, 46 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/mmc/host/sdhci-pci-core.c b/drivers/mmc/host/sdhci-pci-core.c
+> > > index 9552708846ca..fd7544a498c0 100644
+> > > --- a/drivers/mmc/host/sdhci-pci-core.c
+> > > +++ b/drivers/mmc/host/sdhci-pci-core.c
+> > > @@ -67,7 +67,7 @@ static int sdhci_pci_init_wakeup(struct sdhci_pci_chip *chip)
+> > >       return 0;
+> > >  }
+> > >
+> > > -static int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip)
+> > > +int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip)
+> > >  {
+> > >       int i, ret;
+> > >
+> > > diff --git a/drivers/mmc/host/sdhci-pci-gli.c b/drivers/mmc/host/sdhci-pci-gli.c
+> > > index 9887485a4134..c7b788b0e22e 100644
+> > > --- a/drivers/mmc/host/sdhci-pci-gli.c
+> > > +++ b/drivers/mmc/host/sdhci-pci-gli.c
+> > > @@ -109,6 +109,12 @@
+> > >
+> > >  #define GLI_MAX_TUNING_LOOP 40
+> > >
+> > > +#ifdef CONFIG_PM_SLEEP
+> > > +struct gli_host {
+> > > +     u16 linkctl_saved;
+> > > +};
+> > > +#endif
+> > > +
+> > >  /* Genesys Logic chipset */
+> > >  static inline void gl9750_wt_on(struct sdhci_host *host)
+> > >  {
+> > > @@ -577,14 +583,48 @@ static u32 sdhci_gl9750_readl(struct sdhci_host *host, int reg)
+> > >  }
+> > >
+> > >  #ifdef CONFIG_PM_SLEEP
+> > > +static int sdhci_pci_gli_suspend(struct sdhci_pci_chip *chip)
+> > > +{
+> > > +     int ret;
+> > > +     struct sdhci_pci_slot *slot = chip->slots[0];
+> > > +     struct pci_dev *pdev = slot->chip->pdev;
+> > > +     struct gli_host *gli_host = sdhci_pci_priv(slot);
+> > > +
+> > > +     ret = pcie_capability_read_word(pdev, PCI_EXP_LNKCTL,
+> > > +                     &gli_host->linkctl_saved);
+> > > +     if (ret)
+> > > +             goto exit;
+> > > +
+> > > +     ret = pcie_capability_write_word(pdev, PCI_EXP_LNKCTL,
+> > > +                     gli_host->linkctl_saved & ~PCI_EXP_LNKCTL_ASPMC);
+> > > +     if (ret)
+> > > +             goto exit;
+> > > +
+> > > +     ret = sdhci_pci_suspend_host(chip);
+> > > +
+> > > +exit:
+> > > +     return ret;
+> > > +}
+> > > +
+> > >  static int sdhci_pci_gli_resume(struct sdhci_pci_chip *chip)
+> > >  {
+> > > +     int ret;
+> > >       struct sdhci_pci_slot *slot = chip->slots[0];
+> > > +     struct pci_dev *pdev = slot->chip->pdev;
+> > > +     struct gli_host *gli_host = sdhci_pci_priv(slot);
+> > >
+> > > -     pci_free_irq_vectors(slot->chip->pdev);
+> > > +     pci_free_irq_vectors(pdev);
+> > >       gli_pcie_enable_msi(slot);
+> > >
+> > > -     return sdhci_pci_resume_host(chip);
+> > > +     ret = sdhci_pci_resume_host(chip);
+> > > +     if (ret)
+> > > +             goto exit;
+> > > +
+> > > +     ret = pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
+> > > +                     PCI_EXP_LNKCTL_ASPMC, gli_host->linkctl_saved);
+> > > +
+> > > +exit:
+> > > +     return ret;
+> > >  }
+> > >
+> > >  static int sdhci_cqhci_gli_resume(struct sdhci_pci_chip *chip)
+> > > @@ -834,7 +874,9 @@ const struct sdhci_pci_fixes sdhci_gl9750 = {
+> > >       .probe_slot     = gli_probe_slot_gl9750,
+> > >       .ops            = &sdhci_gl9750_ops,
+> > >  #ifdef CONFIG_PM_SLEEP
+> > > +     .suspend        = sdhci_pci_gli_suspend,
+> > >       .resume         = sdhci_pci_gli_resume,
+> > > +     .priv_size      = sizeof(struct gli_host),
+> > >  #endif
+> > >  };
+> > >
+> > > diff --git a/drivers/mmc/host/sdhci-pci.h b/drivers/mmc/host/sdhci-pci.h
+> > > index d0ed232af0eb..16187a265e63 100644
+> > > --- a/drivers/mmc/host/sdhci-pci.h
+> > > +++ b/drivers/mmc/host/sdhci-pci.h
+> > > @@ -187,6 +187,7 @@ static inline void *sdhci_pci_priv(struct sdhci_pci_slot *slot)
+> > >  }
+> > >
+> > >  #ifdef CONFIG_PM_SLEEP
+> > > +int sdhci_pci_suspend_host(struct sdhci_pci_chip *chip);
+> > >  int sdhci_pci_resume_host(struct sdhci_pci_chip *chip);
+> > >  #endif
+> > >  int sdhci_pci_enable_dma(struct sdhci_host *host);
+> > > --
+> > > 2.30.0.284.gd98b1dd5eaa7-goog
+> > >
