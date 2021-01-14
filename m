@@ -2,175 +2,261 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23360C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 19:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F3FC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 19:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E59E023B55
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 19:21:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80FBE23B7D
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 19:25:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729810AbhANTVj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jan 2021 14:21:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58224 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727017AbhANTVj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Jan 2021 14:21:39 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0764423B40;
-        Thu, 14 Jan 2021 19:20:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610652058;
-        bh=RqVCL5R8u/uiaCf/QQG+CR/jl+1+F4XOpwQKBqz7ZEU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=I2PivtTkIbmElL1nDEsoNWNYVisYbzDom+ou3cor+tQigc1unPLaILWshIO5lt080
-         qZU8hLPX0sX7CmqHoFoPScbFBXZWVE55zGaoFIFmj3/vNLrpwOprVoZAvrEVdNmlzV
-         JfnW1B5BwoTLF7mPFKGYCE2XpnJ3WCAXeT5oiUfsr7Mn7plBcnV/otXX0J9PasUkQw
-         5WOs2fRrS9Baafg1vL87ORZaIfavot2zQl5B1wT1suukPbi6T2tuZDBqjpjfmSUucw
-         rNL13dvKOxLsNSX6HGujdLNbtTKTbcdLFPxqDQtl+qXZG4KYUpBXjVj4eFS3II2wqj
-         jU5dGSedjy5sQ==
-Date:   Thu, 14 Jan 2021 13:20:56 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dominik Mierzejewski <dominik@greysector.net>
-Cc:     Peter Jones <pjones@redhat.com>, David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [Bug 211189] New: vgaarb overrides boot device unexpectedly with
- Intel and discrete AMDGPU
-Message-ID: <20210114192056.GA2013381@bjorn-Precision-5520>
+        id S1727211AbhANTZE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jan 2021 14:25:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44214 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726472AbhANTZE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2021 14:25:04 -0500
+Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D457FC061757;
+        Thu, 14 Jan 2021 11:24:23 -0800 (PST)
+Received: by mail-io1-xd30.google.com with SMTP id w18so13531427iot.0;
+        Thu, 14 Jan 2021 11:24:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=js7HHq3LTad9ixc5DutSYP9XyZNdeih2UKdu5gNL9h0=;
+        b=HlmdNZPvrNQsxTC7dWYJhiR0ilFFinkKe6L9YwnlN+UG4pA1XVLpHhY8XvaEIUm0O6
+         VcJIIltOfSHclfVe//ECZUePE9RNbE4pAhVeSrCYddiWriHn7kzLxBkPmk8KMEG02Na/
+         tyv2XE7leUxpDqsBcQ80M7yT6RBW7vwd+lq3uhKAyK+FRUjUtBy1u8MfYlFCmh8Dy/o6
+         PO6tP2AiGJlsltW8j08NhX9SYJIOABu/hEMwSJRJ0naH8nufaX2yfqIb8evyime8yt8O
+         Ea3a1GdckkjgEyjLkS+sxEzbyhY3JRF2NTqJZwTMIo70p/YlrL43uWO45IoLeOdq/aOT
+         dpvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=js7HHq3LTad9ixc5DutSYP9XyZNdeih2UKdu5gNL9h0=;
+        b=uZcpQTjU9+Jqsf0yh1Nk7azsYwhooo/v4QsqXba8P3eeM1Q2N0rNoRTzSzHqg55Yqr
+         fqUHx2sGgEOLAzPCecbjeLD8tazxoYtRAils0zinOV75HpV902pnrV1vIHYHlmXNBQwF
+         +gSOnvsmzJ2R+puG6J4wQwLI6OYE9aCHfe1Ijzgdnn0SX0c6VShKCSQCOrtEthSFhwd7
+         K8i+r7XG+zu7e5jX4BuCC4hAvV2+wwF4rkhto6aLgsDH9YcrWj7Z/kAdafVZ5xfB+0LA
+         LnucROZK/rZf8qurFNPkyDPj2YnT3ctrRrauvdDZQ+tdgVgIUo8M52Rtp0G3/TmXBqKK
+         YvyA==
+X-Gm-Message-State: AOAM530QpVvZEs1Tpx3M4b9O4CQe9aQSQna2LYk0zqjJbN3bM01O7uD9
+        DP9HgIynMF6rghM0oEnzznnhlbMvYAh+gM3tvdc=
+X-Google-Smtp-Source: ABdhPJyDW1WpMGNID5jiC/ILWZd6TbBwbMrkNWfqQezCULqQBWDwI8EBYAoutrvvIMiq4lx/TnshX7cBsAQKNz2YKLs=
+X-Received: by 2002:a05:6638:204b:: with SMTP id t11mr1587495jaj.87.1610652263136;
+ Thu, 14 Jan 2021 11:24:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <bug-211189-41252@https.bugzilla.kernel.org/>
+References: <20210110150727.1965295-3-leon@kernel.org> <CAKgT0Uczu6cULPsVjFuFVmir35SpL-bs0hosbfH-T5sZLZ78BQ@mail.gmail.com>
+ <20210112065601.GD4678@unreal> <CAKgT0UdndGdA3xONBr62hE-_RBdL-fq6rHLy0PrdsuMn1936TA@mail.gmail.com>
+ <20210113061909.GG4678@unreal> <CAKgT0Uc4v54vqRVk_HhjOk=OLJu-20AhuBVcg7=C9_hsLtzxLA@mail.gmail.com>
+ <20210114065024.GK4678@unreal> <CAKgT0UeTXMeH24L9=wsPc2oJ=ZJ5jSpJeOqiJvsB2J9TFRFzwQ@mail.gmail.com>
+ <20210114164857.GN4147@nvidia.com> <CAKgT0UcKqt=EgE+eitB8-u8LvxqHBDfF+u2ZSi5urP_Aj0Btvg@mail.gmail.com>
+ <20210114182945.GO4147@nvidia.com>
+In-Reply-To: <20210114182945.GO4147@nvidia.com>
+From:   Alexander Duyck <alexander.duyck@gmail.com>
+Date:   Thu, 14 Jan 2021 11:24:12 -0800
+Message-ID: <CAKgT0UcQW+nJjTircZAYs1_GWNrRud=hSTsphfVpsc=xaF7aRQ@mail.gmail.com>
+Subject: Re: [PATCH mlx5-next v1 2/5] PCI: Add SR-IOV sysfs entry to read
+ number of MSI-X vectors
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Leon Romanovsky <leon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-rdma@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[cc'd efifb and vgaarb maintainers on bugzilla, but not sure whether
-people pay attention to that]
+On Thu, Jan 14, 2021 at 10:29 AM Jason Gunthorpe <jgg@nvidia.com> wrote:
+>
+> On Thu, Jan 14, 2021 at 09:55:24AM -0800, Alexander Duyck wrote:
+> > On Thu, Jan 14, 2021 at 8:49 AM Jason Gunthorpe <jgg@nvidia.com> wrote:
+> > >
+> > > On Thu, Jan 14, 2021 at 08:40:14AM -0800, Alexander Duyck wrote:
+> > >
+> > > > Where I think you and I disagree is that I really think the MSI-X
+> > > > table size should be fixed at one value for the life of the VF.
+> > > > Instead of changing the table size it should be the number of vectors
+> > > > that are functional that should be the limit. Basically there should
+> > > > be only some that are functional and some that are essentially just
+> > > > dummy vectors that you can write values into that will never be used.
+> > >
+> > > Ignoring the PCI config space to learn the # of available MSI-X
+> > > vectors is big break on the how the device's programming ABI works.
+> > >
+> > > Or stated another way, that isn't compatible with any existing drivers
+> > > so it is basically not a useful approach as it can't be deployed.
+> > >
+> > > I don't know why you think that is better.
+> > >
+> > > Jason
+> >
+> > First off, this is technically violating the PCIe spec section 7.7.2.2
+> > because this is the device driver modifying the Message Control
+> > register for a device, even if it is the PF firmware modifying the VF.
+> > The table size is something that should be set and fixed at device
+> > creation and not changed.
+>
+> The word "violating" is rather an over-reaction, at worst this is an
+> extension.
+>
+> > The MSI-X table is essentially just an MMIO resource, and I believe it
+> > should not be resized, just as you wouldn't expect any MMIO BAR to be
+> > dynamically resized.
+>
+> Resizing the BAR is already defined see commit 276b738deb5b ("PCI:
+> Add resizable BAR infrastructure")
+>
+> As you say BAR and MSI vector table are not so different, it seems
+> perfectly in line with current PCI sig thinking to allow resizing the
+> MSI as well
 
-On Thu, Jan 14, 2021 at 10:42:53AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=211189
-> 
->             Bug ID: 211189
->            Summary: vgaarb overrides boot device unexpectedly with Intel
->                     and discrete AMDGPU
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 5.10.7-200.fc33.x86_64
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: dominik@greysector.net
->         Regression: No
-> 
-> The system is a MSI Z77A-GD65 mainboard configured to boot in UEFI mode.
-> Despite setting integrated GPU (from i5-3570K CPU) as the default in firmware
-> setup, the kernel sets the discrete GPU (Radeon HD 7950) as boot_vga. This
-> results in wrong order in e.g. switcherooctl:
-> $ switcherooctl list
-> Device: 0
->   Name:        Advanced Micro Devices, Inc. [AMD®/ATI] Tahiti PRO [Radeon HD
-> 7950/8950 OEM / R9 280]
->   Default:     yes
->   Environment: DRI_PRIME=pci-0000_01_00_0
-> 
-> Device: 1
->   Name:        Intel® HD Graphics 4000
->   Default:     no
->   Environment: DRI_PRIME=pci-0000_00_02_0
-> $ lspci -vnn
-> ...
-> 00:02.0 VGA compatible controller [0300]: Intel Corporation Xeon E3-1200 v2/3rd
-> Gen Core processor Graphics Controller [8086:0162] (rev 09) (prog-if 00 [VGA
-> controller])
->         DeviceName:  Onboard IGD
->         Subsystem: Micro-Star International Co., Ltd. [MSI] Device [1462:2111]
->         Flags: bus master, fast devsel, latency 0, IRQ 31
->         Memory at f7800000 (64-bit, non-prefetchable) [size=4M]
->         Memory at d0000000 (64-bit, prefetchable) [size=256M]
->         I/O ports at f000 [size=64]
->         Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
->         Capabilities: [d0] Power Management version 2
->         Capabilities: [a4] PCI Advanced Features
->         Kernel driver in use: i915
->         Kernel modules: i915
-> ...
-> 01:00.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc.
-> [AMD/ATI] Tahiti PRO [Radeon HD 7950/8950 OEM / R9 280] [1002:679a] (prog-if 00
-> [VGA controller])
->         Subsystem: Micro-Star International Co., Ltd. [MSI] Device [1462:2761]
->         Flags: bus master, fast devsel, latency 0, IRQ 32
->         Memory at e0000000 (64-bit, prefetchable) [size=256M]
->         Memory at f7d00000 (64-bit, non-prefetchable) [size=256K]
->         I/O ports at e000 [size=256]
->         Expansion ROM at 000c0000 [disabled] [size=128K]
->         Capabilities: [48] Vendor Specific Information: Len=08 <?>
->         Capabilities: [50] Power Management version 3
->         Capabilities: [58] Express Legacy Endpoint, MSI 00
->         Capabilities: [a0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->         Capabilities: [100] Vendor Specific Information: ID=0001 Rev=1 Len=010
-> <?>
->         Capabilities: [150] Advanced Error Reporting
->         Capabilities: [270] Secondary PCI Express
->         Capabilities: [2b0] Address Translation Service (ATS)
->         Capabilities: [2c0] Page Request Interface (PRI)
->         Capabilities: [2d0] Process Address Space ID (PASID)
->         Kernel driver in use: amdgpu
->         Kernel modules: radeon, amdgpu
-> 
-> $ for f in /sys/bus/pci/devices/*/boot_vga ; do echo -n "$f:" ; cat $f ; done
-> /sys/bus/pci/devices/0000:00:02.0/boot_vga:0
-> /sys/bus/pci/devices/0000:01:00.0/boot_vga:1
-> 
-> $ dmesg
-> ...
-> [    0.267216] pci 0000:01:00.0: BAR 0: assigned to efifb
+The resizing of a BAR has an extended capability that goes with it and
+isn't something that the device can just do on a whim. This patch set
+is not based on implementing some ECN for resizable MSI-X tables. I
+view it as arbitrarily rewriting the table size for a device after it
+is created.
 
-This is from drivers/video/fbdev/efifb.c and makes me wonder if this
-is a firmware defect.  You set 00:02.0 to be the default in firmware
-setup, but apparently the EFI FB is using 01:00.0?
+In addition Leon still hasn't answered my question on preventing the
+VF driver from altering entries beyond the ones listed in the table.
+My concern is that this may just be glossing over things and
+introducing potential issues in the process if a VF can access
+resources that don't belong to it.
 
-> [    0.268571] pci 0000:00:02.0: vgaarb: setting as boot VGA device
-> [    0.268571] pci 0000:00:02.0: vgaarb: VGA device added:
-> decodes=io+mem,owns=io+mem,locks=none
-> [    0.268571] pci 0000:01:00.0: vgaarb: VGA device added:
-> decodes=io+mem,owns=io+mem,locks=none
-> [    0.268571] pci 0000:00:02.0: vgaarb: no bridge control possible
-> [    0.268571] pci 0000:01:00.0: vgaarb: bridge control possible
-> [    0.268571] pci 0000:01:00.0: vgaarb: overriding boot device
-> [    0.268571] vgaarb: loaded
-> [    0.754748] efifb: probing for efifb
-> [    0.754766] efifb: No BGRT, not showing boot graphics
-> [    0.754768] efifb: framebuffer at 0xe0000000, using 8100k, total 8100k
-> [    0.754769] efifb: mode is 1920x1080x32, linelength=7680, pages=1
-> [    0.754770] efifb: scrolling: redraw
-> [    0.754772] efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
-> [    2.984727] i915 0000:00:02.0: vgaarb: changed VGA decodes:
-> olddecodes=io+mem,decodes=none:owns=io+mem
-> [    3.011601] [drm] Initialized i915 1.6.0 20200917 for 0000:00:02.0 on minor
-> 0
-> [    3.213870] [drm] amdgpu kernel modesetting enabled.
-> [    3.275739] i915 0000:00:02.0: [drm] fb1: i915drmfb frame buffer device
-> [    3.275972] fb0: switching to amdgpudrmfb from EFI VGA
-> [    3.276112] amdgpu 0000:01:00.0: vgaarb: deactivate vga console
-> [    3.276240] [drm] initializing kernel modesetting (TAHITI 0x1002:0x679A
-> 0x1462:0x2761 0x00).
-> ...
-> [    4.069577] amdgpu 0000:01:00.0: [drm] fb0: amdgpudrmfb frame buffer device
-> [    4.351324] [drm] Initialized amdgpu 3.40.0 20150101 for 0000:01:00.0 on
-> minor 1
-> 
-> -- 
-> You may reply to this email to add a comment.
-> 
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
+> > Many drivers don't make use of the full MSI-X table nor do they
+> > bother reading the size. We just populate a subset of the table
+> > based on the number of interrupt causes we will need to associate to
+> > interrupt handlers.
+>
+> This isn't about "many drivers" this is about what mlx5 does in all
+> the various OS drivers it has, and mlx5 has a sophisticated use of
+> MSI-X.
+
+Can you please cite an example for me? The problem here is you are
+claiming things without any proof. I feel like the requirement for
+changing the VF MSI-X table size is coming from something outside of
+Linux and without having any info on that I cannot really understand
+the issue this is trying to resolve.
+
+From what I can tell, the mlx5 Linux driver never reads the MSI-X
+flags register so it isn't reading the MSI-X size either.
+
+> > What I see this patch doing is trying to push driver PF policy onto
+> > the VF PCIe device configuration space dynamically.
+>
+> Huh? This is using the PF to dynamically reconfigure a child VF beyond
+> what the PCI spec defined. This is done safely under Linux because no
+> driver is bound when it is reconfigured, and any stale config data is
+> flushed out of any OS caches.
+>
+> This is also why there is not a strong desire to standardize an ECN at
+> PCI-sig, the rules for how resizing can work are complicated and OS
+> specific.
+
+At a minimum I really think we need to go through and have a clear
+definition on when updating the MSI-X table size is okay and when it
+is not. I am not sure just saying to not update it when a driver isn't
+attached is enough to guarantee all that.
+
+On top of that the interface as defined here is rather ugly. It is
+just providing a sysfs front end for a vendor proprietary
+circumvention of the fact that the MSI-X table size is read-only. If
+we are going to do that we might as well allow any vendor that has a
+backdoor to their PCIe config go through and edit it.
+
+> > Having some limited number of interrupt causes should really be what
+> > is limiting things here.
+>
+> MSI inherently requires dedicated on-die resources to implement, so
+> every device has a maximum # of MSI vectors it can currently
+> expose. This is some consequence of various PCI rules and applies to
+> all devices.
+>
+> To make effective use of this limited pool requires a hard restriction
+> enforced by the secure domain (hypervisor and FW) onto every
+> user. Every driver attached to the function needs to be aware of the
+> hard enforced limit by the secure domain to operate properly. It has
+> nothing to do with "limited number of interrupt causes".
+
+What we are talking about is the MSI-X table size. Not the number of
+MSI-X vectors being requested by the device driver. Those are normally
+two seperate things.
+
+I can only assume you have some out-of-tree issue or some other OS
+that is the problem. If you can describe the issue in more detail for
+me we have something to work with. Otherwise the request so far seems
+unreasonable to me.
+
+> The standards based way to communicate that limit is the MSI table cap
+> size.
+
+This only defines the maximum number of entries, not how many have to be used.
+
+> To complain that changing the MSI table cap size dynamically is
+> non-standard then offer up a completely non-standard way to operate
+> MSI instead seems to miss the entire point.
+
+I'm not offering up a non-standard way to do this. Just think about
+it. If I have a device that defines an MSI-X table size of 2048 but
+makes use of only one vector how would that be any different than what
+I am suggesting where you size your VF to whatever the maximum is you
+need but only make use of some fixed number from the hardware.
+
+> The important standard is to keep the PCI config space acting per-spec
+> so all the various consumers can work as-is. The extension is to only
+> modify the rare hypervisor to support a dynamic MSI resizing extension
+> for VFs.
+
+I will repeat what I said before. Why can't this be handled via the
+vfio interface? You just need to add the ability to specify the upper
+limit on vdev->msix_size so that it is a number between 1 and whatever
+your max table size is. It sounds like something that probably belongs
+in the vfio_pci_ioctl somewhere. Then if you have an OS running in a
+guest that cannot help itself and will allocate an interrupt for every
+vector, you can simply modify that value so that it puts a cap on the
+total number of vectors it will try to allocate in the guest.
+
+> As far as applicability, any device working at high scale with MSI and
+> VMs is going to need this. Dynamically assigning the limited MSI HW is
+> really required to support the universe of VM configurations people
+> want. eg generally I would expect a VM to receive the number of MSI
+> vectors equal to the number of CPUs the VM gets.
+
+Again, you are pushing VM requirements on to PCI. That really seems
+like the realm of vfio rather than PCI. Especially since your answer
+to the problem is to update a value that is only really being read by
+vfio on the host. It really just seems like it would make more sense
+to maybe make this part of the vfio ioctl call so you could limit the
+use of the MSI-X table in the guest.
+
+> > I see that being mostly a thing between the firmware and the VF in
+> > terms of configuration and not something that necessarily has to be
+> > pushed down onto the PCIe configuration space itself.
+>
+> If mlx5 drivers had been designed long ago to never use standard based
+> MSI and instead did something internal with FW you might have a point,
+> but they weren't. All the mlx5 drivers use standards based MSI and
+> expect the config space to be correct.
+
+Again, from what I can tell you are updating a field that isn't read
+by the mlx5 driver. It is read/written by the OS and the field itself
+is only supposed to be updated by the OS according to the PCIe spec.
+While it is all well and good that the firmware can circumvent this
+and modify the MMIO space I really feel like it shouldn't be doing
+that.
+
+In my mind it sounds a lot like this is something that really should
+have been configured in the VFIO driver as the problems you have
+described all seem to be issues either with some unknown userspace app
+or OSes other than Linux.
