@@ -2,190 +2,292 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B225C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E777C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 03:05:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64ABA23359
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 02:19:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 017BB23715
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 03:05:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726291AbhANCTC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 21:19:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35550 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728991AbhAMUyy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2021 15:54:54 -0500
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AEE7C061786;
-        Wed, 13 Jan 2021 12:52:31 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id c124so2790851wma.5;
-        Wed, 13 Jan 2021 12:52:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:references:subject:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=XzR+bZaWiVntItapmbJT7hixkAXKLBUEq7gHIsoczCo=;
-        b=Dh8muhmAKWVRALQMPwOWhXVAd4O40LKtqtcoiGaw58Im+vayl6yRd3SOxBUi0aCZPp
-         GYWW7ZHrnpd4gA9XUZkfMiPkhz9krKoUhUDB+25BSXZYC7prJqh6cVxhkpIHyp/7Q18N
-         s6KDAdG2E/o9XNfrbefb/YSqXeGNAAsIrF3g8yotju61avWPCO/Yob+JWkzJCf/NWPxH
-         mexpQ7rU5E7Kg3/10GBEzcflIdy++iJh6dbm1ptNiffnI72lp+skIcHDrURGdBTCVfIL
-         LFYEmX0sohItYtHK5pn3DCMpelbz+FiKT+8I1QUXugRPLULKT/mc2uRbHSdGYcIvC7qS
-         vYAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:references:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=XzR+bZaWiVntItapmbJT7hixkAXKLBUEq7gHIsoczCo=;
-        b=Sr8XXqXD6W85XdIJHTcvqpPXMDRHjcebU+f+rmOzGvaltLerd7L6Z2AfpyaqmFhdhL
-         OkBwUm2GhhRqKhiN8xEW0zCUmhZZeYUoZz0Jdw4AIYj6vRQW+jVjcHScmEvowo86Q4PM
-         VpVCRiE9ABb+co+DNPbpcFrqnnOAdGOtzn56Lygt0rSSPF3B7us7TVQDEwZxHCg5xwCa
-         tTdaSiOP+bcbJC98U7EXmqHc7Y44SLRS7jWnjqY6/Yyxl7x0h9WoCNK7jA/hLv6EOmaQ
-         noQv7Vj4pt3FVc/VSlKI08f+wB6dY3nc/AZCpn3uU1XnXeHpZLk9XisXiD1RrRrXHH2g
-         5L2g==
-X-Gm-Message-State: AOAM531nuztABtYAg8WBeWpvuKO1vT7DK+PcO69rUFJVaGS/Vgb8WLj7
-        HtAE6EfVwvbs2PGGzhq/At6yJXC0u7E=
-X-Google-Smtp-Source: ABdhPJxkGmBTESYXWorIndm/GuiGjUhdjyALJag8TFWm+IY7xSWtIlt21TomtfAHyuWb0u90wZkehw==
-X-Received: by 2002:a7b:c849:: with SMTP id c9mr907463wml.11.1610571149816;
-        Wed, 13 Jan 2021 12:52:29 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f06:5500:391b:9f3f:c40b:cb6d? (p200300ea8f065500391b9f3fc40bcb6d.dip0.t-ipconnect.de. [2003:ea:8f06:5500:391b:9f3f:c40b:cb6d])
-        by smtp.googlemail.com with ESMTPSA id x66sm4686731wmg.26.2021.01.13.12.52.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Jan 2021 12:52:29 -0800 (PST)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Lennert Buytenhek <kernel@wantstofly.org>,
-        Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        id S1727190AbhANDFc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 22:05:32 -0500
+Received: from mga04.intel.com ([192.55.52.120]:1345 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727074AbhANDF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jan 2021 22:05:26 -0500
+IronPort-SDR: MR7SQQ3rZhqV30jZ1U/1cJAmE1YQXzDTo72gw5zT9s4s3BDO9r1GFuwn1v0SrPKsJ51PWSrOcN
+ 1FjPcLevyWpQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9863"; a="175721651"
+X-IronPort-AV: E=Sophos;i="5.79,346,1602572400"; 
+   d="scan'208";a="175721651"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 19:04:44 -0800
+IronPort-SDR: q38mOx/V7oAM31QAhnw8sofaSSSTjTJs5FCa/H5GQ2odqGBTy//SrjBn3tWjRKohhejtHyd7hr
+ wg437tMLZqyA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,346,1602572400"; 
+   d="scan'208";a="424801658"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by orsmga001.jf.intel.com with ESMTP; 13 Jan 2021 19:04:29 -0800
+Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 13 Jan 2021 19:04:29 -0800
+Received: from orsmsx603.amr.corp.intel.com (10.22.229.16) by
+ ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 13 Jan 2021 19:04:29 -0800
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ orsmsx603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
+ via Frontend Transport; Wed, 13 Jan 2021 19:04:29 -0800
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.48) by
+ edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.1713.5; Wed, 13 Jan 2021 19:04:28 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gC5nqBzLFHTJzsSX/hHhVdbxxva0xdnt2q1767u/pdNI+WWUvBDfATr+HbwZ2LPLURzCaBOY5gb9L/R9ievl9/bR19U2NWxBaoYdOuMIX/48TWWiou4oO0g4DpL6BxwTR3tNjo8VabbbQTDWzoE+zAraBO4uGLTmH9P96acJoZcufRT4M0+O/LrJV6ZUAMfu+vDBnF6HVVnrpHlibb2g7Rfg1XSkjviSPZjsF7XzeGTiIcEi8NintlK8EmSJvtJWnCe/ijBjciFOr6A49eWYQgtbqsb+9g72ZyzhGEjsVnixCgA1QwvkzhnDRr2hHo2zUbzO+w9+42Lr3zwstSfnLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=W/2mFpspHv3qAuBseo794ptS1HfQT0w1OU1YwTAnv0w=;
+ b=f40hDA8BEJdVwgYQpRdOw8quFb38+c+zAC8HgPjSZxvPu60DPVmxICEfPwdT6XKWaRBEm9DV5F8CDD/p6uLnBcwku+eczbFC9F06oUZPSMUoOE5u7Bps/VmZIyB0gQbPWEYg42bFt8TpQ99GmpBw9M3bMlFIEt7STVghWr+k4JqxhNUqgkYrhMKrN+WAjicqpcDl1jZRn0q8oP3QfPa7Fl1WLkSkC0emNorbvPvSjSRS81SC7dXU1fXziryl6w2rRxjQ9PrG0pglwXJZdmY6KnHkAnSbof4XTOMf/AStKAOW9FAtaj1j4qp+vTL/avDaZ+p4VhHjWppdeYLd/J4X/w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=W/2mFpspHv3qAuBseo794ptS1HfQT0w1OU1YwTAnv0w=;
+ b=nf1GL4srdJ0b2Lg+jdtjm71yk/WlhWR6xQNwKG9nOdECxh3iIJfQt/5P7IX8jDjtMAr5E34ign1k1Ge4RpQwjHVKIHfGsJ9vZ4hmcDmWRGo8l4tdzL/9l4CgH42aytAUOkMlEo5Cfs3CFNLls1GiDFm86J2N8UX0epkWUiLDyOk=
+Received: from BN6PR11MB1875.namprd11.prod.outlook.com (2603:10b6:404:104::11)
+ by BN7PR11MB2547.namprd11.prod.outlook.com (2603:10b6:406:af::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.10; Thu, 14 Jan
+ 2021 03:03:52 +0000
+Received: from BN6PR11MB1875.namprd11.prod.outlook.com
+ ([fe80::a473:9954:c473:9e8d]) by BN6PR11MB1875.namprd11.prod.outlook.com
+ ([fe80::a473:9954:c473:9e8d%8]) with mapi id 15.20.3742.012; Thu, 14 Jan 2021
+ 03:03:52 +0000
+From:   "Tian, Kevin" <kevin.tian@intel.com>
+To:     Lu Baolu <baolu.lu@linux.intel.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "Jiang, Dave" <dave.jiang@intel.com>,
+        "Dey, Megha" <megha.dey@intel.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>
+CC:     "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "rafael@kernel.org" <rafael@kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-References: <20210106192233.GA1329080@bjorn-Precision-5520>
- <768d90a3-93ea-1f4e-f4e0-e039933bc17b@gmail.com>
-Subject: Re: [PATCH v3 1/3] PCI: Disable parity checking if broken_parity is
- set
-Message-ID: <8e9c5b3a-f239-8d8d-08e5-015ec38dd3a0@gmail.com>
-Date:   Wed, 13 Jan 2021 21:52:23 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
-MIME-Version: 1.0
-In-Reply-To: <768d90a3-93ea-1f4e-f4e0-e039933bc17b@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        "Kumar, Sanjay K" <sanjay.k.kumar@intel.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kwankhede@nvidia.com" <kwankhede@nvidia.com>,
+        "will@kernel.org" <will@kernel.org>,
+        "leon@kernel.org" <leon@kernel.org>,
+        "netanelg@mellanox.com" <netanelg@mellanox.com>,
+        "maz@kernel.org" <maz@kernel.org>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        "jgg@mellanox.com" <jgg@mellanox.com>,
+        "yan.y.zhao@linux.intel.com" <yan.y.zhao@linux.intel.com>,
+        "shahafs@mellanox.com" <shahafs@mellanox.com>,
+        "parav@mellanox.com" <parav@mellanox.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "Ortiz, Samuel" <samuel.ortiz@intel.com>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "Luck, Tony" <tony.luck@intel.com>,
+        "Hossain, Mona" <mona.hossain@intel.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        "pbonzini@redhat.com" <pbonzini@redhat.com>,
+        "Woodhouse, David" <dwmw@amazon.co.uk>
+Subject: RE: [RFC PATCH v3 2/2] platform-msi: Add platform check for subdevice
+ irq domain
+Thread-Topic: [RFC PATCH v3 2/2] platform-msi: Add platform check for
+ subdevice irq domain
+Thread-Index: AQHW6hYT4EqA4SOp5kyxojBYbDjQfaomaNqQ
+Date:   Thu, 14 Jan 2021 03:03:52 +0000
+Message-ID: <BN6PR11MB18758E47B2CC114E0AE3CD578CA80@BN6PR11MB1875.namprd11.prod.outlook.com>
+References: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+ <20210114013003.297050-3-baolu.lu@linux.intel.com>
+In-Reply-To: <20210114013003.297050-3-baolu.lu@linux.intel.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-version: 11.5.1.3
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+authentication-results: linux.intel.com; dkim=none (message not signed)
+ header.d=none;linux.intel.com; dmarc=none action=none header.from=intel.com;
+x-originating-ip: [101.88.226.48]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3a0bc6c4-77f2-4c05-6638-08d8b83905e5
+x-ms-traffictypediagnostic: BN7PR11MB2547:
+x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr,ExtFwd
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BN7PR11MB25478DBB2D722976B0851EFF8CA80@BN7PR11MB2547.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: qwpDmM8TOyQkmbqKTvtThQlqMlpkazV8+DO/RFdxcfJTm9Q9nX36DNvLU2c51TCsYyWvkEL0TWzacICMQ/FhLfKfpyGKPNa3fGuk8rKDQ/TQ5dkxhtxRPyfrzobbdfEaBiu7aOYr3pyhyqLbbNOokAICtI4ZotSNfOfJ9VqGTqw418DA2Jz6w/Czc/tFhxzrtLkfcT7DGTq2i56ChLRgU8u6NBUkllnjzw1KzMsuevHSpgJdVK406WYDrQ4AK3SsPdSTLy9PBNecH0qsVhX1hrXD+rXByiEQdEmut57ZeBPrBbFmEpYMJAVW7fM/FDhJXwJVuXITD4Bn1qMzCc55m5SCQrm+weQvmsxf7TfhwynwsVQwlsdLWIijzGADP5IO99yihJGW9ErMfWY6aRurb2PJCK5SLSKGSRTm6DFzO1zT7TBzQCaOUqmSa3k1slHspprXMVEMF44wOMICVi+C/g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN6PR11MB1875.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(366004)(39860400002)(396003)(376002)(346002)(52536014)(66556008)(83380400001)(66946007)(186003)(7416002)(316002)(26005)(86362001)(6506007)(5660300002)(33656002)(66476007)(76116006)(8676002)(66446008)(64756008)(71200400001)(2906002)(4326008)(9686003)(966005)(7696005)(55016002)(110136005)(8936002)(478600001)(54906003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: =?us-ascii?Q?GYAf7NzA2Bvkoa/onRc9w0Xp89Pu0jlg83ydUQaVRiblHajJA9KwuutbPbY/?=
+ =?us-ascii?Q?dl6V7tFIXGeBM/QjEF7edEinEIyQbCdk4h/DZyejplKzEW9y+VXWAOgcQsjL?=
+ =?us-ascii?Q?ca6HGPurL2kkSYvXzFmyAXsMtdSdshYEpyICkPmkdC5zgNo62MMq2fbrIXbB?=
+ =?us-ascii?Q?xZWbmMKkhn5zzRo0Dzat3Bg2xuRUgbB9FD+3QZV2gV+5Ua7i7KVoKbpZ+/7g?=
+ =?us-ascii?Q?0H3E3MkQd5HmAHXTa38PBniJ8jyxMowzvV97oXs8iXXR2GNsN3PPTjI30Bqe?=
+ =?us-ascii?Q?8EsNk4k+FIQrZgAVV98kNR4j8JVCq2MGEVZE/kZ8Q1dLkMRlYXxUiHXyO54v?=
+ =?us-ascii?Q?XBEl0N5XvBJIDBu7tCtO5C61GoiMRXZydJpv4XUKQpr7q73gWJZouZUR+wek?=
+ =?us-ascii?Q?s/cyz+GRT2Cwm3gMl7jhF910sHOhSc22JnoWS/I42JWl1YbmS6HN4jrrAM+Y?=
+ =?us-ascii?Q?u6ABReDTm0YAGXHsdcxYmJW9r566pw4lCEXmUadAo6KbvSXtHT94dQNNYBMv?=
+ =?us-ascii?Q?29tPPVmx2rWa42LsVvjFX+HFtcuxIK41u/wULM/VqXX3v7eP4JBtJwatSgLv?=
+ =?us-ascii?Q?qWn6yP7TcWV+Nsf+wpH04p09GEWGy9o/EOWcA79qSa1sdc1V3AXPyys+2P7S?=
+ =?us-ascii?Q?6fGjhvdItIo5iwCusL+hn6sgaA1KFwJEuGrlSBI6wS/Mii95nfbXXc+ls//u?=
+ =?us-ascii?Q?f8kKvDTa7tM2nG1LuYTrePA2GgVM1RDCUnwgGvGXDoO5Rg0Dz+CZGtMwSYI8?=
+ =?us-ascii?Q?zZA5EPE2pZVrvLhqfRgl66fcDsN6nfhoQV2vUr9CV8CmBzxpfsi1olpVufXS?=
+ =?us-ascii?Q?xrD/Zdkd+dF8exKNkLH/dLhNTCBmpEnUsNwHkW6/h2F2eMjD77eCwgJQ606l?=
+ =?us-ascii?Q?XPnIIXeGNYo6v4k0uf3rS5CQfUqxRzRBIpwRtwVBjX8lnVlCUTdBfKYHBzRo?=
+ =?us-ascii?Q?9w2uuLSTXLlpUFLpreSB17CqasxBqSB1c9AZMZ2FtfE=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN6PR11MB1875.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a0bc6c4-77f2-4c05-6638-08d8b83905e5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Jan 2021 03:03:52.1473
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: WZ0l26qytVXqtIMiF2oRmP3pV84CsjxZQzQUNhEBuLrFc6DlyI2ZIloUpWoIsksnxzqs6QbI3x07+oEmDNu3dg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR11MB2547
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 06.01.2021 20:34, Heiner Kallweit wrote:
-> On 06.01.2021 20:22, Bjorn Helgaas wrote:
->> On Wed, Jan 06, 2021 at 06:50:22PM +0100, Heiner Kallweit wrote:
->>> If we know that a device has broken parity checking, then disable it.
->>> This avoids quirks like in r8169 where on the first parity error
->>> interrupt parity checking will be disabled if broken_parity_status
->>> is set. Make pci_quirk_broken_parity() public so that it can be used
->>> by platform code, e.g. for Thecus N2100.
->>>
->>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
->>> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
->>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> This series should all go together.  Let me know if you want me to do
->> anything more (would require acks for arm and r8169, of course).
->>
-> Right. For r8169 I'm the maintainer myself and agreed with Jakub that
-> the r8169 patch will go through the PCI tree.
-> 
-> Regarding the arm/iop32x part:
-> MAINTAINERS file lists Lennert as maintainer, let me add him.
-> Strange thing is that the MAINTAINERS entry for arm/iop32x has no
-> F entry, therefore the get_maintainers scripts will never list him
-> as addressee. The script lists Russell as "odd fixer".
-> @Lennert: Please provide a patch to add the missing F entry.
-> 
-> ARM/INTEL IOP32X ARM ARCHITECTURE
-> M:	Lennert Buytenhek <kernel@wantstofly.org>
-> L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> S:	Maintained
-> 
+> From: Lu Baolu
+> Sent: Thursday, January 14, 2021 9:30 AM
+>=20
+> The pci_subdevice_msi_create_irq_domain() should fail if the underlying
+> platform is not able to support IMS (Interrupt Message Storage). Otherwis=
+e,
+> the isolation of interrupt is not guaranteed.
+>=20
+> For x86, IMS is only supported on bare metal for now. We could enable it
+> in the virtualization environments in the future if interrupt HYPERCALL
+> domain is supported or the hardware has the capability of interrupt
+> isolation for subdevices.
+>=20
+> Cc: David Woodhouse <dwmw@amazon.co.uk>
+> Cc: Leon Romanovsky <leon@kernel.org>
+> Cc: Kevin Tian <kevin.tian@intel.com>
+> Suggested-by: Thomas Gleixner <tglx@linutronix.de>
+> Link: https://lore.kernel.org/linux-
+> pci/87pn4nk7nn.fsf@nanos.tec.linutronix.de/
+> Link: https://lore.kernel.org/linux-
+> pci/877dqrnzr3.fsf@nanos.tec.linutronix.de/
+> Link: https://lore.kernel.org/linux-
+> pci/877dqqmc2h.fsf@nanos.tec.linutronix.de/
+> Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+> ---
+>  arch/x86/pci/common.c       | 71
+> +++++++++++++++++++++++++++++++++++++
+>  drivers/base/platform-msi.c |  8 +++++
+>  include/linux/msi.h         |  1 +
+>  3 files changed, 80 insertions(+)
+>=20
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 3507f456fcd0..9deb826fb242 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -12,6 +12,7 @@
+>  #include <linux/init.h>
+>  #include <linux/dmi.h>
+>  #include <linux/slab.h>
+> +#include <linux/iommu.h>
+>=20
+>  #include <asm/acpi.h>
+>  #include <asm/segment.h>
+> @@ -724,3 +725,73 @@ struct pci_dev *pci_real_dma_dev(struct pci_dev
+> *dev)
+>  	return dev;
+>  }
+>  #endif
+> +
+> +/*
+> + * We want to figure out which context we are running in. But the hardwa=
+re
+> + * does not introduce a reliable way (instruction, CPUID leaf, MSR, what=
+ever)
+> + * which can be manipulated by the VMM to let the OS figure out where it
+> runs.
+> + * So we go with the below probably on_bare_metal() function as a
+> replacement
+> + * for definitely on_bare_metal() to go forward only for the very simple
+> reason
+> + * that this is the only option we have.
+> + */
+> +static const char * const vmm_vendor_name[] =3D {
+> +	"QEMU", "Bochs", "KVM", "Xen", "VMware", "VMW", "VMware Inc.",
+> +	"innotek GmbH", "Oracle Corporation", "Parallels", "BHYVE"
+> +};
+> +
+> +static void read_type0_virtual_machine(const struct dmi_header *dm, void
+> *p)
+> +{
+> +	u8 *data =3D (u8 *)dm + 0x13;
+> +
+> +	/* BIOS Information (Type 0) */
+> +	if (dm->type !=3D 0 || dm->length < 0x14)
+> +		return;
+> +
+> +	/* Bit 4 of BIOS Characteristics Extension Byte 2*/
+> +	if (*data & BIT(4))
+> +		*((bool *)p) =3D true;
+> +}
+> +
+> +static bool smbios_virtual_machine(void)
+> +{
+> +	bool bit_present =3D false;
+> +
+> +	dmi_walk(read_type0_virtual_machine, &bit_present);
+> +
+> +	return bit_present;
+> +}
+> +
+> +static bool on_bare_metal(struct device *dev)
+> +{
+> +	int i;
+> +
+> +	if (boot_cpu_has(X86_FEATURE_HYPERVISOR))
+> +		return false;
+> +
+> +	if (smbios_virtual_machine())
+> +		return false;
+> +
+> +	if (iommu_capable(dev->bus, IOMMU_CAP_VIOMMU))
+> +		return false;
+> +
+> +	for (i =3D 0; i < ARRAY_SIZE(vmm_vendor_name); i++)
+> +		if (dmi_match(DMI_SYS_VENDOR, vmm_vendor_name[i]))
+> +			return false;
 
-Bjorn, I saw that you set the series to "not applicable". Is this because
-of the missing ack for the arm part?
-I checked and Lennert's last kernel contribution is from 2015. Having said
-that the maintainer's entry may be outdated. Not sure who else would be
-entitled to ack this patch. The change is simple enough, could you take
-it w/o an ack? 
-Alternatively, IIRC Russell has got such a device. Russell, would it
-be possible that you test that there's still no false-positive parity
-errors with this series?
+Thinking more I wonder whether this check is actually useful here. As Leon
+and David commented, the same vendor name can be used both for VM
+and bare metal instances. It implies that both bare metal and VM might be
+misinterpreted with this check. This might not be what we want originally -
+find heuristics to indicate a VM environment and tolerate misinterpreting=20
+VM as bare metal in corner cases (but not vice versa).
 
+Thomas?
 
-> 
->>> ---
->>>  drivers/pci/quirks.c | 17 +++++++++++------
->>>  include/linux/pci.h  |  2 ++
->>>  2 files changed, 13 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 653660e3b..ab54e26b8 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -205,17 +205,22 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
->>>  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->>>  				PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
->>>  
->>> +void pci_quirk_broken_parity(struct pci_dev *dev)
->>> +{
->>> +	u16 cmd;
->>> +
->>> +	dev->broken_parity_status = 1;	/* This device gives false positives */
->>> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
->>> +	pci_write_config_word(dev, PCI_COMMAND, cmd & ~PCI_COMMAND_PARITY);
->>> +}
->>> +
->>>  /*
->>>   * The Mellanox Tavor device gives false positive parity errors.  Mark this
->>>   * device with a broken_parity_status to allow PCI scanning code to "skip"
->>>   * this now blacklisted device.
->>>   */
->>> -static void quirk_mellanox_tavor(struct pci_dev *dev)
->>> -{
->>> -	dev->broken_parity_status = 1;	/* This device gives false positives */
->>> -}
->>> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR, quirk_mellanox_tavor);
->>> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE, quirk_mellanox_tavor);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR, pci_quirk_broken_parity);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE, pci_quirk_broken_parity);
->>>  
->>>  /*
->>>   * Deal with broken BIOSes that neglect to enable passive release,
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index b32126d26..161dcc474 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -1916,6 +1916,8 @@ enum pci_fixup_pass {
->>>  	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
->>>  };
->>>  
->>> +void pci_quirk_broken_parity(struct pci_dev *dev);
->>> +
->>>  #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
->>>  #define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
->>>  				    class_shift, hook)			\
->>> -- 
->>> 2.30.0
->>>
->>>
->>>
-> 
+Thanks
+Kevin
 
