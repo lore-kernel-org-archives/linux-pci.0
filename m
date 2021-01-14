@@ -2,561 +2,202 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0A2C433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 18:15:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D31C433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 18:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E93C23B54
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 18:15:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2552223B28
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 18:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727918AbhANSOv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jan 2021 13:14:51 -0500
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2351 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727249AbhANSOv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2021 13:14:51 -0500
-Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DGsmN5YW5z67bcx;
-        Fri, 15 Jan 2021 02:10:12 +0800 (CST)
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2106.2; Thu, 14 Jan 2021 19:14:09 +0100
-Received: from localhost (10.47.30.252) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2106.2; Thu, 14 Jan
- 2021 18:14:07 +0000
-Date:   Thu, 14 Jan 2021 18:13:28 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Ben Widawsky <ben.widawsky@intel.com>
-CC:     <linux-cxl@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org, Ira Weiny" <ira.weiny@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Vishal Verma" <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        "Bjorn Helgaas" <helgaas@kernel.org>,
-        Jon Masters <jcm@jonmasters.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        "Christoph Hellwig" <hch@infradead.org>,
-        <daniel.lll@alibaba-inc.com>
-Subject: Re: [RFC PATCH v3 07/16] cxl/mem: Implement polled mode mailbox
-Message-ID: <20210114181328.0000284b@Huawei.com>
-In-Reply-To: <20210114175044.clgelxe7csltyx2e@intel.com>
-References: <20210111225121.820014-1-ben.widawsky@intel.com>
-        <20210111225121.820014-8-ben.widawsky@intel.com>
-        <20210114174012.00001d7a@Huawei.com>
-        <20210114175044.clgelxe7csltyx2e@intel.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1728617AbhANSaa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jan 2021 13:30:30 -0500
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:12721 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726367AbhANSa3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2021 13:30:29 -0500
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B60008d9c0000>; Thu, 14 Jan 2021 10:29:48 -0800
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 14 Jan
+ 2021 18:29:47 +0000
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.175)
+ by HQMAIL107.nvidia.com (172.20.187.13) with Microsoft SMTP Server (TLS) id
+ 15.0.1473.3 via Frontend Transport; Thu, 14 Jan 2021 18:29:47 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DN/Ww9VB0Fsa8k482INqWwSg4wMJm3YgAu2b/hOAEFoKSYGFmpIrsm5KIhNgPhq/XKier6iMeeJx+NUmBjJakYCQ+9R9RvJa0WVuSfERI1/U8vN3hWNTIKG56Tlep+hhjuv6dVwAUupeLusNNfj6g4OFtfY5zRAsnFNqYnii2/PFJ4oEEEhN0sZ5FlG7Nv82Xqm5oDVhJiCU8P1rS/FB0MdgQA5eISAyNrUrY2jyiue9WdFukiPmeoLu8Au7txmyR8WGh8H4BdlF3b4CEYaXYsobMSeBXCebjgYlCJgQylCUm7kYL2w2rdXhoyRB4VBu/zzmG5Cj9iMmvXdl8hGZ7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Wrf3nTZDCSV33tsOoxzZns6XNlveD8eoEEhs1l6NUXs=;
+ b=n1ZVn3BIyj9KMyefdu+D7s0aG3OFkE3x+hhVHIwP9v4zrMQb0UHpsHnhG2wzE6Vaqs2EbP/z3VZ2/uHhho+wfJSp7Cal7e1v8R4UTKeZsYx1GZSGkbcN/HNHMgJU8Y9Zyc28JXSf6386gB6OUxkrCuxsFa6qkA/ykzp3ig9D+d2Se2G5q3kLloO9+rCnCuc4W89rVos73eG1LuMXWKSrZwrDgzqzLNXZIjUsg3f0McyXdp67Nu2PgOkDByW/k3yD0s64BlpjkQnffpBkel2Q//A/W7s5hlEGCv1l+6c7OIvbl9sz2kl4XzGC9zE2yLRFvyJDf1OTaoWecw3GD/pS/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+Received: from DM6PR12MB3834.namprd12.prod.outlook.com (2603:10b6:5:14a::12)
+ by DM6PR12MB3836.namprd12.prod.outlook.com (2603:10b6:5:1c3::33) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3742.6; Thu, 14 Jan
+ 2021 18:29:46 +0000
+Received: from DM6PR12MB3834.namprd12.prod.outlook.com
+ ([fe80::546d:512c:72fa:4727]) by DM6PR12MB3834.namprd12.prod.outlook.com
+ ([fe80::546d:512c:72fa:4727%7]) with mapi id 15.20.3742.012; Thu, 14 Jan 2021
+ 18:29:46 +0000
+Date:   Thu, 14 Jan 2021 14:29:45 -0400
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Alexander Duyck <alexander.duyck@gmail.com>
+CC:     Leon Romanovsky <leon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        <linux-rdma@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+        Don Dutile <ddutile@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH mlx5-next v1 2/5] PCI: Add SR-IOV sysfs entry to read
+ number of MSI-X vectors
+Message-ID: <20210114182945.GO4147@nvidia.com>
+References: <20210110150727.1965295-3-leon@kernel.org>
+ <CAKgT0Uczu6cULPsVjFuFVmir35SpL-bs0hosbfH-T5sZLZ78BQ@mail.gmail.com>
+ <20210112065601.GD4678@unreal>
+ <CAKgT0UdndGdA3xONBr62hE-_RBdL-fq6rHLy0PrdsuMn1936TA@mail.gmail.com>
+ <20210113061909.GG4678@unreal>
+ <CAKgT0Uc4v54vqRVk_HhjOk=OLJu-20AhuBVcg7=C9_hsLtzxLA@mail.gmail.com>
+ <20210114065024.GK4678@unreal>
+ <CAKgT0UeTXMeH24L9=wsPc2oJ=ZJ5jSpJeOqiJvsB2J9TFRFzwQ@mail.gmail.com>
+ <20210114164857.GN4147@nvidia.com>
+ <CAKgT0UcKqt=EgE+eitB8-u8LvxqHBDfF+u2ZSi5urP_Aj0Btvg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <CAKgT0UcKqt=EgE+eitB8-u8LvxqHBDfF+u2ZSi5urP_Aj0Btvg@mail.gmail.com>
+X-ClientProxiedBy: MN2PR07CA0025.namprd07.prod.outlook.com
+ (2603:10b6:208:1a0::35) To DM6PR12MB3834.namprd12.prod.outlook.com
+ (2603:10b6:5:14a::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.30.252]
-X-ClientProxiedBy: lhreml709-chm.china.huawei.com (10.201.108.58) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from mlx.ziepe.ca (142.162.115.133) by MN2PR07CA0025.namprd07.prod.outlook.com (2603:10b6:208:1a0::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3763.9 via Frontend Transport; Thu, 14 Jan 2021 18:29:46 +0000
+Received: from jgg by mlx with local (Exim 4.94)        (envelope-from <jgg@nvidia.com>)        id 1l07NR-001Lsk-6u; Thu, 14 Jan 2021 14:29:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1610648988; bh=Wrf3nTZDCSV33tsOoxzZns6XNlveD8eoEEhs1l6NUXs=;
+        h=ARC-Seal:ARC-Message-Signature:ARC-Authentication-Results:Date:
+         From:To:CC:Subject:Message-ID:References:Content-Type:
+         Content-Disposition:In-Reply-To:X-ClientProxiedBy:MIME-Version:
+         X-MS-Exchange-MessageSentRepresentingType;
+        b=LPkDjE0CrnO76+iYFJ4C/TEF5Fy3kO6gNK339REzXGHkP8UW1RKwJKqdXty9x4BuX
+         I9p7qOAM1mRjdpRmLQcgAg1MocjzjDF5b09jQbpCSzBnqx9wmz12DgDUSKC81/Qxpb
+         xu+AH79nMhB1H07SX1v1KnwCXim+klfVOXxltk1VsoVsy6aoXMU4NFqwFPovNqAkXv
+         op7HQgaLhda3d7bLrg68Uz6YkFBD2h5OPWgHDifmf02GdwrAcx8q27QEDv6Q8dcyA7
+         BhprjCoOZBmYgfxenWNQttgVLApEBIr2n5TZifxKZNXOOh/nyT6BjKxwdlsCSRoN1d
+         QZre90+6Dodmg==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 14 Jan 2021 09:50:44 -0800
-Ben Widawsky <ben.widawsky@intel.com> wrote:
-
-> On 21-01-14 17:40:12, Jonathan Cameron wrote:
-> > On Mon, 11 Jan 2021 14:51:11 -0800
-> > Ben Widawsky <ben.widawsky@intel.com> wrote:
-> >   
-> > > Provide enough functionality to utilize the mailbox of a memory device.
-> > > The mailbox is used to interact with the firmware running on the memory
-> > > device.
-> > > 
-> > > The CXL specification defines separate capabilities for the mailbox and
-> > > the memory device. While we can confirm the mailbox is ready, in order
-> > > to actually interact with the memory device, you must also confirm the
-> > > device's firmware is ready.
-> > > 
-> > > Create a function to handle sending a command, optionally with a
-> > > payload, to the memory device, polling on a result, and then optionally
-> > > copying out the payload. The algorithm for doing this comes straight out
-> > > of the CXL 2.0 specification.
-> > > 
-> > > Primary mailboxes are capable of generating an interrupt when submitting
-> > > a command in the background. That implementation is saved for a later
-> > > time.
-> > > 
-> > > Secondary mailboxes aren't implemented at this time.
-> > > 
-> > > The flow is proven with one implemented command, "identify". Because the
-> > > class code has already told the driver this is a memory device and the
-> > > identify command is mandatory, it's safe to assume for sane devices that
-> > > everything here will work.
-> > > 
-> > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>  
-> > One more thing that had me confused in a later patch (14)
-> > 
-> > J  
-> > > ---
-> > >  drivers/cxl/cxl.h |  43 +++++++
-> > >  drivers/cxl/mem.c | 312 ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  2 files changed, 355 insertions(+)
-> > > 
-> > > diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> > > index a77286d04ce4..ca3fa496e21c 100644
-> > > --- a/drivers/cxl/cxl.h
-> > > +++ b/drivers/cxl/cxl.h
-> > > @@ -32,9 +32,40 @@
-> > >  #define   CXLDEV_MB_CAP_PAYLOAD_SIZE_MASK GENMASK(4, 0)
-> > >  #define   CXLDEV_MB_CAP_PAYLOAD_SIZE_SHIFT 0
-> > >  #define CXLDEV_MB_CTRL_OFFSET 0x04
-> > > +#define   CXLDEV_MB_CTRL_DOORBELL BIT(0)
-> > >  #define CXLDEV_MB_CMD_OFFSET 0x08
-> > > +#define   CXLDEV_MB_CMD_COMMAND_OPCODE_SHIFT 0
-> > > +#define   CXLDEV_MB_CMD_COMMAND_OPCODE_MASK GENMASK(15, 0)
-> > > +#define   CXLDEV_MB_CMD_PAYLOAD_LENGTH_SHIFT 16
-> > > +#define   CXLDEV_MB_CMD_PAYLOAD_LENGTH_MASK GENMASK(36, 16)
-> > >  #define CXLDEV_MB_STATUS_OFFSET 0x10
-> > > +#define   CXLDEV_MB_STATUS_RET_CODE_SHIFT 32
-> > > +#define   CXLDEV_MB_STATUS_RET_CODE_MASK GENMASK(47, 32)
-> > >  #define CXLDEV_MB_BG_CMD_STATUS_OFFSET 0x18
-> > > +#define CXLDEV_MB_PAYLOAD_OFFSET 0x20
-> > > +
-> > > +/* Memory Device (CXL 2.0 - 8.2.8.5.1.1) */
-> > > +#define CXLMDEV_STATUS_OFFSET 0x0
-> > > +#define   CXLMDEV_DEV_FATAL BIT(0)
-> > > +#define   CXLMDEV_FW_HALT BIT(1)
-> > > +#define   CXLMDEV_STATUS_MEDIA_STATUS_SHIFT 2
-> > > +#define   CXLMDEV_STATUS_MEDIA_STATUS_MASK GENMASK(3, 2)
-> > > +#define     CXLMDEV_MS_NOT_READY 0
-> > > +#define     CXLMDEV_MS_READY 1
-> > > +#define     CXLMDEV_MS_ERROR 2
-> > > +#define     CXLMDEV_MS_DISABLED 3
-> > > +#define   CXLMDEV_READY(status) \
-> > > +		(CXL_GET_FIELD(status, CXLMDEV_STATUS_MEDIA_STATUS) == CXLMDEV_MS_READY)
-> > > +#define   CXLMDEV_MBOX_IF_READY BIT(4)
-> > > +#define   CXLMDEV_RESET_NEEDED_SHIFT 5
-> > > +#define   CXLMDEV_RESET_NEEDED_MASK GENMASK(7, 5)
-> > > +#define     CXLMDEV_RESET_NEEDED_NOT 0
-> > > +#define     CXLMDEV_RESET_NEEDED_COLD 1
-> > > +#define     CXLMDEV_RESET_NEEDED_WARM 2
-> > > +#define     CXLMDEV_RESET_NEEDED_HOT 3
-> > > +#define     CXLMDEV_RESET_NEEDED_CXL 4
-> > > +#define   CXLMDEV_RESET_NEEDED(status) \
-> > > +		(CXL_GET_FIELD(status, CXLMDEV_RESET_NEEDED) != CXLMDEV_RESET_NEEDED_NOT)
-> > >  
-> > >  /**
-> > >   * struct cxl_mem - A CXL memory device
-> > > @@ -45,6 +76,16 @@ struct cxl_mem {
-> > >  	struct pci_dev *pdev;
-> > >  	void __iomem *regs;
-> > >  
-> > > +	struct {
-> > > +		struct range range;
-> > > +	} pmem;
-> > > +
-> > > +	struct {
-> > > +		struct range range;
-> > > +	} ram;
-> > > +
-> > > +	char firmware_version[0x10];
-> > > +
-> > >  	/* Cap 0001h - CXL_CAP_CAP_ID_DEVICE_STATUS */
-> > >  	struct {
-> > >  		void __iomem *regs;
-> > > @@ -52,6 +93,7 @@ struct cxl_mem {
-> > >  
-> > >  	/* Cap 0002h - CXL_CAP_CAP_ID_PRIMARY_MAILBOX */
-> > >  	struct {
-> > > +		struct mutex mutex; /* Protects device mailbox and firmware */
-> > >  		void __iomem *regs;
-> > >  		size_t payload_size;
-> > >  	} mbox;
-> > > @@ -90,6 +132,7 @@ struct cxl_mem {
-> > >  
-> > >  cxl_reg(status);
-> > >  cxl_reg(mbox);
-> > > +cxl_reg(mem);
-> > >  
-> > >  #define cxl_payload_regs(cxlm)                                                 \
-> > >  	((void __iomem *)(cxlm)->mbox.regs + CXLDEV_MB_PAYLOAD_OFFSET)
-> > > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> > > index 8da9f4a861ea..e9ba97bbd7b9 100644
-> > > --- a/drivers/cxl/mem.c
-> > > +++ b/drivers/cxl/mem.c
-> > > @@ -1,5 +1,6 @@
-> > >  // SPDX-License-Identifier: GPL-2.0-only
-> > >  /* Copyright(c) 2020 Intel Corporation. All rights reserved. */
-> > > +#include <linux/sched/clock.h>
-> > >  #include <linux/module.h>
-> > >  #include <linux/pci.h>
-> > >  #include <linux/io.h>
-> > > @@ -7,6 +8,248 @@
-> > >  #include "pci.h"
-> > >  #include "cxl.h"
-> > >  
-> > > +#define cxl_doorbell_busy(cxlm)                                                \
-> > > +	(cxl_read_mbox_reg32(cxlm, CXLDEV_MB_CTRL_OFFSET) &                    \
-> > > +	 CXLDEV_MB_CTRL_DOORBELL)
-> > > +
-> > > +#define CXL_MAILBOX_TIMEOUT_US 2000
-> > > +
-> > > +enum opcode {
-> > > +	CXL_MBOX_OP_IDENTIFY    = 0x4000,
-> > > +	CXL_MBOX_OP_MAX         = 0x10000
-> > > +};
-> > > +
-> > > +/**
-> > > + * struct mbox_cmd - A command to be submitted to hardware.
-> > > + * @opcode: (input) The command set and command submitted to hardware.
-> > > + * @payload: (input/output) Pointer to the input and output payload.
-> > > + *           Payload can be NULL if the caller wants to populate the payload
-> > > + *           registers themselves (potentially avoiding a copy).
-> > > + * @size_in: (input) Number of bytes to load from @payload.
-> > > + * @size_out:
-> > > + *  - (input) Number of bytes allocated to load into @payload.  
-> > 
-> > I'm not actually seeing where this is used as an input. I'd expect a min(input,  output)
-> > at the memcpy but there isn't one there.
-> >   
+On Thu, Jan 14, 2021 at 09:55:24AM -0800, Alexander Duyck wrote:
+> On Thu, Jan 14, 2021 at 8:49 AM Jason Gunthorpe <jgg@nvidia.com> wrote:
+> >
+> > On Thu, Jan 14, 2021 at 08:40:14AM -0800, Alexander Duyck wrote:
+> >
+> > > Where I think you and I disagree is that I really think the MSI-X
+> > > table size should be fixed at one value for the life of the VF.
+> > > Instead of changing the table size it should be the number of vectors
+> > > that are functional that should be the limit. Basically there should
+> > > be only some that are functional and some that are essentially just
+> > > dummy vectors that you can write values into that will never be used.
+> >
+> > Ignoring the PCI config space to learn the # of available MSI-X
+> > vectors is big break on the how the device's programming ABI works.
+> >
+> > Or stated another way, that isn't compatible with any existing drivers
+> > so it is basically not a useful approach as it can't be deployed.
+> >
+> > I don't know why you think that is better.
+> >
+> > Jason
 > 
-> The functionality changed since v2 and this interface no longer deals with
-> restricting output length. This was because at some intermediate point I had
-> entirely removed the copying in/out of the payload registers from this command.
-> As you see, it came back.
-> 
-> For userspace submitted commands the lengths are all validated up front before
-> we get here.
-> 
-> For commands submitted directly from the kernel, I've gone back and forth about
-> how useful it is. If you feel strongly that it is useful, I can add it back. It
-> sounds like you want me to convert everything back to an intermediate buffer,
-> which I will respond in that patch, so I'd need to rework it anyway if that's
-> the path we end up taking.
+> First off, this is technically violating the PCIe spec section 7.7.2.2
+> because this is the device driver modifying the Message Control
+> register for a device, even if it is the PF firmware modifying the VF.
+> The table size is something that should be set and fixed at device
+> creation and not changed.
 
-Fix the docs to make that (output) only works for me.  Perhaps also add a line saying that
-output payload length must be large enough.
+The word "violating" is rather an over-reaction, at worst this is an
+extension.
 
-> 
-> > > + *  - (output) Number of bytes loaded into @payload.
-> > > + * @return_code: (output) Error code returned from hardware.
-> > > + *
-> > > + * This is the primary mechanism used to send commands to the hardware.
-> > > + * All the fields except @payload correspond exactly to the fields described in
-> > > + * Command Register section of the CXL 2.0 spec (8.2.8.4.5). @payload
-> > > + * corresponds to the Command Payload Registers (8.2.8.4.8).
-> > > + */
-> > > +struct mbox_cmd {
-> > > +	u16 opcode;
-> > > +	void *payload;
-> > > +	size_t size_in;
-> > > +	size_t size_out;
-> > > +	u16 return_code;
-> > > +};
-> > > +
-> > > +static int cxl_mem_wait_for_doorbell(struct cxl_mem *cxlm)
-> > > +{
-> > > +	const int timeout = msecs_to_jiffies(CXL_MAILBOX_TIMEOUT_US);
-> > > +	const unsigned long start = jiffies;
-> > > +	unsigned long end = start;
-> > > +
-> > > +	while (cxl_doorbell_busy(cxlm)) {
-> > > +		end = jiffies;
-> > > +
-> > > +		if (time_after(end, start + timeout)) {
-> > > +			/* Check again in case preempted before timeout test */
-> > > +			if (!cxl_doorbell_busy(cxlm))
-> > > +				break;
-> > > +			return -ETIMEDOUT;
-> > > +		}
-> > > +		cpu_relax();
-> > > +	}
-> > > +
-> > > +	dev_dbg(&cxlm->pdev->dev, "Doorbell wait took %dms",
-> > > +		jiffies_to_msecs(end) - jiffies_to_msecs(start));
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
-> > > +				 struct mbox_cmd *mbox_cmd)
-> > > +{
-> > > +	dev_warn(&cxlm->pdev->dev, "Mailbox command timed out\n");
-> > > +	dev_info(&cxlm->pdev->dev,
-> > > +		 "\topcode: 0x%04x\n"
-> > > +		 "\tpayload size: %zub\n",
-> > > +		 mbox_cmd->opcode, mbox_cmd->size_in);
-> > > +	print_hex_dump_debug("Payload ", DUMP_PREFIX_OFFSET, 16, 1,
-> > > +			     mbox_cmd->payload, mbox_cmd->size_in, true);
-> > > +
-> > > +	/* Here's a good place to figure out if a device reset is needed */
-> > > +}
-> > > +
-> > > +/**
-> > > + * cxl_mem_mbox_send_cmd() - Send a mailbox command to a memory device.
-> > > + * @cxlm: The CXL memory device to communicate with.
-> > > + * @mbox_cmd: Command to send to the memory device.
-> > > + *
-> > > + * Context: Any context. Expects mbox_lock to be held.
-> > > + * Return: -ETIMEDOUT if timeout occurred waiting for completion. 0 on success.
-> > > + *         Caller should check the return code in @mbox_cmd to make sure it
-> > > + *         succeeded.
-> > > + *
-> > > + * This is a generic form of the CXL mailbox send command, thus the only I/O
-> > > + * operations used are cxl_read_mbox_reg(). Memory devices, and perhaps other
-> > > + * types of CXL devices may have further information available upon error
-> > > + * conditions.
-> > > + *
-> > > + * FIXME: As stated above, references to &struct cxl_mem should be changed to a
-> > > + * more generic cxl structure when needed.
-> > > + */
-> > > +static int cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
-> > > +				 struct mbox_cmd *mbox_cmd)
-> > > +{
-> > > +	u64 cmd_reg, status_reg;
-> > > +	size_t out_len;
-> > > +	int rc;
-> > > +
-> > > +	lockdep_assert_held(&cxlm->mbox.mutex);
-> > > +
-> > > +	/*
-> > > +	 * Here are the steps from 8.2.8.4 of the CXL 2.0 spec.
-> > > +	 *   1. Caller reads MB Control Register to verify doorbell is clear
-> > > +	 *   2. Caller writes Command Register
-> > > +	 *   3. Caller writes Command Payload Registers if input payload is non-empty
-> > > +	 *   4. Caller writes MB Control Register to set doorbell
-> > > +	 *   5. Caller either polls for doorbell to be clear or waits for interrupt if configured
-> > > +	 *   6. Caller reads MB Status Register to fetch Return code
-> > > +	 *   7. If command successful, Caller reads Command Register to get Payload Length
-> > > +	 *   8. If output payload is non-empty, host reads Command Payload Registers
-> > > +	 */
-> > > +
-> > > +	/* #1 */
-> > > +	WARN_ON(cxl_doorbell_busy(cxlm));
-> > > +
-> > > +	cmd_reg = CXL_SET_FIELD(mbox_cmd->opcode, CXLDEV_MB_CMD_COMMAND_OPCODE);
-> > > +	if (mbox_cmd->size_in) {
-> > > +		cmd_reg |= CXL_SET_FIELD(mbox_cmd->size_in,
-> > > +					 CXLDEV_MB_CMD_PAYLOAD_LENGTH);
-> > > +		if (mbox_cmd->payload)
-> > > +			memcpy_toio(cxl_payload_regs(cxlm), mbox_cmd->payload,
-> > > +				    mbox_cmd->size_in);
-> > > +	}
-> > > +
-> > > +	/* #2, #3 */
-> > > +	cxl_write_mbox_reg64(cxlm, CXLDEV_MB_CMD_OFFSET, cmd_reg);
-> > > +
-> > > +	/* #4 */
-> > > +	dev_dbg(&cxlm->pdev->dev, "Sending command\n");
-> > > +	cxl_write_mbox_reg32(cxlm, CXLDEV_MB_CTRL_OFFSET,
-> > > +			     CXLDEV_MB_CTRL_DOORBELL);
-> > > +
-> > > +	/* #5 */
-> > > +	rc = cxl_mem_wait_for_doorbell(cxlm);
-> > > +	if (rc == -ETIMEDOUT) {
-> > > +		cxl_mem_mbox_timeout(cxlm, mbox_cmd);
-> > > +		return rc;
-> > > +	}
-> > > +
-> > > +	/* #6 */
-> > > +	status_reg = cxl_read_mbox_reg64(cxlm, CXLDEV_MB_STATUS_OFFSET);
-> > > +	mbox_cmd->return_code =
-> > > +		CXL_GET_FIELD(status_reg, CXLDEV_MB_STATUS_RET_CODE);
-> > > +
-> > > +	if (mbox_cmd->return_code != 0) {
-> > > +		dev_dbg(&cxlm->pdev->dev, "Mailbox operation had an error\n");
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	/* #7 */
-> > > +	cmd_reg = cxl_read_mbox_reg64(cxlm, CXLDEV_MB_CMD_OFFSET);
-> > > +	out_len = CXL_GET_FIELD(cmd_reg, CXLDEV_MB_CMD_PAYLOAD_LENGTH);
-> > > +	mbox_cmd->size_out = out_len;
-> > > +
-> > > +	/* #8 */
-> > > +	if (out_len && mbox_cmd->payload)
-> > > +		memcpy_fromio(mbox_cmd->payload, cxl_payload_regs(cxlm),
-> > > +			      mbox_cmd->size_out);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +/**
-> > > + * cxl_mem_mbox_get() - Acquire exclusive access to the mailbox.
-> > > + * @cxlm: The memory device to gain access to.
-> > > + *
-> > > + * Context: Any context. Takes the mbox_lock.
-> > > + * Return: 0 if exclusive access was acquired.
-> > > + */
-> > > +static int cxl_mem_mbox_get(struct cxl_mem *cxlm)
-> > > +{
-> > > +	u64 md_status;
-> > > +	int rc = -EBUSY;
-> > > +
-> > > +	mutex_lock_io(&cxlm->mbox.mutex);
-> > > +
-> > > +	/*
-> > > +	 * XXX: There is some amount of ambiguity in the 2.0 version of the spec
-> > > +	 * around the mailbox interface ready (8.2.8.5.1.1). The purpose of the
-> > > +	 * bit is to allow firmware running on the device to notify us that it's
-> > > +	 * ready to receive commands. It is unclear if the bit needs to be read
-> > > +	 * every time one tries to use the mailbox, ie. the firmware can switch
-> > > +	 * it on and off as needed. Second, there is no defined timeout for
-> > > +	 * mailbox ready, like there is for the doorbell interface.
-> > > +	 *
-> > > +	 * As such, we make the following assumptions:
-> > > +	 * 1. The firmware might toggle the Mailbox Interface Ready bit, and so
-> > > +	 *    we check it for every command.
-> > > +	 * 2. If the doorbell is clear, the firmware should have first set the
-> > > +	 *    Mailbox Interface Ready bit. Therefore, waiting for the doorbell
-> > > +	 *    to be ready is a sufficient amount of time.
-> > > +	 */
-> > > +	rc = cxl_mem_wait_for_doorbell(cxlm);
-> > > +	if (rc) {
-> > > +		dev_warn(&cxlm->pdev->dev, "Mailbox interface not ready\n");
-> > > +		goto out;
-> > > +	}
-> > > +
-> > > +	md_status = cxl_read_mem_reg64(cxlm, CXLMDEV_STATUS_OFFSET);
-> > > +	if (md_status & CXLMDEV_MBOX_IF_READY && CXLMDEV_READY(md_status)) {
-> > > +		/*
-> > > +		 * Hardware shouldn't allow a ready status but also have failure
-> > > +		 * bits set. Spit out an error, this should be a bug report
-> > > +		 */
-> > > +		if (md_status & CXLMDEV_DEV_FATAL) {
-> > > +			dev_err(&cxlm->pdev->dev,
-> > > +				"CXL device reporting ready and fatal\n");
-> > > +			rc = -EFAULT;
-> > > +			goto out;
-> > > +		}
-> > > +		if (md_status & CXLMDEV_FW_HALT) {
-> > > +			dev_err(&cxlm->pdev->dev,
-> > > +				"CXL device reporting ready and halted\n");
-> > > +			rc = -EFAULT;
-> > > +			goto out;
-> > > +		}
-> > > +		if (CXLMDEV_RESET_NEEDED(md_status)) {
-> > > +			dev_err(&cxlm->pdev->dev,
-> > > +				"CXL device reporting ready and reset needed\n");
-> > > +			rc = -EFAULT;
-> > > +			goto out;
-> > > +		}
-> > > +
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +out:
-> > > +	mutex_unlock(&cxlm->mbox.mutex);
-> > > +	return rc;
-> > > +}
-> > > +
-> > > +/**
-> > > + * cxl_mem_mbox_put() - Release exclusive access to the mailbox.
-> > > + * @cxlm: The CXL memory device to communicate with.
-> > > + *
-> > > + * Context: Any context. Expects mbox_lock to be held.
-> > > + */
-> > > +static void cxl_mem_mbox_put(struct cxl_mem *cxlm)
-> > > +{
-> > > +	mutex_unlock(&cxlm->mbox.mutex);
-> > > +}
-> > > +
-> > >  /**
-> > >   * cxl_mem_setup_regs() - Setup necessary MMIO.
-> > >   * @cxlm: The CXL memory device to communicate with.
-> > > @@ -135,6 +378,8 @@ static struct cxl_mem *cxl_mem_create(struct pci_dev *pdev, u32 reg_lo,
-> > >  		return NULL;
-> > >  	}
-> > >  
-> > > +	mutex_init(&cxlm->mbox.mutex);
-> > > +
-> > >  	regs = pcim_iomap_table(pdev)[bar];
-> > >  	cxlm->pdev = pdev;
-> > >  	cxlm->regs = regs + offset;
-> > > @@ -167,6 +412,69 @@ static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +/**
-> > > + * cxl_mem_identify() - Send the IDENTIFY command to the device.
-> > > + * @cxlm: The device to identify.
-> > > + *
-> > > + * Return: 0 if identify was executed successfully.
-> > > + *
-> > > + * This will dispatch the identify command to the device and on success populate
-> > > + * structures to be exported to sysfs.
-> > > + */
-> > > +static int cxl_mem_identify(struct cxl_mem *cxlm)
-> > > +{
-> > > +	struct cxl_mbox_identify {
-> > > +		char fw_revision[0x10];
-> > > +		__le64 total_capacity;
-> > > +		__le64 volatile_capacity;
-> > > +		__le64 persistent_capacity;
-> > > +		__le64 partition_align;
-> > > +		__le16 info_event_log_size;
-> > > +		__le16 warning_event_log_size;
-> > > +		__le16 failure_event_log_size;
-> > > +		__le16 fatal_event_log_size;
-> > > +		__le32 lsa_size;
-> > > +		u8 poison_list_max_mer[3];
-> > > +		__le16 inject_poison_limit;
-> > > +		u8 poison_caps;
-> > > +		u8 qos_telemetry_caps;
-> > > +	} __packed id;
-> > > +	struct mbox_cmd mbox_cmd;
-> > > +	int rc;
-> > > +
-> > > +	/* Retrieve initial device memory map */
-> > > +	rc = cxl_mem_mbox_get(cxlm);
-> > > +	if (rc)
-> > > +		return rc;
-> > > +
-> > > +	mbox_cmd = (struct mbox_cmd){
-> > > +		.opcode = CXL_MBOX_OP_IDENTIFY,
-> > > +		.payload = &id,
-> > > +		.size_in = 0,
-> > > +	};
-> > > +	rc = cxl_mem_mbox_send_cmd(cxlm, &mbox_cmd);
-> > > +	cxl_mem_mbox_put(cxlm);
-> > > +	if (rc)
-> > > +		return rc;
-> > > +
-> > > +	if (mbox_cmd.size_out != sizeof(id))
-> > > +		return -ENXIO;
-> > > +
-> > > +	/*
-> > > +	 * TODO: enumerate DPA map, as 'ram' and 'pmem' do not alias.
-> > > +	 * For now, only the capacity is exported in sysfs
-> > > +	 */
-> > > +	cxlm->ram.range.start = 0;
-> > > +	cxlm->ram.range.end = le64_to_cpu(id.volatile_capacity) - 1;
-> > > +
-> > > +	cxlm->pmem.range.start = 0;
-> > > +	cxlm->pmem.range.end = le64_to_cpu(id.persistent_capacity) - 1;
-> > > +
-> > > +	memcpy(cxlm->firmware_version, id.fw_revision, sizeof(id.fw_revision));
-> > > +
-> > > +	return rc;
-> > > +}
-> > > +
-> > >  static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> > >  {
-> > >  	struct device *dev = &pdev->dev;
-> > > @@ -222,6 +530,10 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> > >  	if (rc)
-> > >  		goto err;
-> > >  
-> > > +	rc = cxl_mem_identify(cxlm);
-> > > +	if (rc)
-> > > +		goto err;
-> > > +
-> > >  	pci_set_drvdata(pdev, cxlm);
-> > >  	return 0;
-> > >    
-> >   
+> The MSI-X table is essentially just an MMIO resource, and I believe it
+> should not be resized, just as you wouldn't expect any MMIO BAR to be
+> dynamically resized. 
 
+Resizing the BAR is already defined see commit 276b738deb5b ("PCI:
+Add resizable BAR infrastructure")
+
+As you say BAR and MSI vector table are not so different, it seems
+perfectly in line with current PCI sig thinking to allow resizing the
+MSI as well
+
+> Many drivers don't make use of the full MSI-X table nor do they
+> bother reading the size. We just populate a subset of the table
+> based on the number of interrupt causes we will need to associate to
+> interrupt handlers. 
+
+This isn't about "many drivers" this is about what mlx5 does in all
+the various OS drivers it has, and mlx5 has a sophisticated use of
+MSI-X.
+
+> What I see this patch doing is trying to push driver PF policy onto
+> the VF PCIe device configuration space dynamically.
+
+Huh? This is using the PF to dynamically reconfigure a child VF beyond
+what the PCI spec defined. This is done safely under Linux because no
+driver is bound when it is reconfigured, and any stale config data is
+flushed out of any OS caches.
+
+This is also why there is not a strong desire to standardize an ECN at
+PCI-sig, the rules for how resizing can work are complicated and OS
+specific.
+
+> Having some limited number of interrupt causes should really be what
+> is limiting things here. 
+
+MSI inherently requires dedicated on-die resources to implement, so
+every device has a maximum # of MSI vectors it can currently
+expose. This is some consequence of various PCI rules and applies to
+all devices.
+
+To make effective use of this limited pool requires a hard restriction
+enforced by the secure domain (hypervisor and FW) onto every
+user. Every driver attached to the function needs to be aware of the
+hard enforced limit by the secure domain to operate properly. It has
+nothing to do with "limited number of interrupt causes".
+
+The standards based way to communicate that limit is the MSI table cap
+size.
+
+To complain that changing the MSI table cap size dynamically is
+non-standard then offer up a completely non-standard way to operate
+MSI instead seems to miss the entire point.
+
+The important standard is to keep the PCI config space acting per-spec
+so all the various consumers can work as-is. The extension is to only
+modify the rare hypervisor to support a dynamic MSI resizing extension
+for VFs.
+
+As far as applicability, any device working at high scale with MSI and
+VMs is going to need this. Dynamically assigning the limited MSI HW is
+really required to support the universe of VM configurations people
+want. eg generally I would expect a VM to receive the number of MSI
+vectors equal to the number of CPUs the VM gets.
+
+> I see that being mostly a thing between the firmware and the VF in
+> terms of configuration and not something that necessarily has to be
+> pushed down onto the PCIe configuration space itself.
+
+If mlx5 drivers had been designed long ago to never use standard based
+MSI and instead did something internal with FW you might have a point,
+but they weren't. All the mlx5 drivers use standards based MSI and
+expect the config space to be correct.
+
+Jason
