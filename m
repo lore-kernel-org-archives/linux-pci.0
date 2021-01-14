@@ -2,122 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5ABC43332
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 08:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1472CC433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 08:53:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40A9123447
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 08:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0292239EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 08:53:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbhANIaS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jan 2021 03:30:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44014 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727798AbhANIaR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2021 03:30:17 -0500
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BE75C061786;
-        Thu, 14 Jan 2021 00:29:37 -0800 (PST)
-Received: by mail-pj1-x1030.google.com with SMTP id ce17so535899pjb.5;
-        Thu, 14 Jan 2021 00:29:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=9R2jGV3ELt7e4yRKD7ul8p29a+2uSNEqBXC3W5gt1Gk=;
-        b=V7e5LDbJkJbR58fkAEL4hjlfLgteWt83JyppQ6z814W/aVJhxuFoNoRXxnJgZ3Wjsk
-         +NMv6l/fvqSCP2TbBTQ6BDEVUK4QO9ltjdvjeNc3fz8wvOg/I7ui++uBvCLF/h8J2KzJ
-         xiz4ukrtbms42QyKeSL7EG4rha+t2aPCX8ZDKllEwenBMDYt5mNdLlF9NSZg1ufjXKzG
-         Kr2X+29J0ZlG54JY3EYAwnKma7xEB9uF5viLyiFuE13kzMw5NMNo37ZT3mQ5n/Dj7ZBl
-         pza0xFvIo2bjmuNtFgfzWzxDQJBL0hiRNO5uWOgwtLd5GoDpL9dFSLLhWZk1z3mPAcE5
-         hLfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=9R2jGV3ELt7e4yRKD7ul8p29a+2uSNEqBXC3W5gt1Gk=;
-        b=PqUGX5Quov5Qj9V7extM9DINPyvp5BxUNLbFDmf+axr3xZ0SZJsc6IFupPfGFyBOhS
-         W86f7Rw4YQ/seyqoCt8w00m2F9pGJJGLz1SvKuJni2Oq+bcfztXXxwLkQf5zYCsXY2HF
-         +zDjqpmQBs9BzLq1Kah1cY8mImEnzAGgT6DpIPcvsdHTPHrommVRNxm6JaBhwSq1Umvh
-         tvC90eQyfill22QdS4onbjqTuar725T+PNi0x5odQmDQR1TyCRCYuMWV0ajx753p3vWE
-         zhiluan9Ryn1nLEyugZxczbaSqeFvNnn1AMgPDvhYLws0SPG8+TDa7ZEGOmcqa3rD+IR
-         Gs9Q==
-X-Gm-Message-State: AOAM530iy04j8JSZyUVgk6T9KmvF/cXqWHVjSfRQiG7wh5kexwjkZfE4
-        nY1w0eS1CmaoGfbFuPEa+1k=
-X-Google-Smtp-Source: ABdhPJy5BFtnIYW3FZVtRKKO0zBt0IaGmJisHU/iiVqbjsPtKiV511XFyWtRhXAc8PYkN/713VpuQw==
-X-Received: by 2002:a17:90a:7e90:: with SMTP id j16mr3810251pjl.163.1610612977112;
-        Thu, 14 Jan 2021 00:29:37 -0800 (PST)
-Received: from sh05419pcu.spreadtrum.com ([117.18.48.82])
-        by smtp.gmail.com with ESMTPSA id x22sm4776888pfc.19.2021.01.14.00.29.33
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Jan 2021 00:29:36 -0800 (PST)
-From:   Hongtao Wu <wuht06@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Orson Zhai <orsonzhai@gmail.com>,
+        id S1727458AbhANIxS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jan 2021 03:53:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39332 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727130AbhANIxS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Jan 2021 03:53:18 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 90DDC239A1;
+        Thu, 14 Jan 2021 08:52:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610614357;
+        bh=HfT5kq3zEmUNElPzCNa0BiPdm8D62tWA6D8bZUBBB28=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=m9GwJC98HdR0xjoM5pZYBKbJsAChO1k/KflCRHZ45+kDDt/DRqPEC12yWJg6PrRZP
+         jHiF/EYxm7ipia9RuF5TivwNBwKqHt6phe0lMOLb7WhXQy9jxYhVdpTe/k0dT0pi8u
+         /WCCL2Px1CZHlNB6I3OyIE64194qLjHdAldDb/4EKCdh7J0mNX5jjEn3cjfZrtL0b1
+         6TvOI7s0wxnRtHDEro9FOucOA0yV9o08hgBAPG8RykH45QQcbxsx2b/+n5jscxC4EL
+         xDAls5lLpo3p1uY1D9Fe90/I0pqi/xVoQy/9BoJ5+WElotG7Mdi2uoQKGMi/WmsoqV
+         UKIFqWISiEVAw==
+Date:   Thu, 14 Jan 2021 10:52:33 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Hongtao Wu <wuht06@gmail.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Orson Zhai <orsonzhai@gmail.com>,
         Baolin Wang <baolin.wang7@gmail.com>,
         Chunyan Zhang <zhang.lyra@gmail.com>,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, Hongtao Wu <billows.wu@unisoc.com>
-Subject: [RESEND PATCH v5 0/2] PCI: Add new Unisoc PCIe driver
-Date:   Thu, 14 Jan 2021 16:29:26 +0800
-Message-Id: <1610612968-26612-1-git-send-email-wuht06@gmail.com>
-X-Mailer: git-send-email 2.7.4
+Subject: Re: [RESEND PATCH v5 2/2] PCI: sprd: Add support for Unisoc SoCs'
+ PCIe controller
+Message-ID: <20210114085233.GO4678@unreal>
+References: <1610612968-26612-1-git-send-email-wuht06@gmail.com>
+ <1610612968-26612-3-git-send-email-wuht06@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1610612968-26612-3-git-send-email-wuht06@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hongtao Wu <billows.wu@unisoc.com>
+On Thu, Jan 14, 2021 at 04:29:28PM +0800, Hongtao Wu wrote:
+> From: Hongtao Wu <billows.wu@unisoc.com>
+>
+> This series adds PCIe controller driver for Unisoc SoCs.
+> This controller is based on DesignWare PCIe IP.
+>
+> Signed-off-by: Hongtao Wu <billows.wu@unisoc.com>
+> ---
+>  drivers/pci/controller/dwc/Kconfig     |  12 ++
+>  drivers/pci/controller/dwc/Makefile    |   1 +
+>  drivers/pci/controller/dwc/pcie-sprd.c | 293 +++++++++++++++++++++++++++++++++
+>  3 files changed, 306 insertions(+)
+>  create mode 100644 drivers/pci/controller/dwc/pcie-sprd.c
 
-This series adds PCIe controller driver for Unisoc SoCs.
-This controller is based on DesignWare PCIe IP.
+<...>
 
-Changes from v1:
-1) Test this patch on top of Rob Herring's 40 part series of DWC clean-ups:
-   https://lore.kernel.org/linux-pci/20200821035420.380495-1-robh@kernel.org/
+> +static struct platform_driver sprd_pcie_driver = {
+> +	.probe = sprd_pcie_probe,
+> +	.remove = __exit_p(sprd_pcie_remove),
+                   ^^^^^^ why is that?
 
-2) Delete empty function
+> +	.driver = {
+> +		.name = "sprd-pcie",
+> +		.of_match_table = sprd_pcie_of_match,
+> +	},
+> +};
+> +
+> +module_platform_driver(sprd_pcie_driver);
+> +
+> +MODULE_DESCRIPTION("Unisoc PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
 
-3) Document property "sprd,pcie-poweron-syscons" and
-   'sprd,pcie-poweroff-syscons'
+I think that it needs to be "GPL" and not "GPL v2".
 
-4) Delete runtime suspend/resume function
+Thanks
 
-5) Add COMPILE_TEST which CONFIG_PCIE_SPRD depends on
-
-Changes from v2:
-1) Change RC mode to host mode in drivers/pci/controller/dwc/Kconfig
-
-2) Change Signed-off-by from Billows Wu to Hongtao Wu
-
-Changes from v3:
-1) Split the property 'sprd,pcie-poweron-syscons' and
-   'sprd,pcie-poweroff-syscons' into reset, power domains, phy and so on.
-
-2) Delete the function to get resource 'msi' and 'dbi' which were parsed by the
-   DW core.
-
-3) Delete the function 'sprd_pcie_host_init', because the DW core has done it.
-
-Changes from v4:
-1) Install 'yamllint' and upgrade dt-schema in order to solve the yamllint and
-   dtschema/dtc warnings/errors.
-
-Hongtao Wu (2):
-  dt-bindings: PCI: sprd: Document Unisoc PCIe RC host controller
-  PCI: sprd: Add support for Unisoc SoCs' PCIe controller
-
- .../devicetree/bindings/pci/sprd-pcie.yaml         |  93 +++++++
- drivers/pci/controller/dwc/Kconfig                 |  12 +
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pcie-sprd.c             | 293 +++++++++++++++++++++
- 4 files changed, 399 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-sprd.c
-
---
-2.7.4
-
+> --
+> 2.7.4
+>
