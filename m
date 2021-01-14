@@ -2,36 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAE4C433E6
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A31EC4332B
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9043123436
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 418EF2343E
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jan 2021 01:43:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727794AbhANBln (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jan 2021 20:41:43 -0500
-Received: from mga05.intel.com ([192.55.52.43]:51491 "EHLO mga05.intel.com"
+        id S1727833AbhANBls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jan 2021 20:41:48 -0500
+Received: from mga04.intel.com ([192.55.52.120]:56665 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727184AbhANBlm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Jan 2021 20:41:42 -0500
-IronPort-SDR: mH9n4n3hcY8emYU04IYSsu3z9oSu6hiCVzgmjJKqZT+cQUnS4eIITShvvN7cbsvhfm0W8NRKLO
- Vwvo/pr3A3bg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9863"; a="263084524"
+        id S1727184AbhANBlp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Jan 2021 20:41:45 -0500
+IronPort-SDR: rTSuQnKhQFVcZWqhxtJCCvBzjAmfc7Brk0Fjxf7qlrEAJ2S4rgiTQbAqtLctpkjv1IeRAlftzM
+ j1O9PUBig1yA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9863"; a="175714772"
 X-IronPort-AV: E=Sophos;i="5.79,345,1602572400"; 
-   d="scan'208";a="263084524"
+   d="scan'208";a="175714772"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 17:38:18 -0800
-IronPort-SDR: 70ByEuj6ZUTxoobpwmM7DnqLWj+gPglSHAzdk1Zcl51BXOPdoBO9ptYytiJ7aJ9FshTQjUNI11
- 332Cn7+I7AeA==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2021 17:38:32 -0800
+IronPort-SDR: wxb+MIQIs1FT2a1uMpvv5Cq8bB2sNzYIToEKc887iA0TcQmFB6Si8qUMU7epSgRVO8FaAzOjH7
+ hFV/JsDj5x3Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.79,345,1602572400"; 
-   d="scan'208";a="569582482"
+   d="scan'208";a="569582552"
 Received: from allen-box.sh.intel.com ([10.239.159.28])
-  by fmsmga006.fm.intel.com with ESMTP; 13 Jan 2021 17:38:11 -0800
+  by fmsmga006.fm.intel.com with ESMTP; 13 Jan 2021 17:38:24 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     tglx@linutronix.de, ashok.raj@intel.com, kevin.tian@intel.com,
         dave.jiang@intel.com, megha.dey@intel.com, dwmw2@infradead.org
@@ -46,66 +47,167 @@ Cc:     alex.williamson@redhat.com, bhelgaas@google.com,
         samuel.ortiz@intel.com, sanjay.k.kumar@intel.com,
         shahafs@mellanox.com, tony.luck@intel.com, vkoul@kernel.org,
         yan.y.zhao@linux.intel.com, yi.l.liu@intel.com, leon@kernel.org,
-        Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [RFC PATCH v3 0/2] Add platform check for subdevice irq domain
-Date:   Thu, 14 Jan 2021 09:30:01 +0800
-Message-Id: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        David Woodhouse <dwmw@amazon.co.uk>
+Subject: [RFC PATCH v3 2/2] platform-msi: Add platform check for subdevice irq domain
+Date:   Thu, 14 Jan 2021 09:30:03 +0800
+Message-Id: <20210114013003.297050-3-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+References: <20210114013003.297050-1-baolu.lu@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+The pci_subdevice_msi_create_irq_domain() should fail if the underlying
+platform is not able to support IMS (Interrupt Message Storage). Otherwise,
+the isolation of interrupt is not guaranteed.
 
-Learnt from the discussions in this thread:
+For x86, IMS is only supported on bare metal for now. We could enable it
+in the virtualization environments in the future if interrupt HYPERCALL
+domain is supported or the hardware has the capability of interrupt
+isolation for subdevices.
 
-https://lore.kernel.org/linux-pci/160408357912.912050.17005584526266191420.stgit@djiang5-desk3.ch.intel.com/
+Cc: David Woodhouse <dwmw@amazon.co.uk>
+Cc: Leon Romanovsky <leon@kernel.org>
+Cc: Kevin Tian <kevin.tian@intel.com>
+Suggested-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/linux-pci/87pn4nk7nn.fsf@nanos.tec.linutronix.de/
+Link: https://lore.kernel.org/linux-pci/877dqrnzr3.fsf@nanos.tec.linutronix.de/
+Link: https://lore.kernel.org/linux-pci/877dqqmc2h.fsf@nanos.tec.linutronix.de/
+Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+---
+ arch/x86/pci/common.c       | 71 +++++++++++++++++++++++++++++++++++++
+ drivers/base/platform-msi.c |  8 +++++
+ include/linux/msi.h         |  1 +
+ 3 files changed, 80 insertions(+)
 
-The device IMS (Interrupt Message Storage) should not be enabled in any
-virtualization environments unless there is a HYPERCALL domain which
-makes the changes in the message store monitored by the hypervisor.
-
-As the initial step, we allow the IMS to be enabled only if we are
-running on the bare metal. It's easy to enable IMS in the virtualization
-environments if above preconditions are met in the future.
-
-This series is only for comments purpose. We will include it in the Intel
-IMS implementation later once we reach a consensus.
-
-Change log:
-v2->v3:
- - v2:
-   https://lore.kernel.org/linux-pci/20210106022749.2769057-1-baolu.lu@linux.intel.com/
- - Add all identified heuristics so far.
-
-v1->v2:
- - v1:
-   https://lore.kernel.org/linux-pci/20201210004624.345282-1-baolu.lu@linux.intel.com/
- - Rename probably_on_bare_metal() with on_bare_metal();
- - Some vendors might use the same name for both bare metal and virtual
-   environment. Before we add vendor specific code to distinguish
-   between them, let's return false in on_bare_metal(). This won't
-   introduce any regression. The only impact is that the coming new
-   platform msi feature won't be supported until the vendor specific code
-   is provided.
-
-Best regards,
-baolu
-
-Lu Baolu (2):
-  iommu: Add capability IOMMU_CAP_VIOMMU
-  platform-msi: Add platform check for subdevice irq domain
-
- arch/x86/pci/common.c        | 71 ++++++++++++++++++++++++++++++++++++
- drivers/base/platform-msi.c  |  8 ++++
- drivers/iommu/intel/iommu.c  | 20 ++++++++++
- drivers/iommu/virtio-iommu.c |  9 +++++
- include/linux/iommu.h        |  1 +
- include/linux/msi.h          |  1 +
- 6 files changed, 110 insertions(+)
-
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 3507f456fcd0..9deb826fb242 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -12,6 +12,7 @@
+ #include <linux/init.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/iommu.h>
+ 
+ #include <asm/acpi.h>
+ #include <asm/segment.h>
+@@ -724,3 +725,73 @@ struct pci_dev *pci_real_dma_dev(struct pci_dev *dev)
+ 	return dev;
+ }
+ #endif
++
++/*
++ * We want to figure out which context we are running in. But the hardware
++ * does not introduce a reliable way (instruction, CPUID leaf, MSR, whatever)
++ * which can be manipulated by the VMM to let the OS figure out where it runs.
++ * So we go with the below probably on_bare_metal() function as a replacement
++ * for definitely on_bare_metal() to go forward only for the very simple reason
++ * that this is the only option we have.
++ */
++static const char * const vmm_vendor_name[] = {
++	"QEMU", "Bochs", "KVM", "Xen", "VMware", "VMW", "VMware Inc.",
++	"innotek GmbH", "Oracle Corporation", "Parallels", "BHYVE"
++};
++
++static void read_type0_virtual_machine(const struct dmi_header *dm, void *p)
++{
++	u8 *data = (u8 *)dm + 0x13;
++
++	/* BIOS Information (Type 0) */
++	if (dm->type != 0 || dm->length < 0x14)
++		return;
++
++	/* Bit 4 of BIOS Characteristics Extension Byte 2*/
++	if (*data & BIT(4))
++		*((bool *)p) = true;
++}
++
++static bool smbios_virtual_machine(void)
++{
++	bool bit_present = false;
++
++	dmi_walk(read_type0_virtual_machine, &bit_present);
++
++	return bit_present;
++}
++
++static bool on_bare_metal(struct device *dev)
++{
++	int i;
++
++	if (boot_cpu_has(X86_FEATURE_HYPERVISOR))
++		return false;
++
++	if (smbios_virtual_machine())
++		return false;
++
++	if (iommu_capable(dev->bus, IOMMU_CAP_VIOMMU))
++		return false;
++
++	for (i = 0; i < ARRAY_SIZE(vmm_vendor_name); i++)
++		if (dmi_match(DMI_SYS_VENDOR, vmm_vendor_name[i]))
++			return false;
++
++	pr_info("System running on bare metal, report to bugzilla.kernel.org if not the case.");
++
++	return true;
++}
++
++bool arch_support_pci_device_ims(struct pci_dev *pdev)
++{
++	/*
++	 * When we are running in a VMM context, the device IMS could only be
++	 * enabled when the underlying hardware supports interrupt isolation
++	 * of the subdevice, or any mechanism (trap, hypercall) is added so
++	 * that changes in the interrupt message store could be managed by the
++	 * VMM. For now, we only support the device IMS when we are running on
++	 * the bare metal.
++	 */
++	return on_bare_metal(&pdev->dev);
++}
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 8432a1bf4e28..88e5fe4dae67 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -512,6 +512,11 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+ 
++bool __weak arch_support_pci_device_ims(struct pci_dev *pdev)
++{
++	return false;
++}
++
+ /**
+  * pci_subdevice_msi_create_irq_domain - Create an irq domain for subdevices
+  * @pdev:	Pointer to PCI device for which the subdevice domain is created
+@@ -523,6 +528,9 @@ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
+ 	struct irq_domain *domain, *pdev_msi;
+ 	struct fwnode_handle *fn;
+ 
++	if (!arch_support_pci_device_ims(pdev))
++		return NULL;
++
+ 	/*
+ 	 * Retrieve the MSI domain of the underlying PCI device's MSI
+ 	 * domain. The PCI device domain's parent domain is also the parent
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index f319d7c6a4ef..6fda81c4b859 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -478,6 +478,7 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
+ 						struct irq_domain *parent);
+ 
+ # ifdef CONFIG_PCI
++bool arch_support_pci_device_ims(struct pci_dev *pdev);
+ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
+ 						       struct msi_domain_info *info);
+ # endif
 -- 
 2.25.1
 
