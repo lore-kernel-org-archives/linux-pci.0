@@ -5,28 +5,28 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E8FC43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9164BC433E0
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 21:26:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80C4C239E5
+	by mail.kernel.org (Postfix) with ESMTP id 635AE239EF
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 21:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbhAOVZ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jan 2021 16:25:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41352 "EHLO
+        id S1726855AbhAOVZ5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jan 2021 16:25:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725536AbhAOVZ4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 16:25:56 -0500
+        with ESMTP id S1725536AbhAOVZ5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 16:25:57 -0500
 Received: from viti.kaiser.cx (viti.kaiser.cx [IPv6:2a01:238:43fe:e600:cd0c:bd4a:7a3:8e9f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA04C0613D3;
-        Fri, 15 Jan 2021 13:25:15 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0707C061793;
+        Fri, 15 Jan 2021 13:25:16 -0800 (PST)
 Received: from dslb-188-096-136-022.188.096.pools.vodafone-ip.de ([188.96.136.22] helo=martin-debian-2.paytec.ch)
         by viti.kaiser.cx with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <martin@kaiser.cx>)
-        id 1l0Wah-000574-Nc; Fri, 15 Jan 2021 22:25:07 +0100
+        id 1l0Wak-000574-Ry; Fri, 15 Jan 2021 22:25:10 +0100
 From:   Martin Kaiser <martin@kaiser.cx>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Ley Foon Tan <ley.foon.tan@intel.com>,
@@ -38,9 +38,9 @@ To:     Bjorn Helgaas <helgaas@kernel.org>,
         Florian Fainelli <f.fainelli@gmail.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Martin Kaiser <martin@kaiser.cx>
-Subject: [PATCH v4 2/3] PCI: dwc: Remove IRQ handler and data in one go
-Date:   Fri, 15 Jan 2021 22:24:34 +0100
-Message-Id: <20210115212435.19940-2-martin@kaiser.cx>
+Subject: [PATCH v4 3/3] PCI: xgene-msi: Fix race in installing chained irq handler
+Date:   Fri, 15 Jan 2021 22:24:35 +0100
+Message-Id: <20210115212435.19940-3-martin@kaiser.cx>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210115212435.19940-1-martin@kaiser.cx>
 References: <20201108191140.23227-1-martin@kaiser.cx>
@@ -51,43 +51,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Call irq_set_chained_handler_and_data() to clear the chained handler
-and the handler's data under irq_desc->lock.
+Fix a race where a pending interrupt could be received and the handler
+called before the handler's data has been setup, by converting to
+irq_set_chained_handler_and_data().
 
-See also 2cf5a03cb29d ("PCI/keystone: Fix race in installing chained
-IRQ handler").
+See also 2cf5a03cb29d ("PCI/keystone: Fix race in installing chained IRQ
+handler").
+
+Based on the mail discussion, it seems ok to drop the error handling.
 
 Signed-off-by: Martin Kaiser <martin@kaiser.cx>
 ---
-v4:
+v4
  - resend after two months
- - capitalize the commit message properly
-v3:
- - rewrite the commit message again. this is no race condition if we
-   remove the interrupt handler. sorry for the noise.
-v2:
- - rewrite the commit message to clarify that this is a bugfix
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pci-xgene-msi.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 8a84c005f32b..3837fff48944 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -258,10 +258,8 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+diff --git a/drivers/pci/controller/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
+index 2470782cb01a..1c34c897a7e2 100644
+--- a/drivers/pci/controller/pci-xgene-msi.c
++++ b/drivers/pci/controller/pci-xgene-msi.c
+@@ -384,13 +384,9 @@ static int xgene_msi_hwirq_alloc(unsigned int cpu)
+ 		if (!msi_group->gic_irq)
+ 			continue;
  
- static void dw_pcie_free_msi(struct pcie_port *pp)
- {
--	if (pp->msi_irq) {
--		irq_set_chained_handler(pp->msi_irq, NULL);
--		irq_set_handler_data(pp->msi_irq, NULL);
--	}
-+	if (pp->msi_irq)
-+		irq_set_chained_handler_and_data(pp->msi_irq, NULL, NULL);
- 
- 	irq_domain_remove(pp->msi_domain);
- 	irq_domain_remove(pp->irq_domain);
+-		irq_set_chained_handler(msi_group->gic_irq,
+-					xgene_msi_isr);
+-		err = irq_set_handler_data(msi_group->gic_irq, msi_group);
+-		if (err) {
+-			pr_err("failed to register GIC IRQ handler\n");
+-			return -EINVAL;
+-		}
++		irq_set_chained_handler_and_data(msi_group->gic_irq,
++			xgene_msi_isr, msi_group);
++
+ 		/*
+ 		 * Statically allocate MSI GIC IRQs to each CPU core.
+ 		 * With 8-core X-Gene v1, 2 MSI GIC IRQs are allocated
 -- 
 2.20.1
 
