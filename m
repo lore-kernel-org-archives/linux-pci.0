@@ -2,126 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E234C4332E
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 06:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E2DC433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 06:32:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 692CB23A50
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 06:06:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD1CD23A05
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 06:32:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726812AbhAOGFn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jan 2021 01:05:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40536 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726167AbhAOGFm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 01:05:42 -0500
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0106C061575;
-        Thu, 14 Jan 2021 22:05:01 -0800 (PST)
-Received: by mail-pf1-x436.google.com with SMTP id a188so4813900pfa.11;
-        Thu, 14 Jan 2021 22:05:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=uNxmF20bYgUoFeuxLQis6xHKwj5Rp1A5sgJ3aaIKLQ4=;
-        b=aMKH4O5WpFT7Dc+xWdIqp46yvo1A7iw7ylfqUtRdRh0tuX5DzmbE8urh9DuZ5ONyUn
-         073xXdOFi/ysimiN5hqX4Xvh4+bhhFq82ekSlrBQnrR1B73v+CEhYk3c00BYJAkWNuyr
-         OH/Ndt0ZRQC3UPwwny6ezb+vBogEe++I7Ogo1udqAdJYZL1vixzNMZ7xI12Pta2A92qu
-         OmxTjZ5N5u9S+1Y18xfSBCQU3RIDUled9ro9ruENTXQUtr0lIzdL6vJvTRQdQWoV9IoE
-         xQX77RfTfgOhOZuIl7Gi8LVxvkh0uirPoU0UROWwvpXCPQQIXpItqPabncSqI/06YAij
-         jzgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=uNxmF20bYgUoFeuxLQis6xHKwj5Rp1A5sgJ3aaIKLQ4=;
-        b=UrfFgAQy3tKfzC7mW55ZNJl7AWPhgjRFi+gEg8fE4C0m0TxaBu6kcgEbHTOmWi+h9R
-         9ONPot3+5nYHvwjkhcvoYtYcmPxfLKj+3osYPrt5CB/BQDME+MrU8bDU2dlOnfIRcqTs
-         J3J1+X7EGJbV0AcfrgCP+aOLRTorF6LSOEN8WedXx5PzC6HDKI7rTO77TvOl/l7xhHHU
-         wnS6g7iDD9AbcaxZOzurE4iezaOCULPhPXIXnFysHZo7Emyu43Irmj3GT2Vo2x5FlGfR
-         vdExXGQ9tWcv+1TmBIx4L8PIyjjjYfTk8/sscgIkgmw8GYyzk6zoQ795CmfWg4eXilym
-         OeDg==
-X-Gm-Message-State: AOAM533VNmER2lF152MolUdnPRoLFgOLPbQp9SYm6ZsXjPY8OJdG2A1v
-        m0xfCm2jVmRSRJfvUx+Jnts=
-X-Google-Smtp-Source: ABdhPJxqSJVctAl1xO7LHLgMxNuQuWxvmgkBrYiFBdQnB7rd3xUoFISGRkgM2PhlFBXEgOU9kqJHDA==
-X-Received: by 2002:aa7:9e43:0:b029:19c:d0ab:2684 with SMTP id z3-20020aa79e430000b029019cd0ab2684mr11344901pfq.42.1610690701475;
-        Thu, 14 Jan 2021 22:05:01 -0800 (PST)
-Received: from sh05419pcu.spreadtrum.com ([117.18.48.82])
-        by smtp.gmail.com with ESMTPSA id t5sm7051929pjr.22.2021.01.14.22.04.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Jan 2021 22:05:00 -0800 (PST)
-From:   Hongtao Wu <wuht06@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Orson Zhai <orsonzhai@gmail.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Hongtao Wu <billows.wu@unisoc.com>
-Subject: [PATCH v6 0/2] PCI: Add new Unisoc PCIe driver
-Date:   Fri, 15 Jan 2021 14:04:38 +0800
-Message-Id: <1610690680-28493-1-git-send-email-wuht06@gmail.com>
-X-Mailer: git-send-email 2.7.4
+        id S1727983AbhAOGbx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jan 2021 01:31:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60460 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727284AbhAOGbx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Jan 2021 01:31:53 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 56E5E235DD;
+        Fri, 15 Jan 2021 06:31:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610692272;
+        bh=eQf9Y8eJMoRe88X1Cj0Th9MUH/4cRNQWkj9gmjjHO9o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cNU0dv+pTcD03IN4pWiZtj4grJN2qC+dzUJhP5y+xNyC95+1of8DZV8hK7RZKrybd
+         Q4as6+WsWoXsX1YM0J4TkaCX1DNohy6kw2//t5HvlTGzwAy7uW7/CCDWSwY5haUFAm
+         3c5StF0pNe9U1qtT4DHIsxtAqjjtdQ6LLnXGfK1LDoQvO5EVsdBKYeESE7VlHA4f53
+         r0WARA4jeZG8sq13IGU3i9i+5MzzG/LIn7anncWcUlBJLfbZGyRHiN9VLH/gQHDDke
+         +iBrr1N+fCv0q2nxdyDvAVko6OJLAXMONMfasJ4qQ21tgF0TxNrFxR8DVvAoJiWIcm
+         0I0rQGzalcZXQ==
+Date:   Fri, 15 Jan 2021 08:31:08 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Lu Baolu <baolu.lu@linux.intel.com>
+Cc:     tglx@linutronix.de, ashok.raj@intel.com, kevin.tian@intel.com,
+        dave.jiang@intel.com, megha.dey@intel.com, dwmw2@infradead.org,
+        alex.williamson@redhat.com, bhelgaas@google.com,
+        dan.j.williams@intel.com, will@kernel.org, joro@8bytes.org,
+        dmaengine@vger.kernel.org, eric.auger@redhat.com,
+        jacob.jun.pan@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
+        kwankhede@nvidia.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        maz@kernel.org, mona.hossain@intel.com, netanelg@mellanox.com,
+        parav@mellanox.com, pbonzini@redhat.com, rafael@kernel.org,
+        samuel.ortiz@intel.com, sanjay.k.kumar@intel.com,
+        shahafs@mellanox.com, tony.luck@intel.com, vkoul@kernel.org,
+        yan.y.zhao@linux.intel.com, yi.l.liu@intel.com
+Subject: Re: [RFC PATCH v3 1/2] iommu: Add capability IOMMU_CAP_VIOMMU
+Message-ID: <20210115063108.GI944463@unreal>
+References: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+ <20210114013003.297050-2-baolu.lu@linux.intel.com>
+ <20210114132627.GA944463@unreal>
+ <b0c8b260-8e23-a5bd-d2da-ca1d67cdfa8a@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b0c8b260-8e23-a5bd-d2da-ca1d67cdfa8a@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hongtao Wu <billows.wu@unisoc.com>
+On Fri, Jan 15, 2021 at 07:49:47AM +0800, Lu Baolu wrote:
+> Hi Leon,
+>
+> On 1/14/21 9:26 PM, Leon Romanovsky wrote:
+> > On Thu, Jan 14, 2021 at 09:30:02AM +0800, Lu Baolu wrote:
+> > > Some vendor IOMMU drivers are able to declare that it is running in a VM
+> > > context. This is very valuable for the features that only want to be
+> > > supported on bare metal. Add a capability bit so that it could be used.
+> >
+> > And how is it used? Who and how will set it?
+>
+> Use the existing iommu_capable(). I should add more descriptions about
+> who and how to use it.
 
-This series adds PCIe controller driver for Unisoc SoCs.
-This controller is based on DesignWare PCIe IP.
+I want to see the code that sets this capability.
 
-Changes from v1:
-1) Test this patch on top of Rob Herring's 40 part series of DWC clean-ups:
-   https://lore.kernel.org/linux-pci/20200821035420.380495-1-robh@kernel.org/
-
-2) Delete empty function
-
-3) Document property "sprd,pcie-poweron-syscons" and
-   'sprd,pcie-poweroff-syscons'
-
-4) Delete runtime suspend/resume function
-
-5) Add COMPILE_TEST which CONFIG_PCIE_SPRD depends on
-
-Changes from v2:
-1) Change RC mode to host mode in drivers/pci/controller/dwc/Kconfig
-
-2) Change Signed-off-by from Billows Wu to Hongtao Wu
-
-Changes from v3:
-1) Split the property 'sprd,pcie-poweron-syscons' and
-   'sprd,pcie-poweroff-syscons' into reset, power domains, phy and so on.
-
-2) Delete the function to get resource 'msi' and 'dbi' which were parsed by the
-   DW core.
-
-3) Delete the function 'sprd_pcie_host_init', because the DW core has done it.
-
-Changes from v4:
-1) Install 'yamllint' and upgrade dt-schema in order to solve the yamllint and
-    dtschema/dtc warnings/errors:
-
-Changes from v5:
-1) Change "GPL v2" to "GPL".
-2) Remove exit_p wrapper which used to define remove callback.
-
-Hongtao Wu (2):
-  dt-bindings: PCI: sprd: Document Unisoc PCIe RC host controller
-  PCI: sprd: Add support for Unisoc SoCs' PCIe controller
-
- .../devicetree/bindings/pci/sprd-pcie.yaml         |  93 +++++++
- drivers/pci/controller/dwc/Kconfig                 |  12 +
- drivers/pci/controller/dwc/Makefile                |   1 +
- drivers/pci/controller/dwc/pcie-sprd.c             | 293 +++++++++++++++++++++
- 4 files changed, 399 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/sprd-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-sprd.c
-
---
-2.7.4
-
+Thanks
