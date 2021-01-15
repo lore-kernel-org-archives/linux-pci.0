@@ -2,29 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 707BFC43333
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC798C43219
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 17:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4857423136
+	by mail.kernel.org (Postfix) with ESMTP id 877A923136
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 17:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727856AbhAOREl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jan 2021 12:04:41 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:10665 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725923AbhAOREk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 12:04:40 -0500
+        id S1727584AbhAOREi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jan 2021 12:04:38 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:11023 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725923AbhAOREi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 12:04:38 -0500
 Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4DHSDH3lPDz15tQD;
-        Sat, 16 Jan 2021 01:02:55 +0800 (CST)
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4DHSDB4JtVzj8G9;
+        Sat, 16 Jan 2021 01:02:50 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 16 Jan 2021 01:03:48 +0800
+ 14.3.498.0; Sat, 16 Jan 2021 01:03:47 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <catalin.marinas@arm.com>, <will@kernel.org>, <arnd@arndb.de>,
         <akpm@linux-foundation.org>, <xuwei5@hisilicon.com>,
@@ -34,12 +33,10 @@ CC:     <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
         <linux-mips@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>, John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC 4/4] logic_pio: Warn on and discard accesses to addresses below IO_SPACE_BASE
-Date:   Sat, 16 Jan 2021 00:58:49 +0800
-Message-ID: <1610729929-188490-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC 0/4] Fix arm64 crash for accessing unmapped IO port regions (reboot)
+Date:   Sat, 16 Jan 2021 00:58:45 +0800
+Message-ID: <1610729929-188490-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1610729929-188490-1-git-send-email-john.garry@huawei.com>
-References: <1610729929-188490-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -48,94 +45,86 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Start the PCI MMIO region at IO_SPACE_BASE, and warn on any accesses below
-that address. Those accesses are also discarded.
+This is a reboot of my original series to address the problem of drivers
+for legacy ISA devices accessing unmapped IO port regions on arm64 systems
+and causing the system to crash.
 
-This is only for CONFIG_INDIRECT_PIO currently, and support can be added
-later for !CONFIG_INDIRECT_PIO.
+There was another recent report of such an issue [0], and some old ones
+[1] and [2] for reference.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- include/linux/logic_pio.h |  5 +++++
- lib/logic_pio.c           | 20 ++++++++++++++------
- 2 files changed, 19 insertions(+), 6 deletions(-)
+The background is that many systems do not include PCI host controllers,
+or they do and controller probe may have failed. For these cases, no IO
+ports are mapped. However, loading drivers for legacy ISA devices can
+crash the system as there is nothing to stop them accessing those IO
+ports (which have not been io remap'ed).
 
-diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
-index 54945aa824b4..425369f2ddd5 100644
---- a/include/linux/logic_pio.h
-+++ b/include/linux/logic_pio.h
-@@ -111,7 +111,12 @@ void logic_outsl(unsigned long addr, const void *buffer, unsigned int count);
- #else
- #define PIO_INDIRECT_SIZE 0
- #endif /* CONFIG_INDIRECT_PIO */
-+
- #define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
-+#define MMIO_LOWER_LIMIT IO_SPACE_BASE
-+#if MMIO_LOWER_LIMIT >= MMIO_UPPER_LIMIT
-+#error MMIO_UPPPER_LIMIT should be above MMIO_LOWER_LIMIT
-+#endif
- 
- struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode);
- unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
-diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-index f32fe481b492..cbb12260ede6 100644
---- a/lib/logic_pio.c
-+++ b/lib/logic_pio.c
-@@ -36,7 +36,7 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
- 	struct logic_pio_hwaddr *range;
- 	resource_size_t start;
- 	resource_size_t end;
--	resource_size_t mmio_end = 0;
-+	resource_size_t mmio_end = MMIO_LOWER_LIMIT;
- 	resource_size_t iio_sz = MMIO_UPPER_LIMIT;
- 	int ret = 0;
- 
-@@ -234,7 +234,9 @@ type logic_in##bwl(unsigned long addr)					\
- {									\
- 	type ret = (type)~0;						\
- 									\
--	if (addr < MMIO_UPPER_LIMIT) {					\
-+	if (addr < MMIO_LOWER_LIMIT) {					\
-+		WARN_ON_ONCE(1);					\
-+	} else if (addr < MMIO_UPPER_LIMIT) {					\
- 		ret = _in##bwl(addr);					\
- 	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) { \
- 		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-@@ -250,8 +252,10 @@ type logic_in##bwl(unsigned long addr)					\
- 									\
- void logic_out##bwl(type value, unsigned long addr)			\
- {									\
--	if (addr < MMIO_UPPER_LIMIT) {					\
--		_out##bwl(value, addr);				\
-+	if (addr < MMIO_LOWER_LIMIT) {					\
-+		WARN_ON_ONCE(1);					\
-+	} else if (addr < MMIO_UPPER_LIMIT) {				\
-+		_out##bwl(value, addr);					\
- 	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
- 		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
- 									\
-@@ -266,7 +270,9 @@ void logic_out##bwl(type value, unsigned long addr)			\
- void logic_ins##bwl(unsigned long addr, void *buffer,			\
- 		    unsigned int count)					\
- {									\
--	if (addr < MMIO_UPPER_LIMIT) {					\
-+	if (addr < MMIO_LOWER_LIMIT) {					\
-+		WARN_ON_ONCE(1);					\
-+	} else if (addr < MMIO_UPPER_LIMIT) {				\
- 		reads##bwl(PCI_IOBASE + addr, buffer, count);		\
- 	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
- 		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-@@ -283,7 +289,9 @@ void logic_ins##bwl(unsigned long addr, void *buffer,			\
- void logic_outs##bwl(unsigned long addr, const void *buffer,		\
- 		     unsigned int count)				\
- {									\
--	if (addr < MMIO_UPPER_LIMIT) {					\
-+	if (addr < MMIO_LOWER_LIMIT) {					\
-+		WARN_ON_ONCE(1);					\
-+	} else if (addr < MMIO_UPPER_LIMIT) {				\
- 		writes##bwl(PCI_IOBASE + addr, buffer, count);		\
- 	} else if (addr >= MMIO_UPPER_LIMIT && addr < IO_SPACE_LIMIT) {	\
- 		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
+My original solution tried to keep the kernel alive in these situations by
+rejecting logical PIO access to PCI IO regions until PCI IO port regions
+have been mapped.
+
+This series goes one step further, by just reserving the complete legacy
+IO port range in 0x0--0xffff for arm64. The motivation for doing this is
+to make the request_region() calls for those drivers fail, like this:
+
+root@ubuntu:/home/john# insmod mk712.ko
+ [ 3415.575800] mk712: unable to get IO region
+insmod: ERROR: could not insert module mk712.ko: No such device
+
+Otherwise, in theory, those drivers could initiate rogue accesses to
+mapped IO port regions for other devices and cause corruptions or
+side-effects. Indeed, those drivers should not be allowed to access
+IO ports at all in such a system.
+
+As a secondary defence, for broken drivers who do not call
+request_region(), IO port accesses in range 0--0xffff will be ignored,
+again preserving the system.
+
+I am sending as an RFC as I am not sure of any problem with reserving
+first 0x10000 of IO space like this. There is reserve= commandline
+argument, which does allow this already.
+
+For reference, here's how /proc/ioports looks on my arm64 system with
+this change:
+
+root@ubuntu:/home/john# more /proc/ioports
+00010000-0001ffff : PCI Bus 0002:f8
+  00010000-00010fff : PCI Bus 0002:f9
+    00010000-00010007 : 0002:f9:00.0
+      00010000-00010007 : serial
+    00010008-0001000f : 0002:f9:00.1
+      00010008-0001000f : serial
+    00010010-00010017 : 0002:f9:00.2
+    00010018-0001001f : 0002:f9:00.2
+00020000-0002ffff : PCI Bus 0004:88
+00030000-0003ffff : PCI Bus 0005:78
+00040000-0004ffff : PCI Bus 0006:c0
+00050000-0005ffff : PCI Bus 0007:90
+00060000-0006ffff : PCI Bus 000a:10
+00070000-0007ffff : PCI Bus 000c:20
+00080000-0008ffff : PCI Bus 000d:30
+
+[0] https://lore.kernel.org/linux-input/20210112055129.7840-1-song.bao.hua@hisilicon.com/T/#mf86445470160c44ac110e9d200b09245169dc5b6
+[1] https://lore.kernel.org/linux-pci/56F209A9.4040304@huawei.com
+[2] https://lore.kernel.org/linux-arm-kernel/e6995b4a-184a-d8d4-f4d4-9ce75d8f47c0@huawei.com/
+
+Difference since v4:
+https://lore.kernel.org/linux-pci/1560262374-67875-1-git-send-email-john.garry@huawei.com/
+- Reserve legacy ISA region
+
+John Garry (4):
+  arm64: io: Introduce IO_SPACE_BASE
+  asm-generic/io.h: Add IO_SPACE_BASE
+  kernel/resource: Make ioport_resource.start configurable
+  logic_pio: Warn on and discard accesses to addresses below
+    IO_SPACE_BASE
+
+ arch/arm64/include/asm/io.h |  1 +
+ include/asm-generic/io.h    |  4 ++++
+ include/linux/logic_pio.h   |  5 +++++
+ kernel/resource.c           |  2 +-
+ lib/logic_pio.c             | 20 ++++++++++++++------
+ 5 files changed, 25 insertions(+), 7 deletions(-)
+
 -- 
 2.26.2
 
