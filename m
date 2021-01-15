@@ -7,27 +7,26 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE44C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E8FC43381
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 21:26:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F0FD239E5
+	by mail.kernel.org (Postfix) with ESMTP id 80C4C239E5
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Jan 2021 21:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbhAOVZv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jan 2021 16:25:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41334 "EHLO
+        id S1726725AbhAOVZ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jan 2021 16:25:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725536AbhAOVZv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 16:25:51 -0500
-X-Greylist: delayed 544 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 15 Jan 2021 13:25:10 PST
+        with ESMTP id S1725536AbhAOVZ4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2021 16:25:56 -0500
 Received: from viti.kaiser.cx (viti.kaiser.cx [IPv6:2a01:238:43fe:e600:cd0c:bd4a:7a3:8e9f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B867C061757;
-        Fri, 15 Jan 2021 13:25:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA04C0613D3;
+        Fri, 15 Jan 2021 13:25:15 -0800 (PST)
 Received: from dslb-188-096-136-022.188.096.pools.vodafone-ip.de ([188.96.136.22] helo=martin-debian-2.paytec.ch)
         by viti.kaiser.cx with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <martin@kaiser.cx>)
-        id 1l0Wab-000574-2e; Fri, 15 Jan 2021 22:25:01 +0100
+        id 1l0Wah-000574-Nc; Fri, 15 Jan 2021 22:25:07 +0100
 From:   Martin Kaiser <martin@kaiser.cx>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Ley Foon Tan <ley.foon.tan@intel.com>,
@@ -39,12 +38,13 @@ To:     Bjorn Helgaas <helgaas@kernel.org>,
         Florian Fainelli <f.fainelli@gmail.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Martin Kaiser <martin@kaiser.cx>
-Subject: [PATCH v4 1/3] PCI: altera-msi: Remove IRQ handler and data in one go
-Date:   Fri, 15 Jan 2021 22:24:33 +0100
-Message-Id: <20210115212435.19940-1-martin@kaiser.cx>
+Subject: [PATCH v4 2/3] PCI: dwc: Remove IRQ handler and data in one go
+Date:   Fri, 15 Jan 2021 22:24:34 +0100
+Message-Id: <20210115212435.19940-2-martin@kaiser.cx>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20201108191140.23227-1-martin@kaiser.cx>
+In-Reply-To: <20210115212435.19940-1-martin@kaiser.cx>
 References: <20201108191140.23227-1-martin@kaiser.cx>
+ <20210115212435.19940-1-martin@kaiser.cx>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -59,12 +59,6 @@ IRQ handler").
 
 Signed-off-by: Martin Kaiser <martin@kaiser.cx>
 ---
-Hi Lorenzo,
-here's another bunch of simple patches that were discussed in November.
-Could you have a look?
-Thanks,
-Martin
-
 v4:
  - resend after two months
  - capitalize the commit message properly
@@ -74,24 +68,26 @@ v3:
 v2:
  - rewrite the commit message to clarify that this is a bugfix
 
+ drivers/pci/controller/dwc/pcie-designware-host.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
- drivers/pci/controller/pcie-altera-msi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
-index e1636f7714ca..42691dd8ebef 100644
---- a/drivers/pci/controller/pcie-altera-msi.c
-+++ b/drivers/pci/controller/pcie-altera-msi.c
-@@ -204,8 +204,7 @@ static int altera_msi_remove(struct platform_device *pdev)
- 	struct altera_msi *msi = platform_get_drvdata(pdev);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 8a84c005f32b..3837fff48944 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -258,10 +258,8 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
  
- 	msi_writel(msi, 0, MSI_INTMASK);
--	irq_set_chained_handler(msi->irq, NULL);
--	irq_set_handler_data(msi->irq, NULL);
-+	irq_set_chained_handler_and_data(msi->irq, NULL, NULL);
+ static void dw_pcie_free_msi(struct pcie_port *pp)
+ {
+-	if (pp->msi_irq) {
+-		irq_set_chained_handler(pp->msi_irq, NULL);
+-		irq_set_handler_data(pp->msi_irq, NULL);
+-	}
++	if (pp->msi_irq)
++		irq_set_chained_handler_and_data(pp->msi_irq, NULL, NULL);
  
- 	altera_free_domains(msi);
- 
+ 	irq_domain_remove(pp->msi_domain);
+ 	irq_domain_remove(pp->irq_domain);
 -- 
 2.20.1
 
