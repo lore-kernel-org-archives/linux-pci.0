@@ -2,123 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1740C433E6
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Jan 2021 01:32:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DD0FC43381
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Jan 2021 05:31:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8902722CF8
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Jan 2021 01:32:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 522C7238E7
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Jan 2021 05:31:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727520AbhAQBcP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Jan 2021 20:32:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32810 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbhAQBcM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Jan 2021 20:32:12 -0500
-Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A56BC0613CF
-        for <linux-pci@vger.kernel.org>; Sat, 16 Jan 2021 17:31:20 -0800 (PST)
-Received: by mail-lj1-x22f.google.com with SMTP id n8so5743026ljg.3
-        for <linux-pci@vger.kernel.org>; Sat, 16 Jan 2021 17:31:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=tf8Myeu0NiVasaQllGDJf9giDfGqj4Lr7pfXB9rMYOo=;
-        b=SUINPn4nDwhozYtpjAYsdnMatmtyWqHA6TxOdxuoy66Gg//CsIyk/0UP5HlNlxe0WA
-         2HQGxdrqNP+dBZ1JmwWKwoCWXpmql1QDN2NkExL7SzEMas7auT73JQ/EZjIrwl15dlLC
-         Jr6ulZmwqC3IuPL/lC0SVx36WrNATUjdHDg5PBDGaOjGQcAOgPD057tYKf55Z2YbRcKR
-         ATQERCJSRvK9z0NUAvGYre3baY52oiGlR+SnPwsKvirN0oU7k3Ab+Jwt5awYTuPVm7YQ
-         J7KO52y3q2hI4FFLg40Kxt+rDgTQga42FiDilL3fW3QBg6Eh70pDLZHDqWfJTeTaTz1C
-         h+4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=tf8Myeu0NiVasaQllGDJf9giDfGqj4Lr7pfXB9rMYOo=;
-        b=P6D8ZFajgzYV3rzEc4j3J/KnccejfmNSMUgrWVFlYm9mY9ej+jDfCZKCZKQT1jLI2K
-         VHImtyWCXhdsfmAxFgPHIunWFenfoBCcpc2X4j1M1wcwQ1BCXFYEMSz2XoBTVbHPYmgO
-         0VzGId1twzuIhMa9oY0HCXLro6HdYLWwNM+oh45McG79nxvzIa/WENWM9vDV/15hdxCT
-         CWJJZZhU/LQn/KpCEguPdlPW8NHyZM83OhuAfmgJA+13++29zgAlBWCJ0rYNsb2sRC19
-         Z7+WRkmQNSSIwf33ZdvpTDpXLCJBlPg7t8ZOFpw37yEBS8zkC9aeL2LIdKx6zrjACU/u
-         U5pg==
-X-Gm-Message-State: AOAM5323+Rbxs7QZWWU40/J6PboTwZHfb/poZLRUOhnYGn0wHjPZCx7S
-        r7QPWqYnycvmCZ/z1WIjQe0bKw==
-X-Google-Smtp-Source: ABdhPJxCQoQi5eX6x8dtjhEPZ/R38mG5z7G4Vj9Sh7u3S7dHXvKe6mzmI97nOXkWNrLDX4Co6I6BUA==
-X-Received: by 2002:a2e:80d4:: with SMTP id r20mr7822175ljg.495.1610847078683;
-        Sat, 16 Jan 2021 17:31:18 -0800 (PST)
-Received: from eriador.lumag.spb.ru ([94.25.228.101])
-        by smtp.gmail.com with ESMTPSA id c1sm1286298ljd.117.2021.01.16.17.31.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 16 Jan 2021 17:31:18 -0800 (PST)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-msm@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v5 1/2] dt-bindings: pci: qcom: Document ddrss_sf_tbu clock for sm8250
-Date:   Sun, 17 Jan 2021 04:31:13 +0300
-Message-Id: <20210117013114.441973-2-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210117013114.441973-1-dmitry.baryshkov@linaro.org>
-References: <20210117013114.441973-1-dmitry.baryshkov@linaro.org>
+        id S1726316AbhAQFb0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Jan 2021 00:31:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45676 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725815AbhAQFbZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 17 Jan 2021 00:31:25 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7E1E323107;
+        Sun, 17 Jan 2021 05:30:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1610861443;
+        bh=DpapfS8CloHhWIyfLsKQuj+NWk694+ddY9JT8yb4Z6U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oXNqSd+dokYfehm1UYjzF5ow+mxEZgK6nonOZmGu3AgNjswSp1q0eAeRyJFfxbmVO
+         n/n5xjUpZT1CtG/Z7KQkTqJr6VXJnUW7X5pfyyLtTT9tooiul5djn86uuY0vDSGlQT
+         j7Ta3UEIceNucHDMt4alQf5oHlK6kAwYg/966t2LgB5dHSf9aixzKYdtcCGSPpIxNO
+         NlXBWLtKnd2IbDinD6b3c/kX7CtXBw/5LxSwj3QGZG4RGRbzXkhJ5vn8J8dzi6D+vl
+         JkbPPvcsrtJAse0SrFXbC2afUrfdaLRaHmWMMGZuAsH15Sn1v7ILYeGew9ByfE7iwJ
+         cE3KQ/YK8hbAQ==
+Date:   Sun, 17 Jan 2021 07:30:39 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Lu Baolu <baolu.lu@linux.intel.com>
+Cc:     tglx@linutronix.de, ashok.raj@intel.com, kevin.tian@intel.com,
+        dave.jiang@intel.com, megha.dey@intel.com, dwmw2@infradead.org,
+        alex.williamson@redhat.com, bhelgaas@google.com,
+        dan.j.williams@intel.com, will@kernel.org, joro@8bytes.org,
+        dmaengine@vger.kernel.org, eric.auger@redhat.com,
+        jacob.jun.pan@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
+        kwankhede@nvidia.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        maz@kernel.org, mona.hossain@intel.com, netanelg@mellanox.com,
+        parav@mellanox.com, pbonzini@redhat.com, rafael@kernel.org,
+        samuel.ortiz@intel.com, sanjay.k.kumar@intel.com,
+        shahafs@mellanox.com, tony.luck@intel.com, vkoul@kernel.org,
+        yan.y.zhao@linux.intel.com, yi.l.liu@intel.com
+Subject: Re: [RFC PATCH v3 1/2] iommu: Add capability IOMMU_CAP_VIOMMU
+Message-ID: <20210117053039.GO944463@unreal>
+References: <20210114013003.297050-1-baolu.lu@linux.intel.com>
+ <20210114013003.297050-2-baolu.lu@linux.intel.com>
+ <20210114132627.GA944463@unreal>
+ <b0c8b260-8e23-a5bd-d2da-ca1d67cdfa8a@linux.intel.com>
+ <20210115063108.GI944463@unreal>
+ <c58adc13-306a-8df8-19e1-27f834b3a7c9@linux.intel.com>
+ <20210116083904.GN944463@unreal>
+ <eda6ae9f-76eb-3254-ce58-ea355418a4b1@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <eda6ae9f-76eb-3254-ce58-ea355418a4b1@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On SM8250 additional clock is required for PCIe devices to access NOC.
-Document this requirement in devicetree bindings.
+On Sat, Jan 16, 2021 at 04:47:40PM +0800, Lu Baolu wrote:
+> Hi Leon,
+>
+> On 2021/1/16 16:39, Leon Romanovsky wrote:
+> > On Sat, Jan 16, 2021 at 09:20:16AM +0800, Lu Baolu wrote:
+> > > Hi,
+> > >
+> > > On 2021/1/15 14:31, Leon Romanovsky wrote:
+> > > > On Fri, Jan 15, 2021 at 07:49:47AM +0800, Lu Baolu wrote:
+> > > > > Hi Leon,
+> > > > >
+> > > > > On 1/14/21 9:26 PM, Leon Romanovsky wrote:
+> > > > > > On Thu, Jan 14, 2021 at 09:30:02AM +0800, Lu Baolu wrote:
+> > > > > > > Some vendor IOMMU drivers are able to declare that it is running in a VM
+> > > > > > > context. This is very valuable for the features that only want to be
+> > > > > > > supported on bare metal. Add a capability bit so that it could be used.
+> > > > > >
+> > > > > > And how is it used? Who and how will set it?
+> > > > >
+> > > > > Use the existing iommu_capable(). I should add more descriptions about
+> > > > > who and how to use it.
+> > > >
+> > > > I want to see the code that sets this capability.
+> > >
+> > > Currently we have Intel VT-d and the virt-iommu setting this capability.
+> > >
+> > >   static bool intel_iommu_capable(enum iommu_cap cap)
+> > >   {
+> > >   	if (cap == IOMMU_CAP_CACHE_COHERENCY)
+> > >   		return domain_update_iommu_snooping(NULL) == 1;
+> > >   	if (cap == IOMMU_CAP_INTR_REMAP)
+> > >   		return irq_remapping_enabled == 1;
+> > > +	if (cap == IOMMU_CAP_VIOMMU)
+> > > +		return caching_mode_enabled();
+> > >
+> > >   	return false;
+> > >   }
+> > >
+> > > And,
+> > >
+> > > +static bool viommu_capable(enum iommu_cap cap)
+> > > +{
+> > > +	if (cap == IOMMU_CAP_VIOMMU)
+> > > +		return true;
+> > > +
+> > > +	return false;
+> > > +}
+> >
+> > These two functions are reading this cap and not setting.
+> > Where can I see code that does "cap = IOMMU_CAP_VIOMMU" and not "=="?
+>
+> The iommu_capable() is a generic IOMMU interface to query IOMMU
+> capabilities. It takes @bus and @cap as input, and calls the callback
+> of vendor iommu. If the vendor iommu driver supports the specific
+> capability, it returns true. Otherwise, it returns false.
+>
+> bool iommu_capable(struct bus_type *bus, enum iommu_cap cap)
+> {
+>         if (!bus->iommu_ops || !bus->iommu_ops->capable)
+>                 return false;
+>
+>         return bus->iommu_ops->capable(cap);
+> }
+> EXPORT_SYMBOL_GPL(iommu_capable);
+>
+> In the vendor iommu's callback, it checks the capability and returns a
+> value according to its capability, just as showed above.
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Fixes: 458168247ccc ("dt-bindings: pci: qcom: Document PCIe bindings for SM8250 SoC")
----
- .../devicetree/bindings/pci/qcom,pcie.txt       | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Ohh, sorry.
+I missed "iommu_capable(dev->bus, IOMMU_CAP_VIOMMU)" from second patch.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 3b55310390a0..0da458a051b6 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -132,8 +132,20 @@
- 			- "master_bus"	AXI Master clock
- 			- "slave_bus"	AXI Slave clock
- 
---clock-names:
--	Usage: required for sdm845 and sm8250
-+- clock-names:
-+	Usage: required for sdm845
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "aux"		Auxiliary clock
-+			- "cfg"		Configuration clock
-+			- "bus_master"	Master AXI clock
-+			- "bus_slave"	Slave AXI clock
-+			- "slave_q2a"	Slave Q2A clock
-+			- "tbu"		PCIe TBU clock
-+			- "pipe"	PIPE clock
-+
-+- clock-names:
-+	Usage: required for sm8250
- 	Value type: <stringlist>
- 	Definition: Should contain the following entries
- 			- "aux"		Auxiliary clock
-@@ -142,6 +154,7 @@
- 			- "bus_slave"	Slave AXI clock
- 			- "slave_q2a"	Slave Q2A clock
- 			- "tbu"		PCIe TBU clock
-+			- "ddrss_sf_tbu" PCIe SF TBU clock
- 			- "pipe"	PIPE clock
- 
- - resets:
--- 
-2.29.2
+Thanks
 
+>
+> Best regards,
+> baolu
