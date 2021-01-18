@@ -2,591 +2,184 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 599AEC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B0E0C433DB
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:47:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B26322BEA
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:46:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44F0A22242
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388762AbhARKqM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Jan 2021 05:46:12 -0500
-Received: from lucky1.263xmail.com ([211.157.147.134]:33436 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388870AbhARJc3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 04:32:29 -0500
-Received: from localhost (unknown [192.168.167.70])
-        by lucky1.263xmail.com (Postfix) with ESMTP id 5CDFEC591D;
-        Mon, 18 Jan 2021 17:18:03 +0800 (CST)
-X-MAIL-GRAY: 0
-X-MAIL-DELIVERY: 1
-X-ADDR-CHECKED4: 1
-X-ANTISPAM-LEVEL: 2
-X-ABS-CHECKED: 0
-Received: from xxm-vm.localdomain (unknown [58.22.7.114])
-        by smtp.263.net (postfix) whith ESMTP id P13518T140326291363584S1610961461018109_;
-        Mon, 18 Jan 2021 17:18:03 +0800 (CST)
-X-IP-DOMAINF: 1
-X-UNIQUE-TAG: <12b7956a9424351bb479c9cddd68f818>
-X-RL-SENDER: xxm@rock-chips.com
-X-SENDER: xxm@rock-chips.com
-X-LOGIN-NAME: xxm@rock-chips.com
-X-FST-TO: bhelgaas@google.com
-X-SENDER-IP: 58.22.7.114
-X-ATTACHMENT-NUM: 0
-X-System-Flag: 0
-From:   Simon Xue <xxm@rock-chips.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Simon Xue <xxm@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 3/3] PCI: rockchip: add DesignWare based PCIe controller
-Date:   Mon, 18 Jan 2021 17:17:39 +0800
-Message-Id: <20210118091739.247040-3-xxm@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210118091739.247040-1-xxm@rock-chips.com>
-References: <20210118091739.247040-1-xxm@rock-chips.com>
+        id S2388924AbhARKqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Jan 2021 05:46:48 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2361 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389136AbhARJoV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 04:44:21 -0500
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4DK6Cq72DRz67dBV;
+        Mon, 18 Jan 2021 17:38:15 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 18 Jan 2021 10:43:39 +0100
+Received: from [10.47.11.164] (10.47.11.164) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 18 Jan
+ 2021 09:43:37 +0000
+Subject: Re: [PATCH RFC 0/4] Fix arm64 crash for accessing unmapped IO port
+ regions (reboot)
+To:     Jiaxun Yang <jiaxun.yang@flygoat.com>, <catalin.marinas@arm.com>,
+        <will@kernel.org>, <arnd@arndb.de>, <akpm@linux-foundation.org>,
+        <xuwei5@hisilicon.com>, <lorenzo.pieralisi@arm.com>,
+        <helgaas@kernel.org>, <song.bao.hua@hisilicon.com>
+CC:     <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+        <linux-mips@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@openeuler.org>
+References: <1610729929-188490-1-git-send-email-john.garry@huawei.com>
+ <982ed6eb-6975-aea8-1555-a557633966f5@flygoat.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <6c0a2484-2cd6-ea1f-1094-21a7e86d71a2@huawei.com>
+Date:   Mon, 18 Jan 2021 09:42:25 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
+In-Reply-To: <982ed6eb-6975-aea8-1555-a557633966f5@flygoat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.11.164]
+X-ClientProxiedBy: lhreml717-chm.china.huawei.com (10.201.108.68) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pcie-dw-rockchip is based on DWC IP. But pcie-rockchip-host
-is another IP which is only used for RK3399. So all the following
-non-RK3399 SoCs should use this driver.
+On 18/01/2021 01:59, Jiaxun Yang wrote:
+> 在 2021/1/16 上午12:58, John Garry 写道:
+>> This is a reboot of my original series to address the problem of drivers
+>> for legacy ISA devices accessing unmapped IO port regions on arm64 
+>> systems
+>> and causing the system to crash.
+>>
+>> There was another recent report of such an issue [0], and some old ones
+>> [1] and [2] for reference.
+>>
+>> The background is that many systems do not include PCI host controllers,
+>> or they do and controller probe may have failed. For these cases, no IO
+>> ports are mapped. However, loading drivers for legacy ISA devices can
+>> crash the system as there is nothing to stop them accessing those IO
+>> ports (which have not been io remap'ed).
+>>
+>> My original solution tried to keep the kernel alive in these 
+>> situations by
+>> rejecting logical PIO access to PCI IO regions until PCI IO port regions
+>> have been mapped.
+>>
+>> This series goes one step further, by just reserving the complete legacy
+>> IO port range in 0x0--0xffff for arm64. The motivation for doing this is
+>> to make the request_region() calls for those drivers fail, like this:
+>>
+>> root@ubuntu:/home/john# insmod mk712.ko
+>>   [ 3415.575800] mk712: unable to get IO region
+>> insmod: ERROR: could not insert module mk712.ko: No such device
+>>
+>> Otherwise, in theory, those drivers could initiate rogue accesses to
+>> mapped IO port regions for other devices and cause corruptions or
+>> side-effects. Indeed, those drivers should not be allowed to access
+>> IO ports at all in such a system.
+>>
+>> As a secondary defence, for broken drivers who do not call
+>> request_region(), IO port accesses in range 0--0xffff will be ignored,
+>> again preserving the system.
+>>
+>> I am sending as an RFC as I am not sure of any problem with reserving
+>> first 0x10000 of IO space like this. There is reserve= commandline
+>> argument, which does allow this already.
+> 
 
-Signed-off-by: Simon Xue <xxm@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
- drivers/pci/controller/Kconfig                |   4 +-
- drivers/pci/controller/dwc/Kconfig            |   9 +
- drivers/pci/controller/dwc/Makefile           |   1 +
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 454 ++++++++++++++++++
- 4 files changed, 466 insertions(+), 2 deletions(-)
- create mode 100644 drivers/pci/controller/dwc/pcie-dw-rockchip.c
+Hi Jiaxun,
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 64e2f5e379aa..48a7d62f97f3 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -219,7 +219,7 @@ config PCIE_ROCKCHIP_HOST
- 	help
- 	  Say Y here if you want internal PCI support on Rockchip SoC.
- 	  There is 1 internal PCIe port available to support GEN2 with
--	  4 slots.
-+	  4 slots. Only for RK3399.
- 
- config PCIE_ROCKCHIP_EP
- 	bool "Rockchip PCIe endpoint controller"
-@@ -231,7 +231,7 @@ config PCIE_ROCKCHIP_EP
- 	help
- 	  Say Y here if you want to support Rockchip PCIe controller in
- 	  endpoint mode on Rockchip SoC. There is 1 internal PCIe port
--	  available to support GEN2 with 4 slots.
-+	  available to support GEN2 with 4 slots. Only for RK3399.
- 
- config PCIE_MEDIATEK
- 	tristate "MediaTek PCIe controller"
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 22c5529e9a65..110733d0c241 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -214,6 +214,15 @@ config PCIE_ARTPEC6_EP
- 	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
- 	  endpoint mode. This uses the DesignWare core.
- 
-+config PCIE_DW_ROCKCHIP_HOST
-+	bool "Rockchip DesignWare PCIe controller"
-+	select PCIE_DW
-+	select PCIE_DW_HOST
-+	depends on ARCH_ROCKCHIP
-+	depends on OF
-+	help
-+	  Enables support for the DW PCIe controller in the Rockchip SoC.
-+
- config PCIE_INTEL_GW
- 	bool "Intel Gateway PCIe host controller support"
- 	depends on OF && (X86 || COMPILE_TEST)
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index a751553fa0db..9c7048d2be17 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE_EP) += pci-layerscape-ep.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-+obj-$(CONFIG_PCIE_DW_ROCKCHIP_HOST) += pcie-dw-rockchip.o
- obj-$(CONFIG_PCIE_INTEL_GW) += pcie-intel-gw.o
- obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
- obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-new file mode 100644
-index 000000000000..5997fbc675d3
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -0,0 +1,454 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCIe host controller driver for Rockchip SoCs
-+ *
-+ * Copyright (C) 2021 Rockchip Electronics Co., Ltd.
-+ *		http://www.rock-chips.com
-+ *
-+ * Author: Simon Xue <xxm@rock-chips.com>
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/of_gpio.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/reset.h>
-+
-+#include "pcie-designware.h"
-+
-+/*
-+ * The upper 16 bits of PCIE_CLIENT_CONFIG are a write
-+ * mask for the lower 16 bits.  This allows atomic updates
-+ * of the register without locking.
-+ */
-+#define HIWORD_UPDATE(mask, val) (((mask) << 16) | (val))
-+#define HIWORD_UPDATE_BIT(val)	HIWORD_UPDATE(val, val)
-+
-+#define to_rockchip_pcie(x) dev_get_drvdata((x)->dev)
-+
-+#define PCIE_CLIENT_RC_MODE		HIWORD_UPDATE_BIT(0x40)
-+#define PCIE_CLIENT_ENABLE_LTSSM	HIWORD_UPDATE_BIT(0xc)
-+#define PCIE_SMLH_LINKUP		BIT(16)
-+#define PCIE_RDLH_LINKUP		BIT(17)
-+#define PCIE_L0S_ENTRY			0x11
-+#define PCIE_CLIENT_GENERAL_CONTROL	0x0
-+#define PCIE_CLIENT_GENERAL_DEBUG	0x104
-+#define PCIE_CLIENT_HOT_RESET_CTRL      0x180
-+#define PCIE_CLIENT_LTSSM_STATUS	0x300
-+#define PCIE_CLIENT_DBG_FIFO_MODE_CON	0x310
-+#define PCIE_CLIENT_DBG_FIFO_PTN_HIT_D0 0x320
-+#define PCIE_CLIENT_DBG_FIFO_PTN_HIT_D1 0x324
-+#define PCIE_CLIENT_DBG_FIFO_TRN_HIT_D0 0x328
-+#define PCIE_CLIENT_DBG_FIFO_TRN_HIT_D1 0x32c
-+#define PCIE_CLIENT_DBG_FIFO_STATUS	0x350
-+#define PCIE_CLIENT_DBG_TRANSITION_DATA	0xffff0000
-+#define PCIE_CLIENT_DBF_EN		0xffff0003
-+#define PCIE_LTSSM_ENABLE_ENHANCE       BIT(4)
-+
-+struct reset_bulk_data	{
-+	const char *id;
-+	struct reset_control *rst;
-+};
-+
-+struct rockchip_pcie {
-+	struct dw_pcie			*pci;
-+	void __iomem			*dbi_base;
-+	void __iomem			*apb_base;
-+	struct phy			*phy;
-+	struct clk_bulk_data		*clks;
-+	unsigned int			clk_cnt;
-+	struct reset_bulk_data		*rsts;
-+	struct gpio_desc		*rst_gpio;
-+	struct pcie_port		pp;
-+	struct regulator                *vpcie3v3;
-+};
-+
-+static inline int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
-+					  u32 reg)
-+{
-+	return readl(rockchip->apb_base + reg);
-+}
-+
-+static inline void rockchip_pcie_writel_apb(struct rockchip_pcie *rockchip,
-+					    u32 reg, u32 val)
-+{
-+	writel(val, rockchip->apb_base + reg);
-+}
-+
-+static inline void rockchip_pcie_set_mode(struct rockchip_pcie *rockchip)
-+{
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_GENERAL_CONTROL,
-+				 PCIE_CLIENT_RC_MODE);
-+}
-+
-+static inline void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
-+{
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_GENERAL_CONTROL,
-+				 PCIE_CLIENT_ENABLE_LTSSM);
-+}
-+
-+static int rockchip_pcie_link_up(struct dw_pcie *pci)
-+{
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+	u32 val = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_LTSSM_STATUS);
-+
-+	if ((val & (PCIE_RDLH_LINKUP | PCIE_SMLH_LINKUP)) == 0x30000 &&
-+	    (val & GENMASK(5, 0)) == PCIE_L0S_ENTRY)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static void rockchip_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+
-+	if (dw_pcie_link_up(pci)) {
-+		dev_err(pci->dev, "link already up\n");
-+		return;
-+	}
-+
-+	/* Reset device */
-+	gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
-+	msleep(100);
-+	gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
-+
-+	rockchip_pcie_enable_ltssm(rockchip);
-+}
-+
-+static void rockchip_pcie_enable_debug(struct rockchip_pcie *rockchip)
-+{
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DBG_FIFO_PTN_HIT_D0,
-+			   PCIE_CLIENT_DBG_TRANSITION_DATA);
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DBG_FIFO_PTN_HIT_D1,
-+			   PCIE_CLIENT_DBG_TRANSITION_DATA);
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DBG_FIFO_TRN_HIT_D0,
-+			   PCIE_CLIENT_DBG_TRANSITION_DATA);
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DBG_FIFO_TRN_HIT_D1,
-+			   PCIE_CLIENT_DBG_TRANSITION_DATA);
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DBG_FIFO_MODE_CON,
-+			   PCIE_CLIENT_DBF_EN);
-+}
-+
-+static void rockchip_pcie_debug_dump(struct rockchip_pcie *rockchip)
-+{
-+	u32 loop;
-+	struct dw_pcie *pci = rockchip->pci;
-+
-+	dev_dbg(pci->dev, "ltssm = 0x%x\n",
-+		 rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_LTSSM_STATUS));
-+	for (loop = 0; loop < 64; loop++)
-+		dev_dbg(pci->dev, "fifo_status = 0x%x\n",
-+			 rockchip_pcie_readl_apb(rockchip,
-+						 PCIE_CLIENT_DBG_FIFO_STATUS));
-+}
-+
-+static int rockchip_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	rockchip_pcie_enable_debug(rockchip);
-+
-+	rockchip_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
-+
-+	rockchip_pcie_debug_dump(rockchip);
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_host_ops rockchip_pcie_host_ops = {
-+	.host_init = rockchip_pcie_host_init,
-+};
-+
-+static int rockchip_add_pcie_port(struct rockchip_pcie *rockchip)
-+{
-+	int ret;
-+	struct dw_pcie *pci = rockchip->pci;
-+	struct pcie_port *pp = &pci->pp;
-+	struct device *dev = pci->dev;
-+
-+	pp->ops = &rockchip_pcie_host_ops;
-+
-+	if (device_property_read_bool(dev, "msi-map"))
-+		pp->msi_ext = 1;
-+
-+	rockchip_pcie_set_mode(rockchip);
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static void rockchip_pcie_clk_deinit(struct rockchip_pcie *rockchip)
-+{
-+	clk_bulk_disable(rockchip->clk_cnt, rockchip->clks);
-+	clk_bulk_unprepare(rockchip->clk_cnt, rockchip->clks);
-+}
-+
-+static int rockchip_pcie_clk_init(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->pci->dev;
-+	struct property *prop;
-+	const char *name;
-+	int i = 0, ret, count;
-+
-+	count = of_property_count_strings(dev->of_node, "clock-names");
-+	if (count < 1)
-+		return -ENODEV;
-+
-+	rockchip->clks = devm_kcalloc(dev, count,
-+				     sizeof(struct clk_bulk_data),
-+				     GFP_KERNEL);
-+	if (!rockchip->clks)
-+		return -ENOMEM;
-+
-+	rockchip->clk_cnt = count;
-+
-+	of_property_for_each_string(dev->of_node, "clock-names",
-+				    prop, name) {
-+		rockchip->clks[i].id = name;
-+		if (!rockchip->clks[i].id)
-+			return -ENOMEM;
-+		i++;
-+	}
-+
-+	ret = devm_clk_bulk_get(dev, count, rockchip->clks);
-+	if (ret)
-+		return ret;
-+
-+	ret = clk_bulk_prepare(count, rockchip->clks);
-+	if (ret)
-+		return ret;
-+
-+	ret = clk_bulk_enable(count, rockchip->clks);
-+	if (ret) {
-+		clk_bulk_unprepare(count, rockchip->clks);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rockchip_pcie_resource_get(struct platform_device *pdev,
-+				      struct rockchip_pcie *rockchip)
-+{
-+	struct resource *dbi_base;
-+	struct resource *apb_base;
-+
-+	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+						"pcie-dbi");
-+	if (!dbi_base)
-+		return -ENODEV;
-+
-+	rockchip->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
-+	if (IS_ERR(rockchip->dbi_base))
-+		return PTR_ERR(rockchip->dbi_base);
-+
-+	rockchip->pci->dbi_base = rockchip->dbi_base;
-+
-+	apb_base = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+						"pcie-apb");
-+	if (!apb_base)
-+		return -ENODEV;
-+
-+	rockchip->apb_base = devm_ioremap_resource(&pdev->dev, apb_base);
-+	if (IS_ERR(rockchip->apb_base))
-+		return PTR_ERR(rockchip->apb_base);
-+
-+	rockchip->rst_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
-+						    GPIOD_OUT_HIGH);
-+	if (IS_ERR(rockchip->rst_gpio))
-+		return PTR_ERR(rockchip->rst_gpio);
-+
-+	return 0;
-+}
-+
-+static int rockchip_pcie_phy_init(struct rockchip_pcie *rockchip)
-+{
-+	int ret;
-+	struct device *dev = rockchip->pci->dev;
-+
-+	rockchip->phy = devm_phy_get(dev, "pcie-phy");
-+	if (IS_ERR(rockchip->phy)) {
-+		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
-+			dev_info(dev, "missing phy\n");
-+		return PTR_ERR(rockchip->phy);
-+	}
-+
-+	ret = phy_init(rockchip->phy);
-+	if (ret < 0)
-+		return ret;
-+
-+	phy_power_on(rockchip->phy);
-+
-+	return 0;
-+}
-+
-+static void rockchip_pcie_phy_deinit(struct rockchip_pcie *rockchip)
-+{
-+	phy_exit(rockchip->phy);
-+	phy_power_off(rockchip->phy);
-+}
-+
-+static int rockchip_pcie_reset_control_release(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->pci->dev;
-+	struct property *prop;
-+	const char *name;
-+	int ret, count, i = 0;
-+
-+	count = of_property_count_strings(dev->of_node, "reset-names");
-+	if (count < 1)
-+		return -ENODEV;
-+
-+	rockchip->rsts = devm_kcalloc(dev, count,
-+				     sizeof(struct reset_bulk_data),
-+				     GFP_KERNEL);
-+	if (!rockchip->rsts)
-+		return -ENOMEM;
-+
-+	of_property_for_each_string(dev->of_node, "reset-names",
-+				    prop, name) {
-+		rockchip->rsts[i].id = name;
-+		if (!rockchip->rsts[i].id)
-+			return -ENOMEM;
-+		i++;
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		rockchip->rsts[i].rst = devm_reset_control_get_exclusive(dev,
-+						rockchip->rsts[i].id);
-+		if (IS_ERR(rockchip->rsts[i].rst)) {
-+			dev_err(dev, "failed to get %s\n",
-+				rockchip->clks[i].id);
-+			return PTR_ERR(rockchip->rsts[i].rst);
-+		}
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		ret = reset_control_deassert(rockchip->rsts[i].rst);
-+		if (ret) {
-+			dev_err(dev, "failed to release %s\n",
-+				rockchip->rsts[i].id);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static void rockchip_pcie_fast_link_setup(struct rockchip_pcie *rockchip)
-+{
-+	u32 val;
-+
-+	/* LTSSM EN ctrl mode */
-+	val = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_HOT_RESET_CTRL);
-+	val |= PCIE_LTSSM_ENABLE_ENHANCE | (PCIE_LTSSM_ENABLE_ENHANCE << 16);
-+	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_HOT_RESET_CTRL, val);
-+}
-+
-+
-+static const struct of_device_id rockchip_pcie_of_match[] = {
-+	{ .compatible = "rockchip,rk3568-pcie", },
-+	{ /* sentinel */ },
-+};
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.link_up = rockchip_pcie_link_up,
-+};
-+
-+static int rockchip_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct rockchip_pcie *rockchip;
-+	struct dw_pcie *pci;
-+	int ret;
-+
-+	rockchip = devm_kzalloc(dev, sizeof(*rockchip), GFP_KERNEL);
-+	if (!rockchip)
-+		return -ENOMEM;
-+
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	pci->dev = dev;
-+	pci->ops = &dw_pcie_ops;
-+
-+	rockchip->pci = pci;
-+
-+	ret = rockchip_pcie_resource_get(pdev, rockchip);
-+	if (ret)
-+		return ret;
-+
-+	/* DON'T MOVE ME: must be enable before phy init */
-+	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
-+	if (IS_ERR(rockchip->vpcie3v3)) {
-+		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
-+			return PTR_ERR(rockchip->vpcie3v3);
-+		dev_info(dev, "no vpcie3v3 regulator found\n");
-+	}
-+
-+	if (!IS_ERR(rockchip->vpcie3v3)) {
-+		ret = regulator_enable(rockchip->vpcie3v3);
-+		if (ret) {
-+			dev_err(pci->dev, "fail to enable vpcie3v3 regulator\n");
-+			return ret;
-+		}
-+	}
-+
-+	ret = rockchip_pcie_phy_init(rockchip);
-+	if (ret)
-+		goto disable_regulator;
-+
-+	ret = rockchip_pcie_reset_control_release(rockchip);
-+	if (ret)
-+		goto deinit_phy;
-+
-+	ret = rockchip_pcie_clk_init(rockchip);
-+	if (ret)
-+		goto deinit_phy;
-+
-+	rockchip_pcie_fast_link_setup(rockchip);
-+
-+	platform_set_drvdata(pdev, rockchip);
-+
-+	ret = rockchip_add_pcie_port(rockchip);
-+	if (ret)
-+		goto deinit_clk;
-+
-+	return 0;
-+
-+deinit_clk:
-+	rockchip_pcie_clk_deinit(rockchip);
-+deinit_phy:
-+	rockchip_pcie_phy_deinit(rockchip);
-+disable_regulator:
-+	if (!IS_ERR(rockchip->vpcie3v3))
-+		regulator_disable(rockchip->vpcie3v3);
-+
-+	return ret;
-+}
-+
-+MODULE_DEVICE_TABLE(of, rockchip_pcie_of_match);
-+
-+static struct platform_driver rockchip_pcie_driver = {
-+	.driver = {
-+		.name	= "rk-pcie",
-+		.of_match_table = rockchip_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = rockchip_pcie_probe,
-+};
-+
-+builtin_platform_driver(rockchip_pcie_driver);
--- 
-2.25.1
+> 
+> Is it ok with ACPI? I'm not really familiar with ACPI on arm64 but my 
+> impression
+> is ACPI would use legacy I/O ports to communicate with kbd controller, 
+> EC and
+> power management facilities.
 
+I tested for ACPI. As far as I'm concerned, fixed IO ports should not be 
+used on arm64 systems.
 
+Indeed, ACPI spec says IO port addresses should be CPU addressable, and 
+it is the job of the kernel to io remap those correctly for systems 
+which do not support IO ports natively, i.e. those that define PCI_IOBASE.
+
+> 
+> We'd better have a method to detect if ISA bus is not present on the system
+> instead of reserve them unconditionally.
+> 
+
+For ISA bus or any IO ports region, they would/should be behind PCI host 
+bridge or modeled as INDIRECT IO host and we should allocate logic PIO 
+region for them, and there should be no assumption on the IO port 
+address in drivers, i.e. not fixed.
+
+Thanks,
+John
+
+> 
+>>
+>> For reference, here's how /proc/ioports looks on my arm64 system with
+>> this change:
+>>
+>> root@ubuntu:/home/john# more /proc/ioports
+>> 00010000-0001ffff : PCI Bus 0002:f8
+>>    00010000-00010fff : PCI Bus 0002:f9
+>>      00010000-00010007 : 0002:f9:00.0
+>>        00010000-00010007 : serial
+>>      00010008-0001000f : 0002:f9:00.1
+>>        00010008-0001000f : serial
+>>      00010010-00010017 : 0002:f9:00.2
+>>      00010018-0001001f : 0002:f9:00.2
+>> 00020000-0002ffff : PCI Bus 0004:88
+>> 00030000-0003ffff : PCI Bus 0005:78
+>> 00040000-0004ffff : PCI Bus 0006:c0
+>> 00050000-0005ffff : PCI Bus 0007:90
+>> 00060000-0006ffff : PCI Bus 000a:10
+>> 00070000-0007ffff : PCI Bus 000c:20
+>> 00080000-0008ffff : PCI Bus 000d:30
+>>
+>> [0] 
+>> https://lore.kernel.org/linux-input/20210112055129.7840-1-song.bao.hua@hisilicon.com/T/#mf86445470160c44ac110e9d200b09245169dc5b6 
+>>
+>> [1] https://lore.kernel.org/linux-pci/56F209A9.4040304@huawei.com
+>> [2] 
+>> https://lore.kernel.org/linux-arm-kernel/e6995b4a-184a-d8d4-f4d4-9ce75d8f47c0@huawei.com/ 
+>>
+>>
+>> Difference since v4:
+>> https://lore.kernel.org/linux-pci/1560262374-67875-1-git-send-email-john.garry@huawei.com/ 
+>>
+>> - Reserve legacy ISA region
+>>
+>> John Garry (4):
+>>    arm64: io: Introduce IO_SPACE_BASE
+>>    asm-generic/io.h: Add IO_SPACE_BASE
+>>    kernel/resource: Make ioport_resource.start configurable
+>>    logic_pio: Warn on and discard accesses to addresses below
+>>      IO_SPACE_BASE
+>>
+>>   arch/arm64/include/asm/io.h |  1 +
+>>   include/asm-generic/io.h    |  4 ++++
+>>   include/linux/logic_pio.h   |  5 +++++
+>>   kernel/resource.c           |  2 +-
+>>   lib/logic_pio.c             | 20 ++++++++++++++------
+>>   5 files changed, 25 insertions(+), 7 deletions(-)
+>>
+> 
+> .
 
