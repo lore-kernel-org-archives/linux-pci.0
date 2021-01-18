@@ -2,118 +2,123 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B647DC433DB
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 09:01:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B54C433DB
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 849332223E
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 09:01:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7938022242
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 10:46:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388143AbhARJA6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Jan 2021 04:00:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39728 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388155AbhARJAr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 04:00:47 -0500
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA47EC061575
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 01:00:05 -0800 (PST)
-Received: by mail-pg1-x529.google.com with SMTP id n10so10505556pgl.10
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 01:00:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3k3cvWBqp3yfYjIh9TJOU/QTWyWiEbyVzrpJg7eUzFk=;
-        b=CypnN4xXqqoPD6fZ6ZyEzVUe/XB55DNBfsbqbpVUg7suOG9R0D1GgU0PPjbhuk4z+i
-         yvdUR/YRlZt6mEZUrmlcK97ibeugaABW/PBO/QKVptkEZ+bfDSujj50M4BLk5EpMOi9f
-         fphxUjOQHUKrmgzIWX/o/8ycF03Y07NjjpI/KOZZAlRCHbtm43XCJgs2sP7OxYjDdt6+
-         eFVfU9D8hMJa0SrscBOvFAug6O72cC1kKliGP9o+DHdVIS5zpD9KJYx5XggX1qBzJ0ww
-         gOxzjqWqw0f4aPiGagE/ZxLd2QXEZ4A31H3uuGcR506u2rbN+GSEuApcALTIW60JoknW
-         cZ+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=3k3cvWBqp3yfYjIh9TJOU/QTWyWiEbyVzrpJg7eUzFk=;
-        b=D6ScNjU+mup3Ua+Gd7lv+wiseGY/Jh29OOkBsE/u4xteDhg0mTw9P+YvpPU3XHnMsR
-         eLqPxAqMZcuV1g74MAsJoHK6DcFETZhCJZcbvnJbceDhs9a8GCnkj4gxAXsgHt1fq3AK
-         nqX8Z4a8ll0f/SNr9yrOsce1wKnzQdGG0hk2iOSHDy9lWm6jHBHeCFL7LqZsH7FlbVY4
-         5osq2uFJ37IGnQt3/rPNIqORkafbHxa37pZnGLsl+N+PeDpTc5PChRHBjsIDmwjaGL3N
-         pjrROdZkmS6tLb/q9GjA17AaD3zeeiVGYDHz7U0mtybnK6Csykdv+8nyiNuWlhrZnqLT
-         53sg==
-X-Gm-Message-State: AOAM531oSBdWaUtpjvWZDWkK3EDoMs+xNdbQJzi2O9CFcqDTw6Qm3we3
-        KhyRXUlBG7SuAj3iv/phigQdGQ==
-X-Google-Smtp-Source: ABdhPJwRerby7DfvrEpSpJUgKZScBXCGa+EReKk5cv1b0njhy5SmH32VK+27Czea/1J1ebXTIkorrw==
-X-Received: by 2002:a63:5805:: with SMTP id m5mr25120923pgb.352.1610960405257;
-        Mon, 18 Jan 2021 01:00:05 -0800 (PST)
-Received: from localhost.localdomain ([240e:362:42c:4800:8459:4fa0:20cc:1141])
-        by smtp.gmail.com with ESMTPSA id c23sm16087162pgc.72.2021.01.18.00.59.51
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 18 Jan 2021 01:00:04 -0800 (PST)
-From:   Zhangfei Gao <zhangfei.gao@linaro.org>
+        id S2388567AbhARKpC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Jan 2021 05:45:02 -0500
+Received: from lucky1.263xmail.com ([211.157.147.132]:49828 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388873AbhARJc0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 04:32:26 -0500
+Received: from localhost (unknown [192.168.167.70])
+        by lucky1.263xmail.com (Postfix) with ESMTP id 0FA1FEFDEF;
+        Mon, 18 Jan 2021 17:17:45 +0800 (CST)
+X-MAIL-GRAY: 0
+X-MAIL-DELIVERY: 1
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-ABS-CHECKED: 0
+Received: from xxm-vm.localdomain (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P13518T140326291363584S1610961461018109_;
+        Mon, 18 Jan 2021 17:17:44 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <4fd38a682f9815058e1bb69cc85248e2>
+X-RL-SENDER: xxm@rock-chips.com
+X-SENDER: xxm@rock-chips.com
+X-LOGIN-NAME: xxm@rock-chips.com
+X-FST-TO: bhelgaas@google.com
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-System-Flag: 0
+From:   Simon Xue <xxm@rock-chips.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        jean-philippe <jean-philippe@linaro.org>,
-        kenneth-lee-2012@foxmail.com, wangzhou1@hisilicon.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhangfei Gao <zhangfei.gao@linaro.org>
-Subject: [PATCH v2 3/3] PCI: set dma-can-stall for HiSilicon chip
-Date:   Mon, 18 Jan 2021 16:58:36 +0800
-Message-Id: <1610960316-28935-4-git-send-email-zhangfei.gao@linaro.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1610960316-28935-1-git-send-email-zhangfei.gao@linaro.org>
-References: <1610960316-28935-1-git-send-email-zhangfei.gao@linaro.org>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>
+Subject: [PATCH 1/3] PCI: dwc: Skip allocating own MSI domain if using external MSI domain
+Date:   Mon, 18 Jan 2021 17:17:37 +0800
+Message-Id: <20210118091739.247040-1-xxm@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-HiSilicon KunPeng920 and KunPeng930 have devices appear as PCI but are
-actually on the AMBA bus. These fake PCI devices can support SVA via
-SMMU stall feature, by setting dma-can-stall for ACPI platforms.
+From: Shawn Lin <shawn.lin@rock-chips.com>
 
-Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
-Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+On some platform, external MSI domain is using instead of the one
+created by designware driver. For instance, if using GIC-V3-ITS
+as a MSI domain, we only need set msi-map in the devicetree but
+never need any bit in the designware driver to handle MSI stuff.
+So skip allocating its own MSI domain for that case.
+
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Simon Xue <xxm@rock-chips.com>
 ---
-Property dma-can-stall depends on patchset
-https://lore.kernel.org/linux-iommu/20210108145217.2254447-1-jean-philippe@linaro.org/
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 +++++++++-
+ drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
- drivers/pci/quirks.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 873d27f..b866cdf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1827,10 +1827,23 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1610, PCI_CLASS_BRIDGE_PCI
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 8a84c005f32b..d9d93cab970a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -235,6 +235,10 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct fwnode_handle *fwnode = of_node_to_fwnode(pci->dev->of_node);
  
- static void quirk_huawei_pcie_sva(struct pci_dev *pdev)
++	/* Rely on the external MSI domain */
++	if (pp->msi_ext)
++		return 0;
++
+ 	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
+ 					       &dw_pcie_msi_domain_ops, pp);
+ 	if (!pp->irq_domain) {
+@@ -258,6 +262,9 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+ 
+ static void dw_pcie_free_msi(struct pcie_port *pp)
  {
-+	struct property_entry properties[] = {
-+		PROPERTY_ENTRY_BOOL("dma-can-stall"),
-+		{},
-+	};
++	if (pp->msi_ext)
++		return;
 +
- 	if (pdev->revision != 0x21 && pdev->revision != 0x30)
- 		return;
+ 	if (pp->msi_irq) {
+ 		irq_set_chained_handler(pp->msi_irq, NULL);
+ 		irq_set_handler_data(pp->msi_irq, NULL);
+@@ -359,7 +366,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pci->link_gen < 1)
+ 		pci->link_gen = of_pci_get_max_link_speed(np);
  
- 	pdev->pasid_no_tlp = 1;
-+
-+	/*
-+	 * Set the dma-can-stall property on ACPI platforms. Device tree
-+	 * can set it directly.
-+	 */
-+	if (!pdev->dev.of_node &&
-+	    device_add_properties(&pdev->dev, properties))
-+		pci_warn(pdev, "could not add stall property");
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0xa250, quirk_huawei_pcie_sva);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0xa251, quirk_huawei_pcie_sva);
+-	if (pci_msi_enabled()) {
++	if (pci_msi_enabled() &&
++	    !pp->msi_ext) {
+ 		pp->has_msi_ctrl = !(pp->ops->msi_host_init ||
+ 				     of_property_read_bool(np, "msi-parent") ||
+ 				     of_property_read_bool(np, "msi-map"));
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 0207840756c4..cf3b0664302a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -195,6 +195,7 @@ struct pcie_port {
+ 	u32			irq_mask[MAX_MSI_CTRLS];
+ 	struct pci_host_bridge  *bridge;
+ 	raw_spinlock_t		lock;
++	int			msi_ext;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
 -- 
-2.7.4
+2.25.1
+
+
 
