@@ -2,141 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B1FC433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 21:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CE1C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 22:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A348F222B3
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 21:10:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75FF822CB1
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 22:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389300AbhARVKB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Jan 2021 16:10:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54148 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388583AbhARVCj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 16:02:39 -0500
-Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D0D5C061575
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 13:01:59 -0800 (PST)
-Received: by mail-yb1-xb36.google.com with SMTP id k132so6790213ybf.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 13:01:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+6WyOf0eR79gLxpfXkkTKsFGZ48cTcGjXXrB5k3tHZU=;
-        b=eBDibH/keDb+f0lcVDKsAk492JAG4MtqHrbbCztc/YVPyEOAJNaqKlI3o4NQcUGotO
-         MxwVmD1/prmYv4Lxl8KfM727BO0IEECzyAcn4MW9L81BzDuTLg+d31sSJ+6WZ5tXjd/N
-         Qyr8/PrBlIvnkdO1+7ZDRmyxMZYq+3Jp3rVewjANiT287qf1khStKvb+oVbaxrIZpqeT
-         X1f7Zao1dh1EFwm1CmXybNk62vmzTR8dreF6DKX0CbzuRDkUJqkhBYxf0F4p+M5aYwNW
-         MinsorPAw4zJR5ppuykQF68gZUjDf+gKf9dfyD4SWLLrBqX8CIjNeoPtCGeW14caDtZe
-         NX3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=+6WyOf0eR79gLxpfXkkTKsFGZ48cTcGjXXrB5k3tHZU=;
-        b=kX6dl7QLsM48SL8z8EaoxK/jNtDi/6dVaoT8qTCLf89bj5OyfUxl8Ug5x5YkWMMB+8
-         0h4CgQo5DfcfYcd7RUI1v7HFtnoZz4gVv3n9NMrFkSXMxwxhtak4hxol4o0GygWNgb83
-         AflCf8ZJJcbNqwcoUo8Gr0+VQgGSg8/jjhbGepfVedkZOUEso0QwkRkm3zF+I8NTNHry
-         BlbSm+pP3Pd7TCbbF/P/yIttkSUZXbQWwYh1bkiWFDCfZttiXpRlNXZXW6fyZO2WTCUg
-         cR1fw5/sP5fYx13CzqQdcoKOsd3t+vQOVsL6MaMjqmH0DqOBXkGevVrZ+fsbkLOhKDQg
-         eFcw==
-X-Gm-Message-State: AOAM532i0r7g3Ue+0Wb3qGpr8qmNpTHcuzrlckrrOhS//u3+Usci/XS8
-        nrB+UVJJ0gRa7kt46F5ZXtE7oMxYKU3EXkWEiCLgtA==
-X-Google-Smtp-Source: ABdhPJzTV859+4Dye5PFFGFGBAj3QcEuu9tffkTQrp4dsq9G3sjdYXvOWg8oMzYU7lMlaIj1t00EM5XaB6IKWuXBwhY=
-X-Received: by 2002:a25:77d4:: with SMTP id s203mr1637715ybc.32.1611003718283;
- Mon, 18 Jan 2021 13:01:58 -0800 (PST)
-MIME-Version: 1.0
-References: <20201218031703.3053753-6-saravanak@google.com> <20210117230134.32042-1-michael@walle.cc>
-In-Reply-To: <20210117230134.32042-1-michael@walle.cc>
-From:   Saravana Kannan <saravanak@google.com>
-Date:   Mon, 18 Jan 2021 13:01:22 -0800
-Message-ID: <CAGETcx9=6fPAHLuMyfxfXTGxeSUO8FwHVU_F4bfqLTfK6c+eXw@mail.gmail.com>
-Subject: Re: [PATCH v1 5/5] driver core: Set fw_devlink=on by default
-To:     Michael Walle <michael@walle.cc>
-Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Android Kernel Team <kernel-team@android.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, roy.zang@nxp.com,
-        Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S1728923AbhARWUT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Jan 2021 17:20:19 -0500
+Received: from mx.socionext.com ([202.248.49.38]:16086 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725892AbhARWUS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Jan 2021 17:20:18 -0500
+X-Greylist: delayed 580 seconds by postgrey-1.27 at vger.kernel.org; Mon, 18 Jan 2021 17:20:17 EST
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 19 Jan 2021 07:09:55 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 776C62059027;
+        Tue, 19 Jan 2021 07:09:55 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Tue, 19 Jan 2021 07:09:55 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan2.css.socionext.com (Postfix) with ESMTP id 0BCB9B1D40;
+        Tue, 19 Jan 2021 07:09:55 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v9 1/3] PCI: portdrv: Add pcie_port_service_get_irq() function
+Date:   Tue, 19 Jan 2021 07:09:43 +0900
+Message-Id: <1611007785-25771-2-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1611007785-25771-1-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1611007785-25771-1-git-send-email-hayashi.kunihiko@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Jan 17, 2021 at 3:01 PM Michael Walle <michael@walle.cc> wrote:
->
-> Hi Saravana, again ;)
+Add pcie_port_service_get_irq() that returns the virtual IRQ number
+for specified portdrv service.
 
-Hi again! :)
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv.h      |  1 +
+ drivers/pci/pcie/portdrv_core.c | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
 
->
-> > Cyclic dependencies in some firmware was one of the last remaining
-> > reasons fw_devlink=on couldn't be set by default. Now that cyclic
-> > dependencies don't block probing, set fw_devlink=on by default.
-> >
-> > Setting fw_devlink=on by default brings a bunch of benefits (currently,
-> > only for systems with device tree firmware):
-> > * Significantly cuts down deferred probes.
-> > * Device probe is effectively attempted in graph order.
-> > * Makes it much easier to load drivers as modules without having to
-> >   worry about functional dependencies between modules (depmod is still
-> >   needed for symbol dependencies).
-> >
-> > If this patch prevents some devices from probing, it's very likely due
-> > to the system having one or more device drivers that "probe"/set up a
-> > device (DT node with compatible property) without creating a struct
-> > device for it.  If we hit such cases, the device drivers need to be
-> > fixed so that they populate struct devices and probe them like normal
-> > device drivers so that the driver core is aware of the devices and their
-> > status. See [1] for an example of such a case.
-> >
-> > [1] - https://lore.kernel.org/lkml/CAGETcx9PiX==mLxB9PO8Myyk6u2vhPVwTMsA5NkD-ywH5xhusw@mail.gmail.com/
-> > Signed-off-by: Saravana Kannan <saravanak@google.com>
->
-> This breaks (at least) probing of the PCIe controllers of my board. The
-> driver in question is
->   drivers/pci/controller/dwc/pci-layerscape.c
-> I've also put the maintainers of this driver on CC. Looks like it uses a
-> proper struct device. But it uses builtin_platform_driver_probe() and
-> apparently it waits for the iommu which uses module_platform_driver().
-> Dunno if that will work together.
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index af7cf23..e256456 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -150,4 +150,5 @@ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+ #endif /* !CONFIG_PCIE_PME */
+ 
+ struct device *pcie_port_find_device(struct pci_dev *dev, u32 service);
++int pcie_port_service_get_irq(struct pci_dev *dev, u32 service);
+ #endif /* _PORTDRV_H_ */
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e1fed664..b60f0f3 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -477,6 +477,22 @@ struct device *pcie_port_find_device(struct pci_dev *dev,
+ }
+ EXPORT_SYMBOL_GPL(pcie_port_find_device);
+ 
++/*
++ * pcie_port_service_get_irq - get irq of the service
++ * @dev: PCI Express port the service is associated with
++ * @service: For the service to find
++ *
++ * Get irq number associated with given service on a pci_dev
++ */
++int pcie_port_service_get_irq(struct pci_dev *dev, u32 service)
++{
++	struct pcie_device *pciedev;
++
++	pciedev = to_pcie_device(pcie_port_find_device(dev, service));
++
++	return pciedev->irq;
++}
++
+ /**
+  * pcie_port_device_remove - unregister PCI Express port service devices
+  * @dev: PCI Express port the service devices to unregister are associated with
+-- 
+2.7.4
 
-Yeah, the builtin vs module doesn't matter. I've had fw_devlink work
-multiple times with the consumer driver being built in and the
-supplier actually loaded as a module. Making that work is one of the
-goals of fw_devlink.
-
-> The board device tree can be found here:
->   arch/arm64/boot/dts/freescale/fsl-ls1028a-kontron-sl28-var3-ads2.dts
->
-> Attached is the log with enabled "probe deferral" messages enabled.
-
-I took a look at the logs. As you said, pci seems to be waiting on
-iommu, but it's not clear why the iommu didn't probe by then. Can you
-add initcall_debug=1 and enable the logs in device_link_add()? Btw, I
-realize one compromise on the logs is to send them as an attachment
-instead of inline. That way, it's still archived in the list, but I
-don't have to deal with log lines getting wrapped, etc.
-
-Thanks for reporting the issues. Also, could you try picking up all of
-these changes and giving it a shot. It's unlikely to help, but I want
-to rule out issues related to fixes in progress.
-
-https://lore.kernel.org/lkml/20210116011412.3211292-1-saravanak@google.com/
-https://lore.kernel.org/lkml/20210115210159.3090203-1-saravanak@google.com/
-https://lore.kernel.org/lkml/20201218210750.3455872-1-saravanak@google.com/
-
-Thanks,
-Saravana
