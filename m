@@ -2,175 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 697D8C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 20:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B1FC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 21:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E8EA22CAD
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 20:08:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A348F222B3
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Jan 2021 21:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388223AbhARKpd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Jan 2021 05:45:33 -0500
-Received: from lucky1.263xmail.com ([211.157.147.132]:49874 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388871AbhARJc1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 04:32:27 -0500
-Received: from localhost (unknown [192.168.167.70])
-        by lucky1.263xmail.com (Postfix) with ESMTP id 3DD38EFBB8;
-        Mon, 18 Jan 2021 17:17:58 +0800 (CST)
-X-MAIL-GRAY: 0
-X-MAIL-DELIVERY: 1
-X-ADDR-CHECKED4: 1
-X-ANTISPAM-LEVEL: 2
-X-ABS-CHECKED: 0
-Received: from xxm-vm.localdomain (unknown [58.22.7.114])
-        by smtp.263.net (postfix) whith ESMTP id P13518T140326291363584S1610961461018109_;
-        Mon, 18 Jan 2021 17:17:57 +0800 (CST)
-X-IP-DOMAINF: 1
-X-UNIQUE-TAG: <537c15aae69a0918012960324760c77f>
-X-RL-SENDER: xxm@rock-chips.com
-X-SENDER: xxm@rock-chips.com
-X-LOGIN-NAME: xxm@rock-chips.com
-X-FST-TO: bhelgaas@google.com
-X-SENDER-IP: 58.22.7.114
-X-ATTACHMENT-NUM: 0
-X-System-Flag: 0
-From:   Simon Xue <xxm@rock-chips.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Simon Xue <xxm@rock-chips.com>
-Subject: [PATCH 2/3] dt-bindings: rockchip: Add DesignWare based PCIe controller
-Date:   Mon, 18 Jan 2021 17:17:38 +0800
-Message-Id: <20210118091739.247040-2-xxm@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210118091739.247040-1-xxm@rock-chips.com>
-References: <20210118091739.247040-1-xxm@rock-chips.com>
+        id S2389300AbhARVKB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Jan 2021 16:10:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54148 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388583AbhARVCj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2021 16:02:39 -0500
+Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D0D5C061575
+        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 13:01:59 -0800 (PST)
+Received: by mail-yb1-xb36.google.com with SMTP id k132so6790213ybf.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2021 13:01:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=+6WyOf0eR79gLxpfXkkTKsFGZ48cTcGjXXrB5k3tHZU=;
+        b=eBDibH/keDb+f0lcVDKsAk492JAG4MtqHrbbCztc/YVPyEOAJNaqKlI3o4NQcUGotO
+         MxwVmD1/prmYv4Lxl8KfM727BO0IEECzyAcn4MW9L81BzDuTLg+d31sSJ+6WZ5tXjd/N
+         Qyr8/PrBlIvnkdO1+7ZDRmyxMZYq+3Jp3rVewjANiT287qf1khStKvb+oVbaxrIZpqeT
+         X1f7Zao1dh1EFwm1CmXybNk62vmzTR8dreF6DKX0CbzuRDkUJqkhBYxf0F4p+M5aYwNW
+         MinsorPAw4zJR5ppuykQF68gZUjDf+gKf9dfyD4SWLLrBqX8CIjNeoPtCGeW14caDtZe
+         NX3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=+6WyOf0eR79gLxpfXkkTKsFGZ48cTcGjXXrB5k3tHZU=;
+        b=kX6dl7QLsM48SL8z8EaoxK/jNtDi/6dVaoT8qTCLf89bj5OyfUxl8Ug5x5YkWMMB+8
+         0h4CgQo5DfcfYcd7RUI1v7HFtnoZz4gVv3n9NMrFkSXMxwxhtak4hxol4o0GygWNgb83
+         AflCf8ZJJcbNqwcoUo8Gr0+VQgGSg8/jjhbGepfVedkZOUEso0QwkRkm3zF+I8NTNHry
+         BlbSm+pP3Pd7TCbbF/P/yIttkSUZXbQWwYh1bkiWFDCfZttiXpRlNXZXW6fyZO2WTCUg
+         cR1fw5/sP5fYx13CzqQdcoKOsd3t+vQOVsL6MaMjqmH0DqOBXkGevVrZ+fsbkLOhKDQg
+         eFcw==
+X-Gm-Message-State: AOAM532i0r7g3Ue+0Wb3qGpr8qmNpTHcuzrlckrrOhS//u3+Usci/XS8
+        nrB+UVJJ0gRa7kt46F5ZXtE7oMxYKU3EXkWEiCLgtA==
+X-Google-Smtp-Source: ABdhPJzTV859+4Dye5PFFGFGBAj3QcEuu9tffkTQrp4dsq9G3sjdYXvOWg8oMzYU7lMlaIj1t00EM5XaB6IKWuXBwhY=
+X-Received: by 2002:a25:77d4:: with SMTP id s203mr1637715ybc.32.1611003718283;
+ Mon, 18 Jan 2021 13:01:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20201218031703.3053753-6-saravanak@google.com> <20210117230134.32042-1-michael@walle.cc>
+In-Reply-To: <20210117230134.32042-1-michael@walle.cc>
+From:   Saravana Kannan <saravanak@google.com>
+Date:   Mon, 18 Jan 2021 13:01:22 -0800
+Message-ID: <CAGETcx9=6fPAHLuMyfxfXTGxeSUO8FwHVU_F4bfqLTfK6c+eXw@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] driver core: Set fw_devlink=on by default
+To:     Michael Walle <michael@walle.cc>
+Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Android Kernel Team <kernel-team@android.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com,
+        Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Simon Xue <xxm@rock-chips.com>
----
- .../bindings/pci/rockchip-dw-pcie.yaml        | 101 ++++++++++++++++++
- 1 file changed, 101 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+On Sun, Jan 17, 2021 at 3:01 PM Michael Walle <michael@walle.cc> wrote:
+>
+> Hi Saravana, again ;)
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-new file mode 100644
-index 000000000000..fa664cfffb29
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -0,0 +1,101 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: DesignWare based PCIe RC controller on Rockchip SoCs
-+
-+maintainers:
-+  - Shawn Lin <shawn.lin@rock-chips.com>
-+  - Simon Xue <xxm@rock-chips.com>
-+
-+# We need a select here so we don't match all nodes with 'snps,dw-pcie'
-+select:
-+  properties:
-+    compatible:
-+      contains:
-+        const: rockchip,rk3568-pcie
-+  required:
-+    - compatible
-+
-+properties:
-+  compatible:
-+    enum:
-+      - rockchip,rk3568-pcie
-+      - snps,dw-pcie
-+
-+  reg:
-+    maxItems: 1
-+
-+  clocks:
-+    items:
-+      - description: AHB clock for PCIe master
-+      - description: AHB clock for PCIe slave
-+      - description: AHB clock for PCIe dbi
-+      - description: APB clock for PCIe
-+      - description: Auxiliary clock for PCIe
-+
-+  clock-names:
-+    items:
-+      - const: aclk_mst
-+      - const: aclk_slv
-+      - const: aclk_dbi
-+      - const: pclk
-+      - const: aux
-+
-+  resets:
-+    items:
-+      - description: PCIe pipe reset line
-+
-+  reset-names:
-+    items:
-+      - const: pipe
-+
-+required:
-+  - compatible
-+  - "#address-cells"
-+  - "#size-cells"
-+  - bus-range
-+  - reg
-+  - reg-names
-+  - clocks
-+  - clock-names
-+  - msi-map
-+  - num-lanes
-+  - phys
-+  - phy-names
-+  - ranges
-+  - resets
-+  - reset-names
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    pcie3x2: pcie@fe280000 {
-+      compatible = "rockchip,rk3568-pcie", "snps,dw-pcie";
-+      #address-cells = <3>;
-+      #size-cells = <2>;
-+      bus-range = <0x20 0x2f>;
-+      reg = <0x3 0xc0800000 0x0 0x400000>,
-+            <0x0 0xfe280000 0x0 0x10000>;
-+      reg-names = "pcie-dbi", "pcie-apb";
-+      clocks = <&cru ACLK_PCIE30X2_MST>, <&cru ACLK_PCIE30X2_SLV>,
-+               <&cru ACLK_PCIE30X2_DBI>, <&cru PCLK_PCIE30X2>,
-+               <&cru CLK_PCIE30X2_AUX_NDFT>;
-+      clock-names = "aclk_mst", "aclk_slv",
-+                    "aclk_dbi", "pclk",
-+                    "aux";
-+      msi-map = <0x2000 &its 0x2000 0x1000>;
-+      num-lanes = <2>;
-+      phys = <&pcie30phy>;
-+      phy-names = "pcie-phy";
-+      ranges = <0x00000800 0x0 0x80000000 0x3 0x80000000 0x0 0x800000
-+                0x81000000 0x0 0x80800000 0x3 0x80800000 0x0 0x100000
-+                0x83000000 0x0 0x80900000 0x3 0x80900000 0x0 0x3f700000>;
-+      resets = <&cru SRST_PCIE30X2_POWERUP>;
-+      reset-names = "pipe";
-+    };
-+
-+...
--- 
-2.25.1
+Hi again! :)
 
+>
+> > Cyclic dependencies in some firmware was one of the last remaining
+> > reasons fw_devlink=on couldn't be set by default. Now that cyclic
+> > dependencies don't block probing, set fw_devlink=on by default.
+> >
+> > Setting fw_devlink=on by default brings a bunch of benefits (currently,
+> > only for systems with device tree firmware):
+> > * Significantly cuts down deferred probes.
+> > * Device probe is effectively attempted in graph order.
+> > * Makes it much easier to load drivers as modules without having to
+> >   worry about functional dependencies between modules (depmod is still
+> >   needed for symbol dependencies).
+> >
+> > If this patch prevents some devices from probing, it's very likely due
+> > to the system having one or more device drivers that "probe"/set up a
+> > device (DT node with compatible property) without creating a struct
+> > device for it.  If we hit such cases, the device drivers need to be
+> > fixed so that they populate struct devices and probe them like normal
+> > device drivers so that the driver core is aware of the devices and their
+> > status. See [1] for an example of such a case.
+> >
+> > [1] - https://lore.kernel.org/lkml/CAGETcx9PiX==mLxB9PO8Myyk6u2vhPVwTMsA5NkD-ywH5xhusw@mail.gmail.com/
+> > Signed-off-by: Saravana Kannan <saravanak@google.com>
+>
+> This breaks (at least) probing of the PCIe controllers of my board. The
+> driver in question is
+>   drivers/pci/controller/dwc/pci-layerscape.c
+> I've also put the maintainers of this driver on CC. Looks like it uses a
+> proper struct device. But it uses builtin_platform_driver_probe() and
+> apparently it waits for the iommu which uses module_platform_driver().
+> Dunno if that will work together.
 
+Yeah, the builtin vs module doesn't matter. I've had fw_devlink work
+multiple times with the consumer driver being built in and the
+supplier actually loaded as a module. Making that work is one of the
+goals of fw_devlink.
 
+> The board device tree can be found here:
+>   arch/arm64/boot/dts/freescale/fsl-ls1028a-kontron-sl28-var3-ads2.dts
+>
+> Attached is the log with enabled "probe deferral" messages enabled.
+
+I took a look at the logs. As you said, pci seems to be waiting on
+iommu, but it's not clear why the iommu didn't probe by then. Can you
+add initcall_debug=1 and enable the logs in device_link_add()? Btw, I
+realize one compromise on the logs is to send them as an attachment
+instead of inline. That way, it's still archived in the list, but I
+don't have to deal with log lines getting wrapped, etc.
+
+Thanks for reporting the issues. Also, could you try picking up all of
+these changes and giving it a shot. It's unlikely to help, but I want
+to rule out issues related to fixes in progress.
+
+https://lore.kernel.org/lkml/20210116011412.3211292-1-saravanak@google.com/
+https://lore.kernel.org/lkml/20210115210159.3090203-1-saravanak@google.com/
+https://lore.kernel.org/lkml/20201218210750.3455872-1-saravanak@google.com/
+
+Thanks,
+Saravana
