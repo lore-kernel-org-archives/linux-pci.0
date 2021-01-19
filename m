@@ -2,103 +2,171 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 407D6C432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A3ADC43219
 	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 13:03:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0186A2312D
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 13:03:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4740A23132
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 13:03:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391965AbhASM5k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jan 2021 07:57:40 -0500
-Received: from foss.arm.com ([217.140.110.172]:52144 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389029AbhASLbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jan 2021 06:31:05 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id F01DE1042;
-        Tue, 19 Jan 2021 03:30:05 -0800 (PST)
-Received: from e123427-lin.arm.com (unknown [10.57.35.195])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E06263F719;
-        Tue, 19 Jan 2021 03:30:03 -0800 (PST)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, Rob Herring <robh@kernel.org>,
-        Jon Mason <jdmason@kudzu.us>, Jonathan Corbet <corbet@lwn.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Tom Joseph <tjoseph@cadence.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-ntb@googlegroups.com, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v9 00/17] Implement NTB Controller using multiple PCI EP
-Date:   Tue, 19 Jan 2021 11:29:55 +0000
-Message-Id: <161105563975.29969.4677344444174224884.b4-ty@arm.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20210104152909.22038-1-kishon@ti.com>
-References: <20210104152909.22038-1-kishon@ti.com>
+        id S1732583AbhASM4C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jan 2021 07:56:02 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:51025 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389207AbhASKlS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2021 05:41:18 -0500
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210119104000epoutp015b47d2011ba2eb767ea87f65490442e0~bm-yKlsWo1165411654epoutp01D
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 10:40:00 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210119104000epoutp015b47d2011ba2eb767ea87f65490442e0~bm-yKlsWo1165411654epoutp01D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1611052800;
+        bh=UWEbuKD0Gjjm/J0hkgTFmlztBXn6nGW8Y4VqcJOGw1M=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=pSSNHiaWE3oPSNDfM9DdXrgAZihQoo8MrHfFAWUA1LkuaQLcPptjRZ23SLZCkEj6U
+         lPc/wCjEhY0FouO3GGml3kDHKE3z+KBuE7D/hZV0IfVeKSiyJFPQ69m0OLFrn0HzkF
+         HtrmuOC4gEzJHQnQeQDn9ZBP1QrnAlmhmqncQiVU=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20210119104000epcas5p4038247cdf198234fe84ae0b977f5b8b6~bm-xoGvM92063220632epcas5p4X;
+        Tue, 19 Jan 2021 10:40:00 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        76.34.33964.FF6B6006; Tue, 19 Jan 2021 19:39:59 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20210119101206epcas5p2b31e6de44bfdda7d7819b17b11ad69bb~bmnbA_e151167611676epcas5p2O;
+        Tue, 19 Jan 2021 10:12:06 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210119101206epsmtrp1fe56d64dc8c78463c94da3dfc42a8e95~bmna-6NdJ0268502685epsmtrp1h;
+        Tue, 19 Jan 2021 10:12:06 +0000 (GMT)
+X-AuditID: b6c32a4b-ea1ff700000184ac-71-6006b6ffa640
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1D.E5.13470.670B6006; Tue, 19 Jan 2021 19:12:06 +0900 (KST)
+Received: from shradhat02 (unknown [107.122.8.248]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20210119101204epsmtip28499023aad8571cd774d03773fd3d2fb~bmnZFEtKu3005730057epsmtip2j;
+        Tue, 19 Jan 2021 10:12:04 +0000 (GMT)
+From:   "Shradha Todi" <shradha.t@samsung.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Cc:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <robh@kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <bhelgaas@google.com>, <pankaj.dubey@samsung.com>,
+        <sriram.dash@samsung.com>, <niyas.ahmed@samsung.com>,
+        <p.rajanbabu@samsung.com>, <l.mehra@samsung.com>,
+        <hari.tv@samsung.com>
+In-Reply-To: <1609929900-19082-1-git-send-email-shradha.t@samsung.com>
+Subject: RE: [PATCH v2] PCI: dwc: Change size to u64 for EP outbound iATU
+Date:   Tue, 19 Jan 2021 15:42:03 +0530
+Message-ID: <147901d6ee4b$8a39f3e0$9eaddba0$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIugMS81mxWyVxXUcStsAlB72BGxQKGN/EDqWtjM7A=
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMKsWRmVeSWpSXmKPExsWy7bCmlu7/bWwJBj1/LCyWNGVY7LrbwW7x
+        cdpKJosVX2ayW9x5foPR4vKuOWwWZ+cdZ7N48/sFu8WTKY9YLY5uDLZYtPULu8X/PTvYLW6s
+        Z3fg9Vgzbw2jx85Zd9k9Fmwq9di0qpPNo2/LKkaPLfs/M3p83iQXwB7FZZOSmpNZllqkb5fA
+        lbHp/mTmgl6BikffT7M2MDbydjFyckgImEjMfLGJrYuRi0NIYDejxI01z1ghnE+MEp3357GB
+        VAkJfGOUOHC9HKbj0I2JUEV7GSU+3fjFCOG8YJT417ifHaSKTUBH4smVP8xdjBwcIgL2Ek0/
+        EkFqmAWWMklc/3SNEaSGU8BN4nTnPDBbWMBT4v+zpWA2i4CqxKevM8Dm8ApYSvxfsJEZwhaU
+        ODnzCQuIzSwgL7H97RxmiIsUJH4+XcYKYosIWEk0zLzAClEjLvHy6BF2kMUSAmc4JPqWPmaH
+        aHCR2D2jEapZWOLV8S1QcSmJl/1tUHa+xNQLT1lAHpAQqJBY3lMHEbaXOHBlDliYWUBTYv0u
+        fYiwrMTUU+uYINbySfT+fsIEEeeV2DEPxlaW+PJ3DwuELSkx79hl1gmMSrOQfDYLyWezkHww
+        C2HbAkaWVYySqQXFuempxaYFxnmp5XrFibnFpXnpesn5uZsYwelMy3sH46MHH/QOMTJxMB5i
+        lOBgVhLhLV3HlCDEm5JYWZValB9fVJqTWnyIUZqDRUmcd4fBg3ghgfTEktTs1NSC1CKYLBMH
+        p1QD0yZp8TPppdL5/lWf52ce/cromn9Y9zD7RZmV2QEWz1vOFFgw7VG+/7EjL+fU0vPbrT3e
+        pa49+ku48gm39P6fjGV/nnyYGMngPre1Y+Na4XK7Ry+e/PHsjZJYEz1fOkLRbR9XpC/XzB7P
+        M08SD4jMvXNRd9LOne77Hx+RC895dDewvnTCcx87/1Pbfty02ibVG/rbSvHM6XMO50U1MmR5
+        T8nfkysv3MzT+ezV53O1PlMSpuwTXXJ0c5XlKu0Am8roH+e+Btm275se8JrJtiqjb9+/3YJL
+        nvP7uK2rbhUpznpttV6J60tp97SULw1OlrsZyj2CHnRznb+87NWzX8/8zqqrf/W7cGnO0mO8
+        f0786lNiKc5INNRiLipOBABl1xOV1gMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJIsWRmVeSWpSXmKPExsWy7bCSvG7ZBrYEgz2vpS2WNGVY7LrbwW7x
+        cdpKJosVX2ayW9x5foPR4vKuOWwWZ+cdZ7N48/sFu8WTKY9YLY5uDLZYtPULu8X/PTvYLW6s
+        Z3fg9Vgzbw2jx85Zd9k9Fmwq9di0qpPNo2/LKkaPLfs/M3p83iQXwB7FZZOSmpNZllqkb5fA
+        lbHp/mTmgl6BikffT7M2MDbydjFyckgImEgcujGRtYuRi0NIYDejxNJJT9ghEpISny+uY4Kw
+        hSVW/nvODlH0jFFi8qxDbCAJNgEdiSdX/jCD2CICjhKz97YygRQxC2xkkug7/B1q7HRGiYO3
+        74GN4hRwkzjdOY8RxBYW8JT4/2wpmM0ioCrx6esMsNW8ApYS/xdsZIawBSVOznzCAmIzC2hL
+        PL35FMqWl9j+dg4zxHkKEj+fLmOFuMJKomHmBVaIGnGJl0ePsE9gFJ6FZNQsJKNmIRk1C0nL
+        AkaWVYySqQXFuem5xYYFhnmp5XrFibnFpXnpesn5uZsYwbGppbmDcfuqD3qHGJk4GA8xSnAw
+        K4nwlq5jShDiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6HrZLyQQHpiSWp2ampBahFMlomDU6qB
+        qcr9QGrKmrtLzZ6kxr7PnXxUwaf6O2v2xMfCQgZn13SHmOpZvHp/mLO9277eLbXjFx/T2dn/
+        b6RdvvNS1kTCliVjzwab6X9S5r5TtakQKlLYfI7p4A656VYX/A7tb9p9rd52wdpmw0tiByKv
+        hJ9SWBccdt401m63s13j0QURF8I2iBznCLXk2zljirSx7epPRiyXU3O3vFd12tS/0zmhoO32
+        rO9aV+ew3DM70e4uk/fp+KZXUelGNbsE2OVPHX1d/4u36k+4usnb+bqzGjMdzP7qvP3QydQs
+        6c57lTWttSb50vsrux5r/s10Pr6m9r7jJ/X0v/sNlx15nsymU1Nx9vi+Pb2vnjEe0r3Fnlcs
+        qcRSnJFoqMVcVJwIAOR8u/E8AwAA
+X-CMS-MailID: 20210119101206epcas5p2b31e6de44bfdda7d7819b17b11ad69bb
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20210106104514epcas5p37d8e3a88aefdf109f7fb4157d4a1f07a
+References: <CGME20210106104514epcas5p37d8e3a88aefdf109f7fb4157d4a1f07a@epcas5p3.samsung.com>
+        <1609929900-19082-1-git-send-email-shradha.t@samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 4 Jan 2021 20:58:52 +0530, Kishon Vijay Abraham I wrote:
-> This series is about implementing SW defined Non-Transparent Bridge (NTB)
-> using multiple endpoint (EP) instances. This series has been tested using
-> 2 endpoint instances in J7 connected to J7 board on one end and DRA7 board
-> on the other end. However there is nothing platform specific for the NTB
-> functionality.
+Gentle Ping.
+Thanks.
+
+> -----Original Message-----
+> From: Shradha Todi <shradha.t@samsung.com>
+> Subject: [PATCH v2] PCI: dwc: Change size to u64 for EP outbound iATU
 > 
-> This was presented in Linux Plumbers Conference. Link to presentation
-> and video can be found @ [1]
-> Created a video demo @ [9]
+> Since outbound iATU permits size to be greater than 4GB for which the
+> support is also available, allow EP function to send u64 size instead of
+> truncating to u32.
 > 
-> [...]
+> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+> ---
+> v1: https://lkml.org/lkml/2020/12/18/690
+> v2:
+>    Addressed Bjorn's review on to keep commit message length limit to 75
+> 
+>  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c
+> b/drivers/pci/controller/dwc/pcie-designware.c
+> index 1d62ca9..db407ed 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -326,7 +326,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+> int index, int type,
+> 
+>  void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int
+> index,
+>  				  int type, u64 cpu_addr, u64 pci_addr,
+> -				  u32 size)
+> +				  u64 size)
+>  {
+>  	__dw_pcie_prog_outbound_atu(pci, func_no, index, type,
+>  				    cpu_addr, pci_addr, size);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h
+> b/drivers/pci/controller/dwc/pcie-designware.h
+> index 7da79eb..359151f 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -302,7 +302,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+> int index,
+>  			       u64 size);
+>  void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int
+> index,
+>  				  int type, u64 cpu_addr, u64 pci_addr,
+> -				  u32 size);
+> +				  u64 size);
+>  int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+>  			     int bar, u64 cpu_addr,
+>  			     enum dw_pcie_as_type as_type);
+> --
+> 2.7.4
 
-Applied to pci/ntb to give it more visibility and testing, aiming
-for v5.12.
-
-[01/17] Documentation: PCI: Add specification for the *PCI NTB* function device
-        https://git.kernel.org/lpieralisi/pci/c/75e6ac86ca
-[02/17] PCI: endpoint: Make *_get_first_free_bar() take into account 64 bit BAR
-        https://git.kernel.org/lpieralisi/pci/c/b6c7a2a2b5
-[03/17] PCI: endpoint: Add helper API to get the 'next' unreserved BAR
-        https://git.kernel.org/lpieralisi/pci/c/43e293914d
-[04/17] PCI: endpoint: Make *_free_bar() to return error codes on failure
-        https://git.kernel.org/lpieralisi/pci/c/293e2c258c
-[05/17] PCI: endpoint: Remove unused pci_epf_match_device()
-        https://git.kernel.org/lpieralisi/pci/c/9a25bdab98
-[06/17] PCI: endpoint: Add support to associate secondary EPC with EPF
-        https://git.kernel.org/lpieralisi/pci/c/868fe90ea4
-[07/17] PCI: endpoint: Add support in configfs to associate two EPCs with EPF
-        https://git.kernel.org/lpieralisi/pci/c/632c92ec12
-[08/17] PCI: endpoint: Add pci_epc_ops to map MSI irq
-        https://git.kernel.org/lpieralisi/pci/c/310511a301
-[09/17] PCI: endpoint: Add pci_epf_ops for epf drivers to expose function specific attrs
-        https://git.kernel.org/lpieralisi/pci/c/34fb8ab2e3
-[10/17] PCI: endpoint: Allow user to create sub-directory of 'EPF Device' directory
-        https://git.kernel.org/lpieralisi/pci/c/3a5c112c7a
-[11/17] PCI: cadence: Implement ->msi_map_irq() ops
-        https://git.kernel.org/lpieralisi/pci/c/d5c3d2ae7c
-[12/17] PCI: cadence: Configure LM_EP_FUNC_CFG based on epc->function_num_map
-        https://git.kernel.org/lpieralisi/pci/c/d3f4973104
-[13/17] PCI: endpoint: Add EP function driver to provide NTB functionality
-        https://git.kernel.org/lpieralisi/pci/c/7dc64244f9
-[14/17] PCI: Add TI J721E device to pci ids
-        https://git.kernel.org/lpieralisi/pci/c/17d49876c3
-[15/17] NTB: Add support for EPF PCI-Express Non-Transparent Bridge
-        https://git.kernel.org/lpieralisi/pci/c/5d0db3f429
-[16/17] Documentation: PCI: Add configfs binding documentation for pci-ntb endpoint function
-        https://git.kernel.org/lpieralisi/pci/c/099f07051e
-[17/17] Documentation: PCI: Add userguide for PCI endpoint NTB function
-        https://git.kernel.org/lpieralisi/pci/c/27f22f76c3
-
-Thanks,
-Lorenzo
