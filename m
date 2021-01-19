@@ -2,114 +2,125 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F07C433DB
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 15:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53524C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 15:02:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64B0523134
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 15:00:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DB02207C4
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 15:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731459AbhASPAa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jan 2021 10:00:30 -0500
-Received: from mga12.intel.com ([192.55.52.136]:16839 "EHLO mga12.intel.com"
+        id S1731914AbhASPAh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jan 2021 10:00:37 -0500
+Received: from gloria.sntech.de ([185.11.138.130]:54108 "EHLO gloria.sntech.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390362AbhASNQT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jan 2021 08:16:19 -0500
-IronPort-SDR: TR3oOsXU6wkfXoTcowsvKXUwagYwbvNbah/u/PxyuBy/61wOU+ANEzsRNcL3V5EBAvO+S4SZzC
- +KvulphsPIxg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9868"; a="158102170"
-X-IronPort-AV: E=Sophos;i="5.79,358,1602572400"; 
-   d="scan'208";a="158102170"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2021 05:14:12 -0800
-IronPort-SDR: XtUZXNd6yK/u6BfIChMsZk9oZ2A1xmGUlHLdJaQyA5zHv4wMpXcjTCVfX3dU8CesruzKGNFfbe
- 7ph6/QH7eyMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,358,1602572400"; 
-   d="scan'208";a="466694494"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 19 Jan 2021 05:14:11 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 5AA9814A; Tue, 19 Jan 2021 15:14:10 +0200 (EET)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Utkarsh H Patel <utkarsh.h.patel@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: Re-enable downstream port LTR if it was previously enabled
-Date:   Tue, 19 Jan 2021 16:14:10 +0300
-Message-Id: <20210119131410.27528-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.29.2
+        id S2389453AbhASNQU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Jan 2021 08:16:20 -0500
+Received: from ip5f5aa64a.dynamic.kabel-deutschland.de ([95.90.166.74] helo=diego.localnet)
+        by gloria.sntech.de with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <heiko@sntech.de>)
+        id 1l1qqa-0006zp-SK; Tue, 19 Jan 2021 14:15:00 +0100
+From:   Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To:     Simon Xue <xxm@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Johan Jonker <jbx6244@gmail.com>
+Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        devicetree <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 2/3] dt-bindings: rockchip: Add DesignWare based PCIe controller
+Date:   Tue, 19 Jan 2021 14:14:59 +0100
+Message-ID: <2336601.uoxibFcf9D@diego>
+In-Reply-To: <e143ad9e-1cfd-e59d-0079-513c036981ba@gmail.com>
+References: <20210118091739.247040-1-xxm@rock-chips.com> <20210118091739.247040-2-xxm@rock-chips.com> <e143ad9e-1cfd-e59d-0079-513c036981ba@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe r5.0, sec 7.5.3.16 says that the downstream ports must reset the
-LTR enable bit if the link goes down (port goes DL_Down status). Now, if
-we had LTR previously enabled and the PCIe endpoint gets hot-removed and
-then hot-added back the ->ltr_path of the downstream port is still set
-but the port now does not have the LTR enable bit set anymore.
+Hi Johan,
 
-For this reason check if the bridge upstream had LTR enabled previously
-and re-enable it before enabling LTR for the endpoint.
+Am Dienstag, 19. Januar 2021, 14:07:41 CET schrieb Johan Jonker:
+> Hi Simon,
+> 
+> Thank you for this patch for rk3568 pcie.
+> 
+> Include the Rockchip device tree maintainer and all other people/lists
+> to the CC list.
+> 
+> ./scripts/checkpatch.pl --strict <patch1> <patch2>
+> 
+>  ./scripts/get_maintainer.pl --noroles --norolestats --nogit-fallback
+> --nogit <patch1> <patch2>
+> 
+> git send-email --suppress-cc all --dry-run --annotate --to
+> heiko@sntech.de --cc <..> <patch1> <patch2>
+> 
+> This SoC has no support in mainline linux kernel yet.
+> In all the following yaml documents for rk3568 we need headers with
+> defines for clocks and power domains, etc.
+> 
+> For example:
+> #include <dt-bindings/clock/rk3568-cru.h>
+> #include <dt-bindings/power/rk3568-power.h>
+> 
+> Could Rockchip submit first clocks and power drivers entries and a basic
+> rk3568.dtsi + evb dts?
+> Include a patch to this serie with 3 pcie nodes added to rk3568.dtsi.
+> 
+> A dtbs_check only works with a complete dtsi and evb dts.
+> 
+> make ARCH=arm64 dtbs_check
+> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> 
+> On 1/18/21 10:17 AM, Simon Xue wrote:
+> > Signed-off-by: Simon Xue <xxm@rock-chips.com>
+> > ---
+> >  .../bindings/pci/rockchip-dw-pcie.yaml        | 101 ++++++++++++++++++
+> >  1 file changed, 101 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> > new file mode 100644
+> > index 000000000000..fa664cfffb29
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> > @@ -0,0 +1,101 @@
+> > +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: DesignWare based PCIe RC controller on Rockchip SoCs
+> > +
+> 
+> > +maintainers:
+> > +  - Shawn Lin <shawn.lin@rock-chips.com>
+> > +  - Simon Xue <xxm@rock-chips.com>
+> 
+> maintainers:
+>   - Heiko Stuebner <heiko@sntech.de>
+> 
+> Add only people with maintainer rights.
 
-Reported-by: Utkarsh H Patel <utkarsh.h.patel@intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
-Previous version can be found here:
+I'd disagree on this ;-)
 
-  https://lore.kernel.org/linux-pci/20210114134724.79511-1-mika.westerberg@linux.intel.com/
+The maintainer for individual drivers should be the persons who are
+actually know the hardware. We have individual Rockchip developers
+taking care of other drivers as well already.
 
-Changes from the previous version:
+And normally scripts/get_maintainer.pl should already include me
+due to the wildcard for things having "rockchip" in the name.
 
-  * Corrected typos in the commit message
-  * No need to call pcie_downstream_port()
 
- drivers/pci/probe.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+Heiko
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0eb68b47354f..a4a8c0305fb9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2153,7 +2153,7 @@ static void pci_configure_ltr(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCIEASPM
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
--	struct pci_dev *bridge;
-+	struct pci_dev *bridge = NULL;
- 	u32 cap, ctl;
- 
- 	if (!pci_is_pcie(dev))
-@@ -2191,6 +2191,21 @@ static void pci_configure_ltr(struct pci_dev *dev)
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	    ((bridge = pci_upstream_bridge(dev)) &&
- 	      bridge->ltr_path)) {
-+		/*
-+		 * Downstream ports reset the LTR enable bit when the
-+		 * link goes down (e.g on hot-remove) so re-enable the
-+		 * bit here if not set anymore.
-+		 * PCIe r5.0, sec 7.5.3.16.
-+		 */
-+		if (bridge) {
-+			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl);
-+			if (!(ctl & PCI_EXP_DEVCTL2_LTR_EN)) {
-+				pci_dbg(bridge, "re-enabling LTR\n");
-+				pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-+							 PCI_EXP_DEVCTL2_LTR_EN);
-+			}
-+		}
-+		pci_dbg(dev, "enabling LTR\n");
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
- 					 PCI_EXP_DEVCTL2_LTR_EN);
- 		dev->ltr_path = 1;
--- 
-2.29.2
+
 
