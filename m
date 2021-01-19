@@ -2,249 +2,388 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 832F8C433E6
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 16:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB7E6C10F0B
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F03A21D1B
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 16:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 918802253A
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 18:27:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389916AbhASQHN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jan 2021 11:07:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44928 "EHLO
+        id S1730580AbhASO7s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jan 2021 09:59:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391506AbhASQEk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2021 11:04:40 -0500
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61AF8C0613C1
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 08:03:59 -0800 (PST)
-Received: by mail-oi1-x232.google.com with SMTP id q205so21600362oig.13
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 08:03:59 -0800 (PST)
+        with ESMTP id S2392718AbhASNI0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2021 08:08:26 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2B8DC0613C1;
+        Tue, 19 Jan 2021 05:07:45 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id d22so10412675edy.1;
+        Tue, 19 Jan 2021 05:07:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=C4caimOCBoyRubav3xXjC9bOO4RtJRj6u6Pl4z9zDK0=;
-        b=cRiSq8d643nzO4pMu5DLNNc8vejNL0rftgNwo0bq1cmYKpJ9RQQgeQBcbuFYMe3o7U
-         IjjPn5H4rSlj8yVrLsnu9CCjWdcRP3/OLEKSDy6eP6U10ijmYkcVrj25wNwUPXW0QRw4
-         MQ9e8vb+z2e/7MBXyzTZLBDCOG8dmK7KmJhfk=
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=wzaXSRn4+k01DEBdxGgglCeDYjx+EaPzUwvzpubQoSs=;
+        b=HzOBN2TQiQXAD6gN5jIPfgNqQOLdMxjEWNT04squLwNoPZ2YGCKBDbjd7ADFHtEGzZ
+         JUBpEDMJKdaQMeAXb3YRwX1SjNKRCc+Pq7pzBtYFrUUYa95VA6wd6vlA4mMOMPVuElpT
+         QozoL55q/mVw15BNzeRN4Hi83aWALP0LM0dKZVN5eQMHNV/w6K+yPr7J11RDqkKjkicP
+         jbtd3iPVLVvAnoKA52u/++7z4YyxXZiS7YZiiyjqZYFeE5Ay5aKAUfg/kXIXv+M34ubn
+         f2P17MgnrtNYpDz+dZIQN2cXN892oqSn8EW5g7HO8GirziT2NNt7PuyVA+O/+TBiKUJ3
+         I9dA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=C4caimOCBoyRubav3xXjC9bOO4RtJRj6u6Pl4z9zDK0=;
-        b=AZDXAyLSoL2hKVyDg/ZnfOpzQOz2l0nrHzu71GZkIPc4woJA9FwAZPbOceXaqVrQD0
-         +lXoUHBUp4Y5OSYSPELIjK/X3tGJFIP9NKMJSA7dnwRunsi9jXWHqOZUNbl0gwuyHkVx
-         NvDi61wxy5/ZQAaDGy9LOwc0BR8zpAk7ZXrB57tjtO1tH/bcjyaDUc1PuM9oPbkGDYAz
-         FTZrXdnOEgIgKBXbp+MNnXc3nFNCLbqdJCd7XIR7vlJWeCPAzWAgmsmjC7Mzo7yTiw5d
-         vgSSbrWYhyzssHQuFDpp8qQpAxbooNXYwozxsetqMMIhp6fqc9bXFhar56EcOsXU4YQw
-         DlLQ==
-X-Gm-Message-State: AOAM5310n19O9jCbHCCZ5dOU+inhGn15TLiQWLfE3mB6qA21VNkQ70Yz
-        gsu4qmlHoaG1tKq2hJ4/v1n21MWjUwdLMrqp+aBumQ==
-X-Google-Smtp-Source: ABdhPJxoP/1TS61hjYhioQiQadr8vXmUqMbQUDNcQl+sUuH8lnBhXp5oW9ly3n43KoEIPweMIIdCTRX9dP/iNYA5ob0=
-X-Received: by 2002:aca:ad92:: with SMTP id w140mr232065oie.128.1611072238805;
- Tue, 19 Jan 2021 08:03:58 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=wzaXSRn4+k01DEBdxGgglCeDYjx+EaPzUwvzpubQoSs=;
+        b=jESu4tlRF6gXQa7lXvcd1mbZD1Kn/bBtCxRxTtlP+ye064htRZEXSuHr4Lo7aXb+cJ
+         c6aZF0lttuOhGNsFfbK/PGfAef1cJP7Ww67owi4IpwXcScQGHAEEtE3hnHz3ytmr2Ow5
+         2PI6IGNh18e7B/vBUnplYQ42EA8lHPwQ0wyk+XmkjPBOx6jAPmF9DMNqxhjK85sHW5Oy
+         w0a/mbVVeXtqcjEaKyKtk+QYoFtM9Wl3jgkZjR5XiSqLxOYyHbwvqbkIqmVXtAZrL2BS
+         VG3b5Bs4vr/nmcSNpfkp9d/lICWdRPEOOy3WktFZ9gvAV+hKcVKF+rcMCQCHTOTpUBsP
+         LMVQ==
+X-Gm-Message-State: AOAM531f7kUphh5ertDnozAZCIZDQURXfTXzkj2i3wbwbyz7995xlicJ
+        hyHnF7HnT0sMvM4u4EJ260s/NQVYsdM=
+X-Google-Smtp-Source: ABdhPJxGMjNIGBOEXxEbq4NM0CuNR7cCn53Aw3uCy1mn9iG1Rc6tAxOw8T+aMFDekTP/Cird6una6A==
+X-Received: by 2002:aa7:dd12:: with SMTP id i18mr2486937edv.36.1611061664198;
+        Tue, 19 Jan 2021 05:07:44 -0800 (PST)
+Received: from [192.168.2.2] (81-204-249-205.fixed.kpn.net. [81.204.249.205])
+        by smtp.gmail.com with ESMTPSA id l17sm2408837ejc.60.2021.01.19.05.07.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Jan 2021 05:07:43 -0800 (PST)
+Subject: Re: [PATCH 2/3] dt-bindings: rockchip: Add DesignWare based PCIe
+ controller
+To:     Simon Xue <xxm@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        devicetree <devicetree@vger.kernel.org>
+References: <20210118091739.247040-1-xxm@rock-chips.com>
+ <20210118091739.247040-2-xxm@rock-chips.com>
+From:   Johan Jonker <jbx6244@gmail.com>
+Message-ID: <e143ad9e-1cfd-e59d-0079-513c036981ba@gmail.com>
+Date:   Tue, 19 Jan 2021 14:07:41 +0100
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-References: <20201127164131.2244124-1-daniel.vetter@ffwll.ch>
- <20201127164131.2244124-13-daniel.vetter@ffwll.ch> <CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com>
- <YAbtZBU5PMr68q9E@kroah.com> <CAKMK7uGHSgetm7mDso6_vj+aGrR4u+ChwHb3k0QvgG0K6X2fPg@mail.gmail.com>
- <YAb4yD4IbpQ3qhJG@kroah.com>
-In-Reply-To: <YAb4yD4IbpQ3qhJG@kroah.com>
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-Date:   Tue, 19 Jan 2021 17:03:47 +0100
-Message-ID: <CAKMK7uF9RfqhOGzcjgXTY62-dFS7ELr+uHuRDhEjOcO-kSgY+w@mail.gmail.com>
-Subject: Re: [PATCH v7 12/17] PCI: Revoke mappings like devmem
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-        "open list:DMA BUFFER SHARING FRAMEWORK" 
-        <linux-media@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20210118091739.247040-2-xxm@rock-chips.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 4:20 PM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
->
-> On Tue, Jan 19, 2021 at 03:34:47PM +0100, Daniel Vetter wrote:
-> > On Tue, Jan 19, 2021 at 3:32 PM Greg Kroah-Hartman
-> > <gregkh@linuxfoundation.org> wrote:
-> > >
-> > > On Tue, Jan 19, 2021 at 09:17:55AM +0100, Daniel Vetter wrote:
-> > > > On Fri, Nov 27, 2020 at 5:42 PM Daniel Vetter <daniel.vetter@ffwll.=
-ch> wrote:
-> > > > >
-> > > > > Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver clai=
-ms
-> > > > > the region") /dev/kmem zaps ptes when the kernel requests exclusi=
-ve
-> > > > > acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, thi=
-s is
-> > > > > the default for all driver uses.
-> > > > >
-> > > > > Except there's two more ways to access PCI BARs: sysfs and proc m=
-map
-> > > > > support. Let's plug that hole.
-> > > > >
-> > > > > For revoke_devmem() to work we need to link our vma into the same
-> > > > > address_space, with consistent vma->vm_pgoff. ->pgoff is already
-> > > > > adjusted, because that's how (io_)remap_pfn_range works, but for =
-the
-> > > > > mapping we need to adjust vma->vm_file->f_mapping. The cleanest w=
-ay is
-> > > > > to adjust this at at ->open time:
-> > > > >
-> > > > > - for sysfs this is easy, now that binary attributes support this=
-. We
-> > > > >   just set bin_attr->mapping when mmap is supported
-> > > > > - for procfs it's a bit more tricky, since procfs pci access has =
-only
-> > > > >   one file per device, and access to a specific resources first n=
-eeds
-> > > > >   to be set up with some ioctl calls. But mmap is only supported =
-for
-> > > > >   the same resources as sysfs exposes with mmap support, and othe=
-rwise
-> > > > >   rejected, so we can set the mapping unconditionally at open tim=
-e
-> > > > >   without harm.
-> > > > >
-> > > > > A special consideration is for arch_can_pci_mmap_io() - we need t=
-o
-> > > > > make sure that the ->f_mapping doesn't alias between ioport and i=
-omem
-> > > > > space. There's only 2 ways in-tree to support mmap of ioports: ge=
-neric
-> > > > > pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the singl=
-e
-> > > > > architecture hand-rolling. Both approach support ioport mmap thro=
-ugh a
-> > > > > special pfn range and not through magic pte attributes. Aliasing =
-is
-> > > > > therefore not a problem.
-> > > > >
-> > > > > The only difference in access checks left is that sysfs PCI mmap =
-does
-> > > > > not check for CAP_RAWIO. I'm not really sure whether that should =
-be
-> > > > > added or not.
-> > > > >
-> > > > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> > > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> > > > > Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> > > > > Cc: Kees Cook <keescook@chromium.org>
-> > > > > Cc: Dan Williams <dan.j.williams@intel.com>
-> > > > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > > > Cc: John Hubbard <jhubbard@nvidia.com>
-> > > > > Cc: J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com>
-> > > > > Cc: Jan Kara <jack@suse.cz>
-> > > > > Cc: Dan Williams <dan.j.williams@intel.com>
-> > > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > Cc: linux-mm@kvack.org
-> > > > > Cc: linux-arm-kernel@lists.infradead.org
-> > > > > Cc: linux-samsung-soc@vger.kernel.org
-> > > > > Cc: linux-media@vger.kernel.org
-> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Cc: linux-pci@vger.kernel.org
-> > > > > Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-> > > > > --
-> > > > > v2:
-> > > > > - Totally new approach: Adjust filp->f_mapping at open time. Note=
- that
-> > > > >   this now works on all architectures, not just those support
-> > > > >   ARCH_GENERIC_PCI_MMAP_RESOURCE
-> > > > > ---
-> > > > >  drivers/pci/pci-sysfs.c | 4 ++++
-> > > > >  drivers/pci/proc.c      | 1 +
-> > > > >  2 files changed, 5 insertions(+)
-> > > > >
-> > > > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > > > > index d15c881e2e7e..3f1c31bc0b7c 100644
-> > > > > --- a/drivers/pci/pci-sysfs.c
-> > > > > +++ b/drivers/pci/pci-sysfs.c
-> > > > > @@ -929,6 +929,7 @@ void pci_create_legacy_files(struct pci_bus *=
-b)
-> > > > >         b->legacy_io->read =3D pci_read_legacy_io;
-> > > > >         b->legacy_io->write =3D pci_write_legacy_io;
-> > > > >         b->legacy_io->mmap =3D pci_mmap_legacy_io;
-> > > > > +       b->legacy_io->mapping =3D iomem_get_mapping();
-> > > > >         pci_adjust_legacy_attr(b, pci_mmap_io);
-> > > > >         error =3D device_create_bin_file(&b->dev, b->legacy_io);
-> > > > >         if (error)
-> > > > > @@ -941,6 +942,7 @@ void pci_create_legacy_files(struct pci_bus *=
-b)
-> > > > >         b->legacy_mem->size =3D 1024*1024;
-> > > > >         b->legacy_mem->attr.mode =3D 0600;
-> > > > >         b->legacy_mem->mmap =3D pci_mmap_legacy_mem;
-> > > > > +       b->legacy_io->mapping =3D iomem_get_mapping();
-> > > >
-> > > > Unlike the normal pci stuff below, the legacy files here go boom
-> > > > because they're set up much earlier in the boot sequence. This only
-> > > > affects HAVE_PCI_LEGACY architectures, which aren't that many. So w=
-hat
-> > > > should we do here now:
-> > > > - drop the devmem revoke for these
-> > > > - rework the init sequence somehow to set up these files a lot late=
-r
-> > > > - redo the sysfs patch so that it doesn't take an address_space
-> > > > pointer, but instead a callback to get at that (since at open time
-> > > > everything is set up). Imo rather ugly
-> > > > - ditch this part of the series (since there's not really any taker=
-s
-> > > > for the latter parts it might just not make sense to push for this)
-> > > > - something else?
-> > > >
-> > > > Bjorn, Greg, thoughts?
-> > >
-> > > What sysfs patch are you referring to here?
-> >
-> > Currently in linux-next:
-> >
-> > commit 74b30195395c406c787280a77ae55aed82dbbfc7 (HEAD ->
-> > topic/iomem-mmap-vs-gup, drm/topic/iomem-mmap-vs-gup)
-> > Author: Daniel Vetter <daniel.vetter@ffwll.ch>
-> > Date:   Fri Nov 27 17:41:25 2020 +0100
-> >
-> >    sysfs: Support zapping of binary attr mmaps
-> >
-> > Or the patch right before this one in this submission here:
-> >
-> > https://lore.kernel.org/dri-devel/20201127164131.2244124-12-daniel.vett=
-er@ffwll.ch/
->
-> Ah.  Hm, a callback in the sysfs file logic seems really hairy, so I
-> would prefer that not happen.  If no one really needs this stuff, why
-> not just drop it like you mention?
+Hi Simon,
 
-Well it is needed, but just on architectures I don't care about much.
-Most relevant is perhaps powerpc (that's where Stephen hit the issue).
-I do wonder whether we could move the legacy pci files setup to where
-the modern stuff is set up from pci_create_resource_files() or maybe
-pci_create_sysfs_dev_files() even for HAVE_PCI_LEGACY. I think that
-might work, but since it's legacy flow on some funny architectures
-(alpha, itanium, that kind of stuff) I have no idea what kind of
-monsters I'm going to anger :-)
--Daniel
---=20
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+Thank you for this patch for rk3568 pcie.
+
+Include the Rockchip device tree maintainer and all other people/lists
+to the CC list.
+
+./scripts/checkpatch.pl --strict <patch1> <patch2>
+
+ ./scripts/get_maintainer.pl --noroles --norolestats --nogit-fallback
+--nogit <patch1> <patch2>
+
+git send-email --suppress-cc all --dry-run --annotate --to
+heiko@sntech.de --cc <..> <patch1> <patch2>
+
+This SoC has no support in mainline linux kernel yet.
+In all the following yaml documents for rk3568 we need headers with
+defines for clocks and power domains, etc.
+
+For example:
+#include <dt-bindings/clock/rk3568-cru.h>
+#include <dt-bindings/power/rk3568-power.h>
+
+Could Rockchip submit first clocks and power drivers entries and a basic
+rk3568.dtsi + evb dts?
+Include a patch to this serie with 3 pcie nodes added to rk3568.dtsi.
+
+A dtbs_check only works with a complete dtsi and evb dts.
+
+make ARCH=arm64 dtbs_check
+DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+
+On 1/18/21 10:17 AM, Simon Xue wrote:
+> Signed-off-by: Simon Xue <xxm@rock-chips.com>
+> ---
+>  .../bindings/pci/rockchip-dw-pcie.yaml        | 101 ++++++++++++++++++
+>  1 file changed, 101 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> new file mode 100644
+> index 000000000000..fa664cfffb29
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> @@ -0,0 +1,101 @@
+> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: DesignWare based PCIe RC controller on Rockchip SoCs
+> +
+
+> +maintainers:
+> +  - Shawn Lin <shawn.lin@rock-chips.com>
+> +  - Simon Xue <xxm@rock-chips.com>
+
+maintainers:
+  - Heiko Stuebner <heiko@sntech.de>
+
+Add only people with maintainer rights.
+
+
+allOf:
+  - $ref: /schemas/pci/pci-bus.yaml#
+
+designware-pcie.txt is in need for conversion to yaml.
+Include the things that are needed in this document for now.
+
+> +
+> +# We need a select here so we don't match all nodes with 'snps,dw-pcie'
+> +select:
+> +  properties:
+> +    compatible:
+> +      contains:
+> +        const: rockchip,rk3568-pcie
+> +  required:
+> +    - compatible
+> +
+> +properties:
+> +  compatible:
+
+> +    enum:
+> +      - rockchip,rk3568-pcie
+> +      - snps,dw-pcie
+
+    items:
+      - const: rockchip,rk3568-pcie
+      - const: snps,dw-pcie
+
+> +
+> +  reg:
+> +    maxItems: 1
+
+    interrupts:
+      - description:
+      - description:
+      - description:
+      - description:
+      - description:
+
+  interrupt-names:    items:
+      - const: sys
+      - const: pmc
+      - const: msg
+      - const: legacy
+      - const: err
+
+> +
+> +  clocks:
+> +    items:
+> +      - description: AHB clock for PCIe master
+> +      - description: AHB clock for PCIe slave
+> +      - description: AHB clock for PCIe dbi
+> +      - description: APB clock for PCIe
+> +      - description: Auxiliary clock for PCIe
+> +
+> +  clock-names:
+> +    items:
+> +      - const: aclk_mst
+> +      - const: aclk_slv
+> +      - const: aclk_dbi
+> +      - const: pclk
+> +      - const: aux
+> +
+
+
+  msi-map: true
+
+  power-domains:
+    maxItems: 1
+
+> +  resets:	maxItems: 1
+
+> +    items:
+> +      - description: PCIe pipe reset line
+
+remove
+
+> +
+> +  reset-names:
+	const: pipe
+
+> +    items:
+> +      - const: pipe
+
+remove
+
+> +
+> +required:
+> +  - compatible
+
+> +  - "#address-cells"
+> +  - "#size-cells"
+
+already required in pci-bus.yaml
+
+> +  - bus-range
+> +  - reg
+> +  - reg-names
+> +  - clocks
+> +  - clock-names
+
+> +  - msi-map
+
+not defined in pci-bus.yaml and designware-pcie.txt
+add to document
+
+> +  - num-lanes
+
+> +  - phys
+> +  - phy-names
+
+not defined in pci-bus.yaml and designware-pcie.txt
+add to document
+
+   - power-domains
+
+> +  - ranges
+
+already required in pci-bus.yaml
+
+> +  - resets
+> +  - reset-names
+> +
+
+> +additionalProperties: false
+
+unevaluatedProperties: false
+
+If other documents are included use unevaluatedProperties.
+
+> +
+> +examples:
+> +  - |
+
+#include <dt-bindings/clock/rk3568-cru.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/power/rk3568-power.h>
+
+Missing defines
+
+
+    bus {
+        #address-cells = <2>;
+        #size-cells = <2>;
+
+dt-check uses standard 32 bit regs
+this example is for 64 bit
+
+> +    pcie3x2: pcie@fe280000 {
+> +      compatible = "rockchip,rk3568-pcie", "snps,dw-pcie";
+
+> +      #address-cells = <3>;
+> +      #size-cells = <2>;
+
+sort things that start with # below
+
+> +      bus-range = <0x20 0x2f>;
+
+sort order is:
+compatible
+reg
+interrupt
+the rest in alphabetical order
+things with #
+no status in yaml examples
+
+
+> +      reg = <0x3 0xc0800000 0x0 0x400000>,
+> +            <0x0 0xfe280000 0x0 0x10000>;
+> +      reg-names = "pcie-dbi", "pcie-apb";
+
+		interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "sys", "pmc", "msg", "legacy", "err";
+
+> +      clocks = <&cru ACLK_PCIE30X2_MST>, <&cru ACLK_PCIE30X2_SLV>,
+> +               <&cru ACLK_PCIE30X2_DBI>, <&cru PCLK_PCIE30X2>,
+> +               <&cru CLK_PCIE30X2_AUX_NDFT>;
+> +      clock-names = "aclk_mst", "aclk_slv",
+> +                    "aclk_dbi", "pclk",
+> +                    "aux";
+> +      msi-map = <0x2000 &its 0x2000 0x1000>;
+> +      num-lanes = <2>;
+> +      phys = <&pcie30phy>;
+> +      phy-names = "pcie-phy";
+
+    power-domains = <&power RK3568_PD_PIPE>;
+
+> +      ranges = <0x00000800 0x0 0x80000000 0x3 0x80000000 0x0 0x800000
+> +                0x81000000 0x0 0x80800000 0x3 0x80800000 0x0 0x100000
+> +                0x83000000 0x0 0x80900000 0x3 0x80900000 0x0 0x3f700000>;
+> +      resets = <&cru SRST_PCIE30X2_POWERUP>;
+> +      reset-names = "pipe";
+> +    };
+
+};
+
+> +
+> +...
+> 
+
+Make sure that all properties that show up in this node are checked!
+
+	pcie2x1: pcie@fe260000 {
+		compatible = "rockchip,rk3568-pcie", "snps,dw-pcie";
+		#address-cells = <3>;
+		#size-cells = <2>;
+		bus-range = <0x0 0xf>;
+		clocks = <&cru ACLK_PCIE20_MST>, <&cru ACLK_PCIE20_SLV>,
+			 <&cru ACLK_PCIE20_DBI>, <&cru PCLK_PCIE20>,
+			 <&cru CLK_PCIE20_AUX_NDFT>;
+		clock-names = "aclk_mst", "aclk_slv",
+			      "aclk_dbi", "pclk", "aux";
+		device_type = "pci";
+		interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "sys", "pmc", "msg", "legacy", "err";
+		linux,pci-domain = <0>;
+		num-ib-windows = <6>;
+		num-ob-windows = <2>;
+		max-link-speed = <2>;
+		msi-map = <0x0 &its 0x0 0x1000>;
+		num-lanes = <1>;
+		phys = <&combphy2_psq PHY_TYPE_PCIE>;
+		phy-names = "pcie-phy";
+		power-domains = <&power RK3568_PD_PIPE>;
+		ranges = <0x00000800 0x0 0x00000000 0x3 0x00000000 0x0 0x800000
+			  0x81000000 0x0 0x00800000 0x3 0x00800000 0x0 0x100000
+			  0x83000000 0x0 0x00900000 0x3 0x00900000 0x0 0x3f700000>;
+		reg = <0x3 0xc0000000 0x0 0x400000>,
+		      <0x0 0xfe260000 0x0 0x10000>;
+		reg-names = "pcie-dbi", "pcie-apb";
+		resets = <&cru SRST_PCIE20_POWERUP>;
+		reset-names = "pipe";
+		status = "disabled";
+	};
