@@ -2,86 +2,211 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A700BC433E9
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1834BC433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:37:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C73C230FE
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8A2023104
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:37:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729708AbhASWIt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jan 2021 17:08:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729645AbhASWIp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jan 2021 17:08:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A443722E01;
-        Tue, 19 Jan 2021 22:08:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611094085;
-        bh=eW1/wXmaqahGEv5kWJWMoABKmMH5EpcvibsdR+tOxb0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=YcbHOMQu/OfKXtKwaNsArp/rnK1zUlAk2eGCOkNBZc5v/WN6RWRX7SiZ2i+7LWjMn
-         M0e9sCiMwH/88PEt1EwsEESqSbjKd6GjwzrmP6Tx1feZ32dePd3w6PoaRc2WyDTasb
-         +OrcFcs6S1J2c1fHXqN2hkA4mxQIOZ/o24Tl1/+DPCzLTissqqGBx059XM+wOAgOJc
-         mhI2QEHOG4mJWPfOr/0ODutYCsDa+VhF9Bhx3tngEsuWPpYFjfd28U8ohkFcoZWveG
-         Twrwd+iVUl9hGzp+7AUhEvSFQhcimATyCHoyjK/ORRJX6zljKTucqW55XBDZ/oLsL0
-         6uk1v6vwooVmA==
-Date:   Tue, 19 Jan 2021 16:08:03 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Daniele Palmas <dnlplm@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Loic Poulain <loic.poulain@linaro.org>
-Subject: Re: [PATCH 1/1] PCI: add Telit Vendor ID
-Message-ID: <20210119220803.GA2510309@bjorn-Precision-5520>
+        id S1728640AbhASWhG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jan 2021 17:37:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387677AbhASOhg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2021 09:37:36 -0500
+Received: from mail-ot1-x333.google.com (mail-ot1-x333.google.com [IPv6:2607:f8b0:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF895C0613ED
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 06:34:58 -0800 (PST)
+Received: by mail-ot1-x333.google.com with SMTP id 36so8416656otp.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 06:34:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=4e0CGYDHUfu279fyABP5Y+REbie5VpiNs9f4Knw2Cok=;
+        b=VBqn8DUOGeynSeRg3k1zvnxZgxHVN/m4CmDY5MHMndd1hrRsvbsOlsUR+N5zIlZNjv
+         I1JtDyXv8bu7TYIBeBou0qbqzOTX9l2l0clQMWnlaS5BEAD0UdAQ7SGwdm49iZ4AHegS
+         P3+zFz0CEInVbSD6li/gqZsMR+ZONkqJPxGNc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=4e0CGYDHUfu279fyABP5Y+REbie5VpiNs9f4Knw2Cok=;
+        b=AIW6Dpk4fpoMUfZByfEZw1ge2cB8GganhXqQguOJw1W34sMP9MkY7au2RPsGxUxxaa
+         J/e285lUU8NkhmBdA8rXacXEgRpab1Xgv6t1FXyq86QCg/Qizgb2mOYe1Yhg4yHJDzJN
+         CWQlDefgDgm6tlurUAhl2ZYjjPYw0um8a1AA4E30SiiqIYkAjl/+HR91Xcb8FcGTXR4R
+         1Yk5vQ2jGKJxG/o+sST5ZKY94h1db16HSmnCAk/eNZ9jd/Nr02+WAWwU3E7cOrmFpgJM
+         W8alXHhO7xGR3EFW3l8qB86R0psnTKDr4hoFM1ruho6WAmGpgkWqd9RsMj1wGpEkXpkn
+         /IMA==
+X-Gm-Message-State: AOAM533xLZRTZB2E/9EXbMd9CpzbsNIjzvT52z9pbbraqs/4Hyxd+gUv
+        px/YbgDEchTfTqMRSlwG9U4uUOnNz2lKJsFJacYJIQ==
+X-Google-Smtp-Source: ABdhPJxNAs6mhMviXMtFn7M206VEX/Eake/mU9seAOwtJ76LA2Emqx8YbNqRC8ThlQu1JNtpKUawwkeGr99A8LNHJEY=
+X-Received: by 2002:a9d:ea6:: with SMTP id 35mr3626432otj.188.1611066898227;
+ Tue, 19 Jan 2021 06:34:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210119220619.GA2510101@bjorn-Precision-5520>
+References: <20201127164131.2244124-1-daniel.vetter@ffwll.ch>
+ <20201127164131.2244124-13-daniel.vetter@ffwll.ch> <CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com>
+ <YAbtZBU5PMr68q9E@kroah.com>
+In-Reply-To: <YAbtZBU5PMr68q9E@kroah.com>
+From:   Daniel Vetter <daniel.vetter@ffwll.ch>
+Date:   Tue, 19 Jan 2021 15:34:47 +0100
+Message-ID: <CAKMK7uGHSgetm7mDso6_vj+aGrR4u+ChwHb3k0QvgG0K6X2fPg@mail.gmail.com>
+Subject: Re: [PATCH v7 12/17] PCI: Revoke mappings like devmem
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
+        "open list:DMA BUFFER SHARING FRAMEWORK" 
+        <linux-media@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kees Cook <keescook@chromium.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        John Hubbard <jhubbard@nvidia.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>, Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 04:06:21PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 19, 2021 at 11:27:57AM +0100, Daniele Palmas wrote:
-> > Add Telit Vendor ID to pci_ids.h
-> 
-> From the top of the file:
-> 
->  *      Do not add new entries to this file unless the definitions
->  *      are shared between multiple drivers.
-> 
-> If this is the case, include this patch in a series that adds multiple
-> uses or mention the uses in this commit log.
+On Tue, Jan 19, 2021 at 3:32 PM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> On Tue, Jan 19, 2021 at 09:17:55AM +0100, Daniel Vetter wrote:
+> > On Fri, Nov 27, 2020 at 5:42 PM Daniel Vetter <daniel.vetter@ffwll.ch> =
+wrote:
+> > >
+> > > Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims
+> > > the region") /dev/kmem zaps ptes when the kernel requests exclusive
+> > > acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, this is
+> > > the default for all driver uses.
+> > >
+> > > Except there's two more ways to access PCI BARs: sysfs and proc mmap
+> > > support. Let's plug that hole.
+> > >
+> > > For revoke_devmem() to work we need to link our vma into the same
+> > > address_space, with consistent vma->vm_pgoff. ->pgoff is already
+> > > adjusted, because that's how (io_)remap_pfn_range works, but for the
+> > > mapping we need to adjust vma->vm_file->f_mapping. The cleanest way i=
+s
+> > > to adjust this at at ->open time:
+> > >
+> > > - for sysfs this is easy, now that binary attributes support this. We
+> > >   just set bin_attr->mapping when mmap is supported
+> > > - for procfs it's a bit more tricky, since procfs pci access has only
+> > >   one file per device, and access to a specific resources first needs
+> > >   to be set up with some ioctl calls. But mmap is only supported for
+> > >   the same resources as sysfs exposes with mmap support, and otherwis=
+e
+> > >   rejected, so we can set the mapping unconditionally at open time
+> > >   without harm.
+> > >
+> > > A special consideration is for arch_can_pci_mmap_io() - we need to
+> > > make sure that the ->f_mapping doesn't alias between ioport and iomem
+> > > space. There's only 2 ways in-tree to support mmap of ioports: generi=
+c
+> > > pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the single
+> > > architecture hand-rolling. Both approach support ioport mmap through =
+a
+> > > special pfn range and not through magic pte attributes. Aliasing is
+> > > therefore not a problem.
+> > >
+> > > The only difference in access checks left is that sysfs PCI mmap does
+> > > not check for CAP_RAWIO. I'm not really sure whether that should be
+> > > added or not.
+> > >
+> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+> > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+> > > Cc: Jason Gunthorpe <jgg@ziepe.ca>
+> > > Cc: Kees Cook <keescook@chromium.org>
+> > > Cc: Dan Williams <dan.j.williams@intel.com>
+> > > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > > Cc: John Hubbard <jhubbard@nvidia.com>
+> > > Cc: J=C3=A9r=C3=B4me Glisse <jglisse@redhat.com>
+> > > Cc: Jan Kara <jack@suse.cz>
+> > > Cc: Dan Williams <dan.j.williams@intel.com>
+> > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Cc: linux-mm@kvack.org
+> > > Cc: linux-arm-kernel@lists.infradead.org
+> > > Cc: linux-samsung-soc@vger.kernel.org
+> > > Cc: linux-media@vger.kernel.org
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+> > > --
+> > > v2:
+> > > - Totally new approach: Adjust filp->f_mapping at open time. Note tha=
+t
+> > >   this now works on all architectures, not just those support
+> > >   ARCH_GENERIC_PCI_MMAP_RESOURCE
+> > > ---
+> > >  drivers/pci/pci-sysfs.c | 4 ++++
+> > >  drivers/pci/proc.c      | 1 +
+> > >  2 files changed, 5 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index d15c881e2e7e..3f1c31bc0b7c 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -929,6 +929,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+> > >         b->legacy_io->read =3D pci_read_legacy_io;
+> > >         b->legacy_io->write =3D pci_write_legacy_io;
+> > >         b->legacy_io->mmap =3D pci_mmap_legacy_io;
+> > > +       b->legacy_io->mapping =3D iomem_get_mapping();
+> > >         pci_adjust_legacy_attr(b, pci_mmap_io);
+> > >         error =3D device_create_bin_file(&b->dev, b->legacy_io);
+> > >         if (error)
+> > > @@ -941,6 +942,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+> > >         b->legacy_mem->size =3D 1024*1024;
+> > >         b->legacy_mem->attr.mode =3D 0600;
+> > >         b->legacy_mem->mmap =3D pci_mmap_legacy_mem;
+> > > +       b->legacy_io->mapping =3D iomem_get_mapping();
+> >
+> > Unlike the normal pci stuff below, the legacy files here go boom
+> > because they're set up much earlier in the boot sequence. This only
+> > affects HAVE_PCI_LEGACY architectures, which aren't that many. So what
+> > should we do here now:
+> > - drop the devmem revoke for these
+> > - rework the init sequence somehow to set up these files a lot later
+> > - redo the sysfs patch so that it doesn't take an address_space
+> > pointer, but instead a callback to get at that (since at open time
+> > everything is set up). Imo rather ugly
+> > - ditch this part of the series (since there's not really any takers
+> > for the latter parts it might just not make sense to push for this)
+> > - something else?
+> >
+> > Bjorn, Greg, thoughts?
+>
+> What sysfs patch are you referring to here?
 
-Also, when you do, follow the subject convention (run "git log
---oneline include/linux/pci_ids.h" to see it).
+Currently in linux-next:
 
-> > Signed-off-by: Daniele Palmas <dnlplm@gmail.com>
-> > ---
-> > Reference: https://pcisig.com/membership/member-companies?combine=telit
-> > ---
-> >  include/linux/pci_ids.h | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index d8156a5dbee8..b10a04783287 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2590,6 +2590,8 @@
-> >  
-> >  #define PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS	0x1c36
-> >  
-> > +#define PCI_VENDOR_ID_TELIT		0x1c5d
-> > +
-> >  #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-> >  #define PCI_SUBSYSTEM_ID_CIRCUITCO_MINNOWBOARD	0x0001
-> >  
-> > -- 
-> > 2.17.1
-> > 
+commit 74b30195395c406c787280a77ae55aed82dbbfc7 (HEAD ->
+topic/iomem-mmap-vs-gup, drm/topic/iomem-mmap-vs-gup)
+Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+Date:   Fri Nov 27 17:41:25 2020 +0100
+
+   sysfs: Support zapping of binary attr mmaps
+
+Or the patch right before this one in this submission here:
+
+https://lore.kernel.org/dri-devel/20201127164131.2244124-12-daniel.vetter@f=
+fwll.ch/
+
+Cheers, Daniel
+--=20
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
