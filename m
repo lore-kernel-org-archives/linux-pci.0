@@ -2,114 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C58D2C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 14:27:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4525C43217
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 14:47:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95E6F23381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 14:27:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A261233EA
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 14:47:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388460AbhATO1X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Jan 2021 09:27:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39318 "EHLO mail.kernel.org"
+        id S2389210AbhATOnA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Jan 2021 09:43:00 -0500
+Received: from m12-12.163.com ([220.181.12.12]:47933 "EHLO m12-12.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728897AbhATOYz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jan 2021 09:24:55 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4E34523380;
-        Wed, 20 Jan 2021 14:24:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611152653;
-        bh=0Xtz3tkNSwsoY9gbgqE2qTK7eRaJcR+iJ9o+tD1IB+c=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=qkReOQiov9zXiYg96avLVaWfdyxpxanbJ1uYevLhphyxJQkpBe8s27GEbJCpbLClv
-         Pmp53G/9+dTzLyTCKYMrBzb8Oeb0ty1Fn8tuBSP3TAltZjQLhY7enM0IaALUq7ljAb
-         OvFYsUMQWyyYb3CafYK1WdyJvB69e9p2x6zbI07cLivlmcqDQ2fUutAbQjXxKJFdpM
-         BdRDy0IV1M/fByAQVJdkREme6VBxXklgB99icNJAtj/fVEvRxXLZIeJdNZJoTBS1N9
-         ylED35lcHlOWjzm8XRXYvWs39gy8h15E+45MTK0vsKgE0SRUa2IS+L1nwwvAYSM7vY
-         kyuWhg6uFbW6A==
-Received: by mail-ed1-f42.google.com with SMTP id b21so17132868edy.6;
-        Wed, 20 Jan 2021 06:24:13 -0800 (PST)
-X-Gm-Message-State: AOAM532xn2y+PkWUJSOlzhj9N3RKFfofxVFsjBT/MjQIK7GvMHyUCIq7
-        8PDv83EOjBahZZkmOhlr9FUMs1jpJO0uVzoL4Q==
-X-Google-Smtp-Source: ABdhPJxsjPL+nYG7BlFb3gzD3BUJUMJLtrEcPRLAGMIcR3Rwa6WblBDjUksihZpxjJd/Vr6d3NHetWaFA5kQ/EYByFs=
-X-Received: by 2002:a50:fc04:: with SMTP id i4mr7590319edr.137.1611152651919;
- Wed, 20 Jan 2021 06:24:11 -0800 (PST)
-MIME-Version: 1.0
-References: <20210120105246.23218-1-michael@walle.cc>
-In-Reply-To: <20210120105246.23218-1-michael@walle.cc>
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 20 Jan 2021 08:23:59 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
-Message-ID: <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: layerscape: convert to builtin_platform_driver()
-To:     Michael Walle <michael@walle.cc>
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S2390764AbhATOlW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jan 2021 09:41:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=y8Z+jU1IE/vKH8MMhw
+        F/F1/xZhIIlIreDEVa8fPEHRM=; b=n8biHLN1jMTnSd/CT269uO2McS1u8rKODW
+        klv1XG5VUTGPFf7hk6Jwg3YQk777iOca3vrtmwfV7aKD7ISjceCaM20Fd+LUMeao
+        3ilKmtOBcjmxuxF7Dyqd/t7H5D8BFCa3rQIY3vYffAhWL7bEZZMQRjHujkDhPbA1
+        +PAL0afpI=
+Received: from localhost.localdomain (unknown [111.201.134.89])
+        by smtp8 (Coremail) with SMTP id DMCowAC3Nvs7QAhgoibuMw--.3261S4;
+        Wed, 20 Jan 2021 22:37:50 +0800 (CST)
+From:   Pan Bian <bianpan2016@163.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+Subject: [PATCH] PCI: xilinx-cpm: Fix reference count leak on error path
+Date:   Wed, 20 Jan 2021 06:37:45 -0800
+Message-Id: <20210120143745.699-1-bianpan2016@163.com>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: DMCowAC3Nvs7QAhgoibuMw--.3261S4
+X-Coremail-Antispam: 1Uf129KBjvdXoW7JF15uFWUZF4ruw1rAw1DJrb_yoW3urX_uw
+        1UZF1xur4UCryfJr1vyrWSvr9Yyas7Xwn7KFn3tF13Aa9FgryfZr97A398XryrCrWfJF9r
+        Ar90yay7CFyUCjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUjYiiPUUUUU==
+X-Originating-IP: [111.201.134.89]
+X-CM-SenderInfo: held01tdqsiiqw6rljoofrz/xtbBzx4gclaD9ynmfAAAsS
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc> wrote:
->
-> fw_devlink will defer the probe until all suppliers are ready. We can't
-> use builtin_platform_driver_probe() because it doesn't retry after probe
-> deferral. Convert it to builtin_platform_driver().
+Also drop the reference count of the node on error path.
 
-If builtin_platform_driver_probe() doesn't work with fw_devlink, then
-shouldn't it be fixed or removed? Then we're not fixing drivers later
-when folks start caring about deferred probe and devlink.
+Fixes: 508f610648b9 ("PCI: xilinx-cpm: Add Versal CPM Root Port driver")
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/pci/controller/pcie-xilinx-cpm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I'd really prefer if we convert this to a module instead. (And all the
-other PCI host drivers.)
+diff --git a/drivers/pci/controller/pcie-xilinx-cpm.c b/drivers/pci/controller/pcie-xilinx-cpm.c
+index f92e0152e65e..67937facd90c 100644
+--- a/drivers/pci/controller/pcie-xilinx-cpm.c
++++ b/drivers/pci/controller/pcie-xilinx-cpm.c
+@@ -404,6 +404,7 @@ static int xilinx_cpm_pcie_init_irq_domain(struct xilinx_cpm_pcie_port *port)
+ 	return 0;
+ out:
+ 	xilinx_cpm_free_irq_domains(port);
++	of_node_put(pcie_intc_node);
+ 	dev_err(dev, "Failed to allocate IRQ domains\n");
+ 
+ 	return -ENOMEM;
+-- 
+2.17.1
 
-> Fixes: e590474768f1 ("driver core: Set fw_devlink=on by default")
 
-This happened!?
-
-> Signed-off-by: Michael Walle <michael@walle.cc>
-> ---
->  drivers/pci/controller/dwc/pci-layerscape.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-> index 44ad34cdc3bc..5b9c625df7b8 100644
-> --- a/drivers/pci/controller/dwc/pci-layerscape.c
-> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
-> @@ -232,7 +232,7 @@ static const struct of_device_id ls_pcie_of_match[] = {
->         { },
->  };
->
-> -static int __init ls_pcie_probe(struct platform_device *pdev)
-> +static int ls_pcie_probe(struct platform_device *pdev)
->  {
->         struct device *dev = &pdev->dev;
->         struct dw_pcie *pci;
-> @@ -271,10 +271,11 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  }
->
->  static struct platform_driver ls_pcie_driver = {
-> +       .probe = ls_pcie_probe,
->         .driver = {
->                 .name = "layerscape-pcie",
->                 .of_match_table = ls_pcie_of_match,
->                 .suppress_bind_attrs = true,
->         },
->  };
-> -builtin_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
-> +builtin_platform_driver(ls_pcie_driver);
-> --
-> 2.20.1
->
