@@ -2,218 +2,212 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB24CC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 11:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E04C4332E
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 11:30:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9835E2332B
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 11:30:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D5BB23359
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 11:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728564AbhATLYV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Jan 2021 06:24:21 -0500
-Received: from mga03.intel.com ([134.134.136.65]:26610 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733061AbhATKes (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jan 2021 05:34:48 -0500
-IronPort-SDR: 2x0OQEk0mz80t+GGd13uQwrCl+mQtqKZGWdFglasIQ9VoMxlNhbiQXxKEXH13z/fsrG9pmnJsb
- OsoAocIPn4OQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9869"; a="179168258"
-X-IronPort-AV: E=Sophos;i="5.79,360,1602572400"; 
-   d="scan'208";a="179168258"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jan 2021 02:34:07 -0800
-IronPort-SDR: y1hykezJI8VpbaZu+7pUWw3YG2GAE+a97TOt84Ov1UfDtYy9Kr0ZI09Q1ZtjNgWRHGJOUiC3MP
- QdgPFu+8cXsg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,360,1602572400"; 
-   d="scan'208";a="399735449"
-Received: from lkp-server01.sh.intel.com (HELO 260eafd5ecd0) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 20 Jan 2021 02:34:05 -0800
-Received: from kbuild by 260eafd5ecd0 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1l2AoP-0005l3-9T; Wed, 20 Jan 2021 10:34:05 +0000
-Date:   Wed, 20 Jan 2021 18:33:51 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS c011005a7f3be6749d41a7c56c41a4bbdc89021d
-Message-ID: <6008070f.Rww2wHz4ZqC0AQMm%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1729666AbhATLX2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Jan 2021 06:23:28 -0500
+Received: from lucky1.263xmail.com ([211.157.147.132]:45014 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732591AbhATKTZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2021 05:19:25 -0500
+Received: from localhost (unknown [192.168.167.235])
+        by lucky1.263xmail.com (Postfix) with ESMTP id CA553EFECA;
+        Wed, 20 Jan 2021 18:17:05 +0800 (CST)
+X-MAIL-GRAY: 0
+X-MAIL-DELIVERY: 1
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-ABS-CHECKED: 0
+Received: from xxm-vm.localdomain (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P24739T140081880880896S1611137823657337_;
+        Wed, 20 Jan 2021 18:17:06 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <6437ee0df936cb16e67f5d472d753823>
+X-RL-SENDER: xxm@rock-chips.com
+X-SENDER: xxm@rock-chips.com
+X-LOGIN-NAME: xxm@rock-chips.com
+X-FST-TO: bhelgaas@google.com
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-System-Flag: 0
+From:   Simon Xue <xxm@rock-chips.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Simon Xue <xxm@rock-chips.com>
+Subject: [PATCH v2 1/2] dt-bindings: rockchip: Add DesignWare based PCIe controller
+Date:   Wed, 20 Jan 2021 18:16:57 +0800
+Message-Id: <20210120101658.241134-1-xxm@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-branch HEAD: c011005a7f3be6749d41a7c56c41a4bbdc89021d  Merge branch 'remotes/lorenzo/pci/misc'
-
-elapsed time: 721m
-
-configs tested: 149
-configs skipped: 2
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-sh                         ap325rxa_defconfig
-c6x                        evmc6678_defconfig
-arc                 nsimosci_hs_smp_defconfig
-mips                          rm200_defconfig
-arm                         s5pv210_defconfig
-sh                              ul2_defconfig
-mips                           gcw0_defconfig
-openrisc                            defconfig
-sh                        sh7763rdp_defconfig
-powerpc                      bamboo_defconfig
-sh                           sh2007_defconfig
-sh                          polaris_defconfig
-powerpc                      pasemi_defconfig
-sparc64                             defconfig
-arc                           tb10x_defconfig
-m68k                        m5272c3_defconfig
-c6x                        evmc6474_defconfig
-powerpc                      mgcoge_defconfig
-powerpc                 mpc8313_rdb_defconfig
-riscv                            alldefconfig
-m68k                            q40_defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-arm                        neponset_defconfig
-sh                   rts7751r2dplus_defconfig
-powerpc                       holly_defconfig
-h8300                    h8300h-sim_defconfig
-powerpc                    adder875_defconfig
-arm                            hisi_defconfig
-arm                         palmz72_defconfig
-mips                malta_kvm_guest_defconfig
-m68k                         amcore_defconfig
-mips                  decstation_64_defconfig
-ia64                            zx1_defconfig
-sh                           se7721_defconfig
-xtensa                         virt_defconfig
-sh                         apsh4a3a_defconfig
-m68k                       m5249evb_defconfig
-mips                      loongson3_defconfig
-powerpc                     sbc8548_defconfig
-i386                                defconfig
-c6x                        evmc6472_defconfig
-powerpc                 mpc837x_mds_defconfig
-mips                         cobalt_defconfig
-arm                           corgi_defconfig
-m68k                        m5407c3_defconfig
-m68k                          amiga_defconfig
-powerpc                      cm5200_defconfig
-arm                       omap2plus_defconfig
-powerpc                     pq2fads_defconfig
-powerpc                       eiger_defconfig
-arc                              alldefconfig
-mips                     loongson1b_defconfig
-mips                           jazz_defconfig
-mips                        omega2p_defconfig
-powerpc                 canyonlands_defconfig
-powerpc                      tqm8xx_defconfig
-arm                            lart_defconfig
-mips                     cu1000-neo_defconfig
-arm                       cns3420vb_defconfig
-um                             i386_defconfig
-xtensa                           alldefconfig
-parisc                generic-32bit_defconfig
-arm                             ezx_defconfig
-arm                          pxa168_defconfig
-powerpc                 mpc837x_rdb_defconfig
-riscv                    nommu_k210_defconfig
-riscv                          rv32_defconfig
-arm                           stm32_defconfig
-sh                           se7780_defconfig
-arm                        spear6xx_defconfig
-powerpc                     skiroot_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                               tinyconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a001-20210120
-i386                 randconfig-a002-20210120
-i386                 randconfig-a004-20210120
-i386                 randconfig-a006-20210120
-i386                 randconfig-a005-20210120
-i386                 randconfig-a003-20210120
-x86_64               randconfig-a012-20210120
-x86_64               randconfig-a015-20210120
-x86_64               randconfig-a016-20210120
-x86_64               randconfig-a011-20210120
-x86_64               randconfig-a013-20210120
-x86_64               randconfig-a014-20210120
-i386                 randconfig-a013-20210120
-i386                 randconfig-a011-20210120
-i386                 randconfig-a012-20210120
-i386                 randconfig-a014-20210120
-i386                 randconfig-a015-20210120
-i386                 randconfig-a016-20210120
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a002-20210120
-x86_64               randconfig-a003-20210120
-x86_64               randconfig-a001-20210120
-x86_64               randconfig-a005-20210120
-x86_64               randconfig-a006-20210120
-x86_64               randconfig-a004-20210120
-x86_64               randconfig-a015-20210119
-x86_64               randconfig-a013-20210119
-x86_64               randconfig-a012-20210119
-x86_64               randconfig-a016-20210119
-x86_64               randconfig-a011-20210119
-x86_64               randconfig-a014-20210119
-
+Signed-off-by: Simon Xue <xxm@rock-chips.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ .../bindings/pci/rockchip-dw-pcie.yaml        | 140 ++++++++++++++++++
+ 1 file changed, 140 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+new file mode 100644
+index 000000000000..9d3a57f5305e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -0,0 +1,140 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: DesignWare based PCIe RC controller on Rockchip SoCs
++
++maintainers:
++  - Shawn Lin <shawn.lin@rock-chips.com>
++  - Simon Xue <xxm@rock-chips.com>
++
++description: |+
++  RK3568 SoC PCIe host controller is based on the Synopsys DesignWare
++  PCIe IP and thus inherits all the common properties defined in
++  designware-pcie.txt.
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++# We need a select here so we don't match all nodes with 'snps,dw-pcie'
++select:
++  properties:
++    compatible:
++      contains:
++        const: rockchip,rk3568-pcie
++  required:
++    - compatible
++
++properties:
++  compatible:
++    item:
++      - const: rockchip,rk3568-pcie
++      - const: snps,dw-pcie
++  reg:
++    maxItems: 1
++
++  interrupt:
++      - description: system information
++      - description: power management control
++      - description: PCIe message
++      - description: legacy interrupt
++      - description: error report
++
++  interrupt-names:
++    items:
++      - const: sys
++      - const: pmc
++      - const: msg
++      - const: legacy
++      - const: err
++
++  clocks:
++    items:
++      - description: AHB clock for PCIe master
++      - description: AHB clock for PCIe slave
++      - description: AHB clock for PCIe dbi
++      - description: APB clock for PCIe
++      - description: Auxiliary clock for PCIe
++
++  clock-names:
++    items:
++      - const: aclk_mst
++      - const: aclk_slv
++      - const: aclk_dbi
++      - const: pclk
++      - const: aux
++
++  msi-map: true
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    items:
++      - const: pipe
++
++required:
++  - compatible
++  - bus-range
++  - reg
++  - reg-names
++  - clocks
++  - clock-names
++  - msi-map
++  - num-lanes
++  - phys
++  - phy-names
++  - power-domains
++  - resets
++  - reset-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/rk3568-cru.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/rk3568-power.h>
++
++    bus {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie3x2: pcie@fe280000 {
++            compatible = "rockchip,rk3568-pcie", "snps,dw-pcie";
++            #address-cells = <3>;
++            #size-cells = <2>;
++            bus-range = <0x20 0x2f>;
++            reg = <0x3 0xc0800000 0x0 0x400000>,
++                  <0x0 0xfe280000 0x0 0x10000>;
++            reg-names = "pcie-dbi", "pcie-apb";
++            interrupts = <GIC_SPI 165 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "sys", "pmc", "msg", "legacy", "err";
++            clocks = <&cru ACLK_PCIE30X2_MST>, <&cru ACLK_PCIE30X2_SLV>,
++                     <&cru ACLK_PCIE30X2_DBI>, <&cru PCLK_PCIE30X2>,
++                     <&cru CLK_PCIE30X2_AUX_NDFT>;
++            clock-names = "aclk_mst", "aclk_slv",
++                          "aclk_dbi", "pclk",
++                          "aux";
++            msi-map = <0x2000 &its 0x2000 0x1000>;
++            num-lanes = <2>;
++            phys = <&pcie30phy>;
++            phy-names = "pcie-phy";
++            power-domains = <&power RK3568_PD_PIPE>;
++            ranges = <0x00000800 0x0 0x80000000 0x3 0x80000000 0x0 0x800000
++                      0x81000000 0x0 0x80800000 0x3 0x80800000 0x0 0x100000
++                      0x83000000 0x0 0x80900000 0x3 0x80900000 0x0 0x3f700000>;
++            resets = <&cru SRST_PCIE30X2_POWERUP>;
++            reset-names = "pipe";
++        };
++    };
++...
+-- 
+2.25.1
+
+
+
