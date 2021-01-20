@@ -2,112 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5370BC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E87A9C433E0
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:49:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9E8423432
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 985622343E
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:49:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731278AbhATTWW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Jan 2021 14:22:22 -0500
-Received: from mail-wm1-f45.google.com ([209.85.128.45]:36995 "EHLO
-        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388671AbhATSsy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2021 13:48:54 -0500
-Received: by mail-wm1-f45.google.com with SMTP id c128so3759073wme.2
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jan 2021 10:48:38 -0800 (PST)
+        id S2392762AbhATTs4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Jan 2021 14:48:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37120 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392779AbhATTst (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2021 14:48:49 -0500
+Received: from mail-yb1-xb30.google.com (mail-yb1-xb30.google.com [IPv6:2607:f8b0:4864:20::b30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 272EDC061757
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jan 2021 11:48:09 -0800 (PST)
+Received: by mail-yb1-xb30.google.com with SMTP id r32so10867526ybd.5
+        for <linux-pci@vger.kernel.org>; Wed, 20 Jan 2021 11:48:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Z+VKdic9vQLplZ5dRDPFBsqTAKEx7zvAEih/IIGE3o4=;
+        b=gqXXWU/DUfCRlZqg6VB4WrIPdIGgIy2FpoB64Tw6CtQ1jL1wrLFZqp3MrEbrMBYGiZ
+         N4/i+WbY5NkRoGQ0TOQ8gSx1H/xButR/QyThA+B2Gz/O5XBV3DuftVSBSZBLeyg1OLU+
+         UOnY3ZnpvA9fS2hSivgKSdxrfkTqrNLOncrFUlwoHemuKABuY67DntKltT3SJx0D9dWo
+         /9pBl19rfoJS1N1WX6MM6xVcEDMYzyaqXAJ7Q6wXNhN/hh/u8nnQojbYlYlOdnqtABHz
+         lhAfatORzVUNAHTBDkjRB1KD+A8zB99tvQ/Y4CW0lF2FN6Oz8vdPn1HEE/kgKprBbKFe
+         sZcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uxPmbiajECo9YExCxiewn6BUGuPfDNtaPp5Y2cOf+vw=;
-        b=UKxlCiRSJDq4U13Cp5Eii6miOwNPrU9cZLiCptY7X/jdRhB+XkeoHOkIWoVnZJAlPr
-         jY63oCpJrrOBi4Bc+tq+Qdl1Rbuje7rj9MoSMQ1x5yvBHUhV8ak9thEfbfxmUrh0sE+R
-         67dCHyHb0t000AT1aUc5MI/FiEyj+sj/Jze68uSKOXZvgYgw0dWLgB3JmF0QaMljBaNs
-         tt5q21fKYvkunuWhxpUP+yYwWjZ9kHtBbbPWIr3lWzsnq4nHFDPNUaMRQ2eKDU/TB37g
-         BZTmFMQFje5e1NNhkoQzkaiUa0WUaTp8U/8TbllLs0sxW4TJ+tL6q5MQd77i3yIZRfK+
-         yhzw==
-X-Gm-Message-State: AOAM53016P27wkqIguveE5v0guoACS9hrHDsUdo1vaFN/loJUWJBdYLl
-        DFmBiHBTtK2tQ7hyPPG7wck=
-X-Google-Smtp-Source: ABdhPJwtn2xpshugzYAvflARryBYa82pNPYQWztaOHR67Bzcg8Dpc4zdRyBK9jvQ3DfPLD+GcFYXig==
-X-Received: by 2002:a1c:c90c:: with SMTP id f12mr5726969wmb.98.1611168492620;
-        Wed, 20 Jan 2021 10:48:12 -0800 (PST)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id v11sm5466474wrt.25.2021.01.20.10.48.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Jan 2021 10:48:11 -0800 (PST)
-From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-To:     Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: mediatek: Add missing of_node_put() to fix reference leak
-Date:   Wed, 20 Jan 2021 18:48:10 +0000
-Message-Id: <20210120184810.3068794-1-kw@linux.com>
-X-Mailer: git-send-email 2.30.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Z+VKdic9vQLplZ5dRDPFBsqTAKEx7zvAEih/IIGE3o4=;
+        b=BH4mKPTTo59am32SX0m/Bcgib2m8oi4iMIry0Wo3tNb1oToAR+ASS44XwUhlYgBuGi
+         GmdYTiv2CVT+rqOztLgzLI6+ptp50HrDORDohhFGc4urb8RW88YmLjXTWDnh2aTrphRL
+         Hwg6VBWzvTT+hW0dwC2e1pkR62wxEji8hvnVrzpWkwb/FWGx0G6LS/xT0pEwYK9/qbp+
+         Cdwk24pqxNkOc7QIUKL0RJzyXb7HErsuoksJ1ROo1GoipCS5OTPZ0wb5TZP9xDbngUSF
+         hRaierbnz6pd+p23QC+lLjjh/wkDSyOouTqMXv4YSYMrfl/bSoiUZ6t78p++RKOqm+eA
+         xW9Q==
+X-Gm-Message-State: AOAM5300+j/FWu+RxrcUvNttOwa0D+MqWPE6HbG5a1WzwHPSIA7WQi90
+        hv2nwFzG+8+KTB1003x2WZMqN7xqrZUBhoOWhThTxw==
+X-Google-Smtp-Source: ABdhPJy6lnzImOgxZ62zFBVY/BNYqrbN/QRRos+AWvRoeObCVMQxkr4MeX9zWJIX5eWD7W+mqvC8d3XxTrbOt6hpwoA=
+X-Received: by 2002:a25:77d4:: with SMTP id s203mr17677961ybc.32.1611172088185;
+ Wed, 20 Jan 2021 11:48:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20210120105246.23218-1-michael@walle.cc> <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
+ <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com> <c3e35b90e173b15870a859fd7001a712@walle.cc>
+In-Reply-To: <c3e35b90e173b15870a859fd7001a712@walle.cc>
+From:   Saravana Kannan <saravanak@google.com>
+Date:   Wed, 20 Jan 2021 11:47:31 -0800
+Message-ID: <CAGETcx8eZRd1fJ3yuO_t2UXBFHObeNdv-c8oFH3mXw6zi=zOkQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: dwc: layerscape: convert to builtin_platform_driver()
+To:     Michael Walle <michael@walle.cc>
+Cc:     Rob Herring <robh@kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The for_each_available_child_of_node helper internally makes use of the
-of_get_next_available_child() which performs an of_node_get() on each
-iteration when searching for next available child node.
+On Wed, Jan 20, 2021 at 11:28 AM Michael Walle <michael@walle.cc> wrote:
+>
+> [RESEND, fat-fingered the buttons of my mail client and converted
+> all CCs to BCCs :(]
+>
+> Am 2021-01-20 20:02, schrieb Saravana Kannan:
+> > On Wed, Jan 20, 2021 at 6:24 AM Rob Herring <robh@kernel.org> wrote:
+> >>
+> >> On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc>
+> >> wrote:
+> >> >
+> >> > fw_devlink will defer the probe until all suppliers are ready. We can't
+> >> > use builtin_platform_driver_probe() because it doesn't retry after probe
+> >> > deferral. Convert it to builtin_platform_driver().
+> >>
+> >> If builtin_platform_driver_probe() doesn't work with fw_devlink, then
+> >> shouldn't it be fixed or removed?
+> >
+> > I was actually thinking about this too. The problem with fixing
+> > builtin_platform_driver_probe() to behave like
+> > builtin_platform_driver() is that these probe functions could be
+> > marked with __init. But there are also only 20 instances of
+> > builtin_platform_driver_probe() in the kernel:
+> > $ git grep ^builtin_platform_driver_probe | wc -l
+> > 20
+> >
+> > So it might be easier to just fix them to not use
+> > builtin_platform_driver_probe().
+> >
+> > Michael,
+> >
+> > Any chance you'd be willing to help me by converting all these to
+> > builtin_platform_driver() and delete builtin_platform_driver_probe()?
+>
+> If it just moving the probe function to the _driver struct and
+> remove the __init annotations. I could look into that.
 
-Should an available child node be found, then it would return a device
-node pointer with reference count incremented, thus early return from
-the middle of the loop requires an explicit of_node_put() to prevent
-reference count leak.
+Yup. That's pretty much it AFAICT.
 
-To stop the reference leak, explicitly call of_node_put() before
-returning after an error occurred.
+builtin_platform_driver_probe() also makes sure the driver doesn't ask
+for async probe, etc. But I doubt anyone is actually setting async
+flags and still using builtin_platform_driver_probe().
 
-Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
----
- drivers/pci/controller/pcie-mediatek.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index cf4c18f0c25a..23548b517e4b 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -1035,14 +1035,14 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- 		err = of_pci_get_devfn(child);
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse devfn: %d\n", err);
--			return err;
-+			goto error_put_node;
- 		}
- 
- 		slot = PCI_SLOT(err);
- 
- 		err = mtk_pcie_parse_port(pcie, child, slot);
- 		if (err)
--			return err;
-+			goto error_put_node;
- 	}
- 
- 	err = mtk_pcie_subsys_powerup(pcie);
-@@ -1058,6 +1058,9 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- 		mtk_pcie_subsys_powerdown(pcie);
- 
- 	return 0;
-+error_put_node:
-+	of_node_put(child);
-+	return err;
- }
- 
- static int mtk_pcie_probe(struct platform_device *pdev)
--- 
-2.30.0
-
+-Saravana
