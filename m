@@ -2,158 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA133C433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 15:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6934BC433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 15:54:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C9C62336D
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 15:39:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2584923381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 15:54:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731957AbhATPiu convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Jan 2021 10:38:50 -0500
-Received: from gloria.sntech.de ([185.11.138.130]:60590 "EHLO gloria.sntech.de"
+        id S2389084AbhATPx0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Jan 2021 10:53:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59600 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390174AbhATOz0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Jan 2021 09:55:26 -0500
-Received: from ip5f5aa64a.dynamic.kabel-deutschland.de ([95.90.166.74] helo=diego.localnet)
-        by gloria.sntech.de with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <heiko@sntech.de>)
-        id 1l2EsV-0001oX-0b; Wed, 20 Jan 2021 15:54:35 +0100
-From:   Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-To:     Robin Murphy <robin.murphy@arm.com>,
-        Rob Herring <robh+dt@kernel.org>
-Cc:     Johan Jonker <jbx6244@gmail.com>, Simon Xue <xxm@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S2391080AbhATPvA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Jan 2021 10:51:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3458A23340;
+        Wed, 20 Jan 2021 15:50:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1611157819;
+        bh=fBMJEpbeW4fb/1FlOYEHbgt7kuNpM9yvsa0KQlOyNHo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RVDEo4KsJGh9Tb7AghreIaMDU7L2aWJ3JG12Owy6S7VImj/ocpgKYdJi60PF5PL62
+         7sqM05TbpFlQmxpSRTG6zyXqcgypIF0Vyru2eqoZWpaobq5HkF71Tglq8cfKC2+eiz
+         y5jqwpHIo4RnlZox0OB2ct7qBFD4P+r9pxfNoVNA=
+Date:   Wed, 20 Jan 2021 16:50:17 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Michael Walle <michael@walle.cc>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
         PCI <linux-pci@vger.kernel.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>
-Subject: Re: [PATCH 2/3] dt-bindings: rockchip: Add DesignWare based PCIe controller
-Date:   Wed, 20 Jan 2021 15:54:34 +0100
-Message-ID: <3792680.3daJWjYHZt@diego>
-In-Reply-To: <CAL_JsqK=roMm7vb=WAcLUsiru5qwFg=Sc_po1gD8oJu=JipZbg@mail.gmail.com>
-References: <20210118091739.247040-1-xxm@rock-chips.com> <c9ff67c7-ca1d-d4a6-aef5-4c75688ed6d3@arm.com> <CAL_JsqK=roMm7vb=WAcLUsiru5qwFg=Sc_po1gD8oJu=JipZbg@mail.gmail.com>
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Saravana Kannan <saravanak@google.com>
+Subject: Re: [PATCH] PCI: dwc: layerscape: convert to
+ builtin_platform_driver()
+Message-ID: <YAhROU8A8ZHduptZ@kroah.com>
+References: <20210120105246.23218-1-michael@walle.cc>
+ <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Mittwoch, 20. Januar 2021, 15:16:25 CET schrieb Rob Herring:
-> On Tue, Jan 19, 2021 at 12:40 PM Robin Murphy <robin.murphy@arm.com> wrote:
+On Wed, Jan 20, 2021 at 08:23:59AM -0600, Rob Herring wrote:
+> On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc> wrote:
 > >
-> > On 2021-01-19 15:11, Johan Jonker wrote:
-> > > Hi Simon, Heiko,
-> > >
-> > > On 1/19/21 2:14 PM, Heiko Stübner wrote:
-> > >> Hi Johan,
-> > >>
-> > >> Am Dienstag, 19. Januar 2021, 14:07:41 CET schrieb Johan Jonker:
-> > >>> Hi Simon,
-> > >>>
-> > >>> Thank you for this patch for rk3568 pcie.
-> > >>>
-> > >>> Include the Rockchip device tree maintainer and all other people/lists
-> > >>> to the CC list.
-> > >>>
-> > >>> ./scripts/checkpatch.pl --strict <patch1> <patch2>
-> > >>>
-> > >>>   ./scripts/get_maintainer.pl --noroles --norolestats --nogit-fallback
-> > >>> --nogit <patch1> <patch2>
-> > >>>
-> > >>> git send-email --suppress-cc all --dry-run --annotate --to
-> > >>> heiko@sntech.de --cc <..> <patch1> <patch2>
-> > >>>
-> > >>> This SoC has no support in mainline linux kernel yet.
-> > >>> In all the following yaml documents for rk3568 we need headers with
-> > >>> defines for clocks and power domains, etc.
-> > >>>
-> > >>> For example:
-> > >>> #include <dt-bindings/clock/rk3568-cru.h>
-> > >>> #include <dt-bindings/power/rk3568-power.h>
-> > >>>
-> > >>> Could Rockchip submit first clocks and power drivers entries and a basic
-> > >>> rk3568.dtsi + evb dts?
-> > >>> Include a patch to this serie with 3 pcie nodes added to rk3568.dtsi.
-> > >>>
-> > >>> A dtbs_check only works with a complete dtsi and evb dts.
-> > >>>
-> > >>> make ARCH=arm64 dtbs_check
-> > >>> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > >>>
-> > >>> On 1/18/21 10:17 AM, Simon Xue wrote:
-> > >>>> Signed-off-by: Simon Xue <xxm@rock-chips.com>
-> > >>>> ---
-> > >>>>   .../bindings/pci/rockchip-dw-pcie.yaml        | 101 ++++++++++++++++++
-> > >>>>   1 file changed, 101 insertions(+)
-> > >>>>   create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > >>>>
-> > >>>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > >>>> new file mode 100644
-> > >>>> index 000000000000..fa664cfffb29
-> > >>>> --- /dev/null
-> > >>>> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > >>>> @@ -0,0 +1,101 @@
-> > >>>> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> > >>>> +%YAML 1.2
-> > >>>> +---
-> > >>>> +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
-> > >>>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > >>>> +
-> > >>>> +title: DesignWare based PCIe RC controller on Rockchip SoCs
-> > >>>> +
-> > >>>
-> > >>>> +maintainers:
-> > >>>> +  - Shawn Lin <shawn.lin@rock-chips.com>
-> > >>>> +  - Simon Xue <xxm@rock-chips.com>
-> > >>>
-> > >>> maintainers:
-> > >>>    - Heiko Stuebner <heiko@sntech.de>
-> > >>>
-> > >>> Add only people with maintainer rights.
-> > >>
-> > >> I'd disagree on this ;-)
-> > >
-> > > All roads leads to Heiko... ;)
-> > >
-> > > It takes long term commitment.
-> > > Year in, year out.
-> > > Keeping yourself up to date with the latest pcei development.
-> > > Communicate in English.
-> > > Be able to submit patches without errors... ;)
-> > > Review other peoples patches.
-> > > Respond in short time.
-> > > Bug fixing.
-> >
-> > Crikey, it's only a DT binding... :/
-> >
-> > > If that's what you really want, then you must include a patch to this
-> > > serie for MAINTAINERS.
-> >
-> > I think if Bjorn and Lorenzo want a specifically named sub-maintainer
-> > for the driver itself, we can let them say so rather than presume.
+> > fw_devlink will defer the probe until all suppliers are ready. We can't
+> > use builtin_platform_driver_probe() because it doesn't retry after probe
+> > deferral. Convert it to builtin_platform_driver().
 > 
-> For the binding it's my call. :)
+> If builtin_platform_driver_probe() doesn't work with fw_devlink, then
+> shouldn't it be fixed or removed? Then we're not fixing drivers later
+> when folks start caring about deferred probe and devlink.
 > 
-> This should be someone who cares and knows the h/w. IOW, if I want to
-> delete the binding, someone who will object.
->
-> Of course, I'd like that someone to have all the above qualities too.
+> I'd really prefer if we convert this to a module instead. (And all the
+> other PCI host drivers.)
+> 
+> > Fixes: e590474768f1 ("driver core: Set fw_devlink=on by default")
+> 
+> This happened!?
 
-I guess that would be separate entites then ...
+It's in linux-next in my tree, but is looking like it might be reverted
+soon.  But finding these issues is good.
 
-Shawn and Simon know the hardware way better, though I'm not sure if their
-work commitments will allow them to keep track of binding deletions
+thanks,
 
-So maybe all 3 of us ;-)
-
-Heiko
-
-
+greg k-h
