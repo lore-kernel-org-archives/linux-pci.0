@@ -2,150 +2,91 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
-	DATE_IN_FUTURE_06_12,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F66C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA70DC433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:28:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01F2323A79
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:37:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CD77233FE
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:28:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727314AbhAUThW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jan 2021 14:37:22 -0500
-Received: from mga02.intel.com ([134.134.136.20]:14401 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726769AbhAUTde (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jan 2021 14:33:34 -0500
-IronPort-SDR: 9beEo0O2O2pOcojCPL1GUridj71We0ss/Wrdj/GYmsM+GMk4HYqGHlmvFahISPet1nS6n1d2fc
- 3pls3UEZCqMg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9871"; a="166425921"
-X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
-   d="scan'208";a="166425921"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 11:32:53 -0800
-IronPort-SDR: 71iIBiTk7HTcDqhSl+0nPgfg5Ew8mi8bJqt76hWwZkXalxc2OoaTARUN3V340ExBIOcgszEq6a
- jIWfu0EDOmlw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
-   d="scan'208";a="367027293"
-Received: from intel-z390-ud.iind.intel.com ([10.223.252.51])
-  by orsmga002.jf.intel.com with ESMTP; 21 Jan 2021 11:32:49 -0800
-From:   srikanth.thokala@intel.com
-To:     bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        lakshmi.bai.raja.subramanian@intel.com,
-        mallikarjunappa.sangannavar@intel.com, srikanth.thokala@intel.com
-Subject: [PATCH v6 0/2] PCI: keembay: Add support for Intel Keem Bay
-Date:   Fri, 22 Jan 2021 08:56:08 +0530
-Message-Id: <20210122032610.4958-1-srikanth.thokala@intel.com>
-X-Mailer: git-send-email 2.17.1
+        id S2392481AbhATT1E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Jan 2021 14:27:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60552 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392433AbhATT0a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2021 14:26:30 -0500
+Received: from ssl.serverraum.org (ssl.serverraum.org [IPv6:2a01:4f8:151:8464::1:2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E12AAC0613C1;
+        Wed, 20 Jan 2021 11:25:49 -0800 (PST)
+Received: from ssl.serverraum.org (web.serverraum.org [172.16.0.2])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ssl.serverraum.org (Postfix) with ESMTPSA id 27EE622727;
+        Wed, 20 Jan 2021 20:25:46 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=walle.cc; s=mail2016061301;
+        t=1611170746;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8Ob7KUwKuR0nwFPm6ISDKf74WkwKvOKiqWXqn3cjXq4=;
+        b=miTTwPJ3DtMSDIJ557R+SQ07RWGLYMYbiHcOHy/FBwqEOPhREbpehfwHDCrQ1LUSLmRfIQ
+        Gv/SFl3qrWmnvAEQl1eh+Mtx3U9pOR+3PjPlrugHpuLdvZxxeAhu0ZZNdKS317cRghifnO
+        rcfP8XLVRxq17yPcSoiTiTE4L/tdBpY=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 20 Jan 2021 20:25:45 +0100
+From:   Michael Walle <michael@walle.cc>
+To:     undisclosed-recipients:;
+Subject: Re: [PATCH] PCI: dwc: layerscape: convert to
+ builtin_platform_driver()
+In-Reply-To: <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com>
+References: <20210120105246.23218-1-michael@walle.cc>
+ <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
+ <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com>
+User-Agent: Roundcube Webmail/1.4.10
+Message-ID: <66e4bf55b2809893ad9c87458c170f99@walle.cc>
+X-Sender: michael@walle.cc
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Srikanth Thokala <srikanth.thokala@intel.com>
+Am 2021-01-20 20:02, schrieb Saravana Kannan:
+> On Wed, Jan 20, 2021 at 6:24 AM Rob Herring <robh@kernel.org> wrote:
+>> 
+>> On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc> 
+>> wrote:
+>> >
+>> > fw_devlink will defer the probe until all suppliers are ready. We can't
+>> > use builtin_platform_driver_probe() because it doesn't retry after probe
+>> > deferral. Convert it to builtin_platform_driver().
+>> 
+>> If builtin_platform_driver_probe() doesn't work with fw_devlink, then
+>> shouldn't it be fixed or removed?
+> 
+> I was actually thinking about this too. The problem with fixing
+> builtin_platform_driver_probe() to behave like
+> builtin_platform_driver() is that these probe functions could be
+> marked with __init. But there are also only 20 instances of
+> builtin_platform_driver_probe() in the kernel:
+> $ git grep ^builtin_platform_driver_probe | wc -l
+> 20
+> 
+> So it might be easier to just fix them to not use
+> builtin_platform_driver_probe().
+> 
+> Michael,
+> 
+> Any chance you'd be willing to help me by converting all these to
+> builtin_platform_driver() and delete builtin_platform_driver_probe()?
 
-Hi,
+If it just moving the probe function to the _driver struct and
+remove the __init annotations. I could look into that.
 
-The first patch is to document DT bindings for Keem Bay PCIe controller
-for both Root Complex and Endpoint modes.
-
-The second patch is the driver file, a glue driver. Keem Bay PCIe
-controller is based on DesignWare PCIe IP.
-
-The patch was tested with Keem Bay evaluation module board, with A0
-stepping.
-
-I would also like to inform that I will be taking ownership of this patch
-series from this version as the previous author moved out of the organization.
-
-Kindly review.
-
-Thanks!
-Srikanth
-
-Changes since v5:
-- Rebased to v5.11-rc4.
-- Updated maintainers to add myself in DT binding documents.
-- Fix checkpatch issues.
-
-Changes since v4:
-- Rebased to v5.11-rc1 and retest.
-
-Changes since v3:
-- Add Reviewed-by: Rob Herring <robh@kernel.org> tag in dt-bindings
-  patch.
-- Remove the keembay_pcie_{readl,writel} wrappers. And replace them with
-  readl() and writel().
-- Remove the dead code related to unused irqs.
-- Remove unused definition for unused irqs.
-- In keembay_pcie_ep_init(), initialize enabled interrupts to known state.
-- Rebased to next-20201215.
-
-Changes since v2:
-- In keembay_pcie_probe(), use return keembay_pcie_add_pcie_port(pcie,
-  pdev); statement and remove return 0; at the end of the function.
-
-Changes since v1:
-- In dt-bindings patch.
-  - Fixed indent warning for compatible property.
-  - Rename interrupt-names to pcie, pcie_ev, pcie_err and
-    pcie_mem_access, similar to the name used in datasheet.
-  - Remove device_type, #address-cells and #size-cells property.
-  - Remove num-viewport, num-ib-windows and num-ob-windows property.
-  - Replace additionalProperties with unevaluatedProperties, for RC
-    only.
-  - Add dbi2 and atu property.
-  - Remove description for regs and interrupts property.
-  - Change enum value for num-lanes to 1 and 2 only.
-- In driver patch.
-  - In Kconfig file, remove dependency on ARM64.
-  - Add new define, PCIE_REGS_PCIE_SII_LINK_UP.
-  - Remove PCIE_DBI2_MASK.
-  - In struct keembay_pcie, declare pci member as struct, not pointer.
-    And remove irq number members.
-  - Rename and rework keembay_pcie_establish_link(), to
-    keembay_pcie_start_link().
-  - Remove unneeded BAR disable steps.
-  - Remove unused interrupt handlers; keembay_pcie_ev_irq_handler(),
-    keembay_pcie_err_irq_handler().
-  - Remove keembay_pcie_enable_interrupts().
-  - Rework keembay_pcie_setup_irq() and call it from
-    keembay_pcie_probe().
-  - Remove keembay_pcie_host_init() and make keembay_pcie_host_ops
-    empty.
-  - Keep and rework keembay_pcie_add_pcie_port() a little.
-  - Remove keembay_pcie_add_pcie_ep() and call dw_pcie_ep_init() from
-    keembay_pcie_probe().
-  - In keembay_pcie_probe(), remove dbi setup as it will be handled in
-    dwc common code.
-  - In keembay_pcie_link_up(), use return (val &
-    PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP.
-  - In keembay_pcie_ep_raise_irq(), rework error message for
-    PCI_EPC_IRQ_LEGACY and default cases.
-- Rebased to next-20201124, that has dwc pci refactoring,
-  https://lore.kernel.org/linux-pci/20201105211159.1814485-1-robh@kernel.org/.
-
-Srikanth Thokala (2):
-  dt-bindings: PCI: Add Intel Keem Bay PCIe controller
-  PCI: keembay: Add support for Intel Keem Bay
-
- .../bindings/pci/intel,keembay-pcie-ep.yaml   |  68 +++
- .../bindings/pci/intel,keembay-pcie.yaml      |  96 ++++
- drivers/pci/controller/dwc/Kconfig            |  24 +
- drivers/pci/controller/dwc/Makefile           |   1 +
- drivers/pci/controller/dwc/pcie-keembay.c     | 448 ++++++++++++++++++
- 5 files changed, 637 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
-
-
-base-commit: 45dfb8a5659ad286c28fa59008271dbc4e5e3f2d
--- 
-2.17.1
-
+-michael
