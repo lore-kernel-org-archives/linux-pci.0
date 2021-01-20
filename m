@@ -2,167 +2,174 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E68C433DB
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC2FAC433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 00:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB06023104
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jan 2021 22:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA23D23104
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 00:02:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727558AbhASWmf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jan 2021 17:42:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33384 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405480AbhASOcr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Jan 2021 09:32:47 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2014F206E9;
-        Tue, 19 Jan 2021 14:32:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1611066726;
-        bh=Tduvv18LK/LCkLs3ZnFGc8LwDL80UuULmc4HIuM8pAY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=prM3R5m3uo3uXxwz5GeHrVafgNEbazb911/CI5WpXB7mO0+x4TdgpD/xfl7vPnlJZ
-         RQsVqKJuk3PN4R4txzMSyCZaE72+c4UfnjcSxVefqnxyckuXd2lD6+sVDOm9sB3/vH
-         hju2ZT4LQV1lPp7LQu8FKl+QWHFfDJWRhHidhWT8=
-Date:   Tue, 19 Jan 2021 15:32:04 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        KVM list <kvm@vger.kernel.org>, Linux MM <linux-mm@kvack.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-        "open list:DMA BUFFER SHARING FRAMEWORK" 
-        <linux-media@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>, Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v7 12/17] PCI: Revoke mappings like devmem
-Message-ID: <YAbtZBU5PMr68q9E@kroah.com>
-References: <20201127164131.2244124-1-daniel.vetter@ffwll.ch>
- <20201127164131.2244124-13-daniel.vetter@ffwll.ch>
- <CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com>
+        id S1731022AbhATACS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jan 2021 19:02:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35366 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730969AbhATABb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2021 19:01:31 -0500
+Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4A86C061757
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 16:00:50 -0800 (PST)
+Received: by mail-yb1-xb2a.google.com with SMTP id x78so13273399ybe.11
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2021 16:00:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sXowcYDvZcXKMzrFe9FqqTDON419/OKr3sdTZYFlcNc=;
+        b=j0I/oY65AvJ7CU54ULhJ1qeloJ+tUy7Suv13S/8UGRdct5S1U8jqJtgzxSw4bqgHo0
+         yrK3A/QwKI/9olI6wVBRt2hybEi1JNg5UciXh8FDI9oyJqGr4kiAc6bZq48259pH9cpX
+         gd1k93jSKgdDgnpcNnX/C73ZSypJxkVZUOHBO48boKgjMvSsPr1EDj6vsQdL9axQLRrc
+         /T9nB0wQRj1MlR7RxqmLvOKSgoyko5pIvX7rcpazCz4FXZxcCfzIn5VY9zfwABcTcn07
+         g/eariP4frZx7HX41ZYN8COsV2lZk0Yg3ygglu2ORdvSh6nAzSQrZCHIGkIzxBcFmSlY
+         uO+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sXowcYDvZcXKMzrFe9FqqTDON419/OKr3sdTZYFlcNc=;
+        b=RrTeo3dqMjBtID5Zg087HmyYNFMmo/LLMPAulfteevzdoi/1DpLIJpb/LnyQTdrw19
+         9YztW1invL02u1PdV27vm6Dz2WC8oUlPXkJjwjlzFDeRoiDyT2110fhCDFwO5EXJorHl
+         liFDqyHfSMq0vUi3G1ot0eT8o8CPb+SG99UQErnopFz7VMgjgK07sX8eTMojFuzHbjoj
+         ubia1P6GaNiUEPXrJgKVFZ2QKUDG4pWjjMVSul2VWzq525NwHFU4sxMcr9iWdjAPa8ef
+         iim/9TZek+QCLtxEtT10+dDypbsqMhshHzBPQ2VdIcNPDfxXNiWe1d45M1sLWxy94Vn5
+         eZDQ==
+X-Gm-Message-State: AOAM5323GWT0j058Pehphijsv/2mlxc7CUMiCTfaTMi/xk/dlTFtvorX
+        +CxPmISeK+/HewihoUlGQHTCO2mANKF+n+qJhpYxwg==
+X-Google-Smtp-Source: ABdhPJw5WAIHI4c3zIOTDPo9BjXenLy0BPhFyl4vUZqVjWpXCCRqzn59hUQZuomKdzC+jWBZv9W9ZAJt+QV+jZKyzb8=
+X-Received: by 2002:a25:77d4:: with SMTP id s203mr10670708ybc.32.1611100849671;
+ Tue, 19 Jan 2021 16:00:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com>
+References: <20201218031703.3053753-6-saravanak@google.com>
+ <20210117230134.32042-1-michael@walle.cc> <CAGETcx9=6fPAHLuMyfxfXTGxeSUO8FwHVU_F4bfqLTfK6c+eXw@mail.gmail.com>
+ <4b9ae679b6f76d2f7e340e2ec229dd53@walle.cc>
+In-Reply-To: <4b9ae679b6f76d2f7e340e2ec229dd53@walle.cc>
+From:   Saravana Kannan <saravanak@google.com>
+Date:   Tue, 19 Jan 2021 16:00:13 -0800
+Message-ID: <CAGETcx-s1Hc8iiForpoeqP6Tf-syOYvxHMui+3vRJFmqArL+-A@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] driver core: Set fw_devlink=on by default
+To:     Michael Walle <michael@walle.cc>
+Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Android Kernel Team <kernel-team@android.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com,
+        Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 09:17:55AM +0100, Daniel Vetter wrote:
-> On Fri, Nov 27, 2020 at 5:42 PM Daniel Vetter <daniel.vetter@ffwll.ch> wrote:
+On Tue, Jan 19, 2021 at 2:41 AM Michael Walle <michael@walle.cc> wrote:
+>
+> Am 2021-01-18 22:01, schrieb Saravana Kannan:
+> > On Sun, Jan 17, 2021 at 3:01 PM Michael Walle <michael@walle.cc> wrote:
+> >> > Cyclic dependencies in some firmware was one of the last remaining
+> >> > reasons fw_devlink=on couldn't be set by default. Now that cyclic
+> >> > dependencies don't block probing, set fw_devlink=on by default.
+> >> >
+> >> > Setting fw_devlink=on by default brings a bunch of benefits (currently,
+> >> > only for systems with device tree firmware):
+> >> > * Significantly cuts down deferred probes.
+> >> > * Device probe is effectively attempted in graph order.
+> >> > * Makes it much easier to load drivers as modules without having to
+> >> >   worry about functional dependencies between modules (depmod is still
+> >> >   needed for symbol dependencies).
+> >> >
+> >> > If this patch prevents some devices from probing, it's very likely due
+> >> > to the system having one or more device drivers that "probe"/set up a
+> >> > device (DT node with compatible property) without creating a struct
+> >> > device for it.  If we hit such cases, the device drivers need to be
+> >> > fixed so that they populate struct devices and probe them like normal
+> >> > device drivers so that the driver core is aware of the devices and their
+> >> > status. See [1] for an example of such a case.
+> >> >
+> >> > [1] - https://lore.kernel.org/lkml/CAGETcx9PiX==mLxB9PO8Myyk6u2vhPVwTMsA5NkD-ywH5xhusw@mail.gmail.com/
+> >> > Signed-off-by: Saravana Kannan <saravanak@google.com>
+> >>
+> >> This breaks (at least) probing of the PCIe controllers of my board.
+> >> The
+> >> driver in question is
+> >>   drivers/pci/controller/dwc/pci-layerscape.c
+> >> I've also put the maintainers of this driver on CC. Looks like it uses
+> >> a
+> >> proper struct device. But it uses builtin_platform_driver_probe() and
+> >> apparently it waits for the iommu which uses module_platform_driver().
+> >> Dunno if that will work together.
 > >
-> > Since 3234ac664a87 ("/dev/mem: Revoke mappings when a driver claims
-> > the region") /dev/kmem zaps ptes when the kernel requests exclusive
-> > acccess to an iomem region. And with CONFIG_IO_STRICT_DEVMEM, this is
-> > the default for all driver uses.
-> >
-> > Except there's two more ways to access PCI BARs: sysfs and proc mmap
-> > support. Let's plug that hole.
-> >
-> > For revoke_devmem() to work we need to link our vma into the same
-> > address_space, with consistent vma->vm_pgoff. ->pgoff is already
-> > adjusted, because that's how (io_)remap_pfn_range works, but for the
-> > mapping we need to adjust vma->vm_file->f_mapping. The cleanest way is
-> > to adjust this at at ->open time:
-> >
-> > - for sysfs this is easy, now that binary attributes support this. We
-> >   just set bin_attr->mapping when mmap is supported
-> > - for procfs it's a bit more tricky, since procfs pci access has only
-> >   one file per device, and access to a specific resources first needs
-> >   to be set up with some ioctl calls. But mmap is only supported for
-> >   the same resources as sysfs exposes with mmap support, and otherwise
-> >   rejected, so we can set the mapping unconditionally at open time
-> >   without harm.
-> >
-> > A special consideration is for arch_can_pci_mmap_io() - we need to
-> > make sure that the ->f_mapping doesn't alias between ioport and iomem
-> > space. There's only 2 ways in-tree to support mmap of ioports: generic
-> > pci mmap (ARCH_GENERIC_PCI_MMAP_RESOURCE), and sparc as the single
-> > architecture hand-rolling. Both approach support ioport mmap through a
-> > special pfn range and not through magic pte attributes. Aliasing is
-> > therefore not a problem.
-> >
-> > The only difference in access checks left is that sysfs PCI mmap does
-> > not check for CAP_RAWIO. I'm not really sure whether that should be
-> > added or not.
-> >
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> > Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> > Cc: Kees Cook <keescook@chromium.org>
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > Cc: John Hubbard <jhubbard@nvidia.com>
-> > Cc: Jérôme Glisse <jglisse@redhat.com>
-> > Cc: Jan Kara <jack@suse.cz>
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Cc: linux-mm@kvack.org
-> > Cc: linux-arm-kernel@lists.infradead.org
-> > Cc: linux-samsung-soc@vger.kernel.org
-> > Cc: linux-media@vger.kernel.org
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-> > --
-> > v2:
-> > - Totally new approach: Adjust filp->f_mapping at open time. Note that
-> >   this now works on all architectures, not just those support
-> >   ARCH_GENERIC_PCI_MMAP_RESOURCE
-> > ---
-> >  drivers/pci/pci-sysfs.c | 4 ++++
-> >  drivers/pci/proc.c      | 1 +
-> >  2 files changed, 5 insertions(+)
-> >
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index d15c881e2e7e..3f1c31bc0b7c 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -929,6 +929,7 @@ void pci_create_legacy_files(struct pci_bus *b)
-> >         b->legacy_io->read = pci_read_legacy_io;
-> >         b->legacy_io->write = pci_write_legacy_io;
-> >         b->legacy_io->mmap = pci_mmap_legacy_io;
-> > +       b->legacy_io->mapping = iomem_get_mapping();
-> >         pci_adjust_legacy_attr(b, pci_mmap_io);
-> >         error = device_create_bin_file(&b->dev, b->legacy_io);
-> >         if (error)
-> > @@ -941,6 +942,7 @@ void pci_create_legacy_files(struct pci_bus *b)
-> >         b->legacy_mem->size = 1024*1024;
-> >         b->legacy_mem->attr.mode = 0600;
-> >         b->legacy_mem->mmap = pci_mmap_legacy_mem;
-> > +       b->legacy_io->mapping = iomem_get_mapping();
-> 
-> Unlike the normal pci stuff below, the legacy files here go boom
-> because they're set up much earlier in the boot sequence. This only
-> affects HAVE_PCI_LEGACY architectures, which aren't that many. So what
-> should we do here now:
-> - drop the devmem revoke for these
-> - rework the init sequence somehow to set up these files a lot later
-> - redo the sysfs patch so that it doesn't take an address_space
-> pointer, but instead a callback to get at that (since at open time
-> everything is set up). Imo rather ugly
-> - ditch this part of the series (since there's not really any takers
-> for the latter parts it might just not make sense to push for this)
-> - something else?
-> 
-> Bjorn, Greg, thoughts?
+> > Yeah, the builtin vs module doesn't matter. I've had fw_devlink work
+> > multiple times with the consumer driver being built in and the
+> > supplier actually loaded as a module. Making that work is one of the
+> > goals of fw_devlink.
+>
+> Ok.
 
-What sysfs patch are you referring to here?
+Hi Michael,
 
-thanks,
+My bad, I spoke too soon. I thought you were talking about builtin_ vs
+module_. My response is correct in that context. But the problem here
+is related to builtin_platform_driver_probe(). That macro expects the
+device (PCI) to be added and ready to probe by the time it's called.
+If not, it just gives up and frees the code. That's why it's not
+getting called after the first attempt. Can you please convert it into
+builtin_platform_driver()? It should be a pretty trivial change.
 
-greg k-h
+-Saravana
+
+>
+> >> The board device tree can be found here:
+> >>   arch/arm64/boot/dts/freescale/fsl-ls1028a-kontron-sl28-var3-ads2.dts
+> >>
+> >> Attached is the log with enabled "probe deferral" messages enabled.
+> >
+> > I took a look at the logs. As you said, pci seems to be waiting on
+> > iommu, but it's not clear why the iommu didn't probe by then. Can you
+> > add initcall_debug=1 and enable the logs in device_link_add()? Btw, I
+> > realize one compromise on the logs is to send them as an attachment
+> > instead of inline. That way, it's still archived in the list, but I
+> > don't have to deal with log lines getting wrapped, etc.
+> >
+> > Thanks for reporting the issues. Also, could you try picking up all of
+> > these changes and giving it a shot. It's unlikely to help, but I want
+> > to rule out issues related to fixes in progress.
+> >
+> > https://lore.kernel.org/lkml/20210116011412.3211292-1-saravanak@google.com/
+> > https://lore.kernel.org/lkml/20210115210159.3090203-1-saravanak@google.com/
+> > https://lore.kernel.org/lkml/20201218210750.3455872-1-saravanak@google.com/
+>
+> Did pick them up, the last one had a conflict due some superfluous
+> lines.
+> Maybe they got reordered in that arrray.
+>
+> Issue still persist. I've enabled the debug in device_link_add(), in
+> device_links_check_suppliers() and booted with initcall_debug. Please
+> see attached log. Lets see how that goes ;)
+>
+> [    0.132687] calling  ls_pcie_driver_init+0x0/0x38 @ 1
+> [    0.132762] platform 3400000.pcie: probe deferral - supplier
+> 5000000.iommu not ready
+> [    0.132777] platform 3500000.pcie: probe deferral - supplier
+> 5000000.iommu not ready
+> [    0.132818] initcall ls_pcie_driver_init+0x0/0x38 returned -19 after
+> 119 usecs
+>
+> After that, ls_pcie_driver_init() is never called again.
+>
+> -michael
