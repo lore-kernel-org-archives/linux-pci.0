@@ -2,91 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA70DC433DB
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8763FC433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:54:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CD77233FE
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Jan 2021 19:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44BC123A54
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:54:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392481AbhATT1E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Jan 2021 14:27:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60552 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392433AbhATT0a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2021 14:26:30 -0500
-Received: from ssl.serverraum.org (ssl.serverraum.org [IPv6:2a01:4f8:151:8464::1:2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E12AAC0613C1;
-        Wed, 20 Jan 2021 11:25:49 -0800 (PST)
-Received: from ssl.serverraum.org (web.serverraum.org [172.16.0.2])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ssl.serverraum.org (Postfix) with ESMTPSA id 27EE622727;
-        Wed, 20 Jan 2021 20:25:46 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=walle.cc; s=mail2016061301;
-        t=1611170746;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8Ob7KUwKuR0nwFPm6ISDKf74WkwKvOKiqWXqn3cjXq4=;
-        b=miTTwPJ3DtMSDIJ557R+SQ07RWGLYMYbiHcOHy/FBwqEOPhREbpehfwHDCrQ1LUSLmRfIQ
-        Gv/SFl3qrWmnvAEQl1eh+Mtx3U9pOR+3PjPlrugHpuLdvZxxeAhu0ZZNdKS317cRghifnO
-        rcfP8XLVRxq17yPcSoiTiTE4L/tdBpY=
+        id S1725883AbhAUTx3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jan 2021 14:53:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49362 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726218AbhAUTwv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jan 2021 14:52:51 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A896A224B2;
+        Thu, 21 Jan 2021 19:52:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611258729;
+        bh=5h26ZqruEotl0zDmBUHsSpYMoFr6DyQrAE/VtmEyMuc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=nQ0gW5cA4KI6m7Ho28hv7DmcfqZGSDVYiY+WLAe+yTrI1dmwPw9MrBta8a8fDseU2
+         Rv7akH8Xkqi7LsUS6y7avti3zYkna4x8qkczvWKfCIEVyfEWqUpnpTIF+Z0osTJ89S
+         r0kHjMwFDL2E83ePD8mf1MO4wpRXM6Tds7ScuOHkgY9FZihIOd2rECDv+IB0QMJFqp
+         Da2+y7DeL5V1SMJZiC1u6osMTOOZFWT6Ki07mr8mWIGe0BhZ1lmPJLfV+qbq3q0Mq4
+         7XAVYBSQ1gubptJ98jj2z4fTsVdDrTrpcUBmU4jgCHsi0cNCbQ9vINmoZE8B69H3VA
+         kHUNglsofIjaA==
+Date:   Thu, 21 Jan 2021 13:52:06 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     srikanth.thokala@intel.com
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
+        lakshmi.bai.raja.subramanian@intel.com,
+        mallikarjunappa.sangannavar@intel.com
+Subject: Re: [PATCH v6 2/2] PCI: keembay: Add support for Intel Keem Bay
+Message-ID: <20210121195206.GA2678455@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 20 Jan 2021 20:25:45 +0100
-From:   Michael Walle <michael@walle.cc>
-To:     undisclosed-recipients:;
-Subject: Re: [PATCH] PCI: dwc: layerscape: convert to
- builtin_platform_driver()
-In-Reply-To: <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com>
-References: <20210120105246.23218-1-michael@walle.cc>
- <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
- <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com>
-User-Agent: Roundcube Webmail/1.4.10
-Message-ID: <66e4bf55b2809893ad9c87458c170f99@walle.cc>
-X-Sender: michael@walle.cc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210122032610.4958-3-srikanth.thokala@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 2021-01-20 20:02, schrieb Saravana Kannan:
-> On Wed, Jan 20, 2021 at 6:24 AM Rob Herring <robh@kernel.org> wrote:
->> 
->> On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc> 
->> wrote:
->> >
->> > fw_devlink will defer the probe until all suppliers are ready. We can't
->> > use builtin_platform_driver_probe() because it doesn't retry after probe
->> > deferral. Convert it to builtin_platform_driver().
->> 
->> If builtin_platform_driver_probe() doesn't work with fw_devlink, then
->> shouldn't it be fixed or removed?
+On Fri, Jan 22, 2021 at 08:56:10AM +0530, srikanth.thokala@intel.com wrote:
+> From: Srikanth Thokala <srikanth.thokala@intel.com>
 > 
-> I was actually thinking about this too. The problem with fixing
-> builtin_platform_driver_probe() to behave like
-> builtin_platform_driver() is that these probe functions could be
-> marked with __init. But there are also only 20 instances of
-> builtin_platform_driver_probe() in the kernel:
-> $ git grep ^builtin_platform_driver_probe | wc -l
-> 20
+> Add driver for Intel Keem Bay SoC PCIe controller. This controller
+> is based on DesignWare PCIe core.
 > 
-> So it might be easier to just fix them to not use
-> builtin_platform_driver_probe().
+> In root complex mode, only internal reference clock is possible for
+> Keem Bay A0. For Keem Bay B0, external reference clock can be used
+> and will be the default configuration. Currently, keembay_pcie_of_data
+> structure has one member. It will be expanded later to handle this
+> difference.
 > 
-> Michael,
+> Endpoint mode link initialization is handled by the boot firmware.
 > 
-> Any chance you'd be willing to help me by converting all these to
-> builtin_platform_driver() and delete builtin_platform_driver_probe()?
+> Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+> Signed-off-by: Srikanth Thokala <srikanth.thokala@intel.com>
+> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  MAINTAINERS                               |   7 +
+>  drivers/pci/controller/dwc/Kconfig        |  28 ++
+>  drivers/pci/controller/dwc/Makefile       |   1 +
+>  drivers/pci/controller/dwc/pcie-keembay.c | 446 ++++++++++++++++++++++
+>  4 files changed, 482 insertions(+)
+>  create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 00836f6452f0..2fc0fb03c430 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -13852,6 +13852,13 @@ L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/pci/controller/dwc/*spear*
+>  
+> +PCI DRIVER FOR INTEL KEEM BAY
+> +M:	Srikanth Thokala <srikanth.thokala@intel.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
+> +F:	drivers/pci/controller/dwc/pcie-keembay.c
 
-If it just moving the probe function to the _driver struct and
-remove the __init annotations. I could look into that.
+<checks MAINTAINERS> ... yep, all previous entries are in alphabetical
+order.  This new one just got dropped at the end.
 
--michael
+I feel like a broken record, but please, please, take a look at the
+surrounding code/text/whatever, and MAKE YOUR NEW STUFF MATCH THE
+EXISTING STYLE.  We want the whole thing to be reasonably consistent
+so readers can make sense of it without being confused by the
+idiosyncrasies of every contributor.
+
+Also, probably s/PCI DRIVER/PCIE DRIVER/.  We have both (an existing
+inconsistency), but pick one, put it in the section that matches, and
+alphabetize.
+
+> +
+>  PCMCIA SUBSYSTEM
+>  M:	Dominik Brodowski <linux@dominikbrodowski.net>
+>  S:	Odd Fixes
+
+> +static void keembay_ep_reset_deassert(struct keembay_pcie *pcie)
+> +{
+> +	msleep(100);
+
+Please note the spec section that requires this sleep.  Otherwise it's
+just an unmaintainable magic number.
+
+> +	gpiod_set_value_cansleep(pcie->reset, 0);
+> +	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+> +}
