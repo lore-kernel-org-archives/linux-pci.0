@@ -2,110 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E58F1C433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 16:29:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 178F0C433E9
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 16:53:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A67E723A23
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 16:29:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9DA323A59
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 16:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387750AbhAUQ2g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jan 2021 11:28:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58460 "EHLO mail.kernel.org"
+        id S1729589AbhAUQxi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jan 2021 11:53:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387804AbhAUQYM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jan 2021 11:24:12 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BCBDD22B45;
-        Thu, 21 Jan 2021 16:23:31 +0000 (UTC)
+        id S1729842AbhAUPzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jan 2021 10:55:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D06BA23A1D;
+        Thu, 21 Jan 2021 15:54:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611246212;
-        bh=SGnWKlQo06sg8d+NDOQwaMUesF8OTKiZdb/fFObVA5M=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m+iNbUe1iH56GlLK9RfZSVnhckUnp2JZRKs/tbqkhu1wk2ONnMIVExT3hVjT7EGth
-         +cYgBB9941K1+gZEu3f9NRKFz0oBIzy5KJhlSIYVYvMzi8aPM099NvjW3luA0M3cAt
-         SilMrNkke79EwXj8YwSci70gf4scZ0LPT6yAgk4hKtnYw0BbGFMGHGuyMzXCD/3Ncw
-         MQVhraqL9eexYSUKD/SHpMs+PSUVyPJzNIBQH03dKy1SzDjUN/JkJ5S5WPFjivwEgJ
-         NknIpZjTLibFgLQ6cOc8OzOt+icSCu9IjNzae72EdwmPulWmz05WcpIWfYQcXmbcrM
-         rwRpF3s6cqxAA==
-Received: by wens.tw (Postfix, from userid 1000)
-        id 94B265FBB9; Fri, 22 Jan 2021 00:23:28 +0800 (CST)
-From:   Chen-Yu Tsai <wens@kernel.org>
-To:     Shawn Lin <shawn.lin@rock-chips.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Chen-Yu Tsai <wens@csie.org>, Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Johan Jonker <jbx6244@gmail.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH v4 3/4] arm64: dts: rockchip: nanopi4: Move ep-gpios property to nanopc-t4
-Date:   Fri, 22 Jan 2021 00:23:20 +0800
-Message-Id: <20210121162321.4538-4-wens@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210121162321.4538-1-wens@kernel.org>
-References: <20210121162321.4538-1-wens@kernel.org>
+        s=k20201202; t=1611244487;
+        bh=hhZx/Ee+Xm9H79fb1J5cDRefS6ThbB9mATSkmjREweo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=bXnfeDo0omSMD3KJcPgmF+Vo69xhpAs9l+5o/Mwk2G1Jx0DbNZ846sA7HqfoZgNaD
+         Swan94fkPGc49EqGESxX0Nt/zUWTLHgppmDaJ2wRKTPYBizX9CB1tcGPSX6Is2dlE9
+         V5Q5F8QkFtHi77fmW5p/ms7iZqMrXHEtXgcIKbiZtcnZL0Oc3myUi8t/dK5r84pBnB
+         8xHU7Sen+5VhCX+xeAu7o5OMWGQ75gam6m5AuOfnfsC88oPWtYQjd+Lk+zIlwqRc1b
+         9OspZsssgr1C7gi3n3GNuTdtPj1ZC0bakGJDkk2D4vmMw7eD3ipoUCjG5VBbzZXOWI
+         hCgOHN1Uz/kjA==
+Date:   Thu, 21 Jan 2021 09:54:45 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Christian Brauner <christian.brauner@ubuntu.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, Pierre Morel <pmorel@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Viktor Mihajlovski <mihajlov@linux.ibm.com>
+Subject: Re: [RFC 1/1] s390/pci: expose UID checking state in sysfs
+Message-ID: <20210121155445.GA2657778@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1cf42837-bf98-944f-697c-8407a0ebd623@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen-Yu Tsai <wens@csie.org>
+[Greg may be able to help compare/contrast this s390 UID with udev
+persistent names]
 
-Only the NanoPC T4 hs the PCIe reset pin routed to the SoC. For the
-NanoPi M4 family, no such signal is routed to the expansion header on
-the base board.
+On Thu, Jan 21, 2021 at 04:31:55PM +0100, Niklas Schnelle wrote:
+> On 1/15/21 4:29 PM, Bjorn Helgaas wrote:
+> > On Fri, Jan 15, 2021 at 12:20:59PM +0100, Niklas Schnelle wrote:
+> >> On 1/14/21 5:14 PM, Greg Kroah-Hartman wrote:
+> >>> On Thu, Jan 14, 2021 at 04:51:17PM +0100, Niklas Schnelle wrote:
+> >>>> On 1/14/21 4:17 PM, Greg Kroah-Hartman wrote:
+> >>>>> On Thu, Jan 14, 2021 at 04:06:11PM +0100, Niklas Schnelle wrote:
+> >>>>>> On 1/14/21 2:58 PM, Greg Kroah-Hartman wrote:
+> >>>>>>> On Thu, Jan 14, 2021 at 02:44:53PM +0100, Christian Brauner wrote:
+> >>>>>>>> On Thu, Jan 14, 2021 at 02:20:10PM +0100, Niklas Schnelle wrote:
+> >>>>>>>>> On 1/13/21 7:55 PM, Bjorn Helgaas wrote:
+> >>>>>>>>>> On Wed, Jan 13, 2021 at 08:47:58AM +0100, Niklas Schnelle wrote:
+> >>>>>>>>>>> On 1/12/21 10:50 PM, Bjorn Helgaas wrote:
+> >> ... snip ...
+> >>
+> >>>
+> >>>> 	if (!zpci_global_kset)
+> >>>> 		return -ENOMEM;
+> >>>>
+> >>>> 	return sysfs_create_group(&zpci_global_kset->kobj, &zpci_attr_group_global);
+> >>>
+> >>> Huge hint, if in a driver, or bus subsystem, and you call sysfs_*,
+> >>> that's usually a huge clue that you are doing something wrong.
+> >>>
+> >>> Try the above again, with a simple attribute group, and name for it, and
+> >>> it should "just work".
+> >>
+> >> I'm probably missing something but I don't get how this could work
+> >> in this case. If I'm seeing this right the default attribute group
+> >> here is pci_bus_type.bus_groups and that is already set in
+> >> drivers/pci/pci-driver.c so I don't think I should set that.
+> >>
+> >> I did however find bus_create_file() which does work when using the
+> >> path /sys/bus/pci/uid_checking instead. This would work for us if
+> >> Bjorn is okay with that path and the code is really clean and simple
+> >> too.
+> >>
+> >> That said, I think we could also add something like
+> >> bus_create_group().  Then we could use that to also clean up
+> >> drivers/pci/slot.c:pci_slot_init() and get the original path
+> >> /sys/bus/pci/zpci/uid_checking.
+> > 
+> > I don't think "uid_checking" is quite the right name.  It says
+> > something about the *implementation*, but it doesn't convey what that
+> > *means* to userspace.  IIUC this file tells userspace something about
+> > whether a given PCI device always has the same PCI domain/bus/dev/fn
+> > address (or maybe just the same domain?)
+> > 
+> > It sounds like this feature could be useful beyond just s390, and
+> > other arches might implement it differently, without the UID concept.
+> > If so, I'm OK with something at the /sys/bus/pci/xxx level as long as
+> > the name is not s390-specific (and "uid" sounds s390-specific).
+> > 
+> > I assume it would also help with the udev/systemd end if you could
+> > make this less s390 dependent.
+> 
+> I've thought about this more and even implemented a proof of concept
+> patch for a global attribute using a pcibios_has_reproducible_addressing()
+> hook. 
+> 
+> However after implementing it I think as a more general and
+> future proof concept it makes more sense to do this as a per device
+> attribute, maybe as another flag in "stuct pci_dev" named something
+> like "reliable_address". My reasoning behind this can be best be seen
+> with a QEMU example. While I expect that QEMU can easily guarantee
+> that one can always use "0000:01:00.0" for a virtio-pci NIC and
+> thus enp1s0 interface name, the same might be harder to guarantee
+> for a SR-IOV VF passed through with vfio-pci in that same VM and
+> even less so if a thunderbolt controller is passed through and
+> enumeration may depend on daisy chaining. The QEMU example
+> also applies to s390 and maybe others will in the future.
 
-As the schematics for the expansion board were not released, it is
-unclear how this is handled, but the likely answer is that the signal
-is always pulled high.
+I'm a little wary of using the PCI geographical address
+("0000:01:00.0") as a stable name.  Even if you can make a way to use
+that to identify a specific device instance, regardless of how it is
+plugged in or passed through, it sounds like we could end up with
+"physical PCI addresses" and "virtual PCI addresses" that look the
+same and would cause confusion.
 
-Move the ep-gpios property from the common nanopi4.dtsi file to the
-board level nanopc-t4.dts file. This makes the nanopi-m4 lack ep-gpios,
-matching the board design.
+This concept sounds similar to the udev concept of a "persistent
+device name".  What advantages does this s390 UID have over the udev
+approach?
 
-A companion patch "PCI: rockchip: make ep_gpio optional" for the Linux
-driver is required, as the driver currently requires the property to be
-present.
-
-Fixes: e7a095908227 ("arm64: dts: rockchip: Add devicetree for NanoPC-T4")
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Signed-off-by: Chen-Yu Tsai <wens@csie.org>
----
- arch/arm64/boot/dts/rockchip/rk3399-nanopc-t4.dts | 1 +
- arch/arm64/boot/dts/rockchip/rk3399-nanopi4.dtsi  | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-nanopc-t4.dts b/arch/arm64/boot/dts/rockchip/rk3399-nanopc-t4.dts
-index e0d75617bb7e..452728b82e42 100644
---- a/arch/arm64/boot/dts/rockchip/rk3399-nanopc-t4.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopc-t4.dts
-@@ -95,6 +95,7 @@ map3 {
- };
- 
- &pcie0 {
-+	ep-gpios = <&gpio2 RK_PA4 GPIO_ACTIVE_HIGH>;
- 	num-lanes = <4>;
- 	vpcie3v3-supply = <&vcc3v3_sys>;
- };
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-nanopi4.dtsi b/arch/arm64/boot/dts/rockchip/rk3399-nanopi4.dtsi
-index 76a8b40a93c6..48ed4aaa37f3 100644
---- a/arch/arm64/boot/dts/rockchip/rk3399-nanopi4.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-nanopi4.dtsi
-@@ -504,7 +504,6 @@ &pcie_phy {
- };
- 
- &pcie0 {
--	ep-gpios = <&gpio2 RK_PA4 GPIO_ACTIVE_HIGH>;
- 	max-link-speed = <2>;
- 	num-lanes = <2>;
- 	vpcie0v9-supply = <&vcca0v9_s3>;
--- 
-2.29.2
-
+There are optional PCI device serial numbers that we currently don't
+really make use of.  Would that be a generic way to help with this?
