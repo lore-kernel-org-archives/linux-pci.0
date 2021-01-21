@@ -2,118 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8763FC433E6
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:54:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0E0DC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 20:43:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 44BC123A54
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:54:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 733C923A04
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 20:43:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725883AbhAUTx3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jan 2021 14:53:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49362 "EHLO mail.kernel.org"
+        id S1727520AbhAUUmw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jan 2021 15:42:52 -0500
+Received: from mga07.intel.com ([134.134.136.100]:44895 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726218AbhAUTwv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jan 2021 14:52:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A896A224B2;
-        Thu, 21 Jan 2021 19:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611258729;
-        bh=5h26ZqruEotl0zDmBUHsSpYMoFr6DyQrAE/VtmEyMuc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=nQ0gW5cA4KI6m7Ho28hv7DmcfqZGSDVYiY+WLAe+yTrI1dmwPw9MrBta8a8fDseU2
-         Rv7akH8Xkqi7LsUS6y7avti3zYkna4x8qkczvWKfCIEVyfEWqUpnpTIF+Z0osTJ89S
-         r0kHjMwFDL2E83ePD8mf1MO4wpRXM6Tds7ScuOHkgY9FZihIOd2rECDv+IB0QMJFqp
-         Da2+y7DeL5V1SMJZiC1u6osMTOOZFWT6Ki07mr8mWIGe0BhZ1lmPJLfV+qbq3q0Mq4
-         7XAVYBSQ1gubptJ98jj2z4fTsVdDrTrpcUBmU4jgCHsi0cNCbQ9vINmoZE8B69H3VA
-         kHUNglsofIjaA==
-Date:   Thu, 21 Jan 2021 13:52:06 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     srikanth.thokala@intel.com
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com,
+        id S1727459AbhAUUmc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jan 2021 15:42:32 -0500
+IronPort-SDR: qrHyRx6+hj5fDanU5FnnpNj00RWHfpsXgXukbWNiZ+QERAMke/QyqEX39oXilcAQxubQ32qeeW
+ w5fsBAisw6zQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9871"; a="243416471"
+X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
+   d="scan'208";a="243416471"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 12:40:37 -0800
+IronPort-SDR: Rr4DoKevT+g5dZ6hx/wrxwD3LZ+q52T4F7qD4my6qpHZrNVVOPwbSDuqjLIrLCj6ugxQ1kmQNQ
+ g7OoXfoBK0Vw==
+X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
+   d="scan'208";a="351587401"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 12:40:34 -0800
+Received: from andy by smile with local (Exim 4.94)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1l2gls-007zQL-NK; Thu, 21 Jan 2021 22:41:36 +0200
+Date:   Thu, 21 Jan 2021 22:41:36 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     srikanth.thokala@intel.com, bhelgaas@google.com,
+        robh+dt@kernel.org, lorenzo.pieralisi@arm.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        lakshmi.bai.raja.subramanian@intel.com,
+        mgross@linux.intel.com, lakshmi.bai.raja.subramanian@intel.com,
         mallikarjunappa.sangannavar@intel.com
 Subject: Re: [PATCH v6 2/2] PCI: keembay: Add support for Intel Keem Bay
-Message-ID: <20210121195206.GA2678455@bjorn-Precision-5520>
+Message-ID: <YAnnALx/ZHJ+Euhq@smile.fi.intel.com>
+References: <20210122032610.4958-3-srikanth.thokala@intel.com>
+ <20210121195206.GA2678455@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210122032610.4958-3-srikanth.thokala@intel.com>
+In-Reply-To: <20210121195206.GA2678455@bjorn-Precision-5520>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 22, 2021 at 08:56:10AM +0530, srikanth.thokala@intel.com wrote:
-> From: Srikanth Thokala <srikanth.thokala@intel.com>
+On Thu, Jan 21, 2021 at 01:52:06PM -0600, Bjorn Helgaas wrote:
+> On Fri, Jan 22, 2021 at 08:56:10AM +0530, srikanth.thokala@intel.com wrote:
+
+> > Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+> > Signed-off-by: Srikanth Thokala <srikanth.thokala@intel.com>
+
+This list seems strange. Shouldn't be your SoB last?
+
+...
+
+> <checks MAINTAINERS> ... yep, all previous entries are in alphabetical
+> order.  This new one just got dropped at the end.
 > 
-> Add driver for Intel Keem Bay SoC PCIe controller. This controller
-> is based on DesignWare PCIe core.
-> 
-> In root complex mode, only internal reference clock is possible for
-> Keem Bay A0. For Keem Bay B0, external reference clock can be used
-> and will be the default configuration. Currently, keembay_pcie_of_data
-> structure has one member. It will be expanded later to handle this
-> difference.
-> 
-> Endpoint mode link initialization is handled by the boot firmware.
-> 
-> Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-> Signed-off-by: Srikanth Thokala <srikanth.thokala@intel.com>
-> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  MAINTAINERS                               |   7 +
->  drivers/pci/controller/dwc/Kconfig        |  28 ++
->  drivers/pci/controller/dwc/Makefile       |   1 +
->  drivers/pci/controller/dwc/pcie-keembay.c | 446 ++++++++++++++++++++++
->  4 files changed, 482 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 00836f6452f0..2fc0fb03c430 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -13852,6 +13852,13 @@ L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	drivers/pci/controller/dwc/*spear*
->  
-> +PCI DRIVER FOR INTEL KEEM BAY
-> +M:	Srikanth Thokala <srikanth.thokala@intel.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
-> +F:	drivers/pci/controller/dwc/pcie-keembay.c
+> I feel like a broken record, but please, please, take a look at the
+> surrounding code/text/whatever, and MAKE YOUR NEW STUFF MATCH THE
+> EXISTING STYLE.  We want the whole thing to be reasonably consistent
+> so readers can make sense of it without being confused by the
+> idiosyncrasies of every contributor.
 
-<checks MAINTAINERS> ... yep, all previous entries are in alphabetical
-order.  This new one just got dropped at the end.
+I guess even checkpatch.pl should complain about this these days.
 
-I feel like a broken record, but please, please, take a look at the
-surrounding code/text/whatever, and MAKE YOUR NEW STUFF MATCH THE
-EXISTING STYLE.  We want the whole thing to be reasonably consistent
-so readers can make sense of it without being confused by the
-idiosyncrasies of every contributor.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Also, probably s/PCI DRIVER/PCIE DRIVER/.  We have both (an existing
-inconsistency), but pick one, put it in the section that matches, and
-alphabetize.
 
-> +
->  PCMCIA SUBSYSTEM
->  M:	Dominik Brodowski <linux@dominikbrodowski.net>
->  S:	Odd Fixes
-
-> +static void keembay_ep_reset_deassert(struct keembay_pcie *pcie)
-> +{
-> +	msleep(100);
-
-Please note the spec section that requires this sleep.  Otherwise it's
-just an unmaintainable magic number.
-
-> +	gpiod_set_value_cansleep(pcie->reset, 0);
-> +	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-> +}
