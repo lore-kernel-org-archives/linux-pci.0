@@ -2,230 +2,598 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
+	DATE_IN_FUTURE_06_12,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08DB7C433DB
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 18:41:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31777C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:36:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C037322A83
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 18:41:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E01FE23A33
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jan 2021 19:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727429AbhAUSli (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jan 2021 13:41:38 -0500
-Received: from mga04.intel.com ([192.55.52.120]:41448 "EHLO mga04.intel.com"
+        id S1727407AbhAUTfa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jan 2021 14:35:30 -0500
+Received: from mga02.intel.com ([134.134.136.20]:14407 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726467AbhAUSlg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Jan 2021 13:41:36 -0500
-IronPort-SDR: Gnj00ZfF8g+yyRNBTPSdbKOEzeY6vEYD9lam/VcD4VkpCLqnHsQTb2zq5nJGWLHKOSx+u06W9B
- YKu1ojPJ14SA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9871"; a="176747681"
-X-IronPort-AV: E=Sophos;i="5.79,364,1602572400"; 
-   d="scan'208";a="176747681"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 10:40:43 -0800
-IronPort-SDR: 7zvoVKsgeq7e6EpaNxZ2fCy5jza869ddxJ26eTcXGKm5qrQRN2UecNPmGNGbsAw6hOC+sHspgL
- +L7o7L5zH5Yw==
-X-IronPort-AV: E=Sophos;i="5.79,364,1602572400"; 
-   d="scan'208";a="385412345"
-Received: from jonesmel-mobl.amr.corp.intel.com (HELO intel.com) ([10.252.130.74])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 10:40:43 -0800
-Date:   Thu, 21 Jan 2021 10:40:41 -0800
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        Ira Weiny <ira.weiny@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Jon Masters <jcm@jonmasters.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        daniel.lll@alibaba-inc.com
-Subject: Re: [RFC PATCH v3 13/16] cxl/mem: Create concept of enabled commands
-Message-ID: <20210121184041.r7x7tofhu2qqneus@intel.com>
-References: <20210111225121.820014-1-ben.widawsky@intel.com>
- <20210111225121.820014-15-ben.widawsky@intel.com>
- <20210114172531.0000347a@Huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210114172531.0000347a@Huawei.com>
+        id S1727264AbhAUTdn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Jan 2021 14:33:43 -0500
+IronPort-SDR: Ceq5TrZEvdz5Tnr9pXNlqyGHGwqpk6A+0/cEDtTSueSjiRIyE7e9tqsS52ZuR6/P4ebfgjWs2A
+ EcdAO9UtaJFA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9871"; a="166425928"
+X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
+   d="scan'208";a="166425928"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2021 11:33:01 -0800
+IronPort-SDR: 8zpukxPLJOB6XUmVoGm6faWxDP4sJ7Asfa6PiURKXhIZGmXU5RV/xaZ1c4J9+0vASejB7h9++F
+ wWzT7A5eKkJA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.79,365,1602572400"; 
+   d="scan'208";a="367027349"
+Received: from intel-z390-ud.iind.intel.com ([10.223.252.51])
+  by orsmga002.jf.intel.com with ESMTP; 21 Jan 2021 11:32:57 -0800
+From:   srikanth.thokala@intel.com
+To:     bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
+        lakshmi.bai.raja.subramanian@intel.com,
+        mallikarjunappa.sangannavar@intel.com, srikanth.thokala@intel.com
+Subject: [PATCH v6 2/2] PCI: keembay: Add support for Intel Keem Bay
+Date:   Fri, 22 Jan 2021 08:56:10 +0530
+Message-Id: <20210122032610.4958-3-srikanth.thokala@intel.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210122032610.4958-1-srikanth.thokala@intel.com>
+References: <20210122032610.4958-1-srikanth.thokala@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21-01-14 17:25:31, Jonathan Cameron wrote:
-> On Mon, 11 Jan 2021 14:51:18 -0800
-> Ben Widawsky <ben.widawsky@intel.com> wrote:
-> 
-> > CXL devices must implement the Device Command Interface (described in
-> > 8.2.9 of the CXL 2.0 spec). While the driver already maintains a list of
-> > commands it supports, there is still a need to be able to distinguish
-> > between commands that the driver knows about from commands that may not
-> > be supported by the hardware. No such commands currently are defined in
-> > the driver.
-> > 
-> > The implementation leaves the statically defined table of commands and
-> > supplements it with a bitmap to determine commands that are enabled.
-> > 
-> > ---
-> > 
-> > There are multiple approaches that can be taken, but this is nice for a
-> > few reasons.
-> > 
-> > Here are some of the other solutions:
-> > 
-> > Create a per instance table with only the supported commands.
-> > 1. Having a fixed command id -> command mapping is much easier to manage
-> >    for development and debugging.
-> > 2. Dealing with dynamic memory allocation for the table adds unnecessary
-> >    complexity.
-> > 3. Most tables for device types are likely to be quite similar.
-> > 4. Makes it difficult to implement helper macros like cxl_for_each_cmd()
-> > 
-> > If the per instance table did preserve ids, #1 above can be addressed.
-> > However, as "enable" is currently the only mutable state for the
-> > commands, it would yield a lot of overhead for not much gain.
-> > Additionally, the other issues remain.
-> > 
-> > If "enable" remains the only mutable state, I believe this to be the
-> > best solution. Once the number of mutable elements in a command grows,
-> > it probably makes sense to move to per device instance state with a
-> > fixed command ID mapping.
-> Agreed with the logic.   
-> 
-> However, patch wise, should either drop the --- above or move this below the
-> --- after your sign off.  Otherwise you run the risk of git dropping your
-> sign off and resulting complaints from anyone run validation scripts
-> of the kernel tree that check for that.
-> 
-> > 
-> > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> > ---
-> >  drivers/cxl/cxl.h |  4 ++++
-> >  drivers/cxl/mem.c | 38 +++++++++++++++++++++++++++++++++++++-
-> >  2 files changed, 41 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> > index 537ac4d8e6bd..963ba30cb200 100644
-> > --- a/drivers/cxl/cxl.h
-> > +++ b/drivers/cxl/cxl.h
-> > @@ -17,6 +17,9 @@
-> >  
-> >  #define CXL_GET_FIELD(word, field) FIELD_GET(field##_MASK, word)
-> >  
-> > +/* XXX: Arbitrary max */
-> > +#define CXL_MAX_COMMANDS 32
-> 
-> If going this way, probably want a build time check that you don't
-> go beyond this value for a given command set.  I haven't actually
-> thought about how to construct that but should be easy enough.
-> 
+From: Srikanth Thokala <srikanth.thokala@intel.com>
 
-I think BUILD_BUG_ON of ARRAY_SIZE mem_commands is sufficient. Let me know if
-you want anything more.
+Add driver for Intel Keem Bay SoC PCIe controller. This controller
+is based on DesignWare PCIe core.
 
-> > +
-> >  /* Device  (CXL 2.0 - 8.2.8.3) */
-> >  #define CXLDEV_CAP_ARRAY_REG 0x0
-> >  #define CXLDEV_CAP_ARRAY_CAP_ID 0
-> > @@ -88,6 +91,7 @@ struct cxl_mem {
-> >  	} ram;
-> >  
-> >  	char firmware_version[0x10];
-> > +	DECLARE_BITMAP(enabled_cmds, CXL_MAX_COMMANDS);
-> >  
-> >  	/* Cap 0001h - CXL_CAP_CAP_ID_DEVICE_STATUS */
-> >  	struct {
-> > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> > index a824cfd4342a..20b26fa2c466 100644
-> > --- a/drivers/cxl/mem.c
-> > +++ b/drivers/cxl/mem.c
-> > @@ -114,6 +114,8 @@ static struct {
-> >   *    would typically be used for deprecated commands.
-> >   *  * %CXL_CMD_FLAG_MANDATORY: Hardware must support this command. This flag is
-> >   *    only used internally by the driver for sanity checking.
-> > + *  * %CXL_CMD_INTERNAL_FLAG_PSEUDO: This is a pseudo command which doesn't have
-> > + *    a direct mapping to hardware. They are implicitly always enabled.
-> >   *
-> >   * The cxl_mem_command is the driver's internal representation of commands that
-> >   * are supported by the driver. Some of these commands may not be supported by
-> > @@ -129,6 +131,7 @@ struct cxl_mem_command {
-> >  #define CXL_CMD_INTERNAL_FLAG_NONE 0
-> >  #define CXL_CMD_INTERNAL_FLAG_HIDDEN BIT(0)
-> >  #define CXL_CMD_INTERNAL_FLAG_MANDATORY BIT(1)
-> > +#define CXL_CMD_INTERNAL_FLAG_PSEUDO BIT(2)
-> >  };
-> >  
-> >  /*
-> > @@ -140,7 +143,7 @@ struct cxl_mem_command {
-> >  static struct cxl_mem_command mem_commands[] = {
-> >  	CXL_CMD(INVALID, KERNEL, 0, 0, HIDDEN),
-> >  	CXL_CMD(IDENTIFY, NONE, 0, 0x43, MANDATORY),
-> > -	CXL_CMD(RAW, NONE, ~0, ~0, MANDATORY),
-> > +	CXL_CMD(RAW, NONE, ~0, ~0, PSEUDO),
-> >  };
-> >  
-> >  #define cxl_for_each_cmd(cmd)                                                  \
-> > @@ -618,6 +621,10 @@ static int cxl_validate_cmd_from_user(struct cxl_mem *cxlm,
-> >  	c = &mem_commands[send_cmd->id];
-> >  	info = &c->info;
-> >  
-> > +	/* Check that the command is enabled for hardware */
-> > +	if (!test_bit(cxl_cmd_index(c), cxlm->enabled_cmds))
-> > +		return -ENOTTY;
-> > +
-> >  	if (info->flags & CXL_MEM_COMMAND_FLAG_KERNEL)
-> >  		return -EPERM;
-> >  
-> > @@ -1029,6 +1036,31 @@ static int cxl_mem_add_memdev(struct cxl_mem *cxlm)
-> >  	return rc;
-> >  }
-> >  
-> > +/**
-> > + * cxl_mem_enumerate_cmds() - Enumerate commands for a device.
-> > + * @cxlm: The device.
-> > + *
-> > + * Returns 0 if enumerate completed successfully.
-> > + *
-> > + * CXL devices have optional support for certain commands. This function will
-> > + * determine the set of supported commands for the hardware and update the
-> > + * enabled_cmds bitmap in the @cxlm.
-> > + */
-> > +static int cxl_mem_enumerate_cmds(struct cxl_mem *cxlm)
-> > +{
-> > +	struct cxl_mem_command *c;
-> > +
-> > +	/* All commands are considered enabled for now (except INVALID). */
-> > +	cxl_for_each_cmd(c) {
-> > +		if (c->flags & CXL_CMD_INTERNAL_FLAG_HIDDEN)
-> > +			continue;
-> > +
-> > +		set_bit(cxl_cmd_index(c), cxlm->enabled_cmds);
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  /**
-> >   * cxl_mem_identify() - Send the IDENTIFY command to the device.
-> >   * @cxlm: The device to identify.
-> > @@ -1147,6 +1179,10 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >  	if (rc)
-> >  		goto err;
-> >  
-> > +	rc = cxl_mem_enumerate_cmds(cxlm);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> >  	rc = cxl_mem_identify(cxlm);
-> >  	if (rc)
-> >  		goto err;
-> 
+In root complex mode, only internal reference clock is possible for
+Keem Bay A0. For Keem Bay B0, external reference clock can be used
+and will be the default configuration. Currently, keembay_pcie_of_data
+structure has one member. It will be expanded later to handle this
+difference.
+
+Endpoint mode link initialization is handled by the boot firmware.
+
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+Signed-off-by: Srikanth Thokala <srikanth.thokala@intel.com>
+Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ MAINTAINERS                               |   7 +
+ drivers/pci/controller/dwc/Kconfig        |  28 ++
+ drivers/pci/controller/dwc/Makefile       |   1 +
+ drivers/pci/controller/dwc/pcie-keembay.c | 446 ++++++++++++++++++++++
+ 4 files changed, 482 insertions(+)
+ create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 00836f6452f0..2fc0fb03c430 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13852,6 +13852,13 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/controller/dwc/*spear*
+ 
++PCI DRIVER FOR INTEL KEEM BAY
++M:	Srikanth Thokala <srikanth.thokala@intel.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
++F:	drivers/pci/controller/dwc/pcie-keembay.c
++
+ PCMCIA SUBSYSTEM
+ M:	Dominik Brodowski <linux@dominikbrodowski.net>
+ S:	Odd Fixes
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 22c5529e9a65..4dcb4b2773ea 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -225,6 +225,34 @@ config PCIE_INTEL_GW
+ 	  The PCIe controller uses the DesignWare core plus Intel-specific
+ 	  hardware wrappers.
+ 
++config PCIE_KEEMBAY
++	bool
++
++config PCIE_KEEMBAY_HOST
++	bool "Intel Keem Bay PCIe controller - Host mode"
++	depends on ARCH_KEEMBAY || COMPILE_TEST
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	select PCIE_DW_HOST
++	select PCIE_KEEMBAY
++	help
++	  Say 'Y' here to enable support for the PCIe controller in Keem Bay
++	  to work in host mode.
++	  The PCIe controller is based on Designware Hardware and uses
++	  DesignWare core functions.
++
++config PCIE_KEEMBAY_EP
++	bool "Intel Keem Bay PCIe controller - Endpoint mode"
++	depends on ARCH_KEEMBAY || COMPILE_TEST
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	select PCIE_KEEMBAY
++	help
++	  Say 'Y' here to enable support for the PCIe controller in Keem Bay
++	  to work in endpoint mode.
++	  The PCIe controller is based on Designware Hardware and uses
++	  DesignWare core functions.
++
+ config PCIE_KIRIN
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+ 	bool "HiSilicon Kirin series SoCs PCIe controllers"
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index a751553fa0db..95da2c62c426 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+ obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+ obj-$(CONFIG_PCIE_INTEL_GW) += pcie-intel-gw.o
++obj-$(CONFIG_PCIE_KEEMBAY) += pcie-keembay.o
+ obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+ obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+ obj-$(CONFIG_PCI_MESON) += pci-meson.o
+diff --git a/drivers/pci/controller/dwc/pcie-keembay.c b/drivers/pci/controller/dwc/pcie-keembay.c
+new file mode 100644
+index 000000000000..4b81018b09d8
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-keembay.c
+@@ -0,0 +1,446 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * PCIe controller driver for Intel Keem Bay
++ * Copyright (C) 2020 Intel Corporation
++ */
++
++#include <linux/bitfield.h>
++#include <linux/bits.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/gpio/consumer.h>
++#include <linux/init.h>
++#include <linux/iopoll.h>
++#include <linux/kernel.h>
++#include <linux/mod_devicetable.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/property.h>
++
++#include "pcie-designware.h"
++
++/* PCIE_REGS_APB_SLV Registers */
++#define PCIE_REGS_PCIE_CFG		0x0004
++#define  PCIE_DEVICE_TYPE		BIT(8)
++#define  PCIE_RSTN			BIT(0)
++#define PCIE_REGS_PCIE_APP_CNTRL	0x0008
++#define  APP_LTSSM_ENABLE		BIT(0)
++#define PCIE_REGS_INTERRUPT_ENABLE	0x0028
++#define  MSI_CTRL_INT_EN		BIT(8)
++#define  EDMA_INT_EN			GENMASK(7, 0)
++#define PCIE_REGS_INTERRUPT_STATUS	0x002c
++#define  MSI_CTRL_INT			BIT(8)
++#define PCIE_REGS_PCIE_SII_PM_STATE	0x00b0
++#define  SMLH_LINK_UP			BIT(19)
++#define  RDLH_LINK_UP			BIT(8)
++#define  PCIE_REGS_PCIE_SII_LINK_UP	(SMLH_LINK_UP | RDLH_LINK_UP)
++#define PCIE_REGS_PCIE_PHY_CNTL		0x0164
++#define  PHY0_SRAM_BYPASS		BIT(8)
++#define PCIE_REGS_PCIE_PHY_STAT		0x0168
++#define  PHY0_MPLLA_STATE		BIT(1)
++#define PCIE_REGS_LJPLL_STA		0x016c
++#define  LJPLL_LOCK			BIT(0)
++#define PCIE_REGS_LJPLL_CNTRL_0		0x0170
++#define  LJPLL_EN			BIT(29)
++#define  LJPLL_FOUT_EN			GENMASK(24, 21)
++#define PCIE_REGS_LJPLL_CNTRL_2		0x0178
++#define  LJPLL_REF_DIV			GENMASK(17, 12)
++#define  LJPLL_FB_DIV			GENMASK(11, 0)
++#define PCIE_REGS_LJPLL_CNTRL_3		0x017c
++#define  LJPLL_POST_DIV3A		GENMASK(24, 22)
++#define  LJPLL_POST_DIV2A		GENMASK(18, 16)
++
++#define PERST_DELAY_US		1000
++#define AUX_CLK_RATE_HZ		24000000
++
++struct keembay_pcie {
++	struct dw_pcie		pci;
++	void __iomem		*apb_base;
++	enum dw_pcie_device_mode mode;
++
++	struct clk		*clk_master;
++	struct clk		*clk_aux;
++	struct gpio_desc	*reset;
++};
++
++struct keembay_pcie_of_data {
++	enum dw_pcie_device_mode mode;
++};
++
++static void keembay_ep_reset_assert(struct keembay_pcie *pcie)
++{
++	gpiod_set_value_cansleep(pcie->reset, 1);
++	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
++}
++
++static void keembay_ep_reset_deassert(struct keembay_pcie *pcie)
++{
++	msleep(100);
++
++	gpiod_set_value_cansleep(pcie->reset, 0);
++	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
++}
++
++static void keembay_pcie_ltssm_enable(struct keembay_pcie *pcie, bool enable)
++{
++	u32 val;
++
++	val = readl(pcie->apb_base + PCIE_REGS_PCIE_APP_CNTRL);
++	if (enable)
++		val |= APP_LTSSM_ENABLE;
++	else
++		val &= ~APP_LTSSM_ENABLE;
++	writel(val, pcie->apb_base + PCIE_REGS_PCIE_APP_CNTRL);
++}
++
++static int keembay_pcie_link_up(struct dw_pcie *pci)
++{
++	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
++	u32 val;
++
++	val = readl(pcie->apb_base + PCIE_REGS_PCIE_SII_PM_STATE);
++
++	return (val & PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP;
++}
++
++static int keembay_pcie_start_link(struct dw_pcie *pci)
++{
++	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
++	u32 val;
++	int ret;
++
++	if (pcie->mode == DW_PCIE_EP_TYPE)
++		return 0;
++
++	keembay_pcie_ltssm_enable(pcie, false);
++
++	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_PCIE_PHY_STAT,
++				 val, val & PHY0_MPLLA_STATE, 20,
++				 500 * USEC_PER_MSEC);
++	if (ret) {
++		dev_err(pci->dev, "MPLLA is not locked\n");
++		return ret;
++	}
++
++	keembay_pcie_ltssm_enable(pcie, true);
++
++	return 0;
++}
++
++static void keembay_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
++
++	keembay_pcie_ltssm_enable(pcie, false);
++}
++
++static const struct dw_pcie_ops keembay_pcie_ops = {
++	.link_up	= keembay_pcie_link_up,
++	.start_link	= keembay_pcie_start_link,
++	.stop_link	= keembay_pcie_stop_link,
++};
++
++static inline struct clk *keembay_pcie_probe_clock(struct device *dev,
++						   const char *id, u64 rate)
++{
++	struct clk *clk;
++	int ret;
++
++	clk = devm_clk_get(dev, id);
++	if (IS_ERR(clk))
++		return clk;
++
++	if (rate) {
++		ret = clk_set_rate(clk, rate);
++		if (ret)
++			return ERR_PTR(ret);
++	}
++
++	ret = clk_prepare_enable(clk);
++	if (ret)
++		return ERR_PTR(ret);
++
++	ret = devm_add_action_or_reset(dev,
++				       (void(*)(void *))clk_disable_unprepare,
++				       clk);
++	if (ret)
++		return ERR_PTR(ret);
++
++	return clk;
++}
++
++static int keembay_pcie_probe_clocks(struct keembay_pcie *pcie)
++{
++	struct dw_pcie *pci = &pcie->pci;
++	struct device *dev = pci->dev;
++
++	pcie->clk_master = keembay_pcie_probe_clock(dev, "master", 0);
++	if (IS_ERR(pcie->clk_master))
++		return dev_err_probe(dev, PTR_ERR(pcie->clk_master),
++				     "Failed to enable master clock");
++
++	pcie->clk_aux = keembay_pcie_probe_clock(dev, "aux", AUX_CLK_RATE_HZ);
++	if (IS_ERR(pcie->clk_aux))
++		return dev_err_probe(dev, PTR_ERR(pcie->clk_aux),
++				     "Failed to enable auxiliary clock");
++
++	return 0;
++}
++
++/*
++ * Initialize the internal PCIe PLL in Host mode.
++ * See the following sections in Keem Bay data book,
++ * (1) 6.4.6.1 PCIe Subsystem Example Initialization,
++ * (2) 6.8 PCIe Low Jitter PLL for Ref Clk Generation.
++ */
++static int keembay_pcie_pll_init(struct keembay_pcie *pcie)
++{
++	struct dw_pcie *pci = &pcie->pci;
++	u32 val;
++	int ret;
++
++	val = FIELD_PREP(LJPLL_REF_DIV, 0) | FIELD_PREP(LJPLL_FB_DIV, 0x32);
++	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_2);
++
++	val = FIELD_PREP(LJPLL_POST_DIV3A, 0x2) |
++		FIELD_PREP(LJPLL_POST_DIV2A, 0x2);
++	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_3);
++
++	val = FIELD_PREP(LJPLL_EN, 0x1) | FIELD_PREP(LJPLL_FOUT_EN, 0xc);
++	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_0);
++
++	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_LJPLL_STA,
++				 val, val & LJPLL_LOCK, 20,
++				 500 * USEC_PER_MSEC);
++	if (ret)
++		dev_err(pci->dev, "Low jitter PLL is not locked\n");
++
++	return ret;
++}
++
++static irqreturn_t keembay_pcie_irq_handler(int irq, void *arg)
++{
++	struct keembay_pcie *pcie = arg;
++	struct dw_pcie *pci = &pcie->pci;
++	struct pcie_port *pp = &pci->pp;
++	u32 val, mask, status;
++
++	val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
++	mask = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
++
++	status = val & mask;
++	if (!status)
++		return IRQ_NONE;
++
++	if (status & MSI_CTRL_INT)
++		dw_handle_msi_irq(pp);
++
++	writel(status, pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
++
++	return IRQ_HANDLED;
++}
++
++static int keembay_pcie_setup_irq(struct keembay_pcie *pcie)
++{
++	struct dw_pcie *pci = &pcie->pci;
++	struct device *dev = pci->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	int irq, ret;
++
++	irq = platform_get_irq_byname(pdev, "pcie");
++	if (irq < 0)
++		return irq;
++
++	ret = devm_request_irq(dev, irq, keembay_pcie_irq_handler,
++			       IRQF_SHARED | IRQF_NO_THREAD, "pcie", pcie);
++	if (ret)
++		dev_err(dev, "Failed to request IRQ: %d\n", ret);
++
++	return ret;
++}
++
++static void keembay_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
++
++	writel(EDMA_INT_EN, pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
++}
++
++static int keembay_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
++				     enum pci_epc_irq_type type,
++				     u16 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		/* Legacy interrupts are not supported in Keem Bay */
++		dev_err(pci->dev, "Legacy IRQ is not supported\n");
++		return -EINVAL;
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
++	case PCI_EPC_IRQ_MSIX:
++		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
++	default:
++		dev_err(pci->dev, "Unknown IRQ type %d\n", type);
++		return -EINVAL;
++	}
++}
++
++static const struct pci_epc_features keembay_pcie_epc_features = {
++	.linkup_notifier	= false,
++	.msi_capable		= true,
++	.msix_capable		= true,
++	.reserved_bar		= BIT(BAR_1) | BIT(BAR_3) | BIT(BAR_5),
++	.bar_fixed_64bit	= BIT(BAR_0) | BIT(BAR_2) | BIT(BAR_4),
++	.align			= SZ_16K,
++};
++
++static const struct pci_epc_features *
++keembay_pcie_get_features(struct dw_pcie_ep *ep)
++{
++	return &keembay_pcie_epc_features;
++}
++
++static const struct dw_pcie_ep_ops keembay_pcie_ep_ops = {
++	.ep_init	= keembay_pcie_ep_init,
++	.raise_irq	= keembay_pcie_ep_raise_irq,
++	.get_features	= keembay_pcie_get_features,
++};
++
++static const struct dw_pcie_host_ops keembay_pcie_host_ops = {
++};
++
++static int keembay_pcie_add_pcie_port(struct keembay_pcie *pcie,
++				      struct platform_device *pdev)
++{
++	struct dw_pcie *pci = &pcie->pci;
++	struct pcie_port *pp = &pci->pp;
++	struct device *dev = &pdev->dev;
++	u32 val;
++	int ret;
++
++	pp->ops = &keembay_pcie_host_ops;
++	pp->msi_irq = -ENODEV;
++
++	pcie->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(pcie->reset))
++		return PTR_ERR(pcie->reset);
++
++	ret = keembay_pcie_probe_clocks(pcie);
++	if (ret)
++		return ret;
++
++	val = readl(pcie->apb_base + PCIE_REGS_PCIE_PHY_CNTL);
++	val |= PHY0_SRAM_BYPASS;
++	writel(val, pcie->apb_base + PCIE_REGS_PCIE_PHY_CNTL);
++
++	writel(PCIE_DEVICE_TYPE, pcie->apb_base + PCIE_REGS_PCIE_CFG);
++
++	ret = keembay_pcie_pll_init(pcie);
++	if (ret)
++		return ret;
++
++	val = readl(pcie->apb_base + PCIE_REGS_PCIE_CFG);
++	writel(val | PCIE_RSTN, pcie->apb_base + PCIE_REGS_PCIE_CFG);
++	keembay_ep_reset_deassert(pcie);
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		keembay_ep_reset_assert(pcie);
++		dev_err(dev, "Failed to initialize host: %d\n", ret);
++		return ret;
++	}
++
++	val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		val |= MSI_CTRL_INT_EN;
++	writel(val, pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
++
++	return 0;
++}
++
++static int keembay_pcie_probe(struct platform_device *pdev)
++{
++	const struct keembay_pcie_of_data *data;
++	struct device *dev = &pdev->dev;
++	struct keembay_pcie *pcie;
++	struct dw_pcie *pci;
++	enum dw_pcie_device_mode mode;
++	int ret;
++
++	data = device_get_match_data(dev);
++	if (!data)
++		return -ENODEV;
++
++	mode = (enum dw_pcie_device_mode)data->mode;
++
++	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	pci = &pcie->pci;
++	pci->dev = dev;
++	pci->ops = &keembay_pcie_ops;
++
++	pcie->mode = mode;
++
++	pcie->apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
++	if (IS_ERR(pcie->apb_base))
++		return PTR_ERR(pcie->apb_base);
++
++	ret = keembay_pcie_setup_irq(pcie);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, pcie);
++
++	switch (pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_HOST))
++			return -ENODEV;
++
++		return keembay_pcie_add_pcie_port(pcie, pdev);
++	case DW_PCIE_EP_TYPE:
++		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_EP))
++			return -ENODEV;
++
++		pci->ep.ops = &keembay_pcie_ep_ops;
++		return dw_pcie_ep_init(&pci->ep);
++	default:
++		dev_err(dev, "Invalid device type %d\n", pcie->mode);
++		return -ENODEV;
++	}
++}
++
++static const struct keembay_pcie_of_data keembay_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct keembay_pcie_of_data keembay_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
++static const struct of_device_id keembay_pcie_of_match[] = {
++	{
++		.compatible = "intel,keembay-pcie",
++		.data = &keembay_pcie_rc_of_data,
++	},
++	{
++		.compatible = "intel,keembay-pcie-ep",
++		.data = &keembay_pcie_ep_of_data,
++	},
++	{}
++};
++
++static struct platform_driver keembay_pcie_driver = {
++	.driver = {
++		.name = "keembay-pcie",
++		.of_match_table = keembay_pcie_of_match,
++		.suppress_bind_attrs = true,
++	},
++	.probe  = keembay_pcie_probe,
++};
++builtin_platform_driver(keembay_pcie_driver);
+-- 
+2.17.1
+
