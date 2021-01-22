@@ -2,231 +2,206 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FC4C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Jan 2021 15:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1DAC433DB
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Jan 2021 17:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAEAD221FF
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Jan 2021 15:56:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A111923A79
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Jan 2021 17:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729104AbhAVPzs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Jan 2021 10:55:48 -0500
-Received: from mail-ot1-f45.google.com ([209.85.210.45]:35318 "EHLO
-        mail-ot1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729016AbhAVPzq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jan 2021 10:55:46 -0500
-Received: by mail-ot1-f45.google.com with SMTP id 36so5508981otp.2;
-        Fri, 22 Jan 2021 07:55:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=b+Blmlo5/G343X4GJ/Rd6bvnggbhUWj/TZr//zejW8U=;
-        b=NZgjaPTLlYll7mva98KMj0NRhxCBUMGe/eR6LS+ybfR/Y/wsshte5cGBpyVZlRLVys
-         fIh7TmdgpdS3aYfAs95hS4DIE1IMtnsHc3cQ9ha1b16xpaSJAMThQOvDuslHIx7I9QTu
-         ddbdkTwRfzdmIxQaSFtubnO9jV6rN+W64vgVKrp5WMjHF1o167qUzJF7TPsBlXnAXPgH
-         oMnH6TPrzdFbkpbnhFuMIx9RuLTSiAHnuDhGy2KP5MTGcTsFQeUgevEW7JTrhNzS0Qf1
-         YRAWkFxIOIoqbrugux9taVtSgygwzCcffJkKIpTtx3eYeVnXrEcBkFwvtj3RfHthOl3h
-         vJmg==
-X-Gm-Message-State: AOAM530NIwkhkcD006hr8bUqDmH3yjqMBU+R2HvdcY4ZlqtyL0Ld+tGk
-        /eXJbu54Qqgc7Y5GxAWpLvdLBhUuNQ==
-X-Google-Smtp-Source: ABdhPJyJqKvwJn/o/cYm8DTTbgPOgWIx77c0lSo5V9uwOCGEsJ1kcCpBGX5Hh5syHMjZTSUFVXb5RA==
-X-Received: by 2002:a9d:66d1:: with SMTP id t17mr3651979otm.163.1611330905408;
-        Fri, 22 Jan 2021 07:55:05 -0800 (PST)
-Received: from robh.at.kernel.org (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id j1sm1751786oiw.50.2021.01.22.07.55.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Jan 2021 07:55:04 -0800 (PST)
-Received: (nullmailer pid 864183 invoked by uid 1000);
-        Fri, 22 Jan 2021 15:55:03 -0000
-Date:   Fri, 22 Jan 2021 09:55:03 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Johan Jonker <jbx6244@gmail.com>
-Cc:     Simon Xue <xxm@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>
-Subject: Re: [PATCH v2 1/2] dt-bindings: rockchip: Add DesignWare based PCIe
- controller
-Message-ID: <20210122155503.GA860027@robh.at.kernel.org>
-References: <20210120101554.241029-1-xxm@rock-chips.com>
- <3af70037-c05d-1759-2bae-41db1e8e2768@gmail.com>
+        id S1729715AbhAVRI5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Jan 2021 12:08:57 -0500
+Received: from mga06.intel.com ([134.134.136.31]:6192 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729575AbhAVRIu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jan 2021 12:08:50 -0500
+IronPort-SDR: 8q1JZnoFh6/Ov4uE3tiQfOD8noZtd7gcFNnduNcvfwAEXq9praj/AfOHBKA6s2WjhMgOmHXlsN
+ ds1hjG/BCh6Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9872"; a="241014315"
+X-IronPort-AV: E=Sophos;i="5.79,367,1602572400"; 
+   d="scan'208";a="241014315"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 09:08:08 -0800
+IronPort-SDR: uCDpyMIblkwPQQuh3jthwwt+zajyW0pO+I5VI7d7NstXQkK4jCq3xnDTJlSNItCSxDhuKmzm4j
+ ojQQ9sQK0swg==
+X-IronPort-AV: E=Sophos;i="5.79,367,1602572400"; 
+   d="scan'208";a="357096396"
+Received: from entan-mobl.amr.corp.intel.com (HELO intel.com) ([10.252.129.121])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 09:08:07 -0800
+Date:   Fri, 22 Jan 2021 09:08:06 -0800
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc:     linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        "linux-acpi@vger.kernel.org, Ira Weiny" <ira.weiny@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Jon Masters <jcm@jonmasters.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        daniel.lll@alibaba-inc.com
+Subject: Re: [RFC PATCH v3 10/16] cxl/mem: Add send command
+Message-ID: <20210122170806.lbimm7dzlo3t4b6j@intel.com>
+References: <20210111225121.820014-1-ben.widawsky@intel.com>
+ <20210111225121.820014-11-ben.widawsky@intel.com>
+ <20210114171038.00003636@Huawei.com>
+ <20210121181546.fqmsecgqklh4hep4@intel.com>
+ <20210122114357.00001af9@Huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3af70037-c05d-1759-2bae-41db1e8e2768@gmail.com>
+In-Reply-To: <20210122114357.00001af9@Huawei.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 20, 2021 at 06:07:29PM +0100, Johan Jonker wrote:
-> Hi Simon,
+On 21-01-22 11:43:57, Jonathan Cameron wrote:
+> On Thu, 21 Jan 2021 10:15:46 -0800
+> Ben Widawsky <ben.widawsky@intel.com> wrote:
 > 
-> Thanks you for version 2.
-> A few comments, have a look if it is useful or that you disagree.
-> 
-> This patch has no commit message. Add one in version 3.
-> 
-> Submit all patches in one batch with the same sort message ID to all
-> maintainers including Heiko.
-> 
-> Heiko Stuebner <heiko@sntech.de>
-> 
-> Example message ID:
-> 20210120101554.241029-1-xxm@rock-chips.com
-> 
-> /////
-> 
-> Included is a copy of the Rockchip pcie nodes in a sort of test.dts below.
-> Could you confirm that the properties in that dts are the one that we
-> can expect for Linux mainline and can base our YAML document on?
-> 
-> With rk3568-cru.h and rk3568-power.h manualy added we do some tests with
-> the following commands:
-> 
-> make ARCH=arm64 dt_binding_check
-> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> 
-> make ARCH=arm64 dtbs_check
-> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> 
-> make ARCH=arm64 dtbs_check
-> DT_SCHEMA_FILES=~/.local/lib/python3.5/site-packages/dtschema/schemas/pci/pci-bus.yaml
-> 
-> /////
-> 
-> Example notifications:
-> 
-> /arch/arm64/boot/dts/rockchip/test.dt.yaml: pcie@fe270000: reg: [[3,
-> 3225419776, 0, 4194304], [0, 4263968768, 0, 65536]] is too long
-> 
-> /arch/arm64/boot/dts/rockchip/test.dt.yaml: pcie@fe270000: ranges:
-> 'oneOf' conditional failed, one must be fixed:
-> 
-> Before you submit version 3 make sure that all warnings gone as much as
-> possible.
-> 
-> On 1/20/21 11:15 AM, Simon Xue wrote:
-> > Signed-off-by: Simon Xue <xxm@rock-chips.com>
-> > ---
-> >  .../bindings/pci/rockchip-dw-pcie.yaml        | 140 ++++++++++++++++++
-> >  1 file changed, 140 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+> > On 21-01-14 17:10:38, Jonathan Cameron wrote:
+> > > On Mon, 11 Jan 2021 14:51:14 -0800
+> > > Ben Widawsky <ben.widawsky@intel.com> wrote:
+> > >   
+> > > > The send command allows userspace to issue mailbox commands directly to
+> > > > the hardware. The driver will verify basic properties of the command and
+> > > > possible inspect the input (or output) payload to determine whether or
+> > > > not the command is allowed (or might taint the kernel).
+> > > > 
+> > > > The list of allowed commands and their properties can be determined by
+> > > > using the QUERY IOCTL for CXL memory devices.
+> > > > 
+> > > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+> > > > ---
+> > > >  drivers/cxl/mem.c            | 204 ++++++++++++++++++++++++++++++++++-
+> > > >  include/uapi/linux/cxl_mem.h |  39 +++++++
+> > > >  2 files changed, 239 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+> > > > index d4eb3f5b9469..f979788b4d9f 100644
+> > > > --- a/drivers/cxl/mem.c
+> > > > +++ b/drivers/cxl/mem.c
+> > > > @@ -84,6 +84,13 @@ static DEFINE_IDR(cxl_mem_idr);
+> > > >  /* protect cxl_mem_idr allocations */
+> > > >  static DEFINE_MUTEX(cxl_memdev_lock);
+> > > >  
+> > > > +#undef C
+> > > > +#define C(a, b) { b }  
+> > > 
+> > > I'm not following why this is here?
+> > >   
 > > 
-> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > new file mode 100644
-> > index 000000000000..9d3a57f5305e
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-> > @@ -0,0 +1,140 @@
-> > +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: DesignWare based PCIe RC controller on Rockchip SoCs
-> > +
-> > +maintainers:
-> > +  - Shawn Lin <shawn.lin@rock-chips.com>
-> > +  - Simon Xue <xxm@rock-chips.com>
->      - Heiko Stuebner <heiko@sntech.de> ;)
-> > +
-> > +description: |+
-> > +  RK3568 SoC PCIe host controller is based on the Synopsys DesignWare
-> > +  PCIe IP and thus inherits all the common properties defined in
-> > +  designware-pcie.txt.
-> > +
-> > +allOf:
-> > +  - $ref: /schemas/pci/pci-bus.yaml#
-> > +
-> > +# We need a select here so we don't match all nodes with 'snps,dw-pcie'
-> > +select:
-> > +  properties:
-> > +    compatible:
-> > +      contains:
-> > +        const: rockchip,rk3568-pcie
-> > +  required:
-> > +    - compatible
-> > +
-> > +properties:
-> > +  compatible:
+> > It's used for a debug message in handle_mailbox_cmd_from_user(). This is all the
+> > macro magic stolen from ftrace. Or, did I miss the question?
+> > 
+> > > > +static struct {
+> > > > +	const char *name;
+> > > > +} command_names[] = { CMDS };
+> > > > +#undef C
 > 
-> > +    item:
+> Mostly that you define it then undef it without use that I can see.
 > 
->     items:
+> > > > +
+> > > >  #define CXL_CMD(_id, _flags, sin, sout, f)                                     \
+> > > >  	[CXL_MEM_COMMAND_ID_##_id] = {                                         \
+> > > >  		{                                                              \  
+> > > ...
+> > >   
+> > > > +
+> > > > +/**
+> > > > + * handle_mailbox_cmd_from_user() - Dispatch a mailbox command.
+> > > > + * @cxlmd: The CXL memory device to communicate with.
+> > > > + * @cmd: The validated command.
+> > > > + * @in_payload: Pointer to userspace's input payload.
+> > > > + * @out_payload: Pointer to userspace's output payload.
+> > > > + * @u: The command submitted by userspace. Has output fields.
+> > > > + *
+> > > > + * Return:
+> > > > + *  * %0	- Mailbox transaction succeeded.
+> > > > + *  * %-EFAULT	- Something happened with copy_to/from_user.
+> > > > + *  * %-EINTR	- Mailbox acquisition interrupted.
+> > > > + *  * %-E2BIG   - Output payload would overrun buffer.
+> > > > + *
+> > > > + * Creates the appropriate mailbox command on behalf of a userspace request.
+> > > > + * Return value, size, and output payload are all copied out to @u. The
+> > > > + * parameters for the command must be validated before calling this function.
+> > > > + *
+> > > > + * A 0 return code indicates the command executed successfully, not that it was
+> > > > + * itself successful. IOW, the retval should always be checked if wanting to  
+> > > 
+> > > cmd->retval perhaps to be more explicit?
+> > >   
+> > > > + * determine the actual result.
+> > > > + */
+> > > > +static int handle_mailbox_cmd_from_user(struct cxl_memdev *cxlmd,
+> > > > +					const struct cxl_mem_command *cmd,
+> > > > +					u64 in_payload,
+> > > > +					u64 out_payload,
+> > > > +					struct cxl_send_command __user *u)
+> > > > +{
+> > > > +	struct mbox_cmd mbox_cmd = {
+> > > > +		.opcode = cmd->opcode,
+> > > > +		.size_in = cmd->info.size_in,
+> > > > +		.payload = NULL, /* Copied by copy_to|from_user() */
+> > > > +	};
+> > > > +	int rc;
+> > > > +
+> > > > +	if (cmd->info.size_in) {
+> > > > +		/*
+> > > > +		 * Directly copy the userspace payload into the hardware. UAPI
+> > > > +		 * states that the buffer must already be little endian.
+> > > > +		 */
+> > > > +		if (copy_from_user((__force void *)cxl_payload_regs(cxlmd->cxlm),
+> > > > +				   u64_to_user_ptr(in_payload),
+> > > > +				   cmd->info.size_in)) {
+> > > > +			cxl_mem_mbox_put(cxlmd->cxlm);  
+> > > 
+> > > mbox_get is after this point though it shouldn't be given we just
+> > > wrote into the mbox registers.
+> > > 
+> > > This seems unlikely to be a high performance path, so perhaps just
+> > > use a local buffer and let cxl_mem_mbox_send_cmd copy it into the registers.
+> > >   
+> > 
+> > You're correct about the get() needing to be first. I will fix it. As for
+> > performance path - so while this does potentially help with performance, it
+> > actually ends up being I think a little cleaner to not have to deal with a local
+> > buffer.
+> > 
+> > How strongly do you feel about it? I'd say if you don't care so much, let's keep
+> > it as is and find a reason to undo later.
 > 
-> > +      - const: rockchip,rk3568-pcie
-> > +      - const: snps,dw-pcie
+> A slightly interesting corner.  The fact that there are no other cases of this
+> particular sequence in kernel bothered me...  It's more than possible I've
+> missed something in the following.
 > 
-> Add empty line
+> So with a bounce buffered we'd have
+> copy_from_user()
+> then 
+> memcpy_toio()
 > 
-> > +  reg:    items:
->       - description:
->       - description:
+> here we end loosing the fact that memcpy_to_io() might not be a 'simple' memcpy().
+> In the generic asm form it's just a (__force void *) like you have here done using
+> __io_virt() (which might make sense here if you keep this, to make it clear
+> what's going on)
 > 
-> Add some description for regs.
+> However, not all architectures are using the generic form of memcpy_toio()
+> and even if the ones we care about are safe today using the above construct,
+> it's more than possible some future architecture might be more 'exciting'.
 > 
-> > +    maxItems: 1
-> remove
+> So basically I'm doubtful that this construct is safe.
 > 
-> This reg maxItems gives errors.
+> Jonathan
 > 
-> > +
-> 
-> > +  interrupt:
-> interrupts:
->    items:
-> 
-> > +      - description: system information
-> > +      - description: power management control
-> > +      - description: PCIe message
-> > +      - description: legacy interrupt
-> > +      - description: error report
-> > +
-> > +  interrupt-names:
-> > +    items:
-> > +      - const: sys
-> > +      - const: pmc
-> > +      - const: msg
 
-MSI? If so, use 'msi'. The DWC core will handle setting it up now.
+Sounds reasonable.
 
-> > +      - const: legacy
-> > +      - const: err
-> > +
-> > +  clocks:
-> > +    items:
-> > +      - description: AHB clock for PCIe master
-> > +      - description: AHB clock for PCIe slave
-> > +      - description: AHB clock for PCIe dbi
-> > +      - description: APB clock for PCIe
-> > +      - description: Auxiliary clock for PCIe
-> > +
-> > +  clock-names:
-> > +    items:
-> > +      - const: aclk_mst
-> > +      - const: aclk_slv
-> > +      - const: aclk_dbi
-> > +      - const: pclk
-> > +      - const: aux
-> > +
-> > +  msi-map: true
-> > +
-> > +  power-domains:
-> > +    maxItems: 1
-> 
-> /////
-> These properties come from designware-pcie.txt
-> Maybe add them here for now till there's a common yaml?
-> 
->   num-ib-windows: number of inbound address translation windows
->   num-ob-windows: number of outbound address translation windows
-
-These can be and are now detected at runtime.
-
-Rob
+Thanks for digging. I'll go back to the bounce buffer in v4.
