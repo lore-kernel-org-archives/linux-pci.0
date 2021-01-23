@@ -2,118 +2,112 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75804C433E0
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 705DAC433DB
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:16:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C05523B2A
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:15:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2932723B2A
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:16:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725968AbhAWBPP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Jan 2021 20:15:15 -0500
-Received: from mga04.intel.com ([192.55.52.120]:26962 "EHLO mga04.intel.com"
+        id S1726440AbhAWBQK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Jan 2021 20:16:10 -0500
+Received: from mga04.intel.com ([192.55.52.120]:26863 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726381AbhAWBPD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Jan 2021 20:15:03 -0500
-IronPort-SDR: JoP23lSQdWTqlM+9hMC+QxnFSew9SMqO2Jk5IjxtrjLvyL9FyhnnDkvW4a9sDON3zIzAFvFjTu
- mEnO9t4WVdHg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9872"; a="176962180"
+        id S1726381AbhAWBQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Jan 2021 20:16:03 -0500
+IronPort-SDR: BBT4I6a6o8su3JlSOcJFJDu3YPkMqYC1SRd96Zvur3qOXH1u8jXIRkMq3sLCiYk59GPIvWvMio
+ FJCGOVTblFqw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9872"; a="176962173"
 X-IronPort-AV: E=Sophos;i="5.79,368,1602572400"; 
-   d="scan'208";a="176962180"
+   d="scan'208";a="176962173"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:21 -0800
-IronPort-SDR: AkKQ+ylDEuVf0i74UmVvl2w0wyYdRVUEowftbRYcFvjXNfPvGrDDfqRtxMWcf4Dd9priEb8a6V
- i3kD7cXJ+riw==
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:20 -0800
+IronPort-SDR: I1QdyjMVMsE07R9pya9Y/gl4ub+rWu5kkiaW1KaPtY/oTQTHU8PHBtTFaEXSLTphYJEN9ytThl
+ Pj9ngkKRDTDA==
 X-IronPort-AV: E=Sophos;i="5.79,368,1602572400"; 
-   d="scan'208";a="386084690"
+   d="scan'208";a="386084669"
 Received: from usundar-mobl1.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.212.36.142])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:21 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:19 -0800
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v13 3/5] PCI/ACPI: Tidy _OSC control bit checking
-Date:   Fri, 22 Jan 2021 17:11:11 -0800
-Message-Id: <5c08e4433ec142f3b9dba1279edf15f31b2f9181.1611364025.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v13 0/5] Simplify PCIe native ownership
+Date:   Fri, 22 Jan 2021 17:11:08 -0800
+Message-Id: <cover.1611364024.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1611364024.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1611364024.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add OSC_OWNER() helper to prettify checking the _OSC control bits to learn
-whether the platform has granted us control of PCI features.  No functional
-change intended.
+Currently, PCIe capabilities ownership status is detected by
+verifying the status of pcie_ports_native, and _OSC negotiated
+results (cached in  struct pci_host_bridge->native_* members).
+But this logic can be simplified, and we can use only struct
+pci_host_bridge ->native_* members to detect it. 
 
-[bhelgaas: split to separate patch, commit log]
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+This patchset removes the distributed checks for pcie_ports_native,
+parameter.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 0bf072cef6cf..601fbe905993 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -874,6 +874,12 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 	__acpi_pci_root_release_info(bridge->release_data);
- }
- 
-+#define OSC_OWNER(ctrl, bit, flag)	\
-+	do {				\
-+		if (!(ctrl & bit))	\
-+			flag = 0;	\
-+	} while (0)
-+
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -885,6 +891,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	struct pci_bus *bus;
- 	struct pci_host_bridge *host_bridge;
- 	union acpi_object *obj;
-+	u32 ctrl;
- 
- 	info->root = root;
- 	info->bridge = device;
-@@ -910,18 +917,16 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 		goto out_release_info;
- 
- 	host_bridge = to_pci_host_bridge(bus->bridge);
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--		host_bridge->native_pcie_hotplug = 0;
--	if (!(root->osc_control_set & OSC_PCI_SHPC_NATIVE_HP_CONTROL))
--		host_bridge->native_shpc_hotplug = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_AER_CONTROL))
--		host_bridge->native_aer = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_PME_CONTROL))
--		host_bridge->native_pme = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_LTR_CONTROL))
--		host_bridge->native_ltr = 0;
--	if (!(root->osc_control_set & OSC_PCI_EXPRESS_DPC_CONTROL))
--		host_bridge->native_dpc = 0;
-+
-+	ctrl = root->osc_control_set;
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_NATIVE_HP_CONTROL,
-+		  host_bridge->native_pcie_hotplug);
-+	OSC_OWNER(ctrl, OSC_PCI_SHPC_NATIVE_HP_CONTROL,
-+		  host_bridge->native_shpc_hotplug);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_AER_CONTROL, host_bridge->native_aer);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_PME_CONTROL, host_bridge->native_pme);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
-+	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
- 
- 	/*
- 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
+Changes since v12:
+ * Rebased on top of v5.11-rc1
+
+Changes since v11 (Bjorns update):
+ * Add bugfix for DPC with no AER Capability
+ * Split OSC_OWNER trivial changes from pcie_ports_native changes
+ * Temporarily drop pcie_ports_dpc_native changes (revisit it later).
+
+Changes since v10:
+ * Addressed format issue reported by lkp test.
+
+Changes since v9:
+ * Rebased on top of v5.10-rc1
+
+Changes since v8:
+ * Simplified setting _OSC ownwership logic
+ * Moved bridge->native_ltr out of #ifdef CONFIG_PCIEPORTBUS.
+
+Changes since v7:
+ * Fixed "fix array_size.cocci warnings".
+
+Changes since v6:
+ * Created new patch for CONFIG_PCIEPORTBUS check in
+   pci_init_host_bridge().
+ * Added warning message for a case when pcie_ports_native
+   overrides _OSC negotiation result.
+
+Changes since v5:
+ * Rebased on top of v5.8-rc1
+
+Changes since v4:
+ * Changed the patch set title (Original link: https://lkml.org/lkml/2020/5/26/1710)
+ * Added AER/DPC dependency logic cleanup fixes.
+
+Bjorn Helgaas (2):
+  PCI/DPC: Ignore devices with no AER Capability
+  PCI/ACPI: Centralize pci_aer_available() checking
+
+Kuppuswamy Sathyanarayanan (3):
+  PCI: Assume control of portdrv-related features only when portdrv
+    enabled
+  PCI/ACPI: Tidy _OSC control bit checking
+  PCI/ACPI: Centralize pcie_ports_native checking
+
+ drivers/acpi/pci_root.c           | 49 ++++++++++++++++++++++++-------
+ drivers/pci/hotplug/pciehp_core.c |  2 +-
+ drivers/pci/pci-acpi.c            |  3 --
+ drivers/pci/pcie/aer.c            |  2 +-
+ drivers/pci/pcie/dpc.c            |  3 ++
+ drivers/pci/pcie/portdrv_core.c   | 11 +++----
+ drivers/pci/probe.c               |  6 ++--
+ 7 files changed, 51 insertions(+), 25 deletions(-)
+
 -- 
 2.25.1
 
