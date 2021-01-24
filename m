@@ -2,186 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B89FC433E6
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0EAEC433DB
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 06:38:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CC1623A81
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Jan 2021 01:16:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A749D22BF3
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 06:38:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726013AbhAWBQn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Jan 2021 20:16:43 -0500
-Received: from mga04.intel.com ([192.55.52.120]:26962 "EHLO mga04.intel.com"
+        id S1726451AbhAXGiO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 Jan 2021 01:38:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726501AbhAWBQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Jan 2021 20:16:35 -0500
-IronPort-SDR: 7oWewMBCkFDsSf44VPrQfTpol4dXOdlHYSnjCNQTvvUgbcCLLfY/wtG4Zeidrww/ldJR1QZc4H
- WMVcxpawiVrQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9872"; a="176962181"
-X-IronPort-AV: E=Sophos;i="5.79,368,1602572400"; 
-   d="scan'208";a="176962181"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:22 -0800
-IronPort-SDR: p1vPc0PBWrfhAfo6AIBPV7Slf6Q9B8j8hfkI415ZG0Pcan/+CIplUhp2W5eOrqJwnPYYuV4EsV
- t07PchcBzyKw==
-X-IronPort-AV: E=Sophos;i="5.79,368,1602572400"; 
-   d="scan'208";a="386084698"
-Received: from usundar-mobl1.amr.corp.intel.com (HELO skuppusw-mobl5.amr.corp.intel.com) ([10.212.36.142])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2021 17:11:21 -0800
-From:   Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v13 4/5] PCI/ACPI: Centralize pcie_ports_native checking
-Date:   Fri, 22 Jan 2021 17:11:12 -0800
-Message-Id: <a96291aead64474ecb40a07a6d16a55e0f0df140.1611364025.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1611364024.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1611364024.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1726233AbhAXGh7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 24 Jan 2021 01:37:59 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E147E22C7E;
+        Sun, 24 Jan 2021 06:37:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611470238;
+        bh=d6qvR+/rxa5xe/EYKj1H8t2pZktQ0bAYGIOrwlTg0Lo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YJTAL3WQMBotzhsJNFxTgxc/BD1MjoapwcYftt+7qhibK4Kcw6gorfKI83LqXni6Q
+         DB0KXN+Xh0u1WDKAc8x9DZkONfhBDlpZ1B2eDHcAxmlX+2Y5lWEFc+aRdr1WLOh4L/
+         fA4mLf7+kzbJWgZ9Tjp0DMT0lRTLK2Cak2e8hYi3m88sqJ8y8LsKHfViDVytdVTn94
+         zxwumAx5EaTjpp56Ie9DN8GoGbp7KR3+O6II+zUCsLWaHxem9sVPZzHpBRcxl9fqoN
+         yfhUA1yLdqMgU31DyWM9KN2nhj+rn2+/Kd/U9xn2v5loRUSDh/xLdhUVX0c8HPoqit
+         GCGAifKBnPn8Q==
+Date:   Sun, 24 Jan 2021 07:39:12 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: free of node in pci_scan_device's error path
+Message-ID: <20210124053912.GA4742@unreal>
+References: <20210123005838.3623618-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210123005838.3623618-1-dmitry.baryshkov@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the user booted with "pcie_ports=native", we take control of the PCIe
-features unconditionally, regardless of what _OSC says.
+On Sat, Jan 23, 2021 at 03:58:38AM +0300, Dmitry Baryshkov wrote:
+> In the pci_scan_device() if pci_setup_device() fails for any reason, the
+> code will not release device's of_node by calling pci_release_of_node().
+> Fix that by calling the release function.
+>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> Fixes: 98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
 
-Centralize the testing of pcie_ports_native in acpi_pci_root_create(),
-where we interpret the _OSC results, so other places only have to check
-host_bridge->native_X and we don't have to sprinkle tests of
-pcie_ports_native everywhere.
+Fixes should come before your SOB, otherwise many static checkers will
+report the current format as an error.
 
-[bhelgaas: commit log, rework OSC_PCI_EXPRESS_CONTROL_MASKS, logging]
-Link: https://lore.kernel.org/r/bc87c9e675118960949043a832bed86bc22becbd.1603766889.git.sathyanarayanan.kuppuswamy@linux.intel.com
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/acpi/pci_root.c           | 19 +++++++++++++++++++
- drivers/pci/hotplug/pciehp_core.c |  2 +-
- drivers/pci/pci-acpi.c            |  3 ---
- drivers/pci/pcie/aer.c            |  2 +-
- drivers/pci/pcie/portdrv_core.c   | 11 ++++-------
- 5 files changed, 25 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 601fbe905993..16ca58d58fef 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -880,6 +880,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 			flag = 0;	\
- 	} while (0)
- 
-+#define FLAG(x)		((x) ? '+' : '-')
-+
- struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 				     struct acpi_pci_root_ops *ops,
- 				     struct acpi_pci_root_info *info,
-@@ -928,6 +930,23 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_LTR_CONTROL, host_bridge->native_ltr);
- 	OSC_OWNER(ctrl, OSC_PCI_EXPRESS_DPC_CONTROL, host_bridge->native_dpc);
- 
-+	if (pcie_ports_native) {
-+		dev_info(&root->device->dev, "Taking control of PCIe-related features because \"pcie_ports=native\" specified; may conflict with firmware\n");
-+		host_bridge->native_pcie_hotplug = 1;
-+		host_bridge->native_aer = 1;
-+		host_bridge->native_pme = 1;
-+		host_bridge->native_ltr = 1;
-+		host_bridge->native_dpc = 1;
-+	}
-+
-+	dev_info(&root->device->dev, "OS native features: SHPCHotplug%c PCIeHotplug%c PME%c AER%c DPC%c LTR%c\n",
-+		FLAG(host_bridge->native_shpc_hotplug),
-+		FLAG(host_bridge->native_pcie_hotplug),
-+		FLAG(host_bridge->native_pme),
-+		FLAG(host_bridge->native_aer),
-+		FLAG(host_bridge->native_dpc),
-+		FLAG(host_bridge->native_ltr));
-+
- 	/*
- 	 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
- 	 * exists and returns 0, we must preserve any PCI resource
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index ad3393930ecb..d1831e6bf60a 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -256,7 +256,7 @@ static bool pme_is_native(struct pcie_device *dev)
- 	const struct pci_host_bridge *host;
- 
- 	host = pci_find_host_bridge(dev->port->bus);
--	return pcie_ports_native || host->native_pme;
-+	return host->native_pme;
- }
- 
- static void pciehp_disable_interrupt(struct pcie_device *dev)
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 53502a751914..f6327cf0601b 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -800,9 +800,6 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
- 		return false;
- 
--	if (pcie_ports_native)
--		return true;
--
- 	host = pci_find_host_bridge(bridge->bus);
- 	return host->native_pcie_hotplug;
- }
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 77b0f2c45bc0..7fdeaadc40fe 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -219,7 +219,7 @@ int pcie_aer_is_native(struct pci_dev *dev)
- 	if (!dev->aer_cap)
- 		return 0;
- 
--	return pcie_ports_native || host->native_aer;
-+	return host->native_aer;
- }
- 
- int pci_enable_pcie_error_reporting(struct pci_dev *dev)
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index e1fed6649c41..ea1099908d5d 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -208,8 +208,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
- 	int services = 0;
- 
--	if (dev->is_hotplug_bridge &&
--	    (pcie_ports_native || host->native_pcie_hotplug)) {
-+	if (host->native_pcie_hotplug && dev->is_hotplug_bridge) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-@@ -221,8 +220,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	}
- 
- #ifdef CONFIG_PCIEAER
--	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer)) {
-+	if (host->native_aer && dev->aer_cap && pci_aer_available()) {
- 		services |= PCIE_PORT_SERVICE_AER;
- 
- 		/*
-@@ -234,9 +232,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- #endif
- 
- 	/* Root Ports and Root Complex Event Collectors may generate PMEs */
--	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
--	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
--	    (pcie_ports_native || host->native_pme)) {
-+	if (host->native_pme && (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-+				 pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC)) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
- 		/*
--- 
-2.25.1
-
+Thanks
