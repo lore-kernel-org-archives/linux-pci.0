@@ -2,96 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C066FC4332B
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 13:13:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D96B6C43381
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 15:10:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CF3B22ADC
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 13:13:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6C7422B48
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 15:10:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727008AbhAXNMp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 Jan 2021 08:12:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42278 "EHLO mail.kernel.org"
+        id S1726470AbhAXPKc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 Jan 2021 10:10:32 -0500
+Received: from mx.socionext.com ([202.248.49.38]:26502 "EHLO mx.socionext.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726929AbhAXNMo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Jan 2021 08:12:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2807822D2C;
-        Sun, 24 Jan 2021 13:11:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611493897;
-        bh=aHBmFnfLyG43e7CqSIxZ36xVHHd++9BQh2pCJmoqnr0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=C5XQosOH9gXH2dshXEXIFJYYImstVT3WfEC7Zzc0YFbGMSFs1wJfcqtHkx2ub/zSY
-         aAmtz08sf2jmrPM9kzReqsOeCpGhJEK6BQd4ly/GXnBnHUj2hCLSb7GjkVNRD1qXqg
-         0/1dyL+7QnAi5m7A8fNmgQB/EACW9Oyk/IgsTiMk83uq8j3hXS8nNX3eV8C3PXgK57
-         lCVBJoVMHTQ7hLPjngaczoXdLGGr+dMWWM7gyaVEOdG4n2tmzYnTW1PK4LxwZsuYGY
-         U2iJ3TH2LlV+TRayVA/S1YVg4gVik+y00150Hy21KGLG00FP6PoPI+irgbkyjZwMXU
-         y00gOmZDKMx0A==
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Saeed Mahameed <saeedm@nvidia.com>
-Cc:     Leon Romanovsky <leonro@nvidia.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        Jakub Kicinski <kuba@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        Don Dutile <ddutile@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: [PATCH mlx5-next v4 2/4] net/mlx5: Add dynamic MSI-X capabilities bits
-Date:   Sun, 24 Jan 2021 15:11:17 +0200
-Message-Id: <20210124131119.558563-3-leon@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210124131119.558563-1-leon@kernel.org>
-References: <20210124131119.558563-1-leon@kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1726434AbhAXPK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 24 Jan 2021 10:10:29 -0500
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 25 Jan 2021 00:09:43 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 8F52F2059027;
+        Mon, 25 Jan 2021 00:09:43 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Mon, 25 Jan 2021 00:09:43 +0900
+Received: from plum.e01.socionext.com (unknown [10.213.132.32])
+        by kinkan2.css.socionext.com (Postfix) with ESMTP id CE604B1D40;
+        Mon, 25 Jan 2021 00:09:42 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
+        Jassi Brar <jaswinder.singh@linaro.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v2 0/3] PCI: endpoint: Add endpoint restart management support
+Date:   Mon, 25 Jan 2021 00:09:34 +0900
+Message-Id: <1611500977-24816-1-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Leon Romanovsky <leonro@nvidia.com>
+Add new functions to manage recovery of configuration for endpoint controller
+and restart the controller when asserting bus-reset from root complex (RC).
 
-These new fields declare the number of MSI-X vectors that is
-possible to allocate on the VF through PF configuration.
+This feature is only available if bus-reset (PERST#) line is physically
+routed between RC and endpoint, and the signal from RC also resets
+the endpoint controller.
 
-Value must be in range defined by min_dynamic_vf_msix_table_size
-and max_dynamic_vf_msix_table_size.
+This series is only for UniPhier PCIe endpoint controller at this point.
 
-The driver should continue to query its MSI-X table through PCI
-configuration header.
+Changes since v1:
+- Update the patches to rebase onto the latest tree 
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- include/linux/mlx5/mlx5_ifc.h | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Kunihiko Hayashi (3):
+  PCI: endpoint: Add 'started' to pci_epc to set whether the controller
+    is started
+  PCI: endpoint: Add endpoint restart management
+  PCI: uniphier-ep: Add EPC restart management support
 
-diff --git a/include/linux/mlx5/mlx5_ifc.h b/include/linux/mlx5/mlx5_ifc.h
-index b96f99f1198e..31e6eac67f51 100644
---- a/include/linux/mlx5/mlx5_ifc.h
-+++ b/include/linux/mlx5/mlx5_ifc.h
-@@ -1657,7 +1657,16 @@ struct mlx5_ifc_cmd_hca_cap_bits {
- 	u8	   reserved_at_6e0[0x10];
- 	u8	   sf_base_id[0x10];
- 
--	u8	   reserved_at_700[0x80];
-+	u8	   reserved_at_700[0x8];
-+	u8	   num_total_dynamic_vf_msix[0x18];
-+	u8	   reserved_at_720[0x14];
-+	u8	   dynamic_msix_table_size[0xc];
-+	u8	   reserved_at_740[0xc];
-+	u8	   min_dynamic_vf_msix_table_size[0x4];
-+	u8	   reserved_at_750[0x4];
-+	u8	   max_dynamic_vf_msix_table_size[0xc];
-+
-+	u8	   reserved_at_760[0x20];
- 	u8	   vhca_tunnel_commands[0x40];
- 	u8	   reserved_at_7c0[0x40];
- };
+ drivers/pci/controller/dwc/Kconfig            |   1 +
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c |  44 +++++++++-
+ drivers/pci/endpoint/Kconfig                  |   9 ++
+ drivers/pci/endpoint/Makefile                 |   1 +
+ drivers/pci/endpoint/pci-epc-core.c           |   2 +
+ drivers/pci/endpoint/pci-epc-restart.c        | 114 ++++++++++++++++++++++++++
+ include/linux/pci-epc.h                       |  22 +++++
+ 7 files changed, 192 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/endpoint/pci-epc-restart.c
+
 -- 
-2.29.2
+2.7.4
 
