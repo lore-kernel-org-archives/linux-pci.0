@@ -2,71 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCC3C433DB
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 16:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE38C433DB
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 16:32:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C989221E3
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 16:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B041225AB
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 16:32:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728820AbhAYQ1s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Jan 2021 11:27:48 -0500
-Received: from foss.arm.com ([217.140.110.172]:50750 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730716AbhAYQ0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Jan 2021 11:26:35 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 715041042;
-        Mon, 25 Jan 2021 08:25:49 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 576B73F68F;
-        Mon, 25 Jan 2021 08:25:48 -0800 (PST)
-Date:   Mon, 25 Jan 2021 16:25:42 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-Cc:     Jonathan Chocron <jonnyc@amazon.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH dwc-next v2 0/2] PCI: dwc: remove useless dw_pcie_ops
-Message-ID: <20210125162542.GA5795@e121166-lin.cambridge.arm.com>
-References: <20201120191611.7b84a86b@xhacker.debian>
+        id S1730704AbhAYQbl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Jan 2021 11:31:41 -0500
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:31940 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727840AbhAYQbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jan 2021 11:31:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1611592266; x=1643128266;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=Y6cYRDZBHofXC1+fMpkWazCbSAWSF9dRS/TDToGnCxg=;
+  b=e3inWXgvz39YTPy8FIiOTx9ZpqmAqhm10KlPLdDSYtRSPN09QS6N6EFN
+   2MtfdlnPXwB4Q/05uM+rhl7Lw2hVwlESnFZ1IifETPzNKGjQZvhfYALfp
+   7lAGQ+0hoTR8fLqXgt2SejYuu68FgRHlRZnfM20kKoHFrSHMCX1dFhTwn
+   P85I5n2rb7vzBmD0aXM/zzCCs2ypfs9nwNuMz2a7lp8VY0SeFi5GCMqTM
+   1pOmwI1p2pojusM+kMf+E+HsSWLCDsRPWG7sovMC6cpmmfR7uImcy1lc+
+   KP2ACxK1ZYuIRulLA1WyVa9CQF4ptUwrWli0GxcQNQ7PZmzpYdXOWlSIi
+   g==;
+IronPort-SDR: QcCEgNQK5upIbX+b+qnkA7bBFXzY3TOPYZ4ralwBmfiJEGG16OKSCkKG2J4OGphoyD5WSiVrnA
+ W+E0TSgkDyU/tcnoq+jF3/BOxWMbWccKvwnh4e3zWsFc4D6tkNRydA5WAb23oQGkBnxrniBayY
+ DoAkeC1OBkPRDlevi5/zMqnZ/NV2iFfu8TMenE29gVxAjGfeMrSQRpnU5+GRO+yX4gg8ljcWh+
+ 4/WZp8vgW9atBYchYboT35ESEUuo+buEj3kinZKzMRrdcOR1IEPaFHoZ0CNIhrrvOlIIbGJhfE
+ 36Q=
+X-IronPort-AV: E=Sophos;i="5.79,374,1602572400"; 
+   d="scan'208";a="112382968"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Jan 2021 09:29:49 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1979.3; Mon, 25 Jan 2021 09:29:49 -0700
+Received: from ryzen.microchip.com (10.10.115.15) by chn-vm-ex02.mchp-main.com
+ (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Mon, 25 Jan 2021 09:29:47 -0700
+From:   <daire.mcnamara@microchip.com>
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh@kernel.org>, <linux-pci@vger.kernel.org>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+CC:     <david.abdurachmanov@gmail.com>, <cyril.jean@microchip.com>,
+        "Daire McNamara" <daire.mcnamara@microchip.com>
+Subject: [PATCH v21 4/4] MAINTAINERS: Add Daire McNamara as maintainer for the Microchip PCIe driver
+Date:   Mon, 25 Jan 2021 16:29:34 +0000
+Message-ID: <20210125162934.5335-5-daire.mcnamara@microchip.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210125162934.5335-1-daire.mcnamara@microchip.com>
+References: <20210125162934.5335-1-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201120191611.7b84a86b@xhacker.debian>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 20, 2020 at 07:16:11PM +0800, Jisheng Zhang wrote:
-> Some designware based device driver especially host only driver may
-> work well with the default read_dbi/write_dbi/link_up implementation
-> in pcie-designware.c, thus remove the assumption to simplify those
-> drivers.
-> 
-> Since v1:
->   - rebase to the latest dwc-next
-> 
-> Jisheng Zhang (2):
->   PCI: dwc: Don't assume the ops in dw_pcie always exists
->   PCI: dwc: al: Remove useless dw_pcie_ops
-> 
->  drivers/pci/controller/dwc/pcie-al.c              |  4 ----
->  drivers/pci/controller/dwc/pcie-designware-ep.c   |  8 +++-----
->  drivers/pci/controller/dwc/pcie-designware-host.c |  2 +-
->  drivers/pci/controller/dwc/pcie-designware.c      | 14 +++++++-------
->  4 files changed, 11 insertions(+), 17 deletions(-)
+From: Daire McNamara <daire.mcnamara@microchip.com>
 
-Would you mind rebasing it against my current pci/dwc branch please ?
+Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I shall apply it then.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e73636b75f29..f2dafbf3393c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13628,6 +13628,13 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/mediatek*
+ F:	drivers/pci/controller/*mediatek*
+ 
++PCIE DRIVER FOR MICROCHIP
++M:	Daire McNamara <daire.mcnamara@microchip.com>
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/microchip*
++F:	drivers/pci/controller/*microchip*
++
+ PCIE DRIVER FOR QUALCOMM MSM
+ M:	Stanimir Varbanov <svarbanov@mm-sol.com>
+ L:	linux-pci@vger.kernel.org
+-- 
+2.25.1
 
-Thanks,
-Lorenzo
