@@ -2,99 +2,243 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11E28C433DB
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 23:29:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A029C433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 02:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D29A3229F0
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Jan 2021 23:29:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 680512253A
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Jan 2021 02:10:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726261AbhAXX3N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 Jan 2021 18:29:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49618 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726149AbhAXX3N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jan 2021 18:29:13 -0500
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A96EDC061573
-        for <linux-pci@vger.kernel.org>; Sun, 24 Jan 2021 15:28:32 -0800 (PST)
-Received: by mail-lj1-x233.google.com with SMTP id u11so13105019ljo.13
-        for <linux-pci@vger.kernel.org>; Sun, 24 Jan 2021 15:28:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ruMNViRIcar6u3gv3qlcn2+tM7+wPe4+R71bK+/E4Bw=;
-        b=nuCceln9+2omIg5vzCu5ivFi29qZx1Tj1rOmvcgMke+i9Ftzw+R2z325fhMsrR5d5I
-         Nx7htn3a4/ZXovjULRzA4R2T2jU+ozq1jQm02nGy3sZoVpGSputYuJlhOwAVFWMiANwY
-         +IXa29lhxH7PyMuXRzaHLgpdVdWTxpItP3dP0NOJCEHyOyffA8lqGnsVnjcGYunIP+nm
-         sGwPnIJrWXMyP4qIn+XMaC0e9l5L0oQKd88aVakUGob+iP4rv9AwhdR+qgLK4VLkf4vX
-         BxXYktgtbT6PURS7DydG10tc5Ha1Ls1SW/B6dR0hFNcW3y56oqek/vSJdlN4mkOoNE2E
-         TAiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ruMNViRIcar6u3gv3qlcn2+tM7+wPe4+R71bK+/E4Bw=;
-        b=c0R/V8ozmqTMtQZtg0A49qpzFGOb28b2PPuPlf9tHgh+hy61OV6/gv7k2keEnabbk1
-         3oDWs7yOdhqEj+qJgvQW9eTKfAGN0/6Jwrhvy53sap8SYfnc3aDdwNov/YD9dkJ+rY9p
-         ckiK2PFBiX/TS5RBpw0JDCnfeq0R2/n6vaSkq0C1HITMUC63Ya3eI7JxWM4AZINsb/qh
-         7uOEM5yIWoqXFHRXXMgwmwoKph9UFWV50VVHSIwMU5+y/z8yMpkvnu4MsYsS6/twV2rh
-         9NG8Bhifv8+H9p7Qgwdy8zqN9+/n0q3KK0srZIfl4Ye9vK/Q/geShnIWm+1WLn4o7zle
-         SxKA==
-X-Gm-Message-State: AOAM532qwfBSL7abhTZXHwB82B0BOQq5CGvF2a/9lZr+9M1scL+LnKtR
-        Q5Yd6EwAeC8UIH92RUGTYc3LvA==
-X-Google-Smtp-Source: ABdhPJxfzn7VB5v37cFuLT8Sqbfe6RCqd3rA1LGL+yj7pDKraEAYOTjo4IcWA9IcDrHnvx/PF9353A==
-X-Received: by 2002:a2e:98ca:: with SMTP id s10mr2373266ljj.283.1611530911112;
-        Sun, 24 Jan 2021 15:28:31 -0800 (PST)
-Received: from umbar.lan ([188.162.64.188])
-        by smtp.gmail.com with ESMTPSA id y3sm1715065ljy.98.2021.01.24.15.28.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Jan 2021 15:28:30 -0800 (PST)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: free of node in pci_scan_device's error path
-Date:   Mon, 25 Jan 2021 02:28:26 +0300
-Message-Id: <20210124232826.1879-1-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.29.2
+        id S1726730AbhAYCKV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 Jan 2021 21:10:21 -0500
+Received: from regular1.263xmail.com ([211.150.70.198]:40434 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726677AbhAYCHB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Jan 2021 21:07:01 -0500
+Received: from localhost (unknown [192.168.167.235])
+        by regular1.263xmail.com (Postfix) with ESMTP id 0FA626A9;
+        Mon, 25 Jan 2021 09:53:21 +0800 (CST)
+X-MAIL-GRAY: 0
+X-MAIL-DELIVERY: 1
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-SKE-CHECKED: 1
+X-ABS-CHECKED: 1
+Received: from [192.168.31.83] (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P24739T140082531448576S1611539600296563_;
+        Mon, 25 Jan 2021 09:53:20 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <dcf0c7cb0998b121b2b8409034ca4d48>
+X-RL-SENDER: xxm@rock-chips.com
+X-SENDER: xxm@rock-chips.com
+X-LOGIN-NAME: xxm@rock-chips.com
+X-FST-TO: heiko@sntech.de
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-System-Flag: 0
+Subject: =?UTF-8?Q?Re=3a_=5bPATCH_v2_1/2=5d_dt-bindings=3a_rockchip=3a_Add_D?=
+ =?UTF-8?B?ZXNpZ25XYXJlIGJhc2VkIFBDSWUgY29udHJvbGxlcuOAkOivt+azqOaEj++8jA==?=
+ =?UTF-8?B?6YKu5Lu255Sxcm9iaGVycmluZzJAZ21haWwuY29t5Luj5Y+R44CR?=
+To:     Rob Herring <robh@kernel.org>, Johan Jonker <jbx6244@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>
+References: <20210120101554.241029-1-xxm@rock-chips.com>
+ <3af70037-c05d-1759-2bae-41db1e8e2768@gmail.com>
+ <20210122155503.GA860027@robh.at.kernel.org>
+From:   xxm <xxm@rock-chips.com>
+Message-ID: <5bde2bf9-2492-78a2-5281-c3694efa405d@rock-chips.com>
+Date:   Mon, 25 Jan 2021 09:53:18 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
+In-Reply-To: <20210122155503.GA860027@robh.at.kernel.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the pci_scan_device() if pci_setup_device() fails for any reason, the
-code will not release device's of_node by calling pci_release_of_node().
-Fix that by calling the release function.
+Hi Rob,
 
-Fixes: 98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
+ÔÚ 2021/1/22 23:55, Rob Herring Ð´µÀ:
+> On Wed, Jan 20, 2021 at 06:07:29PM +0100, Johan Jonker wrote:
+>> Hi Simon,
+>>
+>> Thanks you for version 2.
+>> A few comments, have a look if it is useful or that you disagree.
+>>
+>> This patch has no commit message. Add one in version 3.
+>>
+>> Submit all patches in one batch with the same sort message ID to all
+>> maintainers including Heiko.
+>>
+>> Heiko Stuebner <heiko@sntech.de>
+>>
+>> Example message ID:
+>> 20210120101554.241029-1-xxm@rock-chips.com
+>>
+>> /////
+>>
+>> Included is a copy of the Rockchip pcie nodes in a sort of test.dts below.
+>> Could you confirm that the properties in that dts are the one that we
+>> can expect for Linux mainline and can base our YAML document on?
+>>
+>> With rk3568-cru.h and rk3568-power.h manualy added we do some tests with
+>> the following commands:
+>>
+>> make ARCH=arm64 dt_binding_check
+>> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+>>
+>> make ARCH=arm64 dtbs_check
+>> DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+>>
+>> make ARCH=arm64 dtbs_check
+>> DT_SCHEMA_FILES=~/.local/lib/python3.5/site-packages/dtschema/schemas/pci/pci-bus.yaml
+>>
+>> /////
+>>
+>> Example notifications:
+>>
+>> /arch/arm64/boot/dts/rockchip/test.dt.yaml: pcie@fe270000: reg: [[3,
+>> 3225419776, 0, 4194304], [0, 4263968768, 0, 65536]] is too long
+>>
+>> /arch/arm64/boot/dts/rockchip/test.dt.yaml: pcie@fe270000: ranges:
+>> 'oneOf' conditional failed, one must be fixed:
+>>
+>> Before you submit version 3 make sure that all warnings gone as much as
+>> possible.
+>>
+>> On 1/20/21 11:15 AM, Simon Xue wrote:
+>>> Signed-off-by: Simon Xue <xxm@rock-chips.com>
+>>> ---
+>>>   .../bindings/pci/rockchip-dw-pcie.yaml        | 140 ++++++++++++++++++
+>>>   1 file changed, 140 insertions(+)
+>>>   create mode 100644 Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+>>> new file mode 100644
+>>> index 000000000000..9d3a57f5305e
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+>>> @@ -0,0 +1,140 @@
+>>> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+>>> +%YAML 1.2
+>>> +---
+>>> +$id: http://devicetree.org/schemas/pci/rockchip-dw-pcie.yaml#
+>>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>>> +
+>>> +title: DesignWare based PCIe RC controller on Rockchip SoCs
+>>> +
+>>> +maintainers:
+>>> +  - Shawn Lin <shawn.lin@rock-chips.com>
+>>> +  - Simon Xue <xxm@rock-chips.com>
+>>       - Heiko Stuebner <heiko@sntech.de> ;)
+>>> +
+>>> +description: |+
+>>> +  RK3568 SoC PCIe host controller is based on the Synopsys DesignWare
+>>> +  PCIe IP and thus inherits all the common properties defined in
+>>> +  designware-pcie.txt.
+>>> +
+>>> +allOf:
+>>> +  - $ref: /schemas/pci/pci-bus.yaml#
+>>> +
+>>> +# We need a select here so we don't match all nodes with 'snps,dw-pcie'
+>>> +select:
+>>> +  properties:
+>>> +    compatible:
+>>> +      contains:
+>>> +        const: rockchip,rk3568-pcie
+>>> +  required:
+>>> +    - compatible
+>>> +
+>>> +properties:
+>>> +  compatible:
+>>> +    item:
+>>      items:
+>>
+>>> +      - const: rockchip,rk3568-pcie
+>>> +      - const: snps,dw-pcie
+>> Add empty line
+>>
+>>> +  reg:    items:
+>>        - description:
+>>        - description:
+>>
+>> Add some description for regs.
+>>
+>>> +    maxItems: 1
+>> remove
+>>
+>> This reg maxItems gives errors.
+>>
+>>> +
+>>> +  interrupt:
+>> interrupts:
+>>     items:
+>>
+>>> +      - description: system information
+>>> +      - description: power management control
+>>> +      - description: PCIe message
+>>> +      - description: legacy interrupt
+>>> +      - description: error report
+>>> +
+>>> +  interrupt-names:
+>>> +    items:
+>>> +      - const: sys
+>>> +      - const: pmc
+>>> +      - const: msg
+> MSI? If so, use 'msi'. The DWC core will handle setting it up now.
 
-Changes since v1:
- - Changed the order of Fixes and S-o-B tags.
+No, it is SoC designed interrupt for some purpose. Currently, we don't 
+use interrupt, will remove
 
----
- drivers/pci/probe.c | 1 +
- 1 file changed, 1 insertion(+)
+these.
 
+>>> +      - const: legacy
+>>> +      - const: err
+>>> +
+>>> +  clocks:
+>>> +    items:
+>>> +      - description: AHB clock for PCIe master
+>>> +      - description: AHB clock for PCIe slave
+>>> +      - description: AHB clock for PCIe dbi
+>>> +      - description: APB clock for PCIe
+>>> +      - description: Auxiliary clock for PCIe
+>>> +
+>>> +  clock-names:
+>>> +    items:
+>>> +      - const: aclk_mst
+>>> +      - const: aclk_slv
+>>> +      - const: aclk_dbi
+>>> +      - const: pclk
+>>> +      - const: aux
+>>> +
+>>> +  msi-map: true
+>>> +
+>>> +  power-domains:
+>>> +    maxItems: 1
+>> /////
+>> These properties come from designware-pcie.txt
+>> Maybe add them here for now till there's a common yaml?
+>>
+>>    num-ib-windows: number of inbound address translation windows
+>>    num-ob-windows: number of outbound address translation windows
+> These can be and are now detected at runtime.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 953f15abc850..be51670572fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2353,6 +2353,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	pci_set_of_node(dev);
- 
- 	if (pci_setup_device(dev)) {
-+		pci_release_of_node(dev);
- 		pci_bus_put(dev->bus);
- 		kfree(dev);
- 		return NULL;
--- 
-2.29.2
+Will remove.
+
+Simon Xue
+
+>
+> Rob
+>
+>
+>
+
 
