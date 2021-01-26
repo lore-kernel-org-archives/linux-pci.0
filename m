@@ -5,23 +5,23 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E204C43331
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 972CDC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:42:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 001EE23122
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A47230FE
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:42:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403825AbhAZMlM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:41:12 -0500
-Received: from muru.com ([72.249.23.125]:53360 "EHLO muru.com"
+        id S2390794AbhAZMlt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:41:49 -0500
+Received: from muru.com ([72.249.23.125]:53456 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403836AbhAZMlE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 07:41:04 -0500
+        id S2391853AbhAZMlp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 07:41:45 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 73CA98317;
-        Tue, 26 Jan 2021 12:40:27 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 5AE9288B3;
+        Tue, 26 Jan 2021 12:40:38 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
@@ -30,9 +30,9 @@ Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 04/15] ARM: dts: Properly configure dra7 edma sysconfig registers
-Date:   Tue, 26 Jan 2021 14:39:53 +0200
-Message-Id: <20210126124004.52550-5-tony@atomide.com>
+Subject: [PATCH 10/15] ARM: dts: Configure simple-pm-bus for dra7 l4_wkup
+Date:   Tue, 26 Jan 2021 14:39:59 +0200
+Message-Id: <20210126124004.52550-11-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126124004.52550-1-tony@atomide.com>
 References: <20210126124004.52550-1-tony@atomide.com>
@@ -42,71 +42,64 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Looks like the TRM is not listing the sysconfig for edma, let's add it
-based on am437x TRM edma registers as listed in sections "Table 10-26.
-EDMA3CC Registers" and "Table 10-99. EDMA3TC Registers".
+We can now probe interconnects with device tree only configuration using
+simple-pm-bus and genpd.
 
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- arch/arm/boot/dts/dra7.dtsi | 33 +++++++++++++++++++++++++++------
- 1 file changed, 27 insertions(+), 6 deletions(-)
+ arch/arm/boot/dts/dra7-l4.dtsi | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -369,8 +369,15 @@ dra7_iodelay_core: padconf@4844a000 {
+diff --git a/arch/arm/boot/dts/dra7-l4.dtsi b/arch/arm/boot/dts/dra7-l4.dtsi
+--- a/arch/arm/boot/dts/dra7-l4.dtsi
++++ b/arch/arm/boot/dts/dra7-l4.dtsi
+@@ -4228,7 +4228,10 @@ vpe: vpe@0 {
+ };
  
- 		target-module@43300000 {
- 			compatible = "ti,sysc-omap4", "ti,sysc";
--			reg = <0x43300000 0x4>;
--			reg-names = "rev";
-+			reg = <0x43300000 0x4>,
-+			      <0x43300010 0x4>;
-+			reg-names = "rev", "sysc";
-+			ti,sysc-midle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
-+			ti,sysc-sidle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
- 			clocks = <&l3main1_clkctrl DRA7_L3MAIN1_TPCC_CLKCTRL 0>;
- 			clock-names = "fck";
- 			#address-cells = <1>;
-@@ -402,8 +409,15 @@ edma: dma@0 {
+ &l4_wkup {						/* 0x4ae00000 */
+-	compatible = "ti,dra7-l4-wkup", "simple-bus";
++	compatible = "ti,dra7-l4-wkup", "simple-pm-bus";
++	power-domains = <&prm_wkupaon>;
++	clocks = <&wkupaon_clkctrl DRA7_WKUPAON_L4_WKUP_CLKCTRL 0>;
++	clock-names = "fck";
+ 	reg = <0x4ae00000 0x800>,
+ 	      <0x4ae00800 0x800>,
+ 	      <0x4ae01000 0x1000>;
+@@ -4241,7 +4244,7 @@ &l4_wkup {						/* 0x4ae00000 */
+ 		 <0x00030000 0x4ae30000 0x010000>;	/* segment 3 */
  
- 		target-module@43400000 {
- 			compatible = "ti,sysc-omap4", "ti,sysc";
--			reg = <0x43400000 0x4>;
--			reg-names = "rev";
-+			reg = <0x43400000 0x4>,
-+			      <0x43400010 0x4>;
-+			reg-names = "rev", "sysc";
-+			ti,sysc-midle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
-+			ti,sysc-sidle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
- 			clocks = <&l3main1_clkctrl DRA7_L3MAIN1_TPTC0_CLKCTRL 0>;
- 			clock-names = "fck";
- 			#address-cells = <1>;
-@@ -420,8 +434,15 @@ edma_tptc0: dma@0 {
+ 	segment@0 {					/* 0x4ae00000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00000000 0x00000000 0x000800>,	/* ap 0 */
+@@ -4318,7 +4321,7 @@ scm_wkup: scm_conf@0 {
+ 	};
  
- 		target-module@43500000 {
- 			compatible = "ti,sysc-omap4", "ti,sysc";
--			reg = <0x43500000 0x4>;
--			reg-names = "rev";
-+			reg = <0x43500000 0x4>,
-+			      <0x43500010 0x4>;
-+			reg-names = "rev", "sysc";
-+			ti,sysc-midle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
-+			ti,sysc-sidle = <SYSC_IDLE_FORCE>,
-+					<SYSC_IDLE_NO>,
-+					<SYSC_IDLE_SMART>;
- 			clocks = <&l3main1_clkctrl DRA7_L3MAIN1_TPTC1_CLKCTRL 0>;
- 			clock-names = "fck";
- 			#address-cells = <1>;
+ 	segment@10000 {					/* 0x4ae10000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00000000 0x00010000 0x001000>,	/* ap 5 */
+@@ -4428,7 +4431,7 @@ target-module@c000 {			/* 0x4ae1c000, ap 11 38.0 */
+ 	};
+ 
+ 	segment@20000 {					/* 0x4ae20000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00006000 0x00026000 0x001000>,	/* ap 13 */
+@@ -4534,7 +4537,7 @@ target-module@f000 {			/* 0x4ae2f000, ap 32 58.0 */
+ 	};
+ 
+ 	segment@30000 {					/* 0x4ae30000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x0000c000 0x0003c000 0x002000>,	/* ap 30 */
 -- 
 2.30.0
