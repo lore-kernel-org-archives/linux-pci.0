@@ -2,154 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD8DC433E6
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88438C433E6
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:27:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EF072073A
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38CB72074A
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237695AbhA0MZO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Jan 2021 07:25:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:32495 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235925AbhA0MWC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2021 07:22:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1611750034;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wb6zepnLUfjQE6SpoSSqkOZ1CmRA5GSq31+ma+nKIb4=;
-        b=bOP0osJUrKXjtMw+g8LbzVKax9qLe1vjSge0ZkAQefb3uJRluzsOAQ4W6oC0NjegeVF++l
-        s61jWNbHLiXeXXZNheinX/o0XZky45laPuCR9jMdYi3hav4tkyX4JByEpkhVeObYUv9FHN
-        sN9QrNE22MrtdH01Wwx3rZd8oAsee8c=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-254-vUkMZCK3Mtq2CtLoziprjg-1; Wed, 27 Jan 2021 07:20:32 -0500
-X-MC-Unique: vUkMZCK3Mtq2CtLoziprjg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D7857107ACF6;
-        Wed, 27 Jan 2021 12:20:29 +0000 (UTC)
-Received: from fuller.cnet (ovpn-112-2.gru2.redhat.com [10.97.112.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 655285C1C2;
-        Wed, 27 Jan 2021 12:20:22 +0000 (UTC)
-Received: by fuller.cnet (Postfix, from userid 1000)
-        id 8958B4178900; Wed, 27 Jan 2021 09:19:39 -0300 (-03)
-Date:   Wed, 27 Jan 2021 09:19:39 -0300
-From:   Marcelo Tosatti <mtosatti@redhat.com>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        frederic@kernel.org, juri.lelli@redhat.com, abelits@marvell.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        rostedt@goodmis.org, mingo@kernel.org, peterz@infradead.org,
-        tglx@linutronix.de, davem@davemloft.net, akpm@linux-foundation.org,
-        sfr@canb.auug.org.au, stephen@networkplumber.org,
-        rppt@linux.vnet.ibm.com, jinyuqi@huawei.com,
-        zhangshaokun@hisilicon.com
-Subject: Re: [Patch v4 1/3] lib: Restrict cpumask_local_spread to houskeeping
- CPUs
-Message-ID: <20210127121939.GA54725@fuller.cnet>
-References: <20200625223443.2684-1-nitesh@redhat.com>
- <20200625223443.2684-2-nitesh@redhat.com>
- <3e9ce666-c9cd-391b-52b6-3471fe2be2e6@arm.com>
+        id S237499AbhA0M0y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Jan 2021 07:26:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35154 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S314044AbhAZWzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 17:55:40 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A5DDE2065D;
+        Tue, 26 Jan 2021 22:54:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611701699;
+        bh=7/yqTNqWIqQ7XCIx1WSLqU/snxBtDCQ23qUfG8HlO5A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hxfU/IRuv3TUSul3I/evOCCOqIPlij7Fp31pMB/khCbDtR9z8LV26+bh8BQ6A4D5H
+         Uq6Ao6JNAEzjMpilMG6xm7GxiAKvj/FOBV4T5u++joQDdfLKG1YcevdvOPMchYnQL5
+         dR64tGX8kKpzZdmaGAYt7JHF65SsvAsX4aF6OOzy2vG/uyXamFVONJlj7Iaz6Adbu/
+         LEY2tk3cW4TpsdZlqoPVTZiSzGNkH2fDVm+iqF0C/113G8xoke/nSmDYfRYddMEIAw
+         3l6N9G7bZ6O7HocoxzYRRF0iUibB5D5RzXhmA+I1JFNpag/Q5v+LNgqQRm4egUMNf/
+         yrOTMJv1AnUmg==
+Date:   Tue, 26 Jan 2021 22:54:54 +0000
+From:   Will Deacon <will@kernel.org>
+To:     Jeremy Linton <jeremy.linton@arm.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jon Masters <jcm@jonmasters.org>, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, sudeep.holla@arm.com,
+        linux-kernel@vger.kernel.org, catalin.marinas@arm.com,
+        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] arm64: PCI: Enable SMC conduit
+Message-ID: <20210126225454.GB30941@willie-the-truck>
+References: <20210105045735.1709825-1-jeremy.linton@arm.com>
+ <20210107181416.GA3536@willie-the-truck>
+ <56375cd8-8e11-aba6-9e11-1e0ec546e423@jonmasters.org>
+ <20210108103216.GA17931@e121166-lin.cambridge.arm.com>
+ <20210122194829.GE25471@willie-the-truck>
+ <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3e9ce666-c9cd-391b-52b6-3471fe2be2e6@arm.com>
+In-Reply-To: <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 27, 2021 at 11:57:16AM +0000, Robin Murphy wrote:
-> Hi,
+On Tue, Jan 26, 2021 at 10:46:04AM -0600, Jeremy Linton wrote:
+> On 1/22/21 1:48 PM, Will Deacon wrote:
+> > This isn't like the usual fragmentation problems, where firmware swoops in
+> > to save the day; CPU onlining, spectre mitigations, early entropy etc. All
+> > of these problems exist because there isn't a standard method to implement
+> > them outside of firmware, and so adding a layer of abstraction there makes
+> > sense.
 > 
-> On 2020-06-25 23:34, Nitesh Narayan Lal wrote:
-> > From: Alex Belits <abelits@marvell.com>
-> > 
-> > The current implementation of cpumask_local_spread() does not respect the
-> > isolated CPUs, i.e., even if a CPU has been isolated for Real-Time task,
-> > it will return it to the caller for pinning of its IRQ threads. Having
-> > these unwanted IRQ threads on an isolated CPU adds up to a latency
-> > overhead.
-> > 
-> > Restrict the CPUs that are returned for spreading IRQs only to the
-> > available housekeeping CPUs.
-> > 
-> > Signed-off-by: Alex Belits <abelits@marvell.com>
-> > Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> > ---
-> >   lib/cpumask.c | 16 +++++++++++-----
-> >   1 file changed, 11 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/lib/cpumask.c b/lib/cpumask.c
-> > index fb22fb266f93..85da6ab4fbb5 100644
-> > --- a/lib/cpumask.c
-> > +++ b/lib/cpumask.c
-> > @@ -6,6 +6,7 @@
-> >   #include <linux/export.h>
-> >   #include <linux/memblock.h>
-> >   #include <linux/numa.h>
-> > +#include <linux/sched/isolation.h>
-> >   /**
-> >    * cpumask_next - get the next cpu in a cpumask
-> > @@ -205,22 +206,27 @@ void __init free_bootmem_cpumask_var(cpumask_var_t mask)
-> >    */
-> >   unsigned int cpumask_local_spread(unsigned int i, int node)
-> >   {
-> > -	int cpu;
-> > +	int cpu, hk_flags;
-> > +	const struct cpumask *mask;
-> > +	hk_flags = HK_FLAG_DOMAIN | HK_FLAG_MANAGED_IRQ;
-> > +	mask = housekeeping_cpumask(hk_flags);
+> There are a lot of parallels with PSCI here because there were existing
+> standards for cpu online.
+
+I don't recall anything that I would consider a standard at the time.
+
+> > But PCIe is already a standard!
 > 
-> AFAICS, this generally resolves to something based on cpu_possible_mask
-> rather than cpu_online_mask as before, so could now potentially return an
-> offline CPU. Was that an intentional change?
+> And it says that ECAM is optional, particularly if there are
+> firmware/platform standardized ways of accessing the config space.
 
-Robin,
+Nice loophole; I haven't checked.
 
-AFAICS online CPUs should be filtered.
-
-> I was just looking at the current code since I had the rare presence of mind
-> to check if something suitable already existed before I start open-coding
-> "any online CPU, but local node preferred" logic for handling IRQ affinity
-> in a driver - cpumask_local_spread() appears to be almost what I want (if a
-> bit more heavyweight), if only it would actually guarantee an online CPU as
-> the kerneldoc claims :(
+> > We shouldn't paper over hardware designers' inability to follow a ~20 year
+> > old standard by hiding it behind another standard that is hot off the press.
+> > Seriously.
 > 
-> Robin.
+> No disagreement, but its been more than half a decade and there are some
+> high (millions!) volume parts, that still don't have kernel support.
+
+Ok.
+
+> > There is not a scrap of evidence to suggest that the firmware
+> > implementations will be any better, but they will certainly be harder to
+> > debug and maintain.  I have significant reservations about Arm's interest in
+> > maintaining the spec as both more errata appear and the PCIe spec evolves
+> > (after all, this is outside of SBSA, no?). The whole thing stinks of "if all
+> > you have is a hammer, then everything looks like a nail". But this isn't the
+> > sort of problem that is solved with yet another spec -- instead, how about
+> > encouraging vendors to read the specs that already exist?
 > 
-> >   	/* Wrap: we always want a cpu. */
-> > -	i %= num_online_cpus();
-> > +	i %= cpumask_weight(mask);
-> >   	if (node == NUMA_NO_NODE) {
-> > -		for_each_cpu(cpu, cpu_online_mask)
-> > +		for_each_cpu(cpu, mask) {
-> >   			if (i-- == 0)
-> >   				return cpu;
-> > +		}
-> >   	} else {
-> >   		/* NUMA first. */
-> > -		for_each_cpu_and(cpu, cpumask_of_node(node), cpu_online_mask)
-> > +		for_each_cpu_and(cpu, cpumask_of_node(node), mask) {
-> >   			if (i-- == 0)
-> >   				return cpu;
-> > +		}
-> > -		for_each_cpu(cpu, cpu_online_mask) {
-> > +		for_each_cpu(cpu, mask) {
-> >   			/* Skip NUMA nodes, done above. */
-> >   			if (cpumask_test_cpu(cpu, cpumask_of_node(node)))
-> >   				continue;
+> PSCI, isn't a good example of a firmware interface that works?
+
+Not sure what you're getting at here.
+
+> > > The SMC is an olive branch and just to make sure it is crystal clear
+> > > there won't be room for adding quirks if the implementation turns out
+> > > to be broken, if a line in the sand is what we want here it is.
 > > 
+> > I appreciate the sentiment, but you're not solving the problem here. You're
+> > moving it somewhere else. Somewhere where you don't have to deal with it
+> > (and I honestly can't blame you for that), but also somewhere where you
+> > _can't_ necessarily deal with it. The inevitable outcome is an endless
+> > succession of crappy, non-compliant machines which only appear to operate
+> > correctly with particularly kernel/firmware combinations. Imagine trying to
+> > use something like that?
+> > 
+> > The approach championed here actively discourages vendors from building
+> > spec-compliant hardware and reduces our ability to work around problems
+> > on such hardware at the same time.
+> > 
+> > So I won't be applying these patches, sorry.
+> 
+> Does that mean its open season for ECAM quirks, and we can expect them to
+> start being merged now?
 
+That's not for me to say.
+
+Will
