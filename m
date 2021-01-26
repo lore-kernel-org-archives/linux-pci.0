@@ -2,26 +2,26 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 006F2C433E9
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5952C433E6
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:09:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C488F221F0
+	by mail.kernel.org (Postfix) with ESMTP id ADADA20848
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728261AbhAZRFB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:05:01 -0500
-Received: from muru.com ([72.249.23.125]:53168 "EHLO muru.com"
+        id S1731153AbhAZREy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:04:54 -0500
+Received: from muru.com ([72.249.23.125]:53170 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390141AbhAZIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2390132AbhAZIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 26 Jan 2021 03:31:22 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id E7AE38A84;
-        Tue, 26 Jan 2021 08:27:50 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 2F3838B3E;
+        Tue, 26 Jan 2021 08:28:01 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
@@ -31,9 +31,9 @@ Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 13/27] ARM: dts: Configure simple-pm-bus for dra7 l4_per3
-Date:   Tue, 26 Jan 2021 10:27:02 +0200
-Message-Id: <20210126082716.54358-14-tony@atomide.com>
+Subject: [PATCH 18/27] ARM: OMAP2+: Drop legacy platform data for dra7 sata
+Date:   Tue, 26 Jan 2021 10:27:07 +0200
+Message-Id: <20210126082716.54358-19-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -43,37 +43,101 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now probe interconnects with device tree only configuration using
-simple-pm-bus and genpd.
+We can now probe devices with ti-sysc interconnect driver and dts data.
+Let's drop the related platform data and custom ti,hwmods dts property.
 
+As we're just dropping data, and the early platform data init is based on
+the custom ti,hwmods property, we want to drop both the platform data and
+ti,hwmods property in a single patch.
+
+Cc: Balaji T K <balajitk@ti.com>
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- arch/arm/boot/dts/dra7-l4.dtsi | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/dra7-l4.dtsi            |  1 -
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c | 47 -----------------------
+ 2 files changed, 48 deletions(-)
 
 diff --git a/arch/arm/boot/dts/dra7-l4.dtsi b/arch/arm/boot/dts/dra7-l4.dtsi
 --- a/arch/arm/boot/dts/dra7-l4.dtsi
 +++ b/arch/arm/boot/dts/dra7-l4.dtsi
-@@ -3123,7 +3123,10 @@ cpts {
+@@ -576,7 +576,6 @@ target-module@8000 {			/* 0x4a108000, ap 29 1e.0 */
+ 
+ 		target-module@40000 {			/* 0x4a140000, ap 31 06.0 */
+ 			compatible = "ti,sysc-omap4", "ti,sysc";
+-			ti,hwmods = "sata";
+ 			reg = <0x400fc 4>,
+ 			      <0x41100 4>;
+ 			reg-names = "rev", "sysc";
+diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+--- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+@@ -266,44 +266,6 @@ static struct omap_hwmod dra7xx_mpu_hwmod = {
+ 	},
  };
  
- &l4_per3 {						/* 0x48800000 */
--	compatible = "ti,dra7-l4-per3", "simple-bus";
-+	compatible = "ti,dra7-l4-per3", "simple-pm-bus";
-+	power-domains = <&prm_l4per>;
-+	clocks = <&l4per3_clkctrl DRA7_L4PER3_L4_PER3_CLKCTRL 0>;
-+	clock-names = "fck";
- 	reg = <0x48800000 0x800>,
- 	      <0x48800800 0x800>,
- 	      <0x48801000 0x400>,
-@@ -3135,7 +3138,7 @@ &l4_per3 {						/* 0x48800000 */
- 	ranges = <0x00000000 0x48800000 0x200000>;	/* segment 0 */
+-/*
+- * 'sata' class
+- *
+- */
+-
+-static struct omap_hwmod_class_sysconfig dra7xx_sata_sysc = {
+-	.rev_offs	= 0x00fc,
+-	.sysc_offs	= 0x0000,
+-	.sysc_flags	= (SYSC_HAS_MIDLEMODE | SYSC_HAS_SIDLEMODE),
+-	.idlemodes	= (SIDLE_FORCE | SIDLE_NO | SIDLE_SMART |
+-			   SIDLE_SMART_WKUP | MSTANDBY_FORCE | MSTANDBY_NO |
+-			   MSTANDBY_SMART | MSTANDBY_SMART_WKUP),
+-	.sysc_fields	= &omap_hwmod_sysc_type2,
+-};
+-
+-static struct omap_hwmod_class dra7xx_sata_hwmod_class = {
+-	.name	= "sata",
+-	.sysc	= &dra7xx_sata_sysc,
+-};
+-
+-/* sata */
+-
+-static struct omap_hwmod dra7xx_sata_hwmod = {
+-	.name		= "sata",
+-	.class		= &dra7xx_sata_hwmod_class,
+-	.clkdm_name	= "l3init_clkdm",
+-	.flags		= HWMOD_SWSUP_SIDLE | HWMOD_SWSUP_MSTANDBY,
+-	.main_clk	= "func_48m_fclk",
+-	.mpu_rt_idx	= 1,
+-	.prcm = {
+-		.omap4 = {
+-			.clkctrl_offs = DRA7XX_CM_L3INIT_SATA_CLKCTRL_OFFSET,
+-			.context_offs = DRA7XX_RM_L3INIT_SATA_CONTEXT_OFFSET,
+-			.modulemode   = MODULEMODE_SWCTRL,
+-		},
+-	},
+-};
+-
+ /*
+  * 'vcp' class
+  *
+@@ -467,14 +429,6 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__mpu = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+ };
  
- 	segment@0 {					/* 0x48800000 */
--		compatible = "simple-bus";
-+		compatible = "simple-pm-bus";
- 		#address-cells = <1>;
- 		#size-cells = <1>;
- 		ranges = <0x00000000 0x00000000 0x000800>,	/* ap 0 */
+-/* l4_cfg -> sata */
+-static struct omap_hwmod_ocp_if dra7xx_l4_cfg__sata = {
+-	.master		= &dra7xx_l4_cfg_hwmod,
+-	.slave		= &dra7xx_sata_hwmod,
+-	.clk		= "l3_iclk_div",
+-	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+-};
+-
+ /* l3_main_1 -> vcp1 */
+ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__vcp1 = {
+ 	.master		= &dra7xx_l3_main_1_hwmod,
+@@ -523,7 +477,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+ 	&dra7xx_l3_main_1__bb2d,
+ 	&dra7xx_l4_wkup__ctrl_module_wkup,
+ 	&dra7xx_l4_cfg__mpu,
+-	&dra7xx_l4_cfg__sata,
+ 	&dra7xx_l3_main_1__vcp1,
+ 	&dra7xx_l4_per2__vcp1,
+ 	&dra7xx_l3_main_1__vcp2,
 -- 
 2.30.0
