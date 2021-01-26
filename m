@@ -4,24 +4,24 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC40C433E6
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:00:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15ABBC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31E772228A
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:00:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4B6C230FC
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388629AbhAZRGt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:06:49 -0500
-Received: from muru.com ([72.249.23.125]:53186 "EHLO muru.com"
+        id S2388124AbhAZRGo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:06:44 -0500
+Received: from muru.com ([72.249.23.125]:53180 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389915AbhAZIbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2390150AbhAZIbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 26 Jan 2021 03:31:47 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id D6A398B99;
-        Tue, 26 Jan 2021 08:28:13 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id BC10A8B87;
+        Tue, 26 Jan 2021 08:28:09 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
@@ -31,9 +31,9 @@ Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 24/27] ARM: OMAP2+: Drop legacy platform data for dra7 l4_per3
-Date:   Tue, 26 Jan 2021 10:27:13 +0200
-Message-Id: <20210126082716.54358-25-tony@atomide.com>
+Subject: [PATCH 22/27] ARM: OMAP2+: Drop legacy platform data for dra7 l4_per1
+Date:   Tue, 26 Jan 2021 10:27:11 +0200
+Message-Id: <20210126082716.54358-23-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -57,8 +57,8 @@ diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/oma
  
  /*
   * 'l4' class
-- * instance(s): l4_cfg, l4_per3
-+ * instance(s): l4_cfg
+- * instance(s): l4_cfg, l4_per1, l4_per2, l4_per3
++ * instance(s): l4_cfg, l4_per2, l4_per3
   */
  static struct omap_hwmod_class dra7xx_l4_hwmod_class = {
  	.name	= "l4",
@@ -66,44 +66,44 @@ diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/oma
  	},
  };
  
--/* l4_per3 */
--static struct omap_hwmod dra7xx_l4_per3_hwmod = {
--	.name		= "l4_per3",
+-/* l4_per1 */
+-static struct omap_hwmod dra7xx_l4_per1_hwmod = {
+-	.name		= "l4_per1",
 -	.class		= &dra7xx_l4_hwmod_class,
--	.clkdm_name	= "l4per3_clkdm",
+-	.clkdm_name	= "l4per_clkdm",
 -	.prcm = {
 -		.omap4 = {
--			.clkctrl_offs = DRA7XX_CM_L4PER3_L4_PER3_CLKCTRL_OFFSET,
+-			.clkctrl_offs = DRA7XX_CM_L4PER_L4_PER1_CLKCTRL_OFFSET,
 -			.flags = HWMOD_OMAP4_NO_CONTEXT_LOSS_BIT,
 -		},
 -	},
 -};
 -
- /*
-  * 'bb2d' class
-  *
-@@ -220,14 +207,6 @@ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_cfg = {
+ /* l4_per2 */
+ static struct omap_hwmod dra7xx_l4_per2_hwmod = {
+ 	.name		= "l4_per2",
+@@ -270,14 +257,6 @@ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_cfg = {
  	.user		= OCP_USER_MPU | OCP_USER_SDMA,
  };
  
--/* l3_main_1 -> l4_per3 */
--static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_per3 = {
+-/* l3_main_1 -> l4_per1 */
+-static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_per1 = {
 -	.master		= &dra7xx_l3_main_1_hwmod,
--	.slave		= &dra7xx_l4_per3_hwmod,
+-	.slave		= &dra7xx_l4_per1_hwmod,
 -	.clk		= "l3_iclk_div",
 -	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 -};
 -
- /* l3_main_1 -> bb2d */
- static struct omap_hwmod_ocp_if dra7xx_l3_main_1__bb2d = {
+ /* l3_main_1 -> l4_per2 */
+ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_per2 = {
  	.master		= &dra7xx_l3_main_1_hwmod,
-@@ -258,7 +237,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+@@ -348,7 +327,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
  	&dra7xx_l3_main_1__l3_main_2,
  	&dra7xx_l4_cfg__l3_main_2,
  	&dra7xx_l3_main_1__l4_cfg,
--	&dra7xx_l3_main_1__l4_per3,
- 	&dra7xx_l3_main_1__bb2d,
- 	&dra7xx_l3_main_1__vcp1,
- 	&dra7xx_l3_main_1__vcp2,
+-	&dra7xx_l3_main_1__l4_per1,
+ 	&dra7xx_l3_main_1__l4_per2,
+ 	&dra7xx_l3_main_1__l4_per3,
+ 	&dra7xx_l4_per2__atl,
 -- 
 2.30.0
