@@ -3,107 +3,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56F0BC432C3
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F10CC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33C062310E
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 284B5230FE
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403859AbhAZMlH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:41:07 -0500
-Received: from muru.com ([72.249.23.125]:53350 "EHLO muru.com"
+        id S2403800AbhAZMk6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:40:58 -0500
+Received: from muru.com ([72.249.23.125]:53318 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403801AbhAZMlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 07:41:03 -0500
+        id S2391625AbhAZMk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 07:40:57 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 9F6F0820C;
-        Tue, 26 Jan 2021 12:40:25 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id E4CD58057;
+        Tue, 26 Jan 2021 12:40:19 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 03/15] ARM: dts: Configure interconnect target module for dra7 pcie
-Date:   Tue, 26 Jan 2021 14:39:52 +0200
-Message-Id: <20210126124004.52550-4-tony@atomide.com>
+Subject: [PATCHv2 00/15] Update dra7 devicetree files to probe with genpd
+Date:   Tue, 26 Jan 2021 14:39:49 +0200
+Message-Id: <20210126124004.52550-1-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210126124004.52550-1-tony@atomide.com>
-References: <20210126124004.52550-1-tony@atomide.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now probe devices with device tree only configuration using
-ti-sysc interconnect target module driver. Let's configure the
-module, but keep the legacy "ti,hwmods" peroperty to avoid new boot
-time warnings. The legacy property will be removed in later patches
-together with the legacy platform data.
+Hi all,
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- arch/arm/boot/dts/dra7.dtsi | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+Here's v2 series to update dra7 to probe with ti-sysc and genpd like we've
+already done for am3 and 4.
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -166,8 +166,21 @@ l4_per2: interconnect@48400000 {
- 		l4_per3: interconnect@48800000 {
- 		};
- 
--		axi@0 {
--			compatible = "simple-bus";
-+		/*
-+		 * Register access seems to have complex dependencies and also
-+		 * seems to need an enabled phy. See the TRM chapter for "Table
-+		 * 26-678. Main Sequence PCIe Controller Global Initialization"
-+		 * and also dra7xx_pcie_probe().
-+		 */
-+		axi0: target-module@51000000 {
-+			compatible = "ti,sysc-omap4", "ti,sysc";
-+			power-domains = <&prm_l3init>;
-+			resets = <&prm_l3init 0>;
-+			reset-names = "rstctrl";
-+			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 0>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 9>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 10>;
-+			clock-names = "fck", "phy-clk", "phy-clk-div";
- 			#size-cells = <1>;
- 			#address-cells = <1>;
- 			ranges = <0x51000000 0x51000000 0x3000>,
-@@ -229,8 +242,21 @@ pcie1_ep: pcie_ep@51000000 {
- 			};
- 		};
- 
--		axi@1 {
--			compatible = "simple-bus";
-+		/*
-+		 * Register access seems to have complex dependencies and also
-+		 * seems to need an enabled phy. See the TRM chapter for "Table
-+		 * 26-678. Main Sequence PCIe Controller Global Initialization"
-+		 * and also dra7xx_pcie_probe().
-+		 */
-+		axi1: target-module@51800000 {
-+			compatible = "ti,sysc-omap4", "ti,sysc";
-+			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 0>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 9>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 10>;
-+			clock-names = "fck", "phy-clk", "phy-clk-div";
-+			power-domains = <&prm_l3init>;
-+			resets = <&prm_l3init 1>;
-+			reset-names = "rstctrl";
- 			#size-cells = <1>;
- 			#address-cells = <1>;
- 			ranges = <0x51800000 0x51800000 0x3000>,
+These patches are against v5.11-rc1, and depend on the following commits
+in my fixes branch:
+
+7078a5ba7a58 ("soc: ti: omap-prm: Fix boot time errors for rst_map_012 bits 0 and 1")
+2a39af3870e9 ("ARM: OMAP2+: Fix booting for am335x after moving to simple-pm-bus")
+
+These patches also depend on the series:
+
+[PATCH 0/3] Few ti-sysc changes for v5.12 merge window
+
+Please review and test, I've also pushed out a temporary testing branch to
+make testing easier to [0][1].
+
+Regards,
+
+Tony
+
+Changes since v1:
+
+- Split the series into two parts, looks like most of the emails did not
+  make it to the lists
+
+- Dropped Balaji from Cc as the email address bounces
+
+[0] git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap.git tmp-testing-genpd-dra7
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap.git/log/?h=omap-for-v5.12/tmp-testing-genpd-dra7
+
+Tony Lindgren (15):
+  PCI: pci-dra7xx: Prepare for deferred probe with
+    module_platform_driver
+  ARM: dts: Update pcie ranges for dra7
+  ARM: dts: Configure interconnect target module for dra7 pcie
+  ARM: dts: Properly configure dra7 edma sysconfig registers
+  ARM: dts: Move dra7 l3 noc to a separate node
+  ARM: dts: Configure interconnect target module for dra7 qspi
+  ARM: dts: Configure interconnect target module for dra7 sata
+  ARM: dts: Configure interconnect target module for dra7 mpu
+  ARM: dts: Configure interconnect target module for dra7 dmm
+  ARM: dts: Configure simple-pm-bus for dra7 l4_wkup
+  ARM: dts: Configure simple-pm-bus for dra7 l4_per1
+  ARM: dts: Configure simple-pm-bus for dra7 l4_per2
+  ARM: dts: Configure simple-pm-bus for dra7 l4_per3
+  ARM: dts: Configure simple-pm-bus for dra7 l4_cfg
+  ARM: dts: Configure simple-pm-bus for dra7 l3
+
+ arch/arm/boot/dts/dra7-l4.dtsi          |  76 ++++++---
+ arch/arm/boot/dts/dra7.dtsi             | 216 ++++++++++++++++--------
+ drivers/pci/controller/dwc/pci-dra7xx.c |  13 +-
+ 3 files changed, 213 insertions(+), 92 deletions(-)
+
 -- 
 2.30.0
