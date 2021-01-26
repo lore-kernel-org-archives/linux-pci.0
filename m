@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A00C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:01:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E9FC433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:02:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29A07230FD
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:01:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C007229C9
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:02:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727310AbhAZRAj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:00:39 -0500
-Received: from muru.com ([72.249.23.125]:52952 "EHLO muru.com"
+        id S1727978AbhAZRBL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:01:11 -0500
+Received: from muru.com ([72.249.23.125]:53166 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390009AbhAZI2D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 03:28:03 -0500
+        id S1727980AbhAZIaZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 03:30:25 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id C430C814C;
-        Tue, 26 Jan 2021 08:27:25 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 760A389BE;
+        Tue, 26 Jan 2021 08:27:38 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Balaji T K <balajitk@ti.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>
-Subject: [PATCH 01/27] PCI: pci-dra7xx: Prepare for deferred probe with module_platform_driver
-Date:   Tue, 26 Jan 2021 10:26:50 +0200
-Message-Id: <20210126082716.54358-2-tony@atomide.com>
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 07/27] ARM: dts: Configure interconnect target module for dra7 sata
+Date:   Tue, 26 Jan 2021 10:26:56 +0200
+Message-Id: <20210126082716.54358-8-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -43,90 +43,90 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-After updating pci-dra7xx driver to probe with ti-sysc and genpd, I
-noticed that dra7xx_pcie_probe() would not run if a power-domains property
-was configured for the interconnect target module.
+We can now probe devices with device tree only configuration using
+ti-sysc interconnect target module driver. Let's configure the
+module, but keep the legacy "ti,hwmods" peroperty to avoid new boot
+time warnings. The legacy property will be removed in later patches
+together with the legacy platform data.
 
-Turns out that module_platform_driver_probe uses platform_driver_probe(),
-while module_platform_driver_probe uses platform_driver_register().
+Note that the old sysc register offset is wrong, the real offset is at
+0x1100 as listed in TRM for SATA_SYSCONFIG register. Looks like we've been
+happily using sata on the bootloader configured sysconfig register and
+nobody noticed. Also the old register range for SATAMAC_wrapper registers
+is wrong at 7 while it should be 8. But that too seems harmless.
 
-Only platform_driver_register() works for deferred probe as noted in the
-comments for __platform_driver_probe() in drivers/base/platform.c with a
-line saying "Note that this is incompatible with deferred probing".
+There is also an L3 parent interconnect range that we don't seem to be
+using. That can be added as needed later on.
 
-With module_platform_driver_probe, we have platform_driver_probe() produce
--ENODEV error at device_initcall() level, and no further attempts are done.
-Let's fix this by using module_platform_driver instead.
-
-Note this is not an issue currently as we probe devices with simple-bus,
-and only is needed as we start probing the device with ti-sysc, or when
-probed with simple-pm-bus.
-
-Note that we must now also remove __init for probe related functions to
-avoid a section mismatch warning.
-
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Balaji T K <balajitk@ti.com>
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
+ arch/arm/boot/dts/dra7-l4.dtsi | 29 ++++++++++++++++++++++++++---
+ arch/arm/boot/dts/dra7.dtsi    | 12 ------------
+ 2 files changed, 26 insertions(+), 15 deletions(-)
 
-Can you guys please review test and ack if this looks OK? I'd like to
-apply this together with the series to drop dra7 platform data as it's
-not needed earlier.
-
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -443,8 +443,8 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
- 	.get_features = dra7xx_pcie_get_features,
- };
+diff --git a/arch/arm/boot/dts/dra7-l4.dtsi b/arch/arm/boot/dts/dra7-l4.dtsi
+--- a/arch/arm/boot/dts/dra7-l4.dtsi
++++ b/arch/arm/boot/dts/dra7-l4.dtsi
+@@ -572,11 +572,34 @@ target-module@8000 {			/* 0x4a108000, ap 29 1e.0 */
+ 		};
  
--static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
--				     struct platform_device *pdev)
-+static int dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
-+			      struct platform_device *pdev)
- {
- 	int ret;
- 	struct dw_pcie_ep *ep;
-@@ -472,8 +472,8 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
- 	return 0;
- }
+ 		target-module@40000 {			/* 0x4a140000, ap 31 06.0 */
+-			compatible = "ti,sysc";
+-			status = "disabled";
+-			#address-cells = <1>;
++			compatible = "ti,sysc-omap4", "ti,sysc";
++			ti,hwmods = "sata";
++			reg = <0x400fc 4>,
++			      <0x41100 4>;
++			reg-names = "rev", "sysc";
++			ti,sysc-midle = <SYSC_IDLE_FORCE>,
++					<SYSC_IDLE_NO>,
++					<SYSC_IDLE_SMART>;
++			ti,sysc-sidle = <SYSC_IDLE_FORCE>,
++					<SYSC_IDLE_NO>,
++					<SYSC_IDLE_SMART>,
++					<SYSC_IDLE_SMART_WKUP>;
++			power-domains = <&prm_l3init>;
++			clocks = <&l3init_clkctrl DRA7_L3INIT_SATA_CLKCTRL 0>;
++			clock-names = "fck";
+ 			#size-cells = <1>;
++			#address-cells = <1>;
+ 			ranges = <0x0 0x40000 0x10000>;
++
++			sata: sata@0 {
++				compatible = "snps,dwc-ahci";
++				reg = <0 0x1100>, <0x1100 0x8>;
++				interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
++				phys = <&sata_phy>;
++				phy-names = "sata-phy";
++				clocks = <&l3init_clkctrl DRA7_L3INIT_SATA_CLKCTRL 8>;
++				ports-implemented = <0x1>;
++			};
+ 		};
  
--static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
--				       struct platform_device *pdev)
-+static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-+				struct platform_device *pdev)
- {
- 	int ret;
- 	struct dw_pcie *pci = dra7xx->pci;
-@@ -682,7 +682,7 @@ static int dra7xx_pcie_configure_two_lane(struct device *dev,
- 	return 0;
- }
+ 		target-module@51000 {			/* 0x4a151000, ap 33 50.0 */
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -785,18 +785,6 @@ qspi: spi@0 {
+ 			};
+ 		};
  
--static int __init dra7xx_pcie_probe(struct platform_device *pdev)
-+static int dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
- 	int ret;
-@@ -938,6 +938,7 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- };
+-		/* OCP2SCP3 */
+-		sata: sata@4a141100 {
+-			compatible = "snps,dwc-ahci";
+-			reg = <0x4a140000 0x1100>, <0x4a141100 0x7>;
+-			interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
+-			phys = <&sata_phy>;
+-			phy-names = "sata-phy";
+-			clocks = <&l3init_clkctrl DRA7_L3INIT_SATA_CLKCTRL 8>;
+-			ti,hwmods = "sata";
+-			ports-implemented = <0x1>;
+-		};
+-
+ 		/* OCP2SCP1 */
+ 		/* IRQ for DWC3_3 and DWC3_4 need IRQ crossbar */
  
- static struct platform_driver dra7xx_pcie_driver = {
-+	.probe = dra7xx_pcie_probe,
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-@@ -946,4 +947,4 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	},
- 	.shutdown = dra7xx_pcie_shutdown,
- };
--builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
-+builtin_platform_driver(dra7xx_pcie_driver);
 -- 
 2.30.0
