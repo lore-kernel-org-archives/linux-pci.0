@@ -3,97 +3,130 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F10CC433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2038C433E9
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 284B5230FE
+	by mail.kernel.org (Postfix) with ESMTP id 8E73023128
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403800AbhAZMk6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:40:58 -0500
-Received: from muru.com ([72.249.23.125]:53318 "EHLO muru.com"
+        id S2403879AbhAZMlK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:41:10 -0500
+Received: from muru.com ([72.249.23.125]:53340 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391625AbhAZMk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 07:40:57 -0500
+        id S2403825AbhAZMlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 07:41:02 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id E4CD58057;
-        Tue, 26 Jan 2021 12:40:19 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id A973D81A3;
+        Tue, 26 Jan 2021 12:40:23 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+        devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCHv2 00/15] Update dra7 devicetree files to probe with genpd
-Date:   Tue, 26 Jan 2021 14:39:49 +0200
-Message-Id: <20210126124004.52550-1-tony@atomide.com>
+Subject: [PATCH 02/15] ARM: dts: Update pcie ranges for dra7
+Date:   Tue, 26 Jan 2021 14:39:51 +0200
+Message-Id: <20210126124004.52550-3-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210126124004.52550-1-tony@atomide.com>
+References: <20210126124004.52550-1-tony@atomide.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+In order to update pcie to probe with ti-sysc and genpd, let's update the
+pcie ranges to not use address 0 for 0x20000000 and 0x30000000. The range
+for 0 is typically used for child devices as the offset from the module
+base. In the following patches, we will update pcie to probe with ti-sysc,
+and the patches become a bit confusing to read compared to other similar
+modules unless we update the ranges first. So let's just use the full
+addresses for ranges for the 0x20000000 and 0x30000000 ranges.
 
-Here's v2 series to update dra7 to probe with ti-sysc and genpd like we've
-already done for am3 and 4.
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ arch/arm/boot/dts/dra7.dtsi | 29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
-These patches are against v5.11-rc1, and depend on the following commits
-in my fixes branch:
-
-7078a5ba7a58 ("soc: ti: omap-prm: Fix boot time errors for rst_map_012 bits 0 and 1")
-2a39af3870e9 ("ARM: OMAP2+: Fix booting for am335x after moving to simple-pm-bus")
-
-These patches also depend on the series:
-
-[PATCH 0/3] Few ti-sysc changes for v5.12 merge window
-
-Please review and test, I've also pushed out a temporary testing branch to
-make testing easier to [0][1].
-
-Regards,
-
-Tony
-
-Changes since v1:
-
-- Split the series into two parts, looks like most of the emails did not
-  make it to the lists
-
-- Dropped Balaji from Cc as the email address bounces
-
-[0] git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap.git tmp-testing-genpd-dra7
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap.git/log/?h=omap-for-v5.12/tmp-testing-genpd-dra7
-
-Tony Lindgren (15):
-  PCI: pci-dra7xx: Prepare for deferred probe with
-    module_platform_driver
-  ARM: dts: Update pcie ranges for dra7
-  ARM: dts: Configure interconnect target module for dra7 pcie
-  ARM: dts: Properly configure dra7 edma sysconfig registers
-  ARM: dts: Move dra7 l3 noc to a separate node
-  ARM: dts: Configure interconnect target module for dra7 qspi
-  ARM: dts: Configure interconnect target module for dra7 sata
-  ARM: dts: Configure interconnect target module for dra7 mpu
-  ARM: dts: Configure interconnect target module for dra7 dmm
-  ARM: dts: Configure simple-pm-bus for dra7 l4_wkup
-  ARM: dts: Configure simple-pm-bus for dra7 l4_per1
-  ARM: dts: Configure simple-pm-bus for dra7 l4_per2
-  ARM: dts: Configure simple-pm-bus for dra7 l4_per3
-  ARM: dts: Configure simple-pm-bus for dra7 l4_cfg
-  ARM: dts: Configure simple-pm-bus for dra7 l3
-
- arch/arm/boot/dts/dra7-l4.dtsi          |  76 ++++++---
- arch/arm/boot/dts/dra7.dtsi             | 216 ++++++++++++++++--------
- drivers/pci/controller/dwc/pci-dra7xx.c |  13 +-
- 3 files changed, 213 insertions(+), 92 deletions(-)
-
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -170,22 +170,24 @@ axi@0 {
+ 			compatible = "simple-bus";
+ 			#size-cells = <1>;
+ 			#address-cells = <1>;
+-			ranges = <0x51000000 0x51000000 0x3000
+-				  0x0	     0x20000000 0x10000000>;
++			ranges = <0x51000000 0x51000000 0x3000>,
++				 <0x20000000 0x20000000 0x10000000>;
+ 			dma-ranges;
+ 			/**
+ 			 * To enable PCI endpoint mode, disable the pcie1_rc
+ 			 * node and enable pcie1_ep mode.
+ 			 */
+ 			pcie1_rc: pcie@51000000 {
+-				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
++				reg = <0x51000000 0x2000>,
++				      <0x51002000 0x14c>,
++				      <0x20001000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 232 0x4>, <0 233 0x4>;
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
++				ranges = <0x81000000 0 0x00000000 0x20003000 0 0x00010000>,
++					 <0x82000000 0 0x20013000 0x20013000 0 0x0ffed000>;
+ 				bus-range = <0x00 0xff>;
+ 				#interrupt-cells = <1>;
+ 				num-lanes = <1>;
+@@ -209,7 +211,10 @@ pcie1_intc: interrupt-controller {
+ 			};
+ 
+ 			pcie1_ep: pcie_ep@51000000 {
+-				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
++				reg = <0x51000000 0x28>,
++				      <0x51002000 0x14c>,
++				      <0x51001000 0x28>,
++				      <0x20001000 0x10000000>;
+ 				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
+ 				interrupts = <0 232 0x4>;
+ 				num-lanes = <1>;
+@@ -228,19 +233,21 @@ axi@1 {
+ 			compatible = "simple-bus";
+ 			#size-cells = <1>;
+ 			#address-cells = <1>;
+-			ranges = <0x51800000 0x51800000 0x3000
+-				  0x0	     0x30000000 0x10000000>;
++			ranges = <0x51800000 0x51800000 0x3000>,
++				 <0x30000000 0x30000000 0x10000000>;
+ 			dma-ranges;
+ 			status = "disabled";
+ 			pcie2_rc: pcie@51800000 {
+-				reg = <0x51800000 0x2000>, <0x51802000 0x14c>, <0x1000 0x2000>;
++				reg = <0x51800000 0x2000>,
++				      <0x51802000 0x14c>,
++				      <0x30001000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 355 0x4>, <0 356 0x4>;
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x30013000 0x13000 0 0xffed000>;
++				ranges = <0x81000000 0 0x00000000 0x30003000 0 0x00010000>,
++					 <0x82000000 0 0x30013000 0x30013000 0 0x0ffed000>;
+ 				bus-range = <0x00 0xff>;
+ 				#interrupt-cells = <1>;
+ 				num-lanes = <1>;
 -- 
 2.30.0
