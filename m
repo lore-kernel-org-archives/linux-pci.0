@@ -2,131 +2,342 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5062BC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDF7C433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:26:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F91423120
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:06:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4AAF23129
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390506AbhAZMGR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:06:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32786 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392347AbhAZLW7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2021 06:22:59 -0500
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD083C0617A7;
-        Tue, 26 Jan 2021 03:22:12 -0800 (PST)
-Received: by mail-lj1-x229.google.com with SMTP id f19so10166559ljn.5;
-        Tue, 26 Jan 2021 03:22:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ih68eaA45lBBxmQYA23SwMPQQkvJWOCkqoNeRhWoVxA=;
-        b=SZSR9Ot2y5b48JnRdH/RMmEtPWH8qvYSBx38TV13Bkx1yVPhqktWsAsPQ9cnyCtjSM
-         bPv3D+Z2RxpheCJ7BxfPj0JZaJ6N72UBfHA63H0EYB/RljKoDaHdNCEw1dbikyidKowM
-         udIZKhOodSnSAyjB82QXJlqFdA/vwduKj2CzY8cZkrSwipEQUSVqHCyogRovlUoIQrMz
-         tcDbTZRKPjowN+Dy6lcUFBgF8LyBSicNVGzIU3UbeD9C3nthE6jtNXLdC2br+MJPS5kv
-         QkI84rX+q0a6seCzAdtRWzRl/trbJjFJCPAkJJfNRyDBq398zLVT10MnL7GH372igzKv
-         8dfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ih68eaA45lBBxmQYA23SwMPQQkvJWOCkqoNeRhWoVxA=;
-        b=bq9ApbaBmd/UAg7hrzpsmEmMRRTeUEJjYUDEPHOiZ4GEf9F10Izo+C2ZxeHHtYF9s2
-         Wr79oOciqUi+jlyPF42mREQt3XHP9fTAoFrG2x6keTKT9t6GWHnrsEPuIR2nKHtsUSZw
-         9TF0KXtP6+pSu6B0rTKGc1JJJ6PXLjnA4WVeRm7aH1N/9373puGoeNvvBG2QuFzpaco3
-         7vIp6Trv7WawRAUHAEe0LwPrSgjXNaGvIbruwmGSzumVvXa15xqX97CIvcUKDphDuekl
-         39VE58Z8jmwyjBcdZZw8bKim07Dbcga8muEDiL9VoqKHSOpBM/r+Yqrc0G+J2RIFmvVS
-         QtVw==
-X-Gm-Message-State: AOAM532TwAxN/iLQ3oeKtVkWC1q8Wl2FTYcfWGESjYTYL9+h0vT67tqf
-        cGFpL3JXEwdtQkj2reqr2qTz5qo/rGY53Sgx
-X-Google-Smtp-Source: ABdhPJxlHcU65g68jSBIsU3oU5EeHqmac+DMXdsDz2KHWAycRsq/x3U1+YM/r4OUEIaXZX0+4NkpWw==
-X-Received: by 2002:a2e:9610:: with SMTP id v16mr2560339ljh.374.1611660131427;
-        Tue, 26 Jan 2021 03:22:11 -0800 (PST)
-Received: from ?IPv6:2001:14ba:efe:51f0:444e:3bca:7345:a707? (db7-gd8cfl498z86gz8dt-3.rev.dnainternet.fi. [2001:14ba:efe:51f0:444e:3bca:7345:a707])
-        by smtp.gmail.com with ESMTPSA id 201sm692077lfm.25.2021.01.26.03.22.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Jan 2021 03:22:10 -0800 (PST)
-Subject: Re: [PATCH] PCI: quirk for preventing bus reset on TI C667X
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-References: <20210121235547.GA2705432@bjorn-Precision-5520>
-From:   =?UTF-8?Q?Antti_J=c3=a4rvinen?= <antti.jarvinen@gmail.com>
-Message-ID: <35612e76-0b97-7bb4-60b7-88ae6d53f0be@gmail.com>
-Date:   Tue, 26 Jan 2021 13:22:18 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S2404576AbhAZM0U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:26:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59446 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404481AbhAZMZv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 07:25:51 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A605C23109;
+        Tue, 26 Jan 2021 12:25:10 +0000 (UTC)
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1l4NPA-00A7Mc-LG; Tue, 26 Jan 2021 12:25:08 +0000
 MIME-Version: 1.0
-In-Reply-To: <20210121235547.GA2705432@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Tue, 26 Jan 2021 12:25:08 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sj Huang <sj.huang@mediatek.com>, youlin.pei@mediatek.com,
+        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
+        sin_jieyang@mediatek.com, drinkcat@chromium.org,
+        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
+Subject: Re: [v7,4/7] PCI: mediatek-gen3: Add INTx support
+In-Reply-To: <20210113114001.5804-5-jianjun.wang@mediatek.com>
+References: <20210113114001.5804-1-jianjun.wang@mediatek.com>
+ <20210113114001.5804-5-jianjun.wang@mediatek.com>
+User-Agent: Roundcube Webmail/1.4.10
+Message-ID: <123724a33c29d1f078f2a65795c6e208@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: jianjun.wang@mediatek.com, bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com, ryder.lee@mediatek.com, p.zabel@pengutronix.de, matthias.bgg@gmail.com, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, sj.huang@mediatek.com, youlin.pei@mediatek.com, chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com, sin_jieyang@mediatek.com, drinkcat@chromium.org, Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 22.1.2021 1.55, Bjorn Helgaas wrote:> 
-
-> It looks like we would probably be trying a Secondary Bus Reset using
-> the bridge leading to the C667X.  Can you confirm? 
-
-Yes, this is my understanding too.
-
-> Wonder if you
-> could try doing what pci_reset_secondary_bus() does by hand:
+On 2021-01-13 11:39, Jianjun Wang wrote:
+> Add INTx support for MediaTek Gen3 PCIe controller.
 > 
-
-I tried this by hand. It looks that result is same as through VFIO.
-
-# cat sbr.sh
-BRIDGE=10:00.0
-C667X=11:00.0
-
-setpci -s$C667X VENDOR_ID.w
-
-VAL=$(setpci -s$BRIDGE BRIDGE_CONTROL.w)
-echo $VAL
-setpci -s$BRIDGE BRIDGE_CONTROL.w=$(($VAL | 0x40))
-sleep 1
-setpci -s$BRIDGE BRIDGE_CONTROL.w=$VAL
-sleep 1
-setpci -s$C667X VENDOR_ID.w=0
-setpci -s$C667X VENDOR_ID.w
-
-
-# ./sbr.sh
-104c
-0003
-ffff
-
-
->   # BRIDGE=...                              # PCI address, e.g., 00:1c.0
->   # C667X=...
->   # setpci -s$C667X VENDOR_ID.w
->   # setpci -s$BRIDGE BRIDGE_CONTROL.w       # prints "val"
->   # setpci -s$BRIDGE BRIDGE_CONTROL.w=      # val | 0x40 (set SBR)
->   # sleep 1
->   # setpci -s$BRIDGE BRIDGE_CONTROL.w=      # val (clear SBR)
->   # sleep 1
->   # setpci -s$C667X VENDOR_ID.w=0
->   # setpci -s$C667X VENDOR_ID.w
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek-gen3.c | 163 ++++++++++++++++++++
+>  1 file changed, 163 insertions(+)
 > 
-> If we use this quirk and avoid the reset, I assume that means
-> assigning the device to VMs with VFIO will leak state between VMs?
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c
+> b/drivers/pci/controller/pcie-mediatek-gen3.c
+> index c00ea7c167de..7979a2856c35 100644
+> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+> @@ -9,6 +9,9 @@
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+>  #include <linux/iopoll.h>
+> +#include <linux/irq.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/of_address.h>
+> @@ -49,6 +52,12 @@
+>  #define PCIE_LINK_STATUS_REG		0x154
+>  #define PCIE_PORT_LINKUP		BIT(8)
+> 
+> +#define PCIE_INT_ENABLE_REG		0x180
+> +#define PCIE_INTX_SHIFT			24
+> +#define PCIE_INTX_MASK			GENMASK(27, 24)
 
-I think this is true.
+I guess this '24' is actually PCIE_INTX_SHIFT? In this case,
+please write it as
 
+GENMASK(PCIE_INTX_SHIFT + PCI_NUM_INTX - 1, PCIE_INTX_SHIFT)
+
+to make it clear that you are dealing with one bit per INTx.
+
+> +
+> +#define PCIE_INT_STATUS_REG		0x184
+> +
+>  #define PCIE_TRANS_TABLE_BASE_REG	0x800
+>  #define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
+>  #define PCIE_ATR_TRSL_ADDR_LSB_OFFSET	0x8
+> @@ -77,6 +86,8 @@
+>   * @phy: PHY controller block
+>   * @clks: PCIe clocks
+>   * @num_clks: PCIe clocks count for this port
+> + * @irq: PCIe controller interrupt number
+> + * @intx_domain: legacy INTx IRQ domain
+>   */
+>  struct mtk_pcie_port {
+>  	struct device *dev;
+> @@ -87,6 +98,9 @@ struct mtk_pcie_port {
+>  	struct phy *phy;
+>  	struct clk_bulk_data *clks;
+>  	int num_clks;
+> +
+> +	int irq;
+> +	struct irq_domain *intx_domain;
+>  };
+> 
+>  /**
+> @@ -266,6 +280,149 @@ static int mtk_pcie_startup_port(struct
+> mtk_pcie_port *port)
+>  	return 0;
+>  }
+> 
+> +static int mtk_pcie_set_affinity(struct irq_data *data,
+> +				 const struct cpumask *mask, bool force)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static void mtk_intx_mask(struct irq_data *data)
+> +{
+> +	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+> +	u32 val;
+> +
+> +	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
+> +	val &= ~BIT(data->hwirq + PCIE_INTX_SHIFT);
+> +	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
+
+This is missing some locking. Otherwise, two concurrent mask/unmask
+for different interrupts will corrupt each other's state.
+
+> +}
+> +
+> +static void mtk_intx_unmask(struct irq_data *data)
+> +{
+> +	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+> +	u32 val;
+> +
+> +	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
+> +	val |= BIT(data->hwirq + PCIE_INTX_SHIFT);
+> +	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
+
+Same thing here.
+
+> +}
+> +
+> +/**
+> + * mtk_intx_eoi
+> + * @data: pointer to chip specific data
+> + *
+> + * As an emulated level IRQ, its interrupt status will remain
+> + * until the corresponding de-assert message is received; hence that
+> + * the status can only be cleared when the interrupt has been 
+> serviced.
+> + */
+> +static void mtk_intx_eoi(struct irq_data *data)
+> +{
+> +	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+> +	unsigned long hwirq;
+> +
+> +	hwirq = data->hwirq + PCIE_INTX_SHIFT;
+> +	writel_relaxed(BIT(hwirq), port->base + PCIE_INT_STATUS_REG);
+> +}
+> +
+> +static struct irq_chip mtk_intx_irq_chip = {
+> +	.irq_mask		= mtk_intx_mask,
+> +	.irq_unmask		= mtk_intx_unmask,
+> +	.irq_eoi		= mtk_intx_eoi,
+> +	.irq_set_affinity	= mtk_pcie_set_affinity,
+> +	.name			= "PCIe",
+
+nit: "PCIe" is not really descriptive. "INTx" would be a bit better.
+
+> +};
+> +
+> +static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int 
+> irq,
+> +			     irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler_name(irq, &mtk_intx_irq_chip,
+> +				      handle_fasteoi_irq, "INTx");
+> +	irq_set_chip_data(irq, domain->host_data);
+
+You probably want to set the chip_data *before* wiring
+the handler, as otherwise you could end-up with a NULL
+pointer in any of the callbacks if the interrupt fires
+between the two.
+
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops intx_domain_ops = {
+> +	.map = mtk_pcie_intx_map,
+> +};
+> +
+> +static int mtk_pcie_init_irq_domains(struct mtk_pcie_port *port,
+> +				     struct device_node *node)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *intc_node;
+> +
+> +	/* Setup INTx */
+> +	intc_node = of_get_child_by_name(node, "interrupt-controller");
+> +	if (!intc_node) {
+> +		dev_err(dev, "missing PCIe Intc node\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	port->intx_domain = irq_domain_add_linear(intc_node, PCI_NUM_INTX,
+> +						  &intx_domain_ops, port);
+> +	if (!port->intx_domain) {
+> +		dev_err(dev, "failed to get INTx IRQ domain\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void mtk_pcie_irq_teardown(struct mtk_pcie_port *port)
+> +{
+> +	irq_set_chained_handler_and_data(port->irq, NULL, NULL);
+> +
+> +	if (port->intx_domain)
+> +		irq_domain_remove(port->intx_domain);
+> +
+> +	irq_dispose_mapping(port->irq);
+> +}
+> +
+> +static void mtk_pcie_irq_handler(struct irq_desc *desc)
+> +{
+> +	struct mtk_pcie_port *port = irq_desc_get_handler_data(desc);
+> +	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+> +	unsigned long status;
+> +	unsigned int virq;
+> +	irq_hw_number_t irq_bit = PCIE_INTX_SHIFT;
+> +
+> +	chained_irq_enter(irqchip, desc);
+> +
+> +	status = readl_relaxed(port->base + PCIE_INT_STATUS_REG);
+> +	if (status & PCIE_INTX_MASK) {
+
+This "if (status & PCIE_INTX_MASK)" is already implicit from
+the for_each_set_bit_from() iterator, and you can drop it.
+
+> +		for_each_set_bit_from(irq_bit, &status, PCI_NUM_INTX +
+> +				      PCIE_INTX_SHIFT) {
+> +			virq = irq_find_mapping(port->intx_domain,
+> +						irq_bit - PCIE_INTX_SHIFT);
+> +			generic_handle_irq(virq);
+> +		}
+> +	}
+> +
+> +	chained_irq_exit(irqchip, desc);
+> +}
+> +
+> +static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+> +			      struct device_node *node)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct platform_device *pdev = to_platform_device(dev);
+> +	int err;
+> +
+> +	err = mtk_pcie_init_irq_domains(port, node);
+> +	if (err) {
+> +		dev_err(dev, "failed to init PCIe IRQ domain\n");
+> +		return err;
+> +	}
+> +
+> +	port->irq = platform_get_irq(pdev, 0);
+> +	if (port->irq < 0)
+> +		return port->irq;
+> +
+> +	irq_set_chained_handler_and_data(port->irq, mtk_pcie_irq_handler, 
+> port);
+
+You seem to be missing something that will mask all INTx interrupts
+as an initial state.
+
+> +
+> +	return 0;
+> +}
+> +
+>  static int mtk_pcie_clk_init(struct mtk_pcie_port *port)
+>  {
+>  	int ret;
+> @@ -388,6 +545,10 @@ static int mtk_pcie_setup(struct mtk_pcie_port 
+> *port)
+>  		goto err_setup;
+>  	}
+> 
+> +	err = mtk_pcie_setup_irq(port, dev->of_node);
+> +	if (err)
+> +		goto err_setup;
+> +
+>  	dev_info(dev, "PCIe link up success!\n");
+> 
+>  	return 0;
+> @@ -423,6 +584,7 @@ static int mtk_pcie_probe(struct platform_device 
+> *pdev)
+> 
+>  	err = pci_host_probe(host);
+>  	if (err) {
+> +		mtk_pcie_irq_teardown(port);
+>  		mtk_pcie_power_down(port);
+>  		return err;
+>  	}
+> @@ -440,6 +602,7 @@ static int mtk_pcie_remove(struct platform_device 
+> *pdev)
+>  	pci_remove_root_bus(host->bus);
+>  	pci_unlock_rescan_remove();
+> 
+> +	mtk_pcie_irq_teardown(port);
+>  	mtk_pcie_power_down(port);
+> 
+>  	return 0;
+
+Thanks,
+
+         M.
+-- 
+Jazz is not dead. It just smells funny...
