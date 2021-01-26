@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1763C4332D
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56F0BC432C3
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C89E923121
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33C062310E
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 12:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403819AbhAZMlA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:41:00 -0500
-Received: from muru.com ([72.249.23.125]:53330 "EHLO muru.com"
+        id S2403859AbhAZMlH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 07:41:07 -0500
+Received: from muru.com ([72.249.23.125]:53350 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403801AbhAZMk7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 07:40:59 -0500
+        id S2403801AbhAZMlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 07:41:03 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id B77D5814C;
-        Tue, 26 Jan 2021 12:40:21 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 9F6F0820C;
+        Tue, 26 Jan 2021 12:40:25 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>
-Subject: [PATCH 01/15] PCI: pci-dra7xx: Prepare for deferred probe with module_platform_driver
-Date:   Tue, 26 Jan 2021 14:39:50 +0200
-Message-Id: <20210126124004.52550-2-tony@atomide.com>
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 03/15] ARM: dts: Configure interconnect target module for dra7 pcie
+Date:   Tue, 26 Jan 2021 14:39:52 +0200
+Message-Id: <20210126124004.52550-4-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126124004.52550-1-tony@atomide.com>
 References: <20210126124004.52550-1-tony@atomide.com>
@@ -42,90 +42,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-After updating pci-dra7xx driver to probe with ti-sysc and genpd, I
-noticed that dra7xx_pcie_probe() would not run if a power-domains property
-was configured for the interconnect target module.
+We can now probe devices with device tree only configuration using
+ti-sysc interconnect target module driver. Let's configure the
+module, but keep the legacy "ti,hwmods" peroperty to avoid new boot
+time warnings. The legacy property will be removed in later patches
+together with the legacy platform data.
 
-Turns out that module_platform_driver_probe uses platform_driver_probe(),
-while module_platform_driver_probe uses platform_driver_register().
-
-Only platform_driver_register() works for deferred probe as noted in the
-comments for __platform_driver_probe() in drivers/base/platform.c with a
-line saying "Note that this is incompatible with deferred probing".
-
-With module_platform_driver_probe, we have platform_driver_probe() produce
--ENODEV error at device_initcall() level, and no further attempts are done.
-Let's fix this by using module_platform_driver instead.
-
-Note this is not an issue currently as we probe devices with simple-bus,
-and only is needed as we start probing the device with ti-sysc, or when
-probed with simple-pm-bus.
-
-Note that we must now also remove __init for probe related functions to
-avoid a section mismatch warning.
-
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
+ arch/arm/boot/dts/dra7.dtsi | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-Can you guys please review test and ack if this looks OK? I'd like to
-apply this together with the series to drop dra7 platform data as it's
-not needed earlier.
-
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -443,8 +443,8 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
- 	.get_features = dra7xx_pcie_get_features,
- };
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -166,8 +166,21 @@ l4_per2: interconnect@48400000 {
+ 		l4_per3: interconnect@48800000 {
+ 		};
  
--static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
--				     struct platform_device *pdev)
-+static int dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
-+			      struct platform_device *pdev)
- {
- 	int ret;
- 	struct dw_pcie_ep *ep;
-@@ -472,8 +472,8 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
- 	return 0;
- }
+-		axi@0 {
+-			compatible = "simple-bus";
++		/*
++		 * Register access seems to have complex dependencies and also
++		 * seems to need an enabled phy. See the TRM chapter for "Table
++		 * 26-678. Main Sequence PCIe Controller Global Initialization"
++		 * and also dra7xx_pcie_probe().
++		 */
++		axi0: target-module@51000000 {
++			compatible = "ti,sysc-omap4", "ti,sysc";
++			power-domains = <&prm_l3init>;
++			resets = <&prm_l3init 0>;
++			reset-names = "rstctrl";
++			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 0>,
++				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 9>,
++				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 10>;
++			clock-names = "fck", "phy-clk", "phy-clk-div";
+ 			#size-cells = <1>;
+ 			#address-cells = <1>;
+ 			ranges = <0x51000000 0x51000000 0x3000>,
+@@ -229,8 +242,21 @@ pcie1_ep: pcie_ep@51000000 {
+ 			};
+ 		};
  
--static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
--				       struct platform_device *pdev)
-+static int dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
-+				struct platform_device *pdev)
- {
- 	int ret;
- 	struct dw_pcie *pci = dra7xx->pci;
-@@ -682,7 +682,7 @@ static int dra7xx_pcie_configure_two_lane(struct device *dev,
- 	return 0;
- }
- 
--static int __init dra7xx_pcie_probe(struct platform_device *pdev)
-+static int dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
- 	int ret;
-@@ -938,6 +938,7 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- };
- 
- static struct platform_driver dra7xx_pcie_driver = {
-+	.probe = dra7xx_pcie_probe,
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-@@ -946,4 +947,4 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	},
- 	.shutdown = dra7xx_pcie_shutdown,
- };
--builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
-+builtin_platform_driver(dra7xx_pcie_driver);
+-		axi@1 {
+-			compatible = "simple-bus";
++		/*
++		 * Register access seems to have complex dependencies and also
++		 * seems to need an enabled phy. See the TRM chapter for "Table
++		 * 26-678. Main Sequence PCIe Controller Global Initialization"
++		 * and also dra7xx_pcie_probe().
++		 */
++		axi1: target-module@51800000 {
++			compatible = "ti,sysc-omap4", "ti,sysc";
++			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 0>,
++				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 9>,
++				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 10>;
++			clock-names = "fck", "phy-clk", "phy-clk-div";
++			power-domains = <&prm_l3init>;
++			resets = <&prm_l3init 1>;
++			reset-names = "rstctrl";
+ 			#size-cells = <1>;
+ 			#address-cells = <1>;
+ 			ranges = <0x51800000 0x51800000 0x3000>,
 -- 
 2.30.0
