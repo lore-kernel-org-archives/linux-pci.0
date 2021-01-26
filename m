@@ -2,27 +2,26 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D76B8C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF654C433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:03:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFD6422228
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:03:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A236E206CC
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:03:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729684AbhAZREe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:04:34 -0500
-Received: from muru.com ([72.249.23.125]:53176 "EHLO muru.com"
+        id S1727937AbhAZRD3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:03:29 -0500
+Received: from muru.com ([72.249.23.125]:53164 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390147AbhAZIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2390137AbhAZIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 26 Jan 2021 03:31:22 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 46E5B8B46;
-        Tue, 26 Jan 2021 08:28:03 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id DB9678AE1;
+        Tue, 26 Jan 2021 08:27:52 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
@@ -32,9 +31,9 @@ Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 19/27] ARM: OMAP2+: Drop legacy platform data for dra7 mpu
-Date:   Tue, 26 Jan 2021 10:27:08 +0200
-Message-Id: <20210126082716.54358-20-tony@atomide.com>
+Subject: [PATCH 14/27] ARM: dts: Configure simple-pm-bus for dra7 l4_cfg
+Date:   Tue, 26 Jan 2021 10:27:03 +0200
+Message-Id: <20210126082716.54358-15-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -44,109 +43,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now probe devices with ti-sysc interconnect driver and dts data.
-Let's drop the related platform data and custom ti,hwmods dts property.
-
-As we're just dropping data, and the early platform data init is based on
-the custom ti,hwmods property, we want to drop both the platform data and
-ti,hwmods property in a single patch.
+We can now probe interconnects with device tree only configuration using
+simple-pm-bus and genpd.
 
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- arch/arm/boot/dts/dra7.dtsi               |  1 -
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c | 42 -----------------------
- 2 files changed, 43 deletions(-)
+ arch/arm/boot/dts/dra7-l4.dtsi | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -158,7 +158,6 @@ l4_per1: interconnect@48000000 {
+diff --git a/arch/arm/boot/dts/dra7-l4.dtsi b/arch/arm/boot/dts/dra7-l4.dtsi
+--- a/arch/arm/boot/dts/dra7-l4.dtsi
++++ b/arch/arm/boot/dts/dra7-l4.dtsi
+@@ -1,5 +1,8 @@
+ &l4_cfg {						/* 0x4a000000 */
+-	compatible = "ti,dra7-l4-cfg", "simple-bus";
++	compatible = "ti,dra7-l4-cfg", "simple-pm-bus";
++	power-domains = <&prm_coreaon>;
++	clocks = <&l4cfg_clkctrl DRA7_L4CFG_L4_CFG_CLKCTRL 0>;
++	clock-names = "fck";
+ 	reg = <0x4a000000 0x800>,
+ 	      <0x4a000800 0x800>,
+ 	      <0x4a001000 0x1000>;
+@@ -11,7 +14,7 @@ &l4_cfg {						/* 0x4a000000 */
+ 		 <0x00200000 0x4a200000 0x100000>;	/* segment 2 */
  
- 		target-module@48210000 {
- 			compatible = "ti,sysc-omap4-simple", "ti,sysc";
--			ti,hwmods = "mpu";
- 			power-domains = <&prm_mpu>;
- 			clocks = <&mpu_clkctrl DRA7_MPU_CLKCTRL 0>;
- 			clock-names = "fck";
-diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
---- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-@@ -242,30 +242,6 @@ static struct omap_hwmod dra7xx_ctrl_module_wkup_hwmod = {
- 	},
- };
+ 	segment@0 {					/* 0x4a000000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00000000 0x00000000 0x000800>,	/* ap 0 */
+@@ -493,7 +496,7 @@ hwspinlock: spinlock@0 {
+ 	};
  
--/*
-- * 'mpu' class
-- *
-- */
--
--static struct omap_hwmod_class dra7xx_mpu_hwmod_class = {
--	.name	= "mpu",
--};
--
--/* mpu */
--static struct omap_hwmod dra7xx_mpu_hwmod = {
--	.name		= "mpu",
--	.class		= &dra7xx_mpu_hwmod_class,
--	.clkdm_name	= "mpu_clkdm",
--	.flags		= HWMOD_INIT_NO_IDLE | HWMOD_INIT_NO_RESET,
--	.main_clk	= "dpll_mpu_m2_ck",
--	.prcm = {
--		.omap4 = {
--			.clkctrl_offs = DRA7XX_CM_MPU_MPU_CLKCTRL_OFFSET,
--			.context_offs = DRA7XX_RM_MPU_MPU_CONTEXT_OFFSET,
--		},
--	},
--};
--
- /*
-  * 'vcp' class
-  *
-@@ -333,14 +309,6 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__l3_main_1 = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
+ 	segment@100000 {					/* 0x4a100000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00002000 0x00102000 0x001000>,	/* ap 27 */
+@@ -812,7 +815,7 @@ target-module@87000 {			/* 0x4a187000, ap 75 74.0 */
+ 	};
  
--/* mpu -> l3_main_1 */
--static struct omap_hwmod_ocp_if dra7xx_mpu__l3_main_1 = {
--	.master		= &dra7xx_mpu_hwmod,
--	.slave		= &dra7xx_l3_main_1_hwmod,
--	.clk		= "l3_iclk_div",
--	.user		= OCP_USER_MPU,
--};
--
- /* l3_main_1 -> l3_main_2 */
- static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l3_main_2 = {
- 	.master		= &dra7xx_l3_main_1_hwmod,
-@@ -421,14 +389,6 @@ static struct omap_hwmod_ocp_if dra7xx_l4_wkup__ctrl_module_wkup = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
- 
--/* l4_cfg -> mpu */
--static struct omap_hwmod_ocp_if dra7xx_l4_cfg__mpu = {
--	.master		= &dra7xx_l4_cfg_hwmod,
--	.slave		= &dra7xx_mpu_hwmod,
--	.clk		= "l3_iclk_div",
--	.user		= OCP_USER_MPU | OCP_USER_SDMA,
--};
--
- /* l3_main_1 -> vcp1 */
- static struct omap_hwmod_ocp_if dra7xx_l3_main_1__vcp1 = {
- 	.master		= &dra7xx_l3_main_1_hwmod,
-@@ -465,7 +425,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l3_main_1__dmm,
- 	&dra7xx_l3_main_2__l3_instr,
- 	&dra7xx_l4_cfg__l3_main_1,
--	&dra7xx_mpu__l3_main_1,
- 	&dra7xx_l3_main_1__l3_main_2,
- 	&dra7xx_l4_cfg__l3_main_2,
- 	&dra7xx_l3_main_1__l4_cfg,
-@@ -476,7 +435,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l4_per2__atl,
- 	&dra7xx_l3_main_1__bb2d,
- 	&dra7xx_l4_wkup__ctrl_module_wkup,
--	&dra7xx_l4_cfg__mpu,
- 	&dra7xx_l3_main_1__vcp1,
- 	&dra7xx_l4_per2__vcp1,
- 	&dra7xx_l3_main_1__vcp2,
+ 	segment@200000 {					/* 0x4a200000 */
+-		compatible = "simple-bus";
++		compatible = "simple-pm-bus";
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		ranges = <0x00018000 0x00218000 0x001000>,	/* ap 43 */
 -- 
 2.30.0
