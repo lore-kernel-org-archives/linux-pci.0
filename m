@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E4F4C433DB
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06742C433E6
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE9DC2228A
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:06:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4D9022228
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:06:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727362AbhAZRAo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:00:44 -0500
-Received: from muru.com ([72.249.23.125]:52972 "EHLO muru.com"
+        id S1727341AbhAZRAk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:00:40 -0500
+Received: from muru.com ([72.249.23.125]:52962 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389104AbhAZI2I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 03:28:08 -0500
+        id S2388921AbhAZI2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 03:28:06 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id 0D5F88327;
-        Tue, 26 Jan 2021 08:27:29 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id E46B6820C;
+        Tue, 26 Jan 2021 08:27:27 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
@@ -31,9 +31,9 @@ Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 03/27] ARM: dts: Configure interconnect target module for dra7 pcie
-Date:   Tue, 26 Jan 2021 10:26:52 +0200
-Message-Id: <20210126082716.54358-4-tony@atomide.com>
+Subject: [PATCH 02/27] ARM: dts: Update pcie ranges for dra7
+Date:   Tue, 26 Jan 2021 10:26:51 +0200
+Message-Id: <20210126082716.54358-3-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -43,68 +43,91 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now probe devices with device tree only configuration using
-ti-sysc interconnect target module driver. Let's configure the
-module, but keep the legacy "ti,hwmods" peroperty to avoid new boot
-time warnings. The legacy property will be removed in later patches
-together with the legacy platform data.
+In order to update pcie to probe with ti-sysc and genpd, let's update the
+pcie ranges to not use address 0 for 0x20000000 and 0x30000000. The range
+for 0 is typically used for child devices as the offset from the module
+base. In the following patches, we will update pcie to probe with ti-sysc,
+and the patches become a bit confusing to read compared to other similar
+modules unless we update the ranges first. So let's just use the full
+addresses for ranges for the 0x20000000 and 0x30000000 ranges.
 
 Cc: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- arch/arm/boot/dts/dra7.dtsi | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+ arch/arm/boot/dts/dra7.dtsi | 29 ++++++++++++++++++-----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
 diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
 --- a/arch/arm/boot/dts/dra7.dtsi
 +++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -166,8 +166,21 @@ l4_per2: interconnect@48400000 {
- 		l4_per3: interconnect@48800000 {
- 		};
- 
--		axi@0 {
--			compatible = "simple-bus";
-+		/*
-+		 * Register access seems to have complex dependencies and also
-+		 * seems to need an enabled phy. See the TRM chapter for "Table
-+		 * 26-678. Main Sequence PCIe Controller Global Initialization"
-+		 * and also dra7xx_pcie_probe().
-+		 */
-+		axi0: target-module@51000000 {
-+			compatible = "ti,sysc-omap4", "ti,sysc";
-+			power-domains = <&prm_l3init>;
-+			resets = <&prm_l3init 0>;
-+			reset-names = "rstctrl";
-+			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 0>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 9>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE1_CLKCTRL 10>;
-+			clock-names = "fck", "phy-clk", "phy-clk-div";
+@@ -170,22 +170,24 @@ axi@0 {
+ 			compatible = "simple-bus";
  			#size-cells = <1>;
  			#address-cells = <1>;
- 			ranges = <0x51000000 0x51000000 0x3000>,
-@@ -229,8 +242,21 @@ pcie1_ep: pcie_ep@51000000 {
+-			ranges = <0x51000000 0x51000000 0x3000
+-				  0x0	     0x20000000 0x10000000>;
++			ranges = <0x51000000 0x51000000 0x3000>,
++				 <0x20000000 0x20000000 0x10000000>;
+ 			dma-ranges;
+ 			/**
+ 			 * To enable PCI endpoint mode, disable the pcie1_rc
+ 			 * node and enable pcie1_ep mode.
+ 			 */
+ 			pcie1_rc: pcie@51000000 {
+-				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
++				reg = <0x51000000 0x2000>,
++				      <0x51002000 0x14c>,
++				      <0x20001000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 232 0x4>, <0 233 0x4>;
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x20013000 0x13000 0 0xffed000>;
++				ranges = <0x81000000 0 0x00000000 0x20003000 0 0x00010000>,
++					 <0x82000000 0 0x20013000 0x20013000 0 0x0ffed000>;
+ 				bus-range = <0x00 0xff>;
+ 				#interrupt-cells = <1>;
+ 				num-lanes = <1>;
+@@ -209,7 +211,10 @@ pcie1_intc: interrupt-controller {
  			};
- 		};
  
--		axi@1 {
--			compatible = "simple-bus";
-+		/*
-+		 * Register access seems to have complex dependencies and also
-+		 * seems to need an enabled phy. See the TRM chapter for "Table
-+		 * 26-678. Main Sequence PCIe Controller Global Initialization"
-+		 * and also dra7xx_pcie_probe().
-+		 */
-+		axi1: target-module@51800000 {
-+			compatible = "ti,sysc-omap4", "ti,sysc";
-+			clocks = <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 0>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 9>,
-+				 <&pcie_clkctrl DRA7_PCIE_PCIE2_CLKCTRL 10>;
-+			clock-names = "fck", "phy-clk", "phy-clk-div";
-+			power-domains = <&prm_l3init>;
-+			resets = <&prm_l3init 1>;
-+			reset-names = "rstctrl";
+ 			pcie1_ep: pcie_ep@51000000 {
+-				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
++				reg = <0x51000000 0x28>,
++				      <0x51002000 0x14c>,
++				      <0x51001000 0x28>,
++				      <0x20001000 0x10000000>;
+ 				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
+ 				interrupts = <0 232 0x4>;
+ 				num-lanes = <1>;
+@@ -228,19 +233,21 @@ axi@1 {
+ 			compatible = "simple-bus";
  			#size-cells = <1>;
  			#address-cells = <1>;
- 			ranges = <0x51800000 0x51800000 0x3000>,
+-			ranges = <0x51800000 0x51800000 0x3000
+-				  0x0	     0x30000000 0x10000000>;
++			ranges = <0x51800000 0x51800000 0x3000>,
++				 <0x30000000 0x30000000 0x10000000>;
+ 			dma-ranges;
+ 			status = "disabled";
+ 			pcie2_rc: pcie@51800000 {
+-				reg = <0x51800000 0x2000>, <0x51802000 0x14c>, <0x1000 0x2000>;
++				reg = <0x51800000 0x2000>,
++				      <0x51802000 0x14c>,
++				      <0x30001000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 355 0x4>, <0 356 0x4>;
+ 				#address-cells = <3>;
+ 				#size-cells = <2>;
+ 				device_type = "pci";
+-				ranges = <0x81000000 0 0          0x03000 0 0x00010000
+-					  0x82000000 0 0x30013000 0x13000 0 0xffed000>;
++				ranges = <0x81000000 0 0x00000000 0x30003000 0 0x00010000>,
++					 <0x82000000 0 0x30013000 0x30013000 0 0x0ffed000>;
+ 				bus-range = <0x00 0xff>;
+ 				#interrupt-cells = <1>;
+ 				num-lanes = <1>;
 -- 
 2.30.0
