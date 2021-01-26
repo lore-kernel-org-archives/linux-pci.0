@@ -2,157 +2,159 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C41C433DB
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:36:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A848DC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 23:29:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 308C422A84
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:36:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6722A2067B
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 23:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725837AbhAZFkF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 00:40:05 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:58353 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727393AbhAYKQK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Jan 2021 05:16:10 -0500
-X-UUID: 6384287551e242db833b41f0c09ca140-20210125
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=agLfhRiuBQXPUocs/4aHh4BCnBF//jWXNeHjcfaSKuI=;
-        b=Uiaz2Pj+ptMJi915Iq/CtEYKrHAaOLC0jFKhZbgkqvdjx1tU96R+Jlsrzu44OHBHUEIkOBP9Q3ivGRk9smm23GStaHPZ029Ka0LC/p8pXJHhYI1s7IDgG3jOcZVc1UgDXGzjtSJm3OcIbvuy+8SI7yMVvribHCNQaWBuix3ncD4=;
-X-UUID: 6384287551e242db833b41f0c09ca140-20210125
-Received: from mtkcas34.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
-        (envelope-from <mingchuang.qiao@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1678971890; Mon, 25 Jan 2021 18:14:40 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31N1.mediatek.inc
- (172.27.4.69) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 25 Jan
- 2021 18:14:34 +0800
-Received: from [10.19.240.15] (10.19.240.15) by MTKCAS36.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 25 Jan 2021 18:14:34 +0800
-Message-ID: <1611569674.5980.101.camel@mcddlt001>
-Subject: Re: [PATCH v2] PCI: Re-enable downstream port LTR if it was
- previously enabled
-From:   Mingchuang Qiao <mingchuang.qiao@mediatek.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Utkarsh H Patel" <utkarsh.h.patel@intel.com>,
-        <linux-pci@vger.kernel.org>, <matthias.bgg@gmail.com>,
-        <lambert.wang@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <haijun.liu@mediatek.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>
-Date:   Mon, 25 Jan 2021 18:14:34 +0800
-In-Reply-To: <20210122132006.GA2749050@bjorn-Precision-5520>
-References: <20210122132006.GA2749050@bjorn-Precision-5520>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1727466AbhAZXR2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:17:28 -0500
+Received: from mx.socionext.com ([202.248.49.38]:47481 "EHLO mx.socionext.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732684AbhAZF0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 00:26:35 -0500
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 26 Jan 2021 14:25:35 +0900
+Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
+        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 27D702059025;
+        Tue, 26 Jan 2021 14:25:35 +0900 (JST)
+Received: from 172.31.9.53 (172.31.9.53) by m-FILTER with ESMTP; Tue, 26 Jan 2021 14:25:35 +0900
+Received: from yuzu.css.socionext.com (yuzu [172.31.8.45])
+        by iyokan2.css.socionext.com (Postfix) with ESMTP id C1729B1D40;
+        Tue, 26 Jan 2021 14:25:34 +0900 (JST)
+Received: from [10.212.21.92] (unknown [10.212.21.92])
+        by yuzu.css.socionext.com (Postfix) with ESMTP id 1EBC912014A;
+        Tue, 26 Jan 2021 14:25:34 +0900 (JST)
+Subject: Re: [PATCH] PCI: dwc: Move forward the iATU detection process
+To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com,
+        gustavo.pimentel@synopsys.com, jingoohan1@gmail.com,
+        jaswinder.singh@linaro.org, masami.hiramatsu@linaro.org
+References: <20210125044803.4310-1-Zhiqiang.Hou@nxp.com>
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Message-ID: <7d2d8a01-1339-2858-0d6a-5674f1cf2bca@socionext.com>
+Date:   Tue, 26 Jan 2021 14:25:33 +0900
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 285C75945C61DF9626389DE331E26E2A373F19C46FAB96DAF5BBD6B4539DE7102000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20210125044803.4310-1-Zhiqiang.Hou@nxp.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gRnJpLCAyMDIxLTAxLTIyIGF0IDA3OjIwIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBPbiBGcmksIEphbiAyMiwgMjAyMSBhdCAwMzowMzoxMVBNICswODAwLCBNaW5nY2h1YW5nIFFp
-YW8gd3JvdGU6DQo+ID4gT24gVGh1LCAyMDIxLTAxLTIxIGF0IDE2OjMxIC0wNjAwLCBCam9ybiBI
-ZWxnYWFzIHdyb3RlOg0KPiA+ID4gWytjYyBBbGV4IGFuZCBNaW5nY2h1YW5nIGV0IGFsIGZyb20N
-Cj4gPiA+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyMTAxMTIwNzI3MzkuMzE2MjQtMS1t
-aW5nY2h1YW5nLnFpYW9AbWVkaWF0ZWsuY29tXQ0KPiA+ID4gDQo+ID4gPiBPbiBUdWUsIEphbiAx
-OSwgMjAyMSBhdCAwNDoxNDoxMFBNICswMzAwLCBNaWthIFdlc3RlcmJlcmcgd3JvdGU6DQo+ID4g
-PiA+IFBDSWUgcjUuMCwgc2VjIDcuNS4zLjE2IHNheXMgdGhhdCB0aGUgZG93bnN0cmVhbSBwb3J0
-cyBtdXN0IHJlc2V0IHRoZQ0KPiA+ID4gPiBMVFIgZW5hYmxlIGJpdCBpZiB0aGUgbGluayBnb2Vz
-IGRvd24gKHBvcnQgZ29lcyBETF9Eb3duIHN0YXR1cykuIE5vdywgaWYNCj4gPiA+ID4gd2UgaGFk
-IExUUiBwcmV2aW91c2x5IGVuYWJsZWQgYW5kIHRoZSBQQ0llIGVuZHBvaW50IGdldHMgaG90LXJl
-bW92ZWQgYW5kDQo+ID4gPiA+IHRoZW4gaG90LWFkZGVkIGJhY2sgdGhlIC0+bHRyX3BhdGggb2Yg
-dGhlIGRvd25zdHJlYW0gcG9ydCBpcyBzdGlsbCBzZXQNCj4gPiA+ID4gYnV0IHRoZSBwb3J0IG5v
-dyBkb2VzIG5vdCBoYXZlIHRoZSBMVFIgZW5hYmxlIGJpdCBzZXQgYW55bW9yZS4NCj4gPiA+ID4g
-DQo+ID4gPiA+IEZvciB0aGlzIHJlYXNvbiBjaGVjayBpZiB0aGUgYnJpZGdlIHVwc3RyZWFtIGhh
-ZCBMVFIgZW5hYmxlZCBwcmV2aW91c2x5DQo+ID4gPiA+IGFuZCByZS1lbmFibGUgaXQgYmVmb3Jl
-IGVuYWJsaW5nIExUUiBmb3IgdGhlIGVuZHBvaW50Lg0KPiA+ID4gPiANCj4gPiA+ID4gUmVwb3J0
-ZWQtYnk6IFV0a2Fyc2ggSCBQYXRlbCA8dXRrYXJzaC5oLnBhdGVsQGludGVsLmNvbT4NCj4gPiA+
-ID4gU2lnbmVkLW9mZi1ieTogTWlrYSBXZXN0ZXJiZXJnIDxtaWthLndlc3RlcmJlcmdAbGludXgu
-aW50ZWwuY29tPg0KPiA+ID4gDQo+ID4gPiBJIHRoaW5rIHRoaXMgYW5kIE1pbmdjaHVhbmcncyBw
-YXRjaCwgd2hpY2ggaXMgZXNzZW50aWFsbHkgaWRlbnRpY2FsLA0KPiA+ID4gYXJlIHJpZ2h0IGFu
-ZCBzb2x2ZXMgdGhlIHByb2JsZW0gZm9yIGhvdC1yZW1vdmUvaG90LWFkZC4gIEluIHRoYXQNCj4g
-PiA+IHNjZW5hcmlvIHdlIGNhbGwgcGNpX2NvbmZpZ3VyZV9sdHIoKSBvbiB0aGUgaG90LWFkZGVk
-IGRldmljZSwgYW5kDQo+ID4gPiB3aXRoIHRoaXMgcGF0Y2gsIHdlJ2xsIHJlLWVuYWJsZSBMVFIg
-b24gdGhlIGJyaWRnZSBsZWFkaW5nIHRvIHRoZSBuZXcNCj4gPiA+IGRldmljZSBiZWZvcmUgZW5h
-YmxpbmcgTFRSIG9uIHRoZSBuZXcgZGV2aWNlIGl0c2VsZi4NCj4gPiA+IA0KPiA+ID4gQnV0IGRv
-bid0IHdlIGhhdmUgYSBzaW1pbGFyIHByb2JsZW0gaWYgd2Ugc2ltcGx5IGRvIGEgRnVuZGFtZW50
-YWwNCj4gPiA+IFJlc2V0IG9uIGEgZGV2aWNlPyAgSSB0aGluayB0aGUgcmVzZXQgcGF0aCB3aWxs
-IHJlc3RvcmUgdGhlIGRldmljZSdzDQo+ID4gPiBzdGF0ZSwgaW5jbHVkaW5nIFBDSV9FWFBfREVW
-Q1RMMiwgYnV0IGl0IGRvZXNuJ3QgZG8gYW55dGhpbmcgd2l0aCB0aGUNCj4gPiA+IHVwc3RyZWFt
-IGJyaWRnZSwgZG9lcyBpdD8NCj4gPiANCj4gPiBZZXMuIEkgdGhpbmsgdGhlIHNhbWUgcHJvYmxl
-bSBleGlzdHMgdW5kZXIgc3VjaCBzY2VuYXJpbywgYW5kIHRoYXTigJlzIHRoZQ0KPiA+IGlzc3Vl
-IG15IHBhdGNoIGludGVuZHMgdG8gcmVzb2x2ZS4NCj4gPiBJIGFsc28gcHJlcGFyZWQgYSB2MiBw
-YXRjaCBmb3IgcmV2aWV3KHVwZGF0ZSB0aGUgcGF0Y2ggZGVzY3JpcHRpb24pLg0KPiA+IFNoYWxs
-IEkgc3VibWl0IHRoZSB2MiBwYXRjaCBmb3IgcmV2aWV3Pw0KPiANCj4gSG93IGRvZXMgeW91ciBw
-YXRjaCBzb2x2ZSB0aGlzIGZvciB0aGUgcmVzZXQgcGF0aD8gIEkgZG9uJ3QgdGhpbmsgd2UNCj4g
-Y2FsbCBwY2lfY29uZmlndXJlX2x0cigpIHdoZW4gd2UgcmVzZXQgYSBkZXZpY2UuDQo+IA0KDQpT
-b3JyeSwgSSBtaXN1bmRlcnN0YW5kIHRoZSByZXNldCBwYXRoLiBXaGVuIHdlIGRvIGEgRnVuZGFt
-ZW50YWwgUmVzZXQgb24NCmEgZGV2aWNlLCB3ZSBjYW4gdHJpZ2dlciBkZXZpY2UgcmVtb3ZhbCBh
-bmQgcmVzY2FuIGZsb3cgdG8gcmVzdG9yZSB0aGUNCmRldmljZS4gSW4gZGV2aWNlIHJlc2NhbiBm
-bG93LCBwY2lfY29uZmlndXJlX2x0cigpIHdpbGwgYmUgaW52b2tlZC4gSQ0KcmVnYXJkIHRoZSAi
-cmVtb3ZlIGFuZCByZXNjYW4gZmxvdyIgYXMgYSBwYXJ0IG9mIHJlc2V0IHBhdGggZm9yIHRoaXMN
-CmNhc2UgOikNCklmIHdlIHJlc3RvcmUgZGV2aWNlIGp1c3Qgd2l0aCBwY2lfcmVzdG9yZV9zdGF0
-ZSgpIGluIGRldmljZSBkcml2ZXINCmFmdGVyIGRldmljZSByZXNldHMsIHRoZSBMVFIgcHJvYmxl
-bSBhbHNvIGV4aXN0cyBkdWUgdG8NCnBjaV9yZXN0b3JlX3N0YXRlKCkgZG9lcyBub3RoaW5nIHdp
-dGggdXBzdHJlYW0gYnJpZGdlLiBJbiBuZXh0IHBhdGNoLCBJDQp3b3VsZCBsaWtlIHRvIHJlLWVu
-YWJsZSBMVFIgZm9yIHVwc3RyZWFtIGJyaWRnZSBiZWZvcmUgcmVzdG9yaW5nDQpkZXZpY2UncyBQ
-Q0lfRVhQX0RFVkNUTDIgaWYgaXQgaXMgbmVlZGVkLg0KDQo+ID4gPiBTbyBpZiBhIGJyaWRnZSBh
-bmQgYSBkZXZpY2UgYmVsb3cgaXQgYm90aCBoYXZlIExUUiBlbmFibGVkLCBjYW4ndCB3ZQ0KPiA+
-ID4gaGF2ZSB0aGUgZm9sbG93aW5nOg0KPiA+ID4gDQo+ID4gPiAgIC0gYnJpZGdlIExUUiBlbmFi
-bGVkDQo+ID4gPiAgIC0gZGV2aWNlIExUUiBlbmFibGVkDQo+ID4gPiAgIC0gcmVzZXQgZGV2aWNl
-LCBlLmcuLCB2aWEgU2Vjb25kYXJ5IEJ1cyBSZXNldA0KPiA+ID4gICAtIGxpbmsgZ29lcyBkb3du
-LCBicmlkZ2UgZGlzYWJsZXMgTFRSDQo+ID4gPiAgIC0gbGluayBjb21lcyBiYWNrIHVwLCBMVFIg
-ZGlzYWJsZWQgaW4gYm90aCBicmlkZ2UgYW5kIGRldmljZQ0KPiA+ID4gICAtIHJlc3RvcmUgZGV2
-aWNlIHN0YXRlLCBpbmNsdWRpbmcgTFRSIGVuYWJsZQ0KPiA+ID4gICAtIGRldmljZSBzZW5kcyBM
-VFIgbWVzc2FnZQ0KPiA+ID4gICAtIGJyaWRnZSByZXBvcnRzIFVuc3VwcG9ydGVkIFJlcXVlc3QN
-Cj4gPiA+IA0KPiA+ID4gPiAtLS0NCj4gPiA+ID4gUHJldmlvdXMgdmVyc2lvbiBjYW4gYmUgZm91
-bmQgaGVyZToNCj4gPiA+ID4gDQo+ID4gPiA+ICAgaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvbGlu
-dXgtcGNpLzIwMjEwMTE0MTM0NzI0Ljc5NTExLTEtbWlrYS53ZXN0ZXJiZXJnQGxpbnV4LmludGVs
-LmNvbS8NCj4gPiA+ID4gDQo+ID4gPiA+IENoYW5nZXMgZnJvbSB0aGUgcHJldmlvdXMgdmVyc2lv
-bjoNCj4gPiA+ID4gDQo+ID4gPiA+ICAgKiBDb3JyZWN0ZWQgdHlwb3MgaW4gdGhlIGNvbW1pdCBt
-ZXNzYWdlDQo+ID4gPiA+ICAgKiBObyBuZWVkIHRvIGNhbGwgcGNpZV9kb3duc3RyZWFtX3BvcnQo
-KQ0KPiA+ID4gPiANCj4gPiA+ID4gIGRyaXZlcnMvcGNpL3Byb2JlLmMgfCAxNyArKysrKysrKysr
-KysrKysrLQ0KPiA+ID4gPiAgMSBmaWxlIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyksIDEgZGVs
-ZXRpb24oLSkNCj4gPiA+ID4gDQo+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9i
-ZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+ID4gPiBpbmRleCAwZWI2OGI0NzM1NGYuLmE0
-YThjMDMwNWZiOSAxMDA2NDQNCj4gPiA+ID4gLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+
-ID4gPiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQo+ID4gPiA+IEBAIC0yMTUzLDcgKzIxNTMs
-NyBAQCBzdGF0aWMgdm9pZCBwY2lfY29uZmlndXJlX2x0cihzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0K
-PiA+ID4gPiAgew0KPiA+ID4gPiAgI2lmZGVmIENPTkZJR19QQ0lFQVNQTQ0KPiA+ID4gPiAgCXN0
-cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmhvc3QgPSBwY2lfZmluZF9ob3N0X2JyaWRnZShkZXYtPmJ1
-cyk7DQo+ID4gPiA+IC0Jc3RydWN0IHBjaV9kZXYgKmJyaWRnZTsNCj4gPiA+ID4gKwlzdHJ1Y3Qg
-cGNpX2RldiAqYnJpZGdlID0gTlVMTDsNCj4gPiA+ID4gIAl1MzIgY2FwLCBjdGw7DQo+ID4gPiA+
-ICANCj4gPiA+ID4gIAlpZiAoIXBjaV9pc19wY2llKGRldikpDQo+ID4gPiA+IEBAIC0yMTkxLDYg
-KzIxOTEsMjEgQEAgc3RhdGljIHZvaWQgcGNpX2NvbmZpZ3VyZV9sdHIoc3RydWN0IHBjaV9kZXYg
-KmRldikNCj4gPiA+ID4gIAlpZiAocGNpX3BjaWVfdHlwZShkZXYpID09IFBDSV9FWFBfVFlQRV9S
-T09UX1BPUlQgfHwNCj4gPiA+ID4gIAkgICAgKChicmlkZ2UgPSBwY2lfdXBzdHJlYW1fYnJpZGdl
-KGRldikpICYmDQo+ID4gPiA+ICAJICAgICAgYnJpZGdlLT5sdHJfcGF0aCkpIHsNCj4gPiA+ID4g
-KwkJLyoNCj4gPiA+ID4gKwkJICogRG93bnN0cmVhbSBwb3J0cyByZXNldCB0aGUgTFRSIGVuYWJs
-ZSBiaXQgd2hlbiB0aGUNCj4gPiA+ID4gKwkJICogbGluayBnb2VzIGRvd24gKGUuZyBvbiBob3Qt
-cmVtb3ZlKSBzbyByZS1lbmFibGUgdGhlDQo+ID4gPiA+ICsJCSAqIGJpdCBoZXJlIGlmIG5vdCBz
-ZXQgYW55bW9yZS4NCj4gPiA+ID4gKwkJICogUENJZSByNS4wLCBzZWMgNy41LjMuMTYuDQo+ID4g
-PiA+ICsJCSAqLw0KPiA+ID4gPiArCQlpZiAoYnJpZGdlKSB7DQo+ID4gPiA+ICsJCQlwY2llX2Nh
-cGFiaWxpdHlfcmVhZF9kd29yZChicmlkZ2UsIFBDSV9FWFBfREVWQ1RMMiwgJmN0bCk7DQo+ID4g
-PiA+ICsJCQlpZiAoIShjdGwgJiBQQ0lfRVhQX0RFVkNUTDJfTFRSX0VOKSkgew0KPiA+ID4gPiAr
-CQkJCXBjaV9kYmcoYnJpZGdlLCAicmUtZW5hYmxpbmcgTFRSXG4iKTsNCj4gPiA+ID4gKwkJCQlw
-Y2llX2NhcGFiaWxpdHlfc2V0X3dvcmQoYnJpZGdlLCBQQ0lfRVhQX0RFVkNUTDIsDQo+ID4gPiA+
-ICsJCQkJCQkJIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pOw0KPiA+ID4gPiArCQkJfQ0KPiA+ID4g
-PiArCQl9DQo+ID4gPiA+ICsJCXBjaV9kYmcoZGV2LCAiZW5hYmxpbmcgTFRSXG4iKTsNCj4gPiA+
-ID4gIAkJcGNpZV9jYXBhYmlsaXR5X3NldF93b3JkKGRldiwgUENJX0VYUF9ERVZDVEwyLA0KPiA+
-ID4gPiAgCQkJCQkgUENJX0VYUF9ERVZDVEwyX0xUUl9FTik7DQo+ID4gPiA+ICAJCWRldi0+bHRy
-X3BhdGggPSAxOw0KPiA+ID4gPiAtLSANCj4gPiA+ID4gMi4yOS4yDQo+ID4gPiA+IA0KPiA+IA0K
-DQo=
+Hi,
 
+This looks to me the same fix as my posted patch[1].
+Is this more effective than mine?
+
+Thank you,
+
+[1] https://www.spinics.net/lists/linux-pci/msg103889.html
+
+On 2021/01/25 13:48, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> 
+> In the dw_pcie_ep_init(), it depends on the detected iATU region
+> numbers to allocate the in/outbound window management bit map.
+> It fails after the commit 281f1f99cf3a ("PCI: dwc: Detect number
+> of iATU windows").
+> 
+> So this patch move the iATU region detection into a new function,
+> move forward the detection to the very beginning of functions
+> dw_pcie_host_init() and dw_pcie_ep_init(). And also remove it
+> from the dw_pcie_setup(), since it's more like a software
+> perspective initialization step than hardware setup.
+> 
+> Fixes: 281f1f99cf3a ("PCI: dwc: Detect number of iATU windows")
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+>   drivers/pci/controller/dwc/pcie-designware-ep.c   |  2 ++
+>   drivers/pci/controller/dwc/pcie-designware-host.c |  2 ++
+>   drivers/pci/controller/dwc/pcie-designware.c      | 11 ++++++++---
+>   drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+>   4 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index bcd1cd9ba8c8..fcf935bf6f5e 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -707,6 +707,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>   		}
+>   	}
+>   
+> +	dw_pcie_iatu_detect(pci);
+> +
+>   	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>   	if (!res)
+>   		return -EINVAL;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 8a84c005f32b..8eae817c138d 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -316,6 +316,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>   			return PTR_ERR(pci->dbi_base);
+>   	}
+>   
+> +	dw_pcie_iatu_detect(pci);
+> +
+>   	bridge = devm_pci_alloc_host_bridge(dev, 0);
+>   	if (!bridge)
+>   		return -ENOMEM;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 5b72a5448d2e..5b9bf02d918b 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -654,11 +654,9 @@ static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
+>   	pci->num_ob_windows = ob;
+>   }
+>   
+> -void dw_pcie_setup(struct dw_pcie *pci)
+> +void dw_pcie_iatu_detect(struct dw_pcie *pci)
+>   {
+> -	u32 val;
+>   	struct device *dev = pci->dev;
+> -	struct device_node *np = dev->of_node;
+>   	struct platform_device *pdev = to_platform_device(dev);
+>   
+>   	if (pci->version >= 0x480A || (!pci->version &&
+> @@ -687,6 +685,13 @@ void dw_pcie_setup(struct dw_pcie *pci)
+>   
+>   	dev_info(pci->dev, "Detected iATU regions: %u outbound, %u inbound",
+>   		 pci->num_ob_windows, pci->num_ib_windows);
+> +}
+> +
+> +void dw_pcie_setup(struct dw_pcie *pci)
+> +{
+> +	u32 val;
+> +	struct device *dev = pci->dev;
+> +	struct device_node *np = dev->of_node;
+>   
+>   	if (pci->link_gen > 0)
+>   		dw_pcie_link_set_max_speed(pci, pci->link_gen);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 5d979953800d..867369d4c4f7 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -305,6 +305,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+>   void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
+>   			 enum dw_pcie_region_type type);
+>   void dw_pcie_setup(struct dw_pcie *pci);
+> +void dw_pcie_iatu_detect(struct dw_pcie *pci);
+>   
+>   static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+>   {
+> 
+
+---
+Best Regards
+Kunihiko Hayashi
