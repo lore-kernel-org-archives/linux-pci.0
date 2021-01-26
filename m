@@ -2,96 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24556C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 13:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 473BDC433E0
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 13:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1D20206F9
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 13:25:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FD2C2223D
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 13:50:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389774AbhAZMpU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 07:45:20 -0500
-Received: from foss.arm.com ([217.140.110.172]:59324 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391803AbhAZKDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 05:03:50 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 07718101E;
-        Tue, 26 Jan 2021 02:03:04 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 73F8A3F66B;
-        Tue, 26 Jan 2021 02:03:02 -0800 (PST)
-Date:   Tue, 26 Jan 2021 10:02:56 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Michael Walle <michael@walle.cc>
-Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>
-Subject: Re: [PATCH] PCI: dwc: layerscape: convert to
- builtin_platform_driver()
-Message-ID: <20210126100256.GA20547@e121166-lin.cambridge.arm.com>
-References: <20210120105246.23218-1-michael@walle.cc>
+        id S2404933AbhAZNtb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 08:49:31 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32473 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404929AbhAZNnp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2021 08:43:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611668540;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ee5AivrSRLItWFPV05HPSH2q5yS6lb/pyR0EaqqWQbk=;
+        b=GGalh2mDWJBmwg1wuX4oo0oeDvMINECU3Il8mugJyPP8gAL1S3UxtDAtQs0AlFbAuFPz7G
+        7Wkx9dr0iXdp4PzDzOWoUarBkOK+jI6cwhJ4D/iM/Dmd/L3jiqNq+HsiPdHliotShN88p1
+        /RX9gE050kJU1vmRAGmXoXMYOES9LLQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-161-W_QBnZ1EP7Chpe_JIb1Kjw-1; Tue, 26 Jan 2021 08:42:16 -0500
+X-MC-Unique: W_QBnZ1EP7Chpe_JIb1Kjw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C627D8018AB;
+        Tue, 26 Jan 2021 13:42:13 +0000 (UTC)
+Received: from prarit.bos.redhat.com (prarit-guest.7a2m.lab.eng.bos.redhat.com [10.16.222.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B72B01880F;
+        Tue, 26 Jan 2021 13:42:12 +0000 (UTC)
+Subject: Re: [PATCH] pci-driver: Add driver load messages
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     bhelgaas@google.com, corbet@lwn.net, linux-doc@vger.kernel.org,
+        linux-pci@vger.kernel.org, mstowe@redhat.com
+References: <20210126063935.GC1053290@unreal>
+ <20210126125446.1118325-1-prarit@redhat.com>
+ <20210126131441.GG1053290@unreal>
+From:   Prarit Bhargava <prarit@redhat.com>
+Message-ID: <616eb9a3-b855-316b-5091-8b8230208455@redhat.com>
+Date:   Tue, 26 Jan 2021 08:42:12 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210120105246.23218-1-michael@walle.cc>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20210126131441.GG1053290@unreal>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 20, 2021 at 11:52:46AM +0100, Michael Walle wrote:
-> fw_devlink will defer the probe until all suppliers are ready. We can't
-> use builtin_platform_driver_probe() because it doesn't retry after probe
-> deferral. Convert it to builtin_platform_driver().
-> 
-> Fixes: e590474768f1 ("driver core: Set fw_devlink=on by default")
 
-I will have to drop this Fixes: tag if you don't mind, it is not
-in the mainline.
 
-Lorenzo
+On 1/26/21 8:14 AM, Leon Romanovsky wrote:
+> On Tue, Jan 26, 2021 at 07:54:46AM -0500, Prarit Bhargava wrote:
+>>   Leon Romanovsky <leon@kernel.org> wrote:
+>>> On Mon, Jan 25, 2021 at 02:41:38PM -0500, Prarit Bhargava wrote:
+>>>> There are two situations where driver load messages are helpful.
+>>>>
+>>>> 1) Some drivers silently load on devices and debugging driver or system
+>>>> failures in these cases is difficult.  While some drivers (networking
+>>>> for example) may not completely initialize when the PCI driver probe() function
+>>>> has returned, it is still useful to have some idea of driver completion.
+>>>
+>>> Sorry, probably it is me, but I don't understand this use case.
+>>> Are you adding global to whole kernel command line boot argument to debug
+>>> what and when?
+>>>
+>>> During boot:
+>>> If device success, you will see it in /sys/bus/pci/[drivers|devices]/*.
+>>> If device fails, you should get an error from that device (fix the
+>>> device to return an error), or something immediately won't work and
+>>> you won't see it in sysfs.
+>>>
+>>
+>> What if there is a panic during boot?  There's no way to get to sysfs.
+>> That's the case where this is helpful.
+> 
+> How? If you have kernel panic, it means you have much more worse problem
+> than not-supported device. If kernel panic was caused by the driver, you
+> will see call trace related to it. If kernel panic was caused by
+> something else, supported/not supported won't help here.
 
-> Signed-off-by: Michael Walle <michael@walle.cc>
-> ---
->  drivers/pci/controller/dwc/pci-layerscape.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+I still have no idea *WHICH* device it was that the panic occurred on.
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-> index 44ad34cdc3bc..5b9c625df7b8 100644
-> --- a/drivers/pci/controller/dwc/pci-layerscape.c
-> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
-> @@ -232,7 +232,7 @@ static const struct of_device_id ls_pcie_of_match[] = {
->  	{ },
->  };
->  
-> -static int __init ls_pcie_probe(struct platform_device *pdev)
-> +static int ls_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	struct dw_pcie *pci;
-> @@ -271,10 +271,11 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
->  }
->  
->  static struct platform_driver ls_pcie_driver = {
-> +	.probe = ls_pcie_probe,
->  	.driver = {
->  		.name = "layerscape-pcie",
->  		.of_match_table = ls_pcie_of_match,
->  		.suppress_bind_attrs = true,
->  	},
->  };
-> -builtin_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
-> +builtin_platform_driver(ls_pcie_driver);
-> -- 
-> 2.20.1
+>>
+>>> During run:
+>>> We have many other solutions to get debug prints during run, for example
+>>> tracing, which is possible to toggle dynamically.
+>>>
+>>> Right now, my laptop will print 34 prints on boot and endless amount during
+>>> day-to-day usage.
+>>>
+>>> ➜  kernel git:(rdma-next) ✗ lspci |wc -l
+>>> 34
+>>>
+>>>>
+>>>> 2) Storage and Network device vendors have relatively short lives for
+>>>> some of their hardware.  Some devices may continue to function but are
+>>>> problematic due to out-of-date firmware or other issues.  Maintaining
+>>>> a database of the hardware is out-of-the-question in the kernel as it would
+>>>> require constant updating.  Outputting a message in the log would allow
+>>>> different OSes to determine if the problem hardware was truly supported or not.
+>>>
+>>> And rely on some dmesg output as a true source of supported/not supported and
+>>> making this ABI which needs knob in command line. ?
+>>
+>> Yes.  The console log being saved would work as a true source of load
+>> messages to be interpreted by an OS tool.  But I see your point about the
+>> knob below...
 > 
+> You will need much more stronger claim than the above if you want to proceed
+> ABI path through dmesg prints.
+> 
+
+See my answer below.  I agree with you on the ABI statement.
+
+>>
+>>>
+>>>>
+>>>> Add optional driver load messages from the PCI core that indicates which
+>>>> driver was loaded, on which slot, and on which device.
+>>>
+>>> Why don't you add simple pr_debug(..) without any knob? You will be able
+>>> to enable/disable it through dynamic prints facility.
+>>
+>> Good point.  I'll wait for more feedback and submit a v2 with pr_debug.
+> 
+> Just to be clear, none of this can be ABI and any kernel print can
+> be changed or removed any minute without any announcement.
+
+Yes, that's absolutely the case and I agree with you that nothing can guarantee
+ABI of those pr_debug() statements.  They are *debug* after all.
+
+P.
+
+> 
+> Thanks
+> 
+>>
+>> P.
+>>
+>>>
+>>> Thanks
+>>
+> 
+
