@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DE0FC4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CA97C43331
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AD3E20829
+	by mail.kernel.org (Postfix) with ESMTP id 3148021BE5
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 17:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733054AbhAZRFs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:05:48 -0500
-Received: from muru.com ([72.249.23.125]:53174 "EHLO muru.com"
+        id S1732733AbhAZRFx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:05:53 -0500
+Received: from muru.com ([72.249.23.125]:53192 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390145AbhAZIbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 03:31:22 -0500
+        id S2390153AbhAZIbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 03:31:47 -0500
 Received: from hillo.muru.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTP id DD1228B15;
-        Tue, 26 Jan 2021 08:27:56 +0000 (UTC)
+        by muru.com (Postfix) with ESMTP id 0FED78BF8;
+        Tue, 26 Jan 2021 08:28:19 +0000 (UTC)
 From:   Tony Lindgren <tony@atomide.com>
 To:     linux-omap@vger.kernel.org
 Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        devicetree@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
-        Balaji T K <balajitk@ti.com>,
+        devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 16/27] ARM: OMAP2+: Drop legacy platform data for dra7 pcie
-Date:   Tue, 26 Jan 2021 10:27:05 +0200
-Message-Id: <20210126082716.54358-17-tony@atomide.com>
+Subject: [PATCH 27/27] ARM: OMAP2+: Drop legacy platform data for dra7 hwmod
+Date:   Tue, 26 Jan 2021 10:27:16 +0200
+Message-Id: <20210126082716.54358-28-tony@atomide.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
 References: <20210126082716.54358-1-tony@atomide.com>
@@ -43,230 +43,119 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We can now probe devices with ti-sysc interconnect driver and dts data.
-Let's drop the related platform data and custom ti,hwmods dts property.
+We can now probe interconnects with simple-pm-bus and genpd.
 
-As we're just dropping data, and the early platform data init is based on
-the custom ti,hwmods property, we want to drop both the platform data and
-ti,hwmods property in a single patch.
-
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- arch/arm/boot/dts/dra7.dtsi               |   3 -
- arch/arm/mach-omap2/common.h              |   9 --
- arch/arm/mach-omap2/omap_hwmod.c          |   8 --
- arch/arm/mach-omap2/omap_hwmod_7xx_data.c | 114 ----------------------
- 4 files changed, 134 deletions(-)
+ arch/arm/mach-omap2/Kconfig               |  1 -
+ arch/arm/mach-omap2/Makefile              |  1 -
+ arch/arm/mach-omap2/io.c                  |  2 -
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c | 64 -----------------------
+ 4 files changed, 68 deletions(-)
+ delete mode 100644 arch/arm/mach-omap2/omap_hwmod_7xx_data.c
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -215,7 +215,6 @@ pcie1_rc: pcie@51000000 {
- 				#interrupt-cells = <1>;
- 				num-lanes = <1>;
- 				linux,pci-domain = <0>;
--				ti,hwmods = "pcie1";
- 				phys = <&pcie1_phy>;
- 				phy-names = "pcie-phy0";
- 				ti,syscon-lane-sel = <&scm_conf_pcie 0x18>;
-@@ -243,7 +242,6 @@ pcie1_ep: pcie_ep@51000000 {
- 				num-lanes = <1>;
- 				num-ib-windows = <4>;
- 				num-ob-windows = <16>;
--				ti,hwmods = "pcie1";
- 				phys = <&pcie1_phy>;
- 				phy-names = "pcie-phy0";
- 				ti,syscon-unaligned-access = <&scm_conf1 0x14 1>;
-@@ -288,7 +286,6 @@ pcie2_rc: pcie@51800000 {
- 				#interrupt-cells = <1>;
- 				num-lanes = <1>;
- 				linux,pci-domain = <1>;
--				ti,hwmods = "pcie2";
- 				phys = <&pcie2_phy>;
- 				phy-names = "pcie-phy0";
- 				interrupt-map-mask = <0 0 0 7>;
-diff --git a/arch/arm/mach-omap2/common.h b/arch/arm/mach-omap2/common.h
---- a/arch/arm/mach-omap2/common.h
-+++ b/arch/arm/mach-omap2/common.h
-@@ -343,15 +343,6 @@ static inline void omap5_secondary_hyp_startup(void)
- }
- #endif
+diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+--- a/arch/arm/mach-omap2/Kconfig
++++ b/arch/arm/mach-omap2/Kconfig
+@@ -90,7 +90,6 @@ config SOC_DRA7XX
+ 	select HAVE_ARM_ARCH_TIMER
+ 	select IRQ_CROSSBAR
+ 	select ARM_ERRATA_798181 if SMP
+-	select OMAP_HWMOD
+ 	select OMAP_INTERCONNECT
+ 	select OMAP_INTERCONNECT_BARRIER
+ 	select PM_OPP
+diff --git a/arch/arm/mach-omap2/Makefile b/arch/arm/mach-omap2/Makefile
+--- a/arch/arm/mach-omap2/Makefile
++++ b/arch/arm/mach-omap2/Makefile
+@@ -209,7 +209,6 @@ obj-$(CONFIG_ARCH_OMAP3)		+= omap_hwmod_3xxx_data.o
+ obj-$(CONFIG_SOC_TI81XX)		+= omap_hwmod_81xx_data.o
+ obj-$(CONFIG_ARCH_OMAP4)		+= omap_hwmod_44xx_data.o
+ obj-$(CONFIG_SOC_OMAP5)			+= omap_hwmod_54xx_data.o
+-obj-$(CONFIG_SOC_DRA7XX)		+= omap_hwmod_7xx_data.o
  
--#ifdef CONFIG_SOC_DRA7XX
--extern int dra7xx_pciess_reset(struct omap_hwmod *oh);
--#else
--static inline int dra7xx_pciess_reset(struct omap_hwmod *oh)
--{
--	return 0;
--}
--#endif
--
- struct omap_system_dma_plat_info;
- 
- void pdata_quirks_init(const struct of_device_id *);
-diff --git a/arch/arm/mach-omap2/omap_hwmod.c b/arch/arm/mach-omap2/omap_hwmod.c
---- a/arch/arm/mach-omap2/omap_hwmod.c
-+++ b/arch/arm/mach-omap2/omap_hwmod.c
-@@ -3495,10 +3495,6 @@ static const struct omap_hwmod_reset omap24xx_reset_quirks[] = {
- 	{ .match = "msdi", .len = 4, .reset = omap_msdi_reset, },
- };
- 
--static const struct omap_hwmod_reset dra7_reset_quirks[] = {
--	{ .match = "pcie", .len = 4, .reset = dra7xx_pciess_reset, },
--};
--
- static const struct omap_hwmod_reset omap_reset_quirks[] = {
- 	{ .match = "dss_core", .len = 8, .reset = omap_dss_reset, },
- 	{ .match = "hdq1w", .len = 5, .reset = omap_hdq1w_reset, },
-@@ -3534,10 +3530,6 @@ omap_hwmod_init_reset_quirks(struct device *dev, struct omap_hwmod *oh,
- 					    omap24xx_reset_quirks,
- 					    ARRAY_SIZE(omap24xx_reset_quirks));
- 
--	if (soc_is_dra7xx())
--		omap_hwmod_init_reset_quirk(dev, oh, data, dra7_reset_quirks,
--					    ARRAY_SIZE(dra7_reset_quirks));
--
- 	omap_hwmod_init_reset_quirk(dev, oh, data, omap_reset_quirks,
- 				    ARRAY_SIZE(omap_reset_quirks));
+ # OMAP2420 MSDI controller integration support ("MMC")
+ obj-$(CONFIG_SOC_OMAP2420)		+= msdi.o
+diff --git a/arch/arm/mach-omap2/io.c b/arch/arm/mach-omap2/io.c
+--- a/arch/arm/mach-omap2/io.c
++++ b/arch/arm/mach-omap2/io.c
+@@ -667,8 +667,6 @@ void __init dra7xx_init_early(void)
+ 	dra7xxx_check_revision();
+ 	dra7xx_powerdomains_init();
+ 	dra7xx_clockdomains_init();
+-	dra7xx_hwmod_init();
+-	omap_hwmod_init_postsetup();
+ 	omap_clk_soc_init = dra7xx_dt_clk_init;
+ 	omap_secure_init();
  }
 diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+deleted file mode 100644
 --- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
-@@ -266,84 +266,6 @@ static struct omap_hwmod dra7xx_mpu_hwmod = {
- 	},
- };
- 
--
++++ /dev/null
+@@ -1,64 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-only
 -/*
-- * 'PCIE' class
+- * Hardware modules present on the DRA7xx chips
 - *
+- * Copyright (C) 2013 Texas Instruments Incorporated - https://www.ti.com
+- *
+- * Paul Walmsley
+- * Benoit Cousson
+- *
+- * This file is automatically generated from the OMAP hardware databases.
+- * We respectfully ask that any modifications to this file be coordinated
+- * with the public linux-omap@vger.kernel.org mailing list and the
+- * authors above to ensure that the autogeneration scripts are kept
+- * up-to-date with the file contents.
 - */
 -
+-#include <linux/io.h>
+-
+-#include "omap_hwmod.h"
+-#include "omap_hwmod_common_data.h"
+-#include "cm1_7xx.h"
+-#include "cm2_7xx.h"
+-#include "prm7xx.h"
+-#include "soc.h"
+-
+-/* Base offset for all DRA7XX interrupts external to MPUSS */
+-#define DRA7XX_IRQ_GIC_START	32
+-
 -/*
-- * As noted in documentation for _reset() in omap_hwmod.c, the stock reset
-- * functionality of OMAP HWMOD layer does not deassert the hardreset lines
-- * associated with an IP automatically leaving the driver to handle that
-- * by itself. This does not work for PCIeSS which needs the reset lines
-- * deasserted for the driver to start accessing registers.
-- *
-- * We use a PCIeSS HWMOD class specific reset handler to deassert the hardreset
-- * lines after asserting them.
+- * Interfaces
 - */
--int dra7xx_pciess_reset(struct omap_hwmod *oh)
+-static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+-	NULL,
+-};
+-
+-/* SoC variant specific hwmod links */
+-static struct omap_hwmod_ocp_if *dra72x_hwmod_ocp_ifs[] __initdata = {
+-	NULL,
+-};
+-
+-static struct omap_hwmod_ocp_if *rtc_hwmod_ocp_ifs[] __initdata = {
+-	NULL,
+-};
+-
+-int __init dra7xx_hwmod_init(void)
 -{
--	int i;
+-	int ret;
 -
--	for (i = 0; i < oh->rst_lines_cnt; i++) {
--		omap_hwmod_assert_hardreset(oh, oh->rst_lines[i].name);
--		omap_hwmod_deassert_hardreset(oh, oh->rst_lines[i].name);
+-	omap_hwmod_init();
+-	ret = omap_hwmod_register_links(dra7xx_hwmod_ocp_ifs);
+-
+-	if (!ret && soc_is_dra74x()) {
+-		ret = omap_hwmod_register_links(rtc_hwmod_ocp_ifs);
+-	} else if (!ret && soc_is_dra72x()) {
+-		ret = omap_hwmod_register_links(dra72x_hwmod_ocp_ifs);
+-		if (!ret && !of_machine_is_compatible("ti,dra718"))
+-			ret = omap_hwmod_register_links(rtc_hwmod_ocp_ifs);
+-	} else if (!ret && soc_is_dra76x()) {
+-		if (!ret && soc_is_dra76x_abz())
+-			ret = omap_hwmod_register_links(rtc_hwmod_ocp_ifs);
 -	}
 -
--	return 0;
+-	return ret;
 -}
--
--static struct omap_hwmod_class dra7xx_pciess_hwmod_class = {
--	.name	= "pcie",
--	.reset	= dra7xx_pciess_reset,
--};
--
--/* pcie1 */
--static struct omap_hwmod_rst_info dra7xx_pciess1_resets[] = {
--	{ .name = "pcie", .rst_shift = 0 },
--};
--
--static struct omap_hwmod dra7xx_pciess1_hwmod = {
--	.name		= "pcie1",
--	.class		= &dra7xx_pciess_hwmod_class,
--	.clkdm_name	= "pcie_clkdm",
--	.rst_lines	= dra7xx_pciess1_resets,
--	.rst_lines_cnt	= ARRAY_SIZE(dra7xx_pciess1_resets),
--	.main_clk	= "l4_root_clk_div",
--	.prcm = {
--		.omap4 = {
--			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS1_CLKCTRL_OFFSET,
--			.rstctrl_offs = DRA7XX_RM_L3INIT_PCIESS_RSTCTRL_OFFSET,
--			.context_offs = DRA7XX_RM_L3INIT_PCIESS1_CONTEXT_OFFSET,
--			.modulemode   = MODULEMODE_SWCTRL,
--		},
--	},
--};
--
--/* pcie2 */
--static struct omap_hwmod_rst_info dra7xx_pciess2_resets[] = {
--	{ .name = "pcie", .rst_shift = 1 },
--};
--
--/* pcie2 */
--static struct omap_hwmod dra7xx_pciess2_hwmod = {
--	.name		= "pcie2",
--	.class		= &dra7xx_pciess_hwmod_class,
--	.clkdm_name	= "pcie_clkdm",
--	.rst_lines	= dra7xx_pciess2_resets,
--	.rst_lines_cnt	= ARRAY_SIZE(dra7xx_pciess2_resets),
--	.main_clk	= "l4_root_clk_div",
--	.prcm = {
--		.omap4 = {
--			.clkctrl_offs = DRA7XX_CM_L3INIT_PCIESS2_CLKCTRL_OFFSET,
--			.rstctrl_offs = DRA7XX_RM_L3INIT_PCIESS_RSTCTRL_OFFSET,
--			.context_offs = DRA7XX_RM_L3INIT_PCIESS2_CONTEXT_OFFSET,
--			.modulemode   = MODULEMODE_SWCTRL,
--		},
--	},
--};
--
- /*
-  * 'qspi' class
-  *
-@@ -579,38 +501,6 @@ static struct omap_hwmod_ocp_if dra7xx_l4_cfg__mpu = {
- 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
- };
- 
--/* l3_main_1 -> pciess1 */
--static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pciess1 = {
--	.master		= &dra7xx_l3_main_1_hwmod,
--	.slave		= &dra7xx_pciess1_hwmod,
--	.clk		= "l3_iclk_div",
--	.user		= OCP_USER_MPU | OCP_USER_SDMA,
--};
--
--/* l4_cfg -> pciess1 */
--static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pciess1 = {
--	.master		= &dra7xx_l4_cfg_hwmod,
--	.slave		= &dra7xx_pciess1_hwmod,
--	.clk		= "l4_root_clk_div",
--	.user		= OCP_USER_MPU | OCP_USER_SDMA,
--};
--
--/* l3_main_1 -> pciess2 */
--static struct omap_hwmod_ocp_if dra7xx_l3_main_1__pciess2 = {
--	.master		= &dra7xx_l3_main_1_hwmod,
--	.slave		= &dra7xx_pciess2_hwmod,
--	.clk		= "l3_iclk_div",
--	.user		= OCP_USER_MPU | OCP_USER_SDMA,
--};
--
--/* l4_cfg -> pciess2 */
--static struct omap_hwmod_ocp_if dra7xx_l4_cfg__pciess2 = {
--	.master		= &dra7xx_l4_cfg_hwmod,
--	.slave		= &dra7xx_pciess2_hwmod,
--	.clk		= "l4_root_clk_div",
--	.user		= OCP_USER_MPU | OCP_USER_SDMA,
--};
--
- /* l3_main_1 -> qspi */
- static struct omap_hwmod_ocp_if dra7xx_l3_main_1__qspi = {
- 	.master		= &dra7xx_l3_main_1_hwmod,
-@@ -675,10 +565,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
- 	&dra7xx_l3_main_1__bb2d,
- 	&dra7xx_l4_wkup__ctrl_module_wkup,
- 	&dra7xx_l4_cfg__mpu,
--	&dra7xx_l3_main_1__pciess1,
--	&dra7xx_l4_cfg__pciess1,
--	&dra7xx_l3_main_1__pciess2,
--	&dra7xx_l4_cfg__pciess2,
- 	&dra7xx_l3_main_1__qspi,
- 	&dra7xx_l4_cfg__sata,
- 	&dra7xx_l3_main_1__vcp1,
 -- 
 2.30.0
