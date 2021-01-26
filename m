@@ -2,96 +2,108 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA79C433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 18:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC40C433E6
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:00:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EEFE22A84
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 18:59:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31E772228A
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Jan 2021 19:00:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388984AbhAZRHG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 12:07:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53702 "EHLO mail.kernel.org"
+        id S2388629AbhAZRGt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 12:06:49 -0500
+Received: from muru.com ([72.249.23.125]:53186 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390589AbhAZI6d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 03:58:33 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 77DC2230FD;
-        Tue, 26 Jan 2021 08:57:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611651459;
-        bh=aHBmFnfLyG43e7CqSIxZ36xVHHd++9BQh2pCJmoqnr0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mqHq3lnWsnnIxbEmR84cNJohLvSC5dUSmBmQxCkkLT7XXPcjO/xjPRazHUq7V2xOC
-         4xajUQZU4H+h5erutEjIZzB1E2YWHzj8MU3OuTa5lHtl7uVFWaopo8i5vgxuuoZvOc
-         zRNeoLK/qu6r97znPWCbF0Au2BztUt285cvXCdwjwZfbEnC8i2s/mghelbIroG0kLZ
-         byk0Elahede/Jg0PbcciYPTaskFPAvZJWkP/kJCv3f0cdlgBPTdDQf7SR8GSh3Tkld
-         zDXzx7434AhBCF/Dnqn5Jd4SXkhvfyhTJabApJRb7PzGXNBhsXorLT33i/3Tq7tkF4
-         QA8KNQW8nDqsQ==
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Saeed Mahameed <saeedm@nvidia.com>
-Cc:     Leon Romanovsky <leonro@nvidia.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        Jakub Kicinski <kuba@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        Don Dutile <ddutile@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: [PATCH mlx5-next v5 2/4] net/mlx5: Add dynamic MSI-X capabilities bits
-Date:   Tue, 26 Jan 2021 10:57:28 +0200
-Message-Id: <20210126085730.1165673-3-leon@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210126085730.1165673-1-leon@kernel.org>
-References: <20210126085730.1165673-1-leon@kernel.org>
+        id S2389915AbhAZIbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 03:31:47 -0500
+Received: from hillo.muru.com (localhost [127.0.0.1])
+        by muru.com (Postfix) with ESMTP id D6A398B99;
+        Tue, 26 Jan 2021 08:28:13 +0000 (UTC)
+From:   Tony Lindgren <tony@atomide.com>
+To:     linux-omap@vger.kernel.org
+Cc:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
+        devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 24/27] ARM: OMAP2+: Drop legacy platform data for dra7 l4_per3
+Date:   Tue, 26 Jan 2021 10:27:13 +0200
+Message-Id: <20210126082716.54358-25-tony@atomide.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210126082716.54358-1-tony@atomide.com>
+References: <20210126082716.54358-1-tony@atomide.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Leon Romanovsky <leonro@nvidia.com>
+We can now probe interconnects with simple-pm-bus and genpd.
 
-These new fields declare the number of MSI-X vectors that is
-possible to allocate on the VF through PF configuration.
-
-Value must be in range defined by min_dynamic_vf_msix_table_size
-and max_dynamic_vf_msix_table_size.
-
-The driver should continue to query its MSI-X table through PCI
-configuration header.
-
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- include/linux/mlx5/mlx5_ifc.h | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c | 24 +----------------------
+ 1 file changed, 1 insertion(+), 23 deletions(-)
 
-diff --git a/include/linux/mlx5/mlx5_ifc.h b/include/linux/mlx5/mlx5_ifc.h
-index b96f99f1198e..31e6eac67f51 100644
---- a/include/linux/mlx5/mlx5_ifc.h
-+++ b/include/linux/mlx5/mlx5_ifc.h
-@@ -1657,7 +1657,16 @@ struct mlx5_ifc_cmd_hca_cap_bits {
- 	u8	   reserved_at_6e0[0x10];
- 	u8	   sf_base_id[0x10];
+diff --git a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+--- a/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_7xx_data.c
+@@ -81,7 +81,7 @@ static struct omap_hwmod dra7xx_l3_main_2_hwmod = {
  
--	u8	   reserved_at_700[0x80];
-+	u8	   reserved_at_700[0x8];
-+	u8	   num_total_dynamic_vf_msix[0x18];
-+	u8	   reserved_at_720[0x14];
-+	u8	   dynamic_msix_table_size[0xc];
-+	u8	   reserved_at_740[0xc];
-+	u8	   min_dynamic_vf_msix_table_size[0x4];
-+	u8	   reserved_at_750[0x4];
-+	u8	   max_dynamic_vf_msix_table_size[0xc];
-+
-+	u8	   reserved_at_760[0x20];
- 	u8	   vhca_tunnel_commands[0x40];
- 	u8	   reserved_at_7c0[0x40];
+ /*
+  * 'l4' class
+- * instance(s): l4_cfg, l4_per3
++ * instance(s): l4_cfg
+  */
+ static struct omap_hwmod_class dra7xx_l4_hwmod_class = {
+ 	.name	= "l4",
+@@ -100,19 +100,6 @@ static struct omap_hwmod dra7xx_l4_cfg_hwmod = {
+ 	},
  };
+ 
+-/* l4_per3 */
+-static struct omap_hwmod dra7xx_l4_per3_hwmod = {
+-	.name		= "l4_per3",
+-	.class		= &dra7xx_l4_hwmod_class,
+-	.clkdm_name	= "l4per3_clkdm",
+-	.prcm = {
+-		.omap4 = {
+-			.clkctrl_offs = DRA7XX_CM_L4PER3_L4_PER3_CLKCTRL_OFFSET,
+-			.flags = HWMOD_OMAP4_NO_CONTEXT_LOSS_BIT,
+-		},
+-	},
+-};
+-
+ /*
+  * 'bb2d' class
+  *
+@@ -220,14 +207,6 @@ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_cfg = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+ };
+ 
+-/* l3_main_1 -> l4_per3 */
+-static struct omap_hwmod_ocp_if dra7xx_l3_main_1__l4_per3 = {
+-	.master		= &dra7xx_l3_main_1_hwmod,
+-	.slave		= &dra7xx_l4_per3_hwmod,
+-	.clk		= "l3_iclk_div",
+-	.user		= OCP_USER_MPU | OCP_USER_SDMA,
+-};
+-
+ /* l3_main_1 -> bb2d */
+ static struct omap_hwmod_ocp_if dra7xx_l3_main_1__bb2d = {
+ 	.master		= &dra7xx_l3_main_1_hwmod,
+@@ -258,7 +237,6 @@ static struct omap_hwmod_ocp_if *dra7xx_hwmod_ocp_ifs[] __initdata = {
+ 	&dra7xx_l3_main_1__l3_main_2,
+ 	&dra7xx_l4_cfg__l3_main_2,
+ 	&dra7xx_l3_main_1__l4_cfg,
+-	&dra7xx_l3_main_1__l4_per3,
+ 	&dra7xx_l3_main_1__bb2d,
+ 	&dra7xx_l3_main_1__vcp1,
+ 	&dra7xx_l3_main_1__vcp2,
 -- 
-2.29.2
-
+2.30.0
