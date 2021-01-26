@@ -2,71 +2,176 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A40CC433DB
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:46:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DECB7C433E9
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:48:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28D752074B
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:46:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D6972074B
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S317157AbhAZXbH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:31:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58518 "EHLO mail.kernel.org"
+        id S316631AbhAZX16 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Jan 2021 18:27:58 -0500
+Received: from foss.arm.com ([217.140.110.172]:48540 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391020AbhAZTg7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 14:36:59 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E46DD21919;
-        Tue, 26 Jan 2021 19:35:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611689705;
-        bh=JNTauFIn9ZwI/TxoCodmHDQdXf/u0dPDmIwk5yY2k8E=;
-        h=From:To:Cc:Subject:Date:From;
-        b=XExB8sj5JwzPcRHySFyGS+RqsgCanqTawo7mAI4lvwLvrke5LWXZpb77RzZTMY/h1
-         DrJfkuAKhAA6JruUp+7Sc9+kB39M5mvd71Q/XDXzRQTXCW0CK+chV4Zv/dZ9ECBdkA
-         0SLgvn4zgKoF02BoBR21WBR/T3ipNhqTCsKO3yqKFkDVI+g5MAPu1qFFQ00QzskYVm
-         1XQE07bnT0CAFtik5nKudtsmV4YZSzZSv9SSnl+1W6m05GT04RrcIp+UeN8pt3cXjK
-         TtubcoCLn0J7croXIoSlKdvj8CuTI2+4IlXawYc9rCoCrc/85ddVp9mlchsHy1ECv2
-         8+MMzPFoPaFxw==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Santosh Shilimkar <ssantosh@kernel.org>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] MAINTAINERS: Fix 'ARM/TEXAS INSTRUMENT KEYSTONE CLOCKSOURCE' capitalization
-Date:   Tue, 26 Jan 2021 13:34:57 -0600
-Message-Id: <20210126193457.2907650-1-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        id S1727975AbhAZRDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Jan 2021 12:03:51 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4CAC5D6E;
+        Tue, 26 Jan 2021 08:46:09 -0800 (PST)
+Received: from [192.168.122.166] (unknown [172.31.20.19])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C56053F66E;
+        Tue, 26 Jan 2021 08:46:08 -0800 (PST)
+Subject: Re: [PATCH] arm64: PCI: Enable SMC conduit
+To:     Will Deacon <will@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jon Masters <jcm@jonmasters.org>, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, sudeep.holla@arm.com,
+        linux-kernel@vger.kernel.org, catalin.marinas@arm.com,
+        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+References: <20210105045735.1709825-1-jeremy.linton@arm.com>
+ <20210107181416.GA3536@willie-the-truck>
+ <56375cd8-8e11-aba6-9e11-1e0ec546e423@jonmasters.org>
+ <20210108103216.GA17931@e121166-lin.cambridge.arm.com>
+ <20210122194829.GE25471@willie-the-truck>
+From:   Jeremy Linton <jeremy.linton@arm.com>
+Message-ID: <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
+Date:   Tue, 26 Jan 2021 10:46:04 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210122194829.GE25471@willie-the-truck>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi,
 
-Fix capitalization typo in 'ARM/TEXAS INSTRUMENT KEYSTONE CLOCKSOURCE'.
+On 1/22/21 1:48 PM, Will Deacon wrote:
+> Hi Lorenzo,
+> 
+> On Fri, Jan 08, 2021 at 10:32:16AM +0000, Lorenzo Pieralisi wrote:
+>> On Thu, Jan 07, 2021 at 04:05:48PM -0500, Jon Masters wrote:
+>>> On 1/7/21 1:14 PM, Will Deacon wrote:
+>>>
+>>>> On Mon, Jan 04, 2021 at 10:57:35PM -0600, Jeremy Linton wrote:
+>>>>> Given that most arm64 platform's PCI implementations needs quirks
+>>>>> to deal with problematic config accesses, this is a good place to
+>>>>> apply a firmware abstraction. The ARM PCI SMMCCC spec details a
+>>>>> standard SMC conduit designed to provide a simple PCI config
+>>>>> accessor. This specification enhances the existing ACPI/PCI
+>>>>> abstraction and expects power, config, etc functionality is handled
+>>>>> by the platform. It also is very explicit that the resulting config
+>>>>> space registers must behave as is specified by the pci specification.
+>>>>>
+>>>>> Lets hook the normal ACPI/PCI config path, and when we detect
+>>>>> missing MADT data, attempt to probe the SMC conduit. If the conduit
+>>>>> exists and responds for the requested segment number (provided by the
+>>>>> ACPI namespace) attach a custom pci_ecam_ops which redirects
+>>>>> all config read/write requests to the firmware.
+>>>>>
+>>>>> This patch is based on the Arm PCI Config space access document @
+>>>>> https://developer.arm.com/documentation/den0115/latest
+>>>>
+>>>> Why does firmware need to be involved with this at all? Can't we just
+>>>> quirk Linux when these broken designs show up in production? We'll need
+>>>> to modify Linux _anyway_ when the firmware interface isn't implemented
+>>>> correctly...
+>>>
+>>> I agree with Will on this. I think we want to find a way to address some
+>>> of the non-compliance concerns through quirks in Linux. However...
+>>
+>> I understand the concern and if you are asking me if this can be fixed
+>> in Linux it obviously can. The point is, at what cost for SW and
+>> maintenance - in Linux and other OSes, I think Jeremy summed it up
+>> pretty well:
+>>
+>> https://lore.kernel.org/linux-pci/61558f73-9ac8-69fe-34c1-2074dec5f18a@arm.com
+>>
+>> The issue here is that what we are asked to support on ARM64 ACPI is a
+>> moving target and the target carries PCI with it.
+>>
+>> This potentially means that all drivers in:
+>>
+>> drivers/pci/controller
+>>
+>> may require an MCFG quirk and to implement it we may have to:
+>>
+>> - Define new ACPI bindings (that may need AML and that's already a
+>>    showstopper for some OSes)
+>> - Require to manage clocks in the kernel (see link-up checks)
+>> - Handle PCI config space faults in the kernel
+>>
+>> Do we really want to do that ? I don't think so. Therefore we need
+>> to have a policy to define what constitutes a "reasonable" quirk and
+>> that's not objective I am afraid, however we slice it (there is no
+>> such a thing as eg 90% ECAM).
+> 
+> Without a doubt, I would much prefer to see these quirks and workarounds
+> in Linux than hidden behind a firmware interface. Every single time.
+> 
+> This isn't like the usual fragmentation problems, where firmware swoops in
+> to save the day; CPU onlining, spectre mitigations, early entropy etc. All
+> of these problems exist because there isn't a standard method to implement
+> them outside of firmware, and so adding a layer of abstraction there makes
+> sense.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+There are a lot of parallels with PSCI here because there were existing 
+standards for cpu online.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cc1e6a5ee6e6..52311efad03e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2603,7 +2603,7 @@ L:	linux-kernel@vger.kernel.org
- S:	Maintained
- F:	drivers/clk/keystone/
- 
--ARM/TEXAS INSTRUMENT KEYSTONE ClOCKSOURCE
-+ARM/TEXAS INSTRUMENT KEYSTONE CLOCKSOURCE
- M:	Santosh Shilimkar <ssantosh@kernel.org>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- L:	linux-kernel@vger.kernel.org
--- 
-2.25.1
+> 
+> But PCIe is already a standard!
+
+And it says that ECAM is optional, particularly if there are 
+firmware/platform standardized ways of accessing the config space.
+
+> 
+> We shouldn't paper over hardware designers' inability to follow a ~20 year
+> old standard by hiding it behind another standard that is hot off the press.
+> Seriously.
+
+No disagreement, but its been more than half a decade and there are some 
+high (millions!) volume parts, that still don't have kernel support.
+
+> 
+> There is not a scrap of evidence to suggest that the firmware
+> implementations will be any better, but they will certainly be harder to
+> debug and maintain.  I have significant reservations about Arm's interest in
+> maintaining the spec as both more errata appear and the PCIe spec evolves
+> (after all, this is outside of SBSA, no?). The whole thing stinks of "if all
+> you have is a hammer, then everything looks like a nail". But this isn't the
+> sort of problem that is solved with yet another spec -- instead, how about
+> encouraging vendors to read the specs that already exist?
+
+PSCI, isn't a good example of a firmware interface that works?
+
+> 
+>> The SMC is an olive branch and just to make sure it is crystal clear
+>> there won't be room for adding quirks if the implementation turns out
+>> to be broken, if a line in the sand is what we want here it is.
+> 
+> I appreciate the sentiment, but you're not solving the problem here. You're
+> moving it somewhere else. Somewhere where you don't have to deal with it
+> (and I honestly can't blame you for that), but also somewhere where you
+> _can't_ necessarily deal with it. The inevitable outcome is an endless
+> succession of crappy, non-compliant machines which only appear to operate
+> correctly with particularly kernel/firmware combinations. Imagine trying to
+> use something like that?
+> 
+> The approach championed here actively discourages vendors from building
+> spec-compliant hardware and reduces our ability to work around problems
+> on such hardware at the same time.
+> 
+> So I won't be applying these patches, sorry.
+
+Does that mean its open season for ECAM quirks, and we can expect them 
+to start being merged now?
+
+Thanks.
 
