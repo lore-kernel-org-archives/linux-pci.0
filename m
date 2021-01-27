@@ -2,148 +2,497 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CD9C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D416C433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 13:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29B69207A9
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:46:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B51D9207A3
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 13:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237474AbhA0Mpz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Jan 2021 07:45:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34138 "EHLO mail.kernel.org"
+        id S237427AbhA0NHt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Jan 2021 08:07:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55834 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S313045AbhAZWyh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 17:54:37 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E80792065C;
-        Tue, 26 Jan 2021 22:53:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611701637;
-        bh=90forB2cGb6Q0K0xI6+WurI9tm2KAuX6GVmEgXtvfyE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Me+oMZH2WW/ar4X1gTYs4u+oK3haCRjuAP1NLtUeZ8ObrUwGpUl3n8wZzE1PHlQui
-         1Hne7FVBUSOTElLsaCdCoDDo1OK7St+oFpUI42pWfAK4qUsC/6maGovC/ckaBnMa1F
-         fJMXgl8WopCIouYXOWu8ffEYVdxXB10/8zQ+rv9WVA6gArdrpVbKfq+M4YULWDtpIC
-         wpIXvGjq2phHuMMipiJxv/BGjXKW/29lluTTlzl8jHqtSB27mTIGrtv6r/OlAYY6L2
-         tYJ8qyF+RtA8bVYcIKdVL/aYsEnUHZvIopj7Si6BO7d9qyHq8Wff547T5vRMdcD091
-         GctZKz0wU4uCw==
-Date:   Tue, 26 Jan 2021 22:53:51 +0000
-From:   Will Deacon <will@kernel.org>
-To:     Vikram Sethi <vsethi@nvidia.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, vidyas@nvidia.com,
-        treding@nvidia.com, Jon Masters <jcm@jonmasters.org>,
-        Jeremy Linton <jeremy.linton@arm.com>, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, sudeep.holla@arm.com,
-        linux-kernel@vger.kernel.org, catalin.marinas@arm.com,
-        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-        ebrower@nvidia.com
-Subject: Re: [PATCH] arm64: PCI: Enable SMC conduit
-Message-ID: <20210126225351.GA30941@willie-the-truck>
-References: <20210105045735.1709825-1-jeremy.linton@arm.com>
- <20210107181416.GA3536@willie-the-truck>
- <56375cd8-8e11-aba6-9e11-1e0ec546e423@jonmasters.org>
- <20210108103216.GA17931@e121166-lin.cambridge.arm.com>
- <20210122194829.GE25471@willie-the-truck>
- <b37bbff9-d4f8-ece6-3a89-fa21093e15e1@nvidia.com>
+        id S238066AbhA0NGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Jan 2021 08:06:09 -0500
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A304C2079A;
+        Wed, 27 Jan 2021 13:05:24 +0000 (UTC)
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1l4kVe-00ANT7-Kt; Wed, 27 Jan 2021 13:05:22 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b37bbff9-d4f8-ece6-3a89-fa21093e15e1@nvidia.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 27 Jan 2021 13:05:22 +0000
+From:   Marc Zyngier <maz@kernel.org>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sj Huang <sj.huang@mediatek.com>, youlin.pei@mediatek.com,
+        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
+        sin_jieyang@mediatek.com, drinkcat@chromium.org,
+        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
+Subject: Re: [v7,5/7] PCI: mediatek-gen3: Add MSI support
+In-Reply-To: <1611750706.14672.54.camel@mhfsdcap03>
+References: <20210113114001.5804-1-jianjun.wang@mediatek.com>
+ <20210113114001.5804-6-jianjun.wang@mediatek.com>
+ <661df220100e0d4e69f5cde90c083f4a@kernel.org>
+ <1611750706.14672.54.camel@mhfsdcap03>
+User-Agent: Roundcube Webmail/1.4.10
+Message-ID: <210ce8009aedbea1660e1c5e1f8ebce9@kernel.org>
+X-Sender: maz@kernel.org
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: jianjun.wang@mediatek.com, bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com, ryder.lee@mediatek.com, p.zabel@pengutronix.de, matthias.bgg@gmail.com, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, sj.huang@mediatek.com, youlin.pei@mediatek.com, chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com, sin_jieyang@mediatek.com, drinkcat@chromium.org, Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 26, 2021 at 11:08:31AM -0600, Vikram Sethi wrote:
-> On 1/22/2021 1:48 PM, Will Deacon wrote:
-> > On Fri, Jan 08, 2021 at 10:32:16AM +0000, Lorenzo Pieralisi wrote:
-> >> On Thu, Jan 07, 2021 at 04:05:48PM -0500, Jon Masters wrote:
-> >>> On 1/7/21 1:14 PM, Will Deacon wrote:
-> >>>> On Mon, Jan 04, 2021 at 10:57:35PM -0600, Jeremy Linton wrote:
-> >>>>> Given that most arm64 platform's PCI implementations needs quirks
-> >>>>> to deal with problematic config accesses, this is a good place to
-> >>>>> apply a firmware abstraction. The ARM PCI SMMCCC spec details a
-> >>>>> standard SMC conduit designed to provide a simple PCI config
-> >>>>> accessor. This specification enhances the existing ACPI/PCI
-> >>>>> abstraction and expects power, config, etc functionality is handled
-> >>>>> by the platform. It also is very explicit that the resulting config
-> >>>>> space registers must behave as is specified by the pci specification.
-> >>>>>
-> >>>>> Lets hook the normal ACPI/PCI config path, and when we detect
-> >>>>> missing MADT data, attempt to probe the SMC conduit. If the conduit
-> >>>>> exists and responds for the requested segment number (provided by the
-> >>>>> ACPI namespace) attach a custom pci_ecam_ops which redirects
-> >>>>> all config read/write requests to the firmware.
-> >>>>>
-> >>>>> This patch is based on the Arm PCI Config space access document @
-> >>>>> https://developer.arm.com/documentation/den0115/latest
-> >>>> Why does firmware need to be involved with this at all? Can't we just
-> >>>> quirk Linux when these broken designs show up in production? We'll need
-> >>>> to modify Linux _anyway_ when the firmware interface isn't implemented
-> >>>> correctly...
-> >>> I agree with Will on this. I think we want to find a way to address some
-> >>> of the non-compliance concerns through quirks in Linux. However...
-> >> I understand the concern and if you are asking me if this can be fixed
-> >> in Linux it obviously can. The point is, at what cost for SW and
-> >> maintenance - in Linux and other OSes, I think Jeremy summed it up
-> >> pretty well:
-> >>
-> >> https://lore.kernel.org/linux-pci/61558f73-9ac8-69fe-34c1-2074dec5f18a@arm.com
-> >>
-> >> The issue here is that what we are asked to support on ARM64 ACPI is a
-> >> moving target and the target carries PCI with it.
-> >>
-> >> This potentially means that all drivers in:
-> >>
-> >> drivers/pci/controller
-> >>
-> >> may require an MCFG quirk and to implement it we may have to:
-> >>
-> >> - Define new ACPI bindings (that may need AML and that's already a
-> >>   showstopper for some OSes)
-> >> - Require to manage clocks in the kernel (see link-up checks)
-> >> - Handle PCI config space faults in the kernel
-> >>
-> >> Do we really want to do that ? I don't think so. Therefore we need
-> >> to have a policy to define what constitutes a "reasonable" quirk and
-> >> that's not objective I am afraid, however we slice it (there is no
-> >> such a thing as eg 90% ECAM).
-> > Without a doubt, I would much prefer to see these quirks and workarounds
-> > in Linux than hidden behind a firmware interface. Every single time.
+On 2021-01-27 12:31, Jianjun Wang wrote:
+> On Tue, 2021-01-26 at 13:57 +0000, Marc Zyngier wrote:
+>> On 2021-01-13 11:39, Jianjun Wang wrote:
+>> > Add MSI support for MediaTek Gen3 PCIe controller.
+>> >
+>> > This PCIe controller supports up to 256 MSI vectors, the MSI hardware
+>> > block diagram is as follows:
+>> >
+>> >                   +-----+
+>> >                   | GIC |
+>> >                   +-----+
+>> >                      ^
+>> >                      |
+>> >                  port->irq
+>> >                      |
+>> >              +-+-+-+-+-+-+-+-+
+>> >              |0|1|2|3|4|5|6|7| (PCIe intc)
+>> >              +-+-+-+-+-+-+-+-+
+>> >               ^ ^           ^
+>> >               | |    ...    |
+>> >       +-------+ +------+    +-----------+
+>> >       |                |                |
+>> > +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
+>> > |0|1|...|30|31|  |0|1|...|30|31|  |0|1|...|30|31| (MSI sets)
+>> > +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
+>> >  ^ ^      ^  ^    ^ ^      ^  ^    ^ ^      ^  ^
+>> >  | |      |  |    | |      |  |    | |      |  |  (MSI vectors)
+>> >  | |      |  |    | |      |  |    | |      |  |
+>> >
+>> >   (MSI SET0)       (MSI SET1)  ...   (MSI SET7)
+>> >
+>> > With 256 MSI vectors supported, the MSI vectors are composed of 8 sets,
+>> > each set has its own address for MSI message, and supports 32 MSI
+>> > vectors
+>> > to generate interrupt.
+>> >
+>> > Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+>> > Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+>> > ---
+>> >  drivers/pci/controller/pcie-mediatek-gen3.c | 261 ++++++++++++++++++++
+>> >  1 file changed, 261 insertions(+)
+>> >
+>> > diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c
+>> > b/drivers/pci/controller/pcie-mediatek-gen3.c
+>> > index 7979a2856c35..471d97cd1ef9 100644
+>> > --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+>> > +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+>> > @@ -14,6 +14,7 @@
+>> >  #include <linux/irqdomain.h>
+>> >  #include <linux/kernel.h>
+>> >  #include <linux/module.h>
+>> > +#include <linux/msi.h>
+>> >  #include <linux/of_address.h>
+>> >  #include <linux/of_clk.h>
+>> >  #include <linux/of_pci.h>
+>> > @@ -52,11 +53,28 @@
+>> >  #define PCIE_LINK_STATUS_REG		0x154
+>> >  #define PCIE_PORT_LINKUP		BIT(8)
+>> >
+>> > +#define PCIE_MSI_SET_NUM		8
+>> > +#define PCIE_MSI_IRQS_PER_SET		32
+>> > +#define PCIE_MSI_IRQS_NUM \
+>> > +	(PCIE_MSI_IRQS_PER_SET * (PCIE_MSI_SET_NUM))
+>> 
+>> Spurious inner bracketing.
+>> 
+>> > +
+>> >  #define PCIE_INT_ENABLE_REG		0x180
+>> > +#define PCIE_MSI_ENABLE			GENMASK(PCIE_MSI_SET_NUM + 8 - 1, 8)
+>> > +#define PCIE_MSI_SHIFT			8
+>> >  #define PCIE_INTX_SHIFT			24
+>> >  #define PCIE_INTX_MASK			GENMASK(27, 24)
+>> >
+>> >  #define PCIE_INT_STATUS_REG		0x184
+>> > +#define PCIE_MSI_SET_ENABLE_REG		0x190
+>> > +#define PCIE_MSI_SET_ENABLE		GENMASK(PCIE_MSI_SET_NUM - 1, 0)
+>> > +
+>> > +#define PCIE_MSI_SET_BASE_REG		0xc00
+>> > +#define PCIE_MSI_SET_OFFSET		0x10
+>> > +#define PCIE_MSI_SET_STATUS_OFFSET	0x04
+>> > +#define PCIE_MSI_SET_ENABLE_OFFSET	0x08
+>> > +
+>> > +#define PCIE_MSI_SET_ADDR_HI_BASE	0xc80
+>> > +#define PCIE_MSI_SET_ADDR_HI_OFFSET	0x04
+>> >
+>> >  #define PCIE_TRANS_TABLE_BASE_REG	0x800
+>> >  #define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
+>> > @@ -76,6 +94,18 @@
+>> >  #define PCIE_ATR_TLP_TYPE_MEM		PCIE_ATR_TLP_TYPE(0)
+>> >  #define PCIE_ATR_TLP_TYPE_IO		PCIE_ATR_TLP_TYPE(2)
+>> >
+>> > +/**
+>> > + * struct mtk_pcie_msi - MSI information for each set
+>> > + * @dev: pointer to PCIe device
+>> > + * @base: IO mapped register base
+>> > + * @msg_addr: MSI message address
+>> > + */
+>> > +struct mtk_msi_set {
+>> > +	struct device *dev;
+>> > +	void __iomem *base;
+>> > +	phys_addr_t msg_addr;
+>> > +};
+>> > +
+>> >  /**
+>> >   * struct mtk_pcie_port - PCIe port information
+>> >   * @dev: pointer to PCIe device
+>> > @@ -88,6 +118,11 @@
+>> >   * @num_clks: PCIe clocks count for this port
+>> >   * @irq: PCIe controller interrupt number
+>> >   * @intx_domain: legacy INTx IRQ domain
+>> > + * @msi_domain: MSI IRQ domain
+>> > + * @msi_bottom_domain: MSI IRQ bottom domain
+>> > + * @msi_sets: MSI sets information
+>> > + * @lock: lock protecting IRQ bit map
+>> > + * @msi_irq_in_use: bit map for assigned MSI IRQ
+>> >   */
+>> >  struct mtk_pcie_port {
+>> >  	struct device *dev;
+>> > @@ -101,6 +136,11 @@ struct mtk_pcie_port {
+>> >
+>> >  	int irq;
+>> >  	struct irq_domain *intx_domain;
+>> > +	struct irq_domain *msi_domain;
+>> > +	struct irq_domain *msi_bottom_domain;
+>> > +	struct mtk_msi_set msi_sets[PCIE_MSI_SET_NUM];
+>> > +	struct mutex lock;
+>> > +	DECLARE_BITMAP(msi_irq_in_use, PCIE_MSI_IRQS_NUM);
+>> >  };
+>> >
+>> >  /**
+>> > @@ -243,6 +283,15 @@ static int mtk_pcie_startup_port(struct
+>> > mtk_pcie_port *port)
+>> >  		return err;
+>> >  	}
+>> >
+>> > +	/* Enable MSI */
+>> > +	val = readl_relaxed(port->base + PCIE_MSI_SET_ENABLE_REG);
+>> > +	val |= PCIE_MSI_SET_ENABLE;
+>> > +	writel_relaxed(val, port->base + PCIE_MSI_SET_ENABLE_REG);
+>> > +
+>> > +	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
+>> > +	val |= PCIE_MSI_ENABLE;
+>> > +	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
+>> > +
+>> >  	/* Set PCIe translation windows */
+>> >  	resource_list_for_each_entry(entry, &host->windows) {
+>> >  		struct resource *res = entry->res;
+>> > @@ -286,6 +335,129 @@ static int mtk_pcie_set_affinity(struct irq_data
+>> > *data,
+>> >  	return -EINVAL;
+>> >  }
+>> >
+>> > +static struct irq_chip mtk_msi_irq_chip = {
+>> > +	.name = "MSI",
+>> > +	.irq_ack = irq_chip_ack_parent,
+>> > +};
+>> > +
+>> > +static struct msi_domain_info mtk_msi_domain_info = {
+>> > +	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_PCI_MSIX |
+>> > +			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_MULTI_PCI_MSI),
+>> > +	.chip		= &mtk_msi_irq_chip,
+>> > +};
+>> > +
+>> > +static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg
+>> > *msg)
+>> > +{
+>> > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+>> > +	unsigned long hwirq;
+>> > +
+>> > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+>> > +
+>> > +	msg->address_hi = upper_32_bits(msi_set->msg_addr);
+>> > +	msg->address_lo = lower_32_bits(msi_set->msg_addr);
+>> > +	msg->data = hwirq;
+>> > +	dev_dbg(msi_set->dev, "msi#%#lx address_hi %#x address_lo %#x data
+>> > %d\n",
+>> > +		hwirq, msg->address_hi, msg->address_lo, msg->data);
+>> > +}
+>> > +
+>> > +static void mtk_msi_bottom_irq_ack(struct irq_data *data)
+>> > +{
+>> > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+>> > +	unsigned long hwirq;
+>> > +
+>> > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+>> > +
+>> > +	writel_relaxed(BIT(hwirq), msi_set->base +
+>> > PCIE_MSI_SET_STATUS_OFFSET);
+>> > +}
+>> > +
+>> > +static struct irq_chip mtk_msi_bottom_irq_chip = {
+>> > +	.irq_ack		= mtk_msi_bottom_irq_ack,
+>> > +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
+>> > +	.irq_set_affinity	= mtk_pcie_set_affinity,
+>> > +	.name			= "PCIe",
+>> 
+>> nit: "MSI", rather than "PCIe".
+>> 
+>> > +};
+>> > +
+>> > +static int mtk_msi_bottom_domain_alloc(struct irq_domain *domain,
+>> > +				       unsigned int virq, unsigned int nr_irqs,
+>> > +				       void *arg)
+>> > +{
+>> > +	struct mtk_pcie_port *port = domain->host_data;
+>> > +	struct mtk_msi_set *msi_set;
+>> > +	int i, hwirq, set_idx;
+>> > +
+>> > +	mutex_lock(&port->lock);
+>> > +
+>> > +	hwirq = bitmap_find_free_region(port->msi_irq_in_use,
+>> > PCIE_MSI_IRQS_NUM,
+>> > +					order_base_2(nr_irqs));
+>> > +
+>> > +	mutex_unlock(&port->lock);
+>> > +
+>> > +	if (hwirq < 0)
+>> > +		return -ENOSPC;
+>> > +
+>> > +	set_idx = hwirq / PCIE_MSI_IRQS_PER_SET;
+>> > +	msi_set = &port->msi_sets[set_idx];
+>> > +
+>> > +	for (i = 0; i < nr_irqs; i++)
+>> > +		irq_domain_set_info(domain, virq + i, hwirq + i,
+>> > +				    &mtk_msi_bottom_irq_chip, msi_set,
+>> > +				    handle_edge_irq, NULL, NULL);
+>> > +
+>> > +	return 0;
+>> > +}
+>> > +
+>> > +static void mtk_msi_bottom_domain_free(struct irq_domain *domain,
+>> > +				       unsigned int virq, unsigned int nr_irqs)
+>> > +{
+>> > +	struct mtk_pcie_port *port = domain->host_data;
+>> > +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>> > +
+>> > +	mutex_lock(&port->lock);
+>> > +
+>> > +	bitmap_clear(port->msi_irq_in_use, data->hwirq, nr_irqs);
+>> > +
+>> > +	mutex_unlock(&port->lock);
+>> > +
+>> > +	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+>> > +}
+>> > +
+>> > +static int mtk_msi_bottom_domain_activate(struct irq_domain *domain,
+>> > +					  struct irq_data *data, bool reserve)
+>> > +{
+>> > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+>> > +	unsigned long hwirq;
+>> > +	u32 val;
+>> > +
+>> > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+>> > +
+>> > +	val = readl_relaxed(msi_set->base + PCIE_MSI_SET_ENABLE_OFFSET);
+>> > +	val |= BIT(hwirq);
+>> > +	writel_relaxed(val, msi_set->base + PCIE_MSI_SET_ENABLE_OFFSET);
+>> 
+>> This isn't an activate. This is an unmask, which suffers from the same
+>> issue as its INTx sibling.
+>> 
+>> > +
+>> > +	return 0;
+>> > +}
+>> > +
+>> > +static void mtk_msi_bottom_domain_deactivate(struct irq_domain
+>> > *domain,
+>> > +					     struct irq_data *data)
+>> > +{
+>> > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+>> > +	unsigned long hwirq;
+>> > +	u32 val;
+>> > +
+>> > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+>> > +
+>> > +	val = readl_relaxed(msi_set->base + PCIE_MSI_SET_ENABLE_OFFSET);
+>> > +	val &= ~BIT(hwirq);
+>> > +	writel_relaxed(val, msi_set->base + PCIE_MSI_SET_ENABLE_OFFSET);
+>> > +}
+>> 
+>> Same thing, this is a mask. I don't think this block requires any
+>> activate/deactivate callbacks for its lower irqdomain.
+>> 
+>> As it stands, you can't mask a MSI at the low-level, which is
+>> pretty bad (you need to mask them at the PCI source, which can
+>> end-up disabling all vectors in the case of Multi-MSI).
 > 
-> In that case, can you please comment on/apply Tegra194 ECAM quirk that was rejected
+> Hi Marc,
 > 
-> a year ago, and was the reason we worked with Samer/ARM to define this common
+> Thanks for your review.
 > 
-> mechanism?
-> 
-> https://lkml.org/lkml/2020/1/3/395
-> 
-> The T194 ECAM is from widely used Root Port IP from a IP vendor. That is one reason so many
-> 
-> *existing* SOCs have ECAM quirks. ARM is only now working with the Root port IP vendors
-> 
-> to test ECAM, MSI etc, but the reality is there were deficiencies in industry IP that is widely
-> 
-> used. If this common quirk is not the way to go, then please apply the T194 specific quirk which was
-> 
-> NAK'd a year ago, or suggest how to improve that quirk.
-> 
-> The ECAM issue has been fixed on future Tegra chips and is validated preSilicon with BSA
-> 
-> tests, so it is not going to be a recurrent issue for us.
+> This mtk_msi_bottom_domain is the parent domain of pci_msi_domain, but
+> the mask/unmask callback of pci_msi_domain does not call the callback 
+> of
+> its parent. Therefore if these functions are put in the mask/unmask
+> callbacks, they will not have a chance to be called.
 
-(aside: please fix your mail client not to add all these blank lines)
+It is for you to wire the callbacks in the mtk_msi_irq_chip irqchip
+so that the request can be forwarded to the parent, without relying
+on the default callbacks:
 
-Personally, if a hundred lines of self-contained quirk code is all that is
-needed to get your legacy IP running, then I would say we should merge it.
-But I don't maintain the PCI subsystem, and I trust Bjorn and Lorenzo's
-judgement as to what is the right thing to do when it concerns that code.
-After all, they're the ones who end up having to look after this stuff long
-after the hardware companies have stopped caring.
+static void mtk_mask_msi_irq(struct irq_data *d)
+{
+	pci_msi_mask_irq(d);
+	irq_chip_mask_parent(d);
+}
 
-Will
+static void mtk_unmask_msi_irq(struct irq_data *d)
+{
+	pci_msi_unmask_irq(d);
+	irq_chip_unmask_parent(d);
+}
+
+static struct irq_chip mtk_msi_irq_chip = {
+        .name = "MSI",
+        .irq_mask = mtk_mask_msi_irq,
+        .irq_unmask = mtk_unmask_msi_irq,
+        .irq_ack = irq_chip_ack_parent,
+};
+
+and turn your activate/deactivate into unmask/mask.
+
+>> 
+>> > +
+>> > +static const struct irq_domain_ops mtk_msi_bottom_domain_ops = {
+>> > +	.alloc = mtk_msi_bottom_domain_alloc,
+>> > +	.free = mtk_msi_bottom_domain_free,
+>> > +	.activate = mtk_msi_bottom_domain_activate,
+>> > +	.deactivate = mtk_msi_bottom_domain_deactivate,
+>> > +};
+>> > +
+>> >  static void mtk_intx_mask(struct irq_data *data)
+>> >  {
+>> >  	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+>> > @@ -350,6 +522,9 @@ static int mtk_pcie_init_irq_domains(struct
+>> > mtk_pcie_port *port,
+>> >  {
+>> >  	struct device *dev = port->dev;
+>> >  	struct device_node *intc_node;
+>> > +	struct fwnode_handle *fwnode = of_node_to_fwnode(node);
+>> > +	struct msi_domain_info *info;
+>> > +	int i, ret;
+>> >
+>> >  	/* Setup INTx */
+>> >  	intc_node = of_get_child_by_name(node, "interrupt-controller");
+>> > @@ -365,7 +540,57 @@ static int mtk_pcie_init_irq_domains(struct
+>> > mtk_pcie_port *port,
+>> >  		return -ENODEV;
+>> >  	}
+>> >
+>> > +	/* Setup MSI */
+>> > +	mutex_init(&port->lock);
+>> > +
+>> > +	port->msi_bottom_domain = irq_domain_add_linear(node,
+>> > PCIE_MSI_IRQS_NUM,
+>> > +				  &mtk_msi_bottom_domain_ops, port);
+>> > +	if (!port->msi_bottom_domain) {
+>> > +		dev_info(dev, "failed to create MSI bottom domain\n");
+>> > +		ret = -ENODEV;
+>> > +		goto err_msi_bottom_domain;
+>> > +	}
+>> > +
+>> > +	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+>> > +	if (!info) {
+>> > +		ret = -ENOMEM;
+>> > +		goto err_msi_bottom_domain;
+>> > +	}
+>> > +
+>> > +	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
+>> 
+>> Why the memcpy()? There is nothing in mtk_msi_domain_info that is
+>> per-domain, and you should be able to use this structure for all
+>> ports, shouldn't you?
+> 
+> Yes, it used to update the info->chip_data for each port, but since the
+> msi_set has been used for msi_bottom_domain ,it has no effect anymore, 
+> I
+> will drop it in the next version, thanks.
+>> 
+>> > +	info->chip_data = port;
+>> > +
+>> > +	port->msi_domain = pci_msi_create_irq_domain(fwnode, info,
+>> > +						     port->msi_bottom_domain);
+>> > +	if (!port->msi_domain) {
+>> > +		dev_info(dev, "failed to create MSI domain\n");
+>> > +		ret = -ENODEV;
+>> > +		goto err_msi_domain;
+>> > +	}
+>> > +
+>> > +	for (i = 0; i < PCIE_MSI_SET_NUM; i++) {
+>> > +		struct mtk_msi_set *msi_set = &port->msi_sets[i];
+>> > +
+>> > +		msi_set->dev = port->dev;
+>> 
+>> Given that this is only used in a debug message, and that the 
+>> addresses
+>> are already non-ambiguous, you can probably remove this field.
+> 
+> OK, I will remove it in the next version.
+> 
+>> 
+>> > +		msi_set->base = port->base + PCIE_MSI_SET_BASE_REG +
+>> > +				i * PCIE_MSI_SET_OFFSET;
+>> > +		msi_set->msg_addr = port->reg_base + PCIE_MSI_SET_BASE_REG +
+>> > +				    i * PCIE_MSI_SET_OFFSET;
+>> > +
+>> > +		writel_relaxed(lower_32_bits(msi_set->msg_addr), msi_set->base);
+>> > +		writel_relaxed(upper_32_bits(msi_set->msg_addr),
+>> > +			       port->base + PCIE_MSI_SET_ADDR_HI_BASE +
+>> > +			       i * PCIE_MSI_SET_ADDR_HI_OFFSET);
+>> 
+>> Please a comment on what this is doing...
+> 
+> This codes are used to configure the capture address of each MSI set,
+> the lower 32 bits of MSI address should be written to msi_set->base, 
+> but
+> the strange thing is that the address where need to write the higher 32
+> bits are not near each set, they are start from
+> PCIE_MSI_SET_ADDR_HI_BASE, and have PCIE_MSI_SET_ADDR_HI_OFFSET apart.
+> 
+> That's why it looks so weired...
+
+OK. Just add a comment saying that this programs the MSI capture 
+address.
+
+Thanks,
+
+         M.
+-- 
+Jazz is not dead. It just smells funny...
