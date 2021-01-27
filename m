@@ -2,114 +2,178 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 347BCC433E9
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91561C433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:45:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E944D2074A
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:45:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FA7820724
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 07:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S317158AbhAZXcK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Jan 2021 18:32:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60996 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404663AbhAZTve (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 14:51:34 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A0DB222B2C;
-        Tue, 26 Jan 2021 19:50:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611690648;
-        bh=/6ngywS810oXL2ZA1A4zcs8uV/FXPP53uDQM5zBbkwM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=nac9SDFmG9oX4kG01dO+elCsbd182MDOZNKBY25QVfMXGNtTi2SRohLDsEvkXLyLX
-         JQeI/D7hch3yS7BQP1yGU5/0ES3eaGXsd7pyXOeJFb7Wq+DdmCxwiGddsUD86o9U29
-         ZK5HG0LZSIS27WlJ0ACtqd7CvehtAyqdTUhbHHy8Cw9bvbNBMUXSfVisB1BSrDR0ns
-         LsJmwNl32NfluNr+HJiFMIMDe//5g5e1P8MvXgDQGQjT3zko6g26EUb5gha/nLgXGP
-         7w0wks0rLmp+9X2RLeETkn7r8M1RVYhknuxWKoqm8Hq0aIgDFK9DMwM87ySNsUXFo6
-         OGKZB0giQ1gtw==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Dave Airlie <airlied@redhat.com>,
-        Gerd Hoffmann <kraxel@redhat.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-s390@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] Fix "ordering" comment typos
-Date:   Tue, 26 Jan 2021 13:50:42 -0600
-Message-Id: <20210126195042.2909405-1-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        id S232154AbhA0Hpk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Jan 2021 02:45:40 -0500
+Received: from mail-ot1-f46.google.com ([209.85.210.46]:35477 "EHLO
+        mail-ot1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231488AbhA0Hoi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2021 02:44:38 -0500
+Received: by mail-ot1-f46.google.com with SMTP id 36so847210otp.2;
+        Tue, 26 Jan 2021 23:44:22 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=x0dGkBBCOjjdRO5NeNomyXurGTss4C1Z8jAZPD1nTr0=;
+        b=D/t6/XpngIhr+dElHpkKgt7I9raIdEFD/aIUvplW60JNP0cGyfm8vB5RupvZjShzK8
+         o9tAFA7R1prXP1p4TWSIDLkFG3Ok12Pr731mwn36mh6OTJ6NZINfAlsYeJiYCMn4aPE8
+         SoJJP9OWxg7MTI1M8h2hTZq7jAqlg7xGRNqPg+nXVJu12OokR1Tpl3dBANluMPjYMzJd
+         ililMEOfD6U8Wqr+uSU3mqavqrZ1scytN5GGfOAR5AYlkG3bSHsoUnzvbhkv3qH3Tz2A
+         v3cVkmUc3XEWwej1GhByKCSx44Cwci6TR6WIFhOYA/47d0kdY0MbOWh5Hy40AvsjGOAS
+         QW/g==
+X-Gm-Message-State: AOAM532/RncdhhlpjY2XqfIjMmv+jhWUhCflVCbduVIUpwgMM/NL5QHn
+        KAKKdqvgiH1tZvbdGNoeo4s8OzikM3SJEHe6N+A=
+X-Google-Smtp-Source: ABdhPJytEiLX+kMjV4Ea2i2rFfKnTCKJB2DxU0jLTV+BpUesrQ9gHru0x+sIRyJPwSKOmvFMZ1Gze3L0qvmdO0bLsr0=
+X-Received: by 2002:a9d:c01:: with SMTP id 1mr6698124otr.107.1611733436883;
+ Tue, 26 Jan 2021 23:43:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210120105246.23218-1-michael@walle.cc> <CAL_JsqLSJCLtgPyAdKSqsy=JoHSLYef_0s-stTbiJ+VCq2qaSA@mail.gmail.com>
+ <CAGETcx86HMo=gaDdXFyJ4QQ-pGXWzw2G0J=SjC-eq4K7B1zQHg@mail.gmail.com>
+ <c3e35b90e173b15870a859fd7001a712@walle.cc> <CAGETcx8eZRd1fJ3yuO_t2UXBFHObeNdv-c8oFH3mXw6zi=zOkQ@mail.gmail.com>
+ <f706c0e4b684e07635396fcf02f4c9a6@walle.cc> <CAGETcx8_6Hp+MWFOhRohXwdWFSfCc7A=zpb5QYNHZE5zv0bDig@mail.gmail.com>
+ <CAMuHMdWvFej-6vkaLM44t7eX2LpkDSXu4_7VH-X-3XRueXTO=A@mail.gmail.com>
+ <a24391e62b107040435766fff52bdd31@walle.cc> <CAGETcx8FO+YSM0jwCnDdnvE3NCdjZ=1FSmAZpyaOEOvCgd4SXw@mail.gmail.com>
+ <CAMuHMdX8__juNc-Lx8Tu9abMKq-pT=yA4s6D1w4ZeStKOasGpg@mail.gmail.com> <CAGETcx-0G-Y8wT_+BfP5vbi0gW6KonwgoJ6DdqjaGbFkutTGag@mail.gmail.com>
+In-Reply-To: <CAGETcx-0G-Y8wT_+BfP5vbi0gW6KonwgoJ6DdqjaGbFkutTGag@mail.gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 27 Jan 2021 08:43:45 +0100
+Message-ID: <CAMuHMdXMaAtrbQibJh+Z2v5qhe_Tg0hQU9YqxuU0ow_iNO1atg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: dwc: layerscape: convert to builtin_platform_driver()
+To:     Saravana Kannan <saravanak@google.com>
+Cc:     Michael Walle <michael@walle.cc>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Roy Zang <roy.zang@nxp.com>, PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi Saravana,
 
-Fix comment typos in "ordering".
+On Wed, Jan 27, 2021 at 1:44 AM Saravana Kannan <saravanak@google.com> wrote:
+> On Tue, Jan 26, 2021 at 12:50 AM Geert Uytterhoeven
+> <geert@linux-m68k.org> wrote:
+> > On Mon, Jan 25, 2021 at 11:42 PM Saravana Kannan <saravanak@google.com> wrote:
+> > > On Mon, Jan 25, 2021 at 11:49 AM Michael Walle <michael@walle.cc> wrote:
+> > > > Am 2021-01-21 12:01, schrieb Geert Uytterhoeven:
+> > > > > On Thu, Jan 21, 2021 at 1:05 AM Saravana Kannan <saravanak@google.com>
+> > > > > wrote:
+> > > > >> On Wed, Jan 20, 2021 at 3:53 PM Michael Walle <michael@walle.cc>
+> > > > >> wrote:
+> > > > >> > Am 2021-01-20 20:47, schrieb Saravana Kannan:
+> > > > >> > > On Wed, Jan 20, 2021 at 11:28 AM Michael Walle <michael@walle.cc>
+> > > > >> > > wrote:
+> > > > >> > >>
+> > > > >> > >> [RESEND, fat-fingered the buttons of my mail client and converted
+> > > > >> > >> all CCs to BCCs :(]
+> > > > >> > >>
+> > > > >> > >> Am 2021-01-20 20:02, schrieb Saravana Kannan:
+> > > > >> > >> > On Wed, Jan 20, 2021 at 6:24 AM Rob Herring <robh@kernel.org> wrote:
+> > > > >> > >> >>
+> > > > >> > >> >> On Wed, Jan 20, 2021 at 4:53 AM Michael Walle <michael@walle.cc>
+> > > > >> > >> >> wrote:
+> > > > >> > >> >> >
+> > > > >> > >> >> > fw_devlink will defer the probe until all suppliers are ready. We can't
+> > > > >> > >> >> > use builtin_platform_driver_probe() because it doesn't retry after probe
+> > > > >> > >> >> > deferral. Convert it to builtin_platform_driver().
+> > > > >> > >> >>
+> > > > >> > >> >> If builtin_platform_driver_probe() doesn't work with fw_devlink, then
+> > > > >> > >> >> shouldn't it be fixed or removed?
+> > > > >> > >> >
+> > > > >> > >> > I was actually thinking about this too. The problem with fixing
+> > > > >> > >> > builtin_platform_driver_probe() to behave like
+> > > > >> > >> > builtin_platform_driver() is that these probe functions could be
+> > > > >> > >> > marked with __init. But there are also only 20 instances of
+> > > > >> > >> > builtin_platform_driver_probe() in the kernel:
+> > > > >> > >> > $ git grep ^builtin_platform_driver_probe | wc -l
+> > > > >> > >> > 20
+> > > > >> > >> >
+> > > > >> > >> > So it might be easier to just fix them to not use
+> > > > >> > >> > builtin_platform_driver_probe().
+> > > > >> > >> >
+> > > > >> > >> > Michael,
+> > > > >> > >> >
+> > > > >> > >> > Any chance you'd be willing to help me by converting all these to
+> > > > >> > >> > builtin_platform_driver() and delete builtin_platform_driver_probe()?
+> > > > >> > >>
+> > > > >> > >> If it just moving the probe function to the _driver struct and
+> > > > >> > >> remove the __init annotations. I could look into that.
+> > > > >> > >
+> > > > >> > > Yup. That's pretty much it AFAICT.
+> > > > >> > >
+> > > > >> > > builtin_platform_driver_probe() also makes sure the driver doesn't ask
+> > > > >> > > for async probe, etc. But I doubt anyone is actually setting async
+> > > > >> > > flags and still using builtin_platform_driver_probe().
+> > > > >> >
+> > > > >> > Hasn't module_platform_driver_probe() the same problem? And there
+> > > > >> > are ~80 drivers which uses that.
+> > > > >>
+> > > > >> Yeah. The biggest problem with all of these is the __init markers.
+> > > > >> Maybe some familiar with coccinelle can help?
+> > > > >
+> > > > > And dropping them will increase memory usage.
+> > > >
+> > > > Although I do have the changes for the builtin_platform_driver_probe()
+> > > > ready, I don't think it makes much sense to send these unless we agree
+> > > > on the increased memory footprint. While there are just a few
+> > > > builtin_platform_driver_probe() and memory increase _might_ be
+> > > > negligible, there are many more module_platform_driver_probe().
+> > >
+> > > While it's good to drop code that'll not be used past kernel init, the
+> > > module_platform_driver_probe() is going even more extreme. It doesn't
+> > > even allow deferred probe (well before kernel init is done). I don't
+> > > think that behavior is right and that's why we should delete it. Also,
+> >
+> > This construct is typically used for builtin hardware for which the
+> > dependencies are registered very early, and thus known to probe at
+> > first try (if present).
+> >
+> > > I doubt if any of these probe functions even take up 4KB of memory.
+> >
+> > How many 4 KiB pages do you have in a system with 10 MiB of SRAM?
+> > How many can you afford to waste?
+>
+> There are only a few instances of this macro in the kernel. How many
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/s390/include/asm/facility.h             | 2 +-
- drivers/gpu/drm/qxl/qxl_drv.c                | 2 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+$ git grep -lw builtin_platform_driver_probe | wc -l
+21
+$ git grep -lw module_platform_driver_probe | wc -l
+86
 
++ the ones that haven't been converted to the above yet:
 
-Unless somebody objects, I'll just merge these typo fixes via the PCI tree.
+$ git grep -lw platform_driver_probe | wc -l
+58
 
+> of those actually fit the description above? We can probably just
+> check the DT?
 
-diff --git a/arch/s390/include/asm/facility.h b/arch/s390/include/asm/facility.h
-index 68c476b20b57..91b5d714d28f 100644
---- a/arch/s390/include/asm/facility.h
-+++ b/arch/s390/include/asm/facility.h
-@@ -44,7 +44,7 @@ static inline int __test_facility(unsigned long nr, void *facilities)
- }
- 
- /*
-- * The test_facility function uses the bit odering where the MSB is bit 0.
-+ * The test_facility function uses the bit ordering where the MSB is bit 0.
-  * That makes it easier to query facility bits with the bit number as
-  * documented in the Principles of Operation.
-  */
-diff --git a/drivers/gpu/drm/qxl/qxl_drv.c b/drivers/gpu/drm/qxl/qxl_drv.c
-index 6e7f16f4cec7..dab190a547cc 100644
---- a/drivers/gpu/drm/qxl/qxl_drv.c
-+++ b/drivers/gpu/drm/qxl/qxl_drv.c
-@@ -141,7 +141,7 @@ static void qxl_drm_release(struct drm_device *dev)
- 
- 	/*
- 	 * TODO: qxl_device_fini() call should be in qxl_pci_remove(),
--	 * reodering qxl_modeset_fini() + qxl_device_fini() calls is
-+	 * reordering qxl_modeset_fini() + qxl_device_fini() calls is
- 	 * non-trivial though.
- 	 */
- 	qxl_modeset_fini(qdev);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 597bc88479ba..04fbfe5cbeb0 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -866,7 +866,7 @@ struct iwl_fw_dbg_trigger_time_event {
-  * tx_bar: tid bitmap to configure on what tid the trigger should occur
-  *	when a BAR is send (for an Rx BlocAck session).
-  * frame_timeout: tid bitmap to configure on what tid the trigger should occur
-- *	when a frame times out in the reodering buffer.
-+ *	when a frame times out in the reordering buffer.
-  */
- struct iwl_fw_dbg_trigger_ba {
- 	__le16 rx_ba_start;
+What do you mean by checking the DT?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.25.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
