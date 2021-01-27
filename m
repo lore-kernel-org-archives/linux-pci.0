@@ -2,122 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88438C433E6
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E593C433E6
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:35:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38CB72074A
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:27:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAD1720739
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jan 2021 12:35:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237499AbhA0M0y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Jan 2021 07:26:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35154 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S314044AbhAZWzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Jan 2021 17:55:40 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A5DDE2065D;
-        Tue, 26 Jan 2021 22:54:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611701699;
-        bh=7/yqTNqWIqQ7XCIx1WSLqU/snxBtDCQ23qUfG8HlO5A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hxfU/IRuv3TUSul3I/evOCCOqIPlij7Fp31pMB/khCbDtR9z8LV26+bh8BQ6A4D5H
-         Uq6Ao6JNAEzjMpilMG6xm7GxiAKvj/FOBV4T5u++joQDdfLKG1YcevdvOPMchYnQL5
-         dR64tGX8kKpzZdmaGAYt7JHF65SsvAsX4aF6OOzy2vG/uyXamFVONJlj7Iaz6Adbu/
-         LEY2tk3cW4TpsdZlqoPVTZiSzGNkH2fDVm+iqF0C/113G8xoke/nSmDYfRYddMEIAw
-         3l6N9G7bZ6O7HocoxzYRRF0iUibB5D5RzXhmA+I1JFNpag/Q5v+LNgqQRm4egUMNf/
-         yrOTMJv1AnUmg==
-Date:   Tue, 26 Jan 2021 22:54:54 +0000
-From:   Will Deacon <will@kernel.org>
-To:     Jeremy Linton <jeremy.linton@arm.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jon Masters <jcm@jonmasters.org>, mark.rutland@arm.com,
-        linux-pci@vger.kernel.org, sudeep.holla@arm.com,
-        linux-kernel@vger.kernel.org, catalin.marinas@arm.com,
-        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] arm64: PCI: Enable SMC conduit
-Message-ID: <20210126225454.GB30941@willie-the-truck>
-References: <20210105045735.1709825-1-jeremy.linton@arm.com>
- <20210107181416.GA3536@willie-the-truck>
- <56375cd8-8e11-aba6-9e11-1e0ec546e423@jonmasters.org>
- <20210108103216.GA17931@e121166-lin.cambridge.arm.com>
- <20210122194829.GE25471@willie-the-truck>
- <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
+        id S237074AbhA0Mei (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Jan 2021 07:34:38 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:45102 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237969AbhA0Mb3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2021 07:31:29 -0500
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 10RC2Nkh117828;
+        Wed, 27 Jan 2021 07:30:37 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=rwzNdVxaabwTTzTgTZiXcpB5MZiv4i4Keynxr5b824I=;
+ b=VKGYx+Yu4qp0Ov/MuEfEu9mWOggHrC9iBzT/DriErNwUnp7Z7Hhi7zMFSGM3KDJX8WqB
+ +hN1QC7L1GaKVhph2FRR2Eb9TttgHq8HwB2Sy85+bCDMJBRRR+zwMyxbcfOI97dGUFG0
+ CTyloZkSAYkmfUodCXcbRk5JbW+LoNHAnTUuz/BN7bo1yoNDnGr/MBYHy+PJ/FNuReDx
+ WG/1rSlWm6EHh8wKm2Gv8UAywyN3D4T/wrP9BzIQlrrfEFNCrylyJQ2+Yb4Ux1hQZw0R
+ m5B03B9I4ikPy1xSn1z0EA1QAggwZV5UmVkM8PCCzjXvU5trcFNyq+yc461hLLjsvQ1W Hg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 36awe7eyxp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 27 Jan 2021 07:30:37 -0500
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 10RC30MO119656;
+        Wed, 27 Jan 2021 07:30:37 -0500
+Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 36awe7eyws-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 27 Jan 2021 07:30:37 -0500
+Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
+        by ppma01fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 10RCEBZL002533;
+        Wed, 27 Jan 2021 12:30:34 GMT
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
+        by ppma01fra.de.ibm.com with ESMTP id 368be81ya7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 27 Jan 2021 12:30:34 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 10RCUVv446793006
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Jan 2021 12:30:31 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8C60442042;
+        Wed, 27 Jan 2021 12:30:31 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DE3BF42045;
+        Wed, 27 Jan 2021 12:30:30 +0000 (GMT)
+Received: from localhost (unknown [9.171.68.8])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed, 27 Jan 2021 12:30:30 +0000 (GMT)
+Date:   Wed, 27 Jan 2021 13:30:29 +0100
+From:   Vasily Gorbik <gor@linux.ibm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Dave Airlie <airlied@redhat.com>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, linux-s390@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] Fix "ordering" comment typos
+Message-ID: <your-ad-here.call-01611750629-ext-5157@work.hours>
+References: <20210126195042.2909405-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20210126195042.2909405-1-helgaas@kernel.org>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.343,18.0.737
+ definitions=2021-01-27_05:2021-01-27,2021-01-27 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ priorityscore=1501 spamscore=0 clxscore=1011 suspectscore=0
+ impostorscore=0 bulkscore=0 mlxscore=0 adultscore=0 lowpriorityscore=0
+ mlxlogscore=936 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2101270063
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 26, 2021 at 10:46:04AM -0600, Jeremy Linton wrote:
-> On 1/22/21 1:48 PM, Will Deacon wrote:
-> > This isn't like the usual fragmentation problems, where firmware swoops in
-> > to save the day; CPU onlining, spectre mitigations, early entropy etc. All
-> > of these problems exist because there isn't a standard method to implement
-> > them outside of firmware, and so adding a layer of abstraction there makes
-> > sense.
+On Tue, Jan 26, 2021 at 01:50:42PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> There are a lot of parallels with PSCI here because there were existing
-> standards for cpu online.
-
-I don't recall anything that I would consider a standard at the time.
-
-> > But PCIe is already a standard!
+> Fix comment typos in "ordering".
 > 
-> And it says that ECAM is optional, particularly if there are
-> firmware/platform standardized ways of accessing the config space.
-
-Nice loophole; I haven't checked.
-
-> > We shouldn't paper over hardware designers' inability to follow a ~20 year
-> > old standard by hiding it behind another standard that is hot off the press.
-> > Seriously.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/s390/include/asm/facility.h             | 2 +-
+>  drivers/gpu/drm/qxl/qxl_drv.c                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/fw/file.h | 2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> No disagreement, but its been more than half a decade and there are some
-> high (millions!) volume parts, that still don't have kernel support.
-
-Ok.
-
-> > There is not a scrap of evidence to suggest that the firmware
-> > implementations will be any better, but they will certainly be harder to
-> > debug and maintain.  I have significant reservations about Arm's interest in
-> > maintaining the spec as both more errata appear and the PCIe spec evolves
-> > (after all, this is outside of SBSA, no?). The whole thing stinks of "if all
-> > you have is a hammer, then everything looks like a nail". But this isn't the
-> > sort of problem that is solved with yet another spec -- instead, how about
-> > encouraging vendors to read the specs that already exist?
 > 
-> PSCI, isn't a good example of a firmware interface that works?
-
-Not sure what you're getting at here.
-
-> > > The SMC is an olive branch and just to make sure it is crystal clear
-> > > there won't be room for adding quirks if the implementation turns out
-> > > to be broken, if a line in the sand is what we want here it is.
-> > 
-> > I appreciate the sentiment, but you're not solving the problem here. You're
-> > moving it somewhere else. Somewhere where you don't have to deal with it
-> > (and I honestly can't blame you for that), but also somewhere where you
-> > _can't_ necessarily deal with it. The inevitable outcome is an endless
-> > succession of crappy, non-compliant machines which only appear to operate
-> > correctly with particularly kernel/firmware combinations. Imagine trying to
-> > use something like that?
-> > 
-> > The approach championed here actively discourages vendors from building
-> > spec-compliant hardware and reduces our ability to work around problems
-> > on such hardware at the same time.
-> > 
-> > So I won't be applying these patches, sorry.
+> Unless somebody objects, I'll just merge these typo fixes via the PCI tree.
 > 
-> Does that mean its open season for ECAM quirks, and we can expect them to
-> start being merged now?
+> 
+> diff --git a/arch/s390/include/asm/facility.h b/arch/s390/include/asm/facility.h
+> index 68c476b20b57..91b5d714d28f 100644
+> --- a/arch/s390/include/asm/facility.h
+> +++ b/arch/s390/include/asm/facility.h
+> @@ -44,7 +44,7 @@ static inline int __test_facility(unsigned long nr, void *facilities)
+>  }
+>  
+>  /*
+> - * The test_facility function uses the bit odering where the MSB is bit 0.
+> + * The test_facility function uses the bit ordering where the MSB is bit 0.
+>   * That makes it easier to query facility bits with the bit number as
+>   * documented in the Principles of Operation.
+>   */
 
-That's not for me to say.
-
-Will
+Acked-by: Vasily Gorbik <gor@linux.ibm.com>
