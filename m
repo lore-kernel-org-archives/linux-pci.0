@@ -2,134 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 336E3C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 17:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C6FC433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 18:56:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 059AB64E1E
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 17:55:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1353F64E23
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 18:56:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231346AbhA1Ry4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Jan 2021 12:54:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58782 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231149AbhA1RyI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2021 12:54:08 -0500
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60A93C0617AB
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jan 2021 09:52:38 -0800 (PST)
-Received: by mail-lj1-x233.google.com with SMTP id e18so7389903lja.12
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jan 2021 09:52:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=+h4iY3X8KWYJxdBXqwutJPnHSSsLNjVIGMbK8ENRaO4=;
-        b=Xth5HkEyru+I/oRftl/ZDJ9BqQGqc9PFbpXVMzQIqiTTVRZ+jKPaJfu0eeutGCPqFq
-         Ux551LITZ4RfdT8b7yhUdO//5/rBe2o/7XpMvPbBCon1yCMjsEK8pgn0yrWo+Fv1CIJ0
-         9O1rjM4pky3dsuyVhSzEXGJIuPFNRDJMnSVV2Zh6XFXfaGNbgmkCAe6W/mQElPh/SMzd
-         f52zcd2PK0kuChVNe4fmk/K/xGJmGWrX5479qcGUZ3ZDBAXWZ6dl16+Dc/L/ePNygrLC
-         +bt67kayzncAC9A3x2kRVfNKB+uOVSetpWWq5VptLZ3NBuG10+jNYmnnJ0Dh4aCn6esd
-         FM6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=+h4iY3X8KWYJxdBXqwutJPnHSSsLNjVIGMbK8ENRaO4=;
-        b=dIrAN48QVK6LFMCFg0LuglXYnURh52mFDM+xbwyxiC054YGCnRMK1X7AMevQINiyNs
-         vJcyotX2X+DiT8tGj6SOF3zxNjzniJUzEPpgdJmbNHJYImYIqifqEhUYfgWOJkUOKB95
-         wDDV1EZFTfGzQAR2ble7b3Va8S+68XUAWU/9YI7T2JZLHICNcEj4hrOWbptJsdJmR16v
-         10aJHHqH+0aJSh/uSOZbOmcdUlW2Pm8zHpK+R9G/iNuATOViAa0eZYAloRHEKCzvOALi
-         cTZPexjvR8AJtuyM51cRxyR7M1JBwvzpETySHJ/RtpQo/azT/OIF0ASW2Z8RGSlj1c/P
-         iTGA==
-X-Gm-Message-State: AOAM530mRclg/iJDrL7Bue+cJ74lXu7jVOaLNbkOBcliYMJQi85+hRme
-        gJ4kQaEZFvb5GBoFuO3zMqUUoA==
-X-Google-Smtp-Source: ABdhPJwaaiMy0PndRhrLl8JkAsSnUorqd4IdFfg4mBRAi9QArmC3uK+gQIstRLDRTFKyKTlp7frTkQ==
-X-Received: by 2002:a2e:9ed1:: with SMTP id h17mr240397ljk.160.1611856356937;
-        Thu, 28 Jan 2021 09:52:36 -0800 (PST)
-Received: from eriador.lan ([94.25.229.83])
-        by smtp.gmail.com with ESMTPSA id w10sm2216119ljj.37.2021.01.28.09.52.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Jan 2021 09:52:36 -0800 (PST)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-arm-msm@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 3/5] pcie-qcom: provide a way to power up qca6390 chip on RB5 platform
-Date:   Thu, 28 Jan 2021 20:52:23 +0300
-Message-Id: <20210128175225.3102958-4-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210128175225.3102958-1-dmitry.baryshkov@linaro.org>
-References: <20210128175225.3102958-1-dmitry.baryshkov@linaro.org>
+        id S232063AbhA1S4L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Jan 2021 13:56:11 -0500
+Received: from foss.arm.com ([217.140.110.172]:37674 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232481AbhA1SvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Jan 2021 13:51:14 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0529F13A1;
+        Thu, 28 Jan 2021 10:50:21 -0800 (PST)
+Received: from [192.168.122.166] (unknown [172.31.20.19])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 77BB83F719;
+        Thu, 28 Jan 2021 10:50:20 -0800 (PST)
+Subject: Re: [PATCH] arm64: PCI: Enable SMC conduit
+To:     Will Deacon <will@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jon Masters <jcm@jonmasters.org>, mark.rutland@arm.com,
+        linux-pci@vger.kernel.org, sudeep.holla@arm.com,
+        linux-kernel@vger.kernel.org, catalin.marinas@arm.com,
+        bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+References: <20210105045735.1709825-1-jeremy.linton@arm.com>
+ <20210107181416.GA3536@willie-the-truck>
+ <56375cd8-8e11-aba6-9e11-1e0ec546e423@jonmasters.org>
+ <20210108103216.GA17931@e121166-lin.cambridge.arm.com>
+ <20210122194829.GE25471@willie-the-truck>
+ <4c2db08d-ccc4-05eb-6b7b-5fd7d07dd11e@arm.com>
+ <20210126225454.GB30941@willie-the-truck>
+From:   Jeremy Linton <jeremy.linton@arm.com>
+Message-ID: <bde7b13e-e395-0f12-d0dc-62383ee80dd8@arm.com>
+Date:   Thu, 28 Jan 2021 12:50:15 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210126225454.GB30941@willie-the-truck>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some Qualcomm platforms require to power up an external device before
-probing the PCI bus. E.g. on RB5 platform the QCA6390 WiFi/BT chip needs
-to be powered up before PCIe0 bus is probed. Add a quirk to the
-respective PCIe root bridge to attach to the power domain if one is
-required, so that the QCA chip is started before scanning the PCIe bus.
+Hi,
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+On 1/26/21 4:54 PM, Will Deacon wrote:
+> On Tue, Jan 26, 2021 at 10:46:04AM -0600, Jeremy Linton wrote:
+>> On 1/22/21 1:48 PM, Will Deacon wrote:
+>>> This isn't like the usual fragmentation problems, where firmware swoops in
+>>> to save the day; CPU onlining, spectre mitigations, early entropy etc. All
+>>> of these problems exist because there isn't a standard method to implement
+>>> them outside of firmware, and so adding a layer of abstraction there makes
+>>> sense.
+>>
+>> There are a lot of parallels with PSCI here because there were existing
+>> standards for cpu online.
+> 
+> I don't recall anything that I would consider a standard at the time.
+> 
+>>> But PCIe is already a standard!
+>>
+>> And it says that ECAM is optional, particularly if there are
+>> firmware/platform standardized ways of accessing the config space.
+> 
+> Nice loophole; I haven't checked.
+> 
+>>> We shouldn't paper over hardware designers' inability to follow a ~20 year
+>>> old standard by hiding it behind another standard that is hot off the press.
+>>> Seriously.
+>>
+>> No disagreement, but its been more than half a decade and there are some
+>> high (millions!) volume parts, that still don't have kernel support.
+> 
+> Ok.
+> 
+>>> There is not a scrap of evidence to suggest that the firmware
+>>> implementations will be any better, but they will certainly be harder to
+>>> debug and maintain.  I have significant reservations about Arm's interest in
+>>> maintaining the spec as both more errata appear and the PCIe spec evolves
+>>> (after all, this is outside of SBSA, no?). The whole thing stinks of "if all
+>>> you have is a hammer, then everything looks like a nail". But this isn't the
+>>> sort of problem that is solved with yet another spec -- instead, how about
+>>> encouraging vendors to read the specs that already exist?
+>>
+>> PSCI, isn't a good example of a firmware interface that works?
+> 
+> Not sure what you're getting at here.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index ab21aa01c95d..eb73c8540d4d 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -20,6 +20,7 @@
- #include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
-+#include <linux/pm_domain.h>
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
- #include <linux/phy/phy.h>
-@@ -1568,6 +1569,26 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0302, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1000, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
- 
-+static void qcom_fixup_power(struct pci_dev *dev)
-+{
-+	int ret;
-+	struct pcie_port *pp = dev->bus->sysdata;
-+	struct dw_pcie *pci;
-+
-+	if (!pci_is_root_bus(dev->bus))
-+		return;
-+
-+	ret = dev_pm_domain_attach(&dev->dev, true);
-+	if (ret < 0 || !dev->dev.pm_domain)
-+		return;
-+
-+	pci = to_dw_pcie_from_pp(pp);
-+	dev_info(&dev->dev, "Bus powered up, waiting for link to come up\n");
-+
-+	dw_pcie_wait_for_link(pci);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x010b, qcom_fixup_power);
-+
- static struct platform_driver qcom_pcie_driver = {
- 	.probe = qcom_pcie_probe,
- 	.driver = {
--- 
-2.29.2
+Simply, that PSCI is working fairly well today, and that hopefully this
+specification will similarly mature.
+
+Right now, there are at least three prongs for assuring compliance. The 
+TF-A core service is being written to assure parameter validation and 
+error checking is common across all the platforms. That code is 
+attempting to cover every case called out by the SMC/PCI spec. The 
+kernel is now utilizing the entire API service and cross validating the 
+ACPI/SMC bus values and function existence. Lastly, but most important, 
+there is the ACS PCI compliance suite*. That suite attempts to validate, 
+among other things, config space behavior. When run on top of the SMC 
+conduit, it provides assurance that root port registers/etc behave as 
+the PCIe standard dictates.
+
+* https://github.com/ARM-software/sbsa-acs/tree/master/test_pool/pcie
+
+Thanks,
+> 
+>>>> The SMC is an olive branch and just to make sure it is crystal clear
+>>>> there won't be room for adding quirks if the implementation turns out
+>>>> to be broken, if a line in the sand is what we want here it is.
+>>>
+>>> I appreciate the sentiment, but you're not solving the problem here. You're
+>>> moving it somewhere else. Somewhere where you don't have to deal with it
+>>> (and I honestly can't blame you for that), but also somewhere where you
+>>> _can't_ necessarily deal with it. The inevitable outcome is an endless
+>>> succession of crappy, non-compliant machines which only appear to operate
+>>> correctly with particularly kernel/firmware combinations. Imagine trying to
+>>> use something like that?
+>>>
+>>> The approach championed here actively discourages vendors from building
+>>> spec-compliant hardware and reduces our ability to work around problems
+>>> on such hardware at the same time.
+>>>
+>>> So I won't be applying these patches, sorry.
+>>
+>> Does that mean its open season for ECAM quirks, and we can expect them to
+>> start being merged now?
+> 
+> That's not for me to say.
+> 
+> Will
+> 
 
