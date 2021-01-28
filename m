@@ -2,95 +2,181 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D74C433DB
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 21:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A3CC433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 23:23:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C840E64DE0
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 21:00:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 534C864DF1
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jan 2021 23:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229728AbhA1VAi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Jan 2021 16:00:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229595AbhA1VA2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 28 Jan 2021 16:00:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6875F64DDE;
-        Thu, 28 Jan 2021 20:59:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611867587;
-        bh=I/Eo/ckFo/UmLLq/4F+ksUbGqF3NvUqqpdVR1dzGu2Y=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=lFzgJrI60IS7FZ9jt4yG9eaeDFmWJXV9IQ3UGRKicN9QWr0GKbOkcsiXIGtxXZ2J5
-         bMv/PHYsZtmIe6aHHQBZC2v38jGMwjuDl1Ph55nA56rDVbvRh4caNRwpWKxls0VMp6
-         FRGr1hIxzD+4PTuY37qCJqcL6EXQXN4CEZuR1Ed2rikDm/oH8ISVusYXGRXI9Ag0YB
-         57WOrCp0TYgUSWD7pDazBiDIPhrqLHvx4ojGClOhWPfe6Dxw6txQLfCwYafuvVSq5U
-         zFSd/Rp3PpQUCOqa9VAsK0tr/63WOcrDzxUcxWkUn8cvhqPUMmtZTiLW3H7V6jzEG0
-         A3RqGbV2JErmQ==
-Date:   Thu, 28 Jan 2021 14:59:46 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Marc MERLIN <marc_nouveau@merlins.org>
-Cc:     nouveau@lists.freedesktop.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: 5.9.11 still hanging 2mn at each boot and looping on nvidia-gpu
- 0000:01:00.3: PME# enabled (Quadro RTX 4000 Mobile)
-Message-ID: <20210128205946.GA27855@bjorn-Precision-5520>
+        id S231716AbhA1XW5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Jan 2021 18:22:57 -0500
+Received: from mail-oo1-f53.google.com ([209.85.161.53]:42689 "EHLO
+        mail-oo1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231703AbhA1XW4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2021 18:22:56 -0500
+Received: by mail-oo1-f53.google.com with SMTP id g46so1859244ooi.9;
+        Thu, 28 Jan 2021 15:22:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ydH4nhxewK7vs+CzByTZsj+twADBwFlu+n9oaryGu3g=;
+        b=IJlJC3Qs0gVk7M/YqtVq22LZ8sjoohEOaF5AP3U4pIiKC3PYqtFyvYjqnEuZJHm/UC
+         O4IJp0lOA8DtpDy+AAcIRyE5/yV55T/FMrz1zHjRu1OnDT/AiMZiF+avbx6gCDtun5/D
+         2uojSCNJVhN1Md78PLMqs52zfZ9gQv+3alRtQZpQWI0wQf94fQ0+AYtwm602XQr5UhUx
+         nP4oZgfMFLoILsZsfe3zBgjtZawV4nW1hq9euuc2adX6faztP9IfX2Ok8/8a3wqqVwGx
+         OqWpvxw3MsC/pa5NvPF+74nmcNkUF9400sZb0WR+Q+9bJ9XlG+GgiICfSRZ8hQsgaCg4
+         m09Q==
+X-Gm-Message-State: AOAM5302vT+HO7BZNItQE/vbeFEF4ZJxbk1vHNIUKVwZl7o4ZOV+jYoF
+        8gxmhsa0VmfAA2PsRukQUnhf30z4das=
+X-Google-Smtp-Source: ABdhPJzFUzfv7gbRcuengnXOY5sHTHQQk8G+pTaTghZ5FijpRS07urmHAGpgzlyrL+/VeXxxP58SjQ==
+X-Received: by 2002:a4a:a22a:: with SMTP id m42mr1356247ool.22.1611876134785;
+        Thu, 28 Jan 2021 15:22:14 -0800 (PST)
+Received: from mail-oi1-f177.google.com (mail-oi1-f177.google.com. [209.85.167.177])
+        by smtp.gmail.com with ESMTPSA id t65sm1537692oie.25.2021.01.28.15.22.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Jan 2021 15:22:14 -0800 (PST)
+Received: by mail-oi1-f177.google.com with SMTP id w8so7963523oie.2;
+        Thu, 28 Jan 2021 15:22:13 -0800 (PST)
+X-Received: by 2002:aca:f382:: with SMTP id r124mr1069457oih.175.1611876133354;
+ Thu, 28 Jan 2021 15:22:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210127213300.GA3046575@bjorn-Precision-5520>
+References: <20210108093610.28595-1-Zhiqiang.Hou@nxp.com> <20210108093610.28595-2-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20210108093610.28595-2-Zhiqiang.Hou@nxp.com>
+From:   Li Yang <leoyang.li@nxp.com>
+Date:   Thu, 28 Jan 2021 17:22:02 -0600
+X-Gmail-Original-Message-ID: <CADRPPNQr4xGH0On94rxr69VYeZAQEYQgt=CosVqEDi91cfO_tw@mail.gmail.com>
+Message-ID: <CADRPPNQr4xGH0On94rxr69VYeZAQEYQgt=CosVqEDi91cfO_tw@mail.gmail.com>
+Subject: Re: [PATCHv3 1/7] PCI: dwc: Fix a bug of the case dw_pci->ops is NULL
+To:     Zhiqiang Hou <Zhiqiang.Hou@nxp.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Shawn Guo <shawnguo@kernel.org>, gustavo.pimentel@synopsys.com,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 27, 2021 at 03:33:02PM -0600, Bjorn Helgaas wrote:
-> On Sat, Dec 26, 2020 at 03:12:09AM -0800, Marc MERLIN wrote:
-> > This started with 5.5 and hasn't gotten better since then, despite
-> > some reports I tried to send.
-> > 
-> > As per my previous message:
-> > I have a Thinkpad P70 with hybrid graphics.
-> > 01:00.0 VGA compatible controller: NVIDIA Corporation GM107GLM [Quadro M600M] (rev a2)
-> > that one works fine, I can use i915 for the main screen, and nouveau to
-> > display on the external ports (external ports are only wired to nvidia
-> > chip, so it's impossible to use them without turning the nvidia chip
-> > on).
-> >  
-> > I now got a newer P73 also with the same hybrid graphics (setup as such
-> > in the bios). It runs fine with i915, and I don't need to use external
-> > display with nouveau for now (it almost works, but I only see the mouse
-> > cursor on the external screen, no window or anything else can get
-> > displayed, very weird).
-> > 01:00.0 VGA compatible controller: NVIDIA Corporation TU104GLM [Quadro RTX 4000 Mobile / Max-Q] (rev a1)
-> >  
-> > 
-> > after boot, when it gets the right trigger (not sure which ones), it
-> > loops on this evern 2 seconds, mostly forever.
-> > 
-> > I'm not sure if it's nouveau's fault or the kernel's PCI PME's fault, or something else.
-> 
-> IIUC there are basically two problems:
-> 
->   1) A 2 minute delay during boot
->   2) Some sort of event every 2 seconds that kills your battery life
-> 
-> Your machine doesn't sound unusual, and I haven't seen a flood of
-> similar reports, so maybe there's something unusual about your config.
-> But I really don't have any guesses for either one.
-> 
-> It sounds like v5.5 worked fine and you first noticed the slow boot
-> problem in v5.8.  We *could* try to bisect it, but I know that's a lot
-> of work on your part.
-> 
-> Grasping for any ideas for the boot delay; could you boot with
-> "initcall_debug" and collect your "lsmod" output?  I notice async_tx
-> in some of your logs, but I have no idea what it is.  It's from
-> crypto, so possibly somewhat unusual?
+On Fri, Jan 8, 2021 at 3:29 AM Zhiqiang Hou <Zhiqiang.Hou@nxp.com> wrote:
+>
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>
+> The dw_pci->ops may be a NULL, and fix it by adding one more check.
+>
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 
-Another random thought: is there any chance the boot delay could be
-related to crypto waiting for entropy?
+Hi Bjorn,
+
+This is causing many layerscape platforms to fail to boot.  Can you
+help to pick up this patch?  Or are you actually preferring other
+solutions like creating dummy ops when it is not needed?
+
+Regards,
+Leo
+
+> ---
+> V3:
+>  - Rebased against the latest code base
+>
+>  drivers/pci/controller/dwc/pcie-designware-host.c |  2 +-
+>  drivers/pci/controller/dwc/pcie-designware.c      | 14 +++++++-------
+>  2 files changed, 8 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 516b151e0ef3..0413284fdd93 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -429,7 +429,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>         dw_pcie_setup_rc(pp);
+>         dw_pcie_msi_init(pp);
+>
+> -       if (!dw_pcie_link_up(pci) && pci->ops->start_link) {
+> +       if (!dw_pcie_link_up(pci) && pci->ops && pci->ops->start_link) {
+>                 ret = pci->ops->start_link(pci);
+>                 if (ret)
+>                         goto err_free_msi;
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 645fa1892375..cf895c12f71f 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -141,7 +141,7 @@ u32 dw_pcie_read_dbi(struct dw_pcie *pci, u32 reg, size_t size)
+>         int ret;
+>         u32 val;
+>
+> -       if (pci->ops->read_dbi)
+> +       if (pci->ops && pci->ops->read_dbi)
+>                 return pci->ops->read_dbi(pci, pci->dbi_base, reg, size);
+>
+>         ret = dw_pcie_read(pci->dbi_base + reg, size, &val);
+> @@ -156,7 +156,7 @@ void dw_pcie_write_dbi(struct dw_pcie *pci, u32 reg, size_t size, u32 val)
+>  {
+>         int ret;
+>
+> -       if (pci->ops->write_dbi) {
+> +       if (pci->ops && pci->ops->write_dbi) {
+>                 pci->ops->write_dbi(pci, pci->dbi_base, reg, size, val);
+>                 return;
+>         }
+> @@ -171,7 +171,7 @@ void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val)
+>  {
+>         int ret;
+>
+> -       if (pci->ops->write_dbi2) {
+> +       if (pci->ops && pci->ops->write_dbi2) {
+>                 pci->ops->write_dbi2(pci, pci->dbi_base2, reg, size, val);
+>                 return;
+>         }
+> @@ -186,7 +186,7 @@ static u32 dw_pcie_readl_atu(struct dw_pcie *pci, u32 reg)
+>         int ret;
+>         u32 val;
+>
+> -       if (pci->ops->read_dbi)
+> +       if (pci->ops && pci->ops->read_dbi)
+>                 return pci->ops->read_dbi(pci, pci->atu_base, reg, 4);
+>
+>         ret = dw_pcie_read(pci->atu_base + reg, 4, &val);
+> @@ -200,7 +200,7 @@ static void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
+>  {
+>         int ret;
+>
+> -       if (pci->ops->write_dbi) {
+> +       if (pci->ops && pci->ops->write_dbi) {
+>                 pci->ops->write_dbi(pci, pci->atu_base, reg, 4, val);
+>                 return;
+>         }
+> @@ -273,7 +273,7 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+>  {
+>         u32 retries, val;
+>
+> -       if (pci->ops->cpu_addr_fixup)
+> +       if (pci->ops && pci->ops->cpu_addr_fixup)
+>                 cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+>
+>         if (pci->iatu_unroll_enabled) {
+> @@ -481,7 +481,7 @@ int dw_pcie_link_up(struct dw_pcie *pci)
+>  {
+>         u32 val;
+>
+> -       if (pci->ops->link_up)
+> +       if (pci->ops && pci->ops->link_up)
+>                 return pci->ops->link_up(pci);
+>
+>         val = readl(pci->dbi_base + PCIE_PORT_DEBUG1);
+> --
+> 2.17.1
+>
