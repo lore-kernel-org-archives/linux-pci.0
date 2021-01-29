@@ -2,128 +2,213 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6E6C433DB
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Jan 2021 07:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E85C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Jan 2021 16:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EC5B64DEB
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Jan 2021 07:12:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17B7164E03
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Jan 2021 16:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229786AbhA2HMn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Jan 2021 02:12:43 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:14306 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229656AbhA2HMk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2021 02:12:40 -0500
-X-UUID: 031b914e14c4445e9add05fc0c4e33f5-20210129
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Dotr11xV0I8A+Mm2Qxg7vmqoGowQzsRFthVfYwd5JAo=;
-        b=QW4I0yGsvDJ5T4//G06x+FXkmJBtcv+2artZbMLgAgZMszHGGlpXdU9NBuaKEXPjVuogALecHitM897LGjevq5PbtiRIU3aDHskAdjdMWn1X+sDRnA0huSWgsj/4skGJIbQjy70R6iP054PDx8PJeY8Z5RY3ESOdQqSfzn/DigM=;
-X-UUID: 031b914e14c4445e9add05fc0c4e33f5-20210129
-Received: from mtkcas34.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
-        (envelope-from <mingchuang.qiao@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1567695377; Fri, 29 Jan 2021 15:11:52 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31N2.mediatek.inc
- (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 29 Jan
- 2021 15:11:46 +0800
-Received: from mcddlt001.mediatek.inc (10.19.240.15) by MTKCAS36.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 29 Jan 2021 15:11:45 +0800
-From:   <mingchuang.qiao@mediatek.com>
-To:     <bhelgaas@google.com>, <matthias.bgg@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <mingchuang.qiao@mediatek.com>, <haijun.liu@mediatek.com>,
-        <lambert.wang@mediatek.com>, <kerun.zhu@mediatek.com>,
-        <mika.westerberg@linux.intel.com>, <alex.williamson@redhat.com>,
-        <rjw@rjwysocki.net>, <utkarsh.h.patel@intel.com>
-Subject: [v3] PCI: Avoid unsync of LTR mechanism configuration
-Date:   Fri, 29 Jan 2021 15:11:37 +0800
-Message-ID: <20210129071137.8743-1-mingchuang.qiao@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S231468AbhA2Qcl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Jan 2021 11:32:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55406 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231335AbhA2Qbo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jan 2021 11:31:44 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0720064DFD;
+        Fri, 29 Jan 2021 16:31:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1611937864;
+        bh=+AbPZ5Xsf8cGzLmX/c37ZvPUD+eQokRI5BEG0yFXASY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=F5cDj5bXQeuvxAFU300wYllglP/fz6K3HKMGjnMKjjf+5tyobigvAK4SMOkHKO7Vy
+         WrMBletmjKv0C/wT9lCtpKOUuq9R4nMIGlArN3Ban4dUHDKqqjNUaqczg5RPbjUVAi
+         boMDGpN9Te6wKfyxgq3+btNmAAETNc3JyKyr668Bp3qa3Dtc15D4z1Oo1JqXdMG4Br
+         lJv37QpLjoin7cF5PVcqYQ5tjrsiZBseb8J10ZXQdOupMLoJbQ0cV5UlhsglcPbjvV
+         LyFU8+4JM74K4cpEwUzZ12853V5ylzl1EhwU1azjByO7kj6PAJDrkbF/5WvagcpQ1h
+         ZNuA2JHfkq6Vg==
+Date:   Fri, 29 Jan 2021 17:30:57 +0100
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: Enabling PCIe support on Hikey 970
+Message-ID: <20210129173057.30288c9d@coco.lan>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: D09C1C281E76E7598B4674A7DB4AB076AF2D879ACA6C536492D37C5A40A3E4C32000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RnJvbTogTWluZ2NodWFuZyBRaWFvIDxtaW5nY2h1YW5nLnFpYW9AbWVkaWF0ZWsuY29tPg0KDQpJ
-biBidXMgc2NhbiBmbG93LCB0aGUgIkxUUiBNZWNoYW5pc20gRW5hYmxlIiBiaXQgb2YgREVWQ1RM
-MiByZWdpc3RlciBpcw0KY29uZmlndXJlZCBpbiBwY2lfY29uZmlndXJlX2x0cigpLiBJZiBkZXZp
-Y2UgYW5kIGJyaWRnZSBib3RoIHN1cHBvcnQgTFRSDQptZWNoYW5pc20sIHRoZSAiTFRSIE1lY2hh
-bmlzbSBFbmFibGUiIGJpdCBvZiBkZXZpY2UgYW5kIGJyaWRnZSB3aWxsIGJlDQplbmFibGVkIGlu
-IERFVkNUTDIgcmVnaXN0ZXIuIEFuZCBwY2lfZGV2LT5sdHJfcGF0aCB3aWxsIGJlIHNldCBhcyAx
-Lg0KDQpJZiBQQ0llIGxpbmsgZ29lcyBkb3duIHdoZW4gZGV2aWNlIHJlc2V0cywgdGhlICJMVFIg
-TWVjaGFuaXNtIEVuYWJsZSIgYml0DQpvZiBicmlkZ2Ugd2lsbCBjaGFuZ2UgdG8gMCBhY2NvcmRp
-bmcgdG8gUENJZSByNS4wLCBzZWMgNy41LjMuMTYuIEhvd2V2ZXIsDQp0aGUgcGNpX2Rldi0+bHRy
-X3BhdGggdmFsdWUgb2YgYnJpZGdlIGlzIHN0aWxsIDEuDQoNCkZvciBmb2xsb3dpbmcgY29uZGl0
-aW9ucywgY2hlY2sgYW5kIHJlLWNvbmZpZ3VyZSAiTFRSIE1lY2hhbmlzbSBFbmFibGUiIGJpdA0K
-b2YgYnJpZGdlIHRvIG1ha2UgIkxUUiBNZWNoYW5pc20gRW5hYmxlIiBiaXQgbXRhY2ggbHRyX3Bh
-dGggdmFsdWUuDQogICAtYmVmb3JlIGNvbmZpZ3VyaW5nIGRldmljZSdzIExUUiBmb3IgaG90LXJl
-bW92ZS9ob3QtYWRkDQogICAtYmVmb3JlIHJlc3RvcmluZyBkZXZpY2UncyBERVZDVEwyIHJlZ2lz
-dGVyIHdoZW4gcmVzdG9yZSBkZXZpY2Ugc3RhdGUNCg0KU2lnbmVkLW9mZi1ieTogTWluZ2NodWFu
-ZyBRaWFvIDxtaW5nY2h1YW5nLnFpYW9AbWVkaWF0ZWsuY29tPg0KLS0tDQpjaGFuZ2VzIG9mIHYy
-DQogLW1vZGlmeSBwYXRjaCBkZXNjcmlwdGlvbg0KIC1yZWNvbmZpZ3VyZSBicmlkZ2UncyBMVFIg
-YmVmb3JlIHJlc3RvcmluZyBkZXZpY2UgREVWQ1RMMiByZWdpc3Rlcg0KY2hhbmdlcyBvZiB2Mw0K
-IC1jYWxsIHBjaV9yZWNvbmZpZ3VyZV9icmlkZ2VfbHRyKCkgaW4gcHJvYmUuYw0KLS0tDQogZHJp
-dmVycy9wY2kvcGNpLmMgICB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCiBkcml2ZXJz
-L3BjaS9wY2kuaCAgIHwgIDEgKw0KIGRyaXZlcnMvcGNpL3Byb2JlLmMgfCAxMyArKysrKysrKysr
-LS0tDQogMyBmaWxlcyBjaGFuZ2VkLCAzNiBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0K
-DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpLmMgYi9kcml2ZXJzL3BjaS9wY2kuYw0KaW5k
-ZXggYjlmZWNjMjVkMjEzLi4xMmI1NTdjOGYwNjIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9w
-Y2kuYw0KKysrIGIvZHJpdmVycy9wY2kvcGNpLmMNCkBAIC0xNDM3LDYgKzE0MzcsMjQgQEAgc3Rh
-dGljIGludCBwY2lfc2F2ZV9wY2llX3N0YXRlKHN0cnVjdCBwY2lfZGV2ICpkZXYpDQogCXJldHVy
-biAwOw0KIH0NCiANCit2b2lkIHBjaV9yZWNvbmZpZ3VyZV9icmlkZ2VfbHRyKHN0cnVjdCBwY2lf
-ZGV2ICpkZXYpDQorew0KKyNpZmRlZiBDT05GSUdfUENJRUFTUE0NCisJc3RydWN0IHBjaV9kZXYg
-KmJyaWRnZTsNCisJdTMyIGN0bDsNCisNCisJYnJpZGdlID0gcGNpX3Vwc3RyZWFtX2JyaWRnZShk
-ZXYpOw0KKwlpZiAoYnJpZGdlICYmIGJyaWRnZS0+bHRyX3BhdGgpIHsNCisJCXBjaWVfY2FwYWJp
-bGl0eV9yZWFkX2R3b3JkKGJyaWRnZSwgUENJX0VYUF9ERVZDVEwyLCAmY3RsKTsNCisJCWlmICgh
-KGN0bCAmIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pKSB7DQorCQkJcGNpX2RiZyhicmlkZ2UsICJy
-ZS1lbmFibGluZyBMVFJcbiIpOw0KKwkJCXBjaWVfY2FwYWJpbGl0eV9zZXRfd29yZChicmlkZ2Us
-IFBDSV9FWFBfREVWQ1RMMiwNCisJCQkJCQkgUENJX0VYUF9ERVZDVEwyX0xUUl9FTik7DQorCQl9
-DQorCX0NCisjZW5kaWYNCit9DQorDQogc3RhdGljIHZvaWQgcGNpX3Jlc3RvcmVfcGNpZV9zdGF0
-ZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQ0KIHsNCiAJaW50IGkgPSAwOw0KQEAgLTE0NDcsNiArMTQ2
-NSwxMyBAQCBzdGF0aWMgdm9pZCBwY2lfcmVzdG9yZV9wY2llX3N0YXRlKHN0cnVjdCBwY2lfZGV2
-ICpkZXYpDQogCWlmICghc2F2ZV9zdGF0ZSkNCiAJCXJldHVybjsNCiANCisJLyoNCisJICogRG93
-bnN0cmVhbSBwb3J0cyByZXNldCB0aGUgTFRSIGVuYWJsZSBiaXQgd2hlbiBsaW5rIGdvZXMgZG93
-bi4NCisJICogQ2hlY2sgYW5kIHJlLWNvbmZpZ3VyZSB0aGUgYml0IGhlcmUgYmVmb3JlIHJlc3Rv
-cmluZyBkZXZpY2UuDQorCSAqIFBDSWUgcjUuMCwgc2VjIDcuNS4zLjE2Lg0KKwkgKi8NCisJcGNp
-X3JlY29uZmlndXJlX2JyaWRnZV9sdHIoZGV2KTsNCisNCiAJY2FwID0gKHUxNiAqKSZzYXZlX3N0
-YXRlLT5jYXAuZGF0YVswXTsNCiAJcGNpZV9jYXBhYmlsaXR5X3dyaXRlX3dvcmQoZGV2LCBQQ0lf
-RVhQX0RFVkNUTCwgY2FwW2krK10pOw0KIAlwY2llX2NhcGFiaWxpdHlfd3JpdGVfd29yZChkZXYs
-IFBDSV9FWFBfTE5LQ1RMLCBjYXBbaSsrXSk7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNp
-LmggYi9kcml2ZXJzL3BjaS9wY2kuaA0KaW5kZXggNWM1OTM2NTA5MmZhLi5hNjYwYTAxMzU4YzUg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9wY2kuaA0KKysrIGIvZHJpdmVycy9wY2kvcGNpLmgN
-CkBAIC0xMTEsNiArMTExLDcgQEAgdm9pZCBwY2lfZnJlZV9jYXBfc2F2ZV9idWZmZXJzKHN0cnVj
-dCBwY2lfZGV2ICpkZXYpOw0KIGJvb2wgcGNpX2JyaWRnZV9kM19wb3NzaWJsZShzdHJ1Y3QgcGNp
-X2RldiAqZGV2KTsNCiB2b2lkIHBjaV9icmlkZ2VfZDNfdXBkYXRlKHN0cnVjdCBwY2lfZGV2ICpk
-ZXYpOw0KIHZvaWQgcGNpX2JyaWRnZV93YWl0X2Zvcl9zZWNvbmRhcnlfYnVzKHN0cnVjdCBwY2lf
-ZGV2ICpkZXYpOw0KK3ZvaWQgcGNpX3JlY29uZmlndXJlX2JyaWRnZV9sdHIoc3RydWN0IHBjaV9k
-ZXYgKmRldik7DQogDQogc3RhdGljIGlubGluZSB2b2lkIHBjaV93YWtldXBfZXZlbnQoc3RydWN0
-IHBjaV9kZXYgKmRldikNCiB7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2Ry
-aXZlcnMvcGNpL3Byb2JlLmMNCmluZGV4IDk1M2YxNWFiYzg1MC4uZmE2MDc1MDkzZjNiIDEwMDY0
-NA0KLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYw0KKysrIGIvZHJpdmVycy9wY2kvcHJvYmUuYw0K
-QEAgLTIxMzIsOSArMjEzMiwxNiBAQCBzdGF0aWMgdm9pZCBwY2lfY29uZmlndXJlX2x0cihzdHJ1
-Y3QgcGNpX2RldiAqZGV2KQ0KIAkgKiBDb21wbGV4IGFuZCBhbGwgaW50ZXJtZWRpYXRlIFN3aXRj
-aGVzIGluZGljYXRlIHN1cHBvcnQgZm9yIExUUi4NCiAJICogUENJZSByNC4wLCBzZWMgNi4xOC4N
-CiAJICovDQotCWlmIChwY2lfcGNpZV90eXBlKGRldikgPT0gUENJX0VYUF9UWVBFX1JPT1RfUE9S
-VCB8fA0KLQkgICAgKChicmlkZ2UgPSBwY2lfdXBzdHJlYW1fYnJpZGdlKGRldikpICYmDQotCSAg
-ICAgIGJyaWRnZS0+bHRyX3BhdGgpKSB7DQorCWlmIChwY2lfcGNpZV90eXBlKGRldikgPT0gUENJ
-X0VYUF9UWVBFX1JPT1RfUE9SVCkgew0KKwkJcGNpZV9jYXBhYmlsaXR5X3NldF93b3JkKGRldiwg
-UENJX0VYUF9ERVZDVEwyLA0KKwkJCQkJIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pOw0KKwkJZGV2
-LT5sdHJfcGF0aCA9IDE7DQorCQlyZXR1cm47DQorCX0NCisNCisJYnJpZGdlID0gcGNpX3Vwc3Ry
-ZWFtX2JyaWRnZShkZXYpOw0KKwlpZiAoYnJpZGdlICYmIGJyaWRnZS0+bHRyX3BhdGgpIHsNCisJ
-CXBjaV9yZWNvbmZpZ3VyZV9icmlkZ2VfbHRyKGRldik7DQogCQlwY2llX2NhcGFiaWxpdHlfc2V0
-X3dvcmQoZGV2LCBQQ0lfRVhQX0RFVkNUTDIsDQogCQkJCQkgUENJX0VYUF9ERVZDVEwyX0xUUl9F
-Tik7DQogCQlkZXYtPmx0cl9wYXRoID0gMTsNCi0tIA0KMi4xOC4wDQo=
+Hi Bjorn/Rob,
 
+I've been trying to make a Hikey 970 board to work properly upstream.
+
+This specific hardware is similar to a previous model (Hikey 960),
+and it uses the same PCIe driver, with a few additions
+(drivers/pci/controller/dwc/pcie-kirin.c).
+
+The major difference between those two models is that, on Hikey 960,
+the PCIe is mapped as [1]:
+
+	+---------+      +--------+
+	|Kirin 960|----> |PCIe M.2|
+	|  SoC    |	 |        |
+	+---------+      +--------+
+
+While, on Hikey 970, the connection is more complex[2]:
+
+	+---------+	 +--------+
+	|         |	 |        |     +--------+
+	|         |	 |        |---->|PCIe M.2|-->M.2 slot
+	|         |	 |        |     +--------+
+	|         |	 |        |
+	|         |	 |        |     +--------+
+	|Kirin 970|----> |Switch  |---->|Mini 1x |-->mini PCIe slot
+	|         |	 |PEX 8606|     +--------+
+	|  SoC    |	 |        |
+	|         |	 |        |     +-------+
+	|         |	 |        |---->|RTL8169|---> Ethernet
+	|         |	 |        |     +-------+
+	+---------+	 +--------+
+
+
+
+[1] see https://www.96boards.org/documentation/consumer/hikey/hikey960/hardware-docs/hardware-user-manual.md.html
+[2] see https://www.96boards.org/documentation/consumer/hikey/hikey970/hardware-docs/files/hikey970-schematics.pdf
+
+When the driver is properly loaded, this is what can be seen there:
+
+	$ lspci
+	00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
+	01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+	06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
+
+(without anything connected to M.2 or mini 1x slots)
+
+All devices after the SoC require a regulator line to be
+enabled (LDO33). Starting the PCIe bus before turning them on
+causes PCIe probe to fail.
+
+There are also separate PERST lines for the switch (Broadcom PEX 8606), 
+PCIe M.2, Mini 1x and for the Ethernet hardware (RTL 8169).
+
+To make it a little more fun, the M.2, the Mini 1x and the
+RTL 8169 also requires a clockreq in order to work.
+
+Both the 4 PERST reset lines and the 3 CLOCKREQ lines are initialized
+during the PCIe power on logic, at probing time.
+
+I'm currently thinking about the best way to report this via
+device tree.
+
+It sounds to me that the best would be to add those 4 data at the DTS file:
+
+	reset-gpios = <&gpio7 0 0 >, <&gpio25 2 0 >,
+		      <&gpio3 1 0 >, <&gpio27 4 0 >;
+	reset-names = "pcie_switch_reset", "pcie_eth_reset",
+		      "pcie_m_2_reset",    "pcie_mini1_reset";
+	clkreq-gpios = <&gpio20 6 0 >, <&gpio27 3 0 >,
+		       <&gpio17 0 0 >;
+	clkreq-names = "pcie_eth_clkreq", "pcie_m_2_clkreq",
+		       "pcie_mini1_clkreq";
+
+E. g. the complete representation for the PCIe controller will
+be:
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+...
+		pcie@f4000000 {
+			compatible = "hisilicon,kirin970-pcie";
+			reg = <0x0 0xf4000000 0x0 0x1000000>,
+			      <0x0 0xfc180000 0x0 0x1000>,
+			      <0x0 0xfc000000 0x0 0x80000>,
+			      <0x0 0xf5000000 0x0 0x2000>;
+			pci-supply = <&ldo33>;
+			reg-names = "dbi", "apb", "phy", "config";
+			bus-range = <0x0  0x1>;
+			msi-parent = <&its_pcie>;
+			#address-cells = <3>;
+			#size-cells = <2>;
+			device_type = "pci";
+			ranges = <0x02000000 0x0 0x00000000
+				  0x0 0xf6000000
+				  0x0 0x02000000>;
+			num-lanes = <1>;
+			#interrupt-cells = <1>;
+			interrupts = <0 283 4>;
+			interrupt-names = "msi";
+			interrupt-map-mask = <0 0 0 7>;
+			interrupt-map = <0x0 0 0 1
+					 &gic GIC_SPI 282 IRQ_TYPE_LEVEL_HIGH>,
+					<0x0 0 0 2
+					 &gic GIC_SPI 283 IRQ_TYPE_LEVEL_HIGH>,
+					<0x0 0 0 3
+					 &gic GIC_SPI 284 IRQ_TYPE_LEVEL_HIGH>,
+					<0x0 0 0 4
+					 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&crg_ctrl HI3670_CLK_GATE_PCIEPHY_REF>,
+				 <&crg_ctrl HI3670_CLK_GATE_PCIEAUX>,
+				 <&crg_ctrl HI3670_PCLK_GATE_PCIE_PHY>,
+				 <&crg_ctrl HI3670_PCLK_GATE_PCIE_SYS>,
+				 <&crg_ctrl HI3670_ACLK_GATE_PCIE>;
+
+			clock-names = "pcie_phy_ref", "pcie_aux",
+				      "pcie_apb_phy", "pcie_apb_sys",
+				      "pcie_aclk";
+			reset-gpios = <&gpio7 0 0 >, <&gpio25 2 0 >,
+				      <&gpio3 1 0 >, <&gpio27 4 0 >;
+
+			reset-names = "pcie_switch_reset", "pcie_eth_reset",
+				      "pcie_m_2_reset",    "pcie_mini1_reset";
+
+			clkreq-gpios = <&gpio20 6 0 >, <&gpio27 3 0 >,
+				       <&gpio17 0 0 >;
+
+			clkreq-names = "pcie_eth_clkreq", "pcie_m_2_clkreq",
+				       "pcie_mini1_clkreq";
+
+			/* vboost iboost pre post main */
+			eye_param = <0xFFFFFFFF 0xFFFFFFFF 0xFFFFFFFF 0xFFFFFFFF 0xFFFFFFFF>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&pcie_clkreq_pmx_func &pcie_clkreq_cfg_func>;
+		};
+	};
+
+Would this be ok?
+
+---
+
+FYI, the current driver is on this branch:
+
+	https://github.com/mchehab/linux/tree/staging/hikey970-pcie-v2
+
+The DTS file is at:
+
+	https://github.com/mchehab/linux/blob/staging/hikey970-pcie-v2/arch/arm64/boot/dts/hisilicon/hi3670.dtsi
+
+The DT bindings at:
+	https://github.com/mchehab/linux/blob/staging/hikey970-pcie-v2/Documentation/devicetree/bindings/pci/hisilicon%2Ckirin-pcie.yaml
+
+And the driver, modified to support Hikey 970, at:
+	https://github.com/mchehab/linux/blob/staging/hikey970-pcie-v2/drivers/pci/controller/dwc/pcie-kirin.c
+
+Thanks,
+Mauro
