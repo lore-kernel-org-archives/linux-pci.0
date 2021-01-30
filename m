@@ -2,144 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB709C433E0
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 09:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 265D0C433E0
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 09:48:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96FB264DF5
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 09:19:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2C5C64E04
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 09:48:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230342AbhA3JSf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Jan 2021 04:18:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233513AbhA3ENi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2021 23:13:38 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F9D2C0617AB
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2021 19:59:46 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id d13so6512505plg.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2021 19:59:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=zmqbQDHWa5qE1qWqd3ap0DMM/Xtz2uCqxKtJyp2MZuU=;
-        b=KAksbMwVTssgr21laJJdDhf5lwzT2DY647zB1AjU1aOV+t3J5fgUyVAn+rWv3UCPzu
-         5YZmAeZksWraf/xL8xmBBRx1xwWYfHyM2lBOkJoXQ57PoZr49xG95ozfnI8UG5qP9YG6
-         yH7mGpIOdPzFUYXNXA+PN1CHjtRA8jc2IGpc5akrwO4A9n+/x3ubiBH2IDTe8XqDyHt9
-         GupovsE3FRxezJ2BzrWCdNdy6cWGSr6jInIZSqXDomVb7JrDO1imVmttNOB6CUpNYZsp
-         heXhOmDj3rithtjMxOkOPLUUcrPhpCxc1UCQHRBwv1bEVR3MKQgxj5mzqYvyQ2C7+wte
-         kX8g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=zmqbQDHWa5qE1qWqd3ap0DMM/Xtz2uCqxKtJyp2MZuU=;
-        b=jMbINh0GRAaStlKtKoTa691H6GnLPe6shGAfGF34aNo2GJh7hRftDGqAl5IzRWn9+J
-         DYYQcfe2wr8hpjc2XWEJYo8SBJARcOLSG3Q0dXWFbMpRhdsyG5/apcRP7fDLlNfBjw1H
-         KuX9JH2ZLGYI5xozKj2h7fVMcDL23jOEoj+1XvvMsCceolzWZlqulC3uCxYHZ+VzeEke
-         wuIUDOKran+LWw6BE2KaGSIlJEVrNpJA50/Fmpkt/JLPvpH1+nnYzvKBwrDwklM6TaEC
-         rZ+PKpDsfIVzBgQ1upqZxcowhnx15f6B/mqNBUJKBZ3T0RvvUmYEnN2u9OXesmXmWkKH
-         6P3Q==
-X-Gm-Message-State: AOAM530IomddwoHiC20y6XCnudz60eYeGopsas9G9eHuHP/kjnSDlfIf
-        NtB6piEPK0hwVFzBX1crN/Kc
-X-Google-Smtp-Source: ABdhPJwvDyFGZs5+MrSQPiVrSF/8sOJDIsVyypz6GzMuyCULbQkLL3UmYWmA9QgzB161u8XpOgD99w==
-X-Received: by 2002:a17:902:b94b:b029:e0:1e:da58 with SMTP id h11-20020a170902b94bb02900e0001eda58mr7695366pls.55.1611979185636;
-        Fri, 29 Jan 2021 19:59:45 -0800 (PST)
-Received: from work ([103.77.37.140])
-        by smtp.gmail.com with ESMTPSA id a2sm9061524pjm.51.2021.01.29.19.59.41
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 29 Jan 2021 19:59:45 -0800 (PST)
-Date:   Sat, 30 Jan 2021 09:29:39 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] arm64: qcom: dts: qrb5165-rb5: add qca6391 power
- device
-Message-ID: <20210130035939.GA3544@work>
-References: <20210128175225.3102958-1-dmitry.baryshkov@linaro.org>
- <20210128175225.3102958-3-dmitry.baryshkov@linaro.org>
- <YBTW2et0IVCUGmdg@builder.lan>
+        id S229990AbhA3Jrg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Jan 2021 04:47:36 -0500
+Received: from mail-41104.protonmail.ch ([185.70.41.104]:59620 "EHLO
+        mail-41104.protonmail.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232012AbhA3Jpn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2021 04:45:43 -0500
+X-Greylist: delayed 2507 seconds by postgrey-1.27 at vger.kernel.org; Sat, 30 Jan 2021 04:45:40 EST
+Received: from mail-02.mail-europe.com (mail-02.mail-europe.com [51.89.119.103])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        by mail-41104.protonmail.ch (Postfix) with ESMTPS id A05BD200038B;
+        Sat, 30 Jan 2021 08:16:42 +0000 (UTC)
+Authentication-Results: mail-41104.protonmail.ch;
+        dkim=pass (1024-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="G0E1cUEu"
+Date:   Sat, 30 Jan 2021 08:04:51 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail; t=1611993895;
+        bh=lw9NipPj9ZmUjA+q3t5yaTgBtEXb/vo2lGVSIlDNbZM=;
+        h=Date:To:From:Cc:Reply-To:Subject:From;
+        b=G0E1cUEuBoW0hJR0QCxXhwslQ8+PR8nwqlnc4it/NA+ZDJskvRAuDn/dwmrNCnflW
+         P9fJvy+gibXgA1lN8InTC/O4c2+CL5UIlJfvDP1qAXDzJqdNg/9v8dx/J/7FejK70E
+         f8YZiVMoMdCi+1KUY4F6fR3W2SCxs1xz0DyOjCj0=
+To:     "dmitry.baryshkov@linaro.org" <dmitry.baryshkov@linaro.org>
+From:   Yassine Oudjana <y.oudjana@protonmail.com>
+Cc:     "agross@kernel.org" <agross@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+        "mchehab@kernel.org" <mchehab@kernel.org>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>
+Reply-To: Yassine Oudjana <y.oudjana@protonmail.com>
+Subject: Re: [PATCH v2 3/5] pcie-qcom: provide a way to power up qca6390 chip on RB5 platform
+Message-ID: <Y6qqfCwC-O5b_bSR-8HY9-0aCeREaoAPsyOw5EVhv6YkZgPkzafs28dd5ldWZvT1Pkln-XfkB0t2gLFOClvJNDuny7zFAfYxbQzt0UMNjrE=@protonmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YBTW2et0IVCUGmdg@builder.lan>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 29, 2021 at 09:47:37PM -0600, Bjorn Andersson wrote:
-> On Thu 28 Jan 11:52 CST 2021, Dmitry Baryshkov wrote:
-> 
-> > Add qca6391 to device tree as a way to provide power domain to WiFi and
-> > BT parts of the chip.
-> > 
-> > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> > ---
-> >  arch/arm64/boot/dts/qcom/qrb5165-rb5.dts | 61 ++++++++++++++++++++++++
-> >  1 file changed, 61 insertions(+)
-> > 
-> > diff --git a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
-> > index 8aebc3660b11..2b0c1cc9333b 100644
-> > --- a/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
-> > +++ b/arch/arm64/boot/dts/qcom/qrb5165-rb5.dts
-> > @@ -151,6 +151,23 @@ vreg_s4a_1p8: vreg-s4a-1p8 {
-> >  		regulator-max-microvolt = <1800000>;
-> >  		regulator-always-on;
-> >  	};
-> > +
-> > +	qca6391: qca6391 {
-> > +		compatible = "qcom,qca6390";
-> > +		#power-domain-cells = <0>;
-> > +
-> > +		vddaon-supply = <&vreg_s6a_0p95>;
-> > +		vddpmu-supply = <&vreg_s2f_0p95>;
-> > +		vddrfa1-supply = <&vreg_s2f_0p95>;
-> > +		vddrfa2-supply = <&vreg_s8c_1p3>;
-> > +		vddrfa3-supply = <&vreg_s5a_1p9>;
-> > +		vddpcie1-supply = <&vreg_s8c_1p3>;
-> > +		vddpcie2-supply = <&vreg_s5a_1p9>;
-> > +		vddio-supply = <&vreg_s4a_1p8>;
-> > +		pinctrl-names = "default", "active";
-> > +		pinctrl-0 = <&wlan_default_state &bt_default_state>;
-> > +		pinctrl-1 = <&wlan_active_state &bt_active_state>;
-> 
-> I dislike the use of pinctrl states for toggling the level of the gpio
-> and would prefer that you use the gpio binding and api for this instead.
-> 
-> > +	};
-> >  };
-> >  
-> >  &adsp {
-> > @@ -1013,6 +1030,28 @@ &tlmm {
-> >  		"HST_WLAN_UART_TX",
-> >  		"HST_WLAN_UART_RX";
-> >  
-> > +	bt_default_state: bt-default-state {
-> 
-> Are you sure you need to drive the BT_EN pin in order to have WiFi
-> working? On QCA6174 I believe the "WL_EN" was actually RESET_N and BT_EN
-> was actually "blueooth enable" - so we wired that in the bluetooth node
-> instead.
-> 
+On Thu, Jan 28, 2021 at 11:52 AM Dmitry Baryshkov
+<dmitry.baryshkov@linaro.org> wrote:
+>
+> Some Qualcomm platforms require to power up an external device before
+> probing the PCI bus. E.g. on RB5 platform the QCA6390 WiFi/BT chip needs
+> to be powered up before PCIe0 bus is probed. Add a quirk to the
+> respective PCIe root bridge to attach to the power domain if one is
+> required, so that the QCA chip is started before scanning the PCIe bus.
 
-IIRC, that's the case. We need both BT_EN and WL_EN for proper bringup of the
-chip.
-
-Thanks,
-Mani
+I'm lead to believe that this is also needed for QCA6174. I tried taking
+the driver you wrote and changing regulators to match the ones used by QCA6=
+174,
+but I found that it gets probed after PCIe, which makes it get -EPROBE_DEFE=
+R
+when it tries to attach to the power domain, which it doesn't handle it and
+just proceeds to scan the bus and not find the chip as usual.
