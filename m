@@ -2,298 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E38C4332B
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 10:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C6CC433DB
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 16:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8778D64E08
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 10:24:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DF2364E0A
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 16:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232103AbhA3KXv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Jan 2021 05:23:51 -0500
-Received: from mga01.intel.com ([192.55.52.88]:38338 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231863AbhA3AZz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jan 2021 19:25:55 -0500
-IronPort-SDR: x215d5KLD0t1r1pgXyxJndlETrsaT+I4ut5dVCQw1FhzN0EUnPHyFSPQDzQv3EX9xhIKs8sMwX
- 1W/4iz+Ey+QQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9879"; a="199350683"
-X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="199350683"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:46 -0800
-IronPort-SDR: rwtIFrLbgdRfbKZdTrY4Ko2/Lhi+tupqhi7a6rJ5rf6+mSF3KNTStj/fB1X+1QPKASZzNMzYSw
- mlcWpz0sXtMQ==
-X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="370591655"
-Received: from jambrizm-mobl1.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.133.15])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:46 -0800
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     linux-cxl@vger.kernel.org
-Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jon Masters <jcm@jonmasters.org>,
-        Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        daniel.lll@alibaba-inc.com,
-        "John Groves (jgroves)" <jgroves@micron.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>
-Subject: [PATCH 03/14] cxl/mem: Find device capabilities
-Date:   Fri, 29 Jan 2021 16:24:27 -0800
-Message-Id: <20210130002438.1872527-4-ben.widawsky@intel.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <20210130002438.1872527-1-ben.widawsky@intel.com>
-References: <20210130002438.1872527-1-ben.widawsky@intel.com>
+        id S231897AbhA3QPo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Jan 2021 11:15:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60028 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232369AbhA3QPV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2021 11:15:21 -0500
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EC53C061786
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 08:14:52 -0800 (PST)
+Received: by mail-qk1-x72e.google.com with SMTP id r77so11873892qka.12
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 08:14:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZW9/30ZgBdjsQF6ELbAndLfZM5KKodhdtFyYrqkzGHo=;
+        b=aK4pYBjPylxJwoy9KBdrEeHpbtFm4YSFEZu2cql7L3iZT9UP9Ooj8Ds95rVv8HbRPn
+         ZN+sQRolh7iN7/vu7L45CCzoPgV6z1NN/fwRD3jgLKUxnpGz9yJBTC0DChSsPT0ISsCA
+         4JVsnuGavXGPZb74fGnZHQP98fguwcCGlS0uNzr66QQekDwazpeNs397kcqQT1Uw27Z9
+         77WIYxnEI5gBgg1Yfhv72YgM7wewytpWawXpsGd7yG/LcEj95Tx4ny/6AgOj3zQaLPap
+         jZ4hROph4FxAx/pThCzrfqfhVhqQp/N9uwXLcKvcqwLig7SoMv7hIGdCDY52azJAx7Ty
+         uzYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZW9/30ZgBdjsQF6ELbAndLfZM5KKodhdtFyYrqkzGHo=;
+        b=YOwaczTirTgtxHcYqof4ptGYwI4PP6fCOSDnzuBol1pXuvvJSsf7p/xlf87+JRLomb
+         foEdkfUHW78Myy/dzJCvp25UvIqAF5XgV0yobbHYUvdiK054KT5jh/71t9gdaNuEnksC
+         7qZ6pc/9G2X9YS+MJEDexmWOEIhTrh8z8CWG68nthyjCUqeulqHrIQclDRFL9C9ufcRb
+         JXj7d4coRuFTUPWpuelfWaJ2NuIqOKniSNXcWpj16OEC6nRQT26a6RvWRu6l9EJUw7pE
+         LAsir27QtZC8x+Ii3AisqgDVP4eocAwUyVV69nh76t2TTnV+DrZmeNH4ZvNgSZ8bMN4O
+         nPGQ==
+X-Gm-Message-State: AOAM531l9WpBQbKfbaOS1mG38lSedFlMOQHt9AIIo5q0PP8zJwer6zVj
+        1hIMA2R04xcIpT1QvyGMAGXbMR1jMu18Ld0tgCz+lA==
+X-Google-Smtp-Source: ABdhPJzvVeT3yCHYO+uMeT1uDgk9TA//Bi2FqW9hASqtRKvrKij9Kcpks2iKouQWcQQi0mlWAR74RX2cK4uYhok4x0w=
+X-Received: by 2002:a37:af46:: with SMTP id y67mr8534573qke.434.1612023291329;
+ Sat, 30 Jan 2021 08:14:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <da0ac373-4edb-0230-b264-49697fa3d86a@linaro.org>
+ <20210129215024.GA113900@bjorn-Precision-5520> <CAA8EJpoPsv5tfsaiJq4UnBYt3o+gJanWzy8aaZRK=V8yOk3mJQ@mail.gmail.com>
+ <YBTYKLi81Cf65yUB@builder.lan>
+In-Reply-To: <YBTYKLi81Cf65yUB@builder.lan>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date:   Sat, 30 Jan 2021 19:14:40 +0300
+Message-ID: <CAA8EJprwBKbGrh-BjrzkQTxoboUi470wYcn-gTBHdNQ1Af7DKA@mail.gmail.com>
+Subject: Re: [PATCH v2 3/5] pcie-qcom: provide a way to power up qca6390 chip
+ on RB5 platform
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-CXL devices contain an array of capabilities that describe the
-interactions software can have with the device or firmware running on
-the device. A CXL compliant device must implement the device status and
-the mailbox capability. A CXL compliant memory device must implement the
-memory device capability.
+On Sat, 30 Jan 2021 at 06:53, Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
+>
+> On Fri 29 Jan 16:19 CST 2021, Dmitry Baryshkov wrote:
+>
+> > On Sat, 30 Jan 2021 at 00:50, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >
+> > > On Fri, Jan 29, 2021 at 06:45:21AM +0300, Dmitry Baryshkov wrote:
+> > > > On 28/01/2021 22:26, Rob Herring wrote:
+> > > > > On Thu, Jan 28, 2021 at 11:52 AM Dmitry Baryshkov
+> > > > > <dmitry.baryshkov@linaro.org> wrote:
+> > > > > >
+> > > > > > Some Qualcomm platforms require to power up an external device before
+> > > > > > probing the PCI bus. E.g. on RB5 platform the QCA6390 WiFi/BT chip needs
+> > > > > > to be powered up before PCIe0 bus is probed. Add a quirk to the
+> > > > > > respective PCIe root bridge to attach to the power domain if one is
+> > > > > > required, so that the QCA chip is started before scanning the PCIe bus.
+> > > > >
+> > > > > This is solving a generic problem in a specific driver. It needs to be
+> > > > > solved for any PCI host and any device.
+> > > >
+> > > > Ack. I see your point here.
+> > > >
+> > > > As this would require porting code from powerpc/spark of-pci code and
+> > > > changing pcie port driver to apply power supply before bus probing happens,
+> > > > I'd also ask for the comments from PCI maintainers. Will that solution be
+> > > > acceptable to you?
+> > >
+> > > I can't say without seeing the code.  I don't know enough about this
+> > > scenario to envision how it might look.
+> > >
+> > > I guess the QCA6390 is a PCIe device?  Why does it need to be powered
+> > > up before probing?  Shouldn't we get a link-up interrupt when it is
+> > > powered up so we could probe it then?
+> >
+> > Not quite. QCA6390 is a multifunction device, with PCIe and serial
+> > parts. It has internal power regulators which once enabled will
+> > powerup the PCIe, serial and radio parts. There is no need to manage
+> > regulators. Once enabled they will automatically handle device
+> > suspend/resume, etc.
+> >
+>
+> So what you're saying is that if either the PCI controller or bluetooth
+> driver probes these regulators will be turned on, indefinitely?
+>
+> If so, why do we need a driver to turn them on, rather than just mark
+> them as always-on?
+>
+> What's the timing requirement wrt regulators vs WL_EN/BT_EN?
 
-Each of the capabilities can [will] provide an offset within the MMIO
-region for interacting with the CXL device.
+According to the documentation I have, they must be enabled right
+after enabling powering the chip and they must stay enabled all the
+time.
 
-For more details see 8.2.8 of the CXL 2.0 specification (see Link).
 
-Link: https://www.computeexpresslink.org/download-the-specification
-Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
----
- drivers/cxl/cxl.h |  78 ++++++++++++++++++++++++++++++++++-
- drivers/cxl/mem.c | 102 +++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 178 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index d81d0ba4617c..a3da7f8050c4 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -4,6 +4,37 @@
- #ifndef __CXL_H__
- #define __CXL_H__
- 
-+#include <linux/bitfield.h>
-+#include <linux/bitops.h>
-+#include <linux/io.h>
-+
-+#define CXL_SET_FIELD(value, field)                                            \
-+	({                                                                     \
-+		WARN_ON(!FIELD_FIT(field##_MASK, value));                      \
-+		FIELD_PREP(field##_MASK, value);                               \
-+	})
-+
-+#define CXL_GET_FIELD(word, field) FIELD_GET(field##_MASK, word)
-+
-+/* Device Capabilities (CXL 2.0 - 8.2.8.1) */
-+#define CXLDEV_CAP_ARRAY_OFFSET 0x0
-+#define   CXLDEV_CAP_ARRAY_CAP_ID 0
-+#define   CXLDEV_CAP_ARRAY_ID_MASK GENMASK(15, 0)
-+#define   CXLDEV_CAP_ARRAY_COUNT_MASK GENMASK(47, 32)
-+/* (CXL 2.0 - 8.2.8.2.1) */
-+#define CXLDEV_CAP_CAP_ID_DEVICE_STATUS 0x1
-+#define CXLDEV_CAP_CAP_ID_PRIMARY_MAILBOX 0x2
-+#define CXLDEV_CAP_CAP_ID_SECONDARY_MAILBOX 0x3
-+#define CXLDEV_CAP_CAP_ID_MEMDEV 0x4000
-+
-+/* CXL Device Mailbox (CXL 2.0 - 8.2.8.4) */
-+#define CXLDEV_MB_CAPS_OFFSET 0x00
-+#define   CXLDEV_MB_CAP_PAYLOAD_SIZE_MASK GENMASK(4, 0)
-+#define CXLDEV_MB_CTRL_OFFSET 0x04
-+#define CXLDEV_MB_CMD_OFFSET 0x08
-+#define CXLDEV_MB_STATUS_OFFSET 0x10
-+#define CXLDEV_MB_BG_CMD_STATUS_OFFSET 0x18
-+
- /**
-  * struct cxl_mem - A CXL memory device
-  * @pdev: The PCI device associated with this CXL device.
-@@ -12,6 +43,51 @@
- struct cxl_mem {
- 	struct pci_dev *pdev;
- 	void __iomem *regs;
-+
-+	/* Cap 0001h - CXL_CAP_CAP_ID_DEVICE_STATUS */
-+	struct {
-+		void __iomem *regs;
-+	} status;
-+
-+	/* Cap 0002h - CXL_CAP_CAP_ID_PRIMARY_MAILBOX */
-+	struct {
-+		void __iomem *regs;
-+		size_t payload_size;
-+	} mbox;
-+
-+	/* Cap 4000h - CXL_CAP_CAP_ID_MEMDEV */
-+	struct {
-+		void __iomem *regs;
-+	} mem;
- };
- 
--#endif
-+#define cxl_reg(type)                                                          \
-+	static inline void cxl_write_##type##_reg32(struct cxl_mem *cxlm,      \
-+						    u32 reg, u32 value)        \
-+	{                                                                      \
-+		void __iomem *reg_addr = cxlm->type.regs;                      \
-+		writel(value, reg_addr + reg);                                 \
-+	}                                                                      \
-+	static inline void cxl_write_##type##_reg64(struct cxl_mem *cxlm,      \
-+						    u32 reg, u64 value)        \
-+	{                                                                      \
-+		void __iomem *reg_addr = cxlm->type.regs;                      \
-+		writeq(value, reg_addr + reg);                                 \
-+	}                                                                      \
-+	static inline u32 cxl_read_##type##_reg32(struct cxl_mem *cxlm,        \
-+						  u32 reg)                     \
-+	{                                                                      \
-+		void __iomem *reg_addr = cxlm->type.regs;                      \
-+		return readl(reg_addr + reg);                                  \
-+	}                                                                      \
-+	static inline u64 cxl_read_##type##_reg64(struct cxl_mem *cxlm,        \
-+						  u32 reg)                     \
-+	{                                                                      \
-+		void __iomem *reg_addr = cxlm->type.regs;                      \
-+		return readq(reg_addr + reg);                                  \
-+	}
-+
-+cxl_reg(status);
-+cxl_reg(mbox);
-+
-+#endif /* __CXL_H__ */
-diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-index a869c8dc24cc..fa14d51243ee 100644
---- a/drivers/cxl/mem.c
-+++ b/drivers/cxl/mem.c
-@@ -6,6 +6,99 @@
- #include "pci.h"
- #include "cxl.h"
- 
-+/**
-+ * cxl_mem_setup_regs() - Setup necessary MMIO.
-+ * @cxlm: The CXL memory device to communicate with.
-+ *
-+ * Return: 0 if all necessary registers mapped.
-+ *
-+ * A memory device is required by spec to implement a certain set of MMIO
-+ * regions. The purpose of this function is to enumerate and map those
-+ * registers.
-+ *
-+ * XXX: Register accessors need the mappings set up by this function, so
-+ * any reads or writes must be read(b|w|l|q) or write(b|w|l|q)
-+ */
-+static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
-+{
-+	struct device *dev = &cxlm->pdev->dev;
-+	int cap, cap_count;
-+	u64 cap_array;
-+
-+	cap_array = readq(cxlm->regs + CXLDEV_CAP_ARRAY_OFFSET);
-+	if (CXL_GET_FIELD(cap_array, CXLDEV_CAP_ARRAY_ID) != CXLDEV_CAP_ARRAY_CAP_ID)
-+		return -ENODEV;
-+
-+	cap_count = CXL_GET_FIELD(cap_array, CXLDEV_CAP_ARRAY_COUNT);
-+
-+	for (cap = 1; cap <= cap_count; cap++) {
-+		void __iomem *register_block;
-+		u32 offset;
-+		u16 cap_id;
-+
-+		cap_id = readl(cxlm->regs + cap * 0x10) & 0xffff;
-+		offset = readl(cxlm->regs + cap * 0x10 + 0x4);
-+		register_block = cxlm->regs + offset;
-+
-+		switch (cap_id) {
-+		case CXLDEV_CAP_CAP_ID_DEVICE_STATUS:
-+			dev_dbg(dev, "found Status capability (0x%x)\n",
-+				offset);
-+			cxlm->status.regs = register_block;
-+			break;
-+		case CXLDEV_CAP_CAP_ID_PRIMARY_MAILBOX:
-+			dev_dbg(dev, "found Mailbox capability (0x%x)\n",
-+				offset);
-+			cxlm->mbox.regs = register_block;
-+			break;
-+		case CXLDEV_CAP_CAP_ID_SECONDARY_MAILBOX:
-+			dev_dbg(dev,
-+				"found Secondary Mailbox capability (0x%x)\n",
-+				offset);
-+			break;
-+		case CXLDEV_CAP_CAP_ID_MEMDEV:
-+			dev_dbg(dev, "found Memory Device capability (0x%x)\n",
-+				offset);
-+			cxlm->mem.regs = register_block;
-+			break;
-+		default:
-+			dev_warn(dev, "Unknown cap ID: %d (0x%x)\n", cap_id,
-+				 offset);
-+			break;
-+		}
-+	}
-+
-+	if (!cxlm->status.regs || !cxlm->mbox.regs || !cxlm->mem.regs) {
-+		dev_err(dev, "registers not found: %s%s%s\n",
-+			!cxlm->status.regs ? "status " : "",
-+			!cxlm->mbox.regs ? "mbox " : "",
-+			!cxlm->mem.regs ? "mem" : "");
-+		return -ENXIO;
-+	}
-+
-+	return 0;
-+}
-+
-+static int cxl_mem_setup_mailbox(struct cxl_mem *cxlm)
-+{
-+	const int cap = cxl_read_mbox_reg32(cxlm, CXLDEV_MB_CAPS_OFFSET);
-+
-+	cxlm->mbox.payload_size =
-+		1 << CXL_GET_FIELD(cap, CXLDEV_MB_CAP_PAYLOAD_SIZE);
-+
-+	/* 8.2.8.4.3 */
-+	if (cxlm->mbox.payload_size < 256) {
-+		dev_err(&cxlm->pdev->dev, "Mailbox is too small (%zub)",
-+			cxlm->mbox.payload_size);
-+		return -ENXIO;
-+	}
-+
-+	dev_dbg(&cxlm->pdev->dev, "Mailbox payload sized %zu",
-+		cxlm->mbox.payload_size);
-+
-+	return 0;
-+}
-+
- /**
-  * cxl_mem_create() - Create a new &struct cxl_mem.
-  * @pdev: The pci device associated with the new &struct cxl_mem.
-@@ -119,7 +212,14 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		}
- 	}
- 
--	return rc;
-+	if (rc)
-+		return rc;
-+
-+	rc = cxl_mem_setup_regs(cxlm);
-+	if (rc)
-+		return rc;
-+
-+	return cxl_mem_setup_mailbox(cxlm);
- }
- 
- static const struct pci_device_id cxl_mem_pci_tbl[] = {
+
 -- 
-2.30.0
-
+With best wishes
+Dmitry
