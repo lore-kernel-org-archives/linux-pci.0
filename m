@@ -2,107 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-23.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A61CEC4332B
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 16:19:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D42C433DB
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 23:52:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7788664E17
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 16:19:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E2AF64E19
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 23:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232290AbhA3QSr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Jan 2021 11:18:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59946 "EHLO
+        id S232671AbhA3XwZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Jan 2021 18:52:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232295AbhA3QNu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2021 11:13:50 -0500
-Received: from mail-qv1-xf2d.google.com (mail-qv1-xf2d.google.com [IPv6:2607:f8b0:4864:20::f2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CD75C0613D6
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 08:12:38 -0800 (PST)
-Received: by mail-qv1-xf2d.google.com with SMTP id n14so6031366qvg.5
-        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 08:12:38 -0800 (PST)
+        with ESMTP id S232542AbhA3XwV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2021 18:52:21 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B163FC061573
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 15:51:41 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id kx7so8186309pjb.2
+        for <linux-pci@vger.kernel.org>; Sat, 30 Jan 2021 15:51:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=9u+YQGFsbxaqSC+O1bAY5JRmBj2ohq+/cyFoF3rmfcA=;
-        b=JvHA2ouYUv5VMC10IJxQ2OeH+845vhpkVOxUeeGM4nuIaXcabgehf1HFCDgP4KMWf+
-         xJ5B8cNT/4UfBn8yIlZ84MZBfKA1eXvAmFh9zYjkbEnXzwjLyTNiyuATqPR2JjROC3AJ
-         U23QCuVMcPKDsF4rvGzfCtqA/F9WuZurP3y4mn0C1OG3G1NNCqR8uLSPr7jIsFRJp2cL
-         9gdm338c4PQ1OvLC+Zd+Wz78fOg/Rh7UYBxUMM4Hr9Q+3PfnrRzlZf++IY6VUH0XL9ME
-         QFd4rkVmg/cUqrWtRd4Xh4Uth4Xnz+1Eeg7KMtkFQXrVXmZOL72uZ40aveBn6g95+xdG
-         Z2Aw==
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :mime-version;
+        bh=cxvqbAo1IAIrwLB5kk+h8Luaw/WcNq7od57uwR/z/0A=;
+        b=PjLjww8QTw6X6rVMAjtISyXtX7JMmqVaUJx3F60RM3ylFSLWRRcZCFrQlsjCSBGBqx
+         Oj3eIeIel+lx5s/2LzA2cqzsOlBvs+jrSV4AXQBePenX9TqRNh4fBF2xa1vy/ZURdeOn
+         +lhC0/eWjRwZcBS/1uE7a0/fxUpCmQEsIlkvVUw8XTrYgT7HEkD84ilH2PhECtGuizOl
+         3L/Qf/himoTN1JGUyeYCivImS0tAyPYb9OeJvkMbXST578xzSCdUkQFxivOMQrwZRtAE
+         nxCiaSxwoehw8rIP5fQZOuvdxKVzXZHozdLwXh4cjAQrPf6k9Zf1rWPHmWo72HtJywGU
+         U2Sg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=9u+YQGFsbxaqSC+O1bAY5JRmBj2ohq+/cyFoF3rmfcA=;
-        b=HvvsA4oMYWmPr1DwSU5u+YDjYNZKluiL4xtk2Y+R0HzhHcEySkZWAQNuPWy5NrD0Ru
-         zO9f37bEBT3dJVUlrr7yM3Q+mfD54TiTzs4UEvD5XKyBmbC+01VhoDUfTD2/eBD6xCVE
-         Flcxf5fqaQiG2VTDXAe3c6McDCKyZ7F39JYfYIXQxUvMbcz62f8hmECMfIkweEr2U1dh
-         hBxWhmLL42SzBfplH/BMfNdKHqQ5UZlD+BRjMunF5f0RXgtkewMbzbJBpmOOWlIV/8Z4
-         oZ3r4EVUZ5EK9+UvWBZfyetIQDVZmew45s4oCSGmNxsvdHaSPzt0OsmA5t3+n71oNjYU
-         s4cw==
-X-Gm-Message-State: AOAM530iA1/j2U+P5Z7Ok8s0p5lRihJuvpY20mEb5zUGafiqqOYBXAIH
-        GJ3IXY4TJZlplUes+Bxm5/ghK2T9Z+aPK0NT8H07rQ==
-X-Google-Smtp-Source: ABdhPJwXXrdwv7HtV6m76V6gfORG5FAzN+LpL189uBR63KfaDVgGrTi2te5BwJ9hJZevYOSALLrr6Q7NfH+WY+Yi30Q=
-X-Received: by 2002:a0c:c78c:: with SMTP id k12mr8612491qvj.47.1612023157148;
- Sat, 30 Jan 2021 08:12:37 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:mime-version;
+        bh=cxvqbAo1IAIrwLB5kk+h8Luaw/WcNq7od57uwR/z/0A=;
+        b=pdKqk+KGvjPOh01nRPnSpgvCFUAt1C5d85l1B4mCZ3J4m2qS4HYDKVIYA3YjHZD+Ab
+         E/O6fFI+vhnP98ZhEJimG5O49/kyJV2RNeHXgly1zPfNbS0I7Fsig513VYUASlzpWnXp
+         AkY1L427StTWkp/Z7KldlZYTOt+9oxT3NpS5GwlBoUxqmTxWU/9BASP89Sr4qBYvjFMT
+         lEvol7MLVb3Xb1cQS9GdxWzOwH+JA3HxINfwS76T9kvkDjkHRVZyKkrvHVDzPUbRcsRU
+         zQZ7tDWjwhqJjl9eHhpV6WighhwnYRgxpE+qImhbaXn8r5R2V+T0W1WwSVSOyMkvY+Eg
+         WHmA==
+X-Gm-Message-State: AOAM531JZ5DQxf8hwRSBJ3t9xUE0AuDpkPfiGDsDzLboTyMw37gCoQUe
+        UBUqg3afMCNZZJ+Tpylb0Xm/9w==
+X-Google-Smtp-Source: ABdhPJyDODycXpp/h5ITu3myrcAhtELZTjRYPPBKofKsdhKWkycX4cAiMkSboMfRs6hOUzcld1n8Cw==
+X-Received: by 2002:a17:902:edcd:b029:df:d2b1:ecf0 with SMTP id q13-20020a170902edcdb02900dfd2b1ecf0mr11639635plk.15.1612050701068;
+        Sat, 30 Jan 2021 15:51:41 -0800 (PST)
+Received: from [2620:15c:17:3:4a0f:cfff:fe51:6667] ([2620:15c:17:3:4a0f:cfff:fe51:6667])
+        by smtp.gmail.com with ESMTPSA id c5sm12745797pfi.5.2021.01.30.15.51.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 Jan 2021 15:51:40 -0800 (PST)
+Date:   Sat, 30 Jan 2021 15:51:39 -0800 (PST)
+From:   David Rientjes <rientjes@google.com>
+To:     Ben Widawsky <ben.widawsky@intel.com>
+cc:     linux-cxl@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        daniel.lll@alibaba-inc.com,
+        "John Groves (jgroves)" <jgroves@micron.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>
+Subject: Re: [PATCH 01/14] cxl/mem: Introduce a driver for CXL-2.0-Type-3
+ endpoints
+In-Reply-To: <20210130002438.1872527-2-ben.widawsky@intel.com>
+Message-ID: <54655f17-2e4a-cc1e-262c-b365e3de9b20@google.com>
+References: <20210130002438.1872527-1-ben.widawsky@intel.com> <20210130002438.1872527-2-ben.widawsky@intel.com>
 MIME-Version: 1.0
-References: <Y6qqfCwC-O5b_bSR-8HY9-0aCeREaoAPsyOw5EVhv6YkZgPkzafs28dd5ldWZvT1Pkln-XfkB0t2gLFOClvJNDuny7zFAfYxbQzt0UMNjrE=@protonmail.com>
-In-Reply-To: <Y6qqfCwC-O5b_bSR-8HY9-0aCeREaoAPsyOw5EVhv6YkZgPkzafs28dd5ldWZvT1Pkln-XfkB0t2gLFOClvJNDuny7zFAfYxbQzt0UMNjrE=@protonmail.com>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date:   Sat, 30 Jan 2021 19:12:25 +0300
-Message-ID: <CAA8EJpqeMgfWz2XJKxTb=9AuShVtwHGp0xjGmcESBf5CNUv4CA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/5] pcie-qcom: provide a way to power up qca6390 chip
- on RB5 platform
-To:     Yassine Oudjana <y.oudjana@protonmail.com>
-Cc:     "agross@kernel.org" <agross@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-        "mchehab@kernel.org" <mchehab@kernel.org>,
-        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 30 Jan 2021 at 11:04, Yassine Oudjana <y.oudjana@protonmail.com> wrote:
->
-> On Thu, Jan 28, 2021 at 11:52 AM Dmitry Baryshkov
-> <dmitry.baryshkov@linaro.org> wrote:
-> >
-> > Some Qualcomm platforms require to power up an external device before
-> > probing the PCI bus. E.g. on RB5 platform the QCA6390 WiFi/BT chip needs
-> > to be powered up before PCIe0 bus is probed. Add a quirk to the
-> > respective PCIe root bridge to attach to the power domain if one is
-> > required, so that the QCA chip is started before scanning the PCIe bus.
->
-> I'm lead to believe that this is also needed for QCA6174. I tried taking
-> the driver you wrote and changing regulators to match the ones used by QCA6174,
-> but I found that it gets probed after PCIe, which makes it get -EPROBE_DEFER
-> when it tries to attach to the power domain, which it doesn't handle it and
-> just proceeds to scan the bus and not find the chip as usual.
+On Fri, 29 Jan 2021, Ben Widawsky wrote:
 
-As a quick hack, you can try using this power domain for the pci_phy
-(see my v1). Rob declined this approach, but it is useful to check if
-QCA6174 wakes up properly and deferring PCIe probing till the chip is
-powered up.
+> diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> new file mode 100644
+> index 000000000000..3b66b46af8a0
+> --- /dev/null
+> +++ b/drivers/cxl/Kconfig
+> @@ -0,0 +1,35 @@
+> +# SPDX-License-Identifier: GPL-2.0-only
+> +menuconfig CXL_BUS
+> +	tristate "CXL (Compute Express Link) Devices Support"
+> +	depends on PCI
+> +	help
+> +	  CXL is a bus that is electrically compatible with PCI Express, but
+> +	  layers three protocols on that signalling (CXL.io, CXL.cache, and
+> +	  CXL.mem). The CXL.cache protocol allows devices to hold cachelines
+> +	  locally, the CXL.mem protocol allows devices to be fully coherent
+> +	  memory targets, the CXL.io protocol is equivalent to PCI Express.
+> +	  Say 'y' to enable support for the configuration and management of
+> +	  devices supporting these protocols.
+> +
+> +if CXL_BUS
+> +
+> +config CXL_MEM
+> +	tristate "CXL.mem: Endpoint Support"
 
+Nit: "CXL.mem: Memory Devices" or "CXL Memory Devices: CXL.mem" might look 
+better, but feel free to ignore.
 
-
--- 
-With best wishes
-Dmitry
+Acked-by: David Rientjes <rientjes@google.com>
