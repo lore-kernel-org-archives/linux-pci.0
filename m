@@ -3,35 +3,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE6DC433DB
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 10:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C10C43381
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 10:24:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7519264DE4
+	by mail.kernel.org (Postfix) with ESMTP id 0FFDB64E09
 	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 10:24:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232062AbhA3A0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Jan 2021 19:26:03 -0500
+        id S231690AbhA3KWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Jan 2021 05:22:39 -0500
 Received: from mga01.intel.com ([192.55.52.88]:38336 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230009AbhA3AZa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jan 2021 19:25:30 -0500
-IronPort-SDR: ihODjFYr1ag+oXqn21UF3cNlZMyxdzBQwqFEzZGnXp2FsT0NIqxcNw6KABQJbdWMVuHBQv8jyp
- 0OvEI9mvsCVg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9879"; a="199350680"
+        id S232484AbhA3A1G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jan 2021 19:27:06 -0500
+IronPort-SDR: c0PDrxOukNoAm7UBk8nhb3yoYdOnHyz6b2Un0/C4wQze2rB4OYRLY8k1EBk968biA4oO0Gr1Un
+ ayQJC1nSEpsA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9879"; a="199350688"
 X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="199350680"
+   d="scan'208";a="199350688"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:45 -0800
-IronPort-SDR: 2Qr93ZP+aH/uhPOAc0J5zom4DzflXQWWzztfofYSrASo6XXKWnzKVo9aQbDuqJbLce75q5/+gP
- 6Qi46MABmQiQ==
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:49 -0800
+IronPort-SDR: VOBcOt1l54DxNAotpSMWk8CHiB+5zPh+jPg2DmJfKBiOepFTqkMIDXSeROM+ZXZJh+Y2zU5Vun
+ wXHu8ircr5+w==
 X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="370591638"
+   d="scan'208";a="370591678"
 Received: from jambrizm-mobl1.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.133.15])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:44 -0800
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:48 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org
 Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
@@ -49,215 +49,335 @@ Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
         daniel.lll@alibaba-inc.com,
         "John Groves (jgroves)" <jgroves@micron.com>,
         "Kelley, Sean V" <sean.v.kelley@intel.com>
-Subject: [PATCH 00/14] CXL 2.0 Support
-Date:   Fri, 29 Jan 2021 16:24:24 -0800
-Message-Id: <20210130002438.1872527-1-ben.widawsky@intel.com>
+Subject: [PATCH 07/14] cxl/mem: Add send command
+Date:   Fri, 29 Jan 2021 16:24:31 -0800
+Message-Id: <20210130002438.1872527-8-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210130002438.1872527-1-ben.widawsky@intel.com>
+References: <20210130002438.1872527-1-ben.widawsky@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-# Changes since RFC v3 [1]
-   * Added error message when payload size is too small. (Ben)
-   * Fix includes in UAPI for Clang (LKP)
-   * Reorder CXL in MAINTAINERS (Joe Perches)
-   * Kconfig whitespace and spelling fixes (Randy)
-   * Remove excess frees controlled by devm, introduced in v3 (Jonathan, Dan)
-   * Use 'PCI Express' instead of 'PCI-E' in Kconfig (Jonathan)
-   * Fail when mailbox commands return value is an error (Jonathan)
-   * Add comment to mailbox protocol to explain ordering of operations
-     (Jonathan, Ben)
-   * Fail mailbox xfer when doorbell is busy. (Jonathan)
-   * Remove extraneous SHIFT defines. (Jonathan)
-   * Change kdocs for mbox_cmd size_out to output only. (Jonathan)
-   * Fix transient bug (ENOTTY) in CXL_MEM_QUERY_COMMANDS (Jonathan)
-   * Add some comments and code beautification to mbox commands (Jonathan)
-   * Add some comments and code beautification to user commands (Jonathan)
-   * Fix bogus check of memcpy return value (Ben)
-   * Add concept of blocking certain RAW opcodes (Dan)
-   * Add debugfs knob to allow all RAW opcodes (Vishal)
-   * Move docs to driver-api/ (Dan)
-   * Use bounce buffer again like in v2 (Jonathan)
-       * Use kvzalloc instead of memdup (Ben)
-   * Wordsmith some changelogs and documentation (Dan)
-   * Use a percpu_ref counter to protect devm allocated data in the ioctl path
-     (Dan)
-   * Rework cdev registration and lookup to use inode->i_cdev (Dan)
-   * Drop mutex_lock_interruptible() from ioctl path (Dan)
-   * Convert add_taint() to WARN_TAINT_ONCE()
-   * Drop ACPI coordination for pure mailbox driver milestone (Dan)
-   * Permit GET_LOG with CEL_UUID (Ben)
-   * Cover letter overhaul (Ben)
-   * Use info.id instead of CXL_COMMAND_INDEX (Dan)
-   * Add several new commands to the mailbox interface (Ben)
+The send command allows userspace to issue mailbox commands directly to
+the hardware. The driver will verify basic properties of the command and
+possible inspect the input (or output) payload to determine whether or
+not the command is allowed (or might taint the kernel).
 
+The list of allowed commands and their properties can be determined by
+using the QUERY IOCTL for CXL memory devices.
+
+Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
+ drivers/cxl/mem.c            | 201 ++++++++++++++++++++++++++++++++++-
+ include/uapi/linux/cxl_mem.h |  45 ++++++++
+ 2 files changed, 244 insertions(+), 2 deletions(-)
 
-In addition to the mailing list, please feel free to use #cxl on oftc IRC for
-discussion.
-
----
-
-# Summary
-
-Introduce support for “type-3” memory devices defined in the Compute Express
-Link (CXL) 2.0 specification [2]. Specifically, these are the memory devices
-defined by section 8.2.8.5 of the CXL 2.0 spec. A reference implementation
-emulating these devices has been submitted to the QEMU mailing list [3] and is
-available on gitlab [4], but will move to a shared tree on kernel.org after
-initial acceptance. “Type-3” is a CXL device that acts as a memory expander for
-RAM or Persistent Memory. The device might be interleaved with other CXL devices
-in a given physical address range.
-
-In addition to the core functionality of discovering the spec defined registers
-and resources, introduce a CXL device model that will be the foundation for
-translating CXL capabilities into existing Linux infrastructure for Persistent
-Memory and other memory devices. For now, this only includes support for the
-management command mailbox the surfacing of type-3 devices. These control
-devices fill the role of “DIMMs” / nmemX memory-devices in LIBNVDIMM terms.
-
-## Userspace Interaction
-
-Interaction with the driver and type-3 devices via the CXL drivers is introduced
-in this patch series and considered stable ABI. They include
-
-   * sysfs - Documentation/ABI/testing/sysfs-bus-cxl
-   * IOCTL - Documentation/driver-api/cxl/memory-devices.rst
-   * debugfs - Documentation/ABI/testing/debugfs-debug
-
-
-Work is in process to add support for CXL interactions to the ndctl project [5]
-
-### Development plans
-
-One of the unique challenges that CXL imposes on the Linux driver model is that
-it requires the operating system to perform physical address space management
-interleaved across devices and bridges. Whereas LIBNVDIMM handles a list of
-established static persistent memory address ranges (for example from the ACPI
-NFIT), CXL introduces hotplug and the concept of allocating address space to
-instantiate persistent memory ranges. This is similar to PCI in the sense that
-the platform establishes the MMIO range for PCI BARs to be allocated, but it is
-significantly complicated by the fact that a given device can optionally be
-interleaved with other devices and can participate in several interleave-sets at
-once. LIBNVDIMM handled something like this with the aliasing between PMEM and
-BLOCK-WINDOW mode, but CXL adds flexibility to alias DEVICE MEMORY through up to
-10 decoders per device.
-
-All of the above needs to be enabled with respect to PCI hotplug events on
-Type-3 memory device which needs hooks to determine if a given device is
-contributing to a "System RAM" address range that is unable to be unplugged. In
-other words CXL ties PCI hotplug to Memory Hotplug and PCI hotplug needs to be
-able to negotiate with memory hotplug.  In the medium term the implications of
-CXL hotplug vs ACPI SRAT/SLIT/HMAT need to be reconciled. One capability that
-seems to be needed is either the dynamic allocation of new memory nodes, or
-default initializing extra pgdat instances beyond what is enumerated in ACPI
-SRAT to accommodate hot-added CXL memory.
-
-Patches welcome, questions welcome as the development effort on the post v5.12
-capabilities proceeds.
-
-## Running in QEMU
-
-The incantation to get CXL support in QEMU [4] is considered unstable at this
-time. Future readers of this cover letter should verify if any changes are
-needed. For the novice QEMU user, the following can be copy/pasted into a
-working QEMU commandline. It is enough to make the simplest topology possible.
-The topology would consist of a single memory window, single type3 device,
-single root port, and single host bridge.
-
-    +-------------+
-    |   CXL PXB   |
-    |             |
-    |  +-------+  |<----------+
-    |  |CXL RP |  |           |
-    +--+-------+--+           v
-           |            +----------+
-           |            | "window" |
-           |            +----------+
-           v                  ^
-    +-------------+           |
-    |  CXL Type 3 |           |
-    |   Device    |<----------+
-    +-------------+
-
-// Memory backend
--object memory-backend-file,id=cxl-mem1,share,mem-path=cxl-type3,size=512M
-
-// Host Bridge
--device pxb-cxl id=cxl.0,bus=pcie.0,bus_nr=52,uid=0 len-window-base=1,window-base[0]=0x4c0000000 memdev[0]=cxl-mem1
-
-// Single root port
--device cxl rp,id=rp0,bus=cxl.0,addr=0.0,chassis=0,slot=0,memdev=cxl-mem1
-
-// Single type3 device
--device cxl-type3,bus=rp0,memdev=cxl-mem1,id=cxl-pmem0,size=256M -device cxl-type3,bus=rp1,memdev=cxl-mem1,id=cxl-pmem1,size=256M
-
----
-
-[1]: https://lore.kernel.org/linux-cxl/20201209002418.1976362-1-ben.widawsky@intel.com/
-[2]: https://www.computeexpresslink.org/](https://www.computeexpresslink.org/
-[3]: https://lore.kernel.org/qemu-devel/20210105165323.783725-1-ben.widawsky@intel.com/T/#t
-[4]: https://gitlab.com/bwidawsk/qemu/-/tree/cxl-2.0v*
-[5]: https://github.com/pmem/ndctl/tree/cxl-2.0v*
-
-
-Ben Widawsky (12):
-  cxl/mem: Map memory device registers
-  cxl/mem: Find device capabilities
-  cxl/mem: Implement polled mode mailbox
-  cxl/mem: Add basic IOCTL interface
-  cxl/mem: Add send command
-  taint: add taint for direct hardware access
-  cxl/mem: Add a "RAW" send command
-  cxl/mem: Create concept of enabled commands
-  cxl/mem: Use CEL for enabling commands
-  cxl/mem: Add set of informational commands
-  cxl/mem: Add limited Get Log command (0401h)
-  MAINTAINERS: Add maintainers of the CXL driver
-
-Dan Williams (2):
-  cxl/mem: Introduce a driver for CXL-2.0-Type-3 endpoints
-  cxl/mem: Register CXL memX devices
-
- .clang-format                                 |    1 +
- Documentation/ABI/testing/debugfs-cxl         |   10 +
- Documentation/ABI/testing/sysfs-bus-cxl       |   26 +
- Documentation/admin-guide/sysctl/kernel.rst   |    1 +
- Documentation/admin-guide/tainted-kernels.rst |    6 +-
- Documentation/driver-api/cxl/index.rst        |   12 +
- .../driver-api/cxl/memory-devices.rst         |   46 +
- Documentation/driver-api/index.rst            |    1 +
- .../userspace-api/ioctl/ioctl-number.rst      |    1 +
- MAINTAINERS                                   |   11 +
- drivers/Kconfig                               |    1 +
- drivers/Makefile                              |    1 +
- drivers/base/core.c                           |   14 +
- drivers/cxl/Kconfig                           |   49 +
- drivers/cxl/Makefile                          |    7 +
- drivers/cxl/bus.c                             |   29 +
- drivers/cxl/cxl.h                             |  140 ++
- drivers/cxl/mem.c                             | 1603 +++++++++++++++++
- drivers/cxl/pci.h                             |   34 +
- include/linux/device.h                        |    1 +
- include/linux/kernel.h                        |    3 +-
- include/uapi/linux/cxl_mem.h                  |  180 ++
- kernel/panic.c                                |    1 +
- 23 files changed, 2176 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/ABI/testing/debugfs-cxl
- create mode 100644 Documentation/ABI/testing/sysfs-bus-cxl
- create mode 100644 Documentation/driver-api/cxl/index.rst
- create mode 100644 Documentation/driver-api/cxl/memory-devices.rst
- create mode 100644 drivers/cxl/Kconfig
- create mode 100644 drivers/cxl/Makefile
- create mode 100644 drivers/cxl/bus.c
- create mode 100644 drivers/cxl/cxl.h
- create mode 100644 drivers/cxl/mem.c
- create mode 100644 drivers/cxl/pci.h
- create mode 100644 include/uapi/linux/cxl_mem.h
-
+diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+index 3c3ff45f01c0..c646f0a1cf66 100644
+--- a/drivers/cxl/mem.c
++++ b/drivers/cxl/mem.c
+@@ -126,8 +126,8 @@ struct cxl_mem_command {
+ 			.size_in = sin,                                        \
+ 			.size_out = sout,                                      \
+ 		},                                                             \
+-		.flags = CXL_CMD_INTERNAL_FLAG_##f,                            \
+-		.opcode = CXL_MBOX_OP_##_id,                                   \
++	.flags = CXL_CMD_INTERNAL_FLAG_##f,                                    \
++	.opcode = CXL_MBOX_OP_##_id,                                           \
+ 	}
+ 
+ /*
+@@ -427,6 +427,174 @@ static int cxl_mem_count_commands(void)
+ 	}
+ 
+ 	return n;
++};
++
++/**
++ * handle_mailbox_cmd_from_user() - Dispatch a mailbox command.
++ * @cxlmd: The CXL memory device to communicate with.
++ * @cmd: The validated command.
++ * @in_payload: Pointer to userspace's input payload.
++ * @out_payload: Pointer to userspace's output payload.
++ * @u: The command submitted by userspace. Has output fields.
++ *
++ * Return:
++ *  * %0	- Mailbox transaction succeeded.
++ *  * %-EFAULT	- Something happened with copy_to/from_user.
++ *  * %-ENOMEM  - Couldn't allocate a bounce buffer.
++ *  * %-EINTR	- Mailbox acquisition interrupted.
++ *  * %-E2BIG   - Output payload would overrun user's buffer.
++ *
++ * Creates the appropriate mailbox command on behalf of a userspace request.
++ * Return value, size, and output payload are all copied out to @u. The
++ * parameters for the command must be validated before calling this function.
++ *
++ * A 0 return code indicates the command executed successfully, not that it was
++ * itself successful. IOW, the cmd->retval should always be checked if wanting
++ * to determine the actual result.
++ */
++static int handle_mailbox_cmd_from_user(struct cxl_memdev *cxlmd,
++					const struct cxl_mem_command *cmd,
++					u64 in_payload, u64 out_payload,
++					struct cxl_send_command __user *u)
++{
++	struct cxl_mem *cxlm = cxlmd->cxlm;
++	struct mbox_cmd mbox_cmd = {
++		.opcode = cmd->opcode,
++		.payload_in = NULL, /* Populated with copy_from_user() */
++		.payload_out = NULL, /* Read out by copy_to_user() */
++		.size_in = cmd->info.size_in,
++	};
++	s32 user_size_out;
++	int rc;
++
++	if (get_user(user_size_out, &u->size_out))
++		return -EFAULT;
++
++	if (cmd->info.size_out > 0) /* fixed size command */
++		mbox_cmd.payload_out = kvzalloc(cmd->info.size_out, GFP_KERNEL);
++	else if (cmd->info.size_out < 0) /* variable */
++		mbox_cmd.payload_out =
++			kvzalloc(cxlm->mbox.payload_size, GFP_KERNEL);
++
++	if (cmd->info.size_in) {
++		mbox_cmd.payload_in = kvzalloc(cmd->info.size_in, GFP_KERNEL);
++		if (!mbox_cmd.payload_in) {
++			rc = -ENOMEM;
++			goto out;
++		}
++
++		if (copy_from_user(mbox_cmd.payload_in,
++				   u64_to_user_ptr(in_payload),
++				   cmd->info.size_in)) {
++			rc = -EFAULT;
++			goto out;
++		}
++	}
++
++	rc = cxl_mem_mbox_get(cxlm);
++	if (rc)
++		goto out;
++
++	dev_dbg(&cxlmd->dev,
++		"Submitting %s command for user\n"
++		"\topcode: %x\n"
++		"\tsize: %ub\n",
++		cxl_command_names[cmd->info.id].name, mbox_cmd.opcode,
++		cmd->info.size_in);
++
++	rc = cxl_mem_mbox_send_cmd(cxlm, &mbox_cmd);
++	cxl_mem_mbox_put(cxlm);
++	if (rc)
++		goto out;
++
++	rc = put_user(mbox_cmd.return_code, &u->retval);
++	if (rc)
++		goto out;
++
++	if (user_size_out < mbox_cmd.size_out) {
++		rc = -E2BIG;
++		goto out;
++	}
++
++	if (mbox_cmd.size_out) {
++		if (copy_to_user(u64_to_user_ptr(out_payload),
++				 mbox_cmd.payload_out, mbox_cmd.size_out)) {
++			rc = -EFAULT;
++			goto out;
++		}
++	}
++
++	rc = put_user(mbox_cmd.size_out, &u->size_out);
++
++out:
++	kvfree(mbox_cmd.payload_in);
++	kvfree(mbox_cmd.payload_out);
++	return rc;
++}
++
++/**
++ * cxl_validate_cmd_from_user() - Check fields for CXL_MEM_SEND_COMMAND.
++ * @cxlm: &struct cxl_mem device whose mailbox will be used.
++ * @send_cmd: &struct cxl_send_command copied in from userspace.
++ * @out_cmd: Sanitized and populated &struct cxl_mem_command.
++ *
++ * Return:
++ *  * %0	- @out_cmd is ready to send.
++ *  * %-ENOTTY	- Invalid command specified.
++ *  * %-EINVAL	- Reserved fields or invalid values were used.
++ *  * %-EPERM	- Attempted to use a protected command.
++ *  * %-ENOMEM	- Input or output buffer wasn't sized properly.
++ *
++ * The result of this command is a fully validated command in @out_cmd that is
++ * safe to send to the hardware.
++ *
++ * See handle_mailbox_cmd_from_user()
++ */
++static int cxl_validate_cmd_from_user(struct cxl_mem *cxlm,
++				      const struct cxl_send_command *send_cmd,
++				      struct cxl_mem_command *out_cmd)
++{
++	const struct cxl_command_info *info;
++	struct cxl_mem_command *c;
++
++	if (send_cmd->id == 0 || send_cmd->id >= CXL_MEM_COMMAND_ID_MAX)
++		return -ENOTTY;
++
++	/*
++	 * The user can never specify an input payload larger than
++	 * hardware supports, but output can be arbitrarily large,
++	 * simply write out as much data as the hardware provides.
++	 */
++	if (send_cmd->size_in > cxlm->mbox.payload_size)
++		return -EINVAL;
++
++	if (send_cmd->flags & ~CXL_MEM_COMMAND_FLAG_MASK)
++		return -EINVAL;
++
++	if (send_cmd->rsvd)
++		return -EINVAL;
++
++	/* Convert user's command into the internal representation */
++	c = &mem_commands[send_cmd->id];
++	info = &c->info;
++
++	if (info->flags & CXL_MEM_COMMAND_FLAG_KERNEL)
++		return -EPERM;
++
++	/* Check the input buffer is the expected size */
++	if (info->size_in >= 0 && info->size_in != send_cmd->size_in)
++		return -ENOMEM;
++
++	/* Check the output buffer is at least large enough */
++	if (info->size_out >= 0 && send_cmd->size_out < info->size_out)
++		return -ENOMEM;
++
++	/* Setting a few const fields here... */
++	memcpy(out_cmd, c, sizeof(*c));
++	*(s32 *)&out_cmd->info.size_in = send_cmd->size_in;
++	*(s32 *)&out_cmd->info.size_out = send_cmd->size_out;
++
++	return 0;
+ }
+ 
+ static long __cxl_memdev_ioctl(struct cxl_memdev *cxlmd, unsigned int cmd,
+@@ -469,6 +637,35 @@ static long __cxl_memdev_ioctl(struct cxl_memdev *cxlmd, unsigned int cmd,
+ 		}
+ 
+ 		return 0;
++	} else if (cmd == CXL_MEM_SEND_COMMAND) {
++		struct cxl_send_command send, __user *u = (void __user *)arg;
++		struct cxl_mem_command c;
++		int rc;
++
++		dev_dbg(dev, "Send IOCTL\n");
++
++		if (copy_from_user(&send, u, sizeof(send)))
++			return -EFAULT;
++
++		rc = device_lock_interruptible(dev);
++		if (rc)
++			return rc;
++
++		if (!get_live_device(dev)) {
++			device_unlock(dev);
++			return -ENXIO;
++		}
++
++		rc = cxl_validate_cmd_from_user(cxlmd->cxlm, &send, &c);
++		if (!rc)
++			rc = handle_mailbox_cmd_from_user(cxlmd, &c,
++							  send.in_payload,
++							  send.out_payload, u);
++
++		put_device(dev);
++		device_unlock(dev);
++
++		return rc;
+ 	}
+ 
+ 	return -ENOTTY;
+diff --git a/include/uapi/linux/cxl_mem.h b/include/uapi/linux/cxl_mem.h
+index 70e3ba2fa008..9d865794a420 100644
+--- a/include/uapi/linux/cxl_mem.h
++++ b/include/uapi/linux/cxl_mem.h
+@@ -28,6 +28,7 @@ extern "C" {
+  */
+ 
+ #define CXL_MEM_QUERY_COMMANDS _IOR(0xCE, 1, struct cxl_mem_query_commands)
++#define CXL_MEM_SEND_COMMAND _IOWR(0xCE, 2, struct cxl_send_command)
+ 
+ #define CXL_CMDS                                                          \
+ 	___C(INVALID, "Invalid Command"),                                 \
+@@ -37,6 +38,11 @@ extern "C" {
+ #define ___C(a, b) CXL_MEM_COMMAND_ID_##a
+ enum { CXL_CMDS };
+ 
++#undef ___C
++#define ___C(a, b) { b }
++static const struct {
++	const char *name;
++} cxl_command_names[] = { CXL_CMDS };
+ #undef ___C
+ 
+ /**
+@@ -71,6 +77,7 @@ struct cxl_command_info {
+ #define CXL_MEM_COMMAND_FLAG_NONE 0
+ #define CXL_MEM_COMMAND_FLAG_KERNEL BIT(0)
+ #define CXL_MEM_COMMAND_FLAG_MUTEX BIT(1)
++#define CXL_MEM_COMMAND_FLAG_MASK GENMASK(1, 0)
+ 
+ 	__s32 size_in;
+ 	__s32 size_out;
+@@ -112,6 +119,44 @@ struct cxl_mem_query_commands {
+ 	struct cxl_command_info __user commands[]; /* out: supported commands */
+ };
+ 
++/**
++ * struct cxl_send_command - Send a command to a memory device.
++ * @id: The command to send to the memory device. This must be one of the
++ *	commands returned by the query command.
++ * @flags: Flags for the command (input).
++ * @rsvd: Must be zero.
++ * @retval: Return value from the memory device (output).
++ * @size_in: Size of the payload to provide to the device (input).
++ * @size_out: Size of the payload received from the device (input/output). This
++ *	      field is filled in by userspace to let the driver know how much
++ *	      space was allocated for output. It is populated by the driver to
++ *	      let userspace know how large the output payload actually was.
++ * @in_payload: Pointer to memory for payload input (little endian order).
++ * @out_payload: Pointer to memory for payload output (little endian order).
++ *
++ * Mechanism for userspace to send a command to the hardware for processing. The
++ * driver will do basic validation on the command sizes. In some cases even the
++ * payload may be introspected. Userspace is required to allocate large
++ * enough buffers for size_out which can be variable length in certain
++ * situations.
++ */
++struct cxl_send_command {
++	__u32 id;
++	__u32 flags;
++	__u32 rsvd;
++	__u32 retval;
++
++	struct {
++		__s32 size_in;
++		__u64 in_payload;
++	};
++
++	struct {
++		__s32 size_out;
++		__u64 out_payload;
++	};
++};
++
+ #if defined(__cplusplus)
+ }
+ #endif
 -- 
 2.30.0
 
