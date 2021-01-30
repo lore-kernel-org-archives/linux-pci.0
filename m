@@ -7,41 +7,39 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA97C433DB
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 00:26:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 440DCC433E0
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 00:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 368F364E00
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 00:26:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8FA464E02
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Jan 2021 00:28:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbhA3A0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Jan 2021 19:26:02 -0500
-Received: from mga01.intel.com ([192.55.52.88]:38334 "EHLO mga01.intel.com"
+        id S232496AbhA3A1T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Jan 2021 19:27:19 -0500
+Received: from mga01.intel.com ([192.55.52.88]:38336 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231138AbhA3AZa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Jan 2021 19:25:30 -0500
-IronPort-SDR: fTWEneBAuMBp2DwOiY5I6Y6OO8BD5g6ZPHumQdQGdaea7DOp/MZWAzCebvyWqNAErLCV1h1py6
- pam1MuykNTxw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9879"; a="199350681"
+        id S232173AbhA3A0F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Jan 2021 19:26:05 -0500
+IronPort-SDR: XX3d8iNm45m5TGBqqwstphyu27C1WkQhVB0Ii0QQcipstvWOhlKFH3zIVz+a6FqXPwOd/sEdB0
+ u1Nk9oj+/l2w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9879"; a="199350684"
 X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="199350681"
+   d="scan'208";a="199350684"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:45 -0800
-IronPort-SDR: CqRdBbsp55b6+sSNXhG3wGGUB2/578PfuTqvbSayjqJApMWWI+5ryRenXObkNHyZXkWhJhHCX2
- PyYqjWy56nvg==
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:47 -0800
+IronPort-SDR: tXglMtC/DYykcCzZE83qqEmn+RrW3816Y7ZMC4UnJk8EONRICxy1PicM7p8VKywaIhbrD280Bm
+ 9dK/V0KXE/Dg==
 X-IronPort-AV: E=Sophos;i="5.79,387,1602572400"; 
-   d="scan'208";a="370591645"
+   d="scan'208";a="370591660"
 Received: from jambrizm-mobl1.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.133.15])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:45 -0800
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2021 16:24:46 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
+Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
         Chris Browy <cbrowy@avery-design.com>,
         Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
         Ira Weiny <ira.weiny@intel.com>,
         Jon Masters <jcm@jonmasters.org>,
         Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
@@ -51,9 +49,9 @@ Cc:     Dan Williams <dan.j.williams@intel.com>,
         daniel.lll@alibaba-inc.com,
         "John Groves (jgroves)" <jgroves@micron.com>,
         "Kelley, Sean V" <sean.v.kelley@intel.com>
-Subject: [PATCH 01/14] cxl/mem: Introduce a driver for CXL-2.0-Type-3 endpoints
-Date:   Fri, 29 Jan 2021 16:24:25 -0800
-Message-Id: <20210130002438.1872527-2-ben.widawsky@intel.com>
+Subject: [PATCH 04/14] cxl/mem: Implement polled mode mailbox
+Date:   Fri, 29 Jan 2021 16:24:28 -0800
+Message-Id: <20210130002438.1872527-5-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210130002438.1872527-1-ben.widawsky@intel.com>
 References: <20210130002438.1872527-1-ben.widawsky@intel.com>
@@ -63,282 +61,509 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Dan Williams <dan.j.williams@intel.com>
+Provide enough functionality to utilize the mailbox of a memory device.
+The mailbox is used to interact with the firmware running on the memory
+device.
 
-The CXL.mem protocol allows a device to act as a provider of "System
-RAM" and/or "Persistent Memory" that is fully coherent as if the memory
-was attached to the typical CPU memory controller.
+The CXL specification defines separate capabilities for the mailbox and
+the memory device. The mailbox interface has a doorbell to indicate
+ready to accept commands and the memory device has a capability register
+that indicates the mailbox interface is ready. The expectation is that
+the doorbell-ready is always later than the memory-device-indication
+that the mailbox is ready.
 
-With the CXL-2.0 specification a PCI endpoint can implement a "Type-3"
-device interface and give the operating system control over "Host
-Managed Device Memory". See section 2.3 Type 3 CXL Device.
+Create a function to handle sending a command, optionally with a
+payload, to the memory device, polling on a result, and then optionally
+copying out the payload. The algorithm for doing this comes straight out
+of the CXL 2.0 specification.
 
-The memory range exported by the device may optionally be described by
-the platform firmware memory map, or by infrastructure like LIBNVDIMM to
-provision persistent memory capacity from one, or more, CXL.mem devices.
+Primary mailboxes are capable of generating an interrupt when submitting
+a command in the background. That implementation is saved for a later
+time.
 
-A pre-requisite for Linux-managed memory-capacity provisioning is this
-cxl_mem driver that can speak the mailbox protocol defined in section
-8.2.8.4 Mailbox Registers.
+Secondary mailboxes aren't implemented at this time.
 
-For now just land the initial driver boiler-plate and Documentation/
-infrastructure.
+The flow is proven with one implemented command, "identify". Because the
+class code has already told the driver this is a memory device and the
+identify command is mandatory.
 
-Link: https://www.computeexpresslink.org/download-the-specification
-Cc: Jonathan Corbet <corbet@lwn.net>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
- Documentation/driver-api/cxl/index.rst        | 12 ++++
- .../driver-api/cxl/memory-devices.rst         | 29 +++++++++
- Documentation/driver-api/index.rst            |  1 +
- drivers/Kconfig                               |  1 +
- drivers/Makefile                              |  1 +
- drivers/cxl/Kconfig                           | 35 +++++++++++
- drivers/cxl/Makefile                          |  4 ++
- drivers/cxl/mem.c                             | 61 +++++++++++++++++++
- drivers/cxl/pci.h                             | 20 ++++++
- 9 files changed, 164 insertions(+)
- create mode 100644 Documentation/driver-api/cxl/index.rst
- create mode 100644 Documentation/driver-api/cxl/memory-devices.rst
- create mode 100644 drivers/cxl/Kconfig
- create mode 100644 drivers/cxl/Makefile
- create mode 100644 drivers/cxl/mem.c
- create mode 100644 drivers/cxl/pci.h
+ drivers/cxl/Kconfig |  14 ++
+ drivers/cxl/cxl.h   |  39 +++++
+ drivers/cxl/mem.c   | 342 +++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 394 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/driver-api/cxl/index.rst b/Documentation/driver-api/cxl/index.rst
-new file mode 100644
-index 000000000000..036e49553542
---- /dev/null
-+++ b/Documentation/driver-api/cxl/index.rst
-@@ -0,0 +1,12 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+====================
-+Compute Express Link
-+====================
-+
-+.. toctree::
-+   :maxdepth: 1
-+
-+   memory-devices
-+
-+.. only::  subproject and html
-diff --git a/Documentation/driver-api/cxl/memory-devices.rst b/Documentation/driver-api/cxl/memory-devices.rst
-new file mode 100644
-index 000000000000..43177e700d62
---- /dev/null
-+++ b/Documentation/driver-api/cxl/memory-devices.rst
-@@ -0,0 +1,29 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
-+
-+===================================
-+Compute Express Link Memory Devices
-+===================================
-+
-+A Compute Express Link Memory Device is a CXL component that implements the
-+CXL.mem protocol. It contains some amount of volatile memory, persistent memory,
-+or both. It is enumerated as a PCI device for configuration and passing
-+messages over an MMIO mailbox. Its contribution to the System Physical
-+Address space is handled via HDM (Host Managed Device Memory) decoders
-+that optionally define a device's contribution to an interleaved address
-+range across multiple devices underneath a host-bridge or interleaved
-+across host-bridges.
-+
-+Driver Infrastructure
-+=====================
-+
-+This section covers the driver infrastructure for a CXL memory device.
-+
-+CXL Memory Device
-+-----------------
-+
-+.. kernel-doc:: drivers/cxl/mem.c
-+   :doc: cxl mem
-+
-+.. kernel-doc:: drivers/cxl/mem.c
-+   :internal:
-diff --git a/Documentation/driver-api/index.rst b/Documentation/driver-api/index.rst
-index 2456d0a97ed8..d246a18fd78f 100644
---- a/Documentation/driver-api/index.rst
-+++ b/Documentation/driver-api/index.rst
-@@ -35,6 +35,7 @@ available subsections can be seen below.
-    usb/index
-    firewire
-    pci/index
-+   cxl/index
-    spi
-    i2c
-    ipmb
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index dcecc9f6e33f..62c753a73651 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -6,6 +6,7 @@ menu "Device Drivers"
- source "drivers/amba/Kconfig"
- source "drivers/eisa/Kconfig"
- source "drivers/pci/Kconfig"
-+source "drivers/cxl/Kconfig"
- source "drivers/pcmcia/Kconfig"
- source "drivers/rapidio/Kconfig"
- 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index fd11b9ac4cc3..678ea810410f 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -73,6 +73,7 @@ obj-$(CONFIG_NVM)		+= lightnvm/
- obj-y				+= base/ block/ misc/ mfd/ nfc/
- obj-$(CONFIG_LIBNVDIMM)		+= nvdimm/
- obj-$(CONFIG_DAX)		+= dax/
-+obj-$(CONFIG_CXL_BUS)		+= cxl/
- obj-$(CONFIG_DMA_SHARED_BUFFER) += dma-buf/
- obj-$(CONFIG_NUBUS)		+= nubus/
- obj-y				+= macintosh/
 diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-new file mode 100644
-index 000000000000..3b66b46af8a0
---- /dev/null
+index 3b66b46af8a0..fe591f74af96 100644
+--- a/drivers/cxl/Kconfig
 +++ b/drivers/cxl/Kconfig
-@@ -0,0 +1,35 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+menuconfig CXL_BUS
-+	tristate "CXL (Compute Express Link) Devices Support"
-+	depends on PCI
+@@ -32,4 +32,18 @@ config CXL_MEM
+ 	  Chapter 2.3 Type 3 CXL Device in the CXL 2.0 specification.
+ 
+ 	  If unsure say 'm'.
++
++config CXL_MEM_INSECURE_DEBUG
++	bool "CXL.mem debugging"
++	depends on CXL_MEM
 +	help
-+	  CXL is a bus that is electrically compatible with PCI Express, but
-+	  layers three protocols on that signalling (CXL.io, CXL.cache, and
-+	  CXL.mem). The CXL.cache protocol allows devices to hold cachelines
-+	  locally, the CXL.mem protocol allows devices to be fully coherent
-+	  memory targets, the CXL.io protocol is equivalent to PCI Express.
-+	  Say 'y' to enable support for the configuration and management of
-+	  devices supporting these protocols.
++	  Enable debug of all CXL command payloads.
 +
-+if CXL_BUS
++	  Some CXL devices and controllers support encryption and other
++	  security features. The payloads for the commands that enable
++	  those features may contain sensitive clear-text security
++	  material. Disable debug of those command payloads by default.
++	  If you are a kernel developer actively working on CXL
++	  security enabling say Y, otherwise say N.
 +
-+config CXL_MEM
-+	tristate "CXL.mem: Endpoint Support"
-+	help
-+	  The CXL.mem protocol allows a device to act as a provider of
-+	  "System RAM" and/or "Persistent Memory" that is fully coherent
-+	  as if the memory was attached to the typical CPU memory
-+	  controller.
+ endif
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index a3da7f8050c4..df3d97154b63 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -31,9 +31,36 @@
+ #define CXLDEV_MB_CAPS_OFFSET 0x00
+ #define   CXLDEV_MB_CAP_PAYLOAD_SIZE_MASK GENMASK(4, 0)
+ #define CXLDEV_MB_CTRL_OFFSET 0x04
++#define   CXLDEV_MB_CTRL_DOORBELL BIT(0)
+ #define CXLDEV_MB_CMD_OFFSET 0x08
++#define   CXLDEV_MB_CMD_COMMAND_OPCODE_MASK GENMASK(15, 0)
++#define   CXLDEV_MB_CMD_PAYLOAD_LENGTH_MASK GENMASK(36, 16)
+ #define CXLDEV_MB_STATUS_OFFSET 0x10
++#define   CXLDEV_MB_STATUS_RET_CODE_MASK GENMASK(47, 32)
+ #define CXLDEV_MB_BG_CMD_STATUS_OFFSET 0x18
++#define CXLDEV_MB_PAYLOAD_OFFSET 0x20
 +
-+	  Say 'y/m' to enable a driver (named "cxl_mem.ko" when built as
-+	  a module) that will attach to CXL.mem devices for
-+	  configuration, provisioning, and health monitoring. This
-+	  driver is required for dynamic provisioning of CXL.mem
-+	  attached memory which is a prerequisite for persistent memory
-+	  support. Typically volatile memory is mapped by platform
-+	  firmware and included in the platform memory map, but in some
-+	  cases the OS is responsible for mapping that memory. See
-+	  Chapter 2.3 Type 3 CXL Device in the CXL 2.0 specification.
++/* Memory Device (CXL 2.0 - 8.2.8.5.1.1) */
++#define CXLMDEV_STATUS_OFFSET 0x0
++#define   CXLMDEV_DEV_FATAL BIT(0)
++#define   CXLMDEV_FW_HALT BIT(1)
++#define   CXLMDEV_STATUS_MEDIA_STATUS_MASK GENMASK(3, 2)
++#define     CXLMDEV_MS_NOT_READY 0
++#define     CXLMDEV_MS_READY 1
++#define     CXLMDEV_MS_ERROR 2
++#define     CXLMDEV_MS_DISABLED 3
++#define   CXLMDEV_READY(status) \
++		(CXL_GET_FIELD(status, CXLMDEV_STATUS_MEDIA_STATUS) == CXLMDEV_MS_READY)
++#define   CXLMDEV_MBOX_IF_READY BIT(4)
++#define   CXLMDEV_RESET_NEEDED_SHIFT 5
++#define   CXLMDEV_RESET_NEEDED_MASK GENMASK(7, 5)
++#define     CXLMDEV_RESET_NEEDED_NOT 0
++#define     CXLMDEV_RESET_NEEDED_COLD 1
++#define     CXLMDEV_RESET_NEEDED_WARM 2
++#define     CXLMDEV_RESET_NEEDED_HOT 3
++#define     CXLMDEV_RESET_NEEDED_CXL 4
++#define   CXLMDEV_RESET_NEEDED(status) \
++		(CXL_GET_FIELD(status, CXLMDEV_RESET_NEEDED) != CXLMDEV_RESET_NEEDED_NOT)
+ 
+ /**
+  * struct cxl_mem - A CXL memory device
+@@ -44,6 +71,16 @@ struct cxl_mem {
+ 	struct pci_dev *pdev;
+ 	void __iomem *regs;
+ 
++	struct {
++		struct range range;
++	} pmem;
 +
-+	  If unsure say 'm'.
-+endif
-diff --git a/drivers/cxl/Makefile b/drivers/cxl/Makefile
-new file mode 100644
-index 000000000000..4a30f7c3fc4a
---- /dev/null
-+++ b/drivers/cxl/Makefile
-@@ -0,0 +1,4 @@
-+# SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_CXL_MEM) += cxl_mem.o
++	struct {
++		struct range range;
++	} ram;
 +
-+cxl_mem-y := mem.o
++	char firmware_version[0x10];
++
+ 	/* Cap 0001h - CXL_CAP_CAP_ID_DEVICE_STATUS */
+ 	struct {
+ 		void __iomem *regs;
+@@ -51,6 +88,7 @@ struct cxl_mem {
+ 
+ 	/* Cap 0002h - CXL_CAP_CAP_ID_PRIMARY_MAILBOX */
+ 	struct {
++		struct mutex mutex; /* Protects device mailbox and firmware */
+ 		void __iomem *regs;
+ 		size_t payload_size;
+ 	} mbox;
+@@ -89,5 +127,6 @@ struct cxl_mem {
+ 
+ cxl_reg(status);
+ cxl_reg(mbox);
++cxl_reg(mem);
+ 
+ #endif /* __CXL_H__ */
 diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-new file mode 100644
-index 000000000000..f4ee9a507ac9
---- /dev/null
+index fa14d51243ee..69ed15bfa5d4 100644
+--- a/drivers/cxl/mem.c
 +++ b/drivers/cxl/mem.c
-@@ -0,0 +1,61 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/io.h>
-+#include "pci.h"
+@@ -6,6 +6,270 @@
+ #include "pci.h"
+ #include "cxl.h"
+ 
++#define cxl_doorbell_busy(cxlm)                                                \
++	(cxl_read_mbox_reg32(cxlm, CXLDEV_MB_CTRL_OFFSET) &                    \
++	 CXLDEV_MB_CTRL_DOORBELL)
 +
-+static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
++#define CXL_MAILBOX_TIMEOUT_US 2000
++
++enum opcode {
++	CXL_MBOX_OP_IDENTIFY		= 0x4000,
++	CXL_MBOX_OP_MAX			= 0x10000
++};
++
++/**
++ * struct mbox_cmd - A command to be submitted to hardware.
++ * @opcode: (input) The command set and command submitted to hardware.
++ * @payload_in: (input) Pointer to the input payload.
++ * @payload_out: (output) Pointer to the output payload. Must be allocated by
++ *		 the caller.
++ * @size_in: (input) Number of bytes to load from @payload.
++ * @size_out: (output) Number of bytes loaded into @payload.
++ * @return_code: (output) Error code returned from hardware.
++ *
++ * This is the primary mechanism used to send commands to the hardware.
++ * All the fields except @payload_* correspond exactly to the fields described in
++ * Command Register section of the CXL 2.0 spec (8.2.8.4.5). @payload_in and
++ * @payload_out are written to, and read from the Command Payload Registers
++ * defined in (8.2.8.4.8).
++ */
++struct mbox_cmd {
++	u16 opcode;
++	void *payload_in;
++	void *payload_out;
++	size_t size_in;
++	size_t size_out;
++	u16 return_code;
++#define CXL_MBOX_SUCCESS 0
++};
++
++static int cxl_mem_wait_for_doorbell(struct cxl_mem *cxlm)
 +{
-+	int pos;
++	const int timeout = msecs_to_jiffies(CXL_MAILBOX_TIMEOUT_US);
++	const unsigned long start = jiffies;
++	unsigned long end = start;
 +
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DVSEC);
-+	if (!pos)
-+		return 0;
++	while (cxl_doorbell_busy(cxlm)) {
++		end = jiffies;
 +
-+	while (pos) {
-+		u16 vendor, id;
-+
-+		pci_read_config_word(pdev, pos + PCI_DVSEC_VENDOR_ID_OFFSET,
-+				     &vendor);
-+		pci_read_config_word(pdev, pos + PCI_DVSEC_ID_OFFSET, &id);
-+		if (vendor == PCI_DVSEC_VENDOR_ID_CXL && dvsec == id)
-+			return pos;
-+
-+		pos = pci_find_next_ext_capability(pdev, pos,
-+						   PCI_EXT_CAP_ID_DVSEC);
++		if (time_after(end, start + timeout)) {
++			/* Check again in case preempted before timeout test */
++			if (!cxl_doorbell_busy(cxlm))
++				break;
++			return -ETIMEDOUT;
++		}
++		cpu_relax();
 +	}
++
++	dev_dbg(&cxlm->pdev->dev, "Doorbell wait took %dms",
++		jiffies_to_msecs(end) - jiffies_to_msecs(start));
++	return 0;
++}
++
++static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
++				 struct mbox_cmd *mbox_cmd)
++{
++	dev_warn(&cxlm->pdev->dev, "Mailbox command timed out\n");
++	dev_info(&cxlm->pdev->dev,
++		 "\topcode: 0x%04x\n"
++		 "\tpayload size: %zub\n",
++		 mbox_cmd->opcode, mbox_cmd->size_in);
++
++	if (IS_ENABLED(CONFIG_CXL_MEM_INSECURE_DEBUG)) {
++		print_hex_dump_debug("Payload ", DUMP_PREFIX_OFFSET, 16, 1,
++				     mbox_cmd->payload_in, mbox_cmd->size_in,
++				     true);
++	}
++
++	/* Here's a good place to figure out if a device reset is needed */
++}
++
++/**
++ * cxl_mem_mbox_send_cmd() - Send a mailbox command to a memory device.
++ * @cxlm: The CXL memory device to communicate with.
++ * @mbox_cmd: Command to send to the memory device.
++ *
++ * Context: Any context. Expects mbox_lock to be held.
++ * Return: -ETIMEDOUT if timeout occurred waiting for completion. 0 on success.
++ *         Caller should check the return code in @mbox_cmd to make sure it
++ *         succeeded.
++ *
++ * This is a generic form of the CXL mailbox send command, thus the only I/O
++ * operations used are cxl_read_mbox_reg(). Memory devices, and perhaps other
++ * types of CXL devices may have further information available upon error
++ * conditions.
++ *
++ * The CXL spec allows for up to two mailboxes. The intention is for the primary
++ * mailbox to be OS controlled and the secondary mailbox to be used by system
++ * firmware. This allows the OS and firmware to communicate with the device and
++ * not need to coordinate with each other. The driver only uses the primary
++ * mailbox.
++ */
++static int cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
++				 struct mbox_cmd *mbox_cmd)
++{
++	void __iomem *payload = cxlm->mbox.regs + CXLDEV_MB_PAYLOAD_OFFSET;
++	u64 cmd_reg, status_reg;
++	size_t out_len;
++	int rc;
++
++	lockdep_assert_held(&cxlm->mbox.mutex);
++
++	/*
++	 * Here are the steps from 8.2.8.4 of the CXL 2.0 spec.
++	 *   1. Caller reads MB Control Register to verify doorbell is clear
++	 *   2. Caller writes Command Register
++	 *   3. Caller writes Command Payload Registers if input payload is non-empty
++	 *   4. Caller writes MB Control Register to set doorbell
++	 *   5. Caller either polls for doorbell to be clear or waits for interrupt if configured
++	 *   6. Caller reads MB Status Register to fetch Return code
++	 *   7. If command successful, Caller reads Command Register to get Payload Length
++	 *   8. If output payload is non-empty, host reads Command Payload Registers
++	 *
++	 *   Hardware is free to do whatever it wants before the doorbell is
++	 *   rung, and isn't allowed to change anything after it clears the
++	 *   doorbell. As such, steps 2 and 3 can happen in any order, and steps
++	 *   6, 7, 8 can also happen in any order (though some orders might not
++	 *   make sense).
++	 */
++
++	/* #1 */
++	if (cxl_doorbell_busy(cxlm)) {
++		dev_err_ratelimited(&cxlm->pdev->dev,
++				    "Mailbox re-busy after acquiring\n");
++		return -EBUSY;
++	}
++
++	cmd_reg = CXL_SET_FIELD(mbox_cmd->opcode, CXLDEV_MB_CMD_COMMAND_OPCODE);
++	if (mbox_cmd->size_in) {
++		if (WARN_ON(!mbox_cmd->payload_in))
++			return -EINVAL;
++
++		cmd_reg |= CXL_SET_FIELD(mbox_cmd->size_in,
++					 CXLDEV_MB_CMD_PAYLOAD_LENGTH);
++		memcpy_toio(payload, mbox_cmd->payload_in, mbox_cmd->size_in);
++	}
++
++	/* #2, #3 */
++	cxl_write_mbox_reg64(cxlm, CXLDEV_MB_CMD_OFFSET, cmd_reg);
++
++	/* #4 */
++	dev_dbg(&cxlm->pdev->dev, "Sending command\n");
++	cxl_write_mbox_reg32(cxlm, CXLDEV_MB_CTRL_OFFSET,
++			     CXLDEV_MB_CTRL_DOORBELL);
++
++	/* #5 */
++	rc = cxl_mem_wait_for_doorbell(cxlm);
++	if (rc == -ETIMEDOUT) {
++		cxl_mem_mbox_timeout(cxlm, mbox_cmd);
++		return rc;
++	}
++
++	/* #6 */
++	status_reg = cxl_read_mbox_reg64(cxlm, CXLDEV_MB_STATUS_OFFSET);
++	mbox_cmd->return_code =
++		CXL_GET_FIELD(status_reg, CXLDEV_MB_STATUS_RET_CODE);
++
++	if (mbox_cmd->return_code != 0) {
++		dev_dbg(&cxlm->pdev->dev, "Mailbox operation had an error\n");
++		return 0;
++	}
++
++	/* #7 */
++	cmd_reg = cxl_read_mbox_reg64(cxlm, CXLDEV_MB_CMD_OFFSET);
++	out_len = CXL_GET_FIELD(cmd_reg, CXLDEV_MB_CMD_PAYLOAD_LENGTH);
++
++	/* #8 */
++	if (out_len && mbox_cmd->payload_out)
++		memcpy_fromio(mbox_cmd->payload_out, payload, out_len);
++
++	mbox_cmd->size_out = out_len;
 +
 +	return 0;
 +}
 +
-+static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++/**
++ * cxl_mem_mbox_get() - Acquire exclusive access to the mailbox.
++ * @cxlm: The memory device to gain access to.
++ *
++ * Context: Any context. Takes the mbox_lock.
++ * Return: 0 if exclusive access was acquired.
++ */
++static int cxl_mem_mbox_get(struct cxl_mem *cxlm)
 +{
-+	struct device *dev = &pdev->dev;
-+	int regloc;
++	struct device *dev = &cxlm->pdev->dev;
++	int rc = -EBUSY;
++	u64 md_status;
 +
-+	regloc = cxl_mem_dvsec(pdev, PCI_DVSEC_ID_CXL_REGLOC);
-+	if (!regloc) {
-+		dev_err(dev, "register location dvsec not found\n");
++	mutex_lock_io(&cxlm->mbox.mutex);
++
++	/*
++	 * XXX: There is some amount of ambiguity in the 2.0 version of the spec
++	 * around the mailbox interface ready (8.2.8.5.1.1).  The purpose of the
++	 * bit is to allow firmware running on the device to notify the driver
++	 * that it's ready to receive commands. It is unclear if the bit needs
++	 * to be read for each transaction mailbox, ie. the firmware can switch
++	 * it on and off as needed. Second, there is no defined timeout for
++	 * mailbox ready, like there is for the doorbell interface.
++	 *
++	 * Assumptions:
++	 * 1. The firmware might toggle the Mailbox Interface Ready bit, check
++	 *    it for every command.
++	 *
++	 * 2. If the doorbell is clear, the firmware should have first set the
++	 *    Mailbox Interface Ready bit. Therefore, waiting for the doorbell
++	 *    to be ready is sufficient.
++	 */
++	rc = cxl_mem_wait_for_doorbell(cxlm);
++	if (rc) {
++		dev_warn(dev, "Mailbox interface not ready\n");
++		goto out;
++	}
++
++	md_status = cxl_read_mem_reg64(cxlm, CXLMDEV_STATUS_OFFSET);
++	if (!(md_status & CXLMDEV_MBOX_IF_READY && CXLMDEV_READY(md_status))) {
++		dev_err(dev,
++			"mbox: reported doorbell ready, but not mbox ready\n");
++		goto out;
++	}
++
++	/*
++	 * Hardware shouldn't allow a ready status but also have failure bits
++	 * set. Spit out an error, this should be a bug report
++	 */
++	rc = -EFAULT;
++	if (md_status & CXLMDEV_DEV_FATAL) {
++		dev_err(dev, "mbox: reported ready, but fatal\n");
++		goto out;
++	}
++	if (md_status & CXLMDEV_FW_HALT) {
++		dev_err(dev, "mbox: reported ready, but halted\n");
++		goto out;
++	}
++	if (CXLMDEV_RESET_NEEDED(md_status)) {
++		dev_err(dev, "mbox: reported ready, but reset needed\n");
++		goto out;
++	}
++
++	/* with lock held */
++	return 0;
++
++out:
++	mutex_unlock(&cxlm->mbox.mutex);
++	return rc;
++}
++
++/**
++ * cxl_mem_mbox_put() - Release exclusive access to the mailbox.
++ * @cxlm: The CXL memory device to communicate with.
++ *
++ * Context: Any context. Expects mbox_lock to be held.
++ */
++static void cxl_mem_mbox_put(struct cxl_mem *cxlm)
++{
++	mutex_unlock(&cxlm->mbox.mutex);
++}
++
+ /**
+  * cxl_mem_setup_regs() - Setup necessary MMIO.
+  * @cxlm: The CXL memory device to communicate with.
+@@ -142,6 +406,8 @@ static struct cxl_mem *cxl_mem_create(struct pci_dev *pdev, u32 reg_lo,
+ 		return NULL;
+ 	}
+ 
++	mutex_init(&cxlm->mbox.mutex);
++
+ 	regs = pcim_iomap_table(pdev)[bar];
+ 	cxlm->pdev = pdev;
+ 	cxlm->regs = regs + offset;
+@@ -174,6 +440,76 @@ static int cxl_mem_dvsec(struct pci_dev *pdev, int dvsec)
+ 	return 0;
+ }
+ 
++/**
++ * cxl_mem_identify() - Send the IDENTIFY command to the device.
++ * @cxlm: The device to identify.
++ *
++ * Return: 0 if identify was executed successfully.
++ *
++ * This will dispatch the identify command to the device and on success populate
++ * structures to be exported to sysfs.
++ */
++static int cxl_mem_identify(struct cxl_mem *cxlm)
++{
++	struct cxl_mbox_identify {
++		char fw_revision[0x10];
++		__le64 total_capacity;
++		__le64 volatile_capacity;
++		__le64 persistent_capacity;
++		__le64 partition_align;
++		__le16 info_event_log_size;
++		__le16 warning_event_log_size;
++		__le16 failure_event_log_size;
++		__le16 fatal_event_log_size;
++		__le32 lsa_size;
++		u8 poison_list_max_mer[3];
++		__le16 inject_poison_limit;
++		u8 poison_caps;
++		u8 qos_telemetry_caps;
++	} __packed id;
++	struct mbox_cmd mbox_cmd;
++	int rc;
++
++	/* Retrieve initial device memory map */
++	rc = cxl_mem_mbox_get(cxlm);
++	if (rc)
++		return rc;
++
++	mbox_cmd = (struct mbox_cmd){
++		.opcode = CXL_MBOX_OP_IDENTIFY,
++		.payload_out = &id,
++		.size_in = 0,
++	};
++	rc = cxl_mem_mbox_send_cmd(cxlm, &mbox_cmd);
++	cxl_mem_mbox_put(cxlm);
++	if (rc)
++		return rc;
++
++	/* TODO: Handle retry or reset responses from firmware. */
++	if (mbox_cmd.return_code != CXL_MBOX_SUCCESS) {
++		dev_err(&cxlm->pdev->dev, "Mailbox command failed (%d)\n",
++			mbox_cmd.return_code);
 +		return -ENXIO;
 +	}
 +
-+	return 0;
++	if (mbox_cmd.size_out != sizeof(id))
++		return -ENXIO;
++
++	/*
++	 * TODO: enumerate DPA map, as 'ram' and 'pmem' do not alias.
++	 * For now, only the capacity is exported in sysfs
++	 */
++	cxlm->ram.range.start = 0;
++	cxlm->ram.range.end = le64_to_cpu(id.volatile_capacity) - 1;
++
++	cxlm->pmem.range.start = 0;
++	cxlm->pmem.range.end = le64_to_cpu(id.persistent_capacity) - 1;
++
++	memcpy(cxlm->firmware_version, id.fw_revision, sizeof(id.fw_revision));
++
++	return rc;
 +}
 +
-+static const struct pci_device_id cxl_mem_pci_tbl[] = {
-+	/* PCI class code for CXL.mem Type-3 Devices */
-+	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+	  PCI_CLASS_MEMORY_CXL, 0xffffff, 0 },
-+	{ /* terminate list */ },
-+};
-+MODULE_DEVICE_TABLE(pci, cxl_mem_pci_tbl);
+ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -219,7 +555,11 @@ static int cxl_mem_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (rc)
+ 		return rc;
+ 
+-	return cxl_mem_setup_mailbox(cxlm);
++	rc = cxl_mem_setup_mailbox(cxlm);
++	if (rc)
++		return rc;
 +
-+static struct pci_driver cxl_mem_driver = {
-+	.name			= KBUILD_MODNAME,
-+	.id_table		= cxl_mem_pci_tbl,
-+	.probe			= cxl_mem_probe,
-+};
-+
-+MODULE_LICENSE("GPL v2");
-+module_pci_driver(cxl_mem_driver);
-diff --git a/drivers/cxl/pci.h b/drivers/cxl/pci.h
-new file mode 100644
-index 000000000000..a8a9935fa90b
---- /dev/null
-+++ b/drivers/cxl/pci.h
-@@ -0,0 +1,20 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
-+#ifndef __CXL_PCI_H__
-+#define __CXL_PCI_H__
-+
-+#define PCI_CLASS_MEMORY_CXL	0x050210
-+
-+/*
-+ * See section 8.1 Configuration Space Registers in the CXL 2.0
-+ * Specification
-+ */
-+#define PCI_EXT_CAP_ID_DVSEC		0x23
-+#define PCI_DVSEC_VENDOR_ID_CXL		0x1E98
-+#define PCI_DVSEC_VENDOR_ID_OFFSET	0x4
-+#define PCI_DVSEC_ID_CXL		0x0
-+#define PCI_DVSEC_ID_OFFSET		0x8
-+
-+#define PCI_DVSEC_ID_CXL_REGLOC		0x8
-+
-+#endif /* __CXL_PCI_H__ */
++	return cxl_mem_identify(cxlm);
+ }
+ 
+ static const struct pci_device_id cxl_mem_pci_tbl[] = {
 -- 
 2.30.0
 
