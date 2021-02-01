@@ -2,242 +2,193 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A62B2C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC5FBC433E6
 	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 18:27:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DB2264E3C
+	by mail.kernel.org (Postfix) with ESMTP id A9AF864E2C
 	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 18:27:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229680AbhBAS1G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 13:27:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49784 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232665AbhBASSJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 13:18:09 -0500
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98737C061573
-        for <linux-pci@vger.kernel.org>; Mon,  1 Feb 2021 10:17:28 -0800 (PST)
-Received: by mail-lj1-x22a.google.com with SMTP id t8so20784422ljk.10
-        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2021 10:17:28 -0800 (PST)
+        id S232759AbhBAS12 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 13:27:28 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:42260 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232917AbhBAS1H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 13:27:07 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 111IEFD8139697;
+        Mon, 1 Feb 2021 18:24:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2020-01-29;
+ bh=l60f08n2UUQ9F7F3myeI2FXfLaXXPiQ5alJJSKZvH80=;
+ b=LBCr0/3WVhQl444e1NQPWB3C0vU5e53WYhZXU+RZn4XLfkaVJFz3cjWm8jzWvGvRIhT5
+ 75nvBupyd0qJmU3vLmnrrwFKr22kPkua9pK1b4NGc3XX26rKzkL3TI42x/8E6M4QF/7P
+ ZkavPwbTu3rAxLJnADX9DH2y2Q6HuL+oZEscgHb8fHF+LSO1NzUuT2DiQyatfch6XW0I
+ MBHD6IGZJ4cMl2u9SouVDi6oxCPm9cB4Lzq9hQEZ+u+UnZdOxvU30DGNLPvUJadTea24
+ vaPEobGG2a/rNZ1CAaqV8POXTxAqQeHxOjjb65T3UbFCT75wyBgd5NVPuI1S3TU3L/MP bQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 36cxvqxt7e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 Feb 2021 18:24:09 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 111IFRRP057545;
+        Mon, 1 Feb 2021 18:24:08 GMT
+Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2046.outbound.protection.outlook.com [104.47.66.46])
+        by aserp3030.oracle.com with ESMTP id 36dh1msbuy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 01 Feb 2021 18:24:08 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fWkqEZtd3OIeluG+4X4rhE54rgfIb06tXmSzdTThvnJBGeq2AHfFYbf6RJyy6yD8K+e2DHcDIVytPTPQZYcLHDO4/IpFlYSwYl30a/bQma/Li4m8QrYqFQUwWLry62OE7wcdgHOZgedG+8z7zV6QcjpeZcCy5IQyL8rSSeSIoJsX6G8/pHN1SMYRHqHQYwMrvNVd8ZY/FMo/R9A9OBg09C/2TyhrKbEHWlbs5fi/49XrP1rH0SXFqjxQTDrV+D3I8Y4DPnPI2C5jumD71KRqSTP1rrzRcN3jPmosIBLdCiW2Un6aQPQA+NFT72QDIotYjRtS4NjBPVAwyTptIWb9Hw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l60f08n2UUQ9F7F3myeI2FXfLaXXPiQ5alJJSKZvH80=;
+ b=F9ON7cEsf1087McSMSkMUR3qbCpU4fvsmHLCunfgRoHHW+TJoSuERM1ACi6Yuhy/BUvRQJICLxhpzBODY5Wk+imuMPHSVfSQ1M9be/pxnkFMUwaF8awLuWCh/SXU5fOGvcaNB1sriksSxZX2ZGThlKaek+sDqn319oYI1cOB8uOoHSb6JeweLVuJveU7SUJJX2KaLRlOfqzs0ipmXaYqodPho9l5oc8xbClTD5/SyM1w4jyqUuW6+0unh0AY1V/pSiLQIG13mVc8n/qrhoik+bFtOb7+0xf7Q7qIh0prhTmuCzqRmk8OPt1/Ifl9pbpvmIS0d/Nrp455O9BLsvlUkQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=4x3fYHzuLloRCVGLydI5lwFq+4xtHyn3FNo/8cAtAGI=;
-        b=VOhUnLVQDVMAlONLOlUNKrGCfK/CLXhagq0ZrkVbF7j6qrwxo/YnlI1+GYDRli9tTx
-         zFlGjbwfrBIgv+l9JK2fLPh/2di7Xnb3/2dumHsm7har95+WLP5ouzwZo5QLx2BadCZq
-         AcV7HUIN2MgSAhFYUN6mPkFLcz/I2N2wPNXrxa+cEcYmiPN/HUCBMUKMg+fmB20X3LGj
-         TBGJXelNGYwTrFRYHHztDy0WjJEdUyiZs6TKJtc39EGSqghzo18YHimyoO+PDqQnEnSW
-         dqGOImPAlf1vaL+S7/K4A4+kAL68s7b4OHo+6Y6oa+kW2q32SUW7d/ExqGnShPcZXDA4
-         w2LA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=4x3fYHzuLloRCVGLydI5lwFq+4xtHyn3FNo/8cAtAGI=;
-        b=bnITNSOaGm2Kg5q+6YlxGfzeTcyt/ow2tMrT6uPRIEFsMkYUino0x1K6K5OhihQ5Ar
-         jne7WfHxtdNPckyxNmAtCYs9AnNnWNgvNNdSOqr/odrHcdO1V2UXhikl/id7euiGdWdq
-         6unkp4mTgJSuFGTpgWWCbP/WbkSDytmA67vnLBLxJoY+k6SAnAy6UkuEhrUMfTGlM0VR
-         Uwj1MqpkyLcUBUNWtrba0L+OZwyh+ndoyVCQLWdVDCAn5BNofEkjtzaouOPA31REro+F
-         aMlVnTVEnI95iaYKTeTOnoYczfd1iv10FKiVfEpEVJXi+6kmM1oMjv05hPYRfyfPbzBX
-         CJ2w==
-X-Gm-Message-State: AOAM530gKFwskJzzW+e8zMvrqQ4CU9C0BHjs86sl1zWXLxejv4bk2kSe
-        NtF339CtBofCARekhXmKcZoD0tj/hv0=
-X-Google-Smtp-Source: ABdhPJxF+g8Z3Msxg8Yl1NOC1bc0gkhpFrc9UTspxzDwyiYCnykihAwkN8LaB/gA4O+h8Em266+FOw==
-X-Received: by 2002:a2e:9801:: with SMTP id a1mr7965744ljj.122.1612203447141;
-        Mon, 01 Feb 2021 10:17:27 -0800 (PST)
-Received: from localhost.localdomain (85-76-10-224-nat.elisa-mobile.fi. [85.76.10.224])
-        by smtp.gmail.com with ESMTPSA id g25sm3890569ljj.64.2021.02.01.10.17.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Feb 2021 10:17:26 -0800 (PST)
-From:   =?UTF-8?q?Jari=20H=C3=A4m=C3=A4l=C3=A4inen?= <nuumiofi@gmail.com>
-To:     shawn.lin@rock-chips.com
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux.amoon@gmail.com, lorenzo.pieralisi@arm.com,
-        xxm@rock-chips.com
-Subject: Re: [PATCH 1/2] PCI: rockchip: Enable IO base and limit registers
-Date:   Mon,  1 Feb 2021 20:16:55 +0200
-Message-Id: <20210201181655.325452-1-nuumiofi@gmail.com>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <139e0296-e845-500f-8899-72b0f0b22e8c@rock-chips.com>
-References: <139e0296-e845-500f-8899-72b0f0b22e8c@rock-chips.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l60f08n2UUQ9F7F3myeI2FXfLaXXPiQ5alJJSKZvH80=;
+ b=SPA0d3qXkIMDwOb3ocqYLU6EFcdhPUUld6p87yD1GvhXJtlxb5GkhXtefCCikPa3voceSIEXTkvfH4zraQk5HqaOGJ2LjWMX01hmWM9fuL8p3HS/8rCtsoc/xyB+lox91pNwk2TfxWVs+dQA1WCN5XP4aoUJbxLAuaQ5NPpXEjs=
+Authentication-Results: intel.com; dkim=none (message not signed)
+ header.d=none;intel.com; dmarc=none action=none header.from=oracle.com;
+Received: from BYAPR10MB2999.namprd10.prod.outlook.com (2603:10b6:a03:85::27)
+ by BYAPR10MB3592.namprd10.prod.outlook.com (2603:10b6:a03:11f::31) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.17; Mon, 1 Feb
+ 2021 18:24:05 +0000
+Received: from BYAPR10MB2999.namprd10.prod.outlook.com
+ ([fe80::e180:1ba2:d87:456]) by BYAPR10MB2999.namprd10.prod.outlook.com
+ ([fe80::e180:1ba2:d87:456%4]) with mapi id 15.20.3784.019; Mon, 1 Feb 2021
+ 18:24:05 +0000
+Date:   Mon, 1 Feb 2021 13:24:00 -0500
+From:   Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To:     Ben Widawsky <ben.widawsky@intel.com>
+Cc:     linux-cxl@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        daniel.lll@alibaba-inc.com,
+        "John Groves (jgroves)" <jgroves@micron.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>
+Subject: Re: [PATCH 09/14] cxl/mem: Add a "RAW" send command
+Message-ID: <20210201182400.GK197521@fedora>
+References: <20210130002438.1872527-1-ben.widawsky@intel.com>
+ <20210130002438.1872527-10-ben.widawsky@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210130002438.1872527-10-ben.widawsky@intel.com>
+X-Originating-IP: [209.6.208.110]
+X-ClientProxiedBy: MN2PR22CA0010.namprd22.prod.outlook.com
+ (2603:10b6:208:238::15) To BYAPR10MB2999.namprd10.prod.outlook.com
+ (2603:10b6:a03:85::27)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from fedora (209.6.208.110) by MN2PR22CA0010.namprd22.prod.outlook.com (2603:10b6:208:238::15) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3805.17 via Frontend Transport; Mon, 1 Feb 2021 18:24:02 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 9d461fed-002c-49e3-9ac4-08d8c6de8e80
+X-MS-TrafficTypeDiagnostic: BYAPR10MB3592:
+X-Microsoft-Antispam-PRVS: <BYAPR10MB35929DAA0162FB50D3D0B66589B69@BYAPR10MB3592.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:517;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 8fYLKQYRUI1hSIiCIiAi9zeWolG5+hrEaxbHatdmIhbu/FLOP/KgePAgoeBtdlyZZXxoJTWQFvNfvpEexpqacdnz/PKbT3dmTfT5bzOvaUXLvmhKJdtPHNv9hjsIectS5pTmlVMMhJOeKdmhVGTJgzCtUChDV99m3xzlguPJe1fLSWbhD0ku+rqIWQmxuIvVW9Jn2G3mJBvvw5mxAYKY+FjeL1IhmWzmSOCfzWaggdTAc8NO4Wf6UvOJSl2TiLmzow59xpc3s2XfJw+MpOlhO96F75rNlQtab1QOI0OrSQUbkMcbjg5JD0KaNn0LaifnVQSAjqPZP/HQ0oiZDZjgYVXxjyZ+cASg0IRatAdRnYmAWB9P50MQ3mD606f5G1mbKByFP7MkTX3ndYchhNoItn8am0fyYs/6G0qslLtLe9ltKZC9xmQh/FCAT0AGxRkBCN98/zB9FQH+YGddJR/kAL50zXoeFKfe38g0WzrRjYan2/IBSBwf6MLCw+Q0QKaMA3Ngoz1uy3Fq5I+ApvXTuw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB2999.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(39860400002)(136003)(346002)(376002)(366004)(186003)(16526019)(52116002)(956004)(6496006)(7416002)(54906003)(4326008)(33716001)(316002)(86362001)(8936002)(66946007)(66556008)(55016002)(66476007)(6916009)(5660300002)(9686003)(9576002)(83380400001)(1076003)(478600001)(2906002)(26005)(8676002)(33656002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?knjkINRLpew+T2+ghIBAvf0NYHVEWFS/xsS/K2MaUxyHLYkAlHqQy1mU5ITo?=
+ =?us-ascii?Q?rf3RS/aQYn9GJRA4+H6LQbuu9SQRQNASVFue9S6N/Unyq4KO1YLhAqPZzj4Y?=
+ =?us-ascii?Q?htDLMXKhTcklg0bpGmgO8svp72YWiQ36HLW4L8QJPQm/G5piYG8Plwkn7J5v?=
+ =?us-ascii?Q?rTAuo10ADs/nXuNnYbWVC5nV5MIUgBUnjPzNJwGfef/py9q1fr1Fmg6rnhH5?=
+ =?us-ascii?Q?mE2yxy/kzDHCxOG1rjoHTZpt4VhOHCxsS8QUuM6iQLFcAzjW2RTLm6ZcxyN0?=
+ =?us-ascii?Q?7ANhc4zaXE7cc/SuTLzXLALRpn1EMdSnyoJQjbXdgtD3W/60qqLd4ys6bAe5?=
+ =?us-ascii?Q?mSMGTRLE8x7csKe41kt4DEeZM9AubqEqC+d8ydZ0R3Rnh20TgOVemSgH9KY1?=
+ =?us-ascii?Q?dXQpAW4ptxCGdxkjHSmTfoD56zKj5equI0WrkIea24ZIipnI9fGAN4D1RTTU?=
+ =?us-ascii?Q?E8BsIuaWxvbmjWzoOOrLcIwzxqqy1Xio6UgjwJK+tCZAuI74aY2jFJ/whLrO?=
+ =?us-ascii?Q?8ZzlYNgwdhrivtBtX9kQsb2n0S0s+CzFM0TcXXx0jxjqX/MNOG8cM0O1CCyB?=
+ =?us-ascii?Q?sLYONj93/XBxsx5cuIPQXTQA9rF8e1DPu+K+/bfgUsiT7NsFJ4JPk2KFWQXh?=
+ =?us-ascii?Q?r3Fz7pxqmAHZ/mBPR/IvVsMbKmDl+ZR4kEfeX+LTRV9KekugFgGR4QibLPfi?=
+ =?us-ascii?Q?DdcNB31ZZAqhhz5tuNoi1TwMbUJT8jzxGUf8abFhS7G8Hr43UUUEaLFRd3O8?=
+ =?us-ascii?Q?0b+NiE5A7ey7DDGElFoZ795vDSgge3HTN4EJnn2UC5txsDHQnlayUwh1agdE?=
+ =?us-ascii?Q?5NRFZ9GzE2Ojm3Z97b5+oxSmwAXNaiK7V2fbMEClJTkOl1SG7C6lRJp9ZFhK?=
+ =?us-ascii?Q?F7WwCDF6aeqoFzcycJzHCDWVr+OaDzbF9ixH935RbfJIAwBZPEUUf36cb0q/?=
+ =?us-ascii?Q?g0p4Lz4i0i8ZZX5+eWw8vRqcQT+2c0LGP4BGoqNnMBakugg6q20AAe1Goce3?=
+ =?us-ascii?Q?Y8oTnyhlCw0KsDCM5v3Lfin9+7IQpBHvDqymVBrQ70NaHPx1s3rPM7ckERbd?=
+ =?us-ascii?Q?u29oMIme?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9d461fed-002c-49e3-9ac4-08d8c6de8e80
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB2999.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Feb 2021 18:24:05.0306
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GcK29ybDpcmjYVgqwbtQzSnSoxajqTbxpYMTfCZHDg92TTRoXk68DT7E+Ou+CmU2yIgyuj6n4brpx49YiBmmoQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3592
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9882 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ suspectscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102010095
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9882 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ mlxscore=0 priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+ suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2102010095
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> On 2020/7/14 0:45, Lorenzo Pieralisi wrote:
->> On Thu, Jul 09, 2020 at 09:18:27AM +0530, Anand Moon wrote:
->>> hi Lorenzo,
->>>
->>> On Wed, 8 Jul 2020 at 20:31, Lorenzo Pieralisi
->>> <lorenzo.pieralisi@arm.com> wrote:
->>>>
->>>> On Fri, May 22, 2020 at 05:59:14PM +0530, Anand Moon wrote:
->>>>> Hi Shawn
->>>>>
->>>>> On Fri, 22 May 2020 at 08:30, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->>>>>>
->>>>>>
->>>>>> 在 2020/5/21 18:51, Anand Moon 写道:
->>>>>>> Hi Shawn,
->>>>>>>
->>>>>>> On Thu, 21 May 2020 at 06:35, Shawn Lin <shawn.lin@rock-chips.com> wrote:
->>>>>>>>
->>>>>>>> According to RK3399 user manual, bit 9 in PCIE_RC_BAR_CONF should
->>>>>>>> be set, otherwise accessing to IO base and limit registers would
->>>>>>>> fail.
->>>>>>>>
->>>>>>>> [    0.411318] pci_bus 0000:00: root bus resource [bus 00-1f]
->>>>>>>> [    0.411822] pci_bus 0000:00: root bus resource [mem 0xfa000000-0xfbdfffff]
->>>>>>>> [    0.412440] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0xfbe00000-0xfbefffff])
->>>>>>>> [    0.413665] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>>>>>>> [    0.414698] pci 0000:01:00.0: reg 0x10: initial BAR value 0x00000000 invalid
->>>>>>>> [    0.415412] pci 0000:01:00.0: reg 0x18: initial BAR value 0x00000000 invalid
->>>>>>>> [    0.418456] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
->>>>>>>> [    0.419065] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa000000-0xfa007fff pref]
->>>>>>>> [    0.419728] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa008000-0xfa00ffff pref]
->>>>>>>> [    0.420377] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
->>>>>>>> [    0.420935] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
->>>>>>>> [    0.421526] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0004]
->>>>>>>> [    0.422084] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0004]
->>>>>>>> [    0.422687] pci 0000:00:00.0: PCI bridge to [bus 01]
->>>>>>>> [    0.423135] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
->>>>>>>> [    0.423794] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
->>>>>>>> [    0.424566] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
->>>>>>>> [    0.425182] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
->>>>>>>>
->>>>>>>> 01:00.0 Class 0700: Device 1c00:3853 (rev 10) (prog-if 05)
->>>>>>>>           Subsystem: Device 1c00:3853
->>>>>>>>           Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->>>>>>>>           Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>>>>>           Interrupt: pin A routed to IRQ 230
->>>>>>>>           Region 0: I/O ports at <unassigned> [disabled]
->>>>>>>>           Region 1: Memory at fa000000 (32-bit, prefetchable) [disabled] [size=32K]
->>>>>>>>           Region 2: I/O ports at <unassigned> [disabled]
->>>>>>>>           [virtual] Expansion ROM at fa008000 [disabled] [size=32K]
->>>>>>>>
->>>>>>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>>>>>>> ---
->>>>>>>
->>>>>>> I have old development board Odroid N1 (RK3399),  It has onboard PCIe
->>>>>>> 2 dual sata bridge.
->>>>>>> I have tested this patch, but I am still getting following log on
->>>>>>> Odroid N1 board.
->>>>>>> Is their any more configuration needed for sata ports ?
->>>>>>
->>>>>> Thanks for testing. I made a mistake that it should be bit 19, so
->>>>>> can you try using BIT(19)?
->>>>>>
->>>>>
->>>>> Nop enable this bit dose not solve the issue see at my end.
->>>>>
->>>>> But as per RK3399 TMR  17.6.7.1.45 Root Complex BAR Configuration Register
->>>>> their are many bits that are not tuned correctly.
->>>>> I tried to set some bit to BAR Configuration register. but it dose not
->>>>> work at my end.
->>>>> I feel some more core configuration is missing.
->>>>> If I have some update I will share it with you.
->>>>
->>>> What's the status of this discussion and therefore this series ?
->>>>
->>>> Thanks,
->>>> Lorenzo
->>>
->>> Well I have looked into the RK3399 TRM  (Rockchip RK3399 TRM V1.3 Part2.pdf)
->>> There seems to be some core configuration missing, but I could not
->>> resolve this on my board.
->> 
->> So what are we going to do with this series ?
+On Fri, Jan 29, 2021 at 04:24:33PM -0800, Ben Widawsky wrote:
+> The CXL memory device send interface will have a number of supported
+> commands. The raw command is not such a command. Raw commands allow
+> userspace to send a specified opcode to the underlying hardware and
+> bypass all driver checks on the command. This is useful for a couple of
+> usecases, mainly:
+> 1. Undocumented vendor specific hardware commands
+> 2. Prototyping new hardware commands not yet supported by the driver
+
+This sounds like a recipe for ..
+
+In case you really really want this may I recommend you do two things:
+
+- Wrap this whole thing with #ifdef
+  CONFIG_CXL_DEBUG_THIS_WILL_DESTROY_YOUR_LIFE
+
+ (or something equivalant to make it clear this should never be
+  enabled in production kernels).
+
+ - Add a nice big fat printk in dmesg telling the user that they
+   are creating a unstable parallel universe that will lead to their
+   blood pressure going sky-high, or perhaps something more professional
+   sounding.
+
+- Rethink this. Do you really really want to encourage vendors
+  to use this raw API instead of them using the proper APIs?
+
 > 
-> I didn't test it on N1 board so I cannot say what happened there, but I
-> incline to suspend this series untile I have a sufficient offlist
-> debugging with Anand.
+> While this all sounds very powerful it comes with a couple of caveats:
+> 1. Bug reports using raw commands will not get the same level of
+>    attention as bug reports using supported commands (via taint).
+> 2. Supported commands will be rejected by the RAW command.
 > 
->> 
->> Lorenzo
->> 
->> 
+> With this comes new debugfs knob to allow full access to your toes with
+> your weapon of choice.
 
-Hello Shawn and all,
-
-Sorry about my previous garbled message. I'm trying to use git send-email
-and subject failed badly. Hopefully this one works better.
-
-Is there any news about this series? I happened to stumble upon this while
-searching anything PCIe related for my bus scan crash workaround [1].
-
-This series still seems to apply cleanly on v5.11-rc6 so I applied the
-BIT(9) to BIT(19) change mentioned earlier and tested it with four SAS
-adapter cards and two SATA adapter cards. For all of them this series fixed
-"no space for io" in dmesg and "I/O ports at <unassigned> [disabled]" in
-lspci output.
-
-Below are few dmesg and lspci -vvnn snippets before and after applying
-these patches (SAS cards need bus scan crash workaround too).
-
-LSI SAS2008 before applying patch:
-
-  [    2.664846] pci_bus 0000:00: bus scan returning with max=01
-  [    2.665412] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
-  [    2.666083] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa000000-0xfa07ffff pref]
-  [    2.666796] pci 0000:01:00.0: BAR 3: assigned [mem 0xfa080000-0xfa0bffff 64bit]
-  [    2.667550] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa0c0000-0xfa0c3fff 64bit]
-  [    2.668301] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
-  [    2.668917] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
-  [    2.669565] pci 0000:00:00.0: PCI bridge to [bus 01]
-  [    2.670075] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
-
-  00:00.0 PCI bridge [0604]: Fuzhou Rockchip Electronics Co., Ltd RK3399 PCI Express Root Port [1d87:0100] (prog-if 00 [Normal decode])
-    Flags: bus master, fast devsel, latency 0, IRQ 78
-    Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-    I/O behind bridge: 00000000-00000fff [size=4K]
-    Memory behind bridge: fa000000-fa0fffff [size=1M]
-  ...
-  01:00.0 RAID bus controller [0104]: Broadcom / LSI SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] [1000:0072] (rev 03)
-    Subsystem: Fujitsu Technology Solutions HBA Ctrl SAS 6G 0/1 [D2607] [1734:1177]
-    Flags: bus master, fast devsel, latency 0, IRQ 77
-    I/O ports at <unassigned> [disabled]
-    Memory at fa0c0000 (64-bit, non-prefetchable) [size=16K]
-
-LSI SAS2008 after applying patch:
-
-  [    2.746453] pci_bus 0000:00: bus scan returning with max=01
-  [    2.747021] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
-  [    2.747689] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-  [    2.748294] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa000000-0xfa07ffff pref]
-  [    2.749008] pci 0000:01:00.0: BAR 3: assigned [mem 0xfa080000-0xfa0bffff 64bit]
-  [    2.749761] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa0c0000-0xfa0c3fff 64bit]
-  [    2.750515] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
-  [    2.751128] pci 0000:00:00.0: PCI bridge to [bus 01]
-  [    2.751638] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-  [    2.752242] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
-
-  00:00.0 PCI bridge [0604]: Fuzhou Rockchip Electronics Co., Ltd RK3399 PCI Express Root Port [1d87:0100] (prog-if 00 [Normal decode])
-    Flags: bus master, fast devsel, latency 0, IRQ 78
-    Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-    I/O behind bridge: 00001000-00001fff [size=4K]
-    Memory behind bridge: fa000000-fa0fffff [size=1M]
-  ...
-  01:00.0 RAID bus controller [0104]: Broadcom / LSI SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] [1000:0072] (rev 03)
-    Subsystem: Fujitsu Technology Solutions HBA Ctrl SAS 6G 0/1 [D2607] [1734:1177]
-    Flags: bus master, fast devsel, latency 0, IRQ 77
-    I/O ports at 1000 [disabled] [size=256]
-    Memory at fa0c0000 (64-bit, non-prefetchable) [size=16K]
-
-I haven't yet tested if this change actually makes these card work any
-better or worse but I could do more testing if that BIT(9) to BIT(19) is
-fixed and this series is otherwise able to get merged.
-
-[1] https://lore.kernel.org/linux-pci/20201231125214.25733-1-nuumiofi@gmail.com/
-
-Regards,
-Jari
+Problem is that debugfs is no longer "debug" but is enabled in
+production kernel.
