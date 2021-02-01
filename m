@@ -5,45 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F812C433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D76C433E6
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E766F64EA2
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:02:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A408264EBD
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:08:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232924AbhBAUCW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 15:02:22 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:42036 "EHLO
+        id S232803AbhBAUHw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 15:07:52 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:42126 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232471AbhBAUBX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:01:23 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111JxYsS024167;
-        Mon, 1 Feb 2021 13:59:34 -0600
+        with ESMTP id S232855AbhBAUAq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:00:46 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111JxjVk024236;
+        Mon, 1 Feb 2021 13:59:45 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1612209574;
-        bh=EuXUXQ2MK6XQb++j+zAUk27hVnYjozn7DI26CkPIRjg=;
+        s=ti-com-17Q1; t=1612209585;
+        bh=WksIlAP2St63/dYiNF+cCQGpadcOB7vBxhhFZVaW4Fw=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=APLRnJ/QuDOWBgauX5WVDcol4+ZshQodlUKUDT+V5iP+Gkxej6IfXe5ofvkV1PObO
-         tvED/SdXZwukd0h0MZFYdOsCP9lsNkk0nx7q6hFonZSKQZkRswj/7ksxsVLvXn3K5H
-         rZkLrc5T/4BzqgCPGEu0nuH+k4SsQST+rR6Qmx0o=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111JxYU4102086
+        b=TwZFmTrfwmpq7to45F/Vk7tMPT5wekjovW+ZFbvnR3Lp9x6wy9WACYFGMafw8Xeoc
+         ybCcSlpyySbCZh/4JPv0M5koFkPDErI1oW0AUejVA2hbsDgjHof9ZsZ5LWA1aCH9ve
+         msC9s1Uz0W0oGBnMJOiqcyFeQvxkDEd01a+5bzzw=
+Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111Jxjrw074258
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 1 Feb 2021 13:59:34 -0600
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 1 Feb 2021 13:59:45 -0600
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 1 Feb
- 2021 13:59:34 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ 2021 13:59:44 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 1 Feb 2021 13:59:34 -0600
+ Frontend Transport; Mon, 1 Feb 2021 13:59:44 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQl085814;
-        Mon, 1 Feb 2021 13:59:29 -0600
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQn085814;
+        Mon, 1 Feb 2021 13:59:40 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -56,9 +57,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v11 14/17] PCI: Add TI J721E device to pci ids
-Date:   Tue, 2 Feb 2021 01:28:06 +0530
-Message-ID: <20210201195809.7342-15-kishon@ti.com>
+Subject: [PATCH v11 16/17] Documentation: PCI: Add configfs binding documentation for pci-ntb endpoint function
+Date:   Tue, 2 Feb 2021 01:28:08 +0530
+Message-ID: <20210201195809.7342-17-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210201195809.7342-1-kishon@ti.com>
 References: <20210201195809.7342-1-kishon@ti.com>
@@ -69,40 +70,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add TI J721E device to the pci id database. Since this device has
-a configurable PCIe endpoint, it could be used with different
-drivers.
+Add binding documentation for pci-ntb endpoint function that helps in
+adding and configuring pci-ntb endpoint function.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 1 -
- include/linux/pci_ids.h          | 1 +
- 2 files changed, 1 insertion(+), 1 deletion(-)
+ .../PCI/endpoint/function/binding/pci-ntb.rst | 38 +++++++++++++++++++
+ Documentation/PCI/endpoint/index.rst          |  1 +
+ 2 files changed, 39 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/function/binding/pci-ntb.rst
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index eff481ce08ee..1b2868ca4f2a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -68,7 +68,6 @@
- #define PCI_ENDPOINT_TEST_FLAGS			0x2c
- #define FLAG_USE_DMA				BIT(0)
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-ntb.rst b/Documentation/PCI/endpoint/function/binding/pci-ntb.rst
+new file mode 100644
+index 000000000000..40253d3d5163
+--- /dev/null
++++ b/Documentation/PCI/endpoint/function/binding/pci-ntb.rst
+@@ -0,0 +1,38 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==========================
++PCI NTB Endpoint Function
++==========================
++
++1) Create a subdirectory to pci_epf_ntb directory in configfs.
++
++Standard EPF Configurable Fields:
++
++================   ===========================================================
++vendorid	   should be 0x104c
++deviceid	   should be 0xb00d for TI's J721E SoC
++revid		   don't care
++progif_code	   don't care
++subclass_code	   should be 0x00
++baseclass_code	   should be 0x5
++cache_line_size	   don't care
++subsys_vendor_id   don't care
++subsys_id	   don't care
++interrupt_pin	   don't care
++msi_interrupts	   don't care
++msix_interrupts	   don't care
++================   ===========================================================
++
++2) Create a subdirectory to directory created in 1
++
++NTB EPF specific configurable fields:
++
++================   ===========================================================
++db_count	   Number of doorbells; default = 4
++mw1     	   size of memory window1
++mw2     	   size of memory window2
++mw3     	   size of memory window3
++mw4     	   size of memory window4
++num_mws     	   Number of memory windows; max = 4
++spad_count     	   Number of scratchpad registers; default = 64
++================   ===========================================================
+diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
+index ef6861128506..9cb6e5f3c4d5 100644
+--- a/Documentation/PCI/endpoint/index.rst
++++ b/Documentation/PCI/endpoint/index.rst
+@@ -14,3 +14,4 @@ PCI Endpoint Framework
+    pci-ntb-function
  
--#define PCI_DEVICE_ID_TI_J721E			0xb00d
- #define PCI_DEVICE_ID_TI_AM654			0xb00c
- #define PCI_DEVICE_ID_LS1088A			0x80c0
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d8156a5dbee8..f968fcda338e 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -881,6 +881,7 @@
- #define PCI_DEVICE_ID_TI_X620		0xac8d
- #define PCI_DEVICE_ID_TI_X420		0xac8e
- #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
-+#define PCI_DEVICE_ID_TI_J721E		0xb00d
- #define PCI_DEVICE_ID_TI_DRA74x		0xb500
- #define PCI_DEVICE_ID_TI_DRA72x		0xb501
- 
+    function/binding/pci-test
++   function/binding/pci-ntb
 -- 
 2.17.1
 
