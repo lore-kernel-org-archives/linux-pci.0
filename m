@@ -2,113 +2,342 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FC8C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9CDC43381
 	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:01:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 104F464EA2
+	by mail.kernel.org (Postfix) with ESMTP id 5B65B64EA2
 	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:01:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232964AbhBAUBV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 15:01:21 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:41956 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230273AbhBAUBN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:01:13 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111JxMfJ024071;
-        Mon, 1 Feb 2021 13:59:22 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1612209562;
-        bh=Hv2Bn0Lk5Are5SnuuKfQMZlyBMtzlQMuYQhqnCaXHzc=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=V/+1mANRFmE8sVMBi1sd3q6HlKRw2AVKhrgXIXLFkyBDFUohY6Kw+wB207ImH9t3I
-         DnwHSpRwYRyWJGrkYH9Al7uru3fVQVzG/8yuMFwe0HY5R1IWRszvQmilndPSTRoxzQ
-         gd2ZNSEIQYpinfKTMYa++Fd6Wnf3hhEHoED3uZz8=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111JxMKv101912
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 1 Feb 2021 13:59:22 -0600
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 1 Feb
- 2021 13:59:22 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 1 Feb 2021 13:59:22 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQj085814;
-        Mon, 1 Feb 2021 13:59:17 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v11 12/17] PCI: cadence: Configure LM_EP_FUNC_CFG based on epc->function_num_map
-Date:   Tue, 2 Feb 2021 01:28:04 +0530
-Message-ID: <20210201195809.7342-13-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210201195809.7342-1-kishon@ti.com>
-References: <20210201195809.7342-1-kishon@ti.com>
+        id S232934AbhBAUBn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 15:01:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43834 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232968AbhBAUBe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:01:34 -0500
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7D5CC061786
+        for <linux-pci@vger.kernel.org>; Mon,  1 Feb 2021 12:00:22 -0800 (PST)
+Received: by mail-ej1-x630.google.com with SMTP id l9so26349442ejx.3
+        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2021 12:00:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=461YGUpeMwuirfSPdv36fT4hA/Nfndl8hImXvd+kglU=;
+        b=Fy0CnF6qJQE/SIb2lSkDnbYkezpH15gQ6p/LXcDkhpabDypI4jB/x7kK41krPNFgXr
+         i3WULbXipQ6rdY7LlcDX94sVSLoeRLZtfLBAmo0h6Utu/oWDo7C55t1arvOIcXUh4WXB
+         +i6mhIjKHvQJEJTz8/+kwBX0Skfv1jDt3NjaxeAzzywjF4SyHlkSssEIbwDhfwN4Ky49
+         lmgyY0dcBY5SVYOMe6CN2AB08ICK2F2ThwNqKO3pADvN9fcw9EkuxFIKg9EzvqKrkIDt
+         bmmJ2qWW21QArEDTrZrh3Ev5H81G38s7v0gU0SEevYAleoBXbkS2wYLlzGVDIAr3Zgwu
+         3EXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=461YGUpeMwuirfSPdv36fT4hA/Nfndl8hImXvd+kglU=;
+        b=MW/GONIdM44XnOK/DjDrBjn/44hKhlh81B16neLmnJc2qNiazYJ19AGIGpKuJ395cj
+         AHvQ1pgPltVBzy+gJ5vTw1XNYKz8gEF4zcphk8xPsub4NdFe5IErnhfh7Tdz0cEK2+a9
+         9CBBkorY1eG7dKxoFHtcW84aEikUu8qDVuLe7kW4e5LTEOcmdBKP7XRf0vpVltKjh5eH
+         Zu54VDrZBY2t4z1hXBdvJUNBASYm359j+lv1P7UCJnwsROjVyScBgy4aNEqwz662vWuV
+         wR88xVte2VGAyWmR5T0Is8fhSJgwYDSr2/HhY09OxLtaq/kBnu26ZRSDjiZw8JUWWmSw
+         Zk6A==
+X-Gm-Message-State: AOAM5336JoUGt+oVtPX7h5Q9cV7jxRDYH8x7BzEaw48aEoixQUh64bCp
+        beHkuTlTta79/UNgyVLnpcRKcS25gh2yAnb5btAiKf0IcSm0Mg==
+X-Google-Smtp-Source: ABdhPJz9uFWkuLDdrzvffjOIXGKy+Hssz4LaB90QiLrBPnysw4tcYuXlQkzlx7XyI13fiOAYKVJMKVpjmbozh/Nwrkg=
+X-Received: by 2002:a17:906:d8a1:: with SMTP id qc1mr12489360ejb.523.1612209621231;
+ Mon, 01 Feb 2021 12:00:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <20210130002438.1872527-1-ben.widawsky@intel.com>
+ <20210130002438.1872527-5-ben.widawsky@intel.com> <5986abe5-1248-30b2-5f53-fa7013baafad@google.com>
+In-Reply-To: <5986abe5-1248-30b2-5f53-fa7013baafad@google.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 1 Feb 2021 12:00:18 -0800
+Message-ID: <CAPcyv4g_yUpwoBJsLeVwCZAkZGGrfSgrCk2+GXVXBcouktZNSQ@mail.gmail.com>
+Subject: Re: [PATCH 04/14] cxl/mem: Implement polled mode mailbox
+To:     David Rientjes <rientjes@google.com>
+Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        daniel.lll@alibaba-inc.com,
+        "John Groves (jgroves)" <jgroves@micron.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The number of functions supported by the endpoint controller is
-configured in LM_EP_FUNC_CFG based on func_no member of struct pci_epf.
-Now that an endpoint function can be associated with two endpoint
-controllers (primary and secondary), just using func_no will
-not suffice as that will take into account only if the endpoint
-controller is associated with the primary interface of endpoint
-function. Instead use epc->function_num_map which will already have the
-configured functions information (irrespective of whether the endpoint
-controller is associated with primary or secondary interface).
+On Sat, Jan 30, 2021 at 3:52 PM David Rientjes <rientjes@google.com> wrote:
+>
+> On Fri, 29 Jan 2021, Ben Widawsky wrote:
+>
+> > Provide enough functionality to utilize the mailbox of a memory device.
+> > The mailbox is used to interact with the firmware running on the memory
+> > device.
+> >
+> > The CXL specification defines separate capabilities for the mailbox and
+> > the memory device. The mailbox interface has a doorbell to indicate
+> > ready to accept commands and the memory device has a capability register
+> > that indicates the mailbox interface is ready. The expectation is that
+> > the doorbell-ready is always later than the memory-device-indication
+> > that the mailbox is ready.
+> >
+> > Create a function to handle sending a command, optionally with a
+> > payload, to the memory device, polling on a result, and then optionally
+> > copying out the payload. The algorithm for doing this comes straight out
+> > of the CXL 2.0 specification.
+> >
+> > Primary mailboxes are capable of generating an interrupt when submitting
+> > a command in the background. That implementation is saved for a later
+> > time.
+> >
+> > Secondary mailboxes aren't implemented at this time.
+> >
+> > The flow is proven with one implemented command, "identify". Because the
+> > class code has already told the driver this is a memory device and the
+> > identify command is mandatory.
+> >
+> > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+> > ---
+> >  drivers/cxl/Kconfig |  14 ++
+> >  drivers/cxl/cxl.h   |  39 +++++
+> >  drivers/cxl/mem.c   | 342 +++++++++++++++++++++++++++++++++++++++++++-
+> >  3 files changed, 394 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> > index 3b66b46af8a0..fe591f74af96 100644
+> > --- a/drivers/cxl/Kconfig
+> > +++ b/drivers/cxl/Kconfig
+> > @@ -32,4 +32,18 @@ config CXL_MEM
+> >         Chapter 2.3 Type 3 CXL Device in the CXL 2.0 specification.
+> >
+> >         If unsure say 'm'.
+> > +
+> > +config CXL_MEM_INSECURE_DEBUG
+> > +     bool "CXL.mem debugging"
+> > +     depends on CXL_MEM
+> > +     help
+> > +       Enable debug of all CXL command payloads.
+> > +
+> > +       Some CXL devices and controllers support encryption and other
+> > +       security features. The payloads for the commands that enable
+> > +       those features may contain sensitive clear-text security
+> > +       material. Disable debug of those command payloads by default.
+> > +       If you are a kernel developer actively working on CXL
+> > +       security enabling say Y, otherwise say N.
+>
+> Not specific to this patch, but the reference to encryption made me
+> curious about integrity: are all CXL.mem devices compatible with DIMP?
+> Some?  None?
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Tom Joseph <tjoseph@cadence.com>
----
- drivers/pci/controller/cadence/pcie-cadence-ep.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+The encryption here is "device passphrase" similar to the NVDIMM
+Security Management described here:
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index dc88078194cb..897cdde02bd8 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -506,18 +506,13 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	struct device *dev = pcie->dev;
--	struct pci_epf *epf;
--	u32 cfg;
- 	int ret;
- 
- 	/*
- 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
- 	 * and can't be disabled anyway.
- 	 */
--	cfg = BIT(0);
--	list_for_each_entry(epf, &epc->pci_epf, list)
--		cfg |= BIT(epf->func_no);
--	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, cfg);
-+	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
- 
- 	ret = cdns_pcie_start_link(pcie);
- 	if (ret) {
--- 
-2.17.1
+https://pmem.io/documents/IntelOptanePMem_DSM_Interface-V2.0.pdf
 
+The LIBNVDIMM enabling wrapped this support with the Linux keys
+interface which among other things enforces wrapping the clear text
+passphrase with a Linux "trusted/encrypted" key.
+
+Additionally, the CXL.io interface optionally supports PCI IDE:
+
+https://www.intel.com/content/dam/www/public/us/en/documents/reference-guides/pcie-device-security-enhancements.pdf
+
+I'm otherwise not familiar with the DIMP acronym?
+
+> > +
+> >  endif
+> > diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> > index a3da7f8050c4..df3d97154b63 100644
+> > --- a/drivers/cxl/cxl.h
+> > +++ b/drivers/cxl/cxl.h
+> > @@ -31,9 +31,36 @@
+> >  #define CXLDEV_MB_CAPS_OFFSET 0x00
+> >  #define   CXLDEV_MB_CAP_PAYLOAD_SIZE_MASK GENMASK(4, 0)
+> >  #define CXLDEV_MB_CTRL_OFFSET 0x04
+> > +#define   CXLDEV_MB_CTRL_DOORBELL BIT(0)
+> >  #define CXLDEV_MB_CMD_OFFSET 0x08
+> > +#define   CXLDEV_MB_CMD_COMMAND_OPCODE_MASK GENMASK(15, 0)
+> > +#define   CXLDEV_MB_CMD_PAYLOAD_LENGTH_MASK GENMASK(36, 16)
+> >  #define CXLDEV_MB_STATUS_OFFSET 0x10
+> > +#define   CXLDEV_MB_STATUS_RET_CODE_MASK GENMASK(47, 32)
+> >  #define CXLDEV_MB_BG_CMD_STATUS_OFFSET 0x18
+> > +#define CXLDEV_MB_PAYLOAD_OFFSET 0x20
+> > +
+> > +/* Memory Device (CXL 2.0 - 8.2.8.5.1.1) */
+> > +#define CXLMDEV_STATUS_OFFSET 0x0
+> > +#define   CXLMDEV_DEV_FATAL BIT(0)
+> > +#define   CXLMDEV_FW_HALT BIT(1)
+> > +#define   CXLMDEV_STATUS_MEDIA_STATUS_MASK GENMASK(3, 2)
+> > +#define     CXLMDEV_MS_NOT_READY 0
+> > +#define     CXLMDEV_MS_READY 1
+> > +#define     CXLMDEV_MS_ERROR 2
+> > +#define     CXLMDEV_MS_DISABLED 3
+> > +#define   CXLMDEV_READY(status) \
+> > +             (CXL_GET_FIELD(status, CXLMDEV_STATUS_MEDIA_STATUS) == CXLMDEV_MS_READY)
+> > +#define   CXLMDEV_MBOX_IF_READY BIT(4)
+> > +#define   CXLMDEV_RESET_NEEDED_SHIFT 5
+> > +#define   CXLMDEV_RESET_NEEDED_MASK GENMASK(7, 5)
+> > +#define     CXLMDEV_RESET_NEEDED_NOT 0
+> > +#define     CXLMDEV_RESET_NEEDED_COLD 1
+> > +#define     CXLMDEV_RESET_NEEDED_WARM 2
+> > +#define     CXLMDEV_RESET_NEEDED_HOT 3
+> > +#define     CXLMDEV_RESET_NEEDED_CXL 4
+> > +#define   CXLMDEV_RESET_NEEDED(status) \
+> > +             (CXL_GET_FIELD(status, CXLMDEV_RESET_NEEDED) != CXLMDEV_RESET_NEEDED_NOT)
+> >
+> >  /**
+> >   * struct cxl_mem - A CXL memory device
+> > @@ -44,6 +71,16 @@ struct cxl_mem {
+> >       struct pci_dev *pdev;
+> >       void __iomem *regs;
+> >
+> > +     struct {
+> > +             struct range range;
+> > +     } pmem;
+> > +
+> > +     struct {
+> > +             struct range range;
+> > +     } ram;
+> > +
+> > +     char firmware_version[0x10];
+> > +
+> >       /* Cap 0001h - CXL_CAP_CAP_ID_DEVICE_STATUS */
+> >       struct {
+> >               void __iomem *regs;
+> > @@ -51,6 +88,7 @@ struct cxl_mem {
+> >
+> >       /* Cap 0002h - CXL_CAP_CAP_ID_PRIMARY_MAILBOX */
+> >       struct {
+> > +             struct mutex mutex; /* Protects device mailbox and firmware */
+> >               void __iomem *regs;
+> >               size_t payload_size;
+> >       } mbox;
+> > @@ -89,5 +127,6 @@ struct cxl_mem {
+> >
+> >  cxl_reg(status);
+> >  cxl_reg(mbox);
+> > +cxl_reg(mem);
+> >
+> >  #endif /* __CXL_H__ */
+> > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+> > index fa14d51243ee..69ed15bfa5d4 100644
+> > --- a/drivers/cxl/mem.c
+> > +++ b/drivers/cxl/mem.c
+> > @@ -6,6 +6,270 @@
+> >  #include "pci.h"
+> >  #include "cxl.h"
+> >
+> > +#define cxl_doorbell_busy(cxlm)                                                \
+> > +     (cxl_read_mbox_reg32(cxlm, CXLDEV_MB_CTRL_OFFSET) &                    \
+> > +      CXLDEV_MB_CTRL_DOORBELL)
+> > +
+> > +#define CXL_MAILBOX_TIMEOUT_US 2000
+>
+> This should be _MS?
+>
+> > +
+> > +enum opcode {
+> > +     CXL_MBOX_OP_IDENTIFY            = 0x4000,
+> > +     CXL_MBOX_OP_MAX                 = 0x10000
+> > +};
+> > +
+> > +/**
+> > + * struct mbox_cmd - A command to be submitted to hardware.
+> > + * @opcode: (input) The command set and command submitted to hardware.
+> > + * @payload_in: (input) Pointer to the input payload.
+> > + * @payload_out: (output) Pointer to the output payload. Must be allocated by
+> > + *            the caller.
+> > + * @size_in: (input) Number of bytes to load from @payload.
+> > + * @size_out: (output) Number of bytes loaded into @payload.
+> > + * @return_code: (output) Error code returned from hardware.
+> > + *
+> > + * This is the primary mechanism used to send commands to the hardware.
+> > + * All the fields except @payload_* correspond exactly to the fields described in
+> > + * Command Register section of the CXL 2.0 spec (8.2.8.4.5). @payload_in and
+> > + * @payload_out are written to, and read from the Command Payload Registers
+> > + * defined in (8.2.8.4.8).
+> > + */
+> > +struct mbox_cmd {
+> > +     u16 opcode;
+> > +     void *payload_in;
+> > +     void *payload_out;
+> > +     size_t size_in;
+> > +     size_t size_out;
+> > +     u16 return_code;
+> > +#define CXL_MBOX_SUCCESS 0
+> > +};
+> > +
+> > +static int cxl_mem_wait_for_doorbell(struct cxl_mem *cxlm)
+> > +{
+> > +     const int timeout = msecs_to_jiffies(CXL_MAILBOX_TIMEOUT_US);
+> > +     const unsigned long start = jiffies;
+> > +     unsigned long end = start;
+> > +
+> > +     while (cxl_doorbell_busy(cxlm)) {
+> > +             end = jiffies;
+> > +
+> > +             if (time_after(end, start + timeout)) {
+> > +                     /* Check again in case preempted before timeout test */
+> > +                     if (!cxl_doorbell_busy(cxlm))
+> > +                             break;
+> > +                     return -ETIMEDOUT;
+> > +             }
+> > +             cpu_relax();
+> > +     }
+> > +
+> > +     dev_dbg(&cxlm->pdev->dev, "Doorbell wait took %dms",
+> > +             jiffies_to_msecs(end) - jiffies_to_msecs(start));
+> > +     return 0;
+> > +}
+> > +
+> > +static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
+> > +                              struct mbox_cmd *mbox_cmd)
+> > +{
+> > +     dev_warn(&cxlm->pdev->dev, "Mailbox command timed out\n");
+> > +     dev_info(&cxlm->pdev->dev,
+> > +              "\topcode: 0x%04x\n"
+> > +              "\tpayload size: %zub\n",
+> > +              mbox_cmd->opcode, mbox_cmd->size_in);
+> > +
+> > +     if (IS_ENABLED(CONFIG_CXL_MEM_INSECURE_DEBUG)) {
+> > +             print_hex_dump_debug("Payload ", DUMP_PREFIX_OFFSET, 16, 1,
+> > +                                  mbox_cmd->payload_in, mbox_cmd->size_in,
+> > +                                  true);
+> > +     }
+> > +
+> > +     /* Here's a good place to figure out if a device reset is needed */
+>
+> What are the implications if we don't do a reset, as this implementation
+> does not?  IOW, does a timeout require a device to be recovered through a
+> reset before it can receive additional commands, or is it safe to simply
+> drop the command that timed out on the floor and proceed?
+
+Not a satisfying answer, but "it depends". It's also complicated by
+the fact that a reset may need to be coordinated with other devices in
+the interleave-set as the HDM decoders may bounce.
+
+For comparison, to date there have been no problems with the "drop on
+the floor" policy of LIBNVDIMM command timeouts. At the same time
+there simply was not a software visible reset mechanism for those
+devices so this problem never came out. This mailbox isn't a fast
+path, so the device is likely completely dead if this timeout is ever
+violated, and the firmware reporting a timeout might as well assume
+that the OS gives up on the device.
+
+I'll let Ben chime in on the rest...
