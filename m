@@ -2,117 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C86DAC433DB
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 19:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5320DC433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:00:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C52964EBD
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 19:57:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0407F64D92
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231219AbhBAT4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 14:56:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41316 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232650AbhBATuI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 14:50:08 -0500
-Received: from ssl.serverraum.org (ssl.serverraum.org [IPv6:2a01:4f8:151:8464::1:2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1563DC061573;
-        Mon,  1 Feb 2021 11:49:19 -0800 (PST)
-Received: from ssl.serverraum.org (web.serverraum.org [172.16.0.2])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ssl.serverraum.org (Postfix) with ESMTPSA id 28E9322F99;
-        Mon,  1 Feb 2021 20:49:16 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=walle.cc; s=mail2016061301;
-        t=1612208956;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZwS7M5DVuVgIp79W7J+1nUCnHx61grFZNqdoFSservc=;
-        b=jfjC5UQX2h4RSHu6T7RZ/nYdN9hdMuqbKuhhMXE6S8LYTxZZP00hnKmVKgGqCUfBuK8MCs
-        1o1ZA0YAmytg9kG4IgWDdQX410Y3GNYy3T7LHzDEB30OZLX0Ty5u+9NdWGZDFzu6VdV1Yy
-        2405m45kM0WBRI7g5S69bUv9gdTmkzI=
+        id S232414AbhBAT7o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 14:59:44 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:39416 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232637AbhBAT7g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 14:59:36 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111JwR1H037066;
+        Mon, 1 Feb 2021 13:58:27 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1612209507;
+        bh=re6MIOXxybv+Yv493YnPwG3dJx5wl6L6fPllpFd+bzs=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=RvD4q44qy/aKbSMO/+ifHbOiFN6hPgWQswZ7cuEN0nli7lvFOtz3xWK60Fh060AaW
+         HTg38glErZ9+jwcGwCrlWpiGDkJarzZnoxmTCxb83iWeYr4SOQI0he4suQnjQN8048
+         VS2bX8vEWb/LNXey350/OHGohxCZHXtsxNgOp80o=
+Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111JwRkv036460
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 1 Feb 2021 13:58:27 -0600
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 1 Feb
+ 2021 13:58:27 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
+ Frontend Transport; Mon, 1 Feb 2021 13:58:27 -0600
+Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQZ085814;
+        Mon, 1 Feb 2021 13:58:22 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
+CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
+Subject: [PATCH v11 02/17] PCI: endpoint: Make *_get_first_free_bar() take into account 64 bit BAR
+Date:   Tue, 2 Feb 2021 01:27:54 +0530
+Message-ID: <20210201195809.7342-3-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210201195809.7342-1-kishon@ti.com>
+References: <20210201195809.7342-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 01 Feb 2021 20:49:16 +0100
-From:   Michael Walle <michael@walle.cc>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH v2] PCI: Fix Intel i210 by avoiding overlapping of BARs
-In-Reply-To: <2477c66eafbd97207693b83b60fa0a3c@walle.cc>
-References: <20210115235721.GA1862880@bjorn-Precision-5520>
- <2477c66eafbd97207693b83b60fa0a3c@walle.cc>
-User-Agent: Roundcube Webmail/1.4.10
-Message-ID: <e8647a2cd4bfbcd42c27183d1c8984a0@walle.cc>
-X-Sender: michael@walle.cc
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+pci_epc_get_first_free_bar() uses only "reserved_bar" member in
+epc_features to get the first unreserved BAR. However if the
+reserved BAR is also a 64-bit BAR, then the next BAR shouldn't be
+returned (since 64-bit BAR uses two BARs).
 
-Am 2021-01-17 20:27, schrieb Michael Walle:
-> Am 2021-01-16 00:57, schrieb Bjorn Helgaas:
->> On Wed, Jan 13, 2021 at 12:32:32AM +0100, Michael Walle wrote:
->>> Am 2021-01-12 23:58, schrieb Bjorn Helgaas:
->>> > On Sat, Jan 09, 2021 at 07:31:46PM +0100, Michael Walle wrote:
->>> > > Am 2021-01-08 22:20, schrieb Bjorn Helgaas:
->> 
->>> > > > 3) If the Intel i210 is defective in how it handles an Expansion ROM
->>> > > > that overlaps another BAR, a quirk might be the right fix. But my
->>> > > > guess is the device is working correctly per spec and there's
->>> > > > something wrong in how firmware/Linux is assigning things.  That would
->>> > > > mean we need a more generic fix that's not a quirk and not tied to the
->>> > > > Intel i210.
->>> > >
->>> > > Agreed, but as you already stated (and I've also found that in
->>> > > the PCI spec) the Expansion ROM address decoder can be shared by
->>> > > the other BARs and it shouldn't matter as long as the ExpROM BAR
->>> > > is disabled, which is the case here.
->>> >
->>> > My point is just that if this could theoretically affect devices
->>> > other than the i210, the fix should not be an i210-specific quirk.
->>> > I'll assume this is a general problem and wait for a generic PCI
->>> > core solution unless it's i210-specific.
->>> 
->>> I guess the culprit here is that linux skips the programming of the
->>> BAR because of some broken Matrox card. That should have been a
->>> quirk instead, right? But I don't know if we want to change that, do
->>> we? How many other cards depend on that?
->> 
->> Oh, right.  There's definitely some complicated history there that
->> makes me a little scared to change things.  But it's also unfortunate
->> if we have to pile quirks on top of quirks.
->> 
->>> And still, how do we find out that the i210 is behaving correctly?
->>> In my opinion it is clearly not. You can change the ExpROM BAR value
->>> during runtime and it will start working (while keeping it
->>> disabled).  Am I missing something here?
->> 
->> I agree; if the ROM BAR is disabled, I don't think it should matter at
->> all what it contains, so this does look like an i210 defect.
->> 
->> Would you mind trying the patch below?  It should update the ROM BAR
->> value even when it is disabled.  With the current pci_enable_rom()
->> code that doesn't rely on the value read from the BAR, I *think* this
->> should be safe even on the Matrox and similar devices.
-> 
-> Your patch will fix my issue:
-> 
-> Tested-by: Michael Walle <michael@walle.cc>
+Make pci_epc_get_first_free_bar() take into account 64 bit BAR while
+returning the first free unreserved BAR.
 
-any news on this?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/endpoint/pci-epc-core.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
--michael
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index cadd3db0cbb0..25e57672e1a1 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -93,12 +93,20 @@ EXPORT_SYMBOL_GPL(pci_epc_get);
+ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+ 					*epc_features)
+ {
+-	int free_bar;
++	unsigned long free_bar;
+ 
+ 	if (!epc_features)
+ 		return 0;
+ 
+-	free_bar = ffz(epc_features->reserved_bar);
++	/* Find if the reserved BAR is also a 64-bit BAR */
++	free_bar = epc_features->reserved_bar & epc_features->bar_fixed_64bit;
++
++	/* Set the adjacent bit if the reserved BAR is also a 64-bit BAR */
++	free_bar <<= 1;
++	free_bar |= epc_features->reserved_bar;
++
++	/* Now find the free BAR */
++	free_bar = ffz(free_bar);
+ 	if (free_bar > 5)
+ 		return 0;
+ 
+-- 
+2.17.1
+
