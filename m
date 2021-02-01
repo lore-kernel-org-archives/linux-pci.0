@@ -8,43 +8,43 @@ X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DF2C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97327C43381
 	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F31FA64EBF
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:02:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5066C601FB
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:02:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233068AbhBAUCQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 15:02:16 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:42154 "EHLO
+        id S233089AbhBAUCT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 15:02:19 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:41694 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232516AbhBAUAv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:00:51 -0500
+        with ESMTP id S232904AbhBAUAx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 15:00:53 -0500
 Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111Jxo4P024272;
-        Mon, 1 Feb 2021 13:59:50 -0600
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111Jx6mB023954;
+        Mon, 1 Feb 2021 13:59:06 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1612209590;
-        bh=cy3YI0j7jgYLS3zYPT4KX3+IbsOlaRkg+3s1uwMt/SU=;
+        s=ti-com-17Q1; t=1612209546;
+        bh=lTz57oIbDoqLeHnWKHJxRenng3YXT0XKq15ddYdluKo=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=k5GVlay2/Mcj+3rWVTR1QV5Iszsj7/IVis5bLjWpJvTXKkXUrTVdyegidIqKflv6L
-         STBUzm5cxPVvBkquoi4s4VCeNQvmx7iNV6ytivZuVVO1zRXSS0CYUNAg5B9s9yXDBk
-         ASQvKcqMhI+E1ufIiRj34xRwMwRiPtn8xuDPZUE0=
-Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111JxoX0043472
+        b=PDDyciFeY3vlbeAtvFdAMoz7O8pK627sDKGwejCwAJI4cb/vIKr5deHz2QnrJK6pc
+         eDEq2GdKRiUtfzGyxU/gzq/34stQwrIaQZr4Jb+X5VOWCiLld057fpyDXCWO3wBpPs
+         F0HuWSOU7y4PH+7zLPvC+yO537nvbtiaqxfozDS0=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111Jx67I042894
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 1 Feb 2021 13:59:50 -0600
-Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 1 Feb 2021 13:59:06 -0600
+Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 1 Feb
- 2021 13:59:50 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ 2021 13:59:05 -0600
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 1 Feb 2021 13:59:50 -0600
+ Frontend Transport; Mon, 1 Feb 2021 13:59:05 -0600
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQo085814;
-        Mon, 1 Feb 2021 13:59:45 -0600
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQg085814;
+        Mon, 1 Feb 2021 13:59:00 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -57,9 +57,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
 CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v11 17/17] Documentation: PCI: Add userguide for PCI endpoint NTB function
-Date:   Tue, 2 Feb 2021 01:28:09 +0530
-Message-ID: <20210201195809.7342-18-kishon@ti.com>
+Subject: [PATCH v11 09/17] PCI: endpoint: Add pci_epf_ops for epf drivers to expose function specific attrs
+Date:   Tue, 2 Feb 2021 01:28:01 +0530
+Message-ID: <20210201195809.7342-10-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210201195809.7342-1-kishon@ti.com>
 References: <20210201195809.7342-1-kishon@ti.com>
@@ -70,196 +70,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add documentation to help users use pci-epf-ntb function driver and
-existing host side NTB infrastructure for NTB functionality.
+In addition to the attributes that are generic across function drivers
+documented in Documentation/PCI/endpoint/pci-endpoint-cfs.rst, there
+could be function specific attributes that has to be exposed by the
+function driver to be configured by the user. Add ->add_cfs()
+in pci_epf_ops to be populated by the function driver if it has to
+expose any function specific attributes and pci_epf_type_add_cfs() to
+be invoked by pci-ep-cfs.c when sub-directory to main function directory
+is created.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
 ---
- Documentation/PCI/endpoint/index.rst         |   1 +
- Documentation/PCI/endpoint/pci-ntb-howto.rst | 161 +++++++++++++++++++
- 2 files changed, 162 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-ntb-howto.rst
+ drivers/pci/endpoint/pci-epf-core.c | 32 +++++++++++++++++++++++++++++
+ include/linux/pci-epf.h             |  5 +++++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
-index 9cb6e5f3c4d5..38ea1f604b6d 100644
---- a/Documentation/PCI/endpoint/index.rst
-+++ b/Documentation/PCI/endpoint/index.rst
-@@ -12,6 +12,7 @@ PCI Endpoint Framework
-    pci-test-function
-    pci-test-howto
-    pci-ntb-function
-+   pci-ntb-howto
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 79329ec6373c..7646c8660d42 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -20,6 +20,38 @@ static DEFINE_MUTEX(pci_epf_mutex);
+ static struct bus_type pci_epf_bus_type;
+ static const struct device_type pci_epf_type;
  
-    function/binding/pci-test
-    function/binding/pci-ntb
-diff --git a/Documentation/PCI/endpoint/pci-ntb-howto.rst b/Documentation/PCI/endpoint/pci-ntb-howto.rst
-new file mode 100644
-index 000000000000..9f905ea724d1
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-ntb-howto.rst
-@@ -0,0 +1,161 @@
-+.. SPDX-License-Identifier: GPL-2.0
++/**
++ * pci_epf_type_add_cfs() - Help function drivers to expose function specific
++ *                          attributes in configfs
++ * @epf: the EPF device that has to be configured using configfs
++ * @group: the parent configfs group (corresponding to entries in
++ *         pci_epf_device_id)
++ *
++ * Invoke to expose function specific attributes in configfs. If the function
++ * driver does not have anything to expose (attributes configured by user),
++ * return NULL.
++ */
++struct config_group *pci_epf_type_add_cfs(struct pci_epf *epf,
++					  struct config_group *group)
++{
++	struct config_group *epf_type_group;
 +
-+===================================================================
-+PCI Non-Transparent Bridge (NTB) Endpoint Function (EPF) User Guide
-+===================================================================
++	if (!epf->driver) {
++		dev_err(&epf->dev, "epf device not bound to driver\n");
++		return NULL;
++	}
 +
-+:Author: Kishon Vijay Abraham I <kishon@ti.com>
++	if (!epf->driver->ops->add_cfs)
++		return NULL;
 +
-+This document is a guide to help users use pci-epf-ntb function driver
-+and ntb_hw_epf host driver for NTB functionality. The list of steps to
-+be followed in the host side and EP side is given below. For the hardware
-+configuration and internals of NTB using configurable endpoints see
-+Documentation/PCI/endpoint/pci-ntb-function.rst
++	mutex_lock(&epf->lock);
++	epf_type_group = epf->driver->ops->add_cfs(epf, group);
++	mutex_unlock(&epf->lock);
 +
-+Endpoint Device
-+===============
++	return epf_type_group;
++}
++EXPORT_SYMBOL_GPL(pci_epf_type_add_cfs);
 +
-+Endpoint Controller Devices
-+---------------------------
-+
-+For implementing NTB functionality at least two endpoint controller devices
-+are required.
-+
-+To find the list of endpoint controller devices in the system::
-+
-+        # ls /sys/class/pci_epc/
-+          2900000.pcie-ep  2910000.pcie-ep
-+
-+If PCI_ENDPOINT_CONFIGFS is enabled::
-+
-+	# ls /sys/kernel/config/pci_ep/controllers
-+	  2900000.pcie-ep  2910000.pcie-ep
-+
-+
-+Endpoint Function Drivers
-+-------------------------
-+
-+To find the list of endpoint function drivers in the system::
-+
-+	# ls /sys/bus/pci-epf/drivers
-+	  pci_epf_ntb   pci_epf_ntb
-+
-+If PCI_ENDPOINT_CONFIGFS is enabled::
-+
-+	# ls /sys/kernel/config/pci_ep/functions
-+	  pci_epf_ntb   pci_epf_ntb
-+
-+
-+Creating pci-epf-ntb Device
-+----------------------------
-+
-+PCI endpoint function device can be created using the configfs. To create
-+pci-epf-ntb device, the following commands can be used::
-+
-+	# mount -t configfs none /sys/kernel/config
-+	# cd /sys/kernel/config/pci_ep/
-+	# mkdir functions/pci_epf_ntb/func1
-+
-+The "mkdir func1" above creates the pci-epf-ntb function device that will
-+be probed by pci_epf_ntb driver.
-+
-+The PCI endpoint framework populates the directory with the following
-+configurable fields::
-+
-+	# ls functions/pci_epf_ntb/func1
-+          baseclass_code    deviceid          msi_interrupts    pci-epf-ntb.0
-+          progif_code       secondary         subsys_id         vendorid
-+          cache_line_size   interrupt_pin     msix_interrupts   primary
-+          revid             subclass_code     subsys_vendor_id
-+
-+The PCI endpoint function driver populates these entries with default values
-+when the device is bound to the driver. The pci-epf-ntb driver populates
-+vendorid with 0xffff and interrupt_pin with 0x0001::
-+
-+	# cat functions/pci_epf_ntb/func1/vendorid
-+	  0xffff
-+	# cat functions/pci_epf_ntb/func1/interrupt_pin
-+	  0x0001
-+
-+
-+Configuring pci-epf-ntb Device
-+-------------------------------
-+
-+The user can configure the pci-epf-ntb device using its configfs entry. In order
-+to change the vendorid and the deviceid, the following
-+commands can be used::
-+
-+	# echo 0x104c > functions/pci_epf_ntb/func1/vendorid
-+	# echo 0xb00d > functions/pci_epf_ntb/func1/deviceid
-+
-+In order to configure NTB specific attributes, a new sub-directory to func1
-+should be created::
-+
-+	# mkdir functions/pci_epf_ntb/func1/pci_epf_ntb.0/
-+
-+The NTB function driver will populate this directory with various attributes
-+that can be configured by the user::
-+
-+	# ls functions/pci_epf_ntb/func1/pci_epf_ntb.0/
-+          db_count    mw1         mw2         mw3         mw4         num_mws
-+          spad_count
-+
-+A sample configuration for NTB function is given below::
-+
-+	# echo 4 > functions/pci_epf_ntb/func1/pci_epf_ntb.0/db_count
-+	# echo 128 > functions/pci_epf_ntb/func1/pci_epf_ntb.0/spad_count
-+	# echo 2 > functions/pci_epf_ntb/func1/pci_epf_ntb.0/num_mws
-+	# echo 0x100000 > functions/pci_epf_ntb/func1/pci_epf_ntb.0/mw1
-+	# echo 0x100000 > functions/pci_epf_ntb/func1/pci_epf_ntb.0/mw2
-+
-+Binding pci-epf-ntb Device to EP Controller
-+--------------------------------------------
-+
-+NTB function device should be attached to two PCIe endpoint controllers
-+connected to the two hosts. Use the 'primary' and 'secondary' entries
-+inside NTB function device to attach one PCIe endpoint controller to
-+primary interface and the other PCIe endpoint controller to the secondary
-+interface. ::
-+
-+        # ln -s controllers/2900000.pcie-ep/ functions/pci-epf-ntb/func1/primary
-+        # ln -s controllers/2910000.pcie-ep/ functions/pci-epf-ntb/func1/secondary
-+
-+Once the above step is completed, both the PCI endpoint controllers are ready to
-+establish a link with the host.
-+
-+
-+Start the Link
-+--------------
-+
-+In order for the endpoint device to establish a link with the host, the _start_
-+field should be populated with '1'. For NTB, both the PCIe endpoint controllers
-+should establish link with the host::
-+
-+        #echo 1 > controllers/2900000.pcie-ep/start
-+        #echo 1 > controllers/2910000.pcie-ep/start
-+
-+
-+RootComplex Device
-+==================
-+
-+lspci Output
-+------------
-+
-+Note that the devices listed here correspond to the values populated in
-+"Creating pci-epf-ntb Device" section above::
-+
-+        # lspci
-+        0000:00:00.0 PCI bridge: Texas Instruments Device b00d
-+        0000:01:00.0 RAM memory: Texas Instruments Device b00d
-+
-+
-+Using ntb_hw_epf Device
-+-----------------------
-+
-+The host side software follows the standard NTB software architecture in Linux.
-+All the existing client side NTB utilities like NTB Transport Client and NTB
-+Netdev, NTB Ping Pong Test Client and NTB Tool Test Client can be used with NTB
-+function device.
-+
-+For more information on NTB see
-+:doc:`Non-Transparent Bridge <../../driver-api/ntb>`
+ /**
+  * pci_epf_unbind() - Notify the function driver that the binding between the
+  *		      EPF device and EPC device has been lost
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index 1dc66824f5a8..b241e7dd171f 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -62,10 +62,13 @@ struct pci_epf_header {
+  * @bind: ops to perform when a EPC device has been bound to EPF device
+  * @unbind: ops to perform when a binding has been lost between a EPC device
+  *	    and EPF device
++ * @add_cfs: ops to initialize function specific configfs attributes
+  */
+ struct pci_epf_ops {
+ 	int	(*bind)(struct pci_epf *epf);
+ 	void	(*unbind)(struct pci_epf *epf);
++	struct config_group *(*add_cfs)(struct pci_epf *epf,
++					struct config_group *group);
+ };
+ 
+ /**
+@@ -188,4 +191,6 @@ void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar,
+ 			enum pci_epc_interface_type type);
+ int pci_epf_bind(struct pci_epf *epf);
+ void pci_epf_unbind(struct pci_epf *epf);
++struct config_group *pci_epf_type_add_cfs(struct pci_epf *epf,
++					  struct config_group *group);
+ #endif /* __LINUX_PCI_EPF_H */
 -- 
 2.17.1
 
