@@ -2,155 +2,165 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16664C433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF01C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 21:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF6B764E24
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 20:10:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B159A64E31
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 21:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232653AbhBAT7q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 14:59:46 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:39434 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231451AbhBAT7g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 14:59:36 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 111JwX3G037087;
-        Mon, 1 Feb 2021 13:58:33 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1612209513;
-        bh=7qF2OVbWDyaTlnP441W+A6WtQychKbyb9MpcDopQVLo=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=BMNz41yetAHu2zkza+wxHMQMBh7WsmiRjOyImZzblgdoR3gK9BlNyZqSw3Rejk8+g
-         gGTgbX6xplr34+EyH2oVvfmfUGDwIW1AyVHJu3fMSPa6UZKcD3BmPb/GALrv1YjdED
-         gO4NiASVl0g+V5/29xyKYC3kdoFbLoaEdtu7o8Y4=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 111JwXYd072956
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 1 Feb 2021 13:58:33 -0600
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 1 Feb
- 2021 13:58:32 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 1 Feb 2021 13:58:32 -0600
-Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 111JwAQa085814;
-        Mon, 1 Feb 2021 13:58:27 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ntb@googlegroups.com>
-Subject: [PATCH v11 03/17] PCI: endpoint: Add helper API to get the 'next' unreserved BAR
-Date:   Tue, 2 Feb 2021 01:27:55 +0530
-Message-ID: <20210201195809.7342-4-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210201195809.7342-1-kishon@ti.com>
-References: <20210201195809.7342-1-kishon@ti.com>
+        id S229879AbhBAVU7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 16:20:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60828 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229663AbhBAVU7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 16:20:59 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04F8DC061756
+        for <linux-pci@vger.kernel.org>; Mon,  1 Feb 2021 13:20:18 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id i8so10178440ejc.7
+        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2021 13:20:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=RKV8tfXM/P2yr23U8IrmSV+OjOgK46IvUPsK7p0jMgk=;
+        b=jZLlF1BLcZiQNvZuriBZtAzF6XOXuBz6zZN01Lb11NP+6NRYwxYB0ZMdTbEIExzDKb
+         r/gC0LbZUA18tkBHhoxigMtqVYDxB4j+RWtLlmqHfDvcPVcvDdr3AUlNiqW2LxbOfb3O
+         +V+GSB9O1BjCxxSnLTCxG8gvlUz2B5Itq3vnR+d9KT98zWWMdBnlW1/DAzbz4ulPCc4G
+         nq+Wrn51F//JFhDa2w3l398dovOGhgDJhWKfhYV/ofnLxv7doKXgn3rI+ESCn2v5Ofq9
+         ZecFkI5v7FgvOkds/8sJojnO2M7YKnUAbPpdVdFqGTVqquOyo2GU3ijaFXNzoa5HRNf0
+         nLAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RKV8tfXM/P2yr23U8IrmSV+OjOgK46IvUPsK7p0jMgk=;
+        b=kSymrqkgwsF+8soTcApVB6Y44fGniPhxSRUDNgzZLHCVL9cNz5jj8OCaZpImrwJEXM
+         2pi+k/Jz1fVG/10jbaxbscpQNZxdG0wXd5L1ij3ezOsozYVFyL2qMEk5BXy2ij6ToyRL
+         TsQu0IOG/ys79UWJF0jRGTRIORJxwdjxi8XVWGZv1PbXZe67EmYYnYUIB8drxn0CPH1L
+         YJujpbS21EmNJp/lDkDSFZsRIyo38kpvlBnGrRS7ERZpA7mRgPfNPaYJa5CQEp5dVT+z
+         0KmbQaFiDev/ItOBMmUKfK6vSJgYi6ZLSfGBAu/LG2r96l48YchP/HqskKrIbVHbsSh3
+         HpBA==
+X-Gm-Message-State: AOAM531M8V84VanxLj5WPvdyWvSZcdfngZ9HGr5WTYzDvhmRrBUaIsFK
+        dxDu1a8sW5NKE3M8A6v2OBaQ1dBCrR1g5NtZeBQYdw==
+X-Google-Smtp-Source: ABdhPJwA3l0e3MUGip6gEtrbLA1M+onIFo5pqjzQ23LyigVAMvz9JEe/SBsagHRrDaseCVuas2GfBzS5C8qSA8H7dF0=
+X-Received: by 2002:a17:906:f919:: with SMTP id lc25mr20142627ejb.323.1612214417615;
+ Mon, 01 Feb 2021 13:20:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <20210130002438.1872527-1-ben.widawsky@intel.com>
+ <20210130002438.1872527-10-ben.widawsky@intel.com> <20210201182400.GK197521@fedora>
+ <20210201192708.5cvyecbcdrwx77de@intel.com> <20210201193453.GA308086@fedora>
+In-Reply-To: <20210201193453.GA308086@fedora>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 1 Feb 2021 13:20:14 -0800
+Message-ID: <CAPcyv4hivzQh=rresymO+fRP2g1LLJzEr2d7Or6Pha7V_1L6Pg@mail.gmail.com>
+Subject: Re: [PATCH 09/14] cxl/mem: Add a "RAW" send command
+To:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        daniel.lll@alibaba-inc.com,
+        "John Groves (jgroves)" <jgroves@micron.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add an API to get the next unreserved BAR starting from a given BAR
-number that can be used by the endpoint function.
+On Mon, Feb 1, 2021 at 11:36 AM Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+>
+> On Mon, Feb 01, 2021 at 11:27:08AM -0800, Ben Widawsky wrote:
+> > On 21-02-01 13:24:00, Konrad Rzeszutek Wilk wrote:
+> > > On Fri, Jan 29, 2021 at 04:24:33PM -0800, Ben Widawsky wrote:
+> > > > The CXL memory device send interface will have a number of supported
+> > > > commands. The raw command is not such a command. Raw commands allow
+> > > > userspace to send a specified opcode to the underlying hardware and
+> > > > bypass all driver checks on the command. This is useful for a couple of
+> > > > usecases, mainly:
+> > > > 1. Undocumented vendor specific hardware commands
+> > > > 2. Prototyping new hardware commands not yet supported by the driver
+> > >
+> > > This sounds like a recipe for ..
+> > >
+> > > In case you really really want this may I recommend you do two things:
+> > >
+> > > - Wrap this whole thing with #ifdef
+> > >   CONFIG_CXL_DEBUG_THIS_WILL_DESTROY_YOUR_LIFE
+> > >
+> > >  (or something equivalant to make it clear this should never be
+> > >   enabled in production kernels).
+> > >
+> > >  - Add a nice big fat printk in dmesg telling the user that they
+> > >    are creating a unstable parallel universe that will lead to their
+> > >    blood pressure going sky-high, or perhaps something more professional
+> > >    sounding.
+> > >
+> > > - Rethink this. Do you really really want to encourage vendors
+> > >   to use this raw API instead of them using the proper APIs?
+> >
+> > Again, the ideal is proper APIs. Barring that they get a WARN, and a taint if
+> > they use the raw commands.
+>
+> Linux upstream is all about proper APIs. Just don't do this.
+> >
+> > >
+> > > >
+> > > > While this all sounds very powerful it comes with a couple of caveats:
+> > > > 1. Bug reports using raw commands will not get the same level of
+> > > >    attention as bug reports using supported commands (via taint).
+> > > > 2. Supported commands will be rejected by the RAW command.
+> > > >
+> > > > With this comes new debugfs knob to allow full access to your toes with
+> > > > your weapon of choice.
+> > >
+> > > Problem is that debugfs is no longer "debug" but is enabled in
+> > > production kernel.
+> >
+> > I don't see this as my problem. Again, they've been WARNed and tainted. If they
+>
+> Right not your problem, nice.
+>
+> But it is going to be the problem of vendor kernel engineers who don't have this luxury.
+>
+> > want to do this, that's their business. They will be asked to reproduce without
+> > RAW if they file a bug report.
+>
+>
+> This is not how customers see the world. "If it is there, then it is
+> there to used right? Why else would someone give me the keys to this?"
+>
+> Just kill this. Or better yet, make it a seperate set of patches for
+> folks developing code but not have it as part of this patchset.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++----
- include/linux/pci-epc.h             |  2 ++
- 2 files changed, 24 insertions(+), 4 deletions(-)
+In the ACPI NFIT driver, the only protection against vendor
+shenanigans is the requirement that any and all DSM functions be
+described in a public specification, so there is no unfettered access
+to the DSM interface However, multiple vendors just went ahead and
+included a "vendor passthrough" as a DSM sub-command in their
+implementation. The driver does have the "disable_vendor_specific"
+module parameter, however that does not amount to much more than a
+stern look from the kernel at vendors shipping functionality through
+that path rather than proper functions. It has been a source of bugs.
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 25e57672e1a1..1afe5d9afb0d 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -87,17 +87,36 @@ EXPORT_SYMBOL_GPL(pci_epc_get);
-  * pci_epc_get_first_free_bar() - helper to get first unreserved BAR
-  * @epc_features: pci_epc_features structure that holds the reserved bar bitmap
-  *
-- * Invoke to get the first unreserved BAR that can be used for endpoint
-+ * Invoke to get the first unreserved BAR that can be used by the endpoint
-  * function. For any incorrect value in reserved_bar return '0'.
-  */
- unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
- 					*epc_features)
-+{
-+	return pci_epc_get_next_free_bar(epc_features, BAR_0);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
-+
-+/**
-+ * pci_epc_get_next_free_bar() - helper to get unreserved BAR starting from @bar
-+ * @epc_features: pci_epc_features structure that holds the reserved bar bitmap
-+ * @bar: the starting BAR number from where unreserved BAR should be searched
-+ *
-+ * Invoke to get the next unreserved BAR starting from @bar that can be used
-+ * for endpoint function. For any incorrect value in reserved_bar return '0'.
-+ */
-+unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
-+				       *epc_features, enum pci_barno bar)
- {
- 	unsigned long free_bar;
- 
- 	if (!epc_features)
- 		return 0;
- 
-+	/* If 'bar - 1' is a 64-bit BAR, move to the next BAR */
-+	if ((epc_features->bar_fixed_64bit << 1) & 1 << bar)
-+		bar++;
-+
- 	/* Find if the reserved BAR is also a 64-bit BAR */
- 	free_bar = epc_features->reserved_bar & epc_features->bar_fixed_64bit;
- 
-@@ -105,14 +124,13 @@ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
- 	free_bar <<= 1;
- 	free_bar |= epc_features->reserved_bar;
- 
--	/* Now find the free BAR */
--	free_bar = ffz(free_bar);
-+	free_bar = find_next_zero_bit(&free_bar, 6, bar);
- 	if (free_bar > 5)
- 		return 0;
- 
- 	return free_bar;
- }
--EXPORT_SYMBOL_GPL(pci_epc_get_first_free_bar);
-+EXPORT_SYMBOL_GPL(pci_epc_get_next_free_bar);
- 
- /**
-  * pci_epc_get_features() - get the features supported by EPC
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index cc66bec8be90..cfe9b427e6b7 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -203,6 +203,8 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
- 						    u8 func_no);
- unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
- 					*epc_features);
-+unsigned int pci_epc_get_next_free_bar(const struct pci_epc_features
-+				       *epc_features, enum pci_barno bar);
- struct pci_epc *pci_epc_get(const char *epc_name);
- void pci_epc_put(struct pci_epc *epc);
- 
--- 
-2.17.1
-
+The RAW command proposal Ben has here is a significant improvement on
+that status quo. It's built on the observation that customers pick up
+the phone whenever their kernel backtraces, and makes it is easy to
+spot broken tooling. That said, I think it is reasonable to place the
+RAW interface behind a configuration option and let distribution
+policy decide the availability.
