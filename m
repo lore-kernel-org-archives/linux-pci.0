@@ -2,325 +2,239 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD5E3C433DB
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 17:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFC5C433DB
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 17:53:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6932164E92
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 17:52:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9753D64E97
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Feb 2021 17:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232621AbhBARwR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Feb 2021 12:52:17 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:20461 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232613AbhBARwM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 12:52:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612201845;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UFisRaZ0xO1HdQ49kCdB0yl96ksAM6/3yFLOwHvoRz4=;
-        b=B3JCcIV/ZZ9i+/rQbQGs/UYX4Q239sm4YwxxqtPAcSkNW7wQykc9NPmbBzxuV6S8AcS+Li
-        39D8dAlpbQNpTYzdl0pVKK6PETfiP/zOLtye0tzXHFGh87r1GhEuQhnxy0CyDYRMBGYjZs
-        Gmv282k3jVvwLDSaCG0OcEB2Z+4TWpc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-260-0IydLlIZNRKGGK9PZjogDA-1; Mon, 01 Feb 2021 12:50:41 -0500
-X-MC-Unique: 0IydLlIZNRKGGK9PZjogDA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A40331015940;
-        Mon,  1 Feb 2021 17:50:38 +0000 (UTC)
-Received: from fuller.cnet (ovpn-112-5.gru2.redhat.com [10.97.112.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3CCC410016DB;
-        Mon,  1 Feb 2021 17:50:31 +0000 (UTC)
-Received: by fuller.cnet (Postfix, from userid 1000)
-        id D67294178902; Mon,  1 Feb 2021 14:50:03 -0300 (-03)
-Date:   Mon, 1 Feb 2021 14:50:02 -0300
-From:   Marcelo Tosatti <mtosatti@redhat.com>
-To:     Alex Belits <abelits@marvell.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-        frederic@kernel.org, juri.lelli@redhat.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, rostedt@goodmis.org, mingo@kernel.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        jinyuqi@huawei.com, zhangshaokun@hisilicon.com
-Subject: Re: [EXT] Re: [Patch v4 1/3] lib: Restrict cpumask_local_spread to
- houskeeping CPUs
-Message-ID: <20210201175002.GA27318@fuller.cnet>
-References: <20200625223443.2684-1-nitesh@redhat.com>
- <20200625223443.2684-2-nitesh@redhat.com>
- <3e9ce666-c9cd-391b-52b6-3471fe2be2e6@arm.com>
- <20210127121939.GA54725@fuller.cnet>
- <c5cba5f3-287a-d087-c329-6e6613634370@arm.com>
- <20210127130925.GA64740@fuller.cnet>
- <87tur1cay0.fsf@nanos.tec.linutronix.de>
- <02ac9d85-7ddd-96da-1252-4663feea7c9f@marvell.com>
+        id S231225AbhBARxa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Feb 2021 12:53:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44434 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232576AbhBARxV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2021 12:53:21 -0500
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DABA8C061573
+        for <linux-pci@vger.kernel.org>; Mon,  1 Feb 2021 09:52:40 -0800 (PST)
+Received: by mail-lf1-x129.google.com with SMTP id i187so24001444lfd.4
+        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2021 09:52:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=AJ0/lsbx9t1KSNJzC3o2bUIqgefAkFNsHW+210JrKY8=;
+        b=iAK7rQ3g2VpmnKsaqUigsZwrhdwhTEeZTHOyhN7yhZ/jb3ha38v0UsqeQVVnh9DhzK
+         V7LPK3W+pfiun0QougBHd+gMR0pyxMJXZpn8xYLC+fpX+Jau/CfSTAd+rGW6QVKP/7Hh
+         C+buAcNvZLFvrxfEYVK2F8lCXh+u5uwbY5zWhWD3qnUSbQduJfqrtBnknvZq8b3PhbUd
+         Dq5ObQANgwopU8B0In4snHlIPlHHUeBMimJRisNN19UlrLYVRRYYSnD/s/Ahnf5i3pLt
+         7FcpLqxyqo/1B6MTQ/TDaCg+17S+Px324hzb8QrDem2mJcCxGOQGJukkakgVZjv9cRDw
+         Ql+Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=AJ0/lsbx9t1KSNJzC3o2bUIqgefAkFNsHW+210JrKY8=;
+        b=pw5F81Wi3k+QR2TvWr+BSC8V7mKe2H7wDJmwIOmWvUFS4mvPnsJ5XWph4IbbBzLb/Q
+         zP4iNqym/EvD0ARNTtvLdIk2MpT4vyZwb/ZmwfbcSMFglNtTtoIEOpvg8Ta+KQGCtHdA
+         p3ChQ6uYVE7Vexros2sHt+IQqAAm00HO71Kg8yyfrSU5ZAEPKNuyWz1RkqOsEqN1iRcX
+         WnLO8tj96IKuxW+vDnb78qU+t4Wmlg7Y8WRDJBrmhv0oO5ZZZqAIj2aAHB/9j2BpCmdc
+         LKaTraujqhdjt3XjYmAhaI1L9ep54XMcnFtgjJdCVJWlTCUmybuJplc0gMgXi2myGQcl
+         apSw==
+X-Gm-Message-State: AOAM530ULfHLZEH5A9AkVvlodHYpfh7x4puNSKnQpQxT7vi2Ww/wEXTF
+        Ox3l7mAMN9x1yjPz3Inu8mE=
+X-Google-Smtp-Source: ABdhPJzChqgVqEQ8BbZlXjclBIcC64Urg+/zIXQlo1cXg4DLqVl68hJCIXdHrEG+7fmcg64h+K1tGg==
+X-Received: by 2002:ac2:43d7:: with SMTP id u23mr8662735lfl.276.1612201959336;
+        Mon, 01 Feb 2021 09:52:39 -0800 (PST)
+Received: from localhost.localdomain (85-76-10-224-nat.elisa-mobile.fi. [85.76.10.224])
+        by smtp.gmail.com with ESMTPSA id t15sm3062469lff.74.2021.02.01.09.52.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Feb 2021 09:52:38 -0800 (PST)
+From:   =?UTF-8?q?Jari=20H=C3=A4m=C3=A4l=C3=A4inen?= <nuumiofi@gmail.com>
+To:     shawn.lin@rock-chips.com
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux.amoon@gmail.com, lorenzo.pieralisi@arm.com,
+        xxm@rock-chips.com
+Subject: =?UTF-8?q?=3D=3FUTF-8=3FQ=3FRe=3D3a=5F=3D5bPATCH=5F1/2=3D5d=5FPCI=3D3a=5Frockchip=3D3a=5FEnable=5FIO=5Fbase=5Fa=3F=3D=20=3D=3FUTF-8=3FB=3FbmQgbGltaXQgcmVnaXN0ZXJz44CQ6K+35rOo5oSP77yM6YKu5Lu255SxbGludXgt=3F=3D=20=3D=3FUTF-8=3FQ=3Frockchip-bounces+shawn=3D2elin=3D3drock-chips=3D2ecom=3D40lists=3D2einfrade=3F=3D=20=3D=3FUTF-8=3FB=3FYWQub3Jn5Luj5Y+R44CR=3F=3D?=
+Date:   Mon,  1 Feb 2021 19:52:07 +0200
+Message-Id: <20210201175207.323950-1-nuumiofi@gmail.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <139e0296-e845-500f-8899-72b0f0b22e8c@rock-chips.com>
+References: <139e0296-e845-500f-8899-72b0f0b22e8c@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <02ac9d85-7ddd-96da-1252-4663feea7c9f@marvell.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 29, 2021 at 07:41:27AM -0800, Alex Belits wrote:
-> On 1/28/21 07:56, Thomas Gleixner wrote:
-> > External Email
-> > 
-> > ----------------------------------------------------------------------
-> > On Wed, Jan 27 2021 at 10:09, Marcelo Tosatti wrote:
-> > > On Wed, Jan 27, 2021 at 12:36:30PM +0000, Robin Murphy wrote:
-> > > > > > >     /**
-> > > > > > >      * cpumask_next - get the next cpu in a cpumask
-> > > > > > > @@ -205,22 +206,27 @@ void __init free_bootmem_cpumask_var(cpumask_var_t mask)
-> > > > > > >      */
-> > > > > > >     unsigned int cpumask_local_spread(unsigned int i, int node)
-> > > > > > >     {
-> > > > > > > -	int cpu;
-> > > > > > > +	int cpu, hk_flags;
-> > > > > > > +	const struct cpumask *mask;
-> > > > > > > +	hk_flags = HK_FLAG_DOMAIN | HK_FLAG_MANAGED_IRQ;
-> > > > > > > +	mask = housekeeping_cpumask(hk_flags);
-> > > > > > 
-> > > > > > AFAICS, this generally resolves to something based on cpu_possible_mask
-> > > > > > rather than cpu_online_mask as before, so could now potentially return an
-> > > > > > offline CPU. Was that an intentional change?
-> > > > > 
-> > > > > Robin,
-> > > > > 
-> > > > > AFAICS online CPUs should be filtered.
-> > > > 
-> > > > Apologies if I'm being thick, but can you explain how? In the case of
-> > > > isolation being disabled or compiled out, housekeeping_cpumask() is
-> > > > literally just "return cpu_possible_mask;". If we then iterate over that
-> > > > with for_each_cpu() and just return the i'th possible CPU (e.g. in the
-> > > > NUMA_NO_NODE case), what guarantees that CPU is actually online?
-> > > > 
-> > > > Robin.
-> > > 
-> > > Nothing, but that was the situation before 1abdfe706a579a702799fce465bceb9fb01d407c
-> > > as well.
-> > > 
-> > > cpumask_local_spread() should probably be disabling CPU hotplug.
-> > 
-> > It can't unless all callers are from preemtible code.
-> > 
-> > Aside of that this whole frenzy to sprinkle housekeeping_cpumask() all
-> > over the kernel is just wrong, really.
-> > 
-> > As I explained several times before there are very valid reasons for
-> > having queues and interrupts on isolated CPUs. Just optimizing for the
-> > usecases some people care about is not making anything better.
+> On 2020/7/14 0:45, Lorenzo Pieralisi wrote:
+>> On Thu, Jul 09, 2020 at 09:18:27AM +0530, Anand Moon wrote:
+>>> hi Lorenzo,
+>>>
+>>> On Wed, 8 Jul 2020 at 20:31, Lorenzo Pieralisi
+>>> <lorenzo.pieralisi@arm.com> wrote:
+>>>>
+>>>> On Fri, May 22, 2020 at 05:59:14PM +0530, Anand Moon wrote:
+>>>>> Hi Shawn
+>>>>>
+>>>>> On Fri, 22 May 2020 at 08:30, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>>>>>
+>>>>>>
+>>>>>> 在 2020/5/21 18:51, Anand Moon 写道:
+>>>>>>> Hi Shawn,
+>>>>>>>
+>>>>>>> On Thu, 21 May 2020 at 06:35, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>>>>>>>>
+>>>>>>>> According to RK3399 user manual, bit 9 in PCIE_RC_BAR_CONF should
+>>>>>>>> be set, otherwise accessing to IO base and limit registers would
+>>>>>>>> fail.
+>>>>>>>>
+>>>>>>>> [    0.411318] pci_bus 0000:00: root bus resource [bus 00-1f]
+>>>>>>>> [    0.411822] pci_bus 0000:00: root bus resource [mem 0xfa000000-0xfbdfffff]
+>>>>>>>> [    0.412440] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0xfbe00000-0xfbefffff])
+>>>>>>>> [    0.413665] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>>>>>>>> [    0.414698] pci 0000:01:00.0: reg 0x10: initial BAR value 0x00000000 invalid
+>>>>>>>> [    0.415412] pci 0000:01:00.0: reg 0x18: initial BAR value 0x00000000 invalid
+>>>>>>>> [    0.418456] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
+>>>>>>>> [    0.419065] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa000000-0xfa007fff pref]
+>>>>>>>> [    0.419728] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa008000-0xfa00ffff pref]
+>>>>>>>> [    0.420377] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
+>>>>>>>> [    0.420935] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
+>>>>>>>> [    0.421526] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0004]
+>>>>>>>> [    0.422084] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0004]
+>>>>>>>> [    0.422687] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>>>>>> [    0.423135] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
+>>>>>>>> [    0.423794] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
+>>>>>>>> [    0.424566] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+>>>>>>>> [    0.425182] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+>>>>>>>>
+>>>>>>>> 01:00.0 Class 0700: Device 1c00:3853 (rev 10) (prog-if 05)
+>>>>>>>>           Subsystem: Device 1c00:3853
+>>>>>>>>           Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>>>>>>>>           Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>>>>>           Interrupt: pin A routed to IRQ 230
+>>>>>>>>           Region 0: I/O ports at <unassigned> [disabled]
+>>>>>>>>           Region 1: Memory at fa000000 (32-bit, prefetchable) [disabled] [size=32K]
+>>>>>>>>           Region 2: I/O ports at <unassigned> [disabled]
+>>>>>>>>           [virtual] Expansion ROM at fa008000 [disabled] [size=32K]
+>>>>>>>>
+>>>>>>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>>>>>>> ---
+>>>>>>>
+>>>>>>> I have old development board Odroid N1 (RK3399),  It has onboard PCIe
+>>>>>>> 2 dual sata bridge.
+>>>>>>> I have tested this patch, but I am still getting following log on
+>>>>>>> Odroid N1 board.
+>>>>>>> Is their any more configuration needed for sata ports ?
+>>>>>>
+>>>>>> Thanks for testing. I made a mistake that it should be bit 19, so
+>>>>>> can you try using BIT(19)?
+>>>>>>
+>>>>>
+>>>>> Nop enable this bit dose not solve the issue see at my end.
+>>>>>
+>>>>> But as per RK3399 TMR  17.6.7.1.45 Root Complex BAR Configuration Register
+>>>>> their are many bits that are not tuned correctly.
+>>>>> I tried to set some bit to BAR Configuration register. but it dose not
+>>>>> work at my end.
+>>>>> I feel some more core configuration is missing.
+>>>>> If I have some update I will share it with you.
+>>>>
+>>>> What's the status of this discussion and therefore this series ?
+>>>>
+>>>> Thanks,
+>>>> Lorenzo
+>>>
+>>> Well I have looked into the RK3399 TRM  (Rockchip RK3399 TRM V1.3 Part2.pdf)
+>>> There seems to be some core configuration missing, but I could not
+>>> resolve this on my board.
+>> 
+>> So what are we going to do with this series ?
 > 
-> However making it mandatory for isolated CPUs to allow interrupts is not a
-> good idea, either. Providing an environment free of disturbances is a valid
-> goal, so we can't do something that will make it impossible to achieve. We
-> know that both there is a great amount of demand for this feature and
-> implementing it is doable, so cutting off the possibility of development in
-> this direction would be bad.
+> I didn't test it on N1 board so I cannot say what happened there, but I
+> incline to suspend this series untile I have a sufficient offlist
+> debugging with Anand.
 > 
-> Before there was housekeeping mask, I had to implement another, more
-> cumbersome model that ended up being more intrusive than I wanted. That was
-> one of the reasons why I have spent some time working on it in, please
-> forgive me the pun, isolation.
-> 
-> I was relieved when housekeeping mask appeared, and I was able to remove a
-> large chunk of code that distinguished between CPUs that "are there" and
-> CPUs "available to run work". Housekeeping is supposed to define the set of
-> CPUs that are intended to run work that is not specifically triggered by
-> anything running on those CPUs. "CPUs that are there" are CPUs that are
-> being maintained as a part of the system, so they are usable for running
-> things on them.
-> 
-> My idea at the time was that we can separate this into two directions of
-> development:
-> 
-> 1. Make sure that housekeeping mask applies to all kinds of work that
-> appears on CPUs, so nothing random will end up running there. Because this
-> is very much in line of what it does.
+>> 
+>> Lorenzo
+>> 
+>> 
 
-Its easier to specify "all members of set" rather than having to specify each
-individual member. Thinking of set as a description of types of
-activities that should not have a given CPU as a target.
+Hello Shawn and all,
 
-> 2. Rely on housekeeping mask to exclude anything not specifically intended
-> to run on isolated CPUs, and concentrate efforts on making sure that things
-> that are intended to [eventually] happen on those CPUs are handled properly
-> -- in case of my recent proposals, delayed until synchronization event at
-> the next kernel entry.
+Is there any news about this series? I happened to stumble upon this while
+searching anything PCIe related for my bus scan crash workaround [1].
 
-Your point makes sense, but the "isolated CPU + one interrupt to this CPU"
-use-case is a valid one.
+This series still seems to apply cleanly on v5.11-rc6 so I applied the
+BIT(9) to BIT(19) change mentioned earlier and tested it with four SAS
+adapter cards and two SATA adapter cards. For all of them this series fixed
+"no space for io" in dmesg and "I/O ports at <unassigned> [disabled]" in
+lspci output.
 
-"target CPU" is the CPU we are interested in executing the application
-(and handling the interrupt). So isolation happens today in the
-following components:
+Below are few dmesg and lspci -vvnn snippets before and after applying
+these patches (SAS cards need bus scan crash workaround too).
 
-        1)  setup kernel boot parameters for isolation (suppose
-            the goal is to move these to happen dynamically in
-            userspace, so they would move to step 2 in the future).
+LSI SAS2008 before applying patch:
 
-        2)  disable certain activities from happening at target CPU: "exclude ALL
-            activities for target CPU which can be performed by
-            housekeeping CPUs" (which might involve a
-            number of steps in userspace such as
-            the RPS mask configuration, network queue configuration
-            to avoid vector exhaustion, removal of other activities
-            on target CPU).
+  [    2.664846] pci_bus 0000:00: bus scan returning with max=01
+  [    2.665412] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
+  [    2.666083] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa000000-0xfa07ffff pref]
+  [    2.666796] pci 0000:01:00.0: BAR 3: assigned [mem 0xfa080000-0xfa0bffff 64bit]
+  [    2.667550] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa0c0000-0xfa0c3fff 64bit]
+  [    2.668301] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0100]
+  [    2.668917] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0100]
+  [    2.669565] pci 0000:00:00.0: PCI bridge to [bus 01]
+  [    2.670075] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
 
-        3) userspace informs status of execution of isolated
-           application (via the prctl interface, the QUIESCE step).
-           From this point on interruptions (not as in IRQs but as in
-	   "isolation breaking events") should be either ignored
-           or logged.
+  00:00.0 PCI bridge [0604]: Fuzhou Rockchip Electronics Co., Ltd RK3399 PCI Express Root Port [1d87:0100] (prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0, IRQ 78
+    Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+    I/O behind bridge: 00000000-00000fff [size=4K]
+    Memory behind bridge: fa000000-fa0fffff [size=1M]
+  ...
+  01:00.0 RAID bus controller [0104]: Broadcom / LSI SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] [1000:0072] (rev 03)
+    Subsystem: Fujitsu Technology Solutions HBA Ctrl SAS 6G 0/1 [D2607] [1734:1177]
+    Flags: bus master, fast devsel, latency 0, IRQ 77
+    I/O ports at <unassigned> [disabled]
+    Memory at fa0c0000 (64-bit, non-prefetchable) [size=16K]
 
-> If we want to have some kind of greater flexibility of CPU hotplug
-> management, more runtime control of isolation and housekeeping masks, or
+LSI SAS2008 after applying patch:
 
-Well i think any activity which can possibly cause an interruption
-should be blocked from happening in the kernel. Which can be done as
-soon as the
+  [    2.746453] pci_bus 0000:00: bus scan returning with max=01
+  [    2.747021] pci 0000:00:00.0: BAR 8: assigned [mem 0xfa000000-0xfa0fffff]
+  [    2.747689] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+  [    2.748294] pci 0000:01:00.0: BAR 6: assigned [mem 0xfa000000-0xfa07ffff pref]
+  [    2.749008] pci 0000:01:00.0: BAR 3: assigned [mem 0xfa080000-0xfa0bffff 64bit]
+  [    2.749761] pci 0000:01:00.0: BAR 1: assigned [mem 0xfa0c0000-0xfa0c3fff 64bit]
+  [    2.750515] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+  [    2.751128] pci 0000:00:00.0: PCI bridge to [bus 01]
+  [    2.751638] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+  [    2.752242] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
 
-        "if (cpu_is_isolated(cpu))"
+  00:00.0 PCI bridge [0604]: Fuzhou Rockchip Electronics Co., Ltd RK3399 PCI Express Root Port [1d87:0100] (prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0, IRQ 78
+    Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+    I/O behind bridge: 00001000-00001fff [size=4K]
+    Memory behind bridge: fa000000-fa0fffff [size=1M]
+  ...
+  01:00.0 RAID bus controller [0104]: Broadcom / LSI SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] [1000:0072] (rev 03)
+    Subsystem: Fujitsu Technology Solutions HBA Ctrl SAS 6G 0/1 [D2607] [1734:1177]
+    Flags: bus master, fast devsel, latency 0, IRQ 77
+    I/O ports at 1000 [disabled] [size=256]
+    Memory at fa0c0000 (64-bit, non-prefetchable) [size=16K]
 
-Logic can be integrated.
+I haven't yet tested if this change actually makes these card work any
+better or worse but I could do more testing if that BIT(9) to BIT(19) is
+fixed and this series is otherwise able to get merged.
 
-> more specific definition of what housekeeping mask does, we still have to
-> implement the intended functionality. Something still has to determine,
-> where we should not place delayed work, interrupts, etc. for the purpose of
-> distributing this kind of work.
+[1] https://lore.kernel.org/linux-pci/20201231125214.25733-1-nuumiofi@gmail.com/
 
-Yes, and today the isolation is being performed:
-
-1) At boot time.
-2) At isolation configuration (userspace). We have been trying to
-centralize this in tuned profiles:
-
-* With isolcpus=domain,: https://github.com/redhat-performance/tuned/blob/master/profiles/realtime-virtual-host/realtime-virtual-host-variables.conf
-* With cgroups sets / systemd affinity masks: https://github.com/redhat-performance/tuned/blob/master/profiles/cpu-partitioning/tuned.conf
-
-> As far as I can tell, the real underlying problem is that if anything
-> changes (hotplug happens, CPUs are added or removed from hotplug mask,
-> etc.), for absolutely correct solution in the most general case we would
-> have to modify all those masks that we have determined for various purposes
-> in various pieces of code and re-apply them. So, say, RPS implemented in a
-> running driver will be reconfigured to remove CPUs that are no longer there,
-> or CPUs that we now no longer want in "housekeeping" or "available for RPS,
-> delayed work, or something similar" mask.
-
-We discussed separating housekeeping_mask in per feature masks here:
-
-https://lkml.org/lkml/2020/9/3/1067
-
-So that userspace could control each feature individually.
-
-> To do that (and for full and complete support of hotplug we will have to do
-> that), we would have to reconfigure all users of CPU masks on hotplug and on
-> whatever other events that reassign CPUs purpose. 
-
-Good point.
-
--> Isolate CPU event: steps 1 and 2 above.
--> Unisolate CPU event: undo steps 1 and 2 above (considering the
-boot-time limitation of 1).
-
--> Network device creation: Currently the proposed solution seems to be 
-https://lkml.org/lkml/2021/1/22/815, which requires userspace
-code modification (still missing this case).
-
--> CPU hotplug/hotunplug: unclear. 
-
-> This may be eventually
-> done, however I don't know if it's a good idea to implement it at once, the
-> task of "adjusting all consumers of feature X" usually takes a while, and
-> even proposing such thing imposes a great amount of work on many people.
-
-Agree. CPU hotplug for example is not a feature which is very common 
-on this type of deployments. Having an initial implementation 
-which is suitable for the use cases in production seems OK.
-
-> However we can make a decision, if we really want to go into that direction,
-> and provide a way of handling a general event "CPUs are being repurposed,
-> now adjust whatever is being sent to them". It's my opinion that it would be
-> a good idea, we just can't expect it to be adopted overnight, so we can't
-> make it mandatory.
-> 
-> However if we don't want to block development of "full isolation" for a very
-> long time over this, we can have some minimal implementation available
-> before there will be a decision and implementation of completely dynamic
-> handling of "what can be done on what CPU".
-
-Agree: the dynamic handling can be done as a later step.
-
-> So maybe we have to implement something much more simple. For CPU hotplug it
-> may be something like, "CPU coming online should not be added to
-> housekeeping mask unless full isolation is disabled". 
-
-Not sure i get this. 
-
-> Then we can add a
-> procedure for adding a non-housekeeping CPU to housekeeping mask. And that
-> procedure will fail if CPU is isolated. 
->
-> If we will have dynamic
-> configuration of isolated CPUs we can make it necessary to remove CPU from
-> isolated mask and add it to housekeeping after that. That will never produce
-> any problems. The worst that will happen, some users of CPU masks will miss
-> an opportunity to add more CPUs to whatever they use.
-
-The usecase here seems to be hardware with a single OS running both
-isolated and non-isolated workloads (say a latency sensitive
-application, using multiple cores, and it can scale up/down on 
-the number of cores depending on load). On the remaining CPUs 
-one can use non-latency sensitive workloads.
-
-Does that make sense?
-
-> Then there will be a problem, what to do when we want to remove CPU from
-> housekeeping or maybe this new category "CPUs that are available for various
-> things". Initially we can just allow it only on hotplug.
-
-Fail to parse sentence. Can you expand on "CPUs that are available for
-various things?" 
-
-> If we will want to implement removing a CPU from housekeeping and adding it
-> to become available for isolation in general, we will have to do something
-> new. It will probably look like a different kind of hotplug.
-
-Hum, not sure why, have you read the discussion mentioned above, about 
-the sysfs interface to control housekeeping?
-
-> Maybe it's a bad idea to have only one kind of "housekeeping". 
-
-Yes! That seems to be the same conclusion on the thread.
-
-Forgot to CC you here:
-https://www.spinics.net/lists/kernel/msg3814616.html
-
-Can probably drop patch 7/9 from your series once this is
-integrated.
-
-> As I said
-> above, we may choose to implement "CPUs available for work intended to be
-> spread over multiple CPUs". Or maybe there should be "CPUs available for
-> long-term running kernel tasks that are not considered housekeeping". And we
-> can have separate "CPUs that are allowed to handle timers". There may be
-> reasons for supporting this, other than isolation -- for example, big.LITTLE
-> or new kinds of power management policies. But then, of course, we will have
-> to consider more possible uses for those features, and adjust them for those
-> purposes.
-
+Regards,
+Jari
