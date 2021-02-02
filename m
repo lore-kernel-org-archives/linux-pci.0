@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5ADBC433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD543C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDBC764F49
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE61064F49
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231849AbhBBMmM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 07:42:12 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:44054 "EHLO
+        id S231867AbhBBMmV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 07:42:21 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56110 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231758AbhBBMlt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 07:41:49 -0500
+        by vger.kernel.org with ESMTP id S231654AbhBBMlw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 07:41:52 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 1E7E7400E5;
-        Tue,  2 Feb 2021 12:40:48 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id CC885C00B6;
+        Tue,  2 Feb 2021 12:40:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612269648; bh=oNfEKarVynQpWQYDjVDdd5U8tWSCEBgnT+5HnoYP8SI=;
+        t=1612269652; bh=Dhv3HKnMcUCdDjHuppD9lFN5HMrBEFpVf+0pawhZA0Q=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=bzJriTTXiBWkvnbJh17sVV9AjT5EOyEoVGHo29WDZMmAzgwv/XE8IyBth26egPkL1
-         qTvlMgreIm0vGwKGv1sTZ439TwyUZn+FQ9VUU4f1q8rDIrodRla4osG3zYtVEadSnv
-         EmKOxYrOslhVjHVrOoW1yvK0n+DIsV436p4pNFfZb5lJG2N3v/11bFnnQy/Wx5AVz4
-         aMWeZHEjcUhA8rlm5YW8croPL6ZFwUEtpdWq5X6EJmkUOC8noBhFEaxw7sRcginLaU
-         KtqXpsGgF0MlmFbwoPteAqy0VfKfHDDPEz00JQ55nQPPv9GfTRdUdUJ/5F3EeqnuSV
-         CyGxUrTM9Wtdw==
+        b=lJgBZgGxjUxH3wQVFPn6dhnBvm96q7QmcVJ4WGdzP78yXP6Eul1K0WXz5a9RYRmZS
+         ukUW4mw9BLKqrPMwuYBwqSddmpdA4c2H5rEDpIrtYwna4xCZmuwwlNpKVaq6UAJcG5
+         eewyDWzPGe6Fc5x81sa1mea/7dvAuyrA84R8Tv4dLbqSkEKhnRaz2QsCvaXpErdUyG
+         wFJ+WUGrj2UQjHpZtlgOitjMXGuXI1xd58ZItnf1c1L0LppCskooUdRDMWkND6SY+j
+         L1fAVAMZQaXUSbEv/ilA/hoKl75hAKTkIVuNbnP4Ppe76mQnrmpo9DA6AxkkpnkXuS
+         dykIzEKKgQHiw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id D6466A0249;
-        Tue,  2 Feb 2021 12:40:46 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 9B60AA024B;
+        Tue,  2 Feb 2021 12:40:50 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>,
         Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 02/15] dmaengine: dw-edma: Fix comments offset characters' alignment
-Date:   Tue,  2 Feb 2021 13:40:16 +0100
-Message-Id: <5c0b1ae6eee48c0b72dc807610eb0bc73b13a587.1612269537.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v2 05/15] dmaengine: dw-edma: Add PCIe VSEC data retrieval support
+Date:   Tue,  2 Feb 2021 13:40:19 +0100
+Message-Id: <36052d31f280761614c6b7c4c4fef24e7249b0c1.1612269537.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612269536.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612269536.git.gustavo.pimentel@synopsys.com>
@@ -56,303 +56,237 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix comments offset characters' alignment to follow the same structure
-of similar comments.
+The latest eDMA IP development implements a Vendor-Specific Extended
+Capability that contains the eDMA BAR, offset, map format, and the
+number of read/write channels available.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-v0-regs.h | 214 +++++++++++++++++-----------------
- 1 file changed, 107 insertions(+), 107 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c |  20 ++++---
+ drivers/dma/dw-edma/dw-edma-pcie.c | 114 ++++++++++++++++++++++++++++---------
+ 2 files changed, 99 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-regs.h b/drivers/dma/dw-edma/dw-edma-v0-regs.h
-index d07151d..e175f7b 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-regs.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-regs.h
-@@ -25,177 +25,177 @@
- #define EDMA_V0_CH_EVEN_MSI_DATA_MASK			GENMASK(15, 0)
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index b971505..b65c32e1 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -863,15 +863,19 @@ int dw_edma_probe(struct dw_edma_chip *chip)
  
- struct dw_edma_v0_ch_regs {
--	u32 ch_control1;				/* 0x000 */
--	u32 ch_control2;				/* 0x004 */
--	u32 transfer_size;				/* 0x008 */
-+	u32 ch_control1;				/* 0x0000 */
-+	u32 ch_control2;				/* 0x0004 */
-+	u32 transfer_size;				/* 0x0008 */
- 	union {
--		u64 reg;				/* 0x00c..0x010 */
-+		u64 reg;				/* 0x000c..0x0010 */
- 		struct {
--			u32 lsb;			/* 0x00c */
--			u32 msb;			/* 0x010 */
-+			u32 lsb;			/* 0x000c */
-+			u32 msb;			/* 0x0010 */
- 		};
- 	} sar;
- 	union {
--		u64 reg;				/* 0x014..0x018 */
-+		u64 reg;				/* 0x0014..0x0018 */
- 		struct {
--			u32 lsb;			/* 0x014 */
--			u32 msb;			/* 0x018 */
-+			u32 lsb;			/* 0x0014 */
-+			u32 msb;			/* 0x0018 */
- 		};
- 	} dar;
- 	union {
--		u64 reg;				/* 0x01c..0x020 */
-+		u64 reg;				/* 0x001c..0x0020 */
- 		struct {
--			u32 lsb;			/* 0x01c */
--			u32 msb;			/* 0x020 */
-+			u32 lsb;			/* 0x001c */
-+			u32 msb;			/* 0x0020 */
- 		};
- 	} llp;
- } __packed;
+ 	raw_spin_lock_init(&dw->lock);
  
- struct dw_edma_v0_ch {
--	struct dw_edma_v0_ch_regs wr;			/* 0x200 */
--	u32 padding_1[55];				/* [0x224..0x2fc] */
--	struct dw_edma_v0_ch_regs rd;			/* 0x300 */
--	u32 padding_2[55];				/* [0x324..0x3fc] */
-+	struct dw_edma_v0_ch_regs wr;			/* 0x0200 */
-+	u32 padding_1[55];				/* 0x0224..0x02fc */
-+	struct dw_edma_v0_ch_regs rd;			/* 0x0300 */
-+	u32 padding_2[55];				/* 0x0324..0x03fc */
- } __packed;
+-	/* Find out how many write channels are supported by hardware */
+-	dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
+-	if (!dw->wr_ch_cnt)
+-		return -EINVAL;
++	if (!dw->wr_ch_cnt) {
++		/* Find out how many write channels are supported by hardware */
++		dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
++		if (!dw->wr_ch_cnt)
++			return -EINVAL;
++	}
  
- struct dw_edma_v0_unroll {
--	u32 padding_1;					/* 0x0f8 */
--	u32 wr_engine_chgroup;				/* 0x100 */
--	u32 rd_engine_chgroup;				/* 0x104 */
-+	u32 padding_1;					/* 0x00f8 */
-+	u32 wr_engine_chgroup;				/* 0x0100 */
-+	u32 rd_engine_chgroup;				/* 0x0104 */
- 	union {
--		u64 reg;				/* 0x108..0x10c */
-+		u64 reg;				/* 0x0108..0x010c */
- 		struct {
--			u32 lsb;			/* 0x108 */
--			u32 msb;			/* 0x10c */
-+			u32 lsb;			/* 0x0108 */
-+			u32 msb;			/* 0x010c */
- 		};
- 	} wr_engine_hshake_cnt;
--	u32 padding_2[2];				/* [0x110..0x114] */
-+	u32 padding_2[2];				/* 0x0110..0x0114 */
- 	union {
--		u64 reg;				/* 0x120..0x124 */
-+		u64 reg;				/* 0x0120..0x0124 */
- 		struct {
--			u32 lsb;			/* 0x120 */
--			u32 msb;			/* 0x124 */
-+			u32 lsb;			/* 0x0120 */
-+			u32 msb;			/* 0x0124 */
- 		};
- 	} rd_engine_hshake_cnt;
--	u32 padding_3[2];				/* [0x120..0x124] */
--	u32 wr_ch0_pwr_en;				/* 0x128 */
--	u32 wr_ch1_pwr_en;				/* 0x12c */
--	u32 wr_ch2_pwr_en;				/* 0x130 */
--	u32 wr_ch3_pwr_en;				/* 0x134 */
--	u32 wr_ch4_pwr_en;				/* 0x138 */
--	u32 wr_ch5_pwr_en;				/* 0x13c */
--	u32 wr_ch6_pwr_en;				/* 0x140 */
--	u32 wr_ch7_pwr_en;				/* 0x144 */
--	u32 padding_4[8];				/* [0x148..0x164] */
--	u32 rd_ch0_pwr_en;				/* 0x168 */
--	u32 rd_ch1_pwr_en;				/* 0x16c */
--	u32 rd_ch2_pwr_en;				/* 0x170 */
--	u32 rd_ch3_pwr_en;				/* 0x174 */
--	u32 rd_ch4_pwr_en;				/* 0x178 */
--	u32 rd_ch5_pwr_en;				/* 0x18c */
--	u32 rd_ch6_pwr_en;				/* 0x180 */
--	u32 rd_ch7_pwr_en;				/* 0x184 */
--	u32 padding_5[30];				/* [0x188..0x1fc] */
--	struct dw_edma_v0_ch ch[EDMA_V0_MAX_NR_CH];	/* [0x200..0x1120] */
-+	u32 padding_3[2];				/* 0x0120..0x0124 */
-+	u32 wr_ch0_pwr_en;				/* 0x0128 */
-+	u32 wr_ch1_pwr_en;				/* 0x012c */
-+	u32 wr_ch2_pwr_en;				/* 0x0130 */
-+	u32 wr_ch3_pwr_en;				/* 0x0134 */
-+	u32 wr_ch4_pwr_en;				/* 0x0138 */
-+	u32 wr_ch5_pwr_en;				/* 0x013c */
-+	u32 wr_ch6_pwr_en;				/* 0x0140 */
-+	u32 wr_ch7_pwr_en;				/* 0x0144 */
-+	u32 padding_4[8];				/* 0x0148..0x0164 */
-+	u32 rd_ch0_pwr_en;				/* 0x0168 */
-+	u32 rd_ch1_pwr_en;				/* 0x016c */
-+	u32 rd_ch2_pwr_en;				/* 0x0170 */
-+	u32 rd_ch3_pwr_en;				/* 0x0174 */
-+	u32 rd_ch4_pwr_en;				/* 0x0178 */
-+	u32 rd_ch5_pwr_en;				/* 0x018c */
-+	u32 rd_ch6_pwr_en;				/* 0x0180 */
-+	u32 rd_ch7_pwr_en;				/* 0x0184 */
-+	u32 padding_5[30];				/* 0x0188..0x01fc */
-+	struct dw_edma_v0_ch ch[EDMA_V0_MAX_NR_CH];	/* 0x0200..0x1120 */
- } __packed;
+-	/* Find out how many read channels are supported by hardware */
+-	dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
+-	if (!dw->rd_ch_cnt)
+-		return -EINVAL;
++	if (!dw->rd_ch_cnt) {
++		/* Find out how many read channels are supported by hardware */
++		dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
++		if (!dw->rd_ch_cnt)
++			return -EINVAL;
++	}
  
- struct dw_edma_v0_legacy {
--	u32 viewport_sel;				/* 0x0f8 */
--	struct dw_edma_v0_ch_regs ch;			/* [0x100..0x120] */
-+	u32 viewport_sel;				/* 0x00f8 */
-+	struct dw_edma_v0_ch_regs ch;			/* 0x0100..0x0120 */
- } __packed;
+ 	dev_vdbg(dev, "Channels:\twrite=%d, read=%d\n",
+ 		 dw->wr_ch_cnt, dw->rd_ch_cnt);
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index c130549..7077d79 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -13,9 +13,16 @@
+ #include <linux/dma/edma.h>
+ #include <linux/pci-epf.h>
+ #include <linux/msi.h>
++#include <linux/bitfield.h>
  
- struct dw_edma_v0_regs {
- 	/* eDMA global registers */
--	u32 ctrl_data_arb_prior;			/* 0x000 */
--	u32 padding_1;					/* 0x004 */
--	u32 ctrl;					/* 0x008 */
--	u32 wr_engine_en;				/* 0x00c */
--	u32 wr_doorbell;				/* 0x010 */
--	u32 padding_2;					/* 0x014 */
-+	u32 ctrl_data_arb_prior;			/* 0x0000 */
-+	u32 padding_1;					/* 0x0004 */
-+	u32 ctrl;					/* 0x0008 */
-+	u32 wr_engine_en;				/* 0x000c */
-+	u32 wr_doorbell;				/* 0x0010 */
-+	u32 padding_2;					/* 0x0014 */
- 	union {
--		u64 reg;				/* 0x018..0x01c */
-+		u64 reg;				/* 0x0018..0x001c */
- 		struct {
--			u32 lsb;			/* 0x018 */
--			u32 msb;			/* 0x01c */
-+			u32 lsb;			/* 0x0018 */
-+			u32 msb;			/* 0x001c */
- 		};
- 	} wr_ch_arb_weight;
--	u32 padding_3[3];				/* [0x020..0x028] */
--	u32 rd_engine_en;				/* 0x02c */
--	u32 rd_doorbell;				/* 0x030 */
--	u32 padding_4;					/* 0x034 */
-+	u32 padding_3[3];				/* 0x0020..0x0028 */
-+	u32 rd_engine_en;				/* 0x002c */
-+	u32 rd_doorbell;				/* 0x0030 */
-+	u32 padding_4;					/* 0x0034 */
- 	union {
--		u64 reg;				/* 0x038..0x03c */
-+		u64 reg;				/* 0x0038..0x003c */
- 		struct {
--			u32 lsb;			/* 0x038 */
--			u32 msb;			/* 0x03c */
-+			u32 lsb;			/* 0x0038 */
-+			u32 msb;			/* 0x003c */
- 		};
- 	} rd_ch_arb_weight;
--	u32 padding_5[3];				/* [0x040..0x048] */
-+	u32 padding_5[3];				/* 0x0040..0x0048 */
- 	/* eDMA interrupts registers */
--	u32 wr_int_status;				/* 0x04c */
--	u32 padding_6;					/* 0x050 */
--	u32 wr_int_mask;				/* 0x054 */
--	u32 wr_int_clear;				/* 0x058 */
--	u32 wr_err_status;				/* 0x05c */
-+	u32 wr_int_status;				/* 0x004c */
-+	u32 padding_6;					/* 0x0050 */
-+	u32 wr_int_mask;				/* 0x0054 */
-+	u32 wr_int_clear;				/* 0x0058 */
-+	u32 wr_err_status;				/* 0x005c */
- 	union {
--		u64 reg;				/* 0x060..0x064 */
-+		u64 reg;				/* 0x0060..0x0064 */
- 		struct {
--			u32 lsb;			/* 0x060 */
--			u32 msb;			/* 0x064 */
-+			u32 lsb;			/* 0x0060 */
-+			u32 msb;			/* 0x0064 */
- 		};
- 	} wr_done_imwr;
- 	union {
--		u64 reg;				/* 0x068..0x06c */
-+		u64 reg;				/* 0x0068..0x006c */
- 		struct {
--			u32 lsb;			/* 0x068 */
--			u32 msb;			/* 0x06c */
-+			u32 lsb;			/* 0x0068 */
-+			u32 msb;			/* 0x006c */
- 		};
- 	} wr_abort_imwr;
--	u32 wr_ch01_imwr_data;				/* 0x070 */
--	u32 wr_ch23_imwr_data;				/* 0x074 */
--	u32 wr_ch45_imwr_data;				/* 0x078 */
--	u32 wr_ch67_imwr_data;				/* 0x07c */
--	u32 padding_7[4];				/* [0x080..0x08c] */
--	u32 wr_linked_list_err_en;			/* 0x090 */
--	u32 padding_8[3];				/* [0x094..0x09c] */
--	u32 rd_int_status;				/* 0x0a0 */
--	u32 padding_9;					/* 0x0a4 */
--	u32 rd_int_mask;				/* 0x0a8 */
--	u32 rd_int_clear;				/* 0x0ac */
--	u32 padding_10;					/* 0x0b0 */
-+	u32 wr_ch01_imwr_data;				/* 0x0070 */
-+	u32 wr_ch23_imwr_data;				/* 0x0074 */
-+	u32 wr_ch45_imwr_data;				/* 0x0078 */
-+	u32 wr_ch67_imwr_data;				/* 0x007c */
-+	u32 padding_7[4];				/* 0x0080..0x008c */
-+	u32 wr_linked_list_err_en;			/* 0x0090 */
-+	u32 padding_8[3];				/* 0x0094..0x009c */
-+	u32 rd_int_status;				/* 0x00a0 */
-+	u32 padding_9;					/* 0x00a4 */
-+	u32 rd_int_mask;				/* 0x00a8 */
-+	u32 rd_int_clear;				/* 0x00ac */
-+	u32 padding_10;					/* 0x00b0 */
- 	union {
--		u64 reg;				/* 0x0b4..0x0b8 */
-+		u64 reg;				/* 0x00b4..0x00b8 */
- 		struct {
--			u32 lsb;			/* 0x0b4 */
--			u32 msb;			/* 0x0b8 */
-+			u32 lsb;			/* 0x00b4 */
-+			u32 msb;			/* 0x00b8 */
- 		};
- 	} rd_err_status;
--	u32 padding_11[2];				/* [0x0bc..0x0c0] */
--	u32 rd_linked_list_err_en;			/* 0x0c4 */
--	u32 padding_12;					/* 0x0c8 */
-+	u32 padding_11[2];				/* 0x00bc..0x00c0 */
-+	u32 rd_linked_list_err_en;			/* 0x00c4 */
-+	u32 padding_12;					/* 0x00c8 */
- 	union {
--		u64 reg;				/* 0x0cc..0x0d0 */
-+		u64 reg;				/* 0x00cc..0x00d0 */
- 		struct {
--			u32 lsb;			/* 0x0cc */
--			u32 msb;			/* 0x0d0 */
-+			u32 lsb;			/* 0x00cc */
-+			u32 msb;			/* 0x00d0 */
- 		};
- 	} rd_done_imwr;
- 	union {
--		u64 reg;				/* 0x0d4..0x0d8 */
-+		u64 reg;				/* 0x00d4..0x00d8 */
- 		struct {
--			u32 lsb;			/* 0x0d4 */
--			u32 msb;			/* 0x0d8 */
-+			u32 lsb;			/* 0x00d4 */
-+			u32 msb;			/* 0x00d8 */
- 		};
- 	} rd_abort_imwr;
--	u32 rd_ch01_imwr_data;				/* 0x0dc */
--	u32 rd_ch23_imwr_data;				/* 0x0e0 */
--	u32 rd_ch45_imwr_data;				/* 0x0e4 */
--	u32 rd_ch67_imwr_data;				/* 0x0e8 */
--	u32 padding_13[4];				/* [0x0ec..0x0f8] */
-+	u32 rd_ch01_imwr_data;				/* 0x00dc */
-+	u32 rd_ch23_imwr_data;				/* 0x00e0 */
-+	u32 rd_ch45_imwr_data;				/* 0x00e4 */
-+	u32 rd_ch67_imwr_data;				/* 0x00e8 */
-+	u32 padding_13[4];				/* 0x00ec..0x00f8 */
- 	/* eDMA channel context grouping */
- 	union dw_edma_v0_type {
--		struct dw_edma_v0_legacy legacy;	/* [0x0f8..0x120] */
--		struct dw_edma_v0_unroll unroll;	/* [0x0f8..0x1120] */
-+		struct dw_edma_v0_legacy legacy;	/* 0x00f8..0x0120 */
-+		struct dw_edma_v0_unroll unroll;	/* 0x00f8..0x1120 */
- 	} type;
- } __packed;
+ #include "dw-edma-core.h"
  
++#define DW_PCIE_VSEC_DMA_ID			0x6
++#define DW_PCIE_VSEC_DMA_BAR			GENMASK(10, 8)
++#define DW_PCIE_VSEC_DMA_MAP			GENMASK(2, 0)
++#define DW_PCIE_VSEC_DMA_RD_CH			GENMASK(25, 16)
++#define DW_PCIE_VSEC_DMA_WR_CH			GENMASK(9, 0)
++
+ struct dw_edma_pcie_data {
+ 	/* eDMA registers location */
+ 	enum pci_barno			rg_bar;
+@@ -32,6 +39,8 @@ struct dw_edma_pcie_data {
+ 	/* Other */
+ 	enum dw_edma_map_format		mf;
+ 	u8				irqs;
++	u16				rd_ch_cnt;
++	u16				wr_ch_cnt;
+ };
+ 
+ static const struct dw_edma_pcie_data snps_edda_data = {
+@@ -50,6 +59,8 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	/* Other */
+ 	.mf				= EDMA_MF_EDMA_UNROLL,
+ 	.irqs				= 1,
++	.rd_ch_cnt			= 0,
++	.wr_ch_cnt			= 0,
+ };
+ 
+ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
+@@ -61,10 +72,49 @@ static const struct dw_edma_core_ops dw_edma_pcie_core_ops = {
+ 	.irq_vector = dw_edma_pcie_irq_vector,
+ };
+ 
++static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
++					   struct dw_edma_pcie_data *pdata)
++{
++	u32 val, map;
++	u16 vsec;
++	u64 off;
++
++	vsec = pci_find_vsec_capability(pdev, DW_PCIE_VSEC_DMA_ID);
++	if (!vsec)
++		return;
++
++	pci_read_config_dword(pdev, vsec + PCI_VSEC_HEADER, &val);
++	if (PCI_VSEC_CAP_REV(val) != 0x00 || PCI_VSEC_CAP_LEN(val) != 0x18)
++		return;
++
++	pci_dbg(pdev, "Detected PCIe Vendor-Specific Extended Capability DMA\n");
++	pci_read_config_dword(pdev, vsec + 0x8, &val);
++	map = FIELD_GET(DW_PCIE_VSEC_DMA_MAP, val);
++	if (map != EDMA_MF_EDMA_LEGACY &&
++	    map != EDMA_MF_EDMA_UNROLL &&
++	    map != EDMA_MF_HDMA_COMPAT)
++		return;
++
++	pdata->mf = map;
++	pdata->rg_bar = FIELD_GET(DW_PCIE_VSEC_DMA_BAR, val);
++
++	pci_read_config_dword(pdev, vsec + 0xc, &val);
++	pdata->rd_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val);
++	pdata->wr_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_WR_CH, val);
++
++	pci_read_config_dword(pdev, vsec + 0x14, &val);
++	off = val;
++	pci_read_config_dword(pdev, vsec + 0x10, &val);
++	off <<= 32;
++	off |= val;
++	pdata->rg_off = off;
++}
++
+ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			      const struct pci_device_id *pid)
+ {
+-	const struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
++	struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
++	struct dw_edma_pcie_data vsec_data;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_edma_chip *chip;
+ 	struct dw_edma *dw;
+@@ -77,10 +127,18 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		return err;
+ 	}
+ 
++	memcpy(&vsec_data, pdata, sizeof(struct dw_edma_pcie_data));
++
++	/*
++	 * Tries to find if exists a PCIe Vendor-Specific Extended Capability
++	 * for the DMA, if exists one, then reconfigures with the new data
++	 */
++	dw_edma_pcie_get_vsec_dma_data(pdev, &vsec_data);
++
+ 	/* Mapping PCI BAR regions */
+-	err = pcim_iomap_regions(pdev, BIT(pdata->rg_bar) |
+-				       BIT(pdata->ll_bar) |
+-				       BIT(pdata->dt_bar),
++	err = pcim_iomap_regions(pdev, BIT(vsec_data.rg_bar) |
++				       BIT(vsec_data.ll_bar) |
++				       BIT(vsec_data.dt_bar),
+ 				 pci_name(pdev));
+ 	if (err) {
+ 		pci_err(pdev, "eDMA BAR I/O remapping failed\n");
+@@ -123,7 +181,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		return -ENOMEM;
+ 
+ 	/* IRQs allocation */
+-	nr_irqs = pci_alloc_irq_vectors(pdev, 1, pdata->irqs,
++	nr_irqs = pci_alloc_irq_vectors(pdev, 1, vsec_data.irqs,
+ 					PCI_IRQ_MSI | PCI_IRQ_MSIX);
+ 	if (nr_irqs < 1) {
+ 		pci_err(pdev, "fail to alloc IRQ vector (number of IRQs=%u)\n",
+@@ -137,27 +195,29 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	chip->id = pdev->devfn;
+ 	chip->irq = pdev->irq;
+ 
+-	dw->rg_region.vaddr = pcim_iomap_table(pdev)[pdata->rg_bar];
+-	dw->rg_region.vaddr += pdata->rg_off;
+-	dw->rg_region.paddr = pdev->resource[pdata->rg_bar].start;
+-	dw->rg_region.paddr += pdata->rg_off;
+-	dw->rg_region.sz = pdata->rg_sz;
+-
+-	dw->ll_region.vaddr = pcim_iomap_table(pdev)[pdata->ll_bar];
+-	dw->ll_region.vaddr += pdata->ll_off;
+-	dw->ll_region.paddr = pdev->resource[pdata->ll_bar].start;
+-	dw->ll_region.paddr += pdata->ll_off;
+-	dw->ll_region.sz = pdata->ll_sz;
+-
+-	dw->dt_region.vaddr = pcim_iomap_table(pdev)[pdata->dt_bar];
+-	dw->dt_region.vaddr += pdata->dt_off;
+-	dw->dt_region.paddr = pdev->resource[pdata->dt_bar].start;
+-	dw->dt_region.paddr += pdata->dt_off;
+-	dw->dt_region.sz = pdata->dt_sz;
+-
+-	dw->mf = pdata->mf;
++	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg_bar];
++	dw->rg_region.vaddr += vsec_data.rg_off;
++	dw->rg_region.paddr = pdev->resource[vsec_data.rg_bar].start;
++	dw->rg_region.paddr += vsec_data.rg_off;
++	dw->rg_region.sz = vsec_data.rg_sz;
++
++	dw->ll_region.vaddr = pcim_iomap_table(pdev)[vsec_data.ll_bar];
++	dw->ll_region.vaddr += vsec_data.ll_off;
++	dw->ll_region.paddr = pdev->resource[vsec_data.ll_bar].start;
++	dw->ll_region.paddr += vsec_data.ll_off;
++	dw->ll_region.sz = vsec_data.ll_sz;
++
++	dw->dt_region.vaddr = pcim_iomap_table(pdev)[vsec_data.dt_bar];
++	dw->dt_region.vaddr += vsec_data.dt_off;
++	dw->dt_region.paddr = pdev->resource[vsec_data.dt_bar].start;
++	dw->dt_region.paddr += vsec_data.dt_off;
++	dw->dt_region.sz = vsec_data.dt_sz;
++
++	dw->mf = vsec_data.mf;
+ 	dw->nr_irqs = nr_irqs;
+ 	dw->ops = &dw_edma_pcie_core_ops;
++	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
++	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
+ 
+ 	/* Debug info */
+ 	if (dw->mf == EDMA_MF_EDMA_LEGACY)
+@@ -170,15 +230,15 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
+ 
+ 	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		pdata->rg_bar, pdata->rg_off, pdata->rg_sz,
++		vsec_data.rg_bar, vsec_data.rg_off, vsec_data.rg_sz,
+ 		dw->rg_region.vaddr, &dw->rg_region.paddr);
+ 
+ 	pci_dbg(pdev, "L. List:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		pdata->ll_bar, pdata->ll_off, pdata->ll_sz,
++		vsec_data.ll_bar, vsec_data.ll_off, vsec_data.ll_sz,
+ 		dw->ll_region.vaddr, &dw->ll_region.paddr);
+ 
+ 	pci_dbg(pdev, "Data:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		pdata->dt_bar, pdata->dt_off, pdata->dt_sz,
++		vsec_data.dt_bar, vsec_data.dt_off, vsec_data.dt_sz,
+ 		dw->dt_region.vaddr, &dw->dt_region.paddr);
+ 
+ 	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
 -- 
 2.7.4
 
