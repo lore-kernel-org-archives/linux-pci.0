@@ -2,41 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E75FC433DB
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 17:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E81C9C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 17:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11C7B64E9A
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 17:04:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 997B364E40
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 17:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236989AbhBBRD6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 12:03:58 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:37826 "EHLO
+        id S236318AbhBBREe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 12:04:34 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:53092 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237029AbhBBQ5u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 11:57:50 -0500
+        by vger.kernel.org with ESMTP id S236984AbhBBQ5v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 11:57:51 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 65E7FC00BA;
-        Tue,  2 Feb 2021 16:56:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612285008; bh=jSQ7gPD0eg5i7tdOXR7I0dbZcd3MOQ43M0ZUh6bw2F0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
-         References:From;
-        b=ltFaExBi5SoZXkLuhjrd8/KIg2kkE5HZJpX7w0nLSFSPjZw8Z8EmMrjsPW2gMyEYt
-         hmQTwrrqnpeSh8gQ0QZkqsV+4fjMXIzGqy9ARUgr5aLFZU6zLoUV5mdWS4R3t9VfyA
-         C6L8t0+ibXqKrOD8SlyBi7jRVFzw1jsqTfiulmhG4QNMbDGRWpm/uz2s/06sIRiKeG
-         z2XOaKW/eTH01vNFN8+IrZz/l+1m8oFv9/j+IgTvioQkfBJr92ea/G4yBESISs23Pq
-         BKmrSBjsx+pfDqTYbvbceD/zK6B1rD2PJxu+y7KjIPb03ZCJLy0LuoUXi8AnXeeBP1
-         j7ZmKhI7ROCxA==
-Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 824D3A005F;
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 767654017D;
         Tue,  2 Feb 2021 16:56:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1612285007; bh=+auZmpcKoLtjzoJGo6Msp1yOj0Ox3iggz0BY5h+429o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=j2WhAPuU8d8+zdfAE9/5G2SGrCQQFWXX9L7vPxQo5yvUQUdbIlcD99tH+Ebai3dOc
+         6ZxCQ33Woc85T9pM26Lag5A+B3ZzkOZ4PLV022psLNMXQFnIguYrbI+l44jhoC4Wuf
+         xuaOdKa3dXEZl24qSGusXrB5I4e7H0j81uKtaTJ5Su/0r02+bC3ykzAcPFNwler7p3
+         Bt70Z9qoNGhQTax8yV/hOQOFlPD62YB1w0eeCREGjHs3Xves/AM/8ZridsBqgAaKCB
+         2SJKGY8FPJcyu5lJQtnb32jVfyIOPCOem6/rSoeTmSYP69aNaNaF1Z5bmBWzLRISUq
+         uwpodwkUIn+Uw==
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 69380A005E;
+        Tue,  2 Feb 2021 16:56:43 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -47,41 +46,57 @@ To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Andrew Morton <akpm@linux-foundation.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Jonathan Corbet <corbet@lwn.net>
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [RESEND PATCH v3 2/5] misc: Add Synopsys DesignWare xData IP driver to Makefile
-Date:   Tue,  2 Feb 2021 17:56:35 +0100
-Message-Id: <978462554997e50683e78a69493c0e169de6ef18.1612284945.git.gustavo.pimentel@synopsys.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        linux-doc@vger.kernel.org
+Subject: [RESEND PATCH v3 0/5] misc: Add Add Synopsys DesignWare xData IP driver
+Date:   Tue,  2 Feb 2021 17:56:33 +0100
+Message-Id: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
-References: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
-References: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Synopsys DesignWare xData IP driver to Makefile.
+This patch series adds a new driver called xData-pcie for the Synopsys
+DesignWare PCIe prototype.
 
-This driver enables/disables the PCIe traffic generator module
-pertain to the Synopsys DesignWare prototype.
+The driver configures and enables the Synopsys DesignWare PCIe traffic
+generator IP inside of prototype Endpoint which will generate upstream
+and downstream PCIe traffic. This allows to quickly test the PCIe link
+throughput speed and check is the prototype solution has some limitation
+or not.
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- drivers/misc/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+Changes:
+ V2: Rework driver according to Greg Kroah-Hartman feedback
+ V3: Fixed issues detected while running on 64 bits platforms
+     Rebased patches on top of v5.11-rc1 version
 
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index d23231e..bf22021 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -49,6 +49,7 @@ obj-$(CONFIG_SRAM_EXEC)		+= sram-exec.o
- obj-$(CONFIG_GENWQE)		+= genwqe/
- obj-$(CONFIG_ECHO)		+= echo/
- obj-$(CONFIG_CXL_BASE)		+= cxl/
-+obj-$(CONFIG_DW_XDATA_PCIE)	+= dw-xdata-pcie.o
- obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
- obj-$(CONFIG_OCXL)		+= ocxl/
- obj-y				+= cardreader/
+Cc: Derek Kiernan <derek.kiernan@xilinx.com>
+Cc: Dragan Cvetic <dragan.cvetic@xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+
+Gustavo Pimentel (5):
+  misc: Add Synopsys DesignWare xData IP driver
+  misc: Add Synopsys DesignWare xData IP driver to Makefile
+  misc: Add Synopsys DesignWare xData IP driver to Kconfig
+  Documentation: misc-devices: Add Documentation for dw-xdata-pcie
+    driver
+  MAINTAINERS: Add Synopsys xData IP driver maintainer
+
+ Documentation/misc-devices/dw-xdata-pcie.rst |  40 +++
+ MAINTAINERS                                  |   7 +
+ drivers/misc/Kconfig                         |  11 +
+ drivers/misc/Makefile                        |   1 +
+ drivers/misc/dw-xdata-pcie.c                 | 379 +++++++++++++++++++++++++++
+ 5 files changed, 438 insertions(+)
+ create mode 100644 Documentation/misc-devices/dw-xdata-pcie.rst
+ create mode 100644 drivers/misc/dw-xdata-pcie.c
+
 -- 
 2.7.4
 
