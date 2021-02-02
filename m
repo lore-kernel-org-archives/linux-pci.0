@@ -2,96 +2,80 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6B07C43381
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F17C433DB
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:13:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98AB964DDC
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EC1964E58
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:13:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240240AbhBBUBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 15:01:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36544 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232851AbhBBNrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Feb 2021 08:47:20 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C8E7E64F93;
-        Tue,  2 Feb 2021 13:41:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612273309;
-        bh=lrgu37PQY9gKgzLHomntqVwJNVrZZKNWqcd6OBNf6hA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lP7CntQBMbVQJpEaaiYL7FNJfFN62FdN/GcMCAopAu3GeFeVdRngp79sVRpzFuHK5
-         TD5qm7vP35cKE27SqbfUnQslx8BchPj39SM6t3rctdUC8fYtCSE4pQocYrTa0iN/0t
-         d3FXWFCxMFvch8y6MGZ18wvBLBYTgHhaxOiLNKDwuznwWMH/xSyFPOFz3kqVjyuXZ0
-         zRzPBx8du28F2J7+fEf6S8AW6tZIr7+Fk1oGqZHo5IfxHe5n3QmWIbNh9GJ1DWeuGS
-         WNY6QFW1AReemuHlARlf6l+8hftt/ZTfX7rBzAc8J6+5GpSagbMIx44wB9Lpu37BSB
-         l0Kc3Fk6ocsSg==
-Date:   Tue, 2 Feb 2021 13:41:01 +0000
-From:   Mark Brown <broonie@kernel.org>
-To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
+        id S231860AbhBBUNn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 15:13:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45340 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231667AbhBBUNm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 15:13:42 -0500
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5043CC061573;
+        Tue,  2 Feb 2021 12:13:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=/r/WPmX0rkYqfttFzRKsV+hgjsh3bZ14tB7P3tI6PZ0=; b=yMB3HKvcHkZAxPZJHg9jJedZ/1
+        w4rgaNnFfG/bu1H4w645NVgFdizX3cosn14fkdJGFxGAPptby0N38krynB5HJD3nWs6WxY0480vgw
+        nJQYB2c7P67NDw5dJ4FGAxHnlbVvbt4ZnwUEvorD6xgHxWBREZol1BABKbTbiKI+kUgCojKLX8vQv
+        Fl9gspfSAh16ipfnXKrOYypbjUkcaFBKtOUn8Oj9iDubENCn3l9Tn1YpvEkSNqZryuUTEI/6PNYq8
+        T8k/Ccg62nWXXOQ15q2IILSUqeDesGbsjIKL02d4N9qPGQkZw9cBFt8k7uobaRcrKVb4WHrt7RK0l
+        M68wP2UQ==;
+Received: from [2601:1c0:6280:3f0::2a53] (helo=merlin.infradead.org)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1l722l-00078f-I0; Tue, 02 Feb 2021 20:13:00 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 09/13] pci: dwc: pcie-kirin: allow to optionally require
- a regulator
-Message-ID: <20210202134101.GB5154@sirena.org.uk>
-References: <cover.1612271903.git.mchehab+huawei@kernel.org>
- <7f4abd1ba9f4b33fe6f66213f56aa4269db74317.1612271903.git.mchehab+huawei@kernel.org>
+        linux-pci@vger.kernel.org
+Subject: [PATCH -next] PCI: endpoint: fix build error, EP NTB driver uses configfs
+Date:   Tue,  2 Feb 2021 12:12:55 -0800
+Message-Id: <20210202201255.26768-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
-Content-Disposition: inline
-In-Reply-To: <7f4abd1ba9f4b33fe6f66213f56aa4269db74317.1612271903.git.mchehab+huawei@kernel.org>
-X-Cookie: Only God can make random selections.
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+The pci-epf-ntb driver uses configfs APIs, so it should depend on
+CONFIGFS_FS to prevent build errors.
 
---gj572EiMnwbLXET9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ld: drivers/pci/endpoint/functions/pci-epf-ntb.o: in function `epf_ntb_add_cfs':
+pci-epf-ntb.c:(.text+0x1b): undefined reference to `config_group_init_type_name'
 
-On Tue, Feb 02, 2021 at 02:29:54PM +0100, Mauro Carvalho Chehab wrote:
-> On Hikey 970, there's a power supply controlled by Hi6421v600
-> regulator that turns on the PCI devices on the board. Without
-> that, no PCI hardware would work.
->=20
-> As this is device-dependent, such regulator line should be
-> optional.
+Fixes: 7dc64244f9e9 ("PCI: endpoint: Add EP function driver to provide NTB functionality")
 
-Supplies should only be optional if they may be physically absent from
-the system, if they are just sometimes not described well in firmware
-they should be requested via the normal regulator_get() interface, the
-core will supply a dummy regulator if there is nothing at all in the
-firmware description.
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org
+---
+You may switch to 'select CONFIG_FS_FS' if you feel strongly about it.
 
-Supplies should also generally be referred to with the naming used in
-the datasheet for the part.
+ drivers/pci/endpoint/functions/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
---gj572EiMnwbLXET9
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmAZVm0ACgkQJNaLcl1U
-h9DRtAf+K9FZJNlyTA10opaKROPalDvJYAUzGS29QifY8rP5q40puTuZCei9grQM
-Qxa47bzq4jvwxU8OEg6BID3Orcf7Q+OMe5RV0e58Okl62F4uBXJaVWYp8mnwPpKW
-tPebWtJPWh9PJts0TMok3Noq/AZ8UQxmyiOasj8izrMxk3FEVidRAtXpHbFw+Rwa
-YkTAk/4y4pZhz9pKYGuEXGLj5spn4O7+SiONjxuMB+SZMHLH4foQFiCtmul6upY9
-2UYXjt4NUMCphxNykQ8UeAWDWoQ9txj7vRHFl5YPp0MIbRCNcHFuJEDjZsfQIbFH
-PQQBEahCUOHsorC5pbyEuDrKH60SPw==
-=WkEg
------END PGP SIGNATURE-----
-
---gj572EiMnwbLXET9--
+--- linux-next-20210202.orig/drivers/pci/endpoint/functions/Kconfig
++++ linux-next-20210202/drivers/pci/endpoint/functions/Kconfig
+@@ -16,6 +16,7 @@ config PCI_EPF_TEST
+ config PCI_EPF_NTB
+ 	tristate "PCI Endpoint NTB driver"
+ 	depends on PCI_ENDPOINT
++	depends on CONFIGFS_FS
+ 	help
+ 	  Select this configuration option to enable the NTB driver
+ 	  for PCI Endpoint. NTB driver implements NTB controller
