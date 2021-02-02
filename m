@@ -2,50 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD3CC43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A21DC433E9
 	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 13:33:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A036664F51
+	by mail.kernel.org (Postfix) with ESMTP id 513D864F45
 	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 13:33:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232502AbhBBNdN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 08:33:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59604 "EHLO mail.kernel.org"
+        id S232512AbhBBNda (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 08:33:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59628 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232357AbhBBNbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Feb 2021 08:31:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ED16864F63;
-        Tue,  2 Feb 2021 13:30:01 +0000 (UTC)
+        id S232369AbhBBNbg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Feb 2021 08:31:36 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2310764F76;
+        Tue,  2 Feb 2021 13:30:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1612272602;
-        bh=gJX2uEjb5s4boXI8AdwwpgjMqG9is0PeuQ5sxwVLzHs=;
+        bh=nJFVkFVcxLt04mnBQIBfm4IXRi2ERW4Q1DqINzouepk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bqq/KxT9OgUzXakZZwjsuiQLsUTPxk2zk4jCy0pcEoU8SJIaTClg0CnfWq+3rqq67
-         9hsxq/zXWE9BCJ3MEDWyMJgWamlsmV/GlhxxkAaIIIhTsRj7ZfLjVNqnyxUDiXo8wD
-         kWCnhvc8dWAIlonNCfT03pp9Im7NIj+frkDRyFIRxmm+b+bKdVmOZiaWtT8t4BE03K
-         zuZInaD6wISfgRGJRGuw30AVPmXw2Sj+BP8/DggDVNUYxQIsZK3fpk+Orjv/PKkDfy
-         2pCLFNESXfQC583UYyvyFnt3NhoGZQlCSQq8jg3d+S7/zvcRKupENjlDYufJ2FKIbz
-         JwYRiQLlbIWWg==
+        b=PPTE7k8kTk+XXzwTslQP0Ritd+T4aPUY8VCOztRnA7mqy4ZhQaU13lMM9J+EHkc0b
+         yHwbrU5KYbfnq7JwpONZhJCQD/Di55pgcdQKKTe1A1eH6OI/ZwrRwUhK3UBmPyXzDC
+         W4Xpyu5c2qmm8psfC/oPx0S9HEzxNZBhGCMmHnPs/RB7YKB0JX4AR4RwxUvZdTkn8i
+         tSD6s1rzTdzE75rWsXszeu9TLr8mzm4G9X5mH7xiIfRuVg7+2ZuLQ4T2h3CcQljtK/
+         4UBVJP+WXDZnacBS1vF+DGD8+gZ1M5qSrMEKnOzmksi1K9bu2AUlO4BAKSOTtNlWyw
+         T4oAWoVR/1HPQ==
 Received: by mail.kernel.org with local (Exim 4.94)
         (envelope-from <mchehab@kernel.org>)
-        id 1l6vkl-0011yt-It; Tue, 02 Feb 2021 14:29:59 +0100
+        id 1l6vkl-0011yn-Db; Tue, 02 Feb 2021 14:29:59 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Subject: [PATCH 04/13] pci: dwc: pcie-kirin: add HI3670 PCI-E controller support
-Date:   Tue,  2 Feb 2021 14:29:49 +0100
-Message-Id: <8d988a1cd73c7eae083f5e026a2db71070210fdb.1612271903.git.mchehab+huawei@kernel.org>
+        Fabio Estevam <festevam@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        devicetree@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 01/13] doc: bindings: pci: designware-pcie.txt: convert it to yaml
+Date:   Tue,  2 Feb 2021 14:29:46 +0100
+Message-Id: <706e684f571e142362d7be74eb1dcee2c8558052.1612271903.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <cover.1612271903.git.mchehab+huawei@kernel.org>
 References: <cover.1612271903.git.mchehab+huawei@kernel.org>
@@ -57,857 +83,566 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Convert the file into a DT schema.
 
-Add HiSilicon HI3670 SoC PCI-E controller support based on Designware
-PCI-E controller IP.
-
-[mchehab+huawei@kernel.org: fix merge conflicts]
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-kirin.c | 723 +++++++++++++++++++++++-
- 1 file changed, 707 insertions(+), 16 deletions(-)
+ .../bindings/pci/amlogic,meson-pcie.txt       |   4 +-
+ .../bindings/pci/axis,artpec6-pcie.txt        |   2 +-
+ .../bindings/pci/designware-pcie.txt          |  77 ----------
+ .../bindings/pci/fsl,imx6q-pcie.txt           |   2 +-
+ .../bindings/pci/hisilicon-histb-pcie.txt     |   2 +-
+ .../bindings/pci/hisilicon-pcie.txt           |   2 +-
+ .../devicetree/bindings/pci/kirin-pcie.txt    |   2 +-
+ .../bindings/pci/layerscape-pci.txt           |   2 +-
+ .../bindings/pci/nvidia,tegra194-pcie.txt     |   4 +-
+ .../devicetree/bindings/pci/pci-armada8k.txt  |   2 +-
+ .../devicetree/bindings/pci/pci-keystone.txt  |  10 +-
+ .../devicetree/bindings/pci/pcie-al.txt       |   2 +-
+ .../devicetree/bindings/pci/qcom,pcie.txt     |  14 +-
+ .../bindings/pci/samsung,exynos-pcie.yaml     |   2 +-
+ .../devicetree/bindings/pci/snps,pcie.yaml    | 139 ++++++++++++++++++
+ .../pci/socionext,uniphier-pcie-ep.yaml       |   2 +-
+ .../devicetree/bindings/pci/ti-pci.txt        |   4 +-
+ .../devicetree/bindings/pci/uniphier-pcie.txt |   2 +-
+ MAINTAINERS                                   |   2 +-
+ 19 files changed, 169 insertions(+), 107 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/snps,pcie.yaml
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 026fd1e42a55..5925d2b345a8 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -29,6 +29,7 @@
- #define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
+diff --git a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+index b6acbe694ffb..da9253d43550 100644
+--- a/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/amlogic,meson-pcie.txt
+@@ -3,7 +3,7 @@ Amlogic Meson AXG DWC PCIE SoC controller
+ Amlogic Meson PCIe host controller is based on the Synopsys DesignWare PCI core.
+ It shares common functions with the PCIe DesignWare core driver and
+ inherits common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
  
- #define REF_CLK_FREQ			100000000
-+#define AXI_CLK_FREQ			207500000
+ Additional properties are described here:
  
- /* PCIe ELBI registers */
- #define SOC_PCIECTRL_CTRL0_ADDR		0x000
-@@ -60,6 +61,65 @@
- #define PCIE_DEBOUNCE_PARAM	0xF0F400
- #define PCIE_OE_BYPASS		(0x3 << 28)
+@@ -33,7 +33,7 @@ Required properties:
+ - phy-names: must contain "pcie"
  
-+/* PCIe CTRL registers */
-+#define SOC_PCIECTRL_CTRL0_ADDR   0x000
-+#define SOC_PCIECTRL_CTRL1_ADDR   0x004
-+#define SOC_PCIECTRL_CTRL7_ADDR   0x01c
-+#define SOC_PCIECTRL_CTRL12_ADDR  0x030
-+#define SOC_PCIECTRL_CTRL20_ADDR  0x050
-+#define SOC_PCIECTRL_CTRL21_ADDR  0x054
-+#define SOC_PCIECTRL_STATE0_ADDR  0x400
-+
-+/* PCIe PHY registers */
-+#define SOC_PCIEPHY_CTRL0_ADDR    0x000
-+#define SOC_PCIEPHY_CTRL1_ADDR    0x004
-+#define SOC_PCIEPHY_CTRL2_ADDR    0x008
-+#define SOC_PCIEPHY_CTRL3_ADDR    0x00c
-+#define SOC_PCIEPHY_CTRL38_ADDR   0x0098
-+#define SOC_PCIEPHY_STATE0_ADDR   0x400
-+
-+#define PCIE_LINKUP_ENABLE            (0x8020)
-+#define PCIE_ELBI_SLV_DBI_ENABLE      (0x1 << 21)
-+#define PCIE_LTSSM_ENABLE_BIT         (0x1 << 11)
-+#define PCIEPHY_RESET_BIT             (0x1 << 17)
-+#define PCIEPHY_PIPE_LINE0_RESET_BIT  (0x1 << 19)
-+
-+#define PORT_MSI_CTRL_ADDR            0x820
-+#define PORT_MSI_CTRL_UPPER_ADDR      0x824
-+#define PORT_MSI_CTRL_INT0_ENABLE     0x828
-+
-+#define EYEPARAM_NOCFG 0xFFFFFFFF
-+#define RAWLANEN_DIG_PCS_XF_TX_OVRD_IN_1 0x3001
-+#define SUP_DIG_LVL_OVRD_IN 0xf
-+#define LANEN_DIG_ASIC_TX_OVRD_IN_1 0x1002
-+#define LANEN_DIG_ASIC_TX_OVRD_IN_2 0x1003
-+
-+/* kirin970 pciephy register */
-+#define SOC_PCIEPHY_MMC1PLL_CTRL1  0xc04
-+#define SOC_PCIEPHY_MMC1PLL_CTRL16 0xC40
-+#define SOC_PCIEPHY_MMC1PLL_CTRL17 0xC44
-+#define SOC_PCIEPHY_MMC1PLL_CTRL20 0xC50
-+#define SOC_PCIEPHY_MMC1PLL_CTRL21 0xC54
-+#define SOC_PCIEPHY_MMC1PLL_STAT0  0xE00
-+
-+#define CRGPERIPH_PEREN12   0x470
-+#define CRGPERIPH_PERDIS12  0x474
-+#define CRGPERIPH_PCIECTRL0 0x800
-+
-+/* define ie,oe cfg */
-+#define IO_IE_EN_HARD_BYPASS         (0x1 << 27)
-+#define IO_OE_EN_HARD_BYPASS         (0x1 << 11)
-+#define IO_HARD_CTRL_DEBOUNCE_BYPASS (0x1 << 10)
-+#define IO_OE_GT_MODE                (0x2 << 7)
-+#define DEBOUNCE_WAITCFG_IN          (0xf << 20)
-+#define DEBOUNCE_WAITCFG_OUT         (0xf << 13)
-+
-+/* noc power domain */
-+#define NOC_POWER_IDLEREQ_1 0x38c
-+#define NOC_POWER_IDLE_1    0x394
-+#define NOC_PW_MASK         0x10000
-+#define NOC_PW_SET_BIT      0x1
-+
- /* peri_crg ctrl */
- #define CRGCTRL_PCIE_ASSERT_OFFSET	0x88
- #define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
-@@ -84,12 +144,21 @@ struct kirin_pcie {
- 	void __iomem	*phy_base;
- 	struct regmap	*crgctrl;
- 	struct regmap	*sysctrl;
-+	struct regmap	*pmctrl;
- 	struct clk	*apb_sys_clk;
- 	struct clk	*apb_phy_clk;
- 	struct clk	*phy_ref_clk;
- 	struct clk	*pcie_aclk;
- 	struct clk	*pcie_aux_clk;
--	int		gpio_id_reset;
-+	int		gpio_id_reset[4];
-+	int		gpio_id_clkreq[3];
-+	u32		eye_param[5];
-+};
-+
-+struct kirin_pcie_ops {
-+	long (*get_resource)(struct kirin_pcie *kirin_pcie,
-+			     struct platform_device *pdev);
-+	int (*power_on)(struct kirin_pcie *kirin_pcie);
- };
+ - device_type:
+-	should be "pci". As specified in designware-pcie.txt
++	should be "pci". As specified in snps,pcie.yaml
  
- /* Registers in PCIeCTRL */
-@@ -116,6 +185,28 @@ static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
- 	return readl(kirin_pcie->phy_base + reg);
- }
  
-+static inline void kirin970_apb_phy_writel(struct kirin_pcie *kirin_pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, kirin_pcie->phy_base + 0x40000 + reg);
-+}
-+
-+static inline u32 kirin970_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
-+{
-+	return readl(kirin_pcie->phy_base + 0x40000 + reg);
-+}
-+
-+static inline void kirin_apb_natural_phy_writel(struct kirin_pcie *kirin_pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, kirin_pcie->phy_base + reg * 4);
-+}
-+
-+static inline u32 kirin_apb_natural_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
-+{
-+	return readl(kirin_pcie->phy_base + reg * 4);
-+}
-+
- static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
- 			       struct platform_device *pdev)
- {
-@@ -144,9 +235,68 @@ static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
- 	return 0;
- }
+ Example configuration:
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+index 979dc7b6cfe8..84b53ae2c376 100644
+--- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -1,7 +1,7 @@
+ * Axis ARTPEC-6 PCIe interface
  
--static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
--				    struct platform_device *pdev)
-+void kirin970_pcie_get_eyeparam(struct kirin_pcie *pcie)
- {
-+	struct device *dev = pcie->pci->dev;
-+	int i;
-+	struct device_node *np;
-+
-+	np = dev->of_node;
-+
-+	if (of_property_read_u32_array(np, "eye_param", pcie->eye_param, 5)) {
-+		for (i = 0; i < 5; i++)
-+		pcie->eye_param[i] = EYEPARAM_NOCFG;
-+	}
-+
-+	dev_dbg(dev, "eye_param_vboost = [0x%x]\n", pcie->eye_param[0]);
-+	dev_dbg(dev, "eye_param_iboost = [0x%x]\n", pcie->eye_param[1]);
-+	dev_dbg(dev, "eye_param_pre = [0x%x]\n", pcie->eye_param[2]);
-+	dev_dbg(dev, "eye_param_post = [0x%x]\n", pcie->eye_param[3]);
-+	dev_dbg(dev, "eye_param_main = [0x%x]\n", pcie->eye_param[4]);
-+}
-+
-+static void kirin970_pcie_set_eyeparam(struct kirin_pcie *kirin_pcie)
-+{
-+	u32 val;
-+
-+	val = kirin_apb_natural_phy_readl(kirin_pcie, RAWLANEN_DIG_PCS_XF_TX_OVRD_IN_1);
-+
-+	if (kirin_pcie->eye_param[1] != EYEPARAM_NOCFG) {
-+		val &= (~0xf00);
-+		val |= (kirin_pcie->eye_param[1] << 8) | (0x1 << 12);
-+	}
-+	kirin_apb_natural_phy_writel(kirin_pcie, val, RAWLANEN_DIG_PCS_XF_TX_OVRD_IN_1);
-+
-+	val = kirin_apb_natural_phy_readl(kirin_pcie, LANEN_DIG_ASIC_TX_OVRD_IN_2);
-+	val &= (~0x1FBF);
-+	if (kirin_pcie->eye_param[2] != EYEPARAM_NOCFG)
-+		val |= (kirin_pcie->eye_param[2]<< 0) | (0x1 << 6);
-+
-+	if (kirin_pcie->eye_param[3] != EYEPARAM_NOCFG)
-+		val |= (kirin_pcie->eye_param[3] << 7) | (0x1 << 13);
-+
-+	kirin_apb_natural_phy_writel(kirin_pcie, val, LANEN_DIG_ASIC_TX_OVRD_IN_2);
-+
-+	val = kirin_apb_natural_phy_readl(kirin_pcie, SUP_DIG_LVL_OVRD_IN);
-+	if (kirin_pcie->eye_param[0] != EYEPARAM_NOCFG) {
-+		val &= (~0x1C0);
-+		val |= (kirin_pcie->eye_param[0] << 6) | (0x1 << 9);
-+	}
-+	kirin_apb_natural_phy_writel(kirin_pcie, val, SUP_DIG_LVL_OVRD_IN);
-+
-+	val = kirin_apb_natural_phy_readl(kirin_pcie, LANEN_DIG_ASIC_TX_OVRD_IN_1);
-+	if (kirin_pcie->eye_param[4] != EYEPARAM_NOCFG) {
-+		val &= (~0x7E00);
-+		val |= (kirin_pcie->eye_param[4] << 9) | (0x1 << 15);
-+	}
-+	kirin_apb_natural_phy_writel(kirin_pcie, val, LANEN_DIG_ASIC_TX_OVRD_IN_1);
-+}
-+
-+static long kirin960_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-+				       struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+
- 	kirin_pcie->apb_base =
- 		devm_platform_ioremap_resource_byname(pdev, "apb");
- 	if (IS_ERR(kirin_pcie->apb_base))
-@@ -167,6 +317,122 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 	if (IS_ERR(kirin_pcie->sysctrl))
- 		return PTR_ERR(kirin_pcie->sysctrl);
+ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
++and thus inherits all the common properties defined in snps,pcie.yaml.
  
-+	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
-+						      "reset-gpios", 0);
-+	if (kirin_pcie->gpio_id_reset[0] < 0)
-+		return -ENODEV;
-+
-+	return 0;
-+}
-+
-+static long kirin970_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-+				      struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct resource *apb;
-+	struct resource *phy;
-+	struct resource *dbi;
-+	int ret;
-+
-+	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
-+	kirin_pcie->apb_base = devm_ioremap_resource(dev, apb);
-+	if (IS_ERR(kirin_pcie->apb_base))
-+		return PTR_ERR(kirin_pcie->apb_base);
-+
-+	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-+	kirin_pcie->phy_base = devm_ioremap_resource(dev, phy);
-+	if (IS_ERR(kirin_pcie->phy_base))
-+		return PTR_ERR(kirin_pcie->phy_base);
-+
-+	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	kirin_pcie->pci->dbi_base = devm_ioremap_resource(dev, dbi);
-+	if (IS_ERR(kirin_pcie->pci->dbi_base))
-+		return PTR_ERR(kirin_pcie->pci->dbi_base);
-+
-+	kirin970_pcie_get_eyeparam(kirin_pcie);
-+
-+	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
-+						"switch,reset-gpios", 0);
-+	if (kirin_pcie->gpio_id_reset[0] < 0)
-+		return -ENODEV;
-+
-+	kirin_pcie->gpio_id_reset[1] = of_get_named_gpio(dev->of_node,
-+						"eth,reset-gpios", 0);
-+	if (kirin_pcie->gpio_id_reset[1] < 0)
-+		return -ENODEV;
-+
-+	kirin_pcie->gpio_id_reset[2] = of_get_named_gpio(dev->of_node,
-+						"m_2,reset-gpios", 0);
-+	if (kirin_pcie->gpio_id_reset[2] < 0)
-+		return -ENODEV;
-+
-+	kirin_pcie->gpio_id_reset[3] = of_get_named_gpio(dev->of_node,
-+						"mini1,reset-gpios", 0);
-+	if (kirin_pcie->gpio_id_reset[3] < 0)
-+		return -ENODEV;
-+
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_reset[0],
-+				    "pcie_switch_reset");
-+	if (ret)
-+		return ret;
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_reset[1],
-+				    "pcie_eth_reset");
-+	if (ret)
-+		return ret;
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_reset[2],
-+				    "pcie_m_2_reset");
-+	if (ret)
-+		return ret;
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_reset[3],
-+				    "pcie_mini1_reset");
-+	if (ret)
-+		return ret;
-+
-+	kirin_pcie->gpio_id_clkreq[0] = of_get_named_gpio(dev->of_node,
-+						"eth,clkreq-gpios", 0);
-+	if (kirin_pcie->gpio_id_clkreq[0] < 0)
-+		return -ENODEV;
-+
-+	kirin_pcie->gpio_id_clkreq[1] = of_get_named_gpio(dev->of_node,
-+						"m_2,clkreq-gpios", 0);
-+	if (kirin_pcie->gpio_id_clkreq[1] < 0)
-+		return -ENODEV;
-+
-+	kirin_pcie->gpio_id_clkreq[2] = of_get_named_gpio(dev->of_node,
-+						"mini1,clkreq-gpios", 0);
-+	if (kirin_pcie->gpio_id_clkreq[2] < 0)
-+		return -ENODEV;
-+
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_clkreq[0],
-+				    "pcie_eth_clkreq");
-+	if (ret)
-+		return ret;
-+
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_clkreq[1],
-+				    "pcie_m_2_clkreq");
-+	if (ret)
-+		return ret;
-+
-+	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_clkreq[2],
-+				    "pcie_mini1_clkreq");
-+	if (ret)
-+		return ret;
-+
-+	kirin_pcie->crgctrl =
-+		syscon_regmap_lookup_by_compatible("hisilicon,hi3670-crgctrl");
-+	if (IS_ERR(kirin_pcie->crgctrl))
-+		return PTR_ERR(kirin_pcie->crgctrl);
-+
-+	kirin_pcie->sysctrl =
-+		syscon_regmap_lookup_by_compatible("hisilicon,hi3670-sctrl");
-+	if (IS_ERR(kirin_pcie->sysctrl))
-+		return PTR_ERR(kirin_pcie->sysctrl);
-+
-+	kirin_pcie->pmctrl =
-+		syscon_regmap_lookup_by_compatible("hisilicon,hi3670-pmctrl");
-+	if (IS_ERR(kirin_pcie->sysctrl))
-+		return PTR_ERR(kirin_pcie->sysctrl);
-+
- 	return 0;
- }
- 
-@@ -208,6 +474,21 @@ static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
- 	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
- }
- 
-+static int kirin970_pcie_clk_ctrl(struct clk *clk, int clk_on)
-+{
-+	int ret = 0;
-+
-+	if (clk_on) {
-+		ret = clk_prepare_enable(clk);
-+		if (ret)
-+			return ret;
-+	} else {
-+		clk_disable_unprepare(clk);
-+	}
-+
-+	return ret;
-+}
-+
- static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
- {
- 	int ret = 0;
-@@ -255,7 +536,401 @@ static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
- 	return ret;
- }
- 
--static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
-+static void kirin970_pcie_natural_cfg(struct kirin_pcie *kirin_pcie)
-+{
-+	u32 val;
-+
-+	/* change 2p mem_ctrl */
-+	kirin_apb_ctrl_writel(kirin_pcie, 0x02605550, SOC_PCIECTRL_CTRL20_ADDR);
-+
-+	/* pull up sys_aux_pwr_det */
-+	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL7_ADDR);
-+	val |= (0x1 << 10);
-+	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL7_ADDR);
-+
-+	/* output, pull down */
-+	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL12_ADDR);
-+	val &= ~(0x3 << 2);
-+	val |= (0x1 << 1);
-+	val &= ~(0x1 << 0);
-+	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL12_ADDR);
-+
-+	/* Handle phy_reset and lane0_reset to HW */
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_CTRL1_ADDR);
-+	val |= PCIEPHY_RESET_BIT;
-+	val &= ~PCIEPHY_PIPE_LINE0_RESET_BIT;
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_CTRL1_ADDR);
-+
-+	/* fix chip bug: TxDetectRx fail */
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_CTRL38_ADDR);
-+	val |= (0x1 << 2);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_CTRL38_ADDR);
-+}
-+
-+static void kirin970_pcie_pll_init(struct kirin_pcie *kirin_pcie)
-+{
-+	u32 val;
-+
-+	/* choose FNPLL */
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL1);
-+	val |= (0x1 << 27);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL1);
-+
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+	val &= 0xF000FFFF;
-+	/* fnpll fbdiv = 0xD0 */
-+	val |= (0xd0 << 16);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL17);
-+	val &= 0xFF000000;
-+	/* fnpll fracdiv = 0x555555 */
-+	val |= (0x555555 << 0);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL17);
-+
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+	val &= 0xF5FF88FF;
-+	/* fnpll dll_en = 0x1 */
-+	val |= (0x1 << 27);
-+	/* fnpll postdiv1 = 0x5 */
-+	val |= (0x5 << 8);
-+	/* fnpll postdiv2 = 0x4 */
-+	val |= (0x4 << 12);
-+	/* fnpll pll_mode = 0x0 */
-+	val &= ~(0x1 << 25);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+
-+	kirin970_apb_phy_writel(kirin_pcie, 0x20, SOC_PCIEPHY_MMC1PLL_CTRL21);
-+}
-+
-+static int kirin970_pcie_pll_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
-+{
-+	struct device *dev = kirin_pcie->pci->dev;
-+	u32 val;
-+	int time = 200;
-+
-+	if (enable) {
-+		/* pd = 0 */
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+		val &= ~(0x1 << 0);
-+		kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_STAT0);
-+
-+		/* choose FNPLL */
-+		while (!(val & 0x10)) {
-+			if (!time) {
-+				dev_err(dev, "wait for pll_lock timeout\n");
-+				return -1;
-+			}
-+			time --;
-+			udelay(1);
-+			val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_STAT0);
-+		}
-+
-+		/* pciepll_bp = 0 */
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+		val &= ~(0x1 << 16);
-+		kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+
-+	} else {
-+		/* pd = 1 */
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+		val |= (0x1 << 0);
-+		kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL16);
-+
-+		/* pciepll_bp = 1 */
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+		val |= (0x1 << 16);
-+		kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_MMC1PLL_CTRL20);
-+	}
-+
-+	 return 0;
-+}
-+
-+static void kirin970_pcie_hp_debounce_gt(struct kirin_pcie *kirin_pcie, bool open)
-+{
-+	if (open)
-+		/* gt_clk_pcie_hp/gt_clk_pcie_debounce open */
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PEREN12, 0x9000);
-+	else
-+		/* gt_clk_pcie_hp/gt_clk_pcie_debounce close */
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PERDIS12, 0x9000);
-+}
-+
-+static void kirin970_pcie_phyref_gt(struct kirin_pcie *kirin_pcie, bool open)
-+{
-+	unsigned int val;
-+
-+	regmap_read(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, &val);
-+
-+	if (open)
-+		val &= ~(0x1 << 1); //enable hard gt mode
-+	else
-+		val |= (0x1 << 1); //disable hard gt mode
-+
-+	regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, val);
-+
-+	/* disable soft gt mode */
-+	regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PERDIS12, 0x4000);
-+}
-+
-+static void kirin970_pcie_oe_ctrl(struct kirin_pcie *kirin_pcie, bool en_flag)
-+{
-+	unsigned int val;
-+
-+	regmap_read(kirin_pcie->crgctrl , CRGPERIPH_PCIECTRL0, &val);
-+
-+	/* set ie cfg */
-+	val |= IO_IE_EN_HARD_BYPASS;
-+
-+	/* set oe cfg */
-+	val &= ~IO_HARD_CTRL_DEBOUNCE_BYPASS;
-+
-+	/* set phy_debounce in&out time */
-+	val |= (DEBOUNCE_WAITCFG_IN | DEBOUNCE_WAITCFG_OUT);
-+
-+	/* select oe_gt_mode */
-+	val |= IO_OE_GT_MODE;
-+
-+	if (en_flag)
-+		val &= ~IO_OE_EN_HARD_BYPASS;
-+	else
-+		val |= IO_OE_EN_HARD_BYPASS;
-+
-+	regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, val);
-+}
-+
-+static void kirin970_pcie_ioref_gt(struct kirin_pcie *kirin_pcie, bool open)
-+{
-+	unsigned int val;
-+
-+	if (open) {
-+		kirin_apb_ctrl_writel(kirin_pcie, 0x20000070, SOC_PCIECTRL_CTRL21_ADDR);
-+
-+		kirin970_pcie_oe_ctrl(kirin_pcie, true);
-+
-+		/* en hard gt mode */
-+		regmap_read(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, &val);
-+		val &= ~(0x1 << 0);
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, val);
-+
-+		/* disable soft gt mode */
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PERDIS12, 0x2000);
-+
-+	} else {
-+		/* disable hard gt mode */
-+		regmap_read(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, &val);
-+		val |= (0x1 << 0);
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PCIECTRL0, val);
-+
-+		/* disable soft gt mode */
-+		regmap_write(kirin_pcie->crgctrl, CRGPERIPH_PERDIS12, 0x2000);
-+
-+		kirin970_pcie_oe_ctrl(kirin_pcie, false);
-+       }
-+}
-+
-+static int kirin970_pcie_allclk_ctrl(struct kirin_pcie *kirin_pcie, bool clk_on)
-+{
-+	struct device *dev = kirin_pcie->pci->dev;
-+	u32 val;
-+	int ret = 0;
-+
-+	if (!clk_on)
-+		goto ALL_CLOSE;
-+
-+	/* choose 100MHz clk src: Bit[8]==1 pad, Bit[8]==0 pll */
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_CTRL1_ADDR);
-+	val &= ~(0x1 << 8);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_CTRL1_ADDR);
-+
-+	kirin970_pcie_pll_init(kirin_pcie);
-+
-+	ret = kirin970_pcie_pll_ctrl(kirin_pcie, true);
-+	if (ret) {
-+		dev_err(dev, "Failed to enable pll\n");
-+		return -1;
-+	}
-+	kirin970_pcie_hp_debounce_gt(kirin_pcie, true);
-+	kirin970_pcie_phyref_gt(kirin_pcie, true);
-+	kirin970_pcie_ioref_gt(kirin_pcie, true);
-+
-+	ret = clk_set_rate(kirin_pcie->pcie_aclk, AXI_CLK_FREQ);
-+	if (ret) {
-+		dev_err(dev, "Failed to set rate\n");
-+		goto GT_CLOSE;
-+	}
-+
-+	ret = kirin970_pcie_clk_ctrl(kirin_pcie->pcie_aclk, true);
-+	if (ret) {
-+		dev_err(dev, "Failed to enable pcie_aclk\n");
-+		goto GT_CLOSE;
-+	}
-+
-+	ret = kirin970_pcie_clk_ctrl(kirin_pcie->pcie_aux_clk, true);
-+	if (ret) {
-+		dev_err(dev, "Failed to enable pcie_aux_clk\n");
-+		goto AUX_CLK_FAIL;
-+	}
-+
-+	return 0;
-+
-+ALL_CLOSE:
-+	kirin970_pcie_clk_ctrl(kirin_pcie->pcie_aux_clk, false);
-+AUX_CLK_FAIL:
-+	kirin970_pcie_clk_ctrl(kirin_pcie->pcie_aclk, false);
-+GT_CLOSE:
-+	kirin970_pcie_ioref_gt(kirin_pcie, false);
-+	kirin970_pcie_phyref_gt(kirin_pcie, false);
-+	kirin970_pcie_hp_debounce_gt(kirin_pcie, false);
-+
-+	kirin970_pcie_pll_ctrl(kirin_pcie, false);
-+
-+	return ret;
-+}
-+
-+static bool is_pipe_clk_stable(struct kirin_pcie *kirin_pcie)
-+{
-+	struct device *dev = kirin_pcie->pci->dev;
-+	u32 val;
-+	u32 time = 100;
-+	u32 pipe_clk_stable = 0x1 << 19;
-+
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_STATE0_ADDR);
-+	while (val & pipe_clk_stable) {
-+		mdelay(1);
-+		if (time == 0) {
-+			dev_err(dev, "PIPE clk is not stable\n");
-+			return false;
-+		}
-+		time--;
-+		val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_STATE0_ADDR);
-+	}
-+
-+	return true;
-+}
-+
-+static int kirin970_pcie_noc_power(struct kirin_pcie *kirin_pcie, bool enable)
-+{
-+	struct device *dev = kirin_pcie->pci->dev;
-+	u32 time = 100;
-+	unsigned int val = NOC_PW_MASK;
-+	int rst;
-+
-+	if (enable)
-+		val = NOC_PW_MASK | NOC_PW_SET_BIT;
-+	else
-+		val = NOC_PW_MASK;
-+	rst = enable ? 1 : 0;
-+
-+	regmap_write(kirin_pcie->pmctrl, NOC_POWER_IDLEREQ_1, val);
-+
-+	time = 100;
-+	regmap_read(kirin_pcie->pmctrl, NOC_POWER_IDLE_1, &val);
-+	while((val & NOC_PW_SET_BIT) != rst) {
-+		udelay(10);
-+		if (!time) {
-+			dev_err(dev, "Failed to reverse noc power-status\n");
-+			return -1;
-+		}
-+		time--;
-+		regmap_read(kirin_pcie->pmctrl, NOC_POWER_IDLE_1, &val);
-+	}
-+
-+	return 0;
-+}
-+
-+static int kirin970_pcie_power_on(struct kirin_pcie *kirin_pcie)
-+{
-+	struct device *dev = kirin_pcie->pci->dev;
-+	int ret;
-+	u32 val;
-+
-+	/* Power supply for Host */
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
-+	usleep_range(TIME_CMOS_MIN, TIME_CMOS_MAX);
-+	kirin_pcie_oe_enable(kirin_pcie);
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_clkreq[0], 0);
-+	if (ret)
-+		dev_err(dev, "Failed to pulse eth clkreq signal\n");
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_clkreq[1], 0);
-+	if (ret)
-+		dev_err(dev, "Failed to pulse m.2 clkreq signal\n");
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_clkreq[2], 0);
-+	if (ret)
-+		dev_err(dev, "Failed to pulse mini1 clkreq signal\n");
-+
-+	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
-+	if (ret)
-+		return ret;
-+
-+	/* ISO disable, PCIeCtrl, PHY assert and clk gate clear */
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
-+	regmap_write(kirin_pcie->crgctrl,
-+		     CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
-+
-+	kirin970_pcie_natural_cfg(kirin_pcie);
-+
-+	ret = kirin970_pcie_allclk_ctrl(kirin_pcie, true);
-+	if (ret)
-+		goto close_clk;
-+
-+	/* pull down phy_test_powerdown signal */
-+	val = kirin970_apb_phy_readl(kirin_pcie, SOC_PCIEPHY_CTRL0_ADDR);
-+	val &= ~(0x1 << 22);
-+	kirin970_apb_phy_writel(kirin_pcie, val, SOC_PCIEPHY_CTRL0_ADDR);
-+
-+	/* deassert controller perst_n */
-+	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL12_ADDR);
-+	val |= (0x1 << 2);
-+	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL12_ADDR);
-+	udelay(10);
-+
-+	/* perst assert Endpoints */
-+	usleep_range(21000, 23000);
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_reset[0], 1);
-+	if (ret)
-+		goto close_clk;
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_reset[1], 1);
-+	if (ret)
-+		goto close_clk;
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_reset[2], 1);
-+	if (ret)
-+		goto close_clk;
-+
-+	ret = gpio_direction_output(kirin_pcie->gpio_id_reset[3], 1);
-+	if (ret)
-+		goto close_clk;
-+
-+	usleep_range(10000, 11000);
-+
-+	ret = is_pipe_clk_stable(kirin_pcie);
-+	if (!ret)
-+		goto close_clk;
-+
-+	kirin970_pcie_set_eyeparam(kirin_pcie);
-+
-+	ret = kirin970_pcie_noc_power(kirin_pcie, false);
-+	if (ret)
-+		goto close_clk;
-+
-+	return 0;
-+close_clk:
-+	kirin_pcie_clk_ctrl(kirin_pcie, false);
-+	return ret;
-+}
-+
-+static int kirin960_pcie_power_on(struct kirin_pcie *kirin_pcie)
- {
- 	int ret;
- 
-@@ -282,9 +957,9 @@ static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
- 		goto close_clk;
- 
- 	/* perst assert Endpoint */
--	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
-+	if (!gpio_request(kirin_pcie->gpio_id_reset[0], "pcie_perst")) {
- 		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
--		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
-+		ret = gpio_direction_output(kirin_pcie->gpio_id_reset[0], 1);
- 		if (ret)
- 			goto close_clk;
- 		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
-@@ -419,11 +1094,29 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
- 	.host_init = kirin_pcie_host_init,
- };
- 
-+struct kirin_pcie_ops kirin960_pcie_ops = {
-+	.get_resource = kirin960_pcie_get_resource,
-+	.power_on = kirin960_pcie_power_on,
-+};
-+
-+struct kirin_pcie_ops kirin970_pcie_ops = {
-+	.get_resource = kirin970_pcie_get_resource,
-+	.power_on = kirin970_pcie_power_on,
-+};
-+
-+static const struct of_device_id kirin_pcie_match[] = {
-+	{ .compatible = "hisilicon,kirin960-pcie", .data = &kirin960_pcie_ops },
-+	{ .compatible = "hisilicon,kirin970-pcie", .data = &kirin970_pcie_ops },
-+	{},
-+};
-+
- static int kirin_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct kirin_pcie *kirin_pcie;
- 	struct dw_pcie *pci;
-+	const struct of_device_id *of_id;
-+	struct kirin_pcie_ops *ops;
- 	int ret;
- 
- 	if (!dev->of_node) {
-@@ -431,6 +1124,9 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
-+	of_id = of_match_node(kirin_pcie_match, dev->of_node);
-+	ops = (struct kirin_pcie_ops *)of_id->data;
-+
- 	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
- 	if (!kirin_pcie)
- 		return -ENOMEM;
-@@ -448,20 +1144,20 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
-+	ret = ops->get_resource(kirin_pcie, pdev);
- 	if (ret)
- 		return ret;
- 
--	kirin_pcie->gpio_id_reset = of_get_named_gpio(dev->of_node,
-+	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
- 						      "reset-gpios", 0);
--	if (kirin_pcie->gpio_id_reset == -EPROBE_DEFER) {
-+	if (kirin_pcie->gpio_id_reset[0] == -EPROBE_DEFER) {
- 		return -EPROBE_DEFER;
--	} else if (!gpio_is_valid(kirin_pcie->gpio_id_reset)) {
-+	} else if (!gpio_is_valid(kirin_pcie->gpio_id_reset[0])) {
- 		dev_err(dev, "unable to get a valid gpio pin\n");
- 		return -ENODEV;
- 	}
- 
--	ret = kirin_pcie_power_on(kirin_pcie);
-+	ret = ops->power_on(kirin_pcie);
- 	if (ret)
- 		return ret;
- 
-@@ -470,11 +1166,6 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	return dw_pcie_host_init(&pci->pp);
- }
- 
--static const struct of_device_id kirin_pcie_match[] = {
--	{ .compatible = "hisilicon,kirin960-pcie" },
--	{},
--};
+ Required properties:
+ - compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+deleted file mode 100644
+index 78494c4050f7..000000000000
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ /dev/null
+@@ -1,77 +0,0 @@
+-* Synopsys DesignWare PCIe interface
 -
- static struct platform_driver kirin_pcie_driver = {
- 	.probe			= kirin_pcie_probe,
- 	.driver			= {
+-Required properties:
+-- compatible:
+-	"snps,dw-pcie" for RC mode;
+-	"snps,dw-pcie-ep" for EP mode;
+-- reg: For designware cores version < 4.80 contains the configuration
+-       address space. For designware core version >= 4.80, contains
+-       the configuration and ATU address space
+-- reg-names: Must be "config" for the PCIe configuration space and "atu" for
+-	     the ATU address space.
+-    (The old way of getting the configuration address space from "ranges"
+-    is deprecated and should be avoided.)
+-RC mode:
+-- #address-cells: set to <3>
+-- #size-cells: set to <2>
+-- device_type: set to "pci"
+-- ranges: ranges for the PCI memory and I/O regions
+-- #interrupt-cells: set to <1>
+-- interrupt-map-mask and interrupt-map: standard PCI
+-	properties to define the mapping of the PCIe interface to interrupt
+-	numbers.
+-EP mode:
+-- num-ib-windows: number of inbound address translation windows
+-- num-ob-windows: number of outbound address translation windows
+-
+-Optional properties:
+-- num-lanes: number of lanes to use (this property should be specified unless
+-  the link is brought already up in BIOS)
+-- reset-gpio: GPIO pin number of power good signal
+-- clocks: Must contain an entry for each entry in clock-names.
+-	See ../clocks/clock-bindings.txt for details.
+-- clock-names: Must include the following entries:
+-	- "pcie"
+-	- "pcie_bus"
+-- snps,enable-cdm-check: This is a boolean property and if present enables
+-   automatic checking of CDM (Configuration Dependent Module) registers
+-   for data corruption. CDM registers include standard PCIe configuration
+-   space registers, Port Logic registers, DMA and iATU (internal Address
+-   Translation Unit) registers.
+-RC mode:
+-- num-viewport: number of view ports configured in hardware. If a platform
+-  does not specify it, the driver assumes 2.
+-- bus-range: PCI bus numbers covered (it is recommended for new devicetrees
+-  to specify this property, to keep backwards compatibility a range of
+-  0x00-0xff is assumed if not present)
+-
+-EP mode:
+-- max-functions: maximum number of functions that can be configured
+-
+-Example configuration:
+-
+-	pcie: pcie@dfc00000 {
+-		compatible = "snps,dw-pcie";
+-		reg = <0xdfc00000 0x0001000>, /* IP registers */
+-		      <0xd0000000 0x0002000>; /* Configuration space */
+-		reg-names = "dbi", "config";
+-		#address-cells = <3>;
+-		#size-cells = <2>;
+-		device_type = "pci";
+-		ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000
+-			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
+-		interrupts = <25>, <24>;
+-		#interrupt-cells = <1>;
+-		num-lanes = <1>;
+-	};
+-or
+-	pcie: pcie@dfc00000 {
+-		compatible = "snps,dw-pcie-ep";
+-		reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
+-		      <0xdfc01000 0x0001000>, /* IP registers 2 */
+-		      <0xd0000000 0x2000000>; /* Configuration space */
+-		reg-names = "dbi", "dbi2", "addr_space";
+-		num-ib-windows = <6>;
+-		num-ob-windows = <2>;
+-		num-lanes = <1>;
+-	};
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index de4b2baf91e8..9470b279e3e4 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -1,7 +1,7 @@
+ * Freescale i.MX6 PCIe interface
+ 
+ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
++and thus inherits all the common properties defined in snps,pcie.yaml.
+ 
+ Required properties:
+ - compatible:
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+index 760b4d740616..2f62119d97b9 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+@@ -3,7 +3,7 @@ HiSilicon STB PCIe host bridge DT description
+ The HiSilicon STB PCIe host controller is based on the DesignWare PCIe core.
+ It shares common functions with the DesignWare PCIe core driver and inherits
+ common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ Additional properties are described here:
+ 
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index d6796ef54ea1..4d243bfb9709 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -3,7 +3,7 @@ HiSilicon Hip05 and Hip06 PCIe host bridge DT description
+ HiSilicon PCIe host controller is based on the Synopsys DesignWare PCI core.
+ It shares common functions with the PCIe DesignWare core driver and inherits
+ common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ Additional properties are described here:
+ 
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+index 6bbe43818ad5..a38f8e38a67b 100644
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -3,7 +3,7 @@ HiSilicon Kirin SoCs PCIe host DT description
+ Kirin PCIe host controller is based on the Synopsys DesignWare PCI core.
+ It shares common functions with the PCIe DesignWare core driver and
+ inherits common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ Additional properties are described here:
+ 
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index daa99f7d4c3f..8070adfc1746 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -1,7 +1,7 @@
+ Freescale Layerscape PCIe controller
+ 
+ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
++and thus inherits all the common properties defined in snps,pcie.yaml.
+ 
+ This controller derives its clocks from the Reset Configuration Word (RCW)
+ which is used to describe the PLL settings at the time of chip-reset.
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+index bd43f3c3ece4..4644d79e0e0c 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+@@ -1,7 +1,7 @@
+ NVIDIA Tegra PCIe controller (Synopsys DesignWare Core based)
+ 
+ This PCIe controller is based on the Synopsis Designware PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
++and thus inherits all the common properties defined in snps,pcie.yaml.
+ Some of the controller instances are dual mode where in they can work either
+ in root port mode or endpoint mode but one at a time.
+ 
+@@ -22,7 +22,7 @@ Required properties:
+   property.
+ - reg-names: Must include the following entries:
+   "appl": Controller's application logic registers
+-  "config": As per the definition in designware-pcie.txt
++  "config": As per the definition in snps,pcie.yaml
+   "atu_dma": iATU and DMA registers. This is where the iATU (internal Address
+              Translation Unit) registers of the PCIe core are made available
+              for SW access.
+diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+index 7a813d0e6d63..4531b895e9ea 100644
+--- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
++++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+@@ -1,7 +1,7 @@
+ * Marvell Armada 7K/8K PCIe interface
+ 
+ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+-and thus inherits all the common properties defined in designware-pcie.txt.
++and thus inherits all the common properties defined in snps,pcie.yaml.
+ 
+ Required properties:
+ - compatible: "marvell,armada8k-pcie"
+diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+index 47202a2938f2..ac271a0ca078 100644
+--- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
++++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+@@ -3,9 +3,9 @@ TI Keystone PCIe interface
+ Keystone PCI host Controller is based on the Synopsys DesignWare PCI
+ hardware version 3.65.  It shares common functions with the PCIe DesignWare
+ core driver and inherits common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt
++Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ 
+-Please refer to Documentation/devicetree/bindings/pci/designware-pcie.txt
++Please refer to Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ for the details of DesignWare DT bindings.  Additional properties are
+ described here as well as properties that are not applicable.
+ 
+@@ -82,11 +82,11 @@ reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
+ 	   Address Translation Unit configuration registers and
+ 	   "addr_space" used to map remote RC address space
+ num-ib-windows: As specified in
+-		Documentation/devicetree/bindings/pci/designware-pcie.txt
++		Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ num-ob-windows: As specified in
+-		Documentation/devicetree/bindings/pci/designware-pcie.txt
++		Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ num-lanes: As specified in
+-	   Documentation/devicetree/bindings/pci/designware-pcie.txt
++	   Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ power-domains: As documented by the generic PM domain bindings in
+ 	       Documentation/devicetree/bindings/power/power_domain.txt.
+ ti,syscon-pcie-mode: phandle to the device control module required to configure
+diff --git a/Documentation/devicetree/bindings/pci/pcie-al.txt b/Documentation/devicetree/bindings/pci/pcie-al.txt
+index 557a5089229d..6e1e20e15ae9 100644
+--- a/Documentation/devicetree/bindings/pci/pcie-al.txt
++++ b/Documentation/devicetree/bindings/pci/pcie-al.txt
+@@ -2,7 +2,7 @@
+ 
+ Amazon's Annapurna Labs PCIe Host Controller is based on the Synopsys DesignWare
+ PCI core. It inherits common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ Properties of the host controller node that differ from it are:
+ 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 3b55310390a0..43c3086cf6ea 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -33,22 +33,22 @@
+ - device_type:
+ 	Usage: required
+ 	Value type: <string>
+-	Definition: Should be "pci". As specified in designware-pcie.txt
++	Definition: Should be "pci". As specified in snps,pcie.yaml
+ 
+ - #address-cells:
+ 	Usage: required
+ 	Value type: <u32>
+-	Definition: Should be 3. As specified in designware-pcie.txt
++	Definition: Should be 3. As specified in snps,pcie.yaml
+ 
+ - #size-cells:
+ 	Usage: required
+ 	Value type: <u32>
+-	Definition: Should be 2. As specified in designware-pcie.txt
++	Definition: Should be 2. As specified in snps,pcie.yaml
+ 
+ - ranges:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+-	Definition: As specified in designware-pcie.txt
++	Definition: As specified in snps,pcie.yaml
+ 
+ - interrupts:
+ 	Usage: required
+@@ -63,17 +63,17 @@
+ - #interrupt-cells:
+ 	Usage: required
+ 	Value type: <u32>
+-	Definition: Should be 1. As specified in designware-pcie.txt
++	Definition: Should be 1. As specified in snps,pcie.yaml
+ 
+ - interrupt-map-mask:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+-	Definition: As specified in designware-pcie.txt
++	Definition: As specified in snps,pcie.yaml
+ 
+ - interrupt-map:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+-	Definition: As specified in designware-pcie.txt
++	Definition: As specified in snps,pcie.yaml
+ 
+ - clocks:
+ 	Usage: required
+diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml
+index 1810bf722350..8a4fe2d021ed 100644
+--- a/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.yaml
+@@ -13,7 +13,7 @@ maintainers:
+ description: |+
+   Exynos5433 SoC PCIe host controller is based on the Synopsys DesignWare
+   PCIe IP and thus inherits all the common properties defined in
+-  designware-pcie.txt.
++  snps,pcie.yaml.
+ 
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/snps,pcie.yaml b/Documentation/devicetree/bindings/pci/snps,pcie.yaml
+new file mode 100644
+index 000000000000..eeb5dad6937d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/snps,pcie.yaml
+@@ -0,0 +1,139 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/snps,pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Synopsys DesignWare PCIe interface
++
++maintainers:
++  - Jingoo Han <jingoohan1@gmail.com>
++  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++
++description: |
++  Synopsys DesignWare PCIe host controller
++
++anyOf:
++  - {}
++  - items:
++      contains:
++        enum:
++          - snps,dw-pcie
++          - snps,dw-pcie-ep
++
++properties:
++  compatible:
++    description: |
++      The compatible can be either:
++      - snps,dw-pcie       # for RC mode
++      - snps,dw-pcie-ep    # For EP mode
++      or some other value, when there's a host-specific driver
++
++  reg:
++    description: |
++      Contains DBI and the configuration address space for all
++      Designware versions.
++      For Designware core version >= 4.80, should also contain the
++      ATU address space.
++    minItems: 2
++    maxItems: 4
++
++  reset-gpio:
++    description: GPIO pin number for the PERST# signal
++    maxItems: 1
++
++  clocks:
++    minItems: 2
++    maxItems: 8
++
++  clock-names:
++    items:
++      contains:
++        enum: [ pcie, pcie_bus ]
++    minItems: 2
++    maxItems: 8
++
++  "snps,enable-cdm-check":
++    $ref: /schemas/types.yaml#definitions/flag
++    description: |
++      This is a boolean property and if present enables
++      automatic checking of CDM (Configuration Dependent Module) registers
++      for data corruption. CDM registers include standard PCIe configuration
++      space registers, Port Logic registers, DMA and iATU (internal Address
++      Translation Unit) registers.
++
++  # The following are optional properties for RC mode
++
++  num-viewport:
++    description: |
++      number of view ports configured in hardware. If a platform
++      does not specify it, the driver assumes 2.
++    deprecated: true
++
++  # The following are mandatory properties for EP Mode
++
++  num-ib-windows:
++    description: number of inbound address translation windows
++    maxItems: 1
++    deprecated: true
++
++  num-ob-windows:
++    description: number of outbound address translation windows
++    maxItems: 1
++    deprecated: true
++
++  # The following are optional properties for EP mode
++
++  max-functions:
++    description: maximum number of functions that can be configured
++
++required:
++  - reg
++  - reg-names
++
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: snps,dw-pcie
++    then:
++      allOf:
++        - $ref: /schemas/pci/pci-bus.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: snps,dw-pcie-ep
++    then:
++      required:
++        - compatible
++
++additionalProperties: false
++
++examples:
++  - |
++    pcie: pcie@dfc00000 {
++      compatible = "snps,dw-pcie";
++      reg = <0xdfc00000 0x0001000>, /* IP registers */
++            <0xd0000000 0x0002000>; /* Configuration space */
++      reg-names = "dbi", "config";
++      #address-cells = <3>;
++      #size-cells = <2>;
++      device_type = "pci";
++      ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
++               <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
++      interrupts = <25>, <24>;
++      #interrupt-cells = <1>;
++      num-lanes = <1>;
++    };
++    pcie_ep: pcie_ep@dfd00000 {
++      compatible = "snps,dw-pcie-ep";
++      reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
++            <0xdfc01000 0x0001000>, /* IP registers 2 */
++            <0xd0000000 0x2000000>; /* Configuration space */
++      reg-names = "dbi", "dbi2", "addr_space";
++      num-ib-windows = <6>;
++      num-ob-windows = <2>;
++      num-lanes = <1>;
++    };
+diff --git a/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
+index d6cf8a560ef0..9c8733d21de4 100644
+--- a/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/socionext,uniphier-pcie-ep.yaml
+@@ -10,7 +10,7 @@ description: |
+   UniPhier PCIe endpoint controller is based on the Synopsys DesignWare
+   PCI core. It shares common features with the PCIe DesignWare core and
+   inherits common properties defined in
+-  Documentation/devicetree/bindings/pci/designware-pcie.txt.
++  Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ maintainers:
+   - Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index d5cbfe6b0d89..dfebfdb9b819 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -12,7 +12,7 @@ PCIe DesignWare Controller
+ 	       number of PHYs as specified in *phys* property.
+  - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+ 	       where <X> is the instance number of the pcie from the HW spec.
+- - num-lanes as specified in ../designware-pcie.txt
++ - num-lanes as specified in ../snps,pcie.yaml
+  - ti,syscon-lane-sel : phandle/offset pair. Phandle to the system control
+ 			module and the register offset to specify lane
+ 			selection.
+@@ -32,7 +32,7 @@ HOST MODE
+    device_type,
+    ranges,
+    interrupt-map-mask,
+-   interrupt-map : as specified in ../designware-pcie.txt
++   interrupt-map : as specified in ../snps,pcie.yaml
+  - ti,syscon-unaligned-access: phandle to the syscon DT node. The 1st argument
+ 			       should contain the register offset within syscon
+ 			       and the 2nd argument should contain the bit field
+diff --git a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+index c4b7381733a0..17cfe504d800 100644
+--- a/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/uniphier-pcie.txt
+@@ -6,7 +6,7 @@ on Socionext UniPhier SoCs.
+ UniPhier PCIe host controller is based on the Synopsys DesignWare PCI core.
+ It shares common functions with the PCIe DesignWare core driver and inherits
+ common properties defined in
+-Documentation/devicetree/bindings/pci/designware-pcie.txt.
++Documentation/devicetree/bindings/pci/snps,pcie.yaml.
+ 
+ Required properties:
+ - compatible: Should be "socionext,uniphier-pcie".
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2dd0a662d931..0bcba0d4994c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13673,7 +13673,7 @@ M:	Jingoo Han <jingoohan1@gmail.com>
+ M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
++F:	Documentation/devicetree/bindings/pci/snps,pcie.yaml
+ F:	drivers/pci/controller/dwc/*designware*
+ 
+ PCI DRIVER FOR TI DRA7XX/J721E
 -- 
 2.29.2
 
