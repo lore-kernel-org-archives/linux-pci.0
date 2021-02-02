@@ -7,44 +7,46 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EB2DC433E0
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDEF0C433E0
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:44:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0523C64E7B
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:42:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AA2D64E7B
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 12:44:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231874AbhBBMmW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 07:42:22 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:44066 "EHLO
+        id S231894AbhBBMo0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 07:44:26 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56160 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231656AbhBBMlv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 07:41:51 -0500
+        by vger.kernel.org with ESMTP id S231748AbhBBMmD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 07:42:03 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id BB62E401D9;
-        Tue,  2 Feb 2021 12:40:50 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 3F5EFC00C6;
+        Tue,  2 Feb 2021 12:41:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612269651; bh=gTUqsn4xz8ouo5ljskht8yvrZS1XGOyKaK7hjYUYuHc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+        t=1612269662; bh=RPtJq9pnB6c2RL81eMcBv6mkc0ffZocP1N1iwYCqspQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=Ykprg8VljNuG9luuifcUGnu5RpgLS5pa1zdtnXXvkC2fm3iiACfSwuaS2k+euSOFQ
-         u+HVTKqUxBB+o6AIP92rCx66FdW7IRe4OSe8+uE2zAnLvXswX9Yb5Erl/11zAIl7DI
-         PZaixtjw3wQv4LDjs2/7AB35xcsP2NoVho5bGJoy+QQbyJlCxpKbLb+llewIEJHhS8
-         8heyApLXhU3BOUIushdBXRQyZurFZq+gDdBpy3iU3Z2zo80KloOt0nuISce3WBI9kk
-         D62QRskSCpUp0yBwHwLYx7W601bGir5283G0KSGdjpHFdUkshiOV9TmWK2BL+2OgnQ
-         Ljgt70gmhhbcA==
+        b=IwwkVyyMQapxBBoJWq4RUzHd09/VboaJubAcNZPn7g1k6jZVeByBQfmtARAxhjUpL
+         vaZ5BJ+LPVmN/aWQ4CptBZMZ+f/jU9SEw5WAgqYLsukZByGBjs5zGC3hA43ydC5gIt
+         bg2LoNKtQWjV/DZA5DSDHCa81FINubG1+ZpOKVIpPamucxtPx/KHhXhEzzdUXaSGex
+         zdmhNPQFeRlM82f8phxAzjulc3bTyfE4DsVhXK9a/mxEtFcBtB+aLuHn40lLJGfNQp
+         +SM7/t2/qYueh34UBh/3V+7VlaEnLr7rOXFcstJtE4fYRqaGeBkbNeu5XVAKcy2o6L
+         jg8QFCLCQLuxw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 7B896A0249;
-        Tue,  2 Feb 2021 12:40:49 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 0527AA0249;
+        Tue,  2 Feb 2021 12:41:01 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dmaengine@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v2 04/15] PCI: Add pci_find_vsec_capability() to find a specific VSEC
-Date:   Tue,  2 Feb 2021 13:40:18 +0100
-Message-Id: <2ecb33dfee5dc05efc05de0731b0cb77bc246f54.1612269537.git.gustavo.pimentel@synopsys.com>
+        dmaengine@vger.kernel.org,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2 15/15] dmaengine: dw-edma: Add pcim_iomap_table return checker
+Date:   Tue,  2 Feb 2021 13:40:29 +0100
+Message-Id: <0516469618b38b74f997c36bfc9ca3bad9836832.1612269537.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612269536.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612269536.git.gustavo.pimentel@synopsys.com>
@@ -54,91 +56,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pci_find_vsec_capability() that crawls through the device config
-space searching in all Vendor-Specific Extended Capabilities for a
-particular capability ID.
-
-Vendor-Specific Extended Capability (VSEC) is a PCIe capability (acts
-like a wrapper) specified by PCI-SIG that allows the vendor to create
-their own and specific capability in the device config space.
+Detected by CoverityScan CID 16555 ("Dereference null return")
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/pci/pci.c             | 29 +++++++++++++++++++++++++++++
- include/linux/pci.h           |  2 ++
- include/uapi/linux/pci_regs.h |  6 ++++++
- 3 files changed, 37 insertions(+)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b9fecc2..4ea6dd4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -693,6 +693,35 @@ u8 pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index 686b4ff..7445033 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -238,6 +238,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
  
- /**
-+ * pci_find_vsec_capability - Find a vendor-specific extended capability
-+ * @dev: PCI device to query
-+ * @cap: vendor-specific capability ID code
-+ *
-+ * Returns the address of the vendor-specific structure that matches the
-+ * requested capability ID code within the device's PCI configuration space
-+ * or 0 if it does not find a match.
-+ */
-+u16 pci_find_vsec_capability(struct pci_dev *dev, int vsec_cap_id)
-+{
-+	u16 vsec;
-+	u32 header;
+ 	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
++	if (!dw->rg_region.vaddr)
++		return -ENOMEM;
 +
-+	vsec = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VNDR);
-+	while (vsec) {
-+		if (pci_read_config_dword(dev, vsec + PCI_VSEC_HDR,
-+					  &header) == PCIBIOS_SUCCESSFUL &&
-+		    PCI_VSEC_CAP_ID(header) == vsec_cap_id)
-+			return vsec;
-+
-+		vsec = pci_find_next_ext_capability(dev, vsec,
-+						    PCI_EXT_CAP_ID_VNDR);
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_find_vsec_capability);
-+
-+/**
-  * pci_find_parent_resource - return resource region of parent bus of given
-  *			      region
-  * @dev: PCI device structure contains resources to be searched
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b32126d..da6ab6a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1080,6 +1080,8 @@ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 	dw->rg_region.vaddr += vsec_data.rg.off;
+ 	dw->rg_region.paddr = pdev->resource[vsec_data.rg.bar].start;
+ 	dw->rg_region.paddr += vsec_data.rg.off;
+@@ -250,12 +253,18 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		struct dw_edma_block *dt_block = &vsec_data.dt_wr[i];
  
- u64 pci_get_dsn(struct pci_dev *dev);
- 
-+u16 pci_find_vsec_capability(struct pci_dev *dev, int vsec_cap_id);
+ 		ll_region->vaddr = pcim_iomap_table(pdev)[ll_block->bar];
++		if (!ll_region->vaddr)
++			return -ENOMEM;
 +
- struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
- 			       struct pci_dev *from);
- struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e709ae8..deae275 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -983,6 +983,12 @@
- #define PCI_VSEC_HDR		4	/* extended cap - vendor-specific */
- #define  PCI_VSEC_HDR_LEN_SHIFT	20	/* shift for length field */
+ 		ll_region->vaddr += ll_block->off;
+ 		ll_region->paddr = pdev->resource[ll_block->bar].start;
+ 		ll_region->paddr += ll_block->off;
+ 		ll_region->sz = ll_block->sz;
  
-+/* Vendor-Specific Extended Capabilities */
-+#define PCI_VSEC_HEADER		4	/* Vendor-Specific Header */
-+#define  PCI_VSEC_CAP_ID(x)	((x) & 0xffff)
-+#define  PCI_VSEC_CAP_REV(x)	(((x) >> 16) & 0xf)
-+#define  PCI_VSEC_CAP_LEN(x)	(((x) >> 20) & 0xfff)
+ 		dt_region->vaddr = pcim_iomap_table(pdev)[dt_block->bar];
++		if (!dt_region->vaddr)
++			return -ENOMEM;
 +
- /* SATA capability */
- #define PCI_SATA_REGS		4	/* SATA REGs specifier */
- #define  PCI_SATA_REGS_MASK	0xF	/* location - BAR#/inline */
+ 		dt_region->vaddr += dt_block->off;
+ 		dt_region->paddr = pdev->resource[dt_block->bar].start;
+ 		dt_region->paddr += dt_block->off;
+@@ -269,12 +278,18 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		struct dw_edma_block *dt_block = &vsec_data.dt_rd[i];
+ 
+ 		ll_region->vaddr = pcim_iomap_table(pdev)[ll_block->bar];
++		if (!ll_region->vaddr)
++			return -ENOMEM;
++
+ 		ll_region->vaddr += ll_block->off;
+ 		ll_region->paddr = pdev->resource[ll_block->bar].start;
+ 		ll_region->paddr += ll_block->off;
+ 		ll_region->sz = ll_block->sz;
+ 
+ 		dt_region->vaddr = pcim_iomap_table(pdev)[dt_block->bar];
++		if (!dt_region->vaddr)
++			return -ENOMEM;
++
+ 		dt_region->vaddr += dt_block->off;
+ 		dt_region->paddr = pdev->resource[dt_block->bar].start;
+ 		dt_region->paddr += dt_block->off;
 -- 
 2.7.4
 
