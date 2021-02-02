@@ -2,141 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B73C433DB
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 19:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6B07C43381
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:01:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B230864E27
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 19:55:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98AB964DDC
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Feb 2021 20:01:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240080AbhBBTyv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Feb 2021 14:54:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229667AbhBBTvD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2021 14:51:03 -0500
-Received: from mail-oo1-xc2d.google.com (mail-oo1-xc2d.google.com [IPv6:2607:f8b0:4864:20::c2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D5A6C061573;
-        Tue,  2 Feb 2021 11:50:23 -0800 (PST)
-Received: by mail-oo1-xc2d.google.com with SMTP id 123so2162924ooi.13;
-        Tue, 02 Feb 2021 11:50:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=l3bsSzSp5VFqJIviHqqruclp18d3rcb4uTg/z6V+Z3A=;
-        b=ODYlHNCeEe/cG3cQxKDYb/NJZwWt6FOZimZ7in65vObeMzVZXaWndyvS3tQ3FBs+VH
-         A5iV6JUTBzSmQ4d7feYAHllXZKEMbcORob89eXXtiPmJmQdm/7Pk83XC9IOPc21j+loF
-         LxCVcSgx7scu2EiyTZQnsi68C/lE0VMgLPVO1vGsJBBr4t61/Dl41N6Kk76AA6AbWtNo
-         3fmT2bbYYgtpugpDO4qnVpIHF+2ct3b1v7KSs7WXMYJro1UzBJhD9v1qRR6XWrpTU3Gu
-         NbZ2URFGClHOWKDlGjt3QMQoljUtZIKBllUMpGhcTi37YEDV0OD5VRYaBGF2x3QAiFFO
-         berQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=l3bsSzSp5VFqJIviHqqruclp18d3rcb4uTg/z6V+Z3A=;
-        b=g1+ExHUCGLi2jiIG4g6WqBbIYhg9Zwg4JjzHWQRiE49nJ8h3Ngig9FrXF/yBfUXFoo
-         6XDVInOqyPFBjskn4iHN7i+VOLFYdXig9bC4NBmGBHy411PvaJ4WBZq53qzrWL1Bs/t7
-         Sbbp2OR4bSPdIC+unIw5L6sM1RyfNmm8AcV6BQWoQY0GNJy9Lp1ihVbwogJtRRdORp3o
-         gURQoBOuFjMRIqvviPfk3Nv3keNSn1PDbLIPHSPpN80ttkfJFiNhyLMJ2vtJ8fvs8mIF
-         FWor8+CnSIM3qAMt+0xKSoxWR2vslUNhbTWnfN97hptGt0hhmU2A97rPhdVN77hJaCBY
-         HvLg==
-X-Gm-Message-State: AOAM533QjLObS6csG/EvLA8YvRC9rw2XO2HZHSQDYe9XHSOPHrNfROHS
-        uIpTZfltEsu2NjfxE76mt6Q=
-X-Google-Smtp-Source: ABdhPJw7CaYcN6bnL3pW4O5g2lV2p6UuzwG2E9UF38Aus8EuuCjrecKbq3jCr+VoE07kdXl/b+tcfQ==
-X-Received: by 2002:a4a:decb:: with SMTP id w11mr16562987oou.32.1612295422834;
-        Tue, 02 Feb 2021 11:50:22 -0800 (PST)
-Received: from nuclearis2-1.gtech (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id g13sm4731663otl.60.2021.02.02.11.50.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Feb 2021 11:50:22 -0800 (PST)
-Subject: Re: Issues with "PCI/LINK: Report degraded links via link bandwidth
- notification"
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Sinan Kaya <okaya@kernel.org>, Keith Busch <keith.busch@intel.com>,
-        Jan Vesely <jano.vesely@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Austin Bolen <austin_bolen@dell.com>,
-        Shyam Iyer <Shyam_Iyer@dell.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Dave Airlie <airlied@gmail.com>,
-        Ben Skeggs <skeggsb@gmail.com>,
-        Alex Deucher <alexdeucher@gmail.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        "A. Vladimirov" <vladimirov.atanas@gmail.com>
-References: <20210129215619.GA114790@bjorn-Precision-5520>
-From:   "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <1d07f39d-1f8c-e545-c5e7-8f21aa0e94f3@gmail.com>
-Date:   Tue, 2 Feb 2021 13:50:20 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S240240AbhBBUBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Feb 2021 15:01:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36544 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232851AbhBBNrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Feb 2021 08:47:20 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C8E7E64F93;
+        Tue,  2 Feb 2021 13:41:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612273309;
+        bh=lrgu37PQY9gKgzLHomntqVwJNVrZZKNWqcd6OBNf6hA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lP7CntQBMbVQJpEaaiYL7FNJfFN62FdN/GcMCAopAu3GeFeVdRngp79sVRpzFuHK5
+         TD5qm7vP35cKE27SqbfUnQslx8BchPj39SM6t3rctdUC8fYtCSE4pQocYrTa0iN/0t
+         d3FXWFCxMFvch8y6MGZ18wvBLBYTgHhaxOiLNKDwuznwWMH/xSyFPOFz3kqVjyuXZ0
+         zRzPBx8du28F2J7+fEf6S8AW6tZIr7+Fk1oGqZHo5IfxHe5n3QmWIbNh9GJ1DWeuGS
+         WNY6QFW1AReemuHlARlf6l+8hftt/ZTfX7rBzAc8J6+5GpSagbMIx44wB9Lpu37BSB
+         l0Kc3Fk6ocsSg==
+Date:   Tue, 2 Feb 2021 13:41:01 +0000
+From:   Mark Brown <broonie@kernel.org>
+To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Cc:     Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 09/13] pci: dwc: pcie-kirin: allow to optionally require
+ a regulator
+Message-ID: <20210202134101.GB5154@sirena.org.uk>
+References: <cover.1612271903.git.mchehab+huawei@kernel.org>
+ <7f4abd1ba9f4b33fe6f66213f56aa4269db74317.1612271903.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210129215619.GA114790@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="gj572EiMnwbLXET9"
+Content-Disposition: inline
+In-Reply-To: <7f4abd1ba9f4b33fe6f66213f56aa4269db74317.1612271903.git.mchehab+huawei@kernel.org>
+X-Cookie: Only God can make random selections.
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 1/29/21 3:56 PM, Bjorn Helgaas wrote:
-> On Thu, Jan 28, 2021 at 06:07:36PM -0600, Alex G. wrote:
->> On 1/28/21 5:51 PM, Sinan Kaya wrote:
->>> On 1/28/2021 6:39 PM, Bjorn Helgaas wrote:
->>>> AFAICT, this thread petered out with no resolution.
->>>>
->>>> If the bandwidth change notifications are important to somebody,
->>>> please speak up, preferably with a patch that makes the notifications
->>>> disabled by default and adds a parameter to enable them (or some other
->>>> strategy that makes sense).
->>>>
->>>> I think these are potentially useful, so I don't really want to just
->>>> revert them, but if nobody thinks these are important enough to fix,
->>>> that's a possibility.
->>>
->>> Hide behind debug or expert option by default? or even mark it as BROKEN
->>> until someone fixes it?
->>>
->> Instead of making it a config option, wouldn't it be better as a kernel
->> parameter? People encountering this seem quite competent in passing kernel
->> arguments, so having a "pcie_bw_notification=off" would solve their
->> problems.
-> 
-> I don't want people to have to discover a parameter to solve issues.
-> If there's a parameter, notification should default to off, and people
-> who want notification should supply a parameter to enable it.  Same
-> thing for the sysfs idea.
 
-I can imagine cases where a per-port flag would be useful. For example, 
-a machine with a NIC and a couple of PCIe storage drives. In this 
-example, the PCIe drives donwtrain willie-nillie, so it's useful to turn 
-off their notifications, but the NIC absolutely must not downtrain. It's 
-debatable whether it should be default on or default off.
+--gj572EiMnwbLXET9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I think we really just need to figure out what's going on.  Then it
-> should be clearer how to handle it.  I'm not really in a position to
-> debug the root cause since I don't have the hardware or the time.
+On Tue, Feb 02, 2021 at 02:29:54PM +0100, Mauro Carvalho Chehab wrote:
+> On Hikey 970, there's a power supply controlled by Hi6421v600
+> regulator that turns on the PCI devices on the board. Without
+> that, no PCI hardware would work.
+>=20
+> As this is device-dependent, such regulator line should be
+> optional.
 
-I wonder
-(a) if some PCIe devices are downtraining willie-nillie to save power
-(b) if this willie-nillie downtraining somehow violates PCIe spec
-(c) what is the official behavior when downtraining is intentional
+Supplies should only be optional if they may be physically absent from
+the system, if they are just sometimes not described well in firmware
+they should be requested via the normal regulator_get() interface, the
+core will supply a dummy regulator if there is nothing at all in the
+firmware description.
 
-My theory is: YES, YES, ASPM. But I don't know how to figure this out 
-without having the problem hardware in hand.
+Supplies should also generally be referred to with the naming used in
+the datasheet for the part.
 
+--gj572EiMnwbLXET9
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> If nobody can figure out what's going on, I think we'll have to make it
-> disabled by default.
+-----BEGIN PGP SIGNATURE-----
 
-I think most distros do "CONFIG_PCIE_BW is not set". Is that not true?
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmAZVm0ACgkQJNaLcl1U
+h9DRtAf+K9FZJNlyTA10opaKROPalDvJYAUzGS29QifY8rP5q40puTuZCei9grQM
+Qxa47bzq4jvwxU8OEg6BID3Orcf7Q+OMe5RV0e58Okl62F4uBXJaVWYp8mnwPpKW
+tPebWtJPWh9PJts0TMok3Noq/AZ8UQxmyiOasj8izrMxk3FEVidRAtXpHbFw+Rwa
+YkTAk/4y4pZhz9pKYGuEXGLj5spn4O7+SiONjxuMB+SZMHLH4foQFiCtmul6upY9
+2UYXjt4NUMCphxNykQ8UeAWDWoQ9txj7vRHFl5YPp0MIbRCNcHFuJEDjZsfQIbFH
+PQQBEahCUOHsorC5pbyEuDrKH60SPw==
+=WkEg
+-----END PGP SIGNATURE-----
 
-Alex
+--gj572EiMnwbLXET9--
