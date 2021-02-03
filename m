@@ -2,120 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D04C433DB
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:58:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB357C433DB
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:59:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3308364F8C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:58:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86AE364E22
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:59:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232409AbhBCR60 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 12:58:26 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:49746 "EHLO
+        id S232507AbhBCR6c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 12:58:32 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:49774 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231828AbhBCR6P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:15 -0500
+        by vger.kernel.org with ESMTP id S232384AbhBCR6Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:25 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id ECC3F400E1;
-        Wed,  3 Feb 2021 17:57:14 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 53E7140216;
+        Wed,  3 Feb 2021 17:57:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612375035; bh=N4SrLHDAvSJ3dnKgcShP+vt6i+VMc5c8hvmAqZM7EKc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=O/4sm2k6j/dARNK3I1ZETfYiYAHhq1RW+k+fYP93sEM9UKkTNbdgJd0Sd0ydEfEng
-         uKg4fl+wgLvQc2G8y7WWbwWe7zpwStRlJMPazTWuc/NDFnjKADFoB+dTPvqqXA5ncD
-         Hlj9dcpJru/+B2IHxclGeejBVD0AnuQDH84yebKD00mq9nOnNTicRuquZTstlKUEML
-         qioIN3yLVl01FXyXQ8HSwl0hseU/Fpbp6PPp7M2R4KSee/6DgFKjc9lngT9lrHXksB
-         wG7R7tL4ebpXyPdgiXeW63+xvYEhFsoOW6vkNpgqE2jSiTPmbvZB1TGfHsyweshvs7
-         8S9BFImvgV9Gg==
+        t=1612375042; bh=26bcMb1hhhSb/6zwC97LYr49GH4oBhX47qSAAxTu+pw=;
+        h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=MsSNNGyvL/xoKGLoZZMK1PVXdwFPgy2gPRZOBdWa9az9c4rRJgJaMSnTHjeziil3i
+         KloscSscoFhCP+OzYqP8VFFMYk7SetcK89QzQ3Uz5A4aFK+M6yaSznbbYLRr7KINOj
+         3U3X0FAaj46zabByvjSqZ1cyPVC68ea+Ao/t9vdiD/boSNPq1kLz5dNPIc/1wKhdXn
+         ifNbc2h8twUFpe59xPxXTIrsW+tm9Uqm9eOulVhJWoUFvTph+YebbWA/G1Z7HyWVYA
+         AZurKju84uVkfwXqvcAAJplkbmQ1VHDKeB/Ig1ftemurELYBeQzSoFrh0X487BZiDl
+         8IRH2ndl3NPdw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 3B411A005E;
-        Wed,  3 Feb 2021 17:57:11 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 2FDF4A005F;
+        Wed,  3 Feb 2021 17:57:21 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         dmaengine@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
         Dan Williams <dan.j.williams@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v3 00/15] dmaengine: dw-edma: HDMA support
-Date:   Wed,  3 Feb 2021 18:56:52 +0100
-Message-Id: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v3 07/15] dmaengine: dw-edma: Improve number of channels check
+Date:   Wed,  3 Feb 2021 18:56:59 +0100
+Message-Id: <c70f23ba8cb76facbb620bbad2814b29209db6b9.1612374941.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
+References: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
+References: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series adds the HDMA support, as long the IP design has set
-the compatible register map parameter, which allows compatibility at
-some degree for the existing Synopsys DesignWare eDMA driver that is
-already available on the Kernel.
+It was added some extra checks to ensure that the driver doesn't try to
+use more DMA channels than actually are available in hardware.
 
-The HDMA "Hyper-DMA" IP is an enhancement of the eDMA "embedded-DMA" IP.
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/dma/dw-edma/dw-edma-core.c | 21 +++++++++------------
+ drivers/dma/dw-edma/dw-edma-core.h |  2 ++
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-This new improvement comes with a PCI DVSEC that allows to the driver
-recognize and switch behavior if it's an eDMA or an HDMA, becoming
-retrocompatible, in the absence of this DVSEC, the driver will assume
-that is an eDMA IP.
-
-It also adds the interleaved support, since it will be similar to the
-current scatter-gather implementation.
-
-As well fixes/improves some abnormal behaviors not detected before, such as:
- - crash on loading/unloading driver
- - memory space definition for the data area and for the linked list space
- - scatter-gather address calculation on 32 bits platforms
- - minor comment and variable reordering
-
-Changes:
- V2: Applied changes based on Bjorn Helgaas' review
-     Rebased patches on top of v5.11-rc1 version
- V3: Applied changes based on Lukas Wunner' review
-
-Cc: Vinod Koul <vkoul@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: dmaengine@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-
-Gustavo Pimentel (15):
-  dmaengine: dw-edma: Add writeq() and readq() for 64 bits architectures
-  dmaengine: dw-edma: Fix comments offset characters' alignment
-  dmaengine: dw-edma: Add support for the HDMA feature
-  PCI: Add pci_find_vsec_capability() to find a specific VSEC
-  dmaengine: dw-edma: Add PCIe VSEC data retrieval support
-  dmaengine: dw-edma: Add device_prep_interleave_dma() support
-  dmaengine: dw-edma: Improve number of channels check
-  dmaengine: dw-edma: Reorder variables to keep consistency
-  dmaengine: dw-edma: Improve the linked list and data blocks definition
-  dmaengine: dw-edma: Change linked list and data blocks offset and
-    sizes
-  dmaengine: dw-edma: Move struct dentry variable from static definition
-    into dw_edma struct
-  dmaengine: dw-edma: Fix crash on loading/unloading driver
-  dmaengine: dw-edma: Change DMA abreviation from lower into upper case
-  dmaengine: dw-edma: Revert fix scatter-gather address calculation
-  dmaengine: dw-edma: Add pcim_iomap_table return checker
-
- drivers/dma/dw-edma/dw-edma-core.c       | 178 +++++++++++-------
- drivers/dma/dw-edma/dw-edma-core.h       |  37 ++--
- drivers/dma/dw-edma/dw-edma-pcie.c       | 275 +++++++++++++++++++++-------
- drivers/dma/dw-edma/dw-edma-v0-core.c    | 300 ++++++++++++++++++++++++-------
- drivers/dma/dw-edma/dw-edma-v0-core.h    |   2 +-
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c |  77 ++++----
- drivers/dma/dw-edma/dw-edma-v0-debugfs.h |   4 +-
- drivers/dma/dw-edma/dw-edma-v0-regs.h    | 291 +++++++++++++++++++-----------
- drivers/pci/pci.c                        |  34 ++++
- include/linux/pci.h                      |   2 +
- include/uapi/linux/pci_regs.h            |   6 +
- 11 files changed, 851 insertions(+), 355 deletions(-)
-
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 0fe3835..5495cf7 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -914,19 +914,16 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+ 
+ 	raw_spin_lock_init(&dw->lock);
+ 
+-	if (!dw->wr_ch_cnt) {
+-		/* Find out how many write channels are supported by hardware */
+-		dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
+-		if (!dw->wr_ch_cnt)
+-			return -EINVAL;
+-	}
++	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt,
++			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
++	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
+ 
+-	if (!dw->rd_ch_cnt) {
+-		/* Find out how many read channels are supported by hardware */
+-		dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
+-		if (!dw->rd_ch_cnt)
+-			return -EINVAL;
+-	}
++	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt,
++			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
++	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
++
++	if (!dw->wr_ch_cnt && !dw->rd_ch_cnt)
++		return -EINVAL;
+ 
+ 	dev_vdbg(dev, "Channels:\twrite=%d, read=%d\n",
+ 		 dw->wr_ch_cnt, dw->rd_ch_cnt);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index f72ebaa..650b1c7 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -15,6 +15,8 @@
+ #include "../virt-dma.h"
+ 
+ #define EDMA_LL_SZ					24
++#define EDMA_MAX_WR_CH					8
++#define EDMA_MAX_RD_CH					8
+ 
+ enum dw_edma_dir {
+ 	EDMA_DIR_WRITE = 0,
 -- 
 2.7.4
 
