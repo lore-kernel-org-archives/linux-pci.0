@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA490C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC47AC43381
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 21:03:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67E6F64F5F
+	by mail.kernel.org (Postfix) with ESMTP id 8D6BE64F43
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 21:03:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232681AbhBCVDA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 16:03:00 -0500
-Received: from mga03.intel.com ([134.134.136.65]:47710 "EHLO mga03.intel.com"
+        id S232859AbhBCVDB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 16:03:01 -0500
+Received: from mga07.intel.com ([134.134.136.100]:45270 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232321AbhBCU6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S232792AbhBCU6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 3 Feb 2021 15:58:14 -0500
-IronPort-SDR: Mx4TZwhzE6zhEg/Myi6s2qaaTrU5h1/Gd54PVLrRBqeBCJJ2YhHjeyp3BRlZsiZIYDxp3ESzWG
- 9G/9BB56nptQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="181190095"
+IronPort-SDR: Yhal+xDrb36SOPmvHZEBK6Go741snErnQIfAC/OuTXeMIL0hQovZWtUphnB4roAziTipKY1NgZ
+ i+aFuBiNjyug==
+X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="245191297"
 X-IronPort-AV: E=Sophos;i="5.79,399,1602572400"; 
-   d="scan'208";a="181190095"
+   d="scan'208";a="245191297"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2021 12:57:32 -0800
-IronPort-SDR: jF6G3NJzGgokGR6lD1hAvEKPFO/Fs2jX0KhiYC7l727N4wANLkAtlkN2UpSdny1JbD6Y9igX/z
- 65VuTxmCQpCw==
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2021 12:57:30 -0800
+IronPort-SDR: ES1Xf9ZIwk5IsL/BSza/sEsBAYTEtSL1hblroMmVJ9xn7G6oGgeA2QgbOVHLpecKZo7Kt9/4Xv
+ ea6lX64WRRKA==
 X-IronPort-AV: E=Sophos;i="5.79,399,1602572400"; 
-   d="scan'208";a="372510590"
+   d="scan'208";a="372510567"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.154])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 03 Feb 2021 12:57:31 -0800
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 03 Feb 2021 12:57:29 -0800
 From:   Megha Dey <megha.dey@intel.com>
 To:     tglx@linutronix.de
 Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
@@ -40,11 +40,10 @@ Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
         megha.dey@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
         iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
         bhelgaas@google.com, maz@kernel.org, linux-pci@vger.kernel.org,
-        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com,
-        Leon Romanovsky <leon@kernel.org>
-Subject: [PATCH 11/12] platform-msi: Add platform check for subdevice irq domain
-Date:   Wed,  3 Feb 2021 12:56:44 -0800
-Message-Id: <1612385805-3412-12-git-send-email-megha.dey@intel.com>
+        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
+Subject: [PATCH 06/12] platform-msi: Add device MSI infrastructure
+Date:   Wed,  3 Feb 2021 12:56:39 -0800
+Message-Id: <1612385805-3412-7-git-send-email-megha.dey@intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1612385805-3412-1-git-send-email-megha.dey@intel.com>
 References: <1612385805-3412-1-git-send-email-megha.dey@intel.com>
@@ -52,159 +51,246 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Lu Baolu <baolu.lu@linux.intel.com>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-The pci_subdevice_msi_create_irq_domain() should fail if the underlying
-platform is not able to support IMS (Interrupt Message Storage). Otherwise,
-the isolation of interrupt is not guaranteed.
+Add device specific MSI domain infrastructure for devices which have their
+own resource management and interrupt chip. These devices are not related
+to PCI and contrary to platform MSI they do not share a common resource and
+interrupt chip. They provide their own domain specific resource management
+and interrupt chip.
 
-For x86, IMS is only supported on bare metal for now. We could enable it
-in the virtualization environments in the future if interrupt HYPERCALL
-domain is supported or the hardware has the capability of interrupt
-isolation for subdevices.
+This utilizes the new alloc/free override in a non evil way which avoids
+having yet another set of specialized alloc/free functions. Just using
+msi_domain_alloc/free_irqs() is sufficient
 
-Cc: David Woodhouse <dwmw@amazon.co.uk>
-Cc: Leon Romanovsky <leon@kernel.org>
-Cc: Kevin Tian <kevin.tian@intel.com>
-Suggested-by: Thomas Gleixner <tglx@linutronix.de>
-Link: https://lore.kernel.org/linux-pci/87pn4nk7nn.fsf@nanos.tec.linutronix.de/
-Link: https://lore.kernel.org/linux-pci/877dqrnzr3.fsf@nanos.tec.linutronix.de/
-Link: https://lore.kernel.org/linux-pci/877dqqmc2h.fsf@nanos.tec.linutronix.de/
-Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+While initially it was suggested and tried to piggyback device MSI on
+platform MSI, the better variant is to reimplement platform MSI on top of
+device MSI.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Megha Dey <megha.dey@intel.com>
 ---
- arch/x86/pci/common.c       | 74 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/base/platform-msi.c |  8 +++++
- include/linux/msi.h         |  1 +
- 3 files changed, 83 insertions(+)
+ drivers/base/platform-msi.c | 131 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/irqdomain.h   |   1 +
+ include/linux/msi.h         |  24 ++++++++
+ kernel/irq/Kconfig          |   4 ++
+ 4 files changed, 160 insertions(+)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 3507f45..263ccf6 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -12,6 +12,8 @@
- #include <linux/init.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/iommu.h>
-+#include <linux/msi.h>
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 9d9ccfc..6127b3b 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -419,3 +419,134 @@ int platform_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
  
- #include <asm/acpi.h>
- #include <asm/segment.h>
-@@ -724,3 +726,75 @@ struct pci_dev *pci_real_dma_dev(struct pci_dev *dev)
- 	return dev;
+ 	return err;
  }
- #endif
 +
 +#ifdef CONFIG_DEVICE_MSI
 +/*
-+ * We want to figure out which context we are running in. But the hardware
-+ * does not introduce a reliable way (instruction, CPUID leaf, MSR, whatever)
-+ * which can be manipulated by the VMM to let the OS figure out where it runs.
-+ * So we go with the below probably on_bare_metal() function as a replacement
-+ * for definitely on_bare_metal() to go forward only for the very simple reason
-+ * that this is the only option we have.
++ * Device specific MSI domain infrastructure for devices which have their
++ * own resource management and interrupt chip. These devices are not
++ * related to PCI and contrary to platform MSI they do not share a common
++ * resource and interrupt chip. They provide their own domain specific
++ * resource management and interrupt chip.
 + */
-+static const char * const vmm_vendor_name[] = {
-+	"QEMU", "Bochs", "KVM", "Xen", "VMware", "VMW", "VMware Inc.",
-+	"innotek GmbH", "Oracle Corporation", "Parallels", "BHYVE"
-+};
 +
-+static void read_type0_virtual_machine(const struct dmi_header *dm, void *p)
++static void device_msi_free_msi_entries(struct device *dev)
 +{
-+	u8 *data = (u8 *)dm + 0x13;
++	struct list_head *msi_list = dev_to_msi_list(dev);
++	struct msi_desc *entry, *tmp;
 +
-+	/* BIOS Information (Type 0) */
-+	if (dm->type != 0 || dm->length < 0x14)
-+		return;
-+
-+	/* Bit 4 of BIOS Characteristics Extension Byte 2*/
-+	if (*data & BIT(4))
-+		*((bool *)p) = true;
++	list_for_each_entry_safe(entry, tmp, msi_list, list) {
++		list_del(&entry->list);
++		free_msi_entry(entry);
++	}
 +}
 +
-+static bool smbios_virtual_machine(void)
++/**
++ * device_msi_free_irqs - Free MSI interrupts assigned to  a device
++ * @dev:	Pointer to the device
++ *
++ * Frees the interrupt and the MSI descriptors.
++ */
++static void device_msi_free_irqs(struct irq_domain *domain, struct device *dev)
 +{
-+	bool bit_present = false;
-+
-+	dmi_walk(read_type0_virtual_machine, &bit_present);
-+
-+	return bit_present;
++	__msi_domain_free_irqs(domain, dev);
++	device_msi_free_msi_entries(dev);
 +}
 +
-+static bool on_bare_metal(struct device *dev)
++/**
++ * device_msi_alloc_irqs - Allocate MSI interrupts for a device
++ * @dev:	Pointer to the device
++ * @nvec:	Number of vectors
++ *
++ * Allocates the required number of MSI descriptors and the corresponding
++ * interrupt descriptors.
++ */
++static int device_msi_alloc_irqs(struct irq_domain *domain, struct device *dev, int nvec)
 +{
-+	int i;
++	int i, ret = -ENOMEM;
 +
-+	if (boot_cpu_has(X86_FEATURE_HYPERVISOR))
-+		return false;
++	for (i = 0; i < nvec; i++) {
++		struct msi_desc *entry = alloc_msi_entry(dev, 1, NULL);
 +
-+	if (smbios_virtual_machine())
-+		return false;
++		if (!entry)
++			goto fail;
++		list_add_tail(&entry->list, dev_to_msi_list(dev));
++	}
 +
-+	if (iommu_capable(dev->bus, IOMMU_CAP_VIOMMU_HINT))
-+		return false;
-+
-+	for (i = 0; i < ARRAY_SIZE(vmm_vendor_name); i++)
-+		if (dmi_match(DMI_SYS_VENDOR, vmm_vendor_name[i]))
-+			return false;
-+
-+	pr_info("System running on bare metal, report to bugzilla.kernel.org if not the case.");
-+
-+	return true;
++	ret = __msi_domain_alloc_irqs(domain, dev, nvec);
++	if (!ret)
++		return 0;
++fail:
++	device_msi_free_msi_entries(dev);
++	return ret;
 +}
 +
-+bool arch_support_pci_device_ims(struct pci_dev *pdev)
++static void device_msi_update_dom_ops(struct msi_domain_info *info)
 +{
++	if (!info->ops->domain_alloc_irqs)
++		info->ops->domain_alloc_irqs = device_msi_alloc_irqs;
++	if (!info->ops->domain_free_irqs)
++		info->ops->domain_free_irqs = device_msi_free_irqs;
++	if (!info->ops->msi_prepare)
++		info->ops->msi_prepare = arch_msi_prepare;
++}
++
++/**
++ * device_msi_create_msi_irq_domain - Create an irq domain for devices
++ * @fwnode:	Firmware node of the interrupt controller
++ * @info:	MSI domain info to configure the new domain
++ * @parent:	Parent domain
++ */
++struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
++						struct msi_domain_info *info,
++						struct irq_domain *parent)
++{
++	struct irq_domain *domain;
++
++	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
++		platform_msi_update_chip_ops(info);
++
++	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
++		device_msi_update_dom_ops(info);
++
++	msi_domain_set_default_info_flags(info);
++
++	domain = msi_create_irq_domain(fn, info, parent);
++	if (domain)
++		irq_domain_update_bus_token(domain, DOMAIN_BUS_DEVICE_MSI);
++	return domain;
++}
++
++#ifdef CONFIG_PCI
++#include <linux/pci.h>
++
++/**
++ * pci_subdevice_msi_create_irq_domain - Create an irq domain for subdevices
++ * @pdev:	Pointer to PCI device for which the subdevice domain is created
++ * @info:	MSI domain info to configure the new domain
++ */
++struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
++						       struct msi_domain_info *info)
++{
++	struct irq_domain *domain, *pdev_msi;
++	struct fwnode_handle *fn;
++
 +	/*
-+	 * When we are running in a VMM context, the device IMS could only be
-+	 * enabled when the underlying hardware supports interrupt isolation
-+	 * of the subdevice, or any mechanism (trap, hypercall) is added so
-+	 * that changes in the interrupt message store could be managed by the
-+	 * VMM. For now, we only support the device IMS when we are running on
-+	 * the bare metal.
++	 * Retrieve the MSI domain of the underlying PCI device's MSI
++	 * domain. The PCI device domain's parent domain is also the parent
++	 * domain of the new subdevice domain.
 +	 */
-+	return on_bare_metal(&pdev->dev);
-+}
-+#endif
-diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
-index 6127b3b..d5ae26f 100644
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -519,6 +519,11 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
- 
-+bool __weak arch_support_pci_device_ims(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
- /**
-  * pci_subdevice_msi_create_irq_domain - Create an irq domain for subdevices
-  * @pdev:	Pointer to PCI device for which the subdevice domain is created
-@@ -530,6 +535,9 @@ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
- 	struct irq_domain *domain, *pdev_msi;
- 	struct fwnode_handle *fn;
- 
-+	if (!arch_support_pci_device_ims(pdev))
++	pdev_msi = dev_get_msi_domain(&pdev->dev);
++	if (!pdev_msi)
 +		return NULL;
 +
- 	/*
- 	 * Retrieve the MSI domain of the underlying PCI device's MSI
- 	 * domain. The PCI device domain's parent domain is also the parent
++	fn = irq_domain_alloc_named_fwnode(dev_name(&pdev->dev));
++	if (!fn)
++		return NULL;
++	domain = device_msi_create_irq_domain(fn, info, pdev_msi->parent);
++	if (!domain)
++		irq_domain_free_fwnode(fn);
++	return domain;
++}
++EXPORT_SYMBOL_GPL(pci_subdevice_msi_create_irq_domain);
++#endif /* CONFIG_PCI */
++#endif /* CONFIG_DEVICE_MSI */
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 42d1968..06c88ba 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -85,6 +85,7 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_TI_SCI_INTA_MSI,
+ 	DOMAIN_BUS_WAKEUP,
+ 	DOMAIN_BUS_VMD_MSI,
++	DOMAIN_BUS_DEVICE_MSI,
+ };
+ 
+ /**
 diff --git a/include/linux/msi.h b/include/linux/msi.h
-index a6b419d..fa02542 100644
+index d7a7f7d..fbf2258 100644
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -478,6 +478,7 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
- 						struct irq_domain *parent);
+@@ -95,6 +95,18 @@ struct ti_sci_inta_msi_desc {
+ };
  
- # ifdef CONFIG_PCI
-+bool arch_support_pci_device_ims(struct pci_dev *pdev);
- struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
- 						       struct msi_domain_info *info);
- # endif
+ /**
++ * device_msi_desc - Device MSI specific MSI descriptor data
++ * @priv:		Pointer to device specific private data
++ * @priv_iomem:		Pointer to device specific private io memory
++ * @hwirq:		The hardware irq number in the device domain
++ */
++struct device_msi_desc {
++	void		*priv;
++	void __iomem	*priv_iomem;
++	u16		hwirq;
++};
++
++/**
+  * struct msi_desc - Descriptor structure for MSI based interrupts
+  * @list:	List head for management
+  * @irq:	The base interrupt number
+@@ -166,6 +178,7 @@ struct msi_desc {
+ 		struct platform_msi_desc platform;
+ 		struct fsl_mc_msi_desc fsl_mc;
+ 		struct ti_sci_inta_msi_desc inta;
++		struct device_msi_desc device_msi;
+ 	};
+ };
+ 
+@@ -451,6 +464,17 @@ void *platform_msi_get_host_data(struct irq_domain *domain);
+ void msi_domain_set_default_info_flags(struct msi_domain_info *info);
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ 
++#ifdef CONFIG_DEVICE_MSI
++struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
++						struct msi_domain_info *info,
++						struct irq_domain *parent);
++
++# ifdef CONFIG_PCI
++struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
++						       struct msi_domain_info *info);
++# endif
++#endif /* CONFIG_DEVICE_MSI */
++
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
+ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+diff --git a/kernel/irq/Kconfig b/kernel/irq/Kconfig
+index d79ef24..7223327 100644
+--- a/kernel/irq/Kconfig
++++ b/kernel/irq/Kconfig
+@@ -89,6 +89,10 @@ config GENERIC_MSI_IRQ_DOMAIN
+ 	select IRQ_DOMAIN_HIERARCHY
+ 	select GENERIC_MSI_IRQ
+ 
++config DEVICE_MSI
++	bool
++	select GENERIC_MSI_IRQ_DOMAIN
++
+ config IRQ_MSI_IOMMU
+ 	bool
+ 
 -- 
 2.7.4
 
