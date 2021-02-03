@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DCAC433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D078C433E9
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:00:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BDA364F6D
+	by mail.kernel.org (Postfix) with ESMTP id 609BF64F74
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232763AbhBCWAd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 17:00:33 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:52244 "EHLO
+        id S232772AbhBCWAf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 17:00:35 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:60276 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232313AbhBCV70 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 16:59:26 -0500
+        by vger.kernel.org with ESMTP id S232645AbhBCV7Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 16:59:24 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id E769FC011B;
-        Wed,  3 Feb 2021 21:58:25 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id F2CD84049B;
+        Wed,  3 Feb 2021 21:58:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612389506; bh=71t8kLn/h4uRT+rZrsVOIM9WjcoyjC97XsyNd4xo0/8=;
+        t=1612389504; bh=Q8p1awFRWvZQwAEJydjROiaIceJgT6c3cpPWic23uwQ=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=RgfJV1LBCuVzrk7nQeg5tDASzoie2bzlzyQv4mQhuaIsPuFBooMy1T2A8eX/4hly3
-         r25bPn02ezYWW96rZiXQPpaVF5uc77i2vKRpBk8cHnksostFwm6dJxHdi8TB65Mvd/
-         LmKMQT1r/3TSV7L/Fv77g5h/DephWcfwm4/a7cS41RmNv9CY8EOBGtQYVdsyoDE3Nc
-         U5+Qwg1HGfahlameacyYLeuqa6R4SlwAKr0+IPbKUs8NMDOv1KZb03fdLgxbptWnVT
-         3bYtEq7IoYRWau1Gnbish55wTo3onD8fqFL4zMXbf7FQbeRoMDD7tVsHqpCaU1XKdB
-         3tcn6Y46P9KqQ==
+        b=PGIZmoxftdCaluF7S9VhVDrUUdyx8rkXXKjCFnJyHxSP98ARHWZHDZgCmUoBA10SR
+         KDQNffDHSQ+MszPr3/u9pjz/tsRTQNck/X+LTzFOGQWNmv/6AL5MxjwNAU0dCYnDtw
+         m8EWFvrfr2IbBZTrx0FSd7w0s0VDde7A2b/HmHUxymd020Lnmx2PTh1N9L/1EwMx69
+         nZ/57vdHlrPjhVGr1O4NqYki308iLb5qGiZ1dxY/iJrYQgGD7M3yKUvH6s5BLXsV0j
+         0dW0YrS3jzBvHae5FGzfp06XBQQ+rkkBRVnJU4Cs0YAU4cA4LL1+hS40Eo8z76nEEH
+         mae/4OVfJj1qA==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id B94FBA024B;
-        Wed,  3 Feb 2021 21:58:24 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id BE646A024B;
+        Wed,  3 Feb 2021 21:58:22 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v4 12/15] dmaengine: dw-edma: Fix crash on loading/unloading driver
-Date:   Wed,  3 Feb 2021 22:58:03 +0100
-Message-Id: <50d35480bcb5a7ea33649bbbcf296e148f5977b5.1612389406.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v4 10/15] dmaengine: dw-edma: Change linked list and data blocks offset and sizes
+Date:   Wed,  3 Feb 2021 22:58:01 +0100
+Message-Id: <9e60326f906093f1110bcde6286b8f743c8f19f9.1612389406.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612389406.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612389406.git.gustavo.pimentel@synopsys.com>
@@ -56,48 +56,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the driver is compiled as a module and loaded if we try to unload
-it, the Kernel shows a crash log. This Kernel crash is due to the
-dma_async_device_unregister() call done after deleting the channels,
-this patch fixes this issue.
+Changes the linked list and data blocks offset and sizes to follow the
+recommendation given by the hardware team for the IPK solution.
+
+Although the previous data blocks offset and sizes are still valid and
+functional, using them that might present some issues related to the IPK
+solution, since this solution is based on FPGA and might be subjected to
+timmings constrains.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 8d8292e..f7a1930 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -986,22 +986,21 @@ int dw_edma_remove(struct dw_edma_chip *chip)
- 	/* Power management */
- 	pm_runtime_disable(dev);
- 
-+	/* Deregister eDMA device */
-+	dma_async_device_unregister(&dw->wr_edma);
- 	list_for_each_entry_safe(chan, _chan, &dw->wr_edma.channels,
- 				 vc.chan.device_node) {
--		list_del(&chan->vc.chan.device_node);
- 		tasklet_kill(&chan->vc.task);
-+		list_del(&chan->vc.chan.device_node);
- 	}
- 
-+	dma_async_device_unregister(&dw->rd_edma);
- 	list_for_each_entry_safe(chan, _chan, &dw->rd_edma.channels,
- 				 vc.chan.device_node) {
--		list_del(&chan->vc.chan.device_node);
- 		tasklet_kill(&chan->vc.task);
-+		list_del(&chan->vc.chan.device_node);
- 	}
- 
--	/* Deregister eDMA device */
--	dma_async_device_unregister(&dw->wr_edma);
--	dma_async_device_unregister(&dw->rd_edma);
--
- 	/* Turn debugfs off */
- 	dw_edma_v0_core_debugfs_off(chip);
- 
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index a0fa809..686b4ff 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -59,29 +59,29 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	.rg.sz				= 0x00002000,	/*  8 Kbytes */
+ 	/* eDMA memory linked list location */
+ 	.ll_wr = {
+-		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00000000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00200000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00000000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00200000, 0x00000800)
+ 	},
+ 	.ll_rd = {
+-		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00400000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00600000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00400000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00600000, 0x00000800)
+ 	},
+ 	/* eDMA memory data location */
+ 	.dt_wr = {
+-		/* Channel 0 - BAR 2, offset 8 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00800000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 22 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x01600000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 8 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00800000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 9 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00900000, 0x00000800)
+ 	},
+ 	.dt_rd = {
+-		/* Channel 0 - BAR 2, offset 36 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x02400000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 50 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x03200000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 10 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00a00000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 11 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00b00000, 0x00000800)
+ 	},
+ 	/* Other */
+ 	.mf				= EDMA_MF_EDMA_UNROLL,
 -- 
 2.7.4
 
