@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81006C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA490C433E9
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 21:03:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4346C64F6C
+	by mail.kernel.org (Postfix) with ESMTP id 67E6F64F5F
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 21:03:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232335AbhBCVCV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 16:02:21 -0500
-Received: from mga07.intel.com ([134.134.136.100]:45270 "EHLO mga07.intel.com"
+        id S232681AbhBCVDA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 16:03:00 -0500
+Received: from mga03.intel.com ([134.134.136.65]:47710 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232831AbhBCU6c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Feb 2021 15:58:32 -0500
-IronPort-SDR: bMzPtbJcVsXP0h/g+lR/99OeqtXolQWog0IUvX0Bdi8a8yoCCVOCXx6sguKOgdOlsWrn/BJ44M
- eQHwVsT1fTrQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="245191306"
+        id S232321AbhBCU6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Feb 2021 15:58:14 -0500
+IronPort-SDR: Mx4TZwhzE6zhEg/Myi6s2qaaTrU5h1/Gd54PVLrRBqeBCJJ2YhHjeyp3BRlZsiZIYDxp3ESzWG
+ 9G/9BB56nptQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="181190095"
 X-IronPort-AV: E=Sophos;i="5.79,399,1602572400"; 
-   d="scan'208";a="245191306"
+   d="scan'208";a="181190095"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2021 12:57:30 -0800
-IronPort-SDR: z24OHgspgXrmUufwOeutvV6tlHGf9al7sBOIJbNf8aGLHBQtLiLTIBb2vJCFLQOMgpXsLQm86z
- uHnTQ4xRdMlA==
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2021 12:57:32 -0800
+IronPort-SDR: jF6G3NJzGgokGR6lD1hAvEKPFO/Fs2jX0KhiYC7l727N4wANLkAtlkN2UpSdny1JbD6Y9igX/z
+ 65VuTxmCQpCw==
 X-IronPort-AV: E=Sophos;i="5.79,399,1602572400"; 
-   d="scan'208";a="372510575"
+   d="scan'208";a="372510590"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.154])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 03 Feb 2021 12:57:30 -0800
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 03 Feb 2021 12:57:31 -0800
 From:   Megha Dey <megha.dey@intel.com>
 To:     tglx@linutronix.de
 Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
@@ -40,10 +40,11 @@ Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
         megha.dey@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
         iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
         bhelgaas@google.com, maz@kernel.org, linux-pci@vger.kernel.org,
-        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
-Subject: [PATCH 08/12] genirq: Set auxiliary data for an interrupt
-Date:   Wed,  3 Feb 2021 12:56:41 -0800
-Message-Id: <1612385805-3412-9-git-send-email-megha.dey@intel.com>
+        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com,
+        Leon Romanovsky <leon@kernel.org>
+Subject: [PATCH 11/12] platform-msi: Add platform check for subdevice irq domain
+Date:   Wed,  3 Feb 2021 12:56:44 -0800
+Message-Id: <1612385805-3412-12-git-send-email-megha.dey@intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1612385805-3412-1-git-send-email-megha.dey@intel.com>
 References: <1612385805-3412-1-git-send-email-megha.dey@intel.com>
@@ -51,95 +52,159 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce a new function pointer in the irq_chip structure(irq_set_auxdata)
-which is responsible for updating data which is stored in a shared register
-or data storage. For example, the idxd driver uses the auxiliary data API
-to enable/set and disable PASID field that is in the IMS entry (introduced
-in a later patch) and that data are not typically present in MSI entry.
+From: Lu Baolu <baolu.lu@linux.intel.com>
 
-Reviewed-by: Tony Luck <tony.luck@intel.com>
+The pci_subdevice_msi_create_irq_domain() should fail if the underlying
+platform is not able to support IMS (Interrupt Message Storage). Otherwise,
+the isolation of interrupt is not guaranteed.
+
+For x86, IMS is only supported on bare metal for now. We could enable it
+in the virtualization environments in the future if interrupt HYPERCALL
+domain is supported or the hardware has the capability of interrupt
+isolation for subdevices.
+
+Cc: David Woodhouse <dwmw@amazon.co.uk>
+Cc: Leon Romanovsky <leon@kernel.org>
+Cc: Kevin Tian <kevin.tian@intel.com>
+Suggested-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lore.kernel.org/linux-pci/87pn4nk7nn.fsf@nanos.tec.linutronix.de/
+Link: https://lore.kernel.org/linux-pci/877dqrnzr3.fsf@nanos.tec.linutronix.de/
+Link: https://lore.kernel.org/linux-pci/877dqqmc2h.fsf@nanos.tec.linutronix.de/
+Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 Signed-off-by: Megha Dey <megha.dey@intel.com>
 ---
- include/linux/interrupt.h |  2 ++
- include/linux/irq.h       |  4 ++++
- kernel/irq/manage.c       | 32 ++++++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+)
+ arch/x86/pci/common.c       | 74 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/base/platform-msi.c |  8 +++++
+ include/linux/msi.h         |  1 +
+ 3 files changed, 83 insertions(+)
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index bb8ff90..d3f419b 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -496,6 +496,8 @@ extern int irq_get_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
- extern int irq_set_irqchip_state(unsigned int irq, enum irqchip_irq_state which,
- 				 bool state);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 3507f45..263ccf6 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -12,6 +12,8 @@
+ #include <linux/init.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <linux/iommu.h>
++#include <linux/msi.h>
  
-+int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val);
-+
- #ifdef CONFIG_IRQ_FORCED_THREADING
- # ifdef CONFIG_PREEMPT_RT
- #  define force_irqthreads	(true)
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 4aeb1c4..568cdf5 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -491,6 +491,8 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
-  *				irq_request_resources
-  * @irq_compose_msi_msg:	optional to compose message content for MSI
-  * @irq_write_msi_msg:	optional to write message content for MSI
-+ * @irq_set_auxdata:	Optional function to update auxiliary data e.g. in
-+ *			shared registers
-  * @irq_get_irqchip_state:	return the internal state of an interrupt
-  * @irq_set_irqchip_state:	set the internal state of a interrupt
-  * @irq_set_vcpu_affinity:	optional to target a vCPU in a virtual machine
-@@ -538,6 +540,8 @@ struct irq_chip {
- 	void		(*irq_compose_msi_msg)(struct irq_data *data, struct msi_msg *msg);
- 	void		(*irq_write_msi_msg)(struct irq_data *data, struct msi_msg *msg);
- 
-+	int		(*irq_set_auxdata)(struct irq_data *data, unsigned int which, u64 auxval);
-+
- 	int		(*irq_get_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool *state);
- 	int		(*irq_set_irqchip_state)(struct irq_data *data, enum irqchip_irq_state which, bool state);
- 
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index 85ede4e..68ff559 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -2860,3 +2860,35 @@ bool irq_check_status_bit(unsigned int irq, unsigned int bitmask)
- 	return res;
+ #include <asm/acpi.h>
+ #include <asm/segment.h>
+@@ -724,3 +726,75 @@ struct pci_dev *pci_real_dma_dev(struct pci_dev *dev)
+ 	return dev;
  }
- EXPORT_SYMBOL_GPL(irq_check_status_bit);
+ #endif
 +
-+/**
-+ * irq_set_auxdata - Set auxiliary data
-+ * @irq:	Interrupt to update
-+ * @which:	Selector which data to update
-+ * @auxval:	Auxiliary data value
-+ *
-+ * Function to update auxiliary data for an interrupt, e.g. to update data
-+ * which is stored in a shared register or data storage (e.g. IMS).
++#ifdef CONFIG_DEVICE_MSI
++/*
++ * We want to figure out which context we are running in. But the hardware
++ * does not introduce a reliable way (instruction, CPUID leaf, MSR, whatever)
++ * which can be manipulated by the VMM to let the OS figure out where it runs.
++ * So we go with the below probably on_bare_metal() function as a replacement
++ * for definitely on_bare_metal() to go forward only for the very simple reason
++ * that this is the only option we have.
 + */
-+int irq_set_auxdata(unsigned int irq, unsigned int which, u64 val)
++static const char * const vmm_vendor_name[] = {
++	"QEMU", "Bochs", "KVM", "Xen", "VMware", "VMW", "VMware Inc.",
++	"innotek GmbH", "Oracle Corporation", "Parallels", "BHYVE"
++};
++
++static void read_type0_virtual_machine(const struct dmi_header *dm, void *p)
 +{
-+	struct irq_desc *desc;
-+	struct irq_data *data;
-+	unsigned long flags;
-+	int res = -ENODEV;
++	u8 *data = (u8 *)dm + 0x13;
 +
-+	desc = irq_get_desc_buslock(irq, &flags, 0);
-+	if (!desc)
-+		return -EINVAL;
++	/* BIOS Information (Type 0) */
++	if (dm->type != 0 || dm->length < 0x14)
++		return;
 +
-+	for (data = &desc->irq_data; data; data = irqd_get_parent_data(data)) {
-+		if (data->chip->irq_set_auxdata) {
-+			res = data->chip->irq_set_auxdata(data, which, val);
-+			break;
-+		}
-+	}
-+
-+	irq_put_desc_busunlock(desc, flags);
-+	return res;
++	/* Bit 4 of BIOS Characteristics Extension Byte 2*/
++	if (*data & BIT(4))
++		*((bool *)p) = true;
 +}
-+EXPORT_SYMBOL_GPL(irq_set_auxdata);
++
++static bool smbios_virtual_machine(void)
++{
++	bool bit_present = false;
++
++	dmi_walk(read_type0_virtual_machine, &bit_present);
++
++	return bit_present;
++}
++
++static bool on_bare_metal(struct device *dev)
++{
++	int i;
++
++	if (boot_cpu_has(X86_FEATURE_HYPERVISOR))
++		return false;
++
++	if (smbios_virtual_machine())
++		return false;
++
++	if (iommu_capable(dev->bus, IOMMU_CAP_VIOMMU_HINT))
++		return false;
++
++	for (i = 0; i < ARRAY_SIZE(vmm_vendor_name); i++)
++		if (dmi_match(DMI_SYS_VENDOR, vmm_vendor_name[i]))
++			return false;
++
++	pr_info("System running on bare metal, report to bugzilla.kernel.org if not the case.");
++
++	return true;
++}
++
++bool arch_support_pci_device_ims(struct pci_dev *pdev)
++{
++	/*
++	 * When we are running in a VMM context, the device IMS could only be
++	 * enabled when the underlying hardware supports interrupt isolation
++	 * of the subdevice, or any mechanism (trap, hypercall) is added so
++	 * that changes in the interrupt message store could be managed by the
++	 * VMM. For now, we only support the device IMS when we are running on
++	 * the bare metal.
++	 */
++	return on_bare_metal(&pdev->dev);
++}
++#endif
+diff --git a/drivers/base/platform-msi.c b/drivers/base/platform-msi.c
+index 6127b3b..d5ae26f 100644
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -519,6 +519,11 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+ 
++bool __weak arch_support_pci_device_ims(struct pci_dev *pdev)
++{
++	return false;
++}
++
+ /**
+  * pci_subdevice_msi_create_irq_domain - Create an irq domain for subdevices
+  * @pdev:	Pointer to PCI device for which the subdevice domain is created
+@@ -530,6 +535,9 @@ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
+ 	struct irq_domain *domain, *pdev_msi;
+ 	struct fwnode_handle *fn;
+ 
++	if (!arch_support_pci_device_ims(pdev))
++		return NULL;
++
+ 	/*
+ 	 * Retrieve the MSI domain of the underlying PCI device's MSI
+ 	 * domain. The PCI device domain's parent domain is also the parent
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index a6b419d..fa02542 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -478,6 +478,7 @@ struct irq_domain *device_msi_create_irq_domain(struct fwnode_handle *fn,
+ 						struct irq_domain *parent);
+ 
+ # ifdef CONFIG_PCI
++bool arch_support_pci_device_ims(struct pci_dev *pdev);
+ struct irq_domain *pci_subdevice_msi_create_irq_domain(struct pci_dev *pdev,
+ 						       struct msi_domain_info *info);
+ # endif
 -- 
 2.7.4
 
