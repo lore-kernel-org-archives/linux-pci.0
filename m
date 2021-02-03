@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0875BC433DB
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D329C433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:15:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACA8964DF0
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:14:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57B4D64E0F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 22:15:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233171AbhBCWOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 17:14:36 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:32808 "EHLO
+        id S233175AbhBCWOi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 17:14:38 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:32796 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232446AbhBCWN5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 17:13:57 -0500
+        by vger.kernel.org with ESMTP id S232091AbhBCWN4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 17:13:56 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 9BFF140489;
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 0D72B40395;
         Wed,  3 Feb 2021 22:12:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612390376; bh=wTDtZw8zXSiDJYCQgfDlx/77INQB9/ASV35kYlcbdFY=;
+        t=1612390376; bh=jSQ7gPD0eg5i7tdOXR7I0dbZcd3MOQ43M0ZUh6bw2F0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=DQm8TqRARbtNcGLNuZRyImIEKpLDuy3vAFBngfUYyYGg0I5h+YO443M/lO1XY5Rzt
-         5G0O4ciZHio3qfkzL9WOXP5sBGTT2MjH/KrBQhcvsDZXaszANDMapQiyx2ZPPMZ/HT
-         MrGRJBKDhhNIbMJIRuAoMobABuTY+0VKTNqlsu5Lqzf6n2UUOGGji8U79yRpzsdq3x
-         TXWaT/nMA+avN0+7IJb1rD0dkMN6M69o0y8Xaoim7JCDdL3cKiTj0GiKLxL9NYJOKX
-         eL+LyvnSY5c/l6YNsD/m5IImQ3zUj4xWzEXFgwKcB0GyPKqbhMDOHCvyh5SVrGKnHy
-         Ary5DLkZSC9Kg==
+        b=EjI0JqH+P66rNI7cZN+JO1EBPEOFzIG4DW/r75l5QlqIUXXytfl6VoiKaO5VZBnbu
+         D21CgD6o2iKs+Pz2CL9OsfvQ8GuTlfxnkjGeuZaIeWnHTh+QA54F/CG77UeJ/YepM8
+         w1K1tL/1MDxAoE8JG6TyM+BEFVZsN7J2Z28OZazAFkZ/OEOYQ4o2BwwJwyaWJ+PSD/
+         63LOszWo6vFxmVo/A2PRRzpFVxdV6cXPiIiG7v/amcG6w9athYUPYqusKCwcNTvJrE
+         yEPByU4y/HONtRWA7vaPCkSjN23ZJxmpLltG5OkqOQxuCpkD79pVfCTYRbYVD5wnQQ
+         5b79MTMtGJIIA==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 5D11BA0249;
-        Wed,  3 Feb 2021 22:12:55 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id CA38DA024D;
+        Wed,  3 Feb 2021 22:12:54 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -48,9 +48,9 @@ To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [RESEND v4 3/6] misc: Add Synopsys DesignWare xData IP driver to Kconfig
-Date:   Wed,  3 Feb 2021 23:12:48 +0100
-Message-Id: <81f95c6ff0faaf8cbb56430320abb76af772a339.1612390291.git.gustavo.pimentel@synopsys.com>
+Subject: [RESEND v4 2/6] misc: Add Synopsys DesignWare xData IP driver to Makefile
+Date:   Wed,  3 Feb 2021 23:12:47 +0100
+Message-Id: <1a1b9d4893fe4ef1ff906a5813a0b18895da90ed.1612390291.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612390291.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612390291.git.gustavo.pimentel@synopsys.com>
@@ -60,38 +60,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Synopsys DesignWare xData IP driver to Kconfig.
+Add Synopsys DesignWare xData IP driver to Makefile.
 
 This driver enables/disables the PCIe traffic generator module
 pertain to the Synopsys DesignWare prototype.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/misc/Kconfig | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/misc/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index fafa8b0..6d5783f 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -423,6 +423,17 @@ config SRAM
- config SRAM_EXEC
- 	bool
- 
-+config DW_XDATA_PCIE
-+	depends on PCI
-+	tristate "Synopsys DesignWare xData PCIe driver"
-+	default	n
-+	help
-+	  This driver allows controlling Synopsys DesignWare PCIe traffic
-+	  generator IP also known as xData, present in Synopsys Designware
-+	  PCIe Endpoint prototype.
-+
-+	  If unsure, say N.
-+
- config PCI_ENDPOINT_TEST
- 	depends on PCI
- 	select CRC32
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index d23231e..bf22021 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -49,6 +49,7 @@ obj-$(CONFIG_SRAM_EXEC)		+= sram-exec.o
+ obj-$(CONFIG_GENWQE)		+= genwqe/
+ obj-$(CONFIG_ECHO)		+= echo/
+ obj-$(CONFIG_CXL_BASE)		+= cxl/
++obj-$(CONFIG_DW_XDATA_PCIE)	+= dw-xdata-pcie.o
+ obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
+ obj-$(CONFIG_OCXL)		+= ocxl/
+ obj-y				+= cardreader/
 -- 
 2.7.4
 
