@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F2D6C433E0
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 07:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17845C433E6
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 07:05:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC3D864F5D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 07:05:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9E9464E30
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 07:05:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232118AbhBCHFa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 02:05:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35558 "EHLO mail.kernel.org"
+        id S232126AbhBCHFb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 02:05:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35512 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232034AbhBCHD0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Feb 2021 02:03:26 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 713CE64F7C;
-        Wed,  3 Feb 2021 07:02:01 +0000 (UTC)
+        id S231842AbhBCHDZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Feb 2021 02:03:25 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7BBB864F6A;
+        Wed,  3 Feb 2021 07:02:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612335721;
-        bh=MMNo+h3HEqIoqHzAyjt4M5/YBbQxBfZXIFkLGwOoWfA=;
+        s=k20201202; t=1612335720;
+        bh=s0fWuTBl8hAo4L2qfW2NnlYEUKCtkScUbYwEi6kp9HY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PZB4TT+DYLy810UDcivav4AxNXtzTUSCSHk+qpJ4JrjlhfHBlnePtsImAdPVSefl+
-         94TMiVZhtsLeRsksWM1ucqBRfFlXHhuv6D8hd+tOP/9I3TRuMoT+mw4zgZnxdP2w4U
-         XlIg+cyLwbw0flSutndMnhVtqp6pQ6YOt+qrEEODRktMbf0S0POrm3xw0Ufv2kFmGt
-         x2Bs8YB1DfZ9GkuSdyVBwggSplPfvbUIxwOJS7a1s7uCy3yV1hSmL7Od4c93eDCilm
-         cVbW6txQVlVgeWEzlKF2ILYs2T3jgjdafphb4BlFMAJnND7T9me2H/3SoClSUAZQir
-         yZgPqx0MWvEvw==
+        b=ZxV86Y/IpuUgUWybL8qRFzEO9IkHmm64Wrv19xHBVtFs8mK6n447N6yieivwpbHCl
+         j23AP1npMuCjNkXvG1qixmLxsGnnESp3x52YUx1t1kadUOELiqUt66GgBX6XfAyGBk
+         eFeHLa4fDaEKFLYBwUKA9ANI0GDZHDSTGTofxcwyczAdLtrpTAZiT7Xq+y0DeU6Jxk
+         8fKSOuvE3IXQof3zaBmzEMAzXpEeI1uryPpimdaON47fDJXniZxJuiDBgNzw1mgbcm
+         UVq12srYXOGTT1zCK7OZP1isYgIsBhB5+W9qqbuQ4FMubzDPknp5DhbibmdALJMUmY
+         +m8K2dNxEGpVg==
 Received: by mail.kernel.org with local (Exim 4.94)
         (envelope-from <mchehab@kernel.org>)
-        id 1l7CAo-001CAf-7r; Wed, 03 Feb 2021 08:01:58 +0100
+        id 1l7CAo-001CAZ-5N; Wed, 03 Feb 2021 08:01:58 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Binghui Wang <wangbinghui@hisilicon.com>,
@@ -42,9 +42,9 @@ Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Rob Herring <robh@kernel.org>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 08/11] PCI: dwc: pcie-kirin: add support for a regulator
-Date:   Wed,  3 Feb 2021 08:01:52 +0100
-Message-Id: <f2ddbc72b378bd28cc249da6e3135c7d7bad5af4.1612335031.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v2 05/11] PCI: dwc: pcie-kirin: simplify error handling logic
+Date:   Wed,  3 Feb 2021 08:01:49 +0100
+Message-Id: <6298de2ed4384c2a3f012e9dedc101ae5f184ab2.1612335031.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <cover.1612335031.git.mchehab+huawei@kernel.org>
 References: <cover.1612335031.git.mchehab+huawei@kernel.org>
@@ -56,55 +56,70 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Kirin 970 designs, a power supply is required to enable
-a PCI bridge and other components of the board.
+Instead of returning -ENODEV when of_get_named_gpio() fails, make it
+return the actual error code.
 
-For instance, on HiKey 970, the Hi6421v600 regulator provides a
-power line (LDO33) which powers on the PCI bridge, the M.2 slot,
-the mini PCIe 1x slot and the Realtek 8169 Ethernet card.
-
-Without enabling such power supply, the PCI resource allocation
-fails.
+With that, there's no need anymore to check for -EPROBE_DEFER at
+kirin_pcie_probe().
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-kirin.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/controller/dwc/pcie-kirin.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 2bce6e3750d4..005fc4c2ad7f 100644
+index 5925d2b345a8..f46a51ffd2c8 100644
 --- a/drivers/pci/controller/dwc/pcie-kirin.c
 +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -22,6 +22,7 @@
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
-+#include <linux/regulator/consumer.h>
- #include <linux/resource.h>
- #include <linux/types.h>
- #include "pcie-designware.h"
-@@ -335,8 +336,21 @@ static long kirin970_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 				      struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct regulator *reg;
- 	int ret;
- 
-+	reg = devm_regulator_get(dev, "pcie_vdd");
-+	if (IS_ERR_OR_NULL(reg)) {
-+		if (PTR_ERR(reg) == -EPROBE_DEFER)
-+		    return PTR_ERR(reg);
-+	} else {
-+		ret = regulator_enable(reg);
-+		if (ret) {
-+			dev_err(dev, "Failed to enable regulator\n");
-+			return ret;
-+		}
-+	}
-+
- 	kirin970_pcie_get_eyeparam(kirin_pcie);
- 
+@@ -320,7 +320,7 @@ static long kirin960_pcie_get_resource(struct kirin_pcie *kirin_pcie,
  	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
+ 						      "reset-gpios", 0);
+ 	if (kirin_pcie->gpio_id_reset[0] < 0)
+-		return -ENODEV;
++		return kirin_pcie->gpio_id_reset[0];
+ 
+ 	return 0;
+ }
+@@ -354,22 +354,22 @@ static long kirin970_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ 	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
+ 						"switch,reset-gpios", 0);
+ 	if (kirin_pcie->gpio_id_reset[0] < 0)
+-		return -ENODEV;
++		return kirin_pcie->gpio_id_reset[0];
+ 
+ 	kirin_pcie->gpio_id_reset[1] = of_get_named_gpio(dev->of_node,
+ 						"eth,reset-gpios", 0);
+ 	if (kirin_pcie->gpio_id_reset[1] < 0)
+-		return -ENODEV;
++		return kirin_pcie->gpio_id_reset[1];
+ 
+ 	kirin_pcie->gpio_id_reset[2] = of_get_named_gpio(dev->of_node,
+ 						"m_2,reset-gpios", 0);
+ 	if (kirin_pcie->gpio_id_reset[2] < 0)
+-		return -ENODEV;
++		return kirin_pcie->gpio_id_reset[2];
+ 
+ 	kirin_pcie->gpio_id_reset[3] = of_get_named_gpio(dev->of_node,
+ 						"mini1,reset-gpios", 0);
+ 	if (kirin_pcie->gpio_id_reset[3] < 0)
+-		return -ENODEV;
++		return kirin_pcie->gpio_id_reset[3];
+ 
+ 	ret = devm_gpio_request(dev, kirin_pcie->gpio_id_reset[0],
+ 				    "pcie_switch_reset");
+@@ -1148,11 +1148,7 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	kirin_pcie->gpio_id_reset[0] = of_get_named_gpio(dev->of_node,
+-						      "reset-gpios", 0);
+-	if (kirin_pcie->gpio_id_reset[0] == -EPROBE_DEFER) {
+-		return -EPROBE_DEFER;
+-	} else if (!gpio_is_valid(kirin_pcie->gpio_id_reset[0])) {
++	if (!gpio_is_valid(kirin_pcie->gpio_id_reset[0])) {
+ 		dev_err(dev, "unable to get a valid gpio pin\n");
+ 		return -ENODEV;
+ 	}
 -- 
 2.29.2
 
