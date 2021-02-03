@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB357C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE18C433E6
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:59:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86AE364E22
+	by mail.kernel.org (Postfix) with ESMTP id A584764F41
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 17:59:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232507AbhBCR6c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 12:58:32 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:49774 "EHLO
+        id S232304AbhBCR6h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 12:58:37 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:40802 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232384AbhBCR6Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:25 -0500
+        by vger.kernel.org with ESMTP id S232408AbhBCR60 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:26 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 53E7140216;
-        Wed,  3 Feb 2021 17:57:22 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 2E5CAC010C;
+        Wed,  3 Feb 2021 17:57:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612375042; bh=26bcMb1hhhSb/6zwC97LYr49GH4oBhX47qSAAxTu+pw=;
+        t=1612375045; bh=Q8p1awFRWvZQwAEJydjROiaIceJgT6c3cpPWic23uwQ=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=MsSNNGyvL/xoKGLoZZMK1PVXdwFPgy2gPRZOBdWa9az9c4rRJgJaMSnTHjeziil3i
-         KloscSscoFhCP+OzYqP8VFFMYk7SetcK89QzQ3Uz5A4aFK+M6yaSznbbYLRr7KINOj
-         3U3X0FAaj46zabByvjSqZ1cyPVC68ea+Ao/t9vdiD/boSNPq1kLz5dNPIc/1wKhdXn
-         ifNbc2h8twUFpe59xPxXTIrsW+tm9Uqm9eOulVhJWoUFvTph+YebbWA/G1Z7HyWVYA
-         AZurKju84uVkfwXqvcAAJplkbmQ1VHDKeB/Ig1ftemurELYBeQzSoFrh0X487BZiDl
-         8IRH2ndl3NPdw==
+        b=Cx66f6H9QlTY7FuZK6z1E96JQ4LM9Rmw3sE3IOt4KiiCkHEaSlGTgm27dj4Xkuwgt
+         So9J3ECq39x6TzLIORV/o/GjdzaV1Mjq7e9+IzXRQ5l8HihlbDDBBgXJcetr4k75Ky
+         mZrD+d7aBx5/6CGb/BQJmIfOZWe22c/x+FIQdDuMdrkUj5a3X2g0vDTHKIMtmg7KXu
+         NCh83AqLkTLatIja7l/1HjtO/geIjwUI/9lFd3Gm1uSUG+ZC94lc2umpP+r3O5+DBU
+         8BN5BOm8yy/npsYAm8jscyA8c/Ryl8svysMACSk4sipaJ4pZWReys26nFhvStXqcFF
+         hO3L2OnslKBdw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 2FDF4A005F;
-        Wed,  3 Feb 2021 17:57:21 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id E794FA005E;
+        Wed,  3 Feb 2021 17:57:23 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v3 07/15] dmaengine: dw-edma: Improve number of channels check
-Date:   Wed,  3 Feb 2021 18:56:59 +0100
-Message-Id: <c70f23ba8cb76facbb620bbad2814b29209db6b9.1612374941.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 10/15] dmaengine: dw-edma: Change linked list and data blocks offset and sizes
+Date:   Wed,  3 Feb 2021 18:57:02 +0100
+Message-Id: <837f9dd059f26d73b0ec9636ae6a069c8eceeb79.1612374941.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
@@ -56,61 +56,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It was added some extra checks to ensure that the driver doesn't try to
-use more DMA channels than actually are available in hardware.
+Changes the linked list and data blocks offset and sizes to follow the
+recommendation given by the hardware team for the IPK solution.
+
+Although the previous data blocks offset and sizes are still valid and
+functional, using them that might present some issues related to the IPK
+solution, since this solution is based on FPGA and might be subjected to
+timmings constrains.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 21 +++++++++------------
- drivers/dma/dw-edma/dw-edma-core.h |  2 ++
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 0fe3835..5495cf7 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -914,19 +914,16 @@ int dw_edma_probe(struct dw_edma_chip *chip)
- 
- 	raw_spin_lock_init(&dw->lock);
- 
--	if (!dw->wr_ch_cnt) {
--		/* Find out how many write channels are supported by hardware */
--		dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
--		if (!dw->wr_ch_cnt)
--			return -EINVAL;
--	}
-+	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt,
-+			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
-+	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
- 
--	if (!dw->rd_ch_cnt) {
--		/* Find out how many read channels are supported by hardware */
--		dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
--		if (!dw->rd_ch_cnt)
--			return -EINVAL;
--	}
-+	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt,
-+			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
-+	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
-+
-+	if (!dw->wr_ch_cnt && !dw->rd_ch_cnt)
-+		return -EINVAL;
- 
- 	dev_vdbg(dev, "Channels:\twrite=%d, read=%d\n",
- 		 dw->wr_ch_cnt, dw->rd_ch_cnt);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index f72ebaa..650b1c7 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -15,6 +15,8 @@
- #include "../virt-dma.h"
- 
- #define EDMA_LL_SZ					24
-+#define EDMA_MAX_WR_CH					8
-+#define EDMA_MAX_RD_CH					8
- 
- enum dw_edma_dir {
- 	EDMA_DIR_WRITE = 0,
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index a0fa809..686b4ff 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -59,29 +59,29 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	.rg.sz				= 0x00002000,	/*  8 Kbytes */
+ 	/* eDMA memory linked list location */
+ 	.ll_wr = {
+-		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00000000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00200000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00000000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00200000, 0x00000800)
+ 	},
+ 	.ll_rd = {
+-		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00400000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00600000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00400000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00600000, 0x00000800)
+ 	},
+ 	/* eDMA memory data location */
+ 	.dt_wr = {
+-		/* Channel 0 - BAR 2, offset 8 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00800000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 22 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x01600000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 8 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00800000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 9 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00900000, 0x00000800)
+ 	},
+ 	.dt_rd = {
+-		/* Channel 0 - BAR 2, offset 36 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x02400000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 50 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x03200000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 10 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00a00000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 11 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00b00000, 0x00000800)
+ 	},
+ 	/* Other */
+ 	.mf				= EDMA_MF_EDMA_UNROLL,
 -- 
 2.7.4
 
