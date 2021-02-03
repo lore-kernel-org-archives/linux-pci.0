@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE08C433E0
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 18:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C9E7C43332
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 18:08:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77DB964F92
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 18:07:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B2EB64E33
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Feb 2021 18:08:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232272AbhBCSHQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Feb 2021 13:07:16 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:49766 "EHLO
+        id S232859AbhBCSHj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Feb 2021 13:07:39 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:49756 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232367AbhBCR60 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:26 -0500
+        by vger.kernel.org with ESMTP id S232353AbhBCR6R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2021 12:58:17 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 40D7D401D7;
-        Wed,  3 Feb 2021 17:57:20 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 1EB2E40135;
+        Wed,  3 Feb 2021 17:57:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1612375040; bh=Dhv3HKnMcUCdDjHuppD9lFN5HMrBEFpVf+0pawhZA0Q=;
+        t=1612375036; bh=A8Wse3dF6p4E6D3udyZg1XfTP61UAWOzGhe1pTgY0mA=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=Vjk8+Su1bz72F8tE//2rE3kZYhZFF+xzXoNTlcpAbrq85vZ6RfXZvOtQ//Gcjz/DJ
-         wwBy72zJQ56RUA3ikgcTD1RA9K8JqS8EowvMnkg2azlQioYl7LFzzR0qf+BlbtoB5d
-         qMFpr6pGPRL41vmF2Ex3emNw5MpqvZUd267d5d9cVvtETEUSoev4pn4BwbtZq2eX4K
-         NFoaPRyAZSOKCJjhtLtzN8oNksqPA+vD3lyBA/ZT3rkwytP+oI4jmcFRCqPeyhSSO1
-         ls+CTAAPwaTQ+2mCU030kc+bAR1wJk3FpkbsE1mBi7U2GBwfOFnNh3ylodyjGae9m/
-         vSwOnnHqwjtcg==
+        b=C2t2qvau2IlFiWrkBGPGxEK0q3M4oArcbIgoLTTs0ub/aW9ITMZtnSjiLkBh5v2/L
+         aXLvKVFqvPv4K4Qm9ChGwwDG4AE16TVjwkT23lj2X58u+mczv3ktPz71Ok/fOhImBs
+         9k1UprBm1qFADPMP1or3qGi4IcCXwWL+/LyhAH+AJ3617VAD7H9Wn54TyOcDk0x5Cw
+         AdAaEWB8Be1PtAfhZKmNg1zZBn8D56dmmAjHBlmBLi21Siea3JG2vHq27nyPpDYfLH
+         sQh0ERwatjBQ0cVE0Xte47HFnkbckCCv3Ds3PMskABDZVfK/pI5BFguHsiWIXZECkZ
+         pRiDOCuQeyi7g==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 15228A005F;
-        Wed,  3 Feb 2021 17:57:19 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id D1578A005F;
+        Wed,  3 Feb 2021 17:57:14 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v3 05/15] dmaengine: dw-edma: Add PCIe VSEC data retrieval support
-Date:   Wed,  3 Feb 2021 18:56:57 +0100
-Message-Id: <b775207eb60662486dd8ddd4cb2acb7173be7129.1612374941.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v3 01/15] dmaengine: dw-edma: Add writeq() and readq() for 64 bits architectures
+Date:   Wed,  3 Feb 2021 18:56:53 +0100
+Message-Id: <c4a34dbf58d747ce138e9cb07676b089c383f39f.1612374941.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
 References: <cover.1612374941.git.gustavo.pimentel@synopsys.com>
@@ -56,237 +56,746 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The latest eDMA IP development implements a Vendor-Specific Extended
-Capability that contains the eDMA BAR, offset, map format, and the
-number of read/write channels available.
+Add writeq() and readq() for 64 bits architures support.
+
+Supporting these two functions will allow the write or the read of eDMA
+64 bits registers at once instead of having two consecutive operations.
+
+Also, this improvement will allow the PCI optimization transaction
+messages, which will generate a 64 bits message instead of two messages
+of 32 bits.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c |  20 ++++---
- drivers/dma/dw-edma/dw-edma-pcie.c | 114 ++++++++++++++++++++++++++++---------
- 2 files changed, 99 insertions(+), 35 deletions(-)
+ drivers/dma/dw-edma/dw-edma-v0-core.c    | 254 +++++++++++++++++++++++--------
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c |  48 +++---
+ drivers/dma/dw-edma/dw-edma-v0-regs.h    | 149 +++++++++++++-----
+ 3 files changed, 326 insertions(+), 125 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index b971505..b65c32e1 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -863,15 +863,19 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+index 692de47..7888eda 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+@@ -28,29 +28,69 @@ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ 	return dw->rg_region.vaddr;
+ }
  
- 	raw_spin_lock_init(&dw->lock);
+-#define SET(dw, name, value)				\
++#define SET_32(dw, name, value)				\
+ 	writel(value, &(__dw_regs(dw)->name))
  
--	/* Find out how many write channels are supported by hardware */
--	dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
--	if (!dw->wr_ch_cnt)
--		return -EINVAL;
-+	if (!dw->wr_ch_cnt) {
-+		/* Find out how many write channels are supported by hardware */
-+		dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
-+		if (!dw->wr_ch_cnt)
-+			return -EINVAL;
-+	}
+-#define GET(dw, name)					\
++#define GET_32(dw, name)				\
+ 	readl(&(__dw_regs(dw)->name))
  
--	/* Find out how many read channels are supported by hardware */
--	dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
--	if (!dw->rd_ch_cnt)
--		return -EINVAL;
-+	if (!dw->rd_ch_cnt) {
-+		/* Find out how many read channels are supported by hardware */
-+		dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
-+		if (!dw->rd_ch_cnt)
-+			return -EINVAL;
-+	}
+-#define SET_RW(dw, dir, name, value)			\
++#define SET_RW_32(dw, dir, name, value)			\
+ 	do {						\
+ 		if ((dir) == EDMA_DIR_WRITE)		\
+-			SET(dw, wr_##name, value);	\
++			SET_32(dw, wr_##name, value);	\
+ 		else					\
+-			SET(dw, rd_##name, value);	\
++			SET_32(dw, rd_##name, value);	\
+ 	} while (0)
  
- 	dev_vdbg(dev, "Channels:\twrite=%d, read=%d\n",
- 		 dw->wr_ch_cnt, dw->rd_ch_cnt);
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index c130549..7077d79 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -13,9 +13,16 @@
- #include <linux/dma/edma.h>
- #include <linux/pci-epf.h>
- #include <linux/msi.h>
-+#include <linux/bitfield.h>
+-#define GET_RW(dw, dir, name)				\
++#define GET_RW_32(dw, dir, name)			\
+ 	((dir) == EDMA_DIR_WRITE			\
+-	  ? GET(dw, wr_##name)				\
+-	  : GET(dw, rd_##name))
++	  ? GET_32(dw, wr_##name)			\
++	  : GET_32(dw, rd_##name))
  
- #include "dw-edma-core.h"
- 
-+#define DW_PCIE_VSEC_DMA_ID			0x6
-+#define DW_PCIE_VSEC_DMA_BAR			GENMASK(10, 8)
-+#define DW_PCIE_VSEC_DMA_MAP			GENMASK(2, 0)
-+#define DW_PCIE_VSEC_DMA_RD_CH			GENMASK(25, 16)
-+#define DW_PCIE_VSEC_DMA_WR_CH			GENMASK(9, 0)
+-#define SET_BOTH(dw, name, value)			\
++#define SET_BOTH_32(dw, name, value)			\
+ 	do {						\
+-		SET(dw, wr_##name, value);		\
+-		SET(dw, rd_##name, value);		\
++		SET_32(dw, wr_##name, value);		\
++		SET_32(dw, rd_##name, value);		\
++	} while (0)
 +
- struct dw_edma_pcie_data {
- 	/* eDMA registers location */
- 	enum pci_barno			rg_bar;
-@@ -32,6 +39,8 @@ struct dw_edma_pcie_data {
- 	/* Other */
- 	enum dw_edma_map_format		mf;
- 	u8				irqs;
-+	u16				rd_ch_cnt;
-+	u16				wr_ch_cnt;
- };
++#ifdef CONFIG_64BIT
++
++#define SET_64(dw, name, value)				\
++	writeq(value, &(__dw_regs(dw)->name))
++
++#define GET_64(dw, name)				\
++	readq(&(__dw_regs(dw)->name))
++
++#define SET_RW_64(dw, dir, name, value)			\
++	do {						\
++		if ((dir) == EDMA_DIR_WRITE)		\
++			SET_64(dw, wr_##name, value);	\
++		else					\
++			SET_64(dw, rd_##name, value);	\
++	} while (0)
++
++#define GET_RW_64(dw, dir, name)			\
++	((dir) == EDMA_DIR_WRITE			\
++	  ? GET_64(dw, wr_##name)			\
++	  : GET_64(dw, rd_##name))
++
++#define SET_BOTH_64(dw, name, value)			\
++	do {						\
++		SET_64(dw, wr_##name, value);		\
++		SET_64(dw, rd_##name, value);		\
++	} while (0)
++
++#endif /* CONFIG_64BIT */
++
++#define SET_COMPAT(dw, name, value)			\
++	writel(value, &(__dw_regs(dw)->type.unroll.name))
++
++#define SET_RW_COMPAT(dw, dir, name, value)		\
++	do {						\
++		if ((dir) == EDMA_DIR_WRITE)		\
++			SET_COMPAT(dw, wr_##name, value); \
++		else					\
++			SET_COMPAT(dw, rd_##name, value); \
+ 	} while (0)
  
- static const struct dw_edma_pcie_data snps_edda_data = {
-@@ -50,6 +59,8 @@ static const struct dw_edma_pcie_data snps_edda_data = {
- 	/* Other */
- 	.mf				= EDMA_MF_EDMA_UNROLL,
- 	.irqs				= 1,
-+	.rd_ch_cnt			= 0,
-+	.wr_ch_cnt			= 0,
- };
+ static inline struct dw_edma_v0_ch_regs __iomem *
+@@ -115,21 +155,86 @@ static inline u32 readl_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 	return value;
+ }
  
- static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
-@@ -61,10 +72,49 @@ static const struct dw_edma_core_ops dw_edma_pcie_core_ops = {
- 	.irq_vector = dw_edma_pcie_irq_vector,
- };
+-#define SET_CH(dw, dir, ch, name, value) \
++#define SET_CH_32(dw, dir, ch, name, value) \
+ 	writel_ch(dw, dir, ch, value, &(__dw_ch_regs(dw, dir, ch)->name))
  
-+static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
-+					   struct dw_edma_pcie_data *pdata)
+-#define GET_CH(dw, dir, ch, name) \
++#define GET_CH_32(dw, dir, ch, name) \
+ 	readl_ch(dw, dir, ch, &(__dw_ch_regs(dw, dir, ch)->name))
+ 
+-#define SET_LL(ll, value) \
++#define SET_LL_32(ll, value) \
+ 	writel(value, ll)
+ 
++#ifdef CONFIG_64BIT
++
++static inline void writeq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
++			     u64 value, void __iomem *addr)
 +{
-+	u32 val, map;
-+	u16 vsec;
-+	u64 off;
++	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++		u32 viewport_sel;
++		unsigned long flags;
 +
-+	vsec = pci_find_vsec_capability(pdev, DW_PCIE_VSEC_DMA_ID);
-+	if (!vsec)
-+		return;
++		raw_spin_lock_irqsave(&dw->lock, flags);
 +
-+	pci_read_config_dword(pdev, vsec + PCI_VSEC_HEADER, &val);
-+	if (PCI_VSEC_CAP_REV(val) != 0x00 || PCI_VSEC_CAP_LEN(val) != 0x18)
-+		return;
++		viewport_sel = FIELD_PREP(EDMA_V0_VIEWPORT_MASK, ch);
++		if (dir == EDMA_DIR_READ)
++			viewport_sel |= BIT(31);
 +
-+	pci_dbg(pdev, "Detected PCIe Vendor-Specific Extended Capability DMA\n");
-+	pci_read_config_dword(pdev, vsec + 0x8, &val);
-+	map = FIELD_GET(DW_PCIE_VSEC_DMA_MAP, val);
-+	if (map != EDMA_MF_EDMA_LEGACY &&
-+	    map != EDMA_MF_EDMA_UNROLL &&
-+	    map != EDMA_MF_HDMA_COMPAT)
-+		return;
++		writel(viewport_sel,
++		       &(__dw_regs(dw)->type.legacy.viewport_sel));
++		writeq(value, addr);
 +
-+	pdata->mf = map;
-+	pdata->rg_bar = FIELD_GET(DW_PCIE_VSEC_DMA_BAR, val);
-+
-+	pci_read_config_dword(pdev, vsec + 0xc, &val);
-+	pdata->rd_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val);
-+	pdata->wr_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_WR_CH, val);
-+
-+	pci_read_config_dword(pdev, vsec + 0x14, &val);
-+	off = val;
-+	pci_read_config_dword(pdev, vsec + 0x10, &val);
-+	off <<= 32;
-+	off |= val;
-+	pdata->rg_off = off;
++		raw_spin_unlock_irqrestore(&dw->lock, flags);
++	} else {
++		writeq(value, addr);
++	}
 +}
 +
- static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 			      const struct pci_device_id *pid)
++static inline u64 readq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
++			   const void __iomem *addr)
++{
++	u32 value;
++
++	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++		u32 viewport_sel;
++		unsigned long flags;
++
++		raw_spin_lock_irqsave(&dw->lock, flags);
++
++		viewport_sel = FIELD_PREP(EDMA_V0_VIEWPORT_MASK, ch);
++		if (dir == EDMA_DIR_READ)
++			viewport_sel |= BIT(31);
++
++		writel(viewport_sel,
++		       &(__dw_regs(dw)->type.legacy.viewport_sel));
++		value = readq(addr);
++
++		raw_spin_unlock_irqrestore(&dw->lock, flags);
++	} else {
++		value = readq(addr);
++	}
++
++	return value;
++}
++
++#define SET_CH_64(dw, dir, ch, name, value) \
++	writeq_ch(dw, dir, ch, value, &(__dw_ch_regs(dw, dir, ch)->name))
++
++#define GET_CH_64(dw, dir, ch, name) \
++	readq_ch(dw, dir, ch, &(__dw_ch_regs(dw, dir, ch)->name))
++
++#define SET_LL_64(ll, value) \
++	writeq(value, ll)
++
++#endif /* CONFIG_64BIT */
++
+ /* eDMA management callbacks */
+ void dw_edma_v0_core_off(struct dw_edma *dw)
  {
--	const struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
-+	struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
-+	struct dw_edma_pcie_data vsec_data;
- 	struct device *dev = &pdev->dev;
- 	struct dw_edma_chip *chip;
- 	struct dw_edma *dw;
-@@ -77,10 +127,18 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 		return err;
+-	SET_BOTH(dw, int_mask, EDMA_V0_DONE_INT_MASK | EDMA_V0_ABORT_INT_MASK);
+-	SET_BOTH(dw, int_clear, EDMA_V0_DONE_INT_MASK | EDMA_V0_ABORT_INT_MASK);
+-	SET_BOTH(dw, engine_en, 0);
++	SET_BOTH_32(dw, int_mask,
++		    EDMA_V0_DONE_INT_MASK | EDMA_V0_ABORT_INT_MASK);
++	SET_BOTH_32(dw, int_clear,
++		    EDMA_V0_DONE_INT_MASK | EDMA_V0_ABORT_INT_MASK);
++	SET_BOTH_32(dw, engine_en, 0);
+ }
+ 
+ u16 dw_edma_v0_core_ch_count(struct dw_edma *dw, enum dw_edma_dir dir)
+@@ -137,9 +242,11 @@ u16 dw_edma_v0_core_ch_count(struct dw_edma *dw, enum dw_edma_dir dir)
+ 	u32 num_ch;
+ 
+ 	if (dir == EDMA_DIR_WRITE)
+-		num_ch = FIELD_GET(EDMA_V0_WRITE_CH_COUNT_MASK, GET(dw, ctrl));
++		num_ch = FIELD_GET(EDMA_V0_WRITE_CH_COUNT_MASK,
++				   GET_32(dw, ctrl));
+ 	else
+-		num_ch = FIELD_GET(EDMA_V0_READ_CH_COUNT_MASK, GET(dw, ctrl));
++		num_ch = FIELD_GET(EDMA_V0_READ_CH_COUNT_MASK,
++				   GET_32(dw, ctrl));
+ 
+ 	if (num_ch > EDMA_V0_MAX_NR_CH)
+ 		num_ch = EDMA_V0_MAX_NR_CH;
+@@ -153,7 +260,7 @@ enum dma_status dw_edma_v0_core_ch_status(struct dw_edma_chan *chan)
+ 	u32 tmp;
+ 
+ 	tmp = FIELD_GET(EDMA_V0_CH_STATUS_MASK,
+-			GET_CH(dw, chan->dir, chan->id, ch_control1));
++			GET_CH_32(dw, chan->dir, chan->id, ch_control1));
+ 
+ 	if (tmp == 1)
+ 		return DMA_IN_PROGRESS;
+@@ -167,26 +274,28 @@ void dw_edma_v0_core_clear_done_int(struct dw_edma_chan *chan)
+ {
+ 	struct dw_edma *dw = chan->chip->dw;
+ 
+-	SET_RW(dw, chan->dir, int_clear,
+-	       FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id)));
++	SET_RW_32(dw, chan->dir, int_clear,
++		  FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id)));
+ }
+ 
+ void dw_edma_v0_core_clear_abort_int(struct dw_edma_chan *chan)
+ {
+ 	struct dw_edma *dw = chan->chip->dw;
+ 
+-	SET_RW(dw, chan->dir, int_clear,
+-	       FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id)));
++	SET_RW_32(dw, chan->dir, int_clear,
++		  FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id)));
+ }
+ 
+ u32 dw_edma_v0_core_status_done_int(struct dw_edma *dw, enum dw_edma_dir dir)
+ {
+-	return FIELD_GET(EDMA_V0_DONE_INT_MASK, GET_RW(dw, dir, int_status));
++	return FIELD_GET(EDMA_V0_DONE_INT_MASK,
++			 GET_RW_32(dw, dir, int_status));
+ }
+ 
+ u32 dw_edma_v0_core_status_abort_int(struct dw_edma *dw, enum dw_edma_dir dir)
+ {
+-	return FIELD_GET(EDMA_V0_ABORT_INT_MASK, GET_RW(dw, dir, int_status));
++	return FIELD_GET(EDMA_V0_ABORT_INT_MASK,
++			 GET_RW_32(dw, dir, int_status));
+ }
+ 
+ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+@@ -209,15 +318,23 @@ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+ 			control |= (DW_EDMA_V0_LIE | DW_EDMA_V0_RIE);
+ 
+ 		/* Channel control */
+-		SET_LL(&lli[i].control, control);
++		SET_LL_32(&lli[i].control, control);
+ 		/* Transfer size */
+-		SET_LL(&lli[i].transfer_size, child->sz);
+-		/* SAR - low, high */
+-		SET_LL(&lli[i].sar_low, lower_32_bits(child->sar));
+-		SET_LL(&lli[i].sar_high, upper_32_bits(child->sar));
+-		/* DAR - low, high */
+-		SET_LL(&lli[i].dar_low, lower_32_bits(child->dar));
+-		SET_LL(&lli[i].dar_high, upper_32_bits(child->dar));
++		SET_LL_32(&lli[i].transfer_size, child->sz);
++		/* SAR */
++		#ifdef CONFIG_64BIT
++			SET_LL_64(&lli[i].sar.reg, child->sar);
++		#else /* CONFIG_64BIT */
++			SET_LL_32(&lli[i].sar.lsb, lower_32_bits(child->sar));
++			SET_LL_32(&lli[i].sar.msb, upper_32_bits(child->sar));
++		#endif /* CONFIG_64BIT */
++		/* DAR */
++		#ifdef CONFIG_64BIT
++			SET_LL_64(&lli[i].dar.reg, child->dar);
++		#else /* CONFIG_64BIT */
++			SET_LL_32(&lli[i].dar.lsb, lower_32_bits(child->dar));
++			SET_LL_32(&lli[i].dar.msb, upper_32_bits(child->dar));
++		#endif /* CONFIG_64BIT */
+ 		i++;
  	}
  
-+	memcpy(&vsec_data, pdata, sizeof(struct dw_edma_pcie_data));
-+
-+	/*
-+	 * Tries to find if exists a PCIe Vendor-Specific Extended Capability
-+	 * for the DMA, if exists one, then reconfigures with the new data
-+	 */
-+	dw_edma_pcie_get_vsec_dma_data(pdev, &vsec_data);
-+
- 	/* Mapping PCI BAR regions */
--	err = pcim_iomap_regions(pdev, BIT(pdata->rg_bar) |
--				       BIT(pdata->ll_bar) |
--				       BIT(pdata->dt_bar),
-+	err = pcim_iomap_regions(pdev, BIT(vsec_data.rg_bar) |
-+				       BIT(vsec_data.ll_bar) |
-+				       BIT(vsec_data.dt_bar),
- 				 pci_name(pdev));
- 	if (err) {
- 		pci_err(pdev, "eDMA BAR I/O remapping failed\n");
-@@ -123,7 +181,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 		return -ENOMEM;
+@@ -227,10 +344,14 @@ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+ 		control |= DW_EDMA_V0_CB;
  
- 	/* IRQs allocation */
--	nr_irqs = pci_alloc_irq_vectors(pdev, 1, pdata->irqs,
-+	nr_irqs = pci_alloc_irq_vectors(pdev, 1, vsec_data.irqs,
- 					PCI_IRQ_MSI | PCI_IRQ_MSIX);
- 	if (nr_irqs < 1) {
- 		pci_err(pdev, "fail to alloc IRQ vector (number of IRQs=%u)\n",
-@@ -137,27 +195,29 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	chip->id = pdev->devfn;
- 	chip->irq = pdev->irq;
+ 	/* Channel control */
+-	SET_LL(&llp->control, control);
+-	/* Linked list  - low, high */
+-	SET_LL(&llp->llp_low, lower_32_bits(chunk->ll_region.paddr));
+-	SET_LL(&llp->llp_high, upper_32_bits(chunk->ll_region.paddr));
++	SET_LL_32(&llp->control, control);
++	/* Linked list */
++	#ifdef CONFIG_64BIT
++		SET_LL_64(&llp->llp.reg, chunk->ll_region.paddr);
++	#else /* CONFIG_64BIT */
++		SET_LL_32(&llp->llp.lsb, lower_32_bits(chunk->ll_region.paddr));
++		SET_LL_32(&llp->llp.msb, upper_32_bits(chunk->ll_region.paddr));
++	#endif /* CONFIG_64BIT */
+ }
  
--	dw->rg_region.vaddr = pcim_iomap_table(pdev)[pdata->rg_bar];
--	dw->rg_region.vaddr += pdata->rg_off;
--	dw->rg_region.paddr = pdev->resource[pdata->rg_bar].start;
--	dw->rg_region.paddr += pdata->rg_off;
--	dw->rg_region.sz = pdata->rg_sz;
--
--	dw->ll_region.vaddr = pcim_iomap_table(pdev)[pdata->ll_bar];
--	dw->ll_region.vaddr += pdata->ll_off;
--	dw->ll_region.paddr = pdev->resource[pdata->ll_bar].start;
--	dw->ll_region.paddr += pdata->ll_off;
--	dw->ll_region.sz = pdata->ll_sz;
--
--	dw->dt_region.vaddr = pcim_iomap_table(pdev)[pdata->dt_bar];
--	dw->dt_region.vaddr += pdata->dt_off;
--	dw->dt_region.paddr = pdev->resource[pdata->dt_bar].start;
--	dw->dt_region.paddr += pdata->dt_off;
--	dw->dt_region.sz = pdata->dt_sz;
--
--	dw->mf = pdata->mf;
-+	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg_bar];
-+	dw->rg_region.vaddr += vsec_data.rg_off;
-+	dw->rg_region.paddr = pdev->resource[vsec_data.rg_bar].start;
-+	dw->rg_region.paddr += vsec_data.rg_off;
-+	dw->rg_region.sz = vsec_data.rg_sz;
-+
-+	dw->ll_region.vaddr = pcim_iomap_table(pdev)[vsec_data.ll_bar];
-+	dw->ll_region.vaddr += vsec_data.ll_off;
-+	dw->ll_region.paddr = pdev->resource[vsec_data.ll_bar].start;
-+	dw->ll_region.paddr += vsec_data.ll_off;
-+	dw->ll_region.sz = vsec_data.ll_sz;
-+
-+	dw->dt_region.vaddr = pcim_iomap_table(pdev)[vsec_data.dt_bar];
-+	dw->dt_region.vaddr += vsec_data.dt_off;
-+	dw->dt_region.paddr = pdev->resource[vsec_data.dt_bar].start;
-+	dw->dt_region.paddr += vsec_data.dt_off;
-+	dw->dt_region.sz = vsec_data.dt_sz;
-+
-+	dw->mf = vsec_data.mf;
- 	dw->nr_irqs = nr_irqs;
- 	dw->ops = &dw_edma_pcie_core_ops;
-+	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
-+	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
+ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+@@ -243,28 +364,33 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
  
- 	/* Debug info */
- 	if (dw->mf == EDMA_MF_EDMA_LEGACY)
-@@ -170,15 +230,15 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
+ 	if (first) {
+ 		/* Enable engine */
+-		SET_RW(dw, chan->dir, engine_en, BIT(0));
++		SET_RW_32(dw, chan->dir, engine_en, BIT(0));
+ 		/* Interrupt unmask - done, abort */
+-		tmp = GET_RW(dw, chan->dir, int_mask);
++		tmp = GET_RW_32(dw, chan->dir, int_mask);
+ 		tmp &= ~FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id));
+ 		tmp &= ~FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id));
+-		SET_RW(dw, chan->dir, int_mask, tmp);
++		SET_RW_32(dw, chan->dir, int_mask, tmp);
+ 		/* Linked list error */
+-		tmp = GET_RW(dw, chan->dir, linked_list_err_en);
++		tmp = GET_RW_32(dw, chan->dir, linked_list_err_en);
+ 		tmp |= FIELD_PREP(EDMA_V0_LINKED_LIST_ERR_MASK, BIT(chan->id));
+-		SET_RW(dw, chan->dir, linked_list_err_en, tmp);
++		SET_RW_32(dw, chan->dir, linked_list_err_en, tmp);
+ 		/* Channel control */
+-		SET_CH(dw, chan->dir, chan->id, ch_control1,
+-		       (DW_EDMA_V0_CCS | DW_EDMA_V0_LLE));
+-		/* Linked list - low, high */
+-		SET_CH(dw, chan->dir, chan->id, llp_low,
+-		       lower_32_bits(chunk->ll_region.paddr));
+-		SET_CH(dw, chan->dir, chan->id, llp_high,
+-		       upper_32_bits(chunk->ll_region.paddr));
++		SET_CH_32(dw, chan->dir, chan->id, ch_control1,
++			  (DW_EDMA_V0_CCS | DW_EDMA_V0_LLE));
++		/* Linked list */
++		#ifdef CONFIG_64BIT
++			SET_CH_64(dw, chan->dir, chan->id, llp.reg,
++				  chunk->ll_region.paddr);
++		#else /* CONFIG_64BIT */
++			SET_CH_32(dw, chan->dir, chan->id, llp.lsb,
++				  lower_32_bits(chunk->ll_region.paddr));
++			SET_CH_32(dw, chan->dir, chan->id, llp.msb,
++				  upper_32_bits(chunk->ll_region.paddr));
++		#endif /* CONFIG_64BIT */
+ 	}
+ 	/* Doorbell */
+-	SET_RW(dw, chan->dir, doorbell,
+-	       FIELD_PREP(EDMA_V0_DOORBELL_CH_MASK, chan->id));
++	SET_RW_32(dw, chan->dir, doorbell,
++		  FIELD_PREP(EDMA_V0_DOORBELL_CH_MASK, chan->id));
+ }
  
- 	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
--		pdata->rg_bar, pdata->rg_off, pdata->rg_sz,
-+		vsec_data.rg_bar, vsec_data.rg_off, vsec_data.rg_sz,
- 		dw->rg_region.vaddr, &dw->rg_region.paddr);
+ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
+@@ -273,31 +399,31 @@ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
+ 	u32 tmp = 0;
  
- 	pci_dbg(pdev, "L. List:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
--		pdata->ll_bar, pdata->ll_off, pdata->ll_sz,
-+		vsec_data.ll_bar, vsec_data.ll_off, vsec_data.ll_sz,
- 		dw->ll_region.vaddr, &dw->ll_region.paddr);
+ 	/* MSI done addr - low, high */
+-	SET_RW(dw, chan->dir, done_imwr_low, chan->msi.address_lo);
+-	SET_RW(dw, chan->dir, done_imwr_high, chan->msi.address_hi);
++	SET_RW_32(dw, chan->dir, done_imwr.lsb, chan->msi.address_lo);
++	SET_RW_32(dw, chan->dir, done_imwr.msb, chan->msi.address_hi);
+ 	/* MSI abort addr - low, high */
+-	SET_RW(dw, chan->dir, abort_imwr_low, chan->msi.address_lo);
+-	SET_RW(dw, chan->dir, abort_imwr_high, chan->msi.address_hi);
++	SET_RW_32(dw, chan->dir, abort_imwr.lsb, chan->msi.address_lo);
++	SET_RW_32(dw, chan->dir, abort_imwr.msb, chan->msi.address_hi);
+ 	/* MSI data - low, high */
+ 	switch (chan->id) {
+ 	case 0:
+ 	case 1:
+-		tmp = GET_RW(dw, chan->dir, ch01_imwr_data);
++		tmp = GET_RW_32(dw, chan->dir, ch01_imwr_data);
+ 		break;
  
- 	pci_dbg(pdev, "Data:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
--		pdata->dt_bar, pdata->dt_off, pdata->dt_sz,
-+		vsec_data.dt_bar, vsec_data.dt_off, vsec_data.dt_sz,
- 		dw->dt_region.vaddr, &dw->dt_region.paddr);
+ 	case 2:
+ 	case 3:
+-		tmp = GET_RW(dw, chan->dir, ch23_imwr_data);
++		tmp = GET_RW_32(dw, chan->dir, ch23_imwr_data);
+ 		break;
  
- 	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
+ 	case 4:
+ 	case 5:
+-		tmp = GET_RW(dw, chan->dir, ch45_imwr_data);
++		tmp = GET_RW_32(dw, chan->dir, ch45_imwr_data);
+ 		break;
+ 
+ 	case 6:
+ 	case 7:
+-		tmp = GET_RW(dw, chan->dir, ch67_imwr_data);
++		tmp = GET_RW_32(dw, chan->dir, ch67_imwr_data);
+ 		break;
+ 	}
+ 
+@@ -316,22 +442,22 @@ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
+ 	switch (chan->id) {
+ 	case 0:
+ 	case 1:
+-		SET_RW(dw, chan->dir, ch01_imwr_data, tmp);
++		SET_RW_32(dw, chan->dir, ch01_imwr_data, tmp);
+ 		break;
+ 
+ 	case 2:
+ 	case 3:
+-		SET_RW(dw, chan->dir, ch23_imwr_data, tmp);
++		SET_RW_32(dw, chan->dir, ch23_imwr_data, tmp);
+ 		break;
+ 
+ 	case 4:
+ 	case 5:
+-		SET_RW(dw, chan->dir, ch45_imwr_data, tmp);
++		SET_RW_32(dw, chan->dir, ch45_imwr_data, tmp);
+ 		break;
+ 
+ 	case 6:
+ 	case 7:
+-		SET_RW(dw, chan->dir, ch67_imwr_data, tmp);
++		SET_RW_32(dw, chan->dir, ch67_imwr_data, tmp);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 6f62711..a5e2783 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -114,12 +114,12 @@ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
+ 		REGISTER(ch_control1),
+ 		REGISTER(ch_control2),
+ 		REGISTER(transfer_size),
+-		REGISTER(sar_low),
+-		REGISTER(sar_high),
+-		REGISTER(dar_low),
+-		REGISTER(dar_high),
+-		REGISTER(llp_low),
+-		REGISTER(llp_high),
++		REGISTER(sar.lsb),
++		REGISTER(sar.msb),
++		REGISTER(dar.lsb),
++		REGISTER(dar.msb),
++		REGISTER(llp.lsb),
++		REGISTER(llp.msb),
+ 	};
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+@@ -132,17 +132,17 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 		/* eDMA global registers */
+ 		WR_REGISTER(engine_en),
+ 		WR_REGISTER(doorbell),
+-		WR_REGISTER(ch_arb_weight_low),
+-		WR_REGISTER(ch_arb_weight_high),
++		WR_REGISTER(ch_arb_weight.lsb),
++		WR_REGISTER(ch_arb_weight.msb),
+ 		/* eDMA interrupts registers */
+ 		WR_REGISTER(int_status),
+ 		WR_REGISTER(int_mask),
+ 		WR_REGISTER(int_clear),
+ 		WR_REGISTER(err_status),
+-		WR_REGISTER(done_imwr_low),
+-		WR_REGISTER(done_imwr_high),
+-		WR_REGISTER(abort_imwr_low),
+-		WR_REGISTER(abort_imwr_high),
++		WR_REGISTER(done_imwr.lsb),
++		WR_REGISTER(done_imwr.msb),
++		WR_REGISTER(abort_imwr.lsb),
++		WR_REGISTER(abort_imwr.msb),
+ 		WR_REGISTER(ch01_imwr_data),
+ 		WR_REGISTER(ch23_imwr_data),
+ 		WR_REGISTER(ch45_imwr_data),
+@@ -152,8 +152,8 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 	const struct debugfs_entries debugfs_unroll_regs[] = {
+ 		/* eDMA channel context grouping */
+ 		WR_REGISTER_UNROLL(engine_chgroup),
+-		WR_REGISTER_UNROLL(engine_hshake_cnt_low),
+-		WR_REGISTER_UNROLL(engine_hshake_cnt_high),
++		WR_REGISTER_UNROLL(engine_hshake_cnt.lsb),
++		WR_REGISTER_UNROLL(engine_hshake_cnt.msb),
+ 		WR_REGISTER_UNROLL(ch0_pwr_en),
+ 		WR_REGISTER_UNROLL(ch1_pwr_en),
+ 		WR_REGISTER_UNROLL(ch2_pwr_en),
+@@ -200,19 +200,19 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 		/* eDMA global registers */
+ 		RD_REGISTER(engine_en),
+ 		RD_REGISTER(doorbell),
+-		RD_REGISTER(ch_arb_weight_low),
+-		RD_REGISTER(ch_arb_weight_high),
++		RD_REGISTER(ch_arb_weight.lsb),
++		RD_REGISTER(ch_arb_weight.msb),
+ 		/* eDMA interrupts registers */
+ 		RD_REGISTER(int_status),
+ 		RD_REGISTER(int_mask),
+ 		RD_REGISTER(int_clear),
+-		RD_REGISTER(err_status_low),
+-		RD_REGISTER(err_status_high),
++		RD_REGISTER(err_status.lsb),
++		RD_REGISTER(err_status.msb),
+ 		RD_REGISTER(linked_list_err_en),
+-		RD_REGISTER(done_imwr_low),
+-		RD_REGISTER(done_imwr_high),
+-		RD_REGISTER(abort_imwr_low),
+-		RD_REGISTER(abort_imwr_high),
++		RD_REGISTER(done_imwr.lsb),
++		RD_REGISTER(done_imwr.msb),
++		RD_REGISTER(abort_imwr.lsb),
++		RD_REGISTER(abort_imwr.msb),
+ 		RD_REGISTER(ch01_imwr_data),
+ 		RD_REGISTER(ch23_imwr_data),
+ 		RD_REGISTER(ch45_imwr_data),
+@@ -221,8 +221,8 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	const struct debugfs_entries debugfs_unroll_regs[] = {
+ 		/* eDMA channel context grouping */
+ 		RD_REGISTER_UNROLL(engine_chgroup),
+-		RD_REGISTER_UNROLL(engine_hshake_cnt_low),
+-		RD_REGISTER_UNROLL(engine_hshake_cnt_high),
++		RD_REGISTER_UNROLL(engine_hshake_cnt.lsb),
++		RD_REGISTER_UNROLL(engine_hshake_cnt.msb),
+ 		RD_REGISTER_UNROLL(ch0_pwr_en),
+ 		RD_REGISTER_UNROLL(ch1_pwr_en),
+ 		RD_REGISTER_UNROLL(ch2_pwr_en),
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-regs.h b/drivers/dma/dw-edma/dw-edma-v0-regs.h
+index dfd70e2..d07151d 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-regs.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-regs.h
+@@ -28,30 +28,55 @@ struct dw_edma_v0_ch_regs {
+ 	u32 ch_control1;				/* 0x000 */
+ 	u32 ch_control2;				/* 0x004 */
+ 	u32 transfer_size;				/* 0x008 */
+-	u32 sar_low;					/* 0x00c */
+-	u32 sar_high;					/* 0x010 */
+-	u32 dar_low;					/* 0x014 */
+-	u32 dar_high;					/* 0x018 */
+-	u32 llp_low;					/* 0x01c */
+-	u32 llp_high;					/* 0x020 */
+-};
++	union {
++		u64 reg;				/* 0x00c..0x010 */
++		struct {
++			u32 lsb;			/* 0x00c */
++			u32 msb;			/* 0x010 */
++		};
++	} sar;
++	union {
++		u64 reg;				/* 0x014..0x018 */
++		struct {
++			u32 lsb;			/* 0x014 */
++			u32 msb;			/* 0x018 */
++		};
++	} dar;
++	union {
++		u64 reg;				/* 0x01c..0x020 */
++		struct {
++			u32 lsb;			/* 0x01c */
++			u32 msb;			/* 0x020 */
++		};
++	} llp;
++} __packed;
+ 
+ struct dw_edma_v0_ch {
+ 	struct dw_edma_v0_ch_regs wr;			/* 0x200 */
+ 	u32 padding_1[55];				/* [0x224..0x2fc] */
+ 	struct dw_edma_v0_ch_regs rd;			/* 0x300 */
+ 	u32 padding_2[55];				/* [0x324..0x3fc] */
+-};
++} __packed;
+ 
+ struct dw_edma_v0_unroll {
+ 	u32 padding_1;					/* 0x0f8 */
+ 	u32 wr_engine_chgroup;				/* 0x100 */
+ 	u32 rd_engine_chgroup;				/* 0x104 */
+-	u32 wr_engine_hshake_cnt_low;			/* 0x108 */
+-	u32 wr_engine_hshake_cnt_high;			/* 0x10c */
++	union {
++		u64 reg;				/* 0x108..0x10c */
++		struct {
++			u32 lsb;			/* 0x108 */
++			u32 msb;			/* 0x10c */
++		};
++	} wr_engine_hshake_cnt;
+ 	u32 padding_2[2];				/* [0x110..0x114] */
+-	u32 rd_engine_hshake_cnt_low;			/* 0x118 */
+-	u32 rd_engine_hshake_cnt_high;			/* 0x11c */
++	union {
++		u64 reg;				/* 0x120..0x124 */
++		struct {
++			u32 lsb;			/* 0x120 */
++			u32 msb;			/* 0x124 */
++		};
++	} rd_engine_hshake_cnt;
+ 	u32 padding_3[2];				/* [0x120..0x124] */
+ 	u32 wr_ch0_pwr_en;				/* 0x128 */
+ 	u32 wr_ch1_pwr_en;				/* 0x12c */
+@@ -72,12 +97,12 @@ struct dw_edma_v0_unroll {
+ 	u32 rd_ch7_pwr_en;				/* 0x184 */
+ 	u32 padding_5[30];				/* [0x188..0x1fc] */
+ 	struct dw_edma_v0_ch ch[EDMA_V0_MAX_NR_CH];	/* [0x200..0x1120] */
+-};
++} __packed;
+ 
+ struct dw_edma_v0_legacy {
+ 	u32 viewport_sel;				/* 0x0f8 */
+ 	struct dw_edma_v0_ch_regs ch;			/* [0x100..0x120] */
+-};
++} __packed;
+ 
+ struct dw_edma_v0_regs {
+ 	/* eDMA global registers */
+@@ -87,14 +112,24 @@ struct dw_edma_v0_regs {
+ 	u32 wr_engine_en;				/* 0x00c */
+ 	u32 wr_doorbell;				/* 0x010 */
+ 	u32 padding_2;					/* 0x014 */
+-	u32 wr_ch_arb_weight_low;			/* 0x018 */
+-	u32 wr_ch_arb_weight_high;			/* 0x01c */
++	union {
++		u64 reg;				/* 0x018..0x01c */
++		struct {
++			u32 lsb;			/* 0x018 */
++			u32 msb;			/* 0x01c */
++		};
++	} wr_ch_arb_weight;
+ 	u32 padding_3[3];				/* [0x020..0x028] */
+ 	u32 rd_engine_en;				/* 0x02c */
+ 	u32 rd_doorbell;				/* 0x030 */
+ 	u32 padding_4;					/* 0x034 */
+-	u32 rd_ch_arb_weight_low;			/* 0x038 */
+-	u32 rd_ch_arb_weight_high;			/* 0x03c */
++	union {
++		u64 reg;				/* 0x038..0x03c */
++		struct {
++			u32 lsb;			/* 0x038 */
++			u32 msb;			/* 0x03c */
++		};
++	} rd_ch_arb_weight;
+ 	u32 padding_5[3];				/* [0x040..0x048] */
+ 	/* eDMA interrupts registers */
+ 	u32 wr_int_status;				/* 0x04c */
+@@ -102,10 +137,20 @@ struct dw_edma_v0_regs {
+ 	u32 wr_int_mask;				/* 0x054 */
+ 	u32 wr_int_clear;				/* 0x058 */
+ 	u32 wr_err_status;				/* 0x05c */
+-	u32 wr_done_imwr_low;				/* 0x060 */
+-	u32 wr_done_imwr_high;				/* 0x064 */
+-	u32 wr_abort_imwr_low;				/* 0x068 */
+-	u32 wr_abort_imwr_high;				/* 0x06c */
++	union {
++		u64 reg;				/* 0x060..0x064 */
++		struct {
++			u32 lsb;			/* 0x060 */
++			u32 msb;			/* 0x064 */
++		};
++	} wr_done_imwr;
++	union {
++		u64 reg;				/* 0x068..0x06c */
++		struct {
++			u32 lsb;			/* 0x068 */
++			u32 msb;			/* 0x06c */
++		};
++	} wr_abort_imwr;
+ 	u32 wr_ch01_imwr_data;				/* 0x070 */
+ 	u32 wr_ch23_imwr_data;				/* 0x074 */
+ 	u32 wr_ch45_imwr_data;				/* 0x078 */
+@@ -118,15 +163,30 @@ struct dw_edma_v0_regs {
+ 	u32 rd_int_mask;				/* 0x0a8 */
+ 	u32 rd_int_clear;				/* 0x0ac */
+ 	u32 padding_10;					/* 0x0b0 */
+-	u32 rd_err_status_low;				/* 0x0b4 */
+-	u32 rd_err_status_high;				/* 0x0b8 */
++	union {
++		u64 reg;				/* 0x0b4..0x0b8 */
++		struct {
++			u32 lsb;			/* 0x0b4 */
++			u32 msb;			/* 0x0b8 */
++		};
++	} rd_err_status;
+ 	u32 padding_11[2];				/* [0x0bc..0x0c0] */
+ 	u32 rd_linked_list_err_en;			/* 0x0c4 */
+ 	u32 padding_12;					/* 0x0c8 */
+-	u32 rd_done_imwr_low;				/* 0x0cc */
+-	u32 rd_done_imwr_high;				/* 0x0d0 */
+-	u32 rd_abort_imwr_low;				/* 0x0d4 */
+-	u32 rd_abort_imwr_high;				/* 0x0d8 */
++	union {
++		u64 reg;				/* 0x0cc..0x0d0 */
++		struct {
++			u32 lsb;			/* 0x0cc */
++			u32 msb;			/* 0x0d0 */
++		};
++	} rd_done_imwr;
++	union {
++		u64 reg;				/* 0x0d4..0x0d8 */
++		struct {
++			u32 lsb;			/* 0x0d4 */
++			u32 msb;			/* 0x0d8 */
++		};
++	} rd_abort_imwr;
+ 	u32 rd_ch01_imwr_data;				/* 0x0dc */
+ 	u32 rd_ch23_imwr_data;				/* 0x0e0 */
+ 	u32 rd_ch45_imwr_data;				/* 0x0e4 */
+@@ -137,22 +197,37 @@ struct dw_edma_v0_regs {
+ 		struct dw_edma_v0_legacy legacy;	/* [0x0f8..0x120] */
+ 		struct dw_edma_v0_unroll unroll;	/* [0x0f8..0x1120] */
+ 	} type;
+-};
++} __packed;
+ 
+ struct dw_edma_v0_lli {
+ 	u32 control;
+ 	u32 transfer_size;
+-	u32 sar_low;
+-	u32 sar_high;
+-	u32 dar_low;
+-	u32 dar_high;
+-};
++	union {
++		u64 reg;
++		struct {
++			u32 lsb;
++			u32 msb;
++		};
++	} sar;
++	union {
++		u64 reg;
++		struct {
++			u32 lsb;
++			u32 msb;
++		};
++	} dar;
++} __packed;
+ 
+ struct dw_edma_v0_llp {
+ 	u32 control;
+ 	u32 reserved;
+-	u32 llp_low;
+-	u32 llp_high;
+-};
++	union {
++		u64 reg;
++		struct {
++			u32 lsb;
++			u32 msb;
++		};
++	} llp;
++} __packed;
+ 
+ #endif /* _DW_EDMA_V0_REGS_H */
 -- 
 2.7.4
 
