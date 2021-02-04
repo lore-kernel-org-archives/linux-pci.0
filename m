@@ -2,77 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3767C433E0
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 09:59:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C22C433E0
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:02:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9673F64F55
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 09:59:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 798FA64F59
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:02:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234600AbhBDJ7H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Feb 2021 04:59:07 -0500
-Received: from foss.arm.com ([217.140.110.172]:55134 "EHLO foss.arm.com"
+        id S235218AbhBDKCd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Feb 2021 05:02:33 -0500
+Received: from foss.arm.com ([217.140.110.172]:55172 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232838AbhBDJ7G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Feb 2021 04:59:06 -0500
+        id S235271AbhBDKCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Feb 2021 05:02:31 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0044511D4;
-        Thu,  4 Feb 2021 01:58:21 -0800 (PST)
-Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4F8263F719;
-        Thu,  4 Feb 2021 01:58:20 -0800 (PST)
-Date:   Thu, 4 Feb 2021 09:58:15 +0000
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9F8B111D4;
+        Thu,  4 Feb 2021 02:01:45 -0800 (PST)
+Received: from e123427-lin.arm.com (unknown [10.57.48.116])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 81BFE3F719;
+        Thu,  4 Feb 2021 02:01:43 -0800 (PST)
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Randy Dunlap <rdunlap@infradead.org>, kishon@ti.com
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH -next] PCI: endpoint: fix build error, EP NTB driver uses
- configfs
-Message-ID: <20210204095815.GA26804@e121166-lin.cambridge.arm.com>
-References: <20210202201255.26768-1-rdunlap@infradead.org>
+To:     Shradha Todi <shradha.t@samsung.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        gustavo.pimentel@synopsys.com, niyas.ahmed@samsung.com,
+        pankaj.dubey@samsung.com, p.rajanbabu@samsung.com,
+        jingoohan1@gmail.com, l.mehra@samsung.com, sriram.dash@samsung.com,
+        robh@kernel.org, hari.tv@samsung.com, bhelgaas@google.com
+Subject: Re: [PATCH v3] PCI: dwc: Add upper limit address for outbound iATU
+Date:   Thu,  4 Feb 2021 10:01:38 +0000
+Message-Id: <161243287471.5221.2180903144037812285.b4-ty@arm.com>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <1612250918-19610-1-git-send-email-shradha.t@samsung.com>
+References: <CGME20210202072903epcas5p43dd06fede21ea3a31961b811507fb7f7@epcas5p4.samsung.com> <1612250918-19610-1-git-send-email-shradha.t@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210202201255.26768-1-rdunlap@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 02, 2021 at 12:12:55PM -0800, Randy Dunlap wrote:
-> The pci-epf-ntb driver uses configfs APIs, so it should depend on
-> CONFIGFS_FS to prevent build errors.
-> 
-> ld: drivers/pci/endpoint/functions/pci-epf-ntb.o: in function `epf_ntb_add_cfs':
-> pci-epf-ntb.c:(.text+0x1b): undefined reference to `config_group_init_type_name'
-> 
-> Fixes: 7dc64244f9e9 ("PCI: endpoint: Add EP function driver to provide NTB functionality")
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
-> You may switch to 'select CONFIG_FS_FS' if you feel strongly about it.
+On Tue, 2 Feb 2021 12:58:38 +0530, Shradha Todi wrote:
+> The size parameter is unsigned long type which can accept size > 4GB. In
+> that case, the upper limit address must be programmed. Add support to
+> program the upper limit address and set INCREASE_REGION_SIZE in case size >
+> 4GB.
 
-Kishon ?
+Applied to pci/dwc, thanks!
+
+[1/1] PCI: dwc: Add upper limit address for outbound iATU
+      https://git.kernel.org/lpieralisi/pci/c/13662a07fd
 
 Thanks,
 Lorenzo
-
->  drivers/pci/endpoint/functions/Kconfig |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- linux-next-20210202.orig/drivers/pci/endpoint/functions/Kconfig
-> +++ linux-next-20210202/drivers/pci/endpoint/functions/Kconfig
-> @@ -16,6 +16,7 @@ config PCI_EPF_TEST
->  config PCI_EPF_NTB
->  	tristate "PCI Endpoint NTB driver"
->  	depends on PCI_ENDPOINT
-> +	depends on CONFIGFS_FS
->  	help
->  	  Select this configuration option to enable the NTB driver
->  	  for PCI Endpoint. NTB driver implements NTB controller
