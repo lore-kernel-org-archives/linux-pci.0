@@ -2,76 +2,164 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18095C433DB
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B01C433DB
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:21:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B382764F4A
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D6C264F59
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 10:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235271AbhBDKCw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Feb 2021 05:02:52 -0500
-Received: from mga18.intel.com ([134.134.136.126]:54608 "EHLO mga18.intel.com"
+        id S235336AbhBDKVq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Feb 2021 05:21:46 -0500
+Received: from foss.arm.com ([217.140.110.172]:55356 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235311AbhBDKCw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Feb 2021 05:02:52 -0500
-IronPort-SDR: DML6KJDCdzdxSaKV5Jna17Du1Na0/zX3H8u93E3Jqlh8onrPtNlw0g6eZXRL67Ew4FS70tqyGc
- wST/7tUbqhFA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9884"; a="168891043"
-X-IronPort-AV: E=Sophos;i="5.79,400,1602572400"; 
-   d="scan'208";a="168891043"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2021 02:00:27 -0800
-IronPort-SDR: d9DO6uJzTaVOLuyXyQdxvftReSl/DDuhgEf6H1pUjEWlXGCebIGLGLReSR95sBMVRSRWCJv9E6
- TzUUK0TQt30Q==
-X-IronPort-AV: E=Sophos;i="5.79,400,1602572400"; 
-   d="scan'208";a="393090013"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2021 02:00:23 -0800
-Received: by lahna (sSMTP sendmail emulation); Thu, 04 Feb 2021 12:00:21 +0200
-Date:   Thu, 4 Feb 2021 12:00:21 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     mingchuang.qiao@mediatek.com
-Cc:     bhelgaas@google.com, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, haijun.liu@mediatek.com,
-        lambert.wang@mediatek.com, kerun.zhu@mediatek.com,
-        alex.williamson@redhat.com, rjw@rjwysocki.net,
-        utkarsh.h.patel@intel.com
-Subject: Re: [v4] PCI: Avoid unsync of LTR mechanism configuration
-Message-ID: <20210204100021.GA2542@lahna.fi.intel.com>
-References: <20210204095125.9212-1-mingchuang.qiao@mediatek.com>
+        id S235317AbhBDKVo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Feb 2021 05:21:44 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 080B711D4;
+        Thu,  4 Feb 2021 02:20:59 -0800 (PST)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E063A3F719;
+        Thu,  4 Feb 2021 02:20:57 -0800 (PST)
+Date:   Thu, 4 Feb 2021 10:20:53 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Daire.McNamara@microchip.com
+Cc:     bhelgaas@google.com, robh@kernel.org, linux-pci@vger.kernel.org,
+        robh+dt@kernel.org, devicetree@vger.kernel.org,
+        david.abdurachmanov@gmail.com, Cyril.Jean@microchip.com
+Subject: Re: [PATCH v21 3/4] PCI: microchip: Add host driver for Microchip
+ PCIe controller
+Message-ID: <20210204102052.GA28134@e121166-lin.cambridge.arm.com>
+References: <20210125162934.5335-1-daire.mcnamara@microchip.com>
+ <20210125162934.5335-4-daire.mcnamara@microchip.com>
+ <20210201190541.GA5894@e121166-lin.cambridge.arm.com>
+ <MN2PR11MB42691AE1B54DEAB5C1BAA11D96B59@MN2PR11MB4269.namprd11.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210204095125.9212-1-mingchuang.qiao@mediatek.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <MN2PR11MB42691AE1B54DEAB5C1BAA11D96B59@MN2PR11MB4269.namprd11.prod.outlook.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 04, 2021 at 05:51:25PM +0800, mingchuang.qiao@mediatek.com wrote:
-> From: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+On Tue, Feb 02, 2021 at 09:06:31AM +0000, Daire.McNamara@microchip.com wrote:
 > 
-> In bus scan flow, the "LTR Mechanism Enable" bit of DEVCTL2 register is
-> configured in pci_configure_ltr(). If device and bridge both support LTR
-> mechanism, the "LTR Mechanism Enable" bit of device and bridge will be
-> enabled in DEVCTL2 register. And pci_dev->ltr_path will be set as 1.
 > 
-> If PCIe link goes down when device resets, the "LTR Mechanism Enable" bit
-> of bridge will change to 0 according to PCIe r5.0, sec 7.5.3.16. However,
-> the pci_dev->ltr_path value of bridge is still 1.
+> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Monday 1 February 2021 19:05
+> To: Daire McNamara - X61553 <Daire.McNamara@microchip.com>
+> Cc: bhelgaas@google.com <bhelgaas@google.com>; robh@kernel.org
+> <robh@kernel.org>; linux-pci@vger.kernel.org <linux-pci@vger.kernel.org>;
+> robh+dt@kernel.org <robh+dt@kernel.org>; devicetree@vger.kernel.org
+> <devicetree@vger.kernel.org>; david.abdurachmanov@gmail.com
+> <david.abdurachmanov@gmail.com>; Cyril Jean - M31571 <Cyril.Jean@microchip.com>
+> Subject: Re: [PATCH v21 3/4] PCI: microchip: Add host driver for Microchip PCIe
+> controller
+>  
+> EXTERNAL EMAIL: Do not click links or open attachments unless you know the
+> content is safe
 > 
-> For following conditions, check and re-configure "LTR Mechanism Enable" bit
-> of bridge to make "LTR Mechanism Enable" bit match ltr_path value.
->    -before configuring device's LTR for hot-remove/hot-add
->    -before restoring device's DEVCTL2 register when restore device state
+> On Mon, Jan 25, 2021 at 04:29:33PM +0000, daire.mcnamara@microchip.com wrote:
+> > From: Daire McNamara <daire.mcnamara@microchip.com>
+> >
+> > Add support for the Microchip PolarFire PCIe controller when
+> > configured in host (Root Complex) mode.
+> >
+> > Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+> > Reviewed-by: Rob Herring <robh@kernel.org>
+> > ---
+> >  drivers/pci/controller/Kconfig               |   10 +
+> >  drivers/pci/controller/Makefile              |    1 +
+> >  drivers/pci/controller/pcie-microchip-host.c | 1114 ++++++++++++++++++
+> >  3 files changed, 1125 insertions(+)
+> >  create mode 100644 drivers/pci/controller/pcie-microchip-host.c
+> >
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> > index 64e2f5e379aa..bca2f8949510 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -298,6 +298,16 @@ config PCI_LOONGSON
+> >         Say Y here if you want to enable PCI controller support on
+> >         Loongson systems.
+> >
+> > +config PCIE_MICROCHIP_HOST
+> > +     bool "Microchip AXI PCIe host bridge support"
+> > +     depends on PCI_MSI && OF
+> > +     select PCI_MSI_IRQ_DOMAIN
+> > +     select GENERIC_MSI_IRQ_DOMAIN
+> > +     select PCI_HOST_COMMON
+> > +     help
+> > +       Say Y here if you want kernel to support the Microchip AXI PCIe
+> > +       Host Bridge driver.
+> > +
+> >  config PCIE_HISI_ERR
+> >       depends on ACPI_APEI_GHES && (ARM64 || COMPILE_TEST)
+> >       bool "HiSilicon HIP PCIe controller error handling driver"
+> > diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/
+> Makefile
+> > index 04c6edc285c5..b85fcd574ff6 100644
+> > --- a/drivers/pci/controller/Makefile
+> > +++ b/drivers/pci/controller/Makefile
+> > @@ -28,6 +28,7 @@ obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+> >  obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+> >  obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+> >  obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+> > +obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
+> >  obj-$(CONFIG_VMD) += vmd.o
+> >  obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
+> >  obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
+> > diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/
+> controller/pcie-microchip-host.c
+> > new file mode 100644
+> > index 000000000000..0ef2beab185b
+> > --- /dev/null
+> > +++ b/drivers/pci/controller/pcie-microchip-host.c
+> > @@ -0,0 +1,1114 @@
+> > +// SPDX-License-Identifier: GPL-2.0
+> > +/*
+> > + * Microchip AXI PCIe Bridge host controller driver
+> > + *
+> > + * Copyright (c) 2018 - 2020 Microchip Corporation. All rights reserved.
+> 2021 - I will update it for you if that's OK.
 > 
-> Signed-off-by: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+> Yes, please, that would be great.
+> 
+> > + * Author: Daire McNamara <daire.mcnamara@microchip.com>
+> > + *
+> > + * Based on:
+> > + *   pcie-rcar.c
+> > + *   pcie-xilinx.c
+> > + *   pcie-altera.c
+> 
+> Can I remove these references please ? I said that before, let me know
+> please, do not respost another version.
+> 
+> Yes, please.  Sorry I must have missed the question before.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Replies must be quoted and you must not send HTML format on ML,
+(this was rejected by the ML and all the related tools) and that's
+not the first time I mentioned that.
+
+You must NOT do it and that's the last time I am saying that.
+
+Please read:
+
+https://kernelnewbies.org/PatchCulture
+
+It is your maintainer responsibility to follow the ML and act
+responsibly following the email etiquette, I don't have this HW and you
+are the one that from now onwards is in charge of maintaining this code
+which implies reviewing patches and actively following mailing lists.
+
+Having said that, let's proceed with upstreaming the code, keep this
+in mind please.
+
+Thanks,
+Lorenzo
