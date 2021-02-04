@@ -2,128 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FB46C433E6
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 17:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5336DC433E6
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 17:06:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02D2764F6A
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 17:00:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B9BB64E8C
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Feb 2021 17:06:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238257AbhBDQ7p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Feb 2021 11:59:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58066 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238272AbhBDQ7U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2021 11:59:20 -0500
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 346F2C06178B
-        for <linux-pci@vger.kernel.org>; Thu,  4 Feb 2021 08:58:40 -0800 (PST)
-Received: by mail-wr1-x42a.google.com with SMTP id c12so4338155wrc.7
-        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2021 08:58:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CSXClwte+EBaSfb73OT9a258Z0fuumQByG0sZ3xvY0o=;
-        b=kF3mIgExZ6yqH4eVMQt6WD7DEfAMygEvJlEbz5Xto3mUv0YDv1L49BGJIm43dk9bU1
-         iXTPifKJP86J0pow9upJIpWRGPhVO1f2EMyxp18Untk7OSKOV1noZ4nOqj1K5+vZn89G
-         y8rpqE5p8fJ2NUkDxK1tbqWLU3qx+6Ux/u9co=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CSXClwte+EBaSfb73OT9a258Z0fuumQByG0sZ3xvY0o=;
-        b=AopG+O5gQFvqdp+ysotJAahpfHCEyQtMj+UYLKX2t/t71iTHCQpazWYgeGpJVE4uPV
-         Y75VjZjF1B2S+hTgxn6y43ZejbixzTKPUSkSCAs8Ludk2Ivql44SRNY3qwhmnF5m5Ycz
-         6GciAXPLM2fBVSWazz9PRVw3FFh7kUt/HCxWjjH5QhGhO35WlmytlQCfUIHzQTF1aWIO
-         oBMfAesP+O1ZHFBTW0mwF7k3SOVP9Mw/Mx8VfKfH8agPAhNKjFDlg85SHp8MKHAFVIJp
-         fl9z9GOZREzSS/TkeCp9W+coqRz6OT2cic6oXvC86HljZSDNUYdMX6DRMG5rl/OdfaRl
-         nitQ==
-X-Gm-Message-State: AOAM530JnIDK6bPbNnkPQ9ed4b6ey1USZ1qrSzZxdsY41uT2kmpsYNmd
-        nE06Fq+2qvOd1r0hQFUK88I+zg==
-X-Google-Smtp-Source: ABdhPJzQxOtjiSlI6HeHAkG205a5zhJRcBC5cKGPxy6h1VeNvxXZzxclR5CwPfNihVa2lXiEvFOWdA==
-X-Received: by 2002:adf:decb:: with SMTP id i11mr313945wrn.78.1612457918861;
-        Thu, 04 Feb 2021 08:58:38 -0800 (PST)
-Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id i64sm6700187wmi.19.2021.02.04.08.58.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Feb 2021 08:58:38 -0800 (PST)
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kees Cook <keescook@chromium.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jan Kara <jack@suse.cz>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-media@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] pci sysfs file iomem revoke support
-Date:   Thu,  4 Feb 2021 17:58:29 +0100
-Message-Id: <20210204165831.2703772-1-daniel.vetter@ffwll.ch>
-X-Mailer: git-send-email 2.30.0
+        id S237971AbhBDRFv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Feb 2021 12:05:51 -0500
+Received: from foss.arm.com ([217.140.110.172]:33978 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238355AbhBDRDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Feb 2021 12:03:39 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9C85713A1;
+        Thu,  4 Feb 2021 09:02:53 -0800 (PST)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 814BB3F73B;
+        Thu,  4 Feb 2021 09:02:52 -0800 (PST)
+Date:   Thu, 4 Feb 2021 17:02:47 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        "open list:DRM DRIVER FOR MSM ADRENO GPU" 
+        <linux-arm-msm@vger.kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: Re: [PATCH v5 0/2] PCI: qcom: fix PCIe support on sm8250
+Message-ID: <20210204170247.GA583@e121166-lin.cambridge.arm.com>
+References: <20210117013114.441973-1-dmitry.baryshkov@linaro.org>
+ <64f62684-523d-cbd5-708b-4c06e7d03954@linaro.org>
+ <CAA8EJpqxtqxy5Z8KGt_wQGLvXKWhmLXi845VQ+w2_ps71fKVhg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAA8EJpqxtqxy5Z8KGt_wQGLvXKWhmLXi845VQ+w2_ps71fKVhg@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+[+Stanimir]
 
-This is a revised version of patch 12 from my series to lock down some
-follow_pfn vs VM_SPECIAL races:
+On Thu, Feb 04, 2021 at 06:06:16PM +0300, Dmitry Baryshkov wrote:
+> On Tue, 26 Jan 2021 at 23:11, Dmitry Baryshkov
+> <dmitry.baryshkov@linaro.org> wrote:
+> >
+> > Rob, Lorenzo, gracious poke for this patchset.
+> 
+> Dear colleagues, another gracious ping. I'm not insisting on getting
+> this into 5.12 (it would be good though), but I'd kindly ask for these
+> patches to be reviewed/acked.
 
-https://lore.kernel.org/dri-devel/CAKwvOdnSrsnTgPEuQJyaOTSkTP2dR9208Y66HQG_h1e2LKfqtw@mail.gmail.com/
+I need an ACK from the maintainer(s) to pull them.
 
-Stephen reported an issue on HAVE_PCI_LEGACY platforms which this patch
-set tries to address. Previous patches are all still in linux-next.
+Thanks,
+Lorenzo
 
-Stephen, would be awesome if you can give this a spin.
-
-Björn/Greg, review on the first patch is needed, I think that's the
-cleanest approach from all the options I discussed with Greg in this
-thread:
-
-https://lore.kernel.org/dri-devel/CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com/
-
-Cheers, Daniel
-
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Hubbard <jhubbard@nvidia.com>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-samsung-soc@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-
-Daniel Vetter (2):
-  PCI: also set up legacy files only after sysfs init
-  PCI: Revoke mappings like devmem
-
- drivers/pci/pci-sysfs.c | 11 +++++++++++
- drivers/pci/proc.c      |  1 +
- 2 files changed, 12 insertions(+)
-
--- 
-2.30.0
-
+> > On 17/01/2021 04:31, Dmitry Baryshkov wrote:
+> > > SM8250 platform requires additional clock to be enabled for PCIe to
+> > > function. In case it is disabled, PCIe access will result in IOMMU
+> > > timeouts. Add device tree binding and driver support for this clock.
+> > >
+> > > Canges since v4:
+> > >   - Remove QCOM_PCIE_2_7_0_MAX_CLOCKS define and has_sf_tbu variable.
+> > >
+> > > Changes since v3:
+> > >   - Merge clock handling back into qcom_pcie_get_resources_2_7_0().
+> > >     Define res->num_clks to the amount of clocks used for this particular
+> > >     platform.
+> > >
+> > > Changes since v2:
+> > >   - Split this clock handling from qcom_pcie_get_resources_2_7_0()
+> > >   - Change comment to point that the clock is required rather than
+> > >     optional
+> > >
+> > > Changes since v1:
+> > >   - Added Fixes: tags, as respective patches have hit the upstream Linux
+> > >     tree.
+> > >
+> > >
+> >
+> >
+> > --
+> > With best wishes
+> > Dmitry
+> 
+> 
+> 
+> -- 
+> With best wishes
+> Dmitry
