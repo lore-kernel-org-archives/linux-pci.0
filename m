@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7DDBC433DB
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:35:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE17BC433E0
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:36:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C93964F9C
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:35:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A826264F9B
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:36:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbhBERwt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Feb 2021 12:52:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58748 "EHLO
+        id S233125AbhBERw4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Feb 2021 12:52:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233404AbhBERs6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2021 12:48:58 -0500
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8187C06174A;
-        Fri,  5 Feb 2021 11:30:41 -0800 (PST)
-Received: by mail-wr1-x429.google.com with SMTP id l12so8969522wry.2;
-        Fri, 05 Feb 2021 11:30:41 -0800 (PST)
+        with ESMTP id S233390AbhBERtF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2021 12:49:05 -0500
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA38FC06178C;
+        Fri,  5 Feb 2021 11:30:48 -0800 (PST)
+Received: by mail-wr1-x432.google.com with SMTP id v15so8947588wrx.4;
+        Fri, 05 Feb 2021 11:30:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=pl9PtiuMxl0Wa0UufjsEq2pee41iNKdi+j7uGSkuBlY=;
-        b=IfxgEsxRHzDwf0VPajMqdgWOzgKlbswJui641E+CoHCfg8bJaIfTbZmjFTeWHZCtPm
-         m7TwRkhEQ2G2hD6FBPtfU7o2Z2A/TOBj9ejDYqOjdYn4w7ZnHAdggIQ93eoRzNxLERY3
-         FoKmrfwGvTDhP+bsgW3mZ3oVcO4+qyDSArBCYqMv0q3b4ivz/Wv/yLU1PWAFQc/22RMH
-         YeWotIrdN7/Tr7Aufprp0Pa7B64LPjCSe2gWXtMPA/gyMq9v3MIYiwWyJwz6jPKt2JEb
-         +8vaRzonDqNwtXalT/np03PLRbbFrpoNeol3SdfvpjlfNOiapDyLGJBo7L5BZ7/9bFWx
-         KTvA==
+        bh=XrFiGb4s98X8FFWeanrSHmTuST16C6ouipnGlKmt0Hk=;
+        b=bgHYb32YstYIHcrPptYiIA4Y0YMRkTcRTvt8VvsBpGi/fJgrvP927ZBv+p2ga3j3Nq
+         GjQawqle76fC+iM8D+PlmcjXFdvQTMIeCzWNhdX242tWt5KHwwZzJQ5/+QXfqtDWx6/V
+         0rRaCUvWzZ8G5C5gXL6lgydPSjzC2DLfDMBq0bOR3o2PB2B3TVQxd7lP7K/+uzsxFUGd
+         hWvnQAQDrZXRcMNe+nHknuRIpC48u/llBf254ef2ZQyBj4l3nHhWMw31IAMRvsfLoxpe
+         GX5TgLqKK37hNgy1H2MR1DHLUdxiav7OpRrV7AU+ZBG4mWyR0PUdBvyw+wwsf5oyuiMo
+         Y79w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=pl9PtiuMxl0Wa0UufjsEq2pee41iNKdi+j7uGSkuBlY=;
-        b=XDZ5UW+qTvY4cpGYmp7w9M6INUidPrzwBSmnm4wKadAUficujhStJYKhCT6pBKgDnC
-         2xVTks1Das6Ibe8tFa3ssMdg0+pT08QIj5NKShIZ8SnoAdMvaetHq1uOuO1Oo3Ts4Z6b
-         2qixtd6w75OV4B+qCqXFZ2LX93wcJqP5QrVWMtSY+WEXz520DNWGYJ33WhV/jC0f6eNL
-         CF2Cxzy0zStrR2sMTA175K0IiTQzl7ycbjpRhKLO7HkFXKW6LXc5Y768+5X62v9Nktne
-         HzMEc1K0QOI4fiIojVvOAsX3RGLOqd4ov97qb4/JG5bZdX9mWEacfhBzKxKnVhzBBHte
-         L6Sg==
-X-Gm-Message-State: AOAM530zE6o7hDm9oVBnQQjJIFKatIXe9VkJ5/i+23F8hlqN8I4+ITmg
-        UVC2yOncK3DzcDRmR7kS3Mv7uzjouiU03w==
-X-Google-Smtp-Source: ABdhPJxJMVVa8ALR3exPSd/D48YBzIT0o/Z/rIZPCll7z9zmUWLbHmW87GahTyekq7RqOiLwVl5rMA==
-X-Received: by 2002:adf:f8c1:: with SMTP id f1mr6682616wrq.76.1612553440248;
-        Fri, 05 Feb 2021 11:30:40 -0800 (PST)
+        bh=XrFiGb4s98X8FFWeanrSHmTuST16C6ouipnGlKmt0Hk=;
+        b=li+R+1ZNP4NWFdyDhplsBY9z/Pq4zmO5kAeQ138LJdQIJ7dIvywfEyozrY35zKVTBZ
+         QkE+nUvneWKrwpkFkLIOzJkl74U5bQhTpplWBdZ4MCkjVXiBMw4NRQ1pialCk4tmD7s4
+         fdN6fQ+ojScEFFUsYg8SM1jmV1P3UJApEOQNQJ5YPXvoEAttEpNg+ZB5tcJ7NS0x5f/v
+         VdWXk+Xif1iXSz0IRyEWiJ3D/bMragYvCUhAUXjW6inr4tXiD/mxw/TxwIYo5cFOai4r
+         eeH9zul0kJcaehFJaWtr1nF23i/7g2fX4oVw14Y1bPw+GE9CKpWtUYkoeglsiGM49QmV
+         fNvQ==
+X-Gm-Message-State: AOAM5321w4U8S/7RC+iX4fzfwCwTf8y/B/VLFBFGuMO3cyRDml5kjYcQ
+        tNkRqhHiJxXCa2cPZw8q6fmkPZr1AstFGg==
+X-Google-Smtp-Source: ABdhPJxjpv7UVXJixjrpqYanv+ZmjNv5tgtJlrQQXXti5YUIdcqf10okJetJTeoYLucFqvspOfZVkA==
+X-Received: by 2002:a5d:4204:: with SMTP id n4mr6860605wrq.196.1612553447331;
+        Fri, 05 Feb 2021 11:30:47 -0800 (PST)
 Received: from ?IPv6:2003:ea:8f1f:ad00:11de:46a1:319f:d28? (p200300ea8f1fad0011de46a1319f0d28.dip0.t-ipconnect.de. [2003:ea:8f1f:ad00:11de:46a1:319f:d28])
-        by smtp.googlemail.com with ESMTPSA id d13sm12897926wrx.93.2021.02.05.11.30.37
+        by smtp.googlemail.com with ESMTPSA id d3sm13854121wrp.79.2021.02.05.11.30.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Feb 2021 11:30:39 -0800 (PST)
-Subject: [PATCH resend net-next v2 1/3] cxgb4: remove unused vpd_cap_addr
+        Fri, 05 Feb 2021 11:30:46 -0800 (PST)
+Subject: [PATCH resend net-next v2 3/3] cxgb4: remove changing VPD len
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Raju Rangoju <rajur@chelsio.com>, Jakub Kicinski <kuba@kernel.org>,
         David Miller <davem@davemloft.net>,
@@ -65,8 +65,8 @@ To:     Raju Rangoju <rajur@chelsio.com>, Jakub Kicinski <kuba@kernel.org>,
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 References: <6658af1a-88fc-1389-0126-77201b4af2b3@gmail.com>
-Message-ID: <6feeeb18-2b4e-afce-ee25-21738223dced@gmail.com>
-Date:   Fri, 5 Feb 2021 20:29:11 +0100
+Message-ID: <782626be-d8e8-e7a6-849f-552941d3f924@gmail.com>
+Date:   Fri, 5 Feb 2021 20:30:30 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.7.0
 MIME-Version: 1.0
@@ -78,40 +78,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Supposedly this is a leftover from T3 driver heritage. cxgb4 uses the
-PCI core VPD access code that handles detection of VPD capabilities.
+Now that the PCI VPD for Chelsio devices from T4 has been changed and VPD
+len is set to PCI_VPD_MAX_SIZE (32K), we don't have to change the VPD len
+any longer.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      | 1 -
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 2 --
- 2 files changed, 3 deletions(-)
+ .../net/ethernet/chelsio/cxgb4/cudbg_entity.h |  1 -
+ .../net/ethernet/chelsio/cxgb4/cudbg_lib.c    | 21 ++++---------------
+ 2 files changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index 8e681ce72..314f8d806 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -414,7 +414,6 @@ struct pf_resources {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h b/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
+index 876f90e57..02ccb610a 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
+@@ -220,7 +220,6 @@ struct cudbg_mps_tcam {
+ 	u8 reserved[2];
  };
  
- struct pci_params {
--	unsigned int vpd_cap_addr;
- 	unsigned char speed;
- 	unsigned char width;
- };
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 9f1965c80..6264bc66a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -3201,8 +3201,6 @@ static void cxgb4_mgmt_fill_vf_station_mac_addr(struct adapter *adap)
- 	int err;
- 	u8 *na;
+-#define CUDBG_VPD_PF_SIZE 0x800
+ #define CUDBG_SCFG_VER_ADDR 0x06
+ #define CUDBG_SCFG_VER_LEN 4
+ #define CUDBG_VPD_VER_ADDR 0x18c7
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c b/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
+index 75474f810..addac5518 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
+@@ -2689,7 +2689,7 @@ int cudbg_collect_vpd_data(struct cudbg_init *pdbg_init,
+ 	u32 scfg_vers, vpd_vers, fw_vers;
+ 	struct cudbg_vpd_data *vpd_data;
+ 	struct vpd_params vpd = { 0 };
+-	int rc, ret;
++	int rc;
  
--	adap->params.pci.vpd_cap_addr = pci_find_capability(adap->pdev,
--							    PCI_CAP_ID_VPD);
- 	err = t4_get_raw_vpd_params(adap, &adap->params.vpd);
- 	if (err)
- 		return;
+ 	rc = t4_get_raw_vpd_params(padap, &vpd);
+ 	if (rc)
+@@ -2699,24 +2699,11 @@ int cudbg_collect_vpd_data(struct cudbg_init *pdbg_init,
+ 	if (rc)
+ 		return rc;
+ 
+-	/* Serial Configuration Version is located beyond the PF's vpd size.
+-	 * Temporarily give access to entire EEPROM to get it.
+-	 */
+-	rc = pci_set_vpd_size(padap->pdev, EEPROMVSIZE);
+-	if (rc < 0)
+-		return rc;
+-
+-	ret = cudbg_read_vpd_reg(padap, CUDBG_SCFG_VER_ADDR, CUDBG_SCFG_VER_LEN,
+-				 &scfg_vers);
+-
+-	/* Restore back to original PF's vpd size */
+-	rc = pci_set_vpd_size(padap->pdev, CUDBG_VPD_PF_SIZE);
+-	if (rc < 0)
++	rc = cudbg_read_vpd_reg(padap, CUDBG_SCFG_VER_ADDR, CUDBG_SCFG_VER_LEN,
++				&scfg_vers);
++	if (rc)
+ 		return rc;
+ 
+-	if (ret)
+-		return ret;
+-
+ 	rc = cudbg_read_vpd_reg(padap, CUDBG_VPD_VER_ADDR, CUDBG_VPD_VER_LEN,
+ 				vpd_str);
+ 	if (rc)
 -- 
 2.30.0
 
