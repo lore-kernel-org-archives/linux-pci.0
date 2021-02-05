@@ -2,202 +2,175 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FD3C43333
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 23:23:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C88CDC433DB
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 02:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C60C64FCA
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 23:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9531C64F70
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 02:34:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230258AbhBEXWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Feb 2021 18:22:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52656 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230139AbhBEKFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Feb 2021 05:05:42 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DC7E464FD8;
-        Fri,  5 Feb 2021 10:04:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612519493;
-        bh=28PKurE22BswmWny+JOPpHCzycquk/wHe2fKb6YjBhI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GRMFjIMg0WDAfhXcZ/ESL0lo8tviyCl2qwH4O0+oHY8sHJdh09d/d8r86TI2w2Btj
-         AckC5f6l4QHWok0G1jdmoszO97+cmgVN713MWIYMgw2vkuaIDaHWCGvttlEO1nBM1d
-         iFfdBDb3IPsH7pdwJwNpm9a+7KmPQBsMJGsPATpNyWZIKOrs2jkNj/kAd9HLwi8qEM
-         9GpaACn2oT7I09+zOx27KRcy+SIThThBuonPZ6vcqCWA2FuWX12vrN9XhWD0NSmfWs
-         hHOUgvJQ00vjc0iZQUilD8KK+iphwnHHtlPVahgvJYwvFmE4BOkz8ylSK6T3OLuXdF
-         gmxHQk1GPOiiA==
-Received: by pali.im (Postfix)
-        id 3CEE18A2; Fri,  5 Feb 2021 11:04:50 +0100 (CET)
-Date:   Fri, 5 Feb 2021 11:04:49 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-        Jan Kara <jack@suse.cz>, Kees Cook <keescook@chromium.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
-        John Hubbard <jhubbard@nvidia.com>,
+        id S230273AbhBFCdY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Feb 2021 21:33:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37376 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230111AbhBFCcW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2021 21:32:22 -0500
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2208BC08ECAA;
+        Fri,  5 Feb 2021 14:31:34 -0800 (PST)
+Received: by mail-wm1-x32a.google.com with SMTP id y187so7118099wmd.3;
+        Fri, 05 Feb 2021 14:31:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:references:from:subject:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=OGkdoF9M+3UHWUpJpcL+F1t+md4Wtn4nbfKuUxKA+lw=;
+        b=OJXGhu/oA37QRNKNPvFHp9JUOLW7WmM7tR/uGem0it+xgf84yzzyRqdAl6IeGLIVOX
+         0npkDlFfk3DExhzVa1wjH12H6FF6kw76mtNs3aFJ1srnOtJTUecBSo/gJXYt+eM8fUic
+         DblPuV7d8Vwc0J1fbNOjVn/rd0Ykl0nF7Ji3xBBGxLqUU3xjsIV69b5QPFcLW1pIXEpT
+         lSCBG2eT3Myt1czM338XYrM2GxjaR8u7ZIdReXVxByDwdB1wZxOzJYGDqvZV3KtWwo/J
+         hRfoOKoHJx8/Tv5xzSYWjaEeiBLDowf7+tnZ9wtQZDXwQ+ofl9WgDu3LgGTsUqteF8du
+         1gyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:references:from:subject:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=OGkdoF9M+3UHWUpJpcL+F1t+md4Wtn4nbfKuUxKA+lw=;
+        b=FUFTPTVWCp4LEZA9cUvQhmYW5+D4omKzLKBmLe3z/aiuiOpgMJV3rZtQ4UThRHVpn9
+         RQ8oY5eCCh7WZtyiojG2SFWxQvkIGW7ETVqJr4XK37d7XsU++CBXtKsG6HgK4tfswcfs
+         mbj4JMEVl50oQ37EB/0s9MKbySxYHQvH968Q8Ppaq0jcG+FSaF3fOTUBZe/8eN/HH1zW
+         OnkWWz0HX92V0qy3r+zV6WM0NQQnF96Zd/n4yolhzlhESH2Di0qfH+p86lKwmzC2Dj81
+         ffRL8DA282e+Fxhmq61wSIrJ87qMZ1jztD3Noh5vlw1RbtrZKYehlf3r+e5VleoefTAG
+         df/A==
+X-Gm-Message-State: AOAM530m2QJPgowJCj1J8xSFGSeEKH4S9UfuiOBvBGP4Fc7BCSapoLxW
+        JDxwPuhBDt7+v1zBLKXS+/V/FzEjy5cwsA==
+X-Google-Smtp-Source: ABdhPJzArfqsgcTZr4tf8P+QkK/7PQxFGptMBSKBaLkutC8oJ0Urk+cXLensYO1LhlWb3BKOt2GFww==
+X-Received: by 2002:a1c:5a54:: with SMTP id o81mr5328234wmb.50.1612564292839;
+        Fri, 05 Feb 2021 14:31:32 -0800 (PST)
+Received: from ?IPv6:2003:ea:8f1f:ad00:11de:46a1:319f:d28? (p200300ea8f1fad0011de46a1319f0d28.dip0.t-ipconnect.de. [2003:ea:8f1f:ad00:11de:46a1:319f:d28])
+        by smtp.googlemail.com with ESMTPSA id b18sm13962344wrm.57.2021.02.05.14.31.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Feb 2021 14:31:32 -0800 (PST)
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Raju Rangoju <rajur@chelsio.com>, Jakub Kicinski <kuba@kernel.org>,
+        David Miller <davem@davemloft.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "open list:DMA BUFFER SHARING FRAMEWORK" 
-        <linux-media@vger.kernel.org>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Subject: Re: [PATCH 1/2] PCI: also set up legacy files only after sysfs init
-Message-ID: <20210205100449.w2vzqozgnolxqh4h@pali>
-References: <20210204165831.2703772-2-daniel.vetter@ffwll.ch>
- <20210204215019.GA104698@bjorn-Precision-5520>
- <20210204222407.pkx7wvmcvugdwqdd@pali>
- <CAKMK7uFeZpc4oV2GNRdP_EXmYqacg5o3jPegqqaFZZYqqRutFA@mail.gmail.com>
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Casey Leedom <leedom@chelsio.com>,
+        Rahul Lakkireddy <rahul.lakkireddy@chelsio.com>
+References: <20210205214621.GA198699@bjorn-Precision-5520>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Subject: Re: [PATCH resend net-next v2 2/3] PCI/VPD: Change Chelsio T4 quirk
+ to provide access to full virtual address space
+Message-ID: <6d05f72b-9a61-6da8-e70e-d4b3cdf3ca28@gmail.com>
+Date:   Fri, 5 Feb 2021 23:31:24 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.0
 MIME-Version: 1.0
+In-Reply-To: <20210205214621.GA198699@bjorn-Precision-5520>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKMK7uFeZpc4oV2GNRdP_EXmYqacg5o3jPegqqaFZZYqqRutFA@mail.gmail.com>
-User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Friday 05 February 2021 10:59:50 Daniel Vetter wrote:
-> On Thu, Feb 4, 2021 at 11:24 PM Pali Rohár <pali@kernel.org> wrote:
-> >
-> > On Thursday 04 February 2021 15:50:19 Bjorn Helgaas wrote:
-> > > [+cc Oliver, Pali, Krzysztof]
-> >
-> > Just to note that extending or using sysfs_initialized introduces
-> > another race condition into kernel code which results in PCI fatal
-> > errors. Details are in email discussion which Bjorn already sent.
+On 05.02.2021 22:46, Bjorn Helgaas wrote:
+> [+cc Casey, Rahul]
 > 
-> Yeah I wondered why this doesn't race.
+> On Fri, Feb 05, 2021 at 08:29:45PM +0100, Heiner Kallweit wrote:
+>> cxgb4 uses the full VPD address space for accessing its EEPROM (with some
+>> mapping, see t4_eeprom_ptov()). In cudbg_collect_vpd_data() it sets the
+>> VPD len to 32K (PCI_VPD_MAX_SIZE), and then back to 2K (CUDBG_VPD_PF_SIZE).
+>> Having official (structured) and inofficial (unstructured) VPD data
+>> violates the PCI spec, let's set VPD len according to all data that can be
+>> accessed via PCI VPD access, no matter of its structure.
+> 
+> s/inofficial/unofficial/
+> 
+>> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+>> ---
+>>  drivers/pci/vpd.c | 7 +++----
+>>  1 file changed, 3 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+>> index 7915d10f9..06a7954d0 100644
+>> --- a/drivers/pci/vpd.c
+>> +++ b/drivers/pci/vpd.c
+>> @@ -633,9 +633,8 @@ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+>>  	/*
+>>  	 * If this is a T3-based adapter, there's a 1KB VPD area at offset
+>>  	 * 0xc00 which contains the preferred VPD values.  If this is a T4 or
+>> -	 * later based adapter, the special VPD is at offset 0x400 for the
+>> -	 * Physical Functions (the SR-IOV Virtual Functions have no VPD
+>> -	 * Capabilities).  The PCI VPD Access core routines will normally
+>> +	 * later based adapter, provide access to the full virtual EEPROM
+>> +	 * address space. The PCI VPD Access core routines will normally
+>>  	 * compute the size of the VPD by parsing the VPD Data Structure at
+>>  	 * offset 0x000.  This will result in silent failures when attempting
+>>  	 * to accesses these other VPD areas which are beyond those computed
+>> @@ -644,7 +643,7 @@ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+>>  	if (chip == 0x0 && prod >= 0x20)
+>>  		pci_set_vpd_size(dev, 8192);
+>>  	else if (chip >= 0x4 && func < 0x8)
+>> -		pci_set_vpd_size(dev, 2048);
+>> +		pci_set_vpd_size(dev, PCI_VPD_MAX_SIZE);
+> 
+> This code was added by 7dcf688d4c78 ("PCI/cxgb4: Extend T3 PCI quirk
+> to T4+ devices") [1].  Unfortunately that commit doesn't really have
+> the details about what it fixes, other than the silent failures it
+> mentions in the comment.
+> 
+> Some devices hang if we try to read at the wrong VPD address, and this
+> can be done via the sysfs "vpd" file.  Can you expand the commit log
+> with an argument for why it is always safe to set the size to
+> PCI_VPD_MAX_SIZE for these devices?
+> 
 
-It races, but with smaller probability. I have not seen this race
-condition on x86. But I was able to reproduce it with native PCIe
-drivers on ARM64 (Marvell Armada 3720; pci-aardvark). In mentioned
-discussion I wrote when this race condition happen. But I understand
-that it is hard to simulate it.
+Seeing t4_eeprom_ptov() there is data at the end of the VPD address
+space, but there may be gaps in between. I don't have test hw,
+therefore it would be good if Chelsio could confirm that accessing
+any address in the VPD address space (32K) is ok. If a VPD address
+isn't backed by EEPROM, it should return 0x00 or 0xff, and not hang
+the device.
 
-> but since the history goes back
-> to pre-git times I figured it would have been addressed somehow
-> already if it indeed does race.
-> -Daniel
+> The fact that cudbg_collect_vpd_data() fiddles around with
+> pci_set_vpd_size() suggests to me that there is *some* problem with
+> reading parts of the VPD.  Otherwise, why would they bother?
 > 
-> > > s/also/Also/ in subject
-> > >
-> > > On Thu, Feb 04, 2021 at 05:58:30PM +0100, Daniel Vetter wrote:
-> > > > We are already doing this for all the regular sysfs files on PCI
-> > > > devices, but not yet on the legacy io files on the PCI buses. Thus far
-> > > > now problem, but in the next patch I want to wire up iomem revoke
-> > > > support. That needs the vfs up an running already to make so that
-> > > > iomem_get_mapping() works.
-> > >
-> > > s/now problem/no problem/
-> > > s/an running/and running/
-> > > s/so that/sure that/ ?
-> > >
-> > > iomem_get_mapping() doesn't exist; I don't know what that should be.
-> > >
-> > > > Wire it up exactly like the existing code. Note that
-> > > > pci_remove_legacy_files() doesn't need a check since the one for
-> > > > pci_bus->legacy_io is sufficient.
-> > >
-> > > I'm not sure exactly what you mean by "the existing code."  I could
-> > > probably figure it out, but it would save time to mention the existing
-> > > function here.
-> > >
-> > > This looks like another instance where we should really apply Oliver's
-> > > idea of converting these to attribute_groups [1].
-> > >
-> > > The cover letter mentions options discussed with Greg in [2], but I
-> > > don't think the "sysfs_initialized" hack vs attribute_groups was part
-> > > of that discussion.
-> > >
-> > > It's not absolutely a show-stopper, but it *is* a shame to extend the
-> > > sysfs_initialized hack if attribute_groups could do this more cleanly
-> > > and help solve more than one issue.
-> > >
-> > > Bjorn
-> > >
-> > > [1] https://lore.kernel.org/r/CAOSf1CHss03DBSDO4PmTtMp0tCEu5kScn704ZEwLKGXQzBfqaA@mail.gmail.com
-> > > [2] https://lore.kernel.org/dri-devel/CAKMK7uGrdDrbtj0OyzqQc0CGrQwc2F3tFJU9vLfm2jjufAZ5YQ@mail.gmail.com/
-> > >
-> > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> > > > Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> > > > Cc: Jason Gunthorpe <jgg@ziepe.ca>
-> > > > Cc: Kees Cook <keescook@chromium.org>
-> > > > Cc: Dan Williams <dan.j.williams@intel.com>
-> > > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > > Cc: John Hubbard <jhubbard@nvidia.com>
-> > > > Cc: Jérôme Glisse <jglisse@redhat.com>
-> > > > Cc: Jan Kara <jack@suse.cz>
-> > > > Cc: Dan Williams <dan.j.williams@intel.com>
-> > > > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > Cc: linux-mm@kvack.org
-> > > > Cc: linux-arm-kernel@lists.infradead.org
-> > > > Cc: linux-samsung-soc@vger.kernel.org
-> > > > Cc: linux-media@vger.kernel.org
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: linux-pci@vger.kernel.org
-> > > > ---
-> > > >  drivers/pci/pci-sysfs.c | 7 +++++++
-> > > >  1 file changed, 7 insertions(+)
-> > > >
-> > > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > > > index fb072f4b3176..0c45b4f7b214 100644
-> > > > --- a/drivers/pci/pci-sysfs.c
-> > > > +++ b/drivers/pci/pci-sysfs.c
-> > > > @@ -927,6 +927,9 @@ void pci_create_legacy_files(struct pci_bus *b)
-> > > >  {
-> > > >     int error;
-> > > >
-> > > > +   if (!sysfs_initialized)
-> > > > +           return;
-> > > > +
-> > > >     b->legacy_io = kcalloc(2, sizeof(struct bin_attribute),
-> > > >                            GFP_ATOMIC);
-> > > >     if (!b->legacy_io)
-> > > > @@ -1448,6 +1451,7 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
-> > > >  static int __init pci_sysfs_init(void)
-> > > >  {
-> > > >     struct pci_dev *pdev = NULL;
-> > > > +   struct pci_bus *pbus = NULL;
-> > > >     int retval;
-> > > >
-> > > >     sysfs_initialized = 1;
-> > > > @@ -1459,6 +1463,9 @@ static int __init pci_sysfs_init(void)
-> > > >             }
-> > > >     }
-> > > >
-> > > > +   while ((pbus = pci_find_next_bus(pbus)))
-> > > > +           pci_create_legacy_files(pbus);
-> > > > +
-> > > >     return 0;
-> > > >  }
-> > > >  late_initcall(pci_sysfs_init);
-> > > > --
-> > > > 2.30.0
-> > > >
-> > > >
-> > > > _______________________________________________
-> > > > linux-arm-kernel mailing list
-> > > > linux-arm-kernel@lists.infradead.org
-> > > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 940c9c458866 ("cxgb4: collect vpd info directly from hardware") [2]
+> added the pci_set_vpd_size() usage, but doesn't say why it's needed.
+> Maybe Rahul will remember?
 > 
+
+In addition we have cb92148b58a4 ("PCI: Add pci_set_vpd_size() to set
+VPD size"). To me it seems the VPD size quirks and this commit
+try to achieve the same: allow to override the autodetected VPD len
+
+The quirk mechanism is well established, and if possible I'd like
+to get rid of pci_set_vpd_size(). I don't like the idea that the
+PCI core exposes API calls for accessing a proprietary VPD data
+format of one specific vendor (cxgb4 is the only user of
+pci_set_vpd_size()).
+
+> Bjorn
 > 
+> [1] https://git.kernel.org/linus/7dcf688d4c78
+> [2] https://git.kernel.org/linus/940c9c458866
 > 
-> -- 
-> Daniel Vetter
-> Software Engineer, Intel Corporation
-> http://blog.ffwll.ch
+>>  }
+>>  
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>> -- 
+>> 2.30.0
+>>
+>>
+>>
+
