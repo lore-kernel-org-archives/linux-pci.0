@@ -2,147 +2,64 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE17BC433E0
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:36:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C26BDC433DB
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A826264F9B
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:36:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7904764FB7
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Feb 2021 19:37:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233125AbhBERw4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Feb 2021 12:52:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58786 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233390AbhBERtF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2021 12:49:05 -0500
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA38FC06178C;
-        Fri,  5 Feb 2021 11:30:48 -0800 (PST)
-Received: by mail-wr1-x432.google.com with SMTP id v15so8947588wrx.4;
-        Fri, 05 Feb 2021 11:30:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=XrFiGb4s98X8FFWeanrSHmTuST16C6ouipnGlKmt0Hk=;
-        b=bgHYb32YstYIHcrPptYiIA4Y0YMRkTcRTvt8VvsBpGi/fJgrvP927ZBv+p2ga3j3Nq
-         GjQawqle76fC+iM8D+PlmcjXFdvQTMIeCzWNhdX242tWt5KHwwZzJQ5/+QXfqtDWx6/V
-         0rRaCUvWzZ8G5C5gXL6lgydPSjzC2DLfDMBq0bOR3o2PB2B3TVQxd7lP7K/+uzsxFUGd
-         hWvnQAQDrZXRcMNe+nHknuRIpC48u/llBf254ef2ZQyBj4l3nHhWMw31IAMRvsfLoxpe
-         GX5TgLqKK37hNgy1H2MR1DHLUdxiav7OpRrV7AU+ZBG4mWyR0PUdBvyw+wwsf5oyuiMo
-         Y79w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=XrFiGb4s98X8FFWeanrSHmTuST16C6ouipnGlKmt0Hk=;
-        b=li+R+1ZNP4NWFdyDhplsBY9z/Pq4zmO5kAeQ138LJdQIJ7dIvywfEyozrY35zKVTBZ
-         QkE+nUvneWKrwpkFkLIOzJkl74U5bQhTpplWBdZ4MCkjVXiBMw4NRQ1pialCk4tmD7s4
-         fdN6fQ+ojScEFFUsYg8SM1jmV1P3UJApEOQNQJ5YPXvoEAttEpNg+ZB5tcJ7NS0x5f/v
-         VdWXk+Xif1iXSz0IRyEWiJ3D/bMragYvCUhAUXjW6inr4tXiD/mxw/TxwIYo5cFOai4r
-         eeH9zul0kJcaehFJaWtr1nF23i/7g2fX4oVw14Y1bPw+GE9CKpWtUYkoeglsiGM49QmV
-         fNvQ==
-X-Gm-Message-State: AOAM5321w4U8S/7RC+iX4fzfwCwTf8y/B/VLFBFGuMO3cyRDml5kjYcQ
-        tNkRqhHiJxXCa2cPZw8q6fmkPZr1AstFGg==
-X-Google-Smtp-Source: ABdhPJxjpv7UVXJixjrpqYanv+ZmjNv5tgtJlrQQXXti5YUIdcqf10okJetJTeoYLucFqvspOfZVkA==
-X-Received: by 2002:a5d:4204:: with SMTP id n4mr6860605wrq.196.1612553447331;
-        Fri, 05 Feb 2021 11:30:47 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f1f:ad00:11de:46a1:319f:d28? (p200300ea8f1fad0011de46a1319f0d28.dip0.t-ipconnect.de. [2003:ea:8f1f:ad00:11de:46a1:319f:d28])
-        by smtp.googlemail.com with ESMTPSA id d3sm13854121wrp.79.2021.02.05.11.30.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Feb 2021 11:30:46 -0800 (PST)
-Subject: [PATCH resend net-next v2 3/3] cxgb4: remove changing VPD len
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Raju Rangoju <rajur@chelsio.com>, Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-References: <6658af1a-88fc-1389-0126-77201b4af2b3@gmail.com>
-Message-ID: <782626be-d8e8-e7a6-849f-552941d3f924@gmail.com>
-Date:   Fri, 5 Feb 2021 20:30:30 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.0
+        id S233283AbhBERyx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Feb 2021 12:54:53 -0500
+Received: from foss.arm.com ([217.140.110.172]:36964 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233281AbhBEP33 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Feb 2021 10:29:29 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CE76E31B;
+        Fri,  5 Feb 2021 09:11:01 -0800 (PST)
+Received: from e123427-lin.arm.com (unknown [10.57.37.213])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 081B43F718;
+        Fri,  5 Feb 2021 09:10:59 -0800 (PST)
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Andy Gross <agross@kernel.org>, Rob Herring <robh+dt@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/2] PCI: qcom: fix PCIe support on sm8250
+Date:   Fri,  5 Feb 2021 17:10:53 +0000
+Message-Id: <161254496801.21053.820582580317270864.b4-ty@arm.com>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20210117013114.441973-1-dmitry.baryshkov@linaro.org>
+References: <20210117013114.441973-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <6658af1a-88fc-1389-0126-77201b4af2b3@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that the PCI VPD for Chelsio devices from T4 has been changed and VPD
-len is set to PCI_VPD_MAX_SIZE (32K), we don't have to change the VPD len
-any longer.
+On Sun, 17 Jan 2021 04:31:12 +0300, Dmitry Baryshkov wrote:
+> SM8250 platform requires additional clock to be enabled for PCIe to
+> function. In case it is disabled, PCIe access will result in IOMMU
+> timeouts. Add device tree binding and driver support for this clock.
+> 
+> Canges since v4:
+>  - Remove QCOM_PCIE_2_7_0_MAX_CLOCKS define and has_sf_tbu variable.
+> 
+> [...]
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- .../net/ethernet/chelsio/cxgb4/cudbg_entity.h |  1 -
- .../net/ethernet/chelsio/cxgb4/cudbg_lib.c    | 21 ++++---------------
- 2 files changed, 4 insertions(+), 18 deletions(-)
+Applied to pci/qcom, thanks!
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h b/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
-index 876f90e57..02ccb610a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cudbg_entity.h
-@@ -220,7 +220,6 @@ struct cudbg_mps_tcam {
- 	u8 reserved[2];
- };
- 
--#define CUDBG_VPD_PF_SIZE 0x800
- #define CUDBG_SCFG_VER_ADDR 0x06
- #define CUDBG_SCFG_VER_LEN 4
- #define CUDBG_VPD_VER_ADDR 0x18c7
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c b/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
-index 75474f810..addac5518 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cudbg_lib.c
-@@ -2689,7 +2689,7 @@ int cudbg_collect_vpd_data(struct cudbg_init *pdbg_init,
- 	u32 scfg_vers, vpd_vers, fw_vers;
- 	struct cudbg_vpd_data *vpd_data;
- 	struct vpd_params vpd = { 0 };
--	int rc, ret;
-+	int rc;
- 
- 	rc = t4_get_raw_vpd_params(padap, &vpd);
- 	if (rc)
-@@ -2699,24 +2699,11 @@ int cudbg_collect_vpd_data(struct cudbg_init *pdbg_init,
- 	if (rc)
- 		return rc;
- 
--	/* Serial Configuration Version is located beyond the PF's vpd size.
--	 * Temporarily give access to entire EEPROM to get it.
--	 */
--	rc = pci_set_vpd_size(padap->pdev, EEPROMVSIZE);
--	if (rc < 0)
--		return rc;
--
--	ret = cudbg_read_vpd_reg(padap, CUDBG_SCFG_VER_ADDR, CUDBG_SCFG_VER_LEN,
--				 &scfg_vers);
--
--	/* Restore back to original PF's vpd size */
--	rc = pci_set_vpd_size(padap->pdev, CUDBG_VPD_PF_SIZE);
--	if (rc < 0)
-+	rc = cudbg_read_vpd_reg(padap, CUDBG_SCFG_VER_ADDR, CUDBG_SCFG_VER_LEN,
-+				&scfg_vers);
-+	if (rc)
- 		return rc;
- 
--	if (ret)
--		return ret;
--
- 	rc = cudbg_read_vpd_reg(padap, CUDBG_VPD_VER_ADDR, CUDBG_VPD_VER_LEN,
- 				vpd_str);
- 	if (rc)
--- 
-2.30.0
+[1/2] dt-bindings: pci: qcom: Document ddrss_sf_tbu clock for sm8250
+      https://git.kernel.org/lpieralisi/pci/c/a8069a4831
+[2/2] PCI: qcom: add support for ddrss_sf_tbu clock
+      https://git.kernel.org/lpieralisi/pci/c/f5d48a3328
 
-
-
+Thanks,
+Lorenzo
