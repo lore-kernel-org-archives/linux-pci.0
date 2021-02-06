@@ -2,199 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F7B0C433E6
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 03:25:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F91C433E6
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 03:38:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D163264F9D
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 03:25:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F24D864DFA
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Feb 2021 03:38:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232445AbhBFDYx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Feb 2021 22:24:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43880 "EHLO mail.kernel.org"
+        id S229977AbhBFDiJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Feb 2021 22:38:09 -0500
+Received: from mga03.intel.com ([134.134.136.65]:16481 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232516AbhBFDV4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Feb 2021 22:21:56 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1197560C3D;
-        Fri,  5 Feb 2021 21:57:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612562241;
-        bh=ZN48Ca5F36yaf5Drs7x+C/29r4xyz8+M1y9jXHdbi24=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=nAY41uOB3KikAGegz2nWmDV69PPAzAYy+ERiEx8Qb53sk+fWwA2JhgIP65ysw1XM6
-         P6Go38C8VoIMQYjqjOm6d5kYhctDXJn4YnRx3d1zH45JSDWN6MchYsgcsS/XK0T4eE
-         uhdPxyKlzZNDDVvQqP+fuy/brUD1J7ADC172BhA9JWSNDjvMab2ouNWAa2WuFAEo7q
-         IN9KmPJyiXSvKCxB9YuQO2QutSwa1w2Sv4ZrespGhDGPz+b+drFIp3cMW7k4XtsdzH
-         2UT7EUqyovINJ+VeSjRlH45K11zEAPjyNGv0NKuQwLx82L41Qm2x2G9n0iU4MxjLi+
-         xez5xCE2ixOaQ==
-Date:   Fri, 5 Feb 2021 15:57:18 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        id S231593AbhBFDfw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Feb 2021 22:35:52 -0500
+IronPort-SDR: N1Jy17ZFBHkVqHFQGh/jVK2QtKP3auZFC+6urMTW+tg1+GEwZthJ3vlZ9tZgJZCMepjIv6Wli/
+ VFypMY063mTA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9886"; a="181581381"
+X-IronPort-AV: E=Sophos;i="5.81,156,1610438400"; 
+   d="scan'208";a="181581381"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2021 19:35:10 -0800
+IronPort-SDR: 45plgOWjxXoSgKZ9Lpg7N2xYOHrLJi70ic3mz6JaGwYXS/VqsjjaF0RNTPqylM1PCpbcdD7klB
+ 9PpKCz63cI2g==
+X-IronPort-AV: E=Sophos;i="5.81,156,1610438400"; 
+   d="scan'208";a="576921846"
+Received: from rgrover1-mobl.amr.corp.intel.com (HELO jderrick-mobl.amr.corp.intel.com) ([10.209.102.94])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2021 19:35:11 -0800
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     <linux-pci@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        David Woodhouse <dwmw2@infradead.org>,
         Lu Baolu <baolu.lu@linux.intel.com>,
         Joerg Roedel <joro@8bytes.org>,
         Nirmal Patel <nirmal.patel@intel.com>,
         Kapil Karkra <kapil.karkra@intel.com>,
-        Will Deacon <will@kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: vmd: Disable MSI/X remapping when possible
-Message-ID: <20210205215718.GA202474@bjorn-Precision-5520>
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v3 0/2] VMD MSI Remapping Bypass
+Date:   Fri,  5 Feb 2021 20:35:00 -0700
+Message-Id: <20210206033502.103964-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210204190906.38515-3-jonathan.derrick@intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 04, 2021 at 12:09:06PM -0700, Jon Derrick wrote:
-> VMD will retransmit child device MSI/X using its own MSI/X table and
-> requester-id. This limits the number of MSI/X available to the whole
-> child device domain to the number of VMD MSI/X interrupts.
-> 
-> Some VMD devices have a mode where this remapping can be disabled,
-> allowing child device interrupts to bypass processing with the VMD MSI/X
-> domain interrupt handler and going straight the child device interrupt
-> handler, allowing for better performance and scaling. The requester-id
-> still gets changed to the VMD endpoint's requester-id, and the interrupt
-> remapping handlers have been updated to properly set IRTE for child
-> device interrupts to the VMD endpoint's context.
-> 
-> Some VMD platforms have existing production BIOS which rely on MSI/X
-> remapping and won't explicitly program the MSI/X remapping bit. This
-> re-enables MSI/X remapping on unload.
+The Intel Volume Management Device acts similar to a PCI-to-PCI bridge in that
+it changes downstream devices' requester-ids to its own. As VMD supports PCIe
+devices, it has its own MSI-X table and transmits child device MSI-X by
+remapping child device MSI-X and handling like a demultiplexer.
 
-Trivial comments below.  Would you mind using "MSI-X" instead of
-"MSI/X" so it matches the usage in the PCIe specs?  Several mentions
-above (including subject) and below.
+Some newer VMD devices (Icelake Server) have an option to bypass the VMD MSI-X
+remapping table. This allows for better performance scaling as the child device
+MSI-X won't be limited by VMD's MSI-X count and IRQ handler.
 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-> ---
->  drivers/pci/controller/vmd.c | 60 ++++++++++++++++++++++++++++--------
->  1 file changed, 48 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index 5e80f28f0119..a319ce49645b 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -59,6 +59,13 @@ enum vmd_features {
->  	 * be used for MSI remapping
->  	 */
->  	VMD_FEAT_OFFSET_FIRST_VECTOR		= (1 << 3),
-> +
-> +	/*
-> +	 * Device can bypass remapping MSI/X transactions into its MSI/X table,
-> +	 * avoding the requirement of a VMD MSI domain for child device
+V2->V3:
+Trivial comment fixes
+Added acks
 
-s/avoding/avoiding/
+V1->V2:
+Updated for 5.12-next
+Moved IRQ allocation and remapping enable/disable to a more logical location
 
-> +	 * interrupt handling
+V1 patches 1-4 were already merged
+V1, 5/6: https://patchwork.kernel.org/project/linux-pci/patch/20200728194945.14126-6-jonathan.derrick@intel.com/
+V1, 6/6: https://patchwork.kernel.org/project/linux-pci/patch/20200728194945.14126-7-jonathan.derrick@intel.com/
 
-Maybe a period at the end of the sentence.
+Jon Derrick (2):
+  iommu/vt-d: Use Real PCI DMA device for IRTE
+  PCI: vmd: Disable MSI-X remapping when possible
 
-> +	 */
-> +	VMD_FEAT_BYPASS_MSI_REMAP		= (1 << 4),
->  };
->  
->  /*
-> @@ -306,6 +313,15 @@ static struct msi_domain_info vmd_msi_domain_info = {
->  	.chip		= &vmd_msi_controller,
->  };
->  
-> +static void vmd_enable_msi_remapping(struct vmd_dev *vmd, bool enable)
-> +{
-> +	u16 reg;
-> +
-> +	pci_read_config_word(vmd->dev, PCI_REG_VMCONFIG, &reg);
-> +	reg = enable ? (reg & ~0x2) : (reg | 0x2);
+ drivers/iommu/intel/irq_remapping.c |  3 +-
+ drivers/pci/controller/vmd.c        | 61 +++++++++++++++++++++++------
+ 2 files changed, 51 insertions(+), 13 deletions(-)
 
-Would be nice to have a #define for 0x2.
+-- 
+2.27.0
 
-> +	pci_write_config_word(vmd->dev, PCI_REG_VMCONFIG, reg);
-> +}
-> +
->  static int vmd_create_irq_domain(struct vmd_dev *vmd)
->  {
->  	struct fwnode_handle *fn;
-> @@ -325,6 +341,13 @@ static int vmd_create_irq_domain(struct vmd_dev *vmd)
->  
->  static void vmd_remove_irq_domain(struct vmd_dev *vmd)
->  {
-> +	/*
-> +	 * Some production BIOS won't enable remapping between soft reboots.
-> +	 * Ensure remapping is restored before unloading the driver.
-> +	 */
-> +	if (!vmd->msix_count)
-> +		vmd_enable_msi_remapping(vmd, true);
-> +
->  	if (vmd->irq_domain) {
->  		struct fwnode_handle *fn = vmd->irq_domain->fwnode;
->  
-> @@ -679,15 +702,31 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
->  
->  	sd->node = pcibus_to_node(vmd->dev->bus);
->  
-> -	ret = vmd_create_irq_domain(vmd);
-> -	if (ret)
-> -		return ret;
-> -
->  	/*
-> -	 * Override the irq domain bus token so the domain can be distinguished
-> -	 * from a regular PCI/MSI domain.
-> +	 * Currently MSI remapping must be enabled in guest passthrough mode
-> +	 * due to some missing interrupt remapping plumbing. This is probably
-> +	 * acceptable because the guest is usually CPU-limited and MSI
-> +	 * remapping doesn't become a performance bottleneck.
->  	 */
-> -	irq_domain_update_bus_token(vmd->irq_domain, DOMAIN_BUS_VMD_MSI);
-> +	if (!(features & VMD_FEAT_BYPASS_MSI_REMAP) || offset[0] || offset[1]) {
-> +		ret = vmd_alloc_irqs(vmd);
-> +		if (ret)
-> +			return ret;
-> +
-> +		vmd_enable_msi_remapping(vmd, true);
-> +
-> +		ret = vmd_create_irq_domain(vmd);
-> +		if (ret)
-> +			return ret;
-> +
-> +		/*
-> +		 * Override the irq domain bus token so the domain can be
-> +		 * distinguished from a regular PCI/MSI domain.
-> +		 */
-> +		irq_domain_update_bus_token(vmd->irq_domain, DOMAIN_BUS_VMD_MSI);
-> +	} else {
-> +		vmd_enable_msi_remapping(vmd, false);
-> +	}
->  
->  	pci_add_resource(&resources, &vmd->resources[0]);
->  	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
-> @@ -753,10 +792,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	if (features & VMD_FEAT_OFFSET_FIRST_VECTOR)
->  		vmd->first_vec = 1;
->  
-> -	err = vmd_alloc_irqs(vmd);
-> -	if (err)
-> -		return err;
-> -
->  	spin_lock_init(&vmd->cfg_lock);
->  	pci_set_drvdata(dev, vmd);
->  	err = vmd_enable_domain(vmd, features);
-> @@ -825,7 +860,8 @@ static const struct pci_device_id vmd_ids[] = {
->  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP,},
->  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
->  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-> -				VMD_FEAT_HAS_BUS_RESTRICTIONS,},
-> +				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> +				VMD_FEAT_BYPASS_MSI_REMAP,},
->  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x467f),
->  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
->  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> -- 
-> 2.27.0
-> 
