@@ -2,127 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34098C433E0
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Feb 2021 02:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E002C433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Feb 2021 07:35:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0BD064E28
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Feb 2021 02:02:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E413B64E22
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Feb 2021 07:35:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229631AbhBHCCD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 7 Feb 2021 21:02:03 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:55664 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbhBHCCC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Feb 2021 21:02:02 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 11820AkW123340;
-        Sun, 7 Feb 2021 20:00:10 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1612749610;
-        bh=cUtFIfOlkE66hKZ1iSDwIL9jGzTqS4QxLAUcpT4MTbM=;
-        h=Subject:From:To:CC:References:Date:In-Reply-To;
-        b=apsu4RILEZPLAGEaHnF7AHIxBXnqVsHiIrfJNRUxWE9k4p00Fibsx4Hh8JAMM5eGc
-         MSTyzFqD8sBnIJ562Xr7lFcGOEb7I8Q/G3tid/MpGf6Iygj74Mhbofy8hM+CD7d/kW
-         Qq2+En/2/+KkTOGFb+zks4j20TMRza3RHrWg72NM=
-Received: from DLEE109.ent.ti.com (dlee109.ent.ti.com [157.170.170.41])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 11820ANp120619
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 7 Feb 2021 20:00:10 -0600
-Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Sun, 7 Feb
- 2021 20:00:09 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Sun, 7 Feb 2021 20:00:09 -0600
-Received: from [10.250.232.75] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 118205jW070770;
-        Sun, 7 Feb 2021 20:00:06 -0600
-Subject: Re: [PATCH v7 0/2] PCI: cadence: Retrain Link to work around Gen2
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Nadeem Athani <nadeem@cadence.com>, <tjoseph@cadence.com>,
-        <lorenzo.pieralisi@arm.com>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <mparab@cadence.com>, <sjakhade@cadence.com>,
-        <pthombar@cadence.com>
-References: <20201230120515.2348-1-nadeem@cadence.com>
- <15abdca0-d1e1-64b7-4a9a-d7549f035e01@ti.com>
-Message-ID: <c9cd405b-024c-cc80-586a-7fd3d28dfd96@ti.com>
-Date:   Mon, 8 Feb 2021 07:30:04 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S229621AbhBHHe5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Feb 2021 02:34:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33632 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229751AbhBHHez (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Feb 2021 02:34:55 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7A22F64DDD;
+        Mon,  8 Feb 2021 07:34:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612769653;
+        bh=7TyKKVr8AyUm1jsKCCtx7TX3UogGf1VLNtMdZYu55qE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=G7Az6K0blie4qbk6W+OmSAiRBXBb8s7jK2ZlbGUgcxaOOYHekFQSTz4Nc+kDQDyuO
+         nYA3EpuafmQgO0KeOfVCJqxEqbXbLaZTV9T+GkcOgjgKZJBZU6hdpKpPTBsY3iDP77
+         f+7IC5MVo827j341lOJ4noltUFLzjvqnmMTymdmMWDUXFALU80TQYtU/wm3rD9B4kZ
+         7nB81Wt1nVraPRFkzsXQzfF+iBsB3Dnsm58LcymzfT01DBpp8mQOth49kuge3GL9Tz
+         YheMG1xMXpA31Et5OftgIVV9o6FlZaa7PxngODydq+KBsKQHx3Eg0VMn3Kjb5P0tfH
+         X1Z30lWzamknw==
+Date:   Mon, 8 Feb 2021 09:34:08 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dmaengine@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [RESEND PATCH v3 3/5] misc: Add Synopsys DesignWare xData IP
+ driver to Kconfig
+Message-ID: <20210208073408.GC4656@unreal>
+References: <cover.1612284945.git.gustavo.pimentel@synopsys.com>
+ <850ba8b075a65f753bbb802b9af23839624908bd.1612284945.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <15abdca0-d1e1-64b7-4a9a-d7549f035e01@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <850ba8b075a65f753bbb802b9af23839624908bd.1612284945.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo, Rob,
+On Tue, Feb 02, 2021 at 05:56:36PM +0100, Gustavo Pimentel wrote:
+> Add Synopsys DesignWare xData IP driver to Kconfig.
+>
+> This driver enables/disables the PCIe traffic generator module
+> pertain to the Synopsys DesignWare prototype.
+>
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/misc/Kconfig | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+> index fafa8b0..6d5783f 100644
+> --- a/drivers/misc/Kconfig
+> +++ b/drivers/misc/Kconfig
+> @@ -423,6 +423,17 @@ config SRAM
+>  config SRAM_EXEC
+>  	bool
+>
+> +config DW_XDATA_PCIE
+> +	depends on PCI
+> +	tristate "Synopsys DesignWare xData PCIe driver"
+> +	default	n
 
-On 12/01/21 12:45 pm, Kishon Vijay Abraham I wrote:
-> 
-> 
-> On 30/12/20 5:35 pm, Nadeem Athani wrote:
->> Cadence controller will not initiate autonomous speed change if strapped
->> as Gen2. The Retrain Link bit is set as quirk to enable this speed change.
->> Adding a quirk flag for defective IP. In future IP revisions this will not
->> be applicable.
->>
->> Version history:
->> Changes in v7:
->> - Changing the commit title of patch 1 in this series.
->> - Added a return value for function cdns_pcie_retrain().
->> Changes in v6:
->> - Move the position of function cdns_pcie_host_wait_for_link to remove
->>   compilation error. No changes in code. Separate patch for this.
->> Changes in v5:
->> - Remove the compatible string based setting of quirk flag.
->> - Removed additional Link Up Check
->> - Removed quirk from pcie-cadence-plat.c and added in pci-j721e.c
->> Changes in v4:
->> - Added a quirk flag based on a new compatible string.
->> - Change of api for link up: cdns_pcie_host_wait_for_link().
->> Changes in v3:
->> - To set retrain link bit,checking device capability & link status.
->> - 32bit read in place of 8bit.
->> - Minor correction in patch comment.
->> - Change in variable & macro name.
->> Changes in v2:
->> - 16bit read in place of 8bit.
-> 
-> Could get GEN2 card enumerated in GEN2 mode in J7ES EVM.
-> 
-> Tested-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-Can this series be merged?
+"N" is a default option and not needed to be stated explicitly.
 
 Thanks
-Kishon
-
-> 
-> Thanks
-> Kishon
->>
->> Nadeem Athani (2):
->>   PCI: cadence: Shifting of a function to support new code.
->>   PCI: cadence: Retrain Link to work around Gen2 training defect.
->>
->>  drivers/pci/controller/cadence/pci-j721e.c         |  3 +
->>  drivers/pci/controller/cadence/pcie-cadence-host.c | 70 ++++++++++++++++------
->>  drivers/pci/controller/cadence/pcie-cadence.h      | 11 +++-
->>  3 files changed, 65 insertions(+), 19 deletions(-)
->>
