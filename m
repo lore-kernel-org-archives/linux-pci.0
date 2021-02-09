@@ -2,344 +2,286 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9E47C433DB
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Feb 2021 13:35:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED23DC43381
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Feb 2021 14:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B3EC64ED7
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Feb 2021 13:35:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B379F64E30
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Feb 2021 14:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230262AbhBINf5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Feb 2021 08:35:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43990 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230208AbhBINfs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Feb 2021 08:35:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CC1C564EDA;
-        Tue,  9 Feb 2021 13:35:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612877704;
-        bh=JBhprM4DIDADxeTeqD6MW59O69WywX5uOcYWV/jADd4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V80fYHx/7+xncRsX3aBxC0HO69IxgnZq/34phC6vPKqXjm/D1blfRpwEtDd11fsHl
-         kmwMooMYbNuyxcPc19n3rVQmCLlLhv49koepXgCt8uKUiiBwMjDkPkojFSqfpnm6OL
-         eji/gn1C6MhRMFyC4W5PYcvocHHNmS0D53mkIH28D+KIJlOVoO/wbIRdXltJlFK5Jk
-         9LWFbBAy4cxmQCGkb5iAk3Irt/5peUqog/an+RuQlbx772XuId8uLywyH78/BSg06y
-         4ImlLL/6dKDOBJOLV4QalXYBRjzbu3GQRneF2tZUsMWjnD0rVPAYf5JMyJi/ImzNq7
-         1Qc+VMRGo46EQ==
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Saeed Mahameed <saeedm@nvidia.com>
-Cc:     Leon Romanovsky <leonro@nvidia.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Alexander Duyck <alexander.duyck@gmail.com>,
-        Jakub Kicinski <kuba@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        Don Dutile <ddutile@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: [PATCH mlx5-next v6 1/4] PCI: Add sysfs callback to allow MSI-X table size change of SR-IOV VFs
-Date:   Tue,  9 Feb 2021 15:34:42 +0200
-Message-Id: <20210209133445.700225-2-leon@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210209133445.700225-1-leon@kernel.org>
-References: <20210209133445.700225-1-leon@kernel.org>
+        id S232249AbhBIOr4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Feb 2021 09:47:56 -0500
+Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:37370 "EHLO
+        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232250AbhBIOro (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2021 09:47:44 -0500
+Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
+        by mx0a-0014ca01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 119Ebot5014140;
+        Tue, 9 Feb 2021 06:46:37 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=proofpoint;
+ bh=zWrVEGuowaumsucHSvd+LQ+8x8BQqc6fHTRt9z1+hu4=;
+ b=gSpuapw6gAq4fgph68/K6tR9LlulcP5HkyWat451qSBfm8L6zgITLyPUMSeom47h/zU1
+ +CBgWqWow0Md3J6soN2RoyzhnSdm7usTW6d07A2zdq+mmmm0otrsTooZDL6Qo8F2V2Tc
+ TV1YQ9FlIFHAm1DV4hffwlO5dYEoVzTN+xY0233f24Pt6ZMlCXzH0RjVSyZ2AjzYS3Bo
+ +51wWmAmq/YGfCqm/SYQmuWXNjomMyYStoij9WqAsutsCL8us3BJ5Jmw4m7KknQvyCN3
+ zDa9wZ/ehdlL29IOI85J6kM4ne3wqds+0XK1/n3kYwpCVLRjp+x07/xA2e4qxcLtOiyV og== 
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2108.outbound.protection.outlook.com [104.47.55.108])
+        by mx0a-0014ca01.pphosted.com with ESMTP id 36hrku0ng8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 09 Feb 2021 06:46:37 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QuDdmWCCg/qZ9jO0fwMdpTtM+TZYqKdVdEW6Eb98S/A3hfXb+ImHRowyD8J+Y/PB0JUQD4+k87/4n2t/59CXCNuhv2x5RjEoo6r2/jL0LYHHREFbBxtqXY38nC+TrtDnNgQNBqGjZjxEVswrmGOHTC46gx1B1fC1+RPv1E5l/wEIFUxVbWbFo+Sq+j+AMO7rJAucC+mUfKSe32cBksK/d3grwqtgBrNWWIJhBtKHrKqwtKtWPEbYTmQd26xvyEJZ1wOSnPyV1YWKWejU5XLXgPboG7jleWJ0mLfERvjnDJlYSM+MoT0HrwJSiydMskAfWXtZe7iM6lGM48Iw+d0/PQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zWrVEGuowaumsucHSvd+LQ+8x8BQqc6fHTRt9z1+hu4=;
+ b=H63/uxl9FCHRyb2+AwZMSgFOTf3vad75mULOhH1x6JkVjyhTsmcaa8EYGTfz97bCqcR0R2Q3VFXwOHkyCtG5StFPuIlCLciAD9INFTBa6z1Yg6Jn3ysXpO0kUfjg3zbeR7zhOs98TTMudmiJbcLkMZIATewnqFltoFDKNU11Nx4jCP36M/CmmeRQNEDgCYisPgkLMlhO8kzlo7Lu20/mEsOPpa2QfOldtmNYN/IiAcnEBdaURpEoEHdK9GZF1d1XPV00LbcHD5MilwUjJoFptelPpEca0LzcSwwBQ2Ce/EYV+Xx7EcsTX8+Ji+6FzRlOxUMc2GmgS/n0aYDUqzGwNA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 64.207.220.244) smtp.rcpttodomain=google.com smtp.mailfrom=cadence.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=cadence.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zWrVEGuowaumsucHSvd+LQ+8x8BQqc6fHTRt9z1+hu4=;
+ b=iYFw/VzAH71IT7liel9T8KFm/uGylGRehl7y4WzJKawQpGk8Q/iqa7S1z57BRsN7PQzAJQ+IUCsSILNSwCWI+hIvWEtqL1qebuevl+4DygDb8oN01iovvwQj7F/AfBJtk8X3HLrt8i2+qitADZqSwXqtoVvDALIaAm4DZvxlXD4=
+Received: from BN6PR16CA0025.namprd16.prod.outlook.com (2603:10b6:405:14::11)
+ by SN6PR07MB7936.namprd07.prod.outlook.com (2603:10b6:805:ec::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.20; Tue, 9 Feb
+ 2021 14:46:34 +0000
+Received: from BN8NAM12FT004.eop-nam12.prod.protection.outlook.com
+ (2603:10b6:405:14:cafe::21) by BN6PR16CA0025.outlook.office365.com
+ (2603:10b6:405:14::11) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3846.26 via Frontend
+ Transport; Tue, 9 Feb 2021 14:46:34 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 64.207.220.244)
+ smtp.mailfrom=cadence.com; google.com; dkim=none (message not signed)
+ header.d=none;google.com; dmarc=pass action=none header.from=cadence.com;
+Received-SPF: Pass (protection.outlook.com: domain of cadence.com designates
+ 64.207.220.244 as permitted sender) receiver=protection.outlook.com;
+ client-ip=64.207.220.244; helo=wcmailrelayl01.cadence.com;
+Received: from wcmailrelayl01.cadence.com (64.207.220.244) by
+ BN8NAM12FT004.mail.protection.outlook.com (10.13.183.58) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3846.25 via Frontend Transport; Tue, 9 Feb 2021 14:46:32 +0000
+Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
+        by wcmailrelayl01.cadence.com (8.14.7/8.14.4) with ESMTP id 119EkRwH001420
+        (version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=OK);
+        Tue, 9 Feb 2021 06:46:31 -0800
+X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
+Received: from maileu3.global.cadence.com (10.160.88.99) by
+ maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3; Tue, 9 Feb 2021 15:46:28 +0100
+Received: from vleu-orange.cadence.com (10.160.88.83) by
+ maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Tue, 9 Feb 2021 15:46:28 +0100
+Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
+        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id 119EkSd9026767;
+        Tue, 9 Feb 2021 15:46:28 +0100
+Received: (from nadeem@localhost)
+        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id 119EkSAg026766;
+        Tue, 9 Feb 2021 15:46:28 +0100
+From:   Nadeem Athani <nadeem@cadence.com>
+To:     <tjoseph@cadence.com>, <lorenzo.pieralisi@arm.com>,
+        <robh@kernel.org>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kishon@ti.com>
+CC:     <nadeem@cadence.com>, <mparab@cadence.com>, <sjakhade@cadence.com>,
+        <pthombar@cadence.com>
+Subject: [PATCH v8 2/2] PCI: cadence: Retrain Link to work around Gen2 training defect.
+Date:   Tue, 9 Feb 2021 15:46:22 +0100
+Message-ID: <20210209144622.26683-3-nadeem@cadence.com>
+X-Mailer: git-send-email 2.15.0
+In-Reply-To: <20210209144622.26683-1-nadeem@cadence.com>
+References: <20210209144622.26683-1-nadeem@cadence.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-OrganizationHeadersPreserved: maileu3.global.cadence.com
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 618b385a-d044-4a92-a1fd-08d8cd097e38
+X-MS-TrafficTypeDiagnostic: SN6PR07MB7936:
+X-Microsoft-Antispam-PRVS: <SN6PR07MB7936BD97F8280957C4396FDAD88E9@SN6PR07MB7936.namprd07.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2043;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: BWk+gpNNt0oHC+SDqTnULp9endJzsH9Z7/dQYXkgz8sFiZReMbFJkC2+oFhSRBrxxFmx1w/ST6RrQ4xe5sMcLKpRqsr7x3YxSkLwiDzCZztZ2dcH8SkirWe6F0b8V1bzK3yzG7kyRn8cK+mPx+Y+1/+966Taz6EiyzqykeNaHRqP4WDyJMXmPvvyF6HP+jjhSRWResFrzBhMkBMvJ2IzmuT2rNCb6hoOlEuqxzvxaAWxIZIrjApFBkP7IvNcOXfeNtLWdPVKbFtmeDEAeKgPTqdBPfaRKj5C58l2XuRuF5DvCfW+HOiiZZreIAVDHDEZBHrQ4hYpoVfzModnRtx5PhPIW2rAKRhgJ54bkkA3TmCfgn4XzG6umQ7jz1o7g7+Gxp3TgKg2yQXcBRMi0WpvMRYB4ZO0AMsE6E7IEHT17JK126nyrMASBCh7c8txGEG7e/2UrBiFpcFh/OD+Tfdia1WLQq0CaFienG4cW35snrbTXciYjDV54L7PqgevpXCNeI9hZceDM7Lm9ka4yPcmB/q6Sk7TtpLll2nvbtazY5AijRD4l8QvibEvo6jzzHEBqCO/vVVidoCK+1VjMsetO9kHSeVGBpkakTk97/85SLUaEqMZobpCC+zcbSw6SmGDMx9vwSuVt8dW/8iyf5GfyofyqglR6Gg3hUFNdNUdtKb5pr0LZ8tM6iwXxEm1pKpnaiwUOp349uZ25gP2yR5qm22pruS2KdXAIEfSE2Xnq316nd+VgPm5XWlWKwzXjAS+
+X-Forefront-Antispam-Report: CIP:64.207.220.244;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:wcmailrelayl01.cadence.com;PTR:ErrorRetry;CAT:NONE;SFS:(4636009)(376002)(39860400002)(346002)(136003)(396003)(36092001)(36840700001)(46966006)(83380400001)(26005)(42186006)(107886003)(6666004)(82310400003)(2906002)(336012)(186003)(1076003)(81166007)(82740400003)(426003)(478600001)(2616005)(4326008)(34020700004)(8676002)(54906003)(36906005)(70586007)(86362001)(356005)(47076005)(36756003)(36860700001)(316002)(8936002)(5660300002)(110136005)(70206006)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: cadence.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2021 14:46:32.7506
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 618b385a-d044-4a92-a1fd-08d8cd097e38
+X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[64.207.220.244];Helo=[wcmailrelayl01.cadence.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM12FT004.eop-nam12.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR07MB7936
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.737
+ definitions=2021-02-09_03:2021-02-09,2021-02-09 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 phishscore=0
+ adultscore=0 malwarescore=0 mlxscore=0 bulkscore=0 mlxlogscore=999
+ lowpriorityscore=0 clxscore=1015 suspectscore=0 priorityscore=1501
+ impostorscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2102090076
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Leon Romanovsky <leonro@nvidia.com>
+Cadence controller will not initiate autonomous speed change if strapped
+as Gen2. The Retrain Link bit is set as quirk to enable this speed change.
 
-Extend PCI sysfs interface with a new callback that allows configuration
-of the number of MSI-X vectors for specific SR-IOV VF. This is needed
-to optimize the performance of VFs devices by allocating the number of
-vectors based on the administrator knowledge of the intended use of the VF.
-
-This function is applicable for SR-IOV VF because such devices allocate
-their MSI-X table before they will run on the VMs and HW can't guess the
-right number of vectors, so some devices allocate them statically and equally.
-
-1) The newly added /sys/bus/pci/devices/.../sriov_vf_msix_count
-file will be seen for the VFs and it is writable as long as a driver is not
-bound to the VF.
-
-The values accepted are:
- * > 0 - this will be number reported by the Table Size in the VF's MSI-X Message
-         Control register
- * < 0 - not valid
- * = 0 - will reset to the device default value
-
-2) In order to make management easy, provide new read-only sysfs file that
-returns a total number of possible to configure MSI-X vectors.
-
-cat /sys/bus/pci/devices/.../sriov_vf_total_msix
-  = 0 - feature is not supported
-  > 0 - total number of MSI-X vectors available for distribution among the VFs
-
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+Signed-off-by: Nadeem Athani <nadeem@cadence.com>
 ---
- Documentation/ABI/testing/sysfs-bus-pci |  28 +++++
- drivers/pci/iov.c                       | 153 ++++++++++++++++++++++++
- include/linux/pci.h                     |  12 ++
- 3 files changed, 193 insertions(+)
+ drivers/pci/controller/cadence/pci-j721e.c         |  3 ++
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 48 +++++++++++++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h      | 11 ++++-
+ 3 files changed, 60 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 25c9c39770c6..7dadc3610959 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -375,3 +375,31 @@ Description:
- 		The value comes from the PCI kernel device state and can be one
- 		of: "unknown", "error", "D0", D1", "D2", "D3hot", "D3cold".
- 		The file is read only.
-+
-+What:		/sys/bus/pci/devices/.../sriov_vf_total_msix
-+Date:		January 2021
-+Contact:	Leon Romanovsky <leonro@nvidia.com>
-+Description:
-+		This file is associated with the SR-IOV PFs.
-+		It contains the total number of MSI-X vectors available for
-+		assignment to all VFs associated with this PF. It may be zero
-+		if the device doesn't support this functionality.
-+
-+What:		/sys/bus/pci/devices/.../sriov_vf_msix_count
-+Date:		January 2021
-+Contact:	Leon Romanovsky <leonro@nvidia.com>
-+Description:
-+		This file is associated with the SR-IOV VFs.
-+		It allows configuration of the number of MSI-X vectors for
-+		the VF. This is needed to optimize performance of newly bound
-+		devices by allocating the number of vectors based on the
-+		administrator knowledge of targeted VM.
-+
-+		The values accepted are:
-+		 * > 0 - this will be number reported by the VF's MSI-X
-+			 capability
-+		 * < 0 - not valid
-+		 * = 0 - will reset to the device default value
-+
-+		The file is writable if the PF is bound to a driver that
-+		implements ->sriov_set_msix_vec_count().
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 4afd4ee4f7f0..c0554aa6b90a 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -31,6 +31,7 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
- 	return (dev->devfn + dev->sriov->offset +
- 		dev->sriov->stride * vf_id) & 0xff;
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index dac1ac8a7615..849f1e416ea5 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -64,6 +64,7 @@ enum j721e_pcie_mode {
+ 
+ struct j721e_pcie_data {
+ 	enum j721e_pcie_mode	mode;
++	bool quirk_retrain_flag;
+ };
+ 
+ static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
+@@ -280,6 +281,7 @@ static struct pci_ops cdns_ti_pcie_host_ops = {
+ 
+ static const struct j721e_pcie_data j721e_pcie_rc_data = {
+ 	.mode = PCI_MODE_RC,
++	.quirk_retrain_flag = true,
+ };
+ 
+ static const struct j721e_pcie_data j721e_pcie_ep_data = {
+@@ -388,6 +390,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 
+ 		bridge->ops = &cdns_ti_pcie_host_ops;
+ 		rc = pci_host_bridge_priv(bridge);
++		rc->quirk_retrain_flag = data->quirk_retrain_flag;
+ 
+ 		cdns_pcie = &rc->pcie;
+ 		cdns_pcie->dev = dev;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 9f7aa718c8d4..6f591d382578 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -94,6 +94,52 @@ static int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie)
+ 	return -ETIMEDOUT;
  }
-+EXPORT_SYMBOL_GPL(pci_iov_virtfn_devfn);
-
- /*
-  * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
-@@ -157,6 +158,158 @@ int pci_iov_sysfs_link(struct pci_dev *dev,
- 	return rc;
- }
-
-+#ifdef CONFIG_PCI_MSI
-+static ssize_t sriov_vf_msix_count_store(struct device *dev,
-+					 struct device_attribute *attr,
-+					 const char *buf, size_t count)
+ 
++static int cdns_pcie_retrain(struct cdns_pcie *pcie)
 +{
-+	struct pci_dev *vf_dev = to_pci_dev(dev);
-+	struct pci_dev *pdev = pci_physfn(vf_dev);
-+	int val, ret;
++	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
++	u16 lnk_stat, lnk_ctl;
++	int ret = 0;
 +
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
++	/*
++	 * Set retrain bit if current speed is 2.5 GB/s,
++	 * but the PCIe root port support is > 2.5 GB/s.
++	 */
++
++	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + pcie_cap_off +
++					     PCI_EXP_LNKCAP));
++	if ((lnk_cap_sls & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
 +		return ret;
 +
-+	if (val < 0)
-+		return -EINVAL;
++	lnk_stat = cdns_pcie_rp_readw(pcie, pcie_cap_off + PCI_EXP_LNKSTA);
++	if ((lnk_stat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
++		lnk_ctl = cdns_pcie_rp_readw(pcie,
++					     pcie_cap_off + PCI_EXP_LNKCTL);
++		lnk_ctl |= PCI_EXP_LNKCTL_RL;
++		cdns_pcie_rp_writew(pcie, pcie_cap_off + PCI_EXP_LNKCTL,
++				    lnk_ctl);
 +
-+	device_lock(&pdev->dev);
-+	if (!pdev->driver || !pdev->driver->sriov_set_msix_vec_count) {
-+		ret = -EOPNOTSUPP;
-+		goto err_pdev;
++		ret = cdns_pcie_host_wait_for_link(pcie);
 +	}
-+
-+	device_lock(&vf_dev->dev);
-+	if (vf_dev->driver) {
-+		/*
-+		 * Driver already probed this VF and configured itself
-+		 * based on previously configured (or default) MSI-X vector
-+		 * count. It is too late to change this field for this
-+		 * specific VF.
-+		 */
-+		ret = -EBUSY;
-+		goto err_dev;
-+	}
-+
-+	ret = pdev->driver->sriov_set_msix_vec_count(vf_dev, val);
-+
-+err_dev:
-+	device_unlock(&vf_dev->dev);
-+err_pdev:
-+	device_unlock(&pdev->dev);
-+	return ret ? : count;
-+}
-+static DEVICE_ATTR_WO(sriov_vf_msix_count);
-+
-+static ssize_t sriov_vf_total_msix_show(struct device *dev,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u32 vf_total_msix;
-+
-+	device_lock(dev);
-+	if (!pdev->driver || !pdev->driver->sriov_get_vf_total_msix) {
-+		device_unlock(dev);
-+		return -EOPNOTSUPP;
-+	}
-+	vf_total_msix = pdev->driver->sriov_get_vf_total_msix(pdev);
-+	device_unlock(dev);
-+
-+	return sysfs_emit(buf, "%u\n", vf_total_msix);
-+}
-+static DEVICE_ATTR_RO(sriov_vf_total_msix);
-+#endif
-+
-+static const struct attribute *sriov_pf_dev_attrs[] = {
-+#ifdef CONFIG_PCI_MSI
-+	&dev_attr_sriov_vf_total_msix.attr,
-+#endif
-+	NULL,
-+};
-+
-+static const struct attribute *sriov_vf_dev_attrs[] = {
-+#ifdef CONFIG_PCI_MSI
-+	&dev_attr_sriov_vf_msix_count.attr,
-+#endif
-+	NULL,
-+};
-+
-+/*
-+ * The PF can change the specific properties of associated VFs. Such
-+ * functionality is usually known after PF probed and PCI sysfs files
-+ * were already created.
-+ *
-+ * The function below is driven by such PF. It adds sysfs files to already
-+ * existing PF/VF sysfs device hierarchies.
-+ */
-+int pci_enable_vf_overlay(struct pci_dev *dev)
-+{
-+	struct pci_dev *virtfn;
-+	int id, ret;
-+
-+	if (!dev->is_physfn || !dev->sriov->num_VFs)
-+		return 0;
-+
-+	ret = sysfs_create_files(&dev->dev.kobj, sriov_pf_dev_attrs);
-+	if (ret)
-+		return ret;
-+
-+	for (id = 0; id < dev->sriov->num_VFs; id++) {
-+		virtfn = pci_get_domain_bus_and_slot(
-+			pci_domain_nr(dev->bus), pci_iov_virtfn_bus(dev, id),
-+			pci_iov_virtfn_devfn(dev, id));
-+
-+		if (!virtfn)
-+			continue;
-+
-+		ret = sysfs_create_files(&virtfn->dev.kobj,
-+					 sriov_vf_dev_attrs);
-+		if (ret)
-+			goto out;
-+	}
-+	return 0;
-+
-+out:
-+	while (id--) {
-+		virtfn = pci_get_domain_bus_and_slot(
-+			pci_domain_nr(dev->bus), pci_iov_virtfn_bus(dev, id),
-+			pci_iov_virtfn_devfn(dev, id));
-+
-+		if (!virtfn)
-+			continue;
-+
-+		sysfs_remove_files(&virtfn->dev.kobj, sriov_vf_dev_attrs);
-+	}
-+	sysfs_remove_files(&dev->dev.kobj, sriov_pf_dev_attrs);
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(pci_enable_vf_overlay);
 +
-+void pci_disable_vf_overlay(struct pci_dev *dev)
++static int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc)
 +{
-+	struct pci_dev *virtfn;
-+	int id;
++	struct cdns_pcie *pcie = &rc->pcie;
++	int ret;
 +
-+	if (!dev->is_physfn || !dev->sriov->num_VFs)
-+		return;
++	ret = cdns_pcie_host_wait_for_link(pcie);
 +
-+	id = dev->sriov->num_VFs;
-+	while (id--) {
-+		virtfn = pci_get_domain_bus_and_slot(
-+			pci_domain_nr(dev->bus), pci_iov_virtfn_bus(dev, id),
-+			pci_iov_virtfn_devfn(dev, id));
++	/*
++	 * Retrain link for Gen2 training defect
++	 * if quirk flag is set.
++	 */
++	if (!ret && rc->quirk_retrain_flag)
++		ret = cdns_pcie_retrain(pcie);
 +
-+		if (!virtfn)
-+			continue;
-+
-+		sysfs_remove_files(&virtfn->dev.kobj, sriov_vf_dev_attrs);
-+	}
-+	sysfs_remove_files(&dev->dev.kobj, sriov_pf_dev_attrs);
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(pci_disable_vf_overlay);
 +
- int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
  {
- 	int i;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b32126d26997..732611937574 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -856,6 +856,11 @@ struct module;
-  *		e.g. drivers/net/e100.c.
-  * @sriov_configure: Optional driver callback to allow configuration of
-  *		number of VFs to enable via sysfs "sriov_numvfs" file.
-+ * @sriov_set_msix_vec_count: Driver callback to change number of MSI-X vectors
-+ *              to configure via sysfs "sriov_vf_msix_count" entry. This will
-+ *              change MSI-X Table Size in their Message Control registers.
-+ * @sriov_get_vf_total_msix: Total number of MSI-X veectors to distribute
-+ *              to the VFs
-  * @err_handler: See Documentation/PCI/pci-error-recovery.rst
-  * @groups:	Sysfs attribute groups.
-  * @driver:	Driver model structure.
-@@ -871,6 +876,8 @@ struct pci_driver {
- 	int  (*resume)(struct pci_dev *dev);	/* Device woken up */
- 	void (*shutdown)(struct pci_dev *dev);
- 	int  (*sriov_configure)(struct pci_dev *dev, int num_vfs); /* On PF */
-+	int  (*sriov_set_msix_vec_count)(struct pci_dev *vf, int msix_vec_count); /* On PF */
-+	u32  (*sriov_get_vf_total_msix)(struct pci_dev *pf);
- 	const struct pci_error_handlers *err_handler;
- 	const struct attribute_group **groups;
- 	struct device_driver	driver;
-@@ -2059,6 +2066,9 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
- int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
- int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
-
-+int pci_enable_vf_overlay(struct pci_dev *dev);
-+void pci_disable_vf_overlay(struct pci_dev *dev);
-+
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-
-@@ -2100,6 +2110,8 @@ static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+ 	struct cdns_pcie *pcie = &rc->pcie;
+@@ -456,7 +502,7 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 		return ret;
+ 	}
+ 
+-	ret = cdns_pcie_host_wait_for_link(pcie);
++	ret = cdns_pcie_host_start_link(rc);
+ 	if (ret)
+ 		dev_dbg(dev, "PCIe link never came up\n");
+ 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 30eba6cafe2c..254d2570f8c9 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -119,7 +119,7 @@
+  * Root Port Registers (PCI configuration space for the root port function)
+  */
+ #define CDNS_PCIE_RP_BASE	0x00200000
+-
++#define CDNS_PCIE_RP_CAP_OFFSET 0xc0
+ 
+ /*
+  * Address Translation Registers
+@@ -291,6 +291,7 @@ struct cdns_pcie {
+  * @device_id: PCI device ID
+  * @avail_ib_bar: Satus of RP_BAR0, RP_BAR1 and	RP_NO_BAR if it's free or
+  *                available
++ * @quirk_retrain_flag: Retrain link as quirk for PCIe Gen2
+  */
+ struct cdns_pcie_rc {
+ 	struct cdns_pcie	pcie;
+@@ -299,6 +300,7 @@ struct cdns_pcie_rc {
+ 	u32			vendor_id;
+ 	u32			device_id;
+ 	bool			avail_ib_bar[CDNS_PCIE_RP_MAX_IB];
++	bool                    quirk_retrain_flag;
+ };
+ 
+ /**
+@@ -414,6 +416,13 @@ static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
+ 	cdns_pcie_write_sz(addr, 0x2, value);
  }
- static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
- 					 int id) { }
-+static inline int pci_enable_vf_overlay(struct pci_dev *dev) { return 0; }
-+static inline void pci_disable_vf_overlay(struct pci_dev *dev) { }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
---
-2.29.2
+ 
++static inline u16 cdns_pcie_rp_readw(struct cdns_pcie *pcie, u32 reg)
++{
++	void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
++
++	return cdns_pcie_read_sz(addr, 0x2);
++}
++
+ /* Endpoint Function register access */
+ static inline void cdns_pcie_ep_fn_writeb(struct cdns_pcie *pcie, u8 fn,
+ 					  u32 reg, u8 value)
+-- 
+2.15.0
 
