@@ -2,78 +2,104 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9305BC433E0
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 00:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E66EC433E6
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 00:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E18364E3E
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 00:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC39464E2E
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 00:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233454AbhBJAFU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Feb 2021 19:05:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41066 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234696AbhBIXRJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Feb 2021 18:17:09 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C85FB64E3C;
-        Tue,  9 Feb 2021 23:06:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612911976;
-        bh=3hA4LAECNcxRvS/teZ3WBA7MKSKusBqEX4w/4TJMfpI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=QwLINPBew5K6IV/G6DKAsJKTQLcRmNleHhsKCl/0PJFSuXgjMjj/ZEPjw1F04UpQo
-         kIO8VK9A7Et05moThAy8w+m6RpvEAGMgKPDvMQ4IuEdByD889D5CqH+WJj+4K2EjmK
-         J0Yq4HML02dWQIsi7C5D8N0Pu9XBz1VPxdG01g9K4z3KQV3/drSzbS5sa+ZjQKG/Nn
-         1EZug2IO6N8IZSydjgU5s5dUSKqofu4UjYf2q2Cvjs8hpn/A4+LU1mfoRV1Msa5Mmg
-         Hf05Vswv/eXqp5PFt5BnLEBhZZR827De+inX+0gOavxncz8GNEpjTRrdWYl12PwVMH
-         yczpJjW6VlmQw==
-Date:   Tue, 9 Feb 2021 17:06:14 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     linux-pci@vger.kernel.org, Hinko Kocevar <hinko.kocevar@ess.eu>
-Subject: Re: [PATCHv2 0/5] aer handling fixups
-Message-ID: <20210209230614.GA523701@bjorn-Precision-5520>
+        id S234871AbhBJAFb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Feb 2021 19:05:31 -0500
+Received: from mail-lf1-f49.google.com ([209.85.167.49]:46666 "EHLO
+        mail-lf1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233534AbhBIXo1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2021 18:44:27 -0500
+Received: by mail-lf1-f49.google.com with SMTP id v5so84846lft.13;
+        Tue, 09 Feb 2021 15:44:10 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=yGmWhoja/hQOYUa2PNDucYo9KJYqOoWVC1/FBOW7ZLs=;
+        b=CSwu8RNl0F3aLFNUa2Zhqv/aqOr5LKZ/7NneX13EyvlbISAlqrLqBhJJJ7UJZwfvI+
+         quS89wObQiz7ojngCi7DM6T1jhylHQ+3XWcBSnVAZ01C4E0m29wEPc2lZDcW/Y4PPIgj
+         Ed+riKLtmJ/w0egBe6Fl2kBCYicFdUj3zXYSdcrTD0bV+BuxOFh1lSlbK4bSqNCyr+Zr
+         6vxTkKRcP49eVDXmEZhzL2lesOGyuY3FZAzp4583OpXKBd2/cQzuy9xfvmQkbKlaxs+y
+         1YY45uwPdPHt4Ie5OGc+I4YVy/5AJXOOJdrs2IYwIjMa1PXanRmjlQhXnQXYL8A35VGG
+         nQuw==
+X-Gm-Message-State: AOAM530yQyCHG82gFfpTcdg633sDyv2vKJlhv6/9F2IzsgNc+1VYcVPt
+        fcfEWP7xYbEkJLY4Epoaof8=
+X-Google-Smtp-Source: ABdhPJxx6hda2CiPB5yiesOFRVWCjUTcZerPAMRTqgFm5S+ShAghK/pTP616i1cMawpsbVKWyUk2/w==
+X-Received: by 2002:ac2:544c:: with SMTP id d12mr172177lfn.585.1612914223533;
+        Tue, 09 Feb 2021 15:43:43 -0800 (PST)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id u6sm21519lji.63.2021.02.09.15.43.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Feb 2021 15:43:42 -0800 (PST)
+Date:   Wed, 10 Feb 2021 00:43:41 +0100
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Yicong Yang <yangyicong@hisilicon.com>, linux-pci@vger.kernel.org,
+        prime.zeng@huawei.com, linuxarm@openeuler.org,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Michal Marek <michal.lkml@markovi.net>,
+        linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Use subdir-ccflags-* to inherit debug flag
+Message-ID: <YCMeLS1Vd2YQuWmQ@rocinante>
+References: <1612438215-33105-1-git-send-email-yangyicong@hisilicon.com>
+ <20210209212510.GA513360@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210104230300.1277180-1-kbusch@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210209212510.GA513360@bjorn-Precision-5520>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Hinko]
+Hi Bjorn,
 
-On Mon, Jan 04, 2021 at 03:02:55PM -0800, Keith Busch wrote:
-> Changes from v1:
-> 
->   Added received Acks
-> 
->   Split the kernel print identifying the port type being reset.
-> 
->   Added a patch for the portdrv to ensure the slot_reset happens without
->   relying on a downstream device driver..
-> 
-> Keith Busch (5):
->   PCI/ERR: Clear status of the reporting device
->   PCI/AER: Actually get the root port
->   PCI/ERR: Retain status from error notification
->   PCI/AER: Specify the type of port that was reset
->   PCI/portdrv: Report reset for frozen channel
-> 
->  drivers/pci/pcie/aer.c         |  5 +++--
->  drivers/pci/pcie/err.c         | 16 +++++++---------
->  drivers/pci/pcie/portdrv_pci.c |  3 ++-
->  3 files changed, 12 insertions(+), 12 deletions(-)
+Thank you!  This looks great!
 
-I applied these to pci/error for v5.12, thanks!
+[...]
+> commit e8e9aababe60 ("PCI: Apply CONFIG_PCI_DEBUG to entire drivers/pci hierarchy")
+> Author: Junhao He <hejunhao2@hisilicon.com>
+> Date:   Thu Feb 4 19:30:15 2021 +0800
+> 
+>     PCI: Apply CONFIG_PCI_DEBUG to entire drivers/pci hierarchy
+>     
+>     CONFIG_PCI_DEBUG=y adds -DDEBUG to CFLAGS, which enables things like
+>     pr_debug() and dev_dbg() (and hence pci_dbg()).  Previously we added
+>     -DDEBUG for files in drivers/pci/, but not files in subdirectories of
+>     drivers/pci/.
+>     
+>     Add -DDEBUG to CFLAGS for all files below drivers/pci/ so CONFIG_PCI_DEBUG
+>     applies to the entire hierarchy.
+>     
+>     [bhelgaas: commit log]
+>     Link: https://lore.kernel.org/r/1612438215-33105-1-git-send-email-yangyicong@hisilicon.com
+>     Signed-off-by: Junhao He <hejunhao2@hisilicon.com>
+>     Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
+> 
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 11cc79411e2d..d62c4ac4ae1b 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -36,4 +36,4 @@ obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
+>  obj-y				+= controller/
+>  obj-y				+= switch/
+>  
+> -ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+> +subdir-ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
 
-I *am* a little concerned about the issues Hinko saw because it
-doesn't look we found a root cause.  I didn't spend any time looking
-into it, but even if it only shows up on his specific platform or with
-some weird config combination, it's a problem.  But I guess we'll see
-if anybody else trips over it.
+And thank you again, Yicong, for fixing this.  Much appreciated.
 
-Bjorn
+Krzysztof
