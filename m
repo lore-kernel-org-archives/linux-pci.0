@@ -2,78 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46658C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 07:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E7AC433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 08:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 015B964E42
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 07:42:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7FDD64E28
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Feb 2021 08:57:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232682AbhBJHmE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Feb 2021 02:42:04 -0500
-Received: from smtprelay0243.hostedemail.com ([216.40.44.243]:57246 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S231520AbhBJHmA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2021 02:42:00 -0500
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 81F6718010A5F;
-        Wed, 10 Feb 2021 07:41:15 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: trip57_0a1601f2760e
-X-Filterd-Recvd-Size: 2373
-Received: from [192.168.1.159] (unknown [47.151.137.21])
-        (Authenticated sender: joe@perches.com)
-        by omf20.hostedemail.com (Postfix) with ESMTPA;
-        Wed, 10 Feb 2021 07:41:10 +0000 (UTC)
-Message-ID: <715cfa18165f472420496de96a0a08837de2902d.camel@perches.com>
-Subject: Re: [PATCH] Documentation: Replace lkml.org links with lore
-From:   Joe Perches <joe@perches.com>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Alexander A. Klimov" <grandmaster@al2klimov.de>,
-        bhelgaas@google.com, robh+dt@kernel.org, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        kishon@ti.com, lorenzo.pieralisi@arm.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, shawnguo@kernel.org,
-        s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com,
-        linux-imx@nxp.com, m-karicheri2@ti.com, songxiaowei@hisilicon.com,
-        wangbinghui@hisilicon.com, amurray@thegoodpenguin.co.uk,
-        sathyanarayanan.kuppuswamy@linux.intel.com, hkallweit1@gmail.com,
-        rafael.j.wysocki@intel.com, rdunlap@infradead.org,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Date:   Tue, 09 Feb 2021 23:41:09 -0800
-In-Reply-To: <202102092327.F6D8335A7@keescook>
-References: <20200627103050.71712-1-grandmaster@al2klimov.de>
-         <20200630180917.GA3455699@bjorn-Precision-5520>
-         <20200630140417.3a2dba67@lwn.net>
-         <77cdb7f32cfb087955bfc3600b86c40bed5d4104.camel@perches.com>
-         <202102092327.F6D8335A7@keescook>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+        id S229485AbhBJI5M convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Feb 2021 03:57:12 -0500
+Received: from relay7-d.mail.gandi.net ([217.70.183.200]:40595 "EHLO
+        relay7-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229558AbhBJIyz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2021 03:54:55 -0500
+X-Originating-IP: 90.2.82.147
+Received: from windsurf.home (aputeaux-654-1-223-147.w90-2.abo.wanadoo.fr [90.2.82.147])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay7-d.mail.gandi.net (Postfix) with ESMTPSA id 4056F20002;
+        Wed, 10 Feb 2021 08:54:09 +0000 (UTC)
+Date:   Wed, 10 Feb 2021 09:54:08 +0100
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>
+Cc:     Stefan Roese <sr@denx.de>, Phil Sutter <phil@nwl.cc>,
+        Mario Six <mario.six@gdsys.cc>,
+        Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Stefan Chulski <stefanc@marvell.com>
+Subject: Re: pci mvebu issue (memory controller)
+Message-ID: <20210210095408.75839806@windsurf.home>
+In-Reply-To: <20210209141759.6960fccb@kernel.org>
+References: <20210209141759.6960fccb@kernel.org>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2021-02-09 at 23:28 -0800, Kees Cook wrote:
-> On Sun, Jan 10, 2021 at 12:41:44PM -0800, Joe Perches wrote:
-> > Replace the lkml.org links with lore to better use a single source
-> > that's more likely to stay available long-term.
+Hello Marek,
+
+On Tue, 9 Feb 2021 14:17:59 +0100
+Marek Behún <kabel@kernel.org> wrote:
+
+> (sending this e-mail again because previously I sent it to Thomas' old
+> e-mail address at free-electrons)
+
+Thanks. Turns out I still receive e-mail sent to @free-electrons.com,
+so I had seen your previous e-mail but didn't had the chance to reply.
+
+> we have enountered an issue with pci-mvebu driver and would like your
+> opinion, since you are the author of commit
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=f4ac99011e542d06ea2bda10063502583c6d7991
 > 
-> What's the best way to teach checkpatch about this? I couldn't find the
-> right place to do it. (And more generally, can it also suggest https
-> over http?)
+> After upgrading to new version of U-Boot on a Armada XP / 38x device,
+> some WiFi cards stopped working in kernel. Ath10k driver, for example,
+> could not load firmware into the card.
+> 
+> We discovered that the issue is caused by U-Boot:
+> - when U-Boot's pci_mvebu driver was converted to driver model API,
+>   U-Boot started to configure PCIe registers not only for the newtork
+>   adapter, but also for the Marvell Memory Controller (that you are
+>   mentioning in your commit).
+> - Since pci-mvebu driver in Linux is ignoring the Marvell Memory
+>   Controller device, and U-Boot configures its registers (BARs and what
+>   not), after kernel boots, the registers of this device are
+>   incompatible with kernel, or something, and this causes problems for
+>   the real PCIe device.
+> - Stefan Roese has temporarily solved this issue with U-Boot commit
+>   https://gitlab.denx.de/u-boot/custodians/u-boot-marvell/-/commit/6a2fa284aee2981be2c7661b3757ce112de8d528
+>   which basically just masks the Memory Controller's existence.
+> 
+> - in Linux commit f4ac99011e54 ("pci: mvebu: no longer fake the slot
+>   location of downstream devices") you mention that:
+> 
+>    * On slot 0, a "Marvell Memory controller", identical on all PCIe
+>      interfaces, and which isn't useful when the Marvell SoC is the PCIe
+>      root complex (i.e, the normal case when we run Linux on the Marvell
+>      SoC).
+> 
+> What we are wondering is:
+> - what does the Marvell Memory controller really do? Can it be used to
+>   configure something? It clearly does something, because if it is
+>   configured in U-Boot somehow but not in kernel, problems can occur.
+> - is the best solution really just to ignore this device?
+> - should U-Boot also start doing what commit f4ac99011e54 does? I.e.
+>   to make sure that the real device is in slot 0, and Marvell Memory
+>   Controller in slot 1.
+> - why is Linux ignoring this device? It isn't even listed in lspci
+>   output.
 
-Bjorn's patch:
-https://lore.kernel.org/lkml/20201217235615.43328-1-helgaas@kernel.org/
+To be honest, I don't have much details about what this device does,
+and my memory is unclear on whether I really ever had any details. I
+vaguely remember that this is a device that made sense when the Marvell
+PCIe controller is used as an endpoint, and in such a situation this
+device also the root complex to "see" the physical memory of the
+Marvell SoC. And therefore in a situation where the Marvell PCIe
+controller is the root complex, seeing this device didn't make sense.
 
-And my comments:
-https://lore.kernel.org/lkml/3e21b6e87e219d6538a193a9021b965fd8180025.camel@perches.com/
+In addition, I /think/ it was causing problems with the MBus windows
+allocation. Indeed, if this device is visible, then we will try to
+allocate MBus windows for its different BARs, and those windows are in
+limited number.
 
+I know this isn't a very helpful answer, but the documentation on this
+is pretty much nonexistent, and I don't remember ever having very
+solid and convincing answers.
+
+I've added in Cc Stefan Chulski, from Marvell, who has recently posted
+patches on the PPv2 driver. I don't know if he will have details about
+PCIe, but perhaps he will be able to ask internally at Marvell.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
