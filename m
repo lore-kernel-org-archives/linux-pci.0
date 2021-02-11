@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDFF8C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A43D8C433DB
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:19:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83C9164E6F
+	by mail.kernel.org (Postfix) with ESMTP id 637C064E70
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230034AbhBKJSh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 04:18:37 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56786 "EHLO
+        id S230028AbhBKJSc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 04:18:32 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:34190 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230102AbhBKJOM (ORCPT
+        by vger.kernel.org with ESMTP id S230111AbhBKJOM (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 04:14:12 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id B02C1C00BB;
-        Thu, 11 Feb 2021 09:12:56 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 9738640172;
+        Thu, 11 Feb 2021 09:13:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613034776; bh=oNfEKarVynQpWQYDjVDdd5U8tWSCEBgnT+5HnoYP8SI=;
+        t=1613034784; bh=/npzSvZB4HZzjtUB6OV9ITNpRJsW973D7sOEIOFQQAM=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=QaJDEUBg95c3GeakkU5kpRVcII3+I4NQCEl7i9QXV3p7RzJXqMX/wHzXMHgcM1oHd
-         8fpwFMbeosx9Z9DmR0RFaZXb1BJsocsufTMNE3u8bjcVB2UsNzd+FKNWp/xsMAoEP5
-         TYwYjpaeoxdJ5DfcW43blWIryS95TIWx6W4lYhuXJYbXqidMi0Nf154C7Av0lJuAev
-         gQGjQVGU+QXQyzSz3mCrlZJk5+8X3/l1BK9l+ZF6ZgMGsahKYyI6VB0VblSH3gLPOZ
-         QW08Rig0oQmK62YzHkPON+y7PQose0gQ6YAQRYX2YBGxK91I8YxRVi2zzjDOVcjeHx
-         q/B60/EbMCfWw==
+        b=KZFSix9+L/hjRmNILFlYQWip2L1DnwKhyjwzYouFpXa6BXejMnhjkLQtknpyuX7dX
+         ohr6puu8+jZmOdl/Bdg33o0E2vSL9pKOPDxfHPR37UINUGMYDzU5GVTwXJ3o56bX0C
+         hwZpKv47i7bVLyDs8riyFKgYc8SP6HmhHVYEN6BUyw8uBDPqg86s50DTxqxaw+7zOH
+         ItDDyyAkWj6w5L1dbITp89TyzaWhMV5SY2JpthPhsXbdDSqsZT0kBZfVPLH7ojfEJK
+         Fu+AqQIFT9ikVVTyHqpiVY1oNigrMIFTbXfUJA6w+DjAumCQplUOhJIiX0yhStIrwz
+         x94/plvk9mFtA==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 7FA84A0061;
-        Thu, 11 Feb 2021 09:12:55 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 6E0AAA005D;
+        Thu, 11 Feb 2021 09:13:03 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v5 02/15] dmaengine: dw-edma: Fix comments offset characters' alignment
-Date:   Thu, 11 Feb 2021 10:12:35 +0100
-Message-Id: <5c0b1ae6eee48c0b72dc807610eb0bc73b13a587.1613034728.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 09/15] dmaengine: dw-edma: Improve the linked list and data blocks definition
+Date:   Thu, 11 Feb 2021 10:12:42 +0100
+Message-Id: <52812d20d0624b36b92785517b2b61ae9b6cc1ed.1613034728.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613034728.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613034728.git.gustavo.pimentel@synopsys.com>
@@ -56,302 +56,404 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix comments offset characters' alignment to follow the same structure
-of similar comments.
+In the previous implementation the driver assumes that only existed 2
+memory spaces that would be equal distributed amount the write/read
+channels.
+
+This might not be the case on some other implementations, therefore this
+patches changes this requirement so that each write/read channel has
+their own linked list and data space well defined, which allows
+different sizes and locations.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-v0-regs.h | 214 +++++++++++++++++-----------------
- 1 file changed, 107 insertions(+), 107 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c |  51 +++++-----
+ drivers/dma/dw-edma/dw-edma-core.h |   9 +-
+ drivers/dma/dw-edma/dw-edma-pcie.c | 185 ++++++++++++++++++++++++++-----------
+ 3 files changed, 160 insertions(+), 85 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-regs.h b/drivers/dma/dw-edma/dw-edma-v0-regs.h
-index d07151d..e175f7b 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-regs.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-regs.h
-@@ -25,177 +25,177 @@
- #define EDMA_V0_CH_EVEN_MSI_DATA_MASK			GENMASK(15, 0)
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 5495cf7..48887b5 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -81,8 +81,13 @@ static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
+ 	 *  - Even chunks originate CB equal to 1
+ 	 */
+ 	chunk->cb = !(desc->chunks_alloc % 2);
+-	chunk->ll_region.paddr = dw->ll_region.paddr + chan->ll_off;
+-	chunk->ll_region.vaddr = dw->ll_region.vaddr + chan->ll_off;
++	if (chan->dir == EDMA_DIR_WRITE) {
++		chunk->ll_region.paddr = dw->ll_region_wr[chan->id].paddr;
++		chunk->ll_region.vaddr = dw->ll_region_wr[chan->id].vaddr;
++	} else {
++		chunk->ll_region.paddr = dw->ll_region_rd[chan->id].paddr;
++		chunk->ll_region.vaddr = dw->ll_region_rd[chan->id].vaddr;
++	}
  
- struct dw_edma_v0_ch_regs {
--	u32 ch_control1;				/* 0x000 */
--	u32 ch_control2;				/* 0x004 */
--	u32 transfer_size;				/* 0x008 */
-+	u32 ch_control1;				/* 0x0000 */
-+	u32 ch_control2;				/* 0x0004 */
-+	u32 transfer_size;				/* 0x0008 */
- 	union {
--		u64 reg;				/* 0x00c..0x010 */
-+		u64 reg;				/* 0x000c..0x0010 */
- 		struct {
--			u32 lsb;			/* 0x00c */
--			u32 msb;			/* 0x010 */
-+			u32 lsb;			/* 0x000c */
-+			u32 msb;			/* 0x0010 */
- 		};
- 	} sar;
- 	union {
--		u64 reg;				/* 0x014..0x018 */
-+		u64 reg;				/* 0x0014..0x0018 */
- 		struct {
--			u32 lsb;			/* 0x014 */
--			u32 msb;			/* 0x018 */
-+			u32 lsb;			/* 0x0014 */
-+			u32 msb;			/* 0x0018 */
- 		};
- 	} dar;
- 	union {
--		u64 reg;				/* 0x01c..0x020 */
-+		u64 reg;				/* 0x001c..0x0020 */
- 		struct {
--			u32 lsb;			/* 0x01c */
--			u32 msb;			/* 0x020 */
-+			u32 lsb;			/* 0x001c */
-+			u32 msb;			/* 0x0020 */
- 		};
- 	} llp;
- } __packed;
+ 	if (desc->chunk) {
+ 		/* Create and add new element into the linked list */
+@@ -691,24 +696,13 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 	struct device *dev = chip->dev;
+ 	struct dw_edma *dw = chip->dw;
+ 	struct dw_edma_chan *chan;
+-	size_t ll_chunk, dt_chunk;
+ 	struct dw_edma_irq *irq;
+ 	struct dma_device *dma;
+-	u32 i, j, cnt, ch_cnt;
+ 	u32 alloc, off_alloc;
++	u32 i, j, cnt;
+ 	int err = 0;
+ 	u32 pos;
  
- struct dw_edma_v0_ch {
--	struct dw_edma_v0_ch_regs wr;			/* 0x200 */
--	u32 padding_1[55];				/* [0x224..0x2fc] */
--	struct dw_edma_v0_ch_regs rd;			/* 0x300 */
--	u32 padding_2[55];				/* [0x324..0x3fc] */
-+	struct dw_edma_v0_ch_regs wr;			/* 0x0200 */
-+	u32 padding_1[55];				/* 0x0224..0x02fc */
-+	struct dw_edma_v0_ch_regs rd;			/* 0x0300 */
-+	u32 padding_2[55];				/* 0x0324..0x03fc */
- } __packed;
+-	ch_cnt = dw->wr_ch_cnt + dw->rd_ch_cnt;
+-	ll_chunk = dw->ll_region.sz;
+-	dt_chunk = dw->dt_region.sz;
+-
+-	/* Calculate linked list chunk for each channel */
+-	ll_chunk /= roundup_pow_of_two(ch_cnt);
+-
+-	/* Calculate linked list chunk for each channel */
+-	dt_chunk /= roundup_pow_of_two(ch_cnt);
+-
+ 	if (write) {
+ 		i = 0;
+ 		cnt = dw->wr_ch_cnt;
+@@ -740,14 +734,14 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 		chan->request = EDMA_REQ_NONE;
+ 		chan->status = EDMA_ST_IDLE;
  
- struct dw_edma_v0_unroll {
--	u32 padding_1;					/* 0x0f8 */
--	u32 wr_engine_chgroup;				/* 0x100 */
--	u32 rd_engine_chgroup;				/* 0x104 */
-+	u32 padding_1;					/* 0x00f8 */
-+	u32 wr_engine_chgroup;				/* 0x0100 */
-+	u32 rd_engine_chgroup;				/* 0x0104 */
- 	union {
--		u64 reg;				/* 0x108..0x10c */
-+		u64 reg;				/* 0x0108..0x010c */
- 		struct {
--			u32 lsb;			/* 0x108 */
--			u32 msb;			/* 0x10c */
-+			u32 lsb;			/* 0x0108 */
-+			u32 msb;			/* 0x010c */
- 		};
- 	} wr_engine_hshake_cnt;
--	u32 padding_2[2];				/* [0x110..0x114] */
-+	u32 padding_2[2];				/* 0x0110..0x0114 */
- 	union {
--		u64 reg;				/* 0x120..0x124 */
-+		u64 reg;				/* 0x0120..0x0124 */
- 		struct {
--			u32 lsb;			/* 0x120 */
--			u32 msb;			/* 0x124 */
-+			u32 lsb;			/* 0x0120 */
-+			u32 msb;			/* 0x0124 */
- 		};
- 	} rd_engine_hshake_cnt;
--	u32 padding_3[2];				/* [0x120..0x124] */
--	u32 wr_ch0_pwr_en;				/* 0x128 */
--	u32 wr_ch1_pwr_en;				/* 0x12c */
--	u32 wr_ch2_pwr_en;				/* 0x130 */
--	u32 wr_ch3_pwr_en;				/* 0x134 */
--	u32 wr_ch4_pwr_en;				/* 0x138 */
--	u32 wr_ch5_pwr_en;				/* 0x13c */
--	u32 wr_ch6_pwr_en;				/* 0x140 */
--	u32 wr_ch7_pwr_en;				/* 0x144 */
--	u32 padding_4[8];				/* [0x148..0x164] */
--	u32 rd_ch0_pwr_en;				/* 0x168 */
--	u32 rd_ch1_pwr_en;				/* 0x16c */
--	u32 rd_ch2_pwr_en;				/* 0x170 */
--	u32 rd_ch3_pwr_en;				/* 0x174 */
--	u32 rd_ch4_pwr_en;				/* 0x178 */
--	u32 rd_ch5_pwr_en;				/* 0x18c */
--	u32 rd_ch6_pwr_en;				/* 0x180 */
--	u32 rd_ch7_pwr_en;				/* 0x184 */
--	u32 padding_5[30];				/* [0x188..0x1fc] */
--	struct dw_edma_v0_ch ch[EDMA_V0_MAX_NR_CH];	/* [0x200..0x1120] */
-+	u32 padding_3[2];				/* 0x0120..0x0124 */
-+	u32 wr_ch0_pwr_en;				/* 0x0128 */
-+	u32 wr_ch1_pwr_en;				/* 0x012c */
-+	u32 wr_ch2_pwr_en;				/* 0x0130 */
-+	u32 wr_ch3_pwr_en;				/* 0x0134 */
-+	u32 wr_ch4_pwr_en;				/* 0x0138 */
-+	u32 wr_ch5_pwr_en;				/* 0x013c */
-+	u32 wr_ch6_pwr_en;				/* 0x0140 */
-+	u32 wr_ch7_pwr_en;				/* 0x0144 */
-+	u32 padding_4[8];				/* 0x0148..0x0164 */
-+	u32 rd_ch0_pwr_en;				/* 0x0168 */
-+	u32 rd_ch1_pwr_en;				/* 0x016c */
-+	u32 rd_ch2_pwr_en;				/* 0x0170 */
-+	u32 rd_ch3_pwr_en;				/* 0x0174 */
-+	u32 rd_ch4_pwr_en;				/* 0x0178 */
-+	u32 rd_ch5_pwr_en;				/* 0x018c */
-+	u32 rd_ch6_pwr_en;				/* 0x0180 */
-+	u32 rd_ch7_pwr_en;				/* 0x0184 */
-+	u32 padding_5[30];				/* 0x0188..0x01fc */
-+	struct dw_edma_v0_ch ch[EDMA_V0_MAX_NR_CH];	/* 0x0200..0x1120 */
- } __packed;
+-		chan->ll_off = (ll_chunk * i);
+-		chan->ll_max = (ll_chunk / EDMA_LL_SZ) - 1;
+-
+-		chan->dt_off = (dt_chunk * i);
++		if (write)
++			chan->ll_max = (dw->ll_region_wr[j].sz / EDMA_LL_SZ);
++		else
++			chan->ll_max = (dw->ll_region_rd[j].sz / EDMA_LL_SZ);
++		chan->ll_max -= 1;
  
- struct dw_edma_v0_legacy {
--	u32 viewport_sel;				/* 0x0f8 */
--	struct dw_edma_v0_ch_regs ch;			/* [0x100..0x120] */
-+	u32 viewport_sel;				/* 0x00f8 */
-+	struct dw_edma_v0_ch_regs ch;			/* 0x0100..0x0120 */
- } __packed;
+-		dev_vdbg(dev, "L. List:\tChannel %s[%u] off=0x%.8lx, max_cnt=%u\n",
+-			 write ? "write" : "read", j,
+-			 chan->ll_off, chan->ll_max);
++		dev_vdbg(dev, "L. List:\tChannel %s[%u] max_cnt=%u\n",
++			 write ? "write" : "read", j, chan->ll_max);
  
- struct dw_edma_v0_regs {
- 	/* eDMA global registers */
--	u32 ctrl_data_arb_prior;			/* 0x000 */
--	u32 padding_1;					/* 0x004 */
--	u32 ctrl;					/* 0x008 */
--	u32 wr_engine_en;				/* 0x00c */
--	u32 wr_doorbell;				/* 0x010 */
--	u32 padding_2;					/* 0x014 */
-+	u32 ctrl_data_arb_prior;			/* 0x0000 */
-+	u32 padding_1;					/* 0x0004 */
-+	u32 ctrl;					/* 0x0008 */
-+	u32 wr_engine_en;				/* 0x000c */
-+	u32 wr_doorbell;				/* 0x0010 */
-+	u32 padding_2;					/* 0x0014 */
- 	union {
--		u64 reg;				/* 0x018..0x01c */
-+		u64 reg;				/* 0x0018..0x001c */
- 		struct {
--			u32 lsb;			/* 0x018 */
--			u32 msb;			/* 0x01c */
-+			u32 lsb;			/* 0x0018 */
-+			u32 msb;			/* 0x001c */
- 		};
- 	} wr_ch_arb_weight;
--	u32 padding_3[3];				/* [0x020..0x028] */
--	u32 rd_engine_en;				/* 0x02c */
--	u32 rd_doorbell;				/* 0x030 */
--	u32 padding_4;					/* 0x034 */
-+	u32 padding_3[3];				/* 0x0020..0x0028 */
-+	u32 rd_engine_en;				/* 0x002c */
-+	u32 rd_doorbell;				/* 0x0030 */
-+	u32 padding_4;					/* 0x0034 */
- 	union {
--		u64 reg;				/* 0x038..0x03c */
-+		u64 reg;				/* 0x0038..0x003c */
- 		struct {
--			u32 lsb;			/* 0x038 */
--			u32 msb;			/* 0x03c */
-+			u32 lsb;			/* 0x0038 */
-+			u32 msb;			/* 0x003c */
- 		};
- 	} rd_ch_arb_weight;
--	u32 padding_5[3];				/* [0x040..0x048] */
-+	u32 padding_5[3];				/* 0x0040..0x0048 */
- 	/* eDMA interrupts registers */
--	u32 wr_int_status;				/* 0x04c */
--	u32 padding_6;					/* 0x050 */
--	u32 wr_int_mask;				/* 0x054 */
--	u32 wr_int_clear;				/* 0x058 */
--	u32 wr_err_status;				/* 0x05c */
-+	u32 wr_int_status;				/* 0x004c */
-+	u32 padding_6;					/* 0x0050 */
-+	u32 wr_int_mask;				/* 0x0054 */
-+	u32 wr_int_clear;				/* 0x0058 */
-+	u32 wr_err_status;				/* 0x005c */
- 	union {
--		u64 reg;				/* 0x060..0x064 */
-+		u64 reg;				/* 0x0060..0x0064 */
- 		struct {
--			u32 lsb;			/* 0x060 */
--			u32 msb;			/* 0x064 */
-+			u32 lsb;			/* 0x0060 */
-+			u32 msb;			/* 0x0064 */
- 		};
- 	} wr_done_imwr;
- 	union {
--		u64 reg;				/* 0x068..0x06c */
-+		u64 reg;				/* 0x0068..0x006c */
- 		struct {
--			u32 lsb;			/* 0x068 */
--			u32 msb;			/* 0x06c */
-+			u32 lsb;			/* 0x0068 */
-+			u32 msb;			/* 0x006c */
- 		};
- 	} wr_abort_imwr;
--	u32 wr_ch01_imwr_data;				/* 0x070 */
--	u32 wr_ch23_imwr_data;				/* 0x074 */
--	u32 wr_ch45_imwr_data;				/* 0x078 */
--	u32 wr_ch67_imwr_data;				/* 0x07c */
--	u32 padding_7[4];				/* [0x080..0x08c] */
--	u32 wr_linked_list_err_en;			/* 0x090 */
--	u32 padding_8[3];				/* [0x094..0x09c] */
--	u32 rd_int_status;				/* 0x0a0 */
--	u32 padding_9;					/* 0x0a4 */
--	u32 rd_int_mask;				/* 0x0a8 */
--	u32 rd_int_clear;				/* 0x0ac */
--	u32 padding_10;					/* 0x0b0 */
-+	u32 wr_ch01_imwr_data;				/* 0x0070 */
-+	u32 wr_ch23_imwr_data;				/* 0x0074 */
-+	u32 wr_ch45_imwr_data;				/* 0x0078 */
-+	u32 wr_ch67_imwr_data;				/* 0x007c */
-+	u32 padding_7[4];				/* 0x0080..0x008c */
-+	u32 wr_linked_list_err_en;			/* 0x0090 */
-+	u32 padding_8[3];				/* 0x0094..0x009c */
-+	u32 rd_int_status;				/* 0x00a0 */
-+	u32 padding_9;					/* 0x00a4 */
-+	u32 rd_int_mask;				/* 0x00a8 */
-+	u32 rd_int_clear;				/* 0x00ac */
-+	u32 padding_10;					/* 0x00b0 */
- 	union {
--		u64 reg;				/* 0x0b4..0x0b8 */
-+		u64 reg;				/* 0x00b4..0x00b8 */
- 		struct {
--			u32 lsb;			/* 0x0b4 */
--			u32 msb;			/* 0x0b8 */
-+			u32 lsb;			/* 0x00b4 */
-+			u32 msb;			/* 0x00b8 */
- 		};
- 	} rd_err_status;
--	u32 padding_11[2];				/* [0x0bc..0x0c0] */
--	u32 rd_linked_list_err_en;			/* 0x0c4 */
--	u32 padding_12;					/* 0x0c8 */
-+	u32 padding_11[2];				/* 0x00bc..0x00c0 */
-+	u32 rd_linked_list_err_en;			/* 0x00c4 */
-+	u32 padding_12;					/* 0x00c8 */
- 	union {
--		u64 reg;				/* 0x0cc..0x0d0 */
-+		u64 reg;				/* 0x00cc..0x00d0 */
- 		struct {
--			u32 lsb;			/* 0x0cc */
--			u32 msb;			/* 0x0d0 */
-+			u32 lsb;			/* 0x00cc */
-+			u32 msb;			/* 0x00d0 */
- 		};
- 	} rd_done_imwr;
- 	union {
--		u64 reg;				/* 0x0d4..0x0d8 */
-+		u64 reg;				/* 0x00d4..0x00d8 */
- 		struct {
--			u32 lsb;			/* 0x0d4 */
--			u32 msb;			/* 0x0d8 */
-+			u32 lsb;			/* 0x00d4 */
-+			u32 msb;			/* 0x00d8 */
- 		};
- 	} rd_abort_imwr;
--	u32 rd_ch01_imwr_data;				/* 0x0dc */
--	u32 rd_ch23_imwr_data;				/* 0x0e0 */
--	u32 rd_ch45_imwr_data;				/* 0x0e4 */
--	u32 rd_ch67_imwr_data;				/* 0x0e8 */
--	u32 padding_13[4];				/* [0x0ec..0x0f8] */
-+	u32 rd_ch01_imwr_data;				/* 0x00dc */
-+	u32 rd_ch23_imwr_data;				/* 0x00e0 */
-+	u32 rd_ch45_imwr_data;				/* 0x00e4 */
-+	u32 rd_ch67_imwr_data;				/* 0x00e8 */
-+	u32 padding_13[4];				/* 0x00ec..0x00f8 */
- 	/* eDMA channel context grouping */
- 	union dw_edma_v0_type {
--		struct dw_edma_v0_legacy legacy;	/* [0x0f8..0x120] */
--		struct dw_edma_v0_unroll unroll;	/* [0x0f8..0x1120] */
-+		struct dw_edma_v0_legacy legacy;	/* 0x00f8..0x0120 */
-+		struct dw_edma_v0_unroll unroll;	/* 0x00f8..0x1120 */
- 	} type;
- } __packed;
+ 		if (dw->nr_irqs == 1)
+ 			pos = 0;
+@@ -772,12 +766,15 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 		chan->vc.desc_free = vchan_free_desc;
+ 		vchan_init(&chan->vc, dma);
+ 
+-		dt_region->paddr = dw->dt_region.paddr + chan->dt_off;
+-		dt_region->vaddr = dw->dt_region.vaddr + chan->dt_off;
+-		dt_region->sz = dt_chunk;
+-
+-		dev_vdbg(dev, "Data:\tChannel %s[%u] off=0x%.8lx\n",
+-			 write ? "write" : "read", j, chan->dt_off);
++		if (write) {
++			dt_region->paddr = dw->dt_region_wr[j].paddr;
++			dt_region->vaddr = dw->dt_region_wr[j].vaddr;
++			dt_region->sz = dw->dt_region_wr[j].sz;
++		} else {
++			dt_region->paddr = dw->dt_region_rd[j].paddr;
++			dt_region->vaddr = dw->dt_region_rd[j].vaddr;
++			dt_region->sz = dw->dt_region_rd[j].sz;
++		}
+ 
+ 		dw_edma_v0_core_device_config(chan);
+ 	}
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index 650b1c7..cba5436 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -91,11 +91,8 @@ struct dw_edma_chan {
+ 	int				id;
+ 	enum dw_edma_dir		dir;
+ 
+-	off_t				ll_off;
+ 	u32				ll_max;
+ 
+-	off_t				dt_off;
+-
+ 	struct msi_msg			msi;
+ 
+ 	enum dw_edma_request		request;
+@@ -126,8 +123,10 @@ struct dw_edma {
+ 	u16				rd_ch_cnt;
+ 
+ 	struct dw_edma_region		rg_region;	/* Registers */
+-	struct dw_edma_region		ll_region;	/* Linked list */
+-	struct dw_edma_region		dt_region;	/* Data */
++	struct dw_edma_region		ll_region_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_region		ll_region_rd[EDMA_MAX_RD_CH];
++	struct dw_edma_region		dt_region_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_region		dt_region_rd[EDMA_MAX_RD_CH];
+ 
+ 	struct dw_edma_irq		*irq;
+ 	int				nr_irqs;
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index 9e79eb5..a0fa809 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -23,19 +23,28 @@
+ #define DW_PCIE_VSEC_DMA_WR_CH			GENMASK(9, 0)
+ #define DW_PCIE_VSEC_DMA_RD_CH			GENMASK(25, 16)
+ 
++#define DW_BLOCK(a, b, c) \
++	{ \
++		.bar = a, \
++		.off = b, \
++		.sz = c, \
++	},
++
++struct dw_edma_block {
++	enum pci_barno			bar;
++	off_t				off;
++	size_t				sz;
++};
++
+ struct dw_edma_pcie_data {
+ 	/* eDMA registers location */
+-	enum pci_barno			rg_bar;
+-	off_t				rg_off;
+-	size_t				rg_sz;
++	struct dw_edma_block		rg;
+ 	/* eDMA memory linked list location */
+-	enum pci_barno			ll_bar;
+-	off_t				ll_off;
+-	size_t				ll_sz;
++	struct dw_edma_block		ll_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_block		ll_rd[EDMA_MAX_RD_CH];
+ 	/* eDMA memory data location */
+-	enum pci_barno			dt_bar;
+-	off_t				dt_off;
+-	size_t				dt_sz;
++	struct dw_edma_block		dt_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_block		dt_rd[EDMA_MAX_RD_CH];
+ 	/* Other */
+ 	enum dw_edma_map_format		mf;
+ 	u8				irqs;
+@@ -45,22 +54,40 @@ struct dw_edma_pcie_data {
+ 
+ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	/* eDMA registers location */
+-	.rg_bar				= BAR_0,
+-	.rg_off				= 0x00001000,	/*  4 Kbytes */
+-	.rg_sz				= 0x00002000,	/*  8 Kbytes */
++	.rg.bar				= BAR_0,
++	.rg.off				= 0x00001000,	/*  4 Kbytes */
++	.rg.sz				= 0x00002000,	/*  8 Kbytes */
+ 	/* eDMA memory linked list location */
+-	.ll_bar				= BAR_2,
+-	.ll_off				= 0x00000000,	/*  0 Kbytes */
+-	.ll_sz				= 0x00800000,	/*  8 Mbytes */
++	.ll_wr = {
++		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Mbytes */
++		DW_BLOCK(BAR_2, 0x00000000, 0x00200000)
++		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Mbytes */
++		DW_BLOCK(BAR_2, 0x00200000, 0x00200000)
++	},
++	.ll_rd = {
++		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Mbytes */
++		DW_BLOCK(BAR_2, 0x00400000, 0x00200000)
++		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Mbytes */
++		DW_BLOCK(BAR_2, 0x00600000, 0x00200000)
++	},
+ 	/* eDMA memory data location */
+-	.dt_bar				= BAR_2,
+-	.dt_off				= 0x00800000,	/*  8 Mbytes */
+-	.dt_sz				= 0x03800000,	/* 56 Mbytes */
++	.dt_wr = {
++		/* Channel 0 - BAR 2, offset 8 Mbytes, size 14 Mbytes */
++		DW_BLOCK(BAR_2, 0x00800000, 0x00e00000)
++		/* Channel 1 - BAR 2, offset 22 Mbytes, size 14 Mbytes */
++		DW_BLOCK(BAR_2, 0x01600000, 0x00e00000)
++	},
++	.dt_rd = {
++		/* Channel 0 - BAR 2, offset 36 Mbytes, size 14 Mbytes */
++		DW_BLOCK(BAR_2, 0x02400000, 0x00e00000)
++		/* Channel 1 - BAR 2, offset 50 Mbytes, size 14 Mbytes */
++		DW_BLOCK(BAR_2, 0x03200000, 0x00e00000)
++	},
+ 	/* Other */
+ 	.mf				= EDMA_MF_EDMA_UNROLL,
+ 	.irqs				= 1,
+-	.wr_ch_cnt			= 0,
+-	.rd_ch_cnt			= 0,
++	.wr_ch_cnt			= 2,
++	.rd_ch_cnt			= 2,
+ };
+ 
+ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
+@@ -96,18 +123,20 @@ static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
+ 		return;
+ 
+ 	pdata->mf = map;
+-	pdata->rg_bar = FIELD_GET(DW_PCIE_VSEC_DMA_BAR, val);
++	pdata->rg.bar = FIELD_GET(DW_PCIE_VSEC_DMA_BAR, val);
+ 
+ 	pci_read_config_dword(pdev, vsec + 0xc, &val);
+-	pdata->wr_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_WR_CH, val);
+-	pdata->rd_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val);
++	pdata->wr_ch_cnt = min_t(u16, pdata->wr_ch_cnt,
++				 FIELD_GET(DW_PCIE_VSEC_DMA_WR_CH, val));
++	pdata->rd_ch_cnt = min_t(u16, pdata->rd_ch_cnt,
++				 FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val));
+ 
+ 	pci_read_config_dword(pdev, vsec + 0x14, &val);
+ 	off = val;
+ 	pci_read_config_dword(pdev, vsec + 0x10, &val);
+ 	off <<= 32;
+ 	off |= val;
+-	pdata->rg_off = off;
++	pdata->rg.off = off;
+ }
+ 
+ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+@@ -119,6 +148,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	struct dw_edma_chip *chip;
+ 	struct dw_edma *dw;
+ 	int err, nr_irqs;
++	int i, mask;
+ 
+ 	/* Enable PCI device */
+ 	err = pcim_enable_device(pdev);
+@@ -136,10 +166,16 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	dw_edma_pcie_get_vsec_dma_data(pdev, &vsec_data);
+ 
+ 	/* Mapping PCI BAR regions */
+-	err = pcim_iomap_regions(pdev, BIT(vsec_data.rg_bar) |
+-				       BIT(vsec_data.ll_bar) |
+-				       BIT(vsec_data.dt_bar),
+-				 pci_name(pdev));
++	mask = BIT(vsec_data.rg.bar);
++	for (i = 0; i < vsec_data.wr_ch_cnt; i++) {
++		mask |= BIT(vsec_data.ll_wr[i].bar);
++		mask |= BIT(vsec_data.dt_wr[i].bar);
++	}
++	for (i = 0; i < vsec_data.rd_ch_cnt; i++) {
++		mask |= BIT(vsec_data.ll_rd[i].bar);
++		mask |= BIT(vsec_data.dt_rd[i].bar);
++	}
++	err = pcim_iomap_regions(pdev, mask, pci_name(pdev));
+ 	if (err) {
+ 		pci_err(pdev, "eDMA BAR I/O remapping failed\n");
+ 		return err;
+@@ -195,30 +231,56 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	chip->id = pdev->devfn;
+ 	chip->irq = pdev->irq;
+ 
+-	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg_bar];
+-	dw->rg_region.vaddr += vsec_data.rg_off;
+-	dw->rg_region.paddr = pdev->resource[vsec_data.rg_bar].start;
+-	dw->rg_region.paddr += vsec_data.rg_off;
+-	dw->rg_region.sz = vsec_data.rg_sz;
+-
+-	dw->ll_region.vaddr = pcim_iomap_table(pdev)[vsec_data.ll_bar];
+-	dw->ll_region.vaddr += vsec_data.ll_off;
+-	dw->ll_region.paddr = pdev->resource[vsec_data.ll_bar].start;
+-	dw->ll_region.paddr += vsec_data.ll_off;
+-	dw->ll_region.sz = vsec_data.ll_sz;
+-
+-	dw->dt_region.vaddr = pcim_iomap_table(pdev)[vsec_data.dt_bar];
+-	dw->dt_region.vaddr += vsec_data.dt_off;
+-	dw->dt_region.paddr = pdev->resource[vsec_data.dt_bar].start;
+-	dw->dt_region.paddr += vsec_data.dt_off;
+-	dw->dt_region.sz = vsec_data.dt_sz;
+-
+ 	dw->mf = vsec_data.mf;
+ 	dw->nr_irqs = nr_irqs;
+ 	dw->ops = &dw_edma_pcie_core_ops;
+ 	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
+ 	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
+ 
++	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
++	dw->rg_region.vaddr += vsec_data.rg.off;
++	dw->rg_region.paddr = pdev->resource[vsec_data.rg.bar].start;
++	dw->rg_region.paddr += vsec_data.rg.off;
++	dw->rg_region.sz = vsec_data.rg.sz;
++
++	for (i = 0; i < dw->wr_ch_cnt; i++) {
++		struct dw_edma_region *ll_region = &dw->ll_region_wr[i];
++		struct dw_edma_region *dt_region = &dw->dt_region_wr[i];
++		struct dw_edma_block *ll_block = &vsec_data.ll_wr[i];
++		struct dw_edma_block *dt_block = &vsec_data.dt_wr[i];
++
++		ll_region->vaddr = pcim_iomap_table(pdev)[ll_block->bar];
++		ll_region->vaddr += ll_block->off;
++		ll_region->paddr = pdev->resource[ll_block->bar].start;
++		ll_region->paddr += ll_block->off;
++		ll_region->sz = ll_block->sz;
++
++		dt_region->vaddr = pcim_iomap_table(pdev)[dt_block->bar];
++		dt_region->vaddr += dt_block->off;
++		dt_region->paddr = pdev->resource[dt_block->bar].start;
++		dt_region->paddr += dt_block->off;
++		dt_region->sz = dt_block->sz;
++	}
++
++	for (i = 0; i < dw->rd_ch_cnt; i++) {
++		struct dw_edma_region *ll_region = &dw->ll_region_rd[i];
++		struct dw_edma_region *dt_region = &dw->dt_region_rd[i];
++		struct dw_edma_block *ll_block = &vsec_data.ll_rd[i];
++		struct dw_edma_block *dt_block = &vsec_data.dt_rd[i];
++
++		ll_region->vaddr = pcim_iomap_table(pdev)[ll_block->bar];
++		ll_region->vaddr += ll_block->off;
++		ll_region->paddr = pdev->resource[ll_block->bar].start;
++		ll_region->paddr += ll_block->off;
++		ll_region->sz = ll_block->sz;
++
++		dt_region->vaddr = pcim_iomap_table(pdev)[dt_block->bar];
++		dt_region->vaddr += dt_block->off;
++		dt_region->paddr = pdev->resource[dt_block->bar].start;
++		dt_region->paddr += dt_block->off;
++		dt_region->sz = dt_block->sz;
++	}
++
+ 	/* Debug info */
+ 	if (dw->mf == EDMA_MF_EDMA_LEGACY)
+ 		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", dw->mf);
+@@ -230,16 +292,33 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
+ 
+ 	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		vsec_data.rg_bar, vsec_data.rg_off, vsec_data.rg_sz,
++		vsec_data.rg.bar, vsec_data.rg.off, vsec_data.rg.sz,
+ 		dw->rg_region.vaddr, &dw->rg_region.paddr);
+ 
+-	pci_dbg(pdev, "L. List:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		vsec_data.ll_bar, vsec_data.ll_off, vsec_data.ll_sz,
+-		dw->ll_region.vaddr, &dw->ll_region.paddr);
+ 
+-	pci_dbg(pdev, "Data:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+-		vsec_data.dt_bar, vsec_data.dt_off, vsec_data.dt_sz,
+-		dw->dt_region.vaddr, &dw->dt_region.paddr);
++	for (i = 0; i < dw->wr_ch_cnt; i++) {
++		pci_dbg(pdev, "L. List:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
++			i, vsec_data.ll_wr[i].bar,
++			vsec_data.ll_wr[i].off, dw->ll_region_wr[i].sz,
++			dw->ll_region_wr[i].vaddr, &dw->ll_region_wr[i].paddr);
++
++		pci_dbg(pdev, "Data:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
++			i, vsec_data.dt_wr[i].bar,
++			vsec_data.dt_wr[i].off, dw->dt_region_wr[i].sz,
++			dw->dt_region_wr[i].vaddr, &dw->dt_region_wr[i].paddr);
++	}
++
++	for (i = 0; i < dw->rd_ch_cnt; i++) {
++		pci_dbg(pdev, "L. List:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
++			i, vsec_data.ll_rd[i].bar,
++			vsec_data.ll_rd[i].off, dw->ll_region_rd[i].sz,
++			dw->ll_region_rd[i].vaddr, &dw->ll_region_rd[i].paddr);
++
++		pci_dbg(pdev, "Data:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
++			i, vsec_data.dt_rd[i].bar,
++			vsec_data.dt_rd[i].off, dw->dt_region_rd[i].sz,
++			dw->dt_region_rd[i].vaddr, &dw->dt_region_rd[i].paddr);
++	}
+ 
+ 	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
  
 -- 
 2.7.4
