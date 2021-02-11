@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D309FC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B72C433E6
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B660164E6F
+	by mail.kernel.org (Postfix) with ESMTP id 8D37964E77
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229965AbhBKJRO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 04:17:14 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56644 "EHLO
+        id S230182AbhBKJRJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 04:17:09 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56634 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230054AbhBKJKs (ORCPT
+        by vger.kernel.org with ESMTP id S230051AbhBKJKs (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 04:10:48 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 8EF98C00C5;
-        Thu, 11 Feb 2021 09:09:14 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 8598FC00C1;
+        Thu, 11 Feb 2021 09:09:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613034554; bh=im9YPeIOIOX6v4VKPr6LIGB+a/nLiNTjVu6zUPMNTcw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+        t=1613034552; bh=xjFl0ry1f4kLV7eWV2SxeXcHKekFmdWi7FGEn+fooAU=;
+        h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=HNw0YtZtjRjWYZ4k0IPCCoIVTYw81Nd+HXb4SdsYHkZwfs/IiA569sJZXp1uZAgft
-         1wdWCbLpRte5l109pvlqeZCDYCER87r/guTNqZk5NLFYOEUQN0yKoKaZsecdqqZlHB
-         3DQDEu4COjkAVPfHwitO+MVJssHSHRnOplaZH+oBRhF+2w0hxdmYSpG7QsKian8TZz
-         sjbWRgPEzZ9yVd3GM5zfsxpvtG+s8tG+f7nQDwREAtZbWI6q65BfL8I+0JbM7iPItx
-         99HuW3T1+BsYnrzq3Jf5cgQuz0c+/mwJS+CidetTmTIUjbfw3+zF782hpg2/eg9ozS
-         QY9NRZC6YGzrA==
+        b=c9oa8/JoSw7uSH9p6L4Ib+NqMZwFbIFN25ltKb0zXddqcxTf6q8lJC3R4UCZYzHx+
+         MMBjrnZtUEjuDl8OGGcPBU7BjTXN1EBRIymoLXpl0DJgss3OgP6AHIegvrV6Kn+Ymh
+         PziBW+HVMDa3YYBScHub/TVmVcnCbf9BOqlnCANwbs0ffJ/crMGLxLRF0y3MdEUbRc
+         5MScTwJHe7uC5hpWGNloqevPohQygy87OcGgAZPtwbgUh+oJ2cFMLK4aHDYTsC59A1
+         e5R5+emiwh8cNylEd+4KtNVBVR+XuYV/vYujqQxgGzvX+9m/hxMWWdWKVq9eUDIzoY
+         eTJVhvmctLqrQ==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 549A9A005C;
-        Thu, 11 Feb 2021 09:09:13 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 4AB11A005F;
+        Thu, 11 Feb 2021 09:09:11 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -47,11 +47,11 @@ To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
         Andrew Morton <akpm@linux-foundation.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Jonathan Corbet <corbet@lwn.net>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v5 6/6] docs: ABI: Add sysfs documentation interface of dw-xdata-pcie driver
-Date:   Thu, 11 Feb 2021 10:08:43 +0100
-Message-Id: <dce623f03f782fe536765916a9c3be36cee1dfe2.1613034397.git.gustavo.pimentel@synopsys.com>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v5 4/6] Documentation: misc-devices: Add Documentation for dw-xdata-pcie driver
+Date:   Thu, 11 Feb 2021 10:08:41 +0100
+Message-Id: <e069196ea112d06ef7f4fa98d89bc26f70195206.1613034397.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
@@ -61,67 +61,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch describes the sysfs interface implemented on the dw-xdata-pcie
-driver.
+Add Documentation for dw-xdata-pcie driver.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- Documentation/ABI/testing/sysfs-driver-xdata | 46 ++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-driver-xdata
+ Documentation/misc-devices/dw-xdata-pcie.rst | 40 ++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+ create mode 100644 Documentation/misc-devices/dw-xdata-pcie.rst
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-xdata b/Documentation/ABI/testing/sysfs-driver-xdata
+diff --git a/Documentation/misc-devices/dw-xdata-pcie.rst b/Documentation/misc-devices/dw-xdata-pcie.rst
 new file mode 100644
-index 00000000..a7bb44b
+index 00000000..3af9fad
 --- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-driver-xdata
-@@ -0,0 +1,46 @@
-+What:		/sys/kernel/dw-xdata-pcie/write
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to enable the PCIe traffic generator which
-+		will create write TLPs frames - from the Root Complex to the
-+		Endpoint direction.
-+		Usage e.g.
-+		 echo 1 > /sys/kernel/dw-xdata-pcie/write
++++ b/Documentation/misc-devices/dw-xdata-pcie.rst
+@@ -0,0 +1,40 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
-+		The user can read the current PCIe link throughput generated
-+		through this generator.
-+		Usage e.g.
-+		 cat /sys/kernel/dw-xdata-pcie/write
-+		 204 MB/s
++===========================================================================
++Driver for Synopsys DesignWare PCIe traffic generator (also known as xData)
++===========================================================================
 +
-+		The file is read and write.
++This driver should be used as a host-side (Root Complex) driver and Synopsys
++DesignWare prototype that includes this IP.
 +
-+What:		/sys/kernel/dw-xdata-pcie/read
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to enable the PCIe traffic generator which
-+		will create read TLPs frames - from the Endpoint to the Root
-+		Complex direction.
-+		Usage e.g.
-+		 echo 1 > /sys/kernel/dw-xdata-pcie/read
++The "dw-xdata-pcie" driver can be used to enable/disable PCIe traffic
++generator in either direction (mutual exclusion) besides allowing the
++PCIe link performance analysis.
 +
-+		The user can read the current PCIe link throughput generated
-+		through this generator.
-+		Usage e.g.
-+		 cat /sys/kernel/dw-xdata-pcie/read
-+		 199 MB/s
++The interaction with this driver is done through the module parameter and
++can be changed in runtime. The driver outputs the requested command state
++information to /var/log/kern.log or dmesg.
 +
-+		The file is read and write.
++Request write TLPs traffic generation - Root Complex to Endpoint direction
++- Command:
++	echo 1 > /sys/kernel/dw-xdata-pcie/write
 +
-+What:		/sys/kernel/dw-xdata-pcie/stop
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to disable the PCIe traffic generator in all
-+		directions.
-+		Usage e.g.
-+		 echo 1 > /sys/kernel/dw-xdata-pcie/stop
++Get write TLPs traffic link throughput
++- Command:
++        cat /sys/kernel/dw-xdata-pcie/write
++- Output example:
++	204 MB/s
 +
-+		The file is write only.
++Request read TLPs traffic generation - Endpoint to Root Complex direction:
++- Command:
++	echo 1 > /sys/kernel/dw-xdata-pcie/read
++
++Get read TLPs traffic link throughput
++- Command:
++        cat /sys/kernel/dw-xdata-pcie/read
++- Output example:
++	199 MB/s
++
++Request to stop any current TLP transfer:
++- Command:
++	echo 1 > /sys/kernel/dw-xdata-pcie/stop
 -- 
 2.7.4
 
