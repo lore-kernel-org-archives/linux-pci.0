@@ -2,333 +2,200 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66611C433E6
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 15:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02573C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 11:44:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B65B64E3B
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 15:55:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0BA964EC0
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 11:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbhBLPzT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Feb 2021 10:55:19 -0500
-Received: from mga12.intel.com ([192.55.52.136]:8025 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229512AbhBLPzS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Feb 2021 10:55:18 -0500
-IronPort-SDR: DdcDcPzVbCi0TLLzQdad/idpN0woYGb0azSPwdpyplH94DHluMJp2rRe6kYRBnfcK+gMkv9evl
- SQG5d+t+b76w==
-X-IronPort-AV: E=McAfee;i="6000,8403,9893"; a="161576520"
-X-IronPort-AV: E=Sophos;i="5.81,174,1610438400"; 
-   d="scan'208";a="161576520"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2021 07:54:38 -0800
-IronPort-SDR: ua5ODGCeCiIyd188xVcwJvXjmN0ucGTZtobnydEpeFsnW38CpSKttJz/zUEdqu62gGlHsWL+cn
- GNLoQHgHV0hA==
-X-IronPort-AV: E=Sophos;i="5.81,174,1610438400"; 
-   d="scan'208";a="381488777"
-Received: from smandal1-mobl2.amr.corp.intel.com (HELO intel.com) ([10.252.133.121])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2021 07:54:36 -0800
-Date:   Fri, 12 Feb 2021 07:54:35 -0800
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     linux-cxl@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        David Hildenbrand <david@redhat.com>,
-        David Rientjes <rientjes@google.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jon Masters <jcm@jonmasters.org>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "John Groves (jgroves)" <jgroves@micron.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>
-Subject: Re: [PATCH v2 2/8] cxl/mem: Find device capabilities
-Message-ID: <20210212155435.wwmsuqom4qyymdq6@intel.com>
-References: <20210210000259.635748-1-ben.widawsky@intel.com>
- <20210210000259.635748-3-ben.widawsky@intel.com>
- <20210210133252.000047af@Huawei.com>
- <20210210150759.00005684@Huawei.com>
- <20210210165557.7fuqbyr7e7zjoxaa@intel.com>
- <20210210181605.ecbl3m5ep4rszpqs@intel.com>
- <20210211095548.00000da7@Huawei.com>
- <20210211155529.agul56lcb33cta5s@intel.com>
- <20210212132706.00006edc@Huawei.com>
+        id S229906AbhBKLnt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 06:43:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60356 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231186AbhBKLks (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 06:40:48 -0500
+Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B23C061756
+        for <linux-pci@vger.kernel.org>; Thu, 11 Feb 2021 03:40:07 -0800 (PST)
+Received: by mail-wm1-x32b.google.com with SMTP id j11so5242315wmi.3
+        for <linux-pci@vger.kernel.org>; Thu, 11 Feb 2021 03:40:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=tohq/JdjtvfZAdF0OwFagBaJvOCASM9Lm+6u557MXjU=;
+        b=jZncg4+OXDdQ5q77dwIRHbggDnfB06LDmsbCk5upxPGhtffhotOMwIqK1O8T7B8hQt
+         9VA9VJSW61VKy0oqGxmTVL2/0OMvbIJa7tncMhXCtgcgVHcizN5iPYqNNKVSkBnESbXp
+         EP68F/9S+Ns61exdSbpanlq8Qj5LlUlGlMll+9ActU7xIAzQgDpj6prbBRYf9bqocqKT
+         o4Q7d/hwclN8w2gg5mptmvGnFU/GMkaxz81vym5PTZRJbbmq3uTRfWdCBnmvnrZDODgt
+         ogJ9MwhDKSSRjceWYLdSLQ3QEHERllMzCykpYjBu8JT9sFvcn71BJEdTNtvWwsGzNAvb
+         vGWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=tohq/JdjtvfZAdF0OwFagBaJvOCASM9Lm+6u557MXjU=;
+        b=KC9xbuesGGOtZJHRlfx7z83MfidZcSm46PFf7J7cFTo2jEHp1o2EC470SgBeYPQ6Lz
+         zmM+KG3Gv7AQ3rePHQbLsh/mXlP4xcNOoc42XLUOdytvY0ok/oP41AyllCSSNG7cSaWd
+         iBUF/MFwXmBqnUxQoGaZfjIu13dtp3lfzokrGokHqasAc7HajOI3KQ6FEDIvDefwEy+w
+         6IeaJR+kU57qQDK6OwTFInYC4LOA9oMYdlo9ePgzhBDGxzyhQKvXGbQflNZ/fjAQX4+Y
+         hXBv8hIdvRLIZQkCZxEk94dRTA2mruMBs/gZVJ6908HYzUXDau5V0MQuxodyyiZ6ckHw
+         DlPA==
+X-Gm-Message-State: AOAM530B/exrltoM/vicuzJeEcruJpwmGAM41WTjpWY8r1En6r/8soPs
+        S0W4FckxB5h4OPvNBqAPSkhdlo/aGDL52g==
+X-Google-Smtp-Source: ABdhPJySw7gjyxqROo/LUzY60SvdaPpgiUtbK6dsF70pGv8y8w8FQxZhsuGmKfqZThaAnWPyxrgGwA==
+X-Received: by 2002:a1c:2d48:: with SMTP id t69mr4611953wmt.124.1613043606127;
+        Thu, 11 Feb 2021 03:40:06 -0800 (PST)
+Received: from ?IPv6:2003:ea:8f1f:ad00:60ca:853:df03:450e? (p200300ea8f1fad0060ca0853df03450e.dip0.t-ipconnect.de. [2003:ea:8f1f:ad00:60ca:853:df03:450e])
+        by smtp.googlemail.com with ESMTPSA id n187sm9631299wmf.29.2021.02.11.03.40.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 Feb 2021 03:40:05 -0800 (PST)
+To:     Bjorn Helgaas <bhelgaas@google.com>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH] PCI/VPD: Remove pci_set_vpd_size
+Message-ID: <aa84f395-8c37-89d8-939f-496dfb630b90@gmail.com>
+Date:   Thu, 11 Feb 2021 12:39:56 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210212132706.00006edc@Huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21-02-12 13:27:06, Jonathan Cameron wrote:
-> On Thu, 11 Feb 2021 07:55:29 -0800
-> Ben Widawsky <ben.widawsky@intel.com> wrote:
-> 
-> > On 21-02-11 09:55:48, Jonathan Cameron wrote:
-> > > On Wed, 10 Feb 2021 10:16:05 -0800
-> > > Ben Widawsky <ben.widawsky@intel.com> wrote:
-> > >   
-> > > > On 21-02-10 08:55:57, Ben Widawsky wrote:  
-> > > > > On 21-02-10 15:07:59, Jonathan Cameron wrote:    
-> > > > > > On Wed, 10 Feb 2021 13:32:52 +0000
-> > > > > > Jonathan Cameron <Jonathan.Cameron@Huawei.com> wrote:
-> > > > > >     
-> > > > > > > On Tue, 9 Feb 2021 16:02:53 -0800
-> > > > > > > Ben Widawsky <ben.widawsky@intel.com> wrote:
-> > > > > > >     
-> > > > > > > > Provide enough functionality to utilize the mailbox of a memory device.
-> > > > > > > > The mailbox is used to interact with the firmware running on the memory
-> > > > > > > > device. The flow is proven with one implemented command, "identify".
-> > > > > > > > Because the class code has already told the driver this is a memory
-> > > > > > > > device and the identify command is mandatory.
-> > > > > > > > 
-> > > > > > > > CXL devices contain an array of capabilities that describe the
-> > > > > > > > interactions software can have with the device or firmware running on
-> > > > > > > > the device. A CXL compliant device must implement the device status and
-> > > > > > > > the mailbox capability. Additionally, a CXL compliant memory device must
-> > > > > > > > implement the memory device capability. Each of the capabilities can
-> > > > > > > > [will] provide an offset within the MMIO region for interacting with the
-> > > > > > > > CXL device.
-> > > > > > > > 
-> > > > > > > > The capabilities tell the driver how to find and map the register space
-> > > > > > > > for CXL Memory Devices. The registers are required to utilize the CXL
-> > > > > > > > spec defined mailbox interface. The spec outlines two mailboxes, primary
-> > > > > > > > and secondary. The secondary mailbox is earmarked for system firmware,
-> > > > > > > > and not handled in this driver.
-> > > > > > > > 
-> > > > > > > > Primary mailboxes are capable of generating an interrupt when submitting
-> > > > > > > > a background command. That implementation is saved for a later time.
-> > > > > > > > 
-> > > > > > > > Link: https://www.computeexpresslink.org/download-the-specification
-> > > > > > > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> > > > > > > > Reviewed-by: Dan Williams <dan.j.williams@intel.com>      
-> > > > > > > 
-> > > > > > > Hi Ben,
-> > > > > > > 
-> > > > > > >     
-> > > > > > > > +/**
-> > > > > > > > + * cxl_mem_mbox_send_cmd() - Send a mailbox command to a memory device.
-> > > > > > > > + * @cxlm: The CXL memory device to communicate with.
-> > > > > > > > + * @mbox_cmd: Command to send to the memory device.
-> > > > > > > > + *
-> > > > > > > > + * Context: Any context. Expects mbox_lock to be held.
-> > > > > > > > + * Return: -ETIMEDOUT if timeout occurred waiting for completion. 0 on success.
-> > > > > > > > + *         Caller should check the return code in @mbox_cmd to make sure it
-> > > > > > > > + *         succeeded.      
-> > > > > > > 
-> > > > > > > cxl_xfer_log() doesn't check mbox_cmd->return_code and for my test it currently
-> > > > > > > enters an infinite loop as a result.    
-> > > > > 
-> > > > > I meant to fix that.
-> > > > >     
-> > > > > > > 
-> > > > > > > I haven't checked other paths, but to my mind it is not a good idea to require
-> > > > > > > two levels of error checking - the example here proves how easy it is to forget
-> > > > > > > one.    
-> > > > > 
-> > > > > Demonstrably, you're correct. I think it would be good to have a kernel only
-> > > > > mbox command that does the error checking though. Let me type something up and
-> > > > > see how it looks.    
-> > > > 
-> > > > Hi Jonathan. What do you think of this? The bit I'm on the fence about is if I
-> > > > should validate output size too. I like the simplicity as it is, but it requires
-> > > > every caller to possibly check output size, which is kind of the same problem
-> > > > you're originally pointing out.  
-> > > 
-> > > The simplicity is good and this is pretty much what I expected you would end up with
-> > > (always reassuring)
-> > > 
-> > > For the output, perhaps just add another parameter to the wrapper for minimum
-> > > output length expected?
-> > > 
-> > > Now you mention the length question.  It does rather feel like there should also
-> > > be some protection on memcpy_fromio() copying too much data if the hardware
-> > > happens to return an unexpectedly long length.  Should never happen, but
-> > > the hardening is worth adding anyway given it's easy to do.
-> > > 
-> > > Jonathan  
-> > 
-> > Some background because I forget what I've said previously... It's unfortunate
-> > that the spec maxes at 1M mailbox size but has enough bits in the length field
-> > to support 2M-1. I've made some requests to have this fixed, so maybe 3.0 won't
-> > be awkward like this.
-> 
-> Agreed spec should be tighter here, but I'd argue over 1M indicates buggy hardware.
-> 
-> > 
-> > I think it makes sense to do as you suggested. One question though, do you have
-> > an opinion on we return to the caller as the output payload size, do we cap it
-> > at 1M also, or are we honest?
-> > 
-> > -       if (out_len && mbox_cmd->payload_out)
-> > -               memcpy_fromio(mbox_cmd->payload_out, payload, out_len);
-> > +       if (out_len && mbox_cmd->payload_out) {
-> > +               size_t n = min_t(size_t, cxlm->payload_size, out_len);
-> > +               memcpy_fromio(mbox_cmd->payload_out, payload, n);
-> > +       }
-> 
-> Ah, I read emails in wrong order.  What you have is what I expected and got
-> confused about in your other email.
-> 
-> > 
-> > So...
-> > mbox_cmd->size_out = out_len;
-> > mbox_cmd->size_out = n;
-> 
-> Good question.  My gut says the second one.
-> Maybe it's worth a warning print to let us know something
-> unexpected happened.
-> 
+24a1720a0841 ("cxgb4: collect serial config version from register")
+removed the only usage of pci_set_vpd_size(). If a device needs to
+override the auto-detected VPD size, then this can be done using a
+PCI quirk, like it's done for Chelsio devices. There's no need to
+allow drivers to change the VPD size. So let's remove
+pci_set_vpd_size().
 
-I also prefer 'n', It's unfortunate though if userspace hits this condition, it
-would have to scrape kernel logs to find out. Perhaps though userspace wouldn't
-ever really care.
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+- Referenced commit just landed in linux-next via the netdev tree.
+---
+ drivers/pci/vpd.c   | 47 +++++++--------------------------------------
+ include/linux/pci.h |  1 -
+ 2 files changed, 7 insertions(+), 41 deletions(-)
 
-> > 
-> > 
-> > > 
-> > >   
-> > > > 
-> > > > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> > > > index 55c5f5a6023f..ad7b2077ab28 100644
-> > > > --- a/drivers/cxl/mem.c
-> > > > +++ b/drivers/cxl/mem.c
-> > > > @@ -284,7 +284,7 @@ static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
-> > > >  }
-> > > >  
-> > > >  /**
-> > > > - * cxl_mem_mbox_send_cmd() - Send a mailbox command to a memory device.
-> > > > + * __cxl_mem_mbox_send_cmd() - Execute a mailbox command
-> > > >   * @cxlm: The CXL memory device to communicate with.
-> > > >   * @mbox_cmd: Command to send to the memory device.
-> > > >   *
-> > > > @@ -296,7 +296,8 @@ static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
-> > > >   * This is a generic form of the CXL mailbox send command, thus the only I/O
-> > > >   * operations used are cxl_read_mbox_reg(). Memory devices, and perhaps other
-> > > >   * types of CXL devices may have further information available upon error
-> > > > - * conditions.
-> > > > + * conditions. Driver facilities wishing to send mailbox commands should use the
-> > > > + * wrapper command.
-> > > >   *
-> > > >   * The CXL spec allows for up to two mailboxes. The intention is for the primary
-> > > >   * mailbox to be OS controlled and the secondary mailbox to be used by system
-> > > > @@ -304,8 +305,8 @@ static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
-> > > >   * not need to coordinate with each other. The driver only uses the primary
-> > > >   * mailbox.
-> > > >   */
-> > > > -static int cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
-> > > > -				 struct mbox_cmd *mbox_cmd)
-> > > > +static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
-> > > > +				   struct mbox_cmd *mbox_cmd)
-> > > >  {
-> > > >  	void __iomem *payload = cxlm->mbox_regs + CXLDEV_MBOX_PAYLOAD_OFFSET;
-> > > >  	u64 cmd_reg, status_reg;
-> > > > @@ -469,6 +470,54 @@ static void cxl_mem_mbox_put(struct cxl_mem *cxlm)
-> > > >  	mutex_unlock(&cxlm->mbox_mutex);
-> > > >  }
-> > > >  
-> > > > +/**
-> > > > + * cxl_mem_mbox_send_cmd() - Send a mailbox command to a memory device.
-> > > > + * @cxlm: The CXL memory device to communicate with.
-> > > > + * @opcode: Opcode for the mailbox command.
-> > > > + * @in: The input payload for the mailbox command.
-> > > > + * @in_size: The length of the input payload
-> > > > + * @out: Caller allocated buffer for the output.
-> > > > + *
-> > > > + * Context: Any context. Will acquire and release mbox_mutex.
-> > > > + * Return:
-> > > > + *  * %>=0	- Number of bytes returned in @out.
-> > > > + *  * %-EBUSY	- Couldn't acquire exclusive mailbox access.
-> > > > + *  * %-EFAULT	- Hardware error occurred.
-> > > > + *  * %-ENXIO	- Command completed, but device reported an error.
-> > > > + *
-> > > > + * Mailbox commands may execute successfully yet the device itself reported an
-> > > > + * error. While this distinction can be useful for commands from userspace, the
-> > > > + * kernel will often only care when both are successful.
-> > > > + *
-> > > > + * See __cxl_mem_mbox_send_cmd()
-> > > > + */
-> > > > +static int cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm, u16 opcode, u8 *in,
-> > > > +				 size_t in_size, u8 *out)
-> > > > +{
-> > > > +	struct mbox_cmd mbox_cmd = {
-> > > > +		.opcode = opcode,
-> > > > +		.payload_in = in,
-> > > > +		.size_in = in_size,
-> > > > +		.payload_out = out,
-> > > > +	};
-> > > > +	int rc;
-> > > > +
-> > > > +	rc = cxl_mem_mbox_get(cxlm);
-> > > > +	if (rc)
-> > > > +		return rc;
-> > > > +
-> > > > +	rc = __cxl_mem_mbox_send_cmd(cxlm, &mbox_cmd);
-> > > > +	cxl_mem_mbox_put(cxlm);
-> > > > +	if (rc)
-> > > > +		return rc;
-> > > > +
-> > > > +	/* TODO: Map return code to proper kernel style errno */
-> > > > +	if (mbox_cmd.return_code != CXL_MBOX_SUCCESS)
-> > > > +		return -ENXIO;
-> > > > +
-> > > > +	return mbox_cmd.size_out;
-> > > > +}
-> > > > +
-> > > >  /**
-> > > >   * handle_mailbox_cmd_from_user() - Dispatch a mailbox command.
-> > > >   * @cxlmd: The CXL memory device to communicate with.
-> > > > @@ -1380,33 +1429,18 @@ static int cxl_mem_identify(struct cxl_mem *cxlm)
-> > > >  		u8 poison_caps;
-> > > >  		u8 qos_telemetry_caps;
-> > > >  	} __packed id;
-> > > > -	struct mbox_cmd mbox_cmd = {
-> > > > -		.opcode = CXL_MBOX_OP_IDENTIFY,
-> > > > -		.payload_out = &id,
-> > > > -		.size_in = 0,
-> > > > -	};
-> > > >  	int rc;
-> > > >  
-> > > > -	/* Retrieve initial device memory map */
-> > > > -	rc = cxl_mem_mbox_get(cxlm);
-> > > > -	if (rc)
-> > > > -		return rc;
-> > > > -
-> > > > -	rc = cxl_mem_mbox_send_cmd(cxlm, &mbox_cmd);
-> > > > -	cxl_mem_mbox_put(cxlm);
-> > > > -	if (rc)
-> > > > +	rc = cxl_mem_mbox_send_cmd(cxlm, CXL_MBOX_OP_IDENTIFY, NULL, 0,
-> > > > +				   (u8 *)&id);
-> > > > +	if (rc < 0)
-> > > >  		return rc;
-> > > >  
-> > > > -	/* TODO: Handle retry or reset responses from firmware. */
-> > > > -	if (mbox_cmd.return_code != CXL_MBOX_SUCCESS) {
-> > > > -		dev_err(&cxlm->pdev->dev, "Mailbox command failed (%d)\n",
-> > > > -			mbox_cmd.return_code);
-> > > > +	if (rc < sizeof(id)) {
-> > > > +		dev_err(&cxlm->pdev->dev, "Short identify data\n",
-> > > >  		return -ENXIO;
-> > > >  	}
-> > > >  
-> > > > -	if (mbox_cmd.size_out != sizeof(id))
-> > > > -		return -ENXIO;
-> > > > -
-> > > >  	/*
-> > > >  	 * TODO: enumerate DPA map, as 'ram' and 'pmem' do not alias.
-> > > >  	 * For now, only the capacity is exported in sysfs
-> > > > 
-> > > > 
-> > > > [snip]
-> > > >   
-> > >   
-> 
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 4cf0d77ca..d1cbc5e64 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -16,7 +16,6 @@
+ struct pci_vpd_ops {
+ 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+-	int (*set_size)(struct pci_dev *dev, size_t len);
+ };
+ 
+ struct pci_vpd {
+@@ -59,19 +58,6 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+ }
+ EXPORT_SYMBOL(pci_write_vpd);
+ 
+-/**
+- * pci_set_vpd_size - Set size of Vital Product Data space
+- * @dev:	pci device struct
+- * @len:	size of vpd space
+- */
+-int pci_set_vpd_size(struct pci_dev *dev, size_t len)
+-{
+-	if (!dev->vpd || !dev->vpd->ops)
+-		return -ENODEV;
+-	return dev->vpd->ops->set_size(dev, len);
+-}
+-EXPORT_SYMBOL(pci_set_vpd_size);
+-
+ #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
+ 
+ /**
+@@ -296,23 +282,19 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
+ 	return ret ? ret : count;
+ }
+ 
+-static int pci_vpd_set_size(struct pci_dev *dev, size_t len)
++static void pci_vpd_set_size(struct pci_dev *dev, size_t len)
+ {
+ 	struct pci_vpd *vpd = dev->vpd;
+ 
+-	if (len == 0 || len > PCI_VPD_MAX_SIZE)
+-		return -EIO;
+-
+-	vpd->valid = 1;
+-	vpd->len = len;
+-
+-	return 0;
++	if (vpd && len && len <= PCI_VPD_MAX_SIZE) {
++		vpd->valid = 1;
++		vpd->len = len;
++	}
+ }
+ 
+ static const struct pci_vpd_ops pci_vpd_ops = {
+ 	.read = pci_vpd_read,
+ 	.write = pci_vpd_write,
+-	.set_size = pci_vpd_set_size,
+ };
+ 
+ static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+@@ -345,24 +327,9 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+ 	return ret;
+ }
+ 
+-static int pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
+-{
+-	struct pci_dev *tdev = pci_get_slot(dev->bus,
+-					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+-	int ret;
+-
+-	if (!tdev)
+-		return -ENODEV;
+-
+-	ret = pci_set_vpd_size(tdev, len);
+-	pci_dev_put(tdev);
+-	return ret;
+-}
+-
+ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+ 	.read = pci_vpd_f0_read,
+ 	.write = pci_vpd_f0_write,
+-	.set_size = pci_vpd_f0_set_size,
+ };
+ 
+ int pci_vpd_init(struct pci_dev *dev)
+@@ -528,9 +495,9 @@ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+ 	 * limits.
+ 	 */
+ 	if (chip == 0x0 && prod >= 0x20)
+-		pci_set_vpd_size(dev, 8192);
++		pci_vpd_set_size(dev, 8192);
+ 	else if (chip >= 0x4 && func < 0x8)
+-		pci_set_vpd_size(dev, 2048);
++		pci_vpd_set_size(dev, 2048);
+ }
+ 
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 86c799c97..edadc62ae 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1302,7 +1302,6 @@ void pci_unlock_rescan_remove(void);
+ /* Vital Product Data routines */
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+-int pci_set_vpd_size(struct pci_dev *dev, size_t len);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+-- 
+2.30.0
+
