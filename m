@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 189D6C4332B
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A81C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:18:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE9E764E7D
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:18:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C06C64E66
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230242AbhBKJSN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 04:18:13 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:56842 "EHLO
+        id S230260AbhBKJSO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 04:18:14 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:34178 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230118AbhBKJOM (ORCPT
+        by vger.kernel.org with ESMTP id S230107AbhBKJOM (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 04:14:12 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 3EC73C00C7;
-        Thu, 11 Feb 2021 09:13:07 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 73B4440166;
+        Thu, 11 Feb 2021 09:13:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613034787; bh=0LPtbl9/ClUF4yDOkawYP8loLWswFVdF/V71qFngQe4=;
+        t=1613034781; bh=ZwuAEc7PYGYf65aM+oFkF22mTyotdTO38xdBbdz9Hvs=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=kqSxRT4Tg5yD4EaJR42vsafrVAXqbGu/BwI5XN7RccsNS+SymJbgF4obGPiuo8c1t
-         uerPx5lmWBtHGM7zUWMvB6CrMs9ZvCHyz5hPAuiFZB5Qd9LMUsifR1gK7FESOU8LuX
-         QaSt9h7vuXhMQC0a2Lo2fDGYaosb4eNxaqPTETi7q+wGgtG7PxWru7B/55fB/lPhue
-         jy4znUih1R1QYuKWXP1DfjRyP9ARdVoZ7vamZEOQ1ocSWA13IMPKNS6FcwE7Ra9RPP
-         YKnX/tPvvEk6n49SEZMZL+T3wqtVC6YAvLAr8sxFopodYugWt6wfQt5HIBP0WpZx86
-         YC4p30EATp9Iw==
+        b=CiwwSsyYBtgyw/GhSndFY/bxsmn6OMPL0/P7YoN+HP3OaEq2g+4WFnc3UzadDfs1e
+         SuNfIPxOqQss6H9RpwLNB5PHCP6hIu7as/9uYtK14+GsL7Yei3vA7ujyUr7l0WqVv+
+         HJm1E1B4Wgc8aGU0WuzYnpdZNKSbTWI2yB04eI3k3rUBpzBuAKaXH3jCUdtZSttz25
+         9f3IVOkWkg2EGXiNBMma3CAKUIPNLXVf8hDnAUoSh1qF+m6yXRZ5PyyILvjWNaZaR+
+         qTmN5vqB67jGsAvz7/PZpbyDRBPs1vEzbMW1jvFr/nCoJjpLulURUREmBbGeSn/Mpt
+         SWcUEks56ORPg==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 060FCA005D;
-        Thu, 11 Feb 2021 09:13:06 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 3C467A0061;
+        Thu, 11 Feb 2021 09:13:00 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -44,9 +44,9 @@ To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v5 11/15] dmaengine: dw-edma: Move struct dentry variable from static definition into dw_edma struct
-Date:   Thu, 11 Feb 2021 10:12:44 +0100
-Message-Id: <91b217b5b6e9a04b5736c1afb35977f5c7970737.1613034728.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v5 06/15] dmaengine: dw-edma: Add device_prep_interleave_dma() support
+Date:   Thu, 11 Feb 2021 10:12:39 +0100
+Message-Id: <bd6df859545aba8fa5de14cc19792dde070b0950.1613034728.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613034728.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613034728.git.gustavo.pimentel@synopsys.com>
@@ -56,146 +56,234 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move struct dentry variable from static definition (dw-edma-v0-debugfs.c)
-into dw_edma struct (dw-edma-core.h)
+Add device_prep_interleave_dma() support to Synopsys DMA driver.
 
-Also the variable was renamed from base_dir to debugfs.
+This feature implements a similar data transfer mechanism to the
+scatter-gather implementation.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c       |  2 +-
- drivers/dma/dw-edma/dw-edma-core.h       |  3 +++
- drivers/dma/dw-edma/dw-edma-v0-core.c    |  4 ++--
- drivers/dma/dw-edma/dw-edma-v0-core.h    |  2 +-
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 22 +++++++++++++---------
- drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  4 ++--
- 6 files changed, 22 insertions(+), 15 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c | 85 ++++++++++++++++++++++++++++++--------
+ drivers/dma/dw-edma/dw-edma-core.h | 13 ++++--
+ 2 files changed, 78 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 48887b5..8d8292e 100644
+index b65c32e1..0fe3835 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.c
 +++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -1003,7 +1003,7 @@ int dw_edma_remove(struct dw_edma_chip *chip)
- 	dma_async_device_unregister(&dw->rd_edma);
+@@ -329,7 +329,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 	struct dw_edma_chunk *chunk;
+ 	struct dw_edma_burst *burst;
+ 	struct dw_edma_desc *desc;
+-	u32 cnt;
++	u32 cnt = 0;
+ 	int i;
  
- 	/* Turn debugfs off */
--	dw_edma_v0_core_debugfs_off();
-+	dw_edma_v0_core_debugfs_off(chip);
+ 	if (!chan->configured)
+@@ -352,12 +352,19 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 		return NULL;
+ 	}
  
- 	return 0;
+-	if (xfer->cyclic) {
++	if (xfer->type == EDMA_XFER_CYCLIC) {
+ 		if (!xfer->xfer.cyclic.len || !xfer->xfer.cyclic.cnt)
+ 			return NULL;
+-	} else {
++	} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+ 		if (xfer->xfer.sg.len < 1)
+ 			return NULL;
++	} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
++		if (!xfer->xfer.il->numf)
++			return NULL;
++		if (xfer->xfer.il->numf > 0 && xfer->xfer.il->frame_size > 0)
++			return NULL;
++	} else {
++		return NULL;
+ 	}
+ 
+ 	desc = dw_edma_alloc_desc(chan);
+@@ -368,18 +375,28 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 	if (unlikely(!chunk))
+ 		goto err_alloc;
+ 
+-	src_addr = chan->config.src_addr;
+-	dst_addr = chan->config.dst_addr;
++	if (xfer->type == EDMA_XFER_INTERLEAVED) {
++		src_addr = xfer->xfer.il->src_start;
++		dst_addr = xfer->xfer.il->dst_start;
++	} else {
++		src_addr = chan->config.src_addr;
++		dst_addr = chan->config.dst_addr;
++	}
+ 
+-	if (xfer->cyclic) {
++	if (xfer->type == EDMA_XFER_CYCLIC) {
+ 		cnt = xfer->xfer.cyclic.cnt;
+-	} else {
++	} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+ 		cnt = xfer->xfer.sg.len;
+ 		sg = xfer->xfer.sg.sgl;
++	} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
++		if (xfer->xfer.il->numf > 0)
++			cnt = xfer->xfer.il->numf;
++		else
++			cnt = xfer->xfer.il->frame_size;
+ 	}
+ 
+ 	for (i = 0; i < cnt; i++) {
+-		if (!xfer->cyclic && !sg)
++		if (xfer->type == EDMA_XFER_SCATTER_GATHER && !sg)
+ 			break;
+ 
+ 		if (chunk->bursts_alloc == chan->ll_max) {
+@@ -392,19 +409,21 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 		if (unlikely(!burst))
+ 			goto err_alloc;
+ 
+-		if (xfer->cyclic)
++		if (xfer->type == EDMA_XFER_CYCLIC)
+ 			burst->sz = xfer->xfer.cyclic.len;
+-		else
++		else if (xfer->type == EDMA_XFER_SCATTER_GATHER)
+ 			burst->sz = sg_dma_len(sg);
++		else if (xfer->type == EDMA_XFER_INTERLEAVED)
++			burst->sz = xfer->xfer.il->sgl[i].size;
+ 
+ 		chunk->ll_region.sz += burst->sz;
+ 		desc->alloc_sz += burst->sz;
+ 
+ 		if (chan->dir == EDMA_DIR_WRITE) {
+ 			burst->sar = src_addr;
+-			if (xfer->cyclic) {
++			if (xfer->type == EDMA_XFER_CYCLIC) {
+ 				burst->dar = xfer->xfer.cyclic.paddr;
+-			} else {
++			} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+ 				burst->dar = dst_addr;
+ 				/* Unlike the typical assumption by other
+ 				 * drivers/IPs the peripheral memory isn't
+@@ -416,9 +435,9 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 			}
+ 		} else {
+ 			burst->dar = dst_addr;
+-			if (xfer->cyclic) {
++			if (xfer->type == EDMA_XFER_CYCLIC) {
+ 				burst->sar = xfer->xfer.cyclic.paddr;
+-			} else {
++			} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+ 				burst->sar = src_addr;
+ 				/* Unlike the typical assumption by other
+ 				 * drivers/IPs the peripheral memory isn't
+@@ -430,10 +449,24 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 			}
+ 		}
+ 
+-		if (!xfer->cyclic) {
++		if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+ 			src_addr += sg_dma_len(sg);
+ 			dst_addr += sg_dma_len(sg);
+ 			sg = sg_next(sg);
++		} else if (xfer->type == EDMA_XFER_INTERLEAVED &&
++			   xfer->xfer.il->frame_size > 0) {
++			struct dma_interleaved_template *il = xfer->xfer.il;
++			struct data_chunk *dc = &il->sgl[i];
++
++			if (il->src_sgl) {
++				src_addr += burst->sz;
++				src_addr += dmaengine_get_src_icg(il, dc);
++			}
++
++			if (il->dst_sgl) {
++				dst_addr += burst->sz;
++				dst_addr += dmaengine_get_dst_icg(il, dc);
++			}
+ 		}
+ 	}
+ 
+@@ -459,7 +492,7 @@ dw_edma_device_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
+ 	xfer.xfer.sg.sgl = sgl;
+ 	xfer.xfer.sg.len = len;
+ 	xfer.flags = flags;
+-	xfer.cyclic = false;
++	xfer.type = EDMA_XFER_SCATTER_GATHER;
+ 
+ 	return dw_edma_device_transfer(&xfer);
  }
+@@ -478,7 +511,23 @@ dw_edma_device_prep_dma_cyclic(struct dma_chan *dchan, dma_addr_t paddr,
+ 	xfer.xfer.cyclic.len = len;
+ 	xfer.xfer.cyclic.cnt = count;
+ 	xfer.flags = flags;
+-	xfer.cyclic = true;
++	xfer.type = EDMA_XFER_CYCLIC;
++
++	return dw_edma_device_transfer(&xfer);
++}
++
++static struct dma_async_tx_descriptor *
++dw_edma_device_prep_interleaved_dma(struct dma_chan *dchan,
++				    struct dma_interleaved_template *ilt,
++				    unsigned long flags)
++{
++	struct dw_edma_transfer xfer;
++
++	xfer.dchan = dchan;
++	xfer.direction = ilt->dir;
++	xfer.xfer.il = ilt;
++	xfer.flags = flags;
++	xfer.type = EDMA_XFER_INTERLEAVED;
+ 
+ 	return dw_edma_device_transfer(&xfer);
+ }
+@@ -738,6 +787,7 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 	dma_cap_set(DMA_SLAVE, dma->cap_mask);
+ 	dma_cap_set(DMA_CYCLIC, dma->cap_mask);
+ 	dma_cap_set(DMA_PRIVATE, dma->cap_mask);
++	dma_cap_set(DMA_INTERLEAVE, dma->cap_mask);
+ 	dma->directions = BIT(write ? DMA_DEV_TO_MEM : DMA_MEM_TO_DEV);
+ 	dma->src_addr_widths = BIT(DMA_SLAVE_BUSWIDTH_4_BYTES);
+ 	dma->dst_addr_widths = BIT(DMA_SLAVE_BUSWIDTH_4_BYTES);
+@@ -756,6 +806,7 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 	dma->device_tx_status = dw_edma_device_tx_status;
+ 	dma->device_prep_slave_sg = dw_edma_device_prep_slave_sg;
+ 	dma->device_prep_dma_cyclic = dw_edma_device_prep_dma_cyclic;
++	dma->device_prep_interleaved_dma = dw_edma_device_prep_interleaved_dma;
+ 
+ 	dma_set_max_seg_size(dma->dev, U32_MAX);
+ 
 diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index cba5436..60316d4 100644
+index 3f9593e..f72ebaa 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.h
 +++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -137,6 +137,9 @@ struct dw_edma {
- 	const struct dw_edma_core_ops	*ops;
- 
- 	raw_spinlock_t			lock;		/* Only for legacy */
-+#ifdef CONFIG_DEBUG_FS
-+	struct dentry			*debugfs;
-+#endif /* CONFIG_DEBUG_FS */
+@@ -39,6 +39,12 @@ enum dw_edma_status {
+ 	EDMA_ST_BUSY
  };
  
- struct dw_edma_sg {
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
-index 5b0541a..329fc2e 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-@@ -506,7 +506,7 @@ void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip)
- 	dw_edma_v0_debugfs_on(chip);
- }
- 
--void dw_edma_v0_core_debugfs_off(void)
-+void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip)
- {
--	dw_edma_v0_debugfs_off();
-+	dw_edma_v0_debugfs_off(chip);
- }
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
-index abae152..2afa626 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
-@@ -23,6 +23,6 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
- int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
- /* eDMA debug fs callbacks */
- void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip);
--void dw_edma_v0_core_debugfs_off(void);
-+void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip);
- 
- #endif /* _DW_EDMA_V0_CORE_H */
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index 157dfc2..4b3bcff 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -38,7 +38,6 @@
- #define CHANNEL_STR				"channel"
- #define REGISTERS_STR				"registers"
- 
--static struct dentry				*base_dir;
- static struct dw_edma				*dw;
- static struct dw_edma_v0_regs			__iomem *regs;
- 
-@@ -272,7 +271,7 @@ static void dw_edma_debugfs_regs(void)
- 	struct dentry *regs_dir;
- 	int nr_entries;
- 
--	regs_dir = debugfs_create_dir(REGISTERS_STR, base_dir);
-+	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
- 	if (!regs_dir)
- 		return;
- 
-@@ -293,18 +292,23 @@ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
- 	if (!regs)
- 		return;
- 
--	base_dir = debugfs_create_dir(dw->name, NULL);
--	if (!base_dir)
-+	dw->debugfs = debugfs_create_dir(dw->name, NULL);
-+	if (!dw->debugfs)
- 		return;
- 
--	debugfs_create_u32("mf", 0444, base_dir, &dw->mf);
--	debugfs_create_u16("wr_ch_cnt", 0444, base_dir, &dw->wr_ch_cnt);
--	debugfs_create_u16("rd_ch_cnt", 0444, base_dir, &dw->rd_ch_cnt);
-+	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->mf);
-+	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
-+	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
- 
- 	dw_edma_debugfs_regs();
- }
- 
--void dw_edma_v0_debugfs_off(void)
-+void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
- {
--	debugfs_remove_recursive(base_dir);
-+	dw = chip->dw;
-+	if (!dw)
-+		return;
++enum dw_edma_xfer_type {
++	EDMA_XFER_SCATTER_GATHER = 0,
++	EDMA_XFER_CYCLIC,
++	EDMA_XFER_INTERLEAVED
++};
 +
-+	debugfs_remove_recursive(dw->debugfs);
-+	dw->debugfs = NULL;
- }
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-index 5450a0a..d0ff25a 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-@@ -13,13 +13,13 @@
+ struct dw_edma_chan;
+ struct dw_edma_chunk;
  
- #ifdef CONFIG_DEBUG_FS
- void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip);
--void dw_edma_v0_debugfs_off(void);
-+void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip);
- #else
- static inline void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
- {
- }
+@@ -146,12 +152,13 @@ struct dw_edma_cyclic {
+ struct dw_edma_transfer {
+ 	struct dma_chan			*dchan;
+ 	union dw_edma_xfer {
+-		struct dw_edma_sg	sg;
+-		struct dw_edma_cyclic	cyclic;
++		struct dw_edma_sg		sg;
++		struct dw_edma_cyclic		cyclic;
++		struct dma_interleaved_template *il;
+ 	} xfer;
+ 	enum dma_transfer_direction	direction;
+ 	unsigned long			flags;
+-	bool				cyclic;
++	enum dw_edma_xfer_type		type;
+ };
  
--static inline void dw_edma_v0_debugfs_off(void)
-+static inline void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
- {
- }
- #endif /* CONFIG_DEBUG_FS */
+ static inline
 -- 
 2.7.4
 
