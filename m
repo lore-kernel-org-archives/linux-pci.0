@@ -2,102 +2,98 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16EDCC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3D0C433E9
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:49:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D240B64DCD
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:49:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A21E64DCD
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:49:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229946AbhBKNtE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 08:49:04 -0500
-Received: from imap3.hz.codethink.co.uk ([176.9.8.87]:38754 "EHLO
-        imap3.hz.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231408AbhBKNoX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 08:44:23 -0500
-X-Greylist: delayed 2385 seconds by postgrey-1.27 at vger.kernel.org; Thu, 11 Feb 2021 08:44:18 EST
-Received: from cpc79921-stkp12-2-0-cust288.10-2.cable.virginm.net ([86.16.139.33] helo=[192.168.0.18])
-        by imap3.hz.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
-        id 1lABcx-0002tK-O0; Thu, 11 Feb 2021 13:03:23 +0000
-Subject: Re: [PATCH v21 3/4] PCI: microchip: Add host driver for Microchip
- PCIe controller
-To:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        daire.mcnamara@microchip.com
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S230355AbhBKNtL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 08:49:11 -0500
+Received: from mga02.intel.com ([134.134.136.20]:48915 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231755AbhBKNoo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Feb 2021 08:44:44 -0500
+IronPort-SDR: mHtRjXkzbeOKu+FjUGdff6tl6UCQySAVqJJ3545p5hXcNwyjzB861APgYhoEgOnmFKoL4sIeup
+ R3we8R5Pwrxw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9891"; a="169366832"
+X-IronPort-AV: E=Sophos;i="5.81,170,1610438400"; 
+   d="scan'208";a="169366832"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2021 05:41:01 -0800
+IronPort-SDR: y3sXK0kKzjrX/UZlMbVpzk5vcxjGtKjkPDr9P4YqcE/9aj5Pxnqt8K33GmKRlpxxgkfuy9+Dsi
+ hJ5EbIqfuJGA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,170,1610438400"; 
+   d="scan'208";a="588798000"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga005.fm.intel.com with ESMTP; 11 Feb 2021 05:40:54 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 3408A579; Thu, 11 Feb 2021 15:40:46 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Mike Rapoport <rppt@kernel.org>, Wolfram Sang <wsa@kernel.org>,
+        Sumit Gupta <sumitg@nvidia.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        x86@kernel.org, linux-pm@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@driverdev.osuosl.org
+Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, david.abdurachmanov@gmail.com,
-        cyril.jean@microchip.com
-References: <20210125162934.5335-1-daire.mcnamara@microchip.com>
- <20210125162934.5335-4-daire.mcnamara@microchip.com>
- <CAMuHMdXJQF3c1b6SXyHnuyA_huO7ZiKJ-_xm1r1h7VcGsv=n9A@mail.gmail.com>
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Organization: Codethink Limited.
-Message-ID: <d47ee0a2-7d9c-5c53-2977-09fa054e856b@codethink.co.uk>
-Date:   Thu, 11 Feb 2021 13:03:22 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Mark Gross <mgross@linux.intel.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-acpi@vger.kernel.org
+Subject: [PATCH v1 8/9] x86/platform/intel-mid: Remove unused header inclusion in intel-mid.h
+Date:   Thu, 11 Feb 2021 15:40:07 +0200
+Message-Id: <20210211134008.38282-9-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210211134008.38282-1-andriy.shevchenko@linux.intel.com>
+References: <20210211134008.38282-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdXJQF3c1b6SXyHnuyA_huO7ZiKJ-_xm1r1h7VcGsv=n9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/02/2021 13:07, Geert Uytterhoeven wrote:
-> Hi Daire,
-> 
-> On Mon, Jan 25, 2021 at 5:33 PM <daire.mcnamara@microchip.com> wrote:
->> From: Daire McNamara <daire.mcnamara@microchip.com>
->>
->> Add support for the Microchip PolarFire PCIe controller when
->> configured in host (Root Complex) mode.
->>
->> Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
->> Reviewed-by: Rob Herring <robh@kernel.org>
-> 
-> Thanks for your patch!
-> 
->> --- a/drivers/pci/controller/Kconfig
->> +++ b/drivers/pci/controller/Kconfig
->> @@ -298,6 +298,16 @@ config PCI_LOONGSON
->>            Say Y here if you want to enable PCI controller support on
->>            Loongson systems.
->>
->> +config PCIE_MICROCHIP_HOST
->> +       bool "Microchip AXI PCIe host bridge support"
->> +       depends on PCI_MSI && OF
->> +       select PCI_MSI_IRQ_DOMAIN
->> +       select GENERIC_MSI_IRQ_DOMAIN
->> +       select PCI_HOST_COMMON
->> +       help
->> +         Say Y here if you want kernel to support the Microchip AXI PCIe
->> +         Host Bridge driver.
-> 
-> Is this PCIe host bridge accessible only from the PolarFire RISC-V
-> CPU cores, or also from softcores implemented in the PolarFire FPGA?
-> 
-> In case of the former, we want to add a
-> 
->      depends on CONFIG_SOC_MICROCHIP_POLARFIRE || COMPILE_TEST
+After the commit f1be6cdaf57c ("x86/platform/intel-mid: Make
+intel_scu_device_register() static") the platform_device.h is not being
+used anymore by intel-mid.h. Remove it.
 
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/include/asm/intel-mid.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-I'd say having it on COMPILE_TEST if there's no polarfire includes
-would be useful to allow compile testing of the driver by the build
-robots.
-
-
+diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+index c2c7da4c60cf..c043e91f45ad 100644
+--- a/arch/x86/include/asm/intel-mid.h
++++ b/arch/x86/include/asm/intel-mid.h
+@@ -8,7 +8,6 @@
+ #define _ASM_X86_INTEL_MID_H
+ 
+ #include <linux/pci.h>
+-#include <linux/platform_device.h>
+ 
+ extern int intel_mid_pci_init(void);
+ extern int intel_mid_pci_set_power_state(struct pci_dev *pdev, pci_power_t state);
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+2.30.0
 
-https://www.codethink.co.uk/privacy.html
