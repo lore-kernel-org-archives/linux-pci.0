@@ -2,125 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA4F6C433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 04:42:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2417BC433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7692B64E95
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 04:42:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E725464E77
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 09:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbhBKElq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Feb 2021 23:41:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55676 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbhBKElp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2021 23:41:45 -0500
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62E9FC0613D6
-        for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2021 20:41:04 -0800 (PST)
-Received: by mail-ej1-x62c.google.com with SMTP id y9so7926474ejp.10
-        for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2021 20:41:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=sl6/My6OzOs0T7wZB4oePD5pENhmSvczhT0K8Arc7LI=;
-        b=WkyTT/tlVuOu/QtJMR4TMPtKI3ZroEdf6vo0pV6EA6pmvld9AUZh5AcBIdoQsmyy5W
-         ujhDIglIq4no4S4FnPjAJEON+41CXF/kZhVZc/Of6nBcJmH2ckxq7jFNww9nR/DwT+h/
-         8UqUiI1xPm3fisBJZevopAV8RlTeHFLm996qBPYad35tPwuvIkQ2wNljHBO7QuzsU8pl
-         m6UjMx88Bp2ax8h59hFBDU+mEcT6OxV4L26reH2yIq5jyt3ZKaGUX00yc6uufxWXKc/K
-         6TpW44YRo7+SiphYrSoLs6Eu0cjTNKyi8E8jF9IRE0pU/01y+thIBuSGcpnf168C/Bou
-         mgcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=sl6/My6OzOs0T7wZB4oePD5pENhmSvczhT0K8Arc7LI=;
-        b=H7vJKw3pVUKIKM3846B2r7NmcK8ZqY30qS7AECJ4I2EpxpU27QSdoN499gqjqrb9jc
-         Ol6y5QRt6u2t5NKciPt3djXFRTnBaZ05iAyLAJ1O0HpQYPMFnJfGAby1zm9dhgAmSosC
-         cbO2vKhEWtsG8NCYm0w00MW2jnxIqEJlPgTDZvs9/9lVW/fyVc3OZIig+fqRJdjTTnl8
-         8Fc4TZk1ql2UwFfFcCAxzAzS+M/RTcnlA6VESxMutOnvV9c85Rh27EltjmppJngdzvyC
-         HUnRVjbzH8CamVwCuwof+hyrgvKxmB8AWeTIac6Iot1Tn6FjfRvN7vEhcMAmxKrfTjt/
-         cztw==
-X-Gm-Message-State: AOAM530En6wTSd1v/IQN84ADlMbJGxNTIhOvXeQbNjQ8ZuyIfNohodJW
-        cT6Lx1mddHzeGUmatFDGyJI9LlX1NSiEe2ymQakuQA==
-X-Google-Smtp-Source: ABdhPJyqM5HE0PbHSNMhdSZjzjNWswbaPuS/dDwtU5r1wQLbe3Pkm5vgDMrXrmlgqG9PntEEBlBF3kFxRImOkT4QFcE=
-X-Received: by 2002:a17:906:78a:: with SMTP id l10mr6139548ejc.264.1613018462922;
- Wed, 10 Feb 2021 20:41:02 -0800 (PST)
-MIME-Version: 1.0
-References: <20210210000259.635748-1-ben.widawsky@intel.com>
- <20210210000259.635748-5-ben.widawsky@intel.com> <20210210184540.00007536@Huawei.com>
-In-Reply-To: <20210210184540.00007536@Huawei.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 10 Feb 2021 20:40:52 -0800
-Message-ID: <CAPcyv4hRUB3jxdCV06y0kYMbKbGroEW6F9yOQ4KB_z6YgWBZ4Q@mail.gmail.com>
-Subject: Re: [PATCH v2 4/8] cxl/mem: Add basic IOCTL interface
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Chris Browy <cbrowy@avery-design.com>, Christoph Hellwig
-        <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, David
-        Hildenbrand <david@redhat.com>, David Rientjes" <rientjes@google.com>,
-        "Jon Masters <jcm@jonmasters.org>, Rafael Wysocki
-        <rafael.j.wysocki@intel.com>, Randy Dunlap" <rdunlap@infradead.org>,
-        "John Groves (jgroves)" <jgroves@micron.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        kernel test robot <lkp@intel.com>,
-        Dan Williams <dan.j.willams@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S230009AbhBKJQu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 04:16:50 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:34068 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230052AbhBKJKr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 04:10:47 -0500
+Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 6EE13401D9;
+        Thu, 11 Feb 2021 09:09:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1613034553; bh=x6qwlQ3unob1xa78MC32IMOFOlfkiuMvvCbd1vCCzC8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=OLtSWyt1IrHosK6QLJkU19M9Rrlv3ASey1ySvQ6Ao1Gi+ykbo6yH9KiSyfAbVqsQR
+         Su0AB85Q2O+ZGfbY378P0e7wVLKWfBw+yS+wFQsfGrCuPJaJWk+TeG/ffIO/29jLD0
+         WcvIMIWutp8pIheVlEbh88HT1hV2X0K2a4Ihs0HIG7nY/cgsk3oIb8qBjufEayRFQs
+         kkAz4pAU6S9mMFmZAsCAIgqr0zCbaeHAtL1hlJ9q2SmE1Fw5KUm327jQJIA4EITQro
+         XiRQU3hfHrUYLXlN0JEDcdxdXHc9MCVHlsxNxp7e+nQcmz/pQRYvVAOcqq7U6bhuw8
+         qywi3nGKDjq8A==
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 3496AA005E;
+        Thu, 11 Feb 2021 09:09:12 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v5 5/6] MAINTAINERS: Add Synopsys xData IP driver maintainer
+Date:   Thu, 11 Feb 2021 10:08:42 +0100
+Message-Id: <748e23c798df091835577037ed75fab130e3dfb8.1613034397.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
+References: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
+References: <cover.1613034397.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Feb 10, 2021 at 10:47 AM Jonathan Cameron
-<Jonathan.Cameron@huawei.com> wrote:
-[..]
-> > +#define CXL_CMDS                                                          \
-> > +     ___C(INVALID, "Invalid Command"),                                 \
-> > +     ___C(IDENTIFY, "Identify Command"),                               \
-> > +     ___C(MAX, "Last command")
-> > +
-> > +#define ___C(a, b) CXL_MEM_COMMAND_ID_##a
-> > +enum { CXL_CMDS };
-> > +
-> > +#undef ___C
-> > +#define ___C(a, b) { b }
-> > +static const struct {
-> > +     const char *name;
-> > +} cxl_command_names[] = { CXL_CMDS };
-> > +#undef ___C
->
-> Unless there are going to be a lot of these, I'd just write them out long hand
-> as much more readable than the macro magic.
+Add Synopsys xData IP driver maintainer.
 
-This macro magic isn't new to Linux it was introduced with ftrace:
+This driver aims to support Synopsys xData IP and is normally distributed
+along with Synopsys PCIe EndPoint IP as a PCIe traffic generator (depends
+of the use and licensing agreement).
 
-See "cpp tricks and treats": https://lwn.net/Articles/383362/
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
->
-> enum {
->         CXL_MEM_COMMAND_ID_INVALID,
->         CXL_MEM_COMMAND_ID_IDENTIFY,
->         CXL_MEM_COMMAND_ID_MAX
-> };
->
-> static const struct {
->         const char *name;
-> } cxl_command_names[] = {
->         [CXL_MEM_COMMAND_ID_INVALID] = { "Invalid Command" },
->         [CXL_MEM_COMMAND_ID_IDENTIFY] = { "Identify Comamnd" },
->         /* I hope you never need the Last command to exist in here as that sounds like a bug */
-> };
->
-> That's assuming I actually figured the macro fun out correctly.
-> To my mind it's worth doing this stuff for 'lots' no so much for 3.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 546aa66..f9d681b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5061,6 +5061,13 @@ S:	Maintained
+ F:	drivers/dma/dw-edma/
+ F:	include/linux/dma/edma.h
+ 
++DESIGNWARE XDATA IP DRIVER
++M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/misc-devices/dw-xdata-pcie.rst
++F:	drivers/misc/dw-xdata-pcie.c
++
+ DESIGNWARE USB2 DRD IP DRIVER
+ M:	Minas Harutyunyan <hminas@synopsys.com>
+ L:	linux-usb@vger.kernel.org
+-- 
+2.7.4
 
-The list will continue to expand, and it eliminates the "did you
-remember to update cxl_command_names" review burden permanently.
