@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0192CC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C479C433DB
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:46:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCEEA64DEE
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:46:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E20064E87
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:46:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231990AbhBKNpo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 08:45:44 -0500
-Received: from mga06.intel.com ([134.134.136.31]:32479 "EHLO mga06.intel.com"
+        id S232083AbhBKNpy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Feb 2021 08:45:54 -0500
+Received: from mga03.intel.com ([134.134.136.65]:43775 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232022AbhBKNnC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S232029AbhBKNnC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 11 Feb 2021 08:43:02 -0500
-IronPort-SDR: iqXsMjFBQ4HLW4hZMqSYEFncxNuvhacYbvNswUSSLADuAeiLNNVHORA5TY8h0a58cA4jLmJyOp
- W1BgLRi2le8Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9891"; a="243731533"
+IronPort-SDR: bC50qNqB7Mb6NHZ5TnrMZ28RKqiX7LBMV3QNeddoWBJi9yFfYNYuA0KpFR3ujyeUzLhA0M5M+u
+ hOUV6KmR1AjQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9891"; a="182311181"
 X-IronPort-AV: E=Sophos;i="5.81,170,1610438400"; 
-   d="scan'208";a="243731533"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2021 05:40:53 -0800
-IronPort-SDR: gqK713bNflzIPqHF/MBLgCQwXA2e0HRc6+JQmreSNn5QIUXWXpsIjHHYF2+yX8Jjb8B7ow2Xa/
- nTXKROsYELJQ==
+   d="scan'208";a="182311181"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2021 05:41:00 -0800
+IronPort-SDR: 9ZUuSvDftvalgJABQz+ZGjkBCy7K976RWT4DxqHDy2UgScMEiMSF7GlPuuZWZVoCYw382fU0Qe
+ oH+FP5dWP+Fw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,170,1610438400"; 
-   d="scan'208";a="490341616"
+   d="scan'208";a="414807185"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 11 Feb 2021 05:40:46 -0800
+  by fmsmga004.fm.intel.com with ESMTP; 11 Feb 2021 05:40:54 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id DD94A1FA; Thu, 11 Feb 2021 15:40:45 +0200 (EET)
+        id 29942525; Thu, 11 Feb 2021 15:40:46 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
@@ -61,9 +61,9 @@ Cc:     Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         Sakari Ailus <sakari.ailus@linux.intel.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-acpi@vger.kernel.org
-Subject: [PATCH v1 2/9] cpufreq: sfi-cpufreq: Remove driver for deprecated firmware
-Date:   Thu, 11 Feb 2021 15:40:01 +0200
-Message-Id: <20210211134008.38282-3-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 7/9] x86/platform/intel-mid: Drop unused __intel_mid_cpu_chip and Co.
+Date:   Thu, 11 Feb 2021 15:40:06 +0200
+Message-Id: <20210211134008.38282-8-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20210211134008.38282-1-andriy.shevchenko@linux.intel.com>
 References: <20210211134008.38282-1-andriy.shevchenko@linux.intel.com>
@@ -73,183 +73,100 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SFI-based platforms are gone. So does this driver.
+Since there is no more user of this global variable and associated custom API,
+we may safely drop this legacy reinvented a wheel from the kernel sources.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- drivers/cpufreq/Kconfig.x86   |  10 ---
- drivers/cpufreq/Makefile      |   1 -
- drivers/cpufreq/sfi-cpufreq.c | 127 ----------------------------------
- 3 files changed, 138 deletions(-)
- delete mode 100644 drivers/cpufreq/sfi-cpufreq.c
+ arch/x86/include/asm/intel-mid.h        | 23 -----------------------
+ arch/x86/platform/intel-mid/intel-mid.c | 17 -----------------
+ 2 files changed, 40 deletions(-)
 
-diff --git a/drivers/cpufreq/Kconfig.x86 b/drivers/cpufreq/Kconfig.x86
-index 399526289320..92701a18bdd9 100644
---- a/drivers/cpufreq/Kconfig.x86
-+++ b/drivers/cpufreq/Kconfig.x86
-@@ -62,16 +62,6 @@ config X86_ACPI_CPUFREQ_CPB
- 	  By enabling this option the acpi_cpufreq driver provides the old
- 	  entry in addition to the new boost ones, for compatibility reasons.
+diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+index 6306fe3e5c4a..c2c7da4c60cf 100644
+--- a/arch/x86/include/asm/intel-mid.h
++++ b/arch/x86/include/asm/intel-mid.h
+@@ -21,36 +21,13 @@ extern void intel_mid_pwr_power_off(void);
  
--config X86_SFI_CPUFREQ
--	tristate "SFI Performance-States driver"
--	depends on X86_INTEL_MID && SFI
--	help
--	  This adds a CPUFreq driver for some Silvermont based Intel Atom
--	  architectures like Z34xx and Z35xx which enumerate processor
--	  performance states through SFI.
--
--	  If in doubt, say N.
--
- config ELAN_CPUFREQ
- 	tristate "AMD Elan SC400 and SC410"
- 	depends on MELAN
-diff --git a/drivers/cpufreq/Makefile b/drivers/cpufreq/Makefile
-index f1b7e3dd6e5d..18c9b0eafd09 100644
---- a/drivers/cpufreq/Makefile
-+++ b/drivers/cpufreq/Makefile
-@@ -43,7 +43,6 @@ obj-$(CONFIG_X86_P4_CLOCKMOD)		+= p4-clockmod.o
- obj-$(CONFIG_X86_CPUFREQ_NFORCE2)	+= cpufreq-nforce2.o
- obj-$(CONFIG_X86_INTEL_PSTATE)		+= intel_pstate.o
- obj-$(CONFIG_X86_AMD_FREQ_SENSITIVITY)	+= amd_freq_sensitivity.o
--obj-$(CONFIG_X86_SFI_CPUFREQ)		+= sfi-cpufreq.o
+ extern int intel_mid_pwr_get_lss_id(struct pci_dev *pdev);
  
- ##################################################################################
- # ARM SoC drivers
-diff --git a/drivers/cpufreq/sfi-cpufreq.c b/drivers/cpufreq/sfi-cpufreq.c
-deleted file mode 100644
-index 45cfdf67cf03..000000000000
---- a/drivers/cpufreq/sfi-cpufreq.c
-+++ /dev/null
-@@ -1,127 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-only
 -/*
-- *  SFI Performance States Driver
-- *
-- *  Author: Vishwesh M Rudramuni <vishwesh.m.rudramuni@intel.com>
-- *  Author: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
+- * Medfield is the follow-up of Moorestown, it combines two chip solution into
+- * one. Other than that it also added always-on and constant tsc and lapic
+- * timers. Medfield is the platform name, and the chip name is called Penwell
+- * we treat Medfield/Penwell as a variant of Moorestown. Penwell can be
+- * identified via MSRs.
 - */
--
--#include <linux/cpufreq.h>
--#include <linux/init.h>
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/sfi.h>
--#include <linux/slab.h>
--#include <linux/smp.h>
--
--#include <asm/msr.h>
--
--static struct cpufreq_frequency_table *freq_table;
--static struct sfi_freq_table_entry *sfi_cpufreq_array;
--static int num_freq_table_entries;
--
--static int sfi_parse_freq(struct sfi_table_header *table)
--{
--	struct sfi_table_simple *sb;
--	struct sfi_freq_table_entry *pentry;
--	int totallen;
--
--	sb = (struct sfi_table_simple *)table;
--	num_freq_table_entries = SFI_GET_NUM_ENTRIES(sb,
--			struct sfi_freq_table_entry);
--	if (num_freq_table_entries <= 1) {
--		pr_err("No p-states discovered\n");
--		return -ENODEV;
--	}
--
--	pentry = (struct sfi_freq_table_entry *)sb->pentry;
--	totallen = num_freq_table_entries * sizeof(*pentry);
--
--	sfi_cpufreq_array = kmemdup(pentry, totallen, GFP_KERNEL);
--	if (!sfi_cpufreq_array)
--		return -ENOMEM;
--
--	return 0;
--}
--
--static int sfi_cpufreq_target(struct cpufreq_policy *policy, unsigned int index)
--{
--	unsigned int next_perf_state = 0; /* Index into perf table */
--	u32 lo, hi;
--
--	next_perf_state = policy->freq_table[index].driver_data;
--
--	rdmsr_on_cpu(policy->cpu, MSR_IA32_PERF_CTL, &lo, &hi);
--	lo = (lo & ~INTEL_PERF_CTL_MASK) |
--		((u32) sfi_cpufreq_array[next_perf_state].ctrl_val &
--		INTEL_PERF_CTL_MASK);
--	wrmsr_on_cpu(policy->cpu, MSR_IA32_PERF_CTL, lo, hi);
--
--	return 0;
--}
--
--static int sfi_cpufreq_cpu_init(struct cpufreq_policy *policy)
--{
--	policy->shared_type = CPUFREQ_SHARED_TYPE_HW;
--	policy->cpuinfo.transition_latency = 100000;	/* 100us */
--	policy->freq_table = freq_table;
--
--	return 0;
--}
--
--static struct cpufreq_driver sfi_cpufreq_driver = {
--	.flags		= CPUFREQ_CONST_LOOPS,
--	.verify		= cpufreq_generic_frequency_table_verify,
--	.target_index	= sfi_cpufreq_target,
--	.init		= sfi_cpufreq_cpu_init,
--	.name		= "sfi-cpufreq",
--	.attr		= cpufreq_generic_attr,
+-enum intel_mid_cpu_type {
+-	/* 1 was Moorestown */
+-	INTEL_MID_CPU_CHIP_PENWELL = 2,
+-	INTEL_MID_CPU_CHIP_CLOVERVIEW,
+-	INTEL_MID_CPU_CHIP_TANGIER,
 -};
 -
--static int __init sfi_cpufreq_init(void)
+-extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
+-
+ #ifdef CONFIG_X86_INTEL_MID
+ 
+-static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
 -{
--	int ret, i;
+-	return __intel_mid_cpu_chip;
+-}
 -
--	/* parse the freq table from SFI */
--	ret = sfi_table_parse(SFI_SIG_FREQ, NULL, NULL, sfi_parse_freq);
--	if (ret)
--		return ret;
+ extern void intel_scu_devices_create(void);
+ extern void intel_scu_devices_destroy(void);
+ 
+ #else /* !CONFIG_X86_INTEL_MID */
+ 
+-#define intel_mid_identify_cpu()	0
 -
--	freq_table = kcalloc(num_freq_table_entries + 1, sizeof(*freq_table),
--			     GFP_KERNEL);
--	if (!freq_table) {
--		ret = -ENOMEM;
--		goto err_free_array;
+ static inline void intel_scu_devices_create(void) { }
+ static inline void intel_scu_devices_destroy(void) { }
+ 
+diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+index 846b2ded39d9..2802b5e4637b 100644
+--- a/arch/x86/platform/intel-mid/intel-mid.c
++++ b/arch/x86/platform/intel-mid/intel-mid.c
+@@ -32,9 +32,6 @@
+ #define IPCMSG_COLD_OFF		0x80	/* Only for Tangier */
+ #define IPCMSG_COLD_RESET	0xF1
+ 
+-enum intel_mid_cpu_type __intel_mid_cpu_chip;
+-EXPORT_SYMBOL_GPL(__intel_mid_cpu_chip);
+-
+ static void intel_mid_power_off(void)
+ {
+ 	/* Shut down South Complex via PWRMU */
+@@ -58,29 +55,15 @@ static void __init intel_mid_time_init(void)
+ 
+ static void intel_mid_arch_setup(void)
+ {
+-	if (boot_cpu_data.x86 != 6) {
+-		pr_err("Unknown Intel MID CPU (%d:%d), default to Penwell\n",
+-			boot_cpu_data.x86, boot_cpu_data.x86_model);
+-		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
+-		goto out;
 -	}
 -
--	for (i = 0; i < num_freq_table_entries; i++) {
--		freq_table[i].driver_data = i;
--		freq_table[i].frequency = sfi_cpufreq_array[i].freq_mhz * 1000;
--	}
--	freq_table[i].frequency = CPUFREQ_TABLE_END;
--
--	ret = cpufreq_register_driver(&sfi_cpufreq_driver);
--	if (ret)
--		goto err_free_tbl;
--
--	return ret;
--
--err_free_tbl:
--	kfree(freq_table);
--err_free_array:
--	kfree(sfi_cpufreq_array);
--	return ret;
--}
--late_initcall(sfi_cpufreq_init);
--
--static void __exit sfi_cpufreq_exit(void)
--{
--	cpufreq_unregister_driver(&sfi_cpufreq_driver);
--	kfree(freq_table);
--	kfree(sfi_cpufreq_array);
--}
--module_exit(sfi_cpufreq_exit);
--
--MODULE_AUTHOR("Vishwesh M Rudramuni <vishwesh.m.rudramuni@intel.com>");
--MODULE_DESCRIPTION("SFI Performance-States Driver");
--MODULE_LICENSE("GPL");
+ 	switch (boot_cpu_data.x86_model) {
+-	case 0x35:
+-		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_CLOVERVIEW;
+-		break;
+ 	case 0x3C:
+ 	case 0x4A:
+-		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_TANGIER;
+ 		x86_platform.legacy.rtc = 1;
+ 		break;
+-	case 0x27:
+ 	default:
+-		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
+ 		break;
+ 	}
+ 
+-out:
+ 	/*
+ 	 * Intel MID platforms are using explicitly defined regulators.
+ 	 *
 -- 
 2.30.0
 
