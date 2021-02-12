@@ -2,200 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1AAFC433E6
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6A1C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 17:29:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6A8564E87
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Feb 2021 13:51:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE5CC64E9A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 17:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231898AbhBKNvd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Feb 2021 08:51:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59460 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232152AbhBKNsp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2021 08:48:45 -0500
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1FF2C0613D6
-        for <linux-pci@vger.kernel.org>; Thu, 11 Feb 2021 05:48:02 -0800 (PST)
-Received: by mail-wm1-x336.google.com with SMTP id u16so1960849wmq.1
-        for <linux-pci@vger.kernel.org>; Thu, 11 Feb 2021 05:48:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=tohq/JdjtvfZAdF0OwFagBaJvOCASM9Lm+6u557MXjU=;
-        b=HQu57158wSVHhIE8l7cx35me4mYPQpunE5u/k69jspcVq62YAAex1C2vV4y4XOgyUf
-         CDi6g3lMdp2cXJDnGDoo9rvHJ0h2c70fKMVKLmq+2t6DjU5f9saat4k+zo2hVf4db0Xe
-         dizf7w4BQnVoYMgvnuiRF7MelKozHeDxnJok7RJbjLv39RaBV+lG2Id8TrBuByoGizU2
-         erkgfalKehBtyYJEBVkJ8UMUJtU1qTzvVovRsdwY4Y9t8D/n5I7gfhNa7CJtE5MrrYwz
-         9e5PguMR1yaZP/ieol1XnbgCPKikznV+nSf070iulNnzt/fBZu1M5St0iHKvOHq0kQg8
-         C2+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=tohq/JdjtvfZAdF0OwFagBaJvOCASM9Lm+6u557MXjU=;
-        b=fizR+uMFtWUB8P1ZPuOaMaQ2sm1GHIwoZRGZbkW7hMK7HKkJHWrR259tu6bayQFoVA
-         5uUJPfY3RQPsipILIlMAw+M0OHbowJM15BvYT1OtQzpv+YVuqVXILimzvj4g8xyMhd8B
-         nHOIFBQ6XlmllxrlRvP0bSNVOSVAJs8rWUuLJ8Xcy2ztAgZJJmMm4QIJHSzimgBf/Arr
-         6Tqlrwy/2H2ZdMnjWIvFI6Cla7ukWXC8tFzqmSJf3DqgWmwiu/w4QAgH9SuVw4iGWz48
-         Uqdwa/bsN3K4dL4tuFxaIN9AdUFrlKx3sHXDWGGqZ/AT4seeqJ6RxKWGwvCzzJ16Xb23
-         AARw==
-X-Gm-Message-State: AOAM532ka8NLuVqHdLVUy3Aipmuhr4Q6HcfDQQkQFLnATpmBDvitdpxr
-        QmAiiWP6Ems0djXbgTf/AuMYaUcjIo653w==
-X-Google-Smtp-Source: ABdhPJzmGj4PIL2Lj8D0JG3g1kTRWkA98/AyYRGC6sCW6bv5edmfCZTAZQ0VN7iWGvRDUSmG6vhOSg==
-X-Received: by 2002:a05:600c:4f02:: with SMTP id l2mr5005150wmq.67.1613051281303;
-        Thu, 11 Feb 2021 05:48:01 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f1f:ad00:60ca:853:df03:450e? (p200300ea8f1fad0060ca0853df03450e.dip0.t-ipconnect.de. [2003:ea:8f1f:ad00:60ca:853:df03:450e])
-        by smtp.googlemail.com with ESMTPSA id i7sm4720210wru.49.2021.02.11.05.47.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Feb 2021 05:48:00 -0800 (PST)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH RESEND] PCI/VPD: Remove pci_set_vpd_size
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Message-ID: <ac972a55-05e6-91b5-259d-d310f834eba1@gmail.com>
-Date:   Thu, 11 Feb 2021 14:47:54 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        id S229611AbhBLR3O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Feb 2021 12:29:14 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:42438 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229497AbhBLR3N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Feb 2021 12:29:13 -0500
+Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 4AA4840C64;
+        Fri, 12 Feb 2021 17:28:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1613150894; bh=Kz/HN9GFZ6LekWdpgyUQBJQAeSl6o3M1KoJNJhws9XU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Xaal5YzHcuEOsRB7cWnsNZWIbP/pzcwzyS5oe8KuByqxgsYPRU5UVQ6cYGiuHZ8J5
+         T0VCTNV+cPHqa4tUwWmy7zV5dNbvTbB08gu/Urj4h3nno1Z9Efdi7Cef4HHSp0dxcy
+         kLkeV+zSKqzdC1DWg7HJESK7wj+8NF+cfxTdhhkmfY5bKh68tOY+hbjQzdw8FjI7fu
+         cKHC8jvJa46ffvInxFTWA2u4lV0+6vIUnub8adpp7dY/fiubuLB1dzplrUXg59kWDf
+         16SIWkOD+xnehsgPk+IdarUkqalzMHVjIFVLlrcfS0NPkN+A2/qDMK50xxPnGgVDAv
+         BYK2AujeL5a6A==
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 6A0CDA005D;
+        Fri, 12 Feb 2021 17:28:10 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v6 0/5] misc: Add Add Synopsys DesignWare xData IP driver
+Date:   Fri, 12 Feb 2021 18:28:02 +0100
+Message-Id: <cover.1613150798.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-24a1720a0841 ("cxgb4: collect serial config version from register")
-removed the only usage of pci_set_vpd_size(). If a device needs to
-override the auto-detected VPD size, then this can be done using a
-PCI quirk, like it's done for Chelsio devices. There's no need to
-allow drivers to change the VPD size. So let's remove
-pci_set_vpd_size().
+This patch series adds a new driver called xData-pcie for the Synopsys
+DesignWare PCIe prototype.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
-- Referenced commit just landed in linux-next via the netdev tree.
----
- drivers/pci/vpd.c   | 47 +++++++--------------------------------------
- include/linux/pci.h |  1 -
- 2 files changed, 7 insertions(+), 41 deletions(-)
+The driver configures and enables the Synopsys DesignWare PCIe traffic
+generator IP inside of prototype Endpoint which will generate upstream
+and downstream PCIe traffic. This allows to quickly test the PCIe link
+throughput speed and check is the prototype solution has some limitation
+or not.
 
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 4cf0d77ca..d1cbc5e64 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -16,7 +16,6 @@
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
--	int (*set_size)(struct pci_dev *dev, size_t len);
- };
- 
- struct pci_vpd {
-@@ -59,19 +58,6 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
- }
- EXPORT_SYMBOL(pci_write_vpd);
- 
--/**
-- * pci_set_vpd_size - Set size of Vital Product Data space
-- * @dev:	pci device struct
-- * @len:	size of vpd space
-- */
--int pci_set_vpd_size(struct pci_dev *dev, size_t len)
--{
--	if (!dev->vpd || !dev->vpd->ops)
--		return -ENODEV;
--	return dev->vpd->ops->set_size(dev, len);
--}
--EXPORT_SYMBOL(pci_set_vpd_size);
--
- #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
- 
- /**
-@@ -296,23 +282,19 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	return ret ? ret : count;
- }
- 
--static int pci_vpd_set_size(struct pci_dev *dev, size_t len)
-+static void pci_vpd_set_size(struct pci_dev *dev, size_t len)
- {
- 	struct pci_vpd *vpd = dev->vpd;
- 
--	if (len == 0 || len > PCI_VPD_MAX_SIZE)
--		return -EIO;
--
--	vpd->valid = 1;
--	vpd->len = len;
--
--	return 0;
-+	if (vpd && len && len <= PCI_VPD_MAX_SIZE) {
-+		vpd->valid = 1;
-+		vpd->len = len;
-+	}
- }
- 
- static const struct pci_vpd_ops pci_vpd_ops = {
- 	.read = pci_vpd_read,
- 	.write = pci_vpd_write,
--	.set_size = pci_vpd_set_size,
- };
- 
- static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-@@ -345,24 +327,9 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	return ret;
- }
- 
--static int pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
--{
--	struct pci_dev *tdev = pci_get_slot(dev->bus,
--					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
--	int ret;
--
--	if (!tdev)
--		return -ENODEV;
--
--	ret = pci_set_vpd_size(tdev, len);
--	pci_dev_put(tdev);
--	return ret;
--}
--
- static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.read = pci_vpd_f0_read,
- 	.write = pci_vpd_f0_write,
--	.set_size = pci_vpd_f0_set_size,
- };
- 
- int pci_vpd_init(struct pci_dev *dev)
-@@ -528,9 +495,9 @@ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
- 	 * limits.
- 	 */
- 	if (chip == 0x0 && prod >= 0x20)
--		pci_set_vpd_size(dev, 8192);
-+		pci_vpd_set_size(dev, 8192);
- 	else if (chip >= 0x4 && func < 0x8)
--		pci_set_vpd_size(dev, 2048);
-+		pci_vpd_set_size(dev, 2048);
- }
- 
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 86c799c97..edadc62ae 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1302,7 +1302,6 @@ void pci_unlock_rescan_remove(void);
- /* Vital Product Data routines */
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
--int pci_set_vpd_size(struct pci_dev *dev, size_t len);
- 
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+Changes:
+ V2: Rework driver according to Greg Kroah-Hartman' feedback
+ V3: Fixed issues detected while running on 64 bits platforms
+     Rebased patches on top of v5.11-rc1 version
+ V4: Rework driver according to Greg Kroah-Hartman' feedback
+     Add the ABI doc related to the sysfs implemented on this driver
+ V5: Rework driver accordingly to Leon Romanovsky' feedback
+     Rework driver accordingly to Krzysztof Wilczyński' feedback
+ V6: Rework driver according to Greg Kroah-Hartman' feedback
+     Rework driver accordingly to Krzysztof Wilczyński' feedback
+     Rework driver accordingly to Leon Romanovsky' feedback
+
+Cc: Derek Kiernan <derek.kiernan@xilinx.com>
+Cc: Dragan Cvetic <dragan.cvetic@xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+
+Gustavo Pimentel (5):
+  misc: Add Synopsys DesignWare xData IP driver
+  misc: Add Synopsys DesignWare xData IP driver to Makefile and Kconfig
+  Documentation: misc-devices: Add Documentation for dw-xdata-pcie
+    driver
+  MAINTAINERS: Add Synopsys xData IP driver maintainer
+  docs: ABI: Add sysfs documentation interface of dw-xdata-pcie driver
+
+ Documentation/ABI/testing/sysfs-driver-xdata |  46 ++++
+ Documentation/misc-devices/dw-xdata-pcie.rst |  40 +++
+ MAINTAINERS                                  |   7 +
+ drivers/misc/Kconfig                         |  10 +
+ drivers/misc/Makefile                        |   1 +
+ drivers/misc/dw-xdata-pcie.c                 | 390 +++++++++++++++++++++++++++
+ 6 files changed, 494 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-xdata
+ create mode 100644 Documentation/misc-devices/dw-xdata-pcie.rst
+ create mode 100644 drivers/misc/dw-xdata-pcie.c
+
 -- 
-2.30.0
+2.7.4
 
