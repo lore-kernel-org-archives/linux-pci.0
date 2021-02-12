@@ -5,38 +5,38 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DBF0C43333
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE63C4332D
 	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 17:29:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74A5464EBB
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 17:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06A0164E9A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 17:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231473AbhBLR3Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Feb 2021 12:29:25 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:42770 "EHLO
+        id S231359AbhBLR3V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Feb 2021 12:29:21 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:42750 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231131AbhBLR3S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Feb 2021 12:29:18 -0500
+        by vger.kernel.org with ESMTP id S230489AbhBLR3R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Feb 2021 12:29:17 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 1631BC0448;
-        Fri, 12 Feb 2021 17:28:18 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id E2A37C0447;
+        Fri, 12 Feb 2021 17:28:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613150898; bh=RiCZ/aIb+ohi4u6232sCNdL5GCcyH0Wu9wGtiKnfNzc=;
+        t=1613150897; bh=x6qwlQ3unob1xa78MC32IMOFOlfkiuMvvCbd1vCCzC8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=OdL7A8joiblzjWmFQE0PGkAWE/hDMCy6fBslZEj/cEcYxFmO1fdjQSHnBTQu6Wn9d
-         WEzYwTZhsOZdxNO8p008+dlIReh/Weqc+SUItaXSZSEk83lYDD6BX2YSP2lyf+RKp5
-         iEw7blMSs+HiIX00ztNeyq6/6lObcTTciGpzHGt4ecRlylsVU84MCqvkwPczg9etnt
-         gVMAMxpvdJpRL6JQcmH85GsWtDt6SrVX1zKRqqw05E37P3CAFtlKpFQL22DxqWJFOa
-         wR5JQi88hStX+cdHsnfAMtjoGg01olBgMqHkkBU1Swl/nyHx6rDA6sDEDCGM1ljLnF
-         hTP9RODYaNfXQ==
+        b=ZWnuMBnspqhPjf20f+p1rWTKlCcJkSAZwoa0TR0Lsq6AjuMdbAWaFmXulFTzcAXvE
+         f3jRH+nPP0MzXRQg21LkXxA8LFl4+bJOkUiPPZwWxA8FMVuAt+dUkPMBDa4yqwPM9q
+         fAJg4HhgWBUHcgxwboYOgacG0oCp6JQuBNtgOALT9GwQb9eZWkprQ4/ADSfhM3DdSN
+         s+OxC6q90XehSNIVKdfxWr/FNubsFZdRfYpcyrzKe5tKlpb3bvFr0BbA0IeaQDwcsl
+         a6xGhfts9tsjJRtn+oT4kY36bJsBiadtiNPBoxY9bTtH4o+/Y9Lu5WE/t+9wi6KOFO
+         G60P8f0r21FSA==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id D0B05A005D;
-        Fri, 12 Feb 2021 17:28:16 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id A92AEA0061;
+        Fri, 12 Feb 2021 17:28:15 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -49,9 +49,9 @@ To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
         Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v6 5/5] docs: ABI: Add sysfs documentation interface of dw-xdata-pcie driver
-Date:   Fri, 12 Feb 2021 18:28:07 +0100
-Message-Id: <bf25bd2b8977d678adb13fea02d4cebf22f583bf.1613150798.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v6 4/5] MAINTAINERS: Add Synopsys xData IP driver maintainer
+Date:   Fri, 12 Feb 2021 18:28:06 +0100
+Message-Id: <b64d6aacd93fb8a0389894da885a7c2db631324b.1613150798.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613150798.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613150798.git.gustavo.pimentel@synopsys.com>
@@ -61,67 +61,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch describes the sysfs interface implemented on the dw-xdata-pcie
-driver.
+Add Synopsys xData IP driver maintainer.
+
+This driver aims to support Synopsys xData IP and is normally distributed
+along with Synopsys PCIe EndPoint IP as a PCIe traffic generator (depends
+of the use and licensing agreement).
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- Documentation/ABI/testing/sysfs-driver-xdata | 46 ++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-driver-xdata
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-xdata b/Documentation/ABI/testing/sysfs-driver-xdata
-new file mode 100644
-index 00000000..09d38e1
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-driver-xdata
-@@ -0,0 +1,46 @@
-+What:		/sys/bus/pci/drivers/dw-xdata-pcie/.../write
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to enable the PCIe traffic generator which
-+		will create write TLPs frames - from the Root Complex to the
-+		Endpoint direction.
-+		Usage e.g.
-+		 echo 1 > /sys/bus/pci/drivers/dw-xdata-pcie/.../write
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 546aa66..f9d681b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5061,6 +5061,13 @@ S:	Maintained
+ F:	drivers/dma/dw-edma/
+ F:	include/linux/dma/edma.h
+ 
++DESIGNWARE XDATA IP DRIVER
++M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/misc-devices/dw-xdata-pcie.rst
++F:	drivers/misc/dw-xdata-pcie.c
 +
-+		The user can read the current PCIe link throughput generated
-+		through this generator in MB/s.
-+		Usage e.g.
-+		 cat /sys/bus/pci/drivers/dw-xdata-pcie/.../write
-+		 204
-+
-+		The file is read and write.
-+
-+What:		/sys/bus/pci/drivers/dw-xdata-pcie/.../read
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to enable the PCIe traffic generator which
-+		will create read TLPs frames - from the Endpoint to the Root
-+		Complex direction.
-+		Usage e.g.
-+		 echo 1 > /sys/bus/pci/drivers/dw-xdata-pcie/.../read
-+
-+		The user can read the current PCIe link throughput generated
-+		through this generator in MB/s.
-+		Usage e.g.
-+		 cat /sys/bus/pci/drivers/dw-xdata-pcie/.../read
-+		 199
-+
-+		The file is read and write.
-+
-+What:		/sys/bus/pci/drivers/dw-xdata-pcie/.../stop
-+Date:		February 2021
-+KernelVersion:	5.12
-+Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+Description:	Allows the user to disable the PCIe traffic generator in all
-+		directions.
-+		Usage e.g.
-+		 echo 1 > /sys/bus/pci/drivers/dw-xdata-pcie/.../stop
-+
-+		The file is write only.
+ DESIGNWARE USB2 DRD IP DRIVER
+ M:	Minas Harutyunyan <hminas@synopsys.com>
+ L:	linux-usb@vger.kernel.org
 -- 
 2.7.4
 
