@@ -2,110 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99059C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 20:55:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD56C433E9
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 22:28:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6167864DE9
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 20:55:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6475164E8E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Feb 2021 22:28:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231289AbhBLUzJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Feb 2021 15:55:09 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:55698 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230477AbhBLUzJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Feb 2021 15:55:09 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id CBABB4128A;
-        Fri, 12 Feb 2021 20:54:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        mime-version:content-transfer-encoding:content-id:content-type
-        :content-type:content-language:accept-language:in-reply-to
-        :references:message-id:date:date:subject:subject:from:from
-        :received:received:received:received; s=mta-01; t=1613163261; x=
-        1614977662; bh=A2h9ZfSLg88FgPBOkhRhm2SzRshmIAsl4uBa6F19fkw=; b=T
-        vgtW0SvMIw5wD8P+SLfwMd2WO6Lydi7+EZWp8+4amY0pLjxto02HLQZ63ilXTgeI
-        I7pR6BUurC/ldcN3TQbtrcJ06jUWLTS58l6IODjNg91qKkYwDuiz4cLuTblIq5ZH
-        /2bA+xEKrbvsUcFteM7oMw8mHH+CKaJKdhatTW1Xh0=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id QesUdhETJ-KO; Fri, 12 Feb 2021 23:54:21 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 8423B4126D;
-        Fri, 12 Feb 2021 23:54:19 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (172.17.100.103) by
- T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Fri, 12 Feb 2021 23:54:18 +0300
-Received: from T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272]) by
- T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272%14]) with mapi id
- 15.01.0669.032; Fri, 12 Feb 2021 23:54:19 +0300
-From:   Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-To:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-CC:     "David.Laight@aculab.com" <David.Laight@aculab.com>,
-        "christian@kellner.me" <christian@kellner.me>,
-        "christian.koenig@amd.com" <christian.koenig@amd.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "YehezkelShB@gmail.com" <YehezkelShB@gmail.com>,
-        "mario.limonciello@dell.com" <mario.limonciello@dell.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "linux@yadro.com" <linux@yadro.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "sr@denx.de" <sr@denx.de>, "lukas@wunner.de" <lukas@wunner.de>,
-        "andy.lavr@gmail.com" <andy.lavr@gmail.com>
-Subject: Re: [PATCH v9 00/26] PCI: Allow BAR movement during boot and hotplug
-Thread-Topic: [PATCH v9 00/26] PCI: Allow BAR movement during boot and hotplug
-Thread-Index: AQHW1WT234xzlvvTV0WAimI1cHAduao9LYkAgABgu4CABcepgIADoByAgADzoQCACgJRgIABDByAgABmKICAAUCIgIAAhpoA
-Date:   Fri, 12 Feb 2021 20:54:18 +0000
-Message-ID: <460947ac479281677cdc42e69fc60dccd19dfe94.camel@yadro.com>
-References: <20201218174011.340514-1-s.miroshnichenko@yadro.com>
-         <20210128145316.GA3052488@bjorn-Precision-5520>
-         <20210128203929.GB6613@wunner.de>
-         <20210201125523.GN2542@lahna.fi.intel.com>
-         <44ce19d112b97930b1a154740c2e15f3f2d10818.camel@yadro.com>
-         <20210204104912.GE2542@lahna.fi.intel.com>
-         <afc5d363476d445cfdf04b0ec4db9275db803af3.camel@yadro.com>
-         <20210211113941.GF2542@lahna.fi.intel.com>
-         <52dd963fc697059d3db39c25eda222f4b7197761.camel@yadro.com>
-         <20210212125233.GS2542@lahna.fi.intel.com>
-In-Reply-To: <20210212125233.GS2542@lahna.fi.intel.com>
-Accept-Language: en-US, ru-RU
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [172.17.15.136]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <46AC30FA8F37C84798556D5DAB655894@yadro.com>
-Content-Transfer-Encoding: base64
+        id S231317AbhBLW21 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Feb 2021 17:28:27 -0500
+Received: from mga03.intel.com ([134.134.136.65]:60498 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232101AbhBLW17 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Feb 2021 17:27:59 -0500
+IronPort-SDR: hE79ioqf/Lg9+0eJwyMRHJ5DuRf/J+FuuwDNFmQMg4ZK5G7b0gpy5rdY3Lq8gWbafh53+Qg0eU
+ B6qP+/fdvaNw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9893"; a="182555595"
+X-IronPort-AV: E=Sophos;i="5.81,174,1610438400"; 
+   d="scan'208";a="182555595"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2021 14:25:56 -0800
+IronPort-SDR: OSxbssJAnhWnRMpRde4ztOjzyNyjyVZQrEy9pI5WY8OTt4WnmK4jH39VdeEhzgMeSjupPQQql2
+ 2RQtEvsHuecQ==
+X-IronPort-AV: E=Sophos;i="5.81,174,1610438400"; 
+   d="scan'208";a="587605389"
+Received: from smandal1-mobl2.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.133.121])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Feb 2021 14:25:54 -0800
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     linux-cxl@vger.kernel.org
+Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Chris Browy <cbrowy@avery-design.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        David Hildenbrand <david@redhat.com>,
+        David Rientjes <rientjes@google.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jon Masters <jcm@jonmasters.org>,
+        Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        "John Groves (jgroves)" <jgroves@micron.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Subject: [PATCH v3 7/9] cxl/mem: Add set of informational commands
+Date:   Fri, 12 Feb 2021 14:25:39 -0800
+Message-Id: <20210212222541.2123505-8-ben.widawsky@intel.com>
+X-Mailer: git-send-email 2.30.0
+In-Reply-To: <20210212222541.2123505-1-ben.widawsky@intel.com>
+References: <20210212222541.2123505-1-ben.widawsky@intel.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gRnJpLCAyMDIxLTAyLTEyIGF0IDE0OjUyICswMjAwLCBtaWthLndlc3RlcmJlcmdAbGludXgu
-aW50ZWwuY29tDQp3cm90ZToNCj4gSGksDQo+IA0KPiBPbiBUaHUsIEZlYiAxMSwgMjAyMSBhdCAw
-NTo0NToyMFBNICswMDAwLCBTZXJnZWkgTWlyb3NobmljaGVua28NCj4gd3JvdGU6DQo+ID4gV2hh
-dCBhIHBpdHkuIFllcywgcGxlYXNlLCBJIHdvdWxkIG9mIGNvdXJzZSBsaWtlIHRvIHRha2UgYSBs
-b29rIHdoeQ0KPiA+IHRoYXQgaGFwcGVuZWQsIGFuZCBjb21wYXJlLCB3aGF0IHdlbnQgd3Jvbmcg
-KGJlZm9yZSBhbmQgYWZ0ZXIgdGhlDQo+ID4gaG90cGx1ZzogbHNwY2kgLXR2LCBkbWVzZyAtdCBh
-bmQgL3Byb2MvaW9tZW0gd2l0aCAvcHJvYy9pb3BvcnRzLCBpZg0KPiA+IGl0DQo+ID4gd291bGRu
-J3QgYmUgdG9vIG11Y2ggdHJvdWJsZSkuDQo+IA0KPiBJIGp1c3Qgc2VudCB0aGVzZSBsb2dzIHRv
-IHlvdSBpbiBhIHNlcGFyYXRlIGVtYWlsLiBMZXQgbWUga25vdyBpZiB5b3UNCj4gbmVlZCBtb3Jl
-Lg0KDQpUaGFua3MsIGZyb20gdGhlbSBpdCdzIGNsZWFyIHRoYXQgdGhlICJmdWxsIHJlc2NhbiIg
-YXBwcmFjaCBjdXJyZW50bHkNCmRvZXNuJ3QgaW52b2x2ZSB0aGUgcGNpX2J1c19kaXN0cmlidXRl
-X2F2YWlsYWJsZV9yZXNvdXJjZXMoKSwgdGhhdCdzDQp3aHkgaG90LWFkZGluZyBhIHNlY29uZCBu
-ZXN0ZWQgc3dpdGNoIGJyZWFrczogYmVjYXVzZSBvZiBub24tDQpkaXN0cmlidXRlZCBmcmVlIGJ1
-cyBudW1iZXJzLiBUaGUgZmlyc3Qgc3dpdGNoIHNlZW1zIHdhcyBob3QtYWRkZWQganVzdA0KZmlu
-ZSwgd2l0aCBCQVJzIGJlaW5nIG1vdmVkIGEgYml0Lg0KDQpUaGlzIGlzIHRvIGJlIGZpeGVkIGlu
-IHYxMCwgYWxvbmcgd2l0aCB0aGUNCm1wdDNzYXMrcGNpX2Rldl9pc19kaXNjb25uZWN0ZWQoKSBt
-b21lbnQgTHVrYXMgaGFkIGZvdW5kICh0aGFua3MNCkx1a2FzISksIENPTkZJR19ERUJVR19MT0NL
-X0FMTE9DIG1hY3JvLCBhbmQgYSBtb3JlIHVzZWZ1bCBkZWJ1Zw0KbWVzc2FnZXMuDQoNClNlcmdl
-DQo=
+Add initial set of formal commands beyond basic identify and command
+enumeration.
+
+Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> (v2)
+---
+ drivers/cxl/mem.c            | 9 +++++++++
+ include/uapi/linux/cxl_mem.h | 5 +++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+index b026c1167bda..3bca8451348a 100644
+--- a/drivers/cxl/mem.c
++++ b/drivers/cxl/mem.c
+@@ -44,12 +44,16 @@
+ enum opcode {
+ 	CXL_MBOX_OP_INVALID		= 0x0000,
+ 	CXL_MBOX_OP_RAW			= CXL_MBOX_OP_INVALID,
++	CXL_MBOX_OP_GET_FW_INFO		= 0x0200,
+ 	CXL_MBOX_OP_ACTIVATE_FW		= 0x0202,
+ 	CXL_MBOX_OP_GET_SUPPORTED_LOGS	= 0x0400,
+ 	CXL_MBOX_OP_GET_LOG		= 0x0401,
+ 	CXL_MBOX_OP_IDENTIFY		= 0x4000,
++	CXL_MBOX_OP_GET_PARTITION_INFO	= 0x4100,
+ 	CXL_MBOX_OP_SET_PARTITION_INFO	= 0x4101,
++	CXL_MBOX_OP_GET_LSA		= 0x4102,
+ 	CXL_MBOX_OP_SET_LSA		= 0x4103,
++	CXL_MBOX_OP_GET_HEALTH_INFO	= 0x4200,
+ 	CXL_MBOX_OP_SET_SHUTDOWN_STATE	= 0x4204,
+ 	CXL_MBOX_OP_SCAN_MEDIA		= 0x4304,
+ 	CXL_MBOX_OP_GET_SCAN_MEDIA	= 0x4305,
+@@ -166,6 +170,11 @@ static struct cxl_mem_command mem_commands[] = {
+ 	CXL_CMD(RAW, ~0, ~0, 0),
+ #endif
+ 	CXL_CMD(GET_SUPPORTED_LOGS, 0, ~0, CXL_CMD_FLAG_FORCE_ENABLE),
++	CXL_CMD(GET_FW_INFO, 0, 0x50, 0),
++	CXL_CMD(GET_PARTITION_INFO, 0, 0x20, 0),
++	CXL_CMD(GET_LSA, 0x8, ~0, 0),
++	CXL_CMD(GET_HEALTH_INFO, 0, 0x12, 0),
++	CXL_CMD(GET_LOG, 0x18, ~0, CXL_CMD_FLAG_FORCE_ENABLE),
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/cxl_mem.h b/include/uapi/linux/cxl_mem.h
+index 3b5bf4b58fb4..7670fe0e605a 100644
+--- a/include/uapi/linux/cxl_mem.h
++++ b/include/uapi/linux/cxl_mem.h
+@@ -24,6 +24,11 @@
+ 	___C(IDENTIFY, "Identify Command"),                               \
+ 	___C(RAW, "Raw device command"),                                  \
+ 	___C(GET_SUPPORTED_LOGS, "Get Supported Logs"),                   \
++	___C(GET_FW_INFO, "Get FW Info"),                                 \
++	___C(GET_PARTITION_INFO, "Get Partition Information"),            \
++	___C(GET_LSA, "Get Label Storage Area"),                          \
++	___C(GET_HEALTH_INFO, "Get Health Info"),                         \
++	___C(GET_LOG, "Get Log"),                                         \
+ 	___C(MAX, "invalid / last command")
+ 
+ #define ___C(a, b) CXL_MEM_COMMAND_ID_##a
+-- 
+2.30.0
+
