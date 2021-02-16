@@ -2,77 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F89CC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Feb 2021 02:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C665DC433DB
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Feb 2021 03:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C80EF64DF0
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Feb 2021 02:40:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 890F164DF0
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Feb 2021 03:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229754AbhBPCkC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Feb 2021 21:40:02 -0500
-Received: from m12-16.163.com ([220.181.12.16]:55920 "EHLO m12-16.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229713AbhBPCkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Feb 2021 21:40:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=AARYkRayiGFTgZjLdJ
-        EzuTfDkzsRTsvYgF8PsXcfCJ4=; b=drFmtWNh40sCp9tfsaZPGxvXvG6sFbf/bC
-        iy9b8LoBWu23omZdqg/w89v+GMJN+McG17HLm9HXuM6tWwNXzruY6/IqLa8leQSG
-        B0CMu20d8WSMhgQ9Io6hdmgDtqOBkoemayU3MCFXB4Wt/SS2P3cxa2oCaRVwyAFN
-        XXFLg7HeU=
-Received: from localhost.localdomain (unknown [125.70.193.99])
-        by smtp12 (Coremail) with SMTP id EMCowADnOT7qLytgKjrYcA--.3200S2;
-        Tue, 16 Feb 2021 10:37:33 +0800 (CST)
-From:   Chen Lin <chen45464546@163.com>
-To:     rjw@rjwysocki.net
-Cc:     lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chen Lin <chen.lin5@zte.com.cn>
-Subject: [PATCH] PCI: hotplug: Remove unused function pointer typedef acpiphp_callback
-Date:   Tue, 16 Feb 2021 10:38:40 +0800
-Message-Id: <1613443120-4279-1-git-send-email-chen45464546@163.com>
-X-Mailer: git-send-email 1.7.9.5
-X-CM-TRANSID: EMCowADnOT7qLytgKjrYcA--.3200S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr1UAr4kJr15GF43Wr48JFb_yoWfuFgEgF
-        1Dtr17Kr15GFnakFn8Jw15ZFyjgay3uFyrWw48tFn3Ar48KrsxC3yUGw45ZF97AryYgF1j
-        y347Xr1vyr97tjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU0LvtJUUUUU==
-X-Originating-IP: [125.70.193.99]
-X-CM-SenderInfo: hfkh0kqvuwkkiuw6il2tof0z/xtbBdg47nlUMQAw9iAAAs9
+        id S229703AbhBPDB3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Feb 2021 22:01:29 -0500
+Received: from mail-lf1-f41.google.com ([209.85.167.41]:41454 "EHLO
+        mail-lf1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229652AbhBPDB3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Feb 2021 22:01:29 -0500
+Received: by mail-lf1-f41.google.com with SMTP id d24so13605112lfs.8;
+        Mon, 15 Feb 2021 19:01:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=hAaExniY8eD12XfJrRZgauVsXLQgbU0LNTK/CxUaGD0=;
+        b=p2H9nbhToYeTGyCkc0TVm11apr24pZc2N48go0T9gxTY5nogKNPDCCzCYcKm47R0/6
+         bXbf8g3hvV8w0nAhLOOqxcH3UBuD07JwS4RYBYPEuwSo/zRGWRvDC4yMazdWul+ETbwB
+         0NS3gubGy2z8+ohCJ8zOpSAGB/dGkopiiOg30shZILY3k2qYCm0vRfBFNY1GRp51QAn6
+         lkZKgEa8XxyTsKqztR+wIYvoPVarUE3AudpOZ5MzSsOtwpbuZ4J0lwuJNiKJ53g2yOMD
+         3SsmcPNYVv75qVjmSQjM0/tVtF+l0B9MdiFZmusUkmnI0+VDvkc8BBU2fHZMQW8kBwZg
+         Gdtg==
+X-Gm-Message-State: AOAM532U1YSWyeiFIpkEfdKYVuYU0+HmrUA5vewB5WQo9jgt11DJT/xE
+        bDKJARC7a6TpMSNLAaLSs+k=
+X-Google-Smtp-Source: ABdhPJyXp9qx04aRrwD4mwVsy804rjpKjNseqt4qi1Fxu41G4c0v+N3TEFwPYJvXgUUu/xHLZXv29A==
+X-Received: by 2002:a19:8186:: with SMTP id c128mr10274693lfd.377.1613444446773;
+        Mon, 15 Feb 2021 19:00:46 -0800 (PST)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id u4sm2055765lfi.255.2021.02.15.19.00.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Feb 2021 19:00:46 -0800 (PST)
+Date:   Tue, 16 Feb 2021 04:00:45 +0100
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Chen Lin <chen45464546@163.com>
+Cc:     rjw@rjwysocki.net, lenb@kernel.org, helgaas@kernel.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chen Lin <chen.lin5@zte.com.cn>
+Subject: Re: [PATCH] PCI: hotplug: Remove unused function pointer typedef
+ acpiphp_callback
+Message-ID: <YCs1Xetu4ifu0iGv@rocinante>
+References: <1613443120-4279-1-git-send-email-chen45464546@163.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1613443120-4279-1-git-send-email-chen45464546@163.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Chen Lin <chen.lin5@zte.com.cn>
+Hi Chen,
 
-Remove the 'acpiphp_callback' typedef as it is not used.
+> Remove the 'acpiphp_callback' typedef as it is not used.
+[...]
 
-Signed-off-by: Chen Lin <chen.lin5@zte.com.cn>
----
- drivers/pci/hotplug/acpiphp.h |    3 ---
- 1 file changed, 3 deletions(-)
+Good catch!
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index a2094c0..a74b274 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -176,9 +176,6 @@ struct acpiphp_attention_info
- int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot, unsigned int sun);
- void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- 
--/* acpiphp_glue.c */
--typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
--
- int acpiphp_enable_slot(struct acpiphp_slot *slot);
- int acpiphp_disable_slot(struct acpiphp_slot *slot);
- u8 acpiphp_get_power_status(struct acpiphp_slot *slot);
--- 
-1.7.9.5
+This typedef was initially added in 2005, and then it stopped being used
+around the Kernel version 3.7 release, which is also when the sole user
+of this typedef called acpiphp_for_each_slot() has also been retired.
 
+Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
 
+Krzysztof
