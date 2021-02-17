@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8F5C43333
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Feb 2021 04:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCBA6C433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Feb 2021 04:12:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DF6F64E04
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Feb 2021 04:11:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C0F564DDA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Feb 2021 04:12:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231317AbhBQELh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Feb 2021 23:11:37 -0500
-Received: from mga07.intel.com ([134.134.136.100]:21744 "EHLO mga07.intel.com"
+        id S231393AbhBQEMN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Feb 2021 23:12:13 -0500
+Received: from mga07.intel.com ([134.134.136.100]:21743 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231273AbhBQELV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Feb 2021 23:11:21 -0500
-IronPort-SDR: 72a0bemGjxUamc1Clhul64lt0osKYFBixpjSyzIaiXYx6cTMRKH+5+WrMGlp7k0Qw2d1oaeZUm
- uNLA+CjxYq3g==
-X-IronPort-AV: E=McAfee;i="6000,8403,9897"; a="247165937"
+        id S231346AbhBQELr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Feb 2021 23:11:47 -0500
+IronPort-SDR: GspS+H6jCKCprRbqT4PcDuYa9z98YqP6+cBY6mEKF7Pmw2Yq1/p7wmnnzzWWasIvoeXtBe/7AT
+ a0B8B+Lsli0w==
+X-IronPort-AV: E=McAfee;i="6000,8403,9897"; a="247165948"
 X-IronPort-AV: E=Sophos;i="5.81,184,1610438400"; 
-   d="scan'208";a="247165937"
+   d="scan'208";a="247165948"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2021 20:10:14 -0800
-IronPort-SDR: nK2XZijp2iIhyQNYe85cCLUE9QbW6iMg4l7TMMDJAPd8dQNtFEm5amnnW+OI11gYjAWO8dbpfB
- bOldk/zgbxVQ==
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2021 20:10:18 -0800
+IronPort-SDR: Mug5PkrodM8Rl1xWiYxq98sDIf0X3SSeMjlZa9yQ7TA5gumGj0U/nmFtBL6W2PpAlt1kXP8boS
+ FlOqJ5QddABA==
 X-IronPort-AV: E=Sophos;i="5.81,184,1610438400"; 
-   d="scan'208";a="384948871"
+   d="scan'208";a="384948885"
 Received: from yxie-mobl.amr.corp.intel.com (HELO bwidawsk-mobl5.local) ([10.252.134.141])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2021 20:10:13 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2021 20:10:16 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org
 Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
@@ -49,11 +49,10 @@ Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-acpi@vger.kernel.org,
         Randy Dunlap <rdunlap@infradead.org>,
         Vishal Verma <vishal.l.verma@intel.com>,
         "John Groves (jgroves)" <jgroves@micron.com>,
-        "Kelley, Sean V" <sean.v.kelley@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: [PATCH v5 7/9] cxl/mem: Add set of informational commands
-Date:   Tue, 16 Feb 2021 20:09:56 -0800
-Message-Id: <20210217040958.1354670-8-ben.widawsky@intel.com>
+        "Kelley, Sean V" <sean.v.kelley@intel.com>
+Subject: [RFC PATCH v5 9/9] cxl/mem: Add payload dumping for debug
+Date:   Tue, 16 Feb 2021 20:09:58 -0800
+Message-Id: <20210217040958.1354670-10-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210217040958.1354670-1-ben.widawsky@intel.com>
 References: <20210217040958.1354670-1-ben.widawsky@intel.com>
@@ -63,66 +62,64 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add initial set of formal commands beyond basic identify and command
-enumeration.
+It's often useful in debug scenarios to see what the hardware has dumped
+out. As it stands today, any device error will result in the payload not
+being copied out, so there is no way to triage commands which weren't
+expected to fail (and sometimes the payload may have that information).
+
+The functionality is protected by normal kernel security mechanisms as
+well as a CONFIG option in the CXL driver.
+
+This was extracted from the original version of the CXL enabling patch
+series.
 
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com> (v2)
 ---
- drivers/cxl/mem.c            | 9 +++++++++
- include/uapi/linux/cxl_mem.h | 5 +++++
- 2 files changed, 14 insertions(+)
+ drivers/cxl/Kconfig | 13 +++++++++++++
+ drivers/cxl/mem.c   |  8 ++++++++
+ 2 files changed, 21 insertions(+)
 
+diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+index 97dc4d751651..3eec9276e586 100644
+--- a/drivers/cxl/Kconfig
++++ b/drivers/cxl/Kconfig
+@@ -50,4 +50,17 @@ config CXL_MEM_RAW_COMMANDS
+ 	  potential impact to memory currently in use by the kernel.
+ 
+ 	  If developing CXL hardware or the driver say Y, otherwise say N.
++
++config CXL_MEM_INSECURE_DEBUG
++	bool "CXL.mem debugging"
++	depends on CXL_MEM
++	help
++	  Enable debug of all CXL command payloads.
++
++	  Some CXL devices and controllers support encryption and other
++	  security features. The payloads for the commands that enable
++	  those features may contain sensitive clear-text security
++	  material. Disable debug of those command payloads by default.
++	  If you are a kernel developer actively working on CXL
++	  security enabling say Y, otherwise say N.
+ endif
 diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-index e31b3045e231..6d7d3870b5da 100644
+index 6d7d3870b5da..d63c8eaf23c7 100644
 --- a/drivers/cxl/mem.c
 +++ b/drivers/cxl/mem.c
-@@ -45,12 +45,16 @@
- enum opcode {
- 	CXL_MBOX_OP_INVALID		= 0x0000,
- 	CXL_MBOX_OP_RAW			= CXL_MBOX_OP_INVALID,
-+	CXL_MBOX_OP_GET_FW_INFO		= 0x0200,
- 	CXL_MBOX_OP_ACTIVATE_FW		= 0x0202,
- 	CXL_MBOX_OP_GET_SUPPORTED_LOGS	= 0x0400,
- 	CXL_MBOX_OP_GET_LOG		= 0x0401,
- 	CXL_MBOX_OP_IDENTIFY		= 0x4000,
-+	CXL_MBOX_OP_GET_PARTITION_INFO	= 0x4100,
- 	CXL_MBOX_OP_SET_PARTITION_INFO	= 0x4101,
-+	CXL_MBOX_OP_GET_LSA		= 0x4102,
- 	CXL_MBOX_OP_SET_LSA		= 0x4103,
-+	CXL_MBOX_OP_GET_HEALTH_INFO	= 0x4200,
- 	CXL_MBOX_OP_SET_SHUTDOWN_STATE	= 0x4204,
- 	CXL_MBOX_OP_SCAN_MEDIA		= 0x4304,
- 	CXL_MBOX_OP_GET_SCAN_MEDIA	= 0x4305,
-@@ -171,6 +175,11 @@ static struct cxl_mem_command mem_commands[] = {
- 	CXL_CMD(RAW, ~0, ~0, 0),
- #endif
- 	CXL_CMD(GET_SUPPORTED_LOGS, 0, ~0, CXL_CMD_FLAG_FORCE_ENABLE),
-+	CXL_CMD(GET_FW_INFO, 0, 0x50, 0),
-+	CXL_CMD(GET_PARTITION_INFO, 0, 0x20, 0),
-+	CXL_CMD(GET_LSA, 0x8, ~0, 0),
-+	CXL_CMD(GET_HEALTH_INFO, 0, 0x12, 0),
-+	CXL_CMD(GET_LOG, 0x18, ~0, CXL_CMD_FLAG_FORCE_ENABLE),
- };
+@@ -346,6 +346,14 @@ static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
  
- /*
-diff --git a/include/uapi/linux/cxl_mem.h b/include/uapi/linux/cxl_mem.h
-index 59227f82a4c1..3155382dfc9b 100644
---- a/include/uapi/linux/cxl_mem.h
-+++ b/include/uapi/linux/cxl_mem.h
-@@ -24,6 +24,11 @@
- 	___C(IDENTIFY, "Identify Command"),                               \
- 	___C(RAW, "Raw device command"),                                  \
- 	___C(GET_SUPPORTED_LOGS, "Get Supported Logs"),                   \
-+	___C(GET_FW_INFO, "Get FW Info"),                                 \
-+	___C(GET_PARTITION_INFO, "Get Partition Information"),            \
-+	___C(GET_LSA, "Get Label Storage Area"),                          \
-+	___C(GET_HEALTH_INFO, "Get Health Info"),                         \
-+	___C(GET_LOG, "Get Log"),                                         \
- 	___C(MAX, "invalid / last command")
- 
- #define ___C(a, b) CXL_MEM_COMMAND_ID_##a
+ 	/* #5 */
+ 	rc = cxl_mem_wait_for_doorbell(cxlm);
++
++	if (!cxl_is_security_command(mbox_cmd->opcode) ||
++	    IS_ENABLED(CONFIG_CXL_MEM_INSECURE_DEBUG)) {
++		print_hex_dump_debug("Payload ", DUMP_PREFIX_OFFSET, 16, 1,
++				     mbox_cmd->payload_in, mbox_cmd->size_in,
++				     true);
++	}
++
+ 	if (rc == -ETIMEDOUT) {
+ 		cxl_mem_mbox_timeout(cxlm, mbox_cmd);
+ 		return rc;
 -- 
 2.30.1
 
