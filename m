@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86274C433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:11:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD363C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:11:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 400A064EB8
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:11:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82A5764EB8
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:11:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232890AbhBRTLJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Feb 2021 14:11:09 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:37754 "EHLO
+        id S233052AbhBRTLP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Feb 2021 14:11:15 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:33110 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233718AbhBRTFl (ORCPT
+        by vger.kernel.org with ESMTP id S233658AbhBRTFl (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2021 14:05:41 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 9D54BC009B;
-        Thu, 18 Feb 2021 19:04:27 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 6803340162;
+        Thu, 18 Feb 2021 19:04:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613675067; bh=8RxnKbwEyJxEXSCstQw23PoxXUfTY99H0E63SYLYusc=;
+        t=1613675059; bh=gCI3nNoPy8dCurab6Uc+GVpEmLeCzjb3I1ubHtDkaBI=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=aFGBu42mtzwjx2Y0Mv3f+65XuDOhmXLyrAbVqpPdvi2OoRw6julW1+b4rtUh42Lh8
-         sda/XPqyNVSGffH//XZzf8nLWiD8+YPkWOLh1Y9ZHoztjaei3KENmYZ80ve/58rITH
-         vCVLTzIz9FQvb6vrLeXo98XOe/pP9MBVWEVKkIWYwuM4OfYCJZsuHU7CBL4DYTtqO9
-         U4CUIfHgGXREtBqmJ8b8NTkefq2vZQeTBhCizbvmonlK/MpJSRJ3zXv2wNn9x6tp4+
-         g/c4rojoj04Rw9vqOC6MftmLSOihb++y6Wo5jzGV/cn1uWYpynGRVTsjQsxW9y+0wN
-         H+qa1ZwGWN7rw==
+        b=X0et8RRDLXcy9/UHkzClYr9QwRhpEAkccV4/fPVeYWuMt3rb6O+awfUnRqv8ukUJj
+         VjRtAzr/J+3k7lc2UXqqdqV/1H7pqytHNyc7IQTuoDyjNi7wdoEQ6+YVtX2iekAeaQ
+         lCySLya1t/IutUVkUjJYQFtCaVd4e/tJpGl9AYUgBzIw7g7q3N+f0Fnx53b1lDD2Lw
+         17TTOllUo5TIL5k0YRJkluMQCgAot9lq4GIC4EhA/5i0pvMV2S5zen5JjF3oG/Kcc4
+         X/p0KIGS22ppxuXZQ6pZ73ofTrVDO+tO5BAY1YntO+ILF5FxhOjYJMLGQ9oIJeTXzk
+         Fvp9KSA5yKHZw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 408E0A005D;
-        Thu, 18 Feb 2021 19:04:26 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 11843A005D;
+        Thu, 18 Feb 2021 19:04:18 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -46,9 +46,9 @@ To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Lukas Wunner <lukas@wunner.de>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v7 11/15] dmaengine: dw-edma: Move struct dentry variable from static definition into dw_edma struct
-Date:   Thu, 18 Feb 2021 20:04:05 +0100
-Message-Id: <07c1167b671e7b175700e2e7061cf0b3dd8c6adb.1613674948.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v7 03/15] dmaengine: dw-edma: Add support for the HDMA feature
+Date:   Thu, 18 Feb 2021 20:03:57 +0100
+Message-Id: <5f40f89ef7d6255a12d5b23f34e6e59dcd28861e.1613674948.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
@@ -58,146 +58,224 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move struct dentry variable from static definition (dw-edma-v0-debugfs.c)
-into dw_edma struct (dw-edma-core.h)
+Add support for the HDMA feature.
 
-Also the variable was renamed from base_dir to debugfs.
+This new feature enables the current eDMA IP to use a deeper prefetch
+of the linked list, which reduces the algorithm execution latency
+observed when loading the elements of the list, causing more stable
+and higher data transfer.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c       |  2 +-
- drivers/dma/dw-edma/dw-edma-core.h       |  3 +++
- drivers/dma/dw-edma/dw-edma-v0-core.c    |  4 ++--
- drivers/dma/dw-edma/dw-edma-v0-core.h    |  2 +-
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 22 +++++++++++++---------
- drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  4 ++--
- 6 files changed, 22 insertions(+), 15 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.h       | 10 ++++----
+ drivers/dma/dw-edma/dw-edma-pcie.c       | 23 ++++++++---------
+ drivers/dma/dw-edma/dw-edma-v0-core.c    | 42 +++++++++++++++++++++++++++++---
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c |  9 +++----
+ 4 files changed, 60 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 552b5f9..bc94c8d 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -1003,7 +1003,7 @@ int dw_edma_remove(struct dw_edma_chip *chip)
- 	dma_async_device_unregister(&dw->rd_edma);
- 
- 	/* Turn debugfs off */
--	dw_edma_v0_core_debugfs_off();
-+	dw_edma_v0_core_debugfs_off(chip);
- 
- 	return 0;
- }
 diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index cba5436..60316d4 100644
+index 31fc50d..3f9593e 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.h
 +++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -137,6 +137,9 @@ struct dw_edma {
- 	const struct dw_edma_core_ops	*ops;
- 
- 	raw_spinlock_t			lock;		/* Only for legacy */
-+#ifdef CONFIG_DEBUG_FS
-+	struct dentry			*debugfs;
-+#endif /* CONFIG_DEBUG_FS */
+@@ -21,9 +21,10 @@ enum dw_edma_dir {
+ 	EDMA_DIR_READ
  };
  
- struct dw_edma_sg {
+-enum dw_edma_mode {
+-	EDMA_MODE_LEGACY = 0,
+-	EDMA_MODE_UNROLL
++enum dw_edma_map_format {
++	EDMA_MF_EDMA_LEGACY = 0x0,
++	EDMA_MF_EDMA_UNROLL = 0x1,
++	EDMA_MF_HDMA_COMPAT = 0x5
+ };
+ 
+ enum dw_edma_request {
+@@ -123,8 +124,7 @@ struct dw_edma {
+ 	struct dw_edma_irq		*irq;
+ 	int				nr_irqs;
+ 
+-	u32				version;
+-	enum dw_edma_mode		mode;
++	enum dw_edma_map_format		mf;
+ 
+ 	struct dw_edma_chan		*chan;
+ 	const struct dw_edma_core_ops	*ops;
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index 1eafc60..c130549 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -30,8 +30,7 @@ struct dw_edma_pcie_data {
+ 	off_t				dt_off;
+ 	size_t				dt_sz;
+ 	/* Other */
+-	u32				version;
+-	enum dw_edma_mode		mode;
++	enum dw_edma_map_format		mf;
+ 	u8				irqs;
+ };
+ 
+@@ -49,8 +48,7 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	.dt_off				= 0x00800000,	/*  8 Mbytes */
+ 	.dt_sz				= 0x03800000,	/* 56 Mbytes */
+ 	/* Other */
+-	.version			= 0,
+-	.mode				= EDMA_MODE_UNROLL,
++	.mf				= EDMA_MF_EDMA_UNROLL,
+ 	.irqs				= 1,
+ };
+ 
+@@ -69,8 +67,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	const struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_edma_chip *chip;
+-	int err, nr_irqs;
+ 	struct dw_edma *dw;
++	int err, nr_irqs;
+ 
+ 	/* Enable PCI device */
+ 	err = pcim_enable_device(pdev);
+@@ -157,16 +155,19 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	dw->dt_region.paddr += pdata->dt_off;
+ 	dw->dt_region.sz = pdata->dt_sz;
+ 
+-	dw->version = pdata->version;
+-	dw->mode = pdata->mode;
++	dw->mf = pdata->mf;
+ 	dw->nr_irqs = nr_irqs;
+ 	dw->ops = &dw_edma_pcie_core_ops;
+ 
+ 	/* Debug info */
+-	pci_dbg(pdev, "Version:\t%u\n", dw->version);
+-
+-	pci_dbg(pdev, "Mode:\t%s\n",
+-		dw->mode == EDMA_MODE_LEGACY ? "Legacy" : "Unroll");
++	if (dw->mf == EDMA_MF_EDMA_LEGACY)
++		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", dw->mf);
++	else if (dw->mf == EDMA_MF_EDMA_UNROLL)
++		pci_dbg(pdev, "Version:\teDMA Unroll (0x%x)\n", dw->mf);
++	else if (dw->mf == EDMA_MF_HDMA_COMPAT)
++		pci_dbg(pdev, "Version:\tHDMA Compatible (0x%x)\n", dw->mf);
++	else
++		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
+ 
+ 	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 		pdata->rg_bar, pdata->rg_off, pdata->rg_sz,
 diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
-index 5b0541a..329fc2e 100644
+index 7888eda..5b0541a 100644
 --- a/drivers/dma/dw-edma/dw-edma-v0-core.c
 +++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-@@ -506,7 +506,7 @@ void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip)
- 	dw_edma_v0_debugfs_on(chip);
- }
- 
--void dw_edma_v0_core_debugfs_off(void)
-+void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip)
+@@ -96,7 +96,7 @@ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ static inline struct dw_edma_v0_ch_regs __iomem *
+ __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
  {
--	dw_edma_v0_debugfs_off();
-+	dw_edma_v0_debugfs_off(chip);
- }
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
-index abae152..2afa626 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
-@@ -23,6 +23,6 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
- int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
- /* eDMA debug fs callbacks */
- void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip);
--void dw_edma_v0_core_debugfs_off(void);
-+void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip);
+-	if (dw->mode == EDMA_MODE_LEGACY)
++	if (dw->mf == EDMA_MF_EDMA_LEGACY)
+ 		return &(__dw_regs(dw)->type.legacy.ch);
  
- #endif /* _DW_EDMA_V0_CORE_H */
+ 	if (dir == EDMA_DIR_WRITE)
+@@ -108,7 +108,7 @@ __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
+ static inline void writel_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 			     u32 value, void __iomem *addr)
+ {
+-	if (dw->mode == EDMA_MODE_LEGACY) {
++	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -133,7 +133,7 @@ static inline u32 readl_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ {
+ 	u32 value;
+ 
+-	if (dw->mode == EDMA_MODE_LEGACY) {
++	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -365,6 +365,42 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+ 	if (first) {
+ 		/* Enable engine */
+ 		SET_RW_32(dw, chan->dir, engine_en, BIT(0));
++		if (dw->mf == EDMA_MF_HDMA_COMPAT) {
++			switch (chan->id) {
++			case 0:
++				SET_RW_COMPAT(dw, chan->dir, ch0_pwr_en,
++					      BIT(0));
++				break;
++			case 1:
++				SET_RW_COMPAT(dw, chan->dir, ch1_pwr_en,
++					      BIT(0));
++				break;
++			case 2:
++				SET_RW_COMPAT(dw, chan->dir, ch2_pwr_en,
++					      BIT(0));
++				break;
++			case 3:
++				SET_RW_COMPAT(dw, chan->dir, ch3_pwr_en,
++					      BIT(0));
++				break;
++			case 4:
++				SET_RW_COMPAT(dw, chan->dir, ch4_pwr_en,
++					      BIT(0));
++				break;
++			case 5:
++				SET_RW_COMPAT(dw, chan->dir, ch5_pwr_en,
++					      BIT(0));
++				break;
++			case 6:
++				SET_RW_COMPAT(dw, chan->dir, ch6_pwr_en,
++					      BIT(0));
++				break;
++			case 7:
++				SET_RW_COMPAT(dw, chan->dir, ch7_pwr_en,
++					      BIT(0));
++				break;
++			}
++		}
+ 		/* Interrupt unmask - done, abort */
+ 		tmp = GET_RW_32(dw, chan->dir, int_mask);
+ 		tmp &= ~FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id));
 diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index 157dfc2..4b3bcff 100644
+index a5e2783..157dfc2 100644
 --- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
 +++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -38,7 +38,6 @@
- #define CHANNEL_STR				"channel"
- #define REGISTERS_STR				"registers"
+@@ -55,7 +55,7 @@ struct debugfs_entries {
+ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
+ {
+ 	void __iomem *reg = (void __force __iomem *)data;
+-	if (dw->mode == EDMA_MODE_LEGACY &&
++	if (dw->mf == EDMA_MF_EDMA_LEGACY &&
+ 	    reg >= (void __iomem *)&regs->type.legacy.ch) {
+ 		void __iomem *ptr = &regs->type.legacy.ch;
+ 		u32 viewport_sel = 0;
+@@ -174,7 +174,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
  
--static struct dentry				*base_dir;
- static struct dw_edma				*dw;
- static struct dw_edma_v0_regs			__iomem *regs;
+-	if (dw->mode == EDMA_MODE_UNROLL) {
++	if (dw->mf == EDMA_MF_HDMA_COMPAT) {
+ 		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
+ 		dw_edma_debugfs_create_x32(debugfs_unroll_regs, nr_entries,
+ 					   regs_dir);
+@@ -243,7 +243,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
  
-@@ -272,7 +271,7 @@ static void dw_edma_debugfs_regs(void)
- 	struct dentry *regs_dir;
- 	int nr_entries;
- 
--	regs_dir = debugfs_create_dir(REGISTERS_STR, base_dir);
-+	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
- 	if (!regs_dir)
+-	if (dw->mode == EDMA_MODE_UNROLL) {
++	if (dw->mf == EDMA_MF_HDMA_COMPAT) {
+ 		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
+ 		dw_edma_debugfs_create_x32(debugfs_unroll_regs, nr_entries,
+ 					   regs_dir);
+@@ -297,8 +297,7 @@ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
+ 	if (!base_dir)
  		return;
  
-@@ -293,18 +292,23 @@ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
- 	if (!regs)
- 		return;
+-	debugfs_create_u32("version", 0444, base_dir, &dw->version);
+-	debugfs_create_u32("mode", 0444, base_dir, &dw->mode);
++	debugfs_create_u32("mf", 0444, base_dir, &dw->mf);
+ 	debugfs_create_u16("wr_ch_cnt", 0444, base_dir, &dw->wr_ch_cnt);
+ 	debugfs_create_u16("rd_ch_cnt", 0444, base_dir, &dw->rd_ch_cnt);
  
--	base_dir = debugfs_create_dir(dw->name, NULL);
--	if (!base_dir)
-+	dw->debugfs = debugfs_create_dir(dw->name, NULL);
-+	if (!dw->debugfs)
- 		return;
- 
--	debugfs_create_u32("mf", 0444, base_dir, &dw->mf);
--	debugfs_create_u16("wr_ch_cnt", 0444, base_dir, &dw->wr_ch_cnt);
--	debugfs_create_u16("rd_ch_cnt", 0444, base_dir, &dw->rd_ch_cnt);
-+	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->mf);
-+	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
-+	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
- 
- 	dw_edma_debugfs_regs();
- }
- 
--void dw_edma_v0_debugfs_off(void)
-+void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
- {
--	debugfs_remove_recursive(base_dir);
-+	dw = chip->dw;
-+	if (!dw)
-+		return;
-+
-+	debugfs_remove_recursive(dw->debugfs);
-+	dw->debugfs = NULL;
- }
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-index 5450a0a..d0ff25a 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-@@ -13,13 +13,13 @@
- 
- #ifdef CONFIG_DEBUG_FS
- void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip);
--void dw_edma_v0_debugfs_off(void);
-+void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip);
- #else
- static inline void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
- {
- }
- 
--static inline void dw_edma_v0_debugfs_off(void)
-+static inline void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
- {
- }
- #endif /* CONFIG_DEBUG_FS */
 -- 
 2.7.4
 
