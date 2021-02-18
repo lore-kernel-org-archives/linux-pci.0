@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D7CC433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 895DEC433E9
 	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0EC6864DE9
+	by mail.kernel.org (Postfix) with ESMTP id 39A9F64EBA
 	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230332AbhBRTKB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Feb 2021 14:10:01 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:33188 "EHLO
+        id S232447AbhBRTKG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Feb 2021 14:10:06 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:33138 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233724AbhBRTFk (ORCPT
+        by vger.kernel.org with ESMTP id S233356AbhBRTFk (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2021 14:05:40 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 91B9240341;
-        Thu, 18 Feb 2021 19:04:29 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 587EF402DC;
+        Thu, 18 Feb 2021 19:04:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613675070; bh=w9iK+I/EoC4W0BDyuaOzXjQJW+o0ZoU+YLQQVJ9KZaM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+        t=1613675063; bh=Wqkey4yiMdoTXEqnEcqr//kxJiJDGniz0Wv7vpWtnp0=;
+        h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=XtZDWhEV1y09wEP0fcIAH4cs40qrrFRqi77N+oeVABU+wzRw6j33eNWjCLWtQ0Q9n
-         U1VrOSZbCbfa+CqzfZ+q1MK/Gu/JXB7FmPtqNcUOO3WzXzUFCFv1CrJ2BlL1a7RXA1
-         FKCvmSoddQrZV+EgdBVNyoubG/HjG2/nEsdmSOQlRFX+3G/gK9KJx14xmnh2w9qTM0
-         gMDiw7YbjOwnd0JvwYFWkZRTSrhOT2E7AARTPA6gdFS+b/tiY05tyWdHyQ7pMbAnGq
-         kvsjclqpSq06yHGOKer54ktA6/EVz+987SKbvaTZgNvs/+lMgbzfg36u884DyLrFaz
-         Sv7G+c+NZYUQw==
+        b=ECvWui8nqqcgZu4BCLzmGSu3o9nhTupqfMNsyhJ0glwDVc6GtynR+d/XZGj9JxEDX
+         Ke/08FfWUElg4fFFxfNtqruOLopDF7stEVvGoynsEDq1c/dXaSPP+GOsFP70iH4qQM
+         J3GXUdrPrz9a5MIvSpK6y9R6u5z9B0LMeU2DsIKlgBPEZ6UTRjdr17t36ImgtYKUNT
+         +l/faNE+esnwGOSVvhyi4zmko7mt5cfPFh5JfnMKn/EwLOi6CWrFX7Q/42iA5egb3C
+         xP6XZbJfvZcD4lQc0u2wiijjERJzZIIWPvaylDpxTJU3dMSDvU4o7RwrlpSbsDLO+F
+         K63QS9Zer1+Cw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 6DB42A005D;
-        Thu, 18 Feb 2021 19:04:28 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id 31FD3A0063;
+        Thu, 18 Feb 2021 19:04:22 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -46,10 +46,9 @@ To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Lukas Wunner <lukas@wunner.de>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v7 14/15] dmaengine: dw-edma: Revert fix scatter-gather address calculation
-Date:   Thu, 18 Feb 2021 20:04:08 +0100
-Message-Id: <1778422e389fe40032e216b59b1b992c61ec9887.1613674948.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v7 07/15] dmaengine: dw-edma: Improve number of channels check
+Date:   Thu, 18 Feb 2021 20:04:01 +0100
+Message-Id: <cfb2b0a4f97ae9dc83ebe5ea59d6a51d69ea3654.1613674948.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
@@ -59,48 +58,61 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Reverting the applied patch because it caused a regression on
-ARC700 platform (32 bits).
+It was added some extra checks to ensure that the driver doesn't try to
+use more DMA channels than actually are available in hardware.
 
-Fixes: 05655541c950 ("dmaengine: dw-edma: Fix scatter-gather address calculation")
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c | 21 +++++++++------------
+ drivers/dma/dw-edma/dw-edma-core.h |  2 ++
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 0793df1..5328992 100644
+index 1227a3e..cc39107 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.c
 +++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -429,7 +429,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 			if (xfer->type == EDMA_XFER_CYCLIC) {
- 				burst->dar = xfer->xfer.cyclic.paddr;
- 			} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
--				burst->dar = dst_addr;
-+				src_addr += sg_dma_len(sg);
-+				burst->dar = sg_dma_address(sg);
- 				/* Unlike the typical assumption by other
- 				 * drivers/IPs the peripheral memory isn't
- 				 * a FIFO memory, in this case, it's a
-@@ -443,7 +444,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 			if (xfer->type == EDMA_XFER_CYCLIC) {
- 				burst->sar = xfer->xfer.cyclic.paddr;
- 			} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
--				burst->sar = src_addr;
-+				dst_addr += sg_dma_len(sg);
-+				burst->sar = sg_dma_address(sg);
- 				/* Unlike the typical assumption by other
- 				 * drivers/IPs the peripheral memory isn't
- 				 * a FIFO memory, in this case, it's a
-@@ -455,8 +457,6 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		}
+@@ -914,19 +914,16 @@ int dw_edma_probe(struct dw_edma_chip *chip)
  
- 		if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
--			src_addr += sg_dma_len(sg);
--			dst_addr += sg_dma_len(sg);
- 			sg = sg_next(sg);
- 		} else if (xfer->type == EDMA_XFER_INTERLEAVED &&
- 			   xfer->xfer.il->frame_size > 0) {
+ 	raw_spin_lock_init(&dw->lock);
+ 
+-	if (!dw->wr_ch_cnt) {
+-		/* Find out how many write channels are supported by hardware */
+-		dw->wr_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE);
+-		if (!dw->wr_ch_cnt)
+-			return -EINVAL;
+-	}
++	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt,
++			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
++	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
+ 
+-	if (!dw->rd_ch_cnt) {
+-		/* Find out how many read channels are supported by hardware */
+-		dw->rd_ch_cnt = dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ);
+-		if (!dw->rd_ch_cnt)
+-			return -EINVAL;
+-	}
++	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt,
++			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
++	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
++
++	if (!dw->wr_ch_cnt && !dw->rd_ch_cnt)
++		return -EINVAL;
+ 
+ 	dev_vdbg(dev, "Channels:\twrite=%d, read=%d\n",
+ 		 dw->wr_ch_cnt, dw->rd_ch_cnt);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index f72ebaa..650b1c7 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -15,6 +15,8 @@
+ #include "../virt-dma.h"
+ 
+ #define EDMA_LL_SZ					24
++#define EDMA_MAX_WR_CH					8
++#define EDMA_MAX_RD_CH					8
+ 
+ enum dw_edma_dir {
+ 	EDMA_DIR_WRITE = 0,
 -- 
 2.7.4
 
