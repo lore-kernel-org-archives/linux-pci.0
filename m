@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 909BBC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD6EFC4332D
 	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 17:14:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BCAA64EC1
+	by mail.kernel.org (Postfix) with ESMTP id 97B8C64EB8
 	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 17:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233592AbhBRRM6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Feb 2021 12:12:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53678 "EHLO
+        id S233605AbhBRRNP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Feb 2021 12:13:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230253AbhBRPF4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2021 10:05:56 -0500
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE55EC06178C;
-        Thu, 18 Feb 2021 07:05:14 -0800 (PST)
-Received: by mail-pl1-x62e.google.com with SMTP id a9so1398069plh.8;
-        Thu, 18 Feb 2021 07:05:14 -0800 (PST)
+        with ESMTP id S230398AbhBRPHo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2021 10:07:44 -0500
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5246BC061794;
+        Thu, 18 Feb 2021 07:05:23 -0800 (PST)
+Received: by mail-pl1-x62c.google.com with SMTP id f8so1404906plg.5;
+        Thu, 18 Feb 2021 07:05:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HfgXzYXBFwpw+FA5Ggd2qrGjrZ5TTWoL87obfP5C5Z4=;
-        b=CLxBnnZ/XGe8XizunrAEYHH/T2/Xxla3oEBSreJJ2McBImlbrrDvpShhSI+cHjC+Ev
-         h/FB9VfT+I2YGR6mimtwVc27IIWRy8OOhz5rwy9iv3YhiYr29TriWVSwCuFNYCSDLPO9
-         c9fNi/Is3b66Elfj93H6aDmDoKDIo9SU5DVoJszmoLETTSs/lYhQI9OP1mlva46QfUhy
-         8Fe7rE05S88cu1r/WsjgS5oUP7gNO28nRAgJg3de9GUZtZqbnBpprZ+7oEA23OPxPqcb
-         hBmxJSynmc9ZY/oErjFBTgNIKafbMAcB5zOg4GNrJoo1OoRkeBX091bMZcATPP7HpYxs
-         5+Ow==
+        bh=gDQw0/8Ah6DAAnuC4tfOgLweLZLFJgkJo+lUVRcWr0E=;
+        b=Zv8n1hO18ESYeeNpkWMIeO5GfC37Hd0xxnknbLELMqPld1g4ShosdhA9NaHeVRBo/W
+         IGeBD0Pw9B2IrrPmx52WDU6ZRVk72wF1Mw3SCKcyfMxFXO0JR4IHhc/w9zNdgBw1c+D4
+         nzkCkr7kE/y9NLUQwoS9sw7ILMwIx3FvaxWYx+2iwSs3Au2tMFY2PeDV+1XMtQZCFru7
+         t0HgmyWttTPdo5PWNWV9RGHsLf/jRGQ01p4qs0cj2CBHJm02epfXxRy2PA4jZwE6qW01
+         L56YkK7X7e8UUNG/bxvmU3L5IuLEeuZgilPaSnWm5HvWAVeoOicFjy2jKQ3biVgfPAh3
+         L0Yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HfgXzYXBFwpw+FA5Ggd2qrGjrZ5TTWoL87obfP5C5Z4=;
-        b=YP1nUChvuWDak3DWTAEzrk0qfQwg+Sg3OTgEEyZGIGqUflw3vS4QvjvwcYtcFoKldZ
-         yFQ/EkLywGDnY9XrTTdKYcjW2Pj5eB1k0FDOexjtocHk4IDYZt71zWA9JEOLJo6HfaLf
-         JjlkjbK6WYEK07BbxKWD3n7I/8nIj6WzDYPQMsPjDHyjs0RChCr8ao6LjjDEm3WZsoA7
-         zNzEQ+Z+y+wLlasGxMnRNIftMXdSMjo//boaL4ZIl6XgoF6UiDYMPHWmGkPJNTVQIBK2
-         uuxgAUaC5E1eRrpDsKz2D81AZl7kIKdU3H8DRt9XWNhbJ6V0t1j4Sr4uoZ08oKApmT26
-         0rkg==
-X-Gm-Message-State: AOAM532oV9apscKgbUxdKjn/tVkTUeM4+cRczN4A9w0K/16jcDgS1VWa
-        KwosfYvjvU805cB1T1h+lD4=
-X-Google-Smtp-Source: ABdhPJwUypqcCpt7WO55p8G28pXwLg5n3cdnovDqmB9PqASguOiNz44al5oQnLB+ybL2ZWp2b/0qnA==
-X-Received: by 2002:a17:90b:3689:: with SMTP id mj9mr4394617pjb.99.1613660714315;
-        Thu, 18 Feb 2021 07:05:14 -0800 (PST)
+        bh=gDQw0/8Ah6DAAnuC4tfOgLweLZLFJgkJo+lUVRcWr0E=;
+        b=luCR9hW837uwSppcTbPd8zE8WSkNR/ifPzdUoJ9ML2Nw2o8zDrKmwpGYB8gIIJGEEX
+         3wWlCQ/AKj1qtMvY9WLie7PueAqOpz8je1WAo1guKhaSPAZ1bI5cVpUml7PjGImNJ5J5
+         4PJUSxsO1PVqO/5H94Ndtiy2gADNXNfr8FeMabY/bSldeRWBGTr2JDCW9GODeesMNO+/
+         kFfj4wNmOQB7+xMuW8bTKZlb5LWA/7AqaPkRcZrZ1wQEV2w5GL6Jyk8cZt2NxbnmyKi3
+         ZrTDUUQyJX+QjoDMn2Xh8FUUcoPyKGgkckwcedhqN9TKvTBDrVKJazmbD9GanrQ/Zvvv
+         sLiA==
+X-Gm-Message-State: AOAM530i/d0PzCF8wZKaZiaeoxkGeOB63iad0VT5MknxTNud1kOvlH7Q
+        kHNDcQHW9v7PHMJvZbQ98IVcaRX/qjsMUw==
+X-Google-Smtp-Source: ABdhPJwUO3eNJCDhvCLC2wCC0wRPdXTo3dJMQFKQLX7vnOmE/k5gLgpZ+kSWFP3L5VsY02JJyi+syA==
+X-Received: by 2002:a17:90a:aa0d:: with SMTP id k13mr4609841pjq.210.1613660722893;
+        Thu, 18 Feb 2021 07:05:22 -0800 (PST)
 Received: from localhost (185.212.56.4.16clouds.com. [185.212.56.4])
-        by smtp.gmail.com with ESMTPSA id k31sm6026624pgi.5.2021.02.18.07.05.13
+        by smtp.gmail.com with ESMTPSA id i1sm6638269pfq.158.2021.02.18.07.05.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Feb 2021 07:05:13 -0800 (PST)
+        Thu, 18 Feb 2021 07:05:22 -0800 (PST)
 From:   Dejin Zheng <zhengdejin5@gmail.com>
 To:     corbet@lwn.net, jarkko.nikula@linux.intel.com,
         andriy.shevchenko@linux.intel.com, mika.westerberg@linux.intel.com,
@@ -63,9 +63,9 @@ To:     corbet@lwn.net, jarkko.nikula@linux.intel.com,
         linux-doc@vger.kernel.org, linux-i2c@vger.kernel.org,
         linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Dejin Zheng <zhengdejin5@gmail.com>
-Subject: [PATCH v4 2/4] Documentation: devres: Add pcim_alloc_irq_vectors()
-Date:   Thu, 18 Feb 2021 23:04:56 +0800
-Message-Id: <20210218150458.798347-3-zhengdejin5@gmail.com>
+Subject: [PATCH v4 4/4] i2c: thunderx: Use the correct name of device-managed function
+Date:   Thu, 18 Feb 2021 23:04:58 +0800
+Message-Id: <20210218150458.798347-5-zhengdejin5@gmail.com>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20210218150458.798347-1-zhengdejin5@gmail.com>
 References: <20210218150458.798347-1-zhengdejin5@gmail.com>
@@ -75,32 +75,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pcim_alloc_irq_vectors(), a device-managed version of
-pci_alloc_irq_vectors(). introducing this function can simplify
-the error handling path in many drivers.
+Use the new function pcim_alloc_irq_vectors() to allocate IRQ vectors,
+the pcim_alloc_irq_vectors() function, an explicit device-managed version
+of pci_alloc_irq_vectors(). If pcim_enable_device() has been called
+before, then pci_alloc_irq_vectors() is actually a device-managed
+function. It is used here as a device-managed function, So replace it
+with pcim_alloc_irq_vectors().
 
 Signed-off-by: Dejin Zheng <zhengdejin5@gmail.com>
 ---
 v3 -> v4:
-	- No change
+	- No change.
 v2 -> v3:
-	- No change
+	- No change.
 v1 -> v2:
 	- Modify some commit messages.
- Documentation/driver-api/driver-model/devres.rst | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/i2c/busses/i2c-thunderx-pcidrv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/driver-api/driver-model/devres.rst b/Documentation/driver-api/driver-model/devres.rst
-index cd8b6e657b94..a52f65b6352f 100644
---- a/Documentation/driver-api/driver-model/devres.rst
-+++ b/Documentation/driver-api/driver-model/devres.rst
-@@ -380,6 +380,7 @@ PCI
-   devm_pci_alloc_host_bridge()  : managed PCI host bridge allocation
-   devm_pci_remap_cfgspace()	: ioremap PCI configuration space
-   devm_pci_remap_cfg_resource()	: ioremap PCI configuration space resource
-+  pcim_alloc_irq_vectors()      : managed IRQ vectors allocation
-   pcim_enable_device()		: after success, all PCI ops become managed
-   pcim_pin_device()		: keep PCI device enabled after release
+diff --git a/drivers/i2c/busses/i2c-thunderx-pcidrv.c b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+index 12c90aa0900e..63354e9fb726 100644
+--- a/drivers/i2c/busses/i2c-thunderx-pcidrv.c
++++ b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+@@ -192,7 +192,7 @@ static int thunder_i2c_probe_pci(struct pci_dev *pdev,
+ 	i2c->hlc_int_enable = thunder_i2c_hlc_int_enable;
+ 	i2c->hlc_int_disable = thunder_i2c_hlc_int_disable;
+ 
+-	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
++	ret = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+ 	if (ret < 0)
+ 		goto error;
  
 -- 
 2.25.0
