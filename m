@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DEE1C433DB
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60874C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDB1C64DE9
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B6D264EB4
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232710AbhBRTKS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Feb 2021 14:10:18 -0500
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:33150 "EHLO
+        id S232750AbhBRTKY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Feb 2021 14:10:24 -0500
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:37740 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233712AbhBRTFl (ORCPT
+        by vger.kernel.org with ESMTP id S233714AbhBRTFl (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2021 14:05:41 -0500
 Received: from mailhost.synopsys.com (mdc-mailhost2.synopsys.com [10.225.0.210])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 02A224033B;
-        Thu, 18 Feb 2021 19:04:24 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id E202AC0092;
+        Thu, 18 Feb 2021 19:04:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1613675064; bh=fLE8BRs91LD2ViBN/PoqriomfnN5jIOP0YXg8oAbtSw=;
+        t=1613675066; bh=N+Lz5QIiPGKub9w9KfJ/nARsC4nZVqpX3hhzmAFKL6c=;
         h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=DV7YwOXQ5pHtT0HBtX0Sc3b+bbuNQ3Z/hN7IxQGtp+EWDwb3dSr9KjEb6hp0V8AXG
-         amAHstnGhJBVopCxWhODCG0F8RbrMIYawFOMgqOZ9BAKaSqEm38Bz04NMkRd0QVFNq
-         W9zP1w3yFltLWlDF6jpoElxSLraEHkEx74Nu1bQXpkQgX+5L768Nt3qVOoZsfqmph5
-         rELvvqWTGzRkP/1t3U4V+N1szDK4a3Ay+MpRVSd2El/b2gm7EPMTo/vtkzJytu3wAO
-         1soqufxBTqnIe40rRzetAip7aJETowCdU0gdU9ldfk24UiFmTs7HhzP35ZGfQ9RufU
-         flYi2bV6KpxIQ==
+        b=M4PbkZgQvxo5Ce2EyXvv6FX6GjaPOCWnyjZAEYD7/UTjRvvAr4NGpn3V9tO7nNYSd
+         KlGtev7WFGGu7m8rgYljQAzs776EZ8jrFVF2kyUmDng+OLGanpP6IcZzf+FjULGHca
+         aOi0TKldpIdUaghqBnsDrUtNemp/3tMY9ZF8IKvyq9LHjnXb+urVwsgQpbWmneAenB
+         KAm2/XsxbCIV9VooJ/1HMakJAtnp6VvIM0yB3IFuZGOe6KnA3/e8hgHr8mgMhAreyz
+         H8YaW7YnTTidGTvaecxRx8kVK2c6Y12ZrHY7fR3IL1QwahjU3V91j6gqLEfW/RzFah
+         fIzUifcVNsIRw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id CD90AA0066;
-        Thu, 18 Feb 2021 19:04:22 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id A7A0FA0063;
+        Thu, 18 Feb 2021 19:04:24 +0000 (UTC)
 X-SNPS-Relay: synopsys.com
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -46,9 +46,9 @@ To:     dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Lukas Wunner <lukas@wunner.de>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v7 08/15] dmaengine: dw-edma: Reorder variables to keep consistency
-Date:   Thu, 18 Feb 2021 20:04:02 +0100
-Message-Id: <9bd1f86f19df8bb5de502fb85a0c5dc07978a9ba.1613674948.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH v7 10/15] dmaengine: dw-edma: Change linked list and data blocks offset and sizes
+Date:   Thu, 18 Feb 2021 20:04:04 +0100
+Message-Id: <f682e7f7f06dc6b2efdd431481d6fb4d762c2c05.1613674948.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
 References: <cover.1613674948.git.gustavo.pimentel@synopsys.com>
@@ -58,72 +58,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the driver code structure, I tried to keep the code style consistency
-by writing the write channels instructions first, and then follow by the
-read channels instructions, mimicking the hardware implementation.
+Changes the linked list and data blocks offset and sizes to follow the
+recommendation given by the hardware team for the IPK solution.
 
-However, this code style failed in some cases. This patch fixes that and
-no functional changes are expected.
+Although the previous data blocks offset and sizes are still valid and
+functional, using them that might present some issues related to the IPK
+solution, since this solution is based on FPGA and might be subjected to
+timmings constrains.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
- drivers/dma/dw-edma/dw-edma-pcie.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index eb6f8b3..63c62e1 100644
+index 1055fdb..fa66e03 100644
 --- a/drivers/dma/dw-edma/dw-edma-pcie.c
 +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -20,8 +20,8 @@
- #define DW_PCIE_VSEC_DMA_ID			0x6
- #define DW_PCIE_VSEC_DMA_BAR			GENMASK(10, 8)
- #define DW_PCIE_VSEC_DMA_MAP			GENMASK(2, 0)
--#define DW_PCIE_VSEC_DMA_RD_CH			GENMASK(25, 16)
- #define DW_PCIE_VSEC_DMA_WR_CH			GENMASK(9, 0)
-+#define DW_PCIE_VSEC_DMA_RD_CH			GENMASK(25, 16)
- 
- struct dw_edma_pcie_data {
- 	/* eDMA registers location */
-@@ -39,8 +39,8 @@ struct dw_edma_pcie_data {
- 	/* Other */
- 	enum dw_edma_map_format		mf;
- 	u8				irqs;
--	u16				rd_ch_cnt;
- 	u16				wr_ch_cnt;
-+	u16				rd_ch_cnt;
- };
- 
- static const struct dw_edma_pcie_data snps_edda_data = {
-@@ -59,8 +59,8 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+@@ -59,29 +59,29 @@ static const struct dw_edma_pcie_data snps_edda_data = {
+ 	.rg.sz				= 0x00002000,	/*  8 Kbytes */
+ 	/* eDMA memory linked list location */
+ 	.ll_wr = {
+-		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00000000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00200000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 0 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00000000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 2 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00200000, 0x00000800)
+ 	},
+ 	.ll_rd = {
+-		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00400000, 0x00200000)
+-		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00600000, 0x00200000)
++		/* Channel 0 - BAR 2, offset 4 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00400000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 6 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00600000, 0x00000800)
+ 	},
+ 	/* eDMA memory data location */
+ 	.dt_wr = {
+-		/* Channel 0 - BAR 2, offset 8 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x00800000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 22 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x01600000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 8 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00800000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 9 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00900000, 0x00000800)
+ 	},
+ 	.dt_rd = {
+-		/* Channel 0 - BAR 2, offset 36 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x02400000, 0x00e00000)
+-		/* Channel 1 - BAR 2, offset 50 Mbytes, size 14 Mbytes */
+-		DW_BLOCK(BAR_2, 0x03200000, 0x00e00000)
++		/* Channel 0 - BAR 2, offset 10 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00a00000, 0x00000800)
++		/* Channel 1 - BAR 2, offset 11 Mbytes, size 2 Kbytes */
++		DW_BLOCK(BAR_2, 0x00b00000, 0x00000800)
+ 	},
  	/* Other */
  	.mf				= EDMA_MF_EDMA_UNROLL,
- 	.irqs				= 1,
--	.rd_ch_cnt			= 0,
- 	.wr_ch_cnt			= 0,
-+	.rd_ch_cnt			= 0,
- };
- 
- static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
-@@ -101,8 +101,8 @@ static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
- 	pdata->rg_bar = FIELD_GET(DW_PCIE_VSEC_DMA_BAR, val);
- 
- 	pci_read_config_dword(pdev, vsec + 0xc, &val);
--	pdata->rd_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val);
- 	pdata->wr_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_WR_CH, val);
-+	pdata->rd_ch_cnt = FIELD_GET(DW_PCIE_VSEC_DMA_RD_CH, val);
- 
- 	pci_read_config_dword(pdev, vsec + 0x14, &val);
- 	off = val;
-@@ -218,8 +218,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	dw->mf = vsec_data.mf;
- 	dw->nr_irqs = nr_irqs;
- 	dw->ops = &dw_edma_pcie_core_ops;
--	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
- 	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
-+	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
- 
- 	/* Debug info */
- 	if (dw->mf == EDMA_MF_EDMA_LEGACY)
 -- 
 2.7.4
 
