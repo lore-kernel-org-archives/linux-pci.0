@@ -4,196 +4,110 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C9BFC43333
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 17:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE01C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:09:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3375464EC9
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 17:14:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42FB264ECA
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Feb 2021 19:09:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233655AbhBRRN2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Feb 2021 12:13:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60388 "EHLO mail.kernel.org"
+        id S230263AbhBRTJQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Feb 2021 14:09:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233913AbhBRQwD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Feb 2021 11:52:03 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 47B1E64EB3;
-        Thu, 18 Feb 2021 16:50:08 +0000 (UTC)
+        id S232155AbhBRRVh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Feb 2021 12:21:37 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 26CFE64EAD;
+        Thu, 18 Feb 2021 17:20:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613667008;
-        bh=92qqsNKNLtQETmYq95JpSvV7z/qtYNHIl+uuhSbp41U=;
+        s=k20201202; t=1613668855;
+        bh=r5MkiuheCs61QCnk9rUMSbxTrMxyY9x4PJ7M7Kgiwus=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ha/QTsAIoUVp9c44+GpGrnWclaUGHIhd29nH8xrV1yz1URHEFONOiaMOpm82sNNfM
-         1b7fUrjk0tVZGc5lnza6WvRTAqpSysWcauDvEPeQRWS2JlELbX/40TDGMROlLKCgmw
-         8vOOT9C5HhwHLTMyUteJ7yytgxTcwXtk8ScIYmWg0+1pFQKRKrrtFxvexBaE3u/PY8
-         qSOh16p1wxThaFAdpW75VooJvGCecUcD4nwOH6iasCI1M/wWz2na8vveAnOzvx5uAJ
-         +Q0crPP+4O4atc5UpW6XyKmJRiq14xZ9SyRCpeUuj45oAAmOkh4/fCymsKScOObW56
-         e1Iaipe1Q8MGA==
-Date:   Thu, 18 Feb 2021 10:50:06 -0600
+        b=FCocjhG9A+ZgONipWtIT/pv6jNFzUG/0Rc0NfiBNcpVD6E4Ax7hM5ORNJtG+ypg97
+         uyMPvYw7op5n0H6Y4Lnt8ac4BNR7ERC2Sh13oDh448l5noutLU1+ULxau0WidUKmmN
+         pa2YYMN+RgCmEVfD7n2DYWi0NMS+Giy17j0wcRIwVXX12LXRBAnH3xOcNLeLjvAjRx
+         +jiNRcMaFYhmZzopkM7RBzkxFVwCyhRa+lX7u/SAJd2agw60AubTRuQzsGI+CMkR5E
+         QUOJUuwn3Nv/awc/fZelLG/vk5LutDCMtROJtfmC3EPLVFbzS1vRULqo0KVm984MHV
+         7JTUbrI5Sbm6w==
+Date:   Thu, 18 Feb 2021 11:20:53 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     mingchuang.qiao@mediatek.com
-Cc:     bhelgaas@google.com, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, haijun.liu@mediatek.com,
-        lambert.wang@mediatek.com, kerun.zhu@mediatek.com,
-        mika.westerberg@linux.intel.com, alex.williamson@redhat.com,
-        rjw@rjwysocki.net, utkarsh.h.patel@intel.com
-Subject: Re: [v4] PCI: Avoid unsync of LTR mechanism configuration
-Message-ID: <20210218165006.GA983767@bjorn-Precision-5520>
+To:     Yicong Yang <yangyicong@hisilicon.com>
+Cc:     linux-pci@vger.kernel.org,
+        sathyanarayanan.kuppuswamy@linux.intel.com, kbusch@kernel.org,
+        sean.v.kelley@intel.com, qiuxu.zhuo@intel.com,
+        prime.zeng@huawei.com, linuxarm@openeuler.org
+Subject: Re: [PATCH] PCI/DPC: Disable ERR_COR explicitly for native dpc
+ service
+Message-ID: <20210218172053.GA986776@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210204095125.9212-1-mingchuang.qiao@mediatek.com>
+In-Reply-To: <1612356795-32505-2-git-send-email-yangyicong@hisilicon.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 04, 2021 at 05:51:25PM +0800, mingchuang.qiao@mediatek.com wrote:
-> From: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+On Wed, Feb 03, 2021 at 08:53:15PM +0800, Yicong Yang wrote:
+> Per Downstream Port Containment Related Enhancements ECN[1],
+> Table 4-6 Interpretation of _OSC Control Field Returned Value,
+> for bit 7 of _OSC control return value:
 > 
-> In bus scan flow, the "LTR Mechanism Enable" bit of DEVCTL2 register is
-> configured in pci_configure_ltr(). If device and bridge both support LTR
-> mechanism, the "LTR Mechanism Enable" bit of device and bridge will be
-> enabled in DEVCTL2 register. And pci_dev->ltr_path will be set as 1.
+>   "If firmware allows the OS control of this feature, then,
+>   in the context of the _OSC method the OS must ensure that
+>   Downstream Port Containment ERR_COR signaling is disabled
+>   as described in the PCI Express Base Specification."
+
+I think "the OS must ensure" is a typo in the spec.  In the new r3.3
+of the spec, it has been corrected to:
+
+  If firmware allows the operating system control of this feature,
+  then, in the context of the _OSC method firmware must clear the DPC
+  ERR_COR Enable bit in the DPC Control Register (refer to the PCI
+  Express Base Specification) to 0.
+
+> and PCI Express Base Specification Revision 4.0 Version 1.0
+> section 6.2.10.2, Use of DPC ERR_COR Signaling:
 > 
-> If PCIe link goes down when device resets, the "LTR Mechanism Enable" bit
-> of bridge will change to 0 according to PCIe r5.0, sec 7.5.3.16. However,
-> the pci_dev->ltr_path value of bridge is still 1.
+>   "...DPC ERR_COR signaling is primarily intended for use by
+>   platform firmware..."
 > 
-> For following conditions, check and re-configure "LTR Mechanism Enable" bit
-> of bridge to make "LTR Mechanism Enable" bit match ltr_path value.
->    -before configuring device's LTR for hot-remove/hot-add
->    -before restoring device's DEVCTL2 register when restore device state
+> Currently we don't set DPC ERR_COR enable bit, but explicitly
+> clear the bit to ensure it's disabled.
 
-There's definitely a bug here.  The commit log should say a little
-more about what it is.  I *think* if LTR is enabled and we suspend
-(putting the device in D3cold) and resume, LTR probably doesn't work
-after resume because LTR is disabled in the upstream bridge, which
-would be an obvious bug.
+Does this fix a problem you observed?  If you're seeing a problem, and
+this patch fixes it, we need to do something.  But if it's just to
+line up with the language in the spec, I think we can rely on the
+corrected spec language, which says the *firmware* is responsible for
+doing this, and leave dpc_probe() alone.
 
-Also, if a device with LTR enabled is hot-removed, and we hot-add a
-device, I think LTR will not work on the new device.  Possibly also a
-bug, although I'm not convinced we know how to configure LTR on the
-new device anyway.
-
-So I'd *like* to merge the bug fix for v5.12, but I think I'll wait
-because of the issue below.
-
-> Signed-off-by: Mingchuang Qiao <mingchuang.qiao@mediatek.com>
+> [1] Downstream Port Containment Related Enhancements ECN,
+>     Jan 28, 2019, affecting PCI Firmware Specification, Rev. 3.2
+>     https://members.pcisig.com/wg/PCI-SIG/document/12888
+> 
+> Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 > ---
-> changes of v4
->  -fix typo of commit message
->  -rename: pci_reconfigure_bridge_ltr()->pci_bridge_reconfigure_ltr()
-> changes of v3
->  -call pci_reconfigure_bridge_ltr() in probe.c
-> changes of v2
->  -modify patch description
->  -reconfigure bridge's LTR before restoring device DEVCTL2 register
-> ---
->  drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
->  drivers/pci/pci.h   |  1 +
->  drivers/pci/probe.c | 13 ++++++++++---
->  3 files changed, 36 insertions(+), 3 deletions(-)
+>  drivers/pci/pcie/dpc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b9fecc25d213..6bf65d295331 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1437,6 +1437,24 @@ static int pci_save_pcie_state(struct pci_dev *dev)
->  	return 0;
->  }
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index e05aba8..5cc8ef3 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -302,7 +302,7 @@ static int dpc_probe(struct pcie_device *dev)
+>  	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CAP, &cap);
+>  	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, &ctl);
 >  
-> +void pci_bridge_reconfigure_ltr(struct pci_dev *dev)
-> +{
-> +#ifdef CONFIG_PCIEASPM
-> +	struct pci_dev *bridge;
-> +	u32 ctl;
-> +
-> +	bridge = pci_upstream_bridge(dev);
-> +	if (bridge && bridge->ltr_path) {
-> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2, &ctl);
-> +		if (!(ctl & PCI_EXP_DEVCTL2_LTR_EN)) {
-> +			pci_dbg(bridge, "re-enabling LTR\n");
-> +			pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-> +						 PCI_EXP_DEVCTL2_LTR_EN);
+> -	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
+> +	ctl = (ctl & 0xffe4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
 
-This pattern of updating the upstream bridge on behalf of "dev" is
-problematic because it's racy:
+If we need to clear things here, I'd prefer to have names instead of
+the 0xfff4 or 0xffe4 magic numbers.
 
-  CPU 1                     CPU 2
-  -------------------       ---------------------
-  ctl = read DEVCTL2        ctl = read(DEVCTL2)
-  ctl |= DEVCTL2_LTR_EN     ctl |= DEVCTL2_ARI
-  write(DEVCTL2, ctl)
-                            write(DEVCTL2, ctl)
-
-Now the bridge has ARI set, but not LTR_EN.
-
-We have the same problem in the pci_enable_device() path.  The most
-recent try at fixing it is [1].
-
-[1] https://lore.kernel.org/linux-pci/20201218174011.340514-2-s.miroshnichenko@yadro.com/
-
-> +		}
-> +	}
-> +#endif
-> +}
-> +
->  static void pci_restore_pcie_state(struct pci_dev *dev)
->  {
->  	int i = 0;
-> @@ -1447,6 +1465,13 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
->  	if (!save_state)
->  		return;
+>  	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, ctl);
+>  	pci_info(pdev, "enabled with IRQ %d\n", dev->irq);
 >  
-> +	/*
-> +	 * Downstream ports reset the LTR enable bit when link goes down.
-> +	 * Check and re-configure the bit here before restoring device.
-> +	 * PCIe r5.0, sec 7.5.3.16.
-> +	 */
-> +	pci_bridge_reconfigure_ltr(dev);
-> +
->  	cap = (u16 *)&save_state->cap.data[0];
->  	pcie_capability_write_word(dev, PCI_EXP_DEVCTL, cap[i++]);
->  	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, cap[i++]);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 5c59365092fa..b3a5e5287cb7 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -111,6 +111,7 @@ void pci_free_cap_save_buffers(struct pci_dev *dev);
->  bool pci_bridge_d3_possible(struct pci_dev *dev);
->  void pci_bridge_d3_update(struct pci_dev *dev);
->  void pci_bridge_wait_for_secondary_bus(struct pci_dev *dev);
-> +void pci_bridge_reconfigure_ltr(struct pci_dev *dev);
->  
->  static inline void pci_wakeup_event(struct pci_dev *dev)
->  {
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 953f15abc850..ade055e9fb58 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2132,9 +2132,16 @@ static void pci_configure_ltr(struct pci_dev *dev)
->  	 * Complex and all intermediate Switches indicate support for LTR.
->  	 * PCIe r4.0, sec 6.18.
->  	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> -	    ((bridge = pci_upstream_bridge(dev)) &&
-> -	      bridge->ltr_path)) {
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-> +		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-> +					 PCI_EXP_DEVCTL2_LTR_EN);
-> +		dev->ltr_path = 1;
-> +		return;
-> +	}
-> +
-> +	bridge = pci_upstream_bridge(dev);
-> +	if (bridge && bridge->ltr_path) {
-> +		pci_bridge_reconfigure_ltr(dev);
->  		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
->  					 PCI_EXP_DEVCTL2_LTR_EN);
->  		dev->ltr_path = 1;
 > -- 
-> 2.18.0
+> 2.8.1
+> 
