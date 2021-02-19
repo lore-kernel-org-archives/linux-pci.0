@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55DFBC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 446C1C433DB
 	for <linux-pci@archiver.kernel.org>; Fri, 19 Feb 2021 18:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1044E64EB7
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Feb 2021 18:56:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9FDB64EB4
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Feb 2021 18:56:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229896AbhBSS4i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229808AbhBSS4i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 19 Feb 2021 13:56:38 -0500
-Received: from mga11.intel.com ([192.55.52.93]:13713 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:36098 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229726AbhBSS4i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Feb 2021 13:56:38 -0500
-IronPort-SDR: kiGDWI5PM42/9yaXPhePnM0VNkRgvA647uu1zPNpbSViTXCrN4EK/L/ZXTU458UfYS0F/NrMFV
- 3iC4ZI5sibAw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9900"; a="180420398"
+        id S229612AbhBSS4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Feb 2021 13:56:37 -0500
+IronPort-SDR: SznW+xds0f297XFHm6y+sBAzBgBcr4VroAmYLFQenKum1QUIcDi3VgGYqD6zU7jUD0evLtXHJy
+ F6JE2/UzwrtA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9900"; a="203226588"
 X-IronPort-AV: E=Sophos;i="5.81,189,1610438400"; 
-   d="scan'208";a="180420398"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2021 10:55:57 -0800
-IronPort-SDR: b2HGXtaMC1Gg2iBQiIFCYR8PeT7ug6WTV6ZPBwc7VbcDWvgqRZSXFi8r0cUKNyQuWtjz8Ap4hv
- anmG9/f3yhVA==
+   d="scan'208";a="203226588"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2021 10:55:56 -0800
+IronPort-SDR: XyNME/4xMnTzaLA1RHPPfJdI7/VA1CGMbY0GJ7V0q0wqDT2z/D5xwUOQWGPy1cluWkTu3QpgXX
+ OyHrCHsVAfpg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,189,1610438400"; 
-   d="scan'208";a="378987576"
+   d="scan'208";a="401155904"
 Received: from lkp-server02.sh.intel.com (HELO cd560a204411) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 19 Feb 2021 10:55:55 -0800
+  by orsmga008.jf.intel.com with ESMTP; 19 Feb 2021 10:55:55 -0800
 Received: from kbuild by cd560a204411 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1lDAwV-000AZj-26; Fri, 19 Feb 2021 18:55:55 +0000
-Date:   Sat, 20 Feb 2021 02:55:31 +0800
+        id 1lDAwU-000AZg-NT; Fri, 19 Feb 2021 18:55:54 +0000
+Date:   Sat, 20 Feb 2021 02:55:43 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/hotplug] BUILD SUCCESS
- fc235fcb0f7c1865ccb2d1f50267eef299a4f3fb
-Message-ID: <603009a3.haZuTab33H7N8zen%lkp@intel.com>
+Subject: [pci:next] BUILD SUCCESS 84c8d3d0b60ea104831658411915c20d81da38d7
+Message-ID: <603009af.R/GNUr6aw/8uHlER%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -51,10 +50,10 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
-branch HEAD: fc235fcb0f7c1865ccb2d1f50267eef299a4f3fb  PCI: acpiphp: Remove unused acpiphp_callback typedef
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+branch HEAD: 84c8d3d0b60ea104831658411915c20d81da38d7  Merge branch 'remotes/lorenzo/pci/misc'
 
-elapsed time: 721m
+elapsed time: 722m
 
 configs tested: 149
 configs skipped: 4
