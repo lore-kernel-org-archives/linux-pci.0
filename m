@@ -6,75 +6,80 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EBDFC433DB
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 00:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40DEFC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 01:04:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D68FB64EC3
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 00:57:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 076EB64EC3
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 01:04:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229925AbhBVA5V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 21 Feb 2021 19:57:21 -0500
-Received: from mail-wr1-f49.google.com ([209.85.221.49]:43434 "EHLO
-        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbhBVA5U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Feb 2021 19:57:20 -0500
-Received: by mail-wr1-f49.google.com with SMTP id n8so17269007wrm.10;
-        Sun, 21 Feb 2021 16:57:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=6l08NbqWC+qu4nr8l+AW7qZL8N6MHomNkIxlydPqmjI=;
-        b=gXR1WdYnH0EKzt3G+rc9KQuNoyoLxCKFNlD7gmW8wdshiQDHCwxfrlFeE8oMjBKfWF
-         IhVT5B2g7W25Dbfo/lNuX5y3i3m7TCNvDf6FHSxIVazZaUFN8R0XAIGSEbMzQoCMx3CQ
-         RH7xGsa2Btju7j1Iykzz9K/qUWsUN7+mM4L4uSMyjkVRHM1K/0NUH/49ui+7K6JAajHK
-         U5wkRoarQC/ecELkC/U3ZjYZ6OE3J5hWkhwZUkp8zWLFFLCM/bERDNg7S/T0CJEGT6b5
-         6dvhfQhLSJZ9Dw9Kx1BBkrdk1DNrrYQlPVDY5hqS79I5hCL1roHQ2MRmdTC80P+EqEUT
-         B5EA==
-X-Gm-Message-State: AOAM531b2qu16mpQhKXHMGfd6bA/iI/FFr09YDAFf0nwzTelRYr8shTl
-        DXJXJ+jtosNEqsowEkWqSQgGjlYjgSxwrA==
-X-Google-Smtp-Source: ABdhPJzZ91okcXKkPZMDgKc958eE8akWYsaXgx9jW/6p7m3jEtsKDSFMe3p7tK1Wuk6ZV6Y0w6K5VA==
-X-Received: by 2002:adf:e510:: with SMTP id j16mr19005623wrm.153.1613955398517;
-        Sun, 21 Feb 2021 16:56:38 -0800 (PST)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id b2sm27818367wrn.2.2021.02.21.16.56.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Feb 2021 16:56:37 -0800 (PST)
-Date:   Mon, 22 Feb 2021 01:56:36 +0100
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Qiuxu Zhuo <qiuxu.zhuo@intel.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        id S229944AbhBVBEx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 21 Feb 2021 20:04:53 -0500
+Received: from mga05.intel.com ([192.55.52.43]:51655 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229802AbhBVBEx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 21 Feb 2021 20:04:53 -0500
+IronPort-SDR: U28LiCK9r5n2Of1yAVqBJySucHUs9WeHxw0vHod8yM1qFXNXxG3sjAZ+xYVrsDI+kfIQ3h2A9m
+ Kcd4zcODwsDg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9902"; a="269233478"
+X-IronPort-AV: E=Sophos;i="5.81,195,1610438400"; 
+   d="scan'208";a="269233478"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Feb 2021 17:04:12 -0800
+IronPort-SDR: udvRjf8c642SH3LiL5Dn2d3FnIg352e7OoiqSAQuxXbE4QwkUn0onbAHgRcSvZ5binxFIvkK1I
+ eMJFdn/0XkTA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.81,195,1610438400"; 
+   d="scan'208";a="402313932"
+Received: from orsmsx604.amr.corp.intel.com ([10.22.229.17])
+  by orsmga008.jf.intel.com with ESMTP; 21 Feb 2021 17:04:12 -0800
+Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
+ ORSMSX604.amr.corp.intel.com (10.22.229.17) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Sun, 21 Feb 2021 17:04:11 -0800
+Received: from shsmsx605.ccr.corp.intel.com (10.109.6.215) by
+ ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Sun, 21 Feb 2021 17:04:10 -0800
+Received: from shsmsx605.ccr.corp.intel.com ([10.109.6.215]) by
+ SHSMSX605.ccr.corp.intel.com ([10.109.6.215]) with mapi id 15.01.2106.002;
+ Mon, 22 Feb 2021 09:04:08 +0800
+From:   "Zhuo, Qiuxu" <qiuxu.zhuo@intel.com>
+To:     =?utf-8?B?J0tyenlzenRvZiBXaWxjennFhHNraSc=?= <kw@linux.com>
+CC:     Bjorn Helgaas <helgaas@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sean V Kelley <sean.v.kelley@intel.com>,
+        "Kelley, Sean V" <sean.v.kelley@intel.com>,
         "Luck, Tony" <tony.luck@intel.com>, "Jin, Wen" <wen.jin@intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] PCI/RCEC: Fix RCiEP capable devices RCEC
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 1/1] PCI/RCEC: Fix RCiEP capable devices RCEC
  association
-Message-ID: <YDMBRFWTYKTrDyBI@rocinante>
+Thread-Topic: [PATCH v2 1/1] PCI/RCEC: Fix RCiEP capable devices RCEC
+ association
+Thread-Index: AQHXBmZlagcS3VhAq0mqYPHwwg7Guapi2DoAgACHA7A=
+Date:   Mon, 22 Feb 2021 01:04:07 +0000
+Message-ID: <4a0bf3a852ed47deb072890319fb39ec@intel.com>
 References: <57a7bbc1ba294ce39c309e519fe45842@intel.com>
- <20210219022359.435-1-qiuxu.zhuo@intel.com>
+ <20210219022359.435-1-qiuxu.zhuo@intel.com> <YDMBRFWTYKTrDyBI@rocinante>
+In-Reply-To: <YDMBRFWTYKTrDyBI@rocinante>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+x-originating-ip: [10.239.127.36]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20210219022359.435-1-qiuxu.zhuo@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Lorenzo for visiblity]
-
-Hi,
-
-[...]
-> Fix rcec_assoc_rciep() using the PCI_SLOT() macro and convert the value
-> of "rciep->devfn" to a device number to ensure that the RCiEP devices
-> associated with the RCEC are linked when the RCEC is enumerated.
-> 
-> [ Krzysztof: Update commit message. ]
-[...]
-
-Thank you!  I appreciate that.  However, we probably should drop this
-from the commit message.  Perhaps either Bjorn or Lorenzo could do it
-when applying changes.
-
-Krzysztof
+PiAuLi4NCj4gPiBbIEtyenlzenRvZjogVXBkYXRlIGNvbW1pdCBtZXNzYWdlLiBdDQo+IFsuLi5d
+DQo+IA0KPiBUaGFuayB5b3UhICBJIGFwcHJlY2lhdGUgdGhhdC4gIEhvd2V2ZXIsIHdlIHByb2Jh
+Ymx5IHNob3VsZCBkcm9wIHRoaXMgZnJvbSB0aGUNCj4gY29tbWl0IG1lc3NhZ2UuICBQZXJoYXBz
+IGVpdGhlciBCam9ybiBvciBMb3JlbnpvIGNvdWxkIGRvIGl0IHdoZW4gYXBwbHlpbmcNCj4gY2hh
+bmdlcy4NCg0KT0ssIHdpbGwgc2VuZCBvdXQgdGhlIHYzIHRoYXQgZHJvcHMgIlsgS3J6eXN6dG9m
+OiBVcGRhdGUgY29tbWl0IG1lc3NhZ2UuIF0iIGZyb20gdGhlIGNvbW1pdCBtZXNzYWdlLg0KDQot
+UWl1eHUNCg==
