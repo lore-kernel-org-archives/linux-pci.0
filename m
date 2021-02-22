@@ -5,46 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57580C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91021C433E9
 	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 11:41:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1452E64DFD
+	by mail.kernel.org (Postfix) with ESMTP id 6044464ED6
 	for <linux-pci@archiver.kernel.org>; Mon, 22 Feb 2021 11:41:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbhBVLlm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Feb 2021 06:41:42 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:33804 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230399AbhBVLll (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Feb 2021 06:41:41 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 11MBefUM040401;
-        Mon, 22 Feb 2021 05:40:41 -0600
+        id S230454AbhBVLlp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Feb 2021 06:41:45 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:60596 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230452AbhBVLlo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Feb 2021 06:41:44 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 11MBei2k012555;
+        Mon, 22 Feb 2021 05:40:44 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1613994041;
-        bh=fbKMDGrEvUOo980qTvG1SNIpxoodpmicyqIGKvKGGEg=;
+        s=ti-com-17Q1; t=1613994044;
+        bh=Pcl0cNkSiAoXrLJE0OaBaMIABa9FilDYBc6nx3LEFeA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=HV1CEGFmMunvCJWu22TeXr5IYkecKQcAGaxzJyVtG7G3sYJDJyQZ4fySDFsabCLxr
-         54BReqVx2qBU3sXXxVGtNtOngGszqkTHnHtPcsrY6KYmnKGoiOzDYnSVaSF6+Kup2L
-         I+gXPgx5nmwIHGChjBoZYEyM33r6KkDuoNy/WCq0=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 11MBefQu126125
+        b=dv3LADmzLtOIngiicxtl21dF80qQ3bD2v48b2Z1bw6vH6/mzR/bQ+/Wlf2ap7eWJA
+         TpWwKfNBKETJ5SKap5cb49/cL4tuzygvALygMCOZ/kjdmhN4GCgsjDLcGQAklmaGO0
+         rdZIPo8lidSAZUKkdFOIJOHOgcgZOEmlNTCMANIo=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 11MBeiZ1010755
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 22 Feb 2021 05:40:41 -0600
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 22 Feb 2021 05:40:44 -0600
+Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 22
- Feb 2021 05:40:40 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ Feb 2021 05:40:44 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE108.ent.ti.com
+ (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 22 Feb 2021 05:40:40 -0600
+ Frontend Transport; Mon, 22 Feb 2021 05:40:44 -0600
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 11MBeVjo105473;
-        Mon, 22 Feb 2021 05:40:38 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 11MBeVjp105473;
+        Mon, 22 Feb 2021 05:40:41 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -54,9 +53,9 @@ To:     Kishon Vijay Abraham I <kishon@ti.com>,
 CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 2/4] dt-bindings: PCI: ti,j721e: Add host mode dt-bindings for TI's AM64 SoC
-Date:   Mon, 22 Feb 2021 17:10:28 +0530
-Message-ID: <20210222114030.26445-3-kishon@ti.com>
+Subject: [PATCH v3 3/4] dt-bindings: PCI: ti,j721e: Add endpoint mode dt-bindings for TI's AM64 SoC
+Date:   Mon, 22 Feb 2021 17:10:29 +0530
+Message-ID: <20210222114030.26445-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210222114030.26445-1-kishon@ti.com>
 References: <20210222114030.26445-1-kishon@ti.com>
@@ -67,53 +66,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add host mode dt-bindings for TI's AM64 SoC. This is the same IP used in
-J7200, however AM64 is a non-coherent architecture.
+Add endpoint mode dt-bindings for TI's AM64 SoC. This is the same IP
+used in J7200, however AM64 is a non-coherent architecture.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../devicetree/bindings/pci/ti,j721e-pci-host.yaml    | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/pci/ti,j721e-pci-ep.yaml         | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index 50dc99ac35d9..05aeb1aa362a 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+index d06f0c4464c6..aed437dac363 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
 @@ -16,12 +16,14 @@ allOf:
  properties:
    compatible:
      oneOf:
--      - description: PCIe controller in J7200
-+      - const: ti,j721e-pcie-host
-+      - description: PCIe controller in AM64
+-      - description: PCIe EP controller in J7200
++      - const: ti,j721e-pcie-ep
++      - description: PCIe EP controller in AM64
          items:
--          - const: ti,j7200-pcie-host
-+          - const: ti,am64-pcie-host
-           - const: ti,j721e-pcie-host
--      - description: PCIe controller in J721E
-+      - description: PCIe controller in J7200
+-          - const: ti,j7200-pcie-ep
++          - const: ti,am64-pcie-ep
+           - const: ti,j721e-pcie-ep
+-      - description: PCIe EP controller in J721E
++      - description: PCIe EP controller in J7200
          items:
-+          - const: ti,j7200-pcie-host
-           - const: ti,j721e-pcie-host
++          - const: ti,j7200-pcie-ep
+           - const: ti,j721e-pcie-ep
  
    reg:
-@@ -66,6 +68,8 @@ properties:
-           - const: 0xb00d
-       - items:
-           - const: 0xb00f
-+      - items:
-+          - const: 0xb010
- 
-   msi-map: true
- 
-@@ -82,7 +86,6 @@ required:
-   - vendor-id
-   - device-id
-   - msi-map
+@@ -66,7 +68,6 @@ required:
+   - power-domains
+   - clocks
+   - clock-names
 -  - dma-coherent
-   - dma-ranges
-   - ranges
-   - reset-gpios
+   - max-functions
+   - phys
+   - phy-names
 -- 
 2.17.1
 
