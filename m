@@ -2,95 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4D6C433DB
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 15:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B157C433E6
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 15:40:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E05464EDB
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 15:37:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17B2964EDD
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 15:40:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233152AbhBXPhD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Feb 2021 10:37:03 -0500
-Received: from mail-wr1-f46.google.com ([209.85.221.46]:39102 "EHLO
-        mail-wr1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237519AbhBXOcF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2021 09:32:05 -0500
-Received: by mail-wr1-f46.google.com with SMTP id v1so2086779wrd.6;
-        Wed, 24 Feb 2021 06:31:48 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=/YBrPEr1lwJ23lddEC25NzuV+KrdNuFPq/A3hHw3CPA=;
-        b=VbL5wlt9h/bjh8BTlOF5cqKjmyds0QHqrQ9reZ/GpDJMoZct6cs/dattBdgCvPu2ex
-         SwcC3gWwDpd6AthSaOyw/AOehv0HHm8plcGZyZ1DgyuAuYD+4YsIbr4wku8OLELXgF8G
-         dT/mH7SWc80l4qkwlzugKPrXmUk3JQ4M4t8VBzWaJMqht6C66ApdKV79zMmVicimRPKh
-         7yMFZhNsSSGTSXjQiaTkHgVMKs5Q/a6ZpQM9/Ztn3vlBRrKSmvE5yYFCzundSq3I9BIo
-         z3hxDeUuPorf8DTErxFOoW24Ou0T75rzMPy0dmj6PYnn5NAnNLD38vOqWH6mtXRN2jel
-         A//A==
-X-Gm-Message-State: AOAM532GhGS7jK6D9IHcgGqUdrvSqJfTRYc8yHRfw9XKYwFF/daQhA+j
-        xr8hHNe+uFkHQP7y7611wY0=
-X-Google-Smtp-Source: ABdhPJyzlsFi0TiJ96xPkqKJZCTCILLB53zE4mEccCvTsH8l1EMpfBxoyYXPQQOyfwXHU3MmYnxVGQ==
-X-Received: by 2002:adf:b355:: with SMTP id k21mr288693wrd.156.1614177082777;
-        Wed, 24 Feb 2021 06:31:22 -0800 (PST)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id c2sm3973759wrx.70.2021.02.24.06.31.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Feb 2021 06:31:22 -0800 (PST)
-Date:   Wed, 24 Feb 2021 15:31:20 +0100
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>, maz@kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sj Huang <sj.huang@mediatek.com>, youlin.pei@mediatek.com,
-        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
-        sin_jieyang@mediatek.com, drinkcat@chromium.org,
-        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
-Subject: Re: [v8,5/7] PCI: mediatek-gen3: Add MSI support
-Message-ID: <YDZjOHKmks9ChFQI@rocinante>
-References: <20210224061132.26526-1-jianjun.wang@mediatek.com>
- <20210224061132.26526-6-jianjun.wang@mediatek.com>
+        id S233364AbhBXPhR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Feb 2021 10:37:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48054 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234191AbhBXPId (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Feb 2021 10:08:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 829DD64ECE;
+        Wed, 24 Feb 2021 15:07:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614179226;
+        bh=iOc+6lUyUTnfAX8UjxQy0Si4XlePusKhqCbHzsETH/M=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=pL11se+h7pLwH99CWU1IQWpZxmmM9majEU9UIpTOjripHJyBxLckvzfTshlJBcjWC
+         Z2Hx00CKxPxJW9DQU5hzGIBFuETina/jn90LVbBLnAVoOT99P7rMKvVuWo5sS1ca+s
+         YFrWrWm5+YGyZlG7+JLdofl2DZmmZY0yre6c/0L/vtEX07SOW2OUGAHA5di2FcI66H
+         /D35naGLcRJVEH/huoTwZG4qHDHlz6OWHgP0MH6D2mycYLArGZ0lVvEDQj2gI99PeF
+         znFHPqZGN0TY4diUUOPFzXrvuYmTZoWgB7uvFmcfeD0bnYwe9ssy7MMoL6CtDFcl2r
+         hDyREhxOOD/sA==
+Date:   Wed, 24 Feb 2021 09:07:04 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>,
+        Jakub Kicinski <kuba@kernel.org>, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        Don Dutile <ddutile@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+Subject: Re: [PATCH mlx5-next v6 1/4] PCI: Add sysfs callback to allow MSI-X
+ table size change of SR-IOV VFs
+Message-ID: <20210224150704.GA1540010@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210224061132.26526-6-jianjun.wang@mediatek.com>
+In-Reply-To: <YDYiGmpWDx9I59Qx@unreal>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jianjun,
+On Wed, Feb 24, 2021 at 11:53:30AM +0200, Leon Romanovsky wrote:
+> On Tue, Feb 23, 2021 at 03:07:43PM -0600, Bjorn Helgaas wrote:
+> > On Sun, Feb 21, 2021 at 08:59:18AM +0200, Leon Romanovsky wrote:
+> > > On Sat, Feb 20, 2021 at 01:06:00PM -0600, Bjorn Helgaas wrote:
+> > > > On Fri, Feb 19, 2021 at 09:20:18AM +0100, Greg Kroah-Hartman wrote:
+> > > >
+> > > > > Ok, can you step back and try to explain what problem you are trying to
+> > > > > solve first, before getting bogged down in odd details?  I find it
+> > > > > highly unlikely that this is something "unique", but I could be wrong as
+> > > > > I do not understand what you are wanting to do here at all.
+> > > >
+> > > > We want to add two new sysfs files:
+> > > >
+> > > >   sriov_vf_total_msix, for PF devices
+> > > >   sriov_vf_msix_count, for VF devices associated with the PF
+> > > >
+> > > > AFAICT it is *acceptable* if they are both present always.  But it
+> > > > would be *ideal* if they were only present when a driver that
+> > > > implements the ->sriov_get_vf_total_msix() callback is bound to the
+> > > > PF.
+> > >
+> > > BTW, we already have all possible combinations: static, static with
+> > > folder, with and without "sriov_" prefix, dynamic with and without
+> > > folders on VFs.
+> > >
+> > > I need to know on which version I'll get Acked-by and that version I
+> > > will resubmit.
+> >
+> > I propose that you make static attributes for both files, so
+> > "sriov_vf_total_msix" is visible for *every* PF in the system and
+> > "sriov_vf_msix_count" is visible for *every* VF in the system.
+> 
+> No problem, this is close to v0/v1.
+> 
+> > The PF "sriov_vf_total_msix" show function can return zero if there's
+> > no PF driver or it doesn't support ->sriov_get_vf_total_msix().
+> > (Incidentally, I think the documentation should mention that when it
+> > *is* supported, the contents of this file are *constant*, i.e., it
+> > does not decrease as vectors are assigned to VFs.)
+> >
+> > The "sriov_vf_msix_count" set function can ignore writes if there's no
+> > PF driver or it doesn't support ->sriov_get_vf_total_msix(), or if a
+> > VF driver is bound.
+> 
+> Just to be clear, why don't we return EINVAL/EOPNOTSUPP instead of
+> silently ignore?
 
-[...]
-> +static struct irq_chip mtk_msi_irq_chip = {
-> +	.name = "MSI",
-> +	.irq_enable = mtk_pcie_irq_unmask,
-> +	.irq_disable = mtk_pcie_irq_mask,
-> +	.irq_ack = irq_chip_ack_parent,
-> +	.irq_mask = mtk_pcie_irq_mask,
-> +	.irq_unmask = mtk_pcie_irq_unmask,
-> +};
-
-For consistency sake, what about aligning this like the
-struct mtk_msi_bottom_irq_chip has been?  See immediately below.
-
-[...]
-> +static struct irq_chip mtk_msi_bottom_irq_chip = {
-> +	.irq_ack		= mtk_msi_bottom_irq_ack,
-> +	.irq_mask		= mtk_msi_bottom_irq_mask,
-> +	.irq_unmask		= mtk_msi_bottom_irq_unmask,
-> +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-> +	.irq_set_affinity	= mtk_pcie_set_affinity,
-> +	.name			= "MSI",
-> +};
-
-Krzysztof
+Returning some error is fine.  I just meant that the reads/writes
+would have no effect on the PCI core or the device driver.
