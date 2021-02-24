@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A0AAC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB1EC4332E
 	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 06:13:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE3CF64EC3
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 06:13:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B32264F06
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 06:13:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234122AbhBXGNb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Feb 2021 01:13:31 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:34563 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229539AbhBXGNT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2021 01:13:19 -0500
-X-UUID: fd775a4caf1f4d46839edb304dd6f87c-20210224
-X-UUID: fd775a4caf1f4d46839edb304dd6f87c-20210224
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        id S234126AbhBXGNf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Feb 2021 01:13:35 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:34615 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230234AbhBXGNU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2021 01:13:20 -0500
+X-UUID: 0070d911e420495ba96d4b23f3a67225-20210224
+X-UUID: 0070d911e420495ba96d4b23f3a67225-20210224
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
         (envelope-from <jianjun.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 250371193; Wed, 24 Feb 2021 14:12:27 +0800
+        with ESMTP id 1529753573; Wed, 24 Feb 2021 14:12:35 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
  mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 24 Feb 2021 14:12:25 +0800
+ 15.0.1497.2; Wed, 24 Feb 2021 14:12:34 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 24 Feb 2021 14:12:25 +0800
+ Transport; Wed, 24 Feb 2021 14:12:33 +0800
 From:   Jianjun Wang <jianjun.wang@mediatek.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>, <maz@kernel.org>,
@@ -47,9 +47,9 @@ CC:     Philipp Zabel <p.zabel@pengutronix.de>,
         <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>,
         <drinkcat@chromium.org>, <Rex-BC.Chen@mediatek.com>,
         <anson.chuang@mediatek.com>
-Subject: [v8,1/7] dt-bindings: PCI: mediatek-gen3: Add YAML schema
-Date:   Wed, 24 Feb 2021 14:11:26 +0800
-Message-ID: <20210224061132.26526-2-jianjun.wang@mediatek.com>
+Subject: [v8,6/7] PCI: mediatek-gen3: Add system PM support
+Date:   Wed, 24 Feb 2021 14:11:31 +0800
+Message-ID: <20210224061132.26526-7-jianjun.wang@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20210224061132.26526-1-jianjun.wang@mediatek.com>
 References: <20210224061132.26526-1-jianjun.wang@mediatek.com>
@@ -60,203 +60,138 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add YAML schemas documentation for Gen3 PCIe controller on
-MediaTek SoCs.
+Add suspend_noirq and resume_noirq callback functions to implement
+PM system suspend hooks for MediaTek Gen3 PCIe controller.
+
+When system suspend, trigger the PCIe link to L2 state and pull down
+the PERST# pin, gating the clocks of MAC layer and power off the
+physical layer for the sake of power saving.
+
+When system resum, the PCIe link should be re-established and the
+related control register values should be restored.
 
 Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
 Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../bindings/pci/mediatek-pcie-gen3.yaml      | 181 ++++++++++++++++++
- 1 file changed, 181 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+ drivers/pci/controller/pcie-mediatek-gen3.c | 84 +++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-new file mode 100644
-index 000000000000..e7b1f9892da4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -0,0 +1,181 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/mediatek-pcie-gen3.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index fde9de591888..fd13540d37fe 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -45,6 +45,9 @@
+ #define PCIE_PE_RSTB			BIT(3)
+ 
+ #define PCIE_LTSSM_STATUS_REG		0x150
++#define PCIE_LTSSM_STATE_MASK		GENMASK(28, 24)
++#define PCIE_LTSSM_STATE(val)		((val & PCIE_LTSSM_STATE_MASK) >> 24)
++#define PCIE_LTSSM_STATE_L2_IDLE	0x14
+ 
+ #define PCIE_LINK_STATUS_REG		0x154
+ #define PCIE_PORT_LINKUP		BIT(8)
+@@ -73,6 +76,9 @@
+ #define PCIE_MSI_SET_ADDR_HI_BASE	0xc80
+ #define PCIE_MSI_SET_ADDR_HI_OFFSET	0x04
+ 
++#define PCIE_ICMD_PM_REG		0x198
++#define PCIE_TURN_OFF_LINK		BIT(4)
 +
-+title: Gen3 PCIe controller on MediaTek SoCs
+ #define PCIE_TRANS_TABLE_BASE_REG	0x800
+ #define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
+ #define PCIE_ATR_TRSL_ADDR_LSB_OFFSET	0x8
+@@ -892,6 +898,83 @@ static int mtk_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static int __maybe_unused mtk_pcie_turn_off_link(struct mtk_pcie_port *port)
++{
++	u32 val;
 +
-+maintainers:
-+  - Jianjun Wang <jianjun.wang@mediatek.com>
++	val = readl_relaxed(port->base + PCIE_ICMD_PM_REG);
++	val |= PCIE_TURN_OFF_LINK;
++	writel_relaxed(val, port->base + PCIE_ICMD_PM_REG);
 +
-+description: |+
-+  PCIe Gen3 MAC controller for MediaTek SoCs, it supports Gen3 speed
-+  and compatible with Gen2, Gen1 speed.
++	/* Check the link is L2 */
++	return readl_poll_timeout(port->base + PCIE_LTSSM_STATUS_REG, val,
++				  (PCIE_LTSSM_STATE(val) ==
++				   PCIE_LTSSM_STATE_L2_IDLE), 20,
++				   50 * USEC_PER_MSEC);
++}
 +
-+  This PCIe controller supports up to 256 MSI vectors, the MSI hardware
-+  block diagram is as follows:
++static int __maybe_unused mtk_pcie_suspend_noirq(struct device *dev)
++{
++	struct mtk_pcie_port *port = dev_get_drvdata(dev);
++	int err;
++	u32 val;
 +
-+                    +-----+
-+                    | GIC |
-+                    +-----+
-+                       ^
-+                       |
-+                   port->irq
-+                       |
-+               +-+-+-+-+-+-+-+-+
-+               |0|1|2|3|4|5|6|7| (PCIe intc)
-+               +-+-+-+-+-+-+-+-+
-+                ^ ^           ^
-+                | |    ...    |
-+        +-------+ +------+    +-----------+
-+        |                |                |
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+  |0|1|...|30|31|  |0|1|...|30|31|  |0|1|...|30|31| (MSI sets)
-+  +-+-+---+--+--+  +-+-+---+--+--+  +-+-+---+--+--+
-+   ^ ^      ^  ^    ^ ^      ^  ^    ^ ^      ^  ^
-+   | |      |  |    | |      |  |    | |      |  |  (MSI vectors)
-+   | |      |  |    | |      |  |    | |      |  |
++	/* Trigger link to L2 state */
++	err = mtk_pcie_turn_off_link(port);
++	if (err) {
++		dev_err(port->dev, "can not enter L2 state\n");
++		return err;
++	}
 +
-+    (MSI SET0)       (MSI SET1)  ...   (MSI SET7)
++	/* Pull down the PERST# pin */
++	val = readl_relaxed(port->base + PCIE_RST_CTRL_REG);
++	val |= PCIE_PE_RSTB;
++	writel_relaxed(val, port->base + PCIE_RST_CTRL_REG);
 +
-+  With 256 MSI vectors supported, the MSI vectors are composed of 8 sets,
-+  each set has its own address for MSI message, and supports 32 MSI vectors
-+  to generate interrupt.
++	dev_dbg(port->dev, "enter L2 state success");
 +
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
++	clk_bulk_disable_unprepare(port->num_clks, port->clks);
 +
-+properties:
-+  compatible:
-+    const: mediatek,mt8192-pcie
++	reset_control_assert(port->mac_reset);
 +
-+  reg:
-+    maxItems: 1
++	phy_power_off(port->phy);
++	reset_control_assert(port->phy_reset);
 +
-+  reg-names:
-+    items:
-+      - const: pcie-mac
++	return 0;
++}
 +
-+  interrupts:
-+    maxItems: 1
++static int __maybe_unused mtk_pcie_resume_noirq(struct device *dev)
++{
++	struct mtk_pcie_port *port = dev_get_drvdata(dev);
++	int err;
 +
-+  ranges:
-+    minItems: 1
-+    maxItems: 8
++	reset_control_deassert(port->phy_reset);
++	phy_power_on(port->phy);
 +
-+  resets:
-+    minItems: 1
-+    maxItems: 2
++	reset_control_deassert(port->mac_reset);
 +
-+  reset-names:
-+    minItems: 1
-+    maxItems: 2
-+    items:
-+      - const: phy
-+      - const: mac
++	err = clk_bulk_prepare_enable(port->num_clks, port->clks);
++	if (err) {
++		dev_dbg(dev, "failed to enable PCIe clocks\n");
++		return err;
++	}
 +
-+  clocks:
-+    maxItems: 6
++	err = mtk_pcie_startup_port(port);
++	if (err) {
++		dev_err(port->dev, "resume failed\n");
++		return err;
++	}
 +
-+  clock-names:
-+    items:
-+      - const: pl_250m
-+      - const: tl_26m
-+      - const: tl_96m
-+      - const: tl_32k
-+      - const: peri_26m
-+      - const: top_133m
++	dev_dbg(port->dev, "resume done\n");
 +
-+  assigned-clocks:
-+    maxItems: 1
++	return 0;
++}
 +
-+  assigned-clock-parents:
-+    maxItems: 1
++static const struct dev_pm_ops mtk_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mtk_pcie_suspend_noirq,
++				      mtk_pcie_resume_noirq)
++};
 +
-+  phys:
-+    maxItems: 1
-+
-+  '#interrupt-cells':
-+    const: 1
-+
-+  interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    properties:
-+      '#address-cells':
-+        const: 0
-+      '#interrupt-cells':
-+        const: 1
-+      interrupt-controller: true
-+
-+    required:
-+      - '#address-cells'
-+      - '#interrupt-cells'
-+      - interrupt-controller
-+
-+    additionalProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - ranges
-+  - clocks
-+  - '#interrupt-cells'
-+  - interrupt-controller
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie: pcie@11230000 {
-+            compatible = "mediatek,mt8192-pcie";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            reg = <0x00 0x11230000 0x00 0x4000>;
-+            reg-names = "pcie-mac";
-+            interrupts = <GIC_SPI 251 IRQ_TYPE_LEVEL_HIGH 0>;
-+            bus-range = <0x00 0xff>;
-+            ranges = <0x82000000 0x00 0x12000000 0x00
-+                      0x12000000 0x00 0x1000000>;
-+            clocks = <&infracfg 44>,
-+                     <&infracfg 40>,
-+                     <&infracfg 43>,
-+                     <&infracfg 97>,
-+                     <&infracfg 99>,
-+                     <&infracfg 111>;
-+            clock-names = "pl_250m", "tl_26m", "tl_96m",
-+                          "tl_32k", "peri_26m", "top_133m";
-+            assigned-clocks = <&topckgen 50>;
-+            assigned-clock-parents = <&topckgen 91>;
-+
-+            phys = <&pciephy>;
-+            phy-names = "pcie-phy";
-+
-+            resets = <&infracfg_rst 2>,
-+                     <&infracfg_rst 3>;
-+            reset-names = "phy", "mac";
-+
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+                            <0 0 0 2 &pcie_intc 1>,
-+                            <0 0 0 3 &pcie_intc 2>,
-+                            <0 0 0 4 &pcie_intc 3>;
-+            pcie_intc: interrupt-controller {
-+                      #address-cells = <0>;
-+                      #interrupt-cells = <1>;
-+                      interrupt-controller;
-+            };
-+        };
-+    };
+ static const struct of_device_id mtk_pcie_of_match[] = {
+ 	{ .compatible = "mediatek,mt8192-pcie" },
+ 	{},
+@@ -903,6 +986,7 @@ static struct platform_driver mtk_pcie_driver = {
+ 	.driver = {
+ 		.name = "mtk-pcie",
+ 		.of_match_table = mtk_pcie_of_match,
++		.pm = &mtk_pcie_pm_ops,
+ 	},
+ };
+ 
 -- 
 2.25.1
 
