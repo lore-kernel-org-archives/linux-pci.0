@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B6AC433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB59EC433E6
 	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 06:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B71564EC3
+	by mail.kernel.org (Postfix) with ESMTP id 67BB164EC8
 	for <linux-pci@archiver.kernel.org>; Wed, 24 Feb 2021 06:13:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234114AbhBXGNa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Feb 2021 01:13:30 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:34517 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234106AbhBXGNR (ORCPT
+        id S234111AbhBXGN3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Feb 2021 01:13:29 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:34569 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S234100AbhBXGNR (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2021 01:13:17 -0500
-X-UUID: 14e40e8dd615412686d72d79a8ce7428-20210224
-X-UUID: 14e40e8dd615412686d72d79a8ce7428-20210224
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+X-UUID: 0c372d5a61ea40aeb0fb04b13382a96a-20210224
+X-UUID: 0c372d5a61ea40aeb0fb04b13382a96a-20210224
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
         (envelope-from <jianjun.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 832059160; Wed, 24 Feb 2021 14:12:28 +0800
+        with ESMTP id 1734089674; Wed, 24 Feb 2021 14:12:26 +0800
 Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 24 Feb 2021 14:12:27 +0800
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 24 Feb 2021 14:12:24 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas07.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 24 Feb 2021 14:12:26 +0800
+ Transport; Wed, 24 Feb 2021 14:12:23 +0800
 From:   Jianjun Wang <jianjun.wang@mediatek.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>, <maz@kernel.org>,
@@ -47,12 +47,10 @@ CC:     Philipp Zabel <p.zabel@pengutronix.de>,
         <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>,
         <drinkcat@chromium.org>, <Rex-BC.Chen@mediatek.com>,
         <anson.chuang@mediatek.com>
-Subject: [v8,2/7] PCI: Export pci_pio_to_address() for module use
-Date:   Wed, 24 Feb 2021 14:11:27 +0800
-Message-ID: <20210224061132.26526-3-jianjun.wang@mediatek.com>
+Subject: [v8,0/7] PCI: mediatek: Add new generation controller support
+Date:   Wed, 24 Feb 2021 14:11:25 +0800
+Message-ID: <20210224061132.26526-1-jianjun.wang@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20210224061132.26526-1-jianjun.wang@mediatek.com>
-References: <20210224061132.26526-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -60,26 +58,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This interface will be used by PCI host drivers for PIO translation,
-export it to support compiling those drivers as kernel modules.
+These series patches add pcie-mediatek-gen3.c and dt-bindings file to
+support new generation PCIe controller.
 
-Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
----
- drivers/pci/pci.c | 1 +
- 1 file changed, 1 insertion(+)
+Changes in v8:
+1. Add irq_clock to protect IRQ register access;
+2. Mask all INTx interrupt when startup port;
+3. Remove activate/deactivate callbacks from bottom_domain_ops;
+4. Add unmask/mask callbacks in mtk_msi_bottom_irq_chip;
+5. Add property information for reg-names.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b9fecc25d213..7ce72a82bec5 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4047,6 +4047,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- 
- 	return address;
- }
-+EXPORT_SYMBOL(pci_pio_to_address);
- 
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
- {
+Changes in v7:
+1. Split the driver patch to core PCIe, INTx, MSI and PM patches;
+2. Reshape MSI init and handle flow, use msi_bottom_domain to cover all sets;
+3. Replace readl/writel with their relaxed version;
+4. Add MSI description in binding document;
+5. Add pl_250m clock in binding document.
+
+Changes in v6:
+1. Export pci_pio_to_address() to support compiling as kernel module;
+2. Replace usleep_range(100 * 1000, 120 * 1000) with msleep(100);
+3. Replace dev_notice with dev_err;
+4. Fix MSI get hwirq flow;
+5. Fix warning for possible recursive locking in mtk_pcie_set_affinity.
+
+Changes in v5:
+1. Remove unused macros
+2. Modify the config read/write callbacks, set the config byte field
+   in TLP header and use pci_generic_config_read32/write32
+   to access the config space
+3. Fix the settings of translation window, both MEM and IO regions
+   works properly
+4. Fix typos
+
+Changes in v4:
+1. Fix PCIe power up/down flow
+2. Use "mac" and "phy" for reset names
+3. Add clock names
+4. Fix the variables type
+
+Changes in v3:
+1. Remove standard property in binding document
+2. Return error number when get_optional* API throws an error
+3. Use the bulk clk APIs
+
+Changes in v2:
+1. Fix the typo of dt-bindings patch
+2. Remove the unnecessary properties in binding document
+3. dispos the irq mappings of msi top domain when irq teardown
+
+Jianjun Wang (7):
+  dt-bindings: PCI: mediatek-gen3: Add YAML schema
+  PCI: Export pci_pio_to_address() for module use
+  PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192
+  PCI: mediatek-gen3: Add INTx support
+  PCI: mediatek-gen3: Add MSI support
+  PCI: mediatek-gen3: Add system PM support
+  MAINTAINERS: Add Jianjun Wang as MediaTek PCI co-maintainer
+
+ .../bindings/pci/mediatek-pcie-gen3.yaml      | 181 ++++
+ MAINTAINERS                                   |   1 +
+ drivers/pci/controller/Kconfig                |  13 +
+ drivers/pci/controller/Makefile               |   1 +
+ drivers/pci/controller/pcie-mediatek-gen3.c   | 994 ++++++++++++++++++
+ drivers/pci/pci.c                             |   1 +
+ 6 files changed, 1191 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+ create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
+
 -- 
 2.25.1
 
