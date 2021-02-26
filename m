@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1393EC4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE9FCC43603
 	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 15:52:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF87164F14
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 15:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD0FC64F22
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 15:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229989AbhBZPvu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Feb 2021 10:51:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40920 "EHLO
+        id S230018AbhBZPvz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Feb 2021 10:51:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229698AbhBZPvs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2021 10:51:48 -0500
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F4AFC061756;
-        Fri, 26 Feb 2021 07:51:06 -0800 (PST)
-Received: by mail-pg1-x529.google.com with SMTP id o63so6447644pgo.6;
-        Fri, 26 Feb 2021 07:51:06 -0800 (PST)
+        with ESMTP id S230001AbhBZPvx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2021 10:51:53 -0500
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF3FCC061788;
+        Fri, 26 Feb 2021 07:51:10 -0800 (PST)
+Received: by mail-pg1-x52f.google.com with SMTP id o63so6447789pgo.6;
+        Fri, 26 Feb 2021 07:51:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=3cnyege2lkvyTzpBpEwQIGSU7jGEQIJcUXr0wZfuG3I=;
-        b=ki2ojrFhidCe/PlzX1H75NNXpwP9+iOjCBi9L1PLXFjIMfsblWfmQsOlF0WyO36Fc2
-         BEG1lRGXSh5AKHpasU6Anb81z20P1QCGzJ/GZNzZcxSxD6jH7aBvpJEhf3ed3lgKuMCM
-         eVRej7hI7Jyu2fUKWo9pyilS8vLMfwvhPnuCDN5y8axt1vezG5A/8eN1LaeGlzfXPK1x
-         u3sZobWgM3S6VsS6UTXQwrrZdu1Z7bKM9fMryYXY4U/DAsywAs/dQHqIA3UBywnVi/R8
-         Xa5TP74rNN45cllVfXmF6eEduQsaEoq1p4Lfg76bIGUa4kR9gLeYw2xN3Lrv+wHFEBQE
-         CKLg==
+        bh=za8eu1JYR+W6Qrs53oiJmSIh8L3ByYlyVjAb99OLBoQ=;
+        b=oXpVpXZHvj/d5U6nx2W8ZVQtECAzv/YPcuOckMQgSBfZOfzTlxbkr31+yp90Mw/SLY
+         /5LE13WfnBs6IKlwdEesM3RX4ZmGneMolw8bOJesCX8EY90P43DZZwpENnkXU/xSqOnT
+         Yv+NPWFW8xkswNwEFj8KfHze+PrFgX7HUPOBqumEjFsTYn7euXGYVxraUf7Xl4XEtFb5
+         PLwLbOJSgW6CGxjaDHsQKtz2X42PwnQyE7patUXIVh4Y1cQ9oXassFHOQNOSlvKNnpe9
+         4IvkiV7Y7DxJ56c/BmJfQSv0M+7RpkBnbVdviZoRRgkMtP0JryKp8FdzMhviLfskbl3F
+         Aojw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=3cnyege2lkvyTzpBpEwQIGSU7jGEQIJcUXr0wZfuG3I=;
-        b=jgxQjWv1MRbXjLzNNH/gVNtZfea47e2+5IGwwobUp0YJEiaPc/W1JoImwM2FECDjNS
-         NWtCIRarxEGm+cDOLxBe90Tj3PslnTMFYsKayHNPgTPotLXCNZ5wVuiMOY25npz3N30f
-         R8dc+TBMYZxa8pJwgg8gRgQfKfDYQIJ6lnRHMCFYdKo6eCcmDWghyxm/Siw9SjbnKJPi
-         gUdiNS7teQgBhoaG1AyJ1QsqBbHVUnwTrxdgUnG8s9QqMFQK+sAGx2EMQsZwMkBD7OvQ
-         gQGdjODG5TXYor72/+QyiDQ8+CVxJd8rGYaKJ2Z5Ovfjdxd06wAech7DtCGIj49nzqvH
-         F6Sg==
-X-Gm-Message-State: AOAM532F8HQzSjgpJhBviTf5PSkaCm3Dw77Ib9PZ80uLjUgWwug8Q5W1
-        WjKpvnUb7XtcoiQVWNjepXQ=
-X-Google-Smtp-Source: ABdhPJyXELNZNnHM/+p7yBNowPhVbez2cDEd/pjFAK70wtiUKpzKsa2DwkLEhn/kYIJz/jQVsgFPbg==
-X-Received: by 2002:a65:6289:: with SMTP id f9mr3321403pgv.373.1614354665951;
-        Fri, 26 Feb 2021 07:51:05 -0800 (PST)
+        bh=za8eu1JYR+W6Qrs53oiJmSIh8L3ByYlyVjAb99OLBoQ=;
+        b=J5F/JPLrKNGnuasYMDXshr8Qqcx3wqVApe8y6rsM5Lqgz+kVxdE4xUTiS0QgelDmpL
+         AbvxaCCJoYVP8DA0F0ckdaWWe8lYxo5PtbiPDIw6qBCTqEn8pUjPPfQsW0Cimp5BZ91p
+         7IMwcinjHiM443n1Vpcgl45dQO1S82DO3S2S4CvvUs383HQEqfXyCCZae0I86Dy5p17e
+         bvg5fBTeqXTOtiskm9R7+Puz4SKLZW6YbUX9tH1LeK7bbayfMQTi+5AGjZLFNt5exqkk
+         83K2ocNGTGvrvXYtvxKCMpwFb0KWwNm8v4VIbJwaQlIqUX9lH7nFeqYi6WBDM5gXkf5p
+         LjHQ==
+X-Gm-Message-State: AOAM530KaQxOnIrAH10GfEamPUOokUj5wD6LWuNS6d68ceXjq/NmhQLD
+        wFoJ3iRij+S163uLgEnx4sI=
+X-Google-Smtp-Source: ABdhPJxPAy/kl27Stu1V4S5SDw52GK+PhDfQ2S+4w1MT/G5gNvJmzHadZEYnpAadC3SAuivyqwOPwg==
+X-Received: by 2002:a63:5b0e:: with SMTP id p14mr3424782pgb.110.1614354670560;
+        Fri, 26 Feb 2021 07:51:10 -0800 (PST)
 Received: from localhost (89.208.244.53.16clouds.com. [89.208.244.53])
-        by smtp.gmail.com with ESMTPSA id v123sm9463899pfc.63.2021.02.26.07.51.05
+        by smtp.gmail.com with ESMTPSA id d26sm10103662pfq.175.2021.02.26.07.51.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Feb 2021 07:51:05 -0800 (PST)
+        Fri, 26 Feb 2021 07:51:10 -0800 (PST)
 From:   Dejin Zheng <zhengdejin5@gmail.com>
 To:     corbet@lwn.net, jarkko.nikula@linux.intel.com,
         andriy.shevchenko@linux.intel.com, mika.westerberg@linux.intel.com,
@@ -63,9 +63,9 @@ To:     corbet@lwn.net, jarkko.nikula@linux.intel.com,
         linux-doc@vger.kernel.org, linux-i2c@vger.kernel.org,
         linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Dejin Zheng <zhengdejin5@gmail.com>
-Subject: [PATCH v5 1/4] PCI: Introduce pcim_alloc_irq_vectors()
-Date:   Fri, 26 Feb 2021 23:50:53 +0800
-Message-Id: <20210226155056.1068534-2-zhengdejin5@gmail.com>
+Subject: [PATCH v5 3/4] i2c: designware: Use pcim_alloc_irq_vectors() to allocate IRQ vectors
+Date:   Fri, 26 Feb 2021 23:50:55 +0800
+Message-Id: <20210226155056.1068534-4-zhengdejin5@gmail.com>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20210226155056.1068534-1-zhengdejin5@gmail.com>
 References: <20210226155056.1068534-1-zhengdejin5@gmail.com>
@@ -75,85 +75,86 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce pcim_alloc_irq_vectors(), a device-managed version of
-pci_alloc_irq_vectors(). Introducing this function can simplify
-the error handling path in many drivers.
+The pcim_alloc_irq_vectors() function, an explicit device-managed version
+of pci_alloc_irq_vectors(). If pcim_enable_device() has been called
+before, then pci_alloc_irq_vectors() is actually a device-managed
+function. It is used here as a device-managed function, So replace it
+with pcim_alloc_irq_vectors(). At the same time, Remove the
+pci_free_irq_vectors() function to simplify the error handling path.
+the freeing resources will take automatically when device is gone.
 
-And use pci_free_irq_vectors() to replace some code in pcim_release(),
-they are equivalent, and no functional change. It is more explicit
-that pcim_alloc_irq_vectors() is a device-managed function.
-
-Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Dejin Zheng <zhengdejin5@gmail.com>
 ---
 v4 -> v5:
-	- Remove the check of enable device in pcim_alloc_irq_vectors()
-	  and make it as a static line function.
+	- Modify the subject name.
 v3 -> v4:
-	- No change
+	- add some commit comments.
 v2 -> v3:
-	- Add some commit comments for replace some codes in
-	  pcim_release() by pci_free_irq_vectors().
+	- simplify the error handling path.
 v1 -> v2:
-	- Use pci_free_irq_vectors() to replace some code in
-	  pcim_release().
 	- Modify some commit messages.
 
- drivers/pci/pci.c   |  5 +----
- include/linux/pci.h | 24 ++++++++++++++++++++++++
- 2 files changed, 25 insertions(+), 4 deletions(-)
+ drivers/i2c/busses/i2c-designware-pcidrv.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 16a17215f633..fecfdc0add2f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1969,10 +1969,7 @@ static void pcim_release(struct device *gendev, void *res)
- 	struct pci_devres *this = res;
- 	int i;
+diff --git a/drivers/i2c/busses/i2c-designware-pcidrv.c b/drivers/i2c/busses/i2c-designware-pcidrv.c
+index 55c83a7a24f3..620b41e373b6 100644
+--- a/drivers/i2c/busses/i2c-designware-pcidrv.c
++++ b/drivers/i2c/busses/i2c-designware-pcidrv.c
+@@ -219,7 +219,7 @@ static int i2c_dw_pci_probe(struct pci_dev *pdev,
+ 	if (!dev)
+ 		return -ENOMEM;
  
--	if (dev->msi_enabled)
--		pci_disable_msi(dev);
--	if (dev->msix_enabled)
--		pci_disable_msix(dev);
-+	pci_free_irq_vectors(dev);
+-	r = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
++	r = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+ 	if (r < 0)
+ 		return r;
  
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
- 		if (this->region_mask & (1 << i))
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 86c799c97b77..5cafd7d65fd7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1818,6 +1818,30 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 					      NULL);
+@@ -234,10 +234,8 @@ static int i2c_dw_pci_probe(struct pci_dev *pdev,
+ 
+ 	if (controller->setup) {
+ 		r = controller->setup(pdev, controller);
+-		if (r) {
+-			pci_free_irq_vectors(pdev);
++		if (r)
+ 			return r;
+-		}
+ 	}
+ 
+ 	i2c_dw_adjust_bus_speed(dev);
+@@ -246,10 +244,8 @@ static int i2c_dw_pci_probe(struct pci_dev *pdev,
+ 		i2c_dw_acpi_configure(&pdev->dev);
+ 
+ 	r = i2c_dw_validate_speed(dev);
+-	if (r) {
+-		pci_free_irq_vectors(pdev);
++	if (r)
+ 		return r;
+-	}
+ 
+ 	i2c_dw_configure(dev);
+ 
+@@ -269,10 +265,8 @@ static int i2c_dw_pci_probe(struct pci_dev *pdev,
+ 	adap->nr = controller->bus_num;
+ 
+ 	r = i2c_dw_probe(dev);
+-	if (r) {
+-		pci_free_irq_vectors(pdev);
++	if (r)
+ 		return r;
+-	}
+ 
+ 	pm_runtime_set_autosuspend_delay(&pdev->dev, 1000);
+ 	pm_runtime_use_autosuspend(&pdev->dev);
+@@ -292,7 +286,6 @@ static void i2c_dw_pci_remove(struct pci_dev *pdev)
+ 
+ 	i2c_del_adapter(&dev->adapter);
+ 	devm_free_irq(&pdev->dev, dev->irq, dev);
+-	pci_free_irq_vectors(pdev);
  }
  
-+/**
-+ * pcim_alloc_irq_vectors - a device-managed pci_alloc_irq_vectors()
-+ * @dev:		PCI device to operate on
-+ * @min_vecs:		minimum number of vectors required (must be >= 1)
-+ * @max_vecs:		maximum (desired) number of vectors
-+ * @flags:		flags or quirks for the allocation
-+ *
-+ * Return the number of vectors allocated, (which might be smaller than
-+ * @max_vecs) if successful, or a negative error code on error. If less
-+ * than @min_vecs interrupt vectors are available for @dev the function
-+ * will fail with -ENOSPC.
-+ *
-+ * It depends on calling pcim_enable_device() to make IRQ resources
-+ * manageable.
-+ */
-+static inline int
-+pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-+			unsigned int max_vecs, unsigned int flags)
-+{
-+	if (!pci_is_managed(dev))
-+		return -EINVAL;
-+	return pci_alloc_irq_vectors(dev, min_vecs, max_vecs, flags);
-+}
-+
- /* Include architecture-dependent settings and functions */
- 
- #include <asm/pci.h>
+ /* work with hotplug and coldplug */
 -- 
 2.25.0
 
