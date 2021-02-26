@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CE0C433DB
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D53C433E6
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A448164DA3
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26CAF64DA3
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230523AbhBZUNs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Feb 2021 15:13:48 -0500
-Received: from mga17.intel.com ([192.55.52.151]:35622 "EHLO mga17.intel.com"
+        id S230203AbhBZUNv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Feb 2021 15:13:51 -0500
+Received: from mga17.intel.com ([192.55.52.151]:35659 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231134AbhBZUMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Feb 2021 15:12:54 -0500
-IronPort-SDR: v15gtxW41SeRMEZxM4Mjkccj2IG1llTOLEW6xNdYEk31e0K2qjcGuWuTvDHDqGC4AaLpnbQjmg
- NgxYmTaW7gcA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9907"; a="165846890"
+        id S231161AbhBZUNC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Feb 2021 15:13:02 -0500
+IronPort-SDR: WoXaGExp3AugKtPPIZSszoWlVajphvks6EWzIR8NYyHwF0bHmmtxKDHuGTLXMi7/gIYYxKk6tv
+ uGevjAsIcClw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9907"; a="165846899"
 X-IronPort-AV: E=Sophos;i="5.81,209,1610438400"; 
-   d="scan'208";a="165846890"
+   d="scan'208";a="165846899"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2021 12:11:12 -0800
-IronPort-SDR: u4IAvGdLeToPWo/koT5J5hjXR2dHjNUyI+wV88uEkb9QnkDbyoyO6UoKv2YP3Z7gUMSeRDGQRA
- 2O1bk3wGK+KQ==
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2021 12:11:13 -0800
+IronPort-SDR: +EpK/x9VncNDE5qsC6U/B0HcBszgCBpXa4e1qFTeKEWYJgpXogusVejBQoXRMwu4tztbv7ye9z
+ g5dY5zB++ODA==
 X-IronPort-AV: E=Sophos;i="5.81,209,1610438400"; 
-   d="scan'208";a="405109431"
+   d="scan'208";a="405109442"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.154])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 26 Feb 2021 12:11:11 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 26 Feb 2021 12:11:13 -0800
 From:   Megha Dey <megha.dey@intel.com>
 To:     tglx@linutronix.de
 Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
@@ -41,9 +41,9 @@ Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
         iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
         bhelgaas@google.com, maz@kernel.org, linux-pci@vger.kernel.org,
         baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
-Subject: [Patch V2 04/13] genirq/proc: Take buslock on affinity write
-Date:   Fri, 26 Feb 2021 12:11:08 -0800
-Message-Id: <1614370277-23235-5-git-send-email-megha.dey@intel.com>
+Subject: [Patch V2 07/13] irqdomain/msi: Provide msi_alloc/free_store() callbacks
+Date:   Fri, 26 Feb 2021 12:11:11 -0800
+Message-Id: <1614370277-23235-8-git-send-email-megha.dey@intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1614370277-23235-1-git-send-email-megha.dey@intel.com>
 References: <1614370277-23235-1-git-send-email-megha.dey@intel.com>
@@ -53,66 +53,90 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-Until now interrupt chips which support setting affinity are not locking
-the associated bus lock for two reasons:
+For devices which don't have a standard storage for MSI messages like the
+upcoming IMS (Interrupt Message Store) it's required to allocate storage
+space before allocating interrupts and after freeing them.
 
- - All chips which support affinity setting do not use buslock because they
-   just can operated directly on the hardware.
+This could be achieved with the existing callbacks, but that would be
+awkward because they operate on msi_alloc_info_t which is not uniform
+across architectures. Also these callbacks are invoked per interrupt but
+the allocation might have bulk requirements depending on the device.
 
- - All chips which use buslock do not support affinity setting because
-   their interrupt chips are not capable. These chips are usually connected
-   over a bus like I2C, SPI etc. and have an interrupt output which is
-   conneted to CPU interrupt of some sort. So there is no way to set the
-   affinity on the chip itself.
-
-Upcoming hardware which is PCIE based sports a non standard MSI(X) variant
-which stores the MSI message in RAM which is associated to e.g. a device
-queue. The device manages this RAM and writes have to be issued via command
-queues or similar mechanisms which is obviously not possible from interrupt
-disabled, raw spinlock held context.
-
-The buslock mechanism of irq chips can be utilized to support that. The
-affinity write to the chip writes to shadow state, marks it pending and the
-irq chip's irq_bus_sync_unlock() callback handles the command queue and
-wait for completion similar to the other chip operations on I2C or SPI
-buses.
-
-Change the locking in irq_set_affinity() to bus_lock/unlock to help with
-that. There are a few other callers than the proc interface, but none of
-them is affected by this change as none of them affects an irq chip with
-bus lock support.
+As such devices can operate on different architectures it is simpler to
+have separate callbacks which operate on struct device. The resulting
+storage information has to be stored in struct msi_desc so the underlying
+irq chip implementation can retrieve it for the relevant operations.
 
 Reviewed-by: Tony Luck <tony.luck@intel.com>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Megha Dey <megha.dey@intel.com>
 ---
- kernel/irq/manage.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/linux/msi.h |  8 ++++++++
+ kernel/irq/msi.c    | 11 +++++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index dec3f73..85ede4e 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -443,16 +443,16 @@ int irq_update_affinity_desc(unsigned int irq,
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 46e879c..e915932 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -323,6 +323,10 @@ struct msi_domain_info;
+  *			function.
+  * @domain_free_irqs:	Optional function to override the default free
+  *			function.
++ * @msi_alloc_store:	Optional callback to allocate storage in a device
++ *			specific non-standard MSI store
++ * @msi_alloc_free:	Optional callback to free storage in a device
++ *			specific non-standard MSI store
+  *
+  * @get_hwirq, @msi_init and @msi_free are callbacks used by
+  * msi_create_irq_domain() and related interfaces
+@@ -372,6 +376,10 @@ struct msi_domain_ops {
+ 					     struct device *dev, int nvec);
+ 	void		(*domain_free_irqs)(struct irq_domain *domain,
+ 					    struct device *dev);
++	int		(*msi_alloc_store)(struct irq_domain *domain,
++					   struct device *dev, int nvec);
++	void		(*msi_free_store)(struct irq_domain *domain,
++					  struct device *dev);
+ };
  
- int __irq_set_affinity(unsigned int irq, const struct cpumask *mask, bool force)
+ /**
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index c54316d..047b59d 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -434,6 +434,12 @@ int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
++	if (ops->msi_alloc_store) {
++		ret = ops->msi_alloc_store(domain, dev, nvec);
++		if (ret)
++			return ret;
++	}
++
+ 	for_each_msi_entry(desc, dev) {
+ 		ops->set_desc(&arg, desc);
+ 
+@@ -529,6 +535,8 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 
+ void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
  {
--	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_desc *desc;
- 	unsigned long flags;
- 	int ret;
++	struct msi_domain_info *info = domain->host_data;
++	struct msi_domain_ops *ops = info->ops;
+ 	struct msi_desc *desc;
  
-+	desc = irq_get_desc_buslock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
- 	if (!desc)
- 		return -EINVAL;
- 
--	raw_spin_lock_irqsave(&desc->lock, flags);
- 	ret = irq_set_affinity_locked(irq_desc_get_irq_data(desc), mask, force);
--	raw_spin_unlock_irqrestore(&desc->lock, flags);
-+	irq_put_desc_busunlock(desc, flags);
- 	return ret;
+ 	for_each_msi_entry(desc, dev) {
+@@ -542,6 +550,9 @@ void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
+ 			desc->irq = 0;
+ 		}
+ 	}
++
++	if (ops->msi_free_store)
++		ops->msi_free_store(domain, dev);
  }
  
+ /**
 -- 
 2.7.4
 
