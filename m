@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CE0C43331
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B963AC433E6
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4059364F26
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7194264F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Feb 2021 20:14:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231252AbhBZUOR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Feb 2021 15:14:17 -0500
-Received: from mga17.intel.com ([192.55.52.151]:35662 "EHLO mga17.intel.com"
+        id S230113AbhBZUOW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Feb 2021 15:14:22 -0500
+Received: from mga17.intel.com ([192.55.52.151]:35678 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229863AbhBZUNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Feb 2021 15:13:19 -0500
-IronPort-SDR: bFPsn6MOfJDzXrYOw43slIlSpC4pgQwiPmU8vaW84Q6BQeJATL+ItpmKv5Hq7CwNAlP8116G35
- g/y9rpHI3/aA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9907"; a="165846907"
+        id S231150AbhBZUOC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Feb 2021 15:14:02 -0500
+IronPort-SDR: VxfR5jkt3HFxkn681jJcDta0X1KeYqEP8rBlGLR3rNCUxrT7N/VncmFDF1QYT1WzgTA0JcUM2m
+ Ykl42Q2WsRvQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9907"; a="165846919"
 X-IronPort-AV: E=Sophos;i="5.81,209,1610438400"; 
-   d="scan'208";a="165846907"
+   d="scan'208";a="165846919"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2021 12:11:14 -0800
-IronPort-SDR: Yo/KNtvXneOxHD6NG7HH8FE9wVW+KzGpM+KyH432qTshqa1T8Sq2664sNn9RpZibK33r8a5KZX
- ELNvHeW965Rw==
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2021 12:11:15 -0800
+IronPort-SDR: nb0fcvfHHm0m8Hdy1+xls3a8hEnYNqDlXOEEWSI1luFshB5X1P5oXgEgsXgT8eoI0Qn46ShK9E
+ yLC1P6ZemW2g==
 X-IronPort-AV: E=Sophos;i="5.81,209,1610438400"; 
-   d="scan'208";a="405109452"
+   d="scan'208";a="405109464"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.154])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 26 Feb 2021 12:11:14 -0800
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 26 Feb 2021 12:11:15 -0800
 From:   Megha Dey <megha.dey@intel.com>
 To:     tglx@linutronix.de
 Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
@@ -40,11 +40,10 @@ Cc:     linux-kernel@vger.kernel.org, dave.jiang@intel.com,
         megha.dey@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
         iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
         bhelgaas@google.com, maz@kernel.org, linux-pci@vger.kernel.org,
-        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com,
-        Joerg Roedel <joro@8bytes.org>
-Subject: [Patch V2 10/13] iommu: Add capability IOMMU_CAP_VIOMMU_HINT
-Date:   Fri, 26 Feb 2021 12:11:14 -0800
-Message-Id: <1614370277-23235-11-git-send-email-megha.dey@intel.com>
+        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
+Subject: [Patch V2 13/13] genirq/msi: Provide helpers to return Linux IRQ/dev_msi hw IRQ number
+Date:   Fri, 26 Feb 2021 12:11:17 -0800
+Message-Id: <1614370277-23235-14-git-send-email-megha.dey@intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1614370277-23235-1-git-send-email-megha.dey@intel.com>
 References: <1614370277-23235-1-git-send-email-megha.dey@intel.com>
@@ -52,104 +51,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Lu Baolu <baolu.lu@linux.intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
 
-Some IOMMU specification defines some kind of hint mechanism, through
-which BIOS can imply that OS runs in a virtualized environment. For
-example, the caching mode defined in VT-d spec and NpCache capability
-defined in the AMD IOMMU specification. This hint could also be used
-outside of the IOMMU subsystem, where it could be used with other known
-means (CPUID, smbios) to sense whether Linux is running in a virtualized
-environment. Add a capability bit so that it could be used there.
+Add new helpers to get the Linux IRQ number and device specific index
+for given device-relative vector so that the drivers don't need to
+allocate their own arrays to keep track of the vectors and hwirq for
+the multi vector device MSI case.
 
-Cc: Joerg Roedel <joro@8bytes.org>
 Reviewed-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Megha Dey <megha.dey@intel.com>
 ---
- drivers/iommu/amd/iommu.c    | 2 ++
- drivers/iommu/intel/iommu.c  | 5 +++++
- drivers/iommu/virtio-iommu.c | 9 +++++++++
- include/linux/iommu.h        | 2 ++
- 4 files changed, 18 insertions(+)
+ include/linux/msi.h |  2 ++
+ kernel/irq/msi.c    | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-index a69a8b5..a912318 100644
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -2140,6 +2140,8 @@ static bool amd_iommu_capable(enum iommu_cap cap)
- 		return (irq_remapping_enabled == 1);
- 	case IOMMU_CAP_NOEXEC:
- 		return false;
-+	case IOMMU_CAP_VIOMMU_HINT:
-+		return amd_iommu_np_cache;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index ee09323..55fa198 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -294,6 +294,7 @@ static inline void context_clear_entry(struct context_entry *context)
-  */
- static struct dmar_domain *si_domain;
- static int hw_pass_through = 1;
-+static int intel_caching_mode;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 24abec0..d60a6ba 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -451,6 +451,8 @@ struct irq_domain *platform_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 				   irq_write_msi_msg_t write_msi_msg);
+ void platform_msi_domain_free_irqs(struct device *dev);
++int msi_irq_vector(struct device *dev, unsigned int nr);
++int dev_msi_hwirq(struct device *dev, unsigned int nr);
  
- #define for_each_domain_iommu(idx, domain)			\
- 	for (idx = 0; idx < g_num_of_iommus; idx++)		\
-@@ -3253,6 +3254,8 @@ static int __init init_dmars(void)
- 
- 		if (!ecap_pass_through(iommu->ecap))
- 			hw_pass_through = 0;
-+		if (cap_caching_mode(iommu->cap))
-+			intel_caching_mode = 1;
- 		intel_svm_check(iommu);
- 	}
- 
-@@ -5113,6 +5116,8 @@ static bool intel_iommu_capable(enum iommu_cap cap)
- 		return domain_update_iommu_snooping(NULL) == 1;
- 	if (cap == IOMMU_CAP_INTR_REMAP)
- 		return irq_remapping_enabled == 1;
-+	if (cap == IOMMU_CAP_VIOMMU_HINT)
-+		return intel_caching_mode;
- 
- 	return false;
- }
-diff --git a/drivers/iommu/virtio-iommu.c b/drivers/iommu/virtio-iommu.c
-index 2bfdd57..e4941ca 100644
---- a/drivers/iommu/virtio-iommu.c
-+++ b/drivers/iommu/virtio-iommu.c
-@@ -931,7 +931,16 @@ static int viommu_of_xlate(struct device *dev, struct of_phandle_args *args)
- 	return iommu_fwspec_add_ids(dev, args->args, 1);
+ /* When an MSI domain is used as an intermediate domain */
+ int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 047b59d..f2a8f55 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -581,4 +581,48 @@ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain)
+ 	return (struct msi_domain_info *)domain->host_data;
  }
  
-+static bool viommu_capable(enum iommu_cap cap)
++/**
++ * msi_irq_vector - Get the Linux IRQ number of a device vector
++ * @dev: device to operate on
++ * @nr: device-relative interrupt vector index (0-based).
++ *
++ * Returns the Linux IRQ number of a device vector.
++ */
++int msi_irq_vector(struct device *dev, unsigned int nr)
 +{
-+	if (cap == IOMMU_CAP_VIOMMU_HINT)
-+		return true;
++	struct msi_desc *entry;
++	int i = 0;
 +
-+	return false;
++	for_each_msi_entry(entry, dev) {
++		if (i == nr)
++			return entry->irq;
++		i++;
++	}
++	WARN_ON_ONCE(1);
++	return -EINVAL;
 +}
++EXPORT_SYMBOL_GPL(msi_irq_vector);
 +
- static struct iommu_ops viommu_ops = {
-+	.capable		= viommu_capable,
- 	.domain_alloc		= viommu_domain_alloc,
- 	.domain_free		= viommu_domain_free,
- 	.attach_dev		= viommu_attach_dev,
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 5e7fe51..9d0ade4 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -94,6 +94,8 @@ enum iommu_cap {
- 					   transactions */
- 	IOMMU_CAP_INTR_REMAP,		/* IOMMU supports interrupt isolation */
- 	IOMMU_CAP_NOEXEC,		/* IOMMU_NOEXEC flag */
-+	IOMMU_CAP_VIOMMU_HINT,		/* IOMMU can detect a hit for running in
-+					   VM */
- };
- 
- /*
++/**
++ * dev_msi_hwirq - Get the device MSI hw IRQ number of a device vector
++ * @dev: device to operate on
++ * @nr: device-relative interrupt vector index (0-based).
++ *
++ * Return the dev_msi hw IRQ number of a device vector.
++ */
++int dev_msi_hwirq(struct device *dev, unsigned int nr)
++{
++	struct msi_desc *entry;
++	int i = 0;
++
++	for_each_msi_entry(entry, dev) {
++		if (i == nr)
++			return entry->device_msi.hwirq;
++		i++;
++	}
++	WARN_ON_ONCE(1);
++	return -EINVAL;
++}
++EXPORT_SYMBOL_GPL(dev_msi_hwirq);
++
+ #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
 -- 
 2.7.4
 
