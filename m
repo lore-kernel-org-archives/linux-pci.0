@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 263FAC4321A
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5501C4161F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0451A64E75
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3877664EDD
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239978AbhCCB5v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:57:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49006 "EHLO mail.kernel.org"
+        id S241782AbhCCB6I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:58:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60556 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1350707AbhCBMXv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Mar 2021 07:23:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3511164FA6;
-        Tue,  2 Mar 2021 11:58:50 +0000 (UTC)
+        id S1351015AbhCBNDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Mar 2021 08:03:35 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7AD3B64FB4;
+        Tue,  2 Mar 2021 11:59:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686331;
-        bh=JVsTdjNK4DFq6rSztAHfwI9DROfR3cEPDEPTVS9MFIs=;
+        s=k20201202; t=1614686354;
+        bh=jU4kWJYQHfR0aAfQPcS4kqkjBdaWff57P6igI62WjtM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SXVovwvLZv2s80/l9pzEcIMa+e5RbUkc+bS63v2n8wF4atC3XKkgrfdY1wMzU9QKo
-         b76SI00UqGuYom0qDhDfHSQeUjtm1+9siDZeGiNty1qiShZlAjJSQy0pvQRWLiyy/n
-         xqjTuIAQFgiUWuM3dfqhj1YiyBwL+7c3nVg8Uuqmwg5qTrob6Cbo7Gv5weNte7q3on
-         NAmJj0zocicfCOcOLTWAUQO3lobBQjZLut8NkEutiGHsp2xDfCN/9Lo5I6uGY2znLc
-         ZVDlbFRjt3MOa10xAiIvXqSAwaaonDQokL3ozIWFWBpSWTph+8f61hqLhamlhLtCMv
-         1o7z6qiLEUoEw==
+        b=O455QuwmnWSs65YGF3JL3LnTAnEKSgVzxHlEv6iqZNP6xm6R/SjEwvzVgm8I9RO7L
+         X8i4J3NAiLTrVpdkiOU5YXhKHRmwIGrG73h52pWB4gjvaWeIpDkucyzOQxptU+3GLB
+         SQJNjg6cnugrnYTHA74gscbqWyIoCxMa5AfYxxKURZDPkLZu8a5Va1lGj248EJg9Qk
+         gyw85MA9/SqYGpNANWIf1eVHQRT6/Dol3p72ZBqkqVuchH4+LThWAeI0HFJvqNPaqB
+         xMwFpjBzmz8GfuV1217P7imGIYIzVz3vwXg9Gt/aAYPjlWLveScxl9SUzWaJbf/W/u
+         NQNOEJxAK+XUg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Martin Kaiser <martin@kaiser.cx>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/21] PCI: xgene-msi: Fix race in installing chained irq handler
-Date:   Tue,  2 Mar 2021 06:58:26 -0500
-Message-Id: <20210302115835.63269-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 4.14 08/13] PCI: xgene-msi: Fix race in installing chained irq handler
+Date:   Tue,  2 Mar 2021 06:58:58 -0500
+Message-Id: <20210302115903.63458-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210302115835.63269-1-sashal@kernel.org>
-References: <20210302115835.63269-1-sashal@kernel.org>
+In-Reply-To: <20210302115903.63458-1-sashal@kernel.org>
+References: <20210302115903.63458-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -68,14 +69,14 @@ Signed-off-by: Martin Kaiser <martin@kaiser.cx>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-xgene-msi.c | 10 +++-------
+ drivers/pci/host/pci-xgene-msi.c | 10 +++-------
  1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
-index f4c02da84e59..0bfa5065b440 100644
---- a/drivers/pci/controller/pci-xgene-msi.c
-+++ b/drivers/pci/controller/pci-xgene-msi.c
-@@ -384,13 +384,9 @@ static int xgene_msi_hwirq_alloc(unsigned int cpu)
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 1f42a202b021..784b3f61199e 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -393,13 +393,9 @@ static int xgene_msi_hwirq_alloc(unsigned int cpu)
  		if (!msi_group->gic_irq)
  			continue;
  
