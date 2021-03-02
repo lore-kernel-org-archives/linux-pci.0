@@ -2,136 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBDF7C41519
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6EFCC28CFA
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87B6164EDF
+	by mail.kernel.org (Postfix) with ESMTP id 7303264EE1
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242251AbhCCB6P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:58:15 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:13418 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1447956AbhCBNy0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Mar 2021 08:54:26 -0500
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4Dqcgn1HZ0zjTX6;
-        Tue,  2 Mar 2021 21:00:53 +0800 (CST)
-Received: from localhost.localdomain (10.67.165.24) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 2 Mar 2021 21:02:08 +0800
-From:   Yicong Yang <yangyicong@hisilicon.com>
-To:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC:     <tanxiaofei@huawei.com>, <prime.zeng@huawei.com>,
-        <yangyicong@hisilicon.com>, <linuxarm@huawei.com>
-Subject: [PATCH] PCI/AER: Correctly handle advisory non-fatal errors
-Date:   Tue, 2 Mar 2021 20:59:54 +0800
-Message-ID: <1614689994-10925-1-git-send-email-yangyicong@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
+        id S242132AbhCCB6N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:58:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35854 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1446278AbhCBN25 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Mar 2021 08:28:57 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5E6F064F0B;
+        Tue,  2 Mar 2021 11:56:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614686188;
+        bh=u2P5i4xmHCSSHOMVfd8dvwLyx+VXBqLuGZ/cmQoff18=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=M7WJ2feZixRyl5TiAN5qxOKOB/3l7QHfQXb9iDGYsE+xKVNT3Bi/AVfiRb6jiJlSf
+         E3tJXs+BqPgS64e+zCoyLhM1KKpYkmLQlMKyi6KbEv5UzAyr0ROPdFSq87+8IlFk+b
+         KouXBxcxO3kefLzmw6GB7un3Fsy3hen7oihh7dIifcW4V1CB0VnbojDm+hceiWMbtJ
+         uT+aQohNWQkzq+RU0DYdauT6WAWWS37JuGpqUZg/Jocb8BmdP6Or1vywqE7mYiMXkp
+         VZEFF/zKN41fZ294gnZDNnMnzsfGHWUMsXK8xtGpCY/SnlJhgs7/FHJxLYFP9bdaU5
+         xxF9905tMKReQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 41/52] PCI: Fix pci_register_io_range() memory leak
+Date:   Tue,  2 Mar 2021 06:55:22 -0500
+Message-Id: <20210302115534.61800-41-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
+References: <20210302115534.61800-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.24]
-X-CFilter-Loop: Reflected
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Per PCIe Spec 4.0 sctions 6.2.3.2.4 and 6.2.4.3, some uncorrectable
-errors may signal ERR_COR instead of ERR_NONFATAL and logged as
-advisory non-fatal error. And section 6.2.5 mentions, for advisory
-non-fatal errors, both corresponding bit in Uncorrectable Error Status
-reg and bit in Correctable Error status will be set.
+From: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Currently we only print the information of correctable error status
-when advisory non-fatal error received, and with corresponding
-bit in uncorrectable error status uncleared. This will leads to
-wrong information when non-fatal errors arrive in the future, as
-AER will print the non-fatal errors that already handled as
-advisory non-fatal errors.
+[ Upstream commit f6bda644fa3a7070621c3bf12cd657f69a42f170 ]
 
-Print non-fatal error status signaled as advisory non-fatal error
-and clear the uncorrectable error status.
+Kmemleak reports:
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+  unreferenced object 0xc328de40 (size 64):
+    comm "kworker/1:1", pid 21, jiffies 4294938212 (age 1484.670s)
+    hex dump (first 32 bytes):
+      00 00 00 00 00 00 00 00 e0 d8 fc eb 00 00 00 00  ................
+      00 00 10 fe 00 00 00 00 00 00 00 00 00 00 00 00  ................
+
+  backtrace:
+    [<ad758d10>] pci_register_io_range+0x3c/0x80
+    [<2c7f139e>] of_pci_range_to_resource+0x48/0xc0
+    [<f079ecc8>] devm_of_pci_get_host_bridge_resources.constprop.0+0x2ac/0x3ac
+    [<e999753b>] devm_of_pci_bridge_init+0x60/0x1b8
+    [<a895b229>] devm_pci_alloc_host_bridge+0x54/0x64
+    [<e451ddb0>] rcar_pcie_probe+0x2c/0x644
+
+In case a PCI host driver's probe is deferred, the same I/O range may be
+allocated again, and be ignored, causing a memory leak.
+
+Fix this by (a) letting logic_pio_register_range() return -EEXIST if the
+passed range already exists, so pci_register_io_range() will free it, and
+by (b) making pci_register_io_range() not consider -EEXIST an error
+condition.
+
+Link: https://lore.kernel.org/r/20210202100332.829047-1-geert+renesas@glider.be
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.h      |  1 +
- drivers/pci/pcie/aer.c | 23 ++++++++++++++++++++++-
- 2 files changed, 23 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c | 4 ++++
+ lib/logic_pio.c   | 3 +++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ef7c466..6a5f76c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -424,6 +424,7 @@ struct aer_err_info {
- 
- 	unsigned int status;		/* COR/UNCOR Error Status */
- 	unsigned int mask;		/* COR/UNCOR Error Mask */
-+	unsigned int nf_status;		/* Non-Fatal Error Status signaled as COR Error */
- 	struct aer_header_log_regs tlp;	/* TLP Header */
- };
- 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index ba22388..a3e7d8d 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -691,6 +691,20 @@ static void __aer_print_error(struct pci_dev *dev,
- 		pci_printk(level, dev, "   [%2d] %-22s%s\n", i, errmsg,
- 				info->first_error == i ? " (First)" : "");
- 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 790393d1e318..a53e25d75d04 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4022,6 +4022,10 @@ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+ 	ret = logic_pio_register_range(range);
+ 	if (ret)
+ 		kfree(range);
 +
-+	if (info->severity == AER_CORRECTABLE &&
-+	    (status & PCI_ERR_COR_ADV_NFAT)) {
-+		status = info->nf_status;
-+		pci_printk(level, dev, "   Non-Fatal errors signaled as correctable NonFatalErr:");
-+		for_each_set_bit(i, &status, 32) {
-+			errmsg = aer_uncorrectable_error_string[i];
-+			if (!errmsg)
-+				errmsg = "Unknown Error Bit";
-+
-+			pci_printk(level, dev, "   [%2d] %-22s\n", i, errmsg);
-+		}
-+	}
-+
- 	pci_dev_aer_stats_incr(dev, info);
- }
++	/* Ignore duplicates due to deferred probing */
++	if (ret == -EEXIST)
++		ret = 0;
+ #endif
  
-@@ -781,6 +795,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
- 	info.status = status;
- 	info.mask = mask;
- 	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
-+	info.nf_status = aer->uncor_status;
- 
- 	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
- 	__aer_print_error(dev, &info);
-@@ -946,9 +961,13 @@ static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
- 		 * Correctable error does not need software intervention.
- 		 * No need to go through error recovery process.
- 		 */
--		if (aer)
-+		if (aer) {
- 			pci_write_config_dword(dev, aer + PCI_ERR_COR_STATUS,
- 					info->status);
-+			if (info->status & PCI_ERR_COR_ADV_NFAT)
-+				pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS,
-+						       info->nf_status);
-+		}
- 		if (pcie_aer_is_native(dev))
- 			pcie_clear_device_status(dev);
- 	} else if (info->severity == AER_NONFATAL)
-@@ -1058,6 +1077,8 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
- 			&info->mask);
- 		if (!(info->status & ~info->mask))
- 			return 0;
-+		if (info->status & PCI_ERR_COR_ADV_NFAT)
-+			pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS, &info->nf_status);
- 	} else if (type == PCI_EXP_TYPE_ROOT_PORT ||
- 		   type == PCI_EXP_TYPE_RC_EC ||
- 		   type == PCI_EXP_TYPE_DOWNSTREAM ||
+ 	return ret;
+diff --git a/lib/logic_pio.c b/lib/logic_pio.c
+index f32fe481b492..07b4b9a1f54b 100644
+--- a/lib/logic_pio.c
++++ b/lib/logic_pio.c
+@@ -28,6 +28,8 @@ static DEFINE_MUTEX(io_range_mutex);
+  * @new_range: pointer to the IO range to be registered.
+  *
+  * Returns 0 on success, the error code in case of failure.
++ * If the range already exists, -EEXIST will be returned, which should be
++ * considered a success.
+  *
+  * Register a new IO range node in the IO range list.
+  */
+@@ -51,6 +53,7 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
+ 	list_for_each_entry(range, &io_range_list, list) {
+ 		if (range->fwnode == new_range->fwnode) {
+ 			/* range already there */
++			ret = -EEXIST;
+ 			goto end_register;
+ 		}
+ 		if (range->flags == LOGIC_PIO_CPU_MMIO &&
 -- 
-2.8.1
+2.30.1
 
