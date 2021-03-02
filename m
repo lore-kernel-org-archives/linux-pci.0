@@ -2,248 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2E42C43142
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A79C28CFB
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07F9D64EAE
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0FCE64E87
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241472AbhCCB6G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:58:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50608 "EHLO mail.kernel.org"
+        id S242810AbhCCB6S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:58:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53806 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1444797AbhCBMeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Mar 2021 07:34:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E111364F33;
-        Tue,  2 Mar 2021 11:56:24 +0000 (UTC)
+        id S1344186AbhCBRcP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Mar 2021 12:32:15 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6491C64F1B;
+        Tue,  2 Mar 2021 16:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686185;
-        bh=WivTFf5RrxXAlXBoHdcFGsnevMFtmQzD3w53KWzBk3U=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Utmbz9FebLVthGV0InP3Kt5lLGauvGR7ylEOuAO9qxvVYnE70Ycf/vI98Pw/4k2/Z
-         0B0PPt1FIq5AQ1E1CUU2jl1LWkxvciCauQM3Kiu+QaUFGc9GHcVfxhEE1qIMHbLc4t
-         eqycVFt98G9R32rgkwwTU7jeJvMQxYvWYKIC4r2CoaHHhgv7OXC3reb7hxp1ZUSbdO
-         ikFgEaDHYbhH00pVthISrJzEFUTkXyz2iMP2ggRIuOck9TbuMcbJ/lBonIk3JSqR1d
-         7QfbF/atMcUWNxFLfOmh6Q/mR27iiKzfyrB5J/23KhqjOWUgesds9SxCHPEJ27lMjJ
-         nUFSfx7vsf0zg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nadeem Athani <nadeem@cadence.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 39/52] PCI: cadence: Retrain Link to work around Gen2 training defect
-Date:   Tue,  2 Mar 2021 06:55:20 -0500
-Message-Id: <20210302115534.61800-39-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
-References: <20210302115534.61800-1-sashal@kernel.org>
+        s=k20201202; t=1614702762;
+        bh=DvfHPt3qgERw1Tx3HMUyjao2cas8sxMi68hfOaXTFEM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=FE3nWeAUhM3mbih1ijdn8Dos+tRqMDIbrNwaASaXx1nAXfDYE+1jrPrUPCkllEL4v
+         qDVuNRR10fVxzqQgOE8NIbGMku2P1sh56O5AIUx8wfwiATCKisjo8FUZK3qUNDW2oF
+         AgG/PEFx43+uzKOc2plpsAa5LfYTJFk9JBxfZXNSj6UycfERXMMSfTZHiw/VWYkkeb
+         n6CaTRmiZlA46mmHdckOpXP5XU3FMod/moTUz1tV0YuE0TR9M/+VHjkfr6AE9SKIeg
+         liwuliQFQcb8PbRqH8FQ96Gpfzia3FkzZpyPexj/dqu4tfghYBcGy1wqm6ob/Wy09z
+         ALowwH8ExvYEQ==
+Date:   Tue, 2 Mar 2021 10:32:40 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Loic Poulain <loic.poulain@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Dave Airlie <airlied@redhat.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        "open list:QUALCOMM CPUFREQ DRIVER MSM8996/APQ8096" 
+        <linux-pm@vger.kernel.org>
+Subject: Re: PME while runtime suspend
+Message-ID: <20210302163240.GA422825@bjorn-Precision-5520>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAMZdPi-mmwYa4CqTtaNW3X8RrMzE8F0QchzqkB4SQ0QHCQvPVg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Nadeem Athani <nadeem@cadence.com>
+On Tue, Mar 02, 2021 at 03:52:05PM +0100, Loic Poulain wrote:
+> Hi Bjorn,
+> 
+> On Fri, 26 Feb 2021 at 23:22, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > [+cc Rafael, Dave (author of 42eca2302146), Vaibhav, linux-pm]
+> >
+> > On Fri, Feb 26, 2021 at 11:37:12AM +0100, Loic Poulain wrote:
+> > > Hi Bjorn,
+> > >
+> > > Trying to support runtime suspend in a driver, which puts the device
+> > > in D3hot and wait either for host/driver initiated resume
+> > > (runtime_get), or device initiated resume (PME).
+> > >
+> > > But, given that old change: 42eca2302146 ("PCI: Don't touch card regs
+> > > after runtime suspend D3")
+> > >
+> > > PME that was enabled from pci_finish_runtime_suspend() is not enabled
+> > > anymore for almost all drivers in case of runtime-suspend. The only
+> > > way to enable this is by calling pci_wake_from_d3() from the PCI device
+> > > driver's runtime_suspend() callback, but this function fails if the
+> > > device wake_up is not enabled, which makes sense since it targets
+> > > system-wide sleep wake-up (and wake-up is user/distro policy).
+> > >
+> > > So is there a proper way to allow PME while the device is runtime
+> > > suspended, without having to tell the user to enabled 'unrelated' wake_up
+> > > capability?
+> >
+> > pci_pm_runtime_suspend() calls pci_finish_runtime_suspend(), which
+> > enables wake-up, unless "pci_dev->state_saved".  IIUC we should be
+> > enabling wake-up unless the driver has called pci_save_state() itself.
+> >
+> > So I infer that your driver does call pci_save_state() and the PCI
+> > core does not enable wake-up.  Right?
+> 
+> Right.
+> 
+> > Why does your driver call pci_save_state()?  In most cases I don't
+> > think drivers should need to do that themselves because the PCI core
+> > will do it for them.  E.g., see Vaibhav's recent eb6779d4c505 ("e1000:
+> > use generic power management") [1]
+> 
+> Thanks for the pointer, I was storing the PCI state in order to
+> restore it when the device is crashing and lose its PCI context. But I
+> can do that one time once the device is initialized. I've applied the
+> same changes as you pointed, and it works as expected.
 
-[ Upstream commit 4740b969aaf58adeca6829947a3ad8da423976cf ]
+Great, thanks for letting us know!  It's always nice when you can
+*remove* code and things work better!
 
-Cadence controller will not initiate autonomous speed change if strapped
-as Gen2. The Retrain Link bit is set as quirk to enable this speed change.
-
-Link: https://lore.kernel.org/r/20210209144622.26683-3-nadeem@cadence.com
-Signed-off-by: Nadeem Athani <nadeem@cadence.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/controller/cadence/pci-j721e.c    |  3 +
- .../controller/cadence/pcie-cadence-host.c    | 81 ++++++++++++++-----
- drivers/pci/controller/cadence/pcie-cadence.h | 11 ++-
- 3 files changed, 76 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index dac1ac8a7615..849f1e416ea5 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -64,6 +64,7 @@ enum j721e_pcie_mode {
- 
- struct j721e_pcie_data {
- 	enum j721e_pcie_mode	mode;
-+	bool quirk_retrain_flag;
- };
- 
- static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
-@@ -280,6 +281,7 @@ static struct pci_ops cdns_ti_pcie_host_ops = {
- 
- static const struct j721e_pcie_data j721e_pcie_rc_data = {
- 	.mode = PCI_MODE_RC,
-+	.quirk_retrain_flag = true,
- };
- 
- static const struct j721e_pcie_data j721e_pcie_ep_data = {
-@@ -388,6 +390,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 
- 		bridge->ops = &cdns_ti_pcie_host_ops;
- 		rc = pci_host_bridge_priv(bridge);
-+		rc->quirk_retrain_flag = data->quirk_retrain_flag;
- 
- 		cdns_pcie = &rc->pcie;
- 		cdns_pcie->dev = dev;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 811c1cb2e8de..6f591d382578 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -77,6 +77,68 @@ static struct pci_ops cdns_pcie_host_ops = {
- 	.write		= pci_generic_config_write,
- };
- 
-+static int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	int retries;
-+
-+	/* Check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (cdns_pcie_link_up(pcie)) {
-+			dev_info(dev, "Link up\n");
-+			return 0;
-+		}
-+		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int cdns_pcie_retrain(struct cdns_pcie *pcie)
-+{
-+	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-+	u16 lnk_stat, lnk_ctl;
-+	int ret = 0;
-+
-+	/*
-+	 * Set retrain bit if current speed is 2.5 GB/s,
-+	 * but the PCIe root port support is > 2.5 GB/s.
-+	 */
-+
-+	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + pcie_cap_off +
-+					     PCI_EXP_LNKCAP));
-+	if ((lnk_cap_sls & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
-+		return ret;
-+
-+	lnk_stat = cdns_pcie_rp_readw(pcie, pcie_cap_off + PCI_EXP_LNKSTA);
-+	if ((lnk_stat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB) {
-+		lnk_ctl = cdns_pcie_rp_readw(pcie,
-+					     pcie_cap_off + PCI_EXP_LNKCTL);
-+		lnk_ctl |= PCI_EXP_LNKCTL_RL;
-+		cdns_pcie_rp_writew(pcie, pcie_cap_off + PCI_EXP_LNKCTL,
-+				    lnk_ctl);
-+
-+		ret = cdns_pcie_host_wait_for_link(pcie);
-+	}
-+	return ret;
-+}
-+
-+static int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	int ret;
-+
-+	ret = cdns_pcie_host_wait_for_link(pcie);
-+
-+	/*
-+	 * Retrain link for Gen2 training defect
-+	 * if quirk flag is set.
-+	 */
-+	if (!ret && rc->quirk_retrain_flag)
-+		ret = cdns_pcie_retrain(pcie);
-+
-+	return ret;
-+}
- 
- static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
- {
-@@ -398,23 +460,6 @@ static int cdns_pcie_host_init(struct device *dev,
- 	return cdns_pcie_host_init_address_translation(rc);
- }
- 
--static int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie)
--{
--	struct device *dev = pcie->dev;
--	int retries;
--
--	/* Check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
--		if (cdns_pcie_link_up(pcie)) {
--			dev_info(dev, "Link up\n");
--			return 0;
--		}
--		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
--	}
--
--	return -ETIMEDOUT;
--}
--
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- {
- 	struct device *dev = rc->pcie.dev;
-@@ -457,7 +502,7 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 		return ret;
- 	}
- 
--	ret = cdns_pcie_host_wait_for_link(pcie);
-+	ret = cdns_pcie_host_start_link(rc);
- 	if (ret)
- 		dev_dbg(dev, "PCIe link never came up\n");
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 30eba6cafe2c..254d2570f8c9 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -119,7 +119,7 @@
-  * Root Port Registers (PCI configuration space for the root port function)
-  */
- #define CDNS_PCIE_RP_BASE	0x00200000
--
-+#define CDNS_PCIE_RP_CAP_OFFSET 0xc0
- 
- /*
-  * Address Translation Registers
-@@ -291,6 +291,7 @@ struct cdns_pcie {
-  * @device_id: PCI device ID
-  * @avail_ib_bar: Satus of RP_BAR0, RP_BAR1 and	RP_NO_BAR if it's free or
-  *                available
-+ * @quirk_retrain_flag: Retrain link as quirk for PCIe Gen2
-  */
- struct cdns_pcie_rc {
- 	struct cdns_pcie	pcie;
-@@ -299,6 +300,7 @@ struct cdns_pcie_rc {
- 	u32			vendor_id;
- 	u32			device_id;
- 	bool			avail_ib_bar[CDNS_PCIE_RP_MAX_IB];
-+	bool                    quirk_retrain_flag;
- };
- 
- /**
-@@ -414,6 +416,13 @@ static inline void cdns_pcie_rp_writew(struct cdns_pcie *pcie,
- 	cdns_pcie_write_sz(addr, 0x2, value);
- }
- 
-+static inline u16 cdns_pcie_rp_readw(struct cdns_pcie *pcie, u32 reg)
-+{
-+	void __iomem *addr = pcie->reg_base + CDNS_PCIE_RP_BASE + reg;
-+
-+	return cdns_pcie_read_sz(addr, 0x2);
-+}
-+
- /* Endpoint Function register access */
- static inline void cdns_pcie_ep_fn_writeb(struct cdns_pcie *pcie, u8 fn,
- 					  u32 reg, u8 value)
--- 
-2.30.1
-
+Bjorn
