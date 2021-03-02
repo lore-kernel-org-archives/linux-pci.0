@@ -2,108 +2,112 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8B2C43142
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6EEC433E0
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67A6964E6C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E9C464E6C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237922AbhCCBzy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:55:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49854 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349673AbhCBLDJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Mar 2021 06:03:09 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED120C06121E
-        for <linux-pci@vger.kernel.org>; Tue,  2 Mar 2021 02:59:40 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id s23so1731670pji.1
-        for <linux-pci@vger.kernel.org>; Tue, 02 Mar 2021 02:59:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sifive.com; s=google;
-        h=from:to:subject:date:message-id:in-reply-to:references:mime-version
-         :content-transfer-encoding;
-        bh=/USle6rtqTPO64EisM9sX8IiqldHS5gOFIC7i3hO5BU=;
-        b=LRtiAF9kbHh5VuCDJBNTBZRw0JqzCn2GorHa0OaGv3KuZF0ituHBFJPADTShwCpl9d
-         6yigVY58onm1SZPyKwdir7rH63l99cfavgctu8xlWQoInrPFd1Fy8f2Creu4aJ4EDifF
-         Ch4ZhnW9Ob1S+QS7KViyOQI1HKr+DJwKQ7kj0R2x7rtNHrEkndwu55//0+kP5FR/JKy6
-         iNqOLo9t8C8yCSj7wQulxbUQJN71aYe8XHD0dSvE6s+Kl+u5n1oNj7sn8DAqcsRQtLmD
-         CJR0zapJ3GDCfSbmHPExNCc1/czX5L1vXOXS46gDkagjf+JVz7VvMe0BIrbvP1CMpXgV
-         XpqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=/USle6rtqTPO64EisM9sX8IiqldHS5gOFIC7i3hO5BU=;
-        b=d6uyueSjquajyzgNWtIp3D/+5ZwKZPxOW7SBVlfBrmdu0pIIWHeqbciLklv/BbPHDQ
-         ye910i4ifDlSIwxPmwPqdEp2Zk6IDA2NKozZEpX/tvfAwgYywEEFu5uJYzJv5VdqBeXP
-         bQGz/faUOvmVTErajwIbxJcYR1abOg2rqhjmi8Ct+a/mlyX54v9PnsEOa86ncMPUBne2
-         0F5w99KUygj7zd2UcGKWMbb2sLjpNHKx0XhJ5KB1OuMjFMzyBuWKsb66sfi875tmvP9B
-         cWmE3DmbctRNz4P+oPAWRw/CnJTp6MEpmrKmKlm2aNDq9EbrAfnES3HVrY38HGOKT9Nj
-         ZjlA==
-X-Gm-Message-State: AOAM533CLNDG6NKm5jfbhDq4df26ZcTm6tUwSeBqtFxOhuvRJH2XhxoW
-        gc40ydfo0dOAr7b9O8KdOaIMig==
-X-Google-Smtp-Source: ABdhPJzq5rLhprXNE/gziWlHFB0NKMzepHExLCYtN0zDKq662/9ZKusst83fZ3/drY3VyKZUYTvTjA==
-X-Received: by 2002:a17:902:d893:b029:e3:f3ce:cc6a with SMTP id b19-20020a170902d893b02900e3f3cecc6amr3293615plz.28.1614682779630;
-        Tue, 02 Mar 2021 02:59:39 -0800 (PST)
-Received: from hsinchu02.internal.sifive.com (114-34-229-221.HINET-IP.hinet.net. [114.34.229.221])
-        by smtp.gmail.com with ESMTPSA id t26sm19500451pfq.208.2021.03.02.02.59.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Mar 2021 02:59:39 -0800 (PST)
-From:   Greentime Hu <greentime.hu@sifive.com>
-To:     greentime.hu@sifive.com, paul.walmsley@sifive.com, hes@sifive.com,
-        erik.danie@sifive.com, zong.li@sifive.com, bhelgaas@google.com,
-        robh+dt@kernel.org, palmer@dabbelt.com, aou@eecs.berkeley.edu,
-        mturquette@baylibre.com, sboyd@kernel.org,
-        lorenzo.pieralisi@arm.com, p.zabel@pengutronix.de,
-        alex.dewar90@gmail.com, khilman@baylibre.com,
-        hayashi.kunihiko@socionext.com, vidyas@nvidia.com,
-        jh80.chung@samsung.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org
-Subject: [RFC PATCH 3/6] MAINTAINERS: Add maintainers for SiFive FU740 PCIe driver
-Date:   Tue,  2 Mar 2021 18:59:14 +0800
-Message-Id: <ee829f3f47cd15a2d91a0090b4b6d6746c2e4ec7.1614681831.git.greentime.hu@sifive.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <cover.1614681831.git.greentime.hu@sifive.com>
-References: <cover.1614681831.git.greentime.hu@sifive.com>
+        id S239020AbhCCB5F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:57:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41662 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1383752AbhCBMEM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Mar 2021 07:04:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6E97064F38;
+        Tue,  2 Mar 2021 11:56:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614686179;
+        bh=CJV9PpAHviZMj39pAEuKP1GuYA+C66vTtIS8NgAL4GM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=j669WovMRt629cjHkz1O3wIZoKsV4piMdCvdBQD1TKR90iA7EA+upJgZ/W7sQJXLk
+         efAJ6iUG3JULJjAW5W5LlLPMuwn/L3aKQQFcrrrodZqHF73ytAYbO2EAN1vctnIeWt
+         PfwfxlQ0I41+2wtlvdY96egDa9eXCL2rhxixIxi+CeWLemaCqayWwgwIvlDw8/Uprq
+         KMrMvACM7uNPipdtB+KDNSHTLOSvmYw+xCe578LBy2u+VAQivW/HUuQDcJ+7EfJ7/D
+         VgbSX4G9uLHui8MzOS8d3Re6jmLY4uhOx9maAQJxuHNhz+GkpghKYHoGmUMCrB7GuY
+         A65sXBbnU4QBg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.11 34/52] PCI: mediatek: Add missing of_node_put() to fix reference leak
+Date:   Tue,  2 Mar 2021 06:55:15 -0500
+Message-Id: <20210302115534.61800-34-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
+References: <20210302115534.61800-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Here add maintainer information for SiFive FU740 PCIe driver.
+From: Krzysztof Wilczyński <kw@linux.com>
 
-Signed-off-by: Greentime Hu <greentime.hu@sifive.com>
+[ Upstream commit 42814c438aac79746d310f413a27d5b0b959c5de ]
+
+The for_each_available_child_of_node helper internally makes use of the
+of_get_next_available_child() which performs an of_node_get() on each
+iteration when searching for next available child node.
+
+Should an available child node be found, then it would return a device
+node pointer with reference count incremented, thus early return from
+the middle of the loop requires an explicit of_node_put() to prevent
+reference count leak.
+
+To stop the reference leak, explicitly call of_node_put() before
+returning after an error occurred.
+
+Link: https://lore.kernel.org/r/20210120184810.3068794-1-kw@linux.com
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- MAINTAINERS | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/pci/controller/pcie-mediatek.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index bfc1b86e3e73..4da888be6e80 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -13592,6 +13592,14 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
- F:	drivers/pci/controller/dwc/*imx6*
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index cf4c18f0c25a..23548b517e4b 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -1035,14 +1035,14 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ 		err = of_pci_get_devfn(child);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to parse devfn: %d\n", err);
+-			return err;
++			goto error_put_node;
+ 		}
  
-+PCI DRIVER FOR FU740
-+M:	Paul Walmsley <paul.walmsley@sifive.com>
-+M:	Greentime Hu <greentime.hu@sifive.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml
-+F:	drivers/pci/controller/dwc/pcie-fu740.c
-+
- PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
- M:	Jonathan Derrick <jonathan.derrick@intel.com>
- L:	linux-pci@vger.kernel.org
+ 		slot = PCI_SLOT(err);
+ 
+ 		err = mtk_pcie_parse_port(pcie, child, slot);
+ 		if (err)
+-			return err;
++			goto error_put_node;
+ 	}
+ 
+ 	err = mtk_pcie_subsys_powerup(pcie);
+@@ -1058,6 +1058,9 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ 		mtk_pcie_subsys_powerdown(pcie);
+ 
+ 	return 0;
++error_put_node:
++	of_node_put(child);
++	return err;
+ }
+ 
+ static int mtk_pcie_probe(struct platform_device *pdev)
 -- 
-2.30.0
+2.30.1
 
