@@ -7,42 +7,44 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A4BC4361A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE0B8C4361B
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A495864E6C
+	by mail.kernel.org (Postfix) with ESMTP id DC36C64E84
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:02:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241052AbhCCB6C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:58:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50530 "EHLO mail.kernel.org"
+        id S241400AbhCCB6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:58:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1383811AbhCBMcs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1383907AbhCBMcs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 2 Mar 2021 07:32:48 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6C2BA64FD0;
-        Tue,  2 Mar 2021 11:59:43 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D6A7F64F41;
+        Tue,  2 Mar 2021 11:56:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1614686384;
-        bh=nzfBEvURGIAy8Ojlx75w2U2uuZQ96+VrmVDH4xtSifc=;
+        s=k20201202; t=1614686190;
+        bh=38D3J8FLIRGFAsRoxpxp1VThzkM0HObSRrfrFVgjVag=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fh7Wqo75nrcHGosrRNwmmBobQdjP00NpkMkfbG7BmBWQlboh1je0oBvVaUMWdo7vQ
-         15Ft/ZeNKWQsTkSml0t3duwww44swuNW+WK1dmA/cH/5kfXgm9YUULivTKTD01v7A7
-         cZBd/JHpSq+WUdiikXGjW+BOhl+bOebicXdYGAbxpxQbSX+tHhzbO69CKpeSN0yBZY
-         jmYcoB4wn6vkx2oktHVECFKLjpwlMnyTh8DItDLYD2iuwMOGErkiWAMipZeaf+ys3i
-         a4SdjBgre9GZVOSA8bppL0VK4rgWvwmcLRN3hOGjqRWpp3i3y23NJZ3NE/JqzzhE4T
-         dbWt5tVVllwlA==
+        b=PKkjZNdHJoCBVqosdov+8udFpKV3tBd4gaxSu+FsGNepOlk5DvGIOO4RNey3m8n1p
+         o2dP+yUjpeEIMrTDsCBfJpSK+hC2ylacA1xg6pTqp63xEZKSm4k8km9p0+yqT0mwtK
+         y5IHWLmUdIajGpHkQNfbgmakn+EQcG4FuMb/I2IYcAhB0/ZMVo45WOc8NeiG+F9uDE
+         ZHy29EX3hpNTDxCEcVj6mMkApqRTafNkowI926Rzn379ET2ZS6zpzUV2oTvPk7wPD2
+         EtYWh4vU4uSGvkMcDDtxf6qp60pbgXAiQRrI1NiVXfT6bkL24MA71k3n9cB8hDJzOG
+         1p+oxr510niUg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Martin Kaiser <martin@kaiser.cx>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.4 6/8] PCI: xgene-msi: Fix race in installing chained irq handler
-Date:   Tue,  2 Mar 2021 06:59:33 -0500
-Message-Id: <20210302115935.63777-6-sashal@kernel.org>
+Cc:     Keith Busch <kbusch@kernel.org>,
+        Hinko Kocevar <hinko.kocevar@ess.eu>,
+        Hedi Berriche <hedi.berriche@hpe.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.11 43/52] PCI/ERR: Retain status from error notification
+Date:   Tue,  2 Mar 2021 06:55:24 -0500
+Message-Id: <20210302115534.61800-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210302115935.63777-1-sashal@kernel.org>
-References: <20210302115935.63777-1-sashal@kernel.org>
+In-Reply-To: <20210302115534.61800-1-sashal@kernel.org>
+References: <20210302115534.61800-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,48 +53,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Martin Kaiser <martin@kaiser.cx>
+From: Keith Busch <kbusch@kernel.org>
 
-[ Upstream commit a93c00e5f975f23592895b7e83f35de2d36b7633 ]
+[ Upstream commit 387c72cdd7fb6bef650fb078d0f6ae9682abf631 ]
 
-Fix a race where a pending interrupt could be received and the handler
-called before the handler's data has been setup, by converting to
-irq_set_chained_handler_and_data().
+Overwriting the frozen detected status with the result of the link reset
+loses the NEED_RESET result that drivers are depending on for error
+handling to report the .slot_reset() callback. Retain this status so
+that subsequent error handling has the correct flow.
 
-See also 2cf5a03cb29d ("PCI/keystone: Fix race in installing chained IRQ
-handler").
-
-Based on the mail discussion, it seems ok to drop the error handling.
-
-Link: https://lore.kernel.org/r/20210115212435.19940-3-martin@kaiser.cx
-Signed-off-by: Martin Kaiser <martin@kaiser.cx>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Link: https://lore.kernel.org/r/20210104230300.1277180-4-kbusch@kernel.org
+Reported-by: Hinko Kocevar <hinko.kocevar@ess.eu>
+Tested-by: Hedi Berriche <hedi.berriche@hpe.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Sean V Kelley <sean.v.kelley@intel.com>
+Acked-by: Hedi Berriche <hedi.berriche@hpe.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/host/pci-xgene-msi.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/pci/pcie/err.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index a6456b578269..b6a099371ad2 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -393,13 +393,9 @@ static int xgene_msi_hwirq_alloc(unsigned int cpu)
- 		if (!msi_group->gic_irq)
- 			continue;
- 
--		irq_set_chained_handler(msi_group->gic_irq,
--					xgene_msi_isr);
--		err = irq_set_handler_data(msi_group->gic_irq, msi_group);
--		if (err) {
--			pr_err("failed to register GIC IRQ handler\n");
--			return -EINVAL;
--		}
-+		irq_set_chained_handler_and_data(msi_group->gic_irq,
-+			xgene_msi_isr, msi_group);
-+
- 		/*
- 		 * Statically allocate MSI GIC IRQs to each CPU core.
- 		 * With 8-core X-Gene v1, 2 MSI GIC IRQs are allocated
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 510f31f0ef6d..4798bd6de97d 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -198,8 +198,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	pci_dbg(bridge, "broadcast error_detected message\n");
+ 	if (state == pci_channel_io_frozen) {
+ 		pci_walk_bridge(bridge, report_frozen_detected, &status);
+-		status = reset_subordinates(bridge);
+-		if (status != PCI_ERS_RESULT_RECOVERED) {
++		if (reset_subordinates(bridge) != PCI_ERS_RESULT_RECOVERED) {
+ 			pci_warn(bridge, "subordinate device reset failed\n");
+ 			goto failed;
+ 		}
 -- 
 2.30.1
 
