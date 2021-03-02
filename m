@@ -2,138 +2,154 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E319C28CC4
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D10C43603
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F2C864E6C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02E2164E6C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 02:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238203AbhCCB4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Mar 2021 20:56:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1382757AbhCBLFY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Mar 2021 06:05:24 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFB21C0611C3
-        for <linux-pci@vger.kernel.org>; Tue,  2 Mar 2021 02:59:51 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id i4-20020a17090a7184b02900bfb60fbc6bso1097330pjk.0
-        for <linux-pci@vger.kernel.org>; Tue, 02 Mar 2021 02:59:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sifive.com; s=google;
-        h=from:to:subject:date:message-id:in-reply-to:references:mime-version
-         :content-transfer-encoding;
-        bh=Po2WnbeRcNxbdVRWP+uTe3ZxilZPtJNj+wNjess1Fqs=;
-        b=a5MyBXo6eov2ekIk8ZTfKHDNNdEoI4pKVri0SYc2F9SqYWibdQAXMjW3/w7FU/p/kg
-         c51InQz0krRao9T5zPLw59TMVGitBuCGxloOW2a6N2HxyYz+5D+BaKS6EexoelT6VG/F
-         cLhmS6GHKPR/R9pUBTpK+ZzLQq4r3k3u5M2k/oK8DNOa2g9pRU5In7tUGmZrN5oax8Gp
-         xtafybVddL4BjJoA01DR/QEKBy55T32hKD1PoSLSqD/4iLIQMuoV5gKApwWVSxk36oMa
-         7VrN6Rzarf0ceik8mxDudoNJSOkGYM6IgV9gBF765dqYhMGp5Cogl4ysmSY9NRz8K7qk
-         G77g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Po2WnbeRcNxbdVRWP+uTe3ZxilZPtJNj+wNjess1Fqs=;
-        b=Ub6Lj7NSbYI7hfvXKSeZ5/mWyQjI0cNaNJXONWZMW08AA3FDXdIDKG/nsb90rfh29F
-         SU4wBOX8BHBZn+g5pg0KWtw6ZHYO31pfFIJxGIwlwrJO8dtX4g9TTbiBpewNfARJwI6x
-         HyLLBtrAr652TEC4MrGzkzNJYggkYxoCGhPKBIQfuVNbWInnrIW8RzddbNtSnVW0Ikjk
-         MyOixLrsfOPue0rnEDh0Tf4ZamrVZMUaiLIdj4R9gmQLpQGeywUUEkoxBkWSqfKLQwbF
-         NpJ0t8Lu0xFMw386D/hHnt9lMbYzT4RqO7xeCI+XOg9g3zPoXdJ2B3oQ0MNwpMtApuhG
-         pxWw==
-X-Gm-Message-State: AOAM530Awcodksdv2PSmrHpyjcbnuO8AY7FeadCnBTNz9mkcNjnr1qsy
-        Gi2LJi9UhTl2rZawgePeubeSug==
-X-Google-Smtp-Source: ABdhPJxJIJ3Tse6OxPoZISwk+LpR8TLSC6nbCdGBioVdI/phJeX6zkYJhK340UzKOl5FITpYzpeIZw==
-X-Received: by 2002:a17:90a:9905:: with SMTP id b5mr3711228pjp.195.1614682791332;
-        Tue, 02 Mar 2021 02:59:51 -0800 (PST)
-Received: from hsinchu02.internal.sifive.com (114-34-229-221.HINET-IP.hinet.net. [114.34.229.221])
-        by smtp.gmail.com with ESMTPSA id t26sm19500451pfq.208.2021.03.02.02.59.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Mar 2021 02:59:50 -0800 (PST)
-From:   Greentime Hu <greentime.hu@sifive.com>
-To:     greentime.hu@sifive.com, paul.walmsley@sifive.com, hes@sifive.com,
-        erik.danie@sifive.com, zong.li@sifive.com, bhelgaas@google.com,
-        robh+dt@kernel.org, palmer@dabbelt.com, aou@eecs.berkeley.edu,
-        mturquette@baylibre.com, sboyd@kernel.org,
-        lorenzo.pieralisi@arm.com, p.zabel@pengutronix.de,
-        alex.dewar90@gmail.com, khilman@baylibre.com,
-        hayashi.kunihiko@socionext.com, vidyas@nvidia.com,
-        jh80.chung@samsung.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org
-Subject: [RFC PATCH 6/6] riscv: dts: Add PCIe support for the SiFive FU740-C000 SoC
-Date:   Tue,  2 Mar 2021 18:59:17 +0800
-Message-Id: <cd88f8d29ec2050a22eb31e94f9efc1adfc4db2d.1614681831.git.greentime.hu@sifive.com>
-X-Mailer: git-send-email 2.30.0
-In-Reply-To: <cover.1614681831.git.greentime.hu@sifive.com>
-References: <cover.1614681831.git.greentime.hu@sifive.com>
+        id S233830AbhCCBy1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Mar 2021 20:54:27 -0500
+Received: from foss.arm.com ([217.140.110.172]:49078 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1838377AbhCBKgK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Mar 2021 05:36:10 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8851AED1;
+        Tue,  2 Mar 2021 02:35:24 -0800 (PST)
+Received: from [10.57.48.219] (unknown [10.57.48.219])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 25EFF3F73C;
+        Tue,  2 Mar 2021 02:35:20 -0800 (PST)
+Subject: Re: Aw: Re: Re: [PATCH 09/13] PCI: mediatek: Advertise lack of MSI
+ handling
+To:     Frank Wunderlich <frank-w@public-files.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Chuanjia Liu <chuanjia.liu@mediatek.com>
+Cc:     linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Will Deacon <will@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Rob Herring <robh@kernel.org>, Wei Liu <wei.liu@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        linux-mediatek@lists.infradead.org,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        linux-tegra@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <20210225151023.3642391-1-maz@kernel.org>
+ <20210225151023.3642391-10-maz@kernel.org>
+ <trinity-b7e2cf18-f0e6-4d88-8a80-de6758b5a91f-1614595396771@3c-app-gmx-bap67>
+ <b7721e2ff751cc9565a662cb713819e3@kernel.org>
+ <trinity-9fa6d24e-f9de-4741-bf44-86f6197b174d-1614600961297@3c-app-gmx-bap67>
+ <5afd1d656299d87c43bdf31b8ced2d5f@kernel.org>
+ <trinity-e6593a34-3e03-4154-a03c-f3aed01e33bf-1614607598428@3c-app-gmx-bap67>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <8b9c013a-b5d5-9b19-f28a-4af543e47fff@arm.com>
+Date:   Tue, 2 Mar 2021 10:35:14 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
+In-Reply-To: <trinity-e6593a34-3e03-4154-a03c-f3aed01e33bf-1614607598428@3c-app-gmx-bap67>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Greentime Hu <greentime.hu@sifive.com>
----
- arch/riscv/boot/dts/sifive/fu740-c000.dtsi | 34 ++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+On 2021-03-01 14:06, Frank Wunderlich wrote:
+>> Gesendet: Montag, 01. März 2021 um 14:31 Uhr
+>> Von: "Marc Zyngier" <maz@kernel.org>
+>>
+>> Frank,
+>>
+>>>>> i guess it's a bug in ath10k driver or my r64 board (it is a v1.1
+>>>>> which has missing capacitors on tx lines).
+>>>>
+>>>> No, this definitely looks like a bug in the MTK PCIe driver,
+>>>> where the mutex is either not properly initialised, corrupted,
+>>>> or the wrong pointer is passed.
+>>>
+>>> but why does it happen only with the ath10k-card and not the mt7612 in
+>>> same slot?
+>>
+>> Does mt7612 use MSI? What we have here is a bogus mutex in the
+>> MTK PCIe driver, and the only way not to get there would be
+>> to avoid using MSIs.
+> 
+> i guess this card/its driver does not use MSI. Did not found anything in "datasheet" [1] or driver [2] about msi
 
-diff --git a/arch/riscv/boot/dts/sifive/fu740-c000.dtsi b/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
-index d1bb22b11920..d0839739b425 100644
---- a/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
-+++ b/arch/riscv/boot/dts/sifive/fu740-c000.dtsi
-@@ -158,6 +158,7 @@ prci: clock-controller@10000000 {
- 			reg = <0x0 0x10000000 0x0 0x1000>;
- 			clocks = <&hfclk>, <&rtcclk>;
- 			#clock-cells = <1>;
-+			#reset-cells = <1>;
- 		};
- 		uart0: serial@10010000 {
- 			compatible = "sifive,fu740-c000-uart", "sifive,uart0";
-@@ -288,5 +289,38 @@ gpio: gpio@10060000 {
- 			clocks = <&prci PRCI_CLK_PCLK>;
- 			status = "disabled";
- 		};
-+		pcie@e00000000 {
-+			#address-cells = <3>;
-+			#interrupt-cells = <1>;
-+			#num-lanes = <8>;
-+			#size-cells = <2>;
-+			compatible = "sifive,fu740-pcie";
-+			reg = <0xe 0x00000000 0x1 0x0
-+			       0xd 0xf0000000 0x0 0x10000000
-+			       0x0 0x100d0000 0x0 0x1000>;
-+			reg-names = "dbi", "config", "mgmt";
-+			device_type = "pci";
-+			dma-coherent;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000  0x0 0x60080000  0x0 0x60080000 0x0 0x10000        /* I/O */
-+				  0x82000000  0x0 0x60090000  0x0 0x60090000 0x0 0xff70000      /* mem */
-+				  0x82000000  0x0 0x70000000  0x0 0x70000000 0x0 0x1000000      /* mem */
-+				  0xc3000000 0x20 0x00000000 0x20 0x00000000 0x20 0x00000000>;  /* mem prefetchable */
-+			num-lanes = <0x8>;
-+			interrupts = <56 57 58 59 60 61 62 63 64>;
-+			interrupt-names = "msi", "inta", "intb", "intc", "intd";
-+			interrupt-parent = <&plic0>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &plic0 57>,
-+					<0x0 0x0 0x0 0x2 &plic0 58>,
-+					<0x0 0x0 0x0 0x3 &plic0 59>,
-+					<0x0 0x0 0x0 0x4 &plic0 60>;
-+			clock-names = "pcie_aux";
-+			clocks = <&prci PRCI_CLK_PCIE_AUX>;
-+			pwren-gpios = <&gpio 5 0>;
-+			perstn-gpios = <&gpio 8 0>;
-+			resets = <&prci 4>;
-+			status = "okay";
-+		};
- 	};
- };
--- 
-2.30.0
+FWIW, no need to guess - `lspci -v` (as root) should tell you whether 
+the card has MSI (and/or MSI-X) capability, and whether it is enabled if so.
 
+Robin.
+
+>>>
+>>>> This r64 machine is supposed to have working MSIs, right?
+>>>
+>>> imho mt7622 have working MSI
+>>>
+>>>> Do you get the same issue without this series?
+>>>
+>>> tested 5.11.0 [1] without this series (but with your/thomas' patch
+>>> from discussion about my old patch) and got same trace. so this series
+>>> does not break anything here.
+>>
+>> Can you retest without any additional patch on top of 5.11?
+>> These two patches only affect platforms that do *not* have MSIs at all.
+> 
+> i can revert these 2, but still need patches for mt7622 pcie-support [3]...btw. i see that i miss these in 5.11-main...do not see traceback with them (have firmware not installed...)
+> 
+> root@bpi-r64:~# dmesg | grep ath
+> [    6.450765] ath10k_pci 0000:01:00.0: assign IRQ: got 146
+> [    6.661752] ath10k_pci 0000:01:00.0: enabling device (0000 -> 0002)
+> [    6.697811] ath10k_pci 0000:01:00.0: enabling bus mastering
+> [    6.721293] ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 r
+> eset_mode 0
+> [    6.921030] ath10k_pci 0000:01:00.0: Failed to find firmware-N.bin (N between
+>   2 and 6) from ath10k/QCA988X/hw2.0: -2
+> [    6.931698] ath10k_pci 0000:01:00.0: could not fetch firmware files (-2)
+> [    6.940417] ath10k_pci 0000:01:00.0: could not probe fw (-2)
+> 
+> so traceback was caused by missing changes in mtk pcie-driver not yet upstream, added Chuanjia Liu
+> 
+>>>
+>>>>> Tried with an mt7612e, this seems to work without any errors.
+>>>>>
+>>>>> so for mt7622/mt7623
+>>>>>
+>>>>> Tested-by: Frank Wunderlich <frank-w@public-files.de>
+>>>>
+>>>> We definitely need to understand the above.
+>>>
+>>> there is a hardware-bug which may cause this...afair i saw this with
+>>> the card in r64 with earlier Kernel-versions where other cards work
+>>> (like the mt7612e).
+>>
+>> I don't think a HW bug affecting PCI would cause what we are seeing
+>> here, unless it results in memory corruption.
+> 
+> 
+> [1] https://www.asiarf.com/shop/wifi-wlan/wifi_mini_pcie/ws2433-wifi-11ac-mini-pcie-module-manufacturer/
+> [2] grep -Rni 'msi' drivers/net/wireless/mediatek/mt76/mt76x2/
+> [3] https://patchwork.kernel.org/project/linux-mediatek/list/?series=372885
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
