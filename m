@@ -2,71 +2,200 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC28C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FEC8C433E6
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 21:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAA4564ECF
+	by mail.kernel.org (Postfix) with ESMTP id 3E076600EF
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Mar 2021 21:22:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233741AbhCCUyZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Mar 2021 15:54:25 -0500
-Received: from mga17.intel.com ([192.55.52.151]:50123 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1356507AbhCCKrh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Mar 2021 05:47:37 -0500
-IronPort-SDR: oqeQfvXOFMO5qTf8EOHr0kEP7hqjGabRftgsQH72rLLDZ5LF+k9Nt+e1xGZibPyTcX4Mp5KFLe
- hX/N4AUH6Mdg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9911"; a="167049145"
-X-IronPort-AV: E=Sophos;i="5.81,219,1610438400"; 
-   d="scan'208";a="167049145"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2021 01:27:44 -0800
-IronPort-SDR: JWQ4GYZNL/PGnPAfZQx9BLJ0pPS9sEg+0r0Lw8XZVMBpL4rUlyZxCMchHOm9zx3o232FIhaZpl
- EE9xmUUOhPRA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.81,219,1610438400"; 
-   d="scan'208";a="506723803"
-Received: from mylly.fi.intel.com (HELO [10.237.72.57]) ([10.237.72.57])
-  by fmsmga001.fm.intel.com with ESMTP; 03 Mar 2021 01:27:41 -0800
-Subject: Re: [PATCH v5 3/4] i2c: designware: Use pcim_alloc_irq_vectors() to
- allocate IRQ vectors
-To:     Dejin Zheng <zhengdejin5@gmail.com>, corbet@lwn.net,
-        andriy.shevchenko@linux.intel.com, mika.westerberg@linux.intel.com,
-        rric@kernel.org, bhelgaas@google.com, wsa@kernel.org,
-        linux-doc@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-References: <20210226155056.1068534-1-zhengdejin5@gmail.com>
- <20210226155056.1068534-4-zhengdejin5@gmail.com>
-From:   Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Message-ID: <95c9e172-222f-32b7-1176-a3aa4b404f0a@linux.intel.com>
-Date:   Wed, 3 Mar 2021 11:27:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S231604AbhCCUyY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Mar 2021 15:54:24 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:7754 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S232698AbhCCK0c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Mar 2021 05:26:32 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1239iKST177489;
+        Wed, 3 Mar 2021 04:53:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=GiMYhcqP64MDO+8UvWA5bM2tZfeXB9Mta2yfwV7bUNg=;
+ b=i6vW56P1CPxvzztV4BveFIb5helupK9zwDNl6sCy4u+egFFZuIT9jipBrgCgIlgJqVpf
+ z/JWgzR1G2RWsgMlHKznkEGICIiwQGFyvoc3rgeEo7tjgPtzwU51sqcrzGfBgUzJP/vb
+ yrzxvdidJC3rqq1Wo9C3Of6O6OSJZgS1tIyRymEPko+IG1cakmMMtjoNGPEHNapuurc5
+ H05qO7opXczkEPZnGdDXydyo4XMaK6LZwf+X6D+lENFnoBXjAZQ4WE40v5AYMlUEE+kc
+ 5mhWxrhCn1PxZosyXzmGB6eP71jH+NZznXUWpicMe8APGYn4/yRIV//I2oBah7fgedjR 7g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3728390cer-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 03 Mar 2021 04:53:51 -0500
+Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1239l5ex183414;
+        Wed, 3 Mar 2021 04:53:02 -0500
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3728390c99-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 03 Mar 2021 04:53:02 -0500
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 1239iIxx009812;
+        Wed, 3 Mar 2021 09:52:54 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma03fra.de.ibm.com with ESMTP id 371a8erpwr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 03 Mar 2021 09:52:54 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1239qbh533948068
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 3 Mar 2021 09:52:37 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 20FBB42045;
+        Wed,  3 Mar 2021 09:52:51 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C4F4542047;
+        Wed,  3 Mar 2021 09:52:50 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed,  3 Mar 2021 09:52:50 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Narendra K <narendra_k@dell.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Viktor Mihajlovski <mihajlov@linux.ibm.com>,
+        Stefan Raspl <raspl@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org
+Subject: [RFC 1/1] s390/pci: expose a PCI device's UID as its index
+Date:   Wed,  3 Mar 2021 10:52:50 +0100
+Message-Id: <20210303095250.1360007-2-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210303095250.1360007-1-schnelle@linux.ibm.com>
+References: <20210303095250.1360007-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20210226155056.1068534-4-zhengdejin5@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-02_08:2021-03-01,2021-03-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ priorityscore=1501 phishscore=0 impostorscore=0 suspectscore=0
+ adultscore=0 lowpriorityscore=0 mlxscore=0 bulkscore=0 mlxlogscore=999
+ spamscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2103030072
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2/26/21 5:50 PM, Dejin Zheng wrote:
-> The pcim_alloc_irq_vectors() function, an explicit device-managed version
-> of pci_alloc_irq_vectors(). If pcim_enable_device() has been called
-> before, then pci_alloc_irq_vectors() is actually a device-managed
-> function. It is used here as a device-managed function, So replace it
-> with pcim_alloc_irq_vectors(). At the same time, Remove the
-> pci_free_irq_vectors() function to simplify the error handling path.
-> the freeing resources will take automatically when device is gone.
-> 
-> Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Signed-off-by: Dejin Zheng <zhengdejin5@gmail.com>
-> ---
-Acked-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+On s390 each PCI device has a user-defined ID (UID) exposed under
+/sys/bus/pci/devices/<dev>/uid. This ID was designed to serve as the PCI
+device's primary index and to match the device within Linux to the
+device configured in the hypervisor. To serve as a primary identifier
+the UID must be unique within the Linux instance, this is guaranteed by
+the platform if and only if the UID Uniqueness Checking flag is set
+within the CLP List PCI Functions response.
+
+In this the UID serves an analogous function as the SMBIOS instance
+number or ACPI index exposed as the "index" respectively "acpi_index"
+device attributes and used by e.g. systemd to set interface names. As
+s390 does not use and will likely never use ACPI nor SMBIOS there is no
+conflict and we can just expose the UID under the "index" attribute
+whenever UID Uniqueness Checking is active and get systemd's interface
+naming support for free.
+
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Acked-by: Viktor Mihajlovski <mihajlov@linux.ibm.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci | 11 +++++---
+ arch/s390/pci/pci_sysfs.c               | 36 +++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 25c9c39770c6..1241b6d11a52 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -195,10 +195,13 @@ What:		/sys/bus/pci/devices/.../index
+ Date:		July 2010
+ Contact:	Narendra K <narendra_k@dell.com>, linux-bugs@dell.com
+ Description:
+-		Reading this attribute will provide the firmware
+-		given instance (SMBIOS type 41 device type instance) of the
+-		PCI device. The attribute will be created only if the firmware
+-		has given an instance number to the PCI device.
++		Reading this attribute will provide the firmware given instance
++		number of the PCI device.  Depending on the platform this can
++		be for example the SMBIOS type 41 device type instance or the
++		user-defined ID (UID) on s390. The attribute will be created
++		only if the firmware has given an instance number to the PCI
++		device and that number is guaranteed to uniquely identify the
++		device in the system.
+ Users:
+ 		Userspace applications interested in knowing the
+ 		firmware assigned device type instance of the PCI
+diff --git a/arch/s390/pci/pci_sysfs.c b/arch/s390/pci/pci_sysfs.c
+index 5c028bee91b9..30f48e8a1156 100644
+--- a/arch/s390/pci/pci_sysfs.c
++++ b/arch/s390/pci/pci_sysfs.c
+@@ -131,6 +131,38 @@ static ssize_t report_error_write(struct file *filp, struct kobject *kobj,
+ }
+ static BIN_ATTR(report_error, S_IWUSR, NULL, report_error_write, PAGE_SIZE);
+ 
++#ifndef CONFIG_DMI
++/* analogous to smbios index */
++static ssize_t index_show(struct device *dev,
++			  struct device_attribute *attr, char *buf)
++{
++	struct zpci_dev *zdev = to_zpci(to_pci_dev(dev));
++	u32 index = ~0;
++
++	if (zpci_unique_uid)
++		index = zdev->uid;
++
++	return sprintf(buf, "%u\n", index);
++}
++static DEVICE_ATTR_RO(index);
++
++static umode_t zpci_unique_uids(struct kobject *kobj,
++				struct attribute *attr, int n)
++{
++	return zpci_unique_uid ? attr->mode : 0;
++}
++
++static struct attribute *zpci_ident_attrs[] = {
++	&dev_attr_index.attr,
++	NULL,
++};
++
++static struct attribute_group zpci_ident_attr_group = {
++	.attrs = zpci_ident_attrs,
++	.is_visible = zpci_unique_uids,
++};
++#endif
++
+ static struct bin_attribute *zpci_bin_attrs[] = {
+ 	&bin_attr_util_string,
+ 	&bin_attr_report_error,
+@@ -150,6 +182,7 @@ static struct attribute *zpci_dev_attrs[] = {
+ 	&dev_attr_mio_enabled.attr,
+ 	NULL,
+ };
++
+ static struct attribute_group zpci_attr_group = {
+ 	.attrs = zpci_dev_attrs,
+ 	.bin_attrs = zpci_bin_attrs,
+@@ -170,5 +203,8 @@ static struct attribute_group pfip_attr_group = {
+ const struct attribute_group *zpci_attr_groups[] = {
+ 	&zpci_attr_group,
+ 	&pfip_attr_group,
++#ifndef CONFIG_DMI
++	&zpci_ident_attr_group,
++#endif
+ 	NULL,
+ };
+-- 
+2.25.1
+
