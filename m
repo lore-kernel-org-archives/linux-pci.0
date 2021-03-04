@@ -7,128 +7,115 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 427D2C433E6
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Mar 2021 06:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 232C4C433DB
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Mar 2021 12:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 113D064EF4
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Mar 2021 06:09:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5FDB60C3D
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Mar 2021 12:00:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234051AbhCDGI0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Mar 2021 01:08:26 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:33746 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234040AbhCDGIM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Mar 2021 01:08:12 -0500
-Received: from mail-lf1-f71.google.com ([209.85.167.71])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1lHh90-0005Hx-H7
-        for linux-pci@vger.kernel.org; Thu, 04 Mar 2021 06:07:30 +0000
-Received: by mail-lf1-f71.google.com with SMTP id b1so7325109lft.11
-        for <linux-pci@vger.kernel.org>; Wed, 03 Mar 2021 22:07:30 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=P0f+eYtATsSsjrMI9K7JVfhIQMfZEx2gHGl9xTr7UQQ=;
-        b=rX/tUPt/95LJ0MgP2u1buM7/i3s+cxI286e4oyA8vIdzgaGNR8tWEUJwyKb38sIzBI
-         Y88yTlbS3OgDl2OLvEJTNu9bjQlY5Z7NFUqcfaoxOZRsex5iMa/6+vKnR//U2YpuKJIl
-         3izQPJQh7YJ1zT2PprSR2oqliEFna4HS/rJne8SnIj5SJCw0VEp/wYZB4qrW4fgsQnE5
-         q2cOKnvKWD/OrPNNogtdbP6STvDMBWd139GUkXmimN4cgbF9bgdrvpqjTP1X80ux2/va
-         10ahy/11WlHKGiVkRTc+I7mkzJp2wQiZIi8Qf4aDr8Yy4IEVCnyc+gEu2KvzCOj4mdPx
-         1H3A==
-X-Gm-Message-State: AOAM533CizZa5vaGS9OBOajwB4is1jla/CTrJ/zrTkadBtwD6C8zfjCd
-        K7h01ulJKxaddeMpKAhgmaTYDwByQT9PapHHdraqiCNHQwjLb/ArSt01ZwGMVkambfhue8IW7Uu
-        z48PRR5SedyeAT6Yz+pQLXF+s3oNPeEYCp/axphFMlTfZxZDsJWBaDw==
-X-Received: by 2002:a19:6d09:: with SMTP id i9mr1290809lfc.425.1614838049995;
-        Wed, 03 Mar 2021 22:07:29 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJx9QfkXxjtv37O7vKRgjQ/96zOmvvA9rGg54zz6NkOWiL9NrVaiztc+aQ9BpHPZU7Pt9TK7skvHryZUiXUt98o=
-X-Received: by 2002:a19:6d09:: with SMTP id i9mr1290788lfc.425.1614838049726;
- Wed, 03 Mar 2021 22:07:29 -0800 (PST)
-MIME-Version: 1.0
-References: <6db9e75e-52a7-4316-bfd8-cf44b4875f44@gmail.com> <20210226181656.GA143072@bjorn-Precision-5520>
-In-Reply-To: <20210226181656.GA143072@bjorn-Precision-5520>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Thu, 4 Mar 2021 14:07:18 +0800
-Message-ID: <CAAd53p62zy64gsmdNYSuV1sxOiB1Hye5R0WkY-gNFf+CKbG12A@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Convert rtw88 power cycle quirk to shutdown quirk
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Heiner Kallweit <hkallweit1@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Linux Netdev List <netdev@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
+        id S239673AbhCDL7p convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Mar 2021 06:59:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58548 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239708AbhCDL7p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Mar 2021 06:59:45 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74B6C061756
+        for <linux-pci@vger.kernel.org>; Thu,  4 Mar 2021 03:59:04 -0800 (PST)
+Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1lHmcz-0002LK-IC; Thu, 04 Mar 2021 12:58:49 +0100
+Received: from pza by lupine with local (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1lHmct-0005HU-9M; Thu, 04 Mar 2021 12:58:43 +0100
+Message-ID: <81c45bf40b397b57343f159baae896528fa32d89.camel@pengutronix.de>
+Subject: Re: [RFC PATCH 2/6] clk: sifive: Use reset-simple in prci driver
+ for PCIe driver
+From:   Philipp Zabel <p.zabel@pengutronix.de>
+To:     Greentime Hu <greentime.hu@sifive.com>, paul.walmsley@sifive.com,
+        hes@sifive.com, erik.danie@sifive.com, zong.li@sifive.com,
+        bhelgaas@google.com, robh+dt@kernel.org, palmer@dabbelt.com,
+        aou@eecs.berkeley.edu, mturquette@baylibre.com, sboyd@kernel.org,
+        lorenzo.pieralisi@arm.com, alex.dewar90@gmail.com,
+        khilman@baylibre.com, hayashi.kunihiko@socionext.com,
+        vidyas@nvidia.com, jh80.chung@samsung.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-clk@vger.kernel.org
+Date:   Thu, 04 Mar 2021 12:58:43 +0100
+In-Reply-To: <e2bd7db9db3c196b9b0399f0655a56939a0f3d62.1614681831.git.greentime.hu@sifive.com>
+References: <cover.1614681831.git.greentime.hu@sifive.com>
+         <e2bd7db9db3c196b9b0399f0655a56939a0f3d62.1614681831.git.greentime.hu@sifive.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.30.5-1.1 
+MIME-Version: 1.0
+X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
+X-SA-Exim-Mail-From: p.zabel@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Feb 27, 2021 at 2:17 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Fri, Feb 26, 2021 at 02:31:31PM +0100, Heiner Kallweit wrote:
-> > On 26.02.2021 13:18, Kai-Heng Feng wrote:
-> > > On Fri, Feb 26, 2021 at 8:10 PM Heiner Kallweit <hkallweit1@gmail.com> wrote:
-> > >>
-> > >> On 26.02.2021 08:12, Kalle Valo wrote:
-> > >>> Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
-> > >>>
-> > >>>> Now we have a generic D3 shutdown quirk, so convert the original
-> > >>>> approach to a PCI quirk.
-> > >>>>
-> > >>>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > >>>> ---
-> > >>>>  drivers/net/wireless/realtek/rtw88/pci.c | 2 --
-> > >>>>  drivers/pci/quirks.c                     | 6 ++++++
-> > >>>>  2 files changed, 6 insertions(+), 2 deletions(-)
-> > >>>
-> > >>> It would have been nice to CC linux-wireless also on patches 1-2. I only
-> > >>> saw patch 3 and had to search the rest of patches from lkml.
-> > >>>
-> > >>> I assume this goes via the PCI tree so:
-> > >>>
-> > >>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
-> > >>
-> > >> To me it looks odd to (mis-)use the quirk mechanism to set a device
-> > >> to D3cold on shutdown. As I see it the quirk mechanism is used to work
-> > >> around certain device misbehavior. And setting a device to a D3
-> > >> state on shutdown is a normal activity, and the shutdown() callback
-> > >> seems to be a good place for it.
-> > >> I miss an explanation what the actual benefit of the change is.
-> > >
-> > > To make putting device to D3 more generic, as there are more than one
-> > > device need the quirk.
-> > >
-> > > Here's the discussion:
-> > > https://lore.kernel.org/linux-usb/00de6927-3fa6-a9a3-2d65-2b4d4e8f0012@linux.intel.com/
-> > >
-> >
-> > Thanks for the link. For the AMD USB use case I don't have a strong opinion,
-> > what's considered the better option may be a question of personal taste.
-> > For rtw88 however I'd still consider it over-engineering to replace a simple
-> > call to pci_set_power_state() with a PCI quirk.
-> > I may be biased here because I find it sometimes bothering if I want to
-> > look up how a device is handled and in addition to checking the respective
-> > driver I also have to grep through quirks.c whether there's any special
-> > handling.
->
-> I haven't looked at these patches carefully, but in general, I agree
-> that quirks should be used to work around hardware defects in the
-> device.  If the device behaves correctly per spec, we should use a
-> different mechanism so the code remains generic and all devices get
-> the benefit.
->
-> If we do add quirks, the commit log should explain what the device
-> defect is.
+On Tue, 2021-03-02 at 18:59 +0800, Greentime Hu wrote:
+> We use reset-simple in this patch so that pcie driver can use
+> devm_reset_control_get() to get this reset data structure and use
+> reset_control_deassert() to deassert pcie_power_up_rst_n.
+> 
+> Signed-off-by: Greentime Hu <greentime.hu@sifive.com>
+> ---
+>  drivers/clk/sifive/Kconfig       |  2 ++
+>  drivers/clk/sifive/sifive-prci.c | 14 ++++++++++++++
+>  drivers/clk/sifive/sifive-prci.h |  4 ++++
+>  drivers/reset/Kconfig            |  3 ++-
+>  4 files changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/clk/sifive/Kconfig b/drivers/clk/sifive/Kconfig
+> index 1c14eb20c066..9132c3c4aa86 100644
+> --- a/drivers/clk/sifive/Kconfig
+> +++ b/drivers/clk/sifive/Kconfig
+> @@ -10,6 +10,8 @@ if CLK_SIFIVE
+>  
+>  config CLK_SIFIVE_PRCI
+>  	bool "PRCI driver for SiFive SoCs"
+> +	select RESET_CONTROLLER
+> +	select RESET_SIMPLE
+>  	select CLK_ANALOGBITS_WRPLL_CLN28HPC
+>  	help
+>  	  Supports the Power Reset Clock interface (PRCI) IP block found in
+> diff --git a/drivers/clk/sifive/sifive-prci.c b/drivers/clk/sifive/sifive-prci.c
+> index baf7313dac92..925affc6de55 100644
+> --- a/drivers/clk/sifive/sifive-prci.c
+> +++ b/drivers/clk/sifive/sifive-prci.c
+> @@ -583,7 +583,21 @@ static int sifive_prci_probe(struct platform_device *pdev)
+>  	if (IS_ERR(pd->va))
+>  		return PTR_ERR(pd->va);
+>  
+> +	pd->reset.rcdev.owner = THIS_MODULE;
+> +	pd->reset.rcdev.nr_resets = PRCI_RST_NR;
+> +	pd->reset.rcdev.ops = &reset_simple_ops;
+> +	pd->reset.rcdev.of_node = pdev->dev.of_node;
+> +	pd->reset.active_low = true;
+> +	pd->reset.membase = pd->va + PRCI_DEVICESRESETREG_OFFSET;
+> +	spin_lock_init(&pd->reset.lock);
+> +
+> +	r = devm_reset_controller_register(&pdev->dev, &pd->reset.rcdev);
+> +	if (r) {
+> +		dev_err(dev, "could not register reset controller: %d\n", r);
+> +		return r;
+> +	}
+>  	r = __prci_register_clocks(dev, pd, desc);
+> +
 
-So maybe it's reasonable to put all PCI devices to D3 at shutdown?
+Accidental whitespace?
 
-Kai-Heng
+Otherwise,
 
->
-> Bjorn
+Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+
+regards
+Philipp
