@@ -5,58 +5,74 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0706C433DB
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Mar 2021 02:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 313BDC433E9
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Mar 2021 05:05:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B1EC64FDB
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Mar 2021 02:59:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECE826501E
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Mar 2021 05:05:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229478AbhCEC7Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Mar 2021 21:59:25 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:45160 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbhCEC7Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Mar 2021 21:59:24 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 1252xIXF026556;
-        Thu, 4 Mar 2021 20:59:18 -0600
+        id S229486AbhCEFFB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Mar 2021 00:05:01 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:41000 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229446AbhCEFFB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Mar 2021 00:05:01 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12554UjW125217;
+        Thu, 4 Mar 2021 23:04:30 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1614913158;
-        bh=4ahj61Ka0+iqhWERh7yRL39qOUve4QTofA7lhdzVP6M=;
-        h=From:To:CC:Subject:Date;
-        b=atLib6IfCvdhxB2qqxzMrqn582vEurvNRni4xyzQuAkfXOra5h8suuBnrBcC1c7rm
-         lCxSZQg2+eMzFjYbEptSnJG1wTNZDfLxVk+PJvoDf6sfZRYbYv9STrk4EOII4GU0XV
-         pEUqNUYaXxqSWO3yZNbyu1PTj4ha0VYMUG/khIjI=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 1252xI3c051045
+        s=ti-com-17Q1; t=1614920670;
+        bh=w6tZP2V+r5iKOV+iy1/hmTi0eY5ezHND+e/HvmQjIrs=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=n4Clno3OPsL3v4Lqfh6UVU0oDU4WnsbkFZ2wOBBoU52hXECNcUf25Fkc2W/e4FSPr
+         6DRHP1eHyseJvnAvF27dBZVJFIjDhLNlRHPWxFzvl4TEdzD9N4gZ0QHJdmFooxQgzD
+         CPGEcrqvljAtbh8YuOIgDpDFrVXfUbptMy5lay4c=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12554UmM103373
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 4 Mar 2021 20:59:18 -0600
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 4 Mar 2021 23:04:30 -0600
+Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Thu, 4 Mar
- 2021 20:59:18 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+ 2021 23:04:29 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Thu, 4 Mar 2021 20:59:18 -0600
+ Frontend Transport; Thu, 4 Mar 2021 23:04:29 -0600
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 1252xDqN121008;
-        Thu, 4 Mar 2021 20:59:14 -0600
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12554D96116197;
+        Thu, 4 Mar 2021 23:04:22 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Tom Joseph <tjoseph@cadence.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Nadeem Athani <nadeem@cadence.com>
+CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-renesas-soc@vger.kernel.org>,
+        <linux-rockchip@lists.infradead.org>,
         Lokesh Vutla <lokeshvutla@ti.com>
-Subject: [PATCH] PCI: designware-ep: Fix NULL pointer dereference error
-Date:   Fri, 5 Mar 2021 08:29:10 +0530
-Message-ID: <20210305025910.9652-1-kishon@ti.com>
+Subject: [PATCH v3 1/7] dt-bindings: PCI: pci-ep: Add binding to specify virtual function
+Date:   Fri, 5 Mar 2021 10:34:04 +0530
+Message-ID: <20210305050410.9201-2-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210305050410.9201-1-kishon@ti.com>
+References: <20210305050410.9201-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
@@ -64,97 +80,34 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit 281f1f99cf3a ("PCI: dwc: Detect number of iATU windows") detected
-the number of inbound and outbound windows dynamically at runtime in
-dw_pcie_setup(). However pcie-designware-ep.c accessed the variables
-holding the number of inbound and outbound windows even before
-dw_pcie_setup() was invoked. Fix the sequence here.
+Add binding to specify virtual function (associated with each physical
+function) in endpoint mode.
 
-Fixes: 281f1f99cf3a ("PCI: dwc: Detect number of iATU windows")
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 44 ++++++++++---------
- 1 file changed, 23 insertions(+), 21 deletions(-)
+ Documentation/devicetree/bindings/pci/pci-ep.yaml | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1c25d8337151..2c0f837af458 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -636,9 +636,11 @@ static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
- int dw_pcie_ep_init_complete(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
- 	unsigned int offset;
- 	unsigned int nbars;
- 	u8 hdr_type;
-+	void *addr;
- 	u32 reg;
- 	int i;
+diff --git a/Documentation/devicetree/bindings/pci/pci-ep.yaml b/Documentation/devicetree/bindings/pci/pci-ep.yaml
+index 7847bbcd4a03..b8d5406f94ce 100644
+--- a/Documentation/devicetree/bindings/pci/pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/pci-ep.yaml
+@@ -23,6 +23,15 @@ properties:
+     default: 1
+     maximum: 255
  
-@@ -665,6 +667,27 @@ int dw_pcie_ep_init_complete(struct dw_pcie_ep *ep)
- 	}
- 
- 	dw_pcie_setup(pci);
++  max-virtual-functions:
++    description: Array representing the number of virtual functions corresponding to each physical
++      function
++    $ref: /schemas/types.yaml#/definitions/uint8-array
++    minItems: 1
++    maxItems: 255
++    items:
++      maximum: 255
 +
-+	ep->ib_window_map = devm_kcalloc(dev,
-+					 BITS_TO_LONGS(pci->num_ib_windows),
-+					 sizeof(long),
-+					 GFP_KERNEL);
-+	if (!ep->ib_window_map)
-+		return -ENOMEM;
-+
-+	ep->ob_window_map = devm_kcalloc(dev,
-+					 BITS_TO_LONGS(pci->num_ob_windows),
-+					 sizeof(long),
-+					 GFP_KERNEL);
-+	if (!ep->ob_window_map)
-+		return -ENOMEM;
-+
-+	addr = devm_kcalloc(dev, pci->num_ob_windows, sizeof(phys_addr_t),
-+			    GFP_KERNEL);
-+	if (!addr)
-+		return -ENOMEM;
-+	ep->outbound_addr = addr;
-+
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
-@@ -674,7 +697,6 @@ EXPORT_SYMBOL_GPL(dw_pcie_ep_init_complete);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	int ret;
--	void *addr;
- 	u8 func_no;
- 	struct resource *res;
- 	struct pci_epc *epc;
-@@ -712,26 +734,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->phys_base = res->start;
- 	ep->addr_size = resource_size(res);
- 
--	ep->ib_window_map = devm_kcalloc(dev,
--					 BITS_TO_LONGS(pci->num_ib_windows),
--					 sizeof(long),
--					 GFP_KERNEL);
--	if (!ep->ib_window_map)
--		return -ENOMEM;
--
--	ep->ob_window_map = devm_kcalloc(dev,
--					 BITS_TO_LONGS(pci->num_ob_windows),
--					 sizeof(long),
--					 GFP_KERNEL);
--	if (!ep->ob_window_map)
--		return -ENOMEM;
--
--	addr = devm_kcalloc(dev, pci->num_ob_windows, sizeof(phys_addr_t),
--			    GFP_KERNEL);
--	if (!addr)
--		return -ENOMEM;
--	ep->outbound_addr = addr;
--
- 	if (pci->link_gen < 1)
- 		pci->link_gen = of_pci_get_max_link_speed(np);
- 
+   max-link-speed:
+     $ref: /schemas/types.yaml#/definitions/uint32
+     enum: [ 1, 2, 3, 4 ]
 -- 
 2.17.1
 
