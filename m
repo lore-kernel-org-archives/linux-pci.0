@@ -6,80 +6,73 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FA2C433DB
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Mar 2021 18:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3508AC433E0
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Mar 2021 18:39:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46A9664FF0
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Mar 2021 18:28:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0026865172
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Mar 2021 18:39:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231330AbhCGS11 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 7 Mar 2021 13:27:27 -0500
-Received: from mail-lj1-f180.google.com ([209.85.208.180]:42986 "EHLO
-        mail-lj1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231320AbhCGS1R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Mar 2021 13:27:17 -0500
-Received: by mail-lj1-f180.google.com with SMTP id k12so12115079ljg.9
-        for <linux-pci@vger.kernel.org>; Sun, 07 Mar 2021 10:27:17 -0800 (PST)
+        id S231484AbhCGShE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 7 Mar 2021 13:37:04 -0500
+Received: from mail-lf1-f45.google.com ([209.85.167.45]:34005 "EHLO
+        mail-lf1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231514AbhCGShC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Mar 2021 13:37:02 -0500
+Received: by mail-lf1-f45.google.com with SMTP id v9so15950816lfa.1;
+        Sun, 07 Mar 2021 10:37:00 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=EM3WO/cpA2xTKyEmRtrPyl3CA+LFNIT0kx7gSLinBwM=;
-        b=h1SbLf3OyQ1MauR2sczTRfc0evjHAOSIQafFo1iAWjDMJZWXdnU9z591cIgD3vl0Wa
-         pb51DKyB1Z76Hci8R5H8OjShP2nT0693L6oAGQY3Aq8JBqI4LzavwLSnyVDansKkm8W2
-         Zb1a289+i9j0xUrsPgexbCUK9SKycF52VRIMReTipmi66i5kiEfj7svCDDYLuCOgRGmg
-         hf3qTKbIZgSFNf8bL5dyoaaxT86x+/baMmFNcd6dnSwC/Qx3kESnj8xQ6i8+RHE9LV9F
-         1bmj2qLrRHm/h/S6N4qQ68eomR+RkJAVAHUM4fM0xwYniC+rieLKWQX8hq4tF6tqhO5m
-         ZJuQ==
-X-Gm-Message-State: AOAM533ORqd7/qHUdo0Ppjs5uInFjF2aPb0/7XaEQxDJfYujylb25ZwG
-        nj4Ey7d6e7VBJ1CLElxk7Zo=
-X-Google-Smtp-Source: ABdhPJxGe2Av7cNlU0FPlMUKnUApEQ/zYGaOf7nK00KS/tFS/ZK7PuOGQ/JTimwH3zwxC1zzEJpHcA==
-X-Received: by 2002:a2e:910a:: with SMTP id m10mr11202698ljg.421.1615141636266;
-        Sun, 07 Mar 2021 10:27:16 -0800 (PST)
+        bh=ThbITLkHOU2/dQSeUt335dQeSvRoHsbaI5Fk6bsL6es=;
+        b=uTXnV3OArt5NUjL81bGOMCd5xjBq7325jkIb5YCaLaSyZXytZqC/9WqNh6eDBbMHR1
+         ni6FggMAIQ78hbgJSxTuJlxkXwoRWPtrNocAhg+TccezrydFsooogrMqb4GGUhrxoP1o
+         S3fs7MCClZaFQrFZDz7ZcsvOrGRsIrAYoMJNBM0KKl7wgO28plwnCM7ZWeKST6asyuYO
+         ao6vM4bigO5C8Bqm55VdhfZYxOzv2Apww8DaMjD+kfxzxEb0WEWcittGXR8xE4co1msu
+         zQ1jEL8RWrurlTCL577U4K3PvaaN1MmZrBlPguUYV0S2XUY+BvQODkRsXtoybj1sUWah
+         qTmA==
+X-Gm-Message-State: AOAM5325ywLlCv0AgGQdI+OiubnQNL9sX7996vUQHLoEwVBctPlfKv68
+        8rugwmyB4Fdm/EpRLzjJi9w=
+X-Google-Smtp-Source: ABdhPJwzkmkqC/Pw8HWTIEHGBNMbMZdlHNa4mm3nBRwXwyxM6V/4OrZHbwQtOm9tb4iSU0SGC7jDEQ==
+X-Received: by 2002:ac2:4465:: with SMTP id y5mr12100641lfl.70.1615142219485;
+        Sun, 07 Mar 2021 10:36:59 -0800 (PST)
 Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id w8sm682364ljh.131.2021.03.07.10.27.15
+        by smtp.gmail.com with ESMTPSA id g2sm1179250ljk.15.2021.03.07.10.36.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Mar 2021 10:27:15 -0800 (PST)
-Date:   Sun, 7 Mar 2021 19:27:14 +0100
+        Sun, 07 Mar 2021 10:36:58 -0800 (PST)
+Date:   Sun, 7 Mar 2021 19:36:57 +0100
 From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI/VPD: Silence warning if optional VPD PROM is missing
-Message-ID: <YEUbAi8jV6mzKvp4@rocinante>
-References: <b04a0e46-0b97-da3d-aa77-b05c9b37d21f@gmail.com>
+        Zheng Yongjun <zhengyongjun3@huawei.com>,
+        minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
+        robh@kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] pci/controller/dwc: convert comma to semicolon
+Message-ID: <YEUdSZpwzg0k5z2+@rocinante>
+References: <20201216131944.14990-1-zhengyongjun3@huawei.com>
+ <20210106190722.GA1327553@bjorn-Precision-5520>
+ <20210115113654.GA22508@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b04a0e46-0b97-da3d-aa77-b05c9b37d21f@gmail.com>
+In-Reply-To: <20210115113654.GA22508@e121166-lin.cambridge.arm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Heiner,
+Hi,
 
-> Realtek RTL8169/8168/8125 NIC families indicate VPD capability and an
-> optional VPD EEPROM can be connected via I2C/SPI. However I haven't
-> seen any card or system with such a VPD EEPROM yet. The missing EEPROM
-> causes the following warning whenever e.g. lscpi -vv is executed.
-> 
-> invalid short VPD tag 00 at offset 01
-> 
-> The warning confuses users, I think we should handle the situation more
-> gentle. Therefore, if first VPD byte is read as 0x00, assume a missing
-> optional VPD PROM as and silently set the VPD length to 0.
+[...]
+> I would request NXP maintainers to take this patch, rewrite it as
+> Bjorn requested and resend it as fast as possible, this is a very
+> relevant fix.
 [...]
 
-True.  I saw people on different forum and IRC asking for clarification
-assuming their NIC broke, or that something is wrong, so this would
-indeed save them some worry, nice!
+Looking at the state of the pci-layerscape-ep.c file in Linus' tree,
+this still hasn't been fixed, and it has been a while.
 
-Having said that, I also saw this particular warning showing up for some
-storage controllers (often some SAS cards), so a question here: would it
-warrant adding a pci_dbg() with an appropriate message rather than just
-returning 0?  I wonder if this might be useful for someone who is trying
-to troubleshoot and/or debug some issues with their device.
-
-What do you think?
+NXP folks, are you intend to pick this up?  Do let us know.
 
 Krzysztof
