@@ -5,36 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B07C433E6
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF96C4332E
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B48A651D1
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E133651C9
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230327AbhCHMUv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Mar 2021 07:20:51 -0500
-Received: from mga09.intel.com ([134.134.136.24]:50394 "EHLO mga09.intel.com"
+        id S229972AbhCHMUw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Mar 2021 07:20:52 -0500
+Received: from mga07.intel.com ([134.134.136.100]:3478 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229972AbhCHMUl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Mar 2021 07:20:41 -0500
-IronPort-SDR: 8HjKfgxdzP3Tr08fLF6Rl+vseFPkMiroFdozuYZidZ2t6Y3/A3C4UxeO03VjoxCstxvOZqMXHF
- UjGPjUOMHmSA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="188123974"
+        id S230169AbhCHMUm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Mar 2021 07:20:42 -0500
+IronPort-SDR: Qef8E12BSHAwArql24qevcPZ5OU8KhgJ01nVnY1Y3/0SC3IgYWJOMSnkSvPfJ/1YHlAKC5MxCP
+ jtudN8iOZbTA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="252044285"
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="188123974"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:41 -0800
-IronPort-SDR: S46f8z3XISa1+fZmCo/UklecqlcJS3knmaT5YZJUn5sLqfhHdmQbHJsSW3dnoSBq7mynelwxRA
- RXjZUEQB/1pw==
+   d="scan'208";a="252044285"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:41 -0800
+IronPort-SDR: 2q3WNouO93QO5ykGzfaw+a9Vr4WuKb3dTbqIHNKitQOgq+WsN9clIO/C3nSrxGwM3eaL2KRaye
+ uf82+az6QKpw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="376069664"
+   d="scan'208";a="369401482"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga007.fm.intel.com with ESMTP; 08 Mar 2021 04:20:37 -0800
+  by orsmga003.jf.intel.com with ESMTP; 08 Mar 2021 04:20:37 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id ED38067; Mon,  8 Mar 2021 14:20:37 +0200 (EET)
+        id 11573263; Mon,  8 Mar 2021 14:20:38 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Jean Delvare <jdelvare@suse.de>,
@@ -48,9 +48,9 @@ To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         linux-pci@vger.kernel.org
 Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         hdegoede@redhat.com, henning.schild@siemens.com
-Subject: [PATCH v1 1/7] PCI: Introduce pci_bus_*() printing macros when device is not available
-Date:   Mon,  8 Mar 2021 14:20:14 +0200
-Message-Id: <20210308122020.57071-2-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge support library
+Date:   Mon,  8 Mar 2021 14:20:16 +0200
+Message-Id: <20210308122020.57071-4-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
 References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
@@ -60,68 +60,179 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In some cases PCI device structure is not available and we want to print
-information based on the bus and devfn parameters. For this cases introduce
-pci_bus_*() printing macros and replace in existing users.
+From: Jonathan Yong <jonathan.yong@intel.com>
 
+There is already one and at least one more user is coming which
+requires an access to Primary to Sideband bridge (P2SB) in order to
+get IO or MMIO bar hidden by BIOS. Create a library to access P2SB
+for x86 devices.
+
+Signed-off-by: Jonathan Yong <jonathan.yong@intel.com>
+Co-developed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/pci/probe.c | 12 +++---------
- include/linux/pci.h |  9 +++++++++
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/pci/Kconfig      |  8 ++++
+ drivers/pci/Makefile     |  1 +
+ drivers/pci/pci-p2sb.c   | 83 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-p2sb.h | 28 ++++++++++++++
+ 4 files changed, 120 insertions(+)
+ create mode 100644 drivers/pci/pci-p2sb.c
+ create mode 100644 include/linux/pci-p2sb.h
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 953f15abc850..7d67be52d8e5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2268,16 +2268,12 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	 */
- 	while (pci_bus_crs_vendor_id(*l)) {
- 		if (delay > timeout) {
--			pr_warn("pci %04x:%02x:%02x.%d: not ready after %dms; giving up\n",
--				pci_domain_nr(bus), bus->number,
--				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+			pci_bus_warn(bus, devfn, "not ready after %dms; giving up\n", delay - 1);
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 0c473d75e625..740e5b30d6fd 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -252,6 +252,14 @@ config PCIE_BUS_PEER2PEER
  
- 			return false;
- 		}
- 		if (delay >= 1000)
--			pr_info("pci %04x:%02x:%02x.%d: not ready after %dms; waiting\n",
--				pci_domain_nr(bus), bus->number,
--				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+			pci_bus_info(bus, devfn, "not ready after %dms; waiting\n", delay - 1);
+ endchoice
  
- 		msleep(delay);
- 		delay *= 2;
-@@ -2287,9 +2283,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	}
- 
- 	if (delay >= 1000)
--		pr_info("pci %04x:%02x:%02x.%d: ready after %dms\n",
--			pci_domain_nr(bus), bus->number,
--			PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+		pci_bus_info(bus, devfn, "ready after %dms\n", delay - 1);
- 
- 	return true;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 86c799c97b77..c557d4a8476f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2463,4 +2463,13 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
- 	WARN_ONCE(condition, "%s %s: " fmt, \
- 		  dev_driver_string(&(pdev)->dev), pci_name(pdev), ##arg)
- 
-+#define pci_bus_printk(level, bus, devfn, fmt, arg...)		\
-+	printk(level "pci %04x:%02x:%02x.%d: " fmt,		\
-+	       pci_domain_nr(bus), bus->number,			\
-+	       PCI_SLOT(devfn), PCI_FUNC(devfn), ##arg)
++config PCI_P2SB
++	bool "Primary to Sideband (P2SB) bridge access support"
++	depends on PCI && X86
++	help
++	  The Primary to Sideband bridge is an interface to some PCI
++	  devices connected through it. In particular, SPI NOR
++	  controller in Intel Apollo Lake SoC is one of such devices.
 +
-+#define pci_bus_err(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_ERR, bus, devfn, fmt, ##arg)
-+#define pci_bus_warn(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_WARNING, bus, devfn, fmt, ##arg)
-+#define pci_bus_info(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_INFO, bus, devfn, fmt, ##arg)
+ source "drivers/pci/hotplug/Kconfig"
+ source "drivers/pci/controller/Kconfig"
+ source "drivers/pci/endpoint/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index d62c4ac4ae1b..eee8d5dda7d9 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -23,6 +23,7 @@ obj-$(CONFIG_PCI_IOV)		+= iov.o
+ obj-$(CONFIG_PCI_BRIDGE_EMUL)	+= pci-bridge-emul.o
+ obj-$(CONFIG_PCI_LABEL)		+= pci-label.o
+ obj-$(CONFIG_X86_INTEL_MID)	+= pci-mid.o
++obj-$(CONFIG_PCI_P2SB)		+= pci-p2sb.o
+ obj-$(CONFIG_PCI_SYSCALL)	+= syscall.o
+ obj-$(CONFIG_PCI_STUB)		+= pci-stub.o
+ obj-$(CONFIG_PCI_PF_STUB)	+= pci-pf-stub.o
+diff --git a/drivers/pci/pci-p2sb.c b/drivers/pci/pci-p2sb.c
+new file mode 100644
+index 000000000000..68d7dad48cdb
+--- /dev/null
++++ b/drivers/pci/pci-p2sb.c
+@@ -0,0 +1,83 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Primary to Sideband bridge (P2SB) access support
++ *
++ * Copyright (c) 2017, 2021 Intel Corporation.
++ *
++ * Authors: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
++ *	    Jonathan Yong <jonathan.yong@intel.com>
++ */
 +
- #endif /* LINUX_PCI_H */
++#include <linux/bitops.h>
++#include <linux/export.h>
++#include <linux/pci-p2sb.h>
++
++#include <asm/cpu_device_id.h>
++#include <asm/intel-family.h>
++
++#include "pci.h"
++
++#define P2SBC_HIDE_BYTE			0xe1
++#define P2SBC_HIDE_BIT			BIT(0)
++
++static const struct x86_cpu_id p2sb_cpu_ids[] = {
++	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT,	PCI_DEVFN(13, 0)),
++	{}
++};
++
++static int pci_p2sb_devfn(unsigned int *devfn)
++{
++	const struct x86_cpu_id *id;
++
++	id = x86_match_cpu(p2sb_cpu_ids);
++	if (!id)
++		return -ENODEV;
++
++	*devfn = (unsigned int)id->driver_data;
++	return 0;
++}
++
++/**
++ * pci_p2sb_bar - Get Primary to Sideband bridge (P2SB) device BAR
++ * @pdev:	PCI device to get a PCI bus to communicate with
++ * @devfn:	PCI slot and function to communicate with
++ * @mem:	memory resource to be filled in
++ *
++ * The BIOS prevents the P2SB device from being enumerated by the PCI
++ * subsystem, so we need to unhide and hide it back to lookup the BAR.
++ *
++ * Caller must provide a valid pointer to @mem.
++ *
++ * Locking is handled by pci_rescan_remove_lock mutex.
++ *
++ * Return:
++ * 0 on success or appropriate errno value on error.
++ */
++int pci_p2sb_bar(struct pci_dev *pdev, unsigned int devfn, struct resource *mem)
++{
++	struct pci_bus *bus = pdev->bus;
++	unsigned int df;
++	int ret;
++
++	/* Get devfn for P2SB device itself */
++	ret = pci_p2sb_devfn(&df);
++	if (ret)
++		return ret;
++
++	pci_lock_rescan_remove();
++
++	/* Unhide the P2SB device */
++	pci_bus_write_config_byte(bus, df, P2SBC_HIDE_BYTE, 0);
++
++	/* Read the first BAR of the device in question */
++	__pci_bus_read_base(bus, devfn, pci_bar_unknown, mem, PCI_BASE_ADDRESS_0, true);
++
++	/* Hide the P2SB device */
++	pci_bus_write_config_byte(bus, df, P2SBC_HIDE_BYTE, P2SBC_HIDE_BIT);
++
++	pci_unlock_rescan_remove();
++
++	pci_bus_info(bus, devfn, "BAR: %pR\n", mem);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_p2sb_bar);
+diff --git a/include/linux/pci-p2sb.h b/include/linux/pci-p2sb.h
+new file mode 100644
+index 000000000000..15dd42737c84
+--- /dev/null
++++ b/include/linux/pci-p2sb.h
+@@ -0,0 +1,28 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Primary to Sideband bridge (P2SB) access support
++ */
++
++#ifndef _PCI_P2SB_H
++#define _PCI_P2SB_H
++
++#include <linux/errno.h>
++
++struct pci_dev;
++struct resource;
++
++#if IS_BUILTIN(CONFIG_PCI_P2SB)
++
++int pci_p2sb_bar(struct pci_dev *pdev, unsigned int devfn, struct resource *mem);
++
++#else /* CONFIG_PCI_P2SB is not set */
++
++static inline
++int pci_p2sb_bar(struct pci_dev *pdev, unsigned int devfn, struct resource *mem)
++{
++	return -ENODEV;
++}
++
++#endif /* CONFIG_PCI_P2SB */
++
++#endif /* _PCI_P2SB_H */
 -- 
 2.30.1
 
