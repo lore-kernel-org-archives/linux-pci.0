@@ -2,48 +2,48 @@ Return-Path: <SRS0=jBgi=IG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B370C433E9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60072C4332B
 	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 06:37:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F75565203
+	by mail.kernel.org (Postfix) with ESMTP id 3E889651F8
 	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 06:37:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234900AbhCHGgu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Mar 2021 01:36:50 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:55844 "EHLO
+        id S233961AbhCHGgw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Mar 2021 01:36:52 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:55912 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233961AbhCHGgT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Mar 2021 01:36:19 -0500
+        with ESMTP id S234885AbhCHGgi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Mar 2021 01:36:38 -0500
 Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 1286a3SY110124;
-        Mon, 8 Mar 2021 00:36:03 -0600
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 1286aKYH110190;
+        Mon, 8 Mar 2021 00:36:20 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1615185363;
-        bh=Oqgiy062oERwqX+R9eU5hIC/GSFaSqKW8euiNn4SusI=;
-        h=From:To:CC:Subject:Date;
-        b=xBySieFtiwuutlFMCE90M5Ay3VODEH0SSqL8eAXcrB8DKCLZJKGiPxnS9Xi7oa17X
-         pGZSi1Rw0woGZzLFeGYbvYHjvp4Oa9tY/Rn+jDRCRBOqy0rv8vbmOozTrU3YhZjhoE
-         y5yVGGBjIMQiMunVOTEqNMVE6IbAmRrT0L/M7h74=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 1286a2OQ016646
+        s=ti-com-17Q1; t=1615185380;
+        bh=RuH1XyFPlD2/xUnAbgo3c6Sl0V2SC3r4WGxGh2uZNc8=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=Yosq7WEROYMiwO5WYdQCKxSPFbB5wBZOqj5aFd8uqPawsoc38DdGULVdseFS45BSG
+         Vvd4MrLkLcwK/QBHNDWnjdAFmgD8Fypi7iQnSA5K9EpECQzIwJW6nsMiWyuP1EyxCp
+         r82XbC4hq/rjyPGcYW4QCVX2T556YyqzPhp+MinI=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 1286aKZ7017883
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 8 Mar 2021 00:36:02 -0600
-Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 8 Mar 2021 00:36:20 -0600
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Mon, 8 Mar
- 2021 00:36:01 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
+ 2021 00:36:20 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3 via
- Frontend Transport; Mon, 8 Mar 2021 00:36:01 -0600
+ Frontend Transport; Mon, 8 Mar 2021 00:36:20 -0600
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 1286ZuTS117458;
-        Mon, 8 Mar 2021 00:35:57 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 1286ZuTW117458;
+        Mon, 8 Mar 2021 00:36:16 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -55,57 +55,95 @@ CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Lokesh Vutla <lokeshvutla@ti.com>
-Subject: [PATCH v4 0/4] AM64: Add PCIe bindings and driver support
-Date:   Mon, 8 Mar 2021 12:05:46 +0530
-Message-ID: <20210308063550.6227-1-kishon@ti.com>
+Subject: [PATCH v4 4/4] PCI: j721e: Add support to provide refclk to PCIe connector
+Date:   Mon, 8 Mar 2021 12:05:50 +0530
+Message-ID: <20210308063550.6227-5-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210308063550.6227-1-kishon@ti.com>
+References: <20210308063550.6227-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-AM64 uses the same PCIe controller as in J7200, however AM642 EVM
-doesn't have a clock generator (unlike J7200 base board). Here
-the clock from the SERDES has to be routed to the PCIE connector.
-This series provides an option for the pci-j721e.c driver to
-drive reference clock output to the connector.
+Add support to provide refclk to PCIe connector.
 
-v1 of the patch series can be found @ [1]
-v2 of the patch series can be found @ [2]
-v3 of the patch series can be found @ [3]
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-Changes from v3:
-*) Added Reviewed by from Rob
-*) Incorporated Krzysztof Wilczyński comment on DT binding documentation
-*) Fixed "warn: missing error code 'ret'"
-
-Changes from v2:
-*) Fix DT binding documentation suggested by Rob
-
-Changes from v1:
-*) Fixed missing initialization of "ret" variable in the error path.
-
-[1] -> http://lore.kernel.org/r/20201224115658.2795-1-kishon@ti.com
-[2] -> https://lore.kernel.org/r/20210104124103.30930-1-kishon@ti.com
-[3] -> https://lore.kernel.org/r/20210222114030.26445-1-kishon@ti.com
-
-Kishon Vijay Abraham I (4):
-  dt-bindings: PCI: ti,j721e: Add binding to represent refclk to the
-    connector
-  dt-bindings: PCI: ti,j721e: Add host mode dt-bindings for TI's AM64
-    SoC
-  dt-bindings: PCI: ti,j721e: Add endpoint mode dt-bindings for TI's
-    AM64 SoC
-  PCI: j721e: Add support to provide refclk to PCIe connector
-
- .../bindings/pci/ti,j721e-pci-ep.yaml         |  9 ++++----
- .../bindings/pci/ti,j721e-pci-host.yaml       | 20 ++++++++++++-----
- drivers/pci/controller/cadence/pci-j721e.c    | 22 ++++++++++++++++++-
- 3 files changed, 40 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index dac1ac8a7615..7f9dd34b98a9 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -6,6 +6,7 @@
+  * Author: Kishon Vijay Abraham I <kishon@ti.com>
+  */
+ 
++#include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/io.h>
+@@ -50,6 +51,7 @@ enum link_status {
+ 
+ struct j721e_pcie {
+ 	struct device		*dev;
++	struct clk		*refclk;
+ 	u32			mode;
+ 	u32			num_lanes;
+ 	struct cdns_pcie	*cdns_pcie;
+@@ -310,6 +312,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	struct cdns_pcie_ep *ep;
+ 	struct gpio_desc *gpiod;
+ 	void __iomem *base;
++	struct clk *clk;
+ 	u32 num_lanes;
+ 	u32 mode;
+ 	int ret;
+@@ -408,6 +411,20 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			goto err_get_sync;
+ 		}
+ 
++		clk = devm_clk_get_optional(dev, "pcie_refclk");
++		if (IS_ERR(clk)) {
++			ret = PTR_ERR(clk);
++			dev_err(dev, "failed to get pcie_refclk\n");
++			goto err_pcie_setup;
++		}
++
++		ret = clk_prepare_enable(clk);
++		if (ret) {
++			dev_err(dev, "failed to enable pcie_refclk\n");
++			goto err_get_sync;
++		}
++		pcie->refclk = clk;
++
+ 		/*
+ 		 * "Power Sequencing and Reset Signal Timings" table in
+ 		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 3.0
+@@ -422,8 +439,10 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 		}
+ 
+ 		ret = cdns_pcie_host_setup(rc);
+-		if (ret < 0)
++		if (ret < 0) {
++			clk_disable_unprepare(pcie->refclk);
+ 			goto err_pcie_setup;
++		}
+ 
+ 		break;
+ 	case PCI_MODE_EP:
+@@ -476,6 +495,7 @@ static int j721e_pcie_remove(struct platform_device *pdev)
+ 	struct cdns_pcie *cdns_pcie = pcie->cdns_pcie;
+ 	struct device *dev = &pdev->dev;
+ 
++	clk_disable_unprepare(pcie->refclk);
+ 	cdns_pcie_disable_phy(cdns_pcie);
+ 	pm_runtime_put(dev);
+ 	pm_runtime_disable(dev);
 -- 
 2.17.1
 
