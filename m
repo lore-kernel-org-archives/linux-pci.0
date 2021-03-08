@@ -2,39 +2,38 @@ Return-Path: <SRS0=jBgi=IG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA6F7C43333
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CDBBC432C3
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C976651CF
+	by mail.kernel.org (Postfix) with ESMTP id E40A4651D1
 	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230480AbhCHMUw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Mar 2021 07:20:52 -0500
+        id S231205AbhCHMUy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Mar 2021 07:20:54 -0500
 Received: from mga12.intel.com ([192.55.52.136]:52723 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230184AbhCHMUm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Mar 2021 07:20:42 -0500
-IronPort-SDR: PZ5EcfDbbkwuNTBHD7gK4UCo2DL3cJK7ZWXRXrV/X7eUwgBdbjmS/ay3nGTG8OxLFIhp1zFzZG
- C5RrnkMceafA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="167288037"
+        id S230200AbhCHMUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Mar 2021 07:20:46 -0500
+IronPort-SDR: WcsGZ0fUP7OqWpiiUJm6eisZGqFbyogryTKrtMOFsPz6LR2t+sgbfWBH6fLqb4pJ8bB5kJZGB0
+ 328cfDu41oYw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="167288061"
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="167288037"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:41 -0800
-IronPort-SDR: fSv4514lS+BwTAYRGvBpsn5EFCTYomMuaTpSj1R21DCWGD1sXJ7lzEfdUIRNcnJcPhrvSMUVRR
- AMt/kuKR0zNQ==
+   d="scan'208";a="167288061"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:45 -0800
+IronPort-SDR: HxtkUSl7Fa96ngvtiUC0yKB5VSTApmkbym0/6Ml2L4t+ZxMXFLJWSKGfbLtHZO5XYKWJvnEhQl
+ Jz/kciUykF9w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="588032254"
+   d="scan'208";a="447120657"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga005.jf.intel.com with ESMTP; 08 Mar 2021 04:20:37 -0800
+  by orsmga001.jf.intel.com with ESMTP; 08 Mar 2021 04:20:37 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 1E405490; Mon,  8 Mar 2021 14:20:38 +0200 (EET)
+        id E253AF4; Mon,  8 Mar 2021 14:20:37 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Jean Delvare <jdelvare@suse.de>,
@@ -48,72 +47,61 @@ To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         linux-pci@vger.kernel.org
 Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         hdegoede@redhat.com, henning.schild@siemens.com
-Subject: [PATCH v1 4/7] mfd: lpc_ich: Factor out lpc_ich_enable_spi_write()
-Date:   Mon,  8 Mar 2021 14:20:17 +0200
-Message-Id: <20210308122020.57071-5-andriy.shevchenko@linux.intel.com>
+Subject: [rfc, PATCH v1 0/7] PCI: introduce p2sb helper
+Date:   Mon,  8 Mar 2021 14:20:13 +0200
+Message-Id: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
-References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Factor out duplicate code to lpc_ich_enable_spi_write() helper function.
+There are a few users and even at least one more is coming
+that would like to utilize p2sb mechanisms like hide/unhide
+a device from PCI configuration space.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/mfd/lpc_ich.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+Here is the series to deduplicate existing users and provide
+a generic way for new comers.
 
-diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
-index 3bbb29a7e7a5..3a19ed57260e 100644
---- a/drivers/mfd/lpc_ich.c
-+++ b/drivers/mfd/lpc_ich.c
-@@ -1083,12 +1083,21 @@ static int lpc_ich_init_wdt(struct pci_dev *dev)
- 	return ret;
- }
- 
-+static void lpc_ich_test_spi_write(struct pci_dev *dev, unsigned int devfn,
-+				   struct intel_spi_boardinfo *info)
-+{
-+	u32 bcr;
-+
-+	pci_bus_read_config_dword(dev->bus, devfn, BCR, &bcr);
-+	info->writeable = !!(bcr & BCR_WPD);
-+}
-+
- static int lpc_ich_init_spi(struct pci_dev *dev)
- {
- 	struct lpc_ich_priv *priv = pci_get_drvdata(dev);
- 	struct resource *res = &intel_spi_res[0];
- 	struct intel_spi_boardinfo *info;
--	u32 spi_base, rcba, bcr;
-+	u32 spi_base, rcba;
- 
- 	info = devm_kzalloc(&dev->dev, sizeof(*info), GFP_KERNEL);
- 	if (!info)
-@@ -1112,8 +1121,7 @@ static int lpc_ich_init_spi(struct pci_dev *dev)
- 			res->start = spi_base + SPIBASE_LPT;
- 			res->end = res->start + SPIBASE_LPT_SZ - 1;
- 
--			pci_read_config_dword(dev, BCR, &bcr);
--			info->writeable = !!(bcr & BCR_WPD);
-+			lpc_ich_test_spi_write(dev, dev->devfn, info);
- 		}
- 		break;
- 
-@@ -1134,8 +1142,7 @@ static int lpc_ich_init_spi(struct pci_dev *dev)
- 			res->start = spi_base & 0xfffffff0;
- 			res->end = res->start + SPIBASE_APL_SZ - 1;
- 
--			pci_bus_read_config_dword(bus, spi, BCR, &bcr);
--			info->writeable = !!(bcr & BCR_WPD);
-+			lpc_ich_test_spi_write(dev, spi, info);
- 		}
- 
- 		pci_bus_write_config_byte(bus, p2sb, 0xe1, 0x1);
+It also includes a patch to enable GPIO controllers on Apollo Lake
+when it's used with ABL bootloader w/o ACPI support.
+
+Please, comment on the approach and individual patches.
+
+(Since it's cross subsystem, the PCI seems like a main one and
+ I think it makes sense to route it thru it with immutable tag
+ or branch provided for the others).
+
+Andy Shevchenko (5):
+  PCI: Introduce pci_bus_*() printing macros when device is not
+    available
+  PCI: Convert __pci_read_base() to __pci_bus_read_base()
+  mfd: lpc_ich: Factor out lpc_ich_enable_spi_write()
+  mfd: lpc_ich: Switch to generic pci_p2sb_bar()
+  i2c: i801: convert to use common P2SB accessor
+
+Jonathan Yong (1):
+  PCI: New Primary to Sideband (P2SB) bridge support library
+
+Tan Jui Nee (1):
+  mfd: lpc_ich: Add support for pinctrl in non-ACPI system
+
+ drivers/i2c/busses/Kconfig    |   1 +
+ drivers/i2c/busses/i2c-i801.c |  40 +++-------
+ drivers/mfd/Kconfig           |   1 +
+ drivers/mfd/lpc_ich.c         | 135 +++++++++++++++++++++++++++++-----
+ drivers/pci/Kconfig           |   8 ++
+ drivers/pci/Makefile          |   1 +
+ drivers/pci/pci-p2sb.c        |  89 ++++++++++++++++++++++
+ drivers/pci/pci.h             |  13 +++-
+ drivers/pci/probe.c           |  81 ++++++++++----------
+ include/linux/pci-p2sb.h      |  28 +++++++
+ include/linux/pci.h           |   9 +++
+ 11 files changed, 313 insertions(+), 93 deletions(-)
+ create mode 100644 drivers/pci/pci-p2sb.c
+ create mode 100644 include/linux/pci-p2sb.h
+
 -- 
 2.30.1
 
