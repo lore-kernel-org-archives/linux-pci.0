@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C00C43603
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F99C433E0
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A61C651C5
+	by mail.kernel.org (Postfix) with ESMTP id CED39651DD
 	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231140AbhCHMUx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Mar 2021 07:20:53 -0500
-Received: from mga12.intel.com ([192.55.52.136]:52723 "EHLO mga12.intel.com"
+        id S231215AbhCHMUy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Mar 2021 07:20:54 -0500
+Received: from mga07.intel.com ([134.134.136.100]:3493 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230202AbhCHMUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 Mar 2021 07:20:46 -0500
-IronPort-SDR: 1Rl+bd2TLNR9ttBtL1kKFcWj04rY79Md8U3SVQFg3mavBmvfRrQLWtrkxbXhauWDVqAWjig5G8
- FDdiKFc6+HWA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="167288062"
+        id S230242AbhCHMUs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 Mar 2021 07:20:48 -0500
+IronPort-SDR: zkUiqrQjEn+qsCEUJOSCwPBFYADH3AvbGWl90alNjaCWh9m67sIHP/PnhPKtq+fAoKxeEOgGqD
+ 9gfzXoVSxu/Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="252044308"
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="167288062"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:46 -0800
-IronPort-SDR: 7KV5jbUKmEKHOclGAFqIRsLBCRwD041e9V+1NC7Oz4tSjFWlUGJNzteYGelNMghzFBmIRttzCS
- S9Pg8+TiCmiA==
+   d="scan'208";a="252044308"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:46 -0800
+IronPort-SDR: 7A2Xp3zdMiKu2m4t0oKO7pSq1WMAbOBCWTQ3WUNeykqhEmg3sYAOZ+wTPFd3uu1VlYSRbeNBri
+ ZfnE2o8+QO4w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="447120674"
+   d="scan'208";a="602124729"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga001.jf.intel.com with ESMTP; 08 Mar 2021 04:20:42 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 08 Mar 2021 04:20:43 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 451C25BD; Mon,  8 Mar 2021 14:20:38 +0200 (EET)
+        id 2B596565; Mon,  8 Mar 2021 14:20:38 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Jean Delvare <jdelvare@suse.de>,
@@ -48,9 +48,9 @@ To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         linux-pci@vger.kernel.org
 Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         hdegoede@redhat.com, henning.schild@siemens.com
-Subject: [PATCH v1 7/7] i2c: i801: convert to use common P2SB accessor
-Date:   Mon,  8 Mar 2021 14:20:20 +0200
-Message-Id: <20210308122020.57071-8-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 5/7] mfd: lpc_ich: Switch to generic pci_p2sb_bar()
+Date:   Mon,  8 Mar 2021 14:20:18 +0200
+Message-Id: <20210308122020.57071-6-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
 References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
@@ -60,127 +60,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since we have a common P2SB accessor in tree we may use it instead of
-open coded variants.
+Instead of open coding pci_p2sb_bar() functionality we are going to
+use generic library for that. There one more user of it is coming.
 
-Replace custom code by pci_p2sb_bar() call.
+Besides cleaning up it fixes a potential issue if, by some reason,
+SPI bar is 64-bit.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/i2c/busses/Kconfig    |  1 +
- drivers/i2c/busses/i2c-i801.c | 40 ++++++++---------------------------
- drivers/pci/pci-p2sb.c        |  6 ++++++
- 3 files changed, 16 insertions(+), 31 deletions(-)
+ drivers/mfd/Kconfig   |  1 +
+ drivers/mfd/lpc_ich.c | 20 ++++++--------------
+ 2 files changed, 7 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 05ebf7546e3f..ffd3007f888c 100644
---- a/drivers/i2c/busses/Kconfig
-+++ b/drivers/i2c/busses/Kconfig
-@@ -101,6 +101,7 @@ config I2C_HIX5HD2
- config I2C_I801
- 	tristate "Intel 82801 (ICH/PCH)"
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index a03de3f7a8ed..c16bec1852e5 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -553,6 +553,7 @@ config LPC_ICH
+ 	tristate "Intel ICH LPC"
  	depends on PCI
+ 	select MFD_CORE
 +	select PCI_P2SB if X86
- 	select CHECK_SIGNATURE if X86 && DMI
- 	select I2C_SMBUS
  	help
-diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
-index 4acee6f9e5a3..23b43de9786a 100644
---- a/drivers/i2c/busses/i2c-i801.c
-+++ b/drivers/i2c/busses/i2c-i801.c
-@@ -90,6 +90,7 @@
- #include <linux/interrupt.h>
- #include <linux/module.h>
+ 	  The LPC bridge function of the Intel ICH provides support for
+ 	  many functional units. This driver provides needed support for
+diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
+index 3a19ed57260e..8e9bd6813287 100644
+--- a/drivers/mfd/lpc_ich.c
++++ b/drivers/mfd/lpc_ich.c
+@@ -42,6 +42,7 @@
+ #include <linux/errno.h>
+ #include <linux/acpi.h>
  #include <linux/pci.h>
 +#include <linux/pci-p2sb.h>
- #include <linux/kernel.h>
- #include <linux/stddef.h>
- #include <linux/delay.h>
-@@ -136,7 +137,6 @@
- #define TCOBASE		0x050
- #define TCOCTL		0x054
+ #include <linux/mfd/core.h>
+ #include <linux/mfd/lpc_ich.h>
+ #include <linux/platform_data/itco_wdt.h>
+@@ -69,8 +70,6 @@
+ #define BCR			0xdc
+ #define BCR_WPD			BIT(0)
  
--#define SBREG_BAR		0x10
- #define SBREG_SMBCTRL		0xc6000c
- #define SBREG_SMBCTRL_DNV	0xcf000c
- 
-@@ -1524,52 +1524,30 @@ static const struct itco_wdt_platform_data spt_tco_platform_data = {
- 	.version = 4,
- };
- 
--static DEFINE_SPINLOCK(p2sb_spinlock);
+-#define SPIBASE_APL_SZ		4096
 -
- static struct platform_device *
- i801_add_tco_spt(struct i801_priv *priv, struct pci_dev *pci_dev,
- 		 struct resource *tco_res)
- {
- 	struct resource *res;
- 	unsigned int devfn;
--	u64 base64_addr;
--	u32 base_addr;
--	u8 hidden;
-+	int ret;
+ #define GPIOBASE_ICH0		0x58
+ #define GPIOCTRL_ICH0		0x5C
+ #define GPIOBASE_ICH6		0x48
+@@ -1126,26 +1125,19 @@ static int lpc_ich_init_spi(struct pci_dev *dev)
+ 		break;
  
- 	/*
- 	 * We must access the NO_REBOOT bit over the Primary to Sideband
--	 * bridge (P2SB). The BIOS prevents the P2SB device from being
--	 * enumerated by the PCI subsystem, so we need to unhide/hide it
--	 * to lookup the P2SB BAR.
-+	 * bridge (P2SB).
- 	 */
--	spin_lock(&p2sb_spinlock);
+ 	case INTEL_SPI_BXT: {
+-		unsigned int p2sb = PCI_DEVFN(13, 0);
+ 		unsigned int spi = PCI_DEVFN(13, 2);
+-		struct pci_bus *bus = dev->bus;
++		int ret;
  
- 	devfn = PCI_DEVFN(PCI_SLOT(pci_dev->devfn), 1);
+ 		/*
+ 		 * The P2SB is hidden by BIOS and we need to unhide it in
+ 		 * order to read BAR of the SPI flash device. Once that is
+ 		 * done we hide it again.
+ 		 */
+-		pci_bus_write_config_byte(bus, p2sb, 0xe1, 0x0);
+-		pci_bus_read_config_dword(bus, spi, PCI_BASE_ADDRESS_0,
+-					  &spi_base);
+-		if (spi_base != ~0) {
+-			res->start = spi_base & 0xfffffff0;
+-			res->end = res->start + SPIBASE_APL_SZ - 1;
+-
+-			lpc_ich_test_spi_write(dev, spi, info);
+-		}
++		ret = pci_p2sb_bar(dev, spi, res);
++		if (ret)
++			return ret;
  
--	/* Unhide the P2SB device, if it is hidden */
--	pci_bus_read_config_byte(pci_dev->bus, devfn, 0xe1, &hidden);
--	if (hidden)
--		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, 0x0);
--
--	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR, &base_addr);
--	base64_addr = base_addr & 0xfffffff0;
--
--	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR + 0x4, &base_addr);
--	base64_addr |= (u64)base_addr << 32;
--
--	/* Hide the P2SB device, if it was hidden before */
--	if (hidden)
--		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, hidden);
--	spin_unlock(&p2sb_spinlock);
--
- 	res = &tco_res[1];
-+	ret = pci_p2sb_bar(pci_dev, devfn, res);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
- 	if (pci_dev->device == PCI_DEVICE_ID_INTEL_DNV_SMBUS)
--		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL_DNV;
-+		res->start += SBREG_SMBCTRL_DNV;
- 	else
--		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL;
--
--	res->end = res->start + 3;
--	res->flags = IORESOURCE_MEM;
-+		res->start += SBREG_SMBCTRL;
- 
- 	return platform_device_register_resndata(&pci_dev->dev, "iTCO_wdt", -1,
- 					tco_res, 2, &spt_tco_platform_data,
-diff --git a/drivers/pci/pci-p2sb.c b/drivers/pci/pci-p2sb.c
-index 68d7dad48cdb..7f6bc7d4482a 100644
---- a/drivers/pci/pci-p2sb.c
-+++ b/drivers/pci/pci-p2sb.c
-@@ -22,6 +22,12 @@
- 
- static const struct x86_cpu_id p2sb_cpu_ids[] = {
- 	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT,	PCI_DEVFN(13, 0)),
-+	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT_D,	PCI_DEVFN(31, 1)),
-+	X86_MATCH_INTEL_FAM6_MODEL(ATOM_SILVERMONT_D,	PCI_DEVFN(31, 1)),
-+	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE,		PCI_DEVFN(31, 1)),
-+	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE_L,		PCI_DEVFN(31, 1)),
-+	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE,		PCI_DEVFN(31, 1)),
-+	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE_L,		PCI_DEVFN(31, 1)),
- 	{}
- };
+-		pci_bus_write_config_byte(bus, p2sb, 0xe1, 0x1);
++		lpc_ich_test_spi_write(dev, spi, info);
+ 		break;
+ 	}
  
 -- 
 2.30.1
