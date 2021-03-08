@@ -2,38 +2,39 @@ Return-Path: <SRS0=jBgi=IG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CDBBC432C3
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C00C43603
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E40A4651D1
-	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A61C651C5
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Mar 2021 12:21:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231205AbhCHMUy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 Mar 2021 07:20:54 -0500
+        id S231140AbhCHMUx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Mar 2021 07:20:53 -0500
 Received: from mga12.intel.com ([192.55.52.136]:52723 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230200AbhCHMUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S230202AbhCHMUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 8 Mar 2021 07:20:46 -0500
-IronPort-SDR: WcsGZ0fUP7OqWpiiUJm6eisZGqFbyogryTKrtMOFsPz6LR2t+sgbfWBH6fLqb4pJ8bB5kJZGB0
- 328cfDu41oYw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="167288061"
+IronPort-SDR: 1Rl+bd2TLNR9ttBtL1kKFcWj04rY79Md8U3SVQFg3mavBmvfRrQLWtrkxbXhauWDVqAWjig5G8
+ FDdiKFc6+HWA==
+X-IronPort-AV: E=McAfee;i="6000,8403,9916"; a="167288062"
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="167288061"
+   d="scan'208";a="167288062"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:45 -0800
-IronPort-SDR: HxtkUSl7Fa96ngvtiUC0yKB5VSTApmkbym0/6Ml2L4t+ZxMXFLJWSKGfbLtHZO5XYKWJvnEhQl
- Jz/kciUykF9w==
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2021 04:20:46 -0800
+IronPort-SDR: 7KV5jbUKmEKHOclGAFqIRsLBCRwD041e9V+1NC7Oz4tSjFWlUGJNzteYGelNMghzFBmIRttzCS
+ S9Pg8+TiCmiA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.81,232,1610438400"; 
-   d="scan'208";a="447120657"
+   d="scan'208";a="447120674"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga001.jf.intel.com with ESMTP; 08 Mar 2021 04:20:37 -0800
+  by orsmga001.jf.intel.com with ESMTP; 08 Mar 2021 04:20:42 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id E253AF4; Mon,  8 Mar 2021 14:20:37 +0200 (EET)
+        id 451C25BD; Mon,  8 Mar 2021 14:20:38 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Jean Delvare <jdelvare@suse.de>,
@@ -47,61 +48,140 @@ To:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
         linux-pci@vger.kernel.org
 Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         hdegoede@redhat.com, henning.schild@siemens.com
-Subject: [rfc, PATCH v1 0/7] PCI: introduce p2sb helper
-Date:   Mon,  8 Mar 2021 14:20:13 +0200
-Message-Id: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 7/7] i2c: i801: convert to use common P2SB accessor
+Date:   Mon,  8 Mar 2021 14:20:20 +0200
+Message-Id: <20210308122020.57071-8-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are a few users and even at least one more is coming
-that would like to utilize p2sb mechanisms like hide/unhide
-a device from PCI configuration space.
+Since we have a common P2SB accessor in tree we may use it instead of
+open coded variants.
 
-Here is the series to deduplicate existing users and provide
-a generic way for new comers.
+Replace custom code by pci_p2sb_bar() call.
 
-It also includes a patch to enable GPIO controllers on Apollo Lake
-when it's used with ABL bootloader w/o ACPI support.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/i2c/busses/Kconfig    |  1 +
+ drivers/i2c/busses/i2c-i801.c | 40 ++++++++---------------------------
+ drivers/pci/pci-p2sb.c        |  6 ++++++
+ 3 files changed, 16 insertions(+), 31 deletions(-)
 
-Please, comment on the approach and individual patches.
-
-(Since it's cross subsystem, the PCI seems like a main one and
- I think it makes sense to route it thru it with immutable tag
- or branch provided for the others).
-
-Andy Shevchenko (5):
-  PCI: Introduce pci_bus_*() printing macros when device is not
-    available
-  PCI: Convert __pci_read_base() to __pci_bus_read_base()
-  mfd: lpc_ich: Factor out lpc_ich_enable_spi_write()
-  mfd: lpc_ich: Switch to generic pci_p2sb_bar()
-  i2c: i801: convert to use common P2SB accessor
-
-Jonathan Yong (1):
-  PCI: New Primary to Sideband (P2SB) bridge support library
-
-Tan Jui Nee (1):
-  mfd: lpc_ich: Add support for pinctrl in non-ACPI system
-
- drivers/i2c/busses/Kconfig    |   1 +
- drivers/i2c/busses/i2c-i801.c |  40 +++-------
- drivers/mfd/Kconfig           |   1 +
- drivers/mfd/lpc_ich.c         | 135 +++++++++++++++++++++++++++++-----
- drivers/pci/Kconfig           |   8 ++
- drivers/pci/Makefile          |   1 +
- drivers/pci/pci-p2sb.c        |  89 ++++++++++++++++++++++
- drivers/pci/pci.h             |  13 +++-
- drivers/pci/probe.c           |  81 ++++++++++----------
- include/linux/pci-p2sb.h      |  28 +++++++
- include/linux/pci.h           |   9 +++
- 11 files changed, 313 insertions(+), 93 deletions(-)
- create mode 100644 drivers/pci/pci-p2sb.c
- create mode 100644 include/linux/pci-p2sb.h
-
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index 05ebf7546e3f..ffd3007f888c 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -101,6 +101,7 @@ config I2C_HIX5HD2
+ config I2C_I801
+ 	tristate "Intel 82801 (ICH/PCH)"
+ 	depends on PCI
++	select PCI_P2SB if X86
+ 	select CHECK_SIGNATURE if X86 && DMI
+ 	select I2C_SMBUS
+ 	help
+diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
+index 4acee6f9e5a3..23b43de9786a 100644
+--- a/drivers/i2c/busses/i2c-i801.c
++++ b/drivers/i2c/busses/i2c-i801.c
+@@ -90,6 +90,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
++#include <linux/pci-p2sb.h>
+ #include <linux/kernel.h>
+ #include <linux/stddef.h>
+ #include <linux/delay.h>
+@@ -136,7 +137,6 @@
+ #define TCOBASE		0x050
+ #define TCOCTL		0x054
+ 
+-#define SBREG_BAR		0x10
+ #define SBREG_SMBCTRL		0xc6000c
+ #define SBREG_SMBCTRL_DNV	0xcf000c
+ 
+@@ -1524,52 +1524,30 @@ static const struct itco_wdt_platform_data spt_tco_platform_data = {
+ 	.version = 4,
+ };
+ 
+-static DEFINE_SPINLOCK(p2sb_spinlock);
+-
+ static struct platform_device *
+ i801_add_tco_spt(struct i801_priv *priv, struct pci_dev *pci_dev,
+ 		 struct resource *tco_res)
+ {
+ 	struct resource *res;
+ 	unsigned int devfn;
+-	u64 base64_addr;
+-	u32 base_addr;
+-	u8 hidden;
++	int ret;
+ 
+ 	/*
+ 	 * We must access the NO_REBOOT bit over the Primary to Sideband
+-	 * bridge (P2SB). The BIOS prevents the P2SB device from being
+-	 * enumerated by the PCI subsystem, so we need to unhide/hide it
+-	 * to lookup the P2SB BAR.
++	 * bridge (P2SB).
+ 	 */
+-	spin_lock(&p2sb_spinlock);
+ 
+ 	devfn = PCI_DEVFN(PCI_SLOT(pci_dev->devfn), 1);
+ 
+-	/* Unhide the P2SB device, if it is hidden */
+-	pci_bus_read_config_byte(pci_dev->bus, devfn, 0xe1, &hidden);
+-	if (hidden)
+-		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, 0x0);
+-
+-	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR, &base_addr);
+-	base64_addr = base_addr & 0xfffffff0;
+-
+-	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR + 0x4, &base_addr);
+-	base64_addr |= (u64)base_addr << 32;
+-
+-	/* Hide the P2SB device, if it was hidden before */
+-	if (hidden)
+-		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, hidden);
+-	spin_unlock(&p2sb_spinlock);
+-
+ 	res = &tco_res[1];
++	ret = pci_p2sb_bar(pci_dev, devfn, res);
++	if (ret)
++		return ERR_PTR(ret);
++
+ 	if (pci_dev->device == PCI_DEVICE_ID_INTEL_DNV_SMBUS)
+-		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL_DNV;
++		res->start += SBREG_SMBCTRL_DNV;
+ 	else
+-		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL;
+-
+-	res->end = res->start + 3;
+-	res->flags = IORESOURCE_MEM;
++		res->start += SBREG_SMBCTRL;
+ 
+ 	return platform_device_register_resndata(&pci_dev->dev, "iTCO_wdt", -1,
+ 					tco_res, 2, &spt_tco_platform_data,
+diff --git a/drivers/pci/pci-p2sb.c b/drivers/pci/pci-p2sb.c
+index 68d7dad48cdb..7f6bc7d4482a 100644
+--- a/drivers/pci/pci-p2sb.c
++++ b/drivers/pci/pci-p2sb.c
+@@ -22,6 +22,12 @@
+ 
+ static const struct x86_cpu_id p2sb_cpu_ids[] = {
+ 	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT,	PCI_DEVFN(13, 0)),
++	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT_D,	PCI_DEVFN(31, 1)),
++	X86_MATCH_INTEL_FAM6_MODEL(ATOM_SILVERMONT_D,	PCI_DEVFN(31, 1)),
++	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE,		PCI_DEVFN(31, 1)),
++	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE_L,		PCI_DEVFN(31, 1)),
++	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE,		PCI_DEVFN(31, 1)),
++	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE_L,		PCI_DEVFN(31, 1)),
+ 	{}
+ };
+ 
 -- 
 2.30.1
 
