@@ -2,150 +2,183 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E5AC433E9
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 07:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26AF8C433E6
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 07:32:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFA436520C
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 07:24:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCE68652AB
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 07:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229480AbhCIHXb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Mar 2021 02:23:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50968 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbhCIHX2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 02:23:28 -0500
-Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 238B2C06175F
-        for <linux-pci@vger.kernel.org>; Mon,  8 Mar 2021 23:23:28 -0800 (PST)
-Received: by mail-qk1-x730.google.com with SMTP id t4so12134414qkp.1
-        for <linux-pci@vger.kernel.org>; Mon, 08 Mar 2021 23:23:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sifive.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=oqO7RxhDDe9vwKp/BB6AgPJShCvp9ZtWoA6Sh+EENcs=;
-        b=Ud3PEmS7F/HL1ClBM5fvcc71dFxIGph/JiVvIxFtoAACgUhUdwd3d1JDpZAWyryI4/
-         H00WQUh6kjUPafd2ThBYw9ZtS34nshFF5tWtZGNZ1EgBfQTdUN3XYkl7kzREpnyavn71
-         TK+awh0xLrq0MfmLyTt1/Y13AGmNR3ZBJ15axGl3gd82rU/QKEwN/OMs+2mvmBscgDVy
-         BZeZLu7f0meD98GsZFypmTNkG5/8iycndvsukzJpMwALx2+3+j4rat0gZlbufwYXVt82
-         vFlOJutYcZmd4oW9S7VQwWQPDoXikWAturt0OVgGLzb5SQ+c5k0WpbbIHyWni6dbwUGq
-         Kaow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=oqO7RxhDDe9vwKp/BB6AgPJShCvp9ZtWoA6Sh+EENcs=;
-        b=VN2J7rJNWO8OwX5EN2Gsysh8KYBKMqgxKE5XCfRqa9KDVR1I153wjPB8Zf4nOC9VkU
-         sd9G6B4aAQuBZ+cxxNjO4ipM1ViTcRxvkZv6pbT64ZBGrVVKtjVcoVwOJv5eLbycAl1S
-         MY1n2gEkP6eHUPNPGB9P9kvUHManhcNc0N5FhykRRJQwYaH1kf4So+J+BtyjWRBoozIr
-         td8nrFaiyF/EpC5XljfLorrAybZieZY+V8rEDEAd1q+JLkb1LZL4WVWRm9oVWO2b3U6U
-         +NTBzoxjiSO+aJJs2536DRzGY8GWEtzOaW/5ZIlvTXouG498abFvYmkAgX5kRrwr18xv
-         fazA==
-X-Gm-Message-State: AOAM5317HLzk4vla7gK02ji4bQ4ZeF5cVlSW8CIXIheBiX3vn9fO6z2c
-        2eE8ViCKy5wnLrYnXtn0M9xMqNIFJisnk1nTLb97TA==
-X-Google-Smtp-Source: ABdhPJwtYPYtApR4EueplUtwNsjPnC8GSeKATOROKTHuWvVYiLX1g7t/b1oVki8yJ8MfrVSGPDDRQGIb0ZVn6cn5YHw=
-X-Received: by 2002:a37:66cd:: with SMTP id a196mr16664749qkc.374.1615274606652;
- Mon, 08 Mar 2021 23:23:26 -0800 (PST)
+        id S229649AbhCIHcS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Mar 2021 02:32:18 -0500
+Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:38720 "EHLO
+        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230397AbhCIHb6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 02:31:58 -0500
+Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
+        by mx0a-0014ca01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1297RkoA014874;
+        Mon, 8 Mar 2021 23:31:50 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=proofpoint;
+ bh=qiBxxcYP5C7osuK6J9jAd556dSdRGFFrT5anRCvvZ08=;
+ b=euuyP/LgH70DUoYwRpqC4xKbxylhETG8zlZq79+A1v0JtFnCbba47UHRPV1Ng8aeRSs/
+ yCeyezWyW9+kd7uxy89yst45gJZi2EMQ83QCl33VugdOQl1azXgEneomU+iCxW+Mbgf9
+ AWC6yX1dYZdCpGeplb9p5JE/bH/IyznNDoBYh5rPUgQRQ+nzqHypCxNRFdTSeuDhVlw2
+ ZhZn7IumLBZ0i6robC/7yRG/G07vIr0rpdkKaiXHy6AoaFGW7bbqAWJczq7aQrYT8oUT
+ p3ZFVo+gJbEPBOVLc1xYqXFFmjVp5H863GEOW+LZRLsAG375QIk5iXbE1gZn7SrnxHnS dA== 
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2170.outbound.protection.outlook.com [104.47.59.170])
+        by mx0a-0014ca01.pphosted.com with ESMTP id 374762yph6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 08 Mar 2021 23:31:50 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=S5dmFR3bN1FnUV+c8+tzx3YX0TF8a4bxDx6ZU1Ib+NfFpew03ep8c0M3NZQ0QM1E6NKz/00a00mv78AkeUgJekQM38yY54sDVpLm9+/HyVVwo5vi9Rz/YjGyBI385XNY/VWfW2S+E9pt3a4RiQGh6rFPVHbDZNqNp4zJDsTFtB4a8yVUz/yeFf1ZD/Jk/BfCwxOJQn142n+MdAqv06HlUYnDNs1/NbrTt0Cr7bXZ/l7EI32cJd5J/S3NqY2a2y9lQ871OOmJlThWBW6PLNLN0bEpDlfcV7PiC4vBcNPBif2u8wq6bevorvoTdoX8E5d5YUzkIoQvJek6lE6eAMuk7Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qiBxxcYP5C7osuK6J9jAd556dSdRGFFrT5anRCvvZ08=;
+ b=b2nPHHsrpki7Pk5x5is68wOPttG1O7me6aaaOAoRUhrtB0DGuNbuO+HywFV+dNg7/os8YtBPm5lzNBcvZwrqb1DQDgqf06U9F6FyEz+5wxsJTyvZtG4jOB6Dn6JELJmvup+Rdav/N5xkrb3nay+nzur3elfsyqU4FWSW7zRu+eEPRwXbYpKMGEw10HO2yfnuz7/zV4yLQ885MfNgliKz6sbR4EWfs8QAbFDDjQfW+hF3sBnllIabjoJQOpHIu6YlCLCKYElZBv319CLB68niD5swZb0tkgqU4V65n+R53GxRIIn0JiI83UJgkgR9r8/fh2Gqsfj5iUxgXmd2wcU+Zg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 199.43.4.23) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=cadence.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=cadence.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qiBxxcYP5C7osuK6J9jAd556dSdRGFFrT5anRCvvZ08=;
+ b=ZNL8NAMXlj5aNTd+n5v/UAOSaoB/JZPPU932l2Zb4hxd0nwQujRbLKoT1LeWL7rSoD+Jc8xCWFnNaOricq2WnrifbMjsZivXMBKCdNKi69NkdOQoWODPvwBYsuK9lfMxYASp/hfQM2eI4o0YIKsugf2OaHsAF278yUOxIBuBKyM=
+Received: from BN9PR03CA0915.namprd03.prod.outlook.com (2603:10b6:408:107::20)
+ by SN4PR0701MB3760.namprd07.prod.outlook.com (2603:10b6:803:4e::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3890.19; Tue, 9 Mar
+ 2021 07:31:47 +0000
+Received: from BN8NAM12FT050.eop-nam12.prod.protection.outlook.com
+ (2603:10b6:408:107:cafe::d8) by BN9PR03CA0915.outlook.office365.com
+ (2603:10b6:408:107::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17 via Frontend
+ Transport; Tue, 9 Mar 2021 07:31:47 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 199.43.4.23)
+ smtp.mailfrom=cadence.com; vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=pass action=none
+ header.from=cadence.com;
+Received-SPF: Pass (protection.outlook.com: domain of cadence.com designates
+ 199.43.4.23 as permitted sender) receiver=protection.outlook.com;
+ client-ip=199.43.4.23; helo=rmmaillnx1.cadence.com;
+Received: from rmmaillnx1.cadence.com (199.43.4.23) by
+ BN8NAM12FT050.mail.protection.outlook.com (10.13.182.143) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3933.16 via Frontend Transport; Tue, 9 Mar 2021 07:31:47 +0000
+Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
+        by rmmaillnx1.cadence.com (8.14.4/8.14.4) with ESMTP id 1297Vi7s003118
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 9 Mar 2021 02:31:46 -0500
+X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
+Received: from maileu3.global.cadence.com (10.160.88.99) by
+ maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 9 Mar 2021 08:31:45 +0100
+Received: from vleu-orange.cadence.com (10.160.88.83) by
+ maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Tue, 9 Mar 2021 08:31:45 +0100
+Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
+        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id 1297Vjhn013289;
+        Tue, 9 Mar 2021 08:31:45 +0100
+Received: (from nadeem@localhost)
+        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id 1297Vj0C013286;
+        Tue, 9 Mar 2021 08:31:45 +0100
+From:   Nadeem Athani <nadeem@cadence.com>
+To:     <tjoseph@cadence.com>, <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <robh@kernel.org>, <kishon@ti.com>
+CC:     <mparab@cadence.com>, <sjakhade@cadence.com>, <nadeem@cadence.com>,
+        <pthombar@cadence.com>
+Subject: [PATCH 1/2] dt-bindings:pci: Set LTSSM Detect.Quiet state delay.
+Date:   Tue, 9 Mar 2021 08:31:41 +0100
+Message-ID: <20210309073142.13219-2-nadeem@cadence.com>
+X-Mailer: git-send-email 2.15.0
+In-Reply-To: <20210309073142.13219-1-nadeem@cadence.com>
+References: <20210309073142.13219-1-nadeem@cadence.com>
 MIME-Version: 1.0
-References: <cover.1614681831.git.greentime.hu@sifive.com> <e2bd7db9db3c196b9b0399f0655a56939a0f3d62.1614681831.git.greentime.hu@sifive.com>
- <81c45bf40b397b57343f159baae896528fa32d89.camel@pengutronix.de>
-In-Reply-To: <81c45bf40b397b57343f159baae896528fa32d89.camel@pengutronix.de>
-From:   Greentime Hu <greentime.hu@sifive.com>
-Date:   Tue, 9 Mar 2021 15:23:14 +0800
-Message-ID: <CAHCEehK3P7jXq-v_xVm-0+BQsugG21VgjU0teyuUgANyR5ErKA@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/6] clk: sifive: Use reset-simple in prci driver for
- PCIe driver
-To:     Philipp Zabel <p.zabel@pengutronix.de>
-Cc:     Paul Walmsley <paul.walmsley@sifive.com>, hes@sifive.com,
-        Erik Danie <erik.danie@sifive.com>,
-        Zong Li <zong.li@sifive.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, robh+dt@kernel.org,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Michael Turquette <mturquette@baylibre.com>, sboyd@kernel.org,
-        lorenzo.pieralisi@arm.com, alex.dewar90@gmail.com,
-        khilman@baylibre.com, hayashi.kunihiko@socionext.com,
-        vidyas@nvidia.com, jh80.chung@samsung.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-clk@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-OrganizationHeadersPreserved: maileu3.global.cadence.com
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8cd6fb44-246b-4984-ba95-08d8e2cd65a7
+X-MS-TrafficTypeDiagnostic: SN4PR0701MB3760:
+X-Microsoft-Antispam-PRVS: <SN4PR0701MB3760D69615325CD47D76B421D8929@SN4PR0701MB3760.namprd07.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: NxVfYg3EtCJlM/G2fH7QdztSLmMCF8yex/nnGn2uVMroGn2Nm9xU8i1BxH9/e8Bq583XL5RJ25fYf2WPI42kt1007xhpv2n9uDSTQUmsYhghqvMBei9ZimBMJUTJHmUVtn6mrnGvEcDDx1JWcquYoeglzD6HVEtDPMtcayqqcSbLHGrRP+YemC5vR0CkB+D56uYs0/OE4phPnq68Ki6ap0mpODhgitn/vX7L6ibyFCF5VW1cPY7DHlTsZfnIpQyvcyj9M4QP40sFT32VzatN4nDop4ViKpgAB2q//U6ItEuag4MDIuQ/u5ZfYe9/7A6YVbKSM7gl1JahW96389JNX4JxcwD8+sLH9KemYRSjVJiCyYT7qc7BtZX/5FkCmk2qmyVxP+SPlOK/R6Lxv3pawQevZVP+8SqoP290ECTIC2nTtoctZivEXtVcYPmQ0U0GuUWwJnawYq0Jl/bKDueHjnjl7Bhakv86WX6riU2Lo5tL/IxXRVK9nffIWASrNZaXsx4PhhLgrLxM9pUE45UYgAgZGanYraiv3nNmo7mmAt0I0g9sRkdRM6dypizjYf7kNhuBtDvXNzSqcW5hT9jkUagd68PyqnR8UqYca3nLLakWjO2J0F2XDGzhZOxGGt/HLot+/2LFDDj1G63k/iqUc9oG8ONDW7Yd1alHbpqpsYOvqNVW6TV/VRJvpKfIH8Jlzej3f81+AKK59qaZqohgwB2ERskv5d+RY/uI2wplXgI=
+X-Forefront-Antispam-Report: CIP:199.43.4.23;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:rmmaillnx1.cadence.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(396003)(346002)(136003)(376002)(39860400002)(36092001)(36840700001)(46966006)(8936002)(83380400001)(47076005)(86362001)(6666004)(2616005)(42186006)(70586007)(316002)(81166007)(36756003)(70206006)(356005)(2906002)(336012)(186003)(4326008)(26005)(82310400003)(54906003)(82740400003)(110136005)(36906005)(478600001)(8676002)(5660300002)(426003)(36860700001)(1076003)(107886003)(2101003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: cadence.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2021 07:31:47.4339
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8cd6fb44-246b-4984-ba95-08d8e2cd65a7
+X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[199.43.4.23];Helo=[rmmaillnx1.cadence.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM12FT050.eop-nam12.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0701MB3760
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
+ definitions=2021-03-09_06:2021-03-08,2021-03-09 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0
+ lowpriorityscore=0 mlxscore=0 suspectscore=0 spamscore=0 clxscore=1015
+ adultscore=0 phishscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ impostorscore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2009150000 definitions=main-2103090036
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Philipp Zabel <p.zabel@pengutronix.de> =E6=96=BC 2021=E5=B9=B43=E6=9C=884=
-=E6=97=A5 =E9=80=B1=E5=9B=9B =E4=B8=8B=E5=8D=887:58=E5=AF=AB=E9=81=93=EF=BC=
-=9A
->
-> On Tue, 2021-03-02 at 18:59 +0800, Greentime Hu wrote:
-> > We use reset-simple in this patch so that pcie driver can use
-> > devm_reset_control_get() to get this reset data structure and use
-> > reset_control_deassert() to deassert pcie_power_up_rst_n.
-> >
-> > Signed-off-by: Greentime Hu <greentime.hu@sifive.com>
-> > ---
-> >  drivers/clk/sifive/Kconfig       |  2 ++
-> >  drivers/clk/sifive/sifive-prci.c | 14 ++++++++++++++
-> >  drivers/clk/sifive/sifive-prci.h |  4 ++++
-> >  drivers/reset/Kconfig            |  3 ++-
-> >  4 files changed, 22 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/clk/sifive/Kconfig b/drivers/clk/sifive/Kconfig
-> > index 1c14eb20c066..9132c3c4aa86 100644
-> > --- a/drivers/clk/sifive/Kconfig
-> > +++ b/drivers/clk/sifive/Kconfig
-> > @@ -10,6 +10,8 @@ if CLK_SIFIVE
-> >
-> >  config CLK_SIFIVE_PRCI
-> >       bool "PRCI driver for SiFive SoCs"
-> > +     select RESET_CONTROLLER
-> > +     select RESET_SIMPLE
-> >       select CLK_ANALOGBITS_WRPLL_CLN28HPC
-> >       help
-> >         Supports the Power Reset Clock interface (PRCI) IP block found =
-in
-> > diff --git a/drivers/clk/sifive/sifive-prci.c b/drivers/clk/sifive/sifi=
-ve-prci.c
-> > index baf7313dac92..925affc6de55 100644
-> > --- a/drivers/clk/sifive/sifive-prci.c
-> > +++ b/drivers/clk/sifive/sifive-prci.c
-> > @@ -583,7 +583,21 @@ static int sifive_prci_probe(struct platform_devic=
-e *pdev)
-> >       if (IS_ERR(pd->va))
-> >               return PTR_ERR(pd->va);
-> >
-> > +     pd->reset.rcdev.owner =3D THIS_MODULE;
-> > +     pd->reset.rcdev.nr_resets =3D PRCI_RST_NR;
-> > +     pd->reset.rcdev.ops =3D &reset_simple_ops;
-> > +     pd->reset.rcdev.of_node =3D pdev->dev.of_node;
-> > +     pd->reset.active_low =3D true;
-> > +     pd->reset.membase =3D pd->va + PRCI_DEVICESRESETREG_OFFSET;
-> > +     spin_lock_init(&pd->reset.lock);
-> > +
-> > +     r =3D devm_reset_controller_register(&pdev->dev, &pd->reset.rcdev=
-);
-> > +     if (r) {
-> > +             dev_err(dev, "could not register reset controller: %d\n",=
- r);
-> > +             return r;
-> > +     }
-> >       r =3D __prci_register_clocks(dev, pd, desc);
-> > +
->
-> Accidental whitespace?
->
-> Otherwise,
->
-> Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+The parameter detect-quiet-min-delay can be used to program the minimum
+time that LTSSM waits on entering Detect.Quiet state.
+00 : 0us minimum wait time in Detect.Quiet state.
+01 : 100us minimum wait time in Detect.Quiet state.
+10 : 1000us minimum wait time in Detect.Quiet state.
+11 : 2000us minimum wait time in Detect.Quiet state.
 
-Thank you, Philipp.
-Yes, it is an accidental whitespace. I'll remove it in my next version patc=
-h.
+Signed-off-by: Nadeem Athani <nadeem@cadence.com>
+---
+ .../devicetree/bindings/pci/cdns,cdns-pcie-host.yaml        | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+index 293b8ec318bc..a1d56e0be419 100644
+--- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
+@@ -27,6 +27,18 @@ properties:
+ 
+   msi-parent: true
+ 
++  detect-quiet-min-delay:
++    description:
++      LTSSM Detect.Quiet state minimum delay.
++      00 : 0us minimum wait time
++      01 : 100us minimum wait time
++      10 : 1000us minimum wait time
++      11 : 2000us minimum wait time
++    $ref: /schemas/types.yaml#/definitions/uint32
++    minimum: 0
++    maximum: 3
++    default: 0
++
+ required:
+   - reg
+   - reg-names
+@@ -48,6 +60,7 @@ examples:
+             linux,pci-domain = <0>;
+             vendor-id = <0x17cd>;
+             device-id = <0x0200>;
++            detect-quiet-min-delay = <0>;
+ 
+             reg = <0x0 0xfb000000  0x0 0x01000000>,
+                   <0x0 0x41000000  0x0 0x00001000>;
+-- 
+2.15.0
+
