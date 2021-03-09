@@ -7,51 +7,48 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C69BC4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C84D0C432C3
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC784652B3
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F0046525D
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbhCIIqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40508 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbhCIIph (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:37 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83949C06174A;
-        Tue,  9 Mar 2021 00:45:37 -0800 (PST)
-Message-Id: <20210309084241.890532921@linutronix.de>
+        id S231137AbhCIIqL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Mar 2021 03:46:11 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:51322 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230372AbhCIIpl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:41 -0500
+Message-Id: <20210309084242.209110861@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279536;
+        s=2020; t=1615279539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
-        b=NUiBdRmSHOw8Uw7iGVCliq0SkijyDtSQeIlX2ttF5eYOB04ertkM2Uh8QIwMjzxknvM4Oi
-        GRczvMwF4Chxks6EHIdFcxf994wpOVMid6LgETyt8/3xRgaKeoLH3aRoLE9+RzkxtdL95l
-        p/LK6qN1CFSizLi9NxVul4Z4oW9fZhlPZNFfowy+hYy/bvs0/8AmGMrt7JSObaFS2zC75D
-        OBOxtN7SqvtX0InkXzFW/YoC2AIebW82mdvRv82KClxkE3l8y1cRUmjDxOxpUto6ZjvTy6
-        sOul2TdGNELQKcFbwi+hrqP2XMxO/1prGGp3y655xbR4HnXaPbUW0ukOcaLScQ==
+        bh=3OZDZ1PlAIXweh7titVCv+Mhn6QM6oopTZUhKH8n3fI=;
+        b=OHqjpGKzuWjP+ej4hd27e5ZqZrmViqn9gk8mqAOiivIPpzrHwdyFNiFKhb6RX2HyHplghe
+        CAbm1ecdOgYQd4x7YP2MQPb+tH4KPQ6o0MUrzbYxxI8aRRi2i2nPOkWNuvbOyg61rZ1yo0
+        DjJC1WOJiDIRdPk97zbrpQ0bXKnJnOdUu3NaT2ZP+JtjAC/VvVGBFgel3qlOWmrnlVnbgw
+        PSg2351Hv8WRE7GmEVPQST7lNGtgE6boyfuDeMjNk+1HiMXw3q3En3ND4s5vLy+pzB7LfK
+        2CBwAs4jMqqsgXQKIyJYyGPuJUF1PnOPa/paFgILHa/BvyF3xtK0QIhtfteSbQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279536;
+        s=2020e; t=1615279539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=RESPeTyJ6azVCnEuJ5GRmkpcsMaksLQmntYP94M96Us=;
-        b=ZlShNnj6ML8G8VM9soMkkHJnBGalF94sWxBHDfAV6jTJiZ89UrK4IDm7BXCH9G1FxgEGHe
-        KVDQyUY1lmDetZBw==
-Date:   Tue, 09 Mar 2021 09:42:09 +0100
+        bh=3OZDZ1PlAIXweh7titVCv+Mhn6QM6oopTZUhKH8n3fI=;
+        b=o9tIrGOpSVQUSJ1YQqLXROg6bjTxJYKvkYRgEtPlvtrNy6s6CHuYZDrzd8nr4wFP+zYF0n
+        C0xlpPo2jMwMG+DA==
+Date:   Tue, 09 Mar 2021 09:42:12 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
         Denis Kirjanov <kda@linux-powerpc.org>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
         ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
         linux-atm-general@lists.sourceforge.net,
@@ -65,7 +62,7 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 06/14] tasklets: Replace spin wait in tasklet_kill()
+Subject: [patch 09/14] net: sundance: Use tasklet_disable_in_atomic().
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -74,68 +71,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-tasklet_kill() spin waits for TASKLET_STATE_SCHED to be cleared invoking
-yield() from inside the loop. yield() is an ill defined mechanism and the
-result might still be wasting CPU cycles in a tight loop which is
-especially painful in a guest when the CPU running the tasklet is scheduled
-out.
+tasklet_disable() is used in the timer callback. This might be distangled,
+but without access to the hardware that's a bit risky.
 
-tasklet_kill() is used in teardown paths and not performance critical at
-all. Replace the spin wait with wait_var_event().
+Replace it with tasklet_disable_in_atomic() so tasklet_disable() can be
+changed to a sleep wait once all remaining atomic users are converted.
 
-Signed-off-by: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Denis Kirjanov <kda@linux-powerpc.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: netdev@vger.kernel.org
 ---
- kernel/softirq.c |   23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+ drivers/net/ethernet/dlink/sundance.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/kernel/softirq.c
-+++ b/kernel/softirq.c
-@@ -532,6 +532,16 @@ void __tasklet_hi_schedule(struct taskle
- }
- EXPORT_SYMBOL(__tasklet_hi_schedule);
+--- a/drivers/net/ethernet/dlink/sundance.c
++++ b/drivers/net/ethernet/dlink/sundance.c
+@@ -963,7 +963,7 @@ static void tx_timeout(struct net_device
+ 	unsigned long flag;
  
-+static inline bool tasklet_clear_sched(struct tasklet_struct *t)
-+{
-+	if (test_and_clear_bit(TASKLET_STATE_SCHED, &t->state)) {
-+		wake_up_var(&t->state);
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static void tasklet_action_common(struct softirq_action *a,
- 				  struct tasklet_head *tl_head,
- 				  unsigned int softirq_nr)
-@@ -551,8 +561,7 @@ static void tasklet_action_common(struct
- 
- 		if (tasklet_trylock(t)) {
- 			if (!atomic_read(&t->count)) {
--				if (!test_and_clear_bit(TASKLET_STATE_SCHED,
--							&t->state))
-+				if (!tasklet_clear_sched(t))
- 					BUG();
- 				if (t->use_callback)
- 					t->callback(t);
-@@ -612,13 +621,11 @@ void tasklet_kill(struct tasklet_struct
- 	if (in_interrupt())
- 		pr_notice("Attempt to kill tasklet from interrupt\n");
- 
--	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state)) {
--		do {
--			yield();
--		} while (test_bit(TASKLET_STATE_SCHED, &t->state));
--	}
-+	while (test_and_set_bit(TASKLET_STATE_SCHED, &t->state))
-+		wait_var_event(&t->state, !test_bit(TASKLET_STATE_SCHED, &t->state));
-+
- 	tasklet_unlock_wait(t);
--	clear_bit(TASKLET_STATE_SCHED, &t->state);
-+	tasklet_clear_sched(t);
- }
- EXPORT_SYMBOL(tasklet_kill);
- 
+ 	netif_stop_queue(dev);
+-	tasklet_disable(&np->tx_tasklet);
++	tasklet_disable_in_atomic(&np->tx_tasklet);
+ 	iowrite16(0, ioaddr + IntrEnable);
+ 	printk(KERN_WARNING "%s: Transmit timed out, TxStatus %2.2x "
+ 		   "TxFrameId %2.2x,"
 
