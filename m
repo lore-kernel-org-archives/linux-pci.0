@@ -7,44 +7,52 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 309BFC4321A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F151C43333
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED15A65295
+	by mail.kernel.org (Postfix) with ESMTP id D270365266
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231234AbhCIIqO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:46:14 -0500
+        id S231169AbhCIIqM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Mar 2021 03:46:12 -0500
 Received: from Galois.linutronix.de ([193.142.43.55]:51468 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbhCIIpp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:45 -0500
-Message-Id: <20210309084242.516519290@linutronix.de>
+        with ESMTP id S230424AbhCIIpm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:42 -0500
+Message-Id: <20210309084242.313899703@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279543;
+        s=2020; t=1615279541;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yxUKUiZYjhibc7jZnuln+kQQPBZLvoc8TbB9cqh+HxU=;
-        b=Q13IywTH7EUDUibhBHMamY2qhFxsv/BDqx36OJXLf+7Q44Guho/PkLo0IhD0AdtPtW3qgp
-        w2kiHcvR7sBVw/aZ3JReCRcyFZlRWt+SuCKHybxLuc74cDc7lHqC324UCJCpOcGS/6Ls3s
-        EhLTpsZEXaaEpOv4GY29Z4ou0fNI46qQM53sAOcYIjcXC41/DofN4shGkNo11xWFYmku8q
-        +BZPhCPyND4RWjOPYGSjy32KLewEu+5lxFmZiGGM1sxsVMolDqMJf1t6+tL1UQBvIrjFxT
-        qbmqFBDlC15LlYGmVcptExHe0laWMEkGcVg5P6122ht1p6DN8f+ltdobyMZ1WQ==
+        bh=l6Q3W/LryXAjvWJbzAW7nw1Byy8ZW+Ak6BqUHfGdIYA=;
+        b=wkfrvYWdeSxVkZZvGJrvJ5doa1FQOYEdrs9XtXy+47hkZr79UvWY+m+G9akaJQslI0Hptg
+        sYnBZXRXHiw7V+qHXT2/S2jvkbUf9V5/ePXCILMMjFH3RnIgn2E2s1uSQJfYZt1fCK1XtD
+        Of9D8bk7Jn0jf6Vpiom/NscjyJnL7uIE/s/W4ZKi2PExELJU0oOnY9lQc2U0/hwoX2RYTN
+        aHrp25gQZLqCU9Nj3Xq0qHr8+J9S3Ya78w107pmK4K3X42rqInFgO/e7lGS2qOKPcIcw0w
+        dw82CAulutJ4Psg1LyI6T7H3JYhWeQ1K6QVyGJzeEaDxAXlGa69vFi6ASruCrg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279543;
+        s=2020e; t=1615279541;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=yxUKUiZYjhibc7jZnuln+kQQPBZLvoc8TbB9cqh+HxU=;
-        b=IP5NQTNugT2CYFrvO7b8n1tyL7nIbQVE2j1mpwhsV2gWriSLkZq1moytqMLibvtQWJzD46
-        ea56QlNhvi/NPHAg==
-Date:   Tue, 09 Mar 2021 09:42:15 +0100
+        bh=l6Q3W/LryXAjvWJbzAW7nw1Byy8ZW+Ak6BqUHfGdIYA=;
+        b=DTmNItlbUCzhKqosxEh/VQS7S4RBz18lFKbgeCay+vE0IyWWX0E4N9MzEuBG8k5h2jqMWK
+        HqURayVmIpwdfoCg==
+Date:   Tue, 09 Mar 2021 09:42:13 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         "Ahmed S. Darwish" <a.darwish@linutronix.de>,
+        ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Denis Kirjanov <kda@linux-powerpc.org>,
+        Chas Williams <3chas3@gmail.com>,
+        linux-atm-general@lists.sourceforge.net,
         "K. Y. Srinivasan" <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
@@ -53,16 +61,9 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Denis Kirjanov <kda@linux-powerpc.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
-        linux-atm-general@lists.sourceforge.net,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 12/14] PCI: hv: Use tasklet_disable_in_atomic()
+Subject: [patch 10/14] ath9k: Use tasklet_disable_in_atomic()
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -73,38 +74,39 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-The hv_compose_msi_msg() callback in irq_chip::irq_compose_msi_msg is
-invoked via irq_chip_compose_msi_msg(), which itself is always invoked from
-atomic contexts from the guts of the interrupt core code.
+All callers of ath9k_beacon_ensure_primary_slot() are preemptible /
+acquire a mutex except for this callchain:
 
-There is no way to change this w/o rewriting the whole driver, so use
-tasklet_disable_in_atomic() which allows to make tasklet_disable()
-sleepable once the remaining atomic users are addressed.
+  spin_lock_bh(&sc->sc_pcu_lock);
+  ath_complete_reset()
+  -> ath9k_calculate_summary_state()
+     -> ath9k_beacon_ensure_primary_slot()
+
+It's unclear how that can be distangled, so use tasklet_disable_in_atomic()
+for now. This allows tasklet_disable() to become sleepable once the
+remaining atomic users are cleaned up.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: Wei Liu <wei.liu@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-hyperv@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 ---
- drivers/pci/controller/pci-hyperv.c |    2 +-
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1458,7 +1458,7 @@ static void hv_compose_msi_msg(struct ir
- 	 * Prevents hv_pci_onchannelcallback() from running concurrently
- 	 * in the tasklet.
- 	 */
--	tasklet_disable(&channel->callback_event);
-+	tasklet_disable_in_atomic(&channel->callback_event);
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -251,7 +251,7 @@ void ath9k_beacon_ensure_primary_slot(st
+ 	int first_slot = ATH_BCBUF;
+ 	int slot;
  
- 	/*
- 	 * Since this function is called with IRQ locks held, can't
+-	tasklet_disable(&sc->bcon_tasklet);
++	tasklet_disable_in_atomic(&sc->bcon_tasklet);
+ 
+ 	/* Find first taken slot. */
+ 	for (slot = 0; slot < ATH_BCBUF; slot++) {
 
