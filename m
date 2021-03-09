@@ -7,39 +7,42 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30793C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B90CC4332D
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D269165266
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44C2B6525D
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Mar 2021 08:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbhCIIpg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Mar 2021 03:45:36 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:51208 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbhCIIpb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:31 -0500
-Message-Id: <20210309084241.249343366@linutronix.de>
+        id S230270AbhCIIpi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Mar 2021 03:45:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40490 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230046AbhCIIpe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Mar 2021 03:45:34 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C838DC06174A;
+        Tue,  9 Mar 2021 00:45:33 -0800 (PST)
+Message-Id: <20210309084241.563164193@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1615279530;
+        s=2020; t=1615279532;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=iaFdsa84zN1qKIHuuoUkYKtunZ9pM939i3ed8fPSgwU=;
-        b=XEwGzZxDVBQvC/wL/umlG31QWnGTA4V4F7MELMLkdc2BEOXbsPQiX54Yo5seMvS2UQuP8F
-        SDFc4SgeP/nMsMdcJ0f4NRHQ/9hB1pSHJnZ22vjWsEjzSWlC0/gL8Rr2ym/gbjPZ8oV9SN
-        aP8oIsFhSXCykPH7L55q6Tr4q0VKdBC/l4MgsgP6GfYww4fH8mwy8vwNOa8v4Z57jRRvst
-        TgLiY5648U20sA/G2nYT4g8iS5boWxmSTIOngWmyVdTnVXGPLdxvRihnqDf5xBn4Oz4y9O
-        oD1rA260a2xBR6b4fxtY/pCBz3lrsJ2AShrkfAeMGQbbnGQDGvnDcV4PeHjgKA==
+        bh=/UnLzSVCcxvGNYKGpDDBRqhUSHTKrJGFJcYQa+vwSGQ=;
+        b=V+AEQbNjhtRhuebeBrMCgL7RgzMORCcJrbG1jGSq7hEHhdZa2zglvU9O6hbOcZSe8p1E0X
+        SYJ4HAGbI+7COvYN3irDSshZpa+VP0J0UsSFC8WOPjJuN6RgKiOz++rOeysNvCvsA+H3ta
+        qgmhJcGq1HLPTiKt+a++NsDnKnz8wj0w01sLYRssdeQE0vE2WQO21ON17EPyhfcptOVxkt
+        PwFXUIK+dJL66cPHdls57nImfbwrvZWVg842bG+sCSSpA5jEEHfUR5AC6JoPVC/N9jQvHs
+        IUM72SU5FmiYKkLYTLpCdm9HsrUdZ2anEO03GaZhgiGaYsi2TVdiY9NrPbT36g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1615279530;
+        s=2020e; t=1615279532;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:  references:references;
-        bh=iaFdsa84zN1qKIHuuoUkYKtunZ9pM939i3ed8fPSgwU=;
-        b=QL0dsDLrkyTWJDcn0Idnv3OmGjEQ7hA+fk8LpQLouQYHWEgKPIPI+KlQQIlr/ePLYzBWCL
-        zExxvmYMEMPT7kAA==
-Date:   Tue, 09 Mar 2021 09:42:04 +0100
+        bh=/UnLzSVCcxvGNYKGpDDBRqhUSHTKrJGFJcYQa+vwSGQ=;
+        b=9Az08VrqqTiGpFMvA7db/9zLQv1ZJFiYrsRHaDthCeMBa4+qgzNS/a62E51P751BGYBIY6
+        Hs6xoBoJfJ4IJXBQ==
+Date:   Tue, 09 Mar 2021 09:42:06 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Frederic Weisbecker <frederic@kernel.org>,
@@ -62,8 +65,7 @@ Cc:     Frederic Weisbecker <frederic@kernel.org>,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         Stefan Richter <stefanr@s5r6.in-berlin.de>,
         linux1394-devel@lists.sourceforge.net
-Subject: [patch 01/14] tasklets: Replace barrier() with cpu_relax() in
- tasklet_unlock_wait()
+Subject: [patch 03/14] tasklets: Provide tasklet_disable_in_atomic()
 References: <20210309084203.995862150@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -72,26 +74,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A barrier() in a tight loop which waits for something to happen on a remote
-CPU is a pointless exercise. Replace it with cpu_relax() which allows HT
-siblings to make progress.
+Replacing the spin wait loops in tasklet_unlock_wait() with
+wait_var_event() is not possible as a handful of tasklet_disable()
+invocations are happening in atomic context. All other invocations are in
+teardown paths which can sleep.
+
+Provide tasklet_disable_in_atomic() and tasklet_unlock_spin_wait() to
+convert the few atomic use cases over, which allows to change
+tasklet_disable() and tasklet_unlock_wait() in a later step.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- include/linux/interrupt.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/linux/interrupt.h |   22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 --- a/include/linux/interrupt.h
 +++ b/include/linux/interrupt.h
-@@ -672,7 +672,8 @@ static inline void tasklet_unlock(struct
- 
- static inline void tasklet_unlock_wait(struct tasklet_struct *t)
- {
--	while (test_bit(TASKLET_STATE_RUN, &(t)->state)) { barrier(); }
+@@ -675,10 +675,21 @@ static inline void tasklet_unlock_wait(s
+ 	while (test_bit(TASKLET_STATE_RUN, &t->state))
+ 		cpu_relax();
+ }
++
++/*
++ * Do not use in new code. Waiting for tasklets from atomic contexts is
++ * error prone and should be avoided.
++ */
++static inline void tasklet_unlock_spin_wait(struct tasklet_struct *t)
++{
 +	while (test_bit(TASKLET_STATE_RUN, &t->state))
 +		cpu_relax();
- }
++}
  #else
- #define tasklet_trylock(t) 1
+ static inline int tasklet_trylock(struct tasklet_struct *t) { return 1; }
+ static inline void tasklet_unlock(struct tasklet_struct *t) { }
+ static inline void tasklet_unlock_wait(struct tasklet_struct *t) { }
++static inline void tasklet_unlock_spin_wait(struct tasklet_struct *t) { }
+ #endif
+ 
+ extern void __tasklet_schedule(struct tasklet_struct *t);
+@@ -703,6 +714,17 @@ static inline void tasklet_disable_nosyn
+ 	smp_mb__after_atomic();
+ }
+ 
++/*
++ * Do not use in new code. Disabling tasklets from atomic contexts is
++ * error prone and should be avoided.
++ */
++static inline void tasklet_disable_in_atomic(struct tasklet_struct *t)
++{
++	tasklet_disable_nosync(t);
++	tasklet_unlock_spin_wait(t);
++	smp_mb();
++}
++
+ static inline void tasklet_disable(struct tasklet_struct *t)
+ {
+ 	tasklet_disable_nosync(t);
 
