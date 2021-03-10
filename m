@@ -2,94 +2,190 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2982BC433E6
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 13:20:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9CB4C433DB
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 14:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB58564DAF
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 13:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A45ED64EFD
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 14:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231132AbhCJNTq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Mar 2021 08:19:46 -0500
-Received: from mail-wr1-f42.google.com ([209.85.221.42]:33631 "EHLO
-        mail-wr1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230477AbhCJNTP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 08:19:15 -0500
-Received: by mail-wr1-f42.google.com with SMTP id 7so23319721wrz.0
-        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 05:19:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=7FE/aFUGR4FJTAvdWhgR7s8cfhra8+tchwzJGXoPprw=;
-        b=OhDiYvvtrprbweTUNM5c5xl87udBWy2AEtZsc9cZ0NgZvHqhNfEi08iYTGb1F4oiie
-         VdR1d+LfIt8TOf4BoFM7tY+XzEak/avwWjOX3iiGyvzRo25yYkzAc/yrMfAmxP/f4Ulc
-         KivXFLzW/KEysmvjaFwwie7+sYqZLXxxLyochUzhjXXLrVr1MBSVnwsDsnAF3rtDhgU6
-         9Sh/SPKGkqTFfhYqbDxEkqPPdPac10b5lj/JfBcNdfeijdGvF2Ybd1RB/qBJpig1SY6m
-         vfUmGp8NDCZsKXMeItxAmaFqael/DUMZ3h9bIHYFpIhBzNY/PulNS/FRInO0sfk0oNLd
-         mXPw==
-X-Gm-Message-State: AOAM531ar7nHi2eykSBrJL4NM6lwq+XYz08Y+kIYbFqJv/lyE3bu8c3J
-        eoEWYu0aikGaeW38nqf2QZc=
-X-Google-Smtp-Source: ABdhPJxrsXm71hfXVP623gczvcGXlXW/LSxe6p80c+KDlFBhJqi/AvmB9n32ZC141Ik5Y33ZYMaUBA==
-X-Received: by 2002:adf:dc91:: with SMTP id r17mr3492581wrj.293.1615382354643;
-        Wed, 10 Mar 2021 05:19:14 -0800 (PST)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id l15sm9087457wme.43.2021.03.10.05.19.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Mar 2021 05:19:14 -0800 (PST)
-From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Daire McNamara <daire.mcnamara@microchip.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: microchip: Remove dev_err() when handing an error from platform_get_irq()
-Date:   Wed, 10 Mar 2021 13:19:13 +0000
-Message-Id: <20210310131913.2802385-1-kw@linux.com>
-X-Mailer: git-send-email 2.30.1
+        id S229790AbhCJOwM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Mar 2021 09:52:12 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49016 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231197AbhCJOvs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Mar 2021 09:51:48 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 8EDE3AC1F;
+        Wed, 10 Mar 2021 14:51:46 +0000 (UTC)
+Date:   Wed, 10 Mar 2021 15:51:45 +0100
+From:   Jean Delvare <jdelvare@suse.de>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-pci@vger.kernel.org, Peter Tyser <ptyser@xes-inc.com>,
+        hdegoede@redhat.com, henning.schild@siemens.com
+Subject: Re: [PATCH v1 7/7] i2c: i801: convert to use common P2SB accessor
+Message-ID: <20210310155145.513a7165@endymion>
+In-Reply-To: <20210308122020.57071-8-andriy.shevchenko@linux.intel.com>
+References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+        <20210308122020.57071-8-andriy.shevchenko@linux.intel.com>
+Organization: SUSE Linux
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-suse-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no need to call the dev_err() function directly to print a
-custom message when handling an error from either the platform_get_irq()
-or platform_get_irq_byname() functions as both are going to display an
-appropriate error message in case of a failure.
+Hi Andy,
 
-This change is as per suggestions from Coccinelle, e.g.,
-  drivers/pci/controller/pcie-microchip-host.c:1027:2-9: line 1027 is
-  redundant because platform_get_irq() already prints an error
+On Mon,  8 Mar 2021 14:20:20 +0200, Andy Shevchenko wrote:
+> Since we have a common P2SB accessor in tree we may use it instead of
+> open coded variants.
+> 
+> Replace custom code by pci_p2sb_bar() call.
 
-Related commit caecb05c8000 ("PCI: Remove dev_err() when handing an
-error from platform_get_irq()").
+I like the idea. Just two things...
 
-Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
----
- drivers/pci/controller/pcie-microchip-host.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/i2c/busses/Kconfig    |  1 +
+>  drivers/i2c/busses/i2c-i801.c | 40 ++++++++---------------------------
+>  drivers/pci/pci-p2sb.c        |  6 ++++++
+>  3 files changed, 16 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+> index 05ebf7546e3f..ffd3007f888c 100644
+> --- a/drivers/i2c/busses/Kconfig
+> +++ b/drivers/i2c/busses/Kconfig
+> @@ -101,6 +101,7 @@ config I2C_HIX5HD2
+>  config I2C_I801
+>  	tristate "Intel 82801 (ICH/PCH)"
+>  	depends on PCI
+> +	select PCI_P2SB if X86
+>  	select CHECK_SIGNATURE if X86 && DMI
+>  	select I2C_SMBUS
+>  	help
+> diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
+> index 4acee6f9e5a3..23b43de9786a 100644
+> --- a/drivers/i2c/busses/i2c-i801.c
+> +++ b/drivers/i2c/busses/i2c-i801.c
+> @@ -90,6 +90,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/module.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-p2sb.h>
+>  #include <linux/kernel.h>
+>  #include <linux/stddef.h>
+>  #include <linux/delay.h>
+> @@ -136,7 +137,6 @@
+>  #define TCOBASE		0x050
+>  #define TCOCTL		0x054
+>  
+> -#define SBREG_BAR		0x10
+>  #define SBREG_SMBCTRL		0xc6000c
+>  #define SBREG_SMBCTRL_DNV	0xcf000c
+>  
+> @@ -1524,52 +1524,30 @@ static const struct itco_wdt_platform_data spt_tco_platform_data = {
+>  	.version = 4,
+>  };
+>  
+> -static DEFINE_SPINLOCK(p2sb_spinlock);
+> -
+>  static struct platform_device *
+>  i801_add_tco_spt(struct i801_priv *priv, struct pci_dev *pci_dev,
+>  		 struct resource *tco_res)
+>  {
+>  	struct resource *res;
+>  	unsigned int devfn;
+> -	u64 base64_addr;
+> -	u32 base_addr;
+> -	u8 hidden;
+> +	int ret;
+>  
+>  	/*
+>  	 * We must access the NO_REBOOT bit over the Primary to Sideband
+> -	 * bridge (P2SB). The BIOS prevents the P2SB device from being
+> -	 * enumerated by the PCI subsystem, so we need to unhide/hide it
+> -	 * to lookup the P2SB BAR.
+> +	 * bridge (P2SB).
+>  	 */
+> -	spin_lock(&p2sb_spinlock);
+>  
+>  	devfn = PCI_DEVFN(PCI_SLOT(pci_dev->devfn), 1);
+>  
+> -	/* Unhide the P2SB device, if it is hidden */
+> -	pci_bus_read_config_byte(pci_dev->bus, devfn, 0xe1, &hidden);
+> -	if (hidden)
+> -		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, 0x0);
+> -
+> -	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR, &base_addr);
+> -	base64_addr = base_addr & 0xfffffff0;
+> -
+> -	pci_bus_read_config_dword(pci_dev->bus, devfn, SBREG_BAR + 0x4, &base_addr);
+> -	base64_addr |= (u64)base_addr << 32;
+> -
+> -	/* Hide the P2SB device, if it was hidden before */
+> -	if (hidden)
+> -		pci_bus_write_config_byte(pci_dev->bus, devfn, 0xe1, hidden);
+> -	spin_unlock(&p2sb_spinlock);
+> -
+>  	res = &tco_res[1];
+> +	ret = pci_p2sb_bar(pci_dev, devfn, res);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+> +
+>  	if (pci_dev->device == PCI_DEVICE_ID_INTEL_DNV_SMBUS)
+> -		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL_DNV;
+> +		res->start += SBREG_SMBCTRL_DNV;
+>  	else
+> -		res->start = (resource_size_t)base64_addr + SBREG_SMBCTRL;
+> -
+> -	res->end = res->start + 3;
+> -	res->flags = IORESOURCE_MEM;
+> +		res->start += SBREG_SMBCTRL;
 
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 04c19ff81aff..80cef572c904 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -1023,10 +1023,8 @@ static int mc_platform_init(struct pci_config_window *cfg)
- 	}
- 
- 	irq = platform_get_irq(pdev, 0);
--	if (irq < 0) {
--		dev_err(dev, "unable to request IRQ%d\n", irq);
-+	if (irq < 0)
- 		return -ENODEV;
--	}
- 
- 	for (i = 0; i < NUM_EVENTS; i++) {
- 		event_irq = irq_create_mapping(port->event_domain, i);
+I can't see why you no longer set res->end and res->flags here. I can
+imagine that pci_p2sb_bar() may have set the flags for us, but not that
+->end is still correct after you fixed up ->start. Am I missing
+something?
+
+>  
+>  	return platform_device_register_resndata(&pci_dev->dev, "iTCO_wdt", -1,
+>  					tco_res, 2, &spt_tco_platform_data,
+> diff --git a/drivers/pci/pci-p2sb.c b/drivers/pci/pci-p2sb.c
+> index 68d7dad48cdb..7f6bc7d4482a 100644
+> --- a/drivers/pci/pci-p2sb.c
+> +++ b/drivers/pci/pci-p2sb.c
+> @@ -22,6 +22,12 @@
+>  
+>  static const struct x86_cpu_id p2sb_cpu_ids[] = {
+>  	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT,	PCI_DEVFN(13, 0)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(ATOM_GOLDMONT_D,	PCI_DEVFN(31, 1)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(ATOM_SILVERMONT_D,	PCI_DEVFN(31, 1)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE,		PCI_DEVFN(31, 1)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(KABYLAKE_L,		PCI_DEVFN(31, 1)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE,		PCI_DEVFN(31, 1)),
+> +	X86_MATCH_INTEL_FAM6_MODEL(SKYLAKE_L,		PCI_DEVFN(31, 1)),
+>  	{}
+>  };
+>  
+
+Any reason why this is added in this patch instead of [3/7] (PCI: New
+Primary to Sideband (P2SB) bridge support library)?
+
 -- 
-2.30.1
-
+Jean Delvare
+SUSE L3 Support
