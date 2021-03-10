@@ -8,43 +8,43 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2D23C4321A
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 16:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78CB6C4160E
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 16:11:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB20664F4A
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 16:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D38564EB3
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Mar 2021 16:11:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233312AbhCJQLC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Mar 2021 11:11:02 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:55680 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231519AbhCJQKi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 11:10:38 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12AGA6OX078381;
-        Wed, 10 Mar 2021 10:10:06 -0600
+        id S233326AbhCJQLD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Mar 2021 11:11:03 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:51500 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233250AbhCJQKn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 11:10:43 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12AGAKgT127932;
+        Wed, 10 Mar 2021 10:10:20 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1615392606;
-        bh=eQhxI1/W18BOVkUywuakjL/3whfh8fzgc4sdkMyr0SM=;
+        s=ti-com-17Q1; t=1615392620;
+        bh=xZP94/W6e+feo2IXbD5QHf0IlP942uGU++0kfiWPUQA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=ancyOoAeMoTSdL6OiZYtTJRdFBX0yyOdK7/H5kCnujjLpA8douFdTTIUI0bVpwLH5
-         zvClUAWz4upC+foxrKQy1B5t6EimvYA5WgeRJs6mPUnO7MdjOZY/69cuudFM0Ig4ol
-         rLBUBMLjEFhigqYpaWDFMdqgc5CYnmlOagkeI61c=
-Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12AGA6gq004621
+        b=cKQQte9h66p0BZQg0GzYo+D4kirMxlbVKoLIhPhty5upa+/3tO4pGrEBrm4IQCfk2
+         UipUvBysP/8TYHIlsXHjQqAim4vnEa1GTmiCKcDaIv8zzaCm1li4LLNUfNicVDJ5Oj
+         XbPrFZ81D8DJoWVgYs5dMh+9ZRvfcUm6twKgXZgk=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12AGAJWg093655
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 10 Mar 2021 10:10:06 -0600
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 10 Mar 2021 10:10:20 -0600
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Wed, 10
- Mar 2021 10:10:06 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2021 10:10:19 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Wed, 10 Mar 2021 10:10:06 -0600
+ Frontend Transport; Wed, 10 Mar 2021 10:10:19 -0600
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12AG9qks100440;
-        Wed, 10 Mar 2021 10:09:59 -0600
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12AG9qku100440;
+        Wed, 10 Mar 2021 10:10:13 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -67,9 +67,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-renesas-soc@vger.kernel.org>,
         <linux-rockchip@lists.infradead.org>,
         Lokesh Vutla <lokeshvutla@ti.com>
-Subject: [PATCH v4 1/7] dt-bindings: PCI: pci-ep: Add binding to specify virtual function
-Date:   Wed, 10 Mar 2021 21:39:37 +0530
-Message-ID: <20210310160943.7606-2-kishon@ti.com>
+Subject: [PATCH v4 3/7] PCI: endpoint: Add support to link a physical function to a virtual function
+Date:   Wed, 10 Mar 2021 21:39:39 +0530
+Message-ID: <20210310160943.7606-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210310160943.7606-1-kishon@ti.com>
 References: <20210310160943.7606-1-kishon@ti.com>
@@ -80,33 +80,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add binding to specify virtual function (associated with each physical
-function) in endpoint mode.
+While the physical function has to be linked to endpoint controller, the
+virtual function has to be linked to a physical function. Add support to
+link a physical function to a virtual function in pci-ep-cfs.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/pci-ep.yaml | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/endpoint/pci-ep-cfs.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-ep.yaml b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-index 7847bbcd4a03..ccec51ab5247 100644
---- a/Documentation/devicetree/bindings/pci/pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-@@ -23,6 +23,13 @@ properties:
-     default: 1
-     maximum: 255
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index f3a8b833b479..999911801877 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -475,6 +475,28 @@ static struct configfs_attribute *pci_epf_attrs[] = {
+ 	NULL,
+ };
  
-+  max-virtual-functions:
-+    description: Array representing the number of virtual functions corresponding to each physical
-+      function
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    minItems: 1
-+    maxItems: 255
++static int pci_epf_vepf_link(struct config_item *epf_pf_item,
++			     struct config_item *epf_vf_item)
++{
++	struct pci_epf_group *epf_vf_group = to_pci_epf_group(epf_vf_item);
++	struct pci_epf_group *epf_pf_group = to_pci_epf_group(epf_pf_item);
++	struct pci_epf *epf_pf = epf_pf_group->epf;
++	struct pci_epf *epf_vf = epf_vf_group->epf;
 +
-   max-link-speed:
-     $ref: /schemas/types.yaml#/definitions/uint32
-     enum: [ 1, 2, 3, 4 ]
++	return pci_epf_add_vepf(epf_pf, epf_vf);
++}
++
++static void pci_epf_vepf_unlink(struct config_item *epf_pf_item,
++				struct config_item *epf_vf_item)
++{
++	struct pci_epf_group *epf_vf_group = to_pci_epf_group(epf_vf_item);
++	struct pci_epf_group *epf_pf_group = to_pci_epf_group(epf_pf_item);
++	struct pci_epf *epf_pf = epf_pf_group->epf;
++	struct pci_epf *epf_vf = epf_vf_group->epf;
++
++	pci_epf_remove_vepf(epf_pf, epf_vf);
++}
++
+ static void pci_epf_release(struct config_item *item)
+ {
+ 	struct pci_epf_group *epf_group = to_pci_epf_group(item);
+@@ -487,6 +509,8 @@ static void pci_epf_release(struct config_item *item)
+ }
+ 
+ static struct configfs_item_operations pci_epf_ops = {
++	.allow_link		= pci_epf_vepf_link,
++	.drop_link		= pci_epf_vepf_unlink,
+ 	.release		= pci_epf_release,
+ };
+ 
 -- 
 2.17.1
 
