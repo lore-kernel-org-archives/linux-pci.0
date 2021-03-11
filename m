@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7ABC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 615C8C433E6
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAEA964FCA
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29EC864FAD
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbhCKARm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229468AbhCKARm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 10 Mar 2021 19:17:42 -0500
-Received: from mail-lf1-f52.google.com ([209.85.167.52]:40102 "EHLO
-        mail-lf1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229641AbhCKARb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 19:17:31 -0500
-Received: by mail-lf1-f52.google.com with SMTP id x4so30010271lfu.7
-        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 16:17:31 -0800 (PST)
+Received: from mail-lj1-f173.google.com ([209.85.208.173]:41001 "EHLO
+        mail-lj1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229632AbhCKAR3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 19:17:29 -0500
+Received: by mail-lj1-f173.google.com with SMTP id t9so78777ljt.8
+        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 16:17:29 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=L8bwBr9Pfd7b8SAPZWvFQUsDlwPAHuolYwAQT4bOibQ=;
-        b=Dm7dwV65ioG4NCX8/YqCA0ZdxYoCOC9R0kg96L1z4iYf5ya3GahdLb96EUQMpJs9zd
-         +GMErUh2Nk5vLbpKhGr4Sa//8zI0g8iGA6gZ0iyApFcyb1O9t2QfDIPDCbd2lYpk083C
-         VQAi9dyaWQaQ4/lp44S490zo/RZiODNwiz9tZZH+/pd87NC5R3+IKKYBT2EpcqTcOiTG
-         dEvRvY3f6jR7u+SD4ZUt4P5fjEi0hvR4OtKQfPZLCP4KBhBs6PVU3bjPL657/1a3tq7X
-         Iw+wXwTcV4QlYmYJCYuoV5m2ehSILXW/KujSFEmkmlo+TYvTmYTIa1mDxOoIHAArGWKJ
-         Pfvg==
-X-Gm-Message-State: AOAM533USzsRQ1v0zj5CgK38hYmIHAAV4RrU4C+N1vxjDrMqfT8WL0si
-        CIJ1GZ4h7noXfN3vhoNR+kM=
-X-Google-Smtp-Source: ABdhPJxkEx/i2KtS/JHTkPTMYxauMy0doB82djFET6ilyJnmCv1PoC6pODTjuBwIccgvuDm9EAQsBw==
-X-Received: by 2002:a19:c3d5:: with SMTP id t204mr627041lff.216.1615421850708;
-        Wed, 10 Mar 2021 16:17:30 -0800 (PST)
+        bh=t2becTOHhnpDLLCNKLhd3Mi2zYpwApKxhajyRI9f9S8=;
+        b=gtWKjygKo++thwZVfLY7pQjx+sAnIq/kuLbUH+G6rscQqV6MfeW32+nWBs7A6qbQ6c
+         vUDAMHaqpWMHJSYaniONDdl7swSQuXH7iXVpKJu+hPUGDIiDWEpbPIgfcUJYyIip+g0v
+         zmJs2ELHb0phStYWInf20TPtVyPAUjl1BfWwgZcky2caqvf4aDuk3EcxcZVhtIM3duh4
+         4vns+iUA4SPj8HlGRiq2vW+sR2B5/1zn/N6LFx2wuD522gqJ2hQzvDkiifyJ/Q2wgXdY
+         6pqf8PKspworb4zNhKP6ZjO/R/RM0pPL1UgjICNfoHX9d07lujRnv8iMhccggGOgKjJf
+         RpFA==
+X-Gm-Message-State: AOAM531rctbhvR4LdSEwq+3T4rqhsHfeT/VVsRyibOd+NX9e8WYK9pRp
+        sjkZzNkp4bI9X9MirROV/5s=
+X-Google-Smtp-Source: ABdhPJybTgPwdtEY8gmUe1zneRabsnGbJ8sgmMsqJoqrHDxq9e9lOAXOO6q1ag3LE0xiKR3gDpcNGQ==
+X-Received: by 2002:a2e:8111:: with SMTP id d17mr3202656ljg.337.1615421848459;
+        Wed, 10 Mar 2021 16:17:28 -0800 (PST)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id y186sm269332lfc.304.2021.03.10.16.17.29
+        by smtp.gmail.com with ESMTPSA id y186sm269332lfc.304.2021.03.10.16.17.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Mar 2021 16:17:30 -0800 (PST)
+        Wed, 10 Mar 2021 16:17:28 -0800 (PST)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -57,9 +57,9 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Sean V Kelley <sean.v.kelley@intel.com>,
         Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
         Jay Fang <f.fangjian@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 5/8] PCI: Update function name in the kernel-doc
-Date:   Thu, 11 Mar 2021 00:17:21 +0000
-Message-Id: <20210311001724.423356-5-kw@linux.com>
+Subject: [PATCH 3/8] PCI/PME: Update function name in the kernel-doc
+Date:   Thu, 11 Mar 2021 00:17:19 +0000
+Message-Id: <20210311001724.423356-3-kw@linux.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210311001724.423356-1-kw@linux.com>
 References: <20210311001724.423356-1-kw@linux.com>
@@ -71,33 +71,32 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 Update function name in the kernel-doc to match function prototype for
-function acpi_pci_check_ejectable(), and resolve build time warning
-related to kernel-doc:
+function pcie_pme_init(), and resolve build time warning related to
+kernel-doc:
 
-  drivers/pci/hotplug/acpi_pcihp.c:167: warning: expecting prototype for
-  acpi_pcihp_check_ejectable(). Prototype was for acpi_pci_check_ejectable()
-  instead
+  drivers/pci/pcie/pme.c:469: warning: expecting prototype for
+  pcie_pme_service_init(). Prototype was for pcie_pme_init() instead
 
 No change to functionality intended.
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/hotplug/acpi_pcihp.c | 2 +-
+ drivers/pci/pcie/pme.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 2750a64cecd3..4fedebf2f8c1 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -157,7 +157,7 @@ static int pcihp_is_ejectable(acpi_handle handle)
- }
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 3fc08488d65f..1d0dd77fed3a 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -463,7 +463,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+ };
  
  /**
-- * acpi_pcihp_check_ejectable - check if handle is ejectable ACPI PCI slot
-+ * acpi_pci_check_ejectable - check if handle is ejectable ACPI PCI slot
-  * @pbus: the PCI bus of the PCI slot corresponding to 'handle'
-  * @handle: ACPI handle to check
-  *
+- * pcie_pme_service_init - Register the PCIe PME service driver.
++ * pcie_pme_init - Register the PCIe PME service driver.
+  */
+ int __init pcie_pme_init(void)
+ {
 -- 
 2.30.1
 
