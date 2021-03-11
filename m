@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9880FC4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F279EC43331
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79B5E64FD3
+	by mail.kernel.org (Postfix) with ESMTP id B65DA64FD3
 	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229632AbhCKARn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Mar 2021 19:17:43 -0500
-Received: from mail-lf1-f52.google.com ([209.85.167.52]:42519 "EHLO
-        mail-lf1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbhCKARf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 19:17:35 -0500
-Received: by mail-lf1-f52.google.com with SMTP id v2so23688793lft.9
-        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 16:17:35 -0800 (PST)
+        id S229603AbhCKARm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Mar 2021 19:17:42 -0500
+Received: from mail-lj1-f179.google.com ([209.85.208.179]:37107 "EHLO
+        mail-lj1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229655AbhCKARd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 19:17:33 -0500
+Received: by mail-lj1-f179.google.com with SMTP id q14so98058ljp.4
+        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 16:17:32 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=NOaZ9L90hSCMz6oZGX1bbSsAE8thLW/EO9o9W5+QirQ=;
-        b=b4uDjrutkHmie/hTvLvL88rVFvKmpVyoX3n3VvaApzvHLjahvXds5WIUZ8RxESZVrt
-         xM7siBrz1CY9Zs3gh3KPM96LMEuDR8S6hqYlF31fkSAMXjqDjf6CwZOPSg4iF6uo52RV
-         MpnCV6oCSc96mY3anOVVYPX1/tz0WDNwYTYa1GEAk+9FPUyA1WGA4M8mv+bYAp8wOgML
-         iN2q5bf50wVMJHoDilCQB5r4Xq/mN7TfbvuVVKpsnrkKy75bCB0TeGl0jLbXQ0D8GG1A
-         01pVU7MfR01Aj9ISRQ63E/69HdWFiBwKqoPJ/VTr4ZYqgIPd1mt5NLOZhwztnsOHKT5r
-         H1rg==
-X-Gm-Message-State: AOAM531scZ/YT1CrWrUFT3+bWl1cvmH1QotiDEYW/6e58hByuaJJpuf+
-        FtwE+zyJOzONVgBe+mFwunQ=
-X-Google-Smtp-Source: ABdhPJyIHIUKWITbj+6M9WCWXYHfQKp2laz5VSCEBSOg4vL/S+jWouIS61nsZuzW7UzCYhbjI0Wk1Q==
-X-Received: by 2002:a19:f510:: with SMTP id j16mr635398lfb.301.1615421854491;
-        Wed, 10 Mar 2021 16:17:34 -0800 (PST)
+        bh=vnLOt3JRC/SV3REFag8843NSfHwLc7oxyVUfV6PrzHM=;
+        b=WeMiqQDfKR1yUr0ES5PlWpN+rOFCCh05ChzAgryPNPEAtR7gFH15BM0lhEWvGGp6si
+         jgsRRsQf0DVF66ZEELhB9dOcSkOjo5JnHXrWgiSDMh5zuddNFobPVcBN3xBEUGEGyV4M
+         s8R3ooTR4ksoRAW5h1vaGVarqaBaX1DYt+Xz8yvwC7l5vWdmdRuV2Z6XDhbihEma9cpS
+         XgZLdCYhRn7t8t/vsmZ6jeGLxrdon0NGV3ivjyVSwmjL9pQOjKZRHaNpj/Va/TSHg2b/
+         67D1DAHXtSEYvE2NVOum6YeKrFb/I+HxtlnZy5Ql+3uVBzrYIcrFcJ7qC1hfm8OP/EOV
+         sRbA==
+X-Gm-Message-State: AOAM531ZPT7nLYtVnFg1qZuFsJkKOSaRhg+5ctPsfSEvqi1yykMVhx5H
+        00qtX2vXqE8wvg8J8ecV1so=
+X-Google-Smtp-Source: ABdhPJykC9/y545ja/Zr//caW9YiUhWkHvAYeZMoPTHa4mtNr9dZecRkoscyaLby/GrivZlNfYVAgQ==
+X-Received: by 2002:a05:651c:387:: with SMTP id e7mr3311183ljp.425.1615421851890;
+        Wed, 10 Mar 2021 16:17:31 -0800 (PST)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id y186sm269332lfc.304.2021.03.10.16.17.33
+        by smtp.gmail.com with ESMTPSA id y186sm269332lfc.304.2021.03.10.16.17.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Mar 2021 16:17:34 -0800 (PST)
+        Wed, 10 Mar 2021 16:17:31 -0800 (PST)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -57,9 +57,9 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Sean V Kelley <sean.v.kelley@intel.com>,
         Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
         Jay Fang <f.fangjian@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 8/8] PCI: of: Fix kernel-doc formatting and add missing documentation
-Date:   Thu, 11 Mar 2021 00:17:24 +0000
-Message-Id: <20210311001724.423356-8-kw@linux.com>
+Subject: [PATCH 6/8] PCI: j721e: Fix a non-compliant kernel-doc
+Date:   Thu, 11 Mar 2021 00:17:22 +0000
+Message-Id: <20210311001724.423356-6-kw@linux.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210311001724.423356-1-kw@linux.com>
 References: <20210311001724.423356-1-kw@linux.com>
@@ -70,69 +70,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix kernel-doc formatting and add missing documentation for the "node"
-parameter of the of_get_pci_domain_nr() and of_pci_get_max_link_speed()
-functions, and resolve build time warnings related to kernel-doc:
+Correct a non-compliant kernel-doc at the top of the pci-j721e.c file,
+and resolve build time warning related to kernel-doc:
 
-  drivers/pci/of.c:202: warning: expecting prototype for This function
-  will try to obtain the host bridge domain number by(). Prototype was
-  for of_get_pci_domain_nr() instead
-
-  drivers/pci/of.c:597: warning: expecting prototype for This function
-  will try to find the limitation of link speed by finding(). Prototype
-  was for of_pci_get_max_link_speed() instead
+  drivers/pci/controller/cadence/pci-j721e.c:25: warning: expecting
+  prototype for pci(). Prototype was for ENABLE_REG_SYS_2() instead
 
 No change to functionality intended.
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/of.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+ drivers/pci/controller/cadence/pci-j721e.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 5ea472ae22ac..da5b414d585a 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -190,10 +190,18 @@ int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
- EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
- 
- /**
-- * This function will try to obtain the host bridge domain number by
-- * finding a property called "linux,pci-domain" of the given device node.
-+ * of_get_pci_domain_nr - Find the host bridge domain number
-+ *			  of the given device node.
-+ * @node: Device tree node with the domain information.
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 849f1e416ea5..f1eef67e9526 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -1,5 +1,5 @@
+ // SPDX-License-Identifier: GPL-2.0
+-/**
++/*
+  * pci-j721e - PCIe controller driver for TI's J721E SoCs
   *
-- * @node: device tree node with the domain information
-+ * This function will try to obtain the host bridge domain number by finding
-+ * a property called "linux,pci-domain" of the given device node.
-+ *
-+ * Return:
-+ * * > 0	- On success, an associated domain number.
-+ * * -EINVAL	- The property "linux,pci-domain" does not exist.
-+ * * -ENODATA	- The linux,pci-domain" property does not have value.
-+ * * -EOVERFLOW	- Invalid "linux,pci-domain" property value.
-  *
-  * Returns the associated domain number from DT in the range [0-0xffff], or
-  * a negative value if the required property is not found.
-@@ -585,10 +593,16 @@ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
- #endif /* CONFIG_PCI */
- 
- /**
-+ * of_pci_get_max_link_speed - Find the maximum link speed of the given device node.
-+ * @node: Device tree node with the maximum link speed information.
-+ *
-  * This function will try to find the limitation of link speed by finding
-  * a property called "max-link-speed" of the given device node.
-  *
-- * @node: device tree node with the max link speed information
-+ * Return:
-+ * * > 0	- On success, a maximum link speed.
-+ * * -EINVAL	- Invalid "max-link-speed" property value, or failure to access
-+ *		  the property of the device tree node.
-  *
-  * Returns the associated max link speed from DT, or a negative value if the
-  * required property is not found or is invalid.
+  * Copyright (C) 2020 Texas Instruments Incorporated - http://www.ti.com
 -- 
 2.30.1
 
