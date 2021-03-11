@@ -3,39 +3,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD54C28E82
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EADC433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BC6964FA7
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:49:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 949C964F7C
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:50:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231151AbhCKXtD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 18:49:03 -0500
-Received: from ale.deltatee.com ([204.191.154.188]:52526 "EHLO
+        id S231573AbhCKXtb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 18:49:31 -0500
+Received: from ale.deltatee.com ([204.191.154.188]:36472 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231250AbhCKXsu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 18:48:50 -0500
+        with ESMTP id S229574AbhCKXs7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 18:48:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=kE7unqHb96tgCLiqAy7oTQD9QBaPCBADwUUVoF85ezA=; b=NgonvtaxHynX26gURA+2WbVFF7
-        EdmjT2rJo+H+u9pFbAy9IsACHfULVpJDenz/wZp/uIJ7n11VpJ4PmS3Bye0OakNE8a74IZjm9kiZr
-        HmCO0vtzmtENVocWjr8J6ARILinTKOBgkFxrQ2/zoJCo5nIyXNy4Bnqyn7uw0M3TDFbsPJBGNThgo
-        y9SPPR7K0JweAHZs5X2Ib7iIZBz6T/pQNeEPzLNj+SbWX0fVWQ2YUJ0etkvfvadDo6kE5IIEVbp8y
-        R1+iSUFNpi7MQb8lTFwrflPLEtzmvEAkRYK/jnMRPh29G2joRkm0gvJhU1WPsT4owdgClS4/omxu5
-        9EE77grw==;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=GuKrcY+MDyB48LoFpeM5eZewsFi6xn3yS3/qfyrxy0g=; b=bskuVVfDsBtrM8Ka5VeIt1rZSw
+        KoTj2gXNVBq/5+o+ETpfcxb0hasISNtuCI0MrZDLAlWv61F8veluRVLJPFkvrSKjWNsJ/ETU6rBfo
+        ApD3VqQNs/1jUtgTZIv0Uf87j5hDtS9AZYmU2DJWPORg7cMxKyR2RBqXETGwv9pqlf8EuFiFfxeMo
+        w1oi0NlLPR7HHZ/82oxXWNp+7iyeiGYWJLHhC2+TI6/yjTwyE2p/VfADeYODAHg/j349bktyIEVHC
+        EVGiU3gd0tTUxCYpRhmRifKUcErf5Zd6RBHTh39esGgR0ffbddaI0dCgfhcLc6rIJ01yGkmNF2DDH
+        qROVkdWA==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lKUmZ-0003eq-Rw; Thu, 11 Mar 2021 16:32:15 -0700
+        id 1lKUmZ-0003et-Ru; Thu, 11 Mar 2021 16:31:57 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lKUmV-00024K-OI; Thu, 11 Mar 2021 16:31:51 -0700
+        id 1lKUmW-00024S-7F; Thu, 11 Mar 2021 16:31:52 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -56,98 +56,68 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Dave Hansen <dave.hansen@linux.intel.com>,
         Xiong Jianxin <jianxin.xiong@intel.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 11 Mar 2021 16:31:30 -0700
-Message-Id: <20210311233142.7900-1-logang@deltatee.com>
+Date:   Thu, 11 Mar 2021 16:31:33 -0700
+Message-Id: <20210311233142.7900-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210311233142.7900-1-logang@deltatee.com>
+References: <20210311233142.7900-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, dan.j.williams@intel.com, iweiny@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH v2 00/11] Add support to dma_map_sg for P2PDMA
+Subject: [RFC PATCH v2 03/11] PCI/P2PDMA: Attempt to set map_type if it has not been set
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Attempt to find the mapping type for P2PDMA pages on the first
+DMA map attempt if it has not been done ahead of time.
 
-This is a rework of the first half of my RFC for doing P2PDMA in userspace
-with O_DIRECT[1].
+Previously, the mapping type was expected to be calculated ahead of
+time, but if pages are to come from userspace then there's no
+way to ensure the path was checked ahead of time.
 
-The largest issue with that series was the gross way of flagging P2PDMA
-SGL segments. This RFC proposes a different approach, (suggested by
-Dan Williams[2]) which uses the third bit in the page_link field of the
-SGL.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-This approach is a lot less hacky but comes at the cost of adding a
-CONFIG_64BIT dependency to CONFIG_PCI_P2PDMA and using up the last
-scarce bit in the page_link. For our purposes, a 64BIT restriction is
-acceptable but it's not clear if this is ok for all usecases hoping
-to make use of P2PDMA.
-
-Matthew Wilcox has already suggested (off-list) that this is the wrong
-approach, preferring a new dma mapping operation and an SGL replacement. I
-don't disagree that something along those lines would be a better long
-term solution, but it involves overcoming a lot of challenges to get
-there. Creating a new mapping operation still means adding support to more
-than 25 dma_map_ops implementations (many of which are on obscure
-architectures) or creating a redundant path to fallback with dma_map_sg()
-for every driver that uses the new operation. This RFC is an approach
-that doesn't require overcoming these blocks.
-
-Any alternative ideas or feedback is welcome.
-
-These patches are based on v5.12-rc2 and a git branch is available here:
-
-  https://github.com/sbates130272/linux-p2pmem/  p2pdma_dma_map_ops_rfc
-
-A branch with the patches from the previous RFC that add userspace
-O_DIRECT support is available at the same URL with the name
-"p2pdma_dma_map_ops_rfc+user" (however, none of the issues with those
-extra patches from the feedback of the last posting have been fixed).
-
-Thanks,
-
-Logan
-
-[1] https://lore.kernel.org/linux-block/20201106170036.18713-1-logang@deltatee.com/
-[2] https://lore.kernel.org/linux-block/CAPcyv4ifGcrdOtUt8qr7pmFhmecGHqGVre9G0RorGczCGVECQQ@mail.gmail.com/
-
---
-
-Logan Gunthorpe (11):
-  PCI/P2PDMA: Pass gfp_mask flags to upstream_bridge_distance_warn()
-  PCI/P2PDMA: Avoid pci_get_slot() which sleeps
-  PCI/P2PDMA: Attempt to set map_type if it has not been set
-  PCI/P2PDMA: Introduce pci_p2pdma_should_map_bus() and
-    pci_p2pdma_bus_offset()
-  lib/scatterlist: Add flag for indicating P2PDMA segments in an SGL
-  dma-direct: Support PCI P2PDMA pages in dma-direct map_sg
-  dma-mapping: Add flags to dma_map_ops to indicate PCI P2PDMA support
-  iommu/dma: Support PCI P2PDMA pages in dma-iommu map_sg
-  block: Add BLK_STS_P2PDMA
-  nvme-pci: Check DMA ops when indicating support for PCI P2PDMA
-  nvme-pci: Convert to using dma_map_sg for p2pdma pages
-
- block/blk-core.c            |  2 +
- drivers/iommu/dma-iommu.c   | 63 +++++++++++++++++++++-----
- drivers/nvme/host/core.c    |  3 +-
- drivers/nvme/host/nvme.h    |  2 +-
- drivers/nvme/host/pci.c     | 38 +++++++---------
- drivers/pci/Kconfig         |  2 +-
- drivers/pci/p2pdma.c        | 89 +++++++++++++++++++++++++++++++------
- include/linux/blk_types.h   |  7 +++
- include/linux/dma-map-ops.h |  3 ++
- include/linux/dma-mapping.h |  5 +++
- include/linux/pci-p2pdma.h  | 11 +++++
- include/linux/scatterlist.h | 49 ++++++++++++++++++--
- kernel/dma/direct.c         | 35 +++++++++++++--
- kernel/dma/mapping.c        | 21 +++++++--
- 14 files changed, 271 insertions(+), 59 deletions(-)
-
-
-base-commit: a38fd8748464831584a19438cbb3082b5a2dab15
---
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 2135fe69bb07..7f6836732bce 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -819,11 +819,18 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+ static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct pci_dev *provider,
+ 						    struct pci_dev *client)
+ {
++	enum pci_p2pdma_map_type ret;
++
+ 	if (!provider->p2pdma)
+ 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
+ 
+-	return xa_to_value(xa_load(&provider->p2pdma->map_types,
+-				   map_types_idx(client)));
++	ret = xa_to_value(xa_load(&provider->p2pdma->map_types,
++				  map_types_idx(client)));
++	if (ret != PCI_P2PDMA_MAP_UNKNOWN)
++		return ret;
++
++	return upstream_bridge_distance_warn(provider, client, NULL,
++					     GFP_ATOMIC);
+ }
+ 
+ static int __pci_p2pdma_map_sg(struct pci_p2pdma_pagemap *p2p_pgmap,
+@@ -871,7 +878,6 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 	case PCI_P2PDMA_MAP_BUS_ADDR:
+ 		return __pci_p2pdma_map_sg(p2p_pgmap, dev, sg, nents);
+ 	default:
+-		WARN_ON_ONCE(1);
+ 		return 0;
+ 	}
+ }
+-- 
 2.20.1
+
