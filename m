@@ -2,49 +2,72 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EADC433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F237C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:00:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 949C964F7C
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 23:50:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5553A64F95
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:00:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231573AbhCKXtb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 18:49:31 -0500
-Received: from ale.deltatee.com ([204.191.154.188]:36472 "EHLO
-        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbhCKXs7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 18:48:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=GuKrcY+MDyB48LoFpeM5eZewsFi6xn3yS3/qfyrxy0g=; b=bskuVVfDsBtrM8Ka5VeIt1rZSw
-        KoTj2gXNVBq/5+o+ETpfcxb0hasISNtuCI0MrZDLAlWv61F8veluRVLJPFkvrSKjWNsJ/ETU6rBfo
-        ApD3VqQNs/1jUtgTZIv0Uf87j5hDtS9AZYmU2DJWPORg7cMxKyR2RBqXETGwv9pqlf8EuFiFfxeMo
-        w1oi0NlLPR7HHZ/82oxXWNp+7iyeiGYWJLHhC2+TI6/yjTwyE2p/VfADeYODAHg/j349bktyIEVHC
-        EVGiU3gd0tTUxCYpRhmRifKUcErf5Zd6RBHTh39esGgR0ffbddaI0dCgfhcLc6rIJ01yGkmNF2DDH
-        qROVkdWA==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1lKUmZ-0003et-Ru; Thu, 11 Mar 2021 16:31:57 -0700
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1lKUmW-00024S-7F; Thu, 11 Mar 2021 16:31:52 -0700
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        id S230491AbhCLAAX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:00:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41300 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229526AbhCKX7r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 18:59:47 -0500
+Received: from mail-qt1-x836.google.com (mail-qt1-x836.google.com [IPv6:2607:f8b0:4864:20::836])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C45A2C061574
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 15:59:46 -0800 (PST)
+Received: by mail-qt1-x836.google.com with SMTP id 6so2548896qty.3
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 15:59:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9rzGlCXRuAYzD4FxF8/kX8t+sLM/xQ6RjW+kfB9MHUI=;
+        b=Sht35sRAWhjUnG/vlACxlUdN1NXxZ2hn78xSNsQrOQiOnK1nALUmlUGHUAK1T+DYhZ
+         MX3lwQI/UxwTrkQv8d3kMYROr1PLyoiqVafUPMi7P056ufFmL/tRZlvShlZxbmxqDyNW
+         NLKw5iBy24OxHbW+DCJ1DQJfzdSe8iTc3c8sHbtF9tFwbdZcos5KLgrKfPlUhIrDUvII
+         vIew7klGAO8Wn/28Da6K3YhKEWpKl3Z8yXO4c0K2hvWjTBIXhDYwZP0hefzSiur217jB
+         Lo+rOwqj5lF4a/tIzhlWfi67C2vz4vtRgSFudHgU/4CmiKi4zEw8bQzulGoxFckdnomp
+         ZbNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9rzGlCXRuAYzD4FxF8/kX8t+sLM/xQ6RjW+kfB9MHUI=;
+        b=Y/qkgo6fic0DYyQ8jOHkPIVrEtEkG2jEaEUVuHjL2gYRwIHxwo3+gBdLjNrZKxrzHc
+         sg6f/fYm0C1i19O7yfh88YZDvzloi8mdgYBvZXCK7QfD/Pt3oxxBd783Xm5ssaFgkwIq
+         qaR/MyRkpCifukk3PBlJVCic468UywgUTsfqkGpYFIqGbKdFjztKR80k84vmhJ9VhGEG
+         MBpLut0HErtGItsE1GF+qDCKjNlTVKxGLEtFvKeTGdAU0t5hBDfbtk/N6fGCevHo1P2r
+         2zJq8T7RZPv3KyhQJEK2hz2luaFOBGMTjSSs1+7EGoM5WaUkgf9D0aqSXpFTuDrOx/Uq
+         LIDQ==
+X-Gm-Message-State: AOAM532GqVnqdu3J55YB3UVFwWXEgrCv6n5dIwoPebbiOept11aLbTuJ
+        2VknJ6yZ+3pc+sfID+O6aXctmQ==
+X-Google-Smtp-Source: ABdhPJxiCSaM0aAia7Gh2ystvnvxFkgXLtQu1szm+rOtvCsRMIOPRh5BDiwH0XxEbvHajGL8eIa3Yg==
+X-Received: by 2002:aed:20cd:: with SMTP id 71mr9996620qtb.346.1615507185328;
+        Thu, 11 Mar 2021 15:59:45 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-162-115-133.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.115.133])
+        by smtp.gmail.com with ESMTPSA id z89sm2953405qtd.5.2021.03.11.15.59.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 Mar 2021 15:59:44 -0800 (PST)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1lKVDT-00BbRW-RG; Thu, 11 Mar 2021 19:59:43 -0400
+Date:   Thu, 11 Mar 2021 19:59:43 -0400
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, iommu@lists.linux-foundation.org
-Cc:     Stephen Bates <sbates@raithlin.com>,
+        linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+        Stephen Bates <sbates@raithlin.com>,
         Christoph Hellwig <hch@lst.de>,
         Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
         Ira Weiny <iweiny@intel.com>,
         John Hubbard <jhubbard@nvidia.com>,
         Don Dutile <ddutile@redhat.com>,
@@ -54,70 +77,48 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Minturn Dave B <dave.b.minturn@intel.com>,
         Jason Ekstrand <jason@jlekstrand.net>,
         Dave Hansen <dave.hansen@linux.intel.com>,
-        Xiong Jianxin <jianxin.xiong@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 11 Mar 2021 16:31:33 -0700
-Message-Id: <20210311233142.7900-4-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210311233142.7900-1-logang@deltatee.com>
+        Xiong Jianxin <jianxin.xiong@intel.com>
+Subject: Re: [RFC PATCH v2 11/11] nvme-pci: Convert to using dma_map_sg for
+ p2pdma pages
+Message-ID: <20210311235943.GB2710221@ziepe.ca>
 References: <20210311233142.7900-1-logang@deltatee.com>
+ <20210311233142.7900-12-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, dan.j.williams@intel.com, iweiny@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH v2 03/11] PCI/P2PDMA: Attempt to set map_type if it has not been set
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210311233142.7900-12-logang@deltatee.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Attempt to find the mapping type for P2PDMA pages on the first
-DMA map attempt if it has not been done ahead of time.
+On Thu, Mar 11, 2021 at 04:31:41PM -0700, Logan Gunthorpe wrote:
+> Convert to using dma_[un]map_sg() for PCI p2pdma pages.
+> 
+> This should be equivalent, though support will be somewhat less
+> (only dma-direct and dma-iommu are currently supported).
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+>  drivers/nvme/host/pci.c | 27 +++++++--------------------
+>  1 file changed, 7 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 7d40c6a9e58e..89ca5acf7a62 100644
+> +++ b/drivers/nvme/host/pci.c
+> @@ -577,17 +577,6 @@ static void nvme_free_sgls(struct nvme_dev *dev, struct request *req)
+>  
+>  }
+>  
+> -static void nvme_unmap_sg(struct nvme_dev *dev, struct request *req)
+> -{
+> -	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
+> -
+> -	if (is_pci_p2pdma_page(sg_page(iod->sg)))
+> -		pci_p2pdma_unmap_sg(dev->dev, iod->sg, iod->nents,
+> -				    rq_dma_dir(req));
+> -	else
+> -		dma_unmap_sg(dev->dev, iod->sg, iod->nents, rq_dma_dir(req));
+> -}
 
-Previously, the mapping type was expected to be calculated ahead of
-time, but if pages are to come from userspace then there's no
-way to ensure the path was checked ahead of time.
+Can the two other places with this code pattern be changed too?
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2pdma.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 2135fe69bb07..7f6836732bce 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -819,11 +819,18 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
- static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct pci_dev *provider,
- 						    struct pci_dev *client)
- {
-+	enum pci_p2pdma_map_type ret;
-+
- 	if (!provider->p2pdma)
- 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
- 
--	return xa_to_value(xa_load(&provider->p2pdma->map_types,
--				   map_types_idx(client)));
-+	ret = xa_to_value(xa_load(&provider->p2pdma->map_types,
-+				  map_types_idx(client)));
-+	if (ret != PCI_P2PDMA_MAP_UNKNOWN)
-+		return ret;
-+
-+	return upstream_bridge_distance_warn(provider, client, NULL,
-+					     GFP_ATOMIC);
- }
- 
- static int __pci_p2pdma_map_sg(struct pci_p2pdma_pagemap *p2p_pgmap,
-@@ -871,7 +878,6 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
- 	case PCI_P2PDMA_MAP_BUS_ADDR:
- 		return __pci_p2pdma_map_sg(p2p_pgmap, dev, sg, nents);
- 	default:
--		WARN_ON_ONCE(1);
- 		return 0;
- 	}
- }
--- 
-2.20.1
-
+Jason
