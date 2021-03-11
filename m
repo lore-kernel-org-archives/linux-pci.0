@@ -2,115 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B305BC433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 412C6C433DB
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79E9764FCA
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:07:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0653264FD5
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Mar 2021 00:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbhCKAG3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Mar 2021 19:06:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45570 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229441AbhCKAF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Mar 2021 19:05:58 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2EC3064E33;
-        Thu, 11 Mar 2021 00:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615421158;
-        bh=iFxVJgMoDpJ44jsE4Fuo7YkLXTeRvt9qHwXirR8S6SQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pHbUatCvju/H17C/5K/sXqE3GC74q+fVaVWePgzCGPEelm8i6fAHWz7kps59DplLz
-         rl8g4mlo7ESlnxn/xVc/ow7B1sTyAa92MPRjY/MNPbjODF0ndY5jAMoWs9UhvruzzF
-         pbRgOgVPXwajI2R6qhkbtG469UMo5Vt3Conr7vGybjMfgOyMsHqGydidarB/nUqtte
-         x4bln9KOuq+PyFRDgZ1vH3TCOzJ92D9mEtph5qIxTfFsaDe9ZqyixECTwwRCaB0ise
-         0Vc2O5Xib/wPG/mDsEVfXTteHQGUWLD2sx6M0MVavI3kUxpsoSFPiecKAXA5hEMwgY
-         qOpr7+u2Ha48Q==
-Received: by pali.im (Postfix)
-        id 00BD9A83; Thu, 11 Mar 2021 01:05:55 +0100 (CET)
-Date:   Thu, 11 Mar 2021 01:05:55 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Marc Zyngier <maz@kernel.org>,
-        Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sj Huang <sj.huang@mediatek.com>, youlin.pei@mediatek.com,
-        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
-        sin_jieyang@mediatek.com, drinkcat@chromium.org,
-        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com
-Subject: Re: [v8,5/7] PCI: mediatek-gen3: Add MSI support
-Message-ID: <20210311000555.epypouwxdbql2aqx@pali>
-References: <20210224061132.26526-1-jianjun.wang@mediatek.com>
- <20210224061132.26526-6-jianjun.wang@mediatek.com>
+        id S229577AbhCKARm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Mar 2021 19:17:42 -0500
+Received: from mail-lf1-f50.google.com ([209.85.167.50]:37308 "EHLO
+        mail-lf1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229648AbhCKARa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Mar 2021 19:17:30 -0500
+Received: by mail-lf1-f50.google.com with SMTP id n16so36746377lfb.4
+        for <linux-pci@vger.kernel.org>; Wed, 10 Mar 2021 16:17:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Bbc+ydK9EZPctjxOlQsxWSvwLOSFn01mGILhtLZh9mI=;
+        b=VVkv1mif9wBGKXZzbgnBrEud5/sk1YMoR5woXMIIhgBVJjfwDgMDIEE+amW3zE1fXd
+         kJQUNxb7X4Dj9kx0/su8IP1rwXW6dhwn7JnqpXxNsY1ApcwKFFu68AqX1yhP47NTMyB+
+         GHofOcZPD2uSE23+ILsVPJq8gDhFw+0pxcIXwfZAPXqpgUijuWuUf5+Oalp/00m1u/zM
+         mfEcFYPT/xVQQswEZWN+Gi+9mfT02tKoK7BH2/7APQ7fXFIEl3lRsBOs0MbjkIhPaFIC
+         0WPzlbVTSDYVUMGGGKxq4VrOA76APBCeRPJ3UyfXjxFZAFbm9PS+S3V5btAbjfan73KE
+         xDDg==
+X-Gm-Message-State: AOAM532aLi807lSTeu1HHVJOkqJshCF6bPXySPBYsquc8bJ+TuBTLDpY
+        8c5LZEpkCfg3lWNsz0piyrA=
+X-Google-Smtp-Source: ABdhPJzB1gI1w74Ik1n1aZ4AJjXkWt7Z6Annezky4amWi1L2AUpS3kYdPAAAZlEef7zPaZT3orPIKg==
+X-Received: by 2002:a19:ee13:: with SMTP id g19mr623166lfb.657.1615421849534;
+        Wed, 10 Mar 2021 16:17:29 -0800 (PST)
+Received: from workstation.lan ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id y186sm269332lfc.304.2021.03.10.16.17.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Mar 2021 16:17:29 -0800 (PST)
+From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell Currey <ruscur@russell.cc>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>,
+        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
+        Jay Fang <f.fangjian@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 4/8] PCI/ATS: Update function name in the kernel-doc
+Date:   Thu, 11 Mar 2021 00:17:20 +0000
+Message-Id: <20210311001724.423356-4-kw@linux.com>
+X-Mailer: git-send-email 2.30.1
+In-Reply-To: <20210311001724.423356-1-kw@linux.com>
+References: <20210311001724.423356-1-kw@linux.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210224061132.26526-6-jianjun.wang@mediatek.com>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wednesday 24 February 2021 14:11:30 Jianjun Wang wrote:
-> +static int mtk_msi_bottom_domain_alloc(struct irq_domain *domain,
-> +				       unsigned int virq, unsigned int nr_irqs,
-> +				       void *arg)
-> +{
-> +	struct mtk_pcie_port *port = domain->host_data;
-> +	struct mtk_msi_set *msi_set;
-> +	int i, hwirq, set_idx;
-> +
-> +	mutex_lock(&port->lock);
-> +
-> +	hwirq = bitmap_find_free_region(port->msi_irq_in_use, PCIE_MSI_IRQS_NUM,
-> +					order_base_2(nr_irqs));
-> +
-> +	mutex_unlock(&port->lock);
-> +
-> +	if (hwirq < 0)
-> +		return -ENOSPC;
-> +
-> +	set_idx = hwirq / PCIE_MSI_IRQS_PER_SET;
-> +	msi_set = &port->msi_sets[set_idx];
-> +
-> +	for (i = 0; i < nr_irqs; i++)
-> +		irq_domain_set_info(domain, virq + i, hwirq + i,
-> +				    &mtk_msi_bottom_irq_chip, msi_set,
-> +				    handle_edge_irq, NULL, NULL);
-> +
-> +	return 0;
-> +}
-> +
-> +static void mtk_msi_bottom_domain_free(struct irq_domain *domain,
-> +				       unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	struct mtk_pcie_port *port = domain->host_data;
-> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
-> +
-> +	mutex_lock(&port->lock);
-> +
-> +	bitmap_clear(port->msi_irq_in_use, data->hwirq, nr_irqs);
+Update function name in the kernel-doc to match function prototype for
+function pci_max_pasids(), and resolve build time warning related to
+kernel-doc:
 
-Marc, should not be there bitmap_release_region() with order_base_2()?
+  drivers/pci/ats.c:490: warning: expecting prototype for
+  pci_max_pasid(). Prototype was for pci_max_pasids() instead
 
-bitmap_release_region(port->msi_irq_in_use, data->hwirq, order_base_2(nr_irqs));
+No change to functionality intended.
 
-Because mtk_msi_bottom_domain_alloc() is allocating
-order_base_2(nr_irqs) interrupts, not only nr_irqs.
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+---
+ drivers/pci/ats.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +
-> +	mutex_unlock(&port->lock);
-> +
-> +	irq_domain_free_irqs_common(domain, virq, nr_irqs);
-> +}
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 0d3719407b8b..6d7d64939f82 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -480,7 +480,7 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
+ #define PASID_NUMBER_SHIFT	8
+ #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
+ /**
+- * pci_max_pasid - Get maximum number of PASIDs supported by device
++ * pci_max_pasids - Get maximum number of PASIDs supported by device
+  * @pdev: PCI device structure
+  *
+  * Returns negative value when PASID capability is not present.
+-- 
+2.30.1
+
