@@ -8,58 +8,58 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8929C433E6
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0083C433DB
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D072964F8D
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7704964F91
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231368AbhCLAts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:49:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52086 "EHLO
+        id S231473AbhCLAuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:50:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231402AbhCLAtg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:36 -0500
-Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CF04C061764
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:36 -0800 (PST)
-Received: by mail-qk1-x749.google.com with SMTP id a1so16955178qkn.11
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:36 -0800 (PST)
+        with ESMTP id S231481AbhCLAtn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:43 -0500
+Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20131C061763
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:43 -0800 (PST)
+Received: by mail-qv1-xf4a.google.com with SMTP id j3so16497188qvo.1
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=YI9ktuFU/X+08fuezAEyeT/4YV7bN+r3OwkJvmEu6tA=;
-        b=G4eTVdB9vYaxNQeExEZkD7EJkKoXsPP1Mh7LeCv9UXYddhsCLBhNTAoGc8Y7X0A8l2
-         Eyxb/mtwuF7AwGkZiQuyYBMJmmM23sBMA3tcJOEtvTf0tH2JYPyDcNgFnaeQwXmmMDjM
-         kT8iaz+E1+HtZZiLkju9VH1kkQDUYpLvvXxaYE5rDiD/TLuSHoi6XKfJWOSdgFSk556n
-         Pr7pM6PcY4QwA2g5BI6EXwuZnKgI4oK61gOGJ8t362oU8kuePT3xDFXSPJlqe/NN7rJX
-         muliusPDNXzM8lZ2u3UaTA3NwKZNAvbL6g0DQbhEZaD1olkczwuySFpVS6Q4wmahv7BJ
-         gM0A==
+        bh=Mjpx22b6GuQLoGn4NzDCeA9C1v5eOn+//WEZjXFxGag=;
+        b=p1YJgca/l7E3iFpL3NEl23p9rq3uH3cCDpSNLobzpaRdN94bWmg2TLWliG4OTlDgNF
+         b20mw7m0miBH3TC5NiTSrjOvpsxd/EdcZEMNofKjul69T290228EfMRqi263sZ7ZcaJy
+         z2WDWEy/jTh6Vd9HVohxsoV9lhuJlYgs7JX6zxyvJVOc46TYiMufhQFP5HjsfNJNllhZ
+         x42Xb3kCdRnLN7XJ1Ai7S9r8k9w7c9TnY3ZIZBGaRP2A6WNp1d5UesIsRKD8bTflljM+
+         ApPAV1OH/Bn5BUKlPk/oyAren6W77UIuvmnx4NkfwgRZxTrZ2vrS8diyGNcOaxyVNLg4
+         QIsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=YI9ktuFU/X+08fuezAEyeT/4YV7bN+r3OwkJvmEu6tA=;
-        b=QbyEujy2AYPtXweT8Y15/XtdPt6hg0f2LkdRO8vN68SHfotW73HCzVPYleX5xUsQ0d
-         Z+9ijrEGQHoKmlFbbIRwAwIGwPFhLaTGuvgEumKQe+tyPX90RlJ6j2Ical+ivBZVjL57
-         aDBlygJl8QcXbrwaV5I/2JubNKA4VEINEjWL/r8Y2mZc6eLxFxcBZaPM7H0MuyiWp7Xt
-         L0S7ljCSPrR56XJs4oUC6iEh+DTZPJiwDvZFj7HM+KwXlXspAdd+IwsRdBxA0givPNkq
-         LUonXZbxlm3ECVLA8jc5qiMQTDaoJCDALL/k5gU97ApPBPx2trrUpoqSCqOnhrDyMoYC
-         eVvQ==
-X-Gm-Message-State: AOAM530UuV3/hb4gorLx349w/sMOKrfY9SqHsH/LutbMJnYBoIKtCNw8
-        0Ta3/yxlC2C7yZd/bWnntXNLuHMQSO9xJ1JEYO8=
-X-Google-Smtp-Source: ABdhPJzI9rK5QlDj5oqSuS2czS9rEOHva7EAYyuXoiJYgIvPrvHH3npr11wyk+ga7aI1sfu0nIaCQs6FMxQcyq1QB0Y=
+        bh=Mjpx22b6GuQLoGn4NzDCeA9C1v5eOn+//WEZjXFxGag=;
+        b=gEwo9QmBJDdJVCy4g+SuaitPeZ5PMvEPzkYm82/S7EIVtJ7o/9AGev+oX71/5D8pOW
+         LffNE3IZCJ8OoUKzOfjBXK4pwdbjB0cck8Eml0gDzhEmuXxC9ZU2hVNPVZegBnilUAQz
+         PeBAIZRyv7t4MAC6yIpxf06CvQP14jwsERAYFTmU+UuXyUZXUTKI7AGAg522hWUFKsXn
+         Ug2lggXYo9H2S2E6YE5lY15Dc/SrixSnuQy2igHDcwoQoTqNf5/rp1bia2o6FeThX3wq
+         9Uszt/BeA6N0rek55QOj3MNEw+ei+lDJk/Xr5chgsssHqW2dJnpJ1IwWnfInqd2UJK2q
+         vlXQ==
+X-Gm-Message-State: AOAM533tBPpKlb8rKNjBAsqg55mZkXUQ8eRi/NkN01g12vqJETTv8tvt
+        XTlZ9Yxgtk5qU3fPa7BMNbEo9gE4CboZsQGZuF8=
+X-Google-Smtp-Source: ABdhPJwmy8g4J1Glwh+9/Qdeqiq2sG1+WJpaNKE+Qhd9e3mgm3N1f00E1AniVKdzTbmiO2hHWYG9eMucONFWzKoR1oM=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c86b:8269:af92:55a])
- (user=samitolvanen job=sendgmr) by 2002:ad4:4b6c:: with SMTP id
- m12mr9997739qvx.21.1615510175432; Thu, 11 Mar 2021 16:49:35 -0800 (PST)
-Date:   Thu, 11 Mar 2021 16:49:10 -0800
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4745:: with SMTP id
+ c5mr10451143qvx.39.1615510182313; Thu, 11 Mar 2021 16:49:42 -0800 (PST)
+Date:   Thu, 11 Mar 2021 16:49:13 -0800
 In-Reply-To: <20210312004919.669614-1-samitolvanen@google.com>
-Message-Id: <20210312004919.669614-9-samitolvanen@google.com>
+Message-Id: <20210312004919.669614-12-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210312004919.669614-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.rc2.261.g7f71774620-goog
-Subject: [PATCH 08/17] bpf: disable CFI in dispatcher functions
+Subject: [PATCH 11/17] psci: use __pa_function for cpu_resume
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -77,37 +77,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-BPF dispatcher functions are patched at runtime to perform direct
-instead of indirect calls. Disable CFI for the dispatcher functions to
-avoid conflicts.
+With CONFIG_CFI_CLANG, the compiler replaces function pointers with
+jump table addresses, which results in __pa_symbol returning the
+physical address of the jump table entry. As the jump table contains
+an immediate jump to an EL1 virtual address, this typically won't
+work as intended. Use __pa_function instead to get the address to
+cpu_resume.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- include/linux/bpf.h | 4 ++--
+ drivers/firmware/psci/psci.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index cccaef1088ea..9acdca574527 100644
---- a/include/linux/bpf.h
-+++ b/include/linux/bpf.h
-@@ -635,7 +635,7 @@ struct bpf_dispatcher {
- 	struct bpf_ksym ksym;
- };
+diff --git a/drivers/firmware/psci/psci.c b/drivers/firmware/psci/psci.c
+index f5fc429cae3f..facd3cce3244 100644
+--- a/drivers/firmware/psci/psci.c
++++ b/drivers/firmware/psci/psci.c
+@@ -326,7 +326,7 @@ static int psci_suspend_finisher(unsigned long state)
+ {
+ 	u32 power_state = state;
  
--static __always_inline unsigned int bpf_dispatcher_nop_func(
-+static __always_inline __nocfi unsigned int bpf_dispatcher_nop_func(
- 	const void *ctx,
- 	const struct bpf_insn *insnsi,
- 	unsigned int (*bpf_func)(const void *,
-@@ -663,7 +663,7 @@ void bpf_trampoline_put(struct bpf_trampoline *tr);
+-	return psci_ops.cpu_suspend(power_state, __pa_symbol(cpu_resume));
++	return psci_ops.cpu_suspend(power_state, __pa_function(cpu_resume));
  }
  
- #define DEFINE_BPF_DISPATCHER(name)					\
--	noinline unsigned int bpf_dispatcher_##name##_func(		\
-+	noinline __nocfi unsigned int bpf_dispatcher_##name##_func(	\
- 		const void *ctx,					\
- 		const struct bpf_insn *insnsi,				\
- 		unsigned int (*bpf_func)(const void *,			\
+ int psci_cpu_suspend_enter(u32 state)
+@@ -345,7 +345,7 @@ int psci_cpu_suspend_enter(u32 state)
+ static int psci_system_suspend(unsigned long unused)
+ {
+ 	return invoke_psci_fn(PSCI_FN_NATIVE(1_0, SYSTEM_SUSPEND),
+-			      __pa_symbol(cpu_resume), 0, 0);
++			      __pa_function(cpu_resume), 0, 0);
+ }
+ 
+ static int psci_system_suspend_enter(suspend_state_t state)
 -- 
 2.31.0.rc2.261.g7f71774620-goog
 
