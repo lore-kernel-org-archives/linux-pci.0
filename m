@@ -5,61 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC170C4332E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A5DC28E82
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A07C564FA8
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F38DF64FD0
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231489AbhCLAuR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:50:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52222 "EHLO
+        id S231638AbhCLAuT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:50:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231398AbhCLAtv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:51 -0500
-Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EFD3C061764
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:50 -0800 (PST)
-Received: by mail-qv1-xf49.google.com with SMTP id b15so16460044qvz.15
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:50 -0800 (PST)
+        with ESMTP id S231703AbhCLAtz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:55 -0500
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 387D6C061764
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:54 -0800 (PST)
+Received: by mail-qt1-x849.google.com with SMTP id j15so7779548qtj.12
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=x7nmddhtCAFSgIOj2697qGLSdd5adJgwaMu7EWSa7uE=;
-        b=Xh/nq41/9MEWxm6t2iYy7IPJewLjv0iS/7KYlIJdOJ3bOfF46JUZMMZbt/Lbf7/LKe
-         0C1tO2vPCIwQ5PGJSYXZJ039Dvi3EAoKQxVkFOcDDW/pgCQxSf5VfmNszsM1rX066DfV
-         ABqN34EZoCufg1IuApfGtoKYh4hGj4odHN2v6D0PPbtcxnhTw5RJfO/aIZwlt02AZCo2
-         HzHNQ6tS4vuStQQN4mpWyf+FUX+6L5uoIMBHOzFVAksdP/fKz3Mbmqp3eMuDvo3Z6d4F
-         sEuuF7s32uR5mzuuW48zmaIsJUCAxpxJgvCXO0Q3ix21UAaACo2gUAOvee/rcFn3OFF1
-         XAhg==
+        bh=Wy+IwcbFe5iyl37uDl+oXBLCNbLEHUQXvTEZYf7ymx8=;
+        b=TFaPttpAjNfe+2iixUj6bfpglHAqdyJonN+f/D/N4GxhYzufIVNkNGd52Z481IiXLa
+         J7zK9PmVKfZgaMXiBRQ+GQtnc7Vrgn9nMBlfx1v+5B/BOEhThUKYOHdycFINi66rsJ9n
+         k+rlStscftY35kfr5wg7QYXNcjmxPrl9goemzUQa08kgwYkcgPAmxhdD5RlWO5s5tIcf
+         2Qxw4fQhL1ORNIz5WRig2l6/Q8mJ6txwoQqqPLf970ALae7jjgaj4GvNENLYY1wAqFr7
+         2UZoruoI+cwg1gYH1874qrh6FP4ZiB0odU/ppmrbRZZrBthB+1LqWzxw8PqfRpKrDzFV
+         7Wvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=x7nmddhtCAFSgIOj2697qGLSdd5adJgwaMu7EWSa7uE=;
-        b=ccCzw9sBNXhlXd9Aewcw1DMU6J5yhL2V1ctH58nVKhyL9WDJvCW3Y9/+niPfpZ/YSx
-         y3JBQrlZ9ZcUYy61L18w5dTj48lU1k8sbkda47uENmRj1zO+0nhu7XECyr/duEezpkVc
-         ukEoiGL66pmAv+iQ7acRwHRgxlls5EYY0Vg6IJ4FEzucQgtH6mNuIGnlcS2ZuoXzk5aC
-         wtuLaMHloM/NOoGH8MP54P9fpgyvZHtCiHVpFk5UzQIahmiJZvmR53vRmc/pvr+rB+F+
-         l5/C/iE8+LZn8uXNs1lKtMNmKoScvhUWwcEI/7nmoiYOfCe7X/yAKeoSXiQmdrV8hU7i
-         /fGg==
-X-Gm-Message-State: AOAM531B5fuBT0kaz8ffoNdaYMR8RMf3ivR6dnangPymGscPTSk9HYGc
-        LMudfj+LNo9CYwN34Hte4PURiXSetNgJXjUMaHw=
-X-Google-Smtp-Source: ABdhPJwmptuqD0+7nMK5L7NKwSOAsdIsIjIk7X0BlSf+Uv+Hui3fWlJBQOKwQ25g86AaX73W7AVFnXUyawNQmB/PfgY=
+        bh=Wy+IwcbFe5iyl37uDl+oXBLCNbLEHUQXvTEZYf7ymx8=;
+        b=rPmdME+8JgybVeRWuHQO5YrFV7xDfwIjCNh2zcjbK7OiW+n22J+ydbFfg6ge7wscb8
+         PZ+3JNusi719H/AkD4DvQiQfHfr/yn4MiqMPPueCf02OTsslifN6y6sbfDCA72qRpSBd
+         dpecxYA7vEXk9AS1oDFAweSPFcZ5ANw+G4bE9SUrhlkpnEzvG9mjIe/e7IB9gx/kwdNA
+         yrvLyan9WzOT6jOX05Kd01IGHiBhA1qw8uKWkbF8SUBII7mBNU5/OX34zfXBkDRg6Nug
+         d3dv9dKqTmdpybGjO2CT7iOPcglI8WIdbNpfFkR15OfTxvlPX+7VlvJ7H+s5IML4AbpQ
+         E+UQ==
+X-Gm-Message-State: AOAM532T8yhRsXNnX9Al7pqRRN3wrElCE7Ozbx6JPmUKAbC54oClN5ZI
+        vxDMl4HlNSUZ2606WCPJAZ+5cIzMpUGOedYKrPc=
+X-Google-Smtp-Source: ABdhPJznSvPJLG6qaFoP2kj2Ov4WrW1xkoR+hl4AeQuvmUyvA146uVMjKfz/DR0rMwbjq3TBrHrovQw5xd3PO2vJOjg=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c86b:8269:af92:55a])
- (user=samitolvanen job=sendgmr) by 2002:ad4:4904:: with SMTP id
- bh4mr9878463qvb.53.1615510189517; Thu, 11 Mar 2021 16:49:49 -0800 (PST)
-Date:   Thu, 11 Mar 2021 16:49:17 -0800
+ (user=samitolvanen job=sendgmr) by 2002:ad4:50c7:: with SMTP id
+ e7mr10016068qvq.58.1615510193452; Thu, 11 Mar 2021 16:49:53 -0800 (PST)
+Date:   Thu, 11 Mar 2021 16:49:19 -0800
 In-Reply-To: <20210312004919.669614-1-samitolvanen@google.com>
-Message-Id: <20210312004919.669614-16-samitolvanen@google.com>
+Message-Id: <20210312004919.669614-18-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210312004919.669614-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.rc2.261.g7f71774620-goog
-Subject: [PATCH 15/17] arm64: add __nocfi to __apply_alternatives
+Subject: [PATCH 17/17] arm64: allow CONFIG_CFI_CLANG to be selected
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -77,32 +77,25 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-__apply_alternatives makes indirect calls to functions whose address
-is taken in assembly code using the alternative_cb macro. With
-non-canonical CFI, the compiler won't replace these function
-references with the jump table addresses, which trips CFI. Disable CFI
-checking in the function to work around the issue.
+Select ARCH_SUPPORTS_CFI_CLANG to allow CFI to be enabled.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- arch/arm64/kernel/alternative.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ arch/arm64/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/kernel/alternative.c b/arch/arm64/kernel/alternative.c
-index 1184c44ea2c7..abc84636af07 100644
---- a/arch/arm64/kernel/alternative.c
-+++ b/arch/arm64/kernel/alternative.c
-@@ -133,8 +133,8 @@ static void clean_dcache_range_nopatch(u64 start, u64 end)
- 	} while (cur += d_size, cur < end);
- }
- 
--static void __apply_alternatives(void *alt_region,  bool is_module,
--				 unsigned long *feature_mask)
-+static void __nocfi __apply_alternatives(void *alt_region,  bool is_module,
-+					 unsigned long *feature_mask)
- {
- 	struct alt_instr *alt;
- 	struct alt_region *region = alt_region;
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 1f212b47a48a..6be5b61a0f17 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -75,6 +75,7 @@ config ARM64
+ 	select ARCH_SUPPORTS_SHADOW_CALL_STACK if CC_HAVE_SHADOW_CALL_STACK
+ 	select ARCH_SUPPORTS_LTO_CLANG if CPU_LITTLE_ENDIAN
+ 	select ARCH_SUPPORTS_LTO_CLANG_THIN
++	select ARCH_SUPPORTS_CFI_CLANG
+ 	select ARCH_SUPPORTS_ATOMIC_RMW
+ 	select ARCH_SUPPORTS_INT128 if CC_HAS_INT128 && (GCC_VERSION >= 50000 || CC_IS_CLANG)
+ 	select ARCH_SUPPORTS_NUMA_BALANCING
 -- 
 2.31.0.rc2.261.g7f71774620-goog
 
