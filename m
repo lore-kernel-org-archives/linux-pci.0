@@ -8,58 +8,58 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46780C2BA1A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8929C433E6
 	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37F8164FA9
+	by mail.kernel.org (Postfix) with ESMTP id D072964F8D
 	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231640AbhCLAtt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:49:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52110 "EHLO
+        id S231368AbhCLAts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:49:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231433AbhCLAtk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:40 -0500
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9AD8C061760
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:39 -0800 (PST)
-Received: by mail-yb1-xb4a.google.com with SMTP id q77so27809958ybq.0
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:39 -0800 (PST)
+        with ESMTP id S231402AbhCLAtg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:36 -0500
+Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CF04C061764
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:36 -0800 (PST)
+Received: by mail-qk1-x749.google.com with SMTP id a1so16955178qkn.11
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=hZWFZEGgf1oZzErhLvCwgFyCsdD04UtwuSm9OP/0yUI=;
-        b=Myro43SMeYOTa+WlzxzudU7eRPbu2ZVl8J8nRnzEoOQCBBm3PCLLf2sU0IZZ/5wdgL
-         6s09Ubalx38FLGVf/eCIGLb6Fxk2xPluM7RNfSrZrKf+QEf6uwB3e7Ls8xTHhADuegJ+
-         VaUEyy4XM4BSfLzqZRkrTc113UMZizSYNcaTtog7go6NGMN7gQJLW3mihenOtsxEfPZ5
-         aviGLWHZKCqpW+v9kwflw4luMiyATlEPkHjoQvPYiajbHGXL5cibGvRvQG4F/KjJisJK
-         9I9zahguY2brjGuGSwZC71bTjTKJ24MgzucykCVAS+x/TR9IPmmraiKlc5G5TBTtt+pN
-         eQgQ==
+        bh=YI9ktuFU/X+08fuezAEyeT/4YV7bN+r3OwkJvmEu6tA=;
+        b=G4eTVdB9vYaxNQeExEZkD7EJkKoXsPP1Mh7LeCv9UXYddhsCLBhNTAoGc8Y7X0A8l2
+         Eyxb/mtwuF7AwGkZiQuyYBMJmmM23sBMA3tcJOEtvTf0tH2JYPyDcNgFnaeQwXmmMDjM
+         kT8iaz+E1+HtZZiLkju9VH1kkQDUYpLvvXxaYE5rDiD/TLuSHoi6XKfJWOSdgFSk556n
+         Pr7pM6PcY4QwA2g5BI6EXwuZnKgI4oK61gOGJ8t362oU8kuePT3xDFXSPJlqe/NN7rJX
+         muliusPDNXzM8lZ2u3UaTA3NwKZNAvbL6g0DQbhEZaD1olkczwuySFpVS6Q4wmahv7BJ
+         gM0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=hZWFZEGgf1oZzErhLvCwgFyCsdD04UtwuSm9OP/0yUI=;
-        b=cnK7dkgvXr8yIZO8Sf1BkUy5ET4F9YdGRoc2nl2axB4vRztYR1tVbHZbdPcJ3m9+pj
-         dogs1KW+7FxC6uQCtq9hV6nQtCBcOXPfp7MPrOvacfUDqxwmKzR3SNbEjQS/FoIHTnUP
-         p+kvdqY8Pi+RY6lHYG1elK/GXNuQVZRxnLoD+ySWbGRVeG76VH/PBkt1EvqIdrzFi08F
-         FJwZG43YpCUS5dPU6T3OU04gRup4I90EV1qTEN07CYyB7hNzwUquG0f1q1DWO7/KSkxh
-         XYm4oPlTmOy9IIiiNJfsHocTPNltqTv7Ndf9Aa8t//K2/f6VlCQRitRgx2P+kopU8Mc3
-         IwNw==
-X-Gm-Message-State: AOAM531MGSW8hsFE149H7Qf4TpFV7sB2C/cgMSgvZCzKg/WmpcOGYa/B
-        lFYs2bTLD5HXSC0BC+JiNpAWJO3yaT5cB12rWCU=
-X-Google-Smtp-Source: ABdhPJyUTzKzhlJJScc7b96k8P6UFF7tfvUlrsyiNN1iQd9CLMxgBI+ybk0/Hoqr01MMDE6QMpxcpK7+1qa3BIyQYDc=
+        bh=YI9ktuFU/X+08fuezAEyeT/4YV7bN+r3OwkJvmEu6tA=;
+        b=QbyEujy2AYPtXweT8Y15/XtdPt6hg0f2LkdRO8vN68SHfotW73HCzVPYleX5xUsQ0d
+         Z+9ijrEGQHoKmlFbbIRwAwIGwPFhLaTGuvgEumKQe+tyPX90RlJ6j2Ical+ivBZVjL57
+         aDBlygJl8QcXbrwaV5I/2JubNKA4VEINEjWL/r8Y2mZc6eLxFxcBZaPM7H0MuyiWp7Xt
+         L0S7ljCSPrR56XJs4oUC6iEh+DTZPJiwDvZFj7HM+KwXlXspAdd+IwsRdBxA0givPNkq
+         LUonXZbxlm3ECVLA8jc5qiMQTDaoJCDALL/k5gU97ApPBPx2trrUpoqSCqOnhrDyMoYC
+         eVvQ==
+X-Gm-Message-State: AOAM530UuV3/hb4gorLx349w/sMOKrfY9SqHsH/LutbMJnYBoIKtCNw8
+        0Ta3/yxlC2C7yZd/bWnntXNLuHMQSO9xJ1JEYO8=
+X-Google-Smtp-Source: ABdhPJzI9rK5QlDj5oqSuS2czS9rEOHva7EAYyuXoiJYgIvPrvHH3npr11wyk+ga7aI1sfu0nIaCQs6FMxQcyq1QB0Y=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c86b:8269:af92:55a])
- (user=samitolvanen job=sendgmr) by 2002:a25:880c:: with SMTP id
- c12mr15536827ybl.399.1615510179139; Thu, 11 Mar 2021 16:49:39 -0800 (PST)
-Date:   Thu, 11 Mar 2021 16:49:12 -0800
+ (user=samitolvanen job=sendgmr) by 2002:ad4:4b6c:: with SMTP id
+ m12mr9997739qvx.21.1615510175432; Thu, 11 Mar 2021 16:49:35 -0800 (PST)
+Date:   Thu, 11 Mar 2021 16:49:10 -0800
 In-Reply-To: <20210312004919.669614-1-samitolvanen@google.com>
-Message-Id: <20210312004919.669614-11-samitolvanen@google.com>
+Message-Id: <20210312004919.669614-9-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210312004919.669614-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.rc2.261.g7f71774620-goog
-Subject: [PATCH 10/17] lkdtm: use __va_function
+Subject: [PATCH 08/17] bpf: disable CFI in dispatcher functions
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -77,29 +77,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To ensure we take the actual address of a function in kernel text, use
-__va_function. Otherwise, with CONFIG_CFI_CLANG, the compiler replaces
-the address with a pointer to the CFI jump table, which is actually in
-the module when compiled with CONFIG_LKDTM=m.
+BPF dispatcher functions are patched at runtime to perform direct
+instead of indirect calls. Disable CFI for the dispatcher functions to
+avoid conflicts.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- drivers/misc/lkdtm/usercopy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/bpf.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/misc/lkdtm/usercopy.c b/drivers/misc/lkdtm/usercopy.c
-index 109e8d4302c1..d173d6175c87 100644
---- a/drivers/misc/lkdtm/usercopy.c
-+++ b/drivers/misc/lkdtm/usercopy.c
-@@ -314,7 +314,7 @@ void lkdtm_USERCOPY_KERNEL(void)
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index cccaef1088ea..9acdca574527 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -635,7 +635,7 @@ struct bpf_dispatcher {
+ 	struct bpf_ksym ksym;
+ };
  
- 	pr_info("attempting bad copy_to_user from kernel text: %px\n",
- 		vm_mmap);
--	if (copy_to_user((void __user *)user_addr, vm_mmap,
-+	if (copy_to_user((void __user *)user_addr, __va_function(vm_mmap),
- 			 unconst + PAGE_SIZE)) {
- 		pr_warn("copy_to_user failed, but lacked Oops\n");
- 		goto free_user;
+-static __always_inline unsigned int bpf_dispatcher_nop_func(
++static __always_inline __nocfi unsigned int bpf_dispatcher_nop_func(
+ 	const void *ctx,
+ 	const struct bpf_insn *insnsi,
+ 	unsigned int (*bpf_func)(const void *,
+@@ -663,7 +663,7 @@ void bpf_trampoline_put(struct bpf_trampoline *tr);
+ }
+ 
+ #define DEFINE_BPF_DISPATCHER(name)					\
+-	noinline unsigned int bpf_dispatcher_##name##_func(		\
++	noinline __nocfi unsigned int bpf_dispatcher_##name##_func(	\
+ 		const void *ctx,					\
+ 		const struct bpf_insn *insnsi,				\
+ 		unsigned int (*bpf_func)(const void *,			\
 -- 
 2.31.0.rc2.261.g7f71774620-goog
 
