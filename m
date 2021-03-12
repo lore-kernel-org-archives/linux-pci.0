@@ -5,61 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F5AEC28E80
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55E62C2BA19
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3381B64FD8
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4628F64FA3
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231600AbhCLAtr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:49:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
+        id S231367AbhCLAts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:49:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231374AbhCLAte (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:34 -0500
-Received: from mail-qv1-xf49.google.com (mail-qv1-xf49.google.com [IPv6:2607:f8b0:4864:20::f49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50161C061763
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:34 -0800 (PST)
-Received: by mail-qv1-xf49.google.com with SMTP id x20so7354495qvd.21
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:34 -0800 (PST)
+        with ESMTP id S231423AbhCLAti (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:38 -0500
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E600AC061761
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:37 -0800 (PST)
+Received: by mail-yb1-xb4a.google.com with SMTP id 6so27799808ybq.7
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=ESYHITiLKQTwMyQqI1+m44L/vavOiNb2UPXKfL/7dqU=;
-        b=PMMCvUIZcIon/8qm3dGSSMmSpSk17nnpfqLvQCEMkzCunL9P1EWlysAS/DkD/MfutX
-         1w1/wJnwkSiTt+U2xZVHuaivOHCZf+fZak5dE4YifpFkF99l9X+DsGc/bWkEp8bvRYS/
-         aUIn7XdeB8JfnFfWf7tfFFz/xlaKy6OfTVERBhxfduSc75BOY9WqG39v697PyoyNxDMX
-         eodj7W4qoX56Zh4KBqIIeQPO34Z4lyJD7DKBgla6OY1hXT1FPMrB8OMnNmDGvqVVo8th
-         KdEdF5feGy3XhlMp/PeUmvcQRN06NhZJ2OKCl+oEIQH+hiqvH3wNEPNO4Z/29KyBgHcM
-         p6Bw==
+        bh=6JZKTL3cv5f+QsuwZswDwzrYuKZX5rkh1eIr4Zfx2fE=;
+        b=SdFCtfB+Erk7sy687mtu53wuRF76AZGcEYo50hTsFl58FIcew0neCPwcU/JyE46Lyg
+         8uupf7fpGQiaWZJfLEYQ0iXlShGOCOxPpJWgx6+iNKLuBORfG5z9+ozjbITPTcWG8Hp+
+         krp3MjMp6k/F0pZwOXtdRZPjpcC9Nm+ia4KgnZ9oLej4ik6gd92kTLPwNqBbKFbK3zA5
+         B9vR9YaYjXCmZHFwxIvqh6hEpiNTXSDXUsKDBpLApQYr5+dm/rhtWB/el9ryHg6pZMAI
+         CbS9EPvPMgf2ILbU+iFK2S/kxe2X4eyXHiBnQjBNkmTdJFgT+3hcKhAMd9EtUZ2izmPG
+         2tew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=ESYHITiLKQTwMyQqI1+m44L/vavOiNb2UPXKfL/7dqU=;
-        b=fDOUkTRbNb9kZGPiNoCNG3XFVaMifw/L+mmpZs9guICwotCnuVXsovUiKLARII2aPy
-         yTt3vYi0P6U+vw9HxMVKEJ7OCqhQEwTZZ0ugtaFQuTrDSuXdnS/5K9k8qKE8ioQ7Hds6
-         tKz4JSGk1FkG7TIh1bCohSAvfnX4A6owr8kTQPmKw3PIS3b+szz3g6jsWvFPxQmW3R+A
-         /ppraavABoojAH/H3KpME0CdgYC9AuPeNEOho/VhGR/u7bo89pH3i6VxoKyFVeT3unHA
-         i494aSmdLILWmf9kPMzMWK4+EL+QJYTkx5RVfx5RlpqwaShMimSR6C+AvtBKBgDmQKCL
-         yZOw==
-X-Gm-Message-State: AOAM532cSKTooVXdNKM8VYSarA+z2UEaIFDfVzLkpri7oTGAMENt9sXh
-        yfO4LUFxrHR9LJqE4e8TegqHqRbQdX1DgXVN9uo=
-X-Google-Smtp-Source: ABdhPJzW0uEN8Oxm3LYKJ3R+Njx+t1h43HBF2drlUWKH1BuuoAb2LD5zpQfKztTYQBZfsEf8ydjOwv14o3YXhwxEA5s=
+        bh=6JZKTL3cv5f+QsuwZswDwzrYuKZX5rkh1eIr4Zfx2fE=;
+        b=AkIKMNbzZhMDNxfC3Q/HxOQF8tFQah7A8Gna6wW/odk5gXagH7BvALLeEN8jvB/5tI
+         +WuIkVxaGyxxwVej9phgdVCAegfNZsZjplWFRfWJtCNhM6kNi/21FnQs1L0JqngJcnsU
+         qew2CDa9S0xrLn/HUK1yvAKq6rlAaiC/oD/XJfpX0KGqTezRS8JXOzcTTdde2KZwfuzm
+         5oBYmzYFuyjH8Y0ZYj+zXeJ2g4Y0q5v0rhaEwwIyMRfZw7dy97z3PuBrAFIzyFayiJlK
+         8Y5uCjjUHzcb1RwddvV1/WIiQya4t3DN+D3nti5mBwzgWlLEJ1U0Dj2YP3Dfuq2nmtp4
+         KyKw==
+X-Gm-Message-State: AOAM531OUwnID3zElPC+L9EJwI2c+RR1UVyUuG98vvRWMI0wk85VvKfV
+        cr/Gw1MW3105mJT4baSZZ6H1f4MN1zv3WVt8EnI=
+X-Google-Smtp-Source: ABdhPJx1YGkGp7cqKP4eWzC8MMNMuq4xIKNrPn1tsOPZo78IMlccqylVp5+hUcgOYd8xYJ5Qbwkysj1kalvbYUi0TXY=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c86b:8269:af92:55a])
- (user=samitolvanen job=sendgmr) by 2002:a05:6214:21a5:: with SMTP id
- t5mr10258052qvc.20.1615510173523; Thu, 11 Mar 2021 16:49:33 -0800 (PST)
-Date:   Thu, 11 Mar 2021 16:49:09 -0800
+ (user=samitolvanen job=sendgmr) by 2002:a25:4ce:: with SMTP id
+ 197mr15054589ybe.462.1615510177158; Thu, 11 Mar 2021 16:49:37 -0800 (PST)
+Date:   Thu, 11 Mar 2021 16:49:11 -0800
 In-Reply-To: <20210312004919.669614-1-samitolvanen@google.com>
-Message-Id: <20210312004919.669614-8-samitolvanen@google.com>
+Message-Id: <20210312004919.669614-10-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210312004919.669614-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.rc2.261.g7f71774620-goog
-Subject: [PATCH 07/17] kallsyms: cfi: strip hashes from static functions
+Subject: [PATCH 09/17] lib/list_sort: fix function type mismatches
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -77,131 +77,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With CONFIG_CFI_CLANG and ThinLTO, Clang appends a hash to the names
-of all static functions not marked __used. This can break userspace
-tools that don't expect the function name to change, so strip out the
-hash from the output.
+Casting the comparison function to a different type trips indirect
+call Control-Flow Integrity (CFI) checking. Remove the additional
+consts from cmp_func, and the now unneeded casts.
 
-Suggested-by: Jack Pham <jackp@codeaurora.org>
+Fixes: 043b3f7b6388 ("lib/list_sort: simplify and remove MAX_LIST_LENGTH_BITS")
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 ---
- kernel/kallsyms.c | 54 ++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 49 insertions(+), 5 deletions(-)
+ lib/list_sort.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
-index 8043a90aa50e..17d3a704bafa 100644
---- a/kernel/kallsyms.c
-+++ b/kernel/kallsyms.c
-@@ -161,6 +161,26 @@ static unsigned long kallsyms_sym_address(int idx)
- 	return kallsyms_relative_base - 1 - kallsyms_offsets[idx];
- }
+diff --git a/lib/list_sort.c b/lib/list_sort.c
+index 52f0c258c895..b14accf4ef83 100644
+--- a/lib/list_sort.c
++++ b/lib/list_sort.c
+@@ -8,7 +8,7 @@
+ #include <linux/list.h>
  
-+#if defined(CONFIG_CFI_CLANG) && defined(CONFIG_LTO_CLANG_THIN)
-+/*
-+ * LLVM appends a hash to static function names when ThinLTO and CFI are
-+ * both enabled, which causes confusion and potentially breaks user space
-+ * tools, so we will strip the postfix from expanded symbol names.
-+ */
-+static inline char *cleanup_symbol_name(char *s)
-+{
-+	char *res = NULL;
-+
-+	res = strrchr(s, '$');
-+	if (res)
-+		*res = '\0';
-+
-+	return res;
-+}
-+#else
-+static inline char *cleanup_symbol_name(char *s) { return NULL; }
-+#endif
-+
- /* Lookup the address for this symbol. Returns 0 if not found. */
- unsigned long kallsyms_lookup_name(const char *name)
- {
-@@ -173,6 +193,9 @@ unsigned long kallsyms_lookup_name(const char *name)
+ typedef int __attribute__((nonnull(2,3))) (*cmp_func)(void *,
+-		struct list_head const *, struct list_head const *);
++		struct list_head *, struct list_head *);
  
- 		if (strcmp(namebuf, name) == 0)
- 			return kallsyms_sym_address(i);
-+
-+		if (cleanup_symbol_name(namebuf) && strcmp(namebuf, name) == 0)
-+			return kallsyms_sym_address(i);
+ /*
+  * Returns a list organized in an intermediate format suited
+@@ -227,7 +227,7 @@ void list_sort(void *priv, struct list_head *head,
+ 		if (likely(bits)) {
+ 			struct list_head *a = *tail, *b = a->prev;
+ 
+-			a = merge(priv, (cmp_func)cmp, b, a);
++			a = merge(priv, cmp, b, a);
+ 			/* Install the merged result in place of the inputs */
+ 			a->prev = b->prev;
+ 			*tail = a;
+@@ -249,10 +249,10 @@ void list_sort(void *priv, struct list_head *head,
+ 
+ 		if (!next)
+ 			break;
+-		list = merge(priv, (cmp_func)cmp, pending, list);
++		list = merge(priv, cmp, pending, list);
+ 		pending = next;
  	}
- 	return module_kallsyms_lookup_name(name);
+ 	/* The final merge, rebuilding prev links */
+-	merge_final(priv, (cmp_func)cmp, head, pending, list);
++	merge_final(priv, cmp, head, pending, list);
  }
-@@ -303,7 +326,9 @@ const char *kallsyms_lookup(unsigned long addr,
- 				       namebuf, KSYM_NAME_LEN);
- 		if (modname)
- 			*modname = NULL;
--		return namebuf;
-+
-+		ret = namebuf;
-+		goto found;
- 	}
- 
- 	/* See if it's in a module or a BPF JITed image. */
-@@ -316,11 +341,16 @@ const char *kallsyms_lookup(unsigned long addr,
- 	if (!ret)
- 		ret = ftrace_mod_address_lookup(addr, symbolsize,
- 						offset, modname, namebuf);
-+
-+found:
-+	cleanup_symbol_name(namebuf);
- 	return ret;
- }
- 
- int lookup_symbol_name(unsigned long addr, char *symname)
- {
-+	int res;
-+
- 	symname[0] = '\0';
- 	symname[KSYM_NAME_LEN - 1] = '\0';
- 
-@@ -331,15 +361,23 @@ int lookup_symbol_name(unsigned long addr, char *symname)
- 		/* Grab name */
- 		kallsyms_expand_symbol(get_symbol_offset(pos),
- 				       symname, KSYM_NAME_LEN);
--		return 0;
-+		goto found;
- 	}
- 	/* See if it's in a module. */
--	return lookup_module_symbol_name(addr, symname);
-+	res = lookup_module_symbol_name(addr, symname);
-+	if (res)
-+		return res;
-+
-+found:
-+	cleanup_symbol_name(symname);
-+	return 0;
- }
- 
- int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
- 			unsigned long *offset, char *modname, char *name)
- {
-+	int res;
-+
- 	name[0] = '\0';
- 	name[KSYM_NAME_LEN - 1] = '\0';
- 
-@@ -351,10 +389,16 @@ int lookup_symbol_attrs(unsigned long addr, unsigned long *size,
- 		kallsyms_expand_symbol(get_symbol_offset(pos),
- 				       name, KSYM_NAME_LEN);
- 		modname[0] = '\0';
--		return 0;
-+		goto found;
- 	}
- 	/* See if it's in a module. */
--	return lookup_module_symbol_attrs(addr, size, offset, modname, name);
-+	res = lookup_module_symbol_attrs(addr, size, offset, modname, name);
-+	if (res)
-+		return res;
-+
-+found:
-+	cleanup_symbol_name(name);
-+	return 0;
- }
- 
- /* Look up a kernel symbol and return it in a text buffer. */
+ EXPORT_SYMBOL(list_sort);
 -- 
 2.31.0.rc2.261.g7f71774620-goog
 
