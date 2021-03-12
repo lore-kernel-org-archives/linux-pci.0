@@ -4,58 +4,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D534C433E0
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84FDEC43331
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5791F64F82
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7460664F94
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Mar 2021 00:50:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231492AbhCLAtn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Mar 2021 19:49:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51938 "EHLO
+        id S231526AbhCLAtp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Mar 2021 19:49:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230247AbhCLAtV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:21 -0500
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D804C061762
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:21 -0800 (PST)
-Received: by mail-yb1-xb4a.google.com with SMTP id o9so27460582yba.18
-        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:21 -0800 (PST)
+        with ESMTP id S231216AbhCLAt1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Mar 2021 19:49:27 -0500
+Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 238A2C061760
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:27 -0800 (PST)
+Received: by mail-qt1-x849.google.com with SMTP id c20so4986421qtw.9
+        for <linux-pci@vger.kernel.org>; Thu, 11 Mar 2021 16:49:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=tdPCoglx2rEXEqBLmU0P2QxdgUDSrZlH5oMXt14Ies0=;
-        b=SAiryR+/1F4QR2Sh8/WAofpQOiQwcTfPu82zao4pCXa65lDYdqykBnXnKwFzTFtMK/
-         Q87M8HfYyHqw99Zdf118VxSCYvhYnQG+eORKppK6x+MBlf2oo3XoOt/Ohol2wSmQf/xp
-         wVB0nZ00nVc3+TPKKfTZbsjBNWzzFRvtYZXbIz4ACG5q8p5WvFqy7E2CFmi9Ajz+E04A
-         Uy8u/v8dN+bKkASP3R9AC07S2LEbbwjDZ5SaGCse/p2/gv+5lH2YYZ87b6g6SBBijhwA
-         347Gs/LWWReVAPqK6YJPcO1tmv+IQfOs/BpEy7EpcOK3zCcOayp6J+gmy+3OI53yFvzD
-         zZJA==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=CeeN3xK5WAqMYQUfCf/QpaYnEzhU3e+FKSYu/FFXY8U=;
+        b=YnzwiV3Orw5sKBr6YMDFmOYncBsKWDPtb68ypzRHMVK3VthGHiIWe4l2U/YxjypRBN
+         wsdCMJQ8zMQ4WArlh/izxsQg9B1HPq7k4+zQzGqy/xvNVcvrOCu/A8nWO7g/+YjeuX2h
+         jGDQ6MfChdyYhzfQCswFV9W0HW6D3ltx+MimGyrgUD1x+t+Bx9gPsDldUro2PNx4V8IN
+         W7Zh/Yi/mTibl7LPNJ8pYn5eEyxkejmEbIYlhqwbmdNSdCR37OXx0M/R0WNI7f5943RF
+         Jxme+nNTOcM7RlsIuIDWP8FV2CKIsNqPYMxSMUacQp9r5XEU2NLvZY8ysWVBhk0rMnGD
+         iC0A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=tdPCoglx2rEXEqBLmU0P2QxdgUDSrZlH5oMXt14Ies0=;
-        b=mDCSWGqNVxVm3VzzZpyGq+IXH/vf/f2WHFzCvywLxX4xu2xOQZtwj8+mykztenNCXX
-         V/QRniXW9UvCxYKPkuU7x7OwCx9buQjUFzVGA0dDIy0Qk97dG6VVO1mNGMkQ7Da+55+x
-         6gi8euPTIiofs7IWrQ21FkV30ksv7ul+DNVXyP4AFzo6NHoA8ljnco+vKboA2I+W4bLE
-         IHkzgpCXqOAIMmfnOq6ZFoKJSx3xgFUgvxp6mLv+UPwtOriT3GPsVUQPHzsysCPV5HqN
-         6FmKFKANHkk/GutqKsqiAlQoBOUizrYcONH3sZ6iFCByqmN40Bz7Mdx7HH1ZJ9NMfMpU
-         GZ1w==
-X-Gm-Message-State: AOAM532IFg2zTsXSvgOcc4bwp+qDaKK3v5gzxC09uIrp+4WltPZBE2X/
-        QbgjTyfY0e7z/CUD+y5RMzLCqMD8BkTw+E97Nvk=
-X-Google-Smtp-Source: ABdhPJzShn28s+halMR+vzT0zjcZemE7Ff5yb7+xlvVhoC/UuBoxjvMG/z2t2Y6cw7vtqzmvzKenzjBEbPWRbnPwaZo=
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=CeeN3xK5WAqMYQUfCf/QpaYnEzhU3e+FKSYu/FFXY8U=;
+        b=Vrb7m4LTqWl7CN4NPvfOaQKykO8ZWU1B0pL6msuuWq+Gygo4CdWiGthF5ZQOMTEfAq
+         ErmzXVkiRCG3TTFqI9liCHV2I9rVpJYhbDQS9U9DE9Lhb6XYlgjR+s6NHZgMa95P0F98
+         O0w8CZ2E9ybLknlJY0btTpVALaGHZtyCEj2GFMJAPpqW3/wC6cSkb/wz3/Q8TeQikoYi
+         o4NRcXIMVQCMDdWPF4LtdZzOrlaZUtC2lqZyG16ir4QjY5QB0N/RGzeRy1F/CRL6LJHc
+         OJSlQM+i3lRnrHGueCu7kw/X/ZcFGraGVJ0BgSBcCFS4IrpgrZT81BxFWaNy6mdMoy54
+         86tA==
+X-Gm-Message-State: AOAM533GcRCK5MyjWrWS6+HJ8tFnpDj9ie60nYw6iWoREj+iKmYks4we
+        iRW4aA0PMMvY8LgYX/heU8e19x6c+UXZU5+dwFs=
+X-Google-Smtp-Source: ABdhPJwjquHhXc1azJY3wJx2N7E06CHn55yFR9L2LbefYUmXDDh/IrCaqT99xH2KOyCrVwPGAoCRUF+Cuh4wGPAPnqw=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c86b:8269:af92:55a])
- (user=samitolvanen job=sendgmr) by 2002:a25:e785:: with SMTP id
- e127mr15903182ybh.451.1615510160709; Thu, 11 Mar 2021 16:49:20 -0800 (PST)
-Date:   Thu, 11 Mar 2021 16:49:02 -0800
-Message-Id: <20210312004919.669614-1-samitolvanen@google.com>
+ (user=samitolvanen job=sendgmr) by 2002:a05:6214:1144:: with SMTP id
+ b4mr10460988qvt.12.1615510166369; Thu, 11 Mar 2021 16:49:26 -0800 (PST)
+Date:   Thu, 11 Mar 2021 16:49:05 -0800
+In-Reply-To: <20210312004919.669614-1-samitolvanen@google.com>
+Message-Id: <20210312004919.669614-4-samitolvanen@google.com>
 Mime-Version: 1.0
+References: <20210312004919.669614-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.rc2.261.g7f71774620-goog
-Subject: [PATCH 00/17] Add support for Clang CFI
+Subject: [PATCH 03/17] mm: add generic __va_function and __pa_function macros
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -73,89 +77,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds support for Clang's Control-Flow Integrity (CFI)
-checking. With CFI, the compiler injects a runtime check before each
-indirect function call to ensure the target is a valid function with
-the correct static type. This restricts possible call targets and
-makes it more difficult for an attacker to exploit bugs that allow the
-modification of stored function pointers. For more details, see:
+With CONFIG_CFI_CLANG, the compiler replaces function addresses
+in instrumented C code with jump table addresses. This means that
+__pa_symbol(function) returns the physical address of the jump table
+entry instead of the actual function, which may not work as the jump
+table code will immediately jump to a virtual address that may not be
+mapped.
 
-  https://clang.llvm.org/docs/ControlFlowIntegrity.html
+To avoid this address space confusion, this change adds generic
+definitions for __va_function and __pa_function, which architectures
+that support CFI can override. The typical implementation of the
+__va_function macro would use inline assembly to take the function
+address, which avoids compiler instrumentation.
 
-The first patch contains build system changes and error handling,
-and implements support for cross-module indirect call checking. The
-remaining patches address issues caused by the compiler
-instrumentation. These include fixing known type mismatches, as well
-as issues with address space confusion and cross-module function
-address equality.
+Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+---
+ include/linux/mm.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-These patches add support only for arm64, but I'll post patches also
-for x86_64 after we address the remaining issues there, including
-objtool support.
-
-You can also pull this series from
-
-  https://github.com/samitolvanen/linux.git cfi-v1
-
-
-Sami Tolvanen (17):
-  add support for Clang CFI
-  cfi: add __cficanonical
-  mm: add generic __va_function and __pa_function macros
-  module: cfi: ensure __cfi_check alignment
-  workqueue: cfi: disable callback pointer check with modules
-  kthread: cfi: disable callback pointer check with modules
-  kallsyms: cfi: strip hashes from static functions
-  bpf: disable CFI in dispatcher functions
-  lib/list_sort: fix function type mismatches
-  lkdtm: use __va_function
-  psci: use __pa_function for cpu_resume
-  arm64: implement __va_function
-  arm64: use __pa_function
-  arm64: add __nocfi to functions that jump to a physical address
-  arm64: add __nocfi to __apply_alternatives
-  KVM: arm64: Disable CFI for nVHE
-  arm64: allow CONFIG_CFI_CLANG to be selected
-
- Makefile                                  |  17 ++
- arch/Kconfig                              |  45 +++
- arch/arm64/Kconfig                        |   1 +
- arch/arm64/include/asm/memory.h           |  15 +
- arch/arm64/include/asm/mmu_context.h      |   4 +-
- arch/arm64/kernel/acpi_parking_protocol.c |   2 +-
- arch/arm64/kernel/alternative.c           |   4 +-
- arch/arm64/kernel/cpu-reset.h             |  10 +-
- arch/arm64/kernel/cpufeature.c            |   4 +-
- arch/arm64/kernel/psci.c                  |   3 +-
- arch/arm64/kernel/smp_spin_table.c        |   2 +-
- arch/arm64/kvm/hyp/nvhe/Makefile          |   6 +-
- drivers/firmware/psci/psci.c              |   4 +-
- drivers/misc/lkdtm/usercopy.c             |   2 +-
- include/asm-generic/vmlinux.lds.h         |  20 +-
- include/linux/bpf.h                       |   4 +-
- include/linux/cfi.h                       |  41 +++
- include/linux/compiler-clang.h            |   3 +
- include/linux/compiler_types.h            |   8 +
- include/linux/init.h                      |   6 +-
- include/linux/mm.h                        |   8 +
- include/linux/module.h                    |  13 +-
- include/linux/pci.h                       |   4 +-
- init/Kconfig                              |   2 +-
- kernel/Makefile                           |   4 +
- kernel/cfi.c                              | 329 ++++++++++++++++++++++
- kernel/kallsyms.c                         |  54 +++-
- kernel/kthread.c                          |   8 +-
- kernel/module.c                           |  43 +++
- kernel/workqueue.c                        |   9 +-
- lib/list_sort.c                           |   8 +-
- scripts/Makefile.modfinal                 |   2 +-
- scripts/module.lds.S                      |  14 +-
- 33 files changed, 655 insertions(+), 44 deletions(-)
- create mode 100644 include/linux/cfi.h
- create mode 100644 kernel/cfi.c
-
-
-base-commit: 28806e4d9b97865b450d72156e9ad229f2067f0b
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 77e64e3eac80..1262c4c0242c 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -116,6 +116,14 @@ extern int mmap_rnd_compat_bits __read_mostly;
+ #define __pa_symbol(x)  __pa(RELOC_HIDE((unsigned long)(x), 0))
+ #endif
+ 
++#ifndef __va_function
++#define __va_function(x) (x)
++#endif
++
++#ifndef __pa_function
++#define __pa_function(x) __pa_symbol(__va_function(x))
++#endif
++
+ #ifndef page_to_virt
+ #define page_to_virt(x)	__va(PFN_PHYS(page_to_pfn(x)))
+ #endif
 -- 
 2.31.0.rc2.261.g7f71774620-goog
 
