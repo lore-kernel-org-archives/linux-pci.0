@@ -2,202 +2,124 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E026C433E0
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Mar 2021 15:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14822C433E9
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Mar 2021 15:34:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4600C64E2E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Mar 2021 15:14:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E232264E81
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Mar 2021 15:34:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232223AbhCOPNz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Mar 2021 11:13:55 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:63143 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S232518AbhCOPNn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Mar 2021 11:13:43 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 12FF4dC2170990;
-        Mon, 15 Mar 2021 11:13:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=pp1;
- bh=B5cWiCah1WTZhvLrevuetHghTSK2P2SVWdhapXHvan0=;
- b=cDPDZE/wkNPfg19MWshZ2QNJ1anCLR4ahqspUhAqP/8Vfay8IUdMjs2G6xaCfFvDzyzU
- 9rmuggxR6XIEE5MImZYsDCIdZwO2Sz+MwDvnezGNn9eqd8195kWAZkyB6KTHhHCMmtRO
- un+4oANFgPXynBR3EeC0i5wZU3D2Xuka1DieSMQyjHdp/iuqekH3IRA5+UEJEgSsYBtf
- wS/JwEziI2lhAhE9oIIFklWqCJgC4ZE06KzBc8T8qajM1U1V8arJ4BTY8Xl7DEQ5c66P
- Mezx+rSqL7HGZcoIN96ik1Lfi9B6VKl/DXjj9yDOhLOA9tsCethwXnx4ayi7raALqSvR qQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 37a95da7uk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 15 Mar 2021 11:13:40 -0400
-Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 12FF5Zui175994;
-        Mon, 15 Mar 2021 11:13:39 -0400
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 37a95da7t7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 15 Mar 2021 11:13:39 -0400
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.0.43/8.16.0.43) with SMTP id 12FFCPNE025440;
-        Mon, 15 Mar 2021 15:13:37 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma01fra.de.ibm.com with ESMTP id 378n1891sg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 15 Mar 2021 15:13:37 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 12FFDYlm38928716
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 15 Mar 2021 15:13:34 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B5EB74C04A;
-        Mon, 15 Mar 2021 15:13:34 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 66E764C04E;
-        Mon, 15 Mar 2021 15:13:34 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 15 Mar 2021 15:13:34 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Narendra K <narendra_k@dell.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Viktor Mihajlovski <mihajlov@linux.ibm.com>,
-        Stefan Raspl <raspl@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org
-Subject: [PATCH] s390/pci: expose a PCI device's UID as its index
-Date:   Mon, 15 Mar 2021 16:13:34 +0100
-Message-Id: <20210315151334.174802-1-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.25.1
+        id S230039AbhCOPeX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Mar 2021 11:34:23 -0400
+Received: from mail-ot1-f52.google.com ([209.85.210.52]:33894 "EHLO
+        mail-ot1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230331AbhCOPeO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Mar 2021 11:34:14 -0400
+Received: by mail-ot1-f52.google.com with SMTP id n23so7213964otq.1;
+        Mon, 15 Mar 2021 08:34:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=w2PzQp98xEVljnuInqGfZNpkRUMzLCMEZ5M6TM/sg/0=;
+        b=qBerCCiV3UsDsZgvgOxDfEzsfqmXUDUQK3HBe1tQ95dv1tPDCyvnzOSKZ+Sr43glfr
+         a9n2GkVti5+kSPrBeAfpJEzSrU6OYodGVXwtgv0LFGd4mUyOoApmchSdFiXa0sKAkKQh
+         miouKQqZs7+f0mVWScpFvRxN8XuZCAyUVyjptsN7tnvDvdURoVDpCIwi7JMeaI65gWUc
+         T2rp/EVh418R94Ih36RlIzWKKjxewe99PENV9sPu77SgbX62lwsUWkGdgQVyZEeaDFMm
+         y1KmOZTezNPfm0nIaL5Wm1bEFmthJcBlpGukkASc+vtSjNtcQDF8lEbpxwJBWe7stJ62
+         BOcA==
+X-Gm-Message-State: AOAM533o98jipz/LPxH6O72JI2uzvsfiltQYink8xglh6Xu7EntBhXkO
+        cgm5ztmcGGanZjuo0su/U0HQnQy3uN1YNgRLtQ0=
+X-Google-Smtp-Source: ABdhPJyl/cbr7pq28PHZ/0h31pXlvj6SfsiJtApwzlRSUKiFzC/UHOEFF4rEujy7pXbWO9dTlmsXetPUp2PHgNx7OEE=
+X-Received: by 2002:a9d:3422:: with SMTP id v31mr14466855otb.260.1615822453930;
+ Mon, 15 Mar 2021 08:34:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.369,18.0.761
- definitions=2021-03-15_08:2021-03-15,2021-03-15 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- suspectscore=0 bulkscore=0 priorityscore=1501 phishscore=0 impostorscore=0
- clxscore=1015 adultscore=0 malwarescore=0 mlxscore=0 spamscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2103150109
+References: <20210314000439.3138941-1-luzmaximilian@gmail.com>
+In-Reply-To: <20210314000439.3138941-1-luzmaximilian@gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Mon, 15 Mar 2021 16:34:02 +0100
+Message-ID: <CAJZ5v0hY=NgKAU+N_kaya=q3Vk6SnkRTfXuiiP0ttoxHq+pRTA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Run platform power transition on initial D0 entry
+To:     Maximilian Luz <luzmaximilian@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On s390 each PCI device has a user-defined ID (UID) exposed under
-/sys/bus/pci/devices/<dev>/uid. This ID was designed to serve as the PCI
-device's primary index and to match the device within Linux to the
-device configured in the hypervisor. To serve as a primary identifier
-the UID must be unique within the Linux instance, this is guaranteed by
-the platform if and only if the UID Uniqueness Checking flag is set
-within the CLP List PCI Functions response.
+On Sun, Mar 14, 2021 at 1:06 AM Maximilian Luz <luzmaximilian@gmail.com> wrote:
+>
+> On some devices and platforms, the initial platform (e.g. ACPI) power
+> state is not in sync with the power state of the PCI device.
+>
+> This seems like it is, for all intents and purposes, an issue with the
+> device firmware (e.g. ACPI). On some devices, specifically Microsoft
+> Surface Books 2 and 3, we encounter ACPI code akin to the following
+> power resource, corresponding to a PCI device:
+>
+>     PowerResource (PRP5, 0x00, 0x0000)
+>     {
+>         // Initialized to zero, i.e. off. There is no logic for checking
+>         // the actual state dynamically.
+>         Name (_STA, Zero)
+>
+>         Method (_ON, 0, Serialized)
+>         {
+>             // ... code omitted ...
+>             _STA = One
+>         }
+>
+>         Method (_OFF, 0, Serialized)
+>         {
+>             // ... code omitted ...
+>             _STA = Zero
+>         }
+>     }
+>
+> This resource is initialized to 'off' and does not have any logic for
+> checking its actual state, i.e. the state of the corresponding PCI
+> device. The stored state of this resource can only be changed by running
+> the (platform/ACPI) power transition functions (i.e. _ON and _OFF).
 
-In this the UID serves an analogous function as the SMBIOS instance
-number or ACPI index exposed as the "index" respectively "acpi_index"
-device attributes and used by e.g. systemd to set interface names. As
-s390 does not use and will likely never use ACPI nor SMBIOS there is no
-conflict and we can just expose the UID under the "index" attribute
-whenever UID Uniqueness Checking is active and get systemd's interface
-naming support for free.
+Well, there is _STA that returns "off" initially, so the OS should set
+the initial state of the device to D3cold and transition it into D0 as
+appropriate (i.e. starting with setting all of the power resources
+used by it to "on").
 
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Acked-by: Viktor Mihajlovski <mihajlov@linux.ibm.com>
----
-Changes from RFC patch:
-- Use sysfs_emit() instead of sprintf() (Thanks Krzysztof Wilczyński!)
+> This means that, at boot, the PCI device power state is out of sync with
+> the power state of the corresponding ACPI resource.
+>
+> During initial bring-up of a PCI device, pci_enable_device_flags()
+> updates its PCI core state (from initially 'unknown') by reading from
+> its PCI_PM_CTRL register. It does, however, not check if the platform
+> (here ACPI) state is in sync with/valid for the actual device state and
+> needs updating.
 
- Documentation/ABI/testing/sysfs-bus-pci | 11 +++++---
- arch/s390/pci/pci_sysfs.c               | 36 +++++++++++++++++++++++++
- 2 files changed, 43 insertions(+), 4 deletions(-)
+Well, that's inconsistent.
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 25c9c39770c6..1241b6d11a52 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -195,10 +195,13 @@ What:		/sys/bus/pci/devices/.../index
- Date:		July 2010
- Contact:	Narendra K <narendra_k@dell.com>, linux-bugs@dell.com
- Description:
--		Reading this attribute will provide the firmware
--		given instance (SMBIOS type 41 device type instance) of the
--		PCI device. The attribute will be created only if the firmware
--		has given an instance number to the PCI device.
-+		Reading this attribute will provide the firmware given instance
-+		number of the PCI device.  Depending on the platform this can
-+		be for example the SMBIOS type 41 device type instance or the
-+		user-defined ID (UID) on s390. The attribute will be created
-+		only if the firmware has given an instance number to the PCI
-+		device and that number is guaranteed to uniquely identify the
-+		device in the system.
- Users:
- 		Userspace applications interested in knowing the
- 		firmware assigned device type instance of the PCI
-diff --git a/arch/s390/pci/pci_sysfs.c b/arch/s390/pci/pci_sysfs.c
-index 5c028bee91b9..c7107bd9dd93 100644
---- a/arch/s390/pci/pci_sysfs.c
-+++ b/arch/s390/pci/pci_sysfs.c
-@@ -131,6 +131,38 @@ static ssize_t report_error_write(struct file *filp, struct kobject *kobj,
- }
- static BIN_ATTR(report_error, S_IWUSR, NULL, report_error_write, PAGE_SIZE);
- 
-+#ifndef CONFIG_DMI
-+/* analogous to smbios index */
-+static ssize_t index_show(struct device *dev,
-+			  struct device_attribute *attr, char *buf)
-+{
-+	struct zpci_dev *zdev = to_zpci(to_pci_dev(dev));
-+	u32 index = ~0;
-+
-+	if (zpci_unique_uid)
-+		index = zdev->uid;
-+
-+	return sysfs_emit(buf, "%u\n", index);
-+}
-+static DEVICE_ATTR_RO(index);
-+
-+static umode_t zpci_unique_uids(struct kobject *kobj,
-+				struct attribute *attr, int n)
-+{
-+	return zpci_unique_uid ? attr->mode : 0;
-+}
-+
-+static struct attribute *zpci_ident_attrs[] = {
-+	&dev_attr_index.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group zpci_ident_attr_group = {
-+	.attrs = zpci_ident_attrs,
-+	.is_visible = zpci_unique_uids,
-+};
-+#endif
-+
- static struct bin_attribute *zpci_bin_attrs[] = {
- 	&bin_attr_util_string,
- 	&bin_attr_report_error,
-@@ -150,6 +182,7 @@ static struct attribute *zpci_dev_attrs[] = {
- 	&dev_attr_mio_enabled.attr,
- 	NULL,
- };
-+
- static struct attribute_group zpci_attr_group = {
- 	.attrs = zpci_dev_attrs,
- 	.bin_attrs = zpci_bin_attrs,
-@@ -170,5 +203,8 @@ static struct attribute_group pfip_attr_group = {
- const struct attribute_group *zpci_attr_groups[] = {
- 	&zpci_attr_group,
- 	&pfip_attr_group,
-+#ifndef CONFIG_DMI
-+	&zpci_ident_attr_group,
-+#endif
- 	NULL,
- };
--- 
-2.25.1
+Also, it is rather pointless to update the device's power state at
+this point, because nothing between this point and the later
+do_pci_enable_device() call in this function requires its
+current_state to be up to date AFAICS.
 
+Have you tried to drop the power state update from
+pci_enable_device_flags()?  [Note that we're talking about relatively
+old code here and it looks like that code is not necessary any more.]
+
+Either it should be possible to do that and all should work, or there
+is a good reason to make current_state reflect the real current power
+state of the device upfront, but then that should be done by putting
+it into D0 diractly at that point rather than later.
+
+Calling pci_power_up(dev) instead of pci_set_power_state(dev, PCI_D0)
+when current_state is already 0 only pokes at the power resources,
+because pci_raw_set_power_state() will do nothing then, but that is a
+rather less-than-straightforward way of doing this.  Moreover, the
+ordering of actions mandated by the spec is to set power resources to
+"on" first and then write to the PMCSR, not the other way around.
