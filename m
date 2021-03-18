@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2208C4360C
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60372C2BA1E
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D330D64F65
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F234601FF
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232402AbhCRRMP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Mar 2021 13:12:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33310 "EHLO
+        id S232541AbhCRRMT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Mar 2021 13:12:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232341AbhCRRLi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Mar 2021 13:11:38 -0400
-Received: from mail-pf1-x449.google.com (mail-pf1-x449.google.com [IPv6:2607:f8b0:4864:20::449])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24574C061761
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:38 -0700 (PDT)
-Received: by mail-pf1-x449.google.com with SMTP id 71so19411807pfu.8
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:38 -0700 (PDT)
+        with ESMTP id S232464AbhCRRLw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Mar 2021 13:11:52 -0400
+Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 668D4C061761
+        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:52 -0700 (PDT)
+Received: by mail-pf1-x44a.google.com with SMTP id s18so24499174pfe.10
+        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=xIKsEDWi8EL1j5NSYc2uWQA3l5Y2NiXXcLT9TovNhRQ=;
-        b=uKxyyo5NDdB1QUbA3EnMvjuX1onU20iICbKJ9iP/dqRqzhm0bGPXUszw7wf3GKl1Cw
-         8b6zGQsOgdMHwwqtEMHY8K9uQWWo8Csl7Ij0z216FvJg68YI42t5LQuRc707PLWEIS0l
-         v6mINbfwZQaRHIuEtuhd/w+jw1MkLwDSlSn0PFx/6d0jgHgbFlLEe2zIRvzuxqfIFbB4
-         81s6Y5tTsyTXg3PP3MbUj5QPEwCUc2bn0HIlVMkvO4B9tOKV53UBjXaLwrQa+a/fwExd
-         ndjASAw4BiPpZ/v3XOZOyYf+t4si7VDIT+/WYNd+6rtyQwfJBQtMCpJMP/HwM/sR2oXZ
-         1fYw==
+        bh=WZ2fsTX5FLJhX01BulIdj9aVU+u+1SaaqVDcWrlk7vo=;
+        b=p/MDs2PDjsFiD6r2Ts6jM6BFyv2fovLwrbhh8l+TmOVc+XN/ujL2rtlnXKiP30RH8t
+         S6UgRxg5+yaZATMiFP0V7CZXbXRNJuWO2POyPyc/+mNIGwUkdBn8lGC2KIC6cz2hh6sv
+         CJDbF1wva6NSYjwFp6yOZ5B/8Wi6p/+1TbqSDvFzeJTm5qNOjQDlJzu+az351Kb6k01L
+         8H9aN9DLPhNUJmU3pg9aSJhzVGaGFQW4kJ4pkEcD6+oA15BQDjpnmOHp8Myq3XE58psG
+         csbaakT5tvQ7HUsKigBvtgqMzAnRmEwTfvnkEOj9XxC1ys8T6tR9JZXH1i/okjccLokC
+         xvsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=xIKsEDWi8EL1j5NSYc2uWQA3l5Y2NiXXcLT9TovNhRQ=;
-        b=XaYWhGyOgk5rBer8dFWB4gqgxuoVN+tPPIIzXJ9bDAXZxVRS02hSYFAu5D0w8EqPyH
-         UKaYGTtpD7qpvoh182Vhik4bRoQ3j+o8HMwEdjEu5WE1VxpQz87r0zrUxsAJ7J4lt05r
-         EBRyg9b6fZQnE1/UChzSBarIRyTKz0DBGuSmw6YiylNiAByV44a0fhvLx7Nfk7ANhQEv
-         NRzotqkIm1ExoPy8T6GTlqAcJxTOuYk06CgItw8w/XRagfCoJ23lrwjlv6wTIFTzdYl5
-         6WdSpd0Oqz1vXkCqHF/Lud4cPusCEoVl2F4OH9tchSgFsCZ6jUhd/8uzPM/OyqvY4Z+8
-         6hag==
-X-Gm-Message-State: AOAM532xdu6pwb/R2EbdCkuhxLwo8EfuJf5BOvBrWcD7n2lWWCFoftAG
-        94wFkK8pp3WwTkFmK1WsWxq1nvb6qQgPAgKmo58=
-X-Google-Smtp-Source: ABdhPJwtUxlgXUjHfalHssJK6ozLwDkIUZpLb/yIsL/9erTHZ+0BV/50LNkOYs0FUF9Eq2xmyoDCO5T7tob2m1K9T6U=
+        bh=WZ2fsTX5FLJhX01BulIdj9aVU+u+1SaaqVDcWrlk7vo=;
+        b=Cjt7T0K8pWxXdNUtIwyo8K4w3JTcJq8Y5amJv8HjAlcvykLjkbzMJIA8djUUyq7ZJs
+         4ZCLhP4LWAoQ9C6WkAkR2irnLoAcQhdVqUXJS3VvxjwbILQboGMzdYM1ATy0XSGvA8qJ
+         dq4y8YUT2AG+5Ode3r/hVONGN6v+mDbHxnkxaz0QgQn8KPbBeU9MvOv9Pd8QCGiHWpNn
+         32SCxWQVoBrNSYuauodo8RRnCThRhe4reU/1Pa/ot9GwNUH/sUooXfL8bjeVXYei2ew5
+         abuasmXXryHieOkX11z/QsLOhfhDL4n67rTIrS6wwYlMtqpOvobjfQwNMxq5VoCtW5yt
+         C+mA==
+X-Gm-Message-State: AOAM530esrTL5k7aRaSlklHQKUsA9MB6zme67FjMGIgC+Dd77t2ZMgMq
+        VL1sOSEge/e/qCbTID5yU1w/2D6zoKtyfMx3khY=
+X-Google-Smtp-Source: ABdhPJwVhIeJ7eN/c102kC0C0PDipbzyJDdK32hnyHrtAGB4zJkWiAPX1yDL/oR7lqAn8+vlGW94yr5eZySyWBFd8bM=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c0d7:a7ba:fb41:a35a])
- (user=samitolvanen job=sendgmr) by 2002:a62:e90c:0:b029:203:90f:6f34 with
- SMTP id j12-20020a62e90c0000b0290203090f6f34mr5021966pfh.29.1616087497587;
- Thu, 18 Mar 2021 10:11:37 -0700 (PDT)
-Date:   Thu, 18 Mar 2021 10:11:04 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a17:902:aa8a:b029:e6:64bd:e29d with
+ SMTP id d10-20020a170902aa8ab02900e664bde29dmr10716922plr.24.1616087511958;
+ Thu, 18 Mar 2021 10:11:51 -0700 (PDT)
+Date:   Thu, 18 Mar 2021 10:11:11 -0700
 In-Reply-To: <20210318171111.706303-1-samitolvanen@google.com>
-Message-Id: <20210318171111.706303-11-samitolvanen@google.com>
+Message-Id: <20210318171111.706303-18-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210318171111.706303-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v2 10/17] lkdtm: use __va_function
+Subject: [PATCH v2 17/17] arm64: allow CONFIG_CFI_CLANG to be selected
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -79,30 +79,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To ensure we take the actual address of a function in kernel text, use
-__va_function. Otherwise, with CONFIG_CFI_CLANG, the compiler replaces
-the address with a pointer to the CFI jump table, which is actually in
-the module when compiled with CONFIG_LKDTM=m.
+Select ARCH_SUPPORTS_CFI_CLANG to allow CFI to be enabled.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Acked-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/misc/lkdtm/usercopy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/arm64/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/misc/lkdtm/usercopy.c b/drivers/misc/lkdtm/usercopy.c
-index 109e8d4302c1..d173d6175c87 100644
---- a/drivers/misc/lkdtm/usercopy.c
-+++ b/drivers/misc/lkdtm/usercopy.c
-@@ -314,7 +314,7 @@ void lkdtm_USERCOPY_KERNEL(void)
- 
- 	pr_info("attempting bad copy_to_user from kernel text: %px\n",
- 		vm_mmap);
--	if (copy_to_user((void __user *)user_addr, vm_mmap,
-+	if (copy_to_user((void __user *)user_addr, __va_function(vm_mmap),
- 			 unconst + PAGE_SIZE)) {
- 		pr_warn("copy_to_user failed, but lacked Oops\n");
- 		goto free_user;
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 5656e7aacd69..2eefdbc3e3c9 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -75,6 +75,7 @@ config ARM64
+ 	select ARCH_SUPPORTS_SHADOW_CALL_STACK if CC_HAVE_SHADOW_CALL_STACK
+ 	select ARCH_SUPPORTS_LTO_CLANG if CPU_LITTLE_ENDIAN
+ 	select ARCH_SUPPORTS_LTO_CLANG_THIN
++	select ARCH_SUPPORTS_CFI_CLANG
+ 	select ARCH_SUPPORTS_ATOMIC_RMW
+ 	select ARCH_SUPPORTS_INT128 if CC_HAS_INT128 && (GCC_VERSION >= 50000 || CC_IS_CLANG)
+ 	select ARCH_SUPPORTS_NUMA_BALANCING
 -- 
 2.31.0.291.g576ba9dcdaf-goog
 
