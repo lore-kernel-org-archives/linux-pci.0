@@ -2,110 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D1D6C43142
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA936C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:23:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CCBD64F59
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EDAE64F38
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232532AbhCRRMR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Mar 2021 13:12:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33404 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232421AbhCRRLs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Mar 2021 13:11:48 -0400
-Received: from mail-pl1-x649.google.com (mail-pl1-x649.google.com [IPv6:2607:f8b0:4864:20::649])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD04C061763
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:48 -0700 (PDT)
-Received: by mail-pl1-x649.google.com with SMTP id t18so22475579plr.15
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=qAbADIQAzXUoq/ElYpa9rjjQHxphEP8wPywcql//gEU=;
-        b=jf1TyFgM0qbBrh8PG+9UgOrM2tO3xTLSkbdFlAjoOHwSeKc0SfFX4Q0fQJiehD98Nx
-         V8eHEHeFH6F/2w32lpdS3m06xBAZ3vNDNaCX7x8qpFxSBm6uQOUYcLoYxxuENofMBupO
-         B6duso7Pzno7l5uVBkFz0xUe8AtQKuhaTmELX5H6eGSYwEqGS1XqRT74+g1vLez+eXeQ
-         7z+ITybX9ylbz6ZkOa1dh63eUDWtdli7pIImj6+FfB23BTBDzIAs1fv35o+sxuUwBS44
-         oltowRxFMks3nSe/2PYy3IOmtCU5Xy90zkjD6XlVuVonF/+UFPw1quOUALWqQTVSZsf8
-         4bfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=qAbADIQAzXUoq/ElYpa9rjjQHxphEP8wPywcql//gEU=;
-        b=dHE9p07suTeJHAxncXUMud2p7YthdcfF/Szy2JvZ83v4R/nS0dwJEZfhuEi9fTNGDz
-         q61UHv63dc4yr0KQCvn4LcKbNh6SZjbHgav3DIMrjxEkUePkOOvrPpHitITRACLJ6ThX
-         v1n0RWKgEwuxXul/gLz4RPak4O8tQ8vdCyAPjW1esxxUISF5YW4ImDcQ+r6ECwORaYWM
-         t8p/Ify+OB/4i6wJB2Nu3Mp5Qak2x86h1nQOWQ5U1eYnTv++xvlWYeuUS+wdzKHBQrPP
-         NdYvf7UIPLtcqb+FmKsThCrYmiV82yTypmQ80Bw3jsKRtBk5TuRtbKi4w/5PhA1ILUro
-         BabA==
-X-Gm-Message-State: AOAM530yMVhFBOQS9D9834S81Mim+KtxBCXPEC/0zCjRxKH/Q2own6Rp
-        l2x9H8aRv+zocDv1sVeoojoUvWeHAjXKBf3DKLo=
-X-Google-Smtp-Source: ABdhPJwHw3Ga/ReLCOxUOvdN7Ru83Wr8fqQUCOT6GinoqE3bL2zrZGNpaekhia574g649F2KSLcKcxlK/YtI6PlZyyY=
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c0d7:a7ba:fb41:a35a])
- (user=samitolvanen job=sendgmr) by 2002:aa7:9ae7:0:b029:20a:d94d:dd61 with
- SMTP id y7-20020aa79ae70000b029020ad94ddd61mr5297194pfp.0.1616087507868; Thu,
- 18 Mar 2021 10:11:47 -0700 (PDT)
-Date:   Thu, 18 Mar 2021 10:11:09 -0700
-In-Reply-To: <20210318171111.706303-1-samitolvanen@google.com>
-Message-Id: <20210318171111.706303-16-samitolvanen@google.com>
-Mime-Version: 1.0
-References: <20210318171111.706303-1-samitolvanen@google.com>
-X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v2 15/17] arm64: add __nocfi to __apply_alternatives
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>, Jessica Yu <jeyu@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, bpf@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sami Tolvanen <samitolvanen@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S230038AbhCRRWv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Mar 2021 13:22:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44634 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229840AbhCRRWW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Mar 2021 13:22:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A821D64E37;
+        Thu, 18 Mar 2021 17:22:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616088142;
+        bh=dc75pwbsctWQPsOF4qhXgHwdNZ7A2PS9JI4jzCZQtD8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=JZquC8xKhoSzFRHEFApwcMDGqaxFIaw1hdX8EMc6uJcHjXZz7Bvai5zy5e/xpSEV+
+         9x+OWs1JUskfQZ+s0rAit/FFHL3zuzREq4oKeFq4qIUaTBfzGJRtzZ4md5oCjA+nxe
+         t3lV5Kz9peMkKTeQZeXyxeXls3WFApHPH3T7nqFmfpkfx0YQHXYM1cBMCn/GaLK0V2
+         0b9fNDz0Ck/GrLwPBIjrWPr7RDW+2Cw1XFOOitESs0PRhNfgz62wxwdpF1pix/5PkC
+         PSJ6PIDL6J2V9jYUVHDcGqQQXObkEXSe3mKFURT0a9iHgCwoJ36co6UuYqscCeG8nA
+         1QfpjO0Z06xkw==
+Date:   Thu, 18 Mar 2021 19:22:18 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Alex Williamson <alex.williamson@redhat.com>
+Cc:     Amey Narkhede <ameynarkhede03@gmail.com>,
+        raphael.norwitz@nutanix.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        alay.shah@nutanix.com, suresh.gumpula@nutanix.com,
+        shyam.rajendran@nutanix.com, felipe@nutanix.com
+Subject: Re: [PATCH 4/4] PCI/sysfs: Allow userspace to query and set device
+ reset mechanism
+Message-ID: <YFOMShJAm4j/3vRl@unreal>
+References: <YFGDgqdTLBhQL8mN@unreal>
+ <20210317102447.73no7mhox75xetlf@archlinux>
+ <YFHh3bopQo/CRepV@unreal>
+ <20210317112309.nborigwfd26px2mj@archlinux>
+ <YFHsW/1MF6ZSm8I2@unreal>
+ <20210317131718.3uz7zxnvoofpunng@archlinux>
+ <YFILEOQBOLgOy3cy@unreal>
+ <20210317113140.3de56d6c@omen.home.shazbot.org>
+ <YFMYzkg101isRXIM@unreal>
+ <20210318103935.2ec32302@omen.home.shazbot.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210318103935.2ec32302@omen.home.shazbot.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-__apply_alternatives makes indirect calls to functions whose address
-is taken in assembly code using the alternative_cb macro. With
-non-canonical CFI, the compiler won't replace these function
-references with the jump table addresses, which trips CFI. Disable CFI
-checking in the function to work around the issue.
+On Thu, Mar 18, 2021 at 10:39:35AM -0600, Alex Williamson wrote:
+> On Thu, 18 Mar 2021 11:09:34 +0200
+> Leon Romanovsky <leon@kernel.org> wrote:
 
-Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
----
- arch/arm64/kernel/alternative.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+<...>
 
-diff --git a/arch/arm64/kernel/alternative.c b/arch/arm64/kernel/alternative.c
-index 1184c44ea2c7..abc84636af07 100644
---- a/arch/arm64/kernel/alternative.c
-+++ b/arch/arm64/kernel/alternative.c
-@@ -133,8 +133,8 @@ static void clean_dcache_range_nopatch(u64 start, u64 end)
- 	} while (cur += d_size, cur < end);
- }
- 
--static void __apply_alternatives(void *alt_region,  bool is_module,
--				 unsigned long *feature_mask)
-+static void __nocfi __apply_alternatives(void *alt_region,  bool is_module,
-+					 unsigned long *feature_mask)
- {
- 	struct alt_instr *alt;
- 	struct alt_region *region = alt_region;
--- 
-2.31.0.291.g576ba9dcdaf-goog
+> > I'm lost here, does vfio-pci use sysfs interface or internal to the kernel API?
+> >
+> > If it is latter then we don't really need sysfs, if not, we still need
+> > some sort of DB to create second policy, because "supported != working".
+> > What am I missing?
+>
+> vfio-pci uses the internal kernel API, ie. the variants of
+> pci_reset_function(), which is the same interface used by the existing
+> sysfs reset mechanism.  This proposed configuration of the reset method
+> would affect any driver using that same core infrastructure and from my
+> perspective that's really the goal.  In the case where a supported
+> reset mechanism fails for a device, continuing to quirk those out for
+> the best default behavior makes sense, I'd be disappointed for a vendor
+> to not pursue improving the default behavior where it clearly makes
+> sense.  However, there's also a policy decision, the kernel imposes a
+> preferential ordering of reset mechanism.  Is that ordering the best
+> case for all users?  I've presented above a case where a userspace may
+> prefer a policy of preferring a bus reset to a PM reset.  So I think
+> the question is not only are there supported mechanisms that don't
+> work, where this interface allows userspace to more readily identify
+> and work around those sorts of issues, but it also enables user
+> preference and easier evaluation whether all of the supported reset
+> mechanisms work rather than just the first one we encounter in the
+> ordering we've decided to impose today.  Thanks,
 
+Alex,
+
+Which email client do you use?
+Your responses are grouped as one huge block without any chance to respond
+to you on specific point or answer to your question.
+
+I see your flow and understand your position, but will repeat my
+position. We need to make sure that vendors will have incentive to
+supply quirks.
+
+And regarding vendors, see Amey response below about his touchpad troubles.
+The cheap electronics vendors don't care about their users.
+
+Thanks
+
+>
+> Alex
+>
