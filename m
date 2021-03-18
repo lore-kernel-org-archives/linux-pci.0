@@ -2,168 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52EE2C433E9
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B441DC432C3
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2665264F30
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D24464F69
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Mar 2021 17:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232126AbhCRRLf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Mar 2021 13:11:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33118 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232257AbhCRRLQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Mar 2021 13:11:16 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A7DC061763
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:15 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id v92so6514752ybi.12
-        for <linux-pci@vger.kernel.org>; Thu, 18 Mar 2021 10:11:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=SCzz0vkCTXCJ+hl1sGhlu0aynSHOxUfyv4GiVUi2UT8=;
-        b=Qn2g5lLRvdKJvgzF43+LCRfbhyf/1XwO7VexN9MTAJ/y7/GXos2MZ6DPQ5+40SXSdr
-         3WUM1haHcbmP9fvJ5H0GP0vnMIfZYFYJ3/skq+V4JOBLmlhGlPExy6gqYwMz2uSJ1gR3
-         Kgl24aisbJ27zFi0E+w0DAM6qtK+mORJD0REsBOc+I74Jm51pwyVzGpvxB7NjD1JArlW
-         Z1Nw3IJcwTpFcPc/OM/mDZYHlik6/X5+hBBgaF+RBWA6lCnTc9Su31yLYk3E+KZP8/w7
-         k1BrfTKfIXXZ46LHA5pZpwKRNzhgz58PNc7YyUV/9wiANk3u5qYBZVv8t0PgePg8ENXo
-         Bcrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=SCzz0vkCTXCJ+hl1sGhlu0aynSHOxUfyv4GiVUi2UT8=;
-        b=KF+wOpBEt0zdXqLDX4RC+NWfEAiOTx9CCs9xbIJ0QxVrhRzF0YnmWF5RJlCti94a1R
-         Iu537vUF8NtnQ/HM6c2JlSKG7CFFnLLSUr3M9HJprdHSOvNFqhNpX2r8NYHXdWos11aC
-         HcXx5L55q+SozY3wWASLDxBWQfy7HVnTVx67qWrTA4RPg7DyJcbK0t5qq3nQat9VRmDE
-         59FA60T1PedBlPFuiNqucShB6GlAUYXaKMUOyZNy8fif7HcthybM0Zvg8G4VXsB0wE3G
-         HvpmJ/ERKVU5McmTneYGpExTBEhIOUAN7m/C1jOqleCYEQEcIn6iVHbM1noyyRPkhOV1
-         mtzw==
-X-Gm-Message-State: AOAM5339+Xwv/GUJdlAc6UIWD059HkUb9iusVPfIyhUxV24PtSZmPxM7
-        rH7WLK+S9UuvVai8wr2emyCILH3nhkTMx4zyOsY=
-X-Google-Smtp-Source: ABdhPJwBMd/Hg8Inw/d+QCjcsX4aY1KphAmvmly7frqYXPa28oCDMQoPY4+7I2PpXYAYog1pvPg18bYfcaeLUFSg7M0=
-X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:c0d7:a7ba:fb41:a35a])
- (user=samitolvanen job=sendgmr) by 2002:a25:4ce:: with SMTP id
- 197mr429022ybe.462.1616087474808; Thu, 18 Mar 2021 10:11:14 -0700 (PDT)
-Date:   Thu, 18 Mar 2021 10:10:54 -0700
-Message-Id: <20210318171111.706303-1-samitolvanen@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v2 00/17] Add support for Clang CFI
-From:   Sami Tolvanen <samitolvanen@google.com>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>, Jessica Yu <jeyu@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, bpf@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kbuild@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sami Tolvanen <samitolvanen@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S232282AbhCRRLi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Mar 2021 13:11:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41082 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232292AbhCRRLY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Mar 2021 13:11:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ED346601FF;
+        Thu, 18 Mar 2021 17:11:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616087484;
+        bh=MFIBuAA4jYFqbcWZsIpAtd0iyeV2bPMqk0MdX4Lx+js=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=MmHT1Cpm4VtyUMf8ZoCwfWgeMPtJmgNijoNx5bgltDML5M6DkWZzxQl3rj4DpphdE
+         YiG1maac/K13ovuV05nBz0rmL+dKSX23gJUeX+VsblbjSAQSqhtJCCTqeWY7o+MUj+
+         rHx1yx/t9iuusV9mt37qBjvDt9b/eevGV2oATCP/7gR6+jE/kreRRD+qUbtPKuXSOK
+         TGaoTbOIqbPZUKGPhpKuCRqgqhVogbfGnl8lZ//bJBjW+oPyDXXJMmDgXH40fik3oy
+         joTM8Z521KNXpbwmKWo148HXq65nfajf5tsB07hfnXTKDinhdWDeo9iqDrzuwYTsCe
+         KRc2Awp47KTSg==
+Date:   Thu, 18 Mar 2021 12:11:22 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Martin Mares <mj@ucw.cz>
+Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] lspci: Don't report PCIe link downgrades for downstream
+ ports
+Message-ID: <20210318171122.GA151712@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210318170244.151240-1-helgaas@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds support for Clang's Control-Flow Integrity (CFI)
-checking. With CFI, the compiler injects a runtime check before each
-indirect function call to ensure the target is a valid function with
-the correct static type. This restricts possible call targets and
-makes it more difficult for an attacker to exploit bugs that allow the
-modification of stored function pointers. For more details, see:
+On Thu, Mar 18, 2021 at 12:02:44PM -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> After b47b5bd408e1 ("lspci: Report if the PCIe link speed/width is full or
+> downgraded"), we report "downgraded" or "ok" for PCIe links operating at
+> lower speed or width than they're capable of:
+> 
+>   LnkCap: Port #1, Speed 8GT/s, Width x1, ASPM L1, Exit Latency L1 <16us
+>   LnkSta: Speed 5GT/s (downgraded), Width x1 (ok)
+> 
+> Previously we did this for both ends of the link, but I don't think it's
+> very useful for Downstream Ports (the upstream end of the link) because we
+> claim the link is downgraded even if (1) there's no device on the other end
+> or (2) the other device doesn't support anything faster/wider.
+> 
+> Drop the "downgraded" reporting for Downstream Ports.  If there is a device
+> below, we'll still complain at that end if it supports a faster/wider link
+> than is available.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  ls-caps.c | 17 ++++++++++-------
+>  1 file changed, 10 insertions(+), 7 deletions(-)
+> 
+> diff --git a/ls-caps.c b/ls-caps.c
+> index db56556..dd17c6b 100644
+> --- a/ls-caps.c
+> +++ b/ls-caps.c
+> @@ -758,13 +758,16 @@ static char *link_speed(int speed)
+>      }
+>  }
+>  
+> -static char *link_compare(int sta, int cap)
+> +static char *link_compare(int type, int sta, int cap)
+>  {
+> +  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_DOWNSTREAM) ||
+> +      (type == PCI_EXP_TYPE_PCIE_BRIDGE))
+> +    return "";
+>    if (sta < cap)
+> -    return "downgraded";
+> +    return " (downgraded)";
+>    if (sta > cap)
+> -    return "strange";
+> -  return "ok";
+> +    return " (strange)";
+> +  return " (ok)";
 
-  https://clang.llvm.org/docs/ControlFlowIntegrity.html
+Personally I would probably just return "" by default and drop the
+"(ok)" notes because they don't really seem necessary.  But either way
+is OK.
 
-The first patch contains build system changes and error handling,
-and implements support for cross-module indirect call checking. The
-remaining patches address issues caused by the compiler
-instrumentation. These include fixing known type mismatches, as well
-as issues with address space confusion and cross-module function
-address equality.
-
-These patches add support only for arm64, but I'll post patches also
-for x86_64 after we address the remaining issues there, including
-objtool support.
-
-You can also pull this series from
-
-  https://github.com/samitolvanen/linux.git cfi-v2
-
----
-Changes in v2:
- - Fixed .text merging in module.lds.S.
- - Added WARN_ON_FUNCTION_MISMATCH() and changed kernel/thread.c
-   and kernel/workqueue.c to use the macro instead.
-
-
-Sami Tolvanen (17):
-  add support for Clang CFI
-  cfi: add __cficanonical
-  mm: add generic __va_function and __pa_function macros
-  module: ensure __cfi_check alignment
-  workqueue: use WARN_ON_FUNCTION_MISMATCH
-  kthread: use WARN_ON_FUNCTION_MISMATCH
-  kallsyms: strip ThinLTO hashes from static functions
-  bpf: disable CFI in dispatcher functions
-  lib/list_sort: fix function type mismatches
-  lkdtm: use __va_function
-  psci: use __pa_function for cpu_resume
-  arm64: implement __va_function
-  arm64: use __pa_function
-  arm64: add __nocfi to functions that jump to a physical address
-  arm64: add __nocfi to __apply_alternatives
-  KVM: arm64: Disable CFI for nVHE
-  arm64: allow CONFIG_CFI_CLANG to be selected
-
- Makefile                                  |  17 ++
- arch/Kconfig                              |  45 +++
- arch/arm64/Kconfig                        |   1 +
- arch/arm64/include/asm/memory.h           |  15 +
- arch/arm64/include/asm/mmu_context.h      |   4 +-
- arch/arm64/kernel/acpi_parking_protocol.c |   2 +-
- arch/arm64/kernel/alternative.c           |   4 +-
- arch/arm64/kernel/cpu-reset.h             |  10 +-
- arch/arm64/kernel/cpufeature.c            |   4 +-
- arch/arm64/kernel/psci.c                  |   3 +-
- arch/arm64/kernel/smp_spin_table.c        |   2 +-
- arch/arm64/kvm/hyp/nvhe/Makefile          |   6 +-
- drivers/firmware/psci/psci.c              |   4 +-
- drivers/misc/lkdtm/usercopy.c             |   2 +-
- include/asm-generic/bug.h                 |  16 ++
- include/asm-generic/vmlinux.lds.h         |  20 +-
- include/linux/bpf.h                       |   4 +-
- include/linux/cfi.h                       |  41 +++
- include/linux/compiler-clang.h            |   3 +
- include/linux/compiler_types.h            |   8 +
- include/linux/init.h                      |   6 +-
- include/linux/mm.h                        |   8 +
- include/linux/module.h                    |  13 +-
- include/linux/pci.h                       |   4 +-
- init/Kconfig                              |   2 +-
- kernel/Makefile                           |   4 +
- kernel/cfi.c                              | 329 ++++++++++++++++++++++
- kernel/kallsyms.c                         |  54 +++-
- kernel/kthread.c                          |   3 +-
- kernel/module.c                           |  43 +++
- kernel/workqueue.c                        |   2 +-
- lib/list_sort.c                           |   8 +-
- scripts/Makefile.modfinal                 |   2 +-
- scripts/module.lds.S                      |  18 +-
- 34 files changed, 663 insertions(+), 44 deletions(-)
- create mode 100644 include/linux/cfi.h
- create mode 100644 kernel/cfi.c
-
-
-base-commit: 6417f03132a6952cd17ddd8eaddbac92b61b17e0
--- 
-2.31.0.291.g576ba9dcdaf-goog
-
+>  }
+>  
+>  static char *aspm_support(int code)
+> @@ -837,11 +840,11 @@ static void cap_express_link(struct device *d, int where, int type)
+>    w = get_conf_word(d, where + PCI_EXP_LNKSTA);
+>    sta_speed = w & PCI_EXP_LNKSTA_SPEED;
+>    sta_width = (w & PCI_EXP_LNKSTA_WIDTH) >> 4;
+> -  printf("\t\tLnkSta:\tSpeed %s (%s), Width x%d (%s)\n",
+> +  printf("\t\tLnkSta:\tSpeed %s%s, Width x%d%s\n",
+>  	link_speed(sta_speed),
+> -	link_compare(sta_speed, cap_speed),
+> +	link_compare(type, sta_speed, cap_speed),
+>  	sta_width,
+> -	link_compare(sta_width, cap_width));
+> +	link_compare(type, sta_width, cap_width));
+>    printf("\t\t\tTrErr%c Train%c SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
+>  	FLAG(w, PCI_EXP_LNKSTA_TR_ERR),
+>  	FLAG(w, PCI_EXP_LNKSTA_TRAIN),
+> -- 
+> 2.25.1
+> 
