@@ -2,231 +2,125 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ADFBC433E5
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Mar 2021 16:21:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E88CC433DB
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Mar 2021 16:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52BDB6198A
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Mar 2021 16:21:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01A9961984
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Mar 2021 16:24:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230039AbhCSQUp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Mar 2021 12:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51058 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229941AbhCSQUb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Mar 2021 12:20:31 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DEB1C06175F;
-        Fri, 19 Mar 2021 09:20:31 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id q3so3435577qkq.12;
-        Fri, 19 Mar 2021 09:20:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=vZobaehjsix9ib7wNZYs6eoX+BnCULN5ePNCx8BS41w=;
-        b=G4s5yy6ZMZogHHRpLeRiBVSj9jitvRqqejC74/eF0IfqEwqdvlTBIR7F+IA1ne6l7O
-         GG8O2dzkDS+nvBUkWU/5Gv1NEfId3HoI9LNZ4AxVzLufnBYhR73rMHo4cTOzt+XngoUd
-         XoOUggIAZay53/+P+zf27DOJUwBOUD9sVT11PHdv8v0zCPfMdVL+QvYHaFfjAIE3BzvF
-         ylV/QkEHjtBhjR0hhbxHcEN9Khf4QW0o9CHjOcBODtgr7trRFVJWCKqLFQi9uDt5arXE
-         KLzQr7ky8bHWQ9wklJTdRZPfcBi3E9inKgdQfIIIaRBhn22ewD60AZPgDwHCOsi8AuRP
-         h5+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=vZobaehjsix9ib7wNZYs6eoX+BnCULN5ePNCx8BS41w=;
-        b=C3ndy5z8bTn/0zGS5m2G80yd6/LAcfkDktwMfVPdfmqq+m8wgVywyoe3Wf5HHQeytU
-         Fx6/GEyjb4TxnxTtf9t83A5sciNIxgMJ30vm+RAS5VOkcMhwsX6YwCEIcN2NpIz293bb
-         62kRippiAnZNDx5QwJzVxMECBLjlijrtY7vTkNsxBzRrQgdKX8OZvobMLT+5dlmc0pt3
-         BdU6rjhXb3ZQbbkVxQC19TsLHbglejW4z/KtuRSdjosWFeEiqXiC1jIRBIbJCWO6Aj6E
-         T8ptHPAJKfz3uImyNhI2KsTKptXz9MzlacK9TF+p4EKltuceKCO9PIV2zalWjb4GBJpA
-         2dqw==
-X-Gm-Message-State: AOAM531kMGPhqt/58HJtZ2Wqq8c3sbUow11275gcOW+lWgwNDd10gjZt
-        i9VBrdhf5ycZx0sem1gCRDU=
-X-Google-Smtp-Source: ABdhPJx9673J0fqzQ5fDU65ei6lqj2aCpCqV40IEph2kxix69v/fpBODeOC4oHx+FmsO/q/Asy34UA==
-X-Received: by 2002:a37:9a07:: with SMTP id c7mr10264036qke.352.1616170830254;
-        Fri, 19 Mar 2021 09:20:30 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id 79sm4962458qki.37.2021.03.19.09.20.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Mar 2021 09:20:28 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 430EE27C0061;
-        Fri, 19 Mar 2021 12:20:28 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute5.internal (MEProxy); Fri, 19 Mar 2021 12:20:28 -0400
-X-ME-Sender: <xms:TM9UYNL_xT-OIZogUwujyJAanZv9oGWKKqY_L5z9iySUQkFxaouihg>
-    <xme:TM9UYJK0skRiVetcNxZkdDe-JmGD4aTvmnZEWFbrF3WPv2kp0odaiUKbWZZCA2zjb
-    WClsgfIPXzvYdM5Fw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduledrudefkedgkeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhephffvufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpeeuohhquhhn
-    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
-    htvghrnhephedvveetfefgiedutedtfeevvddvleekjeeuffffleeguefhhfejteekieeu
-    ueelnecukfhppedufedurddutdejrddurddvheegnecuvehluhhsthgvrhfuihiivgeptd
-    enucfrrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgv
-    rhhsohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfh
-    gvnhhgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
-X-ME-Proxy: <xmx:TM9UYFtmSthQ61VUkwd60QbAzNHTtArj-NOof8pemCyJjQ3VanjEGA>
-    <xmx:TM9UYObCanonspK5tnj5N-HtXwP2huAAqZ7ddR_w7WHGT0C49yg3pA>
-    <xmx:TM9UYEZk22Z258n9RhAJkhaoYc3a_lx7x0tV3ysxB0hsBkfo_-TaAA>
-    <xmx:TM9UYKzk6rOhrAFZ0jPAnX8bqH4FInnacel-a-gDS8xIKRDhQZsfFQVkreakkOhZ>
-Received: from localhost (unknown [131.107.1.254])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 9820A240068;
-        Fri, 19 Mar 2021 12:20:27 -0400 (EDT)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, Clint Sbisa <csbisa@amazon.com>,
-        Boqun Feng <boqun.feng@gmail.com>,
-        Ard Biesheuvel <ardb@kernel.org>,
-        Sunil Muthuswamy <sunilmut@microsoft.com>
-Subject: [RFC 1/2] arm64: PCI: Allow use arch-specific pci sysdata
-Date:   Sat, 20 Mar 2021 00:19:55 +0800
-Message-Id: <20210319161956.2838291-2-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210319161956.2838291-1-boqun.feng@gmail.com>
-References: <20210319161956.2838291-1-boqun.feng@gmail.com>
+        id S230015AbhCSQYB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Mar 2021 12:24:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50331 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229736AbhCSQXY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Mar 2021 12:23:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1616171003;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4yMSSQE+266qMvhoobx6hI2uloJNeAdSSRsEhmgkNvM=;
+        b=IqSrRBkw5chkul+IF8gINdPvig1fRaDLoe+XbP/Y7wXHF7wOUSKoNWU7tBSqGg/e6RFGlp
+        h1Mo6ofkbbXfeJjGzG61beBjfjVFJbsDbdKxmiNJs39gbWdsiXi0FhJbWuAKIDx2GMdWs2
+        Jve9JSJYmxv3pxcQMBbilWz8S1J2ZRQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-275-ND2CEfwjMq-no1d6SPdBxw-1; Fri, 19 Mar 2021 12:23:16 -0400
+X-MC-Unique: ND2CEfwjMq-no1d6SPdBxw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7B6E81044804;
+        Fri, 19 Mar 2021 16:23:14 +0000 (UTC)
+Received: from omen.home.shazbot.org (ovpn-112-120.phx2.redhat.com [10.3.112.120])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AF0DA1A86F;
+        Fri, 19 Mar 2021 16:23:13 +0000 (UTC)
+Date:   Fri, 19 Mar 2021 10:23:13 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     "Enrico Weigelt, metux IT consult" <info@metux.net>,
+        Amey Narkhede <ameynarkhede03@gmail.com>,
+        raphael.norwitz@nutanix.com, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        alay.shah@nutanix.com, suresh.gumpula@nutanix.com,
+        shyam.rajendran@nutanix.com, felipe@nutanix.com
+Subject: Re: [PATCH 4/4] PCI/sysfs: Allow userspace to query and set device
+ reset mechanism
+Message-ID: <20210319102313.179e9969@omen.home.shazbot.org>
+In-Reply-To: <YFSgQ2RWqt4YyIV4@unreal>
+References: <YFHh3bopQo/CRepV@unreal>
+        <20210317112309.nborigwfd26px2mj@archlinux>
+        <YFHsW/1MF6ZSm8I2@unreal>
+        <20210317131718.3uz7zxnvoofpunng@archlinux>
+        <YFILEOQBOLgOy3cy@unreal>
+        <20210317113140.3de56d6c@omen.home.shazbot.org>
+        <YFMYzkg101isRXIM@unreal>
+        <20210318103935.2ec32302@omen.home.shazbot.org>
+        <YFOMShJAm4j/3vRl@unreal>
+        <a2b9dc7e-e73a-3a70-5899-8ed37a8ef700@metux.net>
+        <YFSgQ2RWqt4YyIV4@unreal>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently, if an architecture selects CONFIG_PCI_DOMAINS_GENERIC, the
-->sysdata in bus and bridge will be treated as struct pci_config_window,
-which is created by generic ECAM using the data from acpi.
+On Fri, 19 Mar 2021 14:59:47 +0200
+Leon Romanovsky <leon@kernel.org> wrote:
 
-However, for a virtualized PCI bus, there might be no enough data in of
-or acpi table to create a pci_config_window. This is similar to the case
-where CONFIG_PCI_DOMAINS_GENERIC=n, IOW, architectures use their own
-structure for sysdata, so no apci table lookup is required.
+> On Thu, Mar 18, 2021 at 07:34:56PM +0100, Enrico Weigelt, metux IT consult wrote:
+> > On 18.03.21 18:22, Leon Romanovsky wrote:
+> >   
+> > > Which email client do you use?
+> > > Your responses are grouped as one huge block without any chance to respond
+> > > to you on specific point or answer to your question.  
+> > 
+> > I'm reading this thread in Tbird, and threading / quoting all looks
+> > nice.  
+> 
+> I'm not talking about threading or quoting but about response itself.
+> See it here https://lore.kernel.org/lkml/20210318103935.2ec32302@omen.home.shazbot.org/
+> Alex's response is one big chunk without any separations to paragraphs.
 
-In order to enable Hyper-V's virtual PCI (which doesn't have acpi table
-entry for PCI) on ARM64 (which selects CONFIG_PCI_DOMAINS_GENERIC), we
-introduce arch-specific pci sysdata (similar to the one for x86) for
-ARM64, and allow the core PCI code to detect the type of sysdata at the
-runtime. The latter is achieved by adding a pci_ops::use_arch_sysdata
-field.
+I've never known paragraph breaks to be required to interject a reply.
 
-Originally-by: Sunil Muthuswamy <sunilmut@microsoft.com>
-Signed-off-by: Boqun Feng (Microsoft) <boqun.feng@gmail.com>
----
- arch/arm64/include/asm/pci.h | 29 +++++++++++++++++++++++++++++
- arch/arm64/kernel/pci.c      | 15 ++++++++++++---
- include/linux/pci.h          |  3 +++
- 3 files changed, 44 insertions(+), 3 deletions(-)
+Back on topic...
 
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-index b33ca260e3c9..dade061a0658 100644
---- a/arch/arm64/include/asm/pci.h
-+++ b/arch/arm64/include/asm/pci.h
-@@ -22,6 +22,16 @@
- 
- extern int isa_dma_bridge_buggy;
- 
-+struct pci_sysdata {
-+	int domain;	/* PCI domain */
-+	int node;	/* NUMA Node */
-+#ifdef CONFIG_ACPI
-+	struct acpi_device *companion;	/* ACPI companion device */
-+#endif
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	void *fwnode;			/* IRQ domain for MSI assignment */
-+#endif
-+};
- #ifdef CONFIG_PCI
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-@@ -31,8 +41,27 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- 
- static inline int pci_proc_domain(struct pci_bus *bus)
- {
-+	if (bus->ops->use_arch_sysdata)
-+		return pci_domain_nr(bus);
- 	return 1;
- }
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
-+{
-+	struct pci_sysdata *sd = bus->sysdata;
-+
-+	if (bus->ops->use_arch_sysdata)
-+		return sd->fwnode;
-+
-+	/*
-+	 * bus->sysdata is not struct pci_sysdata, fwnode should be able to
-+	 * be queried from of/acpi.
-+	 */
-+	return NULL;
-+}
-+#define pci_root_bus_fwnode	_pci_root_bus_fwnode
-+#endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-+
- #endif  /* CONFIG_PCI */
- 
- #endif  /* __ASM_PCI_H */
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 1006ed2d7c60..63d420d57e63 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -74,15 +74,24 @@ struct acpi_pci_generic_root_info {
- int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
- {
- 	struct pci_config_window *cfg = bus->sysdata;
--	struct acpi_device *adev = to_acpi_device(cfg->parent);
--	struct acpi_pci_root *root = acpi_driver_data(adev);
-+	struct pci_sysdata *sd = bus->sysdata;
-+	struct acpi_device *adev;
-+	struct acpi_pci_root *root;
-+
-+	/* struct pci_sysdata has domain nr in it */
-+	if (bus->ops->use_arch_sysdata)
-+		return sd->domain;
-+
-+	/* or pci_config_window is used as sysdata */
-+	adev = to_acpi_device(cfg->parent);
-+	root = acpi_driver_data(adev);
- 
- 	return root->segment;
- }
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- {
--	if (!acpi_disabled) {
-+	if (!acpi_disabled && bridge->ops->use_arch_sysdata) {
- 		struct pci_config_window *cfg = bridge->bus->sysdata;
- 		struct acpi_device *adev = to_acpi_device(cfg->parent);
- 		struct device *bus_dev = &bridge->bus->dev;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 86c799c97b77..4036aac40361 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -740,6 +740,9 @@ struct pci_ops {
- 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	int use_arch_sysdata;	/* ->sysdata is arch-specific */
-+#endif
- };
- 
- /*
--- 
-2.30.2
+> >   
+> > > I see your flow and understand your position, but will repeat my
+> > > position. We need to make sure that vendors will have incentive to
+> > > supply quirks.  
+
+What if we taint the kernel or pci_warn() for cases where either all
+the reset methods are disabled, ie. 'echo none > reset_method', or any
+time a device specific method is disabled?
+
+I'd almost go so far as to prevent disabling a device specific reset
+altogether, but for example should a device specific reset that fixes
+an aspect of FLR behavior prevent using a bus reset?  I'd prefer in that
+case if direct FLR were disabled via a device flag introduced with the
+quirk and the remaining resets can still be selected by preference.
+
+Theoretically all the other reset methods work and are available, it's
+only a policy decision which to use, right?
+
+If a device probes for a reset that's broken and distros start
+including systemd scripts to apply a preference to avoid it, (a) that
+enables them to work with existing kernels, and (b) indicates to us to
+add the trivial quirk to flag that reset as broken.
+
+The other side of the argument that this discourages quirks is that
+this interface actually makes it significantly easier to report specific
+reset methods as broken for a given device.
+
+Thanks,
+Alex
 
