@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3351C433FB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A09BDC433F8
 	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:54:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5E13619A7
+	by mail.kernel.org (Postfix) with ESMTP id 89AEE619A9
 	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:54:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232259AbhCVSyK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Mar 2021 14:54:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37632 "EHLO mail.kernel.org"
+        id S232172AbhCVSyI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Mar 2021 14:54:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37434 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231738AbhCVSxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Mar 2021 14:53:48 -0400
+        id S231240AbhCVSxm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Mar 2021 14:53:42 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 046736199F;
-        Mon, 22 Mar 2021 18:53:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 12060619A1;
+        Mon, 22 Mar 2021 18:53:42 +0000 (UTC)
 Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <maz@kernel.org>)
-        id 1lOPZU-0038p5-2Z; Mon, 22 Mar 2021 18:46:36 +0000
+        id 1lOPZS-0038p5-4Z; Mon, 22 Mar 2021 18:46:34 +0000
 From:   Marc Zyngier <maz@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -51,9 +51,9 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org,
         linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-Subject: [PATCH v2 13/15] PCI/MSI: Make pci_host_common_probe() declare its reliance on MSI domains
-Date:   Mon, 22 Mar 2021 18:46:12 +0000
-Message-Id: <20210322184614.802565-14-maz@kernel.org>
+Subject: [PATCH v2 11/15] PCI: mediatek: Advertise lack of MSI handling
+Date:   Mon, 22 Mar 2021 18:46:10 +0000
+Message-Id: <20210322184614.802565-12-maz@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322184614.802565-1-maz@kernel.org>
 References: <20210322184614.802565-1-maz@kernel.org>
@@ -67,34 +67,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The generic PCI host driver relies on MSI domains for MSIs to
-be provided to its end-points. Make this dependency explicit.
+From: Thomas Gleixner <tglx@linutronix.de>
 
-This cures the warnings occuring on arm/arm64 VMs when booted
-with PCI virtio devices and no MSI controller (no GICv3 ITS,
-for example).
+Some Mediatek host bridges cannot handle MSIs, which is sad.
+This also results in an ugly warning at device probe time,
+as the core PCI code wasn't told that MSIs were not available.
 
-It is likely that other drivers will need to express the same
-dependency.
+Advertise this fact to the rest of the core PCI code by
+using the 'no_msi' attribute.
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reported-by: Frank Wunderlich <frank-w@public-files.de>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+[maz: commit message]
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pci-host-common.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/pcie-mediatek.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index 6ab694f8d283..d3924a44db02 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -79,6 +79,7 @@ int pci_host_common_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 23548b517e4b..ba28abdd1362 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -143,6 +143,7 @@ struct mtk_pcie_port;
+  * struct mtk_pcie_soc - differentiate between host generations
+  * @need_fix_class_id: whether this host's class ID needed to be fixed or not
+  * @need_fix_device_id: whether this host's device ID needed to be fixed or not
++ * @no_msi: Bridge has no MSI support
+  * @device_id: device ID which this host need to be fixed
+  * @ops: pointer to configuration access functions
+  * @startup: pointer to controller setting functions
+@@ -151,6 +152,7 @@ struct mtk_pcie_port;
+ struct mtk_pcie_soc {
+ 	bool need_fix_class_id;
+ 	bool need_fix_device_id;
++	bool no_msi;
+ 	unsigned int device_id;
+ 	struct pci_ops *ops;
+ 	int (*startup)(struct mtk_pcie_port *port);
+@@ -1087,6 +1089,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
  
- 	bridge->sysdata = cfg;
- 	bridge->ops = (struct pci_ops *)&ops->pci_ops;
-+	bridge->msi_domain = true;
+ 	host->ops = pcie->soc->ops;
+ 	host->sysdata = pcie;
++	host->no_msi = pcie->soc->no_msi;
  
- 	return pci_host_probe(bridge);
- }
+ 	err = pci_host_probe(host);
+ 	if (err)
+@@ -1176,6 +1179,7 @@ static const struct dev_pm_ops mtk_pcie_pm_ops = {
+ };
+ 
+ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
++	.no_msi = true,
+ 	.ops = &mtk_pcie_ops,
+ 	.startup = mtk_pcie_startup_port,
+ };
 -- 
 2.29.2
 
