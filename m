@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C96DC433E8
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E802C433F7
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13F2E619A0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27A67619A3
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231557AbhCVSqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Mar 2021 14:46:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33360 "EHLO mail.kernel.org"
+        id S231916AbhCVSqm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Mar 2021 14:46:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33482 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230381AbhCVSq3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Mar 2021 14:46:29 -0400
+        id S231384AbhCVSqc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Mar 2021 14:46:32 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0FCAE61984;
-        Mon, 22 Mar 2021 18:46:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EEF4D619A4;
+        Mon, 22 Mar 2021 18:46:31 +0000 (UTC)
 Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <maz@kernel.org>)
-        id 1lOPZL-0038p5-ED; Mon, 22 Mar 2021 18:46:27 +0000
+        id 1lOPZO-0038p5-9g; Mon, 22 Mar 2021 18:46:30 +0000
 From:   Marc Zyngier <maz@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -51,9 +51,9 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org,
         linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-Subject: [PATCH v2 04/15] PCI: xilinx: Don't allocate extra memory for the MSI capture address
-Date:   Mon, 22 Mar 2021 18:46:03 +0000
-Message-Id: <20210322184614.802565-5-maz@kernel.org>
+Subject: [PATCH v2 07/15] PCI/MSI: Drop use of msi_controller from core code
+Date:   Mon, 22 Mar 2021 18:46:06 +0000
+Message-Id: <20210322184614.802565-8-maz@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210322184614.802565-1-maz@kernel.org>
 References: <20210322184614.802565-1-maz@kernel.org>
@@ -67,73 +67,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A long cargo-culted behaviour of PCI drivers is to allocate memory
-to obtain an address that is fed to the controller as the MSI
-capture address (i.e. the MSI doorbell).
+As there is no driver using msi_controller, we can now safely
+remove its use from the PCI probe code.
 
-But there is no actual requirement for this address to be RAM.
-All it needs to be is a suitable aligned address that will
-*not* be DMA'd to.
-
-Use the physical address of the 'port' data structure as the MSI
-capture address.
-
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pcie-xilinx.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ drivers/pci/msi.c   | 23 +----------------------
+ drivers/pci/probe.c |  2 --
+ include/linux/pci.h |  2 --
+ 3 files changed, 1 insertion(+), 26 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index fa5baeb82653..3a762ffb0cef 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -94,7 +94,6 @@
-  * struct xilinx_pcie_port - PCIe port information
-  * @reg_base: IO Mapped Register Base
-  * @irq: Interrupt number
-- * @msi_pages: MSI pages
-  * @dev: Device pointer
-  * @msi_domain: MSI IRQ domain pointer
-  * @leg_domain: Legacy IRQ domain pointer
-@@ -103,7 +102,6 @@
- struct xilinx_pcie_port {
- 	void __iomem *reg_base;
- 	u32 irq;
--	unsigned long msi_pages;
- 	struct device *dev;
- 	struct irq_domain *msi_domain;
- 	struct irq_domain *leg_domain;
-@@ -274,10 +272,10 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 
- 	irq_set_msi_desc(irq, desc);
- 
--	msg_addr = virt_to_phys((void *)port->msi_pages);
-+	msg_addr = virt_to_phys(port);
- 
--	msg.address_hi = 0;
--	msg.address_lo = msg_addr;
-+	msg.address_hi = upper_32_bits(msg_addr);
-+	msg.address_lo = lower_32_bits(msg_addr);
- 	msg.data = irq;
- 
- 	pci_write_msi_msg(irq, &msg);
-@@ -330,13 +328,9 @@ static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 3162f88fe940..79b5a995bd02 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -64,39 +64,18 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
+ /* Arch hooks */
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
  {
- 	phys_addr_t msg_addr;
- 
--	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
--	if (!port->msi_pages)
--		return -ENOMEM;
+-	struct msi_controller *chip = dev->bus->msi;
+-	int err;
 -
--	msg_addr = virt_to_phys((void *)port->msi_pages);
--	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
--	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
-+	msg_addr = virt_to_phys(port);
-+	pcie_write(port, upper_32_bit(msg_addr), XILINX_PCIE_REG_MSIBASE1);
-+	pcie_write(port, lower_32_bits(msg_addr), XILINX_PCIE_REG_MSIBASE2);
- 
- 	return 0;
+-	if (!chip || !chip->setup_irq)
+-		return -EINVAL;
+-
+-	err = chip->setup_irq(chip, dev, desc);
+-	if (err < 0)
+-		return err;
+-
+-	irq_set_chip_data(desc->irq, chip);
+-
+-	return 0;
++	return -EINVAL;
  }
+ 
+ void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
+-	struct msi_controller *chip = irq_get_chip_data(irq);
+-
+-	if (!chip || !chip->teardown_irq)
+-		return;
+-
+-	chip->teardown_irq(chip, irq);
+ }
+ 
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
+-	struct msi_controller *chip = dev->bus->msi;
+ 	struct msi_desc *entry;
+ 	int ret;
+ 
+-	if (chip && chip->setup_irqs)
+-		return chip->setup_irqs(chip, dev, nvec, type);
+ 	/*
+ 	 * If an architecture wants to support multiple MSI, it needs to
+ 	 * override arch_setup_msi_irqs()
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 953f15abc850..fb04fc81a8bd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -895,7 +895,6 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	/* Temporarily move resources off the list */
+ 	list_splice_init(&bridge->windows, &resources);
+ 	bus->sysdata = bridge->sysdata;
+-	bus->msi = bridge->msi;
+ 	bus->ops = bridge->ops;
+ 	bus->number = bus->busn_res.start = bridge->busnr;
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+@@ -1053,7 +1052,6 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 		return NULL;
+ 
+ 	child->parent = parent;
+-	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 86c799c97b77..ebf557e59d87 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -540,7 +540,6 @@ struct pci_host_bridge {
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void		*release_data;
+-	struct msi_controller *msi;
+ 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+ 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+ 	unsigned int	native_aer:1;		/* OS may use PCIe AER */
+@@ -621,7 +620,6 @@ struct pci_bus {
+ 	struct resource busn_res;	/* Bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* Configuration access functions */
+-	struct msi_controller *msi;	/* MSI controller */
+ 	void		*sysdata;	/* Hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
+ 
 -- 
 2.29.2
 
