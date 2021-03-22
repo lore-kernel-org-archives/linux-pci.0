@@ -2,114 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B023C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:54:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A6EDC433C1
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 19:50:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E381B619A2
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 18:54:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D90C61934
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Mar 2021 19:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232250AbhCVSyJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Mar 2021 14:54:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37566 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231728AbhCVSxq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Mar 2021 14:53:46 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1C6B161998;
-        Mon, 22 Mar 2021 18:53:46 +0000 (UTC)
-Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94)
-        (envelope-from <maz@kernel.org>)
-        id 1lOPZR-0038p5-66; Mon, 22 Mar 2021 18:46:33 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Thierry Reding <treding@nvidia.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Rob Herring <robh@kernel.org>, Will Deacon <will@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
-        linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-Subject: [PATCH v2 10/15] PCI/MSI: Let PCI host bridges declare their lack of MSI handling
-Date:   Mon, 22 Mar 2021 18:46:09 +0000
-Message-Id: <20210322184614.802565-11-maz@kernel.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210322184614.802565-1-maz@kernel.org>
-References: <20210322184614.802565-1-maz@kernel.org>
+        id S230027AbhCVTth (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Mar 2021 15:49:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33886 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229771AbhCVTtB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Mar 2021 15:49:01 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF890C061574
+        for <linux-pci@vger.kernel.org>; Mon, 22 Mar 2021 12:49:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=a2YNmkFHFWJdUV3G4mTov/7QvS9+ADavhMLaJEkKeio=; b=i9FF28K/oSTYnMuAINyz46NpQC
+        Z+smB3s551EiSa/A9n+LWS58Afh9EvXd7Pitjf62vJyPjACu07shyPBI0Cexhgkuez31YesBTq8H3
+        VcoOwfEUf0wSnT/OBP24DwjWYSDW3aAqcImD3giQ3aL77ZdQkWAZ1V5WOn0bFJoLl82r5b+YMR6K6
+        833z2n91XflFRYWQ4dUFTxIVdScJFp9CUMt+0fDmzIvdygDxAzaDN2bMfl88eW9vSw4113veLxh4f
+        sJlQfpsk2Xxz8XPf7y6Nv+D7ZGRKs7DwTRLPNk9fd1BGf0unE4Gu5kuIWIKqL/5eYpWQuT1d6KTVo
+        mufPP4Sg==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lOQX5-008zTM-3z; Mon, 22 Mar 2021 19:48:18 +0000
+Date:   Mon, 22 Mar 2021 19:48:11 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jon Derrick <jonathan.derrick@intel.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Nirmal Patel <nirmal.patel@intel.com>,
+        Sushma Kalakota <sushmax.kalakota@intel.com>
+Subject: Re: [PATCH 0/5] Legacy direct-assign mode
+Message-ID: <20210322194811.GA2141770@infradead.org>
+References: <20201120225144.15138-1-jonathan.derrick@intel.com>
+ <20210322122837.GC11469@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 62.31.163.78
-X-SA-Exim-Rcpt-To: lorenzo.pieralisi@arm.com, bhelgaas@google.com, frank-w@public-files.de, treding@nvidia.com, tglx@linutronix.de, robh@kernel.org, will@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, mikelley@microsoft.com, wei.liu@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com, ryder.lee@mediatek.com, marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com, michal.simek@xilinx.com, paul.walmsley@sifive.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org, linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210322122837.GC11469@e121166-lin.cambridge.arm.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+On Mon, Mar 22, 2021 at 12:28:37PM +0000, Lorenzo Pieralisi wrote:
+> > correctly program bridge windows with physical addresses. Some customers are
+> > using a legacy method that relies on the VMD subdevice domain's root port
+> > windows to be written with the physical addresses. This method also allows
+> > other hypervisors besides QEMU/KVM to perform guest passthrough.
 
-Some PCI host bridges cannot deal with MSIs at all. This has
-the unfortunate effect of triggering ugly warnings when an end-point
-driver requests MSIs.
+This seems like a bad idea.  What are these other hypervisors?  AFAIK
+there are no purely userspace hypervisors, so in other words what you
+propose here is only for unsupported external modules.
 
-Instead, let the bridge advertise such lack of MSIs, so that it
-can be flagged correctly by the core code.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-[maz: commit message]
-Signed-off-by: Marc Zyngier <maz@kernel.org>
----
- drivers/pci/probe.c | 2 ++
- include/linux/pci.h | 1 +
- 2 files changed, 3 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index fb04fc81a8bd..146bd85c037e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -925,6 +925,8 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	device_enable_async_suspend(bus->bridge);
- 	pci_set_bus_of_node(bus);
- 	pci_set_bus_msi_domain(bus);
-+	if (bridge->no_msi)
-+		bus->bus_flags |= PCI_BUS_FLAGS_NO_MSI;
- 
- 	if (!parent)
- 		set_dev_node(bus->bridge, pcibus_to_node(bus));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ebf557e59d87..48605cca82ae 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -550,6 +550,7 @@ struct pci_host_bridge {
- 	unsigned int	native_dpc:1;		/* OS may use PCIe DPC */
- 	unsigned int	preserve_config:1;	/* Preserve FW resource setup */
- 	unsigned int	size_windows:1;		/* Enable root bus sizing */
-+	unsigned int	no_msi:1;		/* Bridge has no MSI support */
- 
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
--- 
-2.29.2
-
+I don't think we shoud merge something like this.
