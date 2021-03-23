@@ -2,94 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 981EBC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 19:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE528C433C1
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 19:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B817619CA
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 19:40:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E2D4619CA
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 19:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230364AbhCWTjk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Mar 2021 15:39:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41478 "EHLO mail.kernel.org"
+        id S231213AbhCWTlV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Mar 2021 15:41:21 -0400
+Received: from mga18.intel.com ([134.134.136.126]:46567 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230018AbhCWTjZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Mar 2021 15:39:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 247C3614A5;
-        Tue, 23 Mar 2021 19:39:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616528365;
-        bh=tnWhfJQiaw5ptja+gnHDao9U3U7TNeGkUgzd8HGqX6M=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=J803I7TanM+5tCsc4HOkg9etCbENfY9Os0QAKLg1TBkk6guFrojwPL8wMjCLhUcLI
-         P5oJ6/Dg/TbiQCy9MBIKviL8zMS+mtcxxsr491pepxwCAH8QuWpty5m2TJ4+29lG8+
-         FyOP4fewglEZVpgSdGSAqfQqN2CBlE5wefJseV+T153ZQvXO8m3kP0u3MfL+PQEXeR
-         8dxpeCmVNK/0IE/+mK943kLJJUolc9NtFPMjG5KsWiP1kqrtRljKjmvSJZ6/q1/M1p
-         ZqxXdpM4tO54KhQNH2wPhwP+i9bkgmCo7E0jf9Yw3jxVqlj4rNhFsVUt9fbhzUfej/
-         DedIhuOtq72EQ==
-Date:   Tue, 23 Mar 2021 14:39:23 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Vinicius Costa Gomes <vinicius.gomes@intel.com>
+        id S229915AbhCWTkw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Mar 2021 15:40:52 -0400
+IronPort-SDR: EKtEONcOmc2ZuCZbW2IURHUMcCaPYV4Cx/nHl29abdImb00PfbaPRwrvmLsbswwSunBIgacj+B
+ yx20XDs6/ejw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9932"; a="178118859"
+X-IronPort-AV: E=Sophos;i="5.81,272,1610438400"; 
+   d="scan'208";a="178118859"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2021 12:40:51 -0700
+IronPort-SDR: 50JVbDM3OXVNtr/9fTbaGCYta4bCy8TsLKj4kOe4teHrkNLyvLOKCFUUJiA5ZElecQnWCZKuJQ
+ DkCCGOfYXgLQ==
+X-IronPort-AV: E=Sophos;i="5.81,272,1610438400"; 
+   d="scan'208";a="452283510"
+Received: from ckane-desk.amr.corp.intel.com (HELO vcostago-mobl2.amr.corp.intel.com) ([10.209.48.247])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2021 12:40:50 -0700
+From:   Vinicius Costa Gomes <vinicius.gomes@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     intel-wired-lan@lists.osuosl.org, sasha.neftin@intel.com,
         anthony.l.nguyen@intel.com, linux-pci@vger.kernel.org,
         bhelgaas@google.com, netdev@vger.kernel.org, mlichvar@redhat.com,
         richardcochran@gmail.com
-Subject: Re: [PATCH next-queue v3 3/3] igc: Add support for PTP
- getcrosststamp()
-Message-ID: <20210323193923.GA597480@bjorn-Precision-5520>
+Subject: Re: [PATCH next-queue v3 2/3] igc: Enable PCIe PTM
+In-Reply-To: <20210323192920.GA597326@bjorn-Precision-5520>
+References: <20210323192920.GA597326@bjorn-Precision-5520>
+Date:   Tue, 23 Mar 2021 12:40:49 -0700
+Message-ID: <87mtutk69q.fsf@vcostago-mobl2.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210322161822.1546454-4-vinicius.gomes@intel.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 09:18:22AM -0700, Vinicius Costa Gomes wrote:
-> i225 has support for PCIe PTM, which allows us to implement support
-> for the PTP_SYS_OFFSET_PRECISE ioctl(), implemented in the driver via
-> the getcrosststamp() function.
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-> +static bool igc_is_ptm_supported(struct igc_adapter *adapter)
-> +{
-> +#if IS_ENABLED(CONFIG_X86_TSC) && IS_ENABLED(CONFIG_PCIE_PTM)
-> +	return adapter->pdev->ptm_enabled;
-> +#endif
+> On Mon, Mar 22, 2021 at 09:18:21AM -0700, Vinicius Costa Gomes wrote:
+>> In practice, enabling PTM also sets the enabled_ptm flag in the PCI
+>> device, the flag will be used for detecting if PTM is enabled before
+>> adding support for the SYSOFFSET_PRECISE ioctl() (which is added by
+>> implementing the getcrosststamp() PTP function).
+>
+> I think you're referring to the "pci_dev.ptm_enabled" flag.  I'm not
+> sure what the connection to this patch is.  The SYSOFFSET_PRECISE
+> stuff also seems to belong with some other patch.
 
-It's not obvious why you make this x86-specific.  Maybe a comment?
+Yeah, I will improve the commit message to make it clear that this patch
+is a preparation patch for the one that will add support for
+PTP_SYS_OFFSET_PRECISE/getcrosststamp() and what's the relation with
+PCIe PTM.
 
-You shouldn't have to test for CONFIG_PCIE_PTM, either.  We probably
-should have a pdev->ptm_enabled() predicate with a stub that returns
-false when CONFIG_PCIE_PTM is not set.
+>
+> This patch merely enables PTM if it's supported (might be worth
+> expanding Precision Time Measurement for context).
 
-> +	return false;
-> +}
+Yes. Will expand the definition in the commit message.
 
-> +/* PCIe Registers */
-> +#define IGC_PTM_CTRL		0x12540  /* PTM Control */
-> +#define IGC_PTM_STAT		0x12544  /* PTM Status */
-> +#define IGC_PTM_CYCLE_CTRL	0x1254C  /* PTM Cycle Control */
-> +
-> +/* PTM Time registers */
-> +#define IGC_PTM_T1_TIM0_L	0x12558  /* T1 on Timer 0 Low */
-> +#define IGC_PTM_T1_TIM0_H	0x1255C  /* T1 on Timer 0 High */
-> +
-> +#define IGC_PTM_CURR_T2_L	0x1258C  /* Current T2 Low */
-> +#define IGC_PTM_CURR_T2_H	0x12590  /* Current T2 High */
-> +#define IGC_PTM_PREV_T2_L	0x12584  /* Previous T2 Low */
-> +#define IGC_PTM_PREV_T2_H	0x12588  /* Previous T2 High */
-> +#define IGC_PTM_PREV_T4M1	0x12578  /* T4 Minus T1 on previous PTM Cycle */
-> +#define IGC_PTM_CURR_T4M1	0x1257C  /* T4 Minus T1 on this PTM Cycle */
-> +#define IGC_PTM_PREV_T3M2	0x12580  /* T3 Minus T2 on previous PTM Cycle */
-> +#define IGC_PTM_TDELAY		0x12594  /* PTM PCIe Link Delay */
-> +
-> +#define IGC_PCIE_DIG_DELAY	0x12550  /* PCIe Digital Delay */
-> +#define IGC_PCIE_PHY_DELAY	0x12554  /* PCIe PHY Delay */
 
-I assume the above are device-specific registers, right?  Nothing that
-would be found in the PCIe base spec?
-
-Bjorn
+Cheers,
+-- 
+Vinicius
