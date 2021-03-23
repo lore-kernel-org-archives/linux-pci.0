@@ -5,61 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BCBC43211
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 20:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EE5C4161F
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 20:41:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4E28619D2
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 20:41:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BD6619DD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Mar 2021 20:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233670AbhCWUko (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Mar 2021 16:40:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44996 "EHLO
+        id S233487AbhCWUkh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Mar 2021 16:40:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233584AbhCWUkZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Mar 2021 16:40:25 -0400
-Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6548EC0613EE
-        for <linux-pci@vger.kernel.org>; Tue, 23 Mar 2021 13:40:21 -0700 (PDT)
-Received: by mail-qt1-x849.google.com with SMTP id m8so1960598qtp.14
-        for <linux-pci@vger.kernel.org>; Tue, 23 Mar 2021 13:40:21 -0700 (PDT)
+        with ESMTP id S233506AbhCWUkI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Mar 2021 16:40:08 -0400
+Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5C4C0613E5
+        for <linux-pci@vger.kernel.org>; Tue, 23 Mar 2021 13:40:07 -0700 (PDT)
+Received: by mail-qk1-x74a.google.com with SMTP id x11so102923qki.22
+        for <linux-pci@vger.kernel.org>; Tue, 23 Mar 2021 13:40:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=WZ2fsTX5FLJhX01BulIdj9aVU+u+1SaaqVDcWrlk7vo=;
-        b=ec/02RNqMxC3NtjfEqCKWLv4qwmQTmHrkXsCeNO2KBn8qSqKzTE24FKGqfuKH+TVkK
-         X/VKFkbL4vsRYCrPeFIrZP8DeiwqKS96n7WGnqpK5r2/VAz0Iab+2cnLr9ixgbVx3i2+
-         bJO7ki2MVhZqoAWHQEzmE5B7oTVS3IIOSVMH6lZh48SF/0j7bgW6jHNwPIk8gKuBLJqR
-         4qQ5N4v6mKVofR2cSUqiTSphpJlczKzRN+vOPaGMsYJ3GFsS6r9eXFPtqA3WSVhoq05F
-         zPIbSYNFmagSwu4VxL+cE8EfslHOGZyTYBOn5X3fzMMM4mw38aQ1r1FrLS9fBfhCQ2tj
-         1law==
+        bh=xIKsEDWi8EL1j5NSYc2uWQA3l5Y2NiXXcLT9TovNhRQ=;
+        b=CgO/iSD/xRAdG2p+rJSIXqPZiKxGiKV2KoCvVGLUH2ZMIqkf574rj//FtCji3y0utT
+         6lKsLLQNF9ZBDCdsLOxtHp++EYzY5pP2mxldfH597xr3rQ4xUq9h8H5ZqqqHCXkA5Woj
+         AW4sxR0WuNwk6mjflnE1PSnqER0YBsuwjwXu3Ld7LoONyiCQrMHMa5vxLqAxT+oS7dew
+         573+hZHKrFPSsuuYfRH4A915CMBtXOIjkDVY3SgKsQFOEMK30MSps4h+NJvmkF2xbtOc
+         I9PZSHpWCV2Y3qKuZASiPEN0Gbhj4D7LoWjpCn9ubP4M+BIswdDkzinaS2z4pXhbM2te
+         iBHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=WZ2fsTX5FLJhX01BulIdj9aVU+u+1SaaqVDcWrlk7vo=;
-        b=VVRT8ccjd9GniSDw52Q6dusdLCEOztE1OL6q0u0BLPpNznMtNahjJNQMasZkj+wlVz
-         92SdaLpAPw51ACFH1PiwIeUkb5MGjBNBRooSu4aURvI7Gwj/VBIliqAnbcR/Qf1R32M4
-         A7ed4Go7vBjJ0j9bfZf0h7H+0ec2RkqDeb/C2lAg0SH4/Qz9xWIM1FleJ2dN3VG0wcFS
-         YMe5KIo5IKgwUSu37OuDeBLqEL4wwVkgfKuiZpt7zGjxo5ojs0OmXc7pyhtyEX5E7hGc
-         Szk2Hs4haNFH/hVl+JK+qTHmh5FLQY15MTS36mwqWAK+oAHfGLv62ozp2ObcrLSP2AKL
-         40Jw==
-X-Gm-Message-State: AOAM533jCCvsC9DHePYjpJT25Dv375PkzxFjjvyX209L0kGH0I8geOP0
-        kcCqxvPEIJKi8c8MyRMP1mMTJXPX1t4PepWFMxI=
-X-Google-Smtp-Source: ABdhPJyxpPvs3kGL5X0rhxaceHJDwoHelX5/WOAlmnNB1fMlzzx1j3iwVr8PFhB1zHKJQ3nkMRVGiRyWH5xdyb6dFU8=
+        bh=xIKsEDWi8EL1j5NSYc2uWQA3l5Y2NiXXcLT9TovNhRQ=;
+        b=VtkndFEWVRLp8HGQxXPCwL+ICSbfoUjA24C7PqEqv5lWMM8ndNoWjOtd8NokaXo/S4
+         QAX4ofkuJeGFn+/OhIUjjsw5AiGCPwJImK9VY2KSp0JUGXNkSwtYBP6yJ/BFN1TRw0l+
+         5nbn3NMcBwWeAT2BOZ8G9+NGbjtnHSMHPWP1OGtjYQhw2oVUTimKj30xtq3C3sPYku3P
+         wL3SyKUjT94Y6ccpRjaWgCZJQi0/kiWKy0ThM1RtJkm+SUAdapdsY1se6H7J/qNNricq
+         J/k7qH9+Wxcnzkl/XPn7GozBL6nWAw5ZOJOKTCpbc7HHqWVXnSo9fcBWTaoJ0mFmcqD4
+         15OA==
+X-Gm-Message-State: AOAM530a1uy/U+u8BKEYN/nXljV2YA5mkCR4/Ulb9ol0DOUm7AZlpMJh
+        0RWf8sgK1RBvQuFdxL93TtQCz+VkHumswaDk5eA=
+X-Google-Smtp-Source: ABdhPJxb7WUXqQY1HKNj9KDKWZ2mX+BL8U6d8oevhZ712uyBxXvQItdJYqzQ+dKFDvxGu4W+35Xr/uYgxKxus3pnNFc=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:e9a3:260d:763b:67dc])
- (user=samitolvanen job=sendgmr) by 2002:a0c:bec3:: with SMTP id
- f3mr6577376qvj.49.1616532020445; Tue, 23 Mar 2021 13:40:20 -0700 (PDT)
-Date:   Tue, 23 Mar 2021 13:39:46 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a0c:e9c7:: with SMTP id
+ q7mr159305qvo.7.1616532007142; Tue, 23 Mar 2021 13:40:07 -0700 (PDT)
+Date:   Tue, 23 Mar 2021 13:39:39 -0700
 In-Reply-To: <20210323203946.2159693-1-samitolvanen@google.com>
-Message-Id: <20210323203946.2159693-18-samitolvanen@google.com>
+Message-Id: <20210323203946.2159693-11-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210323203946.2159693-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v3 17/17] arm64: allow CONFIG_CFI_CLANG to be selected
+Subject: [PATCH v3 10/17] lkdtm: use __va_function
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -79,26 +79,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Select ARCH_SUPPORTS_CFI_CLANG to allow CFI to be enabled.
+To ensure we take the actual address of a function in kernel text, use
+__va_function. Otherwise, with CONFIG_CFI_CLANG, the compiler replaces
+the address with a pointer to the CFI jump table, which is actually in
+the module when compiled with CONFIG_LKDTM=m.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Acked-by: Kees Cook <keescook@chromium.org>
 ---
- arch/arm64/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/misc/lkdtm/usercopy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 5656e7aacd69..2eefdbc3e3c9 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -75,6 +75,7 @@ config ARM64
- 	select ARCH_SUPPORTS_SHADOW_CALL_STACK if CC_HAVE_SHADOW_CALL_STACK
- 	select ARCH_SUPPORTS_LTO_CLANG if CPU_LITTLE_ENDIAN
- 	select ARCH_SUPPORTS_LTO_CLANG_THIN
-+	select ARCH_SUPPORTS_CFI_CLANG
- 	select ARCH_SUPPORTS_ATOMIC_RMW
- 	select ARCH_SUPPORTS_INT128 if CC_HAS_INT128 && (GCC_VERSION >= 50000 || CC_IS_CLANG)
- 	select ARCH_SUPPORTS_NUMA_BALANCING
+diff --git a/drivers/misc/lkdtm/usercopy.c b/drivers/misc/lkdtm/usercopy.c
+index 109e8d4302c1..d173d6175c87 100644
+--- a/drivers/misc/lkdtm/usercopy.c
++++ b/drivers/misc/lkdtm/usercopy.c
+@@ -314,7 +314,7 @@ void lkdtm_USERCOPY_KERNEL(void)
+ 
+ 	pr_info("attempting bad copy_to_user from kernel text: %px\n",
+ 		vm_mmap);
+-	if (copy_to_user((void __user *)user_addr, vm_mmap,
++	if (copy_to_user((void __user *)user_addr, __va_function(vm_mmap),
+ 			 unconst + PAGE_SIZE)) {
+ 		pr_warn("copy_to_user failed, but lacked Oops\n");
+ 		goto free_user;
 -- 
 2.31.0.291.g576ba9dcdaf-goog
 
