@@ -2,45 +2,46 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C749CC433F1
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10137C433E2
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:32:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8B2961A21
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:31:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD23561A27
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:32:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238417AbhCXVbH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Mar 2021 17:31:07 -0400
-Received: from mga12.intel.com ([192.55.52.136]:8359 "EHLO mga12.intel.com"
+        id S238418AbhCXVbj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Mar 2021 17:31:39 -0400
+Received: from mga05.intel.com ([192.55.52.43]:40195 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238398AbhCXVa5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Mar 2021 17:30:57 -0400
-IronPort-SDR: uE20F4UvRb+ec+cT1H3pJdCEhUg1EenoEeWBVXnzxV4yQ7pQMBH+uVKH8Iv7S6GeQnnCdJROHP
- kY4MIqW3Ifzw==
-X-IronPort-AV: E=McAfee;i="6000,8403,9933"; a="170141164"
+        id S238425AbhCXVbJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Mar 2021 17:31:09 -0400
+IronPort-SDR: E0ki/7qIbGPOgdkKJH8tgBvDu5QlowOejCnL7Axz213RahWQ30xr6QiyyWnRY5K7dB+HX001Ar
+ 8k/ZkPEhiVCw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9933"; a="275915669"
 X-IronPort-AV: E=Sophos;i="5.81,275,1610438400"; 
-   d="scan'208";a="170141164"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:30:57 -0700
-IronPort-SDR: BB5WhabkaLJiMS7/T0Pk3sUvY+44zrQ+Id/nbes1rYR01FoPNHOLaXaZYoma8ZAiRNKNtuPB7T
- jx3d1pVRXPEQ==
+   d="scan'208";a="275915669"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:31:07 -0700
+IronPort-SDR: UiqiTq0h9Rx3ezRrb3TUYKTsDocGhk2W+N2YAhGdc8BZ3B4ltUrKmDcpnRQEHq3U9oOFpKBcTY
+ 0Q+FHZS4HJCQ==
 X-IronPort-AV: E=Sophos;i="5.81,275,1610438400"; 
-   d="scan'208";a="376577905"
+   d="scan'208";a="608245303"
 Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.25])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:30:57 -0700
-Subject: [PATCH 6/8] cxl/Kconfig: Default drivers to CONFIG_CXL_BUS
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:31:07 -0700
+Subject: [PATCH 8/8] cxl/acpi: Add module parameters to stand in for ACPI
+ tables
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     linux-cxl@vger.kernel.org
 Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
         ira.weiny@intel.com, vishal.l.verma@intel.com,
         alison.schofield@intel.com, ben.widawsky@intel.com,
         linux-kernel@vger.kernel.org
-Date:   Wed, 24 Mar 2021 14:30:56 -0700
-Message-ID: <161662145690.1723715.8128782741884211978.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date:   Wed, 24 Mar 2021 14:31:07 -0700
+Message-ID: <161662146724.1723715.10554067294730837889.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <161662142382.1723715.5934723983022398253.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <161662142382.1723715.5934723983022398253.stgit@dwillia2-desk3.amr.corp.intel.com>
 User-Agent: StGit/0.18-3-g996c
@@ -51,37 +52,128 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-CONFIG_CXL_BUS is default 'n' as expected for new functionality. When
-that is enabled do not make the end user hunt for all the expected
-sub-options to enable. For example CONFIG_CXL_BUS without CONFIG_CXL_MEM
-is an odd/expert configuration, so is CONFIG_CXL_MEM without
-CONFIG_CXL_ACPI (on ACPI capable platforms). Default CONFIG_CXL_MEM and
-CONFIG_CXL_ACPI to CONFIG_CXL_BUS.
+[debug / to-be-replaced / not-for-upstream]
 
-Acked-by: Ben Widawsky <ben.widawsky@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Given ACPICA support is needed before drivers can integrate ACPI
+functionality add some module parameters as proxies.
 ---
- drivers/cxl/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/cxl/acpi.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 79 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-index fb282af84afd..1da7970a5e55 100644
---- a/drivers/cxl/Kconfig
-+++ b/drivers/cxl/Kconfig
-@@ -15,6 +15,7 @@ if CXL_BUS
+diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
+index bc2a35ae880b..2a48a728f3e0 100644
+--- a/drivers/cxl/acpi.c
++++ b/drivers/cxl/acpi.c
+@@ -4,10 +4,84 @@
+ #include <linux/module.h>
+ #include <linux/device.h>
+ #include <linux/kernel.h>
++#include <linux/range.h>
+ #include <linux/acpi.h>
+ #include <linux/pci.h>
+ #include "cxl.h"
  
- config CXL_MEM
- 	tristate "CXL.mem: Memory Devices"
-+	default CXL_BUS
- 	help
- 	  The CXL.mem protocol allows a device to act as a provider of
- 	  "System RAM" and/or "Persistent Memory" that is fully coherent
-@@ -54,6 +55,7 @@ config CXL_MEM_RAW_COMMANDS
- config CXL_ACPI
- 	tristate "CXL ACPI: Platform Support"
- 	depends on ACPI
-+	default CXL_BUS
- 	help
- 	  Enable support for host managed device memory (HDM) resources
- 	  published by a platform's ACPI CXL memory layout description.
++/*
++ * TODO: Replace all of the below module parameters with ACPI CXL
++ * resource descriptions once ACPICA makes them available.
++ */
++static unsigned long chbcr[4];
++module_param_named(chbcr0, chbcr[0], ulong, 0400);
++module_param_named(chbcr1, chbcr[1], ulong, 0400);
++module_param_named(chbcr2, chbcr[2], ulong, 0400);
++module_param_named(chbcr3, chbcr[3], ulong, 0400);
++
++/* TODO: cross-bridge interleave */
++static struct cxl_address_space cxl_space[] = {
++	[0] = { .range = { 0, -1 }, .targets = 0x1, },
++	[1] = { .range = { 0, -1 }, .targets = 0x1, },
++	[2] = { .range = { 0, -1 }, .targets = 0x1, },
++	[3] = { .range = { 0, -1 }, .targets = 0x1, },
++};
++
++static int set_range(const char *val, const struct kernel_param *kp)
++{
++	unsigned long long size, base;
++	struct cxl_address_space *space;
++	unsigned long flags;
++	char *p;
++	int rc;
++
++	size = memparse(val, &p);
++	if (*p != '@')
++		return -EINVAL;
++
++	base = memparse(p + 1, &p);
++	if (*p != ':')
++		return -EINVAL;
++
++	rc = kstrtoul(p + 1, 0, &flags);
++	if (rc)
++		return rc;
++	if (!flags || flags > CXL_ADDRSPACE_MASK)
++		return rc;
++
++	space = kp->arg;
++	*space = (struct cxl_address_space) {
++		.range = {
++			.start = base,
++			.end = base + size - 1,
++		},
++		.flags = flags,
++	};
++
++	return 0;
++}
++
++static int get_range(char *buf, const struct kernel_param *kp)
++{
++	struct cxl_address_space *space = kp->arg;
++
++	if (!range_len(&space->range))
++		return -EINVAL;
++
++	return sysfs_emit(buf, "%#llx@%#llx :%s%s%s%s\n",
++			  (unsigned long long)range_len(&space->range),
++			  (unsigned long long)space->range.start,
++			  space->flags & CXL_ADDRSPACE_RAM ? " ram" : "",
++			  space->flags & CXL_ADDRSPACE_PMEM ? " pmem" : "",
++			  space->flags & CXL_ADDRSPACE_TYPE2 ? " type2" : "",
++			  space->flags & CXL_ADDRSPACE_TYPE3 ? " type3" : "");
++}
++
++module_param_call(range0, set_range, get_range, &cxl_space[0], 0400);
++module_param_call(range1, set_range, get_range, &cxl_space[1], 0400);
++module_param_call(range2, set_range, get_range, &cxl_space[2], 0400);
++module_param_call(range3, set_range, get_range, &cxl_space[3], 0400);
++
+ static int match_ACPI0016(struct device *dev, const void *host)
+ {
+ 	struct acpi_device *adev = to_acpi_device(dev);
+@@ -67,13 +141,16 @@ static int cxl_acpi_register_ports(struct device *dev, struct acpi_device *root,
+ 				   struct cxl_port *port, int idx)
+ {
+ 	struct acpi_pci_root *pci_root = acpi_pci_find_root(root->handle);
++	resource_size_t chbcr_base = ~0ULL;
+ 	struct cxl_walk_context ctx;
+ 
+ 	if (!pci_root)
+ 		return -ENXIO;
+ 
+ 	/* TODO: fold in CEDT.CHBS retrieval */
+-	port = devm_cxl_add_port(dev, port, &root->dev, idx, ~0ULL);
++	if (idx < ARRAY_SIZE(chbcr))
++		chbcr_base = chbcr[idx];
++	port = devm_cxl_add_port(dev, port, &root->dev, idx, chbcr_base);
+ 	if (IS_ERR(port))
+ 		return PTR_ERR(port);
+ 	dev_dbg(dev, "%s: register: %s\n", dev_name(&root->dev),
+@@ -99,7 +176,7 @@ static int cxl_acpi_probe(struct platform_device *pdev)
+ 	struct cxl_root *cxl_root;
+ 	int rc, i = 0;
+ 
+-	cxl_root = devm_cxl_add_root(dev, NULL, 0);
++	cxl_root = devm_cxl_add_root(dev, cxl_space, ARRAY_SIZE(cxl_space));
+ 	if (IS_ERR(cxl_root))
+ 		return PTR_ERR(cxl_root);
+ 	dev_dbg(dev, "register: %s\n", dev_name(&cxl_root->port.dev));
 
