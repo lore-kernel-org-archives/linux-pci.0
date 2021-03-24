@@ -2,209 +2,178 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_RED
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CDB0C433C1
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B4D6C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:37:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3B4561A32
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:29:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3540F61A51
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:37:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229590AbhCZJ3K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Mar 2021 05:29:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35302 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229931AbhCZJ2c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Mar 2021 05:28:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 11A6B61A2B;
-        Fri, 26 Mar 2021 09:28:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1616750910;
-        bh=Mp4Rov7gyKbVHVPla9zE4uiVkHzu622ZTYByfZyJTcQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ahlYhvuX6we8xzTLtjZbnnI3x+Eo2J1zB2tpOquazXAO6eiYXo7zxyC4Y7C+GwYF+
-         HHJCrjN66zfEXLaWTgWFnsTJCMI/cO0EOXy83Rwn6770snE5e3UJMRFNZrXJGDL5r/
-         bvtY3awZ/t5P+gMFO40vIzeXIN08aY+zMnkGuyfM=
-Date:   Fri, 26 Mar 2021 10:28:27 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Allow drivers to claim exclusive access to config
- regions
-Message-ID: <YF2pO4E3vsXIy6Dq@kroah.com>
-References: <161663543465.1867664.5674061943008380442.stgit@dwillia2-desk3.amr.corp.intel.com>
- <YFwzw3VK0okr+taA@kroah.com>
- <CAPcyv4huzgpCvT+MVjpVPRE+ZcxPaqB2jqVMt7nJuP0hpzQ82A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4huzgpCvT+MVjpVPRE+ZcxPaqB2jqVMt7nJuP0hpzQ82A@mail.gmail.com>
+        id S230317AbhCZJhM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Mar 2021 05:37:12 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:59983 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230130AbhCZJhD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Mar 2021 05:37:03 -0400
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210326093701epoutp0252e5ad648c170c4b381eecc2f71b9f57~v2toUdKKY2100121001epoutp02p
+        for <linux-pci@vger.kernel.org>; Fri, 26 Mar 2021 09:37:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210326093701epoutp0252e5ad648c170c4b381eecc2f71b9f57~v2toUdKKY2100121001epoutp02p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1616751421;
+        bh=hxHXp6PeFmfwJxhC51xr7jOS0CvxIZzcuhvqoRIdIoY=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=NzjKLmCfwxm5+swbdcj36hMuiiRJODvGQlye6vmgT1Y0o+YXs4FtwDzRgTxHsWaLG
+         sRdNWNLjlV2K4eJTcGkOu6q8JEp8p68LRGnpphja7qsFt90eW/goRfDu1F9SFy2z5x
+         3/tHveYG6A/clraEdsAoiL7EM8m/cT9RKb7MVVd0=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20210326093659epcas5p318af0671c516bc2e17b4a202fa47783a~v2tmyN0O52571125711epcas5p3v;
+        Fri, 26 Mar 2021 09:36:59 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        93.CD.41008.B3BAD506; Fri, 26 Mar 2021 18:36:59 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20210324101555epcas5p1b5c8ff4d99b045b94f820c2151800127~vP9B0vIAg1046710467epcas5p1g;
+        Wed, 24 Mar 2021 10:15:55 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210324101555epsmtrp1347a89b34131b9c8ca40757871367bea~vP9Bz2m9F1863418634epsmtrp1M;
+        Wed, 24 Mar 2021 10:15:55 +0000 (GMT)
+X-AuditID: b6c32a4b-661ff7000001a030-fb-605dab3bca2b
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2C.DD.33967.B511B506; Wed, 24 Mar 2021 19:15:55 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20210324101553epsmtip14886026cd630a4b503948d646d4664fd~vP9AIC2nm1129011290epsmtip1y;
+        Wed, 24 Mar 2021 10:15:53 +0000 (GMT)
+From:   Shradha Todi <shradha.t@samsung.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     p.rajanbabu@samsung.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
+        bhelgaas@google.com, niyas.ahmed@samsung.com, hari.tv@samsung.com,
+        l.mehra@samsung.com, pankaj.dubey@samsung.com,
+        Shradha Todi <shradha.t@samsung.com>,
+        Sriram Dash <dash.sriram@gmail.com>
+Subject: [PATCH v5] PCI: endpoint: Fix NULL pointer dereference for
+ ->get_features()
+Date:   Wed, 24 Mar 2021 15:46:09 +0530
+Message-Id: <20210324101609.79278-1-shradha.t@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrPIsWRmVeSWpSXmKPExsWy7bCmuq716tgEg0fHNS2WNGVYLLu0mdHi
+        47SVTBYXnvawWdx5foPR4vKuOWwWZ+cdZ7N48/sFu8WTKY9YLY5uDLZYtPULu0Xv4VoHHo81
+        89YweuycdZfdY8GmUo++LasYPY7f2M7k8XmTXABbFJdNSmpOZllqkb5dAlfGjimv2QoOiFYs
+        OuTcwLhZqIuRk0NCwETi+qy/7F2MXBxCArsZJW7//8MM4XxilLjXsJERwvnGKHF+zz0ghwOs
+        ZepbX4j4XkaJzfsPMUE4LUwSD76uYwKZyyagJdH4tYsZxBYRsJY43L6FDcRmFuhgktizIATE
+        FhYIk3h25D0jiM0ioCoxdfcmdpAFvAJWEo9vpUOcJy+xesMBsIskBG6xS5xeOJMNIuEicerw
+        PxYIW1ji1fEt7BC2lMTL/jYoO19i6oWnLBBHV0gs76mDCNtLHLgyByzMLKApsX6XPkRYVmLq
+        KYjrmQX4JHp/P2GCiPNK7JgHYytLfPm7B2qrpMS8Y5dZIWwPiY8zP4JtFRKIlXh68g3TBEbZ
+        WQgbFjAyrmKUTC0ozk1PLTYtMM5LLdcrTswtLs1L10vOz93ECE4TWt47GB89+KB3iJGJg/EQ
+        owQHs5IIb5JvTIIQb0piZVVqUX58UWlOavEhRmkOFiVx3h0GD+KFBNITS1KzU1MLUotgskwc
+        nFINTD55mocT7rQHt2Rl32j5rCQUdvFE3r2LPfqKa/KT9txmfn3hXWaIj4wcQ8KPV9Mk4vsa
+        dbstg/Y/uys09ZPChW9Pdv87X9D5959uOJdV4v+p8c02Syqm9e71v13tWW5xt4vLLpVx4wUz
+        vh0BDAzrq2P5OKo3z3vmu+qS4orzt/epJT49qCP+ZZ9WVJ/X1kMb9lW+CvrG86fYsf//He43
+        7ibTuXIjEt/+WXemeFtExt571ZOcl+7Tr9m3xMtZ9KHJwqpdFwpelT6vMVNhizgob/dt9/mw
+        5+be7yKva09fcDFZ+NCtVR4d1179cW00Uk5W+bZ8fa3tBr1F34JPbO9Ru/NnJpN0xCwe89U/
+        na8YJyuxFGckGmoxFxUnAgC4s1LGggMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprOLMWRmVeSWpSXmKPExsWy7bCSnG60YHSCQd8ZDYslTRkWyy5tZrT4
+        OG0lk8WFpz1sFnee32C0uLxrDpvF2XnH2Sze/H7BbvFkyiNWi6Mbgy0Wbf3CbtF7uNaBx2PN
+        vDWMHjtn3WX3WLCp1KNvyypGj+M3tjN5fN4kF8AWxWWTkpqTWZZapG+XwJWxY8prtoIDohWL
+        Djk3MG4W6mLk4JAQMJGY+ta3i5GLQ0hgN6PE0rv32bsYOYHikhKfL65jgrCFJVb+e84OUdTE
+        JHFoyzsWkASbgJZE49cuZhBbRMBW4v6jyawgRcwCU5gkHn48wAaSEBYIkfi68SCYzSKgKjF1
+        9yZ2kM28AlYSj2+lQyyQl1i94QDzBEaeBYwMqxglUwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLz
+        czcxgsNOS3MH4/ZVH/QOMTJxMB5ilOBgVhLhbQmPSBDiTUmsrEotyo8vKs1JLT7EKM3BoiTO
+        e6HrZLyQQHpiSWp2ampBahFMlomDU6qBaZWdy52pmx5WvHBcvt+hirem6xXTugXC9dFhfy0y
+        K9YfFZtgKzuX+fX57HlcJd/a3TTCTT5edMgzmGEgdmHzh7mTFNRzty3PvfeTWyJlT+bDa4mG
+        rflv5yfvt+pxU73xKjNt2bsOgfnLjFKnM62VlH0qOs1ZTWHXy/Vmzky7Cq57e6wSOnoxXuZ6
+        7535Cw5MfOf5882lTbrFtyV0r/gtM5g384ro2uvVmv3u31NCT6287LTSecZX9Q+lEpwzE2+c
+        Xuxacyl2nuh/i3v/NXlldv4UOLj7uMSlGYpaxezXp50I5Lff2KC/0zfz/s77GXdXvL09uSd1
+        5kwTs+9rm6e4R5382qT0qmvpxb+Pt67hLeVVYinOSDTUYi4qTgQAMF9lZqoCAAA=
+X-CMS-MailID: 20210324101555epcas5p1b5c8ff4d99b045b94f820c2151800127
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20210324101555epcas5p1b5c8ff4d99b045b94f820c2151800127
+References: <CGME20210324101555epcas5p1b5c8ff4d99b045b94f820c2151800127@epcas5p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 25, 2021 at 10:43:41AM -0700, Dan Williams wrote:
-> On Wed, Mar 24, 2021 at 11:55 PM Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> >
-> > On Wed, Mar 24, 2021 at 06:23:54PM -0700, Dan Williams wrote:
-> > > The PCIE Data Object Exchange (DOE) mailbox is a protocol run over
-> > > configuration cycles. It assumes one initiator at a time is
-> > > reading/writing the data registers.
-> >
-> > That sounds like a horrible protocol for a multi-processor system.
-> > Where is it described and who can we go complain to for creating such a
-> > mess?
-> 
-> It appears it was added to the PCIE specification in March of last
-> year, I don't attend those meetings. I only learned about it since the
-> CXL specification adopted it.
+get_features ops of pci_epc_ops may return NULL, causing NULL pointer
+dereference in pci_epf_test_alloc_space function. Let us add a check for
+pci_epc_feature pointer in pci_epf_test_bind before we access it to avoid
+any such NULL pointer dereference and return -ENOTSUPP in case
+pci_epc_feature is not found.
 
-Given that the kernel community can not participate in the PCI spec
-process, we rely on the member companies that do work there to at least
-create sane things.  Who do I need to go complain to about this
-happening, again?
+When the patch is not applied and EPC features is not implemented in the
+platform driver, we see the following dump due to kernel NULL pointer
+dereference.
 
-> > > If userspace reads from the response
-> > > data payload it may steal data that a kernel driver was expecting to
-> > > read. If userspace writes to the request payload it may corrupt the
-> > > request a driver was trying to send.
-> >
-> > Fun!  So you want to keep root in userspace from doing this?  I thought
-> > we already do that today?
-> 
-> The only limitation I found was temporary locking via
-> pci_cfg_access_lock(), and some limitations on max config offset, not
-> permanent access disable.
+Call trace:
+ pci_epf_test_bind+0xf4/0x388
+ pci_epf_bind+0x3c/0x80
+ pci_epc_epf_link+0xa8/0xcc
+ configfs_symlink+0x1a4/0x48c
+ vfs_symlink+0x104/0x184
+ do_symlinkat+0x80/0xd4
+ __arm64_sys_symlinkat+0x1c/0x24
+ el0_svc_common.constprop.3+0xb8/0x170
+ el0_svc_handler+0x70/0x88
+ el0_svc+0x8/0x640
+Code: d2800581 b9403ab9 f9404ebb 8b394f60 (f9400400)
+---[ end trace a438e3c5a24f9df0 ]---
 
-Temp locking should be all that is needed, right?  If not then something
-really is wrong with the protocol design.
+Fixes: 2c04c5b8eef79 ("PCI: pci-epf-test: Use pci_epc_get_features() to get EPC features")
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Reviewed-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sriram Dash <dash.sriram@gmail.com>
+Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+---
+Changes w.r.t. v4:
+  https://lkml.org/lkml/2021/1/12/815
+  - Changed commit message to remove time stamp as suggested by Lorenzo
+  - Since deference in not actually happening in bind function, mentioned
+    the same in the commit message as suggested by Leon.
 
-> > > Introduce pci_{request,release}_config_region() for a driver to exclude
-> > > the possibility of userspace induced corruption while accessing the DOE
-> > > mailbox. Likely there are other configuration state assumptions that a
-> > > driver may want to assert are under its exclusive control, so this
-> > > capability is not limited to any specific configuration range.
-> >
-> > As you do not have a user for these functions, it's hard to see how they
-> > would be used.  We also really can't add new apis with no in-tree users,
-> > so do you have a patch series that requires this functionality
-> > somewhere?
-> 
-> Whoops, I buried the lead here. This is in reaction to / support of
-> Jonathan's efforts to use this mailbox to retrieve a blob of memory
-> characteristics data from CXL devices called the CDAT [1]. That blob
-> is used to populate / extend ACPI SRAT/HMAT/SLIT data for CXL attached
-> memory. So while I was reviewing his patches it occurred to me that
-> the b0rked nature of this interface relative to pci-sysfs needed to be
-> addressed. This should wait to go in with his series.
-> 
-> [1]: https://lore.kernel.org/linux-acpi/20210310180306.1588376-2-Jonathan.Cameron@huawei.com/
+ drivers/pci/endpoint/functions/pci-epf-test.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-Interesting.  Messy.  Ick.
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index c0ac4e9cbe72..bc35b3566be6 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -833,15 +833,18 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+ 		return -EINVAL;
+ 
+ 	epc_features = pci_epc_get_features(epc, epf->func_no);
+-	if (epc_features) {
+-		linkup_notifier = epc_features->linkup_notifier;
+-		core_init_notifier = epc_features->core_init_notifier;
+-		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
+-		if (test_reg_bar < 0)
+-			return -EINVAL;
+-		pci_epf_configure_bar(epf, epc_features);
++	if (!epc_features) {
++		dev_err(&epf->dev, "epc_features not implemented\n");
++		return -EOPNOTSUPP;
+ 	}
+ 
++	linkup_notifier = epc_features->linkup_notifier;
++	core_init_notifier = epc_features->core_init_notifier;
++	test_reg_bar = pci_epc_get_first_free_bar(epc_features);
++	if (test_reg_bar < 0)
++		return -EINVAL;
++	pci_epf_configure_bar(epf, epc_features);
++
+ 	epf_test->test_reg_bar = test_reg_bar;
+ 	epf_test->epc_features = epc_features;
+ 
+-- 
+2.17.1
 
-> > > Since writes are targeted and are already prepared for failure the
-> > > entire request is failed. The same can not be done for reads as the
-> > > device completely disappears from lspci output if any configuration
-> > > register in the request is exclusive. Instead skip the actual
-> > > configuration cycle on a per-access basis and return all f's as if the
-> > > read had failed.
-> >
-> > returning all ff is a huge hint to many drivers that the device is gone,
-> > not that it just failed.  So what happens to code that thinks that and
-> > then tears stuff down as if the device has been removed?
-> 
-> This is limited to the pci_user_* family of accessors, kernel drivers
-> should be unaffected. The protection for kernel drivers colliding is
-> the same as request_mem_region() coordination.
-
-So you want to lock out user accesses entirely if a kernel driver is
-bound to the device?  I missed that here.  If so, that's a big change
-that people are not going to like.
-
-> Userspace drivers will of course be horribly confused, but those
-> should not be binding to devices that are claimed by a kernel driver
-> in the first place.
-
-I'm not worried about "userspace drivers", I'm worried about tools like
-'lspci' and others that like reading PCI device state from userspace at
-tiems.
-
-> > Trying to protect drivers from userspace here feels odd, what userspace
-> > tools are trying to access these devices while they are under
-> > "exclusive" control from the kernel?  lspci not running as root should
-> > not be doing anything crazy, but if you want to run it as root,
-> > shouldn't you be allowed to access it properly?
-> 
-> The main concern is unwanted userspace reads. An inopportune "hexdump
-> /sys/bus/pci/devices/$device/config" will end up reading the DOE
-> payload register and advancing the device state machine surprising the
-> kernel iterator that might be reading the payload.
-> 
-> If root really wants to read that portion of config space it can also
-> unload the driver similar to the policy for /dev/mem colliding with
-> exclusive device-mmio... although that raises the question how would
-> root know. At least for exclusive /dev/mem /proc/iomem can show who is
-> claiming that resource.
-
-Yes, root does not know, so this feels really broken from a spec
-point-of-view.
-
-> If userspace needs to submit DOE requests then that should probably be
-> a proper generic driver to submit requests, not raw pci config access.
-
-True, but again as this is exposed through the "normal" config space,
-that is not possible.  Again, broken design :(
-
-> > What hardware has this problem that we need to claim exclusive ownership
-> > over that differs from the old hardware we used to have that would do
-> > crazy things when reading from from userspace?  We had this problem a
-> > long time ago and lived with it, what changed now?
-> 
-> All I can infer from the comments in drivers/pci/access.c is "bad
-> things happens on some devices if you allow reads past a certain
-> offset", but no concern for reads for offsets less than
-> pdev->cfg_size. I think what's changed is that this is the first time
-> Linux has had to worry about an awkward polled I/O data transfer
-> protocol over config cycles.
-
-I recall many old PCI devices that didn't like their memory being read
-at all, and could cause bus lockups, which is why the userspace tools
-would print scary warnings if you really wanted to do this.
-
-Feels like we are back to that mess again.
-
-> To make matters worse there appears to be a proliferation of protocols
-> being layered on top of DOE. In addition to CXL Table Access for CDAT
-> retrieval [2] I'm aware of CXL Compliance Testing [3], Integrity and
-> Data Encryption (IDE) [4], and Component Measurement and
-> Authentication (CMA) [5].
-> 
-> I've not read those, but I worry security_locked_down() may want to
-> prevent even root userspace mucking with "security" interfaces. So
-> that *might* be a reason to ensure exclusive kernel access beyond the
-> basic sanity of the kernel being able to have uninterrupted request /
-> response sessions with this mailbox
-> 
-> [2]: https://uefi.org/sites/default/files/resources/Coherent%20Device%20Attribute%20Table_1.01.pdf
-> [3]: https://www.computeexpresslink.org/download-the-specification
-> [4]: https://members.pcisig.com/wg/PCI-SIG/document/15149
-> [5]: https://members.pcisig.com/wg/PCI-SIG/document/14236
-
-I have no access to these proposed specs, sorry.
-
-If things are being layered on top of a broken design, well, they get
-what they asked for.
-
-How are the "other" operating systems going to handle this mess?  How
-did they "sign off" on this crazy thing?
-
-thanks,
-
-greg k-h
