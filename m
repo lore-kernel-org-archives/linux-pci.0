@@ -2,99 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 761EDC433DB
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 01:32:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 414F4C433E1
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 03:06:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C6FD619E9
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 01:32:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05D69619E1
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 03:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234706AbhCXBcR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Mar 2021 21:32:17 -0400
-Received: from mail-lf1-f42.google.com ([209.85.167.42]:39772 "EHLO
-        mail-lf1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234543AbhCXBbp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Mar 2021 21:31:45 -0400
-Received: by mail-lf1-f42.google.com with SMTP id b4so5585588lfi.6;
-        Tue, 23 Mar 2021 18:31:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=VxiNq12BBkrbM53aTNkI6bHyLip/3/EfWfu40n01gwI=;
-        b=I5ofrO43zpTmAPNMOWxXiQ/rryE4psbG+w/gCtwsoJCIy1RHEDtZ3kHf2FnKweoHEn
-         MJPliRAcaIn1ozvpWSpqtaKfvz18pIflWp15F6zEbR9g6o16W6Gnm8i/0ZY1zzVLRfrM
-         e2KkVC/ptpFU0OCDVn7LqFrbQsGG1MyYgpaLlmdzlgtDdHd9Px8QOi/aaoX3wpT8Bdfy
-         08ZmfAXX3zhYwBzBN7bolbahTtrAYNdVU8uNZxuw96jCqp+/2f9NzNTqpi3O9iClkkFt
-         drbIhTwlOVrLuUTSvJYrVr1/CJ484bdyOQZ6pqKd4l1aRNTqMlfw8lZ5bHphfO11j1rq
-         DiQA==
-X-Gm-Message-State: AOAM530l+lEhv2r1RgGrXc+x5kmP2s9v8VU0/lJgWWhoaZcVOQxoNJCM
-        e7DDG/O21U5gKA6F6Tm8OsI=
-X-Google-Smtp-Source: ABdhPJwwm1H6hy6izV3QUqfh+Sv3+rWYvbjmPeAZrxKVbhXL+n4b0rSUKunbP1A31kywGgq0MlsIOA==
-X-Received: by 2002:a19:98a:: with SMTP id 132mr479464lfj.139.1616549504215;
-        Tue, 23 Mar 2021 18:31:44 -0700 (PDT)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id f9sm95975ljg.115.2021.03.23.18.31.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Mar 2021 18:31:43 -0700 (PDT)
-Date:   Wed, 24 Mar 2021 02:31:42 +0100
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Alexander Lobakin <alobakin@pm.me>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND] PCI: dwc: put struct dw_pcie::{ep,pp} into a
- union to reduce its size
-Message-ID: <YFqWftATEbuxsJbn@rocinante>
-References: <20210312140116.9453-1-alobakin@pm.me>
+        id S235027AbhCXDGL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Mar 2021 23:06:11 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:47519 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S235014AbhCXDFv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Mar 2021 23:05:51 -0400
+X-UUID: fc9c46d0dfd844419121620cd14fc58b-20210324
+X-UUID: fc9c46d0dfd844419121620cd14fc58b-20210324
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 205850110; Wed, 24 Mar 2021 11:05:47 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 24 Mar 2021 11:05:46 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 24 Mar 2021 11:05:44 +0800
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>
+CC:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        <youlin.pei@mediatek.com>, <chuanjia.liu@mediatek.com>,
+        <qizhong.cheng@mediatek.com>, <sin_jieyang@mediatek.com>,
+        <drinkcat@chromium.org>, <Rex-BC.Chen@mediatek.com>,
+        <anson.chuang@mediatek.com>, Krzysztof Wilczyski <kw@linux.com>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+Subject: [v9,2/7] PCI: Export pci_pio_to_address() for module use
+Date:   Wed, 24 Mar 2021 11:05:05 +0800
+Message-ID: <20210324030510.29177-3-jianjun.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210324030510.29177-1-jianjun.wang@mediatek.com>
+References: <20210324030510.29177-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20210312140116.9453-1-alobakin@pm.me>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Alexander,
+This interface will be used by PCI host drivers for PIO translation,
+export it to support compiling those drivers as kernel modules.
 
-Thank you for sending the patch over!
+Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+---
+ drivers/pci/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> A single dw_pcie entity can't be a root complex and an endpoint at
-> the same time.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 16a17215f633..12bba221c9f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4052,6 +4052,7 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 
+ 	return address;
+ }
++EXPORT_SYMBOL(pci_pio_to_address);
+ 
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+-- 
+2.25.1
 
-Nice catch!
-
-A small nitpick: this would be Root Complex and Endpoint, as it's
-customary to capitalise these.
-
-Also, if you could capitalise the subject line - it could also perhaps
-be simplified to something like, for example:
-
-  Optimize struct dw_pcie to reduce its size
-
-Feel free to ignore both suggestions, as these are just nitpicks.
-
-> We can use this to reduce the size of dw_pcie by 80, from 280 to 200
-> bytes (on x32, guess more on x64), by putting the related embedded
-> structures (struct pcie_port and struct dw_pcie_ep) into a union.
-
-[...]
-> -	struct pcie_port	pp;
-> -	struct dw_pcie_ep	ep;
-> +	union {
-> +		struct pcie_port	pp;
-> +		struct dw_pcie_ep	ep;
-> +	};
-[...]
-
-How did you measure the difference?  Often, people include pahole output
-for the "before" and "after", so to speak, to showcase the difference
-and/or improvement.  Do you have something like that handy?
-
-Krzysztof
