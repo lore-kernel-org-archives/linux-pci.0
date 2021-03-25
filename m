@@ -2,173 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-20.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 058DAC433E1
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D48C433E0
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 00:53:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D312D61A1F
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Mar 2021 21:32:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2D9461A14
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 00:53:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233739AbhCXVcM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Mar 2021 17:32:12 -0400
-Received: from mga09.intel.com ([134.134.136.24]:30539 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238487AbhCXVbx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Mar 2021 17:31:53 -0400
-IronPort-SDR: DeN2SK7No8pJIJNE+mm5rkMJVVFk8tpk7lzfd1JnLrvKR+bNWVLI4/3aIB5Wskgg0vFKWN9X/k
- WYTnORoI4bCg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9933"; a="190884170"
-X-IronPort-AV: E=Sophos;i="5.81,275,1610438400"; 
-   d="scan'208";a="190884170"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:30:41 -0700
-IronPort-SDR: 6MEAPcyq8kNRdOX16jZzroA8p0X+rCZ5iSfBxydRrehHiaxk6aMbYdo1Y4ASca8WpvcTJvGIFQ
- FtwH6TwAKIrQ==
-X-IronPort-AV: E=Sophos;i="5.81,275,1610438400"; 
-   d="scan'208";a="443123912"
-Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.25])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2021 14:30:40 -0700
-Subject: [PATCH 3/8] cxl/core: Rename bus.c to core.c
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     linux-cxl@vger.kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        ira.weiny@intel.com, vishal.l.verma@intel.com,
-        alison.schofield@intel.com, ben.widawsky@intel.com,
-        linux-kernel@vger.kernel.org
-Date:   Wed, 24 Mar 2021 14:30:40 -0700
-Message-ID: <161662144049.1723715.7202999623564101920.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <161662142382.1723715.5934723983022398253.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <161662142382.1723715.5934723983022398253.stgit@dwillia2-desk3.amr.corp.intel.com>
-User-Agent: StGit/0.18-3-g996c
+        id S235277AbhCYAxR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Mar 2021 20:53:17 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:14523 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239410AbhCYAwt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Mar 2021 20:52:49 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F5RN70KM8zNqRl;
+        Thu, 25 Mar 2021 08:50:15 +0800 (CST)
+Received: from [127.0.0.1] (10.174.176.117) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.498.0; Thu, 25 Mar 2021
+ 08:52:39 +0800
+Subject: Re: [PATCH] pci: fix memory leak when virtio pci hotplug
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <bhelgaas@google.com>,
+        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, linfeilong <linfeilong@huawei.com>,
+        "wubo (T)" <wubo40@huawei.com>
+References: <20210323182428.GA584698@bjorn-Precision-5520>
+From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Message-ID: <e2e405d3-a9a6-807d-dc7a-d6596214fbe9@huawei.com>
+Date:   Thu, 25 Mar 2021 08:52:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
+In-Reply-To: <20210323182428.GA584698@bjorn-Precision-5520>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.174.176.117]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In preparation for more generic shared functionality across endpoint
-consumers of core cxl resources, and platform-firmware producers of
-those resources, rename bus.c to core.c. In addition to the central
-rendezvous for interleave coordination, the core will also define common
-routines like CXL register block mapping.
+Thanks for your suggestion.
 
-Acked-by: Ben Widawsky <ben.widawsky@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- Documentation/driver-api/cxl/memory-devices.rst |    6 ++---
- drivers/cxl/Makefile                            |    4 ++-
- drivers/cxl/bus.c                               |   29 ----------------------
- drivers/cxl/core.c                              |   30 +++++++++++++++++++++++
- 4 files changed, 35 insertions(+), 34 deletions(-)
- delete mode 100644 drivers/cxl/bus.c
- create mode 100644 drivers/cxl/core.c
+I will rewrite the commit log and send the v2 patch.
 
-diff --git a/Documentation/driver-api/cxl/memory-devices.rst b/Documentation/driver-api/cxl/memory-devices.rst
-index 1bad466f9167..71495ed77069 100644
---- a/Documentation/driver-api/cxl/memory-devices.rst
-+++ b/Documentation/driver-api/cxl/memory-devices.rst
-@@ -28,10 +28,10 @@ CXL Memory Device
- .. kernel-doc:: drivers/cxl/mem.c
-    :internal:
- 
--CXL Bus
-+CXL Core
- -------
--.. kernel-doc:: drivers/cxl/bus.c
--   :doc: cxl bus
-+.. kernel-doc:: drivers/cxl/core.c
-+   :doc: cxl core
- 
- External Interfaces
- ===================
-diff --git a/drivers/cxl/Makefile b/drivers/cxl/Makefile
-index a314a1891f4d..3808e39dd31f 100644
---- a/drivers/cxl/Makefile
-+++ b/drivers/cxl/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
--obj-$(CONFIG_CXL_BUS) += cxl_bus.o
-+obj-$(CONFIG_CXL_BUS) += cxl_core.o
- obj-$(CONFIG_CXL_MEM) += cxl_mem.o
- 
- ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=CXL
--cxl_bus-y := bus.o
-+cxl_core-y := core.o
- cxl_mem-y := mem.o
-diff --git a/drivers/cxl/bus.c b/drivers/cxl/bus.c
-deleted file mode 100644
-index 58f74796d525..000000000000
---- a/drivers/cxl/bus.c
-+++ /dev/null
-@@ -1,29 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-only
--/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
--#include <linux/device.h>
--#include <linux/module.h>
--
--/**
-- * DOC: cxl bus
-- *
-- * The CXL bus provides namespace for control devices and a rendezvous
-- * point for cross-device interleave coordination.
-- */
--struct bus_type cxl_bus_type = {
--	.name = "cxl",
--};
--EXPORT_SYMBOL_GPL(cxl_bus_type);
--
--static __init int cxl_bus_init(void)
--{
--	return bus_register(&cxl_bus_type);
--}
--
--static void cxl_bus_exit(void)
--{
--	bus_unregister(&cxl_bus_type);
--}
--
--module_init(cxl_bus_init);
--module_exit(cxl_bus_exit);
--MODULE_LICENSE("GPL v2");
-diff --git a/drivers/cxl/core.c b/drivers/cxl/core.c
-new file mode 100644
-index 000000000000..7f8d2034038a
---- /dev/null
-+++ b/drivers/cxl/core.c
-@@ -0,0 +1,30 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
-+#include <linux/device.h>
-+#include <linux/module.h>
-+
-+/**
-+ * DOC: cxl core
-+ *
-+ * The CXL core provides a sysfs hierarchy for control devices and a rendezvous
-+ * point for cross-device interleave coordination through cxl ports.
-+ */
-+
-+struct bus_type cxl_bus_type = {
-+	.name = "cxl",
-+};
-+EXPORT_SYMBOL_GPL(cxl_bus_type);
-+
-+static __init int cxl_core_init(void)
-+{
-+	return bus_register(&cxl_bus_type);
-+}
-+
-+static void cxl_core_exit(void)
-+{
-+	bus_unregister(&cxl_bus_type);
-+}
-+
-+module_init(cxl_core_init);
-+module_exit(cxl_core_exit);
-+MODULE_LICENSE("GPL v2");
+
+On 2021/3/24 2:24, Bjorn Helgaas wrote:
+> On Sun, Mar 21, 2021 at 11:29:30PM +0800, Zhiqiang Liu wrote:
+>> From: Feilong Lin <linfeilong@huawei.com>
+>>
+>> Repeated hot-plugging of pci devices for a virtual
+>> machine driven by virtio, we found that there is a
+>> leak in kmalloc-4k, which was confirmed as the memory
+>> of the pci_device structure. Then we found out that
+>> it was missing pci_dev_put() after pci_get_slot() in
+>> enable_slot() of acpiphp_glue.c.
+>>
+>> Signed-off-by: Feilong Lin <linfeilong@huawei.com>
+>> Reviewed-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+> Since this came from you, Zhiqiang, it needs a signed-off-by (not just
+> a reviewed-by) from you.  See
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?id=v5.11#n361
+>
+> Also see
+> https://lore.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
+> and
+>
+>   - Wrap commit log to fill 80 columns
+>   - s/pci/PCI/ (subject and commit log)
+>   - Run "git log --oneline drivers/pci/hotplug/acpiphp_glue.c".  It's
+>     not completely consistent, but at least match the style of one of
+>     them.
+>
+> There is no "pci_device" structure.  I think you mean the "struct
+> pci_dev".
+>
+> The commit log doesn't actually say what the patch does.  It's obvious
+> from the patch, but it should say in the commit log.  Look at previous
+> commit logs to see how they do it.
+>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index 3365c93abf0e..f031302ad401 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -533,6 +533,7 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+>>  			slot->flags &= ~SLOT_ENABLED;
+>>  			continue;
+>>  		}
+>> +		pci_dev_put(dev);
+>>  	}
+>>  }
+>>
+>> -- 
+>> 2.19.1
+>>
+>>
+> .
 
