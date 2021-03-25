@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65333C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA120C433E5
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 07:50:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E5EE61A13
+	by mail.kernel.org (Postfix) with ESMTP id 992FB61A17
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 07:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbhCYHu2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229873AbhCYHu2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 25 Mar 2021 03:50:28 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:14587 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229590AbhCYHuT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 03:50:19 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:14873 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229651AbhCYHuV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 03:50:21 -0400
 Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F5cfT4Nsxz19JB9;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F5cfT1D0Hz9sdP;
         Thu, 25 Mar 2021 15:48:17 +0800 (CST)
 Received: from localhost.localdomain.localdomain (10.175.113.25) by
  DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
- 14.3.498.0; Thu, 25 Mar 2021 15:50:07 +0800
+ 14.3.498.0; Thu, 25 Mar 2021 15:50:09 +0800
 From:   Xiongfeng Wang <wangxiongfeng2@huawei.com>
 To:     <bhelgaas@google.com>, <rjw@rjwysocki.net>, <ruscur@russell.cc>
 CC:     <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <wangxiongfeng2@huawei.com>
-Subject: [PATCH 1/4] PCI: acpi_pcihp: Correct acpi_pci_check_ejectable() function name in the header
-Date:   Thu, 25 Mar 2021 15:51:41 +0800
-Message-ID: <20210325075144.180030-2-wangxiongfeng2@huawei.com>
+Subject: [PATCH 4/4] PCI/ATS: Correct pci_max_pasids() function name in header
+Date:   Thu, 25 Mar 2021 15:51:44 +0800
+Message-ID: <20210325075144.180030-5-wangxiongfeng2@huawei.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210325075144.180030-1-wangxiongfeng2@huawei.com>
 References: <20210325075144.180030-1-wangxiongfeng2@huawei.com>
@@ -46,27 +46,27 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/pci/hotplug/acpi_pcihp.c:167: warning: expecting prototype for acpi_pcihp_check_ejectable(). Prototype was for acpi_pci_check_ejectable() instead
+ drivers/pci/ats.c:490: warning: expecting prototype for pci_max_pasid(). Prototype was for pci_max_pasids() instead
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
 ---
- drivers/pci/hotplug/acpi_pcihp.c | 2 +-
+ drivers/pci/ats.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 2750a64cecd3..4fedebf2f8c1 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -157,7 +157,7 @@ static int pcihp_is_ejectable(acpi_handle handle)
- }
- 
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 0d3719407b8b..6d7d64939f82 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -480,7 +480,7 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
+ #define PASID_NUMBER_SHIFT	8
+ #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
  /**
-- * acpi_pcihp_check_ejectable - check if handle is ejectable ACPI PCI slot
-+ * acpi_pci_check_ejectable - check if handle is ejectable ACPI PCI slot
-  * @pbus: the PCI bus of the PCI slot corresponding to 'handle'
-  * @handle: ACPI handle to check
+- * pci_max_pasid - Get maximum number of PASIDs supported by device
++ * pci_max_pasids - Get maximum number of PASIDs supported by device
+  * @pdev: PCI device structure
   *
+  * Returns negative value when PASID capability is not present.
 -- 
 2.20.1
 
