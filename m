@@ -2,49 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4356C433EA
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 09:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE39C433EB
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 09:01:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1D0D60C41
+	by mail.kernel.org (Postfix) with ESMTP id F095160C41
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 09:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229919AbhCYJBJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Mar 2021 05:01:09 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:38448 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229890AbhCYJBF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 05:01:05 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12P90ruQ101375;
-        Thu, 25 Mar 2021 04:00:53 -0500
+        id S229913AbhCYJBI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Mar 2021 05:01:08 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:49414 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229617AbhCYJBC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 05:01:02 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12P90ieq035055;
+        Thu, 25 Mar 2021 04:00:44 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1616662853;
-        bh=LsBbOgpn9yK/iqmtU3fLr5ApfDJFZK/ILo5OJkwkxvQ=;
+        s=ti-com-17Q1; t=1616662844;
+        bh=abH1W5WXyijsp3MpriPtz1CV3oRWfYGjXmRCI8jXfHw=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=i0PIQTKbQtCh19LDiaaPJqVpCAqOqcd5qB3gcu7YQk63Knu1JH0J8TXzDQDRnbSzd
-         1oK+o7R06N5XfanmQI642ZQzQLszYYMjiHHMgBkLTlt/dnQROEAl8ax8/Ou4+wCsJx
-         U0pG60S7xybNP7bui/ykkZYnlEke1Tu5SS+PXyGQ=
-Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12P90qKu018320
+        b=lM2KiiKkp96TVlEqMMbEPuTxv1ikOMSktPK+iUxy7v6cTZe+/WmWXoNBpBOyhe6Iz
+         EYULf55yXukDGF1q2ZgKSIlnqUlD6itch/SmschQGS1mUduTrDk+52igdtxJ97V5Se
+         bGvk9FuxEPzRnUd6FsRl1PS/Cj+dL2RNvsPhHBqs=
+Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12P90imA008768
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 25 Mar 2021 04:00:52 -0500
-Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 25 Mar 2021 04:00:44 -0500
+Received: from DFLE105.ent.ti.com (10.64.6.26) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Thu, 25
- Mar 2021 04:00:52 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2021 04:00:44 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Thu, 25 Mar 2021 04:00:52 -0500
+ Frontend Transport; Thu, 25 Mar 2021 04:00:44 -0500
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12P90RkC115556;
-        Thu, 25 Mar 2021 04:00:49 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12P90RkA115556;
+        Thu, 25 Mar 2021 04:00:40 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -55,9 +54,9 @@ CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Lokesh Vutla <lokeshvutla@ti.com>
-Subject: [PATCH 5/6] PCI: keystone: Add PCI legacy interrupt support for AM654
-Date:   Thu, 25 Mar 2021 14:30:25 +0530
-Message-ID: <20210325090026.8843-6-kishon@ti.com>
+Subject: [PATCH 3/6] irqdomain: Export of_phandle_args_to_fwspec()
+Date:   Thu, 25 Mar 2021 14:30:23 +0530
+Message-ID: <20210325090026.8843-4-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210325090026.8843-1-kishon@ti.com>
 References: <20210325090026.8843-1-kishon@ti.com>
@@ -68,141 +67,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCI legacy interrupt support for AM654. AM654 has a single HW
-interrupt line for all the four legacy interrupts INTA/INTB/INTC/INTD.
-The HW interrupt line connected to GIC is a pulse interrupt whereas
-the legacy interrupts by definition is level interrupt. In order to
-provide level interrupt functionality to edge interrupt line, PCIe
-in AM654 has provided IRQ_EOI register. When the SW writes to IRQ_EOI
-register after handling the interrupt, the IP checks the state of
-legacy interrupt and re-triggers pulse interrupt invoking the handler
-again.
+Export of_phandle_args_to_fwspec() to be used by drivers.
+of_phandle_args_to_fwspec() can be used by drivers to get irq specifier
+from device node useful while creating hierarchy domain. This was
+suggested by Marc Zyngier [1].
 
+[1] -> http://lore.kernel.org/r/20190223121143.14c1f150@why.wild-wind.fr.eu.org/
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 87 +++++++++++++++++++++--
- 1 file changed, 82 insertions(+), 5 deletions(-)
+ include/linux/irqdomain.h | 2 ++
+ kernel/irq/irqdomain.c    | 6 +++---
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index dfa9a7fcf9b7..84a25207d0d3 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -118,6 +118,7 @@ struct keystone_pcie {
- 	/* PCI Device ID */
- 	u32			device_id;
- 	struct			device_node *legacy_intc_np;
-+	struct irq_domain	*legacy_irq_domain;
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 42d196805f58..0236f508259e 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -391,6 +391,8 @@ extern void irq_domain_associate_many(struct irq_domain *domain,
+ extern unsigned int irq_create_mapping_affinity(struct irq_domain *host,
+ 				      irq_hw_number_t hwirq,
+ 				      const struct irq_affinity_desc *affinity);
++void of_phandle_args_to_fwspec(struct device_node *np, const u32 *args, unsigned int count,
++			       struct irq_fwspec *fwspec);
+ extern unsigned int irq_create_fwspec_mapping(struct irq_fwspec *fwspec);
+ extern void irq_dispose_mapping(unsigned int virq);
  
- 	int			msi_host_irq;
- 	int			num_lanes;
-@@ -289,6 +290,29 @@ static irqreturn_t ks_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
- 	return IRQ_HANDLED;
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 288151393a06..70f050741ab2 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -756,9 +756,8 @@ static int irq_domain_translate(struct irq_domain *d,
+ 	return 0;
  }
  
-+static void ks_pcie_am654_legacy_irq_handler(struct irq_desc *desc)
-+{
-+	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	int virq, i;
-+	u32 reg;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	for (i = 0; i < PCI_NUM_INTX; i++) {
-+		reg = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(i));
-+		if (!(reg & INTx_EN))
-+			continue;
-+
-+		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, i);
-+		generic_handle_irq(virq);
-+		ks_pcie_app_writel(ks_pcie, IRQ_STATUS(i), INTx_EN);
-+		ks_pcie_app_writel(ks_pcie, IRQ_EOI, i);
-+	}
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
- void ks_pcie_irq_eoi(struct irq_data *data)
+-static void of_phandle_args_to_fwspec(struct device_node *np, const u32 *args,
+-				      unsigned int count,
+-				      struct irq_fwspec *fwspec)
++void of_phandle_args_to_fwspec(struct device_node *np, const u32 *args, unsigned int count,
++			       struct irq_fwspec *fwspec)
  {
- 	struct keystone_pcie *ks_pcie = irq_data_get_irq_chip_data(data);
-@@ -728,6 +752,54 @@ static int ks_pcie_config_msi_irq(struct keystone_pcie *ks_pcie)
- 	return ret;
+ 	int i;
+ 
+@@ -768,6 +767,7 @@ static void of_phandle_args_to_fwspec(struct device_node *np, const u32 *args,
+ 	for (i = 0; i < count; i++)
+ 		fwspec->param[i] = args[i];
  }
++EXPORT_SYMBOL_GPL(of_phandle_args_to_fwspec);
  
-+static int ks_pcie_am654_intx_map(struct irq_domain *domain, unsigned int irq,
-+				  irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops ks_pcie_am654_irq_domain_ops = {
-+	.map = ks_pcie_am654_intx_map,
-+};
-+
-+static int ks_pcie_am654_config_legacy_irq(struct keystone_pcie *ks_pcie)
-+{
-+	struct device *dev = ks_pcie->pci->dev;
-+	struct irq_domain *legacy_irq_domain;
-+	struct device_node *np = ks_pcie->np;
-+	struct device_node *intc_np;
-+	int ret = 0;
-+	int irq;
-+	int i;
-+
-+	intc_np = of_get_child_by_name(np, "interrupt-controller");
-+	if (!intc_np) {
-+		dev_warn(dev, "legacy interrupt-controller node is absent\n");
-+		return -EINVAL;
-+	}
-+
-+	irq = irq_of_parse_and_map(intc_np, 0);
-+	if (!irq)
-+		return -EINVAL;
-+
-+	irq_set_chained_handler_and_data(irq, ks_pcie_am654_legacy_irq_handler, ks_pcie);
-+	legacy_irq_domain = irq_domain_add_linear(intc_np, PCI_NUM_INTX,
-+						  &ks_pcie_am654_irq_domain_ops, ks_pcie);
-+	if (!legacy_irq_domain) {
-+		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
-+		return -EINVAL;
-+	}
-+	ks_pcie->legacy_irq_domain = legacy_irq_domain;
-+
-+	for (i = 0; i < PCI_NUM_INTX; i++)
-+		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), INTx_EN);
-+
-+	return ret;
-+}
-+
- static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
+ unsigned int irq_create_fwspec_mapping(struct irq_fwspec *fwspec)
  {
- 	struct device *dev = ks_pcie->pci->dev;
-@@ -835,12 +907,17 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
- 	int ret;
- 
- 	pp->bridge->ops = &ks_pcie_ops;
--	if (!ks_pcie->is_am6)
--		pp->bridge->child_ops = &ks_child_pcie_ops;
- 
--	ret = ks_pcie_config_legacy_irq(ks_pcie);
--	if (ret)
--		return ret;
-+	if (!ks_pcie->is_am6) {
-+		pp->bridge->child_ops = &ks_child_pcie_ops;
-+		ret = ks_pcie_config_legacy_irq(ks_pcie);
-+		if (ret)
-+			return ret;
-+	} else {
-+		ret = ks_pcie_am654_config_legacy_irq(ks_pcie);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	ret = ks_pcie_config_msi_irq(ks_pcie);
- 	if (ret)
 -- 
 2.17.1
 
