@@ -6,91 +6,133 @@ X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB48C433E6
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 16:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6B05C433C1
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 17:09:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06A3361A2E
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 16:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3699619F3
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 17:09:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbhCYQ4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Mar 2021 12:56:34 -0400
-Received: from mail-io1-f42.google.com ([209.85.166.42]:45034 "EHLO
-        mail-io1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229614AbhCYQ4O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 12:56:14 -0400
-Received: by mail-io1-f42.google.com with SMTP id v26so2558963iox.11;
-        Thu, 25 Mar 2021 09:56:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
-         :message-id;
-        bh=+Byms4pK4Tr8p9R8BbBdKHq/oMBldoupWVsIn9Ftc2U=;
-        b=DkAZn/8PB6QpGcfGryvjMVDp9WjScHfECraFXPAtkNLAZlaZmWSQXI/aXXoPl5R7Xs
-         pOVN1RXS2in3NkE794/1AGLYjsofORC3ZZWj9b3No5Piao7B3YTBlJQd45ERwYUFMHIS
-         ZUB+EYJQu0tIS2Ly970kjj01rvkZDNzMopsdXKDqrr4RYRv4s6U72yoft/dezDHYL4bl
-         59AP/rjb6jahA5RxSJWtDopfu6oZbHxHVqpGMd4TSDbQauQP5ZB0xCR+h6ieQvyBSZWr
-         2QFevOf49I9Yo1Ct1KRhWK9TiP0k5UsoyS9jW+X2mV9HBgtpwV3eryUaO6kCwifudntb
-         Vj/Q==
-X-Gm-Message-State: AOAM531s6IAULgOycODLWwLuW8XQ9u826TZcjtsfx7ebhVML2Hv6RcfG
-        C6nlOfDYLmPRoLuOUCT3CQIhJyMN+g==
-X-Google-Smtp-Source: ABdhPJxyw7HD5gin3k4/HN2QE7YpG8aa4kqpYdKljz5sArazZpNs7Hl/KxaTDan9f5FMYUtPEI2+jw==
-X-Received: by 2002:a05:6602:2018:: with SMTP id y24mr7304821iod.74.1616691373920;
-        Thu, 25 Mar 2021 09:56:13 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.253])
-        by smtp.gmail.com with ESMTPSA id o23sm2994475ioo.24.2021.03.25.09.56.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Mar 2021 09:56:12 -0700 (PDT)
-Received: (nullmailer pid 1321893 invoked by uid 1000);
-        Thu, 25 Mar 2021 16:56:01 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-omap@vger.kernel.org, Tom Joseph <tjoseph@cadence.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lokesh Vutla <lokeshvutla@ti.com>
-In-Reply-To: <20210325090936.9306-2-kishon@ti.com>
-References: <20210325090936.9306-1-kishon@ti.com> <20210325090936.9306-2-kishon@ti.com>
-Subject: Re: [PATCH 1/4] dt-bindings: PCI: ti, j721e: Add bindings to specify legacy interrupts
-Date:   Thu, 25 Mar 2021 10:56:01 -0600
-Message-Id: <1616691361.062216.1321892.nullmailer@robh.at.kernel.org>
+        id S229869AbhCYRIc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Mar 2021 13:08:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39560 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229940AbhCYRIR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Mar 2021 13:08:17 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E1791619C2;
+        Thu, 25 Mar 2021 17:08:16 +0000 (UTC)
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1lPTSw-003n47-M2; Thu, 25 Mar 2021 17:08:14 +0000
+Date:   Thu, 25 Mar 2021 17:08:13 +0000
+Message-ID: <8735wjrwjm.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Megha Dey <megha.dey@intel.com>
+Cc:     tglx@linutronix.de, linux-kernel@vger.kernel.org,
+        dave.jiang@intel.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        dwmw@amazon.co.uk, x86@kernel.org, tony.luck@intel.com,
+        dan.j.williams@intel.com, jgg@mellanox.com, kvm@vger.kernel.org,
+        iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
+Subject: Re: [Patch V2 07/13] irqdomain/msi: Provide msi_alloc/free_store() callbacks
+In-Reply-To: <1614370277-23235-8-git-send-email-megha.dey@intel.com>
+References: <1614370277-23235-1-git-send-email-megha.dey@intel.com>
+        <1614370277-23235-8-git-send-email-megha.dey@intel.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: megha.dey@intel.com, tglx@linutronix.de, linux-kernel@vger.kernel.org, dave.jiang@intel.com, ashok.raj@intel.com, kevin.tian@intel.com, dwmw@amazon.co.uk, x86@kernel.org, tony.luck@intel.com, dan.j.williams@intel.com, jgg@mellanox.com, kvm@vger.kernel.org, iommu@lists.linux-foundation.org, alex.williamson@redhat.com, bhelgaas@google.com, linux-pci@vger.kernel.org, baolu.lu@linux.intel.com, ravi.v.shankar@intel.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 25 Mar 2021 14:39:33 +0530, Kishon Vijay Abraham I wrote:
-> Add bindings to specify interrupt controller for legacy interrupts.
+On Fri, 26 Feb 2021 20:11:11 +0000,
+Megha Dey <megha.dey@intel.com> wrote:
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> From: Thomas Gleixner <tglx@linutronix.de>
+> 
+> For devices which don't have a standard storage for MSI messages like the
+> upcoming IMS (Interrupt Message Store) it's required to allocate storage
+> space before allocating interrupts and after freeing them.
+> 
+> This could be achieved with the existing callbacks, but that would be
+> awkward because they operate on msi_alloc_info_t which is not uniform
+> across architectures. Also these callbacks are invoked per interrupt but
+> the allocation might have bulk requirements depending on the device.
+> 
+> As such devices can operate on different architectures it is simpler to
+> have separate callbacks which operate on struct device. The resulting
+> storage information has to be stored in struct msi_desc so the underlying
+> irq chip implementation can retrieve it for the relevant operations.
+> 
+> Reviewed-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Megha Dey <megha.dey@intel.com>
 > ---
->  .../devicetree/bindings/pci/ti,j721e-pci-host.yaml  | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+>  include/linux/msi.h |  8 ++++++++
+>  kernel/irq/msi.c    | 11 +++++++++++
+>  2 files changed, 19 insertions(+)
 > 
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 46e879c..e915932 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -323,6 +323,10 @@ struct msi_domain_info;
+>   *			function.
+>   * @domain_free_irqs:	Optional function to override the default free
+>   *			function.
+> + * @msi_alloc_store:	Optional callback to allocate storage in a device
+> + *			specific non-standard MSI store
+> + * @msi_alloc_free:	Optional callback to free storage in a device
+> + *			specific non-standard MSI store
+>   *
+>   * @get_hwirq, @msi_init and @msi_free are callbacks used by
+>   * msi_create_irq_domain() and related interfaces
+> @@ -372,6 +376,10 @@ struct msi_domain_ops {
+>  					     struct device *dev, int nvec);
+>  	void		(*domain_free_irqs)(struct irq_domain *domain,
+>  					    struct device *dev);
+> +	int		(*msi_alloc_store)(struct irq_domain *domain,
+> +					   struct device *dev, int nvec);
+> +	void		(*msi_free_store)(struct irq_domain *domain,
+> +					  struct device *dev);
+>  };
+>  
+>  /**
+> diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+> index c54316d..047b59d 100644
+> --- a/kernel/irq/msi.c
+> +++ b/kernel/irq/msi.c
+> @@ -434,6 +434,12 @@ int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+>  	if (ret)
+>  		return ret;
+>  
+> +	if (ops->msi_alloc_store) {
+> +		ret = ops->msi_alloc_store(domain, dev, nvec);
 
-My bot found errors running 'make dt_binding_check' on your patch:
+What is supposed to happen if we get aliasing devices (similar to what
+we have with devices behind a PCI bridge)?
 
-yamllint warnings/errors:
+The ITS code goes through all kind of hoops to try and detect this
+case when sizing the translation tables (in the .prepare callback),
+and I have the feeling that sizing the message store is analogous.
 
-dtschema/dtc warnings/errors:
-Error: Documentation/devicetree/bindings/pci/ti,j721e-pci-host.example.dts:59.39-40 syntax error
-FATAL ERROR: Unable to parse input tree
-make[1]: *** [scripts/Makefile.lib:349: Documentation/devicetree/bindings/pci/ti,j721e-pci-host.example.dt.yaml] Error 1
-make[1]: *** Waiting for unfinished jobs....
-make: *** [Makefile:1380: dt_binding_check] Error 2
+Or do we all have the warm fuzzy feeling that aliasing is a thing of
+the past and that we can ignore this potential problem?
 
-See https://patchwork.ozlabs.org/patch/1458255
+Thanks,
 
-This check can fail if there are any dependencies. The base for a patch
-series is generally the most recent rc1.
+	M.
 
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit.
-
+-- 
+Without deviation from the norm, progress is not possible.
