@@ -3,70 +3,71 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 855AEC433E0
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 16:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB48C433E6
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 16:57:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C16761A2A
+	by mail.kernel.org (Postfix) with ESMTP id 06A3361A2E
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 16:57:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229547AbhCYQ4f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Mar 2021 12:56:35 -0400
-Received: from mail-il1-f180.google.com ([209.85.166.180]:38423 "EHLO
-        mail-il1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229626AbhCYQ4R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 12:56:17 -0400
-Received: by mail-il1-f180.google.com with SMTP id d10so2700313ils.5;
-        Thu, 25 Mar 2021 09:56:16 -0700 (PDT)
+        id S229524AbhCYQ4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Mar 2021 12:56:34 -0400
+Received: from mail-io1-f42.google.com ([209.85.166.42]:45034 "EHLO
+        mail-io1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229614AbhCYQ4O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 12:56:14 -0400
+Received: by mail-io1-f42.google.com with SMTP id v26so2558963iox.11;
+        Thu, 25 Mar 2021 09:56:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
          :message-id;
-        bh=2A4tbmbq/41lPUQud924tGYWb6rVXt0+nLh9EtTJUIs=;
-        b=Gx8JQ99xeRQKct814235jhazLTeAdaOlE6Blj94r+0Htz5zkj6j8SRPr2xML6OBdwS
-         7EDceu/o82mccUgA/IAsLTe/JfQ3t1i6kyJN4D0HfDe5IB/b8T5kKSlqAZoeBD3XrOnE
-         aiBoIh1EzZQyXB9h1ko7fAKYDZI1WNyKx6RIzU87ZhBUOYn6ErXIfrppbdRNzwwyqswk
-         BAHvxRoMm7rf1+o92ILRgo5hu8VmsPpPJaiWIKV69KOTZBaSJ1I0Fmhu6lcDgQZ3Y6U0
-         vsNsSAjzvqZwDLDDaHhS6u/ejml3UljQvvp+WtHErvAAuqmqVXTAXfj3I79KZ3JYpZ0n
-         nQjw==
-X-Gm-Message-State: AOAM531qem8zbwF9Uet0sFju4lX5VOsE3Ax2W8LMtv8CCOQuUDVdtHR0
-        MrR5Cgk6l6/UV1Xr+T4xVQ==
-X-Google-Smtp-Source: ABdhPJwvTpZrdakIzdAbZU+rQsbt+Q0Gp7/AOLG2hNGChXtVEKRLKt5/c7vW66dGZ25HeqtS9CKuoQ==
-X-Received: by 2002:a92:cda1:: with SMTP id g1mr7594851ild.141.1616691376369;
-        Thu, 25 Mar 2021 09:56:16 -0700 (PDT)
+        bh=+Byms4pK4Tr8p9R8BbBdKHq/oMBldoupWVsIn9Ftc2U=;
+        b=DkAZn/8PB6QpGcfGryvjMVDp9WjScHfECraFXPAtkNLAZlaZmWSQXI/aXXoPl5R7Xs
+         pOVN1RXS2in3NkE794/1AGLYjsofORC3ZZWj9b3No5Piao7B3YTBlJQd45ERwYUFMHIS
+         ZUB+EYJQu0tIS2Ly970kjj01rvkZDNzMopsdXKDqrr4RYRv4s6U72yoft/dezDHYL4bl
+         59AP/rjb6jahA5RxSJWtDopfu6oZbHxHVqpGMd4TSDbQauQP5ZB0xCR+h6ieQvyBSZWr
+         2QFevOf49I9Yo1Ct1KRhWK9TiP0k5UsoyS9jW+X2mV9HBgtpwV3eryUaO6kCwifudntb
+         Vj/Q==
+X-Gm-Message-State: AOAM531s6IAULgOycODLWwLuW8XQ9u826TZcjtsfx7ebhVML2Hv6RcfG
+        C6nlOfDYLmPRoLuOUCT3CQIhJyMN+g==
+X-Google-Smtp-Source: ABdhPJxyw7HD5gin3k4/HN2QE7YpG8aa4kqpYdKljz5sArazZpNs7Hl/KxaTDan9f5FMYUtPEI2+jw==
+X-Received: by 2002:a05:6602:2018:: with SMTP id y24mr7304821iod.74.1616691373920;
+        Thu, 25 Mar 2021 09:56:13 -0700 (PDT)
 Received: from robh.at.kernel.org ([64.188.179.253])
-        by smtp.gmail.com with ESMTPSA id q8sm2908657ilv.55.2021.03.25.09.56.14
+        by smtp.gmail.com with ESMTPSA id o23sm2994475ioo.24.2021.03.25.09.56.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Mar 2021 09:56:15 -0700 (PDT)
-Received: (nullmailer pid 1321891 invoked by uid 1000);
+        Thu, 25 Mar 2021 09:56:12 -0700 (PDT)
+Received: (nullmailer pid 1321893 invoked by uid 1000);
         Thu, 25 Mar 2021 16:56:01 -0000
 From:   Rob Herring <robh@kernel.org>
 To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Lokesh Vutla <lokeshvutla@ti.com>, Marc Zyngier <maz@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-omap@vger.kernel.org, Tom Joseph <tjoseph@cadence.com>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <maz@kernel.org>,
         Rob Herring <robh+dt@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-In-Reply-To: <20210325090026.8843-3-kishon@ti.com>
-References: <20210325090026.8843-1-kishon@ti.com> <20210325090026.8843-3-kishon@ti.com>
-Subject: Re: [PATCH 2/6] dt-bindings: PCI: ti, am65: Add PCIe endpoint mode dt-bindings for TI's AM65 SoC
+        Lokesh Vutla <lokeshvutla@ti.com>
+In-Reply-To: <20210325090936.9306-2-kishon@ti.com>
+References: <20210325090936.9306-1-kishon@ti.com> <20210325090936.9306-2-kishon@ti.com>
+Subject: Re: [PATCH 1/4] dt-bindings: PCI: ti, j721e: Add bindings to specify legacy interrupts
 Date:   Thu, 25 Mar 2021 10:56:01 -0600
-Message-Id: <1616691361.054847.1321890.nullmailer@robh.at.kernel.org>
+Message-Id: <1616691361.062216.1321892.nullmailer@robh.at.kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 25 Mar 2021 14:30:22 +0530, Kishon Vijay Abraham I wrote:
-> Add PCIe endpoint mode dt-bindings for TI's AM65 SoC.
+On Thu, 25 Mar 2021 14:39:33 +0530, Kishon Vijay Abraham I wrote:
+> Add bindings to specify interrupt controller for legacy interrupts.
 > 
 > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  .../bindings/pci/ti,am65-pci-ep.yaml          | 80 +++++++++++++++++++
->  1 file changed, 80 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
+>  .../devicetree/bindings/pci/ti,j721e-pci-host.yaml  | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 > 
 
 My bot found errors running 'make dt_binding_check' on your patch:
@@ -74,12 +75,13 @@ My bot found errors running 'make dt_binding_check' on your patch:
 yamllint warnings/errors:
 
 dtschema/dtc warnings/errors:
-Error: Documentation/devicetree/bindings/pci/ti,am65-pci-ep.example.dts:39.35-36 syntax error
+Error: Documentation/devicetree/bindings/pci/ti,j721e-pci-host.example.dts:59.39-40 syntax error
 FATAL ERROR: Unable to parse input tree
-make[1]: *** [scripts/Makefile.lib:349: Documentation/devicetree/bindings/pci/ti,am65-pci-ep.example.dt.yaml] Error 1
+make[1]: *** [scripts/Makefile.lib:349: Documentation/devicetree/bindings/pci/ti,j721e-pci-host.example.dt.yaml] Error 1
+make[1]: *** Waiting for unfinished jobs....
 make: *** [Makefile:1380: dt_binding_check] Error 2
 
-See https://patchwork.ozlabs.org/patch/1458245
+See https://patchwork.ozlabs.org/patch/1458255
 
 This check can fail if there are any dependencies. The base for a patch
 series is generally the most recent rc1.
