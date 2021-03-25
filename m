@@ -2,48 +2,49 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C035C433E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4356C433EA
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 09:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3677861A0A
+	by mail.kernel.org (Postfix) with ESMTP id B1D0D60C41
 	for <linux-pci@archiver.kernel.org>; Thu, 25 Mar 2021 09:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229906AbhCYJBI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Mar 2021 05:01:08 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:38290 "EHLO
+        id S229919AbhCYJBJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Mar 2021 05:01:09 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:38448 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229873AbhCYJAu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 05:00:50 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12P90eNS101329;
-        Thu, 25 Mar 2021 04:00:40 -0500
+        with ESMTP id S229890AbhCYJBF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Mar 2021 05:01:05 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12P90ruQ101375;
+        Thu, 25 Mar 2021 04:00:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1616662840;
-        bh=5v/9COS7STv0Pp1b/RvH5GIPWWy1VQ/hFRswDe7GXZw=;
+        s=ti-com-17Q1; t=1616662853;
+        bh=LsBbOgpn9yK/iqmtU3fLr5ApfDJFZK/ILo5OJkwkxvQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=RDW6z0wWjaJIa+KkFEnsAqIRweNP0lOHtQ5YCHxai1fyyuTSLVcCevGW1y+vdiszq
-         BtsrK6mnpxeLxnPKKRHCNcVBnKDSwyD544o0+1MtKWNtOyXjqHc+OrvlOpZcaTxnEy
-         eXFkt1L/6ys5bdwzwdD0LtjeUntxhve5yCob1268=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12P90eVO124244
+        b=i0PIQTKbQtCh19LDiaaPJqVpCAqOqcd5qB3gcu7YQk63Knu1JH0J8TXzDQDRnbSzd
+         1oK+o7R06N5XfanmQI642ZQzQLszYYMjiHHMgBkLTlt/dnQROEAl8ax8/Ou4+wCsJx
+         U0pG60S7xybNP7bui/ykkZYnlEke1Tu5SS+PXyGQ=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12P90qKu018320
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 25 Mar 2021 04:00:40 -0500
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 25 Mar 2021 04:00:52 -0500
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Thu, 25
- Mar 2021 04:00:40 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ Mar 2021 04:00:52 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Thu, 25 Mar 2021 04:00:40 -0500
+ Frontend Transport; Thu, 25 Mar 2021 04:00:52 -0500
 Received: from a0393678-ssd.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12P90Rk9115556;
-        Thu, 25 Mar 2021 04:00:36 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12P90RkC115556;
+        Thu, 25 Mar 2021 04:00:49 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -54,9 +55,9 @@ CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Lokesh Vutla <lokeshvutla@ti.com>
-Subject: [PATCH 2/6] dt-bindings: PCI: ti,am65: Add PCIe endpoint mode dt-bindings for TI's AM65 SoC
-Date:   Thu, 25 Mar 2021 14:30:22 +0530
-Message-ID: <20210325090026.8843-3-kishon@ti.com>
+Subject: [PATCH 5/6] PCI: keystone: Add PCI legacy interrupt support for AM654
+Date:   Thu, 25 Mar 2021 14:30:25 +0530
+Message-ID: <20210325090026.8843-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210325090026.8843-1-kishon@ti.com>
 References: <20210325090026.8843-1-kishon@ti.com>
@@ -67,100 +68,141 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe endpoint mode dt-bindings for TI's AM65 SoC.
+Add PCI legacy interrupt support for AM654. AM654 has a single HW
+interrupt line for all the four legacy interrupts INTA/INTB/INTC/INTD.
+The HW interrupt line connected to GIC is a pulse interrupt whereas
+the legacy interrupts by definition is level interrupt. In order to
+provide level interrupt functionality to edge interrupt line, PCIe
+in AM654 has provided IRQ_EOI register. When the SW writes to IRQ_EOI
+register after handling the interrupt, the IP checks the state of
+legacy interrupt and re-triggers pulse interrupt invoking the handler
+again.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../bindings/pci/ti,am65-pci-ep.yaml          | 80 +++++++++++++++++++
- 1 file changed, 80 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
+ drivers/pci/controller/dwc/pci-keystone.c | 87 +++++++++++++++++++++--
+ 1 file changed, 82 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
-new file mode 100644
-index 000000000000..f0a5518e6331
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/ti,am65-pci-ep.yaml
-@@ -0,0 +1,80 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2021 Texas Instruments Incorporated - http://www.ti.com/
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/pci/ti,am65-pci-ep.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index dfa9a7fcf9b7..84a25207d0d3 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -118,6 +118,7 @@ struct keystone_pcie {
+ 	/* PCI Device ID */
+ 	u32			device_id;
+ 	struct			device_node *legacy_intc_np;
++	struct irq_domain	*legacy_irq_domain;
+ 
+ 	int			msi_host_irq;
+ 	int			num_lanes;
+@@ -289,6 +290,29 @@ static irqreturn_t ks_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void ks_pcie_am654_legacy_irq_handler(struct irq_desc *desc)
++{
++	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	int virq, i;
++	u32 reg;
 +
-+title: TI AM65 PCI Endpoint
++	chained_irq_enter(chip, desc);
 +
-+maintainers:
-+  - Kishon Vijay Abraham I <kishon@ti.com>
++	for (i = 0; i < PCI_NUM_INTX; i++) {
++		reg = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(i));
++		if (!(reg & INTx_EN))
++			continue;
 +
-+allOf:
-+  - $ref: "pci-ep.yaml#"
++		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, i);
++		generic_handle_irq(virq);
++		ks_pcie_app_writel(ks_pcie, IRQ_STATUS(i), INTx_EN);
++		ks_pcie_app_writel(ks_pcie, IRQ_EOI, i);
++	}
 +
-+properties:
-+  compatible:
-+    enum:
-+      - ti,am654-pcie-ep
++	chained_irq_exit(chip, desc);
++}
 +
-+  reg:
-+    maxItems: 4
+ void ks_pcie_irq_eoi(struct irq_data *data)
+ {
+ 	struct keystone_pcie *ks_pcie = irq_data_get_irq_chip_data(data);
+@@ -728,6 +752,54 @@ static int ks_pcie_config_msi_irq(struct keystone_pcie *ks_pcie)
+ 	return ret;
+ }
+ 
++static int ks_pcie_am654_intx_map(struct irq_domain *domain, unsigned int irq,
++				  irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
 +
-+  reg-names:
-+    items:
-+      - const: app
-+      - const: dbics
-+      - const: addr_space
-+      - const: atu
++	return 0;
++}
 +
-+  power-domains:
-+    maxItems: 1
++static const struct irq_domain_ops ks_pcie_am654_irq_domain_ops = {
++	.map = ks_pcie_am654_intx_map,
++};
 +
-+  ti,syscon-pcie-mode:
-+    description: Phandle to the SYSCON entry required for configuring PCIe in RC or EP mode.
-+    $ref: /schemas/types.yaml#/definitions/phandle
++static int ks_pcie_am654_config_legacy_irq(struct keystone_pcie *ks_pcie)
++{
++	struct device *dev = ks_pcie->pci->dev;
++	struct irq_domain *legacy_irq_domain;
++	struct device_node *np = ks_pcie->np;
++	struct device_node *intc_np;
++	int ret = 0;
++	int irq;
++	int i;
 +
-+  interrupts:
-+    minItems: 1
++	intc_np = of_get_child_by_name(np, "interrupt-controller");
++	if (!intc_np) {
++		dev_warn(dev, "legacy interrupt-controller node is absent\n");
++		return -EINVAL;
++	}
 +
-+  dma-coherent: true
++	irq = irq_of_parse_and_map(intc_np, 0);
++	if (!irq)
++		return -EINVAL;
 +
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - max-link-speed
-+  - num-lanes
-+  - power-domains
-+  - ti,syscon-pcie-mode
-+  - phys
-+  - phy-names
-+  - dma-coherent
++	irq_set_chained_handler_and_data(irq, ks_pcie_am654_legacy_irq_handler, ks_pcie);
++	legacy_irq_domain = irq_domain_add_linear(intc_np, PCI_NUM_INTX,
++						  &ks_pcie_am654_irq_domain_ops, ks_pcie);
++	if (!legacy_irq_domain) {
++		dev_err(dev, "Failed to add irq domain for legacy irqs\n");
++		return -EINVAL;
++	}
++	ks_pcie->legacy_irq_domain = legacy_irq_domain;
 +
-+unevaluatedProperties: false
++	for (i = 0; i < PCI_NUM_INTX; i++)
++		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), INTx_EN);
 +
-+examples:
-+  - |
-+    #include <dt-bindings/soc/ti,sci_pm_domain.h>
-+    #include <dt-bindings/gpio/gpio.h>
++	return ret;
++}
 +
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0_ep: pcie-ep@5500000 {
-+                compatible = "ti,am654-pcie-ep";
-+                reg =  <0x0 0x5500000 0x0 0x1000>,
-+                       <0x0 0x5501000 0x0 0x1000>,
-+                       <0x0 0x10000000 0x0 0x8000000>,
-+                       <0x0 0x5506000 0x0 0x1000>;
-+                reg-names = "app", "dbics", "addr_space", "atu";
-+                power-domains = <&k3_pds 120 TI_SCI_PD_EXCLUSIVE>;
-+                ti,syscon-pcie-mode = <&pcie0_mode>;
-+                num-ib-windows = <16>;
-+                num-ob-windows = <16>;
-+                max-link-speed = <2>;
-+                dma-coherent;
-+                interrupts = <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
-+        };
+ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
+ {
+ 	struct device *dev = ks_pcie->pci->dev;
+@@ -835,12 +907,17 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ 	int ret;
+ 
+ 	pp->bridge->ops = &ks_pcie_ops;
+-	if (!ks_pcie->is_am6)
+-		pp->bridge->child_ops = &ks_child_pcie_ops;
+ 
+-	ret = ks_pcie_config_legacy_irq(ks_pcie);
+-	if (ret)
+-		return ret;
++	if (!ks_pcie->is_am6) {
++		pp->bridge->child_ops = &ks_child_pcie_ops;
++		ret = ks_pcie_config_legacy_irq(ks_pcie);
++		if (ret)
++			return ret;
++	} else {
++		ret = ks_pcie_am654_config_legacy_irq(ks_pcie);
++		if (ret)
++			return ret;
++	}
+ 
+ 	ret = ks_pcie_config_msi_irq(ks_pcie);
+ 	if (ret)
 -- 
 2.17.1
 
