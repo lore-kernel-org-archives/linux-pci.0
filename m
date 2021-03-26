@@ -6,80 +6,76 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B72DDC433C1
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:19:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C22C433E0
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:25:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8783961A4F
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:19:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A4D361A45
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Mar 2021 09:25:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230070AbhCZJTB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Mar 2021 05:19:01 -0400
-Received: from mail-wm1-f45.google.com ([209.85.128.45]:34454 "EHLO
-        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230191AbhCZJSb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Mar 2021 05:18:31 -0400
-Received: by mail-wm1-f45.google.com with SMTP id n11-20020a05600c4f8bb029010e5cf86347so5564547wmq.1;
-        Fri, 26 Mar 2021 02:18:30 -0700 (PDT)
+        id S229589AbhCZJZZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Mar 2021 05:25:25 -0400
+Received: from mail-lf1-f51.google.com ([209.85.167.51]:44781 "EHLO
+        mail-lf1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229984AbhCZJZU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Mar 2021 05:25:20 -0400
+Received: by mail-lf1-f51.google.com with SMTP id b83so6648401lfd.11;
+        Fri, 26 Mar 2021 02:25:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=6Mvur1GUmH32VOUskwiW2+EcCiaYg3WjBaEKZm/xa40=;
-        b=GBfg7xzsihRxvEYOa3sX5cdsQv9gZldhG8Zw//WPqB4O1sDsOdOJRDtv2NOybrghil
-         2crljWr3s9lWUO9LtJrKTC1pvEFb26FBJmJlvUOLYz6lS7yanm2pXIjQ3kJ0U7T6cGyL
-         OYCfKbWIcKGBZ/COpDnTOrPH6UjmdZkMKE8Cbkf4pKBxG7TzSwO7Qp7lfIpdc060x7/b
-         WTkkn1EH2ZeEotQmz/dXMPwDtPw1kqlquoRa7TiJhmJ8yGfmPAvUXBg0VsCTCsXseQPz
-         iPW+k/u56cyvdZ9Ek6PGJm7qgtaWVYu4l6sHlzA2nVjah89sdp6md9PwxPJ1sYvZxxJj
-         zGRg==
-X-Gm-Message-State: AOAM530Oe7DIZPxPK6HdLYZaKB27L8NHGov0z1QR80AXenlu4G3ng3HA
-        xZ2AC2EtXQL53QOj8//t04A=
-X-Google-Smtp-Source: ABdhPJzQHRy22NwuSChpb7o0Yk5ORNyrLm9BNNmztYbg5Iaw5u2G4Bcshu7y+mCsBluieKZTKYG1kw==
-X-Received: by 2002:a1c:2683:: with SMTP id m125mr12068344wmm.178.1616750307615;
-        Fri, 26 Mar 2021 02:18:27 -0700 (PDT)
+        bh=3MWassWFEXaUX1gHbazVX0W/gBRgphn/sg0J1pohK+Y=;
+        b=jHmU/CuRW7LQj63Bmjqt00mfbt7VkgwAdCvqcc9QSIIhDhZZ+X+YOVbf9YCZWeVuKq
+         0Txm920CqnnHNA62KUMb4q5IvR3btEkeWuPkqOm5kT32uE8I2hGaxH4q3dQi12jL5PJl
+         1OK7NdN0eeoFgsdM2yL+0+8s+F1Eq+SB0lfR32QuRxtZBzApPaeTOpZN7E9fVLdUeH01
+         ZkRC2aRXNUJYkGEnr2pT+pK4LNy6zTpnf/SvxdMpgAiVyX+AGY6etUX0mfLz1KX3s5fL
+         yFXyVDn/z6VI5GcdKg9Ut1o1wcy7+KxlKijejqz2kzhcH/vFOmEKSvt5Bb9pTdXHxdcK
+         Op7A==
+X-Gm-Message-State: AOAM530Tbar2TLprh88hsmPoDspayLPL1uX8YDmLLvJRBlv6Bgl7ZEDx
+        9C1yXZByQRT8iJddpGRjhFLWkQ09Y+rnBA==
+X-Google-Smtp-Source: ABdhPJx0nOnsKRf0coi6TFnhNpyOiKPW387JS0XuFm2mL6CdKkaGVnEw37/51utTVM7jAB8mITiW2Q==
+X-Received: by 2002:ac2:54ab:: with SMTP id w11mr7771994lfk.260.1616750718849;
+        Fri, 26 Mar 2021 02:25:18 -0700 (PDT)
 Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id h12sm5199389wrv.58.2021.03.26.02.18.26
+        by smtp.gmail.com with ESMTPSA id u15sm838275lfl.110.2021.03.26.02.25.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Mar 2021 02:18:26 -0700 (PDT)
-Date:   Fri, 26 Mar 2021 10:18:25 +0100
+        Fri, 26 Mar 2021 02:25:18 -0700 (PDT)
+Date:   Fri, 26 Mar 2021 10:25:17 +0100
 From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     Alex Williamson <alex.williamson@redhat.com>,
-        "Enrico Weigelt, metux IT consult" <info@metux.net>,
-        Amey Narkhede <ameynarkhede03@gmail.com>,
-        raphael.norwitz@nutanix.com, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        alay.shah@nutanix.com, suresh.gumpula@nutanix.com,
-        shyam.rajendran@nutanix.com, felipe@nutanix.com
-Subject: Re: [PATCH 4/4] PCI/sysfs: Allow userspace to query and set device
- reset mechanism
-Message-ID: <YF2m4amcwj9BkQ+S@rocinante>
-References: <20210322111003.50d64f2c@omen.home.shazbot.org>
- <YFsOVNM1zIqNUN8f@unreal>
- <20210324083743.791d6191@omen.home.shazbot.org>
- <YFtXNF+t/0G26dwS@unreal>
- <20210324111729.702b3942@omen.home.shazbot.org>
- <YFxL4o/QpmhM8KiH@unreal>
- <20210325085504.051e93f2@omen.home.shazbot.org>
- <YFy11u+fm4MEGU5X@unreal>
- <20210325115324.046ddca8@omen.home.shazbot.org>
- <YF2B3oZfkYGEha/w@unreal>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     bhelgaas@google.com,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Disable D3cold support on Intel XMM7360
+Message-ID: <YF2ofVoGlEb07NYm@rocinante>
+References: <20210324111316.250576-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <YF2B3oZfkYGEha/w@unreal>
+In-Reply-To: <20210324111316.250576-1-kai.heng.feng@canonical.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+Hi,
+
+Thank you for sending the patch over!
 
 [...]
+> +static void pci_fixup_no_d3cold(struct pci_dev *pdev)
+> +{
+> +	pci_info(pdev, "disable D3cold\n");
 
-Aside of the sysfs interface, would this new functionality also require
-anything to be overridden at boot time via passing some command-line
-arguments?  Not sure how relevant such thing would be to device, but,
-whatnot reset, though.
+Not sure how useful this message would generally be?  Unless this is
+useful to someone who is doing some troubleshooting, etc.
 
-I am curious whether there would be a need for anything like that.
+> +	pci_d3cold_disable(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x7360, pci_fixup_no_d3cold);
+[...]
+
+A small suggestion: a brief comment, perhaps even linking to the
+Bugzilla, might be a nice touch here, so that people would know why
+D3cold is being disabled for XMM7360, etc.
 
 Krzysztof
