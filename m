@@ -2,74 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0EBFC433C1
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 11:32:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE7AC433C1
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAD0A619F8
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 11:32:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21713619F7
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230322AbhC0Lck (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 07:32:40 -0400
-Received: from mail-wr1-f48.google.com ([209.85.221.48]:44793 "EHLO
-        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230288AbhC0Lck (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 07:32:40 -0400
-Received: by mail-wr1-f48.google.com with SMTP id c8so8079839wrq.11
-        for <linux-pci@vger.kernel.org>; Sat, 27 Mar 2021 04:32:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=GSs69PYJcIHQ6+xxQ5SvqpG1ljoeGwSlyKoNuOWFuaM=;
-        b=cU3TWz/7YQjRxKU8IliPnuyir7tUlK/3aDE1GBv4ZDIuF/z+OfUzYVLtNh466l5NqI
-         Tw0T8Tj0E3jxG3bLUBd90tQDMy/UgW7KfbJBjnfxy3QlaG6DZsIgbOrnBgcie1nL/Hup
-         JHsubWyEJAodPBFJWZyLjeDzLXNZgqMeql7l7GNBRcUdMVckJyQXr0lVWhkCiyUODP78
-         t9m9qMyMpUEAE6rI+LInifnwNkREMjLxebyplaupJct2fadcEwQ+fWuV7q/H92fdo3CL
-         yohgWmpVWfp/UZLIhK7QdkNMFK+fRB4sJ/YN6WiEN+WUduBJA2d5XXtOxtKRvOdZu/2P
-         KbGg==
-X-Gm-Message-State: AOAM533epnBBA7hmDI0TzVBGzouVxWxXMXtnEx5BYiMXb0ygIzETzJnM
-        4OjIx4tVNGbqA+HZD6XbT54=
-X-Google-Smtp-Source: ABdhPJw8tk4k/KA03MEz5dLf6p0d9i9bc26G8aEWJVL0wyZOkfrcLeQh+JjSVqzQ3GLife3vmov1xQ==
-X-Received: by 2002:adf:d0c3:: with SMTP id z3mr19510555wrh.28.1616844758818;
-        Sat, 27 Mar 2021 04:32:38 -0700 (PDT)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id d13sm18951703wro.23.2021.03.27.04.32.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Mar 2021 04:32:38 -0700 (PDT)
-Date:   Sat, 27 Mar 2021 12:32:37 +0100
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     helgaas@kernel.org, wangzhou1@hisilicon.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: hisi: Delete the useless HiSilicon
- PCIe file
-Message-ID: <YF8X1V0PkmMk4fHR@rocinante>
-References: <1616842062-21823-1-git-send-email-liudongdong3@huawei.com>
+        id S230043AbhC0MLM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 08:11:12 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:15013 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229627AbhC0MLL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 08:11:11 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F6yKv0bG6zPsyJ;
+        Sat, 27 Mar 2021 20:08:35 +0800 (CST)
+Received: from localhost.localdomain (10.67.165.24) by
+ DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
+ 14.3.498.0; Sat, 27 Mar 2021 20:11:01 +0800
+From:   Xiaofei Tan <tanxiaofei@huawei.com>
+To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
+        <bhelgaas@google.com>
+CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@openeuler.org>
+Subject: [PATCH v3 07/12] ACPI: button: fix some coding style issues
+Date:   Sat, 27 Mar 2021 20:08:19 +0800
+Message-ID: <1616846904-25719-8-git-send-email-tanxiaofei@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1616846904-25719-1-git-send-email-tanxiaofei@huawei.com>
+References: <1616846904-25719-1-git-send-email-tanxiaofei@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1616842062-21823-1-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.24]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Fix some coding style issues reported by checkpatch.pl, including
+following types:
 
-Such a strong word "useless" in the subject.  I would think that the
-file became "obsolete". :-) (N.B. nothing to fix, though).
+WARNING: Block comments use * on subsequent lines
+WARNING: Block comments use a trailing */ on a separate line
+ERROR: code indent should use tabs where possible
 
-> The hisilicon-pcie.txt file is no longer useful since commit
-> c2fa6cf76d20 (PCI: dwc: hisi: Remove non-ECAM HiSilicon
-> hip05/hip06 driver), so delete it.
+Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+---
+ drivers/acpi/button.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-Thank you for cleaning things up!
+diff --git a/drivers/acpi/button.c b/drivers/acpi/button.c
+index 85e5e03..f25bd33 100644
+--- a/drivers/acpi/button.c
++++ b/drivers/acpi/button.c
+@@ -156,10 +156,7 @@ static unsigned long lid_report_interval __read_mostly = 500;
+ module_param(lid_report_interval, ulong, 0644);
+ MODULE_PARM_DESC(lid_report_interval, "Interval (ms) between lid key events");
+ 
+-/* --------------------------------------------------------------------------
+-                              FS Interface (/proc)
+-   -------------------------------------------------------------------------- */
+-
++/* FS Interface (/proc) */
+ static struct proc_dir_entry *acpi_button_dir;
+ static struct proc_dir_entry *acpi_lid_dir;
+ 
+@@ -348,9 +345,7 @@ static int acpi_button_remove_fs(struct acpi_device *device)
+ 	return 0;
+ }
+ 
+-/* --------------------------------------------------------------------------
+-                                Driver Interface
+-   -------------------------------------------------------------------------- */
++/* Driver Interface */
+ int acpi_lid_open(void)
+ {
+ 	if (!lid_device)
+-- 
+2.8.1
 
-Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
-
-Krzysztof
