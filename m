@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA59FC433FB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FE1C433F2
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4F0161A02
+	by mail.kernel.org (Postfix) with ESMTP id 27CF361A0D
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231382AbhC0GoW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 02:44:22 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15334 "EHLO
+        id S231371AbhC0GoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 02:44:21 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15339 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231258AbhC0GoB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:01 -0400
+        with ESMTP id S231249AbhC0GoC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:02 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m1JvZz93nV;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m1tf3z93nX;
         Sat, 27 Mar 2021 14:41:44 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 14:43:36 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 14:43:35 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH 07/15] ACPI: acpi_memhotplug: fix a coding style issue
-Date:   Sat, 27 Mar 2021 14:40:48 +0800
-Message-ID: <1616827256-51840-8-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH 05/15] remove useless return statement for void function
+Date:   Sat, 27 Mar 2021 14:40:46 +0800
+Message-ID: <1616827256-51840-6-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
@@ -45,30 +45,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix the following coding style issue reported by checkpatch.pl
+Remove useless return statement for void function, reported by
+checkpatch.pl.
 
-WARNING: __initdata should be placed after acpi_no_memhotplug
-FILE: drivers/acpi/acpi_memhotplug.c:326:
-+static bool __initdata acpi_no_memhotplug;
+WARNING: void function return statements are not generally useful
+FILE: drivers/acpi/acpi_ipmi.c:482:
++       return;
++}
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/acpi_memhotplug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/acpi/acpi_ipmi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
-index 8cc195c..5c5ed22 100644
---- a/drivers/acpi/acpi_memhotplug.c
-+++ b/drivers/acpi/acpi_memhotplug.c
-@@ -323,7 +323,7 @@ static void acpi_memory_device_remove(struct acpi_device *device)
- 	acpi_memory_device_free(mem_device);
+diff --git a/drivers/acpi/acpi_ipmi.c b/drivers/acpi/acpi_ipmi.c
+index 9d6c0fc..bbd00d9 100644
+--- a/drivers/acpi/acpi_ipmi.c
++++ b/drivers/acpi/acpi_ipmi.c
+@@ -478,7 +478,6 @@ static void ipmi_register_bmc(int iface, struct device *dev)
+ 	ipmi_dev_release(ipmi_device);
+ err_ref:
+ 	put_device(smi_data.dev);
+-	return;
  }
  
--static bool __initdata acpi_no_memhotplug;
-+static bool acpi_no_memhotplug __initdata;
- 
- void __init acpi_memory_hotplug_init(void)
- {
+ static void ipmi_bmc_gone(int iface)
 -- 
 2.8.1
 
