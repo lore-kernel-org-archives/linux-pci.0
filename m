@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F5BEC433F8
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E37EC4345A
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F63B619F7
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42041619AE
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231404AbhC0Htp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 03:49:45 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15348 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231190AbhC0HtU (ORCPT
+        id S231458AbhC0Htq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 03:49:46 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:14920 "EHLO
+        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230503AbhC0HtU (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:20 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6rXK6NNfz93yn;
-        Sat, 27 Mar 2021 15:47:13 +0800 (CST)
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6rXg4lrCzkjSk;
+        Sat, 27 Mar 2021 15:47:31 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 15:49:05 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 15:49:02 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH v2 09/15] ACPI: battery: fix some coding style issues
-Date:   Sat, 27 Mar 2021 15:46:27 +0800
-Message-ID: <1616831193-17920-10-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH v2 02/15] ACPI: processor: fix some coding style issues
+Date:   Sat, 27 Mar 2021 15:46:20 +0800
+Message-ID: <1616831193-17920-3-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,181 +48,73 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Fix some coding style issues reported by checkpatch.pl, including
 following types:
 
-WARNING: Block comments use * on subsequent lines
-WARNING: Block comments use a trailing */ on a separate line
 ERROR: code indent should use tabs where possible
+WARNING: Block comments use a trailing */ on a separate line
 WARNING: Missing a blank line after declarations
-ERROR: spaces required around that '?' (ctx:WxV)
-WARNING: Block comments should align the * on each line
+WARNING: labels should not be indented
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/battery.c | 64 ++++++++++++++++++++++++++++++--------------------
- 1 file changed, 38 insertions(+), 26 deletions(-)
+ drivers/acpi/acpi_processor.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
-index b822f77..a0d8ead 100644
---- a/drivers/acpi/battery.c
-+++ b/drivers/acpi/battery.c
-@@ -74,16 +74,17 @@ enum {
- 	ACPI_BATTERY_XINFO_PRESENT,
- 	ACPI_BATTERY_QUIRK_PERCENTAGE_CAPACITY,
- 	/* On Lenovo Thinkpad models from 2010 and 2011, the power unit
--	   switches between mWh and mAh depending on whether the system
--	   is running on battery or not.  When mAh is the unit, most
--	   reported values are incorrect and need to be adjusted by
--	   10000/design_voltage.  Verified on x201, t410, t410s, and x220.
--	   Pre-2010 and 2012 models appear to always report in mWh and
--	   are thus unaffected (tested with t42, t61, t500, x200, x300,
--	   and x230).  Also, in mid-2012 Lenovo issued a BIOS update for
--	   the 2011 models that fixes the issue (tested on x220 with a
--	   post-1.29 BIOS), but as of Nov. 2012, no such update is
--	   available for the 2010 models.  */
-+	 * switches between mWh and mAh depending on whether the system
-+	 * is running on battery or not.  When mAh is the unit, most
-+	 * reported values are incorrect and need to be adjusted by
-+	 * 10000/design_voltage.  Verified on x201, t410, t410s, and x220.
-+	 * Pre-2010 and 2012 models appear to always report in mWh and
-+	 * are thus unaffected (tested with t42, t61, t500, x200, x300,
-+	 * and x230).  Also, in mid-2012 Lenovo issued a BIOS update for
-+	 *  the 2011 models that fixes the issue (tested on x220 with a
-+	 * post-1.29 BIOS), but as of Nov. 2012, no such update is
-+	 * available for the 2010 models.
-+	 */
- 	ACPI_BATTERY_QUIRK_THINKPAD_MAH,
- 	/* for batteries reporting current capacity with design capacity
- 	 * on a full charge, but showing degradation in full charge cap.
-@@ -372,8 +373,9 @@ static enum power_supply_property energy_battery_full_cap_broken_props[] = {
- };
+diff --git a/drivers/acpi/acpi_processor.c b/drivers/acpi/acpi_processor.c
+index fc89f3a..2d5bd2a 100644
+--- a/drivers/acpi/acpi_processor.c
++++ b/drivers/acpi/acpi_processor.c
+@@ -25,10 +25,7 @@
+ DEFINE_PER_CPU(struct acpi_processor *, processors);
+ EXPORT_PER_CPU_SYMBOL(processors);
  
- /* --------------------------------------------------------------------------
--                               Battery Management
+-/* --------------------------------------------------------------------------
+-                                Errata Handling
 -   -------------------------------------------------------------------------- */
-+ *				Battery Management
-+ * --------------------------------------------------------------------------
-+ */
- struct acpi_offsets {
- 	size_t offset;		/* offset inside struct acpi_sbs_battery */
- 	u8 mode;		/* int or string? */
-@@ -431,6 +433,7 @@ static int extract_package(struct acpi_battery *battery,
- {
- 	int i;
- 	union acpi_object *element;
+-
++/* Errata Handling */
+ struct acpi_processor_errata errata __read_mostly;
+ EXPORT_SYMBOL_GPL(errata);
+ 
+@@ -151,10 +148,7 @@ static int acpi_processor_errata(void)
+ 	return result;
+ }
+ 
+-/* --------------------------------------------------------------------------
+-                                Initialization
+-   -------------------------------------------------------------------------- */
+-
++/* Initialization */
+ #ifdef CONFIG_ACPI_HOTPLUG_CPU
+ int __weak acpi_map_cpu(acpi_handle handle,
+ 		phys_cpuid_t physid, u32 acpi_id, int *pcpu)
+@@ -306,6 +300,7 @@ static int acpi_processor_get_info(struct acpi_device *device)
+ 	 */
+ 	if (invalid_logical_cpuid(pr->id) || !cpu_present(pr->id)) {
+ 		int ret = acpi_processor_hotadd_init(pr);
 +
- 	if (package->type != ACPI_TYPE_PACKAGE)
- 		return -EFAULT;
- 	for (i = 0; i < num; ++i) {
-@@ -439,6 +442,7 @@ static int extract_package(struct acpi_battery *battery,
- 		element = &package->package.elements[i];
- 		if (offsets[i].mode) {
- 			u8 *ptr = (u8 *)battery + offsets[i].offset;
-+
- 			if (element->type == ACPI_TYPE_STRING ||
- 			    element->type == ACPI_TYPE_BUFFER)
- 				strncpy(ptr, element->string.pointer, 32);
-@@ -497,10 +501,12 @@ static int extract_battery_info(const int use_bix,
- 		    battery->design_capacity_warning *
- 		    10000 / battery->design_voltage;
- 		/* Curiously, design_capacity_low, unlike the rest of them,
--		   is correct.  */
-+		 *  is correct.
-+		 */
- 		/* capacity_granularity_* equal 1 on the systems tested, so
--		   it's impossible to tell if they would need an adjustment
--		   or not if their values were higher.  */
-+		 * it's impossible to tell if they would need an adjustment
-+		 * or not if their values were higher.
-+		 */
+ 		if (ret)
+ 			return ret;
  	}
- 	if (test_bit(ACPI_BATTERY_QUIRK_DEGRADED_FULL_CHARGE, &battery->flags) &&
- 	    battery->capacity_now > battery->full_charge_capacity)
-@@ -532,8 +538,8 @@ static int acpi_battery_get_info(struct acpi_battery *battery)
- 		if (ACPI_FAILURE(status)) {
- 			acpi_handle_info(battery->device->handle,
- 					 "%s evaluation failed: %s\n",
--					 use_bix ?"_BIX":"_BIF",
--				         acpi_format_exception(status));
-+					 use_bix ? "_BIX":"_BIF",
-+					 acpi_format_exception(status));
- 		} else {
- 			result = extract_battery_info(use_bix,
- 						      battery,
-@@ -648,6 +654,7 @@ static ssize_t acpi_battery_alarm_show(struct device *dev,
- 					char *buf)
- {
- 	struct acpi_battery *battery = to_acpi_battery(dev_get_drvdata(dev));
-+
- 	return sprintf(buf, "%d\n", battery->alarm * 1000);
+@@ -431,10 +426,7 @@ static int acpi_processor_add(struct acpi_device *device,
  }
  
-@@ -657,6 +664,7 @@ static ssize_t acpi_battery_alarm_store(struct device *dev,
- {
- 	unsigned long x;
- 	struct acpi_battery *battery = to_acpi_battery(dev_get_drvdata(dev));
-+
- 	if (sscanf(buf, "%lu\n", &x) == 1)
- 		battery->alarm = x/1000;
- 	if (acpi_battery_present(battery))
-@@ -743,7 +751,7 @@ EXPORT_SYMBOL_GPL(battery_hook_register);
-  * This function gets called right after the battery sysfs
-  * attributes have been added, so that the drivers that
-  * define custom sysfs attributes can add their own.
--*/
-+ */
- static void battery_hook_add_battery(struct acpi_battery *battery)
- {
- 	struct acpi_battery_hook *hook_node, *tmp;
-@@ -872,10 +880,12 @@ static void find_battery(const struct dmi_header *dm, void *private)
- {
- 	struct acpi_battery *battery = (struct acpi_battery *)private;
- 	/* Note: the hardcoded offsets below have been extracted from
--	   the source code of dmidecode.  */
-+	 * the source code of dmidecode.
-+	 */
- 	if (dm->type == DMI_ENTRY_PORTABLE_BATTERY && dm->length >= 8) {
- 		const u8 *dmi_data = (const u8 *)(dm + 1);
- 		int dmi_capacity = get_unaligned((const u16 *)(dmi_data + 6));
-+
- 		if (dm->length >= 18)
- 			dmi_capacity *= dmi_data[17];
- 		if (battery->design_capacity * battery->design_voltage / 1000
-@@ -917,6 +927,7 @@ static void acpi_battery_quirks(struct acpi_battery *battery)
- 
- 	if (battery->power_unit && dmi_name_in_vendors("LENOVO")) {
- 		const char *s;
-+
- 		s = dmi_get_system_info(DMI_PRODUCT_VERSION);
- 		if (s && !strncasecmp(s, "ThinkPad", 8)) {
- 			dmi_walk(find_battery, battery);
-@@ -1014,8 +1025,9 @@ static void acpi_battery_refresh(struct acpi_battery *battery)
- }
- 
- /* --------------------------------------------------------------------------
--                                 Driver Interface
+ #ifdef CONFIG_ACPI_HOTPLUG_CPU
+-/* --------------------------------------------------------------------------
+-                                    Removal
 -   -------------------------------------------------------------------------- */
-+ *				Driver Interface
-+ * --------------------------------------------------------------------------
-+ */
- 
- static void acpi_battery_notify(struct acpi_device *device, u32 event)
+-
++/* Removal */
+ static void acpi_processor_remove(struct acpi_device *device)
  {
-@@ -1026,11 +1038,11 @@ static void acpi_battery_notify(struct acpi_device *device, u32 event)
- 		return;
- 	old = battery->bat;
- 	/*
--	* On Acer Aspire V5-573G notifications are sometimes triggered too
--	* early. For example, when AC is unplugged and notification is
--	* triggered, battery state is still reported as "Full", and changes to
--	* "Discharging" only after short delay, without any notification.
--	*/
-+	 * On Acer Aspire V5-573G notifications are sometimes triggered too
-+	 * early. For example, when AC is unplugged and notification is
-+	 * triggered, battery state is still reported as "Full", and changes to
-+	 * "Discharging" only after short delay, without any notification.
-+	 */
- 	if (battery_notification_delay_ms > 0)
- 		msleep(battery_notification_delay_ms);
- 	if (event == ACPI_BATTERY_NOTIFY_INFO)
+ 	struct acpi_processor *pr;
+@@ -892,7 +884,7 @@ int acpi_processor_evaluate_cst(acpi_handle handle, u32 cpu,
+ 
+ 	info->count = last_index;
+ 
+-      end:
++end:
+ 	kfree(buffer.pointer);
+ 
+ 	return ret;
 -- 
 2.8.1
 
