@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EA3DC433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C399C433E2
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D383F61A42
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4196761A18
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbhC0GoS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231298AbhC0GoS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Mar 2021 02:44:18 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15327 "EHLO
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15330 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbhC0Gn7 (ORCPT
+        with ESMTP id S231222AbhC0Gn7 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:43:59 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4l4Lxwz93nK;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4l5BQ5z93nN;
         Sat, 27 Mar 2021 14:41:43 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 14:43:38 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 14:43:36 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH 14/15] ACPI: device_sysfs: fix some coding style issues
-Date:   Sat, 27 Mar 2021 14:40:55 +0800
-Message-ID: <1616827256-51840-15-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH 06/15] ACPI: acpi_lpss: fix some coding style issues
+Date:   Sat, 27 Mar 2021 14:40:47 +0800
+Message-ID: <1616827256-51840-7-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,76 +48,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Fix some coding style issues reported by checkpatch.pl, including
 following types:
 
+WARNING: simple_strtol is obsolete, use kstrtol instead
 WARNING: Missing a blank line after declarations
-WARNING: Block comments should align the * on each line
-ERROR: open brace '{' following function definitions go on the next line
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/device_sysfs.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/acpi/acpi_lpss.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/acpi/device_sysfs.c b/drivers/acpi/device_sysfs.c
-index da4ff2a..a07d4ad 100644
---- a/drivers/acpi/device_sysfs.c
-+++ b/drivers/acpi/device_sysfs.c
-@@ -73,6 +73,7 @@ static const struct sysfs_ops acpi_data_node_sysfs_ops = {
- static void acpi_data_node_release(struct kobject *kobj)
+diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
+index be73974..2df231e 100644
+--- a/drivers/acpi/acpi_lpss.c
++++ b/drivers/acpi/acpi_lpss.c
+@@ -187,7 +187,7 @@ static void byt_i2c_setup(struct lpss_private_data *pdata)
+ 
+ 	/* Expected to always be true, but better safe then sorry */
+ 	if (uid_str)
+-		uid = simple_strtol(uid_str, NULL, 10);
++		uid = kstrtol(uid_str, NULL, 10);
+ 
+ 	/* Detect I2C bus shared with PUNIT and ignore its d3 status */
+ 	status = acpi_evaluate_integer(handle, "_SEM", NULL, &shared_host);
+@@ -377,6 +377,7 @@ static const struct acpi_device_id acpi_lpss_device_ids[] = {
+ static int is_memory(struct acpi_resource *res, void *not_used)
  {
- 	struct acpi_data_node *dn = to_data_node(kobj);
+ 	struct resource r;
 +
- 	complete(&dn->kobj_done);
+ 	return !acpi_dev_resource_memory(res, &r);
  }
  
-@@ -130,7 +131,7 @@ static void acpi_hide_nondev_subnodes(struct acpi_device_data *data)
-  * Return: 0: no _HID and no _CID
-  *         -EINVAL: output error
-  *         -ENOMEM: output is truncated
--*/
-+ */
- static int create_pnp_modalias(struct acpi_device *acpi_dev, char *modalias,
- 			       int size)
- {
-@@ -431,7 +432,8 @@ static DEVICE_ATTR_RO(path);
- /* sysfs file that shows description text from the ACPI _STR method */
- static ssize_t description_show(struct device *dev,
- 				struct device_attribute *attr,
--				char *buf) {
-+				char *buf)
-+{
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	int result;
- 
-@@ -456,7 +458,8 @@ static DEVICE_ATTR_RO(description);
- 
- static ssize_t
- sun_show(struct device *dev, struct device_attribute *attr,
--	 char *buf) {
-+	 char *buf)
-+{
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	acpi_status status;
- 	unsigned long long sun;
-@@ -471,7 +474,8 @@ static DEVICE_ATTR_RO(sun);
- 
- static ssize_t
- hrv_show(struct device *dev, struct device_attribute *attr,
--	 char *buf) {
-+	 char *buf)
-+{
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	acpi_status status;
- 	unsigned long long hrv;
-@@ -485,7 +489,8 @@ hrv_show(struct device *dev, struct device_attribute *attr,
- static DEVICE_ATTR_RO(hrv);
- 
- static ssize_t status_show(struct device *dev, struct device_attribute *attr,
--				char *buf) {
-+				char *buf)
-+{
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	acpi_status status;
- 	unsigned long long sta;
+@@ -1200,6 +1201,7 @@ static int acpi_lpss_poweroff_noirq(struct device *dev)
+ 	if (pdata->dev_desc->resume_from_noirq) {
+ 		/* This is analogous to the acpi_lpss_suspend_noirq() case. */
+ 		int ret = acpi_lpss_do_poweroff_late(dev);
++
+ 		if (ret)
+ 			return ret;
+ 	}
 -- 
 2.8.1
 
