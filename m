@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E37EC4345A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25EBC4345E
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42041619AE
+	by mail.kernel.org (Postfix) with ESMTP id A5E42619C9
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231458AbhC0Htq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 03:49:46 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:14920 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230503AbhC0HtU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:20 -0400
+        id S231466AbhC0Htr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 03:49:47 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15343 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhC0HtT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:19 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6rXg4lrCzkjSk;
-        Sat, 27 Mar 2021 15:47:31 +0800 (CST)
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6rXK4WSSz93yh;
+        Sat, 27 Mar 2021 15:47:13 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 15:49:02 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 15:49:05 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH v2 02/15] ACPI: processor: fix some coding style issues
-Date:   Sat, 27 Mar 2021 15:46:20 +0800
-Message-ID: <1616831193-17920-3-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH v2 10/15] ACPI: button: fix some coding style issues
+Date:   Sat, 27 Mar 2021 15:46:28 +0800
+Message-ID: <1616831193-17920-11-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,73 +48,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Fix some coding style issues reported by checkpatch.pl, including
 following types:
 
-ERROR: code indent should use tabs where possible
+WARNING: Block comments use * on subsequent lines
 WARNING: Block comments use a trailing */ on a separate line
-WARNING: Missing a blank line after declarations
-WARNING: labels should not be indented
+ERROR: code indent should use tabs where possible
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/acpi_processor.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/acpi/button.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/acpi_processor.c b/drivers/acpi/acpi_processor.c
-index fc89f3a..2d5bd2a 100644
---- a/drivers/acpi/acpi_processor.c
-+++ b/drivers/acpi/acpi_processor.c
-@@ -25,10 +25,7 @@
- DEFINE_PER_CPU(struct acpi_processor *, processors);
- EXPORT_PER_CPU_SYMBOL(processors);
+diff --git a/drivers/acpi/button.c b/drivers/acpi/button.c
+index 85e5e03..c66db72 100644
+--- a/drivers/acpi/button.c
++++ b/drivers/acpi/button.c
+@@ -157,8 +157,9 @@ module_param(lid_report_interval, ulong, 0644);
+ MODULE_PARM_DESC(lid_report_interval, "Interval (ms) between lid key events");
  
--/* --------------------------------------------------------------------------
--                                Errata Handling
+ /* --------------------------------------------------------------------------
+-                              FS Interface (/proc)
 -   -------------------------------------------------------------------------- */
--
-+/* Errata Handling */
- struct acpi_processor_errata errata __read_mostly;
- EXPORT_SYMBOL_GPL(errata);
++ *			FS Interface (/proc)
++ * --------------------------------------------------------------------------
++ */
  
-@@ -151,10 +148,7 @@ static int acpi_processor_errata(void)
- 	return result;
+ static struct proc_dir_entry *acpi_button_dir;
+ static struct proc_dir_entry *acpi_lid_dir;
+@@ -349,8 +350,9 @@ static int acpi_button_remove_fs(struct acpi_device *device)
  }
  
--/* --------------------------------------------------------------------------
--                                Initialization
+ /* --------------------------------------------------------------------------
+-                                Driver Interface
 -   -------------------------------------------------------------------------- */
--
-+/* Initialization */
- #ifdef CONFIG_ACPI_HOTPLUG_CPU
- int __weak acpi_map_cpu(acpi_handle handle,
- 		phys_cpuid_t physid, u32 acpi_id, int *pcpu)
-@@ -306,6 +300,7 @@ static int acpi_processor_get_info(struct acpi_device *device)
- 	 */
- 	if (invalid_logical_cpuid(pr->id) || !cpu_present(pr->id)) {
- 		int ret = acpi_processor_hotadd_init(pr);
-+
- 		if (ret)
- 			return ret;
- 	}
-@@ -431,10 +426,7 @@ static int acpi_processor_add(struct acpi_device *device,
- }
- 
- #ifdef CONFIG_ACPI_HOTPLUG_CPU
--/* --------------------------------------------------------------------------
--                                    Removal
--   -------------------------------------------------------------------------- */
--
-+/* Removal */
- static void acpi_processor_remove(struct acpi_device *device)
++ *				Driver Interface
++ * --------------------------------------------------------------------------
++ */
+ int acpi_lid_open(void)
  {
- 	struct acpi_processor *pr;
-@@ -892,7 +884,7 @@ int acpi_processor_evaluate_cst(acpi_handle handle, u32 cpu,
- 
- 	info->count = last_index;
- 
--      end:
-+end:
- 	kfree(buffer.pointer);
- 
- 	return ret;
+ 	if (!lid_device)
 -- 
 2.8.1
 
