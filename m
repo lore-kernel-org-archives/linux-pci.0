@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1F6C433E0
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 09:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8979DC433DB
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 09:59:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F10661976
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 09:56:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59209619A9
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 09:59:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbhC0Jzv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 05:55:51 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:14933 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231285AbhC0JzZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 05:55:25 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6vLF3gxBzkgHw;
-        Sat, 27 Mar 2021 17:53:41 +0800 (CST)
-Received: from [127.0.0.1] (10.40.192.162) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.498.0; Sat, 27 Mar 2021
- 17:55:20 +0800
+        id S231309AbhC0J7D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 05:59:03 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15358 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhC0J6f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 05:58:35 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6vPW00WMz8yBB;
+        Sat, 27 Mar 2021 17:56:30 +0800 (CST)
+Received: from [127.0.0.1] (10.40.192.162) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.498.0; Sat, 27 Mar 2021
+ 17:58:29 +0800
 Subject: Re: [PATCH v2 06/15] ACPI: LPSS: fix some coding style issues
 To:     Andy Shevchenko <andy.shevchenko@gmail.com>
 References: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
  <1616831193-17920-7-git-send-email-tanxiaofei@huawei.com>
- <CAHp75Vc+0hxLS_Ab7_VZfrG2jiQzvia9S=o+Gc+wg+vVk1Z39w@mail.gmail.com>
+ <CAHp75Vd0hVqsfsZK=d1dz98Kbchqz-w4RqQQp6FwisxSGG5BzA@mail.gmail.com>
 CC:     "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
         "lenb@kernel.org" <lenb@kernel.org>,
         "rui.zhang@intel.com" <rui.zhang@intel.com>,
@@ -37,16 +37,17 @@ CC:     "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
         "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linuxarm@openeuler.org" <linuxarm@openeuler.org>
+        "linuxarm@openeuler.org" <linuxarm@openeuler.org>,
+        Joe Perches <joe@perches.com>
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
-Message-ID: <38357624-0886-f8e6-906d-c230c28b386c@huawei.com>
-Date:   Sat, 27 Mar 2021 17:55:19 +0800
+Message-ID: <22ba9fc3-11c6-bda4-d666-5d8b2f874349@huawei.com>
+Date:   Sat, 27 Mar 2021 17:58:29 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.7.1
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vc+0hxLS_Ab7_VZfrG2jiQzvia9S=o+Gc+wg+vVk1Z39w@mail.gmail.com>
+In-Reply-To: <CAHp75Vd0hVqsfsZK=d1dz98Kbchqz-w4RqQQp6FwisxSGG5BzA@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.40.192.162]
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -55,7 +56,7 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi Andy,
 
-On 2021/3/27 16:17, Andy Shevchenko wrote:
+On 2021/3/27 16:19, Andy Shevchenko wrote:
 >
 >
 > On Saturday, March 27, 2021, Xiaofei Tan <tanxiaofei@huawei.com
@@ -66,16 +67,18 @@ On 2021/3/27 16:17, Andy Shevchenko wrote:
 >     following types:
 >
 >     WARNING: simple_strtol is obsolete, use kstrtol instead
+>
+>
+> And one more thing, the above message is bogus. Read what the comments
+> in the code says about use cases for simple_*() vs. kstrto*() ones.
+>
+
+OK. I would remove this modification from the patch.
+
+> Joe?
+>
+>
 >     WARNING: Missing a blank line after declarations
->
->
->
-> First of all, two changes ==> two patches.
->
-
-I thought it would be better to include more simple cleanup in one patch.
-
->
 >
 >     Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com
 >     <mailto:tanxiaofei@huawei.com>>
@@ -94,21 +97,6 @@ I thought it would be better to include more simple cleanup in one patch.
 >             if (uid_str)
 >     -               uid = simple_strtol(uid_str, NULL, 10);
 >     +               uid = kstrtol(uid_str, NULL, 10);
->
->
-> How did you test this? Is there any guarantee that input is
-> null-terminated number?
->
-> Where is the check of returned value from `kstrtol()`?
->
-> Yes, you haven’t tested that at all. Don’t submit patches you are not
-> able to test and haven’t tested.
->
-
-It's my fault. Sorry for that, i will fix it.
-
-> NAK.
->
 >
 >             /* Detect I2C bus shared with PUNIT and ignore its d3 status */
 >             status = acpi_evaluate_integer(handle, "_SEM", NULL,
