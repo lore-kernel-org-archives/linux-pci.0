@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8251DC433E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAFB4C433E9
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DD42619F7
+	by mail.kernel.org (Postfix) with ESMTP id 7DE2D619AE
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231338AbhC0Htm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230236AbhC0Htm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Mar 2021 03:49:42 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15344 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230415AbhC0HtS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:18 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:14927 "EHLO
+        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230249AbhC0HtR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:17 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6rXK4p77z93yj;
-        Sat, 27 Mar 2021 15:47:13 +0800 (CST)
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6rXg4DVrzkjR2;
+        Sat, 27 Mar 2021 15:47:31 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 15:49:07 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 15:49:03 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH v2 15/15] ACPI: dock: fix some coding style issues
-Date:   Sat, 27 Mar 2021 15:46:33 +0800
-Message-ID: <1616831193-17920-16-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH v2 04/15] ACPI: table: replace __attribute__((packed)) by __packed
+Date:   Sat, 27 Mar 2021 15:46:22 +0800
+Message-ID: <1616831193-17920-5-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
@@ -45,60 +45,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix some coding style issues reported by checkpatch.pl, including
-following types:
-
-WARNING: Missing a blank line after declarations
-ERROR: spaces required around that ':'
-WARNING: Statements should start on a tabstop
+Replace __attribute__((packed)) by __packed following the
+advice of checkpatch.pl.
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/dock.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/acpi/acpi_fpdt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-index 0937cea..7cf9215 100644
---- a/drivers/acpi/dock.c
-+++ b/drivers/acpi/dock.c
-@@ -271,6 +271,7 @@ static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+diff --git a/drivers/acpi/acpi_fpdt.c b/drivers/acpi/acpi_fpdt.c
+index a89a806..690a88a 100644
+--- a/drivers/acpi/acpi_fpdt.c
++++ b/drivers/acpi/acpi_fpdt.c
+@@ -53,7 +53,7 @@ struct resume_performance_record {
+ 	u32 resume_count;
+ 	u64 resume_prev;
+ 	u64 resume_avg;
+-} __attribute__((packed));
++} __packed;
  
- 		if (!acpi_device_enumerated(adev)) {
- 			int ret = acpi_bus_scan(adev->handle);
-+
- 			if (ret)
- 				dev_dbg(&adev->dev, "scan error %d\n", -ret);
- 		}
-@@ -502,6 +503,7 @@ static ssize_t flags_show(struct device *dev,
- 			  struct device_attribute *attr, char *buf)
- {
- 	struct dock_station *dock_station = dev->platform_data;
-+
- 	return snprintf(buf, PAGE_SIZE, "%d\n", dock_station->flags);
+ struct boot_performance_record {
+ 	struct fpdt_record_header header;
+@@ -63,13 +63,13 @@ struct boot_performance_record {
+ 	u64 bootloader_launch;
+ 	u64 exitbootservice_start;
+ 	u64 exitbootservice_end;
+-} __attribute__((packed));
++} __packed;
  
- }
-@@ -523,7 +525,7 @@ static ssize_t undock_store(struct device *dev, struct device_attribute *attr,
- 	begin_undock(dock_station);
- 	ret = handle_eject_request(dock_station, ACPI_NOTIFY_EJECT_REQUEST);
- 	acpi_scan_lock_release();
--	return ret ? ret: count;
-+	return ret ? ret : count;
- }
- static DEVICE_ATTR_WO(undock);
+ struct suspend_performance_record {
+ 	struct fpdt_record_header header;
+ 	u64 suspend_start;
+ 	u64 suspend_end;
+-} __attribute__((packed));
++} __packed;
  
-@@ -535,10 +537,11 @@ static ssize_t uid_show(struct device *dev,
- {
- 	unsigned long long lbuf;
- 	struct dock_station *dock_station = dev->platform_data;
-+
- 	acpi_status status = acpi_evaluate_integer(dock_station->handle,
- 					"_UID", NULL, &lbuf);
- 	if (ACPI_FAILURE(status))
--	    return 0;
-+		return 0;
  
- 	return snprintf(buf, PAGE_SIZE, "%llx\n", lbuf);
- }
+ static struct resume_performance_record *record_resume;
 -- 
 2.8.1
 
