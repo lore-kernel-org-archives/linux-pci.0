@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A0DC4345C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A19C4345B
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B17F619F3
+	by mail.kernel.org (Postfix) with ESMTP id 6B100619F7
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 07:50:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231429AbhC0Htp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231441AbhC0Htp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Mar 2021 03:49:45 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:14922 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230487AbhC0HtU (ORCPT
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15347 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231187AbhC0HtU (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 03:49:20 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F6rXg3fj1zkgkX;
-        Sat, 27 Mar 2021 15:47:31 +0800 (CST)
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6rXK5qBWz93ym;
+        Sat, 27 Mar 2021 15:47:13 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 15:49:04 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 15:49:06 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH v2 06/15] ACPI: LPSS: fix some coding style issues
-Date:   Sat, 27 Mar 2021 15:46:24 +0800
-Message-ID: <1616831193-17920-7-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH v2 13/15] ACPI: PM: fix some coding style issues
+Date:   Sat, 27 Mar 2021 15:46:31 +0800
+Message-ID: <1616831193-17920-14-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616831193-17920-1-git-send-email-tanxiaofei@huawei.com>
@@ -45,46 +45,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix some coding style issues reported by checkpatch.pl, including
-following types:
+Fix the following coding style issue reported by checkpatch.pl
 
-WARNING: simple_strtol is obsolete, use kstrtol instead
 WARNING: Missing a blank line after declarations
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/acpi_lpss.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/acpi/device_pm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/acpi/acpi_lpss.c b/drivers/acpi/acpi_lpss.c
-index be73974..2df231e 100644
---- a/drivers/acpi/acpi_lpss.c
-+++ b/drivers/acpi/acpi_lpss.c
-@@ -187,7 +187,7 @@ static void byt_i2c_setup(struct lpss_private_data *pdata)
- 
- 	/* Expected to always be true, but better safe then sorry */
- 	if (uid_str)
--		uid = simple_strtol(uid_str, NULL, 10);
-+		uid = kstrtol(uid_str, NULL, 10);
- 
- 	/* Detect I2C bus shared with PUNIT and ignore its d3 status */
- 	status = acpi_evaluate_integer(handle, "_SEM", NULL, &shared_host);
-@@ -377,6 +377,7 @@ static const struct acpi_device_id acpi_lpss_device_ids[] = {
- static int is_memory(struct acpi_resource *res, void *not_used)
+diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+index 0961537..16c0fe8 100644
+--- a/drivers/acpi/device_pm.c
++++ b/drivers/acpi/device_pm.c
+@@ -966,6 +966,7 @@ EXPORT_SYMBOL_GPL(acpi_dev_resume);
+ int acpi_subsys_runtime_suspend(struct device *dev)
  {
- 	struct resource r;
+ 	int ret = pm_generic_runtime_suspend(dev);
 +
- 	return !acpi_dev_resource_memory(res, &r);
+ 	return ret ? ret : acpi_dev_suspend(dev, true);
  }
- 
-@@ -1200,6 +1201,7 @@ static int acpi_lpss_poweroff_noirq(struct device *dev)
- 	if (pdata->dev_desc->resume_from_noirq) {
- 		/* This is analogous to the acpi_lpss_suspend_noirq() case. */
- 		int ret = acpi_lpss_do_poweroff_late(dev);
+ EXPORT_SYMBOL_GPL(acpi_subsys_runtime_suspend);
+@@ -980,6 +981,7 @@ EXPORT_SYMBOL_GPL(acpi_subsys_runtime_suspend);
+ int acpi_subsys_runtime_resume(struct device *dev)
+ {
+ 	int ret = acpi_dev_resume(dev);
 +
- 		if (ret)
- 			return ret;
- 	}
+ 	return ret ? ret : pm_generic_runtime_resume(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_runtime_resume);
+@@ -1171,6 +1173,7 @@ EXPORT_SYMBOL_GPL(acpi_subsys_freeze);
+ int acpi_subsys_restore_early(struct device *dev)
+ {
+ 	int ret = acpi_dev_resume(dev);
++
+ 	return ret ? ret : pm_generic_restore_early(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_restore_early);
 -- 
 2.8.1
 
