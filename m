@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E534CC433C1
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB12BC433E4
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B143961A05
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDBBB6199F
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 12:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbhC0MLO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 08:11:14 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:15015 "EHLO
+        id S230170AbhC0MLP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 08:11:15 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:15012 "EHLO
         szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbhC0MLM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 08:11:12 -0400
+        with ESMTP id S230202AbhC0MLN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 08:11:13 -0400
 Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F6yKv1ClqzPt2F;
-        Sat, 27 Mar 2021 20:08:35 +0800 (CST)
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4F6yKt6lJszPrjS;
+        Sat, 27 Mar 2021 20:08:34 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 20:11:01 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 20:10:59 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH v3 08/12] ACPI: CPPC: fix some coding style issues
-Date:   Sat, 27 Mar 2021 20:08:20 +0800
-Message-ID: <1616846904-25719-9-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH v3 02/12] ACPI: processor: fix some coding style issues
+Date:   Sat, 27 Mar 2021 20:08:14 +0800
+Message-ID: <1616846904-25719-3-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616846904-25719-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616846904-25719-1-git-send-email-tanxiaofei@huawei.com>
@@ -48,126 +48,73 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Fix some coding style issues reported by checkpatch.pl, including
 following types:
 
+ERROR: code indent should use tabs where possible
+WARNING: Block comments use a trailing */ on a separate line
 WARNING: Missing a blank line after declarations
-WARNING: unnecessary whitespace before a quoted newline
-ERROR: spaces required around that '>='
-ERROR: switch and case should be at the same indent
+WARNING: labels should not be indented
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/cppc_acpi.c | 71 ++++++++++++++++++++++++------------------------
- 1 file changed, 36 insertions(+), 35 deletions(-)
+ drivers/acpi/acpi_processor.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/acpi/cppc_acpi.c b/drivers/acpi/cppc_acpi.c
-index ae53740..3dbaf47 100644
---- a/drivers/acpi/cppc_acpi.c
-+++ b/drivers/acpi/cppc_acpi.c
-@@ -326,6 +326,7 @@ static int send_pcc_cmd(int pcc_ss_id, u16 cmd)
- 		if (unlikely(ret)) {
- 			for_each_possible_cpu(i) {
- 				struct cpc_desc *desc = per_cpu(cpc_desc_ptr, i);
+diff --git a/drivers/acpi/acpi_processor.c b/drivers/acpi/acpi_processor.c
+index fc89f3a..2d5bd2a 100644
+--- a/drivers/acpi/acpi_processor.c
++++ b/drivers/acpi/acpi_processor.c
+@@ -25,10 +25,7 @@
+ DEFINE_PER_CPU(struct acpi_processor *, processors);
+ EXPORT_PER_CPU_SYMBOL(processors);
+ 
+-/* --------------------------------------------------------------------------
+-                                Errata Handling
+-   -------------------------------------------------------------------------- */
+-
++/* Errata Handling */
+ struct acpi_processor_errata errata __read_mostly;
+ EXPORT_SYMBOL_GPL(errata);
+ 
+@@ -151,10 +148,7 @@ static int acpi_processor_errata(void)
+ 	return result;
+ }
+ 
+-/* --------------------------------------------------------------------------
+-                                Initialization
+-   -------------------------------------------------------------------------- */
+-
++/* Initialization */
+ #ifdef CONFIG_ACPI_HOTPLUG_CPU
+ int __weak acpi_map_cpu(acpi_handle handle,
+ 		phys_cpuid_t physid, u32 acpi_id, int *pcpu)
+@@ -306,6 +300,7 @@ static int acpi_processor_get_info(struct acpi_device *device)
+ 	 */
+ 	if (invalid_logical_cpuid(pr->id) || !cpu_present(pr->id)) {
+ 		int ret = acpi_processor_hotadd_init(pr);
 +
- 				if (!desc)
- 					continue;
- 
-@@ -777,7 +778,7 @@ int acpi_cppc_processor_probe(struct acpi_processor *pr)
- 			cpc_ptr->cpc_regs[i-2].type = ACPI_TYPE_BUFFER;
- 			memcpy(&cpc_ptr->cpc_regs[i-2].cpc_entry.reg, gas_t, sizeof(*gas_t));
- 		} else {
--			pr_debug("Err in entry:%d in CPC table of CPU:%d \n", i, pr->id);
-+			pr_debug("Err in entry:%d in CPC table of CPU:%d\n", i, pr->id);
- 			goto out_free;
- 		}
+ 		if (ret)
+ 			return ret;
  	}
-@@ -867,7 +868,7 @@ void acpi_cppc_processor_exit(struct acpi_processor *pr)
- 	void __iomem *addr;
- 	int pcc_ss_id = per_cpu(cpu_pcc_subspace_idx, pr->id);
+@@ -431,10 +426,7 @@ static int acpi_processor_add(struct acpi_device *device,
+ }
  
--	if (pcc_ss_id >=0 && pcc_data[pcc_ss_id]) {
-+	if (pcc_ss_id >= 0 && pcc_data[pcc_ss_id]) {
- 		if (pcc_data[pcc_ss_id]->pcc_channel_acquired) {
- 			pcc_data[pcc_ss_id]->refcount--;
- 			if (!pcc_data[pcc_ss_id]->refcount) {
-@@ -954,22 +955,22 @@ static int cpc_read(int cpu, struct cpc_register_resource *reg_res, u64 *val)
- 				val, reg->bit_width);
+ #ifdef CONFIG_ACPI_HOTPLUG_CPU
+-/* --------------------------------------------------------------------------
+-                                    Removal
+-   -------------------------------------------------------------------------- */
+-
++/* Removal */
+ static void acpi_processor_remove(struct acpi_device *device)
+ {
+ 	struct acpi_processor *pr;
+@@ -892,7 +884,7 @@ int acpi_processor_evaluate_cst(acpi_handle handle, u32 cpu,
  
- 	switch (reg->bit_width) {
--		case 8:
--			*val = readb_relaxed(vaddr);
--			break;
--		case 16:
--			*val = readw_relaxed(vaddr);
--			break;
--		case 32:
--			*val = readl_relaxed(vaddr);
--			break;
--		case 64:
--			*val = readq_relaxed(vaddr);
--			break;
--		default:
--			pr_debug("Error: Cannot read %u bit width from PCC for ss: %d\n",
--				 reg->bit_width, pcc_ss_id);
--			ret_val = -EFAULT;
-+	case 8:
-+		*val = readb_relaxed(vaddr);
-+		break;
-+	case 16:
-+		*val = readw_relaxed(vaddr);
-+		break;
-+	case 32:
-+		*val = readl_relaxed(vaddr);
-+		break;
-+	case 64:
-+		*val = readq_relaxed(vaddr);
-+		break;
-+	default:
-+		pr_debug("Error: Cannot read %u bit width from PCC for ss: %d\n",
-+			 reg->bit_width, pcc_ss_id);
-+		ret_val = -EFAULT;
- 	}
+ 	info->count = last_index;
  
- 	return ret_val;
-@@ -993,23 +994,23 @@ static int cpc_write(int cpu, struct cpc_register_resource *reg_res, u64 val)
- 				val, reg->bit_width);
+-      end:
++end:
+ 	kfree(buffer.pointer);
  
- 	switch (reg->bit_width) {
--		case 8:
--			writeb_relaxed(val, vaddr);
--			break;
--		case 16:
--			writew_relaxed(val, vaddr);
--			break;
--		case 32:
--			writel_relaxed(val, vaddr);
--			break;
--		case 64:
--			writeq_relaxed(val, vaddr);
--			break;
--		default:
--			pr_debug("Error: Cannot write %u bit width to PCC for ss: %d\n",
--				 reg->bit_width, pcc_ss_id);
--			ret_val = -EFAULT;
--			break;
-+	case 8:
-+		writeb_relaxed(val, vaddr);
-+		break;
-+	case 16:
-+		writew_relaxed(val, vaddr);
-+		break;
-+	case 32:
-+		writel_relaxed(val, vaddr);
-+		break;
-+	case 64:
-+		writeq_relaxed(val, vaddr);
-+		break;
-+	default:
-+		pr_debug("Error: Cannot write %u bit width to PCC for ss: %d\n",
-+			 reg->bit_width, pcc_ss_id);
-+		ret_val = -EFAULT;
-+		break;
- 	}
- 
- 	return ret_val;
+ 	return ret;
 -- 
 2.8.1
 
