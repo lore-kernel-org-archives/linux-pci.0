@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85746C433F1
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CE0C43445
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 647C161A48
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4256261A48
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231355AbhC0GoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 02:44:21 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15337 "EHLO
+        id S231403AbhC0GoX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 02:44:23 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15332 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231248AbhC0GoC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:02 -0400
+        with ESMTP id S231270AbhC0GoD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:03 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m2Rqtz93nZ;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m0868z93nQ;
         Sat, 27 Mar 2021 14:41:44 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
@@ -31,9 +31,9 @@ To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH 10/15] ACPI: button: fix some coding style issues
-Date:   Sat, 27 Mar 2021 14:40:51 +0800
-Message-ID: <1616827256-51840-11-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH 08/15] ACPI: acpi_pad: fix a coding style issue
+Date:   Sat, 27 Mar 2021 14:40:49 +0800
+Message-ID: <1616827256-51840-9-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
@@ -45,46 +45,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix some coding style issues reported by checkpatch.pl, including
-following types:
+Fix the following coding style issue reported by checkpatch.pl
 
-WARNING: Block comments use * on subsequent lines
-WARNING: Block comments use a trailing */ on a separate line
-ERROR: code indent should use tabs where possible
+WARNING: Missing a blank line after declarations
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/button.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/acpi/acpi_pad.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/acpi/button.c b/drivers/acpi/button.c
-index 85e5e03..c66db72 100644
---- a/drivers/acpi/button.c
-+++ b/drivers/acpi/button.c
-@@ -157,8 +157,9 @@ module_param(lid_report_interval, ulong, 0644);
- MODULE_PARM_DESC(lid_report_interval, "Interval (ms) between lid key events");
- 
- /* --------------------------------------------------------------------------
--                              FS Interface (/proc)
--   -------------------------------------------------------------------------- */
-+ *			FS Interface (/proc)
-+ * --------------------------------------------------------------------------
-+ */
- 
- static struct proc_dir_entry *acpi_button_dir;
- static struct proc_dir_entry *acpi_lid_dir;
-@@ -349,8 +350,9 @@ static int acpi_button_remove_fs(struct acpi_device *device)
- }
- 
- /* --------------------------------------------------------------------------
--                                Driver Interface
--   -------------------------------------------------------------------------- */
-+ *				Driver Interface
-+ * --------------------------------------------------------------------------
-+ */
- int acpi_lid_open(void)
+diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
+index b84ab72..df4adeb 100644
+--- a/drivers/acpi/acpi_pad.c
++++ b/drivers/acpi/acpi_pad.c
+@@ -128,6 +128,7 @@ static void round_robin_cpu(unsigned int tsk_index)
+ static void exit_round_robin(unsigned int tsk_index)
  {
- 	if (!lid_device)
+ 	struct cpumask *pad_busy_cpus = to_cpumask(pad_busy_cpus_bits);
++
+ 	cpumask_clear_cpu(tsk_in_cpu[tsk_index], pad_busy_cpus);
+ 	tsk_in_cpu[tsk_index] = -1;
+ }
+@@ -265,6 +266,7 @@ static ssize_t rrtime_store(struct device *dev,
+ 	struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	unsigned long num;
++
+ 	if (kstrtoul(buf, 0, &num))
+ 		return -EINVAL;
+ 	if (num < 1 || num >= 100)
+@@ -286,6 +288,7 @@ static ssize_t idlepct_store(struct device *dev,
+ 	struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	unsigned long num;
++
+ 	if (kstrtoul(buf, 0, &num))
+ 		return -EINVAL;
+ 	if (num < 1 || num >= 100)
+@@ -307,6 +310,7 @@ static ssize_t idlecpus_store(struct device *dev,
+ 	struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	unsigned long num;
++
+ 	if (kstrtoul(buf, 0, &num))
+ 		return -EINVAL;
+ 	mutex_lock(&isolated_cpus_lock);
 -- 
 2.8.1
 
