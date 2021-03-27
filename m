@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CE0C43445
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B08CC43459
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4256261A48
+	by mail.kernel.org (Postfix) with ESMTP id 73C7E61A1A
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231403AbhC0GoX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231394AbhC0GoX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Mar 2021 02:44:23 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15332 "EHLO
+Received: from szxga07-in.huawei.com ([45.249.212.35]:15335 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231270AbhC0GoD (ORCPT
+        with ESMTP id S231259AbhC0GoD (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:03 -0400
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m0868z93nQ;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m1bPDz93nW;
         Sat, 27 Mar 2021 14:41:44 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 14:43:37 +0800
+ 14.3.498.0; Sat, 27 Mar 2021 14:43:35 +0800
 From:   Xiaofei Tan <tanxiaofei@huawei.com>
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
 CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linuxarm@openeuler.org>
-Subject: [PATCH 08/15] ACPI: acpi_pad: fix a coding style issue
-Date:   Sat, 27 Mar 2021 14:40:49 +0800
-Message-ID: <1616827256-51840-9-git-send-email-tanxiaofei@huawei.com>
+Subject: [PATCH 03/15] ACPI: acpi_dbg: fix some coding style issues
+Date:   Sat, 27 Mar 2021 14:40:44 +0800
+Message-ID: <1616827256-51840-4-git-send-email-tanxiaofei@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
@@ -45,51 +45,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix the following coding style issue reported by checkpatch.pl
+Fix some coding style issues reported by checkpatch.pl, including
+following types:
 
-WARNING: Missing a blank line after declarations
+WARNING: space prohibited between function name and open parenthesis
+WARNING: else is not generally useful after a break or return
 
 Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
 ---
- drivers/acpi/acpi_pad.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/acpi/acpi_dbg.c | 40 +++++++++++++++++++---------------------
+ 1 file changed, 19 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
-index b84ab72..df4adeb 100644
---- a/drivers/acpi/acpi_pad.c
-+++ b/drivers/acpi/acpi_pad.c
-@@ -128,6 +128,7 @@ static void round_robin_cpu(unsigned int tsk_index)
- static void exit_round_robin(unsigned int tsk_index)
- {
- 	struct cpumask *pad_busy_cpus = to_cpumask(pad_busy_cpus_bits);
+diff --git a/drivers/acpi/acpi_dbg.c b/drivers/acpi/acpi_dbg.c
+index d50261d..e641bc1 100644
+--- a/drivers/acpi/acpi_dbg.c
++++ b/drivers/acpi/acpi_dbg.c
+@@ -21,7 +21,7 @@
+ #include <linux/acpi.h>
+ #include "internal.h"
+ 
+-#define ACPI_AML_BUF_ALIGN	(sizeof (acpi_size))
++#define ACPI_AML_BUF_ALIGN	(sizeof(acpi_size))
+ #define ACPI_AML_BUF_SIZE	PAGE_SIZE
+ 
+ #define circ_count(circ) \
+@@ -613,16 +613,15 @@ static ssize_t acpi_aml_read(struct file *file, char __user *buf,
+ 		if (ret == -EAGAIN) {
+ 			if (file->f_flags & O_NONBLOCK)
+ 				break;
+-			else {
+-				ret = wait_event_interruptible(acpi_aml_io.wait,
+-					acpi_aml_user_readable());
+-				/*
+-				 * We need to retry when the condition
+-				 * becomes true.
+-				 */
+-				if (ret == 0)
+-					goto again;
+-			}
 +
- 	cpumask_clear_cpu(tsk_in_cpu[tsk_index], pad_busy_cpus);
- 	tsk_in_cpu[tsk_index] = -1;
- }
-@@ -265,6 +266,7 @@ static ssize_t rrtime_store(struct device *dev,
- 	struct device_attribute *attr, const char *buf, size_t count)
- {
- 	unsigned long num;
++			ret = wait_event_interruptible(acpi_aml_io.wait,
++				acpi_aml_user_readable());
++			/*
++			 * We need to retry when the condition
++			 * becomes true.
++			 */
++			if (ret == 0)
++				goto again;
+ 		}
+ 		if (ret < 0) {
+ 			if (!acpi_aml_running())
+@@ -683,16 +682,15 @@ static ssize_t acpi_aml_write(struct file *file, const char __user *buf,
+ 		if (ret == -EAGAIN) {
+ 			if (file->f_flags & O_NONBLOCK)
+ 				break;
+-			else {
+-				ret = wait_event_interruptible(acpi_aml_io.wait,
+-					acpi_aml_user_writable());
+-				/*
+-				 * We need to retry when the condition
+-				 * becomes true.
+-				 */
+-				if (ret == 0)
+-					goto again;
+-			}
 +
- 	if (kstrtoul(buf, 0, &num))
- 		return -EINVAL;
- 	if (num < 1 || num >= 100)
-@@ -286,6 +288,7 @@ static ssize_t idlepct_store(struct device *dev,
- 	struct device_attribute *attr, const char *buf, size_t count)
- {
- 	unsigned long num;
-+
- 	if (kstrtoul(buf, 0, &num))
- 		return -EINVAL;
- 	if (num < 1 || num >= 100)
-@@ -307,6 +310,7 @@ static ssize_t idlecpus_store(struct device *dev,
- 	struct device_attribute *attr, const char *buf, size_t count)
- {
- 	unsigned long num;
-+
- 	if (kstrtoul(buf, 0, &num))
- 		return -EINVAL;
- 	mutex_lock(&isolated_cpus_lock);
++			ret = wait_event_interruptible(acpi_aml_io.wait,
++				acpi_aml_user_writable());
++			/*
++			 * We need to retry when the condition
++			 * becomes true.
++			 */
++			if (ret == 0)
++				goto again;
+ 		}
+ 		if (ret < 0) {
+ 			if (!acpi_aml_running())
 -- 
 2.8.1
 
