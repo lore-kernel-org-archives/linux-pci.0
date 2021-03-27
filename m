@@ -2,119 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA0CC43381
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0D6DC433DB
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:51:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0031261A36
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:44:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7538619F8
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Mar 2021 06:51:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231222AbhC0GoW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Mar 2021 02:44:22 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:15336 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231254AbhC0GoB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:44:01 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4F6q4m28hQz93nY;
-        Sat, 27 Mar 2021 14:41:44 +0800 (CST)
-Received: from localhost.localdomain (10.67.165.24) by
- DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 27 Mar 2021 14:43:34 +0800
-From:   Xiaofei Tan <tanxiaofei@huawei.com>
+        id S230352AbhC0Gum (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Mar 2021 02:50:42 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:14156 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230174AbhC0GuL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Mar 2021 02:50:11 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F6qCM0tyrznYxZ;
+        Sat, 27 Mar 2021 14:47:27 +0800 (CST)
+Received: from [127.0.0.1] (10.40.192.162) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.498.0; Sat, 27 Mar 2021
+ 14:49:56 +0800
+Subject: Re: [PATCH 05/15] remove useless return statement for void function
 To:     <rjw@rjwysocki.net>, <lenb@kernel.org>, <rui.zhang@intel.com>,
         <bhelgaas@google.com>
-CC:     Xiaofei Tan <tanxiaofei@huawei.com>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxarm@openeuler.org>
-Subject: [PATCH 02/15] ACPI: processor: fix some coding style issues
-Date:   Sat, 27 Mar 2021 14:40:43 +0800
-Message-ID: <1616827256-51840-3-git-send-email-tanxiaofei@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
 References: <1616827256-51840-1-git-send-email-tanxiaofei@huawei.com>
+ <1616827256-51840-6-git-send-email-tanxiaofei@huawei.com>
+CC:     <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linuxarm@openeuler.org>
+From:   Xiaofei Tan <tanxiaofei@huawei.com>
+Message-ID: <dce63f98-9825-3204-fb0e-0e4d958bf581@huawei.com>
+Date:   Sat, 27 Mar 2021 14:49:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.165.24]
+In-Reply-To: <1616827256-51840-6-git-send-email-tanxiaofei@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.40.192.162]
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix some coding style issues reported by checkpatch.pl, including
-following types:
+Oh, sorry, the title doesn't contain subsystem and module name. I'll 
+send v2 later. Please ignore this one. thanks.
 
-ERROR: code indent should use tabs where possible
-WARNING: Block comments use a trailing */ on a separate line
-WARNING: Missing a blank line after declarations
-WARNING: labels should not be indented
-
-Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
----
- drivers/acpi/acpi_processor.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/acpi/acpi_processor.c b/drivers/acpi/acpi_processor.c
-index fc89f3a..2d5bd2a 100644
---- a/drivers/acpi/acpi_processor.c
-+++ b/drivers/acpi/acpi_processor.c
-@@ -25,10 +25,7 @@
- DEFINE_PER_CPU(struct acpi_processor *, processors);
- EXPORT_PER_CPU_SYMBOL(processors);
- 
--/* --------------------------------------------------------------------------
--                                Errata Handling
--   -------------------------------------------------------------------------- */
--
-+/* Errata Handling */
- struct acpi_processor_errata errata __read_mostly;
- EXPORT_SYMBOL_GPL(errata);
- 
-@@ -151,10 +148,7 @@ static int acpi_processor_errata(void)
- 	return result;
- }
- 
--/* --------------------------------------------------------------------------
--                                Initialization
--   -------------------------------------------------------------------------- */
--
-+/* Initialization */
- #ifdef CONFIG_ACPI_HOTPLUG_CPU
- int __weak acpi_map_cpu(acpi_handle handle,
- 		phys_cpuid_t physid, u32 acpi_id, int *pcpu)
-@@ -306,6 +300,7 @@ static int acpi_processor_get_info(struct acpi_device *device)
- 	 */
- 	if (invalid_logical_cpuid(pr->id) || !cpu_present(pr->id)) {
- 		int ret = acpi_processor_hotadd_init(pr);
-+
- 		if (ret)
- 			return ret;
- 	}
-@@ -431,10 +426,7 @@ static int acpi_processor_add(struct acpi_device *device,
- }
- 
- #ifdef CONFIG_ACPI_HOTPLUG_CPU
--/* --------------------------------------------------------------------------
--                                    Removal
--   -------------------------------------------------------------------------- */
--
-+/* Removal */
- static void acpi_processor_remove(struct acpi_device *device)
- {
- 	struct acpi_processor *pr;
-@@ -892,7 +884,7 @@ int acpi_processor_evaluate_cst(acpi_handle handle, u32 cpu,
- 
- 	info->count = last_index;
- 
--      end:
-+end:
- 	kfree(buffer.pointer);
- 
- 	return ret;
--- 
-2.8.1
+On 2021/3/27 14:40, Xiaofei Tan wrote:
+> Remove useless return statement for void function, reported by
+> checkpatch.pl.
+>
+> WARNING: void function return statements are not generally useful
+> FILE: drivers/acpi/acpi_ipmi.c:482:
+> +       return;
+> +}
+>
+> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+> ---
+>  drivers/acpi/acpi_ipmi.c | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/acpi/acpi_ipmi.c b/drivers/acpi/acpi_ipmi.c
+> index 9d6c0fc..bbd00d9 100644
+> --- a/drivers/acpi/acpi_ipmi.c
+> +++ b/drivers/acpi/acpi_ipmi.c
+> @@ -478,7 +478,6 @@ static void ipmi_register_bmc(int iface, struct device *dev)
+>  	ipmi_dev_release(ipmi_device);
+>  err_ref:
+>  	put_device(smi_data.dev);
+> -	return;
+>  }
+>
+>  static void ipmi_bmc_gone(int iface)
+>
 
