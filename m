@@ -2,80 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 637FFC433C1
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Mar 2021 10:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C7DC433E0
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Mar 2021 11:04:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 359166193A
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Mar 2021 10:55:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A60C66193B
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Mar 2021 11:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232953AbhC2Ky5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Mar 2021 06:54:57 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:15094 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232514AbhC2Kya (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Mar 2021 06:54:30 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F88Xy5dRHz19K4Q;
-        Mon, 29 Mar 2021 18:52:18 +0800 (CST)
-Received: from [10.69.38.196] (10.69.38.196) by DGGEMS401-HUB.china.huawei.com
- (10.3.19.201) with Microsoft SMTP Server id 14.3.498.0; Mon, 29 Mar 2021
- 18:54:12 +0800
-Subject: Re: [PATCH] PCI/AER: Use consistent format when print PCI device
-To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
-CC:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@huawei.com>
-References: <1616752057-9720-1-git-send-email-yangyicong@hisilicon.com>
- <YF20lDlJlikTKNkI@rocinante>
-From:   Yicong Yang <yangyicong@hisilicon.com>
-Message-ID: <09488bb3-69f3-706f-69b1-9c538ff6adf2@hisilicon.com>
-Date:   Mon, 29 Mar 2021 18:54:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+        id S231869AbhC2LED (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Mar 2021 07:04:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51118 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231735AbhC2LDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Mar 2021 07:03:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6A2F461883;
+        Mon, 29 Mar 2021 11:03:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1617015830;
+        bh=eKeLc/eUxq4hM0vTtXWv5c1gnqKwCfyDPdzZJI49lRM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ig+lk1oU61xxoTGM5ALvhcXo3iGoh4jlwm5PkJ4uljdLJrwOdJUc871y6VMSeO01h
+         IIWpkLpJFAIxrz0+2OmHJ+ckVIOnQTpfIZbN0w5HwB4xtGHlD4ly0/XvraMsYkTxSo
+         2RH3jXuVUjmnTNTibOCoSpzpSb/g4N06IvK3Ad+c=
+Date:   Mon, 29 Mar 2021 13:03:47 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+Subject: Re: [PATCH v9 4/4] docs: ABI: Add sysfs documentation interface of
+ dw-xdata-pcie driver
+Message-ID: <YGG0EyKKJoq4BhOb@kroah.com>
+References: <cover.1617011831.git.gustavo.pimentel@synopsys.com>
+ <5840637a206dd1287caf142a0dbedf0dac9ccd48.1617011831.git.gustavo.pimentel@synopsys.com>
+ <YGGnC8LouF+paZ6G@kroah.com>
+ <DM5PR12MB18353C0E6935F94C457F9595DA7E9@DM5PR12MB1835.namprd12.prod.outlook.com>
+ <YGGunNguZTiRS8FP@kroah.com>
+ <DM5PR12MB1835FDEFEFE4C8865CDB17F6DA7E9@DM5PR12MB1835.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <YF20lDlJlikTKNkI@rocinante>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.69.38.196]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DM5PR12MB1835FDEFEFE4C8865CDB17F6DA7E9@DM5PR12MB1835.namprd12.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021/3/26 18:16, Krzysztof Wilczyński wrote:
-> Hi Yicong,
+On Mon, Mar 29, 2021 at 10:53:38AM +0000, Gustavo Pimentel wrote:
+> On Mon, Mar 29, 2021 at 11:40:28, Greg Kroah-Hartman 
+> <gregkh@linuxfoundation.org> wrote:
 > 
->> We use format domain:bus:slot.function when print
->> PCI device. Use consistent format in AER messages.
+> > On Mon, Mar 29, 2021 at 10:25:25AM +0000, Gustavo Pimentel wrote:
+> > > On Mon, Mar 29, 2021 at 11:8:11, Greg Kroah-Hartman 
+> > > <gregkh@linuxfoundation.org> wrote:
+> > > 
+> > > > On Mon, Mar 29, 2021 at 11:59:40AM +0200, Gustavo Pimentel wrote:
+> > > > > This patch describes the sysfs interface implemented on the dw-xdata-pcie
+> > > > > driver.
+> > > > > 
+> > > > > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> > > > > ---
+> > > > >  Documentation/ABI/testing/sysfs-driver-xdata | 46 ++++++++++++++++++++++++++++
+> > > > >  1 file changed, 46 insertions(+)
+> > > > >  create mode 100644 Documentation/ABI/testing/sysfs-driver-xdata
+> > > > > 
+> > > > > diff --git a/Documentation/ABI/testing/sysfs-driver-xdata b/Documentation/ABI/testing/sysfs-driver-xdata
+> > > > > new file mode 100644
+> > > > > index 00000000..66af19a
+> > > > > --- /dev/null
+> > > > > +++ b/Documentation/ABI/testing/sysfs-driver-xdata
+> > > > > @@ -0,0 +1,46 @@
+> > > > > +What:		/sys/class/misc/drivers/dw-xdata-pcie.<device>/write
+> > > > > +Date:		April 2021
+> > > > > +KernelVersion:	5.13
+> > > > > +Contact:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> > > > > +Description:	Allows the user to enable the PCIe traffic generator which
+> > > > > +		will create write TLPs frames - from the Root Complex to the
+> > > > > +		Endpoint direction.
+> > > > > +		Usage e.g.
+> > > > > +		 echo 1 > /sys/class/misc/dw-xdata-pcie.<device>/write
+> > > > 
+> > > > Again, this does not match the code.  Either fix the code (which I
+> > > > recommend), or change this and the other sysfs descriptions of writing
+> > > > values here.
+> > > 
+> > > I've commented about this previously, but I didn't get feedback on it, 
+> > > therefore I assumed that justification was okay.
+> > > I will change the code to accept only the "1" input on the *_store()
+> > 
+> > Why not use the built-in function to parse "1/y/Y" that the kernel
+> > provides for this type of thing?
 > 
-> A small nitpick: the commit message and in the subject line it should
-> probably use "printing" rather than "print".  But I suppose whoever is
-> going be applying this patch can fix this, so probably no need to send
-> another version, unless you really want to do it.
-> 
+> I found kstrtobool() just now. I'm adapting the code as we speak.
+> After testing I will send the v10 as soon as possible.
 
-sorry for the late reply. it's ok for me to get this fixed in a v2 one. :)
+There is no rush, take your time.
 
-> [...]
->> -			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x:%x\n",
->> +			pr_err("AER recover: Can not find pci_dev for %04x:%02x:%02x.%x\n",
->>  			       entry.domain, entry.bus,
->>  			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
-> [...]
->> -		pr_err("AER recover: Buffer overflow when recovering AER for %04x:%02x:%02x:%x\n",
->> +		pr_err("AER recover: Buffer overflow when recovering AER for %04x:%02x:%02x.%x\n",
->>  		       domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
-> 
-> Seems like a good idea!  This BDF-like notation is used at few other
-> places.  Nice catch.
-> 
-> Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
-> 
-
-thanks.
-
-Yicong
+greg k-h
