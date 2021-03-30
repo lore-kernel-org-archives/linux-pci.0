@@ -2,124 +2,71 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3487DC433E0
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 14:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEAAC433C1
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 14:35:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 023B0619D0
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 14:06:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE5B619D0
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 14:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231985AbhC3OFp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Mar 2021 10:05:45 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:15406 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231922AbhC3OFY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Mar 2021 10:05:24 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4F8rlD3GBdzpStM;
-        Tue, 30 Mar 2021 22:03:36 +0800 (CST)
-Received: from linux-ioko.site (10.78.228.23) by
- DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.498.0; Tue, 30 Mar 2021 22:05:10 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-To:     <helgaas@kernel.org>, <wangzhou1@hisilicon.com>, <kw@linux.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH V2] dt-bindings: PCI: hisi: Delete the obsolete HiSilicon PCIe file
-Date:   Tue, 30 Mar 2021 21:43:19 +0800
-Message-ID: <1617111799-109749-1-git-send-email-liudongdong3@huawei.com>
-X-Mailer: git-send-email 1.9.1
+        id S231783AbhC3Oe7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Mar 2021 10:34:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46586 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232067AbhC3Oet (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Mar 2021 10:34:49 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DAA95C061574;
+        Tue, 30 Mar 2021 07:34:48 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 8764492009C; Tue, 30 Mar 2021 16:34:47 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id 7FDA592009B;
+        Tue, 30 Mar 2021 16:34:47 +0200 (CEST)
+Date:   Tue, 30 Mar 2021 16:34:47 +0200 (CEST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+cc:     David Laight <David.Laight@ACULAB.COM>,
+        'Amey Narkhede' <ameynarkhede03@gmail.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "kabel@kernel.org" <kabel@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "raphael.norwitz@nutanix.com" <raphael.norwitz@nutanix.com>
+Subject: Re: How long should be PCIe card in Warm Reset state?
+In-Reply-To: <20210330131018.gby4ze3u6mii23ls@pali>
+Message-ID: <alpine.DEB.2.21.2103301628180.18977@angie.orcam.me.uk>
+References: <20210310110535.zh4pnn4vpmvzwl5q@pali> <20210323161941.gim6msj3ruu3flnf@archlinux> <20210323162747.tscfovntsy7uk5bk@pali> <20210323165749.retjprjgdj7seoan@archlinux> <a8e256ece0334734b1ef568820b95a15@AcuMS.aculab.com>
+ <alpine.DEB.2.21.2103301428030.18977@angie.orcam.me.uk> <20210330131018.gby4ze3u6mii23ls@pali>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.78.228.23]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The hisilicon-pcie.txt file is no longer useful since commit
-c2fa6cf76d20 (PCI: dwc: hisi: Remove non-ECAM HiSilicon
-hip05/hip06 driver), so delete it and remove related code in
-MAINTAINERS file.
+On Tue, 30 Mar 2021, Pali Rohár wrote:
 
-Suggested-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
----
-v1->v2:
-Fix comments by Krzysztof.
-Remove related code in MAINTAINERS file suggested by Zhou.
----
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 43 ----------------------
- MAINTAINERS                                        |  1 -
- 2 files changed, 44 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> >  If I were to implement this stuff, for good measure I'd give it a safety 
+> > margin beyond what the spec requires and use a timeout of say 2-4s while 
+> > actively querying the status of the device.  The values given in the spec 
+> > are only the minimum requirements.
+> 
+> Are you able to also figure out what is the minimal timeout value for 
+> PCIe Warm Reset?
+> 
+> Because we are having troubles to "decode" correct minimal timeout value
+> for this PCIe Warm Reset (not Function-level reset).
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-deleted file mode 100644
-index d6796ef..0000000
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ /dev/null
-@@ -1,43 +0,0 @@
--HiSilicon Hip05 and Hip06 PCIe host bridge DT description
--
--HiSilicon PCIe host controller is based on the Synopsys DesignWare PCI core.
--It shares common functions with the PCIe DesignWare core driver and inherits
--common properties defined in
--Documentation/devicetree/bindings/pci/designware-pcie.txt.
--
--Additional properties are described here:
--
--Required properties
--- compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
--- reg: Should contain rc_dbi, config registers location and length.
--- reg-names: Must include the following entries:
--  "rc_dbi": controller configuration registers;
--  "config": PCIe configuration space registers.
--- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
--- port-id: Should be 0, 1, 2 or 3.
--
--Optional properties:
--- status: Either "ok" or "disabled".
--- dma-coherent: Present if DMA operations are coherent.
--
--Hip05 Example (note that Hip06 is the same except compatible):
--	pcie@b0080000 {
--		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
--		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
--		reg-names = "rc_dbi", "config";
--		bus-range = <0  15>;
--		msi-parent = <&its_pcie>;
--		#address-cells = <3>;
--		#size-cells = <2>;
--		device_type = "pci";
--		dma-coherent;
--		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
--		num-lanes = <8>;
--		port-id = <1>;
--		#interrupt-cells = <1>;
--		interrupt-map-mask = <0xf800 0 0 7>;
--		interrupt-map = <0x0 0 0 1 &mbigen_pcie 1 10
--				 0x0 0 0 2 &mbigen_pcie 2 11
--				 0x0 0 0 3 &mbigen_pcie 3 12
--				 0x0 0 0 4 &mbigen_pcie 4 13>;
--	};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9e87692..f7f0c18 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -13899,7 +13899,6 @@ PCIE DRIVER FOR HISILICON
- M:	Zhou Wang <wangzhou1@hisilicon.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/controller/dwc/pcie-hisi.c
+ The spec does not give any exceptions AFAICT as to the timeouts required 
+between the three kinds of a Conventional Reset (Hot, Warm, or Cold) and 
+refers to them collectively as a Conventional Reset across the relevant 
+parts of the document, so clearly the same rules apply.
 
- PCIE DRIVER FOR HISILICON KIRIN
---
-1.9.1
-
+  Maciej
