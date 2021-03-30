@@ -2,77 +2,230 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85F8BC433E1
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 08:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC52FC433C1
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 09:30:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5147061999
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 08:23:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0598619A6
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 09:30:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231124AbhC3IWn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Mar 2021 04:22:43 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:39910 "EHLO inva021.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231194AbhC3IW1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Mar 2021 04:22:27 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 0C827202FF2;
-        Tue, 30 Mar 2021 10:22:26 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id E8126202FF8;
-        Tue, 30 Mar 2021 10:22:20 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id B308E402B0;
-        Tue, 30 Mar 2021 10:22:14 +0200 (CEST)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     l.stach@pengutronix.de, andrew.smirnov@gmail.com,
-        shawnguo@kernel.org, kw@linux.com, bhelgaas@google.com,
-        stefan@agner.ch, lorenzo.pieralisi@arm.com
-Cc:     linux-pci@vger.kernel.org, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@pengutronix.de, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [RESEND v4 1/2] dt-bindings: imx6q-pcie: add one regulator used to power up pcie phy
-Date:   Tue, 30 Mar 2021 16:08:20 +0800
-Message-Id: <1617091701-6444-2-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1617091701-6444-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1617091701-6444-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S231599AbhC3J3v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Mar 2021 05:29:51 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:52356 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231511AbhC3J3m (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Mar 2021 05:29:42 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 12U9TNfT025028;
+        Tue, 30 Mar 2021 04:29:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1617096563;
+        bh=SyUbvgmeLGI6nGnrfGyJb7UDzXwfVV31iX4s+By/M0g=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=u7QToUNQD3z2Gxpn4a2gX3b0qVVQGC8AW/NrsXipo6L04A1pSJnFdUrjLroX2I3tX
+         Ka7sdwKXs8y+y+Kl0mpDTshck3/50enXclfsgzs24ey0eHUVtrh2T5qBs0OAzX64Gi
+         0uQFzqOBXdLiZke9GU3YYVjQ/RT5/Fa/GiLshcC8=
+Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 12U9TNV4042979
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 30 Mar 2021 04:29:23 -0500
+Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Tue, 30
+ Mar 2021 04:29:23 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
+ Frontend Transport; Tue, 30 Mar 2021 04:29:23 -0500
+Received: from [10.250.234.46] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 12U9TH7e129563;
+        Tue, 30 Mar 2021 04:29:18 -0500
+Subject: Re: [PATCH 1/6] dt-bindings: PCI: ti,am65: Add PCIe host mode
+ dt-bindings for TI's AM65 SoC
+To:     Rob Herring <robh@kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Lokesh Vutla <lokeshvutla@ti.com>
+References: <20210325090026.8843-1-kishon@ti.com>
+ <20210325090026.8843-2-kishon@ti.com>
+ <20210325233812.GA1943834@robh.at.kernel.org>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <985bd950-7bdf-d9b5-0a89-c05a56739c68@ti.com>
+Date:   Tue, 30 Mar 2021 14:59:16 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20210325233812.GA1943834@robh.at.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Both 1.8v and 3.3v power supplies can be used by i.MX8MQ PCIe PHY.
-In default, the PCIE_VPH voltage is suggested to be 1.8v refer to data
-sheet. When PCIE_VPH is supplied by 3.3v in the HW schematic design,
-the VREG_BYPASS bits of GPR registers should be cleared from default
-value 1b'1 to 1b'0. Thus, the internal 3v3 to 1v8 translator would be
-turned on.
+Hi Rob,
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
----
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 3 +++
- 1 file changed, 3 insertions(+)
+On 26/03/21 5:08 am, Rob Herring wrote:
+> On Thu, Mar 25, 2021 at 02:30:21PM +0530, Kishon Vijay Abraham I wrote:
+>> Add PCIe host mode dt-bindings for TI's AM65 SoC.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  .../bindings/pci/ti,am65-pci-host.yaml        | 111 ++++++++++++++++++
+>>  1 file changed, 111 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
+>> new file mode 100644
+>> index 000000000000..b77e492886fa
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/ti,am65-pci-host.yaml
+>> @@ -0,0 +1,111 @@
+>> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+>> +# Copyright (C) 2021 Texas Instruments Incorporated - http://www.ti.com/
+>> +%YAML 1.2
+>> +---
+>> +$id: "http://devicetree.org/schemas/pci/ti,am65-pci-host.yaml#"
+>> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+>> +
+>> +title: TI AM65 PCI Host
+>> +
+>> +maintainers:
+>> +  - Kishon Vijay Abraham I <kishon@ti.com>
+>> +
+>> +allOf:
+>> +  - $ref: /schemas/pci/pci-bus.yaml#
+>> +
+>> +properties:
+>> +  compatible:
+>> +    enum:
+>> +      - ti,am654-pcie-rc
+>> +
+>> +  reg:
+>> +    maxItems: 4
+>> +
+>> +  reg-names:
+>> +    items:
+>> +      - const: app
+>> +      - const: dbics
+> 
+> Please use 'dbi' like everyone else if this isn't shared with the other 
+> TI DW PCI bindings.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index de4b2baf91e8..d8971ab99274 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -38,6 +38,9 @@ Optional properties:
-   The regulator will be enabled when initializing the PCIe host and
-   disabled either as part of the init process or when shutting down the
-   host.
-+- vph-supply: Should specify the regulator in charge of VPH one of the three
-+  PCIe PHY powers. This regulator can be supplied by both 1.8v and 3.3v voltage
-+  supplies.
- 
- Additional required properties for imx6sx-pcie:
- - clock names: Must include the following additional entries:
--- 
-2.17.1
+I'm just converting existing binding in pci-keystone.txt to yaml.
+Documentation/devicetree/bindings/pci/pci-keystone.txt
 
+Device tree for AM65 is also already in the upstream kernel.
+
+I can try to remove the am65 specific part from pci-keystone.txt
+> 
+>> +      - const: config
+>> +      - const: atu
+>> +
+>> +  power-domains:
+>> +    maxItems: 1
+>> +
+>> +  ti,syscon-pcie-id:
+>> +    description: Phandle to the SYSCON entry required for getting PCIe device/vendor ID
+>> +    $ref: /schemas/types.yaml#/definitions/phandle
+>> +
+>> +  ti,syscon-pcie-mode:
+>> +    description: Phandle to the SYSCON entry required for configuring PCIe in RC or EP mode.
+>> +    $ref: /schemas/types.yaml#/definitions/phandle
+>> +
+>> +  msi-map: true
+>> +
+>> +  dma-coherent: true
+>> +
+>> +patternProperties:
+>> +  "interrupt-controller":
+> 
+> Don't need quotes.
+
+sure, will fix it.
+> 
+>> +    type: object
+>> +    description: interrupt controller to handle legacy interrupts.
+>> +
+>> +required:
+>> +  - compatible
+>> +  - reg
+>> +  - reg-names
+>> +  - max-link-speed
+>> +  - num-lanes
+>> +  - power-domains
+>> +  - ti,syscon-pcie-id
+>> +  - ti,syscon-pcie-mode
+>> +  - msi-map
+>> +  - ranges
+>> +  - reset-gpios
+>> +  - phys
+>> +  - phy-names
+>> +  - dma-coherent
+> 
+> 'interrupt-controller' node is optional?
+
+yeah, upstream DT doesn't have interrupt-controller. It's added as part
+of this series.
+
+Thanks
+Kishon
+> 
+>> +
+>> +unevaluatedProperties: false
+>> +
+>> +examples:
+>> +  - |
+>> +    #include <dt-bindings/soc/ti,sci_pm_domain.h>
+>> +    #include <dt-bindings/gpio/gpio.h>
+>> +
+>> +    bus {
+>> +        #address-cells = <2>;
+>> +        #size-cells = <2>;
+>> +
+>> +        pcie0_rc: pcie@5500000 {
+>> +                compatible = "ti,am654-pcie-rc";
+>> +                reg =  <0x0 0x5500000 0x0 0x1000>,
+>> +                       <0x0 0x5501000 0x0 0x1000>,
+>> +                       <0x0 0x10000000 0x0 0x2000>,
+>> +                       <0x0 0x5506000 0x0 0x1000>;
+>> +                reg-names = "app", "dbics", "config", "atu";
+>> +                power-domains = <&k3_pds 120 TI_SCI_PD_EXCLUSIVE>;
+>> +                #address-cells = <3>;
+>> +                #size-cells = <2>;
+>> +                ranges = <0x81000000 0 0          0x0 0x10020000 0 0x00010000>,
+>> +                         <0x82000000 0 0x10030000 0x0 0x10030000 0 0x07FD0000>;
+>> +                ti,syscon-pcie-id = <&pcie_devid>;
+>> +                ti,syscon-pcie-mode = <&pcie0_mode>;
+>> +                bus-range = <0x0 0xff>;
+>> +                num-viewport = <16>;
+>> +                max-link-speed = <2>;
+>> +                dma-coherent;
+>> +                interrupts = <GIC_SPI 340 IRQ_TYPE_EDGE_RISING>;
+>> +                msi-map = <0x0 &gic_its 0x0 0x10000>;
+>> +                #interrupt-cells = <1>;
+>> +                interrupt-map-mask = <0 0 0 7>;
+>> +                interrupt-map = <0 0 0 1 &pcie0_intc 0>, /* INT A */
+>> +                                <0 0 0 2 &pcie0_intc 0>, /* INT B */
+>> +                                <0 0 0 3 &pcie0_intc 0>, /* INT C */
+>> +                                <0 0 0 4 &pcie0_intc 0>; /* INT D */
+>> +
+>> +                pcie0_intc: interrupt-controller {
+>> +                        interrupt-controller;
+>> +                        #interrupt-cells = <1>;
+>> +                        interrupt-parent = <&gic500>;
+>> +                        interrupts = <GIC_SPI 328 IRQ_TYPE_EDGE_RISING>;
+>> +                };
+>> +        };
+>> -- 
+>> 2.17.1
+>>
