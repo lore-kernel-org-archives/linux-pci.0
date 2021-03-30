@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3613C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B5FC433E3
 	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 17:44:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 750D96195C
+	by mail.kernel.org (Postfix) with ESMTP id C92B5619B1
 	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 17:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232126AbhC3Rn6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Mar 2021 13:43:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33044 "EHLO mail.kernel.org"
+        id S232440AbhC3Rn7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Mar 2021 13:43:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232001AbhC3RnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Mar 2021 13:43:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1E0B9619D3;
-        Tue, 30 Mar 2021 17:43:24 +0000 (UTC)
+        id S232101AbhC3Rn2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Mar 2021 13:43:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E757619D6;
+        Tue, 30 Mar 2021 17:43:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617126204;
-        bh=cHgRyNPea/tk/h7ppogF/FAqeVM0OOIbYOAsae8a4D0=;
+        s=k20201202; t=1617126207;
+        bh=oJFKuCUfkKRL7zkTo3uhLRMFcjPrNPutwqIV6AWcUUI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=s1TPDcvpdDQl2zz/6dTzoGc2yPvj9XebTivOzAM94u9CqcWuIn58HEE5DIrWgn30q
-         sQzyt0FN+NxgG9CLTd9gzAZDeCc+5eZjIBsWOtzDDUs0CfcI/LzBQi8H3rVL5GqX60
-         ktbThATq2tyDS++YxOeSJX4FDM07vD03T89DtlPOFzuGQJKAMU7uUKl7CY/hcsX1cF
-         zXDttl8kS85SMWyLpdFL0K1Nv4tIq17S8+7wYNuQTBwGzeLInm5157UjnHV2ZP8H7f
-         nSKZkIleTCQD1Xa4gGQCVp9FCsX4ntHqX+8fTMpp8fU1jvFWhQ3pb4Mei/VENjtpzc
-         SxQsu2nRgwFpA==
+        b=aczD3+BA9FjpTgcNUhiYA6AdAoLO0jJQioJVqdFN+VQkRX4CxxXewXc6uybN4UgOU
+         m4aYzk+MvJ5tBJmJijW5DqSxl3WVCZgZ5FwN5AOdJnfwygy0Op4wCCUtSuWoQXJe6j
+         OnaWH+wC2hT7LVF+/4tbZGpvBdQEt7AQxKbmSVNn18Uy/HU/rZp9eoxOqnLBkkLd6m
+         VxyyLcQM5HN8prUBZrLim6HhoaMUD3Ov1bSsJ4hblswe7i3LZRJBBNQ7/XFyPX3EnP
+         jcvlGRhiO7DoPO+xP5Zl8kGJGNffDo7ykjlYW7LBESWu63efhsUJjwdAwnQgaJ3Y9Q
+         yaJospq8aBiiw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Heiner Kallweit <hkallweit1@gmail.com>
 Cc:     Leon Romanovsky <leonro@nvidia.com>,
@@ -38,10 +38,10 @@ Cc:     Leon Romanovsky <leonro@nvidia.com>,
         David Miller <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>, nic_swsd@realtek.com,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        netdev@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 1/3] PCI: Add pci_disable_parity()
-Date:   Tue, 30 Mar 2021 12:43:16 -0500
-Message-Id: <20210330174318.1289680-2-helgaas@kernel.org>
+        netdev@vger.kernel.org
+Subject: [PATCH v4 3/3] ARM: iop32x: disable N2100 PCI parity reporting
+Date:   Tue, 30 Mar 2021 12:43:18 -0500
+Message-Id: <20210330174318.1289680-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210330174318.1289680-1-helgaas@kernel.org>
 References: <20210330174318.1289680-1-helgaas@kernel.org>
@@ -51,64 +51,72 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Heiner Kallweit <hkallweit1@gmail.com>
 
-Add pci_disable_parity() to disable reporting of parity errors for a
-device by clearing PCI_COMMAND_PARITY.
+On the N2100, instead of just marking the r8169 chips as having
+broken_parity_status, disable parity error reporting for them entirely.
 
-The device will still set PCI_STATUS_DETECTED_PARITY when it detects
-a parity error or receives a Poisoned TLP, but it will not set
-PCI_STATUS_PARITY, which means it will not assert PERR#
-(conventional PCI) or report Poisoned TLPs (PCIe).
+This was the only relevant place that set broken_parity_status, so we no
+longer need to check for it in the r8169 error interrupt handler.
 
-Based-on: https://lore.kernel.org/linux-arm-kernel/d375987c-ea4f-dd98-4ef8-99b2fbfe7c33@gmail.com/
-Based-on-patch-by: Heiner Kallweit <hkallweit1@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+[bhelgaas: squash into one patch, commit log]
+Link: https://lore.kernel.org/r/0c0dcbf2-5f1e-954c-ebd7-e6ccfae5c60e@gmail.com
+Link: https://lore.kernel.org/r/9e312679-a684-e9c7-2656-420723706451@gmail.com
 ---
- drivers/pci/pci.c   | 17 +++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 18 insertions(+)
+ arch/arm/mach-iop32x/n2100.c              |  8 ++++----
+ drivers/net/ethernet/realtek/r8169_main.c | 14 --------------
+ 2 files changed, 4 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 16a17215f633..b1845e5e5c8f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4453,6 +4453,23 @@ void pci_clear_mwi(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_clear_mwi);
+diff --git a/arch/arm/mach-iop32x/n2100.c b/arch/arm/mach-iop32x/n2100.c
+index 78b9a5ee41c9..bf99e718f8b8 100644
+--- a/arch/arm/mach-iop32x/n2100.c
++++ b/arch/arm/mach-iop32x/n2100.c
+@@ -116,16 +116,16 @@ static struct hw_pci n2100_pci __initdata = {
+ };
  
-+/**
-+ * pci_disable_parity - disable parity checking for device
-+ * @dev: the PCI device to operate on
-+ *
-+ * Disable parity checking for device @dev
-+ */
-+void pci_disable_parity(struct pci_dev *dev)
-+{
-+	u16 cmd;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	if (cmd & PCI_COMMAND_PARITY) {
-+		cmd &= ~PCI_COMMAND_PARITY;
-+		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+	}
-+}
-+
- /**
-  * pci_intx - enables/disables PCI INTx for device dev
-  * @pdev: the PCI device to operate on
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 86c799c97b77..4eaa773115da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1201,6 +1201,7 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
- int __must_check pcim_set_mwi(struct pci_dev *dev);
- int pci_try_set_mwi(struct pci_dev *dev);
- void pci_clear_mwi(struct pci_dev *dev);
-+void pci_disable_parity(struct pci_dev *dev);
- void pci_intx(struct pci_dev *dev, int enable);
- bool pci_check_and_mask_intx(struct pci_dev *dev);
- bool pci_check_and_unmask_intx(struct pci_dev *dev);
+ /*
+- * Both r8169 chips on the n2100 exhibit PCI parity problems.  Set
+- * the ->broken_parity_status flag for both ports so that the r8169
+- * driver knows it should ignore error interrupts.
++ * Both r8169 chips on the n2100 exhibit PCI parity problems.  Turn
++ * off parity reporting for both ports so we don't get error interrupts
++ * for them.
+  */
+ static void n2100_fixup_r8169(struct pci_dev *dev)
+ {
+ 	if (dev->bus->number == 0 &&
+ 	    (dev->devfn == PCI_DEVFN(1, 0) ||
+ 	     dev->devfn == PCI_DEVFN(2, 0)))
+-		dev->broken_parity_status = 1;
++		pci_disable_parity(dev);
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, PCI_ANY_ID, n2100_fixup_r8169);
+ 
+diff --git a/drivers/net/ethernet/realtek/r8169_main.c b/drivers/net/ethernet/realtek/r8169_main.c
+index f704da3f214c..a6aff0d993eb 100644
+--- a/drivers/net/ethernet/realtek/r8169_main.c
++++ b/drivers/net/ethernet/realtek/r8169_main.c
+@@ -4358,20 +4358,6 @@ static void rtl8169_pcierr_interrupt(struct net_device *dev)
+ 	if (net_ratelimit())
+ 		netdev_err(dev, "PCI error (cmd = 0x%04x, status_errs = 0x%04x)\n",
+ 			   pci_cmd, pci_status_errs);
+-	/*
+-	 * The recovery sequence below admits a very elaborated explanation:
+-	 * - it seems to work;
+-	 * - I did not see what else could be done;
+-	 * - it makes iop3xx happy.
+-	 *
+-	 * Feel free to adjust to your needs.
+-	 */
+-	if (pdev->broken_parity_status)
+-		pci_cmd &= ~PCI_COMMAND_PARITY;
+-	else
+-		pci_cmd |= PCI_COMMAND_SERR | PCI_COMMAND_PARITY;
+-
+-	pci_write_config_word(pdev, PCI_COMMAND, pci_cmd);
+ 
+ 	rtl_schedule_task(tp, RTL_FLAG_TASK_RESET_PENDING);
+ }
 -- 
 2.25.1
 
