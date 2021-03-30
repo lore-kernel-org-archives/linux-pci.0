@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B94AC433F2
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 15:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D61C433EB
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 15:24:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7744619EC
+	by mail.kernel.org (Postfix) with ESMTP id B6417619D0
 	for <linux-pci@archiver.kernel.org>; Tue, 30 Mar 2021 15:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232402AbhC3PYN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Mar 2021 11:24:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35342 "EHLO mail.kernel.org"
+        id S232421AbhC3PYO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Mar 2021 11:24:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35446 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232354AbhC3PXn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 Mar 2021 11:23:43 -0400
+        id S232369AbhC3PXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 Mar 2021 11:23:46 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7558E6195C;
-        Tue, 30 Mar 2021 15:23:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 862026024A;
+        Tue, 30 Mar 2021 15:23:46 +0000 (UTC)
 Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94)
         (envelope-from <maz@kernel.org>)
-        id 1lRG2C-004i6i-Vy; Tue, 30 Mar 2021 16:12:01 +0100
+        id 1lRG2F-004i6i-Jr; Tue, 30 Mar 2021 16:12:03 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -52,9 +52,9 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org,
         linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-Subject: [PATCH v3 11/14] PCI/MSI: Make pci_host_common_probe() declare its reliance on MSI domains
-Date:   Tue, 30 Mar 2021 16:11:42 +0100
-Message-Id: <20210330151145.997953-12-maz@kernel.org>
+Subject: [PATCH v3 13/14] PCI/MSI: Document the various ways of ending up with NO_MSI
+Date:   Tue, 30 Mar 2021 16:11:44 +0100
+Message-Id: <20210330151145.997953-14-maz@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210330151145.997953-1-maz@kernel.org>
 References: <20210330151145.997953-1-maz@kernel.org>
@@ -68,34 +68,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The generic PCI host driver relies on MSI domains for MSIs to
-be provided to its end-points. Make this dependency explicit.
-
-This cures the warnings occuring on arm/arm64 VMs when booted
-with PCI virtio devices and no MSI controller (no GICv3 ITS,
-for example).
-
-It is likely that other drivers will need to express the same
-dependency.
+We have now three ways of ending up with NO_MSI being set.
+Document them.
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pci-host-common.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/msi.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index 6ab694f8d283..d3924a44db02 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -79,6 +79,7 @@ int pci_host_common_probe(struct platform_device *pdev)
- 
- 	bridge->sysdata = cfg;
- 	bridge->ops = (struct pci_ops *)&ops->pci_ops;
-+	bridge->msi_domain = true;
- 
- 	return pci_host_probe(bridge);
- }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d9c73c173c14..217dc9f0231f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -871,8 +871,15 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
+ 	 * Any bridge which does NOT route MSI transactions from its
+ 	 * secondary bus to its primary bus must set NO_MSI flag on
+ 	 * the secondary pci_bus.
+-	 * We expect only arch-specific PCI host bus controller driver
+-	 * or quirks for specific PCI bridges to be setting NO_MSI.
++	 *
++	 * The NO_MSI flag can either be set directly by:
++	 * - arch-specific PCI host bus controller drivers (deprecated)
++	 * - quirks for specific PCI bridges
++	 *
++	 * or indirectly by platform-specific PCI host bridge drivers by
++	 * advertising the 'msi_domain' property, which results in
++	 * the NO_MSI flag when no MSI domain is found for this bridge
++	 * at probe time.
+ 	 */
+ 	for (bus = dev->bus; bus; bus = bus->parent)
+ 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
 -- 
 2.29.2
 
