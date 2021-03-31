@@ -8,58 +8,58 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42CBCC04FCF
-	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 660CBC004D6
+	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EB00610A1
-	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 489C96105A
+	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233048AbhCaV22 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 Mar 2021 17:28:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51846 "EHLO
+        id S232989AbhCaV2Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 Mar 2021 17:28:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232828AbhCaV1q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Mar 2021 17:27:46 -0400
-Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1DF6C06175F
-        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:45 -0700 (PDT)
-Received: by mail-qk1-x74a.google.com with SMTP id u5so2361418qkj.10
-        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:45 -0700 (PDT)
+        with ESMTP id S232057AbhCaV1f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Mar 2021 17:27:35 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43EECC0613DC
+        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:34 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id i6so3683566ybk.2
+        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=u3sb7mCURY4VtmyE6zoVQ18sx7nW16pIZYxJrlMzk+o=;
-        b=eMFe9houa2XuN05SOLsaOm1Hewi7pJ9LNis+2l70Pybgv0BDjfh3Tdjx0LeKuDts/8
-         5TrWVPttIn2hlb4FWOkPJvsI+3pl4WmXqShOicHoGuBx+x06lTjU0PYmzEkX1eUIZZYm
-         2UbSefvKGG4w1T/hAXOi65BNTP7V932xjjIwsFszWbETMcndQAgg2J1lQsmkLEDmJ1uu
-         1cOK+xgl4cg4yXyncFGUWYT9T4R4JW24KVZEyJFf3MUxdM4Swj6k/74eJaTzZZDQWuQc
-         XORxfZubOGWv8Du+0NlGMiued0fd4ATF8owIEc3jR7W1F5csKMraVh8dIC3NwYQXtmwR
-         qYrQ==
+        bh=83qC35j0sT8ux3EecZ4JSXTBbnC5lT5vvU8jPpy+oIo=;
+        b=qW9htz+1Xajlr5ZlOCWPOGJSyd0/TSkn9e+fyiCr0KHqJua+AlwezhJkvGAUtb8Uus
+         /S4mbwz/r+yDh70gtjVoZeS/Cd8Df/jmcs1PuDY46slrmp+4SqG+psUv2O+ksbCIJsku
+         dIjxKPRi0/bBYhrdnimd0IFEXoBehXd1rxYwYKk6jnrMrv5BJOu5sLPElKsXeAOfL2IR
+         FSzBya2A/E7j+p3qdkcoVeUbSlTHPrCr/FWByGn48UAf6x3/qZaErXzEP1jQigQ+9zTl
+         SKBo2HTMUqAJmQOe4IT5KuTYEDd90h1ZV8EwZpReysv+MJnRxHy6JXArwTScE9I12WVL
+         7/4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=u3sb7mCURY4VtmyE6zoVQ18sx7nW16pIZYxJrlMzk+o=;
-        b=EyydoaiqUOAFzeVEocbUiIFw74NnyoSnrjDcRdjTxBnMjM4FwkrLH2HPhH5k/n9ub5
-         L0LmcozhHkcgU0ceSslqe+bT5yzVtWa3xwpn9bdY0TLB7vplr7ihYhOFr3OfFzrzFA+7
-         UhCUF4n78U8UtRirVg3Op3CdAy24H1RUWgTvORUqkvT6hELvgP/2KclI9gtvIJfGWgv4
-         BU3WStZEoAe+RHfEYL1KqLmadi6ijw1P861sOZZmO1/A151sMBEJEXZZ1HM8mi7NKO33
-         PYHqFBFVbkOtkivwiqS4AA7zK2Ix6mlq2vAGi6yzrmTMMt8gFVBwNOel7I2HeITyljPB
-         mJlg==
-X-Gm-Message-State: AOAM532JTedwDN9FROGsczf8yD3OQurIyz2g++jLF2ybLJpVHL5mHm+t
-        l+1twVu7Yq50N1dRwQ4QnOQnUjy/MNwG1l6jyPc=
-X-Google-Smtp-Source: ABdhPJzrA9aIb2BbE0lWagI3+XE0XKAg7qn3gSUlNS0HnH2/8JbM1k1enyP7wLr7bRTJVSNLjEIoy9fiEcRhnF0cjM8=
+        bh=83qC35j0sT8ux3EecZ4JSXTBbnC5lT5vvU8jPpy+oIo=;
+        b=BG2qWmSZRDjOPGqcHwcHre5PH96GpYCZBYlsZ8kOq1VqdHKakAz2fKKwKN95eDTEjo
+         p/DEkLLrvPTIPgyEwdKP2T9V+G/OyxDtseP9hcmcTrQsAxd904u55xGSK7LtmG5Jd4SK
+         6k7VGa7s/mW13nF7X6DZau+ugfZrjfO5VW1ReWTkGWzGyNwXHsgKMzyTxIvJ3TPB2bLq
+         oaZtu3/xmk4CFZgvOsqWtyVa1M85YeKJ0sIc07AfDpSCulgX8osvu/sA00UOZJXt00/F
+         WacKLUIQJeKZNW3iQQvHmuIZB9kS/bYmsPlNBRB8oTraaOaPg4RmI0pP4UVBTAqhMxOO
+         6bgw==
+X-Gm-Message-State: AOAM533E00z1eSwW8D2jZKbMsAuJAFOZEjg3eYazPP2HpLhUQlTAz8mT
+        0Tm+KEl306ktOVCOur1vy8e22ky0AtjoJthpoTA=
+X-Google-Smtp-Source: ABdhPJyr002SQuA6HZqmBTDomHGBVa4bvwCOQ/KoKLmk8qBxdNaaMWAdSxUHR/bPNxVIO6iowtKoA+CrI/FQIGDGCn4=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:7933:7015:a5d5:3835])
- (user=samitolvanen job=sendgmr) by 2002:a05:6214:945:: with SMTP id
- dn5mr4904341qvb.3.1617226065111; Wed, 31 Mar 2021 14:27:45 -0700 (PDT)
-Date:   Wed, 31 Mar 2021 14:27:15 -0700
+ (user=samitolvanen job=sendgmr) by 2002:a25:3801:: with SMTP id
+ f1mr7850920yba.353.1617226053546; Wed, 31 Mar 2021 14:27:33 -0700 (PDT)
+Date:   Wed, 31 Mar 2021 14:27:09 -0700
 In-Reply-To: <20210331212722.2746212-1-samitolvanen@google.com>
-Message-Id: <20210331212722.2746212-12-samitolvanen@google.com>
+Message-Id: <20210331212722.2746212-6-samitolvanen@google.com>
 Mime-Version: 1.0
 References: <20210331212722.2746212-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v4 11/17] psci: use function_nocfi for cpu_resume
+Subject: [PATCH v4 05/17] workqueue: use WARN_ON_FUNCTION_MISMATCH
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -81,46 +81,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With CONFIG_CFI_CLANG, the compiler replaces function pointers with
-jump table addresses, which results in __pa_symbol returning the
-physical address of the jump table entry. As the jump table contains
-an immediate jump to an EL1 virtual address, this typically won't
-work as intended. Use function_nocfi to get the actual address of
-cpu_resume.
+With CONFIG_CFI_CLANG, a callback function passed to
+__queue_delayed_work from a module points to a jump table entry
+defined in the module instead of the one used in the core kernel,
+which breaks function address equality in this check:
+
+  WARN_ON_ONCE(timer->function != delayed_work_timer_fn);
+
+Use WARN_ON_FUNCTION_MISMATCH() instead to disable the warning
+when CFI and modules are both enabled.
 
 Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
 Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/firmware/psci/psci.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ kernel/workqueue.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/firmware/psci/psci.c b/drivers/firmware/psci/psci.c
-index f5fc429cae3f..64344e84bd63 100644
---- a/drivers/firmware/psci/psci.c
-+++ b/drivers/firmware/psci/psci.c
-@@ -325,8 +325,9 @@ static int __init psci_features(u32 psci_func_id)
- static int psci_suspend_finisher(unsigned long state)
- {
- 	u32 power_state = state;
-+	phys_addr_t pa_cpu_resume = __pa_symbol(function_nocfi(cpu_resume));
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 0d150da252e8..03fe07d2f39f 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -1630,7 +1630,7 @@ static void __queue_delayed_work(int cpu, struct workqueue_struct *wq,
+ 	struct work_struct *work = &dwork->work;
  
--	return psci_ops.cpu_suspend(power_state, __pa_symbol(cpu_resume));
-+	return psci_ops.cpu_suspend(power_state, pa_cpu_resume);
- }
+ 	WARN_ON_ONCE(!wq);
+-	WARN_ON_ONCE(timer->function != delayed_work_timer_fn);
++	WARN_ON_FUNCTION_MISMATCH(timer->function, delayed_work_timer_fn);
+ 	WARN_ON_ONCE(timer_pending(timer));
+ 	WARN_ON_ONCE(!list_empty(&work->entry));
  
- int psci_cpu_suspend_enter(u32 state)
-@@ -344,8 +345,10 @@ int psci_cpu_suspend_enter(u32 state)
- 
- static int psci_system_suspend(unsigned long unused)
- {
-+	phys_addr_t pa_cpu_resume = __pa_symbol(function_nocfi(cpu_resume));
-+
- 	return invoke_psci_fn(PSCI_FN_NATIVE(1_0, SYSTEM_SUSPEND),
--			      __pa_symbol(cpu_resume), 0, 0);
-+			      pa_cpu_resume, 0, 0);
- }
- 
- static int psci_system_suspend_enter(suspend_state_t state)
 -- 
 2.31.0.291.g576ba9dcdaf-goog
 
