@@ -4,58 +4,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 758B5C43611
-	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17900C4363C
+	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56B3361055
+	by mail.kernel.org (Postfix) with ESMTP id EA4D16105A
 	for <linux-pci@archiver.kernel.org>; Wed, 31 Mar 2021 21:28:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232467AbhCaV1e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 Mar 2021 17:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51696 "EHLO
+        id S232539AbhCaV1f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 Mar 2021 17:27:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230291AbhCaV1Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Mar 2021 17:27:25 -0400
-Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1496C06175F
-        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:24 -0700 (PDT)
-Received: by mail-yb1-xb4a.google.com with SMTP id y13so3611163ybk.20
-        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:24 -0700 (PDT)
+        with ESMTP id S232246AbhCaV12 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Mar 2021 17:27:28 -0400
+Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4760FC061574
+        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:28 -0700 (PDT)
+Received: by mail-pf1-x44a.google.com with SMTP id f65so2116801pfa.13
+        for <linux-pci@vger.kernel.org>; Wed, 31 Mar 2021 14:27:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=yTP+LjBFDmYzEkZN/ojSVPqO+bAHNBu2aAmdwQC8Sq0=;
-        b=IImtgBJ7yAhdvPcjObAuget2Jumf3PaCW/76HUIX7raQTGWs3yNE9WoPlH1zK6Q1u4
-         +7jYJb6uW1OS281+twBaFF73GLAuKSTPkEbScEk2CWC9E+ti1FwiAPHe8Wbe1//KUbjL
-         p+kRmfOunTBE7ZEh3NxO0tHeV4EUi6uiuuwGTA81RWeaZZ2Xjnt/4baMCb8b5+Fu7aso
-         9/gyF3XK113vGJ96dbjy4rWUJO2LXn66iORt+eQxiaRmhqAP1anwF+wgvtGqNUrXORGu
-         i4cblL+YQtoV/evE8Hf9ig9e6yT+Kxf/odgiUwus7g8QgOHtY6Ewb2hW78AIWe2OImPx
-         Wjgw==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=bTCEWvQMjkTW/eVBx3Fi28gIb6vhFXkJKuQZd7egWL4=;
+        b=ZyWaDB66yEhpxGUfmbtxVGmU3IBzo+oXxVhHLfWs3XfFFGSmJPLHiE7AtUsL52u4em
+         7r8+LPrjToiGPIKHfAyX+CYa64laXNc6rI1BGc3zm2kLmapiVVq57hrEGsA6RpFB5njc
+         yJtaF9uxQMIwX5fVhtI6GFkCQjMND6xl8/9j4DypA/x676Betc17fx3372YWMv6uudg1
+         Uq3pjBGR+txVa6+cTYQpzbIUUhvOP1NbLuj2g77f+DuZDQjxPV7+fKMGDYKtturZq9Sr
+         ladv12DGpbIVZdpLI4mmgcR60wybqF/xda3o7z0Jpt/JICr6LzvTERx4Cld+Z/MhtGVD
+         UuXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=yTP+LjBFDmYzEkZN/ojSVPqO+bAHNBu2aAmdwQC8Sq0=;
-        b=i37pa5La8ffXq5Z+MuyKh6htJVj1elAuLW1nD616KD3eI534KeS3A5s+OrqYfHbhpW
-         y4dtm/+/wfIYyvwPHsw9zKiL0v2hIJ4lPwQTOEUjVUpkpd7yCVjo9U6zZaCB2U1rvSGo
-         Y/TKnHxCAruwBDTuu6Mg5mxhdmi/jAhSVFMmJOyfokaolqUNQDG+rWA7JcH14EK84ZDg
-         2PdDjeNaKnP6F5gE72auKXCgkD9ijEcUZ4xNQfzlU07pjh5mOPoScZEIXHr328fG6FAt
-         skjNy/VX/6t2pYtJQswNgkrdPR8skk5Agl5VzdxXNzaLGFcttvDwazVEQ6dUU7Tfch+/
-         VWWg==
-X-Gm-Message-State: AOAM533w1CIc1Aeta2rtuDBgijtHEknEtlDrdzYiQ5g8QqhDJzl1SR7j
-        HGMqlQcV0GbL5FgoFbXfzViTEsZgK9vEHS51gz4=
-X-Google-Smtp-Source: ABdhPJxEEWvfo80m5ShoYqPvblwqvUS4wssFRgdGlX1k6EZR1yPZFQwGxomYdq2wD1SGfu2YEhzp2R2AwbgiIYN6I9g=
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=bTCEWvQMjkTW/eVBx3Fi28gIb6vhFXkJKuQZd7egWL4=;
+        b=chWi5MEpSKLIegkFXBUI6g/KHFJ/oa9/2BlS1SSnljgmM39Z/0j2zoVjTiws/lImUZ
+         3d89fNys1uteBNy2E2L9c9QRaRISfs+8IYamMtTfCTZ7evv7Hbw6yDoJAjfxo7f2TGZv
+         XeQFHa96cto0mgbKP6ldh3IVHloroAHrE1QagAEvSugDI31nCtq7iR33VFNscxZ33iWm
+         ceaAZJzFNo56k93Y3oCG7N0o9cUnMcPXW4SiglhhDm85suPEf4YgGpBCkFy4ee5Yu/d0
+         i4s1UYEL7MkxgYLDvTEYT7lD2xgALOKEK0gK41gSrZDrusSjntsM4fsEjq1/2gTClRRF
+         vT4Q==
+X-Gm-Message-State: AOAM530mSmzow4nMKE8EgQKbNgUByEsPF7IpDdsBPwEHevIdXYpc6ZF6
+        hRr5hE0XPNpRizGP/9ojBncZs3dgNcHOpCnswcM=
+X-Google-Smtp-Source: ABdhPJyDPGqZCzSp3WV1/uBjjwnSkHTUJui8hm7KRQKratU0h86QMz9gC7gdr8DJf05TCYSKUV9OwgrvNAHV11IKgX8=
 X-Received: from samitolvanen1.mtv.corp.google.com ([2620:15c:201:2:7933:7015:a5d5:3835])
- (user=samitolvanen job=sendgmr) by 2002:a25:2386:: with SMTP id
- j128mr7405063ybj.284.1617226044066; Wed, 31 Mar 2021 14:27:24 -0700 (PDT)
-Date:   Wed, 31 Mar 2021 14:27:04 -0700
-Message-Id: <20210331212722.2746212-1-samitolvanen@google.com>
+ (user=samitolvanen job=sendgmr) by 2002:a63:d550:: with SMTP id
+ v16mr4986888pgi.164.1617226047699; Wed, 31 Mar 2021 14:27:27 -0700 (PDT)
+Date:   Wed, 31 Mar 2021 14:27:06 -0700
+In-Reply-To: <20210331212722.2746212-1-samitolvanen@google.com>
+Message-Id: <20210331212722.2746212-3-samitolvanen@google.com>
 Mime-Version: 1.0
+References: <20210331212722.2746212-1-samitolvanen@google.com>
 X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-Subject: [PATCH v4 00/17] Add support for Clang CFI
+Subject: [PATCH v4 02/17] cfi: add __cficanonical
 From:   Sami Tolvanen <samitolvanen@google.com>
 To:     Kees Cook <keescook@chromium.org>
 Cc:     Nathan Chancellor <nathan@kernel.org>,
@@ -77,151 +81,98 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds support for Clang's Control-Flow Integrity (CFI)
-checking. With CFI, the compiler injects a runtime check before each
-indirect function call to ensure the target is a valid function with
-the correct static type. This restricts possible call targets and
-makes it more difficult for an attacker to exploit bugs that allow the
-modification of stored function pointers. For more details, see:
+With CONFIG_CFI_CLANG, the compiler replaces a function address taken
+in C code with the address of a local jump table entry, which passes
+runtime indirect call checks. However, the compiler won't replace
+addresses taken in assembly code, which will result in a CFI failure
+if we later jump to such an address in instrumented C code. The code
+generated for the non-canonical jump table looks this:
 
-  https://clang.llvm.org/docs/ControlFlowIntegrity.html
+  <noncanonical.cfi_jt>: /* In C, &noncanonical points here */
+	jmp noncanonical
+  ...
+  <noncanonical>:        /* function body */
+	...
 
-The first patch contains build system changes and error handling,
-and implements support for cross-module indirect call checking. The
-remaining patches address issues caused by the compiler
-instrumentation. These include fixing known type mismatches, as well
-as issues with address space confusion and cross-module function
-address equality.
+This change adds the __cficanonical attribute, which tells the
+compiler to use a canonical jump table for the function instead. This
+means the compiler will rename the actual function to <function>.cfi
+and points the original symbol to the jump table entry instead:
 
-These patches add support only for arm64, but I'll post patches also
-for x86_64 after we address the remaining issues there, including
-objtool support.
+  <canonical>:           /* jump table entry */
+	jmp canonical.cfi
+  ...
+  <canonical.cfi>:       /* function body */
+	...
 
-You can also pull this series from
+As a result, the address taken in assembly, or other non-instrumented
+code always points to the jump table and therefore, can be used for
+indirect calls in instrumented code without tripping CFI checks.
 
-  https://github.com/samitolvanen/linux.git cfi-v4
-
+Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>   # pci.h
 ---
-Changes in v4:
- - Per Mark's suggestion, dropped __pa_function() and renamed
-   __va_function() to function_nocfi().
- - Added a comment to function_nocfi() to explain what it does.
- - Updated the psci patch to use an intermediate variable for
-   the physical address for clarity.
+ include/linux/compiler-clang.h | 1 +
+ include/linux/compiler_types.h | 4 ++++
+ include/linux/init.h           | 4 ++--
+ include/linux/pci.h            | 4 ++--
+ 4 files changed, 9 insertions(+), 4 deletions(-)
 
-Changes in v3:
- - Added a patch to change list_sort() callers treewide to use
-   const pointers instead of simply removing the internal casts.
- - Changed cleanup_symbol_name() to return bool.
- - Changed module.lds.S to drop the .eh_frame section only with
-   CONFIG_CFI_CLANG.
- - Switched to synchronize_rcu() in update_shadow().
-
-Changes in v2:
- - Fixed .text merging in module.lds.S.
- - Added WARN_ON_FUNCTION_MISMATCH() and changed kernel/thread.c
-   and kernel/workqueue.c to use the macro instead.
-
-
-Sami Tolvanen (17):
-  add support for Clang CFI
-  cfi: add __cficanonical
-  mm: add generic function_nocfi macro
-  module: ensure __cfi_check alignment
-  workqueue: use WARN_ON_FUNCTION_MISMATCH
-  kthread: use WARN_ON_FUNCTION_MISMATCH
-  kallsyms: strip ThinLTO hashes from static functions
-  bpf: disable CFI in dispatcher functions
-  treewide: Change list_sort to use const pointers
-  lkdtm: use function_nocfi
-  psci: use function_nocfi for cpu_resume
-  arm64: implement function_nocfi
-  arm64: use function_nocfi with __pa_symbol
-  arm64: add __nocfi to functions that jump to a physical address
-  arm64: add __nocfi to __apply_alternatives
-  KVM: arm64: Disable CFI for nVHE
-  arm64: allow CONFIG_CFI_CLANG to be selected
-
- Makefile                                      |  17 +
- arch/Kconfig                                  |  45 +++
- arch/arm64/Kconfig                            |   1 +
- arch/arm64/include/asm/memory.h               |  15 +
- arch/arm64/include/asm/mmu_context.h          |   4 +-
- arch/arm64/kernel/acpi_parking_protocol.c     |   3 +-
- arch/arm64/kernel/alternative.c               |   4 +-
- arch/arm64/kernel/cpu-reset.h                 |  10 +-
- arch/arm64/kernel/cpufeature.c                |   4 +-
- arch/arm64/kernel/psci.c                      |   3 +-
- arch/arm64/kernel/smp_spin_table.c            |   3 +-
- arch/arm64/kvm/hyp/nvhe/Makefile              |   6 +-
- arch/arm64/kvm/vgic/vgic-its.c                |   8 +-
- arch/arm64/kvm/vgic/vgic.c                    |   3 +-
- block/blk-mq-sched.c                          |   3 +-
- block/blk-mq.c                                |   3 +-
- drivers/acpi/nfit/core.c                      |   3 +-
- drivers/acpi/numa/hmat.c                      |   3 +-
- drivers/clk/keystone/sci-clk.c                |   4 +-
- drivers/firmware/psci/psci.c                  |   7 +-
- drivers/gpu/drm/drm_modes.c                   |   3 +-
- drivers/gpu/drm/i915/gt/intel_engine_user.c   |   3 +-
- drivers/gpu/drm/i915/gvt/debugfs.c            |   2 +-
- drivers/gpu/drm/i915/selftests/i915_gem_gtt.c |   3 +-
- drivers/gpu/drm/radeon/radeon_cs.c            |   4 +-
- .../hw/usnic/usnic_uiom_interval_tree.c       |   3 +-
- drivers/interconnect/qcom/bcm-voter.c         |   2 +-
- drivers/md/raid5.c                            |   3 +-
- drivers/misc/lkdtm/usercopy.c                 |   2 +-
- drivers/misc/sram.c                           |   4 +-
- drivers/nvme/host/core.c                      |   3 +-
- .../controller/cadence/pcie-cadence-host.c    |   3 +-
- drivers/spi/spi-loopback-test.c               |   3 +-
- fs/btrfs/raid56.c                             |   3 +-
- fs/btrfs/tree-log.c                           |   3 +-
- fs/btrfs/volumes.c                            |   3 +-
- fs/ext4/fsmap.c                               |   4 +-
- fs/gfs2/glock.c                               |   3 +-
- fs/gfs2/log.c                                 |   2 +-
- fs/gfs2/lops.c                                |   3 +-
- fs/iomap/buffered-io.c                        |   3 +-
- fs/ubifs/gc.c                                 |   7 +-
- fs/ubifs/replay.c                             |   4 +-
- fs/xfs/scrub/bitmap.c                         |   4 +-
- fs/xfs/xfs_bmap_item.c                        |   4 +-
- fs/xfs/xfs_buf.c                              |   6 +-
- fs/xfs/xfs_extent_busy.c                      |   4 +-
- fs/xfs/xfs_extent_busy.h                      |   3 +-
- fs/xfs/xfs_extfree_item.c                     |   4 +-
- fs/xfs/xfs_refcount_item.c                    |   4 +-
- fs/xfs/xfs_rmap_item.c                        |   4 +-
- include/asm-generic/bug.h                     |  16 +
- include/asm-generic/vmlinux.lds.h             |  20 +-
- include/linux/bpf.h                           |   4 +-
- include/linux/cfi.h                           |  41 +++
- include/linux/compiler-clang.h                |   3 +
- include/linux/compiler_types.h                |   8 +
- include/linux/init.h                          |   6 +-
- include/linux/list_sort.h                     |   7 +-
- include/linux/mm.h                            |  10 +
- include/linux/module.h                        |  13 +-
- include/linux/pci.h                           |   4 +-
- init/Kconfig                                  |   2 +-
- kernel/Makefile                               |   4 +
- kernel/cfi.c                                  | 329 ++++++++++++++++++
- kernel/kallsyms.c                             |  55 ++-
- kernel/kthread.c                              |   3 +-
- kernel/module.c                               |  43 +++
- kernel/workqueue.c                            |   2 +-
- lib/list_sort.c                               |  17 +-
- lib/test_list_sort.c                          |   3 +-
- net/tipc/name_table.c                         |   4 +-
- scripts/Makefile.modfinal                     |   2 +-
- scripts/module.lds.S                          |  20 +-
- 74 files changed, 759 insertions(+), 112 deletions(-)
- create mode 100644 include/linux/cfi.h
- create mode 100644 kernel/cfi.c
-
-
-base-commit: d19cc4bfbff1ae72c3505a00fb8ce0d3fa519e6c
+diff --git a/include/linux/compiler-clang.h b/include/linux/compiler-clang.h
+index 6de9d0c9377e..adbe76b203e2 100644
+--- a/include/linux/compiler-clang.h
++++ b/include/linux/compiler-clang.h
+@@ -63,3 +63,4 @@
+ #endif
+ 
+ #define __nocfi		__attribute__((__no_sanitize__("cfi")))
++#define __cficanonical	__attribute__((__cfi_canonical_jump_table__))
+diff --git a/include/linux/compiler_types.h b/include/linux/compiler_types.h
+index 796935a37e37..d29bda7f6ebd 100644
+--- a/include/linux/compiler_types.h
++++ b/include/linux/compiler_types.h
+@@ -246,6 +246,10 @@ struct ftrace_likely_data {
+ # define __nocfi
+ #endif
+ 
++#ifndef __cficanonical
++# define __cficanonical
++#endif
++
+ #ifndef asm_volatile_goto
+ #define asm_volatile_goto(x...) asm goto(x)
+ #endif
+diff --git a/include/linux/init.h b/include/linux/init.h
+index b3ea15348fbd..045ad1650ed1 100644
+--- a/include/linux/init.h
++++ b/include/linux/init.h
+@@ -220,8 +220,8 @@ extern bool initcall_debug;
+ 	__initcall_name(initstub, __iid, id)
+ 
+ #define __define_initcall_stub(__stub, fn)			\
+-	int __init __stub(void);				\
+-	int __init __stub(void)					\
++	int __init __cficanonical __stub(void);			\
++	int __init __cficanonical __stub(void)			\
+ 	{ 							\
+ 		return fn();					\
+ 	}							\
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 86c799c97b77..39684b72db91 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1944,8 +1944,8 @@ enum pci_fixup_pass {
+ #ifdef CONFIG_LTO_CLANG
+ #define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
+ 				  class_shift, hook, stub)		\
+-	void stub(struct pci_dev *dev);					\
+-	void stub(struct pci_dev *dev)					\
++	void __cficanonical stub(struct pci_dev *dev);			\
++	void __cficanonical stub(struct pci_dev *dev)			\
+ 	{ 								\
+ 		hook(dev); 						\
+ 	}								\
 -- 
 2.31.0.291.g576ba9dcdaf-goog
 
