@@ -2,129 +2,121 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97378C433ED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 11:04:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4704C001B4
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:42:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65FF5610CB
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 11:04:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F5AB613CB
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:42:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233760AbhDALDi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 07:03:38 -0400
-Received: from foss.arm.com ([217.140.110.172]:36788 "EHLO foss.arm.com"
+        id S234466AbhDARmP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 13:42:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40596 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229612AbhDALDL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 07:03:11 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0A88BD6E;
-        Thu,  1 Apr 2021 04:03:10 -0700 (PDT)
-Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A619F3F694;
-        Thu,  1 Apr 2021 04:03:06 -0700 (PDT)
-Date:   Thu, 1 Apr 2021 12:03:01 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Frank Wunderlich <frank-w@public-files.de>,
-        Thierry Reding <treding@nvidia.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Rob Herring <robh@kernel.org>, Will Deacon <will@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
-        linux-tegra@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, kernel-team@android.com
-Subject: Re: [PATCH v3 03/14] PCI: rcar: Convert to MSI domains
-Message-ID: <20210401110301.GA31407@lpieralisi>
-References: <20210330151145.997953-1-maz@kernel.org>
- <20210330151145.997953-4-maz@kernel.org>
- <20210401101957.GA30653@lpieralisi>
- <87y2e2p9wk.wl-maz@kernel.org>
+        id S234559AbhDARiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 13:38:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B76F161386;
+        Thu,  1 Apr 2021 16:42:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617295378;
+        bh=i04niHeXuQvwIy5MixftZzotTP0TGOM+jM0OxbF9CXw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=V0A1RN+DPE2xtWYyDCDoxSGkMsS1QrILEzosJPbis4ibuJoVVIl4ZdF3i89mvsOY6
+         +fH7WX9Ps2Jlw9/cbCJBJ5mE48dsmK6NXkCaZyPpEvUSmKuddYv4gHqDBUra6f0Ov4
+         nsJ3lsAcFsxMUwflSoK41pwCfsEUJjmbZyP54B0FA4EbtF5Lil1xT4B5yteUg0cR6O
+         44aRc52oTCBzFrJ/QDenCd7I7SjQU+BqxUMTOsg65DGdcFl/pJDm9X3KNf6oNC+8bX
+         O+nOlYUmtOKeZLZEjVUn4oBVUMvm5rzm9B0e6Vr7a4PrWk6PM1tA3AKtNmQXJt5Kd5
+         bVuJrTDgpDRZg==
+Date:   Thu, 1 Apr 2021 11:42:56 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Henning Schild <henning.schild@siemens.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-pci@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com
+Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
+ support library
+Message-ID: <20210401164256.GA1516177@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87y2e2p9wk.wl-maz@kernel.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <YGXqfvBv37eLL28Z@smile.fi.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 11:38:19AM +0100, Marc Zyngier wrote:
-> On Thu, 01 Apr 2021 11:19:57 +0100,
-> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> > 
-> > On Tue, Mar 30, 2021 at 04:11:34PM +0100, Marc Zyngier wrote:
-> > 
-> > [...]
-> > 
-> > > +static void rcar_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > > +{
-> > > +	struct rcar_msi *msi = irq_data_get_irq_chip_data(data);
-> > > +	unsigned long pa = virt_to_phys(msi);
-> > >  
-> > > -	hwirq = rcar_msi_alloc_region(msi, nvec);
-> > > -	if (hwirq < 0)
-> > > -		return -ENOSPC;
-> > > +	/* Use the msi structure as the PA for the MSI doorbell */
-> > > +	msg->address_lo = lower_32_bits(pa);
-> > > +	msg->address_hi = upper_32_bits(pa);
-> > 
-> > I don't think this change is aligned with the previous patch (is it ?),
-> > the PA address we are using here is different from the one programmed
-> > into the controller registers - either that or I am missing something,
-> > please let me know.
+On Thu, Apr 01, 2021 at 06:45:02PM +0300, Andy Shevchenko wrote:
+> On Tue, Mar 09, 2021 at 09:42:52AM +0100, Henning Schild wrote:
+> > Am Mon, 8 Mar 2021 19:42:21 -0600
+> > schrieb Bjorn Helgaas <helgaas@kernel.org>:
+> > > On Mon, Mar 08, 2021 at 09:16:50PM +0200, Andy Shevchenko wrote:
+> > > > On Mon, Mar 08, 2021 at 12:52:12PM -0600, Bjorn Helgaas wrote:  
+> > > > > On Mon, Mar 08, 2021 at 02:20:16PM +0200, Andy Shevchenko wrote:  
 > 
-> Err. You are right. This looks like a bad case of broken conflict
-> resolution on my part.
+> ...
 > 
-> The following snippet should fix it. Let me know if you want me to
-> resend the whole thing or whether you are OK with applying this by
-> hand.
+> > > > > > +	/* Read the first BAR of the device in question */
+> > > > > > +	__pci_bus_read_base(bus, devfn, pci_bar_unknown, mem,
+> > > > > > PCI_BASE_ADDRESS_0, true);  
+> > > > > 
+> > > > > I don't get this.  Apparently this normally hidden device is
+> > > > > consuming PCI address space.  The PCI core needs to know
+> > > > > about this.  If it doesn't, the PCI core may assign this
+> > > > > space to another device.  
+> > > > 
+> > > > Right, it returns all 1:s to any request so PCI core *thinks*
+> > > > it's plugged off (like D3cold or so).  
+> > > 
+> > > I'm asking about the MMIO address space.  The BAR is a register
+> > > in config space.  AFAICT, clearing P2SBC_HIDE_BYTE makes that
+> > > BAR visible.  The BAR describes a region of PCI address space.
+> > > It looks like setting P2SBC_HIDE_BIT makes the BAR disappear
+> > > from config space, but it sounds like the PCI address space
+> > > *described* by the BAR is still claimed by the device.  If the
+> > > device didn't respond to that MMIO space, you would have no
+> > > reason to read the BAR at all.
+> > > 
+> > > So what keeps the PCI core from assigning that MMIO space to
+> > > another device?
+> > 
+> > The device will respond to MMIO while being hidden. I am afraid
+> > nothing stops a collision, except for the assumption that the BIOS
+> > is always right and PCI devices never get remapped. But just
+> > guessing here.
+> > 
+> > I have seen devices with coreboot having the P2SB visible, and
+> > most likely relocatable. Making it visible in Linux and not hiding
+> > it again might work, but probably only as long as Linux will not
+> > relocate it.  Which i am afraid might seriously upset the BIOS,
+> > depending on what a device does with those GPIOs and which parts
+> > are implemented in the BIOS.
+> 
+> So the question is, do we have knobs in PCI core to mark device
+> fixes in terms of BARs, no relocation must be applied, no other
+> devices must have the region?
 
-I will apply it and merge the whole series into -next, thanks for
-implementing it !
+I think the closest thing is the IORESOURCE_PCI_FIXED bit that we use
+for things that must not be moved.  Generally PCI resources are
+associated with a pci_dev, and we set IORESOURCE_PCI_FIXED for BARs,
+e.g., dev->resource[n].  We do that for IDE legacy regions (see
+LEGACY_IO_RESOURCE), Langwell devices (pci_fixed_bar_fixup()),
+"enhanced allocation" (pci_ea_flags()), and some quirks (quirk_io()).
 
-Lorenzo
+In your case, the device is hidden so it doesn't respond to config
+accesses, so there is no pci_dev for it.
 
-> Thanks,
-> 
-> 	M.
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-> index f7331ad0d6dc..765cf2b45e24 100644
-> --- a/drivers/pci/controller/pcie-rcar-host.c
-> +++ b/drivers/pci/controller/pcie-rcar-host.c
-> @@ -573,11 +573,10 @@ static int rcar_msi_set_affinity(struct irq_data *d, const struct cpumask *mask,
->  static void rcar_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  {
->  	struct rcar_msi *msi = irq_data_get_irq_chip_data(data);
-> -	unsigned long pa = virt_to_phys(msi);
-> +	struct rcar_pcie *pcie = &msi_to_host(msi)->pcie;
->  
-> -	/* Use the msi structure as the PA for the MSI doorbell */
-> -	msg->address_lo = lower_32_bits(pa);
-> -	msg->address_hi = upper_32_bits(pa);
-> +	msg->address_lo = rcar_pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
-> +	msg->address_hi = rcar_pci_read_reg(pcie, PCIEMSIAUR);
->  	msg->data = data->hwirq;
->  }
->  
-> 
-> -- 
-> Without deviation from the norm, progress is not possible.
+Maybe you could do some sort of quirk that allocates its own struct
+resource, fills it in, sets IORESOURCE_PCI_FIXED, and does something
+similar to pci_claim_resource()?
+
+Bjorn
