@@ -3,40 +3,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DDE2C43470
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B7B5C001B6
 	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33A64610E7
+	by mail.kernel.org (Postfix) with ESMTP id 11214601FC
 	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235143AbhDASgB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:36:01 -0400
-Received: from mga06.intel.com ([134.134.136.31]:62929 "EHLO mga06.intel.com"
+        id S234965AbhDASgA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:36:00 -0400
+Received: from mga11.intel.com ([192.55.52.93]:15518 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240029AbhDAS04 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 14:26:56 -0400
-IronPort-SDR: t1q/F+j3zutU6A7MxiVXsB58ObzyuL3tl5oYGhAfIxz9LsTywAos0AgtTYtUu+YinLV65Gc3Uh
- 9semmPeNQUrQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="253643745"
+        id S238262AbhDASYd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 14:24:33 -0400
+IronPort-SDR: pqTmkUH8LH7BCZzv9+dsL6EhI7++BVMLWPWjlEgjeR+HVvHfydR7wHJ/YDGCUOkLj6BLxP8Lv2
+ 9wm6+3CTKx4Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="189049281"
 X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="253643745"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:23:12 -0700
-IronPort-SDR: BpQApRmhMC2VG0Roa0vW6dfKW9oSoqXCJXE4cVlaFcC63pvFcWaxK4Fo6kw27W/6Y0aDiHCzb1
- P3yD5hmyveTA==
+   d="scan'208";a="189049281"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:22:18 -0700
+IronPort-SDR: iTS/4UfVWmg/0+sjwUsP0cTflWUNTNI4X36H8517uusL8UdxUhqGgrXax8+w4gqgKhJO6rNTtl
+ 6ZhwBnUJvbsw==
 X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="377802024"
+   d="scan'208";a="517445221"
 Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:23:08 -0700
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:22:09 -0700
 Received: from andy by smile with local (Exim 4.94)
         (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1lS1yC-000KGK-P8; Thu, 01 Apr 2021 21:23:04 +0300
-Date:   Thu, 1 Apr 2021 21:23:04 +0300
+        id 1lS1xC-000KFb-9g; Thu, 01 Apr 2021 21:22:02 +0300
+Date:   Thu, 1 Apr 2021 21:22:02 +0300
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc:     Henning Schild <henning.schild@siemens.com>,
         Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Jean Delvare <jdelvare@suse.de>,
@@ -50,85 +50,61 @@ Cc:     Henning Schild <henning.schild@siemens.com>,
         Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com
 Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
  support library
-Message-ID: <YGYPiCekM3clFEsD@smile.fi.intel.com>
-References: <YGXqfvBv37eLL28Z@smile.fi.intel.com>
- <20210401164256.GA1516177@bjorn-Precision-5520>
+Message-ID: <YGYPSoXDn8GW5iSI@smile.fi.intel.com>
+References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+ <20210308122020.57071-4-andriy.shevchenko@linux.intel.com>
+ <20210313104557.321de08e@md1za8fc.ad001.siemens.net>
+ <YGXqDxSJhCO9bD1X@smile.fi.intel.com>
+ <20210401180617.GL2542@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210401164256.GA1516177@bjorn-Precision-5520>
+In-Reply-To: <20210401180617.GL2542@lahna.fi.intel.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 11:42:56AM -0500, Bjorn Helgaas wrote:
-> On Thu, Apr 01, 2021 at 06:45:02PM +0300, Andy Shevchenko wrote:
-> > On Tue, Mar 09, 2021 at 09:42:52AM +0100, Henning Schild wrote:
-> > > Am Mon, 8 Mar 2021 19:42:21 -0600
-> > > schrieb Bjorn Helgaas <helgaas@kernel.org>:
-> > > > On Mon, Mar 08, 2021 at 09:16:50PM +0200, Andy Shevchenko wrote:
-> > > > > On Mon, Mar 08, 2021 at 12:52:12PM -0600, Bjorn Helgaas wrote:  
-> > > > > > On Mon, Mar 08, 2021 at 02:20:16PM +0200, Andy Shevchenko wrote:  
+On Thu, Apr 01, 2021 at 09:06:17PM +0300, Mika Westerberg wrote:
+> On Thu, Apr 01, 2021 at 06:43:11PM +0300, Andy Shevchenko wrote:
+> > On Sat, Mar 13, 2021 at 10:45:57AM +0100, Henning Schild wrote:
+> > > Am Mon, 8 Mar 2021 14:20:16 +0200
+> > > schrieb Andy Shevchenko <andriy.shevchenko@linux.intel.com>:
 > > 
 > > ...
 > > 
-> > > > > > > +	/* Read the first BAR of the device in question */
-> > > > > > > +	__pci_bus_read_base(bus, devfn, pci_bar_unknown, mem,
-> > > > > > > PCI_BASE_ADDRESS_0, true);  
-> > > > > > 
-> > > > > > I don't get this.  Apparently this normally hidden device is
-> > > > > > consuming PCI address space.  The PCI core needs to know
-> > > > > > about this.  If it doesn't, the PCI core may assign this
-> > > > > > space to another device.  
-> > > > > 
-> > > > > Right, it returns all 1:s to any request so PCI core *thinks*
-> > > > > it's plugged off (like D3cold or so).  
-> > > > 
-> > > > I'm asking about the MMIO address space.  The BAR is a register
-> > > > in config space.  AFAICT, clearing P2SBC_HIDE_BYTE makes that
-> > > > BAR visible.  The BAR describes a region of PCI address space.
-> > > > It looks like setting P2SBC_HIDE_BIT makes the BAR disappear
-> > > > from config space, but it sounds like the PCI address space
-> > > > *described* by the BAR is still claimed by the device.  If the
-> > > > device didn't respond to that MMIO space, you would have no
-> > > > reason to read the BAR at all.
-> > > > 
-> > > > So what keeps the PCI core from assigning that MMIO space to
-> > > > another device?
+> > > > + * pci_p2sb_bar - Get Primary to Sideband bridge (P2SB) device BAR
+> > > > + * @pdev:	PCI device to get a PCI bus to communicate with
+> > > > + * @devfn:	PCI slot and function to communicate with
+> > > > + * @mem:	memory resource to be filled in
 > > > 
-> > > The device will respond to MMIO while being hidden. I am afraid
-> > > nothing stops a collision, except for the assumption that the BIOS
-> > > is always right and PCI devices never get remapped. But just
-> > > guessing here.
+> > > Do we really need that many arguments to it?
 > > > 
-> > > I have seen devices with coreboot having the P2SB visible, and
-> > > most likely relocatable. Making it visible in Linux and not hiding
-> > > it again might work, but probably only as long as Linux will not
-> > > relocate it.  Which i am afraid might seriously upset the BIOS,
-> > > depending on what a device does with those GPIOs and which parts
-> > > are implemented in the BIOS.
+> > > Before i had, in a platform driver that never had its own pci_dev or bus
+> > > 
+> > >   res->start = simatic_ipc_get_membase0(PCI_DEVFN(13, 0));
+> > >   if (res-start == 0)
+> > >     return -ENODEV;
+> > > 
+> > > So helper only asked for the devfn, returned base and no dedicated
+> > > error code.
+> > > 
+> > > With this i need
+> > > 
+> > >   struct pci_bus *bus = pci_find_bus(0, 0);
+> > >   struct pci_dev *pci_dev = bus->self;
+> > >   unsigned int magic_i_do_not_want =  PCI_DEVFN(13, 0);
 > > 
-> > So the question is, do we have knobs in PCI core to mark device
-> > fixes in terms of BARs, no relocation must be applied, no other
-> > devices must have the region?
+> > What confuses me is the use for SPI NOR controller on Broxton. And I think
+> > we actually can indeed hide all this under the hood by exposing P2SB to the OS.
+> > 
+> > Mika, what do you think?
 > 
-> I think the closest thing is the IORESOURCE_PCI_FIXED bit that we use
-> for things that must not be moved.  Generally PCI resources are
-> associated with a pci_dev, and we set IORESOURCE_PCI_FIXED for BARs,
-> e.g., dev->resource[n].  We do that for IDE legacy regions (see
-> LEGACY_IO_RESOURCE), Langwell devices (pci_fixed_bar_fixup()),
-> "enhanced allocation" (pci_ea_flags()), and some quirks (quirk_io()).
-> 
-> In your case, the device is hidden so it doesn't respond to config
-> accesses, so there is no pci_dev for it.
+> Not sure I follow. Do you mean we force unhide P2SB and then bind (MFD)
+> driver to that?
 
-Yes, and the idea is to unhide it on the early stage.
-Would it be possible to quirk it to fix the IO resources?
-
-> Maybe you could do some sort of quirk that allocates its own struct
-> resource, fills it in, sets IORESOURCE_PCI_FIXED, and does something
-> similar to pci_claim_resource()?
+Not MFD, SPI NOR (if I understood correctly the code in MFD driver for SPI NOR
+in regards to P2SB case).
 
 -- 
 With Best Regards,
