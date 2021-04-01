@@ -2,136 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D86C43461
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEF6C433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2511601FC
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A1AF60201
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237286AbhDASW6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:22:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36682 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236948AbhDASLl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 14:11:41 -0400
-Received: from mail-wr1-x42d.google.com (mail-wr1-x42d.google.com [IPv6:2a00:1450:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B801C03114D
-        for <linux-pci@vger.kernel.org>; Thu,  1 Apr 2021 09:44:30 -0700 (PDT)
-Received: by mail-wr1-x42d.google.com with SMTP id e18so2460592wrt.6
-        for <linux-pci@vger.kernel.org>; Thu, 01 Apr 2021 09:44:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=YSnhs+QugQX12bb4GkY/AXYl7X1tCBk+JT0tdjERlBo=;
-        b=Wcd3lEvvpTNi2r3myGrKY/G9gxpe497zxepnIBDzVdUXV/f6CXhN8lkS+XuU/awnzT
-         CS1WdiHekcKHkBbcZA7WrGO6G/cJAU4kliOSdUFb3MasyMHr3uEn4VPIOmvV8gAC8drP
-         rk69xX45ifNRXYL5IKAsLD4Sw5xFo1RHXWO+a3602LE8peUDpYSMJyO28EIZAESjoiXL
-         TMAMwtBVlV4xpMXicr+3+1EeDx+3rB8DqgWhrOKFPazE80HmDgCdpwiMDOoSoYOXUg1V
-         9d3o6cVvVFjf0s7oP2bqik3zTRY/69RgGNrjT70HCIh70my0rAMJIf+IjpKt1THSBUAF
-         TGCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=YSnhs+QugQX12bb4GkY/AXYl7X1tCBk+JT0tdjERlBo=;
-        b=MTrmYWf0EC/SYffAXYwntVZmcjKwNDS/KZzXvHipqDGnc5c+ev8/9NOehL2jfAPOMf
-         ZZ/q1U7F0m2bdPUgkqG5SQJLlXa4aa4ZCEe97u3SpbPWep/iEFPYXfCbwb6bEXO8riyW
-         nxhVtazhqq2/rQesJaDzNB7iHkyzrZiNwu6E+iDpp9hI0+kC9QghsoSJcTQ8Mz3B9jz1
-         iwdVg7hSt+zb06esM/HL18dXqzeCNS5lwaqhy1xRfceVqEdtAfTq+9mSMJ5Naj/kdLGB
-         TBzTr4TC2efREqkao9kP8bDLCHKGyl5IoDCHU7EjoOVs6acfAMZiJLXIvxBLigjGiERE
-         Ls7A==
-X-Gm-Message-State: AOAM530bSnrm1WNeryBPGGW1TePKn0R+JhOwf+Sbl53zFq5agUv5NbuM
-        HlV+V5sbhVkDAs1EH9WjC6sbonFU7mS8Zg==
-X-Google-Smtp-Source: ABdhPJwaGgPmDPMmXXEY+GmlIa8Z5vaCpSw6GR8dpI4krTiFjJI4LWV4pE8+CCfAJei+hc5CmugbFA==
-X-Received: by 2002:a5d:554b:: with SMTP id g11mr10492913wrw.411.1617295468920;
-        Thu, 01 Apr 2021 09:44:28 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f1f:bb00:5544:e633:d47e:4b76? (p200300ea8f1fbb005544e633d47e4b76.dip0.t-ipconnect.de. [2003:ea:8f1f:bb00:5544:e633:d47e:4b76])
-        by smtp.googlemail.com with ESMTPSA id a13sm10148732wrp.31.2021.04.01.09.44.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Apr 2021 09:44:28 -0700 (PDT)
-Subject: [PATCH 1/3] PCI/VPD: Change pci_vpd_init return type to void
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
-Message-ID: <663ec440-8375-1459-ddb4-98ea76e75917@gmail.com>
-Date:   Thu, 1 Apr 2021 18:37:47 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
+        id S235461AbhDASW7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:22:59 -0400
+Received: from mga14.intel.com ([192.55.52.115]:59020 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237333AbhDASLw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 14:11:52 -0400
+IronPort-SDR: DMIfi0CH7UekL36xFEXsfGtGA9OWVePn0H7AGa7SkFBlmdDoip8LTAdBUZ15LC22tueHE4RYjr
+ QE7stDsM7ysQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="191782557"
+X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
+   d="scan'208";a="191782557"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:06:25 -0700
+IronPort-SDR: Df3vkX/tq6o0sqSF+irExac4U+Rd9OJWaLRfQ2UN0Xykv6vY8SXvrrd4riQP3vx/Gp2eXaVjRh
+ PCTCNTbTl3ew==
+X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
+   d="scan'208";a="517438729"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 11:06:20 -0700
+Received: by lahna (sSMTP sendmail emulation); Thu, 01 Apr 2021 21:06:17 +0300
+Date:   Thu, 1 Apr 2021 21:06:17 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Henning Schild <henning.schild@siemens.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-pci@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com
+Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
+ support library
+Message-ID: <20210401180617.GL2542@lahna.fi.intel.com>
+References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+ <20210308122020.57071-4-andriy.shevchenko@linux.intel.com>
+ <20210313104557.321de08e@md1za8fc.ad001.siemens.net>
+ <YGXqDxSJhCO9bD1X@smile.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YGXqDxSJhCO9bD1X@smile.fi.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_init_capabilities() is the only caller and doesn't use the return
-value. So let's change the return type to void.
+On Thu, Apr 01, 2021 at 06:43:11PM +0300, Andy Shevchenko wrote:
+> On Sat, Mar 13, 2021 at 10:45:57AM +0100, Henning Schild wrote:
+> > Am Mon, 8 Mar 2021 14:20:16 +0200
+> > schrieb Andy Shevchenko <andriy.shevchenko@linux.intel.com>:
+> 
+> ...
+> 
+> > > + * pci_p2sb_bar - Get Primary to Sideband bridge (P2SB) device BAR
+> > > + * @pdev:	PCI device to get a PCI bus to communicate with
+> > > + * @devfn:	PCI slot and function to communicate with
+> > > + * @mem:	memory resource to be filled in
+> > 
+> > Do we really need that many arguments to it?
+> > 
+> > Before i had, in a platform driver that never had its own pci_dev or bus
+> > 
+> >   res->start = simatic_ipc_get_membase0(PCI_DEVFN(13, 0));
+> >   if (res-start == 0)
+> >     return -ENODEV;
+> > 
+> > So helper only asked for the devfn, returned base and no dedicated
+> > error code.
+> > 
+> > With this i need
+> > 
+> >   struct pci_bus *bus = pci_find_bus(0, 0);
+> >   struct pci_dev *pci_dev = bus->self;
+> >   unsigned int magic_i_do_not_want =  PCI_DEVFN(13, 0);
+> 
+> What confuses me is the use for SPI NOR controller on Broxton. And I think
+> we actually can indeed hide all this under the hood by exposing P2SB to the OS.
+> 
+> Mika, what do you think?
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/pci/pci.h | 2 +-
- drivers/pci/vpd.c | 7 +++----
- 2 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index bbbc55965..ff0f4aeef 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -141,7 +141,7 @@ static inline bool pcie_downstream_port(const struct pci_dev *dev)
- 	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
- }
- 
--int pci_vpd_init(struct pci_dev *dev);
-+void pci_vpd_init(struct pci_dev *dev);
- void pci_vpd_release(struct pci_dev *dev);
- 
- /* PCI Virtual Channel */
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 48f4a9ae8..85889718a 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -337,18 +337,18 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.write = pci_vpd_f0_write,
- };
- 
--int pci_vpd_init(struct pci_dev *dev)
-+void pci_vpd_init(struct pci_dev *dev)
- {
- 	struct pci_vpd *vpd;
- 	u8 cap;
- 
- 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	if (!cap)
--		return -ENODEV;
-+		return;
- 
- 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
- 	if (!vpd)
--		return -ENOMEM;
-+		return;
- 
- 	vpd->len = PCI_VPD_MAX_SIZE;
- 	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
-@@ -360,7 +360,6 @@ int pci_vpd_init(struct pci_dev *dev)
- 	vpd->busy = 0;
- 	vpd->valid = 0;
- 	dev->vpd = vpd;
--	return 0;
- }
- 
- void pci_vpd_release(struct pci_dev *dev)
--- 
-2.31.1
-
-
+Not sure I follow. Do you mean we force unhide P2SB and then bind (MFD)
+driver to that?
