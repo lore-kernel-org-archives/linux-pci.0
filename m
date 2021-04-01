@@ -2,112 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C740C43470
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:45:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28307C433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AB8A60FED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:45:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0072360FED
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235377AbhDASpQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:45:16 -0400
-Received: from mga05.intel.com ([192.55.52.43]:63637 "EHLO mga05.intel.com"
+        id S237722AbhDASrB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:47:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38154 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237593AbhDASho (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 14:37:44 -0400
-IronPort-SDR: DBRHA8ad8cfXh7D8L2eIVs4X6MpbWGm8fln6prJF3nNbWB2ljPZQ8VzC3i7kkCvrkRe/xIzLh3
- u/r9L/6m8kaQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="277457339"
-X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="277457339"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 08:43:18 -0700
-IronPort-SDR: 2pgC/2XvpsQ6arvCckvZv4G5JVCsE5cF0RoD2BuJXuxZuisHgV7En4ZsKMzypSTd1o8j+9m2q3
- +K0odndjwu2w==
-X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="446315995"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 08:43:14 -0700
-Received: from andy by smile with local (Exim 4.94)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1lRzTT-000ID7-8B; Thu, 01 Apr 2021 18:43:11 +0300
-Date:   Thu, 1 Apr 2021 18:43:11 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Henning Schild <henning.schild@siemens.com>
-Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Jean Delvare <jdelvare@suse.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Tan Jui Nee <jui.nee.tan@intel.com>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Jonathan Yong <jonathan.yong@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-pci@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
- support library
-Message-ID: <YGXqDxSJhCO9bD1X@smile.fi.intel.com>
-References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
- <20210308122020.57071-4-andriy.shevchenko@linux.intel.com>
- <20210313104557.321de08e@md1za8fc.ad001.siemens.net>
+        id S238558AbhDASo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 14:44:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 769D66112D;
+        Thu,  1 Apr 2021 12:27:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617280061;
+        bh=6hbeoJ4IU0VAYkOxOutAUGEasgxae6JptOzfhG1Kkfc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IKEIEtKNXNCtYYmT5WvsSYESDz2+fglABxfVImzWJebuOYggWp+qEKUuAmnddpoxN
+         CFqyOL18PjAK9dpeO7E8cAIVdZ+IJAHRlguVex37xyKPUy2hVzlAhlZf7MEznyHHat
+         Iz0ZwzkKf7A6GQCjN4B+jA4DOO93J00hO8M5C1FCS+TJJ3J1JPVw1mxiOx9Gmko9Rm
+         O2BZaVrujhcTB3Eqi5BnyymxM6xT0rxZRU5weGSr9end4PIMoT5PY45cblzSgICzpy
+         ZQLD0EGUcnn0ZaCH5Uw5TbRzK/zU0peIX8X9WxZ7Lm/8JTY72iHpcccyx5+//3hAUI
+         RFIqe9HkabqEQ==
+Date:   Thu, 1 Apr 2021 15:27:37 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Raphael Norwitz <raphael.norwitz@nutanix.com>
+Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "ameynarkhede03@gmail.com" <ameynarkhede03@gmail.com>
+Subject: Re: [PATCH] PCI: merge slot and bus reset implementations
+Message-ID: <YGW8Oe9jn+n9sVsw@unreal>
+References: <20210401053656.16065-1-raphael.norwitz@nutanix.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210313104557.321de08e@md1za8fc.ad001.siemens.net>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20210401053656.16065-1-raphael.norwitz@nutanix.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Mar 13, 2021 at 10:45:57AM +0100, Henning Schild wrote:
-> Am Mon, 8 Mar 2021 14:20:16 +0200
-> schrieb Andy Shevchenko <andriy.shevchenko@linux.intel.com>:
-
-...
-
-> > + * pci_p2sb_bar - Get Primary to Sideband bridge (P2SB) device BAR
-> > + * @pdev:	PCI device to get a PCI bus to communicate with
-> > + * @devfn:	PCI slot and function to communicate with
-> > + * @mem:	memory resource to be filled in
+On Thu, Apr 01, 2021 at 05:37:16AM +0000, Raphael Norwitz wrote:
+> Slot resets are bus resets with additional logic to prevent a device
+> from being removed during the reset. Currently slot and bus resets have
+> separate implementations in pci.c, complicating higher level logic. As
+> discussed on the mailing list, they should be combined into a generic
+> function which performs an SBR. This change adds a function,
+> pci_reset_bus_function(), which first attempts a slot reset and then
+> attempts a bus reset if -ENOTTY is returned, such that there is now a
+> single device agnostic function to perform an SBR.
 > 
-> Do we really need that many arguments to it?
+> This new function is also needed to add SBR reset quirks and therefore
+> is exposed in pci.h.
 > 
-> Before i had, in a platform driver that never had its own pci_dev or bus
+> Link: https://lkml.org/lkml/2021/3/23/911
 > 
->   res->start = simatic_ipc_get_membase0(PCI_DEVFN(13, 0));
->   if (res-start == 0)
->     return -ENODEV;
+> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
+> Signed-off-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
+> ---
+>  drivers/pci/pci.c   | 17 +++++++++--------
+>  include/linux/pci.h |  1 +
+>  2 files changed, 10 insertions(+), 8 deletions(-)
 > 
-> So helper only asked for the devfn, returned base and no dedicated
-> error code.
-> 
-> With this i need
-> 
->   struct pci_bus *bus = pci_find_bus(0, 0);
->   struct pci_dev *pci_dev = bus->self;
->   unsigned int magic_i_do_not_want =  PCI_DEVFN(13, 0);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 16a17215f633..12a91af2ade4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4982,6 +4982,13 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+>  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+>  }
+>  
+> +int pci_reset_bus_function(struct pci_dev *dev, int probe)
+> +{
+> +	int rc = pci_dev_reset_slot_function(dev, probe);
+> +
+> +	return (rc == -ENOTTY) ? pci_parent_bus_reset(dev, probe) : rc;
 
-What confuses me is the use for SPI NOR controller on Broxton. And I think
-we actually can indeed hide all this under the hood by exposing P2SB to the OS.
-
-Mika, what do you think?
-
-> I guess that second devfn is for devices behind that bridge. So
-> unhiding it might reveal several devices?
-
-Good question. I need a device where actually this happens (hidden P2SB stuff
-with let's say SPI NOR there) to see how it looks like in such case. I only
-understood the GPIO part. But I'm not so sure anymore.
-
-> But when caring about that
-> p2sb do i really need to know its devfn. If so i would like to get
-
--- 
-With Best Regards,
-Andy Shevchenko
+The previous coding style is preferable one in the Linux kernel.
+int rc = pci_dev_reset_slot_function(dev, probe);
+if (rc != -ENOTTY)
+  return rc;
+return pci_parent_bus_reset(dev, probe);
 
 
+> +}
+> +
+>  static void pci_dev_lock(struct pci_dev *dev)
+>  {
+>  	pci_cfg_access_lock(dev);
+> @@ -5102,10 +5109,7 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+>  	rc = pci_pm_reset(dev, 0);
+>  	if (rc != -ENOTTY)
+>  		return rc;
+> -	rc = pci_dev_reset_slot_function(dev, 0);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	return pci_parent_bus_reset(dev, 0);
+> +	return pci_reset_bus_function(dev, 0);
+>  }
+>  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+>  
+> @@ -5135,13 +5139,10 @@ int pci_probe_reset_function(struct pci_dev *dev)
+>  	if (rc != -ENOTTY)
+>  		return rc;
+>  	rc = pci_pm_reset(dev, 1);
+> -	if (rc != -ENOTTY)
+> -		return rc;
+> -	rc = pci_dev_reset_slot_function(dev, 1);
+>  	if (rc != -ENOTTY)
+>  		return rc;
+>  
+> -	return pci_parent_bus_reset(dev, 1);
+> +	return pci_reset_bus_function(dev, 1);
+>  }
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 86c799c97b77..979d54335ac1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1228,6 +1228,7 @@ int pci_probe_reset_bus(struct pci_bus *bus);
+>  int pci_reset_bus(struct pci_dev *dev);
+>  void pci_reset_secondary_bus(struct pci_dev *dev);
+>  void pcibios_reset_secondary_bus(struct pci_dev *dev);
+> +int pci_reset_bus_function(struct pci_dev *dev, int probe);
+>  void pci_update_resource(struct pci_dev *dev, int resno);
+>  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+> -- 
+> 2.20.1
