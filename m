@@ -2,118 +2,132 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5A2DC43462
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFD51C433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B8066023C
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE39B601FC
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237325AbhDASW7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:22:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36930 "EHLO
+        id S237366AbhDASXA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:23:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238572AbhDASOr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 14:14:47 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AD22C0613B4
-        for <linux-pci@vger.kernel.org>; Thu,  1 Apr 2021 05:04:25 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id r10-20020a05600c35cab029010c946c95easo769474wmq.4
-        for <linux-pci@vger.kernel.org>; Thu, 01 Apr 2021 05:04:25 -0700 (PDT)
+        with ESMTP id S239232AbhDASPs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 14:15:48 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16006C03114F
+        for <linux-pci@vger.kernel.org>; Thu,  1 Apr 2021 09:44:40 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id j7so2483707wrd.1
+        for <linux-pci@vger.kernel.org>; Thu, 01 Apr 2021 09:44:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=LU2QGi1y2AeEk2lgB60SVhXreDrajjklTU6JlxJPWE4=;
-        b=VZ1hELN0g34f705ivCVi4xQjpXQvTtRtuEIaFFaRVx5xmVJ+dSTPZv6yn4yoVs0iw/
-         bZJercOGWsA8ccu/AtXn/+7fwl9SsabnLyEl9UUBjkoN2/RiJ8usc7TbTn6AjTff7idX
-         ltznsvMboIqJ8/G+NSFSjOPCDKRPq/JXn10UJy3wfflae/5RF/VmYySG3JjXANei+iZ6
-         g/mkTmzz+mFnx6QA1z7PMXpiBgYLBy8YeNRVcjWJAfjENnCl/gv3qxAad5vyTn4C2+kx
-         OUJTOlVohTUUga9IbDC8+BmxrKUaunVkaVD+B8sxgd0gP06nfVJcJTR5FAILcPf590k7
-         5q8A==
+        bh=bgXjFPEoVaKS4YN67IbL3DtnNePGHAFX/A1y+wQ+Nhw=;
+        b=je19boQ1u0Vem3uvE5ckt396JTGv5v1CMLlH4c0OnvUrEftWESjKcJSLueNIMCMNmp
+         92iOA4MnavdJpmP1GjsCBELLAoxftCVSIweIHq6IG+SUmP7TUJN5MzxaNlc8IcepOpR6
+         Drtv2d0txSKaaiMG3d9egeDF+RViJitEWtm7wken0Fo+E3zvJAUS3W1VKTqK9mcMIf8y
+         MFJYM0u2fVOzULMiTQyMvwgysqkk24LHRmxB742JoCkb4ZNLUu9v+D9vlPaZY1e4GvwA
+         tu+Seh1OHL8E4N3xjk194iuTPTkWwBUxJNeJyo2tD308A51ukRSosd1F9MgjjAsVuCp/
+         R4gQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=LU2QGi1y2AeEk2lgB60SVhXreDrajjklTU6JlxJPWE4=;
-        b=gHlVY7qroid5crcjRQVogDHKHXPwfh98tAuxBGtnpljJJNZ5uPi97JAtnoWcjvMOfN
-         uWPz6rTAJje+13XkrnXIiWKktpiede4EqawHF7GSWScdOr6kbiiLUMSgtFiphwsYZOhR
-         r3gX7D7hz6qwhI+idr4j9406HCg3vAFQVuQxdKHeUEm8qRCB7W3cq2QCu3D8aOtuqHz5
-         WO7l/ZhDO18cE6b374Wwta76KvVYXJEMYpCk6Bn/wofINUhyE1Ma3maCeFDyP4jsviob
-         mR4LFx+dDAI4N44FNwyNHtITQDJMZnTUKZTPBjxNnTg39Ev2lh4LV5xnC6+Rp+PzwnIa
-         PWXQ==
-X-Gm-Message-State: AOAM532Y8rBh/xdvy9jxlXDbnLj0auacFKjRAiuRxX0mkLq0zIMMdXqi
-        nTa7ZB/nmOD36eGEOlRg8h4pE72p4BJV8g==
-X-Google-Smtp-Source: ABdhPJxhMojNtUGZEqELnNUzMtY+79uMElwYN8BdxW23qmZHVb8z5a0FHl9CcXEesRbBpIsETRHkJg==
-X-Received: by 2002:a7b:cb90:: with SMTP id m16mr7716619wmi.162.1617278663611;
-        Thu, 01 Apr 2021 05:04:23 -0700 (PDT)
+        bh=bgXjFPEoVaKS4YN67IbL3DtnNePGHAFX/A1y+wQ+Nhw=;
+        b=MHFwsR/5KwOIfg5WMbvbnYRQVzu60HmW3MzGog3ViUVS7miW8pqMjwAx1hHrgdstXz
+         /DSF8CeUlNoKc483NeVVxLza/qxilLBeSwl9cUTKI/r7rG3o87S3+xUlPlsMg2wGqtLu
+         oZs6TBsPe7lwyo/bwDdqMdkSjwALVdYP5/1Lbs8Y2hu8XY9e7g4EbcnEn1Nnbp0xn1nD
+         aq+f/e6LMP5BxyEao8okOkE/ddXuZChN0QfOVConVAGG0EvOHX2w2447eWkqTP6PC8vf
+         WkRQvYDgwWG+ibeH4NIBvXBQ043mOlUH8SCJ4smu8mncF1J2sL+ycgdxVvtPJMNQGqFv
+         eUPA==
+X-Gm-Message-State: AOAM532cMhRt5fQKiqCXdQ+yvX5AxlvT5lAz1l/Wxi9x6NY0YCAMsXBa
+        2fDZpJ6lS7cwvqlGwVh1pog7rgMsUIIrWg==
+X-Google-Smtp-Source: ABdhPJxhGXXHDJNl/7F6ep81YKiWZmX5kPbn1VqqRG2VKNzfx+SJ6yMRaMnvW+N1bfijOpJxef09qA==
+X-Received: by 2002:adf:e481:: with SMTP id i1mr11165085wrm.63.1617295478442;
+        Thu, 01 Apr 2021 09:44:38 -0700 (PDT)
 Received: from ?IPv6:2003:ea:8f1f:bb00:5544:e633:d47e:4b76? (p200300ea8f1fbb005544e633d47e4b76.dip0.t-ipconnect.de. [2003:ea:8f1f:bb00:5544:e633:d47e:4b76])
-        by smtp.googlemail.com with ESMTPSA id p16sm12014849wrt.54.2021.04.01.05.04.22
+        by smtp.googlemail.com with ESMTPSA id p12sm10524126wrx.28.2021.04.01.09.44.35
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Apr 2021 05:04:23 -0700 (PDT)
-Subject: Re: [PATCH] PCI/VPD: Silence warning if optional VPD PROM is missing
+        Thu, 01 Apr 2021 09:44:37 -0700 (PDT)
+Subject: [PATCH 3/3] PCI/VPD: Improve and simplify pci_vpd_find_tag
 From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20210330195611.GA1305306@bjorn-Precision-5520>
- <541f7965-b981-c277-21b5-6de0a47118ac@gmail.com>
-Message-ID: <ef281028-a1b2-483a-ac61-b876550aed95@gmail.com>
-Date:   Thu, 1 Apr 2021 14:04:17 +0200
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
+Message-ID: <3f63f06f-734f-8fff-9518-27fe1faf903d@gmail.com>
+Date:   Thu, 1 Apr 2021 18:44:15 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.0
 MIME-Version: 1.0
-In-Reply-To: <541f7965-b981-c277-21b5-6de0a47118ac@gmail.com>
+In-Reply-To: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31.03.2021 13:14, Heiner Kallweit wrote:
-> On 30.03.2021 21:56, Bjorn Helgaas wrote:
->> On Sun, Mar 07, 2021 at 10:34:25PM +0100, Heiner Kallweit wrote:
->>> On 07.03.2021 19:27, Krzysztof Wilczyński wrote:
->>>> Hi Heiner,
->>>>
->>>>> Realtek RTL8169/8168/8125 NIC families indicate VPD capability and an
->>>>> optional VPD EEPROM can be connected via I2C/SPI. However I haven't
->>>>> seen any card or system with such a VPD EEPROM yet. The missing EEPROM
->>>>> causes the following warning whenever e.g. lscpi -vv is executed.
->>>>>
->>>>> invalid short VPD tag 00 at offset 01
->>>>>
->>>>> The warning confuses users, I think we should handle the situation more
->>>>> gentle. Therefore, if first VPD byte is read as 0x00, assume a missing
->>>>> optional VPD PROM as and silently set the VPD length to 0.
->>>> [...]
->>>>
->>>> True.  I saw people on different forum and IRC asking for clarification
->>>> assuming their NIC broke, or that something is wrong, so this would
->>>> indeed save them some worry, nice!
->>>>
->>>> Having said that, I also saw this particular warning showing up for some
->>>> storage controllers (often some SAS cards), so a question here: would it
->>>> warrant adding a pci_dbg() with an appropriate message rather than just
->>>> returning 0?  I wonder if this might be useful for someone who is trying
->>>> to troubleshoot and/or debug some issues with their device.
->>>>
->>>> What do you think?
->>>>
->>> I don't have a strong opinion here, but yes, that's something we could do.
->>
->> How about if we just downgrade the pci_warn() to a pci_info()?
->>
-> pci_info() would still expose a quite cryptic message to users and leave
-> them with the question whether something is wrong. If in case of VPD tag 00
-> a message is desired, I'd say it should be rephrased to something like:
-> "VPD tag 00 at offset 01, assuming missing optional VPD EPROM"
-> 
+Only SRDT tag is the end tag, and no caller is interested in it.
+This allows to remove all SRDT tag handling.
 
-I submitted a v2 with this change.
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ drivers/pci/vpd.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 5b80db02d..45f1d73f8 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -369,33 +369,14 @@ void pci_vpd_release(struct pci_dev *dev)
+ 
+ int pci_vpd_find_tag(const u8 *buf, unsigned int len, u8 rdt)
+ {
+-	int i;
+-
+-	for (i = 0; i < len; ) {
+-		u8 val = buf[i];
+-
+-		if (val & PCI_VPD_LRDT) {
+-			/* Don't return success of the tag isn't complete */
+-			if (i + PCI_VPD_LRDT_TAG_SIZE > len)
+-				break;
++	int i = 0;
+ 
+-			if (val == rdt)
+-				return i;
+-
+-			i += PCI_VPD_LRDT_TAG_SIZE +
+-			     pci_vpd_lrdt_size(&buf[i]);
+-		} else {
+-			u8 tag = val & ~PCI_VPD_SRDT_LEN_MASK;
+-
+-			if (tag == rdt)
+-				return i;
+-
+-			if (tag == PCI_VPD_SRDT_END)
+-				break;
++	/* look for LRDT tags only, end tag is the only SRDT tag */
++	while (i + PCI_VPD_LRDT_TAG_SIZE <= len && buf[i] & PCI_VPD_LRDT) {
++		if (buf[i] == rdt)
++			return i;
+ 
+-			i += PCI_VPD_SRDT_TAG_SIZE +
+-			     pci_vpd_srdt_size(&buf[i]);
+-		}
++		i += PCI_VPD_LRDT_TAG_SIZE + pci_vpd_lrdt_size(buf + i);
+ 	}
+ 
+ 	return -ENOENT;
+-- 
+2.31.1
+
+
