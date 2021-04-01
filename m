@@ -2,269 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04668C433ED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1394EC43460
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D842F60201
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5FCB61105
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237440AbhDASXE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:23:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37852 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237284AbhDASTE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 14:19:04 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAADCC03114E;
-        Thu,  1 Apr 2021 09:44:36 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id d191so1362600wmd.2;
-        Thu, 01 Apr 2021 09:44:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:references:subject:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=dsZYTG5YjRYIylzLECh8VUqy5Nq7ENfTH8PmA/1aukE=;
-        b=SEp0n4y/wxztrOXia6Y2ncc4SWEsVWT0v7PfduwVzHDoszXd3cSTsNhzauJy9QheWF
-         2QcGmVSNCcLLEoY0Mo42isZ1onV2bDIwLw51pQr7Zlc+nompdU7A7QKXUbV55bakOgwI
-         pW0wzL8f0ZWA+B4RSHKBhLOzyE4hZRgGz3YXNg0yk0uUUkGGjc95Uuo5fZ4qhkKOAFDl
-         Kc5XvNr4Q+3Izlj8gn1qsP5bDIkWOSIf8jn7kQ1KwBQUaeaAwldb8bDx2dr3qcB1yR8l
-         TncTSn09jqv36lKcdrTmcUs1DspNnPomDa5iaC5247OJKiBPa+/vdmjssyY/OkeL4qSx
-         W0hg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:references:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=dsZYTG5YjRYIylzLECh8VUqy5Nq7ENfTH8PmA/1aukE=;
-        b=U9DV6qPf6wRrVDxmZOiv1hsAWyTe66GQKAdzZq5Y1ZGEC3KMsq16WRYNVl+aF3A+ru
-         3RMIZyFJxzzVBnPUU1BO6RfYpZEDLDJQyGMqQl+qRem1B0HHzlfO0Q7R+QqfZf8T8LyP
-         NyqhBN9q8J8OxS63KzLZhPXdIR3/hmuzoQgrBYzNfRc9uiJ/7exqCb9R3TIVhn8OV9RE
-         FSp5sVtQb9CaCU8ciMW6dm+w1/5kk2G83SaWFqppCP4fIYDiEcUmaX+8fwkxhE6xi8a7
-         CpJJFTWs2Z36pWRYZ0ceTd5sql/qBSF8Pp71Ki0ylcmldOvPvmjhHG9K6/YuAlSUVcaX
-         uRXA==
-X-Gm-Message-State: AOAM532xK4RQ14JfLjLF39wjac4BVWIHDFCwidsWQIhQ+76EA21EuDYJ
-        5UBEdmTGR4nOXilRnd8wbz3QG42FC6c49A==
-X-Google-Smtp-Source: ABdhPJzuWtuDjAu1sovzH17Gr8k8/fS+vntCAbg4BsS+EF8kjJ/UPRNArdTs1HXXEGzifhnk4+3qvg==
-X-Received: by 2002:a05:600c:ac2:: with SMTP id c2mr8394938wmr.23.1617295474784;
-        Thu, 01 Apr 2021 09:44:34 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f1f:bb00:5544:e633:d47e:4b76? (p200300ea8f1fbb005544e633d47e4b76.dip0.t-ipconnect.de. [2003:ea:8f1f:bb00:5544:e633:d47e:4b76])
-        by smtp.googlemail.com with ESMTPSA id c8sm8863953wmb.34.2021.04.01.09.44.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Apr 2021 09:44:32 -0700 (PDT)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
-        David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Ariel Elior <aelior@marvell.com>,
-        Sudarsana Kalluru <skalluru@marvell.com>,
-        GR-everest-linux-l2@marvell.com,
-        Michael Chan <michael.chan@broadcom.com>,
-        Siva Reddy Kallam <siva.kallam@broadcom.com>,
-        Prashant Sreedharan <prashant@broadcom.com>,
-        Raju Rangoju <rajur@chelsio.com>,
-        Edward Cree <ecree.xilinx@gmail.com>,
-        Martin Habets <habetsm.xilinx@gmail.com>,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>
-References: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
-Subject: [PATCH 2/3] PCI/VPD: Remove argument off from pci_vpd_find_tag
-Message-ID: <f62e6e19-5423-2ead-b2bd-62844b23ef8f@gmail.com>
-Date:   Thu, 1 Apr 2021 18:43:15 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
+        id S234114AbhDASf7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:35:59 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([185.58.85.151]:48755 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238089AbhDASYT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 14:24:19 -0400
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-121-k3M7_sOBMMSUMd0vtI6_sg-1; Thu, 01 Apr 2021 15:23:18 +0100
+X-MC-Unique: k3M7_sOBMMSUMd0vtI6_sg-1
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
+ AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
+ Server (TLS) id 15.0.1497.2; Thu, 1 Apr 2021 15:23:17 +0100
+Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
+ AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
+ 15.00.1497.012; Thu, 1 Apr 2021 15:23:17 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     "'Rafael J. Wysocki'" <rafael@kernel.org>
+CC:     Bjorn Helgaas <helgaas@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Xiaofei Tan <tanxiaofei@huawei.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linuxarm@openeuler.org" <linuxarm@openeuler.org>
+Subject: RE: [PATCH v2 04/15] ACPI: table: replace __attribute__((packed)) by
+ __packed
+Thread-Topic: [PATCH v2 04/15] ACPI: table: replace __attribute__((packed)) by
+ __packed
+Thread-Index: AQHXJlJheusKxfb1K0qiX/864DlgraqfWwQwgABDWwCAABZkEA==
+Date:   Thu, 1 Apr 2021 14:23:17 +0000
+Message-ID: <a0ec3dbdffc145ac909089048e552eb6@AcuMS.aculab.com>
+References: <e0d626837e577e60f226b8bbf354bd8cbb1fe40a.camel@intel.com>
+ <20210331172210.GA1397554@bjorn-Precision-5520>
+ <100f5a45dae14c77b341b7f1c5ea1db0@AcuMS.aculab.com>
+ <CAJZ5v0jJ2XDYSwqP3AyKuUvuxhwuNwvk3Z=xwtAL3hG5uYGG-Q@mail.gmail.com>
+In-Reply-To: <CAJZ5v0jJ2XDYSwqP3AyKuUvuxhwuNwvk3Z=xwtAL3hG5uYGG-Q@mail.gmail.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-In-Reply-To: <1a0155ce-6c20-b653-d319-58e6505a1a40@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All callers pass 0 as offset. Therefore remove the parameter and use
-a fixed offset 0 in pci_vpd_find_tag().
-
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/net/ethernet/broadcom/bnx2.c             | 2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 3 +--
- drivers/net/ethernet/broadcom/bnxt/bnxt.c        | 2 +-
- drivers/net/ethernet/broadcom/tg3.c              | 4 ++--
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c       | 2 +-
- drivers/net/ethernet/sfc/efx.c                   | 2 +-
- drivers/net/ethernet/sfc/falcon/efx.c            | 2 +-
- drivers/pci/vpd.c                                | 4 ++--
- drivers/scsi/cxlflash/main.c                     | 3 +--
- include/linux/pci.h                              | 3 +--
- 10 files changed, 12 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
-index 3e8a179f3..c0986096c 100644
---- a/drivers/net/ethernet/broadcom/bnx2.c
-+++ b/drivers/net/ethernet/broadcom/bnx2.c
-@@ -8057,7 +8057,7 @@ bnx2_read_vpd_fw_ver(struct bnx2 *bp)
- 		data[i + 3] = data[i + BNX2_VPD_LEN];
- 	}
- 
--	i = pci_vpd_find_tag(data, 0, BNX2_VPD_LEN, PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag(data, BNX2_VPD_LEN, PCI_VPD_LRDT_RO_DATA);
- 	if (i < 0)
- 		goto vpd_done;
- 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-index 568013875..281b1c2e0 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-@@ -12206,8 +12206,7 @@ static void bnx2x_read_fwinfo(struct bnx2x *bp)
- 	/* VPD RO tag should be first tag after identifier string, hence
- 	 * we should be able to find it in first BNX2X_VPD_LEN chars
- 	 */
--	i = pci_vpd_find_tag(vpd_start, 0, BNX2X_VPD_LEN,
--			     PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag(vpd_start, BNX2X_VPD_LEN, PCI_VPD_LRDT_RO_DATA);
- 	if (i < 0)
- 		goto out_not_found;
- 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-index 6f1364212..4c517fe70 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-@@ -12719,7 +12719,7 @@ static void bnxt_vpd_read_info(struct bnxt *bp)
- 		goto exit;
- 	}
- 
--	i = pci_vpd_find_tag(vpd_data, 0, vpd_size, PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag(vpd_data, vpd_size, PCI_VPD_LRDT_RO_DATA);
- 	if (i < 0) {
- 		netdev_err(bp->dev, "VPD READ-Only not found\n");
- 		goto exit;
-diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
-index d23819299..b0e49643f 100644
---- a/drivers/net/ethernet/broadcom/tg3.c
-+++ b/drivers/net/ethernet/broadcom/tg3.c
-@@ -13016,7 +13016,7 @@ static int tg3_test_nvram(struct tg3 *tp)
- 	if (!buf)
- 		return -ENOMEM;
- 
--	i = pci_vpd_find_tag((u8 *)buf, 0, len, PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag((u8 *)buf, len, PCI_VPD_LRDT_RO_DATA);
- 	if (i > 0) {
- 		j = pci_vpd_lrdt_size(&((u8 *)buf)[i]);
- 		if (j < 0)
-@@ -15629,7 +15629,7 @@ static void tg3_read_vpd(struct tg3 *tp)
- 	if (!vpd_data)
- 		goto out_no_vpd;
- 
--	i = pci_vpd_find_tag(vpd_data, 0, vpdlen, PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag(vpd_data, vpdlen, PCI_VPD_LRDT_RO_DATA);
- 	if (i < 0)
- 		goto out_not_found;
- 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-index 98829e482..ef5d10e1c 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-@@ -2774,7 +2774,7 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
- 	if (id_len > ID_LEN)
- 		id_len = ID_LEN;
- 
--	i = pci_vpd_find_tag(vpd, 0, VPD_LEN, PCI_VPD_LRDT_RO_DATA);
-+	i = pci_vpd_find_tag(vpd, VPD_LEN, PCI_VPD_LRDT_RO_DATA);
- 	if (i < 0) {
- 		dev_err(adapter->pdev_dev, "missing VPD-R section\n");
- 		ret = -EINVAL;
-diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
-index 36c8625a6..c746ca723 100644
---- a/drivers/net/ethernet/sfc/efx.c
-+++ b/drivers/net/ethernet/sfc/efx.c
-@@ -920,7 +920,7 @@ static void efx_probe_vpd_strings(struct efx_nic *efx)
- 	}
- 
- 	/* Get the Read only section */
--	ro_start = pci_vpd_find_tag(vpd_data, 0, vpd_size, PCI_VPD_LRDT_RO_DATA);
-+	ro_start = pci_vpd_find_tag(vpd_data, vpd_size, PCI_VPD_LRDT_RO_DATA);
- 	if (ro_start < 0) {
- 		netif_err(efx, drv, efx->net_dev, "VPD Read-only not found\n");
- 		return;
-diff --git a/drivers/net/ethernet/sfc/falcon/efx.c b/drivers/net/ethernet/sfc/falcon/efx.c
-index f89799919..5e7a57b68 100644
---- a/drivers/net/ethernet/sfc/falcon/efx.c
-+++ b/drivers/net/ethernet/sfc/falcon/efx.c
-@@ -2800,7 +2800,7 @@ static void ef4_probe_vpd_strings(struct ef4_nic *efx)
- 	}
- 
- 	/* Get the Read only section */
--	ro_start = pci_vpd_find_tag(vpd_data, 0, vpd_size, PCI_VPD_LRDT_RO_DATA);
-+	ro_start = pci_vpd_find_tag(vpd_data, vpd_size, PCI_VPD_LRDT_RO_DATA);
- 	if (ro_start < 0) {
- 		netif_err(efx, drv, efx->net_dev, "VPD Read-only not found\n");
- 		return;
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 85889718a..5b80db02d 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -367,11 +367,11 @@ void pci_vpd_release(struct pci_dev *dev)
- 	kfree(dev->vpd);
- }
- 
--int pci_vpd_find_tag(const u8 *buf, unsigned int off, unsigned int len, u8 rdt)
-+int pci_vpd_find_tag(const u8 *buf, unsigned int len, u8 rdt)
- {
- 	int i;
- 
--	for (i = off; i < len; ) {
-+	for (i = 0; i < len; ) {
- 		u8 val = buf[i];
- 
- 		if (val & PCI_VPD_LRDT) {
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index dc36531d5..222593bc2 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -1649,8 +1649,7 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
- 	}
- 
- 	/* Get the read only section offset */
--	ro_start = pci_vpd_find_tag(vpd_data, 0, vpd_size,
--				    PCI_VPD_LRDT_RO_DATA);
-+	ro_start = pci_vpd_find_tag(vpd_data, vpd_size, PCI_VPD_LRDT_RO_DATA);
- 	if (unlikely(ro_start < 0)) {
- 		dev_err(dev, "%s: VPD Read-only data not found\n", __func__);
- 		rc = -ENODEV;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 51660ab67..56125397f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2311,14 +2311,13 @@ static inline u8 pci_vpd_info_field_size(const u8 *info_field)
- /**
-  * pci_vpd_find_tag - Locates the Resource Data Type tag provided
-  * @buf: Pointer to buffered vpd data
-- * @off: The offset into the buffer at which to begin the search
-  * @len: The length of the vpd buffer
-  * @rdt: The Resource Data Type to search for
-  *
-  * Returns the index where the Resource Data Type was found or
-  * -ENOENT otherwise.
-  */
--int pci_vpd_find_tag(const u8 *buf, unsigned int off, unsigned int len, u8 rdt);
-+int pci_vpd_find_tag(const u8 *buf, unsigned int len, u8 rdt);
- 
- /**
-  * pci_vpd_find_info_keyword - Locates an information field keyword in the VPD
--- 
-2.31.1
-
+RnJvbTogUmFmYWVsIEouIFd5c29ja2kNCj4gU2VudDogMDEgQXByaWwgMjAyMSAxNDo1MA0KLi4u
+DQo+IFNvIHdoYXQgZXhhY3RseSBpcyB3cm9uZyB3aXRoIHVzaW5nICJwYWNrZWQiPyAgSXQgaXMg
+d2F5IGVhc2llciB0bw0KPiB1bmRlcnN0YW5kIGZvciBhIGNhc3VhbCByZWFkZXIgb2YgdGhlIGNv
+ZGUuDQoNCkJlY2F1c2UgaXQgaXMgdXN1YWxseSB3cm9uZyENCg0KSWYgSSBoYXZlOg0KCXN0cnVj
+dCBmb28gew0KCQl1NjQgdmFsOw0KCX0gX19wYWNrZWQ7DQoNCkFuZCB0aGVuIGhhdmU6DQp1NjQg
+YmFyKHN0cnVjdCBmb28gKmZvbykNCnsNCglyZXR1cm4gZm9vLT52YWw7DQp9DQoNClRoZSBvbiBz
+b21lIGNwdSB0aGUgY29tcGlsZXIgaGFzIHRvIGdlbmVyYXRlIHRoZSBlcXVpdmFsZW50IG9mOg0K
+CXU4ICp4ID0gKHZvaWQgKikmZm9vLT52YWw7DQoJcmV0dXJuIHhbMF0gfCB4WzFdIDw8IDggfCB4
+WzJdIDw8IDE2IHwgeFszXSA8PCAyNCB8IHhbNF0gPDwgMzIgfCB4WzVdIDw8IDQwIHwgeFs2XSA8
+PCA0OCB8IHhbN10gPDwgNTY7DQoNCklmIHlvdSBjYW4gZ3VhcmFudGVlIHRoYXQgdGhlIHN0cnVj
+dHVyZSBpcyAzMmJpdCBhbGlnbmVkDQp0aGVuIGl0IGNhbiBnZW5lcmF0ZSB0aGUgc2ltcGxlcjoN
+Cgl1MzIgKnggPSAodm9pZCAqKSZmb28tPnZhbDsNCglyZXR1cm4geFswXSB8IHhbMV0gPDwgMzI7
+DQoNCihZZXMgSSd2ZSBtaXNzZWQgb3V0IHRoZSA2NC1iaXQgY2FzdHMpDQoNClRoaXMgaXMgd2h5
+IHlvdSBzaG91bGQgYWxtb3N0IG5ldmVyIHVzZSBfX3BhY2tlZC4NCg0KVGhlcmUgYXJlIGhpc3Rv
+cmljIHN0cnVjdHVyZXMgd2l0aCA2NCBiaXQgaXRlbXMgb24gNCBieXRlIGJvdW5kYXJpZXMNCihh
+bmQgMzIgYml0IHZhbHVlcyBvbiAyIGJ5dGUgYm91bmRhcmllcykuDQpUeXBpY2FsbHkgbW9zdCBv
+ZiB0aGUgZmllbGRzIGFyZSBzaG9ydGVyIHNvIGNhbiBiZSByZWFkIGRpcmVjdGx5DQooYWx0aG91
+Z2ggdGhleSBtaWdodCBuZWVkIGEgYnl0ZS1zd2FwcGluZyBsb2FkKS4NCg0KCURhdmlkDQoNCi0N
+ClJlZ2lzdGVyZWQgQWRkcmVzcyBMYWtlc2lkZSwgQnJhbWxleSBSb2FkLCBNb3VudCBGYXJtLCBN
+aWx0b24gS2V5bmVzLCBNSzEgMVBULCBVSw0KUmVnaXN0cmF0aW9uIE5vOiAxMzk3Mzg2IChXYWxl
+cykNCg==
 
