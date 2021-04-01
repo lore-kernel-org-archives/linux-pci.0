@@ -2,167 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E30C001B8
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3E0C001B9
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D4BB601FC
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B9D56100A
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236058AbhDASgC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:36:02 -0400
-Received: from mga18.intel.com ([134.134.136.126]:38549 "EHLO mga18.intel.com"
+        id S237035AbhDASgE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:36:04 -0400
+Received: from foss.arm.com ([217.140.110.172]:46726 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237776AbhDAS2B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 14:28:01 -0400
-IronPort-SDR: 4rlJk1Ud7zx+r0Vl5Egt8TW/D6/M40JraZao7/Jxxwam5JLpJy9BhL8LJtZdYdKDkWGwS7NOSG
- m5kMfn723F8A==
-X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="179789274"
-X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="179789274"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 07:30:42 -0700
-IronPort-SDR: H4pYbCLD2Atj4lnbzqm5H7RXdoGnmMB7d/Rc5Vxxar939NDhA5VOqTICrXrQPbsiq2vXVxr6KM
- AQYMzMK+1kZw==
-X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
-   d="scan'208";a="596359205"
-Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.25])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 07:30:42 -0700
-Subject: [PATCH v2 0/8] CXL Port Enumeration
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     linux-cxl@vger.kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        ira.weiny@intel.com, vishal.l.verma@intel.com,
-        alison.schofield@intel.com, ben.widawsky@intel.com,
-        linux-kernel@vger.kernel.org
-Date:   Thu, 01 Apr 2021 07:30:42 -0700
-Message-ID: <161728744224.2474040.12854720917440712854.stgit@dwillia2-desk3.amr.corp.intel.com>
-User-Agent: StGit/0.18-3-g996c
+        id S240340AbhDASaH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 14:30:07 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C4AD3D6E;
+        Thu,  1 Apr 2021 04:27:53 -0700 (PDT)
+Received: from e123427-lin.arm.com (unknown [10.57.56.129])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1D3193F694;
+        Thu,  1 Apr 2021 04:27:49 -0700 (PDT)
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <maz@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Frank Wunderlich <frank-w@public-files.de>,
+        Michal Simek <michal.simek@xilinx.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>, linux-pci@vger.kernel.org,
+        Thierry Reding <thierry.reding@gmail.com>,
+        linux-tegra@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        linux-mediatek@lists.infradead.org,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        linux-hyperv@vger.kernel.org, Will Deacon <will@kernel.org>,
+        kernel-team@android.com, Michael Kelley <mikelley@microsoft.com>,
+        linux-kernel@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-renesas-soc@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 00/14] PCI/MSI: Getting rid of msi_controller, and other cleanups
+Date:   Thu,  1 Apr 2021 12:27:42 +0100
+Message-Id: <161727636757.32506.11592578621890085687.b4-ty@arm.com>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20210330151145.997953-1-maz@kernel.org>
+References: <20210330151145.997953-1-maz@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Changes since v1 [1]:
-- Add stronger rationale for the 'struct cxl_regs' arrangement that
-  accommodates devices that compose register blocks mixing "component",
-  "device", and "memory device" register sets. (Christoph)
+On Tue, 30 Mar 2021 16:11:31 +0100, Marc Zyngier wrote:
+> This is a respin of the series described at [1].
+> 
+> * From v2 [2]:
+>   - Fixed the Xilinx driver, thanks to Bharat for testing it
+>   - Dropped the no_msi attribute, and solely rely on msi_domain, which
+>     has the same effect for the only platform that was using it.
+>   - Fixed compilation on architectures that do not select the generic
+>     MSI support
+> 
+> [...]
 
-- Reorganize root, address space, and port device creation into separate
-  'alloc' and 'add' steps.
+I have applied it to pci/msi and should be moved into -next shortly
+for further testing/visibility, thanks a lot for putting it together.
 
-- Rename "upstream_port" to "port_host". This is the PCI or ACPI device
-  that implements the CXL port capability.
+[01/14] PCI: tegra: Convert to MSI domains
+        https://git.kernel.org/lpieralisi/pci/c/973a28677e
+[02/14] PCI: rcar: Don't allocate extra memory for the MSI capture address
+        https://git.kernel.org/lpieralisi/pci/c/c244dc15dc
+[03/14] PCI: rcar: Convert to MSI domains
+        https://git.kernel.org/lpieralisi/pci/c/516286287d
+[04/14] PCI: xilinx: Don't allocate extra memory for the MSI capture address
+        https://git.kernel.org/lpieralisi/pci/c/cc8cf90738
+[05/14] PCI: xilinx: Convert to MSI domains
+        https://git.kernel.org/lpieralisi/pci/c/b66873599e
+[06/14] PCI: hv: Drop msi_controller structure
+        https://git.kernel.org/lpieralisi/pci/c/65b131816a
+[07/14] PCI/MSI: Drop use of msi_controller from core code
+        https://git.kernel.org/lpieralisi/pci/c/54729d2a7a
+[08/14] PCI/MSI: Kill msi_controller structure
+        https://git.kernel.org/lpieralisi/pci/c/27278a3fac
+[09/14] PCI/MSI: Kill default_teardown_msi_irqs()
+        https://git.kernel.org/lpieralisi/pci/c/f68f571db9
+[10/14] PCI/MSI: Let PCI host bridges declare their reliance on MSI domains
+        https://git.kernel.org/lpieralisi/pci/c/419150a4ff
+[11/14] PCI/MSI: Make pci_host_common_probe() declare its reliance on MSI domains
+        https://git.kernel.org/lpieralisi/pci/c/98be0634c8
+[12/14] PCI: mediatek: Advertise lack of built-in MSI handling
+        https://git.kernel.org/lpieralisi/pci/c/77cbd88c90
+[13/14] PCI/MSI: Document the various ways of ending up with NO_MSI
+        https://git.kernel.org/lpieralisi/pci/c/44ec480daf
+[14/14] PCI: Refactor HT advertising of NO_MSI flag
+        https://git.kernel.org/lpieralisi/pci/c/18d56e5afe
 
-- Rename @parent to @host in init routines to clarify the device that is
-  the context for devm from the device-model parent of the device being
-  created.
-
-- Rename port.cxl_regs_phys to port.component_regs_phys
-
-- Add initialization for
-  cxl_root.port.{target_id,component_regs_phys,port_host}, where
-  target_id and component_regs_phys are set to invalid values (do not
-  apply to cxl_root as the first port under root is the first actual
-  device in the system and port_host is the ACPI0017 device.
-
-
-[1]: http://lore.kernel.org/r/161662142382.1723715.5934723983022398253.stgit@dwillia2-desk3.amr.corp.intel.com
-
----
-
-This series is a preview of the proposed infrastructure for enabling
-dynamic mapping of Host-managed Device Memory (HDM) Decoders. It
-includes a not-for-upstream hack at the tail of the series to stand-in
-for the in-flight ACPICA enabling. The goal is to get review of the
-proposal in parallel with other in-flight dependencies. The next step
-after this is to add dynamic enumeration and assignment of HDM Decoders
-in coordination with per-cxl_port driver instances.
-
----
-
-The enumeration starts with the ACPI0017 driver registering a 'struct
-cxl_root' object to establish the top of a cxl_port topology. It then
-scans the ACPI bus looking for ACPI0016 instances. The cxl_root object
-is a singleton* anchor to hang "address-space" objects and be a parent
-device for the downstream 'struct cxl_port' instances. An address-space
-has a 1:1 relationship with a platform defined memory resource range,
-like _CRS for PCIE Host Bridges. Use module parameters to model a
-root-level HDM decoder that all downstream ports further decode, to be
-replaced with a Code First ECN to do the same.
-
-Each address space is modeled as a sysfs object that also shows up in
-/proc/iomem as "CXL Address Space". That iomem resource is functionally
-equivalent to the root-level 'PCI Bus' resources for PCIE.mmio while
-'CXL Address Space' indicates space for CXL.mem to be mapped. "System
-RAM" and "Persistent Memory", when mapped by HDM decoders, will appear
-as child CXL.mem resources.
-
-Once a 'struct cxl_root' is established the host bridge is modeled as 1
-upstream 'struct cxl_port' and N downstream 'struct cxl_port' instances
-(one per Root Port), just like a PCIE switch. The host-bridge upstream
-port optionally has the HDM decoder registers from the CHBCR if the
-host-bridge has multiple PCIE/CXL root ports. Single-ported host bridges
-will not have HDM decoders in the CHBCR space (see CHBCR note in
-8.2.5.12 CXL HDM Decoder Capability Structure), but the 'struct
-cxl_port' object is still needed to represent other CXL capabilities and
-access port-specific component registers outside of HDM decoders.
-
-Each 'struct cxl_port' has a 'target_id' attribute that answers the
-question "what port am I in my upstream port's HDM decoder target
-list?". For the host-bridge struct cxl_port, the first tier of ports
-below cxl_root.port, the id is derived from the ordinal mapping of the
-ACPI0016 id (instance id, _UID, or other handle TBD), for all other
-ports the id is the PCIE Root Port ID from the Link Capabilities
-register [1]. The mapping of ordinal port identifiers relative to their
-parent may change once libcxl and cxl-cli prove out region creation, or
-a better option is found to establish a static device path / persistent
-naming scheme. System software must not assume that 'struct cxl_port'
-device names will be static from one boot to the next.
-
-See patch7 for a tree(1) topology picture of what QEMU is producing
-today with this enabling.
-
-* cxl_root is singleton only by convention. A given cxl_root could
-  represent 1 to N address spaces, this patch set chooses to implement 1
-  cxl_root for all address spaces.
-
-[1]: CXL 2.0 8.2.5.12.8 CXL HDM Decoder 0 Target List Low Register
-     (Offset 24h) ...The Target Port Identifier for a given Downstream Port
-     is reported via Port Number field in Link Capabilities Register. (See
-     PCI Express Base Specification).
-
----
-
-Dan Williams (8):
-      cxl/mem: Move some definitions to mem.h
-      cxl/mem: Introduce 'struct cxl_regs' for "composable" CXL devices
-      cxl/core: Rename bus.c to core.c
-      cxl/core: Refactor CXL register lookup for bridge reuse
-      cxl/acpi: Introduce ACPI0017 driver and cxl_root
-      cxl/Kconfig: Default drivers to CONFIG_CXL_BUS
-      cxl/port: Introduce cxl_port objects
-      cxl/acpi: Add module parameters to stand in for ACPI tables
-
-
- Documentation/driver-api/cxl/memory-devices.rst |    6 
- drivers/cxl/Kconfig                             |   16 +
- drivers/cxl/Makefile                            |    6 
- drivers/cxl/acpi.c                              |  215 +++++++++
- drivers/cxl/bus.c                               |   29 -
- drivers/cxl/core.c                              |  553 +++++++++++++++++++++++
- drivers/cxl/cxl.h                               |  146 ++++--
- drivers/cxl/mem.c                               |   97 +---
- drivers/cxl/mem.h                               |   82 +++
- 9 files changed, 990 insertions(+), 160 deletions(-)
- create mode 100644 drivers/cxl/acpi.c
- delete mode 100644 drivers/cxl/bus.c
- create mode 100644 drivers/cxl/core.c
- create mode 100644 drivers/cxl/mem.h
-
-base-commit: a38fd8748464831584a19438cbb3082b5a2dab15
+Thanks,
+Lorenzo
