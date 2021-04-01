@@ -2,141 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28307C433ED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B2EC433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0072360FED
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B93160FD9
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 18:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237722AbhDASrB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 14:47:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38154 "EHLO mail.kernel.org"
+        id S237762AbhDASrH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 14:47:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38236 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238558AbhDASo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 14:44:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 769D66112D;
-        Thu,  1 Apr 2021 12:27:40 +0000 (UTC)
+        id S238937AbhDASpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 14:45:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7038A60FD9;
+        Thu,  1 Apr 2021 18:44:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617280061;
-        bh=6hbeoJ4IU0VAYkOxOutAUGEasgxae6JptOzfhG1Kkfc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IKEIEtKNXNCtYYmT5WvsSYESDz2+fglABxfVImzWJebuOYggWp+qEKUuAmnddpoxN
-         CFqyOL18PjAK9dpeO7E8cAIVdZ+IJAHRlguVex37xyKPUy2hVzlAhlZf7MEznyHHat
-         Iz0ZwzkKf7A6GQCjN4B+jA4DOO93J00hO8M5C1FCS+TJJ3J1JPVw1mxiOx9Gmko9Rm
-         O2BZaVrujhcTB3Eqi5BnyymxM6xT0rxZRU5weGSr9end4PIMoT5PY45cblzSgICzpy
-         ZQLD0EGUcnn0ZaCH5Uw5TbRzK/zU0peIX8X9WxZ7Lm/8JTY72iHpcccyx5+//3hAUI
-         RFIqe9HkabqEQ==
-Date:   Thu, 1 Apr 2021 15:27:37 +0300
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Raphael Norwitz <raphael.norwitz@nutanix.com>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "ameynarkhede03@gmail.com" <ameynarkhede03@gmail.com>
-Subject: Re: [PATCH] PCI: merge slot and bus reset implementations
-Message-ID: <YGW8Oe9jn+n9sVsw@unreal>
-References: <20210401053656.16065-1-raphael.norwitz@nutanix.com>
+        s=k20201202; t=1617302687;
+        bh=RL6MbR40r24EeXnkcYUMQ3nSmn4dmp+zYjibZQ10bdE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=S36fqS/Q1wJv5C0HFOzveKApa4XGVXWPTCfC5BRSCDhnwxgMhs5rp7m27NvsAh0TY
+         /IumbtDUtolLdWlqohz+2vOEP/Q7zaSjWJWReSEXcAg6rorLrm3Fpis0xPKGi/mzMk
+         iL3ceVIFrIKt14zSh2yAymBRPCTId0iJRfhnQPSaEycra8zGJ6HC+QPUmVYJMJf2X+
+         pJtjfYgWwSiyIBVYKFrn0I2yNFNbogMg8RYsbvjX6f2rmuOhq8i7Wq2jy5ddilFr3Z
+         81LB9IXkJwnzwLgU0VJCVjr30HAQ9pmeftQ/HFL9KlbEzB7DoPrrJ6J5gpKB93W+kG
+         xEnr70mAP8z1g==
+Date:   Thu, 1 Apr 2021 13:44:46 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Henning Schild <henning.schild@siemens.com>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-pci@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com
+Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
+ support library
+Message-ID: <20210401184446.GA1528755@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210401053656.16065-1-raphael.norwitz@nutanix.com>
+In-Reply-To: <YGYPiCekM3clFEsD@smile.fi.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 05:37:16AM +0000, Raphael Norwitz wrote:
-> Slot resets are bus resets with additional logic to prevent a device
-> from being removed during the reset. Currently slot and bus resets have
-> separate implementations in pci.c, complicating higher level logic. As
-> discussed on the mailing list, they should be combined into a generic
-> function which performs an SBR. This change adds a function,
-> pci_reset_bus_function(), which first attempts a slot reset and then
-> attempts a bus reset if -ENOTTY is returned, such that there is now a
-> single device agnostic function to perform an SBR.
+On Thu, Apr 01, 2021 at 09:23:04PM +0300, Andy Shevchenko wrote:
+> On Thu, Apr 01, 2021 at 11:42:56AM -0500, Bjorn Helgaas wrote:
+> > On Thu, Apr 01, 2021 at 06:45:02PM +0300, Andy Shevchenko wrote:
+> > > On Tue, Mar 09, 2021 at 09:42:52AM +0100, Henning Schild wrote:
+> > > > Am Mon, 8 Mar 2021 19:42:21 -0600
+> > > > schrieb Bjorn Helgaas <helgaas@kernel.org>:
+> > > > > On Mon, Mar 08, 2021 at 09:16:50PM +0200, Andy Shevchenko wrote:
+> > > > > > On Mon, Mar 08, 2021 at 12:52:12PM -0600, Bjorn Helgaas wrote:  
+> > > > > > > On Mon, Mar 08, 2021 at 02:20:16PM +0200, Andy Shevchenko wrote:  
+> > > 
+> > > ...
+> > > 
+> > > > > > > > +	/* Read the first BAR of the device in question */
+> > > > > > > > +	__pci_bus_read_base(bus, devfn, pci_bar_unknown, mem,
+> > > > > > > > PCI_BASE_ADDRESS_0, true);  
+> > > > > > > 
+> > > > > > > I don't get this.  Apparently this normally hidden device is
+> > > > > > > consuming PCI address space.  The PCI core needs to know
+> > > > > > > about this.  If it doesn't, the PCI core may assign this
+> > > > > > > space to another device.  
+> > > > > > 
+> > > > > > Right, it returns all 1:s to any request so PCI core *thinks*
+> > > > > > it's plugged off (like D3cold or so).  
+> > > > > 
+> > > > > I'm asking about the MMIO address space.  The BAR is a register
+> > > > > in config space.  AFAICT, clearing P2SBC_HIDE_BYTE makes that
+> > > > > BAR visible.  The BAR describes a region of PCI address space.
+> > > > > It looks like setting P2SBC_HIDE_BIT makes the BAR disappear
+> > > > > from config space, but it sounds like the PCI address space
+> > > > > *described* by the BAR is still claimed by the device.  If the
+> > > > > device didn't respond to that MMIO space, you would have no
+> > > > > reason to read the BAR at all.
+> > > > > 
+> > > > > So what keeps the PCI core from assigning that MMIO space to
+> > > > > another device?
+> > > > 
+> > > > The device will respond to MMIO while being hidden. I am afraid
+> > > > nothing stops a collision, except for the assumption that the BIOS
+> > > > is always right and PCI devices never get remapped. But just
+> > > > guessing here.
+> > > > 
+> > > > I have seen devices with coreboot having the P2SB visible, and
+> > > > most likely relocatable. Making it visible in Linux and not hiding
+> > > > it again might work, but probably only as long as Linux will not
+> > > > relocate it.  Which i am afraid might seriously upset the BIOS,
+> > > > depending on what a device does with those GPIOs and which parts
+> > > > are implemented in the BIOS.
+> > > 
+> > > So the question is, do we have knobs in PCI core to mark device
+> > > fixes in terms of BARs, no relocation must be applied, no other
+> > > devices must have the region?
+> > 
+> > I think the closest thing is the IORESOURCE_PCI_FIXED bit that we use
+> > for things that must not be moved.  Generally PCI resources are
+> > associated with a pci_dev, and we set IORESOURCE_PCI_FIXED for BARs,
+> > e.g., dev->resource[n].  We do that for IDE legacy regions (see
+> > LEGACY_IO_RESOURCE), Langwell devices (pci_fixed_bar_fixup()),
+> > "enhanced allocation" (pci_ea_flags()), and some quirks (quirk_io()).
+> > 
+> > In your case, the device is hidden so it doesn't respond to config
+> > accesses, so there is no pci_dev for it.
 > 
-> This new function is also needed to add SBR reset quirks and therefore
-> is exposed in pci.h.
-> 
-> Link: https://lkml.org/lkml/2021/3/23/911
-> 
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
-> Signed-off-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
-> ---
->  drivers/pci/pci.c   | 17 +++++++++--------
->  include/linux/pci.h |  1 +
->  2 files changed, 10 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 16a17215f633..12a91af2ade4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4982,6 +4982,13 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
->  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
->  }
->  
-> +int pci_reset_bus_function(struct pci_dev *dev, int probe)
-> +{
-> +	int rc = pci_dev_reset_slot_function(dev, probe);
-> +
-> +	return (rc == -ENOTTY) ? pci_parent_bus_reset(dev, probe) : rc;
+> Yes, and the idea is to unhide it on the early stage.
+> Would it be possible to quirk it to fix the IO resources?
 
-The previous coding style is preferable one in the Linux kernel.
-int rc = pci_dev_reset_slot_function(dev, probe);
-if (rc != -ENOTTY)
-  return rc;
-return pci_parent_bus_reset(dev, probe);
+If I read your current patch right, it unhides the device, reads the
+BAR, then hides the device again.  I didn't see that it would create a
+pci_dev for it.
 
+If you unhide it and then enumerate it normally (and mark the BAR as
+IORESOURCE_PCI_FIXED to make sure we never move it), that might work.
+Then there should be a pci_dev for it, and it would then show up in
+sysfs, lspci, etc.  And we should insert the BAR in iomem_resource, so
+we should see it in /proc/iomem and we won't accidentally put
+something else on top of it.
 
-> +}
-> +
->  static void pci_dev_lock(struct pci_dev *dev)
->  {
->  	pci_cfg_access_lock(dev);
-> @@ -5102,10 +5109,7 @@ int __pci_reset_function_locked(struct pci_dev *dev)
->  	rc = pci_pm_reset(dev, 0);
->  	if (rc != -ENOTTY)
->  		return rc;
-> -	rc = pci_dev_reset_slot_function(dev, 0);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	return pci_parent_bus_reset(dev, 0);
-> +	return pci_reset_bus_function(dev, 0);
->  }
->  EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
->  
-> @@ -5135,13 +5139,10 @@ int pci_probe_reset_function(struct pci_dev *dev)
->  	if (rc != -ENOTTY)
->  		return rc;
->  	rc = pci_pm_reset(dev, 1);
-> -	if (rc != -ENOTTY)
-> -		return rc;
-> -	rc = pci_dev_reset_slot_function(dev, 1);
->  	if (rc != -ENOTTY)
->  		return rc;
->  
-> -	return pci_parent_bus_reset(dev, 1);
-> +	return pci_reset_bus_function(dev, 1);
->  }
->  
->  /**
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 86c799c97b77..979d54335ac1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1228,6 +1228,7 @@ int pci_probe_reset_bus(struct pci_bus *bus);
->  int pci_reset_bus(struct pci_dev *dev);
->  void pci_reset_secondary_bus(struct pci_dev *dev);
->  void pcibios_reset_secondary_bus(struct pci_dev *dev);
-> +int pci_reset_bus_function(struct pci_dev *dev, int probe);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+> > Maybe you could do some sort of quirk that allocates its own struct
+> > resource, fills it in, sets IORESOURCE_PCI_FIXED, and does something
+> > similar to pci_claim_resource()?
+> 
 > -- 
-> 2.20.1
+> With Best Regards,
+> Andy Shevchenko
+> 
+> 
