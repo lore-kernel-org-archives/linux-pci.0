@@ -2,129 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C55C43619
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:48:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7125AC43470
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:56:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2218F6101A
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:48:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DDE86112F
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:56:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234597AbhDARr6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 13:47:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58338 "EHLO
+        id S235919AbhDARz5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 13:55:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235020AbhDARmK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 13:42:10 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C36E7C0225A4
-        for <linux-pci@vger.kernel.org>; Thu,  1 Apr 2021 08:27:04 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id d191so1249437wmd.2
-        for <linux-pci@vger.kernel.org>; Thu, 01 Apr 2021 08:27:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=GaEJQ5/vSpkw3N9ro5IHQy88KDveSAJD4br6dNdWdn4=;
-        b=lfpzF1T/zwUWJJs+mEN8ZeTXirmdqdzYinbLKFA5iPOrjPWbnlenr42H7/10SqsUTg
-         ZOlpWGzF7oNlW7easxy1ZDqCucquTewm1LVichUfN2oK0/YreerJgqAHqCLcNxM7AS3E
-         Grrr8sf4sCWdMzmlqgK+0iQETY0jSSIIAAnpStVD9D5pqsB5gJNAiXCpKcKZpx5bwCox
-         /cZKgqsiKjmEqi2FjutHygIiUxuXd4u6CEuiTg00ceYCl6mgI1wk8yvh+7mDj3Dg91kP
-         CsrgXV8p6Xjvv1ijuQoOUnXcVlUsbXKLKmNhSY4NVW3EsogFX3pWR94TojZlzOLDI2Nc
-         me/A==
+        with ESMTP id S236050AbhDARtT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Apr 2021 13:49:19 -0400
+Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45371C08EC72;
+        Thu,  1 Apr 2021 06:50:06 -0700 (PDT)
+Received: by mail-oi1-x232.google.com with SMTP id v25so1834842oic.5;
+        Thu, 01 Apr 2021 06:50:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=GaEJQ5/vSpkw3N9ro5IHQy88KDveSAJD4br6dNdWdn4=;
-        b=WbBPdTkDAuYbcXg2GftaIGbrmdkLwpmdWSQVtMCeXx+3oFv788qDqINLZdY621j+Gj
-         vdPnQVkQAlLjzwaV7h2Heq5E6nHgbQInhs67XfY6Kjbxjn0vw4PXEyKYpfsJDAog1lPp
-         cY12cIcLO4NRJmvgcyfzBDZr3x844dYL4q75ZlAHcY4dyZcufLt9DNNKkII4hS2Lwel/
-         TEDhdkbdK97hcU/Cd9lZbhy9qEYKLjLeL7fDPUixJJDuCZxKyiwiE9PITliRA4C5XJ8V
-         AHbeHm1k/NwXW8DqKJTXh1J09LhZx/X8TjumYtRicLpjB23Esl1lG2HmYffzJNa4KnnI
-         uW8Q==
-X-Gm-Message-State: AOAM533NkJFtdDI6+A2g8b1p9S6rIFhk+MKBgtQ15Y7fffUALjIIi1ZH
-        BZFoS1iKKENxhew72zLK6nze2tz4+fUEXA==
-X-Google-Smtp-Source: ABdhPJwlrxRnfW0zye/m/C+xrYAYpTXfQCAlRZm33GDcZ6pzso2tJlrvup6Hi9errK+Ejofn6kIwQA==
-X-Received: by 2002:a1c:e084:: with SMTP id x126mr8554446wmg.37.1617290823161;
-        Thu, 01 Apr 2021 08:27:03 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f1f:bb00:5544:e633:d47e:4b76? (p200300ea8f1fbb005544e633d47e4b76.dip0.t-ipconnect.de. [2003:ea:8f1f:bb00:5544:e633:d47e:4b76])
-        by smtp.googlemail.com with ESMTPSA id u17sm7957344wmq.3.2021.04.01.08.27.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Apr 2021 08:27:02 -0700 (PDT)
-Subject: Re: [PATCH] PCI: Don't try to read CLS from PCIe devices in
- pci_apply_final_quirks
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20210331210044.GA1421276@bjorn-Precision-5520>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Message-ID: <4549ac90-8830-100e-2f53-8ba1a622cb71@gmail.com>
-Date:   Thu, 1 Apr 2021 17:26:57 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.9.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=obPyz+e6xbd7We+KsT9T0ixM5UyYHDGjsKl1W8VAD1Q=;
+        b=Y9k5poOP2aOMcOVYyJPVznKH3uA/mv6KRYy9/7o9IOuHXs/S70YSMRN8YaCVA18RgO
+         M8jAKe/MCXxMqG9exZ6lEGmPiiV6euSGm8shFEeCVjLJCw2p+RmoUlb5nmGhcBy0bV9B
+         QtGJSCcv9Q/xtcwLTDXBIipVHZ5KE+5KThBbu5Ybs+9KZzY/kl+OMd1j2wLqOlt35ZNz
+         1JJ3UZhlIOXxHO6PoNW9cd6DB2CfCl147jhLLvxJ4/PG79CkzZo7Yj9uOp5w9Tn7CP+F
+         K1zmyRN1tUN93lXq4VWA+hTTRMr/WHKHTuRpN18nYEeh651fSyTbBcWlbBZQzakHrwxv
+         8uMw==
+X-Gm-Message-State: AOAM533OzpDdy1cg3P5X66oDfyLfpFs7zIBMLBRwFMML7w7WREVy5F6d
+        VEf2FF5QtymYQ9pCgzoBzeoz4+SrESrcvoeEX1M=
+X-Google-Smtp-Source: ABdhPJwyQVp4oAnnyAvoO1xmI2F+tkbmp4RWiyGqaSVTQUrfQWAgb31mo8zgnybKLFuYB5swwjP5Geu1Q8ZqMJofj5k=
+X-Received: by 2002:aca:5fc3:: with SMTP id t186mr5819440oib.69.1617285005595;
+ Thu, 01 Apr 2021 06:50:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210331210044.GA1421276@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <e0d626837e577e60f226b8bbf354bd8cbb1fe40a.camel@intel.com>
+ <20210331172210.GA1397554@bjorn-Precision-5520> <100f5a45dae14c77b341b7f1c5ea1db0@AcuMS.aculab.com>
+In-Reply-To: <100f5a45dae14c77b341b7f1c5ea1db0@AcuMS.aculab.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Thu, 1 Apr 2021 15:49:52 +0200
+Message-ID: <CAJZ5v0jJ2XDYSwqP3AyKuUvuxhwuNwvk3Z=xwtAL3hG5uYGG-Q@mail.gmail.com>
+Subject: Re: [PATCH v2 04/15] ACPI: table: replace __attribute__((packed)) by __packed
+To:     David Laight <David.Laight@aculab.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Xiaofei Tan <tanxiaofei@huawei.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linuxarm@openeuler.org" <linuxarm@openeuler.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31.03.2021 23:00, Bjorn Helgaas wrote:
-> On Tue, Dec 08, 2020 at 02:26:46PM +0100, Heiner Kallweit wrote:
->> Don't try to read CLS from PCIe devices in pci_apply_final_quirks().
->> This value has no meaning for PCIe.
->>
->> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
->> ---
->>  drivers/pci/quirks.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index d9cbe69b8..ac8ce9118 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -163,6 +163,9 @@ static int __init pci_apply_final_quirks(void)
->>  	pci_apply_fixup_final_quirks = true;
->>  	for_each_pci_dev(dev) {
->>  		pci_fixup_device(pci_fixup_final, dev);
->> +
->> +		if (pci_is_pcie(dev))
->> +			continue;
-> 
-> This loop tries to deduce the platform's cache line size by looking at
-> the CLS of every PCI device.  It doesn't *write* CLS for any devices.
-> 
-> IIUC skipping PCIe devices would only make a difference if a PCIe
-> device had a non-zero CLS different from the CLS of other devices.
-> In that case we would print a "CLS mismatch" message and fall back to
-> pci_dfl_cache_line_size.
-> 
-> The power-up value is zero, so if we read a non-zero CLS, it means
-> firmware set it to something.  It would be strange if firmware set it
-> to something other than the platform's cache line size.
-> 
-> Skipping PCIe devices probably doesn't hurt anything, but I don't
-> really see a benefit either.  What do you think?  In general I think
-> we should add code to check PCI vs PCIe only if it makes a difference.
-> 
-There is no functional change, right. The benefit is just that we
-avoid some unnecessary traffic on the PCI bus.
-If you think that this is not really worth a patch, then this is also
-fine with me.
+On Thu, Apr 1, 2021 at 11:00 AM David Laight <David.Laight@aculab.com> wrote:
+>
+> From: Bjorn Helgaas
+> > Sent: 31 March 2021 18:22
+> >
+> > On Wed, Mar 31, 2021 at 11:55:08PM +0800, Zhang Rui wrote:
+> > > ...
+> >
+> > > From e18c942855e2f51e814d057fff4dd951cd0d0907 Mon Sep 17 00:00:00 2001
+> > > From: Zhang Rui <rui.zhang@intel.com>
+> > > Date: Wed, 31 Mar 2021 20:34:13 +0800
+> > > Subject: [PATCH] ACPI: tables: FPDT: Fix 64bit alignment issue
+> > >
+> > > Some of the 64bit items in FPDT table may be 32bit aligned.
+> > > Using __attribute__((packed)) is not needed in this case, fixing it by
+> > > allowing 32bit alignment for these 64bit items.
+> >
+> > 1) Can you please add a spec reference for this?  I think it's ACPI
+> >    v6.3, sec 5.2.23.5, or something close to that.
+> >
+> > 2) The exact layout in memory is prescribed by the spec.  I think
+> >    that's basically what "packed" accomplishes.  I don't understand
+> >    why using "aligned" would be preferable.  Using "aligned" means
+> >    things can be at different offsets depending on the starting
+> >    address of the structure.  We always want the identical layout, no
+> >    matter what the starting address is.
+>
+> Both 'packed' and 'aligned(4)' remove any structure alignment
+> padding before 64bit items that aren't on an 8 byte boundary.
+> (Because everything else in the structures is naturally aligned.)
+>
+> The difference is significant on cpu that don't support misaligned
+> addresses.
+> Assuming that the structure is always on a 4n byte boundary
+> (which the ACPI spec probably requires) accesses to the 32-bit
+> fields are always ok.
+> It is only 64-bit fields that must be accessed as two 32-bit
+> memory cycles, not all the fields using multiple single byte
+> cycles.
 
-
->>  		/*
->>  		 * If arch hasn't set it explicitly yet, use the CLS
->>  		 * value shared by all PCI devices.  If there's a
->> -- 
->> 2.29.2
->>
-
+So what exactly is wrong with using "packed"?  It is way easier to
+understand for a casual reader of the code.
