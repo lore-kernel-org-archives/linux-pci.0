@@ -2,121 +2,219 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4704C001B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFD98C41536
 	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:42:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F5AB613CB
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:42:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B469A61383
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Apr 2021 17:42:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234466AbhDARmP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Apr 2021 13:42:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40596 "EHLO mail.kernel.org"
+        id S235128AbhDARmR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Apr 2021 13:42:17 -0400
+Received: from mga01.intel.com ([192.55.52.88]:46951 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234559AbhDARiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Apr 2021 13:38:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B76F161386;
-        Thu,  1 Apr 2021 16:42:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617295378;
-        bh=i04niHeXuQvwIy5MixftZzotTP0TGOM+jM0OxbF9CXw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=V0A1RN+DPE2xtWYyDCDoxSGkMsS1QrILEzosJPbis4ibuJoVVIl4ZdF3i89mvsOY6
-         +fH7WX9Ps2Jlw9/cbCJBJ5mE48dsmK6NXkCaZyPpEvUSmKuddYv4gHqDBUra6f0Ov4
-         nsJ3lsAcFsxMUwflSoK41pwCfsEUJjmbZyP54B0FA4EbtF5Lil1xT4B5yteUg0cR6O
-         44aRc52oTCBzFrJ/QDenCd7I7SjQU+BqxUMTOsg65DGdcFl/pJDm9X3KNf6oNC+8bX
-         O+nOlYUmtOKeZLZEjVUn4oBVUMvm5rzm9B0e6Vr7a4PrWk6PM1tA3AKtNmQXJt5Kd5
-         bVuJrTDgpDRZg==
-Date:   Thu, 1 Apr 2021 11:42:56 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Henning Schild <henning.schild@siemens.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Jean Delvare <jdelvare@suse.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Tan Jui Nee <jui.nee.tan@intel.com>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Jonathan Yong <jonathan.yong@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-pci@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Peter Tyser <ptyser@xes-inc.com>, hdegoede@redhat.com
-Subject: Re: [PATCH v1 3/7] PCI: New Primary to Sideband (P2SB) bridge
- support library
-Message-ID: <20210401164256.GA1516177@bjorn-Precision-5520>
+        id S234759AbhDARjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Apr 2021 13:39:44 -0400
+IronPort-SDR: +LmthehJ1PLZRvDXjJyW8F8GO6VjqneIUKxIXwZ2ueD4sPW0DJ9MqAtRIgximA6k+IHBfbWCG1
+ lw3hRpaltkbw==
+X-IronPort-AV: E=McAfee;i="6000,8403,9941"; a="212511861"
+X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
+   d="scan'208";a="212511861"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 07:31:04 -0700
+IronPort-SDR: rBUmT0zYTZoXy45GsDdBfMPzKc/L60oJswgxrTXJX4YVzRDMUnwFaW1LhZp4wcQC5hjtZnfHgy
+ A6pu1u1ZYGfw==
+X-IronPort-AV: E=Sophos;i="5.81,296,1610438400"; 
+   d="scan'208";a="384864735"
+Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.25])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2021 07:31:03 -0700
+Subject: [PATCH v2 4/8] cxl/core: Refactor CXL register lookup for bridge
+ reuse
+From:   Dan Williams <dan.j.williams@intel.com>
+To:     linux-cxl@vger.kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        ira.weiny@intel.com, vishal.l.verma@intel.com,
+        alison.schofield@intel.com, ben.widawsky@intel.com,
+        linux-kernel@vger.kernel.org
+Date:   Thu, 01 Apr 2021 07:31:03 -0700
+Message-ID: <161728746354.2474040.14531317270409827157.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <161728744224.2474040.12854720917440712854.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <161728744224.2474040.12854720917440712854.stgit@dwillia2-desk3.amr.corp.intel.com>
+User-Agent: StGit/0.18-3-g996c
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YGXqfvBv37eLL28Z@smile.fi.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 01, 2021 at 06:45:02PM +0300, Andy Shevchenko wrote:
-> On Tue, Mar 09, 2021 at 09:42:52AM +0100, Henning Schild wrote:
-> > Am Mon, 8 Mar 2021 19:42:21 -0600
-> > schrieb Bjorn Helgaas <helgaas@kernel.org>:
-> > > On Mon, Mar 08, 2021 at 09:16:50PM +0200, Andy Shevchenko wrote:
-> > > > On Mon, Mar 08, 2021 at 12:52:12PM -0600, Bjorn Helgaas wrote:  
-> > > > > On Mon, Mar 08, 2021 at 02:20:16PM +0200, Andy Shevchenko wrote:  
-> 
-> ...
-> 
-> > > > > > +	/* Read the first BAR of the device in question */
-> > > > > > +	__pci_bus_read_base(bus, devfn, pci_bar_unknown, mem,
-> > > > > > PCI_BASE_ADDRESS_0, true);  
-> > > > > 
-> > > > > I don't get this.  Apparently this normally hidden device is
-> > > > > consuming PCI address space.  The PCI core needs to know
-> > > > > about this.  If it doesn't, the PCI core may assign this
-> > > > > space to another device.  
-> > > > 
-> > > > Right, it returns all 1:s to any request so PCI core *thinks*
-> > > > it's plugged off (like D3cold or so).  
-> > > 
-> > > I'm asking about the MMIO address space.  The BAR is a register
-> > > in config space.  AFAICT, clearing P2SBC_HIDE_BYTE makes that
-> > > BAR visible.  The BAR describes a region of PCI address space.
-> > > It looks like setting P2SBC_HIDE_BIT makes the BAR disappear
-> > > from config space, but it sounds like the PCI address space
-> > > *described* by the BAR is still claimed by the device.  If the
-> > > device didn't respond to that MMIO space, you would have no
-> > > reason to read the BAR at all.
-> > > 
-> > > So what keeps the PCI core from assigning that MMIO space to
-> > > another device?
-> > 
-> > The device will respond to MMIO while being hidden. I am afraid
-> > nothing stops a collision, except for the assumption that the BIOS
-> > is always right and PCI devices never get remapped. But just
-> > guessing here.
-> > 
-> > I have seen devices with coreboot having the P2SB visible, and
-> > most likely relocatable. Making it visible in Linux and not hiding
-> > it again might work, but probably only as long as Linux will not
-> > relocate it.  Which i am afraid might seriously upset the BIOS,
-> > depending on what a device does with those GPIOs and which parts
-> > are implemented in the BIOS.
-> 
-> So the question is, do we have knobs in PCI core to mark device
-> fixes in terms of BARs, no relocation must be applied, no other
-> devices must have the region?
+While CXL Memory Device endpoints locate the CXL MMIO registers in a PCI
+BAR, CXL root bridges have their MMIO base address described by platform
+firmware. Refactor the existing register lookup into a generic facility
+for endpoints and bridges to share.
 
-I think the closest thing is the IORESOURCE_PCI_FIXED bit that we use
-for things that must not be moved.  Generally PCI resources are
-associated with a pci_dev, and we set IORESOURCE_PCI_FIXED for BARs,
-e.g., dev->resource[n].  We do that for IDE legacy regions (see
-LEGACY_IO_RESOURCE), Langwell devices (pci_fixed_bar_fixup()),
-"enhanced allocation" (pci_ea_flags()), and some quirks (quirk_io()).
+Reviewed-by: Ben Widawsky <ben.widawsky@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/cxl/core.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/cxl/cxl.h  |    3 +++
+ drivers/cxl/mem.c  |   50 +++++-----------------------------------------
+ 3 files changed, 65 insertions(+), 45 deletions(-)
 
-In your case, the device is hidden so it doesn't respond to config
-accesses, so there is no pci_dev for it.
+diff --git a/drivers/cxl/core.c b/drivers/cxl/core.c
+index 7f8d2034038a..2ab467ef9909 100644
+--- a/drivers/cxl/core.c
++++ b/drivers/cxl/core.c
+@@ -1,7 +1,8 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+-/* Copyright(c) 2020 Intel Corporation. All rights reserved. */
++/* Copyright(c) 2020-2021 Intel Corporation. All rights reserved. */
+ #include <linux/device.h>
+ #include <linux/module.h>
++#include "cxl.h"
+ 
+ /**
+  * DOC: cxl core
+@@ -10,6 +11,60 @@
+  * point for cross-device interleave coordination through cxl ports.
+  */
+ 
++/*
++ * cxl_setup_device_regs() - Detect CXL Device register blocks
++ * @dev: Host device of the @base mapping
++ * @base: mapping of CXL 2.0 8.2.8 CXL Device Register Interface
++ */
++void cxl_setup_device_regs(struct device *dev, void __iomem *base,
++			   struct cxl_device_regs *regs)
++{
++	int cap, cap_count;
++	u64 cap_array;
++
++	*regs = (struct cxl_device_regs) { 0 };
++
++	cap_array = readq(base + CXLDEV_CAP_ARRAY_OFFSET);
++	if (FIELD_GET(CXLDEV_CAP_ARRAY_ID_MASK, cap_array) !=
++	    CXLDEV_CAP_ARRAY_CAP_ID)
++		return;
++
++	cap_count = FIELD_GET(CXLDEV_CAP_ARRAY_COUNT_MASK, cap_array);
++
++	for (cap = 1; cap <= cap_count; cap++) {
++		void __iomem *register_block;
++		u32 offset;
++		u16 cap_id;
++
++		cap_id = FIELD_GET(CXLDEV_CAP_HDR_CAP_ID_MASK,
++				   readl(base + cap * 0x10));
++		offset = readl(base + cap * 0x10 + 0x4);
++		register_block = base + offset;
++
++		switch (cap_id) {
++		case CXLDEV_CAP_CAP_ID_DEVICE_STATUS:
++			dev_dbg(dev, "found Status capability (0x%x)\n", offset);
++			regs->status = register_block;
++			break;
++		case CXLDEV_CAP_CAP_ID_PRIMARY_MAILBOX:
++			dev_dbg(dev, "found Mailbox capability (0x%x)\n", offset);
++			regs->mbox = register_block;
++			break;
++		case CXLDEV_CAP_CAP_ID_SECONDARY_MAILBOX:
++			dev_dbg(dev, "found Secondary Mailbox capability (0x%x)\n", offset);
++			break;
++		case CXLDEV_CAP_CAP_ID_MEMDEV:
++			dev_dbg(dev, "found Memory Device capability (0x%x)\n", offset);
++			regs->memdev = register_block;
++			break;
++		default:
++			dev_dbg(dev, "Unknown cap ID: %d (0x%x)\n", cap_id, offset);
++			break;
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(cxl_setup_device_regs);
++
+ struct bus_type cxl_bus_type = {
+ 	.name = "cxl",
+ };
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 37325e504fb7..cbd29650c4e2 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -67,5 +67,8 @@ struct cxl_regs {
+ 	};
+ };
+ 
++void cxl_setup_device_regs(struct device *dev, void __iomem *base,
++			   struct cxl_device_regs *regs);
++
+ extern struct bus_type cxl_bus_type;
+ #endif /* __CXL_H__ */
+diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+index 6951243d128e..ee55abfa147e 100644
+--- a/drivers/cxl/mem.c
++++ b/drivers/cxl/mem.c
+@@ -865,53 +865,15 @@ static int cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm, u16 opcode,
+ static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
+ {
+ 	struct device *dev = &cxlm->pdev->dev;
+-	int cap, cap_count;
+-	u64 cap_array;
++	struct cxl_regs *regs = &cxlm->regs;
+ 
+-	cap_array = readq(cxlm->base + CXLDEV_CAP_ARRAY_OFFSET);
+-	if (FIELD_GET(CXLDEV_CAP_ARRAY_ID_MASK, cap_array) !=
+-	    CXLDEV_CAP_ARRAY_CAP_ID)
+-		return -ENODEV;
+-
+-	cap_count = FIELD_GET(CXLDEV_CAP_ARRAY_COUNT_MASK, cap_array);
+-
+-	for (cap = 1; cap <= cap_count; cap++) {
+-		void __iomem *register_block;
+-		u32 offset;
+-		u16 cap_id;
+-
+-		cap_id = FIELD_GET(CXLDEV_CAP_HDR_CAP_ID_MASK,
+-				   readl(cxlm->base + cap * 0x10));
+-		offset = readl(cxlm->base + cap * 0x10 + 0x4);
+-		register_block = cxlm->base + offset;
+-
+-		switch (cap_id) {
+-		case CXLDEV_CAP_CAP_ID_DEVICE_STATUS:
+-			dev_dbg(dev, "found Status capability (0x%x)\n", offset);
+-			cxlm->regs.status = register_block;
+-			break;
+-		case CXLDEV_CAP_CAP_ID_PRIMARY_MAILBOX:
+-			dev_dbg(dev, "found Mailbox capability (0x%x)\n", offset);
+-			cxlm->regs.mbox = register_block;
+-			break;
+-		case CXLDEV_CAP_CAP_ID_SECONDARY_MAILBOX:
+-			dev_dbg(dev, "found Secondary Mailbox capability (0x%x)\n", offset);
+-			break;
+-		case CXLDEV_CAP_CAP_ID_MEMDEV:
+-			dev_dbg(dev, "found Memory Device capability (0x%x)\n", offset);
+-			cxlm->regs.memdev = register_block;
+-			break;
+-		default:
+-			dev_dbg(dev, "Unknown cap ID: %d (0x%x)\n", cap_id, offset);
+-			break;
+-		}
+-	}
++	cxl_setup_device_regs(dev, cxlm->base, &regs->device_regs);
+ 
+-	if (!cxlm->regs.status || !cxlm->regs.mbox || !cxlm->regs.memdev) {
++	if (!regs->status || !regs->mbox || !regs->memdev) {
+ 		dev_err(dev, "registers not found: %s%s%s\n",
+-			!cxlm->regs.status ? "status " : "",
+-			!cxlm->regs.mbox ? "mbox " : "",
+-			!cxlm->regs.memdev ? "memdev" : "");
++			!regs->status ? "status " : "",
++			!regs->mbox ? "mbox " : "",
++			!regs->memdev ? "memdev" : "");
+ 		return -ENXIO;
+ 	}
+ 
 
-Maybe you could do some sort of quirk that allocates its own struct
-resource, fills it in, sets IORESOURCE_PCI_FIXED, and does something
-similar to pci_claim_resource()?
-
-Bjorn
