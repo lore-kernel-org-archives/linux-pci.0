@@ -2,123 +2,145 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A40C43460
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1B6C43461
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E02A613E4
+	by mail.kernel.org (Postfix) with ESMTP id E833F613E1
 	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346940AbhDFR1M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1346944AbhDFR1M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 6 Apr 2021 13:27:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244684AbhDFR1L (ORCPT
+Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:33570 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244754AbhDFR1L (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:27:11 -0400
-Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 665CDC06174A;
-        Tue,  6 Apr 2021 10:27:03 -0700 (PDT)
-Received: by mail-oi1-x22f.google.com with SMTP id v25so15904599oic.5;
-        Tue, 06 Apr 2021 10:27:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=aibtX65fRbYclFPJuZJmwbNxAQjzGOE2myqGS3WunLw=;
-        b=Vft4FkSEKfY2Z/qa0/JsrQjiV/YE+4yDEO1Y+jiyV3QFtb/o9z9DILB2JWjOcHMOxg
-         m2VJTdFThlPydPR2J3pNIHJu8W8/BHOi3hdZjcvq0yCjLqSDWQkTtoNSmfbA2BDdrE72
-         T7UEREB3gwPtPc7k4ukjgIuuxlrKBpLyxD0Um0GSomZ5ia7cbO6Jj6Nb7gLc2dGL18YL
-         CuNSYot4qj+NuxBmDis7Dk/gj70XJyH+Nfd0hbd8dmEgcRj3fDzhaiQSOjJF3gnQ1tpv
-         GJTJEUfGodIMLkBoC/bRKEXAeHevz3BA5Pmcr0VMElTjBGkbHiM/U5YuYAPclmbAs6h5
-         GLlA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=aibtX65fRbYclFPJuZJmwbNxAQjzGOE2myqGS3WunLw=;
-        b=mm0TVsWQz3AwkL3hZ07H9rfco+AjbjxQjT1QGFZVa5F2uogsO1Wg4E1IgcTn1xG1Db
-         qa7El+CRLJWFX108K2sbCiY/Qm4qdhVQtwXcFtv5TAVaR86yT6xfiora9F7KEC2rUJ7a
-         Cf+H/eKZlzr651hdz5vxpY5JlXXqb/Ii4z6Gun0UoU6noHVArIW9oK72+j2XzrSfN5gw
-         cvvcgky0vRSHB4aXNYGbF5iml7DwtbLWUwYQCaDvpF4Ri0/ODTq4GujyjTO71gCR7pfo
-         umAxaDw5ijQ3Osv0iTqPptLul+tdKKR9Dx9zDHY51L7EX/FYzjMn80qO2oL+dKKcss60
-         3pwQ==
-X-Gm-Message-State: AOAM531Pogg54YzzmtVct3kp+aar5AdwTjkTkK9I2zBRUosZZbY19VlQ
-        A5IlfWJZx6ijCNOOegJP6gKkN9ucJmURfk811Ow=
-X-Google-Smtp-Source: ABdhPJxzlmwLkzM2a1BhjNvUHf4fud8hfZLp5Pb3qDfM6ZswIQ0AQFgakOSrKLr6XR7eX0WHAMCXCC1Q3cApaePjWyM=
-X-Received: by 2002:aca:35d4:: with SMTP id c203mr4177990oia.10.1617730022896;
- Tue, 06 Apr 2021 10:27:02 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210401212148.47033-1-jim2101024@gmail.com> <20210401212148.47033-3-jim2101024@gmail.com>
- <20210406164708.GM6443@sirena.org.uk>
-In-Reply-To: <20210406164708.GM6443@sirena.org.uk>
-From:   Jim Quinlan <jim2101024@gmail.com>
-Date:   Tue, 6 Apr 2021 13:26:51 -0400
-Message-ID: <CANCKTBsiujTkOdh60etBqF_hE8exg6m9TDxkGHVVAGVS2SFCcQ@mail.gmail.com>
-Subject: Re: [PATCH v4 2/6] dt-bindings: PCI: Add bindings for Brcmstb
- endpoint device voltage regulators
-To:     Mark Brown <broonie@kernel.org>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Rob Herring <robh@kernel.org>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
+Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 3569240134;
+        Tue,  6 Apr 2021 17:27:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1617730023; bh=bAyEykxMWczQn7uzGIiybS4PBoIvdMpiwexgJdlUBUU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=GKx04BLXGPhFxQ2pyV/DRncPFKXpVU3ZoFYyx19XDR5lzeboS+Wis+JkUOvz8VwNG
+         ytHo7WdYWM79piksT8mnVp2tvaVO2UBj/WYMim/pyYahklJaFBuIPtrZK4Q2jE4vxF
+         kn4BylwbNuKUqqHtSLwyPc2b+Da3+6tIe2NcQHHgNEWGf3wo48Tht7He1WOhTNcjOg
+         yULBcCjqc29I+8gRmyv3i3NnQvUzRt/iC+b5qyNPsP4aQwO6Vx9+i95RWFvyXpRfAx
+         33CTGrcqN5uHNFxj/Qjsv0coTLEw+WBzy97wwwEEeEcg/CeFuKs5oORv36qIp6Kzjg
+         gbaEZlhtYhjGw==
+Received: from de02dwvm009.internal.synopsys.com (de02dwvm009.internal.synopsys.com [10.225.17.73])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 98E71A022E;
+        Tue,  6 Apr 2021 17:26:58 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v11 0/4] misc: Add Synopsys DesignWare xData IP driver
+Date:   Tue,  6 Apr 2021 19:26:45 +0200
+Message-Id: <cover.1617729785.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+MIME-Version: 1.0
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 6, 2021 at 12:47 PM Mark Brown <broonie@kernel.org> wrote:
->
-> On Thu, Apr 01, 2021 at 05:21:42PM -0400, Jim Quinlan wrote:
-> > Similar to the regulator bindings found in "rockchip-pcie-host.txt", this
-> > allows optional regulators to be attached and controlled by the PCIe RC
-> > driver.  That being said, this driver searches in the DT subnode (the EP
-> > node, eg pci@0,0) for the regulator property.
->
-> > The use of a regulator property in the pcie EP subnode such as
-> > "vpcie12v-supply" depends on a pending pullreq to the pci-bus.yaml
-> > file at
-> >
-> > https://github.com/devicetree-org/dt-schema/pull/54
-> >
-> > Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> > ---
-> >  Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> > index f90557f6deb8..f2caa5b3b281 100644
-> > --- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> > +++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-> > @@ -64,6 +64,9 @@ properties:
-> >
-> >    aspm-no-l0s: true
-> >
-> > +  vpcie12v-supply: true
-> > +  vpcie3v3-supply: true
-> > +
->
-> No great problem with having these in the controller node (assming it
-> accurately describes the hardware) but I do think we ought to also be
-> able to describe these per slot.
+This patch series adds a new driver called xData-pcie for the Synopsys
+DesignWare PCIe prototype.
 
-Hi Mark,
-Can you explain what you think that would look like in the DT?
-Thanks,
-Jim Quinlan
-Broadcom STB
+The driver configures and enables the Synopsys DesignWare PCIe traffic
+generator IP inside of prototype Endpoint which will generate upstream
+and downstream PCIe traffic. This allows to quickly test the PCIe link
+throughput speed and check is the prototype solution has some limitation
+or not.
+
+Changes:
+ V2: Rework driver according to Greg Kroah-Hartman' feedback
+     - Replace module parameter by sysfs use.
+     - Replace bit fields structure with macros and masks use.
+     - Removed SET() and GET() macros by the writel() and readl().
+     - Removed some noisy info messages.
+ V3: Fixed issues detected while running on 64 bits platforms
+     Rebased patches on top of v5.11-rc1 version
+ V4: Rework driver according to Greg Kroah-Hartman' feedback
+     - Add the ABI doc related to the sysfs implemented on this driver
+ V5: Rework driver accordingly to Leon Romanovsky' feedback
+     - Removed "default n" on Kconfig
+     Rework driver accordingly to Krzysztof Wilczyński' feedback
+     - Added some explanatory comments for some steps
+     - Added some bit defines instead of magic numbers
+ V6: Rework driver according to Greg Kroah-Hartman' feedback
+     - Squashed patches #2 and #3
+     - Removed units (MB/s) on the sys file
+     - Reduced mutex scope on the functions called by sysfs
+     Rework driver accordingly to Krzysztof Wilczyński' feedback
+     - Fix typo "DesignWare"
+ V7: Rework driver according to Greg Kroah-Hartman' feedback
+     - Created a sub device (misc device) that will be associated with the PCI driver
+     - sysfs group is now associated with the misc drivers instead of the PCI driver
+ V8: Rework driver according to Greg Kroah-Hartman' feedback
+     - Added more detail to the version changes on the cover letter
+     - Squashed patches #1 and #2
+     - Removed struct device from the dw_xdata_pcie structure
+     - Replaced the pci_*() use by dev_*()
+     - Added free call for the misc driver name allocation
+     - Added reference counting
+     - Removed snps_edda_data structure and their usage
+     Rebased patches on top of v5.12-rc4 version
+ V9: Squashed temporary development patch #5 into the driver patch #1
+ V10: Reworked the write_store() and read_store() to validate the input using kstrtobool()
+     Removed stop_store()
+     Update ABI documentation accordingly
+ V11: Fixed the documentation based on the warnings detected by Stephen Rothwell
+
+Cc: linux-doc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: Derek Kiernan <derek.kiernan@xilinx.com>
+Cc: Dragan Cvetic <dragan.cvetic@xilinx.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Krzysztof Wilczyński <kw@linux.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+
+Gustavo Pimentel (4):
+  misc: Add Synopsys DesignWare xData IP driver
+  Documentation: misc-devices: Add Documentation for dw-xdata-pcie
+    driver
+  MAINTAINERS: Add Synopsys xData IP driver maintainer
+  docs: ABI: Add sysfs documentation interface of dw-xdata-pcie driver
+
+ Documentation/ABI/testing/sysfs-driver-xdata |  49 ++++
+ Documentation/misc-devices/dw-xdata-pcie.rst |  64 ++++
+ Documentation/misc-devices/index.rst         |   1 +
+ MAINTAINERS                                  |   7 +
+ drivers/misc/Kconfig                         |  10 +
+ drivers/misc/Makefile                        |   1 +
+ drivers/misc/dw-xdata-pcie.c                 | 420 +++++++++++++++++++++++++++
+ 7 files changed, 552 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-driver-xdata
+ create mode 100644 Documentation/misc-devices/dw-xdata-pcie.rst
+ create mode 100644 drivers/misc/dw-xdata-pcie.c
+
+-- 
+2.7.4
+
