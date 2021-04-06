@@ -2,142 +2,301 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-23.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 762F0C43460
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:44:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0139C433ED
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EEE6613CC
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:44:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8742613E2
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236558AbhDFRoN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Apr 2021 13:44:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58158 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240787AbhDFRoL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:44:11 -0400
-Received: from mail-vk1-xa33.google.com (mail-vk1-xa33.google.com [IPv6:2607:f8b0:4864:20::a33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38634C061760
-        for <linux-pci@vger.kernel.org>; Tue,  6 Apr 2021 10:44:03 -0700 (PDT)
-Received: by mail-vk1-xa33.google.com with SMTP id o4so3367363vka.12
-        for <linux-pci@vger.kernel.org>; Tue, 06 Apr 2021 10:44:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=EtQUUFH1idf1LCKyK4bnY5JsWaSl6wulsAadPAZ7yAY=;
-        b=k44fY36vdgSsXvuMKXVH2LPUy3SZsyFWOTycUHNSmOyjQKKd2jYRXyVswoQDx+BXc/
-         qbXVT6sU8A/aog8FxFGQmnA5OqijC8l7d4uKXWgAcKoYSY0f87EdOMdUKGccXRucONjM
-         kQuT9XA70rCkKLQps0fdWPpH+vpwXbGFnuA1rBrLaowSoqzpHxTPvmWAgZWPwrwjiRCP
-         EDsJHhTiPdQdRAMcx1879N1yM38qIuq7ue+gjrpg0ULB7XtmuX4WlsmNRC6gF7c8Oero
-         5G+Qe4AzXmDuJRsj/DVfwuCngDmnz4A5oZH11YIIOMykr0JDwT+RxONPGTfNr6cno1SG
-         C/9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EtQUUFH1idf1LCKyK4bnY5JsWaSl6wulsAadPAZ7yAY=;
-        b=AQ6g3DhllT4x8JPiO7GUiVmkMe4Vs299MPVN6v7PLF7jK92l4QEM67ynrT23s6babs
-         ifw4YQM4s4ivsbfEivm3OXQAQR77jgFc3fOM4ANp5pP1sclCFDKC9ECcOzGwTOwSDB5x
-         mg2roUuMwIzkLpNYrceBXDunldm+TWnZLZ38vzm/qA8qdfUbfVRC08Cwc0wdgyT4d5iU
-         BJJIz0gHUQmO1riNbO5PsostjuYIsgpahpValzuJbRmFyBiE6c5YLV4wFPDIP/vYFuQk
-         XSf/jLyVB2mpXRaBXWBIkDZrlqAcYhlh2TN6fE8dMn2VIepyEhgIeZfve31eQzHHIwhI
-         Evdw==
-X-Gm-Message-State: AOAM532AEeNWQXr41j1SlgOt8Oc++BwgL3V4+Fynh7cyDdFUKI/HeNt+
-        fJyTUBlct6gQPxDeECTORuChIQiz76XBOujEpfoIzA==
-X-Google-Smtp-Source: ABdhPJw/vL1B1lwxMga5y/GzF9RJd38fkIy6KReE2RxFlfigxn9W8Lc55czyHQX2OxWT1+hnyyz72VsWoaRuC/f5D4k=
-X-Received: by 2002:a1f:9345:: with SMTP id v66mr18088483vkd.22.1617731041913;
- Tue, 06 Apr 2021 10:44:01 -0700 (PDT)
+        id S1347042AbhDFRrM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Apr 2021 13:47:12 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2773 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235624AbhDFRrM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:47:12 -0400
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FFFCl5kFhz686RW;
+        Wed,  7 Apr 2021 01:40:03 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2106.2; Tue, 6 Apr 2021 19:47:01 +0200
+Received: from localhost (10.47.87.56) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Tue, 6 Apr 2021
+ 18:47:01 +0100
+Date:   Tue, 6 Apr 2021 17:38:45 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <ira.weiny@intel.com>,
+        <vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
+        <ben.widawsky@intel.com>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/8] cxl/mem: Move some definitions to mem.h
+Message-ID: <20210406173845.00000bec@Huawei.com>
+In-Reply-To: <161728744762.2474040.11009693084215696415.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <161728744224.2474040.12854720917440712854.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <161728744762.2474040.11009693084215696415.stgit@dwillia2-desk3.amr.corp.intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-References: <20210401233216.2540591-1-samitolvanen@google.com>
- <20210401233216.2540591-15-samitolvanen@google.com> <20210406115357.GE96480@C02TD0UTHF1T.local>
-In-Reply-To: <20210406115357.GE96480@C02TD0UTHF1T.local>
-From:   Sami Tolvanen <samitolvanen@google.com>
-Date:   Tue, 6 Apr 2021 10:43:50 -0700
-Message-ID: <CABCJKuchDg74Md_He1nKgXKUf=pVEmiaVr_yJXB_yX+tKNhByA@mail.gmail.com>
-Subject: Re: [PATCH v5 14/18] arm64: add __nocfi to functions that jump to a
- physical address
-To:     Mark Rutland <mark.rutland@arm.com>
-Cc:     Ard Biesheuvel <ardb@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Will Deacon <will@kernel.org>, Jessica Yu <jeyu@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Sedat Dilek <sedat.dilek@gmail.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        bpf <bpf@vger.kernel.org>, linux-hardening@vger.kernel.org,
-        linux-arch <linux-arch@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-kbuild <linux-kbuild@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.87.56]
+X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 6, 2021 at 4:54 AM Mark Rutland <mark.rutland@arm.com> wrote:
->
-> [adding Ard for EFI runtime services bits]
->
-> On Thu, Apr 01, 2021 at 04:32:12PM -0700, Sami Tolvanen wrote:
-> > Disable CFI checking for functions that switch to linear mapping and
-> > make an indirect call to a physical address, since the compiler only
-> > understands virtual addresses and the CFI check for such indirect calls
-> > would always fail.
->
-> What does physical vs virtual have to do with this? Does the address
-> actually matter, or is this just a general thing that when calling an
-> assembly function we won't have a trampoline that the caller expects?
+On Thu, 1 Apr 2021 07:30:47 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-No, this is about the actual address. The compiler-generated runtime
-checks only know about EL1 virtual addresses, so if we switch to a
-different address space, all indirect calls will trip CFI.
+> In preparation for sharing cxl.h with other generic CXL consumers,
+> move / consolidate some of the memory device specifics to mem.h.
+> 
+> Reviewed-by: Ben Widawsky <ben.widawsky@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-> I wonder if we need to do something with asmlinkage here, perhaps?
->
-> I didn't spot anything in the seriues handling EFI runtime services
-> calls, and I strongly suspect we need to do something for those, unless
-> they're handled implicitly by something else.
->
-> > Signed-off-by: Sami Tolvanen <samitolvanen@google.com>
-> > Reviewed-by: Kees Cook <keescook@chromium.org>
-> > ---
-> >  arch/arm64/include/asm/mmu_context.h | 2 +-
-> >  arch/arm64/kernel/cpu-reset.h        | 8 ++++----
-> >  arch/arm64/kernel/cpufeature.c       | 2 +-
-> >  3 files changed, 6 insertions(+), 6 deletions(-)
-> >https://www.cnbc.com/2021/04/06/donald-trump-save-america-pac-has-85-million-on-hand-ahead-of-midterms.html
-> > diff --git a/arch/arm64/include/asm/mmu_context.h b/arch/arm64/include/asm/mmu_context.h
-> > index 386b96400a57..d3cef9133539 100644
-> > --- a/arch/arm64/include/asm/mmu_context.h
-> > +++ b/arch/arm64/include/asm/mmu_context.h
-> > @@ -119,7 +119,7 @@ static inline void cpu_install_idmap(void)
-> >   * Atomically replaces the active TTBR1_EL1 PGD with a new VA-compatible PGD,
-> >   * avoiding the possibility of conflicting TLB entries being allocated.
-> >   */
-> > -static inline void cpu_replace_ttbr1(pgd_t *pgdp)
-> > +static inline void __nocfi cpu_replace_ttbr1(pgd_t *pgdp)
->
-> Given these are inlines, what's the effect when these are inlined into a
-> function that would normally use CFI? Does CFI get supressed for the
-> whole function, or just the bit that got inlined?
+Hi Dan,
 
-Just for the bit that gets inlined.
+Would be good to see something in this patch description saying
+why you chose to have mem.h rather than push the defines down
+into mem.c (which from the current code + patch set looks like
+the more logical thing to do).
 
-> Is there an attribute that we could place on a function pointer to tell
-> the compiler to not check calls via that pointer? If that existed we'd
-> be able to scope this much more tightly.
+As a side note, docs for struct cxl_mem need a fix as they cover
+enabled_commands which at somepoint got shortened to enabled_cmds
 
-There isn't, but I do agree that this would be a useful feature.
+Jonathan
 
-Sami
+> ---
+>  drivers/cxl/cxl.h |   57 ------------------------------------
+>  drivers/cxl/mem.c |   25 +---------------
+>  drivers/cxl/mem.h |   85 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 86 insertions(+), 81 deletions(-)
+>  create mode 100644 drivers/cxl/mem.h
+> 
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 6f14838c2d25..2e3bdacb32e7 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -34,62 +34,5 @@
+>  #define CXLDEV_MBOX_BG_CMD_STATUS_OFFSET 0x18
+>  #define CXLDEV_MBOX_PAYLOAD_OFFSET 0x20
+>  
+> -/* CXL 2.0 8.2.8.5.1.1 Memory Device Status Register */
+> -#define CXLMDEV_STATUS_OFFSET 0x0
+> -#define   CXLMDEV_DEV_FATAL BIT(0)
+> -#define   CXLMDEV_FW_HALT BIT(1)
+> -#define   CXLMDEV_STATUS_MEDIA_STATUS_MASK GENMASK(3, 2)
+> -#define     CXLMDEV_MS_NOT_READY 0
+> -#define     CXLMDEV_MS_READY 1
+> -#define     CXLMDEV_MS_ERROR 2
+> -#define     CXLMDEV_MS_DISABLED 3
+> -#define CXLMDEV_READY(status)                                                  \
+> -	(FIELD_GET(CXLMDEV_STATUS_MEDIA_STATUS_MASK, status) ==                \
+> -	 CXLMDEV_MS_READY)
+> -#define   CXLMDEV_MBOX_IF_READY BIT(4)
+> -#define   CXLMDEV_RESET_NEEDED_MASK GENMASK(7, 5)
+> -#define     CXLMDEV_RESET_NEEDED_NOT 0
+> -#define     CXLMDEV_RESET_NEEDED_COLD 1
+> -#define     CXLMDEV_RESET_NEEDED_WARM 2
+> -#define     CXLMDEV_RESET_NEEDED_HOT 3
+> -#define     CXLMDEV_RESET_NEEDED_CXL 4
+> -#define CXLMDEV_RESET_NEEDED(status)                                           \
+> -	(FIELD_GET(CXLMDEV_RESET_NEEDED_MASK, status) !=                       \
+> -	 CXLMDEV_RESET_NEEDED_NOT)
+> -
+> -struct cxl_memdev;
+> -/**
+> - * struct cxl_mem - A CXL memory device
+> - * @pdev: The PCI device associated with this CXL device.
+> - * @regs: IO mappings to the device's MMIO
+> - * @status_regs: CXL 2.0 8.2.8.3 Device Status Registers
+> - * @mbox_regs: CXL 2.0 8.2.8.4 Mailbox Registers
+> - * @memdev_regs: CXL 2.0 8.2.8.5 Memory Device Registers
+> - * @payload_size: Size of space for payload
+> - *                (CXL 2.0 8.2.8.4.3 Mailbox Capabilities Register)
+> - * @mbox_mutex: Mutex to synchronize mailbox access.
+> - * @firmware_version: Firmware version for the memory device.
+> - * @enabled_commands: Hardware commands found enabled in CEL.
+> - * @pmem_range: Persistent memory capacity information.
+> - * @ram_range: Volatile memory capacity information.
+> - */
+> -struct cxl_mem {
+> -	struct pci_dev *pdev;
+> -	void __iomem *regs;
+> -	struct cxl_memdev *cxlmd;
+> -
+> -	void __iomem *status_regs;
+> -	void __iomem *mbox_regs;
+> -	void __iomem *memdev_regs;
+> -
+> -	size_t payload_size;
+> -	struct mutex mbox_mutex; /* Protects device mailbox and firmware */
+> -	char firmware_version[0x10];
+> -	unsigned long *enabled_cmds;
+> -
+> -	struct range pmem_range;
+> -	struct range ram_range;
+> -};
+> -
+>  extern struct bus_type cxl_bus_type;
+>  #endif /* __CXL_H__ */
+> diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+> index 244cb7d89678..45871ef65152 100644
+> --- a/drivers/cxl/mem.c
+> +++ b/drivers/cxl/mem.c
+> @@ -12,6 +12,7 @@
+>  #include <linux/io-64-nonatomic-lo-hi.h>
+>  #include "pci.h"
+>  #include "cxl.h"
+> +#include "mem.h"
+>  
+>  /**
+>   * DOC: cxl mem
+> @@ -29,12 +30,6 @@
+>   *  - Handle and manage error conditions.
+>   */
+>  
+> -/*
+> - * An entire PCI topology full of devices should be enough for any
+> - * config
+> - */
+> -#define CXL_MEM_MAX_DEVS 65536
+> -
+>  #define cxl_doorbell_busy(cxlm)                                                \
+>  	(readl((cxlm)->mbox_regs + CXLDEV_MBOX_CTRL_OFFSET) &                  \
+>  	 CXLDEV_MBOX_CTRL_DOORBELL)
+> @@ -91,24 +86,6 @@ struct mbox_cmd {
+>  #define CXL_MBOX_SUCCESS 0
+>  };
+>  
+> -/**
+> - * struct cxl_memdev - CXL bus object representing a Type-3 Memory Device
+> - * @dev: driver core device object
+> - * @cdev: char dev core object for ioctl operations
+> - * @cxlm: pointer to the parent device driver data
+> - * @ops_active: active user of @cxlm in ops handlers
+> - * @ops_dead: completion when all @cxlm ops users have exited
+> - * @id: id number of this memdev instance.
+> - */
+> -struct cxl_memdev {
+> -	struct device dev;
+> -	struct cdev cdev;
+> -	struct cxl_mem *cxlm;
+> -	struct percpu_ref ops_active;
+> -	struct completion ops_dead;
+> -	int id;
+> -};
+> -
+
+Why move this stuff? As far as I could tell, at the end of this patch set this
+is still only used within mem.c.
+
+>  static int cxl_mem_major;
+>  static DEFINE_IDA(cxl_memdev_ida);
+>  static struct dentry *cxl_debugfs;
+> diff --git a/drivers/cxl/mem.h b/drivers/cxl/mem.h
+> new file mode 100644
+> index 000000000000..daa9aba0e218
+> --- /dev/null
+> +++ b/drivers/cxl/mem.h
+> @@ -0,0 +1,85 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/* Copyright(c) 2020-2021 Intel Corporation. */
+> +#ifndef __CXL_MEM_H__
+> +#define __CXL_MEM_H__
+> +
+> +/* CXL 2.0 8.2.8.5.1.1 Memory Device Status Register */
+> +#define CXLMDEV_STATUS_OFFSET 0x0
+> +#define   CXLMDEV_DEV_FATAL BIT(0)
+> +#define   CXLMDEV_FW_HALT BIT(1)
+> +#define   CXLMDEV_STATUS_MEDIA_STATUS_MASK GENMASK(3, 2)
+> +#define     CXLMDEV_MS_NOT_READY 0
+> +#define     CXLMDEV_MS_READY 1
+> +#define     CXLMDEV_MS_ERROR 2
+> +#define     CXLMDEV_MS_DISABLED 3
+> +#define CXLMDEV_READY(status)                                                  \
+> +	(FIELD_GET(CXLMDEV_STATUS_MEDIA_STATUS_MASK, status) ==                \
+> +	 CXLMDEV_MS_READY)
+> +#define   CXLMDEV_MBOX_IF_READY BIT(4)
+> +#define   CXLMDEV_RESET_NEEDED_MASK GENMASK(7, 5)
+> +#define     CXLMDEV_RESET_NEEDED_NOT 0
+> +#define     CXLMDEV_RESET_NEEDED_COLD 1
+> +#define     CXLMDEV_RESET_NEEDED_WARM 2
+> +#define     CXLMDEV_RESET_NEEDED_HOT 3
+> +#define     CXLMDEV_RESET_NEEDED_CXL 4
+> +#define CXLMDEV_RESET_NEEDED(status)                                           \
+> +	(FIELD_GET(CXLMDEV_RESET_NEEDED_MASK, status) !=                       \
+> +	 CXLMDEV_RESET_NEEDED_NOT)
+> +
+> +/*
+> + * An entire PCI topology full of devices should be enough for any
+> + * config
+> + */
+> +#define CXL_MEM_MAX_DEVS 65536
+> +
+> +/**
+> + * struct cxl_memdev - CXL bus object representing a Type-3 Memory Device
+> + * @dev: driver core device object
+> + * @cdev: char dev core object for ioctl operations
+> + * @cxlm: pointer to the parent device driver data
+> + * @ops_active: active user of @cxlm in ops handlers
+> + * @ops_dead: completion when all @cxlm ops users have exited
+> + * @id: id number of this memdev instance.
+> + */
+> +struct cxl_memdev {
+> +	struct device dev;
+> +	struct cdev cdev;
+> +	struct cxl_mem *cxlm;
+> +	struct percpu_ref ops_active;
+> +	struct completion ops_dead;
+> +	int id;
+> +};
+> +
+> +/**
+> + * struct cxl_mem - A CXL memory device
+> + * @pdev: The PCI device associated with this CXL device.
+> + * @regs: IO mappings to the device's MMIO
+> + * @status_regs: CXL 2.0 8.2.8.3 Device Status Registers
+> + * @mbox_regs: CXL 2.0 8.2.8.4 Mailbox Registers
+> + * @memdev_regs: CXL 2.0 8.2.8.5 Memory Device Registers
+> + * @payload_size: Size of space for payload
+> + *                (CXL 2.0 8.2.8.4.3 Mailbox Capabilities Register)
+> + * @mbox_mutex: Mutex to synchronize mailbox access.
+> + * @firmware_version: Firmware version for the memory device.
+> + * @enabled_commands: Hardware commands found enabled in CEL.
+
+@enabled_cmds:
+
+> + * @pmem_range: Persistent memory capacity information.
+> + * @ram_range: Volatile memory capacity information.
+> + */
+> +struct cxl_mem {
+> +	struct pci_dev *pdev;
+> +	void __iomem *regs;
+> +	struct cxl_memdev *cxlmd;
+> +
+> +	void __iomem *status_regs;
+> +	void __iomem *mbox_regs;
+> +	void __iomem *memdev_regs;
+> +
+> +	size_t payload_size;
+> +	struct mutex mbox_mutex; /* Protects device mailbox and firmware */
+> +	char firmware_version[0x10];
+> +	unsigned long *enabled_cmds;
+> +
+> +	struct range pmem_range;
+> +	struct range ram_range;
+> +};
+> +#endif /* __CXL_MEM_H__ */
+> 
+
