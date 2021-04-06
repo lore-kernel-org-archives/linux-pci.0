@@ -2,129 +2,123 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F6CFC433ED
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:23:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A40C43460
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 480E46139E
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:23:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E02A613E4
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346881AbhDFRXs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Apr 2021 13:23:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54108 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232593AbhDFRXq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Apr 2021 13:23:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6676E613A3;
-        Tue,  6 Apr 2021 17:23:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617729817;
-        bh=NyyInCGNE1uoqUdzMm+iyXPpAi1wH034+5K530RbhVo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aw1rFiIi9kuo8mcTCSms4+kYvK4ZKBCqmVUZSzPoRCYSCuDqBnv3lwm7DWUXjXe3i
-         GmegKho+YrvnC4RQkDRN3EUhoIe5QEjz1EEPXx5xlPLnLf43VJecf7Q39NPXNqytWX
-         +NFyvnZpWT4xo+sWfZvCGheMIQ3kQ7KBBnotbMh6i5S5iYhg6CfrWIKtt6s1ISLebv
-         Eu0wGvTjzS2xtW39v2fkQwq55rBVMj/crNYX8xgfoposk0d42xM2kzYNM3QvyHfhOz
-         tTAUqfW1mLzdBAycwrAbhrqe4BapVaf1ffu0bvjtC6FvXURKR55T51Oop7LUwDUt5o
-         gWk9IyuXx5DOg==
-Date:   Tue, 6 Apr 2021 18:23:21 +0100
-From:   Mark Brown <broonie@kernel.org>
-To:     Jim Quinlan <jim2101024@gmail.com>
+        id S1346940AbhDFR1M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Apr 2021 13:27:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244684AbhDFR1L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:27:11 -0400
+Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 665CDC06174A;
+        Tue,  6 Apr 2021 10:27:03 -0700 (PDT)
+Received: by mail-oi1-x22f.google.com with SMTP id v25so15904599oic.5;
+        Tue, 06 Apr 2021 10:27:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aibtX65fRbYclFPJuZJmwbNxAQjzGOE2myqGS3WunLw=;
+        b=Vft4FkSEKfY2Z/qa0/JsrQjiV/YE+4yDEO1Y+jiyV3QFtb/o9z9DILB2JWjOcHMOxg
+         m2VJTdFThlPydPR2J3pNIHJu8W8/BHOi3hdZjcvq0yCjLqSDWQkTtoNSmfbA2BDdrE72
+         T7UEREB3gwPtPc7k4ukjgIuuxlrKBpLyxD0Um0GSomZ5ia7cbO6Jj6Nb7gLc2dGL18YL
+         CuNSYot4qj+NuxBmDis7Dk/gj70XJyH+Nfd0hbd8dmEgcRj3fDzhaiQSOjJF3gnQ1tpv
+         GJTJEUfGodIMLkBoC/bRKEXAeHevz3BA5Pmcr0VMElTjBGkbHiM/U5YuYAPclmbAs6h5
+         GLlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aibtX65fRbYclFPJuZJmwbNxAQjzGOE2myqGS3WunLw=;
+        b=mm0TVsWQz3AwkL3hZ07H9rfco+AjbjxQjT1QGFZVa5F2uogsO1Wg4E1IgcTn1xG1Db
+         qa7El+CRLJWFX108K2sbCiY/Qm4qdhVQtwXcFtv5TAVaR86yT6xfiora9F7KEC2rUJ7a
+         Cf+H/eKZlzr651hdz5vxpY5JlXXqb/Ii4z6Gun0UoU6noHVArIW9oK72+j2XzrSfN5gw
+         cvvcgky0vRSHB4aXNYGbF5iml7DwtbLWUwYQCaDvpF4Ri0/ODTq4GujyjTO71gCR7pfo
+         umAxaDw5ijQ3Osv0iTqPptLul+tdKKR9Dx9zDHY51L7EX/FYzjMn80qO2oL+dKKcss60
+         3pwQ==
+X-Gm-Message-State: AOAM531Pogg54YzzmtVct3kp+aar5AdwTjkTkK9I2zBRUosZZbY19VlQ
+        A5IlfWJZx6ijCNOOegJP6gKkN9ucJmURfk811Ow=
+X-Google-Smtp-Source: ABdhPJxzlmwLkzM2a1BhjNvUHf4fud8hfZLp5Pb3qDfM6ZswIQ0AQFgakOSrKLr6XR7eX0WHAMCXCC1Q3cApaePjWyM=
+X-Received: by 2002:aca:35d4:: with SMTP id c203mr4177990oia.10.1617730022896;
+ Tue, 06 Apr 2021 10:27:02 -0700 (PDT)
+MIME-Version: 1.0
+References: <20210401212148.47033-1-jim2101024@gmail.com> <20210401212148.47033-3-jim2101024@gmail.com>
+ <20210406164708.GM6443@sirena.org.uk>
+In-Reply-To: <20210406164708.GM6443@sirena.org.uk>
+From:   Jim Quinlan <jim2101024@gmail.com>
+Date:   Tue, 6 Apr 2021 13:26:51 -0400
+Message-ID: <CANCKTBsiujTkOdh60etBqF_hE8exg6m9TDxkGHVVAGVS2SFCcQ@mail.gmail.com>
+Subject: Re: [PATCH v4 2/6] dt-bindings: PCI: Add bindings for Brcmstb
+ endpoint device voltage regulators
+To:     Mark Brown <broonie@kernel.org>
 Cc:     linux-pci <linux-pci@vger.kernel.org>,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
         Rob Herring <robh@kernel.org>,
         bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
         Jim Quinlan <james.quinlan@broadcom.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-rpi-kernel@lists.infradead.org>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-arm-kernel@lists.infradead.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 3/6] PCI: brcmstb: Add control of slot0 device voltage
- regulators
-Message-ID: <20210406172320.GO6443@sirena.org.uk>
-References: <20210401212148.47033-1-jim2101024@gmail.com>
- <20210401212148.47033-4-jim2101024@gmail.com>
- <20210406163439.GL6443@sirena.org.uk>
- <CANCKTBvP66su2bXNMbawMfe3T7mpiQsRsG5xLfSPL2BWPNYFyw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="Y5wfsVCgeKAcINk2"
-Content-Disposition: inline
-In-Reply-To: <CANCKTBvP66su2bXNMbawMfe3T7mpiQsRsG5xLfSPL2BWPNYFyw@mail.gmail.com>
-X-Cookie: BARBARA STANWYCK makes me nervous!!
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Tue, Apr 6, 2021 at 12:47 PM Mark Brown <broonie@kernel.org> wrote:
+>
+> On Thu, Apr 01, 2021 at 05:21:42PM -0400, Jim Quinlan wrote:
+> > Similar to the regulator bindings found in "rockchip-pcie-host.txt", this
+> > allows optional regulators to be attached and controlled by the PCIe RC
+> > driver.  That being said, this driver searches in the DT subnode (the EP
+> > node, eg pci@0,0) for the regulator property.
+>
+> > The use of a regulator property in the pcie EP subnode such as
+> > "vpcie12v-supply" depends on a pending pullreq to the pci-bus.yaml
+> > file at
+> >
+> > https://github.com/devicetree-org/dt-schema/pull/54
+> >
+> > Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> > ---
+> >  Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> > index f90557f6deb8..f2caa5b3b281 100644
+> > --- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> > +++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+> > @@ -64,6 +64,9 @@ properties:
+> >
+> >    aspm-no-l0s: true
+> >
+> > +  vpcie12v-supply: true
+> > +  vpcie3v3-supply: true
+> > +
+>
+> No great problem with having these in the controller node (assming it
+> accurately describes the hardware) but I do think we ought to also be
+> able to describe these per slot.
 
---Y5wfsVCgeKAcINk2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Apr 06, 2021 at 12:59:16PM -0400, Jim Quinlan wrote:
-> On Tue, Apr 6, 2021 at 12:34 PM Mark Brown <broonie@kernel.org> wrote:
-> > On Thu, Apr 01, 2021 at 05:21:43PM -0400, Jim Quinlan wrote:
-
-> > This is broken, the driver knows which supplies are expected, the device
-> > can't function without these supplies so the driver should just
-> > unconditionally request them like any other supply.
-
-> Some boards require the regulators, some do not.  So the driver is
-
-No, some boards have the supplies described in firmware and some do not.
-
-> only  sure what the names may be if they are present.  If  I put these
-> names in my struct regulator_bulk_data array and do a
-> devm_regulator_bulk_get(), I will get the following for the boards
-> that do not need the regulators (e.g. the RPi SOC):
->=20
-> [    6.823820] brcm-pcie xxx.pcie: supply vpcie12v-supply not found,
-> using dummy regulator
-> [    6.832265] brcm-pcie xxx.pcie: supply vpcie3v3-supply not found,
-> using dummy regulator
-
-Sure, those are just warnings.
-
-> IIRC you consider this a debug feature?  Be that as it may, these
-> lines will confuse our customers and I'd like that they not be printed
-> if possible.
-
-You can stop the warnings by updating your firmware to more completely
-describe the system - ideally all the supplies in the system would be
-described for future proofing.  Or if this is a custom software stack
-just delete whatever error checking and warnings you like.  The warnings
-are there in case we've not got something mapped properly (eg, if there
-were a typo in a property name) and things stop working, it's not great
-to just ignore errors.
-
-> So I ask you to allow the code as is.  If you still insist, I will
-> change and resubmit.
-
-Remove it, conditional code like this is just as bad in this driver as
-it is in every other one.
-
---Y5wfsVCgeKAcINk2
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmBsmQgACgkQJNaLcl1U
-h9DskAf/VoxLSYNHU72exjKJW5JNuftwTxIV64p9P+6X6YdAKyPe9hjIpEgRW4Or
-hLFl5JECdDbLp6+8pCfLwwOqapayysqV1xmDyFEz8aa4YNfEcMQ6oi+ON+577tV5
-o/BkG2BrsGSGgFnwRpaS3fMYpDQZotjJ0mNLdpFOej5kM0NQ42Lm/7m00Ac/YJAM
-Br5LGIpvPhVuCQdnZlTSS2eOp62zN0G6keC3Cqa/ZB3OsItyPEbbvyY4g/g3eO+7
-9CzNGFYfkde6XvvLL63FyDayAw1deqPzMlgWZEV5cCxKmWOM54dWL2bulCluwZFM
-TzoqocIqZAFCIgi5kUw4p0p2WlJNiQ==
-=olsV
------END PGP SIGNATURE-----
-
---Y5wfsVCgeKAcINk2--
+Hi Mark,
+Can you explain what you think that would look like in the DT?
+Thanks,
+Jim Quinlan
+Broadcom STB
