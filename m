@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 240FAC433ED
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A201C43603
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE34E613E8
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 545A6613DE
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:47:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347068AbhDFRrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Apr 2021 13:47:15 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:2775 "EHLO
+        id S1347088AbhDFRrV convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Apr 2021 13:47:21 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2777 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347045AbhDFRrN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:47:13 -0400
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FFFCn4ZK2z686vD;
-        Wed,  7 Apr 2021 01:40:05 +0800 (CST)
+        with ESMTP id S1347058AbhDFRrQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:47:16 -0400
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FFFCq5K06z686vg;
+        Wed,  7 Apr 2021 01:40:07 +0800 (CST)
 Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2106.2; Tue, 6 Apr 2021 19:47:03 +0200
+ 15.1.2106.2; Tue, 6 Apr 2021 19:47:05 +0200
 Received: from localhost (10.47.87.56) by lhreml710-chm.china.huawei.com
  (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Tue, 6 Apr 2021
- 18:47:03 +0100
-Date:   Tue, 6 Apr 2021 18:00:37 +0100
+ 18:47:05 +0100
+Date:   Tue, 6 Apr 2021 18:44:58 +0100
 From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
 To:     Dan Williams <dan.j.williams@intel.com>
 CC:     <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-acpi@vger.kernel.org>, <ira.weiny@intel.com>,
         <vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
         <ben.widawsky@intel.com>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/8] cxl/mem: Introduce 'struct cxl_regs' for
- "composable" CXL devices
-Message-ID: <20210406180037.00000474@Huawei.com>
-In-Reply-To: <161728745324.2474040.14172040051810008737.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: Re: [PATCH v2 7/8] cxl/port: Introduce cxl_port objects
+Message-ID: <20210406184458.000061c0@Huawei.com>
+In-Reply-To: <161728748083.2474040.753623311074560290.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <161728744224.2474040.12854720917440712854.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <161728745324.2474040.14172040051810008737.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <161728748083.2474040.753623311074560290.stgit@dwillia2-desk3.amr.corp.intel.com>
 Organization: Huawei Technologies Research and Development (UK) Ltd.
 X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 X-Originating-IP: [10.47.87.56]
 X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
  lhreml710-chm.china.huawei.com (10.201.108.61)
@@ -56,325 +56,353 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 1 Apr 2021 07:30:53 -0700
+On Thu, 1 Apr 2021 07:31:20 -0700
 Dan Williams <dan.j.williams@intel.com> wrote:
 
-> CXL MMIO register blocks are organized by device type and capabilities.
-> There are Component registers, Device registers (yes, an ambiguous
-> name), and Memory Device registers (a specific extension of Device
-> registers).
+> Once the cxl_root is established then other ports in the hierarchy can
+> be attached. The cxl_port object, unlike cxl_root that is associated
+> with host bridges, is associated with PCIE Root Ports or PCIE Switch
+> Ports. Add cxl_port instances for all PCIE Root Ports in an ACPI0016
+> host bridge. The cxl_port instances for PCIE Switch Ports are not
+> included here as those are to be modeled as another service device
+> registered on the pcie_port_bus_type.
+
+Good to give a bit of description of what port2 represents vs port1.
+
 > 
-> It is possible for a given device instance (endpoint or port) to
-> implement register sets from multiple of the above categories.
+> A sample sysfs topology for a single-host-bridge with
+> single-PCIE/CXL-root-port:
 > 
-> The driver code that enumerates and maps the registers is type specific
-> so it is useful to have a dedicated type and helpers for each block
-> type.
+> /sys/bus/cxl/devices/root0
+> ├── address_space0
+> │   ├── devtype
+> │   ├── end
+> │   ├── start
+> │   ├── supports_ram
+> │   ├── supports_type2
+> │   ├── supports_type3
+> │   └── uevent
+> ├── address_space1
+> │   ├── devtype
+> │   ├── end
+> │   ├── start
+> │   ├── supports_pmem
+> │   ├── supports_type2
+> │   ├── supports_type3
+> │   └── uevent
+> ├── devtype
+> ├── port1
+> │   ├── devtype
+> │   ├── host -> ../../../../LNXSYSTM:00/LNXSYBUS:00/ACPI0016:00
+> │   ├── port2
+> │   │   ├── devtype
+> │   │   ├── host -> ../../../../../pci0000:34/0000:34:00.0
+> │   │   ├── subsystem -> ../../../../../../bus/cxl
+> │   │   ├── target_id
+> │   │   └── uevent
+> │   ├── subsystem -> ../../../../../bus/cxl
+> │   ├── target_id
+> │   └── uevent
+> ├── subsystem -> ../../../../bus/cxl
+> ├── target_id
+> └── uevent
 > 
-> At the same time, once the registers are mapped the origin type does not
-> matter. It is overly pedantic to reference the register block type in
-> code that is using the registers.
-> 
-> In preparation for the endpoint driver to incorporate Component registers
-> into its MMIO operations reorganize the registers to allow typed
-> enumeration + mapping, but anonymous usage. With the end state of
-> 'struct cxl_regs' to be:
-> 
-> struct cxl_regs {
-> 	union {
-> 		struct {
-> 			CXL_DEVICE_REGS();
-> 		};
-> 		struct cxl_device_regs device_regs;
-> 	};
-> 	union {
-> 		struct {
-> 			CXL_COMPONENT_REGS();
-> 		};
-> 		struct cxl_component_regs component_regs;
-> 	};
-> };
-> 
-> With this arrangement the driver can share component init code with
-> ports, but when using the registers it can directly reference the
-> component register block type by name without the 'component_regs'
-> prefix.
-> 
-> So, map + enumerate can be shared across drivers of different CXL
-> classes e.g.:
-> 
-> void cxl_setup_device_regs(struct device *dev, void __iomem *base,
-> 			   struct cxl_device_regs *regs);
-> 
-> void cxl_setup_component_regs(struct device *dev, void __iomem *base,
-> 			      struct cxl_component_regs *regs);
-> 
-> ...while inline usage in the driver need not indicate where the
-> registers came from:
-> 
-> readl(cxlm->regs.mbox + MBOX_OFFSET);
-> readl(cxlm->regs.hdm + HDM_OFFSET);
-> 
-> ...instead of:
-> 
-> readl(cxlm->regs.device_regs.mbox + MBOX_OFFSET);
-> readl(cxlm->regs.component_regs.hdm + HDM_OFFSET);
-> 
-> This complexity of the definition in .h yields improvement in code
-> readability in .c while maintaining type-safety for organization of
-> setup code. It prepares the implementation to maintain organization in
-> the face of CXL devices that compose register interfaces consisting of
-> multiple types.
-> 
-> Reviewed-by: Ben Widawsky <ben.widawsky@intel.com>
 > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-
-A few minor things inline.
-
 > ---
->  drivers/cxl/cxl.h |   33 +++++++++++++++++++++++++++++++++
->  drivers/cxl/mem.c |   44 ++++++++++++++++++++++++--------------------
->  drivers/cxl/mem.h |   13 +++++--------
->  3 files changed, 62 insertions(+), 28 deletions(-)
+>  drivers/cxl/acpi.c |   99 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/cxl/core.c |  121 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/cxl/cxl.h  |    5 ++
+>  3 files changed, 224 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> index 2e3bdacb32e7..37325e504fb7 100644
-> --- a/drivers/cxl/cxl.h
-> +++ b/drivers/cxl/cxl.h
-> @@ -34,5 +34,38 @@
->  #define CXLDEV_MBOX_BG_CMD_STATUS_OFFSET 0x18
->  #define CXLDEV_MBOX_PAYLOAD_OFFSET 0x20
+> diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
+> index d54c2d5de730..bc2a35ae880b 100644
+> --- a/drivers/cxl/acpi.c
+> +++ b/drivers/cxl/acpi.c
+> @@ -5,18 +5,117 @@
+>  #include <linux/device.h>
+>  #include <linux/kernel.h>
+>  #include <linux/acpi.h>
+> +#include <linux/pci.h>
+>  #include "cxl.h"
 >  
-> +/* See note for 'struct cxl_regs' for the rationale of this organization */
-> +#define CXL_DEVICE_REGS() \
-> +	void __iomem *status; \
-> +	void __iomem *mbox; \
-> +	void __iomem *memdev
+> +static int match_ACPI0016(struct device *dev, const void *host)
+> +{
+> +	struct acpi_device *adev = to_acpi_device(dev);
+> +	const char *hid = acpi_device_hid(adev);
 > +
-> +/**
-> + * struct cxl_device_regs - Common container of CXL Device register
-> + * 			    block base pointers
-> + * @status: CXL 2.0 8.2.8.3 Device Status Registers
-> + * @mbox: CXL 2.0 8.2.8.4 Mailbox Registers
-> + * @memdev: CXL 2.0 8.2.8.5 Memory Device Registers
-
-kernel-doc script is not going to be happy with documenting fields it can't see
-+ not documenting the CXL_DEVICE_REGS() field it can.
-
-I've no idea what the right way to handle this might be.
-
-> + */
-> +struct cxl_device_regs {
-> +	CXL_DEVICE_REGS();
+> +	return strcmp(hid, "ACPI0016") == 0;
+> +}
+> +
+> +struct cxl_walk_context {
+> +	struct device *dev;
+> +	struct pci_bus *root;
+> +	struct cxl_port *port;
+> +	int error;
+> +	int count;
 > +};
+> +
+> +static int match_add_root_ports(struct pci_dev *pdev, void *data)
+> +{
+> +	struct cxl_walk_context *ctx = data;
+> +	struct pci_bus *root_bus = ctx->root;
+> +	struct cxl_port *port = ctx->port;
+> +	int type = pci_pcie_type(pdev);
+> +	struct device *dev = ctx->dev;
+> +	resource_size_t cxl_regs_phys;
+> +	int target_id = ctx->count;
+> +
+> +	if (pdev->bus != root_bus)
+> +		return 0;
+> +	if (!pci_is_pcie(pdev))
+> +		return 0;
+> +	if (type != PCI_EXP_TYPE_ROOT_PORT)
+> +		return 0;
+> +
+> +	ctx->count++;
+> +
+> +	/* TODO walk DVSEC to find component register base */
+> +	cxl_regs_phys = -1;
+> +
+> +	port = devm_cxl_add_port(dev, port, &pdev->dev, target_id,
+> +				 cxl_regs_phys);
+> +	if (IS_ERR(port)) {
+> +		ctx->error = PTR_ERR(port);
+> +		return ctx->error;
+> +	}
+> +
+> +	dev_dbg(dev, "%s: register: %s\n", dev_name(&pdev->dev),
+> +		dev_name(&port->dev));
+> +
+> +	return 0;
+> +}
 > +
 > +/*
-> + * Note, the anonymous union organization allows for per
-> + * register-block-type helper routines, without requiring block-type
-> + * agnostic code to include the prefix. I.e.
-> + * cxl_setup_device_regs(&cxlm->regs.dev) vs readl(cxlm->regs.mbox).
-> + * The specificity reads naturally from left-to-right.
+> + * A host bridge may contain one or more root ports.  Register each port
+> + * as a child of the cxl_root.
 > + */
-> +struct cxl_regs {
-> +	union {
-> +		struct {
-> +			CXL_DEVICE_REGS();
-> +		};
-> +		struct cxl_device_regs device_regs;
+> +static int cxl_acpi_register_ports(struct device *dev, struct acpi_device *root,
+> +				   struct cxl_port *port, int idx)
+> +{
+> +	struct acpi_pci_root *pci_root = acpi_pci_find_root(root->handle);
+> +	struct cxl_walk_context ctx;
+> +
+> +	if (!pci_root)
+> +		return -ENXIO;
+> +
+> +	/* TODO: fold in CEDT.CHBS retrieval */
+> +	port = devm_cxl_add_port(dev, port, &root->dev, idx, ~0ULL);
+> +	if (IS_ERR(port))
+> +		return PTR_ERR(port);
+> +	dev_dbg(dev, "%s: register: %s\n", dev_name(&root->dev),
+> +		dev_name(&port->dev));
+> +
+> +	ctx = (struct cxl_walk_context) {
+> +		.dev = dev,
+> +		.root = pci_root->bus,
+> +		.port = port,
 > +	};
+> +	pci_walk_bus(pci_root->bus, match_add_root_ports, &ctx);
+> +
+> +	if (ctx.count == 0)
+> +		return -ENODEV;
+> +	return ctx.error;
+> +}
+> +
+>  static int cxl_acpi_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> +	struct acpi_device *adev = ACPI_COMPANION(dev);
+> +	struct device *bridge = NULL;
+>  	struct cxl_root *cxl_root;
+> +	int rc, i = 0;
+>  
+>  	cxl_root = devm_cxl_add_root(dev, NULL, 0);
+>  	if (IS_ERR(cxl_root))
+>  		return PTR_ERR(cxl_root);
+>  	dev_dbg(dev, "register: %s\n", dev_name(&cxl_root->port.dev));
+>  
+> +	while (true) {
+> +		bridge = bus_find_device(adev->dev.bus, bridge, dev,
+> +					 match_ACPI0016);
+> +		if (!bridge)
+> +			break;
+> +
+> +		rc = cxl_acpi_register_ports(dev, to_acpi_device(bridge),
+> +					     &cxl_root->port, i++);
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/cxl/core.c b/drivers/cxl/core.c
+> index 46c3b2588d2f..65cd704581bc 100644
+> --- a/drivers/cxl/core.c
+> +++ b/drivers/cxl/core.c
+> @@ -148,6 +148,15 @@ static void cxl_root_release(struct device *dev)
+>  	kfree(cxl_root);
+>  }
+>  
+> +static void cxl_port_release(struct device *dev)
+> +{
+> +	struct cxl_port *port = to_cxl_port(dev);
+> +
+> +	ida_free(&cxl_port_ida, port->id);
+> +	put_device(port->port_host);
+> +	kfree(port);
+> +}
+> +
+>  static ssize_t target_id_show(struct device *dev, struct device_attribute *attr,
+>  			      char *buf)
+>  {
+> @@ -178,6 +187,12 @@ static const struct device_type cxl_root_type = {
+>  	.groups = cxl_port_attribute_groups,
+>  };
+>  
+> +static const struct device_type cxl_port_type = {
+> +	.name = "cxl_port",
+> +	.release = cxl_port_release,
+> +	.groups = cxl_port_attribute_groups,
 > +};
+> +
+>  struct cxl_root *to_cxl_root(struct device *dev)
+>  {
+>  	if (dev_WARN_ONCE(dev, dev->type != &cxl_root_type,
+> @@ -188,7 +203,9 @@ struct cxl_root *to_cxl_root(struct device *dev)
+>  
+>  struct cxl_port *to_cxl_port(struct device *dev)
+>  {
+> -	if (dev_WARN_ONCE(dev, dev->type != &cxl_root_type,
+> +	if (dev_WARN_ONCE(dev,
+> +			  dev->type != &cxl_root_type &&
+> +			  dev->type != &cxl_port_type,
+>  			  "not a cxl_port device\n"))
+>  		return NULL;
+>  	return container_of(dev, struct cxl_port, dev);
+> @@ -360,6 +377,108 @@ struct cxl_root *devm_cxl_add_root(struct device *host,
+>  }
+>  EXPORT_SYMBOL_GPL(devm_cxl_add_root);
+>  
+> +static void cxl_unlink_port(void *_port)
+> +{
+> +	struct cxl_port *port = _port;
+> +
+> +	sysfs_remove_link(&port->dev.kobj, "host");
+> +}
+> +
+> +static int devm_cxl_link_port(struct device *dev, struct cxl_port *port)
+> +{
+> +	int rc;
+> +
+> +	rc = sysfs_create_link(&port->dev.kobj, &port->port_host->kobj, "host");
+> +	if (rc)
+> +		return rc;
+> +	return devm_add_action_or_reset(dev, cxl_unlink_port, port);
+> +}
+> +
+> +static struct cxl_port *cxl_port_alloc(struct cxl_port *parent_port,
+> +				       struct device *port_dev, int target_id,
+> +				       resource_size_t component_regs_phys)
+> +{
+> +	struct cxl_port *port;
+> +	struct device *dev;
+> +	int rc;
+> +
+> +	if (!port_dev)
+> +		return ERR_PTR(-EINVAL);
+> +
+> +	port = kzalloc(sizeof(*port), GFP_KERNEL);
+> +	if (!port)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	rc = ida_alloc(&cxl_port_ida, GFP_KERNEL);
+> +	if (rc < 0)
+> +		goto err;
+> +
+> +	port->id = rc;
+> +	port->target_id = target_id;
+> +	port->port_host = get_device(port_dev);
+> +	port->component_regs_phys = component_regs_phys;
+> +
+> +	dev = &port->dev;
+> +	device_initialize(dev);
+> +	device_set_pm_not_required(dev);
+> +	dev->parent = &parent_port->dev;
+> +	dev->bus = &cxl_bus_type;
+> +	dev->type = &cxl_port_type;
+> +
+> +	return port;
+> +
+> +err:
+> +	kfree(port);
+> +	return ERR_PTR(rc);
+> +}
+> +
+> +/**
+> + * devm_cxl_add_port() - add a cxl_port to the topology
+> + * @host: devm context / discovery agent
+> + * @parent_port: immediate ancestor towards cxl_root
+> + * @port_host: PCI or platform-firmware device hosting this port
+> + * @target_id: ordinal id relative to other siblings under @parent_port
+> + * @component_regs_phys: CXL component register base address
+> + */
+> +struct cxl_port *devm_cxl_add_port(struct device *host,
+> +				   struct cxl_port *parent_port,
+> +				   struct device *port_host, int target_id,
+> +				   resource_size_t component_regs_phys)
+> +{
+> +	struct cxl_port *port;
+> +	struct device *dev;
+> +	int rc;
+> +
+> +	port = cxl_port_alloc(parent_port, port_host, target_id,
+> +			      component_regs_phys);
+> +	if (IS_ERR(port))
+> +		return port;
+> +
+> +	dev = &port->dev;
+> +	rc = dev_set_name(dev, "port%d", port->id);
+> +	if (rc)
+> +		goto err;
+> +
+> +	rc = device_add(dev);
+> +	if (rc)
+> +		goto err;
+> +
+> +	rc = devm_add_action_or_reset(host, unregister_dev, dev);
+> +	if (rc)
+> +		return ERR_PTR(rc);
+> +
+> +	rc = devm_cxl_link_port(host, port);
+> +	if (rc)
+> +		return ERR_PTR(rc);
+> +
+> +	return port;
+> +
+> +err:
+> +	put_device(dev);
+> +	return ERR_PTR(rc);
+> +}
+> +EXPORT_SYMBOL_GPL(devm_cxl_add_port);
+> +
+>  /*
+>   * cxl_setup_device_regs() - Detect CXL Device register blocks
+>   * @dev: Host device of the @base mapping
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 559f8343fee4..0211f44c95a2 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -134,5 +134,10 @@ struct cxl_address_space_dev *to_cxl_address_space(struct device *dev);
+>  struct cxl_root *devm_cxl_add_root(struct device *parent,
+>  				   struct cxl_address_space *cxl_space,
+>  				   int nr_spaces);
+> +struct cxl_port *devm_cxl_add_port(struct device *host,
+> +				   struct cxl_port *parent_port,
+> +				   struct device *port_host, int target_id,
+> +				   resource_size_t component_regs_phys);
 > +
 >  extern struct bus_type cxl_bus_type;
 >  #endif /* __CXL_H__ */
-> diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> index 45871ef65152..6951243d128e 100644
-> --- a/drivers/cxl/mem.c
-> +++ b/drivers/cxl/mem.c
-> @@ -31,7 +31,7 @@
->   */
->  
->  #define cxl_doorbell_busy(cxlm)                                                \
-> -	(readl((cxlm)->mbox_regs + CXLDEV_MBOX_CTRL_OFFSET) &                  \
-> +	(readl((cxlm)->regs.mbox + CXLDEV_MBOX_CTRL_OFFSET) &                  \
->  	 CXLDEV_MBOX_CTRL_DOORBELL)
->  
->  /* CXL 2.0 - 8.2.8.4 */
-> @@ -271,7 +271,7 @@ static void cxl_mem_mbox_timeout(struct cxl_mem *cxlm,
->  static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
->  				   struct mbox_cmd *mbox_cmd)
->  {
-> -	void __iomem *payload = cxlm->mbox_regs + CXLDEV_MBOX_PAYLOAD_OFFSET;
-> +	void __iomem *payload = cxlm->regs.mbox + CXLDEV_MBOX_PAYLOAD_OFFSET;
->  	u64 cmd_reg, status_reg;
->  	size_t out_len;
->  	int rc;
-> @@ -314,12 +314,12 @@ static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
->  	}
->  
->  	/* #2, #3 */
-> -	writeq(cmd_reg, cxlm->mbox_regs + CXLDEV_MBOX_CMD_OFFSET);
-> +	writeq(cmd_reg, cxlm->regs.mbox + CXLDEV_MBOX_CMD_OFFSET);
->  
->  	/* #4 */
->  	dev_dbg(&cxlm->pdev->dev, "Sending command\n");
->  	writel(CXLDEV_MBOX_CTRL_DOORBELL,
-> -	       cxlm->mbox_regs + CXLDEV_MBOX_CTRL_OFFSET);
-> +	       cxlm->regs.mbox + CXLDEV_MBOX_CTRL_OFFSET);
->  
->  	/* #5 */
->  	rc = cxl_mem_wait_for_doorbell(cxlm);
-> @@ -329,7 +329,7 @@ static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
->  	}
->  
->  	/* #6 */
-> -	status_reg = readq(cxlm->mbox_regs + CXLDEV_MBOX_STATUS_OFFSET);
-> +	status_reg = readq(cxlm->regs.mbox + CXLDEV_MBOX_STATUS_OFFSET);
->  	mbox_cmd->return_code =
->  		FIELD_GET(CXLDEV_MBOX_STATUS_RET_CODE_MASK, status_reg);
->  
-> @@ -339,7 +339,7 @@ static int __cxl_mem_mbox_send_cmd(struct cxl_mem *cxlm,
->  	}
->  
->  	/* #7 */
-> -	cmd_reg = readq(cxlm->mbox_regs + CXLDEV_MBOX_CMD_OFFSET);
-> +	cmd_reg = readq(cxlm->regs.mbox + CXLDEV_MBOX_CMD_OFFSET);
->  	out_len = FIELD_GET(CXLDEV_MBOX_CMD_PAYLOAD_LENGTH_MASK, cmd_reg);
->  
->  	/* #8 */
-> @@ -400,7 +400,7 @@ static int cxl_mem_mbox_get(struct cxl_mem *cxlm)
->  		goto out;
->  	}
->  
-> -	md_status = readq(cxlm->memdev_regs + CXLMDEV_STATUS_OFFSET);
-> +	md_status = readq(cxlm->regs.memdev + CXLMDEV_STATUS_OFFSET);
->  	if (!(md_status & CXLMDEV_MBOX_IF_READY && CXLMDEV_READY(md_status))) {
->  		dev_err(dev, "mbox: reported doorbell ready, but not mbox ready\n");
->  		rc = -EBUSY;
-> @@ -868,7 +868,7 @@ static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
->  	int cap, cap_count;
->  	u64 cap_array;
->  
-> -	cap_array = readq(cxlm->regs + CXLDEV_CAP_ARRAY_OFFSET);
-> +	cap_array = readq(cxlm->base + CXLDEV_CAP_ARRAY_OFFSET);
->  	if (FIELD_GET(CXLDEV_CAP_ARRAY_ID_MASK, cap_array) !=
->  	    CXLDEV_CAP_ARRAY_CAP_ID)
->  		return -ENODEV;
-> @@ -881,25 +881,25 @@ static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
->  		u16 cap_id;
->  
->  		cap_id = FIELD_GET(CXLDEV_CAP_HDR_CAP_ID_MASK,
-> -				   readl(cxlm->regs + cap * 0x10));
-> -		offset = readl(cxlm->regs + cap * 0x10 + 0x4);
-> -		register_block = cxlm->regs + offset;
-> +				   readl(cxlm->base + cap * 0x10));
-> +		offset = readl(cxlm->base + cap * 0x10 + 0x4);
-> +		register_block = cxlm->base + offset;
->  
->  		switch (cap_id) {
->  		case CXLDEV_CAP_CAP_ID_DEVICE_STATUS:
->  			dev_dbg(dev, "found Status capability (0x%x)\n", offset);
-> -			cxlm->status_regs = register_block;
-> +			cxlm->regs.status = register_block;
->  			break;
->  		case CXLDEV_CAP_CAP_ID_PRIMARY_MAILBOX:
->  			dev_dbg(dev, "found Mailbox capability (0x%x)\n", offset);
-> -			cxlm->mbox_regs = register_block;
-> +			cxlm->regs.mbox = register_block;
->  			break;
->  		case CXLDEV_CAP_CAP_ID_SECONDARY_MAILBOX:
->  			dev_dbg(dev, "found Secondary Mailbox capability (0x%x)\n", offset);
->  			break;
->  		case CXLDEV_CAP_CAP_ID_MEMDEV:
->  			dev_dbg(dev, "found Memory Device capability (0x%x)\n", offset);
-> -			cxlm->memdev_regs = register_block;
-> +			cxlm->regs.memdev = register_block;
->  			break;
->  		default:
->  			dev_dbg(dev, "Unknown cap ID: %d (0x%x)\n", cap_id, offset);
-> @@ -907,11 +907,11 @@ static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
->  		}
->  	}
->  
-> -	if (!cxlm->status_regs || !cxlm->mbox_regs || !cxlm->memdev_regs) {
-> +	if (!cxlm->regs.status || !cxlm->regs.mbox || !cxlm->regs.memdev) {
->  		dev_err(dev, "registers not found: %s%s%s\n",
-> -			!cxlm->status_regs ? "status " : "",
-> -			!cxlm->mbox_regs ? "mbox " : "",
-> -			!cxlm->memdev_regs ? "memdev" : "");
-> +			!cxlm->regs.status ? "status " : "",
-> +			!cxlm->regs.mbox ? "mbox " : "",
-> +			!cxlm->regs.memdev ? "memdev" : "");
->  		return -ENXIO;
->  	}
->  
-> @@ -920,7 +920,7 @@ static int cxl_mem_setup_regs(struct cxl_mem *cxlm)
->  
->  static int cxl_mem_setup_mailbox(struct cxl_mem *cxlm)
->  {
-> -	const int cap = readl(cxlm->mbox_regs + CXLDEV_MBOX_CAPS_OFFSET);
-> +	const int cap = readl(cxlm->regs.mbox + CXLDEV_MBOX_CAPS_OFFSET);
->  
->  	cxlm->payload_size =
->  		1 << FIELD_GET(CXLDEV_MBOX_CAP_PAYLOAD_SIZE_MASK, cap);
-> @@ -980,7 +980,7 @@ static struct cxl_mem *cxl_mem_create(struct pci_dev *pdev, u32 reg_lo,
->  
->  	mutex_init(&cxlm->mbox_mutex);
->  	cxlm->pdev = pdev;
-> -	cxlm->regs = regs + offset;
-> +	cxlm->base = regs + offset;
->  	cxlm->enabled_cmds =
->  		devm_kmalloc_array(dev, BITS_TO_LONGS(cxl_cmd_count),
->  				   sizeof(unsigned long),
-> @@ -1495,6 +1495,10 @@ static __init int cxl_mem_init(void)
->  	dev_t devt;
->  	int rc;
->  
-> +	/* Double check the anonymous union trickery in struct cxl_regs */
-> +	BUILD_BUG_ON(offsetof(struct cxl_regs, memdev) !=
-> +		     offsetof(struct cxl_regs, device_regs.memdev));
-> +
->  	rc = alloc_chrdev_region(&devt, 0, CXL_MEM_MAX_DEVS, "cxl");
->  	if (rc)
->  		return rc;
-> diff --git a/drivers/cxl/mem.h b/drivers/cxl/mem.h
-> index daa9aba0e218..c247cf9c71af 100644
-> --- a/drivers/cxl/mem.h
-> +++ b/drivers/cxl/mem.h
-> @@ -53,10 +53,9 @@ struct cxl_memdev {
->  /**
->   * struct cxl_mem - A CXL memory device
->   * @pdev: The PCI device associated with this CXL device.
-> - * @regs: IO mappings to the device's MMIO
-> - * @status_regs: CXL 2.0 8.2.8.3 Device Status Registers
-> - * @mbox_regs: CXL 2.0 8.2.8.4 Mailbox Registers
-> - * @memdev_regs: CXL 2.0 8.2.8.5 Memory Device Registers
-> + * @base: IO mappings to the device's MMIO
-> + * @cxlmd: Logical memory device chardev / interface
-
-Unrelated missing docs fix?
-
-> + * @regs: Parsed register blocks
->   * @payload_size: Size of space for payload
->   *                (CXL 2.0 8.2.8.4.3 Mailbox Capabilities Register)
->   * @mbox_mutex: Mutex to synchronize mailbox access.
-> @@ -67,12 +66,10 @@ struct cxl_memdev {
->   */
->  struct cxl_mem {
->  	struct pci_dev *pdev;
-> -	void __iomem *regs;
-> +	void __iomem *base;
-
-Whilst I have no problem with the rename and fact you want to free it
-up for other uses, perhaps call it out in the patch description?
-
->  	struct cxl_memdev *cxlmd;
->  
-> -	void __iomem *status_regs;
-> -	void __iomem *mbox_regs;
-> -	void __iomem *memdev_regs;
-> +	struct cxl_regs regs;
->  
->  	size_t payload_size;
->  	struct mutex mbox_mutex; /* Protects device mailbox and firmware */
 > 
 
