@@ -2,158 +2,129 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13053C43460
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A05CAC433ED
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:29:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1BA3613D2
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:27:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 711FC613BC
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Apr 2021 17:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346967AbhDFR1P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Apr 2021 13:27:15 -0400
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:51788 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1346954AbhDFR1O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:27:14 -0400
-Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id EBDC6C0097;
-        Tue,  6 Apr 2021 17:27:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1617730025; bh=FTRqpxHdC8+uO17r8aFORyzwRYRfU4k0CF29Bnq6omQ=;
-        h=From:To:Subject:Date:In-Reply-To:References:In-Reply-To:
-         References:From;
-        b=GGjKjjGZwnO91/hg3gNKzJcwJ1NqdrXHL7iNTLSn8q2CyE/VrydR6cBIKFszo8enX
-         LwVfv0zmI3DJEHFpvSASe0yM2S1Sq1iYzlYzGkeA+kHNq2/O3Ai7xAPGbl9dkAYY1M
-         zNTEz9oAfdFFO2wXZEg4eGOPstDWdHWz9Lr66tJXhg0hfvPtQivUHsotyGJMrsSzuh
-         HYZESOGLSbx3LWDTVmx4fohYiWDavLN6bKRdxf6Sd8b1fg61mM1JTydZDHEmpI03Dx
-         eVzRSLswhX6lW6m6wKhhwfwXKxmXiPUn0qU0AETFPEcSQ0jH33PY+vswnt3wh7GQoa
-         lpC7cz91e6zfw==
-Received: from de02dwvm009.internal.synopsys.com (de02dwvm009.internal.synopsys.com [10.225.17.73])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 386F2A0233;
-        Tue,  6 Apr 2021 17:27:02 +0000 (UTC)
-X-SNPS-Relay: synopsys.com
-From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Derek Kiernan <derek.kiernan@xilinx.com>,
-        Dragan Cvetic <dragan.cvetic@xilinx.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jonathan Corbet <corbet@lwn.net>,
+        id S235068AbhDFRaB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Apr 2021 13:30:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55076 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232752AbhDFRaB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Apr 2021 13:30:01 -0400
+Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5738AC06174A;
+        Tue,  6 Apr 2021 10:29:52 -0700 (PDT)
+Received: by mail-oi1-x232.google.com with SMTP id i81so15916937oif.6;
+        Tue, 06 Apr 2021 10:29:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=e9XCrHRbPqjp2SIACD271qp9C9m0DUNFOwKAi0QKpXs=;
+        b=YBZah0WeABNCYq0ebm/I87ZFpbg0mlsv9pTMX6nhWLnrxZgASf89DWi7GzZlKD2svc
+         BTTN01jmIvz6EI6EZygJ/3n79A8xrD3wBk02eJduiV6a5gJT8VLsoZZoWDoWQDWZxJCi
+         z69rT/QA30kbdV4PchR3sj0XyKsqYjdneHxAaRj4Rv8WYywFUli5wHvegPOsbDs4KUGi
+         MrawLcKd21iWytX7uPzpgdt9Sr9oOCszLnq71v5x0uBhLhDpyFjfoy6NTAoxFeL3RoHx
+         wG1IQzGYERVPErQhJee16HLqo3lNgHXO8/7PTfysJe+EZ1NTLxpDW/GskLhCfK3Gg4tO
+         1f8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=e9XCrHRbPqjp2SIACD271qp9C9m0DUNFOwKAi0QKpXs=;
+        b=MmWNG9LiMzOb7rQu1P9Bnh5DNowTYpzBLv56be4CQDdAQaDUbi1nPCNqYxJlYHuyAc
+         xHjq0iwz1c3pHL7X/jdyMq69oq1CGAfgKNWtabyi8mwul86xqP792mBkxT/HjDw99Sy2
+         14k58GxvZ/vlynULbeaK+dIfDyNfnWbIyn2fWSKNat83sblYiF2dAb+EhIY3tw5+CUdU
+         7Ex5psL1ScxViEZMFBRmnvA3+o6DCEwy0ra6nt8N2xAxj6Q1MDj3C+cgAMYLyhSJmOu/
+         6iSXkDhiOQK91jRZNp1IMxhBlVubCtA2NIU0rwyZytPmZKhgdkGbIr++hhLSJiHElSOm
+         WRYA==
+X-Gm-Message-State: AOAM530QqpkIe53nkhjYdNXKONQxF94ScPWtsg7RMAwI/agYucXqrMDY
+        PMTxN/7PdI3TelvgKWz/mwqXFw1EnSdM16CEvmQ=
+X-Google-Smtp-Source: ABdhPJwE+fUN8o/LQb//6t43DmpeyIY8YaG40zK3+s4/evbg6pFMHv53bEk1TPp+MnBpqKtTbb5PjpE44JswmPwH61Q=
+X-Received: by 2002:aca:fc11:: with SMTP id a17mr4067194oii.68.1617730191812;
+ Tue, 06 Apr 2021 10:29:51 -0700 (PDT)
+MIME-Version: 1.0
+References: <20210401212148.47033-1-jim2101024@gmail.com> <20210401212148.47033-4-jim2101024@gmail.com>
+ <20210406163439.GL6443@sirena.org.uk> <CANCKTBvP66su2bXNMbawMfe3T7mpiQsRsG5xLfSPL2BWPNYFyw@mail.gmail.com>
+ <20210406172320.GO6443@sirena.org.uk>
+In-Reply-To: <20210406172320.GO6443@sirena.org.uk>
+From:   Jim Quinlan <jim2101024@gmail.com>
+Date:   Tue, 6 Apr 2021 13:29:40 -0400
+Message-ID: <CANCKTBvptjpNLyN-mZqynF=Af_X0X+OVasL==thQKzzBZ5r4yw@mail.gmail.com>
+Subject: Re: [PATCH v4 3/6] PCI: brcmstb: Add control of slot0 device voltage regulators
+To:     Mark Brown <broonie@kernel.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Rob Herring <robh@kernel.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v11 2/4] Documentation: misc-devices: Add Documentation for dw-xdata-pcie driver
-Date:   Tue,  6 Apr 2021 19:26:47 +0200
-Message-Id: <61eb643d12ba3fa50308268b0cc7fb111374724d.1617729785.git.gustavo.pimentel@synopsys.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1617729785.git.gustavo.pimentel@synopsys.com>
-References: <cover.1617729785.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1617729785.git.gustavo.pimentel@synopsys.com>
-References: <cover.1617729785.git.gustavo.pimentel@synopsys.com>
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Documentation for dw-xdata-pcie driver.
-
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
- Documentation/misc-devices/dw-xdata-pcie.rst | 64 ++++++++++++++++++++++++++++
- Documentation/misc-devices/index.rst         |  1 +
- 2 files changed, 65 insertions(+)
- create mode 100644 Documentation/misc-devices/dw-xdata-pcie.rst
-
-diff --git a/Documentation/misc-devices/dw-xdata-pcie.rst b/Documentation/misc-devices/dw-xdata-pcie.rst
-new file mode 100644
-index 00000000..a956e1a
---- /dev/null
-+++ b/Documentation/misc-devices/dw-xdata-pcie.rst
-@@ -0,0 +1,64 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+===========================================================================
-+Driver for Synopsys DesignWare PCIe traffic generator (also known as xData)
-+===========================================================================
-+
-+Supported chips:
-+Synopsys DesignWare PCIe prototype solution
-+
-+Data sheet:
-+Not freely available
-+
-+Author:
-+Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+
-+Description
-+-----------
-+
-+This driver should be used as a host-side (Root Complex) driver and Synopsys
-+DesignWare prototype that includes this IP.
-+
-+The dw-xdata-pcie driver can be used to enable/disable PCIe traffic
-+generator in either direction (mutual exclusion) besides allowing the
-+PCIe link performance analysis.
-+
-+The interaction with this driver is done through the module parameter and
-+can be changed in runtime. The driver outputs the requested command state
-+information to ``/var/log/kern.log`` or dmesg.
-+
-+Example
-+-------
-+
-+Write TLPs traffic generation - Root Complex to Endpoint direction
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+Generate traffic::
-+
-+        # echo 1 > /sys/class/misc/dw-xdata-pcie.0/write
-+
-+Get link throughput in MB/s::
-+
-+        # cat /sys/class/misc/dw-xdata-pcie.0/write
-+	204
-+
-+Stop traffic in any direction::
-+
-+        # echo 0 > /sys/class/misc/dw-xdata-pcie.0/write
-+
-+Read TLPs traffic generation - Endpoint to Root Complex direction
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+Generate traffic::
-+
-+        # echo 1 > /sys/class/misc/dw-xdata-pcie.0/read
-+
-+Get link throughput in MB/s::
-+
-+        # cat /sys/class/misc/dw-xdata-pcie.0/read
-+	199
-+
-+Stop traffic in any direction::
-+
-+        # echo 0 > /sys/class/misc/dw-xdata-pcie.0/read
-+
-diff --git a/Documentation/misc-devices/index.rst b/Documentation/misc-devices/index.rst
-index 64420b331..30ac58f 100644
---- a/Documentation/misc-devices/index.rst
-+++ b/Documentation/misc-devices/index.rst
-@@ -19,6 +19,7 @@ fit into other categories.
-    bh1770glc
-    eeprom
-    c2port
-+   dw-xdata-pcie
-    ibmvmc
-    ics932s401
-    isl29003
--- 
-2.7.4
-
+On Tue, Apr 6, 2021 at 1:23 PM Mark Brown <broonie@kernel.org> wrote:
+>
+> On Tue, Apr 06, 2021 at 12:59:16PM -0400, Jim Quinlan wrote:
+> > On Tue, Apr 6, 2021 at 12:34 PM Mark Brown <broonie@kernel.org> wrote:
+> > > On Thu, Apr 01, 2021 at 05:21:43PM -0400, Jim Quinlan wrote:
+>
+> > > This is broken, the driver knows which supplies are expected, the device
+> > > can't function without these supplies so the driver should just
+> > > unconditionally request them like any other supply.
+>
+> > Some boards require the regulators, some do not.  So the driver is
+>
+> No, some boards have the supplies described in firmware and some do not.
+True.
+>
+> > only  sure what the names may be if they are present.  If  I put these
+> > names in my struct regulator_bulk_data array and do a
+> > devm_regulator_bulk_get(), I will get the following for the boards
+> > that do not need the regulators (e.g. the RPi SOC):
+> >
+> > [    6.823820] brcm-pcie xxx.pcie: supply vpcie12v-supply not found,
+> > using dummy regulator
+> > [    6.832265] brcm-pcie xxx.pcie: supply vpcie3v3-supply not found,
+> > using dummy regulator
+>
+> Sure, those are just warnings.
+>
+> > IIRC you consider this a debug feature?  Be that as it may, these
+> > lines will confuse our customers and I'd like that they not be printed
+> > if possible.
+>
+> You can stop the warnings by updating your firmware to more completely
+> describe the system - ideally all the supplies in the system would be
+> described for future proofing.  Or if this is a custom software stack
+> just delete whatever error checking and warnings you like.  The warnings
+> are there in case we've not got something mapped properly (eg, if there
+> were a typo in a property name) and things stop working, it's not great
+> to just ignore errors.
+A lot of this is really not under our control.
+>
+> > So I ask you to allow the code as is.  If you still insist, I will
+> > change and resubmit.
+>
+> Remove it, conditional code like this is just as bad in this driver as
+> it is in every other one.
+I will remove this and resubmit.
+Thanks,
+Jim Quinlan
+Broadcom STB
