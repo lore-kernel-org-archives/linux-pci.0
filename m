@@ -2,160 +2,181 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70817C433B4
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 20:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E53AC433B4
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 20:32:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48B556136A
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 20:07:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04DF861184
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 20:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348993AbhDGUHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Apr 2021 16:07:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49600 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345853AbhDGUHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Apr 2021 16:07:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6E16061158;
-        Wed,  7 Apr 2021 20:07:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617826047;
-        bh=a6BQBkYBckWILIt+kdw/GGz0d9VSJVSXsYtBOcNTfvg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=upetZLxnv0XQGf4pDHYqYTctrM9Xl9I3ZxX+a4L/3q9zB+Bs5gKE37JiLKMvdzsxO
-         bNYCYzvb+lH6XQqK44xPxAwqJ3t0oJCBJjVQ8i+n6lKop77Ra/qnEoe44JrhZ/A2U4
-         u+Hv4xtNHEQ456WmvBYp2+MTv2KK/5Z9+AZH7r3YJ7GBIO0N0CkEOW/90sdManEu+R
-         l21XFXLYa2FrKEotLm7Bl6yKccwZrsFE3rP7x/8TVHtr5RfR9MaV1S7OkaGg7S04X8
-         GGCsk7xj8nI0Tu43OA/OVHsd2dPnldPZXCYxbfqIchUgqelXazhAuGX3O5EaTZG29a
-         NpuVEx6sRNnlA==
-Date:   Wed, 7 Apr 2021 21:07:09 +0100
-From:   Mark Brown <broonie@kernel.org>
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Jim Quinlan <jim2101024@gmail.com>, Rob Herring <robh@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
+        id S235864AbhDGUcV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Apr 2021 16:32:21 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:35192 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234326AbhDGUcS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Apr 2021 16:32:18 -0400
+Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id CCB90C0968;
+        Wed,  7 Apr 2021 20:32:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1617827528; bh=wpjbAZiEScHdjICXEd8kp+dWyXu3MmJRyQaO1oa27is=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=mCE/jU522M16vZ2tcE7+1Zrgr4WHmWsdS7UBfp3LmLDO99bR3JvHXkVTAxj/x4afE
+         +GE5bMCoAsQcv+IYO//CuW6lWqFpHooRKvrCnssDHtTwU3ENqOjmI4F6PvlAHUJZDC
+         Pv0tgCY2irE8uwxsqTdZ19QJew2P2mGz3Oqjp5Zi1L+2F7vPOR0HtidRyxT1gW3GtI
+         CMs6lMFZEsb8LBC+HX0tZNQRwJXt7UKtRi1XQO9AToXTm8EPJGkVb30JOOzHMrk3Th
+         I3rA5w/vGq0h++urwLvLEYlAE5ZM/uHnQ/Vi2XjhfukgMPNUahLRlJ/FFG5TjSGrXb
+         bky0H6GkGacbw==
+Received: from de02dwvm009.internal.synopsys.com (de02dwvm009.internal.synopsys.com [10.225.17.73])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 07211A0231;
+        Wed,  7 Apr 2021 20:32:05 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 2/6] dt-bindings: PCI: Add bindings for Brcmstb
- endpoint device voltage regulators
-Message-ID: <20210407200709.GG5510@sirena.org.uk>
-References: <20210401212148.47033-1-jim2101024@gmail.com>
- <20210401212148.47033-3-jim2101024@gmail.com>
- <20210406164708.GM6443@sirena.org.uk>
- <CANCKTBsiujTkOdh60etBqF_hE8exg6m9TDxkGHVVAGVS2SFCcQ@mail.gmail.com>
- <20210406173211.GP6443@sirena.org.uk>
- <CANCKTBv63b4bGepZbDp1wmFrOeddiDikoXbheMjHhbguAbR2sA@mail.gmail.com>
- <20210407112713.GB5510@sirena.org.uk>
- <03852d1a-1ee4-fd29-8523-4673c35f83cd@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="7lMq7vMTJT4tNk0a"
-Content-Disposition: inline
-In-Reply-To: <03852d1a-1ee4-fd29-8523-4673c35f83cd@gmail.com>
-X-Cookie: Dry clean only.
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v3 1/2] dw-xdata-pcie: Fix documentation build warns and update outdated info
+Date:   Wed,  7 Apr 2021 22:31:48 +0200
+Message-Id: <5e1bc55d098322908ebdf1c32512acad5b65d4d7.1617827290.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1617827290.git.gustavo.pimentel@synopsys.com>
+References: <cover.1617827290.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1617827290.git.gustavo.pimentel@synopsys.com>
+References: <cover.1617827290.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Fixes documentation build warnings related to indentation and text
+formatting, such as:
 
---7lMq7vMTJT4tNk0a
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Documentation/misc-devices/dw-xdata-pcie.rst:20: WARNING: Unexpected
+indentation.
+Documentation/misc-devices/dw-xdata-pcie.rst:24: WARNING: Unexpected
+indentation.
+Documentation/misc-devices/dw-xdata-pcie.rst:25: WARNING: Block quote
+ends without a blank line; unexpected unindent.
+Documentation/misc-devices/dw-xdata-pcie.rst:30: WARNING: Unexpected
+indentation.
+Documentation/misc-devices/dw-xdata-pcie.rst:34: WARNING: Unexpected
+indentation.
+Documentation/misc-devices/dw-xdata-pcie.rst:35: WARNING: Block quote
+ends without a blank line; unexpected unindent.
+Documentation/misc-devices/dw-xdata-pcie.rst:40: WARNING: Unexpected
+indentation.
 
-On Wed, Apr 07, 2021 at 11:35:57AM -0700, Florian Fainelli wrote:
-> On 4/7/2021 4:27 AM, Mark Brown wrote:
+Also fixes some outdated information related to stop file interface in sysfs.
 
-> > Frankly I'm not clear why you're trying to handle powering on PCI slots
-> > in a specific driver, surely PCI devices are PCI devices regardless of
-> > the controller?
+Fixes: e1181b5bbc3c ("Documentation: misc-devices: Add Documentation for dw-xdata-pcie driver")
+Link: https://lore.kernel.org/linux-next/20210406214615.40cf3493@canb.auug.org.au/
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ Documentation/misc-devices/dw-xdata-pcie.rst | 62 +++++++++++++++++++---------
+ 1 file changed, 43 insertions(+), 19 deletions(-)
 
-> There is no currently a way to deal with that situation since you have a
-> chicken and egg problem to solve: there is no pci_device created until
-> you enumerate the PCI bus, and you cannot enumerate the bus and create
-> those pci_devices unless you power on the slots/PCIe end-points attached
-> to the root complex. There are precedents like the rockchip PCIe RC
-> driver, and yes, we should not be cargo culting this, which is why we
-> are trying to understand what is it that should be done here and there
-> has been conflicting advice, or rather our interpretation has led to
-> perceiving it as a conflicting.
+diff --git a/Documentation/misc-devices/dw-xdata-pcie.rst b/Documentation/misc-devices/dw-xdata-pcie.rst
+index fd75c93..a956e1a 100644
+--- a/Documentation/misc-devices/dw-xdata-pcie.rst
++++ b/Documentation/misc-devices/dw-xdata-pcie.rst
+@@ -4,37 +4,61 @@
+ Driver for Synopsys DesignWare PCIe traffic generator (also known as xData)
+ ===========================================================================
+ 
++Supported chips:
++Synopsys DesignWare PCIe prototype solution
++
++Data sheet:
++Not freely available
++
++Author:
++Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++
++Description
++-----------
++
+ This driver should be used as a host-side (Root Complex) driver and Synopsys
+ DesignWare prototype that includes this IP.
+ 
+-The "dw-xdata-pcie" driver can be used to enable/disable PCIe traffic
++The dw-xdata-pcie driver can be used to enable/disable PCIe traffic
+ generator in either direction (mutual exclusion) besides allowing the
+ PCIe link performance analysis.
+ 
+ The interaction with this driver is done through the module parameter and
+ can be changed in runtime. The driver outputs the requested command state
+-information to /var/log/kern.log or dmesg.
++information to ``/var/log/kern.log`` or dmesg.
++
++Example
++-------
++
++Write TLPs traffic generation - Root Complex to Endpoint direction
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++Generate traffic::
++
++        # echo 1 > /sys/class/misc/dw-xdata-pcie.0/write
+ 
+-Request write TLPs traffic generation - Root Complex to Endpoint direction
+-- Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/write
++Get link throughput in MB/s::
+ 
+-Get write TLPs traffic link throughput in MB/s
+-- Command:
+-        cat /sys/class/misc/dw-xdata-pcie/write
+-- Output example:
++        # cat /sys/class/misc/dw-xdata-pcie.0/write
+ 	204
+ 
+-Request read TLPs traffic generation - Endpoint to Root Complex direction:
+-- Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/read
++Stop traffic in any direction::
+ 
+-Get read TLPs traffic link throughput in MB/s
+-- Command:
+-        cat /sys/class/misc/dw-xdata-pcie/read
+-- Output example:
++        # echo 0 > /sys/class/misc/dw-xdata-pcie.0/write
++
++Read TLPs traffic generation - Endpoint to Root Complex direction
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++
++Generate traffic::
++
++        # echo 1 > /sys/class/misc/dw-xdata-pcie.0/read
++
++Get link throughput in MB/s::
++
++        # cat /sys/class/misc/dw-xdata-pcie.0/read
+ 	199
+ 
+-Request to stop any current TLP transfer:
+-- Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/stop
++Stop traffic in any direction::
++
++        # echo 0 > /sys/class/misc/dw-xdata-pcie.0/read
++
+-- 
+2.7.4
 
-As you note below I've pointed you at Slimbus which has a similar
-problem and solves it at a bus level although it thought of this from
-day one which makes life easier; I do think it'd be good to get this
-stuff in the driver core since it's an issue that affects every
-enumerable bus in the end but nobody's summoned up the enthusiasm for
-that (including me).
-
-> If the regulator had a variation where it supported passing a
-> device_node reference to look up regulator properties, we could solve
-> this generically for all devices, that does not exist, and you stated
-> you will not accept changes like those, fair enough.
-
-I'm certainly not enthusiastic about the idea and the likely abuse isn't
-inspiring, and of course regulators aren't the only resource that might
-be needed to get something up and running and would need to be extended
-in the end.  That said I've not seen any concrete proposals either.
-
-> When you suggested to look at soundwire for an example of "software
-> devices", we did that but it was not clear where the sdw_slave would be
-> created prior to sdw_slave_add(), but this does not matter too much.
-
-Looks like sdw_acpi_find_slaves() and sdw_of_find_slaves().
-
-> Let us say we try to solve this generically using the same idea that we
-> would pre-populate pci_device prior to calling pci_scan_child_bus(). We
-> could do something along these lines:
-
-...
-
-> - from there on we try to get the regulators of those pci_device objects
-> we just allocated and we try to enable their regulators, either based on
-> a specific list of supplies or just trying to enable all supplied declared.
-
-I'd suggest specfying the supplies that PCI provides to slots in the
-spec with standard names and just using that list, at least as a start.
-That'd probably cover most cases and allow the binding to be written at
-the generic PCI level rather than having individual devices need to name
-their supplies for the binding documentation and validation stuff which
-seems easier.  Devices with extra stuff can always extend the binding.
-
-> - now pci_scan_child_bus() will attempt to scan the bus for real by
-> reading the pci_device objects ID but we already have such objects, so
-> we need to update pci_scan_device() to search bus::devices and if
-> nothing is found we allocate one
-
-> Is that roughly what you have in mind as to what should be done?
-
-Yes, pretty much.  Ideally there'd be some way for drivers to get a
-callback prior to enumeration to handle any custom stuff for embedded
-cases but unless someone actually has a use case for that you could just
-punt.
-
---7lMq7vMTJT4tNk0a
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmBuEOwACgkQJNaLcl1U
-h9AdLwf/RsAf7UG+ffz3mi2yHRfdLT+R1kAAHHjvZu3yk1w4XvfbIGwyQ0GqFjsh
-bVGHEaP41hJtr+0o8FQOk2warQy4R2aq1rFUAFUsa3j126r6CmanfM7bBTWPwhxx
-5PL2C3RC27LH4RBK851FFVDOsQ4+Wb7DjGEMxsxaEfadT+EUWGAeNauSyXXefrmZ
-Kpwkcwj2Bif3E8oGWcugThD/rcgI15cf32LKRrwMj259Ba/RiCaZBOUM3AFd72Ep
-BVqo9whlen+wRXMYEGDdC2mnW+yyGQAb36KObjAU0rcHQoHJL8HbT1l02B2oFhKN
-MoH3G5M+ZMogQd8ebBqRK4Eh0WlJIQ==
-=bCrR
------END PGP SIGNATURE-----
-
---7lMq7vMTJT4tNk0a--
