@@ -7,210 +7,157 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A426C433B4
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 13:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F31C433ED
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 13:37:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2E7761394
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 13:19:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8E8761245
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Apr 2021 13:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234246AbhDGNT3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Apr 2021 09:19:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58032 "EHLO mail.kernel.org"
+        id S1344467AbhDGNhh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Apr 2021 09:37:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60634 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235861AbhDGNTV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Apr 2021 09:19:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D90DC61394;
-        Wed,  7 Apr 2021 13:19:11 +0000 (UTC)
+        id S233071AbhDGNhg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Apr 2021 09:37:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E11861246;
+        Wed,  7 Apr 2021 13:37:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1617801552;
-        bh=LTkohUbPF6Bi0usi+I5EMI/7O/T2JNpdfdjkmll4mqc=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=Kqp8jArwrojMAJGeP7WVtOPuOJb6aLYI1QEAYtSX69pVNYOckcJv82nFfEUAkn22R
-         KlQ2ugk7eqW8nUoO9zLMEDqF20/YlvesWxR3cl+aTfTEaAlXBPHh3jtdgc1PcbdBw/
-         oly69z9hBpeNoy1kLCYLD7TOyIysnk3U/G3ZNby56pUoe5px6/masGj96nDAzy8EuB
-         5mrZozq/gYR4DfqP5QZ+3weOFPxTN0c41uGVnL2feqVp5ahmMmdCc3ZXEPATH18oYV
-         U42nGp/NvJtmBl8GR/sltvnc01LEaiQDIeSlNbdRqtSTzBMZBFSgi7qMg8ZGdbbEHx
-         uQnmvBalRM7Fg==
-Received: by mail-ed1-f47.google.com with SMTP id ba6so13313241edb.1;
-        Wed, 07 Apr 2021 06:19:11 -0700 (PDT)
-X-Gm-Message-State: AOAM532PU5w/4/8r0kEXwCQZH/LOxZ2mmlxsTdRYlJAHAERV9gSlpU0S
-        NeVMWgofYvaQvtDa4BqH3+38tkcWtXi+H/RWLA==
-X-Google-Smtp-Source: ABdhPJxouTy0fl89h71UvityxWxXCCSfDE+yhlKWwGiRJuvEWO5V5qJmXkmAupn88a+4qG04LBTr4o4N2tIv4Y6sAw4=
-X-Received: by 2002:aa7:d3c8:: with SMTP id o8mr4435514edr.289.1617801550253;
- Wed, 07 Apr 2021 06:19:10 -0700 (PDT)
+        s=k20201202; t=1617802647;
+        bh=mrQ+Tm9p4blQbqcBd/No61KqFpi6MoGU+N73xYe9Hd8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dakhUNsMCUgRJpYExHY5DP+8MwFdh9zNH2uIlFX0ZjA8RarfeVZSM33KYVPWEl4D8
+         gDWhEH70bTa21CdezzxVT0Z3kjYG6dzK0pqDVOAxWorEC9248v2pNJPxYfs9p7P+s8
+         4NKnYbuXwM+Z3HiQuGVbdIqY10XjinL8cODJ5lyk4stD3d0qgWE8dInb40jp5C6/ju
+         CnFdHqzHyMXN/32hc+NXjs0rzo/ps8xbJE/p8h0oau8vY5gKSJbPt9aLr8zJsE1fbF
+         cwLafD3dNmnXZNELYOzEWfi99TJgetlRskL8dClWEeT4h4kh7Vj9ZFwVSK/psq/jlP
+         Z9XxWwBrKz+qw==
+Date:   Wed, 7 Apr 2021 16:37:23 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     "ameynarkhede03@gmail.com" <ameynarkhede03@gmail.com>
+Cc:     Raphael Norwitz <raphael.norwitz@nutanix.com>,
+        AlexWilliamson@archlinux, alex.williamson@redhat.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: merge slot and bus reset implementations
+Message-ID: <YG21k6/4QQNrw41S@unreal>
+References: <20210401053656.16065-1-raphael.norwitz@nutanix.com>
+ <YGW8Oe9jn+n9sVsw@unreal>
+ <20210401105616.71156d08@omen>
+ <YGlzEA5HL6ZvNsB8@unreal>
+ <20210406081626.31f19c0f@x1.home.shazbot.org>
+ <YG1eBUY0vCTV+Za/@unreal>
+ <20210407082356.53subv4np2fx777x@archlinux>
+ <YG2l+AbQW1N0bbQ9@unreal>
+ <20210407130601.aleyww5d5mttitry@archlinux>
 MIME-Version: 1.0
-References: <20210407031839.386088-1-nobuhiro1.iwamatsu@toshiba.co.jp> <20210407031839.386088-2-nobuhiro1.iwamatsu@toshiba.co.jp>
-In-Reply-To: <20210407031839.386088-2-nobuhiro1.iwamatsu@toshiba.co.jp>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Wed, 7 Apr 2021 08:18:58 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqJew19jBJ-WpGNCK2AD+nUQsQBjJ7-ye9Cgort8AuG8mQ@mail.gmail.com>
-Message-ID: <CAL_JsqJew19jBJ-WpGNCK2AD+nUQsQBjJ7-ye9Cgort8AuG8mQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] dt-bindings: pci: Add DT binding for Toshiba Visconti
- PCIe controller
-To:     Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        Punit Agrawal <punit1.agrawal@toshiba.co.jp>,
-        yuji2.ishikawa@toshiba.co.jp,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210407130601.aleyww5d5mttitry@archlinux>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 6, 2021 at 10:19 PM Nobuhiro Iwamatsu
-<nobuhiro1.iwamatsu@toshiba.co.jp> wrote:
->
-> This commit adds the Device Tree binding documentation that allows
-> to describe the PCIe controller found in Toshiba Visconti SoCs.
->
-> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-> ---
->  .../bindings/pci/toshiba,visconti-pcie.yaml   | 121 ++++++++++++++++++
->  1 file changed, 121 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
->
-> diff --git a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-> new file mode 100644
-> index 000000000000..8ab60c235007
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-> @@ -0,0 +1,121 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/toshiba,visconti-pcie.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Toshiba Visconti5 SoC PCIe Host Controller Device Tree Bindings
-> +
-> +maintainers:
-> +  - Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-> +
-> +description: |+
-> +  Toshiba Visconti5 SoC PCIe host controller is based on the Synopsys DesignWare PCIe IP.
-> +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-bus.yaml#
-> +
-> +properties:
-> +  compatible:
-> +    const: toshiba,visconti-pcie
-> +
-> +  reg:
-> +    items:
-> +      - description: Data Bus Interface (DBI) registers.
-> +      - description: PCIe configuration space region.
-> +      - description: Visconti specific additional registers.
-> +      - description: Visconti specific SMU registers
-> +      - description: Visconti specific memory protection unit registers (MPU)
-> +
-> +  reg-names:
-> +    items:
-> +      - const: dbi
-> +      - const: config
-> +      - const: ulreg
-> +      - const: smu
-> +      - const: mpu
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  clocks:
-> +    items:
-> +      - description: PCIe reference clock
-> +      - description: PCIe system clock
-> +      - description: Auxiliary clock
-> +
-> +  clock-names:
-> +    items:
-> +      - const: pcie_refclk
-> +      - const: sysclk
-> +      - const: auxclk
-> +
-> +  num-lanes:
-> +    const: 2
-> +
-> +  num-viewport:
-> +    const: 8
+On Wed, Apr 07, 2021 at 06:36:01PM +0530, ameynarkhede03@gmail.com wrote:
+> On 21/04/07 03:30PM, Leon Romanovsky wrote:
+> > On Wed, Apr 07, 2021 at 01:53:56PM +0530, ameynarkhede03@gmail.com wrote:
+> > > On 21/04/07 10:23AM, Leon Romanovsky wrote:
+> > > > On Tue, Apr 06, 2021 at 08:16:26AM -0600, Alex Williamson wrote:
+> > > > > On Sun, 4 Apr 2021 11:04:32 +0300
+> > > > > Leon Romanovsky <leon@kernel.org> wrote:
+> > > > >
+> > > > > > On Thu, Apr 01, 2021 at 10:56:16AM -0600, Alex Williamson wrote:
+> > > > > > > On Thu, 1 Apr 2021 15:27:37 +0300
+> > > > > > > Leon Romanovsky <leon@kernel.org> wrote:
+> > > > > > >
+> > > > > > > > On Thu, Apr 01, 2021 at 05:37:16AM +0000, Raphael Norwitz wrote:
+> > > > > > > > > Slot resets are bus resets with additional logic to prevent a device
+> > > > > > > > > from being removed during the reset. Currently slot and bus resets have
+> > > > > > > > > separate implementations in pci.c, complicating higher level logic. As
+> > > > > > > > > discussed on the mailing list, they should be combined into a generic
+> > > > > > > > > function which performs an SBR. This change adds a function,
+> > > > > > > > > pci_reset_bus_function(), which first attempts a slot reset and then
+> > > > > > > > > attempts a bus reset if -ENOTTY is returned, such that there is now a
+> > > > > > > > > single device agnostic function to perform an SBR.
+> > > > > > > > >
+> > > > > > > > > This new function is also needed to add SBR reset quirks and therefore
+> > > > > > > > > is exposed in pci.h.
+> > > > > > > > >
+> > > > > > > > > Link: https://lkml.org/lkml/2021/3/23/911
+> > > > > > > > >
+> > > > > > > > > Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> > > > > > > > > Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
+> > > > > > > > > Signed-off-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
+> > > > > > > > > ---
+> > > > > > > > >  drivers/pci/pci.c   | 17 +++++++++--------
+> > > > > > > > >  include/linux/pci.h |  1 +
+> > > > > > > > >  2 files changed, 10 insertions(+), 8 deletions(-)
+> > > > > > > > >
+> > > > > > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > > > > > index 16a17215f633..12a91af2ade4 100644
+> > > > > > > > > --- a/drivers/pci/pci.c
+> > > > > > > > > +++ b/drivers/pci/pci.c
+> > > > > > > > > @@ -4982,6 +4982,13 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+> > > > > > > > >  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+> > > > > > > > >  }
+> > > > > > > > >
+> > > > > > > > > +int pci_reset_bus_function(struct pci_dev *dev, int probe)
+> > > > > > > > > +{
+> > > > > > > > > +	int rc = pci_dev_reset_slot_function(dev, probe);
+> > > > > > > > > +
+> > > > > > > > > +	return (rc == -ENOTTY) ? pci_parent_bus_reset(dev, probe) : rc;
+> > > > > > > >
+> > > > > > > > The previous coding style is preferable one in the Linux kernel.
+> > > > > > > > int rc = pci_dev_reset_slot_function(dev, probe);
+> > > > > > > > if (rc != -ENOTTY)
+> > > > > > > >   return rc;
+> > > > > > > > return pci_parent_bus_reset(dev, probe);
+> > > > > > >
+> > > > > > >
+> > > > > > > That'd be news to me, do you have a reference?  I've never seen
+> > > > > > > complaints for ternaries previously.  Thanks,
+> > > > > >
+> > > > > > The complaint is not to ternaries, but to the function call as one of
+> > > > > > the parameters, that makes it harder to read.
+> > > > >
+> > > > > Sorry, I don't find a function call as a parameter to a ternary to be
+> > > > > extraordinary, nor do I find it to be a discouraged usage model within
+> > > > > the kernel.  This seems like a pretty low bar for hard to read code.
+> > > >
+> > > > It is up to us where this bar is set.
+> > > >
+> > > > Thanks
+> > > On the side note there are plenty of places where this pattern is used
+> > > though
+> > > for example -
+> > > kernel/time/clockevents.c:328:
+> > > return force ? clockevents_program_min_delta(dev) : -ETIME;
+> > >
+> > > kernel/trace/trace_kprobe.c:233:
+> > > return tk ? within_error_injection_list(trace_kprobe_address(tk)) :
+> > >        false;
+> > >
+> > > kernel/signal.c:3104:
+> > > return oset ? put_compat_sigset(oset, &old_set, sizeof(*oset)) : 0;
+> > > etc
+> >
+> > Did you look when they were introduced?
+> >
+> > Thanks
+> >
+> that code trace_kprobe in 2 years old.
+> If you want more recent example checkout
+> drivers/pci/controller/pcie-brcmstb.c:1112,1117:
+> return pcie->rescal ? brcm_phy_cntl(pcie, 1) : 0;
+> which was introduced 7 months ago.
+> There are lot of examples in pci.c also.
 
-Drop this, we detect this now.
+Yeah, I know, copy-paste is a powerful tool.
 
-> +
-> +required:
+Can we please progress with this patch instead of doing
+archaeological research?
 
-Drop everything that pci-bus.yaml already requires.
+Thanks
 
-> +  - reg
-> +  - reg-names
-> +  - interrupts
-> +  - "#address-cells"
-> +  - "#size-cells"
-> +  - "#interrupt-cells"
-> +  - interrupt-map
-> +  - interrupt-map-mask
-> +  - ranges
-> +  - bus-range
-
-If you support 0-0xff, there's no need for this to be required.
-
-> +  - device_type
-> +  - num-lanes
-> +  - num-viewport
-> +  - clocks
-> +  - clock-names
-> +  - max-link-speed
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +
-> +    soc {
-> +        #address-cells = <2>;
-> +        #size-cells = <2>;
-> +
-> +        pcie: pcie@28400000 {
-> +            compatible = "toshiba,visconti-pcie";
-> +            reg = <0x0 0x28400000 0x0 0x00400000>,
-> +                  <0x0 0x70000000 0x0 0x10000000>,
-> +                  <0x0 0x28050000 0x0 0x00010000>,
-> +                  <0x0 0x24200000 0x0 0x00002000>,
-> +                  <0x0 0x24162000 0x0 0x00001000>;
-> +            reg-names  = "dbi", "config", "ulreg", "smu", "mpu";
-> +            device_type = "pci";
-> +            bus-range = <0x00 0xff>;
-> +            num-lanes = <2>;
-> +            num-viewport = <8>;
-> +
-> +            #address-cells = <3>;
-> +            #size-cells = <2>;
-> +            #interrupt-cells = <1>;
-> +            ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000>,
-> +                     <0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
-> +            interrupts = <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-> +            interrupt-names = "intr";
-> +            interrupt-map-mask = <0 0 0 7>;
-> +            interrupt-map =
-> +                <0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-> +                 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-> +                 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-> +                 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-> +            clocks = <&extclk100mhz>, <&clk600mhz>, <&clk25mhz>;
-> +            clock-names = "pcie_refclk", "sysclk", "auxclk";
-> +            max-link-speed = <2>;
-> +
-> +            status = "disabled";
-
-Don't show status in examples.
-
-> +        };
-> +    };
-> +...
-> --
-> 2.30.0.rc2
->
+> 
+> Thanks,
+> Amey
