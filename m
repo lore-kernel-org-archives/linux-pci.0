@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3516C43470
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Apr 2021 17:01:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A81C001E2
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Apr 2021 17:01:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CCF160FDB
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Apr 2021 17:01:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80E8A611F0
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Apr 2021 17:01:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232537AbhDHRB6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Apr 2021 13:01:58 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:36196 "EHLO
+        id S232524AbhDHRB4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Apr 2021 13:01:56 -0400
+Received: from ale.deltatee.com ([204.191.154.188]:36160 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232488AbhDHRBy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Apr 2021 13:01:54 -0400
+        with ESMTP id S232469AbhDHRBx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Apr 2021 13:01:53 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=pIy/hcM3RipH3vmChKhmRErsUYIkx5VaVGpWGhMgMeA=; b=LFhWQMIB3cTAHDrUoTtRJqph2g
-        y/FVZw/7RCie2d5/Q7/39RDhhxh87Rkvhas8fgx6hdfwAqQyw4Ghy7b4XAZeJO3C+rCHNwYDZYVd/
-        hzF86fXWFtqgzOPLyG/A1G35mWjjkEVgh4YFDVSt5ZTlErObnmieyPlj6Ql9TU0tVhmhzsEeDkSGi
-        sIF9MbiVyMc9DyF6hKzKwF91ejOjMpB5fJqFF0/h5y5LfXtTRdlqswjYfWzCyM4N1Ik78t1owm0j+
-        zyXiH0FiR4VSlPANDyKS9JnHs6p74/BqQO8qTtVSYkPB9K04P2Shg0SIEnN3zdb+Kv2ps5W9fcQVg
-        7QFDVUrA==;
+        bh=flK7AVROsAWPTBpHhkc1ioOIaxg1QDUQbObkXE3xVRk=; b=iHt+tHjpDCqThUdOdXRF9HfSfw
+        KNXlTyqVkvY8G7kKWMV9DPMmPD/5B3Sw6SR3woTsOwnCmhXrGeo9I6Po3h2QXY7qCYMB4wnnYBxzu
+        m2BDsINQbkc1hRwfeeYKXrD7GUMW7IcGe6tBW0QEVLkA+FNLz2wdG8585h+SPTrMvjL/5fy3tDnXz
+        0G8kBwrsSkDDxVGJ0mDBkCzQRWDSKp2jRqXPUd9o0wXmbrKaWnqFA2ZixJXebw//4RWMfqZJ6v4EO
+        +Lu2+psTmv0g/Irh2zayIgHNMU5ljvAP97EqEX3L+3DwX3aDzdv+6WeM1oenKyKx24Ev5seQhunPn
+        sIQICdGg==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lUY2G-0002Li-Td; Thu, 08 Apr 2021 11:01:42 -0600
+        id 1lUY2G-0002Ll-Lh; Thu, 08 Apr 2021 11:01:41 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lUY25-0002J0-MA; Thu, 08 Apr 2021 11:01:29 -0600
+        id 1lUY26-0002J6-0C; Thu, 08 Apr 2021 11:01:30 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -58,149 +58,168 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Ira Weiny <ira.weiny@intel.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu,  8 Apr 2021 11:01:13 -0600
-Message-Id: <20210408170123.8788-7-logang@deltatee.com>
+Date:   Thu,  8 Apr 2021 11:01:15 -0600
+Message-Id: <20210408170123.8788-9-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210408170123.8788-1-logang@deltatee.com>
 References: <20210408170123.8788-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 06/16] lib/scatterlist: Add flag for indicating P2PDMA segments in an SGL
+Subject: [PATCH 08/16] PCI/P2PDMA: Introduce helpers for dma_map_sg implementations
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make use of the third free LSB in scatterlist's page_link on 64bit systems.
+Add pci_p2pdma_map_segment() as a helper for simple dma_map_sg()
+implementations. It takes an scatterlist segment that must point to a
+pci_p2pdma struct page and will map it if the mapping requires a bus
+address.
 
-The extra bit will be used by dma_[un]map_sg_p2pdma() to determine when a
-given SGL segments dma_address points to a PCI bus address.
-dma_unmap_sg_p2pdma() will need to perform different cleanup when a
-segment is marked as P2PDMA.
+The return value indicates whether the mapping required a bus address
+or whether the caller still needs to map the segment normally. If the
+segment should not be mapped, -EREMOTEIO is returned.
 
-Using this bit requires adding an additional dependency on CONFIG_64BIT to
-CONFIG_PCI_P2PDMA. This should be acceptable as the majority of P2PDMA
-use cases are restricted to newer root complexes and roughly require the
-extra address space for memory BARs used in the transactions.
+This helper uses a state structure to track the changes to the
+pgmap across calls and avoid needing to lookup into the xarray for
+every page.
+
+Also add pci_p2pdma_map_bus_segment() which is useful for IOMMU
+dma_map_sg() implementations where the sg segment containing the page
+differs from the sg segment containing the DMA address.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/Kconfig         |  2 +-
- include/linux/scatterlist.h | 49 ++++++++++++++++++++++++++++++++++---
- 2 files changed, 46 insertions(+), 5 deletions(-)
+ drivers/pci/p2pdma.c       | 65 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-p2pdma.h | 21 ++++++++++++
+ 2 files changed, 86 insertions(+)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 0c473d75e625..90b4bddb3300 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -163,7 +163,7 @@ config PCI_PASID
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 38c93f57a941..44ad7664e875 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -923,6 +923,71 @@ void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg_attrs);
  
- config PCI_P2PDMA
- 	bool "PCI peer-to-peer transfer support"
--	depends on ZONE_DEVICE
-+	depends on ZONE_DEVICE && 64BIT
- 	select GENERIC_ALLOCATOR
- 	help
- 	  Enableѕ drivers to do PCI peer-to-peer transactions to and from
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 6f70572b2938..5525d3ebf36f 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -58,6 +58,21 @@ struct sg_table {
- #define SG_CHAIN	0x01UL
- #define SG_END		0x02UL
- 
-+/*
-+ * bit 2 is the third free bit in the page_link on 64bit systems which
-+ * is used by dma_unmap_sg() to determine if the dma_address is a PCI
-+ * bus address when doing P2PDMA.
-+ * Note: CONFIG_PCI_P2PDMA depends on CONFIG_64BIT because of this.
++/**
++ * pci_p2pdma_map_segment - map an sg segment determining the mapping type
++ * @state: State structure that should be declared on the stack outside of
++ *	the for_each_sg() loop and initialized to zero.
++ * @dev: DMA device that's doing the mapping operation
++ * @sg: scatterlist segment to map
++ * @attrs: dma mapping attributes
++ *
++ * This is a helper to be used by non-iommu dma_map_sg() implementations where
++ * the sg segment is the same for the page_link and the dma_address.
++ *
++ * Attempt to map a single segment in an SGL with the PCI bus address.
++ * The segment must point to a PCI P2PDMA page and thus must be
++ * wrapped in a is_pci_p2pdma_page(sg_page(sg)) check.
++ *
++ * Returns 1 if the segment was mapped, 0 if the segment should be mapped
++ * directly (or through the IOMMU) and -EREMOTEIO if the segment should not
++ * be mapped at all.
 + */
++int pci_p2pdma_map_segment(struct pci_p2pdma_map_state *state,
++			   struct device *dev, struct scatterlist *sg,
++			   unsigned long dma_attrs)
++{
++	if (state->pgmap != sg_page(sg)->pgmap) {
++		state->pgmap = sg_page(sg)->pgmap;
++		state->map = pci_p2pdma_map_type(state->pgmap, dev, dma_attrs);
++		state->bus_off = to_p2p_pgmap(state->pgmap)->bus_offset;
++	}
 +
-+#ifdef CONFIG_PCI_P2PDMA
-+#define SG_PCI_P2PDMA	0x04UL
-+#else
-+#define SG_PCI_P2PDMA	0x00UL
-+#endif
++	switch (state->map) {
++	case PCI_P2PDMA_MAP_BUS_ADDR:
++		sg->dma_address = sg_phys(sg) + state->bus_off;
++		sg_dma_len(sg) = sg->length;
++		sg_mark_pci_p2pdma(sg);
++		return 1;
++	case PCI_P2PDMA_MAP_THRU_HOST_BRIDGE:
++		return 0;
++	default:
++		return -EREMOTEIO;
++	}
++}
 +
-+#define SG_PAGE_LINK_MASK (SG_CHAIN | SG_END | SG_PCI_P2PDMA)
++/**
++ * pci_p2pdma_map_bus_segment - map an sg segment pre determined to
++ *	be mapped with PCI_P2PDMA_MAP_BUS_ADDR
++ * @pg_sg: scatterlist segment with the page to map
++ * @dma_sg: scatterlist segment to assign a dma address to
++ *
++ * This is a helper for iommu dma_map_sg() implementations when the
++ * segment for the dma address differs from the segment containing the
++ * source page.
++ *
++ * pci_p2pdma_map_type() must have already been called on the pg_sg and
++ * returned PCI_P2PDMA_MAP_BUS_ADDR.
++ */
++void pci_p2pdma_map_bus_segment(struct scatterlist *pg_sg,
++				struct scatterlist *dma_sg)
++{
++	struct pci_p2pdma_pagemap *pgmap = to_p2p_pgmap(sg_page(pg_sg)->pgmap);
 +
- /*
-  * We overload the LSB of the page pointer to indicate whether it's
-  * a valid sg entry, or whether it points to the start of a new scatterlist.
-@@ -65,8 +80,9 @@ struct sg_table {
-  */
- #define sg_is_chain(sg)		((sg)->page_link & SG_CHAIN)
- #define sg_is_last(sg)		((sg)->page_link & SG_END)
-+#define sg_is_pci_p2pdma(sg)	((sg)->page_link & SG_PCI_P2PDMA)
- #define sg_chain_ptr(sg)	\
--	((struct scatterlist *) ((sg)->page_link & ~(SG_CHAIN | SG_END)))
-+	((struct scatterlist *) ((sg)->page_link & ~SG_PAGE_LINK_MASK))
- 
++	dma_sg->dma_address = sg_phys(pg_sg) + pgmap->bus_offset;
++	sg_dma_len(dma_sg) = pg_sg->length;
++	sg_mark_pci_p2pdma(dma_sg);
++}
++
  /**
-  * sg_assign_page - Assign a given page to an SG entry
-@@ -80,13 +96,13 @@ struct sg_table {
-  **/
- static inline void sg_assign_page(struct scatterlist *sg, struct page *page)
+  * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
+  *		to enable p2pdma
+diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
+index a06072ac3a52..49e7679403cf 100644
+--- a/include/linux/pci-p2pdma.h
++++ b/include/linux/pci-p2pdma.h
+@@ -13,6 +13,12 @@
+ 
+ #include <linux/pci.h>
+ 
++struct pci_p2pdma_map_state {
++	struct dev_pagemap *pgmap;
++	int map;
++	u64 bus_off;
++};
++
+ struct block_device;
+ struct scatterlist;
+ 
+@@ -43,6 +49,11 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 		int nents, enum dma_data_direction dir, unsigned long attrs);
+ void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 		int nents, enum dma_data_direction dir, unsigned long attrs);
++int pci_p2pdma_map_segment(struct pci_p2pdma_map_state *state,
++		struct device *dev, struct scatterlist *sg,
++		unsigned long dma_attrs);
++void pci_p2pdma_map_bus_segment(struct scatterlist *pg_sg,
++				struct scatterlist *dma_sg);
+ int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
+ 			    bool *use_p2pdma);
+ ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
+@@ -109,6 +120,16 @@ static inline void pci_p2pdma_unmap_sg_attrs(struct device *dev,
+ 		unsigned long attrs)
  {
--	unsigned long page_link = sg->page_link & (SG_CHAIN | SG_END);
-+	unsigned long page_link = sg->page_link & SG_PAGE_LINK_MASK;
- 
- 	/*
- 	 * In order for the low bit stealing approach to work, pages
- 	 * must be aligned at a 32-bit boundary as a minimum.
- 	 */
--	BUG_ON((unsigned long) page & (SG_CHAIN | SG_END));
-+	BUG_ON((unsigned long) page & SG_PAGE_LINK_MASK);
- #ifdef CONFIG_DEBUG_SG
- 	BUG_ON(sg_is_chain(sg));
- #endif
-@@ -120,7 +136,7 @@ static inline struct page *sg_page(struct scatterlist *sg)
- #ifdef CONFIG_DEBUG_SG
- 	BUG_ON(sg_is_chain(sg));
- #endif
--	return (struct page *)((sg)->page_link & ~(SG_CHAIN | SG_END));
-+	return (struct page *)((sg)->page_link & ~SG_PAGE_LINK_MASK);
  }
- 
- /**
-@@ -222,6 +238,31 @@ static inline void sg_unmark_end(struct scatterlist *sg)
- 	sg->page_link &= ~SG_END;
- }
- 
-+/**
-+ * sg_mark_pci_p2pdma - Mark the scatterlist entry for PCI p2pdma
-+ * @sg:		 SG entryScatterlist
-+ *
-+ * Description:
-+ *   Marks the passed in sg entry to indicate that the dma_address is
-+ *   a PCI bus address.
-+ **/
-+static inline void sg_mark_pci_p2pdma(struct scatterlist *sg)
++static inline int pci_p2pdma_map_segment(struct pci_p2pdma_map_state *state,
++		struct device *dev, struct scatterlist *sg,
++		unsigned long dma_attrs)
 +{
-+	sg->page_link |= SG_PCI_P2PDMA;
++	return 0;
 +}
-+
-+/**
-+ * sg_unmark_pci_p2pdma - Unmark the scatterlist entry for PCI p2pdma
-+ * @sg:		 SG entryScatterlist
-+ *
-+ * Description:
-+ *   Clears the PCI P2PDMA mark
-+ **/
-+static inline void sg_unmark_pci_p2pdma(struct scatterlist *sg)
++static inline void pci_p2pdma_map_bus_segment(struct scatterlist *pg_sg,
++					      struct scatterlist *dma_sg)
 +{
-+	sg->page_link &= ~SG_PCI_P2PDMA;
 +}
-+
- /**
-  * sg_phys - Return physical address of an sg entry
-  * @sg:	     SG entry
+ static inline int pci_p2pdma_enable_store(const char *page,
+ 		struct pci_dev **p2p_dev, bool *use_p2pdma)
+ {
 -- 
 2.20.1
 
