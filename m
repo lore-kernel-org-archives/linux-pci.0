@@ -2,97 +2,84 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 257CAC433B4
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 16:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 501BBC433ED
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 16:46:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5FC2600EF
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 16:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32EDF610CC
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 16:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233713AbhDIQdA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Apr 2021 12:33:00 -0400
-Received: from mx.socionext.com ([202.248.49.38]:3688 "EHLO mx.socionext.com"
+        id S233929AbhDIQq1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Apr 2021 12:46:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44636 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233978AbhDIQdA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Apr 2021 12:33:00 -0400
-Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 10 Apr 2021 01:22:29 +0900
-Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
-        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 8972C2059027;
-        Sat, 10 Apr 2021 01:22:29 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Sat, 10 Apr 2021 01:22:29 +0900
-Received: from plum.e01.socionext.com (unknown [10.213.132.32])
-        by kinkan2.css.socionext.com (Postfix) with ESMTP id 30F7BB1D40;
-        Sat, 10 Apr 2021 01:22:29 +0900 (JST)
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marc Zyngier <maz@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Jassi Brar <jaswinder.singh@linaro.org>,
-        Masami Hiramatsu <masami.hiramatsu@linaro.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v10 2/3] PCI: dwc: Add msi_host_isr() callback
-Date:   Sat, 10 Apr 2021 01:22:17 +0900
-Message-Id: <1617985338-19648-3-git-send-email-hayashi.kunihiko@socionext.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1617985338-19648-1-git-send-email-hayashi.kunihiko@socionext.com>
-References: <1617985338-19648-1-git-send-email-hayashi.kunihiko@socionext.com>
+        id S232990AbhDIQq1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Apr 2021 12:46:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B65EF610A7;
+        Fri,  9 Apr 2021 16:46:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1617986774;
+        bh=UQn1oy9ovI4wcnd7hZW7lUvbYomqZrBjvcbkP9zVz8M=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=hJqXuthM+urxzSEEUmo18nHrBsBJKJx61gmZHfvC7ayobxOz3yTG1IBURdFRtk9ly
+         R7I5jgHmipy3w5rxg6IElx4X0MnYvW66QmD9xa0Tl9NDdv0VTNeMUIbv5X/Al70veg
+         lnCwRwLLyplYP5nJ+KHa53phA2v9d1pIAwCHXVRGFmHYXmOxQ1wo8rKfWUYbw/xMJD
+         yQuXKJ/LV5XNm3QvveTAFYllmCep3Qdo0tZ147QABIBhpoOdwqg4djwtJM8k5kMlak
+         9DOVQqv2tnJru/wS4sZg6O9uD5WwzE3Nm3wL+7LflCV9fB1KfeYlNCpAnGVX/IAge8
+         F0bCCHWybD7QA==
+Date:   Fri, 9 Apr 2021 11:46:12 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Raphael Norwitz <raphael.norwitz@nutanix.com>
+Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "ameynarkhede03@gmail.com" <ameynarkhede03@gmail.com>,
+        Alay Shah <alay.shah@nutanix.com>,
+        Suresh Gumpula <suresh.gumpula@nutanix.com>
+Subject: Re: [PATCH] PCI: Delay after FLR of Intel DC P4510 NVMe
+Message-ID: <20210409164612.GA2037722@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210408190521.16897-1-raphael.norwitz@nutanix.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This adds msi_host_isr() callback function support to describe
-SoC-dependent service triggered by MSI.
+On Thu, Apr 08, 2021 at 07:05:27PM +0000, Raphael Norwitz wrote:
+> Like the Intel DC P3700 NVMe, the Intel P4510 NVMe exhibits a timeout
+> failure when the driver tries to interact with the device to soon after
+> an FLR. The same reset quirk the P3700 uses also resolves the failure
+> for the P4510, so this change introduces the same reset quirk for the
+> P4510.
+> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Alay Shah <alay.shah@nutanix.com>
+> Signed-off-by: Suresh Gumpula <suresh.gumpula@nutanix.com>
+> Signed-off-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
 
-For example, when AER interrupt is triggered by MSI, the callback function
-reads SoC-dependent registers and detects that the interrupt is from AER,
-and invoke AER interrupts related to MSI.
+Applied to pci/virtualization for v5.13, thanks!
 
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 3 +++
- drivers/pci/controller/dwc/pcie-designware.h      | 1 +
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 7e55b2b..3cc6311 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -61,6 +61,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 	irqreturn_t ret = IRQ_NONE;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 
-+	if (pp->ops->msi_host_isr)
-+		pp->ops->msi_host_isr(pp);
-+
- 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
- 
- 	for (i = 0; i < num_ctrls; i++) {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 7247c8b..3c15909 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -175,6 +175,7 @@ enum dw_pcie_device_mode {
- struct dw_pcie_host_ops {
- 	int (*host_init)(struct pcie_port *pp);
- 	int (*msi_host_init)(struct pcie_port *pp);
-+	void (*msi_host_isr)(struct pcie_port *pp);
- };
- 
- struct pcie_port {
--- 
-2.7.4
-
+> ---
+>  drivers/pci/quirks.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 653660e3ba9e..5a8c059b848d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3922,6 +3922,7 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_ivb_igd },
+>  	{ PCI_VENDOR_ID_SAMSUNG, 0xa804, nvme_disable_and_flr },
+>  	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
+> +	{ PCI_VENDOR_ID_INTEL, 0x0a54, delay_250ms_after_flr },
+>  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  		reset_chelsio_generic_dev },
+>  	{ 0 }
+> -- 
+> 2.20.1
