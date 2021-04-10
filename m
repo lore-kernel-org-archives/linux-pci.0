@@ -2,118 +2,220 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3364C433B4
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 21:52:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E4DFC433B4
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 04:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5844B61185
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Apr 2021 21:52:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36895611AE
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 04:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234079AbhDIVwR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Apr 2021 17:52:17 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35608 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S234505AbhDIVwP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Apr 2021 17:52:15 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 139LpHZh030172;
-        Fri, 9 Apr 2021 14:51:59 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=2xkm0JDdHhn4qJaQ0nN/q1OBCXI2FYflSwlVxXCd5dQ=;
- b=L2OmDhoC77Wkq0FjEoKrS/HY3hjHn2jdJUMMWdpenRWr0lCkukzH6NepNZ9clzRD41oR
- M8XGcF4/shAg6+XXC0lSQGDotYLZqMHLCphcNJW/KVZFb9FCMHC1JU2G+bDdFOu4i/HW
- OQ5E3Mc4gKKkFGkEYcjpErClWkuq6HXLec8lx5TelIAdsnpoPH2QW+M2PkSPh6nDBJrM
- Mefu+g3e+sECwLDOB/1nUlv85K4PUFZxLjaoZvDGqhE2eiIS4LbyENPkp6XFRRHm2v7+
- sDGfPo83nGnghhPdLIIItBCwSHlbFrDXQAFPkKyIlw3oi8HpraNKuO6x7PDhjL1+aIi/ 0Q== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 37tftpakp0-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 09 Apr 2021 14:51:58 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 9 Apr
- 2021 14:51:58 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 9 Apr
- 2021 14:51:57 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 9 Apr 2021 14:51:57 -0700
-Received: from dut6246.localdomain (unknown [10.112.88.36])
-        by maili.marvell.com (Postfix) with ESMTP id 70FD33F7040;
-        Fri,  9 Apr 2021 14:51:57 -0700 (PDT)
-Received: by dut6246.localdomain (Postfix, from userid 0)
-        id 54B4F22806E; Fri,  9 Apr 2021 14:51:57 -0700 (PDT)
-From:   Arun Easi <aeasi@marvell.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, Girish Basrur <GBasrur@marvell.com>,
-        "Quinn Tran" <qutran@marvell.com>
-Subject: [PATCH v2 1/1] PCI/VPD: Fix blocking of VPD data in lspci for QLogic 1077:2261
-Date:   Fri, 9 Apr 2021 14:51:53 -0700
-Message-ID: <20210409215153.16569-2-aeasi@marvell.com>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20210409215153.16569-1-aeasi@marvell.com>
-References: <20210409215153.16569-1-aeasi@marvell.com>
+        id S229992AbhDJEvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Apr 2021 00:51:20 -0400
+Received: from mga07.intel.com ([134.134.136.100]:42699 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229472AbhDJEvT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 10 Apr 2021 00:51:19 -0400
+IronPort-SDR: KjqhuNcH3SoVc2ewCGrNqDbno5Y+B4h8B0fsLKYiop/L5rwWVTgC1F6u/ItmfrsDQESt/D7lSr
+ bb37NVKdWK0Q==
+X-IronPort-AV: E=McAfee;i="6000,8403,9949"; a="257868307"
+X-IronPort-AV: E=Sophos;i="5.82,210,1613462400"; 
+   d="scan'208";a="257868307"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2021 21:51:04 -0700
+IronPort-SDR: F92diy1vrOiLTqOMcPyaRSHXQ1wxrFc0l3rZ13THqlbAxuaHTyIi2pubc1izKVoS+srzN689Be
+ VPTxLbrOpwmw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,210,1613462400"; 
+   d="scan'208";a="423018024"
+Received: from lkp-server01.sh.intel.com (HELO 69d8fcc516b7) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 09 Apr 2021 21:51:03 -0700
+Received: from kbuild by 69d8fcc516b7 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1lV5aI-000HrJ-Pq; Sat, 10 Apr 2021 04:51:02 +0000
+Date:   Sat, 10 Apr 2021 12:50:34 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:next] BUILD SUCCESS ed4d2116b283a1a79e2911c687d83e6b33a462d3
+Message-ID: <60712e9a.73BbMfGxrv5oec3o%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: duh2IlrEyEUIgcsgdFXAf6AUKOKWGD_G
-X-Proofpoint-ORIG-GUID: duh2IlrEyEUIgcsgdFXAf6AUKOKWGD_G
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-09_08:2021-04-09,2021-04-09 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-"lspci -vvv" for Qlogic Fibre Channel HBA 1077:2261 displays
-"Vital Product Data" as "Not readable" today and thus preventing
-customers from getting relevant HBA information. Fix it by removing
-the blacklist quirk.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+branch HEAD: ed4d2116b283a1a79e2911c687d83e6b33a462d3  Merge branch 'remotes/lorenzo/pci/misc'
 
-The VPD quirk was added by [0] to avoid a system NMI; this issue has
-been long fixed in the HBA firmware. In addition, PCI also has changes
-to check the VPD size [1], so this quirk can be reverted now regardless
-of a firmware update.
+elapsed time: 727m
 
-Some more details can be found in the following thread:
-    "VPD blacklist of Marvell QLogic 1077/2261" [2]
+configs tested: 152
+configs skipped: 3
 
-[0] 0d5370d1d852 ("PCI: Prevent VPD access for QLogic ISP2722")
-[1] 104daa71b396 ("PCI: Determine actual VPD size on first access")
-[2] https://lore.kernel.org/linux-pci/alpine.LRH.2.21.9999.2012161641230.28924@irv1user01.caveonetworks.com/
-[3] https://lore.kernel.org/linux-pci/alpine.LRH.2.21.9999.2104071535110.13940@irv1user01.caveonetworks.com/
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Clarification on why [0], which appeared in v4.11, would be an issue
-given that [1] appeared in v4.6:
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+x86_64                           allyesconfig
+riscv                            allmodconfig
+riscv                            allyesconfig
+i386                             allyesconfig
+arm64                            alldefconfig
+powerpc                      bamboo_defconfig
+m68k                       bvme6000_defconfig
+mips                      pistachio_defconfig
+openrisc                 simple_smp_defconfig
+sh                           se7750_defconfig
+powerpc                       ebony_defconfig
+mips                           xway_defconfig
+powerpc                     mpc83xx_defconfig
+ia64                      gensparse_defconfig
+arm                          simpad_defconfig
+s390                       zfcpdump_defconfig
+powerpc                      pasemi_defconfig
+powerpc                 linkstation_defconfig
+um                             i386_defconfig
+s390                             allmodconfig
+sh                           se7722_defconfig
+m68k                        m5307c3_defconfig
+powerpc                       ppc64_defconfig
+arm                          gemini_defconfig
+powerpc                     ep8248e_defconfig
+powerpc                      tqm8xx_defconfig
+openrisc                         alldefconfig
+arm                            mmp2_defconfig
+powerpc64                           defconfig
+sh                             espt_defconfig
+arm                         vf610m4_defconfig
+mips                          rb532_defconfig
+mips                            gpr_defconfig
+arc                     haps_hs_smp_defconfig
+arm                             mxs_defconfig
+powerpc                      arches_defconfig
+sh                        dreamcast_defconfig
+mips                        workpad_defconfig
+um                                allnoconfig
+mips                       bmips_be_defconfig
+sh                            shmin_defconfig
+arm                        multi_v7_defconfig
+arc                            hsdk_defconfig
+riscv             nommu_k210_sdcard_defconfig
+arm                        multi_v5_defconfig
+h8300                               defconfig
+powerpc                 mpc836x_rdk_defconfig
+m68k                       m5249evb_defconfig
+ia64                            zx1_defconfig
+arm                          ixp4xx_defconfig
+powerpc                   bluestone_defconfig
+mips                      loongson3_defconfig
+m68k                          multi_defconfig
+arc                          axs101_defconfig
+sh                          sdk7780_defconfig
+arm                          badge4_defconfig
+arm                     am200epdkit_defconfig
+sh                        sh7757lcr_defconfig
+arm                         nhk8815_defconfig
+arm                         shannon_defconfig
+sh                           se7751_defconfig
+sh                           se7619_defconfig
+sh                      rts7751r2d1_defconfig
+h8300                     edosk2674_defconfig
+xtensa                    xip_kc705_defconfig
+m68k                         amcore_defconfig
+powerpc                     ksi8560_defconfig
+xtensa                  audio_kc705_defconfig
+arm                      jornada720_defconfig
+sh                           se7780_defconfig
+sh                          lboxre2_defconfig
+arm                         s3c6400_defconfig
+sh                          r7785rp_defconfig
+powerpc                     asp8347_defconfig
+powerpc                     sbc8548_defconfig
+powerpc                     tqm8540_defconfig
+powerpc                 mpc837x_rdb_defconfig
+powerpc                      mgcoge_defconfig
+m68k                        m5407c3_defconfig
+i386                                defconfig
+arm                        vexpress_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a006-20210409
+i386                 randconfig-a003-20210409
+i386                 randconfig-a001-20210409
+i386                 randconfig-a004-20210409
+i386                 randconfig-a002-20210409
+i386                 randconfig-a005-20210409
+x86_64               randconfig-a014-20210409
+x86_64               randconfig-a015-20210409
+x86_64               randconfig-a012-20210409
+x86_64               randconfig-a011-20210409
+x86_64               randconfig-a013-20210409
+x86_64               randconfig-a016-20210409
+i386                 randconfig-a014-20210409
+i386                 randconfig-a011-20210409
+i386                 randconfig-a016-20210409
+i386                 randconfig-a012-20210409
+i386                 randconfig-a013-20210409
+i386                 randconfig-a015-20210409
+riscv                    nommu_k210_defconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+um                               allmodconfig
+um                               allyesconfig
+um                                  defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
 
-    Firstly, we do not have information on which exact kernel the
-    tester was using that resulted in [0]. That said, the call
-    trace for the issue had pci_vpd_pci22_* calls, which appeared
-    only in pre-4.6 kernels. Those functions were renamed v4.6 and
-    above, so tester was indeed testing using an older kernel.
-    See [3] for further details.
+clang tested configs:
+x86_64               randconfig-a004-20210409
+x86_64               randconfig-a005-20210409
+x86_64               randconfig-a003-20210409
+x86_64               randconfig-a001-20210409
+x86_64               randconfig-a002-20210409
+x86_64               randconfig-a006-20210409
 
-Signed-off-by: Arun Easi <aeasi@marvell.com>
-CC: stable@vger.kernel.org      # v4.6+
 ---
- drivers/pci/vpd.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 6909253..a41818a 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -474,7 +474,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
- 		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QLOGIC, 0x2261, quirk_blacklist_vpd);
- /*
-  * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
-  * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
--- 
-2.9.5
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
