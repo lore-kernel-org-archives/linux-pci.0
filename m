@@ -2,72 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F94CC433ED
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 14:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F14BC433B4
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 14:53:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25FD761165
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 14:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1D966044F
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Apr 2021 14:53:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234738AbhDJOZk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Apr 2021 10:25:40 -0400
-Received: from bmailout2.hostsharing.net ([83.223.78.240]:39495 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234733AbhDJOZj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Apr 2021 10:25:39 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 17CE52800B3D3;
-        Sat, 10 Apr 2021 16:25:24 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 0DEC13663B; Sat, 10 Apr 2021 16:25:24 +0200 (CEST)
-Date:   Sat, 10 Apr 2021 16:25:24 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: Re: PCI service interrupt handlers & access to PCI config space
-Message-ID: <20210410142524.GA31187@wunner.de>
-References: <20210410122845.nhenihbygmcjlegn@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210410122845.nhenihbygmcjlegn@pali>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S234838AbhDJOxY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Apr 2021 10:53:24 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:36542 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234816AbhDJOxY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Apr 2021 10:53:24 -0400
+Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 78580C0122;
+        Sat, 10 Apr 2021 14:53:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1618066389; bh=hSMiiE5yY/Kmol8iEahtysLfqdzwvrDySsXziVJjQ98=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=OmyWQdQTudifMc+fv8BFpCrGoAFVZZjeYyJlg94F7BRKwJ9tvrDsH3fxCOHIctXDp
+         HpsKTVBJvZOaCgV6ypRHrN2oLbC/VzVRHYX1p4ct+Q6RHc7hNAYzwm++iWWXFIHmKe
+         mIgWkBUR/kC445u6uJZgzx0hHozWOhRN3mpZcbAZjn+9Gv923aFeLcPGiPN9gEcOuW
+         SYLiBX7cMqKCLHw8WB78nkIKHwbVTiHToXON7A938H3JJyHMVF4Gd/d+68UePCCB+l
+         O4BE2pEDBnFIKDenb9Tdw+NOTxPLuQH4IeQ3T+Wck9Gvu+sCxCV1sn/sRwCk5Sf8fw
+         2+uQd92SuKfXg==
+Received: from de02dwvm009.internal.synopsys.com (de02dwvm009.internal.synopsys.com [10.225.17.73])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 1382FA0231;
+        Sat, 10 Apr 2021 14:53:06 +0000 (UTC)
+X-SNPS-Relay: synopsys.com
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Derek Kiernan <derek.kiernan@xilinx.com>,
+        Dragan Cvetic <dragan.cvetic@xilinx.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v4 1/2] dw-xdata-pcie: Fix documentation build warns
+Date:   Sat, 10 Apr 2021 16:52:58 +0200
+Message-Id: <42ed2d9d27579291dc7cce89c0164bd9255fe337.1618066164.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1618066164.git.gustavo.pimentel@synopsys.com>
+References: <cover.1618066164.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1618066164.git.gustavo.pimentel@synopsys.com>
+References: <cover.1618066164.git.gustavo.pimentel@synopsys.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Apr 10, 2021 at 02:28:45PM +0200, Pali Rohár wrote:
-> I see that more PCI service drivers in their interrupt handlers are
-> accessing PCI config space.
-> 
-> E.g. in PCIe Hot Plug interrupt handler pciehp_isr handler is called
-> pcie_capability_read_word() function.
-> 
-> It is correct? Because these capability functions are protected by
-> pci_lock_config() / pci_unlock_config() calls.
+Fixes documentation build warns related to indentation, text formatting,
+and missing reference on toc.
 
-Looks fine to me.  That's a raw_spin_lock, which is allowed to be taken
-in interrupt context.
+This fix solves the following warnings:
 
-> And what would happen when during execution of reading or writing to
-> PCIe config space (e.g. via pcie_capability_read_word()) is triggered
-> PCIe HP interrupt? Would not enter interrupt handler function in
-> deadlock (waiting for unlocking config space)?
+WARNING: Unexpected indentation.
+WARNING: Block quote ends without a blank line; unexpected unindent.
+WARNING: document isn't included in any toctree
 
-The interrupt handler would spin until the lock is released.
-raw_spin_locks are not supposed to be held for a prolonged
-period of time.
+Fixes: e1181b5bbc3c ("Documentation: misc-devices: Add Documentation for dw-xdata-pcie driver")
+Link: https://lore.kernel.org/linux-next/20210406214615.40cf3493@canb.auug.org.au/
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ Documentation/misc-devices/dw-xdata-pcie.rst | 14 +++++++-------
+ Documentation/misc-devices/index.rst         |  1 +
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-The interrupt is masked when it triggers and until it's been handled,
-so the interrupt handler never runs multiple times concurrently.
-See e.g. handle_level_irq() in kernel/irq/chip.c.
+diff --git a/Documentation/misc-devices/dw-xdata-pcie.rst b/Documentation/misc-devices/dw-xdata-pcie.rst
+index fd75c93..cbc9f69 100644
+--- a/Documentation/misc-devices/dw-xdata-pcie.rst
++++ b/Documentation/misc-devices/dw-xdata-pcie.rst
+@@ -17,24 +17,24 @@ information to /var/log/kern.log or dmesg.
+ 
+ Request write TLPs traffic generation - Root Complex to Endpoint direction
+ - Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/write
++echo 1 > /sys/class/misc/dw-xdata-pcie/write
+ 
+ Get write TLPs traffic link throughput in MB/s
+ - Command:
+-        cat /sys/class/misc/dw-xdata-pcie/write
++cat /sys/class/misc/dw-xdata-pcie/write
+ - Output example:
+-	204
++204
+ 
+ Request read TLPs traffic generation - Endpoint to Root Complex direction:
+ - Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/read
++echo 1 > /sys/class/misc/dw-xdata-pcie/read
+ 
+ Get read TLPs traffic link throughput in MB/s
+ - Command:
+-        cat /sys/class/misc/dw-xdata-pcie/read
++cat /sys/class/misc/dw-xdata-pcie/read
+ - Output example:
+-	199
++199
+ 
+ Request to stop any current TLP transfer:
+ - Command:
+-	echo 1 > /sys/class/misc/dw-xdata-pcie/stop
++echo 1 > /sys/class/misc/dw-xdata-pcie/stop
+diff --git a/Documentation/misc-devices/index.rst b/Documentation/misc-devices/index.rst
+index 64420b331..30ac58f 100644
+--- a/Documentation/misc-devices/index.rst
++++ b/Documentation/misc-devices/index.rst
+@@ -19,6 +19,7 @@ fit into other categories.
+    bh1770glc
+    eeprom
+    c2port
++   dw-xdata-pcie
+    ibmvmc
+    ics932s401
+    isl29003
+-- 
+2.7.4
 
-Thanks,
-
-Lukas
