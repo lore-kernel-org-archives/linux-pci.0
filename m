@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6570BC433B4
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB2EC43470
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6CA61287
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E072161246
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242904AbhDLPbu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Apr 2021 11:31:50 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47208 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S242899AbhDLPbr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Apr 2021 11:31:47 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13CFVBk6004588;
-        Mon, 12 Apr 2021 08:31:11 -0700
+        id S242908AbhDLPb4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Apr 2021 11:31:56 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50708 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S242898AbhDLPbu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Apr 2021 11:31:50 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13CFUnNG024627;
+        Mon, 12 Apr 2021 08:31:20 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=pfpt0220;
- bh=1w1aOW3ghY/Ww+N67gF96mJvYXQ0kxUthm1XoYVB+Qs=;
- b=kaq9aYBbPal/PUIU6NyIipJ3FFRg9k5/qlYxy/dijCi2a8Th+ZJ5W/f7zD0rVHXzlxl/
- wtAwGWpPZxhUasZ5SRQ78t9VkOJGLPhgHfUDG22ODTUYV7+EhvYrpvdRVBTEzs2+ozZM
- R2MKqkYdfqBZYcQ2JeRGjhk9JlV0QCJypYEprxwG5UWDq+kD9Wp7GmFlP++T1AxjpVI4
- FHoTbB0M9LZLoJTvfuw6BqXgNQI8VONqTl49C7poomwPR0XQ5e0aaiubDQrDCgo52ssz
- j+wi0gOD84gVbwl2mFu+vJhJ09KA90/VER8Xb39/Nl9R+LBWP8VLqcs287PFfImCSDPE 4A== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 37vcu99xp8-1
+ bh=GymurhClTLZ4ST/n6Oo2CGklmnbA31pLqRq8fnRk7Yg=;
+ b=cItsbCT3D2i0nD2xiPTTA5PGk2PQJGfSUoIrw1TR0UmN6x2suIhXj7aAw4iLBPuJC+Zm
+ iLzobZlbS/CUAP3YxUkaCBvAFHVkKgpjRtVNZb1VkA8ekgrjv9CDholqalW/MtoqND05
+ o7QImIRnHUxmqmbDfkHBAtmZUNZsemNWCTDFtbhyR0/jWyTuPAVvYGAYv1NILIXeBrN0
+ 0BrOwOSnm+W+kCb75v8Hwo8zq9vg0jgYx0Bj91lZiNYgBGwYj8VH5R5UQXD01ayCAEhI
+ HqwPaRQIboe/Ufs+SHP9U/GnxwJJmeJO981Jx3Mn4nxkIAgMhWN6vzPDRlAMXY5lzAK6 wA== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 37vpuu0d4y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 08:31:11 -0700
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
- 2021 08:31:09 -0700
+        Mon, 12 Apr 2021 08:31:20 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
+ 2021 08:31:19 -0700
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
  (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
- 2021 08:31:09 -0700
+ 2021 08:31:18 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 12 Apr 2021 08:31:09 -0700
+ Transport; Mon, 12 Apr 2021 08:31:18 -0700
 Received: from nw-bp.marvell.com (nw-bp.marvell.com [10.5.24.22])
-        by maili.marvell.com (Postfix) with ESMTP id 5290F3F7043;
-        Mon, 12 Apr 2021 08:31:05 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 3EC3B3F7050;
+        Mon, 12 Apr 2021 08:31:14 -0700 (PDT)
 From:   <bpeled@marvell.com>
 To:     <thomas.petazzoni@bootlin.com>, <lorenzo.pieralisi@arm.com>,
         <bhelgaas@google.com>
@@ -56,19 +56,18 @@ CC:     <linux-kernel@vger.kernel.org>,
         <sebastian.hesselbarth@gmail.com>, <gregory.clement@bootlin.com>,
         <andrew@lunn.ch>, <robh+dt@kernel.org>, <mw@semihalf.com>,
         <jaz@semihalf.com>, <kostap@marvell.com>, <nadavh@marvell.com>,
-        <stefanc@marvell.com>, <oferh@marvell.com>, <bpeled@marvell.com>,
-        "Marc St-Amand" <mstamand@ciena.com>
-Subject: =?UTF-8?q?=5B=E2=80=9DPATCH=E2=80=9D=201/5=5D=20PCI=3A=20armada8k=3A=20Disable=20LTSSM=20on=20link=20down=20interrupts?=
-Date:   Mon, 12 Apr 2021 18:30:52 +0300
-Message-ID: <1618241456-27200-2-git-send-email-bpeled@marvell.com>
+        <stefanc@marvell.com>, <oferh@marvell.com>, <bpeled@marvell.com>
+Subject: =?UTF-8?q?=5B=E2=80=9DPATCH=E2=80=9D=203/5=5D=20dt-bindings=3A=20pci=3A=20add=20system=20controller=20and=20MAC=20reset=20bit=20to=20Armada=207K/8K=20controller=20bindings?=
+Date:   Mon, 12 Apr 2021 18:30:54 +0300
+Message-ID: <1618241456-27200-4-git-send-email-bpeled@marvell.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1618241456-27200-1-git-send-email-bpeled@marvell.com>
 References: <1618241456-27200-1-git-send-email-bpeled@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: lH0eozCtIxCe8ZuBdcND7yXWxwbA3kra
-X-Proofpoint-ORIG-GUID: lH0eozCtIxCe8ZuBdcND7yXWxwbA3kra
+X-Proofpoint-GUID: ZvWg6RacSjyd6IIIF1KGIgKw8aW92UQF
+X-Proofpoint-ORIG-GUID: ZvWg6RacSjyd6IIIF1KGIgKw8aW92UQF
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
  definitions=2021-04-12_11:2021-04-12,2021-04-12 signatures=0
 Precedence: bulk
@@ -77,79 +76,36 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ben Peled <bpeled@marvell.com>
 
-When a PCI link down condition is detected, the link training state
-machine must be disabled immediately.
+Adding optional system-controller and mac-reset-bit-mask
+needed for linkdown procedure.
 
-Signed-off-by: Marc St-Amand <mstamand@ciena.com>
-Signed-off-by: Konstantin Porotchkin <kostap@marvell.com>
 Signed-off-by: Ben Peled <bpeled@marvell.com>
 ---
- drivers/pci/controller/dwc/pcie-armada8k.c | 38 ++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ Documentation/devicetree/bindings/pci/pci-armada8k.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index 13901f3..b2278b1 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -54,6 +54,10 @@ struct armada8k_pcie {
- #define PCIE_INT_C_ASSERT_MASK		BIT(11)
- #define PCIE_INT_D_ASSERT_MASK		BIT(12)
+diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+index 7a813d0..2696e79 100644
+--- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
++++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+@@ -24,6 +24,10 @@ Optional properties:
+ - phy-names: names of the PHYs corresponding to the number of lanes.
+ 	Must be "cp0-pcie0-x4-lane0-phy", "cp0-pcie0-x4-lane1-phy" for
+ 	2 PHYs.
++- marvell,system-controller: address of system controller needed
++	in order to reset MAC used by link-down handle
++- marvell,mac-reset-bit-mask: MAC reset bit of system controller
++	needed in order to reset MAC used by link-down handle
  
-+#define PCIE_GLOBAL_INT_CAUSE2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x24)
-+#define PCIE_GLOBAL_INT_MASK2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x28)
-+#define PCIE_INT2_PHY_RST_LINK_DOWN	BIT(1)
-+
- #define PCIE_ARCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x50)
- #define PCIE_AWCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x54)
- #define PCIE_ARUSER_REG			(PCIE_VENDOR_REGS_OFFSET + 0x5C)
-@@ -193,6 +197,11 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
- 	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
+ Example:
  
-+	/* Also enable link down interrupts */
-+	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
-+	reg |= PCIE_INT2_PHY_RST_LINK_DOWN;
-+	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, reg);
-+
- 	if (!dw_pcie_link_up(pci)) {
- 		/* Configuration done. Start LTSSM */
- 		reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
-@@ -230,6 +239,35 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG);
- 	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG, val);
- 
-+	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG);
-+
-+	if (PCIE_INT2_PHY_RST_LINK_DOWN & val) {
-+		u32 ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
-+		/*
-+		 * The link went down. Disable LTSSM immediately. This
-+		 * unlocks the root complex config registers. Downstream
-+		 * device accesses will return all-Fs
-+		 */
-+		ctrl_reg &= ~(PCIE_APP_LTSSM_EN);
-+		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, ctrl_reg);
-+		/*
-+		 * Mask link down interrupts. They can be re-enabled once
-+		 * the link is retrained.
-+		 */
-+		ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
-+		ctrl_reg &= ~PCIE_INT2_PHY_RST_LINK_DOWN;
-+		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, ctrl_reg);
-+		/*
-+		 * At this point a worker thread can be triggered to
-+		 * initiate a link retrain. If link retrains were
-+		 * possible, that is.
-+		 */
-+		dev_dbg(pci->dev, "%s: link went down\n", __func__);
-+	}
-+
-+	/* Now clear the second interrupt cause. */
-+	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG, val);
-+
- 	return IRQ_HANDLED;
- }
- 
+@@ -45,4 +49,6 @@ Example:
+ 		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
+ 		num-lanes = <1>;
+ 		clocks = <&cpm_syscon0 1 13>;
++		marvell,system-controller = <&CP11X_LABEL(syscon0)>;
++		marvell,mac-reset-bit-mask = <CP11X_PCIEx_MAC_RESET_BIT_MASK(1)>;
+ 	};
 -- 
 2.7.4
 
