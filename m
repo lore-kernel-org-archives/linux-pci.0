@@ -2,153 +2,736 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1A60C43460
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 17:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A31CC433B4
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 17:24:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2B566044F
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 17:02:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C1DE61249
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 17:24:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243525AbhDLRCd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Apr 2021 13:02:33 -0400
-Received: from mail-bn7nam10on2088.outbound.protection.outlook.com ([40.107.92.88]:55040
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S244569AbhDLRBa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Apr 2021 13:01:30 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eBZ1RJgifFPH8OWH3JffZ8hPu0V+hiDZrKGmEIK4g+pib/+apVwwKTMMAvGChdOt1ghWPmRh/YjoljbEBr0eDmmbCrnEfrRJKT0kHKVbfBwGSoZp51RNLN4sdaAUIjSJtB1KzXTQ5wGVGslEkC3bPPWk94hafYChvjW0o0mdXNXCA1RaOmTmbVn1ME7QKXB7nauEbt/phstz+Tww3KfVtjADNNkLHo4xlJwUutKr+PoPeh7akEDYemdXlBgxQ9B18mSbKpBMtBYd+UDRO6MwIul7CRqSMaPb250RNo8MAehQaF0Pyxne5/nh1rtyUByy5nAv+FWFSIE2omz3Vc1srQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nBDVm6zVK6bq0ooHelHGw8btrTaqsC/fe5WYRaSwMdQ=;
- b=F04scSpyU0frZ2s2CkLrwxDVqbILgzTGp9o1nDXzEa9IICJXDD51S0yvQRf1XOM6pJG91LBEk3WZWWaivHNkZk3zcTFAkVdzQavlGOPbW0Eo6kj8QFNe05RCWuSDfkECl5wH+8IEEDb+ULckbJaABDMd1/TgIiX+K1J3ZHMRdf4zQDljyXn1+5JSd2ajf2ggJRekyj5E9aLyMFk7wej4Am2n5O2xZJheaovl5NJl6OyFSAK0bphilLAJxGSLIFJCwEjj8JbnSk37Dh2b2zlIK15KmmJXX3nBjKyQaibJOmZ+Bn+RO9lBtGS+kTP66Jr/LrP3QXPHQbcNj2SA7Drbfg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=thegoodpenguin.co.uk
- smtp.mailfrom=nvidia.com; dmarc=pass (p=none sp=none pct=100) action=none
- header.from=nvidia.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nBDVm6zVK6bq0ooHelHGw8btrTaqsC/fe5WYRaSwMdQ=;
- b=HT1hue9Png5yuxh+/x1Ai27MHsY8I6dC7bLz8VQoZ8lQv+Trj5AtfBYs9r/PvgJzbtBby7i0tkkS8cRUAI+kIZEGqEmlSf7xDFz6hAmeAO3w8Wg2ppcfulcQJC6M50oAvTB0+HgPqiwKj4pmR2Mhx+qqAuC9zfmHl6dQFzmngbhLwcIGrYktdhQYDPXlGETdSDAr0MH03lqzit9nZVvrIn11qObdMCP/0G27LUOSwJ5NyHJ8237U937ZCbKiJLFzlXkSTzwBP4q7IaNviwMJZ91mteJ9UeQ+vKYuUcVlZDi7vs1G+MrEe6PVjS+SObSToS7n5opRYHkp5U8Wd/0vJw==
-Received: from CO1PR15CA0112.namprd15.prod.outlook.com (2603:10b6:101:21::32)
- by BN8PR12MB4786.namprd12.prod.outlook.com (2603:10b6:408:a9::26) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.21; Mon, 12 Apr
- 2021 17:01:09 +0000
-Received: from CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
- (2603:10b6:101:21:cafe::b8) by CO1PR15CA0112.outlook.office365.com
- (2603:10b6:101:21::32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.17 via Frontend
- Transport; Mon, 12 Apr 2021 17:01:09 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; thegoodpenguin.co.uk; dkim=none (message not
- signed) header.d=none;thegoodpenguin.co.uk; dmarc=pass action=none
- header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.34; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.34) by
- CO1NAM11FT051.mail.protection.outlook.com (10.13.174.114) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4020.17 via Frontend Transport; Mon, 12 Apr 2021 17:01:09 +0000
-Received: from [10.25.97.143] (172.20.145.6) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
- 2021 17:01:05 +0000
-CC:     Krishna Thota <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Thierry Reding <treding@nvidia.com>,
-        "Jonathan Hunter" <jonathanh@nvidia.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <amurray@thegoodpenguin.co.uk>, <robh@kernel.org>,
-        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>
-Subject: Device driver location for the PCIe root port's DMA engine
-Message-ID: <d840687e-bfd7-71b4-e8f0-37c971d3d414@nvidia.com>
-Date:   Mon, 12 Apr 2021 22:31:02 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S243615AbhDLRYT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Apr 2021 13:24:19 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:2838 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241403AbhDLRYS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Apr 2021 13:24:18 -0400
+Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FJwM80zs5z67nYQ;
+        Tue, 13 Apr 2021 01:14:12 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2106.2; Mon, 12 Apr 2021 19:23:58 +0200
+Received: from [10.47.11.100] (10.47.11.100) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2106.2; Mon, 12 Apr
+ 2021 18:23:57 +0100
+Subject: Re: [PATCH v2 1/2] drivers/perf: hisi: Add driver for HiSilicon PCIe
+ PMU
+To:     "liuqi (BA)" <liuqi115@huawei.com>,
+        "will@kernel.org" <will@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Zhangshaokun <zhangshaokun@hisilicon.com>
+References: <1617959157-22956-1-git-send-email-liuqi115@huawei.com>
+ <1617959157-22956-2-git-send-email-liuqi115@huawei.com>
+ <4cae4206-aa50-f111-2f6f-d035bc36856e@huawei.com>
+ <9c577f11-46e7-55a0-95e8-6c3376077049@huawei.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <fb795e51-ce01-e976-ac09-d3f384307623@huawei.com>
+Date:   Mon, 12 Apr 2021 18:21:24 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
+In-Reply-To: <9c577f11-46e7-55a0-95e8-6c3376077049@huawei.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [172.20.145.6]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 2b232020-93b0-4cc3-9c3c-08d8fdd491b2
-X-MS-TrafficTypeDiagnostic: BN8PR12MB4786:
-X-Microsoft-Antispam-PRVS: <BN8PR12MB4786B098C6FECE00AE5F8DDDB8709@BN8PR12MB4786.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: mgeCndsnZvEaXWekGjNcyUFQFJ/XJUDHtKBycxzcRA+Y2L/xmdQ4pWitorY7YlqMkoeH11/+R1NxOqAww8S8FaLR70CsFqt0FZnjBUX4woiUh3q6Qtfh2ZsJr5NRdSwcC7gEvOMqM9B417HR+qAMN5SiM8lp7WL+RLmCIXV0dHbD0SlPRMEbOkbahlWDKIJxuMCnmLK2P/Q2XXw7btUlt1qiUJZ4710AWRyuprDNOLNvV/Ai30qv3pXQhbvASxuJuKbPtbB7fYScN43Yov1tU1OoXgpl/L5p0V2Wp3PLwuxKKDZStpj276fl08ihFJ1xT9EJFugLFhyevH/Z0ROdzYKnBUDEOmOmMwfCo0eLrfU63HW5MT1Xgjy33S+T/b5+12tJPEzHyEdKdAqgJOm/Offatk99hnWr+hqscz7H0DW9hVLKnH0XkwC9cnR0+yaDtEoZswQtrHHb96UGSncR4NkbYDwq3lDB5FPgGIM3Uty8i1shZTUzW9Yqb4rlBOSprobQ+y6uNBYHDGcTo3DXd7ubPTpEtKClS3vfQtexfT4CQYRPM8wmqNUFqZ+6+HgqscHdjTB1HEUNVeXTsFT46crlekgMp1TWsl2U/Nj4zZ/RvbGOuQ6Br8b5X1mBwPdoO6/T8ql2sg1HeROodE9odoE99riDt9jwRH0W7/IZgDfIOT1bFrD6qPrW9SfmHE8r
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(136003)(39860400002)(376002)(346002)(36840700001)(46966006)(316002)(110136005)(47076005)(36906005)(336012)(8676002)(31686004)(16526019)(16576012)(70586007)(186003)(31696002)(26005)(2906002)(70206006)(426003)(54906003)(2616005)(8936002)(82740400003)(86362001)(7636003)(36860700001)(478600001)(5660300002)(82310400003)(6666004)(4326008)(356005)(36756003)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2021 17:01:09.1581
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2b232020-93b0-4cc3-9c3c-08d8fdd491b2
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB4786
+X-Originating-IP: [10.47.11.100]
+X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi
-I'm starting this mail to seek advice on the best approach to be taken 
-to add support for the driver of the PCIe root port's DMA engine.
-To give some background, Tegra194's PCIe IPs are dual-mode PCIe IPs i.e. 
-they work either in the root port mode or in the endpoint mode based on 
-the boot time configuration.
-Since the PCIe hardware IP as such is the same for both (RP and EP) 
-modes, the DMA engine sub-system of the PCIe IP is also made available 
-to both modes of operation.
-Typically, the DMA engine is seen only in the endpoint mode, and that 
-DMA engine’s configuration registers are made available to the host 
-through one of its BARs.
-In the situation that we have here, where there is a DMA engine present 
-as part of the root port, the DMA engine isn’t a typical general-purpose 
-DMA engine in the sense that it can’t have both source and destination 
-addresses targeting external memory addresses.
-RP’s DMA engine, while doing a write operation,
-would always fetch data (i.e. source) from local memory and write it to 
-the remote memory over PCIe link (i.e. destination would be the BAR of 
-an endpoint)
-whereas while doing a read operation,
-would always fetch/read data (i.e. source) from a remote memory over the 
-PCIe link and write it to the local memory.
+On 12/04/2021 14:34, liuqi (BA) wrote:
+> 
+> Hi John,
+> 
+> Thanks for reviewing this.
+> On 2021/4/9 18:22, John Garry wrote:
+>> On 09/04/2021 10:05, Qi Liu wrote:
+>>> PCIe PMU Root Complex Integrated End Point(RCiEP) device is supported
+>>> to sample bandwidth, latency, buffer occupation etc.
+>>>
+>>> Each PMU RCiEP device monitors multiple Root Ports, and each RCiEP is
+>>> registered as a PMU in /sys/bus/event_source/devices, so users can
+>>> select target PMU, and use filter to do further sets.
 
-I see that there are at least two ways we can have a driver for this DMA 
-engine.
-a) DMA engine driver as one of the port service drivers
-	Since the DMA engine is a part of the root port hardware itself 
-(although it is not part of the standard capabilities of the root port), 
-it is one of the options to have the driver for the DMA engine go as one 
-of the port service drivers (along with AER, PME, hot-plug, etc...). 
-Based on Vendor-ID and Device-ID matching runtime, either it gets 
-binded/enabled (like in the case of Tegra194) or it doesn't.
-b) DMA engine driver as a platform driver
-	The DMA engine hardware can be described as a sub-node under the PCIe 
-controller's node in the device tree and a separate platform driver can 
-be written to work with it.
+side note: it would be good to mention what baseline the series is based 
+on in the cover letter
 
-I’m inclined to have the DMA engine driver as a port service driver as 
-it makes it cleaner and also in line with the design philosophy (the way 
-I understood it) of the port service drivers.
-Please let me know your thoughts on this.
+>>>
+>>> Filtering options contains:
+>>> event        - select the event.
+>>> subevent     - select the subevent.
+>>> port         - select target Root Ports. Information of Root Ports
+>>>                  are shown under sysfs.
+>>> bdf          - select requester_id of target EP device.
+>>> trig_len     - set trigger condition for starting event statistics.
+>>> trigger_mode - set trigger mode. 0 means starting to statistic when
+>>>                  bigger than trigger condition, and 1 means smaller.
+>>> thr_len      - set threshold for statistics.
+>>> thr_mode     - set threshold mode. 0 means count when bigger than
+>>>                  threshold, and 1 means smaller.
+>>>
+>>> Signed-off-by: Qi Liu <liuqi115@huawei.com>
+>>> ---
+>>>    MAINTAINERS                                |    6 +
+>>>    drivers/perf/Kconfig                       |    2 +
+>>>    drivers/perf/Makefile                      |    1 +
+>>>    drivers/perf/pci/Kconfig                   |   16 +
+>>>    drivers/perf/pci/Makefile                  |    2 +
+>>>    drivers/perf/pci/hisilicon/Makefile        |    5 +
+>>>    drivers/perf/pci/hisilicon/hisi_pcie_pmu.c | 1011
+>>> ++++++++++++++++++++++++++++
+>>>    include/linux/cpuhotplug.h                 |    1 +
+>>>    8 files changed, 1044 insertions(+)
+>>>    create mode 100644 drivers/perf/pci/Kconfig
+>>>    create mode 100644 drivers/perf/pci/Makefile
+>>>    create mode 100644 drivers/perf/pci/hisilicon/Makefile
+>>>    create mode 100644 drivers/perf/pci/hisilicon/hisi_pcie_pmu.c
+>>>
+>>> diff --git a/MAINTAINERS b/MAINTAINERS
+>>> index 3353de0..46c7861 100644
+>>> --- a/MAINTAINERS
+>>> +++ b/MAINTAINERS
+>>> @@ -8023,6 +8023,12 @@ W:    http://www.hisilicon.com
+>>>    F:    Documentation/admin-guide/perf/hisi-pmu.rst
+>>>    F:    drivers/perf/hisilicon
+>>> +HISILICON PCIE PMU DRIVER
+>>> +M:    Qi Liu <liuqi115@huawei.com>
+>>> +S:    Maintained
+>>> +F:    Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+>>
+>> nit: this does not exist yet...
+>>
+> thanks, I'll move this add-maintainer-part to the second patch.
 
-Thanks,
-Vidya Sagar
+that's why I advocate the documentation first :)
 
+>>> +F:    drivers/perf/pci/hisilicon/hisi_pcie_pmu.c
+>>> +
+>>>    HISILICON QM AND ZIP Controller DRIVER
+>>>    M:    Zhou Wang <wangzhou1@hisilicon.com>
+>>>    L:    linux-crypto@vger.kernel.org
+>>> diff --git a/drivers/perf/Kconfig b/drivers/perf/Kconfig
+>>> index 3075cf1..99d4760 100644
+>>> --- a/drivers/perf/Kconfig
+>>> +++ b/drivers/perf/Kconfig
+>>> @@ -139,4 +139,6 @@ config ARM_DMC620_PMU
+>>>    source "drivers/perf/hisilicon/Kconfig"
+>>> +source "drivers/perf/pci/Kconfig"
+>>> +
+>>>    endmenu
+>>> diff --git a/drivers/perf/Makefile b/drivers/perf/Makefile
+>>> index 5260b11..1208c08 100644
+>>> --- a/drivers/perf/Makefile
+>>> +++ b/drivers/perf/Makefile
+>>> @@ -14,3 +14,4 @@ obj-$(CONFIG_THUNDERX2_PMU) += thunderx2_pmu.o
+>>>    obj-$(CONFIG_XGENE_PMU) += xgene_pmu.o
+>>>    obj-$(CONFIG_ARM_SPE_PMU) += arm_spe_pmu.o
+>>>    obj-$(CONFIG_ARM_DMC620_PMU) += arm_dmc620_pmu.o
+>>> +obj-y += pci/
+>>> diff --git a/drivers/perf/pci/Kconfig b/drivers/perf/pci/Kconfig
+>>> new file mode 100644
+>>> index 0000000..a119486
+>>> --- /dev/null
+>>> +++ b/drivers/perf/pci/Kconfig
+>>> @@ -0,0 +1,16 @@
+>>> +# SPDX-License-Identifier: GPL-2.0-only
+>>> +#
+>>> +# PCIe Performance Monitor Drivers
+>>> +#
+>>> +menu "PCIe Performance Monitor"
+>>> +
+>>> +config HISI_PCIE_PMU
+>>> +    tristate "HiSilicon PCIE PERF PMU"
+>>> +    depends on ARM64 && PCI && HISI_PMU
+>>
+>> What from HISI_PMU is needed? I couldn't find anything here
+> The event_sysfs_show() and format_sysfs_show() function of
+> hisi_uncore_pmu.h can be reused in hisi_pcie_pmu.c, So I add path in
+> Makefile and include "hisi_uncore_pmu.h".
+
+Right, but it would be nice to be able to build this under COMPILE_TEST. 
+CONFIG_HISI_PMU cannot be built under COMPILE_TEST, so nice to not 
+depend on it.
+
+So you could put hisi_event_sysfs_show() as a static inline in 
+hisi_uncore_pmu.h, so the dependency can be removed
+
+Having said that, there is nothing really hisi specific in those 
+functions like hisi_event_sysfs_show().
+
+Can't we just create generic functions here?
+
+hisi_event_sysfs_show() == cci400_pmu_cycle_event_show() == 
+xgene_pmu_event_show()
+
+> 
+>>
+>>> +    help
+>>> +      Provide support for HiSilicon PCIe performance monitoring unit
+>>> (PMU)
+>>> +      RCiEP devices.
+>>> +      Adds the PCIe PMU into perf events system for monitoring latency,
+>>> +      bandwidth etc.
+>>> +
+
+
+
+
+
+>>> +#define HISI_PCIE_CHECK_EVENTS(name, list)             \
+>>
+>> "check" in a function name is too vague, as it does not imply any
+>> side-effect from calling this function.
+>>
+>> And I think "build" or similar would be good to be included in the macro
+>> name.
+>>
+>>> +    static inline bool is_##name##_event(u32 idx)                  \
+>>
+>> why inline?
+>>
+>>> +
+>>> {                                                                   \
+>>> +        if ((idx >= list[0] && idx <= list[1]) || idx == list[2])  \
+>>> +            return true;                                        \
+>>> +        return false;                                               \
+>>
+>> isn't this just:
+>> {
+>>       return (idx >= list[0] && idx <= list[1]) || idx == list[2])
+>> }
+> 
+> thanks, will address in next version.
+>>
+>>> +    }
+>>> +
+>>> +/*
+>>> + * The first element of event list is minimum index of TL-layer events
+>>> + * and the second element is maximum index. The third element is index
+>>> + * of a DL-layer event.
+>>> + */
+>>> +static const u32 bw_events_list[] = {0x04, 0x08, 0x84};
+>>> +static const u32 latency_events_list[] = {0x10, 0x15, 0x85};
+>>> +static const u32 bus_util_events_list[] = {0x20, 0x24, 0x09};
+>>> +static const u32 buf_util_events_list[] = {0x28, 0x2a, 0x33};
+>>> +
+>>> +HISI_PCIE_CHECK_EVENTS(bw, bw_events_list);
+>>> +HISI_PCIE_CHECK_EVENTS(latency, latency_events_list);
+>>> +HISI_PCIE_CHECK_EVENTS(bus_util, bus_util_events_list);
+>>> +HISI_PCIE_CHECK_EVENTS(buf_util, buf_util_events_list);
+>>
+>> Surely the macro can be fixed such that you need to have:
+>> HISI_PCIE_CHECK_EVENTS(buf_util);
+>>
+> will address in next version.
+>>
+>>> +
+>>> +static ssize_t hisi_pcie_cpumask_show(struct device *dev,
+>>> +                      struct device_attribute *attr, char *buf)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(dev_get_drvdata(dev));
+>>> +
+>>> +    return cpumap_print_to_pagebuf(true, buf, &pcie_pmu->cpumask);
+>>> +}
+>>> +
+>>> +static ssize_t hisi_pcie_identifier_show(struct device *dev,
+>>> +                     struct device_attribute *attr,
+>>> +                     char *buf)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(dev_get_drvdata(dev));
+>>> +
+>>> +    return sysfs_emit(buf, "0x%x\n", pcie_pmu->identifier);
+>>> +}
+>>> +
+>>> +static ssize_t hisi_pcie_bus_show(struct device *dev,
+>>> +                  struct device_attribute *attr, char *buf)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(dev_get_drvdata(dev));
+>>> +
+>>> +    return sysfs_emit(buf, "0x%02x\n", PCI_BUS_NUM(pcie_pmu->bdf_min));
+>>> +}
+>>> +
+>>> +static void hisi_pcie_parse_data(struct hisi_pcie_pmu *pcie_pmu, u32
+>>> reg_off,
+>>
+>> hisi_pcie_parse_data() name is way too vague. I mean, parse what data?
+>>
+>> is there is some standard format register we use for various data types,
+>> then make that clear please
+> Seems that we only have lower_32_bits() but do not have lower_16_bits().
+> perhaps we could change the function name to hisi_pcie_parse_reg_value()?
+
+ok, so even that name is better.
+
+> 
+>>
+>>> +                   u16 *arg0, u16 *arg1)
+>>> +{
+>>> +    u32 val = readl(pcie_pmu->base + reg_off);
+>>> +
+>>> +    *arg0 = val & 0xffff;
+>>> +    *arg1 = (val & 0xffff0000) >> 16;
+>>> +}
+>>> +
+>>> +static u32 hisi_pcie_pmu_get_offset(u32 offset, u32 idx)
+>>> +{
+>>> +    return offset + HISI_PCIE_REG_STEP * idx;
+>>> +}
+>>> +
+>>> +static u32 hisi_pcie_pmu_readl(struct hisi_pcie_pmu *pcie_pmu, u32
+>>> reg_offset,
+>>> +                   u32 idx)
+>>> +{
+>>> +    u32 offset = hisi_pcie_pmu_get_offset(reg_offset, idx);
+>>> +
+>>> +    return readl(pcie_pmu->base + offset);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_writel(struct hisi_pcie_pmu *pcie_pmu, u32
+>>> reg_offset,
+>>> +                 u32 idx, u32 val)
+>>> +{
+>>> +    u32 offset = hisi_pcie_pmu_get_offset(reg_offset, idx);
+>>> +
+>>> +    writel(val, pcie_pmu->base + offset);
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_readq(struct hisi_pcie_pmu *pcie_pmu, u32
+>>> reg_offset,
+>>> +                   u32 idx)
+>>> +{
+>>> +    u32 offset = hisi_pcie_pmu_get_offset(reg_offset, idx);
+>>> +
+>>> +    return readq(pcie_pmu->base + offset);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_writeq(struct hisi_pcie_pmu *pcie_pmu, u32
+>>> reg_offset,
+>>> +                 u32 idx, u64 val)
+>>> +{
+>>> +    u32 offset = hisi_pcie_pmu_get_offset(reg_offset, idx);
+>>> +
+>>> +    writeq(val, pcie_pmu->base + offset);
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_get_event(struct perf_event *event)
+>>
+>> that function name is too vague
+>>
+>>> +{
+>>> +    return FIELD_PREP(HISI_PCIE_EVENT_M, hisi_pcie_get_event(event)) |
+>>> +           FIELD_PREP(HISI_PCIE_SUBEVENT_M,
+>>> hisi_pcie_get_subevent(event));
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_get_target(struct perf_event *event)
+>>
+>> same here
+>>
+>>> +{
+>>> +    u64 port, val;
+>>> +
+>>> +    port = hisi_pcie_get_port(event);
+>>> +    if (port) {
+>>> +        val = FIELD_PREP(HISI_PCIE_TARGET_M, port);
+>>> +    } else {
+>>> +        val = FIELD_PREP(HISI_PCIE_TARGET_M, hisi_pcie_get_bdf(event));
+>>> +        val |= HISI_PCIE_TARGET_EN;
+>>> +    }
+>>> +
+>>> +    return val;
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_get_trigger(struct perf_event *event)
+>>
+>> and here
+>>
+>> what you really seem to be doing is getting the formatted fields for the
+>> register
+>>
+>>
+>> Having all these call-once functions seem to make life a bit more
+>> difficult...
+>>
+> Do you mean config all the filters in one function?, will fix it, thanks.
+
+Yes, I would suggest one function
+
+> 
+>>> +{
+>>> +    u64 trig_len, val;
+>>> +
+>>> +    trig_len = hisi_pcie_get_trig_len(event);
+>>> +    if (!trig_len)
+>>> +        return 0;
+>>> +
+>>> +    val = FIELD_PREP(HISI_PCIE_TRIG_M, trig_len);
+>>> +    val |= FIELD_PREP(HISI_PCIE_TRIG_MODE_M,
+>>> +              hisi_pcie_get_trig_mode(event));
+>>> +    val |= HISI_PCIE_TRIG_EN;
+>>> +
+>>> +    return val;
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_get_thr(struct perf_event *event)
+>>> +{
+>>> +    u64 thr_len, val;
+>>> +
+>>> +    thr_len = hisi_pcie_get_thr_len(event);
+>>> +    if (!thr_len)
+>>> +        return 0;
+>>> +
+>>> +    val = FIELD_PREP(HISI_PCIE_THR_M, thr_len);
+>>> +    val |= FIELD_PREP(HISI_PCIE_THR_MODE_M,
+>>> hisi_pcie_get_thr_mode(event));
+>>> +    val |= HISI_PCIE_THR_EN;
+>>> +
+>>> +    return val;
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_config_filter(struct perf_event *event)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +    u32 idx = hwc->idx;
+>>> +    u64 val;
+>>> +
+>>> +    val = HISI_PCIE_DEFAULT_SET;
+>>> +    val |= hisi_pcie_pmu_get_event(event);
+>>> +    val |= hisi_pcie_pmu_get_target(event);
+>>> +    val |= hisi_pcie_pmu_get_trigger(event);
+>>> +    val |= hisi_pcie_pmu_get_thr(event);
+>>> +    hisi_pcie_pmu_writeq(pcie_pmu, HISI_PCIE_EVENT_CTRL, idx, val);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_clear_filter(struct perf_event *event)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +
+>>> +    hisi_pcie_pmu_writeq(pcie_pmu, HISI_PCIE_EVENT_CTRL, hwc->idx,
+>>> +                 HISI_PCIE_DEFAULT_SET);
+>>> +}
+>>> +
+>>> +static bool hisi_pcie_pmu_valid_port(struct hisi_pcie_pmu *pcie_pmu,
+>>> u16 bdf)
+>>> +{
+>>> +    return bdf <= pcie_pmu->bdf_max && bdf >= pcie_pmu->bdf_min;
+>>
+>> nit: it is standard to have:
+>>
+>>       if (x >= min && x <= max)
+>>
+>> i.e. have min on the left
+>>
+>> 2nd nit: it is passed bdf, yet "port" is in the name
+>>
+> will fix the function, bdf means the BDF of Root Port, I'll use rp_bdf
+> in bext version to describe it.
+
+ok
+
+>>
+>>> +}
+>>> +
+>>> +static bool hisi_pcie_pmu_valid_requester_id(struct hisi_pcie_pmu
+>>> *pcie_pmu,
+>>> +                        u32 bdf)
+>>> +{
+>>> +    struct pci_dev *root_port, *pdev;
+>>> +
+>>> +    pdev =
+>>> pci_get_domain_bus_and_slot(pci_domain_nr(pcie_pmu->pdev->bus),
+>>> +                       PCI_BUS_NUM(bdf),
+>>> +                       GET_PCI_DEVFN(bdf));
+>>> +    if (!pdev)
+>>> +        return false;
+>>> +
+>>> +    root_port = pcie_find_root_port(pdev);
+>>> +    if (!root_port)
+>>> +        return false;
+>>> +
+>>> +    pci_dev_put(pdev);
+>>> +    return hisi_pcie_pmu_valid_port(pcie_pmu, pci_dev_id(root_port));
+>>> +}
+>>> +
+>>> +static bool hisi_pcie_pmu_valid_filter(struct perf_event *event,
+>>> +                       struct hisi_pcie_pmu *pcie_pmu)
+>>> +{
+>>> +    u32 subev_idx = hisi_pcie_get_subevent(event);
+>>> +    u32 event_idx = hisi_pcie_get_event(event);
+>>> +    u32 requester_id = hisi_pcie_get_bdf(event);
+>>> +
+>>> +    if (subev_idx > HISI_PCIE_SUBEVENT_MAX ||
+>>> +        event_idx > HISI_PCIE_EVENT_MAX) {
+>>> +        pci_err(pcie_pmu->pdev,
+>>> +            "Max event index and max subevent index is: %d, %d.\n",
+>>> +            HISI_PCIE_EVENT_MAX, HISI_PCIE_SUBEVENT_MAX);
+>>
+>> if this is just going to be fed back to userspace, I don't see why we
+>> need a kernel log
+>>
+>> and the only caller also triggers an error message, which I doubt is needed
+>>
+> Print out the HISI_PCIE_EVENT_MAX and HISI_PCIE_SUBEVENT_MAX here may be
+> more convenient for users to get the right value.
+> If you this is redundant I'll remove it. :)
+
+Don't we already tell this to userspace?
+
+>>> +        return false;
+>>> +    }
+>>> +
+>>> +    if (hisi_pcie_get_thr_len(event) > HISI_PCIE_THR_MAX_VAL)
+>>> +        return false;
+>>> +
+>>> +    if (hisi_pcie_get_trig_len(event) > HISI_PCIE_TRIG_MAX_VAL)
+>>> +        return false;
+>>> +
+>>> +    if (requester_id) {
+>>> +        if (!hisi_pcie_pmu_valid_requester_id(pcie_pmu, requester_id)) {
+>>> +            pci_err(pcie_pmu->pdev, "Invalid requester id.\n");
+>>
+>> see previous comments
+>>
+>>> +            return false;
+>>> +        }
+>>> +    }
+>>> +
+>>> +    return true;
+>>> +}
+>>> +
+>>> +static bool hisi_pcie_pmu_validate_event_group(struct perf_event *event)
+>>> +{
+>>> +    struct perf_event *sibling, *leader = event->group_leader;
+>>> +    int counters = 1;
+>>> +
+>>> +    if (!is_software_event(leader)) {
+>>> +        if (leader->pmu != event->pmu)
+>>> +            return false;
+>>> +
+>>> +        if (leader != event)
+>>> +            counters++;
+>>> +    }
+>>> +
+>>> +    for_each_sibling_event(sibling, event->group_leader) {
+>>> +        if (is_software_event(sibling))
+>>> +            continue;
+>>> +
+>>> +        if (sibling->pmu != event->pmu)
+>>> +            return false;
+>>> +
+>>> +        counters++;
+>>> +    }
+>>> +
+>>> +    return counters <= HISI_PCIE_MAX_COUNTERS;
+>>> +}
+>>> +
+>>> +static int hisi_pcie_pmu_event_init(struct perf_event *event)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +
+>>> +    event->cpu = cpumask_first(&pcie_pmu->cpumask);
+>>> +
+>>> +    if (event->attr.type != event->pmu->type)
+>>> +        return -ENOENT;
+>>> +
+>>> +    /* Sampling is not supported. */
+>>> +    if (is_sampling_event(event) || event->attach_state &
+>>> PERF_ATTACH_TASK)
+>>> +        return -EOPNOTSUPP;
+>>> +
+>>> +    /* Per-task mode is not supported. */
+>>> +    if (event->cpu < 0)
+>>
+>> cpumask_first() gives an unsigned int - this can never happen
+
+please fix this!
+
+>>
+>>> +        return -EINVAL;
+>>> +
+>>> +    if (!hisi_pcie_pmu_valid_filter(event, pcie_pmu)) {
+>>> +        pci_err(pcie_pmu->pdev, "Invalid filter!\n");
+>>> +        return -EINVAL;
+>>> +    }
+>>> +
+>>> +    if (!hisi_pcie_pmu_validate_event_group(event))
+>>> +        return -EINVAL;
+>>> +
+>>> +    return 0;
+>>> +}
+>>> +
+>>> +static u64 hisi_pcie_pmu_process_data(struct perf_event *event, u64 val,
+
+
+
+>>> +
+>>> +static void hisi_pcie_pmu_disable_int(struct hisi_pcie_pmu *pcie_pmu,
+>>> +                      struct hw_perf_event *hwc)
+>>> +{
+>>> +    u32 idx = hwc->idx;
+>>> +
+>>> +    hisi_pcie_pmu_writel(pcie_pmu, HISI_PCIE_INT_MASK, idx, 1);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_reset_counter(struct hisi_pcie_pmu *pcie_pmu,
+>>> +                    struct hw_perf_event *hwc)
+>>> +{
+>>> +    u32 idx = hwc->idx;
+>>> +
+>>> +    hisi_pcie_pmu_writeq(pcie_pmu, HISI_PCIE_EVENT_CTRL, idx,
+>>> +                 HISI_PCIE_RESET_CNT);
+>>> +    hisi_pcie_pmu_writeq(pcie_pmu, HISI_PCIE_EVENT_CTRL, idx,
+>>> +                 HISI_PCIE_DEFAULT_SET);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_start(struct perf_event *event, int flags)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +    struct hw_perf_event_extra *hwc_ext;
+>>> +    u64 prev_cnt, prev_cnt_ext;
+>>> +
+>>> +    hwc_ext = &hwc->extra_reg;
+>>> +    if (WARN_ON_ONCE(!(hwc->state & PERF_HES_STOPPED)))
+>>> +        return;
+>>> +
+>>> +    WARN_ON_ONCE(!(hwc->state & PERF_HES_UPTODATE));
+>>> +    hwc->state = 0;
+>>> +
+>>> +    hisi_pcie_pmu_config_filter(event);
+>>> +    hisi_pcie_pmu_enable_counter(pcie_pmu, hwc);
+>>> +    hisi_pcie_pmu_enable_int(pcie_pmu, hwc);
+>>> +    hisi_pcie_pmu_set_period(event);
+>>> +
+>>> +    if (flags & PERF_EF_RELOAD) {
+>>> +        prev_cnt = local64_read(&hwc->prev_count);
+>>> +        prev_cnt_ext = hwc_ext->config;
+>>> +        hisi_pcie_pmu_write_counter(event, prev_cnt, prev_cnt_ext);
+>>> +    }
+>>> +
+>>> +    perf_event_update_userpage(event);
+>>> +}
+>>> +
+>>> +static void hisi_pcie_pmu_stop(struct perf_event *event, int flags)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +
+>>> +    hisi_pcie_pmu_read(event);
+>>
+>> why do this - it just reads a register? and so why not check the return
+>> value?
+>>
+> hisi_pcie_pmu_read() is a void function, perhaps I should use
+> hisi_pcie_pmu_update_counter().
+
+I am not sure what your intention is with calling hisi_pcie_pmu_read(), 
+so cannot advise
+
+>>> +    hisi_pcie_pmu_disable_int(pcie_pmu, hwc);
+>>> +    hisi_pcie_pmu_disable_counter(pcie_pmu, hwc);
+>>> +    hisi_pcie_pmu_clear_filter(event);
+>>> +    WARN_ON_ONCE(hwc->state & PERF_HES_STOPPED);
+>>> +    hwc->state |= PERF_HES_STOPPED;
+>>> +
+>>> +    if (hwc->state & PERF_HES_UPTODATE)
+>>> +        return;
+>>> +
+>>> +    hwc->state |= PERF_HES_UPTODATE;
+>>> +}
+>>> +
+>>> +static int hisi_pcie_pmu_add(struct perf_event *event, int flags)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +    int idx;
+>>> +
+>>> +    hwc->state = PERF_HES_STOPPED | PERF_HES_UPTODATE;
+>>> +    idx = hisi_pcie_pmu_get_event_idx(pcie_pmu);
+>>> +    if (idx < 0)
+>>> +        return idx;
+>>> +
+>>> +    hwc->idx = idx;
+>>> +    pcie_pmu->hw_events[idx] = event;
+>>> +
+>>> +    /* Reset PMC to avoid interference caused by previous statistic. */
+
+
+
+>>> +
+>>> +static void hisi_pcie_pmu_irq_unregister(struct pci_dev *pdev,
+>>> +                     struct hisi_pcie_pmu *pcie_pmu)
+>>> +{
+>>> +    free_irq(pcie_pmu->irq, pcie_pmu);
+>>> +    pci_free_irq_vectors(pdev);
+>>> +}
+>>> +
+>>> +static int hisi_pcie_pmu_online_cpu(unsigned int cpu, struct
+>>> hlist_node *node)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = hlist_entry_safe(node,
+>>> +                     struct hisi_pcie_pmu, node);
+>>> +
+>>> +    if (cpumask_empty(&pcie_pmu->cpumask)) {
+>>> +        cpumask_set_cpu(cpu, &pcie_pmu->cpumask);
+>>> +        WARN_ON(irq_set_affinity_hint(pcie_pmu->irq, cpumask_of(cpu)));
+>>> +    }
+>>> +
+>>> +    return 0;
+>>> +}
+>>> +
+>>> +static int hisi_pcie_pmu_offline_cpu(unsigned int cpu, struct
+>>> hlist_node *node)
+>>> +{
+>>> +    struct hisi_pcie_pmu *pcie_pmu = hlist_entry_safe(node,
+>>> +                     struct hisi_pcie_pmu, node);
+>>> +    unsigned int target;
+>>> +
+>>> +    if (!cpumask_test_and_clear_cpu(cpu, &pcie_pmu->cpumask))
+>>
+>> I do wonder why we even need maintain pcie_pmu->cpumask
+>>
+>> Can't we just use cpu_online_mask as appropiate instead?
+
+?
+
+>>
+>>> +        return 0;
+>>> +
+>>> +    /* Choose a new CPU from all online cpus. */
+>>> +    target = cpumask_any_but(cpu_online_mask, cpu);
+>>> +    if (target >= nr_cpu_ids)
+>>> +        return 0;
+>>> +
+>>> +    perf_pmu_migrate_context(&pcie_pmu->pmu, cpu, target);
+>>> +    WARN_ON(irq_set_affinity_hint(pcie_pmu->irq, cpumask_of(target)));
+>>> +
+>>> +    return 0;
+>>> +}
+>>> +
