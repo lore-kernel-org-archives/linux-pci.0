@@ -2,112 +2,237 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC468C433B4
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F92C43460
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 16:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99F1A61357
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 15:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ABDE6128C
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Apr 2021 16:01:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242946AbhDLPcP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Apr 2021 11:32:15 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:51308 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S242922AbhDLPcG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Apr 2021 11:32:06 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13CFVLuf004634;
-        Mon, 12 Apr 2021 08:31:28 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=pfpt0220;
- bh=+PPQ0jPh/9sOaCsxsOMINjzr4p98Q80wtAyKsrfihdg=;
- b=QT0Rq0AfzzjdHzptiCyVprRbVLpd0ykuA5BX3hxmLcRHLkJ1VumAvz/8d0nW8p4PQ2gN
- D8Nwiybkfa5PiU3A8j8wz0IyHXlyDcnNkWhBzVmS5c5Exev90o/Zq0HhtsyOHIC9nDRt
- TEiPfNb8uawLYZUod1f8RMA68GZNya4hWvuGfDcxkyCLrKdKSVSqYhHZjV8IvqzdGR1/
- 1sjiv0lJB05pZZGfasMU6LUzurp0wWi7LTt2hSmg1ii+K5iyMQVn+FG7+obCQE04FOPY
- PA3qSZg5UxUnjBL/fwweJZhIJZfuw6uuNi4hn6nOZ6tzCeVUwnVZ3xrXroygmNpTqPR5 PQ== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 37vcu99xrb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 12 Apr 2021 08:31:28 -0700
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
- 2021 08:31:27 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 12 Apr
- 2021 08:31:27 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 12 Apr 2021 08:31:27 -0700
-Received: from nw-bp.marvell.com (nw-bp.marvell.com [10.5.24.22])
-        by maili.marvell.com (Postfix) with ESMTP id F3DE73F7043;
-        Mon, 12 Apr 2021 08:31:22 -0700 (PDT)
-From:   <bpeled@marvell.com>
-To:     <thomas.petazzoni@bootlin.com>, <lorenzo.pieralisi@arm.com>,
-        <bhelgaas@google.com>
-CC:     <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <sebastian.hesselbarth@gmail.com>, <gregory.clement@bootlin.com>,
-        <andrew@lunn.ch>, <robh+dt@kernel.org>, <mw@semihalf.com>,
-        <jaz@semihalf.com>, <kostap@marvell.com>, <nadavh@marvell.com>,
-        <stefanc@marvell.com>, <oferh@marvell.com>, <bpeled@marvell.com>
-Subject: =?UTF-8?q?=5B=E2=80=9DPATCH=E2=80=9D=205/5=5D=20PCI=3A=20armada8k=3A=20add=20device=20reset=20to=20link-down=20handle?=
-Date:   Mon, 12 Apr 2021 18:30:56 +0300
-Message-ID: <1618241456-27200-6-git-send-email-bpeled@marvell.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1618241456-27200-1-git-send-email-bpeled@marvell.com>
-References: <1618241456-27200-1-git-send-email-bpeled@marvell.com>
+        id S243206AbhDLQBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Apr 2021 12:01:44 -0400
+Received: from lizzard.sbs.de ([194.138.37.39]:56388 "EHLO lizzard.sbs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238498AbhDLQBn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Apr 2021 12:01:43 -0400
+Received: from mail1.sbs.de (mail1.sbs.de [192.129.41.35])
+        by lizzard.sbs.de (8.15.2/8.15.2) with ESMTPS id 13CG18SA016672
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 12 Apr 2021 18:01:08 +0200
+Received: from md1za8fc.ad001.siemens.net ([139.22.41.180])
+        by mail1.sbs.de (8.15.2/8.15.2) with ESMTP id 13CG17PN005253;
+        Mon, 12 Apr 2021 18:01:07 +0200
+Date:   Mon, 12 Apr 2021 18:01:06 +0200
+From:   Henning Schild <henning.schild@siemens.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        "Jim Quinlan" <james.quinlan@broadcom.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-kernel@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Jean Delvare <jdelvare@suse.com>,
+        Peter Tyser <ptyser@xes-inc.com>, <hdegoede@redhat.com>
+Subject: Re: [PATCH v1 6/7] mfd: lpc_ich: Add support for pinctrl in
+ non-ACPI system
+Message-ID: <20210412180106.7dc524e8@md1za8fc.ad001.siemens.net>
+In-Reply-To: <20210308122020.57071-7-andriy.shevchenko@linux.intel.com>
+References: <20210308122020.57071-1-andriy.shevchenko@linux.intel.com>
+        <20210308122020.57071-7-andriy.shevchenko@linux.intel.com>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: YDRy_dGnY5Gad4s8J5DMr13f1F-C1kzp
-X-Proofpoint-ORIG-GUID: YDRy_dGnY5Gad4s8J5DMr13f1F-C1kzp
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-12_11:2021-04-12,2021-04-12 signatures=0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ben Peled <bpeled@marvell.com>
+Am Mon, 8 Mar 2021 14:20:19 +0200
+schrieb Andy Shevchenko <andriy.shevchenko@linux.intel.com>:
 
-Added pcie reset via gpio support as described in the
-designware-pcie.txt DT binding document.
-In cases link down cause still exist in device.
-The device need to be reset to reestablish the link.
-If reset-gpio pin provided in the device tree, then the linkdown
-handle resets the device before reestablishing link.
+> From: Tan Jui Nee <jui.nee.tan@intel.com>
+> 
+> Add support for non-ACPI systems, such as system that uses
+> Advanced Boot Loader (ABL) whereby a platform device has to be created
+> in order to bind with pin control and GPIO.
+> 
+> At the moment, Intel Apollo Lake In-Vehicle Infotainment (IVI) system
+> requires a driver to hide and unhide P2SB to lookup P2SB BAR and pass
+> the PCI BAR address to GPIO.
+> 
+> Signed-off-by: Tan Jui Nee <jui.nee.tan@intel.com>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/mfd/lpc_ich.c | 100
+> +++++++++++++++++++++++++++++++++++++++++- 1 file changed, 99
+> insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
+> index 8e9bd6813287..959247b6987a 100644
+> --- a/drivers/mfd/lpc_ich.c
+> +++ b/drivers/mfd/lpc_ich.c
+> @@ -8,7 +8,8 @@
+>   *  Configuration Registers.
+>   *
+>   *  This driver is derived from lpc_sch.
+> -
+> + *
+> + *  Copyright (C) 2017, 2021 Intel Corporation
+>   *  Copyright (c) 2011 Extreme Engineering Solution, Inc.
+>   *  Author: Aaron Sierra <asierra@xes-inc.com>
+>   *
+> @@ -43,6 +44,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci-p2sb.h>
+> +#include <linux/pinctrl/pinctrl.h>
+>  #include <linux/mfd/core.h>
+>  #include <linux/mfd/lpc_ich.h>
+>  #include <linux/platform_data/itco_wdt.h>
+> @@ -140,6 +142,73 @@ static struct mfd_cell lpc_ich_gpio_cell = {
+>  	.ignore_resource_conflicts = true,
+>  };
+>  
+> +/* Offset data for Apollo Lake GPIO controllers */
+> +#define APL_GPIO_SOUTHWEST_OFFSET	0xc00000
+> +#define APL_GPIO_SOUTHWEST_SIZE		0x654
+> +#define APL_GPIO_NORTHWEST_OFFSET	0xc40000
+> +#define APL_GPIO_NORTHWEST_SIZE		0x764
+> +#define APL_GPIO_NORTH_OFFSET		0xc50000
+> +#define APL_GPIO_NORTH_SIZE		0x76c
 
-Signed-off-by: Ben Peled <bpeled@marvell.com>
----
- drivers/pci/controller/dwc/pcie-armada8k.c | 2 ++
- 1 file changed, 2 insertions(+)
+drivers/pinctrl/intel/pinctrl-broxton.c:653
+BXT_COMMUNITY(0, 77),
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index 4eb8607..83ac91e 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -24,6 +24,7 @@
- #include <linux/of_irq.h>
- #include <linux/mfd/syscon.h>
- #include <linux/regmap.h>
-+#include <linux/of_gpio.h>
- 
- #include "pcie-designware.h"
- 
-@@ -38,6 +39,7 @@ struct armada8k_pcie {
- 	struct regmap *sysctrl_base;
- 	u32 mac_rest_bitmask;
- 	struct work_struct recover_link_work;
-+	enum of_gpio_flags flags;
- };
- 
- #define PCIE_VENDOR_REGS_OFFSET		0x8000
--- 
-2.7.4
+> +#define APL_GPIO_WEST_OFFSET		0xc70000
+> +#define APL_GPIO_WEST_SIZE		0x674
+
+All these sizes correlate with 4 magic numbers from pinctrl-broxton.
+
+SIZE - 0x500 (pad_base?) - 4 (no clue) / 8
+
+It might be worth basing both numbers on a define and giving the magic
+numbers some names.
+
+But all this seems like duplication of pinctrl-broxton, maybe the
+pinctrl driver should unhide the p2sb ...
+
+regards,
+Henning
+
+> +
+> +#define APL_GPIO_NR_DEVICES		4
+> +#define APL_GPIO_IRQ			14
+> +
+> +static struct resource apl_gpio_resources[APL_GPIO_NR_DEVICES][2] = {
+> +	{
+> +		DEFINE_RES_MEM(APL_GPIO_NORTH_OFFSET,
+> APL_GPIO_NORTH_SIZE),
+> +		DEFINE_RES_IRQ(APL_GPIO_IRQ),
+> +	},
+> +	{
+> +		DEFINE_RES_MEM(APL_GPIO_NORTHWEST_OFFSET,
+> APL_GPIO_NORTHWEST_SIZE),
+> +		DEFINE_RES_IRQ(APL_GPIO_IRQ),
+> +	},
+> +	{
+> +		DEFINE_RES_MEM(APL_GPIO_WEST_OFFSET,
+> APL_GPIO_WEST_SIZE),
+> +		DEFINE_RES_IRQ(APL_GPIO_IRQ),
+> +	},
+> +	{
+> +		DEFINE_RES_MEM(APL_GPIO_SOUTHWEST_OFFSET,
+> APL_GPIO_SOUTHWEST_SIZE),
+> +		DEFINE_RES_IRQ(APL_GPIO_IRQ),
+> +	},
+> +};
+> +
+> +/* The order must be in sync with apl_pinctrl_soc_data */
+> +static const struct mfd_cell apl_gpio_devices[APL_GPIO_NR_DEVICES] =
+> {
+> +	{
+> +		/* North */
+> +		.name = "apollolake-pinctrl",
+> +		.id = 0,
+> +		.num_resources = ARRAY_SIZE(apl_gpio_resources[0]),
+> +		.resources = apl_gpio_resources[0],
+> +		.ignore_resource_conflicts = true,
+> +	},
+> +	{
+> +		/* NorthWest */
+> +		.name = "apollolake-pinctrl",
+> +		.id = 1,
+> +		.num_resources = ARRAY_SIZE(apl_gpio_resources[1]),
+> +		.resources = apl_gpio_resources[1],
+> +		.ignore_resource_conflicts = true,
+> +	},
+> +	{
+> +		/* West */
+> +		.name = "apollolake-pinctrl",
+> +		.id = 2,
+> +		.num_resources = ARRAY_SIZE(apl_gpio_resources[2]),
+> +		.resources = apl_gpio_resources[2],
+> +		.ignore_resource_conflicts = true,
+> +	},
+> +	{
+> +		/* SouthWest */
+> +		.name = "apollolake-pinctrl",
+> +		.id = 3,
+> +		.num_resources = ARRAY_SIZE(apl_gpio_resources[3]),
+> +		.resources = apl_gpio_resources[3],
+> +		.ignore_resource_conflicts = true,
+> +	},
+> +};
+>  
+>  static struct mfd_cell lpc_ich_spi_cell = {
+>  	.name = "intel-spi",
+> @@ -1082,6 +1151,29 @@ static int lpc_ich_init_wdt(struct pci_dev
+> *dev) return ret;
+>  }
+>  
+> +static int lpc_ich_init_pinctrl(struct pci_dev *dev)
+> +{
+> +	struct resource base;
+> +	unsigned int i;
+> +	int ret;
+> +
+> +	ret = pci_p2sb_bar(dev, PCI_DEVFN(13, 0), &base);
+> +	if (ret)
+> +		return ret;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(apl_gpio_devices); i++) {
+> +		struct resource *mem = &apl_gpio_resources[i][0];
+> +
+> +		/* Fill MEM resource */
+> +		mem->start += base.start;
+> +		mem->end += base.start;
+> +		mem->flags = base.flags;
+> +	}
+> +
+> +	return mfd_add_devices(&dev->dev, 0, apl_gpio_devices,
+> +			       ARRAY_SIZE(apl_gpio_devices), NULL,
+> 0, NULL); +}
+> +
+>  static void lpc_ich_test_spi_write(struct pci_dev *dev, unsigned int
+> devfn, struct intel_spi_boardinfo *info)
+>  {
+> @@ -1198,6 +1290,12 @@ static int lpc_ich_probe(struct pci_dev *dev,
+>  			cell_added = true;
+>  	}
+>  
+> +	if (priv->chipset == LPC_APL) {
+> +		ret = lpc_ich_init_pinctrl(dev);
+> +		if (!ret)
+> +			cell_added = true;
+> +	}
+> +
+>  	if (lpc_chipset_info[priv->chipset].spi_type) {
+>  		ret = lpc_ich_init_spi(dev);
+>  		if (!ret)
 
