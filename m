@@ -2,168 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07532C43470
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B17BDC433B4
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B163D600CD
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:16:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73555611B0
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351199AbhDNNRJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Apr 2021 09:17:09 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:15678 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351182AbhDNNRJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Apr 2021 09:17:09 -0400
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FL2wp4gLXzpXs0;
-        Wed, 14 Apr 2021 21:13:46 +0800 (CST)
-Received: from localhost.localdomain (10.175.118.36) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.498.0; Wed, 14 Apr 2021 21:16:33 +0800
-From:   Chiqijun <chiqijun@huawei.com>
-To:     <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alex.williamson@redhat.com>, <yin.yinshi@huawei.com>,
-        <cloud.wangxiaoyun@huawei.com>,
-        <zengweiliang.zengweiliang@huawei.com>, <chenlizhong@huawei.com>
-Subject: [v6] PCI: Add reset quirk for Huawei Intelligent NIC virtual function
-Date:   Wed, 14 Apr 2021 21:23:01 +0800
-Message-ID: <20210414132301.1793-1-chiqijun@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        id S230195AbhDNNVl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Apr 2021 09:21:41 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20894 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229450AbhDNNVk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Apr 2021 09:21:40 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13EDG1vZ020128;
+        Wed, 14 Apr 2021 06:21:03 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=pfpt0220;
+ bh=Qy9aN4zLoLRY1HY2tMboGlxdf3jeP2pyWyXffE/TaE8=;
+ b=KdPby2kGgSfG2THoRM8xoKD6VFgsAKlRJwezjO5mFbcUK2tjyWOX3A50ukoJBi6Rxm1s
+ b57hD8j3bEFIeC4LDSqUPkiwMTyHiz58encmU+0M1gS9PN4IDXooFRT/uSBnhdbBSWDd
+ Xou33maOWxDdj371yfvG8yl2bxoGQ+SoFAsQaioQ83HaCs7LC7ToayY8+GdIOEgMktVD
+ 0Umpfdg6wfAP4RZRWVTaATKxxpQQLYCCXZPBX2X3xuj5vRhP7VjvDYsex12kAuVIlNiA
+ g5E+FwvYJ3k4+jqJ6nyUojN61cJxzlnmBJkPM7OQ1bEC1KS1m5e9spympHT8URsqbsHw Og== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 37wqtm1sv4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 14 Apr 2021 06:21:03 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 14 Apr
+ 2021 06:21:01 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 14 Apr 2021 06:21:01 -0700
+Received: from nw-bp.marvell.com (nw-bp.marvell.com [10.5.24.22])
+        by maili.marvell.com (Postfix) with ESMTP id B67013F7040;
+        Wed, 14 Apr 2021 06:20:57 -0700 (PDT)
+From:   <bpeled@marvell.com>
+To:     <thomas.petazzoni@bootlin.com>, <lorenzo.pieralisi@arm.com>,
+        <bhelgaas@google.com>
+CC:     <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <sebastian.hesselbarth@gmail.com>, <gregory.clement@bootlin.com>,
+        <andrew@lunn.ch>, <robh+dt@kernel.org>, <mw@semihalf.com>,
+        <jaz@semihalf.com>, <kostap@marvell.com>, <nadavh@marvell.com>,
+        <stefanc@marvell.com>, <oferh@marvell.com>,
+        Ben Peled <bpeled@marvell.com>
+Subject: =?UTF-8?q?=5B=E2=80=9DPATCH=E2=80=9D=20v2=200/5=5D=20Asynchronous=20linkdown=20recovery?=
+Date:   Wed, 14 Apr 2021 16:20:49 +0300
+Message-ID: <1618406454-7953-1-git-send-email-bpeled@marvell.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.118.36]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: JttZFIy73utjp4IY9FEVPP5pgpeWZPY4
+X-Proofpoint-GUID: JttZFIy73utjp4IY9FEVPP5pgpeWZPY4
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-04-14_07:2021-04-14,2021-04-14 signatures=0
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When we do an FLR on several VFs at the same time, the Huawei
-Intelligent NIC processes them serially, resulting in some VF
-FLRs being delayed more than 100ms, when the virtual machine
-restarts and the device driver is loaded, the firmware is doing
-the corresponding VF FLR, causing the driver to fail to load.
-Link: https://support.huawei.com/enterprise/en/doc/EDOC1100063073/87950645/vm-oss-occasionally-fail-to-load-the-in200-driver-when-the-vf-performs-flr
+From: Ben Peled <bpeled@marvell.com>
 
-To solve this problem, add host and firmware status synchronization
-during FLR.
+The following patches implement the required procedure to handle and recover from asynchronous PCIE link down events on Armada SoCs.
 
-Signed-off-by: Chiqijun <chiqijun@huawei.com>
----
-v6:
- - Addressed Bjorn's review comments
+The procedure is defined as the following:
+1) Prevent new access to the PCI-E I/F by disabling the LTSSM
+2) Flush all pending transaction/access to the PCI-E I/F
+3) HW reset the PCIE end point device (based on board support)
+4) Reset the PCIE MAC
+5) Reinitialize the PCIE root complex and enable the LTSSM
 
-v5:
- - Fix build warning reported by kernel test robot
+The execution of this procedure is triggered by the PCIE RST_LINK_DOWN interrupt
 
-v4:
- - Addressed Bjorn's review comments
+v1 --> v2
+- Add missing device reset to link-down handle
 
-v3:
- - The MSE bit in the VF configuration space is hardwired to zero,
-   remove the setting of PCI_COMMAND_MEMORY bit. Add comment for
-   set PCI_COMMAND register.
+Ben Peled (5):
+  PCI: armada8k: Disable LTSSM on link down interrupts
+  PCI: armada8k: Add link-down handle
+  dt-bindings: pci: add system controller and MAC reset bit to    
+    Armada 7K/8K controller bindings
+  arm64: dts: marvell: add pcie mac reset to pcie
+  PCI: armada8k: add device reset to link-down handle
 
-v2:
- - Update comments
- - Use the HINIC_VF_FLR_CAP_BIT_SHIFT and HINIC_VF_FLR_PROC_BIT_SHIFT
-   macro instead of the magic number
----
- drivers/pci/quirks.c | 69 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+ Documentation/devicetree/bindings/pci/pci-armada8k.txt |   6 +
+ arch/arm64/boot/dts/marvell/armada-cp11x.dtsi          |   7 ++
+ drivers/pci/controller/dwc/pcie-armada8k.c             | 127 ++++++++++++++++++++
+ 3 files changed, 140 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 653660e3ba9e..6677b7220442 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3913,6 +3913,73 @@ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
- 	return 0;
- }
- 
-+#define PCI_DEVICE_ID_HINIC_VF      0x375E
-+#define HINIC_VF_FLR_TYPE           0x1000
-+#define HINIC_VF_FLR_CAP_BIT        (1UL << 30)
-+#define HINIC_VF_OP                 0xE80
-+#define HINIC_VF_FLR_PROC_BIT       (1UL << 18)
-+#define HINIC_OPERATION_TIMEOUT     15000	/* 15 seconds */
-+
-+/* Device-specific reset method for Huawei Intelligent NIC virtual functions */
-+static int reset_hinic_vf_dev(struct pci_dev *pdev, int probe)
-+{
-+	unsigned long timeout;
-+	void __iomem *bar;
-+	u32 val;
-+
-+	if (probe)
-+		return 0;
-+
-+	bar = pci_iomap(pdev, 0, 0);
-+	if (!bar)
-+		return -ENOTTY;
-+
-+	/* Get and check firmware capabilities. */
-+	val = ioread32be(bar + HINIC_VF_FLR_TYPE);
-+	if (!(val & HINIC_VF_FLR_CAP_BIT)) {
-+		pci_iounmap(pdev, bar);
-+		return -ENOTTY;
-+	}
-+
-+	/*
-+	 * Set the processing bit for the start of FLR, which will be cleared
-+	 * by the firmware after FLR is completed.
-+	 */
-+	val = ioread32be(bar + HINIC_VF_OP);
-+	val = val | HINIC_VF_FLR_PROC_BIT;
-+	iowrite32be(val, bar + HINIC_VF_OP);
-+
-+	/* Perform the actual device function reset */
-+	pcie_flr(pdev);
-+
-+	/*
-+	 * The device must learn BDF after FLR in order to respond to BAR's
-+	 * read request, therefore, we issue a configure write request to let
-+	 * the device capture BDF.
-+	 */
-+	pci_write_config_word(pdev, PCI_VENDOR_ID, 0);
-+
-+	/* Waiting for device reset complete */
-+	timeout = jiffies + msecs_to_jiffies(HINIC_OPERATION_TIMEOUT);
-+	do {
-+		val = ioread32be(bar + HINIC_VF_OP);
-+		if (!(val & HINIC_VF_FLR_PROC_BIT))
-+			goto reset_complete;
-+		msleep(20);
-+	} while (time_before(jiffies, timeout));
-+
-+	val = ioread32be(bar + HINIC_VF_OP);
-+	if (!(val & HINIC_VF_FLR_PROC_BIT))
-+		goto reset_complete;
-+
-+	pci_warn(pdev, "Reset dev timeout, FLR ack reg: %#010x\n", val);
-+
-+reset_complete:
-+	pci_iounmap(pdev, bar);
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -3924,6 +3991,8 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, 0x0953, delay_250ms_after_flr },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 		reset_chelsio_generic_dev },
-+	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
-+		reset_hinic_vf_dev },
- 	{ 0 }
- };
- 
 -- 
-2.17.1
+2.7.4
 
