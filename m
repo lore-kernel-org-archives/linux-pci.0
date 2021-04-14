@@ -2,152 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27144C433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A23EFC433ED
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 16:12:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2E5661132
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 13:22:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 883F46112F
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Apr 2021 16:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231336AbhDNNXM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Apr 2021 09:23:12 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34600 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1351322AbhDNNXG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Apr 2021 09:23:06 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 13EDG1va020128;
-        Wed, 14 Apr 2021 06:21:08 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=pfpt0220;
- bh=1w1aOW3ghY/Ww+N67gF96mJvYXQ0kxUthm1XoYVB+Qs=;
- b=XU1tpVxJX/dIFConuEnm/ZXW/ygcd1ydOQTmb4p8/g5KzAg6KrawOQUDOOaBDix2voux
- pIGUobGsKWUvwQsQKeukeSRZXlRyziq/u5IeTODQUb80QJctTSlpEx7xTatvdgjYAjwv
- o3F8lFU/bvWqXtkNXa9PxIyKEw3Q5UeoDcBdXyBjYGBQLPRqCNchAH/wRFuEK86LgUW1
- gm4FWA7AUjCGt8dxQXRF3cS6NkiiZnOlx9uHUHVJwDhLybG6p0rbpqLghVeLrhg7odcz
- 0183ry55ejbKsMW2iM5cXmbah3TJdlRZy5uLMAv8q86B4k0F0UhDlSKxXVHHJMJZAq5P 9w== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 37wqtm1svd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 14 Apr 2021 06:21:08 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 14 Apr
- 2021 06:21:06 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 14 Apr 2021 06:21:06 -0700
-Received: from nw-bp.marvell.com (nw-bp.marvell.com [10.5.24.22])
-        by maili.marvell.com (Postfix) with ESMTP id 22F443F7043;
-        Wed, 14 Apr 2021 06:21:01 -0700 (PDT)
-From:   <bpeled@marvell.com>
-To:     <thomas.petazzoni@bootlin.com>, <lorenzo.pieralisi@arm.com>,
-        <bhelgaas@google.com>
-CC:     <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <sebastian.hesselbarth@gmail.com>, <gregory.clement@bootlin.com>,
-        <andrew@lunn.ch>, <robh+dt@kernel.org>, <mw@semihalf.com>,
-        <jaz@semihalf.com>, <kostap@marvell.com>, <nadavh@marvell.com>,
-        <stefanc@marvell.com>, <oferh@marvell.com>,
-        Ben Peled <bpeled@marvell.com>,
-        Marc St-Amand <mstamand@ciena.com>
-Subject: =?UTF-8?q?=5B=E2=80=9DPATCH=E2=80=9D=20v2=201/5=5D=20PCI=3A=20armada8k=3A=20Disable=20LTSSM=20on=20link=20down=20interrupts?=
-Date:   Wed, 14 Apr 2021 16:20:50 +0300
-Message-ID: <1618406454-7953-2-git-send-email-bpeled@marvell.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1618406454-7953-1-git-send-email-bpeled@marvell.com>
-References: <1618406454-7953-1-git-send-email-bpeled@marvell.com>
+        id S1351419AbhDNQMs convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Apr 2021 12:12:48 -0400
+Received: from mga18.intel.com ([134.134.136.126]:61296 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233932AbhDNQMo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Apr 2021 12:12:44 -0400
+IronPort-SDR: ULjpjgWAVva8sQp+KMXUy3W2BWguWzkSPvHq8dp5+V+tMulYAMey0Nr438Qg4d09DCGX/s3IQF
+ Jm4EaFVi84cg==
+X-IronPort-AV: E=McAfee;i="6200,9189,9954"; a="182178246"
+X-IronPort-AV: E=Sophos;i="5.82,222,1613462400"; 
+   d="scan'208";a="182178246"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2021 09:11:03 -0700
+IronPort-SDR: DE6B4YjCMUkQy2gZIwMLAjYT0pE96JDNgn3iwVrYeXbtL8GTIAgKFTBCvsh2Xdc//hnObTfNwJ
+ GR3Z3MHOxxPg==
+X-IronPort-AV: E=Sophos;i="5.82,222,1613462400"; 
+   d="scan'208";a="418378619"
+Received: from glenande-mobl1.amr.corp.intel.com (HELO localhost) ([10.209.19.126])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2021 09:11:02 -0700
+Date:   Wed, 14 Apr 2021 09:11:00 -0700
+From:   Jesse Brandeburg <jesse.brandeburg@intel.com>
+To:     Nitesh Narayan Lal <nitesh@redhat.com>
+Cc:     Marcelo Tosatti <mtosatti@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "frederic@kernel.org" <frederic@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+        "juri.lelli@redhat.com" <juri.lelli@redhat.com>,
+        "abelits@marvell.com" <abelits@marvell.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "rostedt@goodmis.org" <rostedt@goodmis.org>,
+        "mingo@kernel.org" <mingo@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
+        "stephen@networkplumber.org" <stephen@networkplumber.org>,
+        "rppt@linux.vnet.ibm.com" <rppt@linux.vnet.ibm.com>,
+        "jinyuqi@huawei.com" <jinyuqi@huawei.com>,
+        "zhangshaokun@hisilicon.com" <zhangshaokun@hisilicon.com>,
+        netdev@vger.kernel.org, chris.friesen@windriver.com
+Subject: Re: [Patch v4 1/3] lib: Restrict cpumask_local_spread to
+ houskeeping CPUs
+Message-ID: <20210414091100.000033cf@intel.com>
+In-Reply-To: <1a044a14-0884-eedb-5d30-28b4bec24b23@redhat.com>
+References: <20200625223443.2684-1-nitesh@redhat.com>
+        <20200625223443.2684-2-nitesh@redhat.com>
+        <3e9ce666-c9cd-391b-52b6-3471fe2be2e6@arm.com>
+        <20210127121939.GA54725@fuller.cnet>
+        <87r1m5can2.fsf@nanos.tec.linutronix.de>
+        <20210128165903.GB38339@fuller.cnet>
+        <87h7n0de5a.fsf@nanos.tec.linutronix.de>
+        <20210204181546.GA30113@fuller.cnet>
+        <cfa138e9-38e3-e566-8903-1d64024c917b@redhat.com>
+        <20210204190647.GA32868@fuller.cnet>
+        <d8884413-84b4-b204-85c5-810342807d21@redhat.com>
+        <87y2g26tnt.fsf@nanos.tec.linutronix.de>
+        <d0aed683-87ae-91a2-d093-de3f5d8a8251@redhat.com>
+        <7780ae60-efbd-2902-caaa-0249a1f277d9@redhat.com>
+        <07c04bc7-27f0-9c07-9f9e-2d1a450714ef@redhat.com>
+        <20210406102207.0000485c@intel.com>
+        <1a044a14-0884-eedb-5d30-28b4bec24b23@redhat.com>
+X-Mailer: Claws Mail 3.12.0 (GTK+ 2.24.28; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: WDbkL8ZwggSTTIPgQA8z11jWe6SvOfXT
-X-Proofpoint-GUID: WDbkL8ZwggSTTIPgQA8z11jWe6SvOfXT
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-04-14_07:2021-04-14,2021-04-14 signatures=0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ben Peled <bpeled@marvell.com>
+Nitesh Narayan Lal wrote:
 
-When a PCI link down condition is detected, the link training state
-machine must be disabled immediately.
+> > The original issue as seen, was that if you rmmod/insmod a driver
+> > *without* irqbalance running, the default irq mask is -1, which means
+> > any CPU. The older kernels (this issue was patched in 2014) used to use
+> > that affinity mask, but the value programmed into all the interrupt
+> > registers "actual affinity" would end up delivering all interrupts to
+> > CPU0,
+> 
+> So does that mean the affinity mask for the IRQs was different wrt where
+> the IRQs were actually delivered?
+> Or, the affinity mask itself for the IRQs after rmmod, insmod was changed
+> to 0 instead of -1?
 
-Signed-off-by: Marc St-Amand <mstamand@ciena.com>
-Signed-off-by: Konstantin Porotchkin <kostap@marvell.com>
-Signed-off-by: Ben Peled <bpeled@marvell.com>
----
- drivers/pci/controller/dwc/pcie-armada8k.c | 38 ++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+The smp_affinity was 0xfff, and the kernel chooses which interrupt to
+place the interrupt on, among any of the bits set.
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index 13901f3..b2278b1 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -54,6 +54,10 @@ struct armada8k_pcie {
- #define PCIE_INT_C_ASSERT_MASK		BIT(11)
- #define PCIE_INT_D_ASSERT_MASK		BIT(12)
  
-+#define PCIE_GLOBAL_INT_CAUSE2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x24)
-+#define PCIE_GLOBAL_INT_MASK2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x28)
-+#define PCIE_INT2_PHY_RST_LINK_DOWN	BIT(1)
-+
- #define PCIE_ARCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x50)
- #define PCIE_AWCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x54)
- #define PCIE_ARUSER_REG			(PCIE_VENDOR_REGS_OFFSET + 0x5C)
-@@ -193,6 +197,11 @@ static void armada8k_pcie_establish_link(struct armada8k_pcie *pcie)
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
- 	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
- 
-+	/* Also enable link down interrupts */
-+	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
-+	reg |= PCIE_INT2_PHY_RST_LINK_DOWN;
-+	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, reg);
-+
- 	if (!dw_pcie_link_up(pci)) {
- 		/* Configuration done. Start LTSSM */
- 		reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
-@@ -230,6 +239,35 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG);
- 	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG, val);
- 
-+	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG);
-+
-+	if (PCIE_INT2_PHY_RST_LINK_DOWN & val) {
-+		u32 ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
-+		/*
-+		 * The link went down. Disable LTSSM immediately. This
-+		 * unlocks the root complex config registers. Downstream
-+		 * device accesses will return all-Fs
-+		 */
-+		ctrl_reg &= ~(PCIE_APP_LTSSM_EN);
-+		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, ctrl_reg);
-+		/*
-+		 * Mask link down interrupts. They can be re-enabled once
-+		 * the link is retrained.
-+		 */
-+		ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
-+		ctrl_reg &= ~PCIE_INT2_PHY_RST_LINK_DOWN;
-+		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, ctrl_reg);
-+		/*
-+		 * At this point a worker thread can be triggered to
-+		 * initiate a link retrain. If link retrains were
-+		 * possible, that is.
-+		 */
-+		dev_dbg(pci->dev, "%s: link went down\n", __func__);
-+	}
-+
-+	/* Now clear the second interrupt cause. */
-+	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG, val);
-+
- 	return IRQ_HANDLED;
- }
- 
--- 
-2.7.4
+> I did a quick test on top of 5.12.0-rc6 by comparing the i40e IRQ affinity
+> mask before removing the kernel module and after doing rmmod+insmod
+> and didn't find any difference.
+
+with the patch in question removed? Sorry, I'm confused what you tried.
+
+> 
+> >  and if the machine was under traffic load incoming when the
+> > driver loaded, CPU0 would start to poll among all the different netdev
+> > queues, all on CPU0.
+> >
+> > The above then leads to the condition that the device is stuck polling
+> > even if the affinity gets updated from user space, and the polling will
+> > continue until traffic stops.
+> >
+> >> The problem with the commit is that when we overwrite the affinity mask
+> >> based on the hinting mask we completely ignore the default SMP affinity
+> >> mask. If we do want to overwrite the affinity based on the hint mask we
+> >> should atleast consider the default SMP affinity.
+> 
+> For the issue where the IRQs don't follow the default_smp_affinity mask
+> because of this patch, the following are the steps by which it can be easily
+> reproduced with the latest linux kernel:
+> 
+> # Kernel
+> 5.12.0-rc6+
+
+<snip>
+
+> As we can see in the above trace the initial affinity for the IRQ 1478 was
+> correctly set as per the default_smp_affinity mask which includes CPU 42,
+> however, later on, it is updated with CPU3 which is returned from
+> cpumask_local_spread().
+> 
+> > Maybe the right thing is to fix which CPUs are passed in as the valid
+> > mask, or make sure the kernel cross checks that what the driver asks
+> > for is a "valid CPU"?
+> >
+> 
+> Sure, if we can still reproduce the problem that your patch was fixing then
+> maybe we can consider adding a new API like cpumask_local_spread_irq in
+> which we should consider deafult_smp_affinity mask as well before returning
+> the CPU.
+
+I'm sure I don't have a reproducer of the original problem any more, it
+is lost somewhere 8 years ago. I'd like to be able to repro the original
+issue, but I can't.
+
+Your description of the problem makes it obvious there is an issue. It
+appears as if cpumask_local_spread() is the wrong function to use here.
+If you have any suggestions please let me know.
+
+We had one other report of this problem as well (I'm not sure if it's
+the same as your report)
+https://lkml.org/lkml/2021/3/28/206
+https://lists.osuosl.org/pipermail/intel-wired-lan/Week-of-Mon-20210125/023120.html
 
