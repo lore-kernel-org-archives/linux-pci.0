@@ -2,261 +2,169 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBEFCC433B4
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 08:55:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C546CC433B4
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9441361074
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 08:55:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87D0361249
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231326AbhDOIzk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Apr 2021 04:55:40 -0400
-Received: from mga03.intel.com ([134.134.136.65]:40508 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231766AbhDOIzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Apr 2021 04:55:40 -0400
-IronPort-SDR: q4PeYCFsw39I+NdPGyTQzNx8rbG6ONHVxQH6rFNiTc4EF4JIK8lFCMvWu3mDIKmwXhXaeD/LVq
- kX/fD8fk1Yww==
-X-IronPort-AV: E=McAfee;i="6200,9189,9954"; a="194846713"
-X-IronPort-AV: E=Sophos;i="5.82,223,1613462400"; 
-   d="scan'208";a="194846713"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2021 01:55:17 -0700
-IronPort-SDR: VuixoVAUilZwgUsS71x03scpW3LHSGqTRNDN/VRuRauOEnhYD49mMFkmUqn1i0/Tmt6O39kL2a
- RskVL1qcXZeQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,223,1613462400"; 
-   d="scan'208";a="382665504"
-Received: from lkp-server02.sh.intel.com (HELO fa9c8fcc3464) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 15 Apr 2021 01:55:15 -0700
-Received: from kbuild by fa9c8fcc3464 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lWxmM-0000mM-RS; Thu, 15 Apr 2021 08:55:14 +0000
-Date:   Thu, 15 Apr 2021 16:54:40 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/vpd] BUILD SUCCESS
- 3eacfbe797a7b738387bb8c6adb703322bb6a944
-Message-ID: <6077ff50.DuN75u9TtHaLvSt5%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S231919AbhDOMsZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Apr 2021 08:48:25 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:16125 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230487AbhDOMsZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Apr 2021 08:48:25 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FLfFF6S15zpYZC;
+        Thu, 15 Apr 2021 20:45:05 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.56) by
+ DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
+ 14.3.498.0; Thu, 15 Apr 2021 20:47:49 +0800
+From:   Qi Liu <liuqi115@huawei.com>
+To:     <will@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <zhangshaokun@hisilicon.com>
+Subject: [PATCH v3 1/2] docs: perf: Add description for HiSilicon PCIe PMU driver
+Date:   Thu, 15 Apr 2021 20:48:04 +0800
+Message-ID: <1618490885-44612-2-git-send-email-liuqi115@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1618490885-44612-1-git-send-email-liuqi115@huawei.com>
+References: <1618490885-44612-1-git-send-email-liuqi115@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/vpd
-branch HEAD: 3eacfbe797a7b738387bb8c6adb703322bb6a944  PCI: Allow VPD access for QLogic ISP2722
+PCIe PMU Root Complex Integrated End Point(RCiEP) device is supported on
+HiSilicon HIP09 platform. Document it to provide guidance on how to
+use it.
 
-elapsed time: 726m
-
-configs tested: 191
-configs skipped: 2
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-riscv                            allmodconfig
-x86_64                           allyesconfig
-i386                             allyesconfig
-riscv                            allyesconfig
-arc                        vdk_hs38_defconfig
-sparc                            alldefconfig
-m68k                          sun3x_defconfig
-mips                    maltaup_xpa_defconfig
-powerpc                     mpc83xx_defconfig
-ia64                         bigsur_defconfig
-powerpc                       maple_defconfig
-arm                          ep93xx_defconfig
-mips                            e55_defconfig
-ia64                      gensparse_defconfig
-sh                          urquell_defconfig
-arm                            mmp2_defconfig
-arm                       cns3420vb_defconfig
-powerpc                          g5_defconfig
-arm                         palmz72_defconfig
-m68k                             alldefconfig
-arc                         haps_hs_defconfig
-powerpc                      ppc64e_defconfig
-powerpc                 mpc834x_mds_defconfig
-powerpc                      makalu_defconfig
-mips                         tb0287_defconfig
-arm                          pxa3xx_defconfig
-sh                           se7722_defconfig
-powerpc                     ep8248e_defconfig
-s390                          debug_defconfig
-powerpc                     tqm8555_defconfig
-arm                         bcm2835_defconfig
-sh                            migor_defconfig
-mips                      maltasmvp_defconfig
-xtensa                  cadence_csp_defconfig
-arm                         shannon_defconfig
-arm                         lpc32xx_defconfig
-m68k                           sun3_defconfig
-powerpc                      ppc44x_defconfig
-sh                          rsk7264_defconfig
-powerpc               mpc834x_itxgp_defconfig
-arm                        spear6xx_defconfig
-mips                      bmips_stb_defconfig
-mips                          malta_defconfig
-arm                            zeus_defconfig
-mips                     cu1830-neo_defconfig
-arm                          gemini_defconfig
-m68k                             allmodconfig
-microblaze                          defconfig
-riscv                          rv32_defconfig
-nds32                             allnoconfig
-powerpc                   lite5200b_defconfig
-arm                         vf610m4_defconfig
-sh                            shmin_defconfig
-powerpc                     tqm8548_defconfig
-powerpc                 mpc8272_ads_defconfig
-riscv                            alldefconfig
-arm                          exynos_defconfig
-xtensa                          iss_defconfig
-powerpc                     ksi8560_defconfig
-powerpc                     ppa8548_defconfig
-arm                           h3600_defconfig
-powerpc                 mpc837x_mds_defconfig
-xtensa                              defconfig
-sh                   rts7751r2dplus_defconfig
-arm                      jornada720_defconfig
-arm                            qcom_defconfig
-powerpc                     pq2fads_defconfig
-mips                     loongson1c_defconfig
-powerpc                      bamboo_defconfig
-mips                         cobalt_defconfig
-alpha                            alldefconfig
-powerpc                   currituck_defconfig
-mips                          ath25_defconfig
-mips                            gpr_defconfig
-mips                           ci20_defconfig
-arm                         s3c6400_defconfig
-arm                          pcm027_defconfig
-arm                            mps2_defconfig
-arm                          simpad_defconfig
-powerpc64                           defconfig
-powerpc                      arches_defconfig
-h8300                            alldefconfig
-powerpc                 mpc837x_rdb_defconfig
-arm                      tct_hammer_defconfig
-sh                           se7751_defconfig
-mips                      malta_kvm_defconfig
-openrisc                    or1ksim_defconfig
-arm                         axm55xx_defconfig
-m68k                       m5475evb_defconfig
-mips                      fuloong2e_defconfig
-mips                     decstation_defconfig
-arm                         at91_dt_defconfig
-arm                        realview_defconfig
-arc                        nsim_700_defconfig
-m68k                       m5275evb_defconfig
-arc                           tb10x_defconfig
-powerpc                   bluestone_defconfig
-i386                                defconfig
-arm                          lpd270_defconfig
-mips                        nlm_xlp_defconfig
-powerpc                   motionpro_defconfig
-m68k                          hp300_defconfig
-sh                          landisk_defconfig
-mips                     loongson1b_defconfig
-powerpc                      acadia_defconfig
-powerpc                      chrp32_defconfig
-parisc                           alldefconfig
-arc                        nsimosci_defconfig
-sh                         ap325rxa_defconfig
-sparc                               defconfig
-powerpc                       ppc64_defconfig
-powerpc                 mpc834x_itx_defconfig
-m68k                            q40_defconfig
-m68k                       m5249evb_defconfig
-powerpc                     tqm8540_defconfig
-powerpc                    socrates_defconfig
-mips                           jazz_defconfig
-sh                        apsh4ad0a_defconfig
-um                            kunit_defconfig
-powerpc                    sam440ep_defconfig
-arm                             pxa_defconfig
-arm                         hackkit_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20210414
-i386                 randconfig-a006-20210414
-i386                 randconfig-a001-20210414
-i386                 randconfig-a005-20210414
-i386                 randconfig-a004-20210414
-i386                 randconfig-a002-20210414
-x86_64               randconfig-a014-20210414
-x86_64               randconfig-a015-20210414
-x86_64               randconfig-a011-20210414
-x86_64               randconfig-a013-20210414
-x86_64               randconfig-a012-20210414
-x86_64               randconfig-a016-20210414
-i386                 randconfig-a015-20210414
-i386                 randconfig-a014-20210414
-i386                 randconfig-a013-20210414
-i386                 randconfig-a012-20210414
-i386                 randconfig-a016-20210414
-i386                 randconfig-a011-20210414
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-um                               allmodconfig
-um                                allnoconfig
-um                               allyesconfig
-um                                  defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-a003-20210414
-x86_64               randconfig-a002-20210414
-x86_64               randconfig-a005-20210414
-x86_64               randconfig-a001-20210414
-x86_64               randconfig-a006-20210414
-x86_64               randconfig-a004-20210414
-
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ Documentation/admin-guide/perf/hisi-pcie-pmu.rst | 104 +++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+
+diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+new file mode 100644
+index 0000000..2084b53
+--- /dev/null
++++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+@@ -0,0 +1,104 @@
++================================================
++HiSilicon PCIe Performance Monitoring Unit (PMU)
++================================================
++
++HiSilicon PCIe Performance Monitoring Unit (PMU) is a PCIe Root Complex
++integrated End Point (RCiEP) device. On Hip09, each PCIe Core has a PMU RCiEP
++to monitor multi Root Ports and all Endpoints downstream these Root Ports.
++
++HiSilicon PCIe PMU is supported to collect performance data of PCIe bus, such
++as: bandwidth, latency etc.
++
++
++HiSilicon PCIe PMU driver
++=========================
++
++The PCIe PMU driver registers a perf PMU with the name of its sicl-id and PCIe
++Core id.::
++
++  /sys/bus/event_source/hisi_pcie<sicl>_<core>
++
++PMU driver provides description of available events and filter options in sysfs,
++see /sys/bus/event_source/devices/hisi_pcie<sicl>_<core>.
++
++The "format" directory describes all formats of the config (events) and config1
++(filter options) fields of the perf_event_attr structure. The "events" directory
++describes all documented events shown in perf list.
++
++The "identifier" sysfs file allows users to identify the version of the
++PMU hardware device.
++
++The "bus" sysfs file allows users to get the bus number of Root Ports
++monitored by PMU.
++
++Example usage of perf::
++
++  $# perf list
++  hisi_pcie0_0/bw_rx/ [kernel PMU event]
++  ------------------------------------------
++
++  $# perf stat -e hisi_pcie0_0/bw_rx/ sleep 5
++
++The current driver does not support sampling. So "perf record" is unsupported.
++Also attach to a task is unsupported for PCIe PMU.
++
++Filter options
++--------------
++
++1. Target filter
++PMU could only monitor the performance of traffic downstream target Root Ports
++or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
++interfaces for users, and these two interfaces aren't supported at the same
++time.
++
++-port
++"port" filter can be used in all PCIe PMU events, target Root Port can be
++selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
++for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
++
++For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
++should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
++bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,port=0x1/ sleep 5
++
++-bdf
++
++"bdf" filter can only be used in bandwidth events, target Endpoint is selected
++by configuring BDF to "bdf". Counter only counts the bandwidth of message
++requested by target Endpoint.
++
++For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,bdf=0x3900/ sleep 5
++
++2. Trigger filter
++Event statistics start when the first time TLP length is greater/smaller
++than trigger condition. You can set the trigger condition by writing "trig_len",
++and set the trigger mode by writing "trig_mode". This filter can only be used
++in bandwidth events.
++
++For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
++means statistics start when TLP length > trigger condition, "trig_mode=1"
++means start when TLP length < condition.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,trig_len=0x4,trig_mode=1/ sleep 5
++
++3. Threshold filter
++Counter counts when TLP length within the specified range. You can set the
++threshold by writing "thr_len", and set the threshold mode by writing
++"thr_mode". This filter can only be used in bandwidth events.
++
++For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
++counter counts when TLP length >= threshold, and "thr_mode=1" means counts
++when TLP length < threshold.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,thr_len=0x4,thr_mode=1/ sleep 5
+-- 
+2.7.4
+
