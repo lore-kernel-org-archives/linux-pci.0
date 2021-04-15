@@ -2,25 +2,24 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C546CC433B4
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18A9DC43460
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87D0361249
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD9806124B
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 12:48:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231919AbhDOMsZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Apr 2021 08:48:25 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:16125 "EHLO
+        id S232662AbhDOMs0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Apr 2021 08:48:26 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:16126 "EHLO
         szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230487AbhDOMsZ (ORCPT
+        with ESMTP id S231549AbhDOMsZ (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Apr 2021 08:48:25 -0400
 Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FLfFF6S15zpYZC;
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FLfFF6z49zpYZF;
         Thu, 15 Apr 2021 20:45:05 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.56) by
  DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
@@ -31,12 +30,10 @@ CC:     <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
         <zhangshaokun@hisilicon.com>
-Subject: [PATCH v3 1/2] docs: perf: Add description for HiSilicon PCIe PMU driver
-Date:   Thu, 15 Apr 2021 20:48:04 +0800
-Message-ID: <1618490885-44612-2-git-send-email-liuqi115@huawei.com>
+Subject: [PATCH v3 0/2] drivers/perf: hisi: Add support for PCIe PMU
+Date:   Thu, 15 Apr 2021 20:48:03 +0800
+Message-ID: <1618490885-44612-1-git-send-email-liuqi115@huawei.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1618490885-44612-1-git-send-email-liuqi115@huawei.com>
-References: <1618490885-44612-1-git-send-email-liuqi115@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.56]
@@ -45,126 +42,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe PMU Root Complex Integrated End Point(RCiEP) device is supported on
-HiSilicon HIP09 platform. Document it to provide guidance on how to
-use it.
+This patchset adds support for HiSilicon PCIe Performance Monitoring
+Unit(PMU). It is a PCIe Root Complex integrated End Point(RCiEP) device
+added on Hip09. Each PCIe Core has a PMU RCiEP to monitor multi root
+ports and all Endpoints downstream these root ports.
 
-Signed-off-by: Qi Liu <liuqi115@huawei.com>
----
- Documentation/admin-guide/perf/hisi-pcie-pmu.rst | 104 +++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
+HiSilicon PCIe PMU is supported to collect performance data of PCIe bus,
+such as: bandwidth, latency etc.
+
+This patchset is based on 5.12-rc6. 
+
+Changes since v2:
+- Address the comments from John.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617959157-22956-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v1:
+- Drop the internal Reviewed-by tag.
+- Fix some build warnings when W=1.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617788943-52722-1-git-send-email-liuqi115@huawei.com/
+
+Qi Liu (2):
+  docs: perf: Add description for HiSilicon PCIe PMU driver
+  drivers/perf: hisi: Add driver for HiSilicon PCIe PMU
+
+ Documentation/admin-guide/perf/hisi-pcie-pmu.rst |  104 +++
+ MAINTAINERS                                      |    6 +
+ drivers/perf/Kconfig                             |    2 +
+ drivers/perf/Makefile                            |    1 +
+ drivers/perf/pci/Kconfig                         |   16 +
+ drivers/perf/pci/Makefile                        |    2 +
+ drivers/perf/pci/hisilicon/Makefile              |    3 +
+ drivers/perf/pci/hisilicon/hisi_pcie_pmu.c       | 1014 ++++++++++++++++++++++
+ include/linux/cpuhotplug.h                       |    1 +
+ 9 files changed, 1149 insertions(+)
  create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+ create mode 100644 drivers/perf/pci/Kconfig
+ create mode 100644 drivers/perf/pci/Makefile
+ create mode 100644 drivers/perf/pci/hisilicon/Makefile
+ create mode 100644 drivers/perf/pci/hisilicon/hisi_pcie_pmu.c
 
-diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
-new file mode 100644
-index 0000000..2084b53
---- /dev/null
-+++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
-@@ -0,0 +1,104 @@
-+================================================
-+HiSilicon PCIe Performance Monitoring Unit (PMU)
-+================================================
-+
-+HiSilicon PCIe Performance Monitoring Unit (PMU) is a PCIe Root Complex
-+integrated End Point (RCiEP) device. On Hip09, each PCIe Core has a PMU RCiEP
-+to monitor multi Root Ports and all Endpoints downstream these Root Ports.
-+
-+HiSilicon PCIe PMU is supported to collect performance data of PCIe bus, such
-+as: bandwidth, latency etc.
-+
-+
-+HiSilicon PCIe PMU driver
-+=========================
-+
-+The PCIe PMU driver registers a perf PMU with the name of its sicl-id and PCIe
-+Core id.::
-+
-+  /sys/bus/event_source/hisi_pcie<sicl>_<core>
-+
-+PMU driver provides description of available events and filter options in sysfs,
-+see /sys/bus/event_source/devices/hisi_pcie<sicl>_<core>.
-+
-+The "format" directory describes all formats of the config (events) and config1
-+(filter options) fields of the perf_event_attr structure. The "events" directory
-+describes all documented events shown in perf list.
-+
-+The "identifier" sysfs file allows users to identify the version of the
-+PMU hardware device.
-+
-+The "bus" sysfs file allows users to get the bus number of Root Ports
-+monitored by PMU.
-+
-+Example usage of perf::
-+
-+  $# perf list
-+  hisi_pcie0_0/bw_rx/ [kernel PMU event]
-+  ------------------------------------------
-+
-+  $# perf stat -e hisi_pcie0_0/bw_rx/ sleep 5
-+
-+The current driver does not support sampling. So "perf record" is unsupported.
-+Also attach to a task is unsupported for PCIe PMU.
-+
-+Filter options
-+--------------
-+
-+1. Target filter
-+PMU could only monitor the performance of traffic downstream target Root Ports
-+or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
-+interfaces for users, and these two interfaces aren't supported at the same
-+time.
-+
-+-port
-+"port" filter can be used in all PCIe PMU events, target Root Port can be
-+selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
-+for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
-+
-+For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
-+should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
-+bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
-+
-+Example usage of perf::
-+
-+  $# perf stat -e hisi_pcie0_0/bw_rx,port=0x1/ sleep 5
-+
-+-bdf
-+
-+"bdf" filter can only be used in bandwidth events, target Endpoint is selected
-+by configuring BDF to "bdf". Counter only counts the bandwidth of message
-+requested by target Endpoint.
-+
-+For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
-+
-+Example usage of perf::
-+
-+  $# perf stat -e hisi_pcie0_0/bw_rx,bdf=0x3900/ sleep 5
-+
-+2. Trigger filter
-+Event statistics start when the first time TLP length is greater/smaller
-+than trigger condition. You can set the trigger condition by writing "trig_len",
-+and set the trigger mode by writing "trig_mode". This filter can only be used
-+in bandwidth events.
-+
-+For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
-+means statistics start when TLP length > trigger condition, "trig_mode=1"
-+means start when TLP length < condition.
-+
-+Example usage of perf::
-+
-+  $# perf stat -e hisi_pcie0_0/bw_rx,trig_len=0x4,trig_mode=1/ sleep 5
-+
-+3. Threshold filter
-+Counter counts when TLP length within the specified range. You can set the
-+threshold by writing "thr_len", and set the threshold mode by writing
-+"thr_mode". This filter can only be used in bandwidth events.
-+
-+For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
-+counter counts when TLP length >= threshold, and "thr_mode=1" means counts
-+when TLP length < threshold.
-+
-+Example usage of perf::
-+
-+  $# perf stat -e hisi_pcie0_0/bw_rx,thr_len=0x4,thr_mode=1/ sleep 5
 -- 
 2.7.4
 
