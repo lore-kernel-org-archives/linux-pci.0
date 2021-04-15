@@ -2,62 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BEC7C433ED
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 15:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3F4FC433ED
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 15:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A2F260FEA
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 15:11:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C2F61184
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Apr 2021 15:15:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234219AbhDOPLu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Apr 2021 11:11:50 -0400
-Received: from foss.arm.com ([217.140.110.172]:48688 "EHLO foss.arm.com"
+        id S234416AbhDOPQA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Apr 2021 11:16:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55910 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234595AbhDOPJs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Apr 2021 11:09:48 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 86098106F;
-        Thu, 15 Apr 2021 08:09:25 -0700 (PDT)
-Received: from e123427-lin.arm.com (unknown [10.57.59.122])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3027A3FA35;
-        Thu, 15 Apr 2021 08:09:24 -0700 (PDT)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: dwc: move dw_pcie_msi_init() to dw_pcie_setup_rc()
-Date:   Thu, 15 Apr 2021 16:09:18 +0100
-Message-Id: <161849933971.28465.1647999882970399921.b4-ty@arm.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20210325152604.6e79deba@xhacker.debian>
-References: <20210325152604.6e79deba@xhacker.debian>
+        id S233094AbhDOPNz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Apr 2021 11:13:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D360D613A9;
+        Thu, 15 Apr 2021 15:13:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618499612;
+        bh=gnCwUg8I/RSf0h2mo/u86eJvsrWWjx5n5P0C+aiTZms=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=jsXqeM1DZ9Pbi0TIf1LAc1x/cTz41yglDU1DiwKumU0UHb/AVzJeL/HbL9znhwHY+
+         HGXBQr8kO3G578Ea+0v/daT5jKFjH7Wa3oAahxQeQTd9gTPPbjfw2imZ0Fz2bYQy4Z
+         dwkeQC4/QQEST2sZl5pQ6mVxpPszSd3tBkmVsGI7Cw5i5haREtkOCtoDaj0qggwucL
+         xIi+St1+gABHhiPraQFmFif6Ur7AkNNnrliCryDCVqeJxVKYkiZU12tYTSLf9bqlZD
+         9tv6vF+HL/IjWgCTjrKhrNKeba7jdl0ScTrrfoiVkZiSJ/X+WzvQNR5og0UScJqRpx
+         WJ9XujAE4TaSw==
+Received: by mail-ed1-f53.google.com with SMTP id h10so28480775edt.13;
+        Thu, 15 Apr 2021 08:13:32 -0700 (PDT)
+X-Gm-Message-State: AOAM533sHoB5BLAv+Ovw5K+zmJaD1xcgchsObkzuEOU07WT0asnqPJZu
+        rHJE+ZEEqeIIcFmO+zDARX3eHRC8DcA1SUocvA==
+X-Google-Smtp-Source: ABdhPJwxfoJTLt7AJgzWRKNjUP7mZVPDURqIDUVhonvGhI1UgFtE8GSKjZvaIZcnAzBS3+qwQm+A9nTHwXqaPy5/22I=
+X-Received: by 2002:a05:6402:1b1c:: with SMTP id by28mr4859088edb.62.1618499611519;
+ Thu, 15 Apr 2021 08:13:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210412123936.25555-1-pali@kernel.org> <CAL_JsqLSse=W3TFu=Wc=eEAV4fKDGfsQ6JUvO3KyG_pnGTVg6A@mail.gmail.com>
+ <20210415083640.ntg6kv6ayppxldgd@pali> <20210415104537.403de52e@thinkpad>
+In-Reply-To: <20210415104537.403de52e@thinkpad>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Thu, 15 Apr 2021 10:13:17 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqL2gjprb3MDv8KPSpe0CUBFjGajnMbF71DM+F9Yewp2uw@mail.gmail.com>
+Message-ID: <CAL_JsqL2gjprb3MDv8KPSpe0CUBFjGajnMbF71DM+F9Yewp2uw@mail.gmail.com>
+Subject: Re: [PATCH] arm64: dts: marvell: armada-37xx: Set linux,pci-domain to zero
+To:     Marek Behun <marek.behun@nic.cz>,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+Cc:     Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        devicetree@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 25 Mar 2021 15:26:04 +0800, Jisheng Zhang wrote:
-> If the host which makes use of IP's integrated MSI Receiver losts
-> power during suspend, we need to reinit the RC and MSI Receiver in
-> resume. But after we move dw_pcie_msi_init() into the core, we have no
-> API to do so. Usually the dwc users need to call dw_pcie_setup_rc() to
-> reinit the RC, we can solve this problem by moving dw_pcie_msi_init()
-> to dw_pcie_setup_rc().
+On Thu, Apr 15, 2021 at 3:45 AM Marek Behun <marek.behun@nic.cz> wrote:
+>
+> On Thu, 15 Apr 2021 10:36:40 +0200
+> Pali Roh=C3=A1r <pali@kernel.org> wrote:
+>
+> > On Tuesday 13 April 2021 13:17:29 Rob Herring wrote:
+> > > On Mon, Apr 12, 2021 at 7:41 AM Pali Roh=C3=A1r <pali@kernel.org> wro=
+te:
+> > > >
+> > > > Since commit 526a76991b7b ("PCI: aardvark: Implement driver 'remove=
+'
+> > > > function and allow to build it as module") PCIe controller driver f=
+or
+> > > > Armada 37xx can be dynamically loaded and unloaded at runtime. Also=
+ driver
+> > > > allows dynamic binding and unbinding of PCIe controller device.
+> > > >
+> > > > Kernel PCI subsystem assigns by default dynamically allocated PCI d=
+omain
+> > > > number (starting from zero) for this PCIe controller every time whe=
+n device
+> > > > is bound. So PCI domain changes after every unbind / bind operation=
+.
+> > >
+> > > PCI host bridges as a module are relatively new, so seems likely a bu=
+g to me.
+> >
+> > Why a bug? It is there since 5.10 and it is working.
 
-Applied to pci/dwc, thanks!
+I mean historically, the PCI subsystem didn't even support host
+bridges as a module. They weren't even proper drivers and it was all
+arch specific code. Most of the host bridge drivers are still built-in
+only. This seems like a small detail that was easily overlooked.
+unbind is not a well tested path.
 
-[1/1] PCI: dwc: Move dw_pcie_msi_init() to dw_pcie_setup_rc()
-      https://git.kernel.org/lpieralisi/pci/c/fe08db2835
+> > > > Alternative way for assigning PCI domain number is to use static al=
+located
+> > > > numbers defined in Device Tree. This option has requirement that ev=
+ery PCI
+> > > > controller in system must have defined PCI bus number in Device Tre=
+e.
+> > >
+> > > That seems entirely pointless from a DT point of view with a single P=
+CI bridge.
+> >
+> > If domain id is not specified in DT then kernel uses counter and assign=
+s
+> > counter++. So it is not pointless if we want to have stable domain id.
+>
+> What Rob is trying to say is that
+> - the bug is that kernel assigns counter++
+> - device-tree should not be used to fix problems with how kernel does
+>   things
+> - if a device has only one PCIe controller, it is pointless to define
+>   it's pci-domain. If there were multiple controllers, then it would
+>   make sense, but there is only one
 
-Thanks,
-Lorenzo
+Yes. I think what we want here is a domain bitmap rather than a
+counter and we assign the lowest free bit. That could also allow for
+handling a mixture of fixed domain numbers and dynamically assigned
+ones.
+
+You could create scenarios where the numbers change on you, but it
+wouldn't be any different than say plugging in USB serial adapters.
+You get the same ttyUSBx device when you re-attach unless there's been
+other ttyUSBx devices attached/detached.
+
+Rob
