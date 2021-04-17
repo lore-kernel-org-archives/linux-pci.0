@@ -2,29 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B435C433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5601C43461
 	for <linux-pci@archiver.kernel.org>; Sat, 17 Apr 2021 10:20:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F96461152
+	by mail.kernel.org (Postfix) with ESMTP id 974A96023F
 	for <linux-pci@archiver.kernel.org>; Sat, 17 Apr 2021 10:20:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236105AbhDQKUd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 17 Apr 2021 06:20:33 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:17355 "EHLO
+        id S236110AbhDQKUe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 17 Apr 2021 06:20:34 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:17357 "EHLO
         szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbhDQKU1 (ORCPT
+        with ESMTP id S236093AbhDQKU1 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Apr 2021 06:20:27 -0400
 Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FMptC5JsXz7vcS;
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FMptC5ng1z7vcT;
         Sat, 17 Apr 2021 18:17:39 +0800 (CST)
 Received: from localhost.localdomain (10.67.165.24) by
  DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
- 14.3.498.0; Sat, 17 Apr 2021 18:19:50 +0800
+ 14.3.498.0; Sat, 17 Apr 2021 18:19:49 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -38,12 +37,10 @@ CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
         <john.garry@huawei.com>, <prime.zeng@huawei.com>,
         <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
         <yangyicong@hisilicon.com>, <linuxarm@huawei.com>
-Subject: [PATCH RESEND 2/4] hwtracing: Add tune function support for HiSilicon PCIe Tune and Trace device
-Date:   Sat, 17 Apr 2021 18:17:09 +0800
-Message-ID: <1618654631-42454-3-git-send-email-yangyicong@hisilicon.com>
+Subject: [PATCH RESEND 0/4] Add support for HiSilicon PCIe Tune and Trace device
+Date:   Sat, 17 Apr 2021 18:17:07 +0800
+Message-ID: <1618654631-42454-1-git-send-email-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1618654631-42454-1-git-send-email-yangyicong@hisilicon.com>
-References: <1618654631-42454-1-git-send-email-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.67.165.24]
@@ -52,247 +49,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add tune function for the HiSilicon Tune and Trace device. The interface
-of tune is also exposed through debugfs.
+[RESEND with perf and coresight folks Cc'ed]
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/hwtracing/hisilicon/hisi_ptt.c | 187 +++++++++++++++++++++++++++++++++
- 1 file changed, 187 insertions(+)
+HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
+integrated Endpoint (RCiEP) device, providing the capability
+to dynamically monitor and tune the PCIe traffic (tune),
+and trace the TLP headers (trace).
 
-diff --git a/drivers/hwtracing/hisilicon/hisi_ptt.c b/drivers/hwtracing/hisilicon/hisi_ptt.c
-index a1feece..2e3631b 100644
---- a/drivers/hwtracing/hisilicon/hisi_ptt.c
-+++ b/drivers/hwtracing/hisilicon/hisi_ptt.c
-@@ -72,6 +72,7 @@ struct hisi_ptt_debugfs_file_desc {
- 	struct hisi_ptt *hisi_ptt;
- 	const char *name;
- 	const struct file_operations *fops;
-+	struct hisi_ptt_tune_event_desc *private;
- };
- 
- #define PTT_FILE_INIT(__name, __fops)	\
-@@ -85,6 +86,15 @@ struct hisi_ptt_trace_event_desc {
- #define PTT_TRACE_EVENT_INIT(__name, __event_code) \
- 	{ .name = __name, .event_code = __event_code }
- 
-+struct hisi_ptt_tune_event_desc {
-+	const char *name;
-+	u32 event_code;
-+	int (*set)(struct hisi_ptt *hisi_ptt, void *data);
-+	int (*get)(struct hisi_ptt *hisi_ptt, void *data);
-+};
-+#define PTT_TUNE_EVENT_INIT(__name, __event_code, __set, __get)	\
-+	{ .name = __name, .event_code = __event_code, .set = __set, .get = __get }
-+
- enum hisi_ptt_trace_rxtx {
- 	HISI_PTT_TRACE_RX = 0,
- 	HISI_PTT_TRACE_TX,
-@@ -217,6 +227,8 @@ struct hisi_ptt {
- 		bool is_port;
- 		u16 val;
- 	} cur_filter;
-+
-+	u32 tune_event;
- };
- 
- static int hisi_ptt_write_to_buffer(void *buf, size_t len, loff_t *pos,
-@@ -234,6 +246,131 @@ static int hisi_ptt_write_to_buffer(void *buf, size_t len, loff_t *pos,
- 	return 0;
- }
- 
-+static int hisi_ptt_wait_tuning_finish(struct hisi_ptt *hisi_ptt)
-+{
-+	u32 val;
-+
-+	return readl_poll_timeout(hisi_ptt->iobase + HISI_PTT_TUNING_INT_STAT,
-+				  val, !(val & HISI_PTT_TUNING_INT_STAT_MASK),
-+				  HISI_PTT_WAIT_POLL_INTERVAL_US,
-+				  HISI_PTT_WAIT_TIMEOUT_US);
-+}
-+
-+static int hisi_ptt_tune_data_get(struct hisi_ptt *hisi_ptt, void *data)
-+{
-+	u32 *val = data, reg;
-+
-+	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
-+	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
-+			  hisi_ptt->tune_event);
-+	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	/* Write all 1 to indicates it's the read process */
-+	writel(HISI_PTT_TUNING_DATA_VAL_MASK,
-+	       hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+
-+	if (hisi_ptt_wait_tuning_finish(hisi_ptt)) {
-+		pci_err(hisi_ptt->pdev, "failed to read tune data, device timeout.\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	*val = readl(hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+	*val &= HISI_PTT_TUNING_DATA_VAL_MASK;
-+
-+	return 0;
-+}
-+
-+static int hisi_ptt_tune_data_set(struct hisi_ptt *hisi_ptt, void *data)
-+{
-+	u32 *val = data, reg;
-+
-+	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
-+	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
-+			  hisi_ptt->tune_event);
-+	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	*val &= HISI_PTT_TUNING_DATA_VAL_MASK;
-+	writel(*val, hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+
-+	if (hisi_ptt_wait_tuning_finish(hisi_ptt)) {
-+		pci_err(hisi_ptt->pdev, "failed to write tune data, device timeout.\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
-+static ssize_t hisi_ptt_tune_common_read(struct file *filp, char __user *buf,
-+					 size_t count, loff_t *pos)
-+{
-+	struct hisi_ptt_debugfs_file_desc *desc = filp->private_data;
-+	struct hisi_ptt *hisi_ptt = desc->hisi_ptt;
-+	struct hisi_ptt_tune_event_desc *e_desc = desc->private;
-+	char tbuf[HISI_PTT_CTRL_STR_LEN];
-+	int len, ret;
-+	u32 val;
-+
-+	if (!mutex_trylock(&hisi_ptt->mutex))
-+		return -EBUSY;
-+
-+	hisi_ptt->tune_event = e_desc->event_code;
-+	ret = e_desc->get(hisi_ptt, &val);
-+	mutex_unlock(&hisi_ptt->mutex);
-+	if (ret)
-+		return ret;
-+
-+	len = snprintf(tbuf, HISI_PTT_CTRL_STR_LEN, "%d\n", val);
-+
-+	return simple_read_from_buffer(buf, count, pos, tbuf, len);
-+}
-+
-+static ssize_t hisi_ptt_tune_common_write(struct file *filp,
-+					  const char __user *buf,
-+					  size_t count, loff_t *pos)
-+{
-+	struct hisi_ptt_debugfs_file_desc *desc = filp->private_data;
-+	struct hisi_ptt *hisi_ptt = desc->hisi_ptt;
-+	struct hisi_ptt_tune_event_desc *e_desc = desc->private;
-+	char tbuf[HISI_PTT_CTRL_STR_LEN];
-+	int ret;
-+	u16 val;
-+
-+	if (hisi_ptt_write_to_buffer(tbuf, HISI_PTT_CTRL_STR_LEN - 1,
-+				     pos, buf, count))
-+		return -EINVAL;
-+
-+	if (kstrtou16(tbuf, 0, &val))
-+		return -EINVAL;
-+
-+	if (!mutex_trylock(&hisi_ptt->mutex))
-+		return -EBUSY;
-+
-+	hisi_ptt->tune_event = e_desc->event_code;
-+	ret = e_desc->set(hisi_ptt, &val);
-+
-+	mutex_unlock(&hisi_ptt->mutex);
-+	return ret ? ret : count;
-+}
-+
-+static const struct file_operations tune_common_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= simple_open,
-+	.read		= hisi_ptt_tune_common_read,
-+	.write		= hisi_ptt_tune_common_write,
-+	.llseek		= no_llseek,
-+};
-+
-+#define PTT_SIMPLE_TUNE_EVENTS(__name, __event_code)	\
-+	PTT_TUNE_EVENT_INIT(__name, __event_code, hisi_ptt_tune_data_set, hisi_ptt_tune_data_get)
-+
-+static struct hisi_ptt_tune_event_desc tune_events[] = {
-+	PTT_SIMPLE_TUNE_EVENTS("qos_tx_cpl",			(0x4 | (3 << 16))),
-+	PTT_SIMPLE_TUNE_EVENTS("qos_tx_np",			(0x4 | (4 << 16))),
-+	PTT_SIMPLE_TUNE_EVENTS("qos_tx_p",			(0x4 | (5 << 16))),
-+	PTT_SIMPLE_TUNE_EVENTS("tx_path_rx_req_alloc_buf_level",	(0x5 | (6 << 16))),
-+	PTT_SIMPLE_TUNE_EVENTS("tx_path_tx_req_alloc_buf_level",	(0x5 | (7 << 16))),
-+};
-+
- static u16 hisi_ptt_get_filter_val(struct pci_dev *pdev)
- {
- 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
-@@ -1241,6 +1378,49 @@ static void hisi_ptt_init_ctrls(struct hisi_ptt *hisi_ptt)
- 	hisi_ptt->trace_ctrl.tr_event = HISI_PTT_TRACE_DEFAULT_EVENT.event_code;
- }
- 
-+static int hisi_ptt_create_tune_entries(struct hisi_ptt *hisi_ptt)
-+{
-+	struct hisi_ptt_debugfs_file_desc *tune_files;
-+	struct dentry *dir;
-+	int i, ret = 0;
-+
-+	dir = debugfs_create_dir("tune", hisi_ptt->debugfs_dir);
-+	if (IS_ERR(dir))
-+		return PTR_ERR(dir);
-+
-+	tune_files = devm_kcalloc(&hisi_ptt->pdev->dev, ARRAY_SIZE(tune_events),
-+				  sizeof(struct hisi_ptt_debugfs_file_desc),
-+				  GFP_KERNEL);
-+	if (IS_ERR(tune_files)) {
-+		ret = PTR_ERR(tune_files);
-+		goto err;
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(tune_events); ++i) {
-+		struct dentry *file;
-+
-+		tune_files[i].hisi_ptt = hisi_ptt;
-+
-+		/* We use tune event string as control file name. */
-+		tune_files[i].name = tune_events[i].name;
-+		tune_files[i].fops = &tune_common_fops;
-+		tune_files[i].private = &tune_events[i];
-+		file = debugfs_create_file(tune_files[i].name, 0600,
-+					   dir, &tune_files[i],
-+					   &tune_common_fops);
-+		if (IS_ERR(file)) {
-+			ret = PTR_ERR(file);
-+			goto err;
-+		}
-+	}
-+
-+	return 0;
-+
-+err:
-+	debugfs_remove_recursive(dir);
-+	return ret;
-+}
-+
- static int hisi_ptt_create_trace_entries(struct hisi_ptt *hisi_ptt)
- {
- 	struct hisi_ptt_debugfs_file_desc *trace_files;
-@@ -1294,6 +1474,13 @@ static int hisi_ptt_create_debugfs_entries(struct hisi_ptt *hisi_ptt)
- 		return ret;
- 	}
- 
-+	ret = hisi_ptt_create_tune_entries(hisi_ptt);
-+	if (ret) {
-+		pci_err(hisi_ptt->pdev, "failed to create tune entries.\n");
-+		debugfs_remove_recursive(hisi_ptt->debugfs_dir);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
+PTT tune is designed for monitoring and adjusting PCIe link parameters.
+We provide several parameters of the PCIe link. Through the driver,
+user can adjust the value of certain parameter to affect the PCIe link
+for the purpose of enhancing the performance in certian situation.
+
+PTT trace is designed for dumping the TLP headers to the memory, which
+can be used to analyze the transactions and usage condition of the PCIe
+Link. Users can choose filters to trace headers, by either requester
+ID, or those downstream of a set of Root Ports on the same core of the
+PTT device. It's also supported to trace the headers of certain type and
+of certain direction.
+
+We use debugfs to expose the interface. For tune, one parameter is a
+debugfs file and user can set/get the value by reading/writing the
+file. For trace, we have several control files for the user to
+configure the trace parameters like filters, TLP type and format,
+the desired trace data size and so on. There is one data file for
+dumping the traced data to the user. The traced data maybe hundreds
+of megabytes so sysfs cannot support. The reason for debugfs rather
+than character device is that we don't want to have additional
+userspace tools. The operation through debugfs is easier and a bit
+like ftrace.
+
+The reason for not using perf is because there is no current support
+for uncore tracing in the perf facilities. We have our own format
+of data and don't need perf doing the parsing. The setting through
+perf tools doesn't seem to be friendly as well. For example,
+we cannot count on perf to decode the usual format BDF number like
+<domain>:<bus>:<dev>.<fn>, which user can use to filter the TLP
+headers through the PTT device.
+
+A similar approach for implementing this function is ETM, which use
+sysfs for configuring and a character device for dumping data.
+
+Greg has some comments on our implementation and doesn't advocate
+to build driver on debugfs [1]. So I resend this series to
+collect more feedbacks on the implementation of this driver.
+
+Hi perf and ETM related experts, is it suggested to adapt this driver
+to perf? Or is the debugfs approach acceptable? Otherwise use
+sysfs + character device like ETM and use perf tools for decoding it?
+Any comments is welcomed.
+
+[1] https://lore.kernel.org/linux-pci/1617713154-35533-1-git-send-email-yangyicong@hisilicon.com/
+
+Yicong Yang (4):
+  hwtracing: Add trace function support for HiSilicon PCIe Tune and
+    Trace device
+  hwtracing: Add tune function support for HiSilicon PCIe Tune and Trace
+    device
+  docs: Add HiSilicon PTT device driver documentation
+  MAINTAINERS: Add maintainer for HiSilicon PTT driver
+
+ Documentation/trace/hisi-ptt.rst       |  326 +++++++
+ MAINTAINERS                            |    7 +
+ drivers/Makefile                       |    1 +
+ drivers/hwtracing/Kconfig              |    2 +
+ drivers/hwtracing/hisilicon/Kconfig    |   11 +
+ drivers/hwtracing/hisilicon/Makefile   |    2 +
+ drivers/hwtracing/hisilicon/hisi_ptt.c | 1636 ++++++++++++++++++++++++++++++++
+ 7 files changed, 1985 insertions(+)
+ create mode 100644 Documentation/trace/hisi-ptt.rst
+ create mode 100644 drivers/hwtracing/hisilicon/Kconfig
+ create mode 100644 drivers/hwtracing/hisilicon/Makefile
+ create mode 100644 drivers/hwtracing/hisilicon/hisi_ptt.c
+
 -- 
 2.8.1
 
