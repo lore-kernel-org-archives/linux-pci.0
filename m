@@ -2,445 +2,227 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A727CC43461
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Apr 2021 06:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18932C433B4
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Apr 2021 06:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D15961157
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Apr 2021 06:35:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E866D61166
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Apr 2021 06:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237524AbhDSGgL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Apr 2021 02:36:11 -0400
-Received: from mo-csw1115.securemx.jp ([210.130.202.157]:60440 "EHLO
-        mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237506AbhDSGgK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Apr 2021 02:36:10 -0400
-Received: by mo-csw.securemx.jp (mx-mo-csw1115) id 13J6ZHKB006379; Mon, 19 Apr 2021 15:35:18 +0900
-X-Iguazu-Qid: 2wHHJLHH09KWPw3krC
-X-Iguazu-QSIG: v=2; s=0; t=1618814117; q=2wHHJLHH09KWPw3krC; m=BmJZm+c0uwoQuI7CKPxyC8LNl6srxk7xqoM/zwWpo+0=
-Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
-        by relay.securemx.jp (mx-mr1112) id 13J6ZGRv004357
-        (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 19 Apr 2021 15:35:17 +0900
-Received: from enc01.toshiba.co.jp (enc01.toshiba.co.jp [106.186.93.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by imx2-a.toshiba.co.jp (Postfix) with ESMTPS id 642A31000B6;
-        Mon, 19 Apr 2021 15:35:16 +0900 (JST)
-Received: from hop001.toshiba.co.jp ([133.199.164.63])
-        by enc01.toshiba.co.jp  with ESMTP id 13J6ZFfJ018156;
-        Mon, 19 Apr 2021 15:35:16 +0900
-From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, punit1.agrawal@toshiba.co.jp,
-        yuji2.ishikawa@toshiba.co.jp, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Subject: [PATCH v2 2/3] PCI: dwc: Visconti: PCIe RC controller driver
-Date:   Mon, 19 Apr 2021 15:35:12 +0900
-X-TSB-HOP: ON
-Message-Id: <20210419063513.1947003-3-nobuhiro1.iwamatsu@toshiba.co.jp>
-X-Mailer: git-send-email 2.30.0.rc2
-In-Reply-To: <20210419063513.1947003-1-nobuhiro1.iwamatsu@toshiba.co.jp>
-References: <20210419063513.1947003-1-nobuhiro1.iwamatsu@toshiba.co.jp>
+        id S229630AbhDSGxO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Apr 2021 02:53:14 -0400
+Received: from mga03.intel.com ([134.134.136.65]:43187 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229473AbhDSGxO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Apr 2021 02:53:14 -0400
+IronPort-SDR: HP2F24VtV99b+QMLVmSRacEV9TemO4Lr40yL8GAOPHv6p2wgqjJKtwG5JB5ttgnVc3GcxAwTp9
+ 3res4wTNs4CA==
+X-IronPort-AV: E=McAfee;i="6200,9189,9958"; a="195305837"
+X-IronPort-AV: E=Sophos;i="5.82,233,1613462400"; 
+   d="scan'208";a="195305837"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2021 23:52:44 -0700
+IronPort-SDR: K5+NZeaUBODV40juQU+7QX90W40CSY783OpLgTu8t/xu1J9gMzQe3vJVTVeZwndq7Pc1U56RdH
+ XloH+nEEmHjw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,233,1613462400"; 
+   d="scan'208";a="426393275"
+Received: from allen-box.sh.intel.com (HELO [10.239.159.128]) ([10.239.159.128])
+  by orsmga008.jf.intel.com with ESMTP; 18 Apr 2021 23:52:36 -0700
+Cc:     baolu.lu@linux.intel.com, dwmw2@infradead.org, joro@8bytes.org,
+        will@kernel.org, bhelgaas@google.com, rajatja@google.com,
+        grundler@chromium.org, tfiga@chromium.org,
+        senozhatsky@chromium.org, sakari.ailus@linux.intel.com,
+        andriy.shevchenko@linux.intel.com, bingbu.cao@linux.intel.com
+Subject: Re: [PATCH] iommu: Use passthrough mode for the Intel IPUs
+To:     Bingbu Cao <bingbu.cao@intel.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+References: <1618808225-10108-1-git-send-email-bingbu.cao@intel.com>
+From:   Lu Baolu <baolu.lu@linux.intel.com>
+Message-ID: <66ab470d-33e0-5998-a405-a0d446208334@linux.intel.com>
+Date:   Mon, 19 Apr 2021 14:42:55 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.7.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1618808225-10108-1-git-send-email-bingbu.cao@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to PCIe RC controller on Toshiba Visconti ARM SoCs. PCIe controller is based of Synopsys
-DesignWare PCIe core.
+Hi Bingbu,
 
-This patch does not yet use the clock framework to control the clock. This will be replaced in the
-future.
+On 4/19/21 12:57 PM, Bingbu Cao wrote:
+> Intel IPU(Image Processing Unit) has its own (IO)MMU hardware,
+> The IPU driver allocates its own page table that is not mapped
+> via the DMA, and thus the Intel IOMMU driver blocks access giving
+> this error:
+> 
+> DMAR: DRHD: handling fault status reg 3
+> DMAR: [DMA Read] Request device [00:05.0] PASID ffffffff
+>        fault addr 76406000 [fault reason 06] PTE Read access is not set
+> 
+> As IPU is not an external facing device which is not risky, so use
+> IOMMU passthrough mode for Intel IPUs.
 
-Signed-off-by: Yuji Ishikawa <yuji2.ishikawa@toshiba.co.jp>
-Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
----
- drivers/pci/controller/dwc/Kconfig         |   9 +
- drivers/pci/controller/dwc/Makefile        |   1 +
- drivers/pci/controller/dwc/pcie-visconti.c | 333 +++++++++++++++++++++
- 3 files changed, 343 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-visconti.c
+As a quirk, does it need to be back-ported to stable kernels? If so, add
+Fixes tag and cc stable, please.
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index b9aaa84452c4..043c2c70d566 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -286,6 +286,15 @@ config PCIE_TEGRA194_EP
- 	  in order to enable device-specific features PCIE_TEGRA194_EP must be
- 	  selected. This uses the DesignWare core.
- 
-+config PCIE_VISCONTI
-+	bool "Toshiba VISCONTI PCIe controllers"
-+	depends on ARCH_VISCONTI || COMPILE_TEST
-+	depends on PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here if you want PCIe controller support on Toshiba Visconti SoC.
-+	  This driver supports TMPV77xx.
-+
- config PCIE_UNIPHIER
- 	bool "Socionext UniPhier PCIe host controllers"
- 	depends on ARCH_UNIPHIER || COMPILE_TEST
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index ba7c42f6df6f..46ac5d49dc75 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -20,6 +20,7 @@ obj-$(CONFIG_PCI_MESON) += pci-meson.o
- obj-$(CONFIG_PCIE_TEGRA194) += pcie-tegra194.o
- obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
- obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
-+obj-$(CONFIG_PCIE_VISCONTI) += pcie-visconti.o
- 
- # The following drivers are for devices that use the generic ACPI
- # pci_root.c driver but don't support standard ECAM config access.
-diff --git a/drivers/pci/controller/dwc/pcie-visconti.c b/drivers/pci/controller/dwc/pcie-visconti.c
-new file mode 100644
-index 000000000000..a4739e7187f0
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-visconti.c
-@@ -0,0 +1,333 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * DWC PCIe RC driver for Toshiba Visconti ARM SoC
-+ *
-+ * Copyright (C) 2019, 2020 Toshiba Electronic Device & Storage Corporation
-+ * Copyright (C) 2020, TOSHIBA CORPORATION
-+ *
-+ * Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-+ *
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/init.h>
-+#include <linux/iopoll.h>
-+#include <linux/kernel.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+#include "../../pci.h"
-+
-+struct visconti_pcie {
-+	struct dw_pcie pci;
-+	void __iomem *ulreg_base;
-+	void __iomem *smu_base;
-+	void __iomem *mpu_base;
-+	struct clk *refclk;
-+	struct clk *sysclk;
-+	struct clk *auxclk;
-+};
-+
-+#define PCIE_UL_REG_S_PCIE_MODE		0x00F4
-+#define  PCIE_UL_REG_S_PCIE_MODE_EP	0x00
-+#define  PCIE_UL_REG_S_PCIE_MODE_RC	0x04
-+
-+#define PCIE_UL_REG_S_PERSTN_CTRL	0x00F8
-+#define  PCIE_UL_IOM_PCIE_PERSTN_I_EN	BIT(3)
-+#define  PCIE_UL_DIRECT_PERSTN_EN	BIT(2)
-+#define  PCIE_UL_PERSTN_OUT		BIT(1)
-+#define  PCIE_UL_DIRECT_PERSTN		BIT(0)
-+
-+#define PCIE_UL_REG_S_PHY_INIT_02	0x0104
-+#define  PCIE_UL_PHY0_SRAM_EXT_LD_DONE	BIT(0)
-+
-+#define PCIE_UL_REG_S_PHY_INIT_03	0x0108
-+#define  PCIE_UL_PHY0_SRAM_INIT_DONE	BIT(0)
-+
-+#define PCIE_UL_REG_S_INT_EVENT_MASK1	0x0138
-+#define  PCIE_UL_CFG_PME_INT		BIT(0)
-+#define  PCIE_UL_CFG_LINK_EQ_REQ_INT	BIT(1)
-+#define  PCIE_UL_EDMA_INT0		BIT(2)
-+#define  PCIE_UL_EDMA_INT1		BIT(3)
-+#define  PCIE_UL_EDMA_INT2		BIT(4)
-+#define  PCIE_UL_EDMA_INT3		BIT(5)
-+#define  PCIE_UL_S_INT_EVENT_MASK1_ALL  (PCIE_UL_CFG_PME_INT | PCIE_UL_CFG_LINK_EQ_REQ_INT | \
-+					 PCIE_UL_EDMA_INT0 | PCIE_UL_EDMA_INT1 | \
-+					 PCIE_UL_EDMA_INT2 | PCIE_UL_EDMA_INT3)
-+
-+#define PCIE_UL_REG_S_SB_MON		0x0198
-+#define PCIE_UL_REG_S_SIG_MON		0x019C
-+#define  PCIE_UL_CORE_RST_N_MON		BIT(0)
-+
-+#define PCIE_UL_REG_V_SII_DBG_00	0x0844
-+#define PCIE_UL_REG_V_SII_GEN_CTRL_01	0x0860
-+#define  PCIE_UL_APP_LTSSM_ENABLE	BIT(0)
-+
-+#define PCIE_UL_REG_V_PHY_ST_00		0x0864
-+#define  PCIE_UL_SMLH_LINK_UP		BIT(0)
-+
-+#define PCIE_UL_REG_V_PHY_ST_02		0x0868
-+#define  PCIE_UL_S_DETECT_ACT		0x01
-+#define  PCIE_UL_S_L0			0x11
-+
-+#define PISMU_CKON_PCIE			0x0038
-+#define  PISMU_CKON_PCIE_AUX_CLK	BIT(1)
-+#define  PISMU_CKON_PCIE_MSTR_ACLK	BIT(0)
-+
-+#define PISMU_RSOFF_PCIE		0x0538
-+#define  PISMU_RSOFF_PCIE_ULREG_RST_N	BIT(1)
-+#define  PISMU_RSOFF_PCIE_PWR_UP_RST_N	BIT(0)
-+
-+#define PCIE_MPU_REG_MP_EN		0x0
-+#define  MPU_MP_EN_DISABLE		BIT(0)
-+
-+#define PCIE_BUS_OFFSET			0x40000000
-+
-+/* Access registers in PCIe ulreg */
-+static inline void visconti_ulreg_writel(struct visconti_pcie *pcie, u32 val, u32 reg)
-+{
-+	writel_relaxed(val, pcie->ulreg_base + reg);
-+}
-+
-+/* Access registers in PCIe smu */
-+static inline void visconti_smu_writel(struct visconti_pcie *pcie, u32 val, u32 reg)
-+{
-+	writel_relaxed(val, pcie->smu_base + reg);
-+}
-+
-+/* Access registers in PCIe mpu */
-+static inline void visconti_mpu_writel(struct visconti_pcie *pcie, u32 val, u32 reg)
-+{
-+	writel_relaxed(val, pcie->mpu_base + reg);
-+}
-+
-+static inline u32 visconti_mpu_readl(struct visconti_pcie *pcie, u32 reg)
-+{
-+	return readl_relaxed(pcie->mpu_base + reg);
-+}
-+
-+static int visconti_pcie_check_link_status(struct visconti_pcie *pcie)
-+{
-+	int err;
-+	u32 val;
-+
-+	/* wait for linkup of phy link layer */
-+	err = readl_relaxed_poll_timeout(pcie->ulreg_base + PCIE_UL_REG_V_PHY_ST_00, val,
-+				 (val & PCIE_UL_SMLH_LINK_UP), 1000, 10000);
-+	if (err)
-+		return err;
-+
-+	/* wait for linkup of data link layer */
-+	err = readl_relaxed_poll_timeout(pcie->ulreg_base + PCIE_UL_REG_V_PHY_ST_02, val,
-+				 (val & PCIE_UL_S_DETECT_ACT), 1000, 10000);
-+	if (err)
-+		return err;
-+
-+	/* wait for LTSSM Status */
-+	return readl_relaxed_poll_timeout(pcie->ulreg_base + PCIE_UL_REG_V_PHY_ST_02, val,
-+				  (val & PCIE_UL_S_L0), 1000, 10000);
-+}
-+
-+static int visconti_pcie_establish_link(struct pcie_port *pp)
-+{
-+	int ret;
-+	u32 val;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct visconti_pcie *pcie = dev_get_drvdata(pci->dev);
-+
-+	visconti_ulreg_writel(pcie, PCIE_UL_APP_LTSSM_ENABLE, PCIE_UL_REG_V_SII_GEN_CTRL_01);
-+
-+	ret = visconti_pcie_check_link_status(pcie);
-+	if (ret < 0) {
-+		dev_info(pci->dev, "Link failure\n");
-+		return ret;
-+	}
-+
-+	val = visconti_mpu_readl(pcie, PCIE_MPU_REG_MP_EN);
-+	visconti_mpu_writel(pcie, val & ~MPU_MP_EN_DISABLE, PCIE_MPU_REG_MP_EN);
-+
-+	visconti_ulreg_writel(pcie, PCIE_UL_S_INT_EVENT_MASK1_ALL, PCIE_UL_REG_S_INT_EVENT_MASK1);
-+
-+	return 0;
-+}
-+
-+static int visconti_pcie_host_init(struct pcie_port *pp)
-+{
-+	dw_pcie_setup_rc(pp);
-+	return visconti_pcie_establish_link(pp);
-+}
-+
-+static const struct dw_pcie_host_ops visconti_pcie_host_ops = {
-+	.host_init = visconti_pcie_host_init,
-+};
-+
-+static u64 visconti_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
-+{
-+	return pci_addr - PCIE_BUS_OFFSET;
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.cpu_addr_fixup = visconti_pcie_cpu_addr_fixup,
-+};
-+
-+static int visconti_get_resources(struct platform_device *pdev,
-+				  struct visconti_pcie *pcie)
-+{
-+	struct device *dev = &pdev->dev;
-+
-+	pcie->ulreg_base = devm_platform_ioremap_resource_byname(pdev, "ulreg");
-+	if (IS_ERR(pcie->ulreg_base))
-+		return PTR_ERR(pcie->ulreg_base);
-+
-+	pcie->smu_base = devm_platform_ioremap_resource_byname(pdev, "smu");
-+	if (IS_ERR(pcie->smu_base))
-+		return PTR_ERR(pcie->smu_base);
-+
-+	pcie->mpu_base = devm_platform_ioremap_resource_byname(pdev, "mpu");
-+	if (IS_ERR(pcie->mpu_base))
-+		return PTR_ERR(pcie->mpu_base);
-+
-+	pcie->refclk = devm_clk_get(dev, "pcie_refclk");
-+	if (IS_ERR(pcie->refclk)) {
-+		dev_err(dev, "Failed to get refclk clock: %ld\n", PTR_ERR(pcie->refclk));
-+		return PTR_ERR(pcie->refclk);
-+	}
-+
-+	pcie->sysclk = devm_clk_get(dev, "sysclk");
-+	if (IS_ERR(pcie->sysclk)) {
-+		dev_err(dev, "Failed to get sysclk clock: %ld\n", PTR_ERR(pcie->sysclk));
-+		return PTR_ERR(pcie->sysclk);
-+	}
-+
-+	pcie->auxclk = devm_clk_get(dev, "auxclk");
-+	if (IS_ERR(pcie->auxclk)) {
-+		dev_err(dev, "Failed to get auxclk clock: %ld\n", PTR_ERR(pcie->auxclk));
-+		return PTR_ERR(pcie->auxclk);
-+	}
-+
-+	return 0;
-+}
-+
-+static int visconti_device_turnon(struct visconti_pcie *pcie)
-+{
-+	int err;
-+	u32 val;
-+
-+	visconti_smu_writel(pcie, PISMU_CKON_PCIE_AUX_CLK | PISMU_CKON_PCIE_MSTR_ACLK,
-+			    PISMU_CKON_PCIE);
-+	ndelay(250);
-+
-+	visconti_smu_writel(pcie, PISMU_RSOFF_PCIE_ULREG_RST_N, PISMU_RSOFF_PCIE);
-+
-+	visconti_ulreg_writel(pcie, PCIE_UL_REG_S_PCIE_MODE_RC, PCIE_UL_REG_S_PCIE_MODE);
-+
-+	val = PCIE_UL_IOM_PCIE_PERSTN_I_EN | PCIE_UL_DIRECT_PERSTN_EN | PCIE_UL_DIRECT_PERSTN;
-+	visconti_ulreg_writel(pcie, val, PCIE_UL_REG_S_PERSTN_CTRL);
-+	udelay(100);
-+
-+	val |= PCIE_UL_PERSTN_OUT;
-+	visconti_ulreg_writel(pcie, val, PCIE_UL_REG_S_PERSTN_CTRL);
-+	udelay(100);
-+
-+	visconti_smu_writel(pcie, PISMU_RSOFF_PCIE_PWR_UP_RST_N, PISMU_RSOFF_PCIE);
-+
-+	err = readl_relaxed_poll_timeout(pcie->ulreg_base + PCIE_UL_REG_S_PHY_INIT_03, val,
-+				 (val & PCIE_UL_PHY0_SRAM_INIT_DONE), 100, 1000);
-+	if (err)
-+		return err;
-+
-+	visconti_ulreg_writel(pcie, PCIE_UL_PHY0_SRAM_EXT_LD_DONE, PCIE_UL_REG_S_PHY_INIT_02);
-+
-+	return readl_relaxed_poll_timeout(pcie->ulreg_base + PCIE_UL_REG_S_SIG_MON, val,
-+				 (val & PCIE_UL_CORE_RST_N_MON), 100, 1000);
-+}
-+
-+static int visconti_add_pcie_port(struct visconti_pcie *pcie, struct platform_device *pdev)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
-+	struct device *dev = &pdev->dev;
-+	int ret;
-+
-+	pp->irq = platform_get_irq_byname(pdev, "intr");
-+	if (pp->irq < 0) {
-+		dev_err(dev, "interrupt intr is missing");
-+		return pp->irq;
-+	}
-+
-+	pp->ops = &visconti_pcie_host_ops;
-+
-+	pci->link_gen = of_pci_get_max_link_speed(pdev->dev.of_node);
-+	if (pci->link_gen < 0 || pci->link_gen > 3) {
-+		pci->link_gen = 3;
-+		dev_dbg(dev, "Applied default link speed\n");
-+	}
-+
-+	dev_dbg(dev, "link speed Gen %d", pci->link_gen);
-+
-+	ret = visconti_device_turnon(pcie);
-+	if (ret)
-+		goto error;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret)
-+		dev_err(dev, "Failed to initialize host\n");
-+
-+error:
-+	return ret;
-+}
-+
-+static int visconti_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct visconti_pcie *pcie;
-+	struct pcie_port *pp;
-+	struct dw_pcie *pci;
-+	int ret;
-+
-+	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(36));
-+	if (ret)
-+		return ret;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pci = &pcie->pci;
-+	pp = &pci->pp;
-+	pp->num_vectors = MAX_MSI_IRQS;
-+
-+	pci->dev = dev;
-+	pci->ops = &dw_pcie_ops;
-+
-+	ret = visconti_get_resources(pdev, pcie);
-+	if (ret)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	return visconti_add_pcie_port(pcie, pdev);
-+}
-+
-+static const struct of_device_id visconti_pcie_match[] = {
-+	{ .compatible = "toshiba,visconti-pcie" },
-+	{},
-+};
-+
-+static struct platform_driver visconti_pcie_driver = {
-+	.probe = visconti_pcie_probe,
-+	.driver = {
-+		.name = "visconti-pcie",
-+		.of_match_table = visconti_pcie_match,
-+		.suppress_bind_attrs = true,
-+	},
-+};
-+
-+builtin_platform_driver(visconti_pcie_driver);
--- 
-2.30.0.rc2
+> 
+> Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+> ---
+>   drivers/iommu/intel/iommu.c       | 35 +++++++++++++++++++++++++++++++++++
+>   drivers/staging/media/ipu3/ipu3.c |  2 +-
+>   include/linux/pci_ids.h           |  5 +++++
+>   3 files changed, 41 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+> index ee0932307d64..59222d2fe73f 100644
+> --- a/drivers/iommu/intel/iommu.c
+> +++ b/drivers/iommu/intel/iommu.c
+> @@ -55,6 +55,12 @@
+>   #define IS_GFX_DEVICE(pdev) ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
+>   #define IS_USB_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_SERIAL_USB)
+>   #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
+> +#define IS_IPU_DEVICE(pdev) ((pdev)->vendor == PCI_VENDOR_ID_INTEL &&		\
+> +			     ((pdev)->device == PCI_DEVICE_ID_INTEL_IPU3 ||	\
+> +			     (pdev)->device == PCI_DEVICE_ID_INTEL_IPU6 ||	\
+> +			     (pdev)->device == PCI_DEVICE_ID_INTEL_IPU6SE ||	\
+> +			     (pdev)->device == PCI_DEVICE_ID_INTEL_IPU6SE_P ||	\
+> +			     (pdev)->device == PCI_DEVICE_ID_INTEL_IPU6EP))
+>   #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
+>   
+>   #define IOAPIC_RANGE_START	(0xfee00000)
+> @@ -360,6 +366,7 @@ int intel_iommu_enabled = 0;
+>   EXPORT_SYMBOL_GPL(intel_iommu_enabled);
+>   
+>   static int dmar_map_gfx = 1;
+> +static int dmar_map_ipu = 1;
+>   static int dmar_forcedac;
+>   static int intel_iommu_strict;
+>   static int intel_iommu_superpage = 1;
+> @@ -368,6 +375,7 @@ static int iommu_skip_te_disable;
+>   
+>   #define IDENTMAP_GFX		2
+>   #define IDENTMAP_AZALIA		4
+> +#define IDENTMAP_IPU		8
+>   
+>   int intel_iommu_gfx_mapped;
+>   EXPORT_SYMBOL_GPL(intel_iommu_gfx_mapped);
+> @@ -2839,6 +2847,9 @@ static int device_def_domain_type(struct device *dev)
+>   
+>   		if ((iommu_identity_mapping & IDENTMAP_GFX) && IS_GFX_DEVICE(pdev))
+>   			return IOMMU_DOMAIN_IDENTITY;
+> +
+> +		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_IPU_DEVICE(pdev))
+> +			return IOMMU_DOMAIN_IDENTITY;
+>   	}
+>   
+>   	return 0;
+> @@ -3278,6 +3289,9 @@ static int __init init_dmars(void)
+>   	if (!dmar_map_gfx)
+>   		iommu_identity_mapping |= IDENTMAP_GFX;
+>   
+> +	if (!dmar_map_ipu)
+> +		iommu_identity_mapping |= IDENTMAP_IPU;
+> +
+>   	check_tylersburg_isoch();
+>   
+>   	ret = si_domain_init(hw_pass_through);
+> @@ -5622,6 +5636,15 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
+>   	dmar_map_gfx = 0;
+>   }
+>   
+> +static void quirk_iommu_ipu(struct pci_dev *dev)
+> +{
+> +	if (risky_device(dev))
+> +		return;
+> +
+> +	pci_info(dev, "Passthrough IOMMU for integrated Intel IPU\n");
+> +	dmar_map_ipu = 0;
+> +}
+> +
+>   /* G4x/GM45 integrated gfx dmar support is totally busted. */
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
+> @@ -5657,6 +5680,18 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
+>   
+> +/* disable IPU dmar support */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IPU3,
+> +			 quirk_iommu_ipu);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IPU6EP,
+> +			 quirk_iommu_ipu);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IPU6SE_P,
+> +			 quirk_iommu_ipu);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IPU6,
+> +			 quirk_iommu_ipu);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IPU6SE,
+> +			 quirk_iommu_ipu);
 
+This is duplicate with above IS_IPU_DEVICE(). Please keep a single
+device list.
+
+> +
+>   static void quirk_iommu_rwbf(struct pci_dev *dev)
+>   {
+>   	if (risky_device(dev))
+> diff --git a/drivers/staging/media/ipu3/ipu3.c b/drivers/staging/media/ipu3/ipu3.c
+> index ee1bba6bdcac..aee1130ac042 100644
+> --- a/drivers/staging/media/ipu3/ipu3.c
+> +++ b/drivers/staging/media/ipu3/ipu3.c
+> @@ -16,7 +16,7 @@
+>   #include "ipu3-dmamap.h"
+>   #include "ipu3-mmu.h"
+>   
+> -#define IMGU_PCI_ID			0x1919
+> +#define IMGU_PCI_ID			PCI_DEVICE_ID_INTEL_IPU3
+>   #define IMGU_PCI_BAR			0
+>   #define IMGU_DMA_MASK			DMA_BIT_MASK(39)
+>   #define IMGU_MAX_QUEUE_DEPTH		(2 + 2)
+
+Put above changes in a separated patch, please.
+
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index a76ccb697bef..951315892608 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2716,6 +2716,7 @@
+>   #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
+>   #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
+>   #define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
+> +#define PCI_DEVICE_ID_INTEL_IPU3	0x1919
+>   #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
+>   #define PCI_DEVICE_ID_INTEL_QAT_C3XXX	0x19e2
+>   #define PCI_DEVICE_ID_INTEL_QAT_C3XXX_VF	0x19e3
+> @@ -2982,6 +2983,8 @@
+>   #define PCI_DEVICE_ID_INTEL_SBRIDGE_BR		0x3cf5	/* 13.6 */
+>   #define PCI_DEVICE_ID_INTEL_SBRIDGE_SAD1	0x3cf6	/* 12.7 */
+>   #define PCI_DEVICE_ID_INTEL_IOAT_SNB	0x402f
+> +#define PCI_DEVICE_ID_INTEL_IPU6EP	0x465d
+> +#define PCI_DEVICE_ID_INTEL_IPU6SE_P	0x4e19
+>   #define PCI_DEVICE_ID_INTEL_5100_16	0x65f0
+>   #define PCI_DEVICE_ID_INTEL_5100_19	0x65f3
+>   #define PCI_DEVICE_ID_INTEL_5100_21	0x65f5
+> @@ -3032,6 +3035,8 @@
+>   #define PCI_DEVICE_ID_INTEL_IXP4XX	0x8500
+>   #define PCI_DEVICE_ID_INTEL_IXP2800	0x9004
+>   #define PCI_DEVICE_ID_INTEL_VMD_9A0B	0x9a0b
+> +#define PCI_DEVICE_ID_INTEL_IPU6	0x9a19
+> +#define PCI_DEVICE_ID_INTEL_IPU6SE	0x9a39
+>   #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
+>   
+>   #define PCI_VENDOR_ID_SCALEMP		0x8686
+> 
+
+Ditto.
+
+Best regards,
+baolu
