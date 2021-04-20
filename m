@@ -2,35 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61822C43460
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 06:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAED8C43460
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 06:17:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BCF7608FE
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 06:17:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A682613D4
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 06:17:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229953AbhDTGSQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Apr 2021 02:18:16 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:56414 "EHLO
+        id S229968AbhDTGSS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Apr 2021 02:18:18 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:56457 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229577AbhDTGSQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Apr 2021 02:18:16 -0400
-X-UUID: e64997969f214ffe9c8521d07650a47c-20210420
-X-UUID: e64997969f214ffe9c8521d07650a47c-20210420
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        with ESMTP id S230047AbhDTGSS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Apr 2021 02:18:18 -0400
+X-UUID: 7fc07d18d79448e58a145152623a4b93-20210420
+X-UUID: 7fc07d18d79448e58a145152623a4b93-20210420
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
         (envelope-from <jianjun.wang@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.14 Build 0819 with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1752252126; Tue, 20 Apr 2021 14:17:40 +0800
+        with ESMTP id 1943495319; Tue, 20 Apr 2021 14:17:46 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 20 Apr 2021 14:17:39 +0800
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 20 Apr 2021 14:17:44 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 20 Apr 2021 14:17:38 +0800
+ Transport; Tue, 20 Apr 2021 14:17:43 +0800
 From:   Jianjun Wang <jianjun.wang@mediatek.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -48,10 +49,12 @@ CC:     Philipp Zabel <p.zabel@pengutronix.de>,
         <drinkcat@chromium.org>, <Rex-BC.Chen@mediatek.com>,
         <anson.chuang@mediatek.com>, Krzysztof Wilczyski <kw@linux.com>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-Subject: [PATCH v10 0/7] PCI: mediatek: Add new generation controller support
-Date:   Tue, 20 Apr 2021 14:17:16 +0800
-Message-ID: <20210420061723.989-1-jianjun.wang@mediatek.com>
+Subject: [PATCH v10 4/7] PCI: mediatek-gen3: Add INTx support
+Date:   Tue, 20 Apr 2021 14:17:20 +0800
+Message-ID: <20210420061723.989-5-jianjun.wang@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210420061723.989-1-jianjun.wang@mediatek.com>
+References: <20210420061723.989-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -59,88 +62,254 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: mtk15901 <jianjun.wang@mediatek.com>
+Add INTx support for MediaTek Gen3 PCIe controller.
 
-These series patches add pcie-mediatek-gen3.c and dt-bindings file to
-support new generation PCIe controller.
+Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+Reviewed-by: Marc Zyngier <maz@kernel.org>
+---
+ drivers/pci/controller/pcie-mediatek-gen3.c | 172 ++++++++++++++++++++
+ 1 file changed, 172 insertions(+)
 
-Changes in v10:
-1. Fix the subject line format in commit message;
-2. Use EXPORT_SYMBOL_GPL() to export pci_pio_to_address().
-
-Changes in v9:
-1. Use mtk_pcie_parse_port() to get the hw resources;
-2. Remove unnecessary logs;
-3. Add local IRQ enable status save/restore instead of
-   the enable/disable callbacks;
-4. Fix typos.
-
-Changes in v8:
-1. Add irq_clock to protect IRQ register access;
-2. Mask all INTx interrupt when startup port;
-3. Remove activate/deactivate callbacks from bottom_domain_ops;
-4. Add unmask/mask callbacks in mtk_msi_bottom_irq_chip;
-5. Add property information for reg-names.
-
-Changes in v7:
-1. Split the driver patch to core PCIe, INTx, MSI and PM patches;
-2. Reshape MSI init and handle flow,
-   use msi_bottom_domain to cover all sets;
-3. Replace readl/writel with their relaxed version;
-4. Add MSI description in binding document;
-5. Add pl_250m clock in binding document.
-
-Changes in v6:
-1. Export pci_pio_to_address() to support compiling as kernel module;
-2. Replace usleep_range(100 * 1000, 120 * 1000) with msleep(100);
-3. Replace dev_notice with dev_err;
-4. Fix MSI get hwirq flow;
-5. Fix warning for possible recursive locking in mtk_pcie_set_affinity.
-
-Changes in v5:
-1. Remove unused macros
-2. Modify the config read/write callbacks, set the config byte field
-   in TLP header and use pci_generic_config_read32/write32
-   to access the config space
-3. Fix the settings of translation window, both MEM and IO regions
-   works properly
-4. Fix typos
-
-Changes in v4:
-1. Fix PCIe power up/down flow
-2. Use "mac" and "phy" for reset names
-3. Add clock names
-4. Fix the variables type
-
-Changes in v3:
-1. Remove standard property in binding document
-2. Return error number when get_optional* API throws an error
-3. Use the bulk clk APIs
-
-Changes in v2:
-1. Fix the typo of dt-bindings patch
-2. Remove the unnecessary properties in binding document
-3. dispos the irq mappings of msi top domain when irq teardown
-
-Jianjun Wang (7):
-  dt-bindings: PCI: mediatek-gen3: Add YAML schema
-  PCI: Export pci_pio_to_address() for module use
-  PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192
-  PCI: mediatek-gen3: Add INTx support
-  PCI: mediatek-gen3: Add MSI support
-  PCI: mediatek-gen3: Add system PM support
-  MAINTAINERS: Add Jianjun Wang as MediaTek PCI co-maintainer
-
- .../bindings/pci/mediatek-pcie-gen3.yaml      |  181 +++
- MAINTAINERS                                   |    1 +
- drivers/pci/controller/Kconfig                |   13 +
- drivers/pci/controller/Makefile               |    1 +
- drivers/pci/controller/pcie-mediatek-gen3.c   | 1025 +++++++++++++++++
- drivers/pci/pci.c                             |    1 +
- 6 files changed, 1222 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
- create mode 100644 drivers/pci/controller/pcie-mediatek-gen3.c
-
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index 3546e53b3c85..ff91ad587461 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -9,6 +9,9 @@
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/iopoll.h>
++#include <linux/irq.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -45,6 +48,13 @@
+ #define PCIE_LINK_STATUS_REG		0x154
+ #define PCIE_PORT_LINKUP		BIT(8)
+ 
++#define PCIE_INT_ENABLE_REG		0x180
++#define PCIE_INTX_SHIFT			24
++#define PCIE_INTX_ENABLE \
++	GENMASK(PCIE_INTX_SHIFT + PCI_NUM_INTX - 1, PCIE_INTX_SHIFT)
++
++#define PCIE_INT_STATUS_REG		0x184
++
+ #define PCIE_TRANS_TABLE_BASE_REG	0x800
+ #define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
+ #define PCIE_ATR_TRSL_ADDR_LSB_OFFSET	0x8
+@@ -73,6 +83,9 @@
+  * @phy: PHY controller block
+  * @clks: PCIe clocks
+  * @num_clks: PCIe clocks count for this port
++ * @irq: PCIe controller interrupt number
++ * @irq_lock: lock protecting IRQ register access
++ * @intx_domain: legacy INTx IRQ domain
+  */
+ struct mtk_pcie_port {
+ 	struct device *dev;
+@@ -83,6 +96,10 @@ struct mtk_pcie_port {
+ 	struct phy *phy;
+ 	struct clk_bulk_data *clks;
+ 	int num_clks;
++
++	int irq;
++	raw_spinlock_t irq_lock;
++	struct irq_domain *intx_domain;
+ };
+ 
+ /**
+@@ -198,6 +215,11 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+ 	val |= PCI_CLASS(PCI_CLASS_BRIDGE_PCI << 8);
+ 	writel_relaxed(val, port->base + PCIE_PCI_IDS_1);
+ 
++	/* Mask all INTx interrupts */
++	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
++	val &= ~PCIE_INTX_ENABLE;
++	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
++
+ 	/* Assert all reset signals */
+ 	val = readl_relaxed(port->base + PCIE_RST_CTRL_REG);
+ 	val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB;
+@@ -261,6 +283,150 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+ 	return 0;
+ }
+ 
++static int mtk_pcie_set_affinity(struct irq_data *data,
++				 const struct cpumask *mask, bool force)
++{
++	return -EINVAL;
++}
++
++static void mtk_intx_mask(struct irq_data *data)
++{
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
++	unsigned long flags;
++	u32 val;
++
++	raw_spin_lock_irqsave(&port->irq_lock, flags);
++	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
++	val &= ~BIT(data->hwirq + PCIE_INTX_SHIFT);
++	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
++	raw_spin_unlock_irqrestore(&port->irq_lock, flags);
++}
++
++static void mtk_intx_unmask(struct irq_data *data)
++{
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
++	unsigned long flags;
++	u32 val;
++
++	raw_spin_lock_irqsave(&port->irq_lock, flags);
++	val = readl_relaxed(port->base + PCIE_INT_ENABLE_REG);
++	val |= BIT(data->hwirq + PCIE_INTX_SHIFT);
++	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
++	raw_spin_unlock_irqrestore(&port->irq_lock, flags);
++}
++
++/**
++ * mtk_intx_eoi() - Clear INTx IRQ status at the end of interrupt
++ * @data: pointer to chip specific data
++ *
++ * As an emulated level IRQ, its interrupt status will remain
++ * until the corresponding de-assert message is received; hence that
++ * the status can only be cleared when the interrupt has been serviced.
++ */
++static void mtk_intx_eoi(struct irq_data *data)
++{
++	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
++	unsigned long hwirq;
++
++	hwirq = data->hwirq + PCIE_INTX_SHIFT;
++	writel_relaxed(BIT(hwirq), port->base + PCIE_INT_STATUS_REG);
++}
++
++static struct irq_chip mtk_intx_irq_chip = {
++	.irq_mask		= mtk_intx_mask,
++	.irq_unmask		= mtk_intx_unmask,
++	.irq_eoi		= mtk_intx_eoi,
++	.irq_set_affinity	= mtk_pcie_set_affinity,
++	.name			= "INTx",
++};
++
++static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++			     irq_hw_number_t hwirq)
++{
++	irq_set_chip_data(irq, domain->host_data);
++	irq_set_chip_and_handler_name(irq, &mtk_intx_irq_chip,
++				      handle_fasteoi_irq, "INTx");
++	return 0;
++}
++
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = mtk_pcie_intx_map,
++};
++
++static int mtk_pcie_init_irq_domains(struct mtk_pcie_port *port)
++{
++	struct device *dev = port->dev;
++	struct device_node *intc_node, *node = dev->of_node;
++
++	raw_spin_lock_init(&port->irq_lock);
++
++	/* Setup INTx */
++	intc_node = of_get_child_by_name(node, "interrupt-controller");
++	if (!intc_node) {
++		dev_err(dev, "missing interrupt-controller node\n");
++		return -ENODEV;
++	}
++
++	port->intx_domain = irq_domain_add_linear(intc_node, PCI_NUM_INTX,
++						  &intx_domain_ops, port);
++	if (!port->intx_domain) {
++		dev_err(dev, "failed to create INTx IRQ domain\n");
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++static void mtk_pcie_irq_teardown(struct mtk_pcie_port *port)
++{
++	irq_set_chained_handler_and_data(port->irq, NULL, NULL);
++
++	if (port->intx_domain)
++		irq_domain_remove(port->intx_domain);
++
++	irq_dispose_mapping(port->irq);
++}
++
++static void mtk_pcie_irq_handler(struct irq_desc *desc)
++{
++	struct mtk_pcie_port *port = irq_desc_get_handler_data(desc);
++	struct irq_chip *irqchip = irq_desc_get_chip(desc);
++	unsigned long status;
++	unsigned int virq;
++	irq_hw_number_t irq_bit = PCIE_INTX_SHIFT;
++
++	chained_irq_enter(irqchip, desc);
++
++	status = readl_relaxed(port->base + PCIE_INT_STATUS_REG);
++	for_each_set_bit_from(irq_bit, &status, PCI_NUM_INTX +
++			      PCIE_INTX_SHIFT) {
++		virq = irq_find_mapping(port->intx_domain,
++					irq_bit - PCIE_INTX_SHIFT);
++		generic_handle_irq(virq);
++	}
++
++	chained_irq_exit(irqchip, desc);
++}
++
++static int mtk_pcie_setup_irq(struct mtk_pcie_port *port)
++{
++	struct device *dev = port->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	int err;
++
++	err = mtk_pcie_init_irq_domains(port);
++	if (err)
++		return err;
++
++	port->irq = platform_get_irq(pdev, 0);
++	if (port->irq < 0)
++		return port->irq;
++
++	irq_set_chained_handler_and_data(port->irq, mtk_pcie_irq_handler, port);
++
++	return 0;
++}
++
+ static int mtk_pcie_parse_port(struct mtk_pcie_port *port)
+ {
+ 	struct device *dev = port->dev;
+@@ -391,6 +557,10 @@ static int mtk_pcie_setup(struct mtk_pcie_port *port)
+ 	if (err)
+ 		goto err_setup;
+ 
++	err = mtk_pcie_setup_irq(port);
++	if (err)
++		goto err_setup;
++
+ 	return 0;
+ 
+ err_setup:
+@@ -424,6 +594,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = pci_host_probe(host);
+ 	if (err) {
++		mtk_pcie_irq_teardown(port);
+ 		mtk_pcie_power_down(port);
+ 		return err;
+ 	}
+@@ -441,6 +612,7 @@ static int mtk_pcie_remove(struct platform_device *pdev)
+ 	pci_remove_root_bus(host->bus);
+ 	pci_unlock_rescan_remove();
+ 
++	mtk_pcie_irq_teardown(port);
+ 	mtk_pcie_power_down(port);
+ 
+ 	return 0;
 -- 
 2.25.1
 
