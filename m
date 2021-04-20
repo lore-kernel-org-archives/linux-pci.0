@@ -2,179 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA4FC43460
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:02:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D58C433B4
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:08:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9280261264
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:02:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 174C1613BF
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:08:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231702AbhDTLCo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Apr 2021 07:02:44 -0400
-Received: from mga06.intel.com ([134.134.136.31]:7594 "EHLO mga06.intel.com"
+        id S231511AbhDTLJG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Apr 2021 07:09:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43408 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231393AbhDTLCn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Apr 2021 07:02:43 -0400
-IronPort-SDR: 5gZ32iMOfFGv/YMtnfc4oUHjvCtClv2YQBBKHedqL7NI80/OX6Dl6hxglVzIiGhcvtxngAw8f2
- oBJe/qR8Hpow==
-X-IronPort-AV: E=McAfee;i="6200,9189,9959"; a="256799128"
-X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
-   d="scan'208";a="256799128"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2021 04:02:10 -0700
-IronPort-SDR: SfbMSfrbmDeoAoFxkyFsFFfzKzEx81WFjQoAVZJKo6/3QealsjUg7D5+x26/+2Dk91uspeeOXH
- meq+32GNYf4Q==
-X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
-   d="scan'208";a="534453026"
-Received: from paasikivi.fi.intel.com ([10.237.72.42])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2021 04:02:06 -0700
-Received: from paasikivi.fi.intel.com (localhost [127.0.0.1])
-        by paasikivi.fi.intel.com (Postfix) with SMTP id 791ED228CE;
-        Tue, 20 Apr 2021 12:13:09 +0300 (EEST)
-Date:   Tue, 20 Apr 2021 12:13:09 +0300
-From:   Sakari Ailus <sakari.ailus@linux.intel.com>
-To:     Bingbu Cao <bingbu.cao@intel.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        dwmw2@infradead.org, baolu.lu@linux.intel.com, joro@8bytes.org,
-        will@kernel.org, bhelgaas@google.com, rajatja@google.com,
-        grundler@chromium.org, tfiga@chromium.org,
-        senozhatsky@chromium.org, andriy.shevchenko@linux.intel.com,
-        bingbu.cao@linux.intel.com
-Subject: Re: [RESEND v2] iommu/vt-d: Use passthrough mode for the Intel IPUs
-Message-ID: <20210420091309.GH3@paasikivi.fi.intel.com>
-References: <1618886913-6594-1-git-send-email-bingbu.cao@intel.com>
+        id S231415AbhDTLJG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Apr 2021 07:09:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7E1D86135F;
+        Tue, 20 Apr 2021 11:08:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1618916914;
+        bh=tXNrVitqe9y0c4Nre12+HdYi0aoTIvIA9p8ok75STd0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OJT5uKEZWaLIAkjrQec3Kjt2ltJrVRIvQG7xBxcfY2hLdBOPOQ7Khc8DHxndVE+Na
+         5IM+xOPitZ7Fk0NrjEc8Ij23WEXGyh7E//elp6fExjfi0KEVKiDoAVLkUt3NQAOH2+
+         82zHkS4yWt6w/11jtKN6cKbgNOdIXh51BbOmGg+MgUwIIMq0kgdpq+zSs+AzkPGb/P
+         SDfyjb7U20ih6qyOKSgiPvX6c5AWZdJceGc7DvYka5aIBkzeJreqJC8Hauvh2nFPQo
+         Tzc8Tfy6uyHuIr7BJ803PdhZ8SKiMiOi1Gxfs03cpOtBRvpCMa+7NpUXskc+xDadSL
+         /5i1hOiMnEq/Q==
+Received: by pali.im (Postfix)
+        id 31C55A2D; Tue, 20 Apr 2021 13:08:32 +0200 (CEST)
+Date:   Tue, 20 Apr 2021 13:08:32 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     Jianjun Wang <jianjun.wang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, youlin.pei@mediatek.com,
+        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
+        sin_jieyang@mediatek.com, drinkcat@chromium.org,
+        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com,
+        Krzysztof Wilczyski <kw@linux.com>
+Subject: Re: [PATCH v10 5/7] PCI: mediatek-gen3: Add MSI support
+Message-ID: <20210420110832.iyjck2m2s5jlit26@pali>
+References: <20210420061723.989-1-jianjun.wang@mediatek.com>
+ <20210420061723.989-6-jianjun.wang@mediatek.com>
+ <20210420094402.hwdkbspl5wu4rtex@pali>
+ <87bla9qky1.wl-maz@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <1618886913-6594-1-git-send-email-bingbu.cao@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87bla9qky1.wl-maz@kernel.org>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bingbu,
-
-Thanks for the patch.
-
-On Tue, Apr 20, 2021 at 10:48:33AM +0800, Bingbu Cao wrote:
-> Intel IPU(Image Processing Unit) has its own (IO)MMU hardware,
-> The IPU driver allocates its own page table that is not mapped
-> via the DMA, and thus the Intel IOMMU driver blocks access giving
-> this error:
-
-The page table should be mapped to the possible IOMMU using the DMA API.
-
+On Tuesday 20 April 2021 12:01:10 Marc Zyngier wrote:
+> On Tue, 20 Apr 2021 10:44:02 +0100,
+> Pali Rohár <pali@kernel.org> wrote:
+> > 
+> > Hello!
+> > 
+> > On Tuesday 20 April 2021 14:17:21 Jianjun Wang wrote:
+> > > +static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> > > +{
+> > > +	int i;
+> > > +	u32 val;
+> > > +
+> > > +	for (i = 0; i < PCIE_MSI_SET_NUM; i++) {
+> > > +		struct mtk_msi_set *msi_set = &port->msi_sets[i];
+> > > +
+> > > +		msi_set->base = port->base + PCIE_MSI_SET_BASE_REG +
+> > > +				i * PCIE_MSI_SET_OFFSET;
+> > > +		msi_set->msg_addr = port->reg_base + PCIE_MSI_SET_BASE_REG +
+> > > +				    i * PCIE_MSI_SET_OFFSET;
+> > > +
+> > > +		/* Configure the MSI capture address */
+> > > +		writel_relaxed(lower_32_bits(msi_set->msg_addr), msi_set->base);
+> > > +		writel_relaxed(upper_32_bits(msi_set->msg_addr),
+> > > +			       port->base + PCIE_MSI_SET_ADDR_HI_BASE +
+> > > +			       i * PCIE_MSI_SET_ADDR_HI_OFFSET);
+> > 
+> > This looks like as setting MSI doorbell address to MSI doorbell address.
+> > 
+> > > +static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> > > +{
+> > > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+> > > +	struct mtk_pcie_port *port = data->domain->host_data;
+> > > +	unsigned long hwirq;
+> > > +
+> > > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+> > > +
+> > > +	msg->address_hi = upper_32_bits(msi_set->msg_addr);
+> > > +	msg->address_lo = lower_32_bits(msi_set->msg_addr);
+> > > +	msg->data = hwirq;
+> > > +	dev_dbg(port->dev, "msi#%#lx address_hi %#x address_lo %#x data %d\n",
+> > > +		hwirq, msg->address_hi, msg->address_lo, msg->data);
+> > 
+> > ... which is later used in compose_msi_msg().
+> > 
+> > Marc in some other patches for other pci controller drivers changed this
+> > address to just main "port" structure. It simplified implementations and
+> > also avoided need to declare additional member "msg_addr".
+> > 
+> > Marc, would it be possible to simplify it also for this driver and just
+> > set msg_addr to virt_to_phys(port)?
 > 
-> DMAR: DRHD: handling fault status reg 3
-> DMAR: [DMA Read] Request device [00:05.0] PASID ffffffff
->       fault addr 76406000 [fault reason 06] PTE Read access is not set
+> Maybe. It really depends on what range the HW accepts, and the sole
+> requirement is to use an address that the endpoint cannot DMA
+> to. Here, the driver seems to be using something based on the port
+> base address, which is good enough as far as I am concerned (the thing
+> I usually object to is the allocation of memory just for the sake of
+> getting a capture address).
 > 
-> As IPU is not an external facing device which is not risky, so use
-> IOMMU passthrough mode for Intel IPUs.
-
-I think a factor here is that the page tables aren't accessible by the IPU
-firmware.
-
+> If you want to further simplify it, you could simply use port.reg_base
+> as the MSI address for all sets, as I don't think they have to be
+> distinct. But someone with access to the TRM for this should go and
+> check it.
 > 
-> Fixes: 26f5689592e2 ("media: staging/intel-ipu3: mmu: Implement driver")
-> Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
-> ---
->  drivers/iommu/intel/iommu.c | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
+> I don't believe this should gate the merging od this driver though.
+
+Of course! I'm just asking details to understand best practises and how
+it works. So thanks for information!
+
+> 	M.
 > 
-> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-> index ee0932307d64..7e2fbdae467e 100644
-> --- a/drivers/iommu/intel/iommu.c
-> +++ b/drivers/iommu/intel/iommu.c
-> @@ -55,6 +55,12 @@
->  #define IS_GFX_DEVICE(pdev) ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
->  #define IS_USB_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_SERIAL_USB)
->  #define IS_ISA_DEVICE(pdev) ((pdev->class >> 8) == PCI_CLASS_BRIDGE_ISA)
-> +#define IS_INTEL_IPU(pdev) ((pdev)->vendor == PCI_VENDOR_ID_INTEL &&	\
-> +			    ((pdev)->device == 0x9a19 ||		\
-> +			     (pdev)->device == 0x9a39 ||		\
-> +			     (pdev)->device == 0x4e19 ||		\
-> +			     (pdev)->device == 0x465d ||		\
-> +			     (pdev)->device == 0x1919))
->  #define IS_AZALIA(pdev) ((pdev)->vendor == 0x8086 && (pdev)->device == 0x3a3e)
->  
->  #define IOAPIC_RANGE_START	(0xfee00000)
-> @@ -360,6 +366,7 @@ int intel_iommu_enabled = 0;
->  EXPORT_SYMBOL_GPL(intel_iommu_enabled);
->  
->  static int dmar_map_gfx = 1;
-> +static int dmar_map_ipu = 1;
-
-This works as long as there's only one IPU. Same for graphics. But I guess
-this can be reworked in the future if the presumption changes.
-
->  static int dmar_forcedac;
->  static int intel_iommu_strict;
->  static int intel_iommu_superpage = 1;
-> @@ -368,6 +375,7 @@ static int iommu_skip_te_disable;
->  
->  #define IDENTMAP_GFX		2
->  #define IDENTMAP_AZALIA		4
-> +#define IDENTMAP_IPU		8
->  
->  int intel_iommu_gfx_mapped;
->  EXPORT_SYMBOL_GPL(intel_iommu_gfx_mapped);
-> @@ -2839,6 +2847,9 @@ static int device_def_domain_type(struct device *dev)
->  
->  		if ((iommu_identity_mapping & IDENTMAP_GFX) && IS_GFX_DEVICE(pdev))
->  			return IOMMU_DOMAIN_IDENTITY;
-> +
-> +		if ((iommu_identity_mapping & IDENTMAP_IPU) && IS_INTEL_IPU(pdev))
-> +			return IOMMU_DOMAIN_IDENTITY;
->  	}
->  
->  	return 0;
-> @@ -3278,6 +3289,9 @@ static int __init init_dmars(void)
->  	if (!dmar_map_gfx)
->  		iommu_identity_mapping |= IDENTMAP_GFX;
->  
-> +	if (!dmar_map_ipu)
-> +		iommu_identity_mapping |= IDENTMAP_IPU;
-> +
->  	check_tylersburg_isoch();
->  
->  	ret = si_domain_init(hw_pass_through);
-> @@ -5622,6 +5636,18 @@ static void quirk_iommu_igfx(struct pci_dev *dev)
->  	dmar_map_gfx = 0;
->  }
->  
-> +static void quirk_iommu_ipu(struct pci_dev *dev)
-> +{
-> +	if (!IS_INTEL_IPU(dev))
-> +		return;
-> +
-> +	if (risky_device(dev))
-> +		return;
-> +
-> +	pci_info(dev, "Passthrough IOMMU for integrated Intel IPU\n");
-> +	dmar_map_ipu = 0;
-> +}
-> +
->  /* G4x/GM45 integrated gfx dmar support is totally busted. */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2a40, quirk_iommu_igfx);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2e00, quirk_iommu_igfx);
-> @@ -5657,6 +5683,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1632, quirk_iommu_igfx);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163A, quirk_iommu_igfx);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x163D, quirk_iommu_igfx);
->  
-> +/* disable IPU dmar support */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, quirk_iommu_ipu);
-> +
->  static void quirk_iommu_rwbf(struct pci_dev *dev)
->  {
->  	if (risky_device(dev))
-
--- 
-Kind regards,
-
-Sakari Ailus
+> -- 
+> Without deviation from the norm, progress is not possible.
