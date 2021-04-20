@@ -2,90 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E48C43462
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 10:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A76EC433B4
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:01:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E33CE610CC
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 10:41:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52560613BF
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Apr 2021 11:01:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231558AbhDTKmA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Apr 2021 06:42:00 -0400
-Received: from mga07.intel.com ([134.134.136.100]:37280 "EHLO mga07.intel.com"
+        id S231206AbhDTLBq convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Apr 2021 07:01:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40014 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231616AbhDTKmA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Apr 2021 06:42:00 -0400
-IronPort-SDR: 6kAnX2Oqq601rIVnshvdyJGrPfbF+Tx9vQTQ+WkiwYTcfppmjRiKbLMjch4aKx2v5kMCCTGrXL
- ae6BaBxz1thw==
-X-IronPort-AV: E=McAfee;i="6200,9189,9959"; a="259439880"
-X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
-   d="scan'208";a="259439880"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2021 03:41:28 -0700
-IronPort-SDR: zBEE34l19qdqr83AHGBhxQffq+4JvC3ZbYqCOiE4ip4c669xO6weWyCL0VUIfhoj5vmAZi7aFB
- akOfFPKkyhLw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,236,1613462400"; 
-   d="scan'208";a="523757927"
-Received: from ipu5-build.bj.intel.com (HELO [10.238.232.202]) ([10.238.232.202])
-  by fmsmga001.fm.intel.com with ESMTP; 20 Apr 2021 03:41:24 -0700
-Subject: Re: [RESEND v2] iommu/vt-d: Use passthrough mode for the Intel IPUs
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bingbu Cao <bingbu.cao@intel.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        dwmw2@infradead.org, baolu.lu@linux.intel.com, joro@8bytes.org,
-        will@kernel.org, bhelgaas@google.com, rajatja@google.com,
-        grundler@chromium.org, tfiga@chromium.org,
-        senozhatsky@chromium.org, sakari.ailus@linux.intel.com
-References: <1618886913-6594-1-git-send-email-bingbu.cao@intel.com>
- <YH6q+FCTQheO6FHi@smile.fi.intel.com>
-From:   Bingbu Cao <bingbu.cao@linux.intel.com>
-Message-ID: <c9a0fc75-8b7b-e0ae-572e-8ca030a04537@linux.intel.com>
-Date:   Tue, 20 Apr 2021 18:34:26 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <YH6q+FCTQheO6FHi@smile.fi.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S230290AbhDTLBp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Apr 2021 07:01:45 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5A44B61026;
+        Tue, 20 Apr 2021 11:01:14 +0000 (UTC)
+Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94)
+        (envelope-from <maz@kernel.org>)
+        id 1lYo80-008TZz-2b; Tue, 20 Apr 2021 12:01:12 +0100
+Date:   Tue, 20 Apr 2021 12:01:10 +0100
+Message-ID: <87bla9qky1.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
+Cc:     Jianjun Wang <jianjun.wang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, youlin.pei@mediatek.com,
+        chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com,
+        sin_jieyang@mediatek.com, drinkcat@chromium.org,
+        Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com,
+        Krzysztof Wilczyski <kw@linux.com>
+Subject: Re: [PATCH v10 5/7] PCI: mediatek-gen3: Add MSI support
+In-Reply-To: <20210420094402.hwdkbspl5wu4rtex@pali>
+References: <20210420061723.989-1-jianjun.wang@mediatek.com>
+        <20210420061723.989-6-jianjun.wang@mediatek.com>
+        <20210420094402.hwdkbspl5wu4rtex@pali>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+X-SA-Exim-Connect-IP: 62.31.163.78
+X-SA-Exim-Rcpt-To: pali@kernel.org, jianjun.wang@mediatek.com, bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com, ryder.lee@mediatek.com, p.zabel@pengutronix.de, matthias.bgg@gmail.com, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, youlin.pei@mediatek.com, chuanjia.liu@mediatek.com, qizhong.cheng@mediatek.com, sin_jieyang@mediatek.com, drinkcat@chromium.org, Rex-BC.Chen@mediatek.com, anson.chuang@mediatek.com, kw@linux.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Andy,
-
-On 4/20/21 6:20 PM, Andy Shevchenko wrote:
-> On Tue, Apr 20, 2021 at 10:48:33AM +0800, Bingbu Cao wrote:
->> Intel IPU(Image Processing Unit) has its own (IO)MMU hardware,
->> The IPU driver allocates its own page table that is not mapped
->> via the DMA, and thus the Intel IOMMU driver blocks access giving
->> this error:
->>
->> DMAR: DRHD: handling fault status reg 3
->> DMAR: [DMA Read] Request device [00:05.0] PASID ffffffff
->>       fault addr 76406000 [fault reason 06] PTE Read access is not set
->>
->> As IPU is not an external facing device which is not risky, so use
->> IOMMU passthrough mode for Intel IPUs.
->>
->> Fixes: 26f5689592e2 ("media: staging/intel-ipu3: mmu: Implement driver")
->> Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
->> ---
->>  drivers/iommu/intel/iommu.c | 29 +++++++++++++++++++++++++++++
+On Tue, 20 Apr 2021 10:44:02 +0100,
+Pali Rohár <pali@kernel.org> wrote:
 > 
-> This misses the changelog from v1 followed by the explanation why resent.
+> Hello!
 > 
-I noticed there was a typo in the recipient list:
-stable.vger.kernel.org -> stable@vger.kernel.org
+> On Tuesday 20 April 2021 14:17:21 Jianjun Wang wrote:
+> > +static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> > +{
+> > +	int i;
+> > +	u32 val;
+> > +
+> > +	for (i = 0; i < PCIE_MSI_SET_NUM; i++) {
+> > +		struct mtk_msi_set *msi_set = &port->msi_sets[i];
+> > +
+> > +		msi_set->base = port->base + PCIE_MSI_SET_BASE_REG +
+> > +				i * PCIE_MSI_SET_OFFSET;
+> > +		msi_set->msg_addr = port->reg_base + PCIE_MSI_SET_BASE_REG +
+> > +				    i * PCIE_MSI_SET_OFFSET;
+> > +
+> > +		/* Configure the MSI capture address */
+> > +		writel_relaxed(lower_32_bits(msi_set->msg_addr), msi_set->base);
+> > +		writel_relaxed(upper_32_bits(msi_set->msg_addr),
+> > +			       port->base + PCIE_MSI_SET_ADDR_HI_BASE +
+> > +			       i * PCIE_MSI_SET_ADDR_HI_OFFSET);
+> 
+> This looks like as setting MSI doorbell address to MSI doorbell address.
+> 
+> > +static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> > +{
+> > +	struct mtk_msi_set *msi_set = irq_data_get_irq_chip_data(data);
+> > +	struct mtk_pcie_port *port = data->domain->host_data;
+> > +	unsigned long hwirq;
+> > +
+> > +	hwirq =	data->hwirq % PCIE_MSI_IRQS_PER_SET;
+> > +
+> > +	msg->address_hi = upper_32_bits(msi_set->msg_addr);
+> > +	msg->address_lo = lower_32_bits(msi_set->msg_addr);
+> > +	msg->data = hwirq;
+> > +	dev_dbg(port->dev, "msi#%#lx address_hi %#x address_lo %#x data %d\n",
+> > +		hwirq, msg->address_hi, msg->address_lo, msg->data);
+> 
+> ... which is later used in compose_msi_msg().
+> 
+> Marc in some other patches for other pci controller drivers changed this
+> address to just main "port" structure. It simplified implementations and
+> also avoided need to declare additional member "msg_addr".
+> 
+> Marc, would it be possible to simplify it also for this driver and just
+> set msg_addr to virt_to_phys(port)?
 
-no code change for resent.
+Maybe. It really depends on what range the HW accepts, and the sole
+requirement is to use an address that the endpoint cannot DMA
+to. Here, the driver seems to be using something based on the port
+base address, which is good enough as far as I am concerned (the thing
+I usually object to is the allocation of memory just for the sake of
+getting a capture address).
+
+If you want to further simplify it, you could simply use port.reg_base
+as the MSI address for all sets, as I don't think they have to be
+distinct. But someone with access to the TRM for this should go and
+check it.
+
+I don't believe this should gate the merging od this driver though.
+
+	M.
 
 -- 
-Best regards,
-Bingbu Cao
+Without deviation from the norm, progress is not possible.
