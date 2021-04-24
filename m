@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1EABC433ED
-	for <linux-pci@archiver.kernel.org>; Sat, 24 Apr 2021 00:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20FC1C433ED
+	for <linux-pci@archiver.kernel.org>; Sat, 24 Apr 2021 02:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7384761422
-	for <linux-pci@archiver.kernel.org>; Sat, 24 Apr 2021 00:29:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE3F461158
+	for <linux-pci@archiver.kernel.org>; Sat, 24 Apr 2021 02:16:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232101AbhDXAaM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Apr 2021 20:30:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32902 "EHLO
+        id S232809AbhDXCRN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Apr 2021 22:17:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232614AbhDXA37 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Apr 2021 20:29:59 -0400
-Received: from mail-pf1-x449.google.com (mail-pf1-x449.google.com [IPv6:2607:f8b0:4864:20::449])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 948FBC06174A
-        for <linux-pci@vger.kernel.org>; Fri, 23 Apr 2021 17:29:22 -0700 (PDT)
-Received: by mail-pf1-x449.google.com with SMTP id q62-20020a6275410000b029026407f235dbso8464082pfc.23
-        for <linux-pci@vger.kernel.org>; Fri, 23 Apr 2021 17:29:22 -0700 (PDT)
+        with ESMTP id S232619AbhDXCRN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Apr 2021 22:17:13 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5FE7C061756
+        for <linux-pci@vger.kernel.org>; Fri, 23 Apr 2021 19:16:35 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id i201-20020a25d1d20000b02904ed4c01f82bso4216911ybg.20
+        for <linux-pci@vger.kernel.org>; Fri, 23 Apr 2021 19:16:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:message-id:mime-version:subject:from:to:cc;
-        bh=IN+7hpfuilZwjXuucv+7rDMA58hZ+Pmp36t/KLM1cMw=;
-        b=g+1yWDroVwsnWvXxUagwJlOAeimwDRkQ63OncNnDLg+sFstxe5ZnEz7JvM5tMy2LrZ
-         b+PFOldLW3B8xzdZ/fsFTl90Wr4s2T+VM1XPtdAgMCf/pzyJNfYWMewADYTWKrvC3bz5
-         G+YrM8Lod0/La+MGwv7rRnCyLwG2nIKFIADcwfjEjMZESYkQGD/IQBgKkC7m0Ou9ICI6
-         3jUwzlNMb+Eq/8d4Etq3xFrKo4YUKzgbEgl2GphuEloomYeZGOWpgoJk8YRLzKcHgbB5
-         0Zvlnmh0VaOAg0fHBAT8pxTzPku11UBW85rGzlN4+OCF3wC4Kqc/mP17nP1EeYRwj6eK
-         w12w==
+        bh=Mn/X37YGzoXaRidHpnWb9ANkD+US0YqkDbSrWqNk3xI=;
+        b=VeR5IHUodRGIJAp4ZK55DOQuTVeVGNv2TfMX/1yAsrlGPc6ZnxM5cwzmkPAJTPqS0s
+         QOqCtZ5kHOVDKUbLUw4qPfCjsccVYVaiwuAY2yt5OjY/jftJHu0MFocoqNjpbwgyrF06
+         AKMP2a7mA58KXkZA/TDedVWokzAeLCSOqNHTIyMwdkgHYlmnpWvpGUpNTlIkTayUGXqa
+         /XbcEIFptn/tp8i9zbOjRQJ4mVGoARjZ7BmZzOV8t0n/QV1uTipEVJRrJp8ZgBXvflP3
+         goHVVd4M7BKe2czJwPo6P+d1Be0d1Y+Z0jTD0BzvLdmHpbeeZwY4m+Pf5bNaAhbuArA5
+         edlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=IN+7hpfuilZwjXuucv+7rDMA58hZ+Pmp36t/KLM1cMw=;
-        b=gNAxKatYMTI79ECVlx+OUJD230RwSZGPPtLvwtknyCbkfDfimyQ9ZRfe0Xg2r5+ALG
-         26ZANT9xu5ji0MwjfznHey0qDxIBJy63HGRPuuWv3kZ5ugiS/92YNgVTW+Zamqxl48qF
-         eRMjaLEZalf/ryHSTuYQlhwNQSIFLw5NEO00IcnCApW1f6uPl1NTGeKlo5EEgjUvtnLb
-         AZlHEAWxg6CKuOKwj/Spbd3wgCES4YJhQE1kvOLHGIl9qdZcS2nI0EcEzh1OR1y5HiTS
-         o/SPB6prh+wzdbC2SwAZyw1gNqTgHR20/VZ7pnU0/Fyp8isEsLF+btL5ECfRfHny5/cp
-         UqcQ==
-X-Gm-Message-State: AOAM532BCT2A8Vt+qj/qgEMyEz8sBc1WRvBmCn1XeeGe43Di6ec55OaF
-        VIxb4Sn7tkq895AArw2aj7aIURCgtbzI
-X-Google-Smtp-Source: ABdhPJycZqWca6XT3XcA+7vy+xZvUsOwCq9bzaaj1UwM2i0BjgltOYKaHQB1q4nJ3AUaFhQeuLfqwWiRdo1w
+        bh=Mn/X37YGzoXaRidHpnWb9ANkD+US0YqkDbSrWqNk3xI=;
+        b=nRdsGYQFzBiXRSMWBarfb2infJfbtnW7kLWXpiDrb1btehJ3d+4onU28iSJ0b5iJ4/
+         hMtbXsO3xW+9OfY8FuvAwGcse0X+xuy6x9qy65yY1sQQQcRYozzyPmEeGFwJHqoUV0nN
+         Fp0BBBGsSI1sO29jWPeGm51/ZJLu3sJ4ot4aqD/hbG6RKWu2QXQy3b4uJpxCTfTlkClU
+         6l/1B/WW2+JtO8Q/dxDjbUMDWkj2UMPzxsJZX871fRXKRqc3v31nbTqWE8HzYuLnP+On
+         +5MAerfv0BtpEkcHueNTub3TIUXTYnjNmn+Uar5AJiz4ZYeS2iqi+DZecN49Iah+A7ft
+         W3UQ==
+X-Gm-Message-State: AOAM532H0d+s7PiHLYW2OH5vpcbFwMpOwtkbIFWtrOHxww+3Zq/4LkQe
+        SK3BXjI7hhOGglhImbsMCjLW8De+/lS5
+X-Google-Smtp-Source: ABdhPJyqTFwgr+iptO4mJmzwn4Zi2dDPDucXnfaoE/2/OvHuX9pLNICLnDV/HDosIYzlCrTJdY3OdbZ5Jy4F
 X-Received: from rajat2.mtv.corp.google.com ([2620:15c:202:201:5cef:2faf:44cf:b69b])
- (user=rajatja job=sendgmr) by 2002:aa7:93aa:0:b029:25e:31ca:756f with SMTP id
- x10-20020aa793aa0000b029025e31ca756fmr6527446pff.70.1619224162041; Fri, 23
- Apr 2021 17:29:22 -0700 (PDT)
-Date:   Fri, 23 Apr 2021 17:29:17 -0700
-Message-Id: <20210424002918.1962649-1-rajatja@google.com>
+ (user=rajatja job=sendgmr) by 2002:a5b:303:: with SMTP id j3mr8975440ybp.433.1619230594664;
+ Fri, 23 Apr 2021 19:16:34 -0700 (PDT)
+Date:   Fri, 23 Apr 2021 19:16:30 -0700
+Message-Id: <20210424021631.1972022-1-rajatja@google.com>
 Mime-Version: 1.0
 X-Mailer: git-send-email 2.31.1.498.g6c1eba8ee3d-goog
-Subject: [PATCH 1/2] driver core: Move the "removable" attribute from USB to core
+Subject: [PATCH v2 1/2] driver core: Move the "removable" attribute from USB
+ to core
 From:   Rajat Jain <rajatja@google.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -75,19 +75,69 @@ Move the "removable" attribute from USB to core in order to allow
 it to be supported by other subsystem / buses. Individual buses
 that want to support this attribute can opt-in by setting the
 supports_removable flag, and then populating the removable property
-of the device while enumerating it.
+of the device while enumerating it. The ABI for the attribute remains
+unchanged.
 
 Signed-off-by: Rajat Jain <rajatja@google.com>
-Change-Id: I55a0ee5e13d87cd0c5d9cfc98403caba1989b518
 ---
- drivers/base/core.c      | 28 ++++++++++++++++++++++++++++
- drivers/usb/core/hub.c   |  8 ++++----
- drivers/usb/core/sysfs.c | 24 ------------------------
- drivers/usb/core/usb.c   |  1 +
- include/linux/device.h   | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/usb.h      |  7 -------
- 6 files changed, 69 insertions(+), 35 deletions(-)
+v2: Add documentation
 
+ Documentation/ABI/testing/sysfs-bus-usb       | 11 ------
+ .../ABI/testing/sysfs-devices-removable       | 17 +++++++++
+ drivers/base/core.c                           | 28 +++++++++++++++
+ drivers/usb/core/hub.c                        |  8 ++---
+ drivers/usb/core/sysfs.c                      | 24 -------------
+ drivers/usb/core/usb.c                        |  1 +
+ include/linux/device.h                        | 36 +++++++++++++++++++
+ include/linux/usb.h                           |  7 ----
+ 8 files changed, 86 insertions(+), 46 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-devices-removable
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-usb b/Documentation/ABI/testing/sysfs-bus-usb
+index bf2c1968525f..73eb23bc1f34 100644
+--- a/Documentation/ABI/testing/sysfs-bus-usb
++++ b/Documentation/ABI/testing/sysfs-bus-usb
+@@ -154,17 +154,6 @@ Description:
+ 		files hold a string value (enable or disable) indicating whether
+ 		or not USB3 hardware LPM U1 or U2 is enabled for the device.
+ 
+-What:		/sys/bus/usb/devices/.../removable
+-Date:		February 2012
+-Contact:	Matthew Garrett <mjg@redhat.com>
+-Description:
+-		Some information about whether a given USB device is
+-		physically fixed to the platform can be inferred from a
+-		combination of hub descriptor bits and platform-specific data
+-		such as ACPI. This file will read either "removable" or
+-		"fixed" if the information is available, and "unknown"
+-		otherwise.
+-
+ What:		/sys/bus/usb/devices/.../ltm_capable
+ Date:		July 2012
+ Contact:	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+diff --git a/Documentation/ABI/testing/sysfs-devices-removable b/Documentation/ABI/testing/sysfs-devices-removable
+new file mode 100644
+index 000000000000..e13dddd547b5
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-devices-removable
+@@ -0,0 +1,17 @@
++What:		/sys/devices/.../removable
++Date:		Apr 2021
++Contact:	Matthew Garrett <mjg@redhat.com>,
++		Rajat Jain <rajatja@google.com>
++Description:
++		Information about whether a given device is physically fixed to
++		the platform. This is determined by the device's subsystem in a
++		bus / platform specific way. This attribute is only present for
++		buses that can support determining such information:
++
++		"removable": The device is external / removable from the system.
++		"fixed":     The device is internal / fixed to the system.
++		"unknown":   The information is unavailable.
++
++		Currently this is only supported by USB (which infers the
++		information from a combination of hub descriptor bits and
++		platform-specific data such as ACPI).
 diff --git a/drivers/base/core.c b/drivers/base/core.c
 index f29839382f81..b8ae4cc52805 100644
 --- a/drivers/base/core.c
