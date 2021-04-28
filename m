@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B75C43470
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A71C43600
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 293346143A
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57C986143A
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239652AbhD1POX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Apr 2021 11:14:23 -0400
+        id S239702AbhD1PO0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Apr 2021 11:14:26 -0400
 Received: from mail-co1nam11on2051.outbound.protection.outlook.com ([40.107.220.51]:11189
         "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S239847AbhD1POR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Apr 2021 11:14:17 -0400
+        id S239897AbhD1POS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Apr 2021 11:14:18 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KVceJBU1pJr0BWbj8II2dVPbpVEkJJNF3gDvSPUg6b2ZL6BMX+MBuzpxezeEz0OJXc520n/PMsKnbhi6eEZTxyFmJcUSZTZFvO6H/vuJzMXNaVFjCBgccDBf6mmu/fOl946ko9QyspaoOJmRul+FHJlaDGht7AHtRgrfHK3INYwuZEHe+fQIj9buugc1fXGhwPO8UKYcRb09Dv0P10EauZDh2Fmth+HoXhsvPo5HhHXB4a0q6dpwZT9WudFKnhc6c5Vrck2LZdIl/j32U6KdXI8g15E+tkLsVx8P96YW5+gsSkfJw0YH/li0yYfRVmP9I/b6122i1YfZqsuZ7EXVug==
+ b=Ciiqqan7NJLs4EJH1m9DvSun83r5Fs/zysZEpq1dFi/XtlO1lLHJ/y4bsEaJh8hJpnNBqOJ9k3RvoZmWpU08qaGcRgyzD278/giPZILCTTU+lYsVockb/FdFWc/zT3Pyz+t/Nlz6k0hDCavLRSi4sdFdKugrvzx7M/C234u1SfyxvvPxoRc+KjXMsoRzDaqq4HDiLhsNOy8PriXr8qA3AbUwYYsJ2Wa2b9xdydL29oZHGebugXdZQwklsEbkAbl4+V+f8dUrPFU2lUv2TW2uT2IGwjxEbyl7LJlH79yglOTxBcnnmpEGS94ufoyn/Nl4990QJKGAghfIgSkKLvjxxw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J0zppKyDwSYEFkbc1PJUglI0RjqZZnmm5vJgjM8KX04=;
- b=HFMd43HiEaV43zCb2783lAgfTvbhAT4jEvi9enrn0UyOViADcaicshy5jl7cyp1HV56f3iWrawWMCGrIVNVyHlXgfyNpCS7Fhx7nTTeP2XpWgIw9SVdNTJf+74UksoRjXlA+O2JvYFVDG1XViszK6EffLADgHnJLyFgcAyyhdYj0hcC+95WU3YXLfx55YT4mC37zYSe9tihh0AFL5rM0w9QCT2QIx2wapQ2EHLYpXfuWymAXWhgB58g6YnS+B2feUJuDf3NF4Ulzvtzyj77UbfTw1D1HNQPvpFYXgTPX46uyMx9SG8Uf4XLb7O4Qhja/wuaLlvSuqVN3GEJ0EJLbFA==
+ bh=s1bAhGv2kWYW8LlbDT5BH+iVENuohJgwHeQDo0+fR6E=;
+ b=UUBSPwZzn6F18Cut9KjLK6kmTib4KpnKY7mrV2UArJm7tjE4B4S/Yk+4d1paZOtqWe2bAB8tqx4JXVf6P12JWtvB3nn4+tegbDWwoh834sc88XJHHoSghm/SC/lfZKbkvvJhi2VRrQqcwEW8zmWbITJCCEm/lDNGXhbnFveM3gXXu1fdBWj2hAoAmy1e04/nt/Idhcwf34q1X6sc5CeGNUXoNSAV3jfr4l6CsDZz8za7DmDkM2eoo9HnAERS8qfTj3+XcYkDuL17ZoDf2HAu7HBINpZA18SibXzrQWG3ccPU213+gO6mqTlQqKXErbhgb7gPhMyF0gZqOcC8INdM3g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J0zppKyDwSYEFkbc1PJUglI0RjqZZnmm5vJgjM8KX04=;
- b=zIM56gocFvrRNYy/uxsodsyjVJTpKh3xa69ISL8aGXTmaAayPaBwFIaByzrj5iOMANnINRrBN3RpBFq5C6jyQbze+AKuezvqLV/DXYP4GLbXRpEvlVYsmiYFUYidvt6sA4gWMgf0BWwTXogvqAm7AMMFgVECk9NgfSFVf7rjdu0=
+ bh=s1bAhGv2kWYW8LlbDT5BH+iVENuohJgwHeQDo0+fR6E=;
+ b=5GiMn0bgMG0jJCXXXMd1pfobgUaoRYJjp4RbiPn6p/ETCf8EDawYkKBR7X2kRY3Mcd7HZLhQRPodktnUZrP8VEyQoX1etfwQrw0EqLqJDcj3ffHFreIBcAq+tESaqzG/girz4Sv0Z2II+adf1uXKqAeh9I5YawaZQ/VgMmxYmAg=
 Authentication-Results: lists.freedesktop.org; dkim=none (message not signed)
  header.d=none;lists.freedesktop.org; dmarc=none action=none
  header.from=amd.com;
@@ -41,11 +41,11 @@ Received: from SN6PR12MB4623.namprd12.prod.outlook.com (2603:10b6:805:e9::17)
  by SN6PR12MB2749.namprd12.prod.outlook.com (2603:10b6:805:6d::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.22; Wed, 28 Apr
- 2021 15:13:13 +0000
+ 2021 15:13:17 +0000
 Received: from SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c]) by SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c%7]) with mapi id 15.20.4065.026; Wed, 28 Apr 2021
- 15:13:13 +0000
+ 15:13:17 +0000
 From:   Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 To:     dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
         linux-pci@vger.kernel.org, ckoenig.leichtzumerken@gmail.com,
@@ -54,9 +54,9 @@ Cc:     ppaalanen@gmail.com, Alexander.Deucher@amd.com,
         gregkh@linuxfoundation.org, helgaas@kernel.org,
         Felix.Kuehling@amd.com,
         Andrey Grodzovsky <andrey.grodzovsky@amd.com>
-Subject: [PATCH v5 23/27] drm/amd/powerplay: Scope all PM queued work with drm_dev_enter/exit
-Date:   Wed, 28 Apr 2021 11:12:03 -0400
-Message-Id: <20210428151207.1212258-24-andrey.grodzovsky@amd.com>
+Subject: [PATCH v5 25/27] drm/amdgpu: Scope all amdgpu queued work with drm_dev_enter/exit
+Date:   Wed, 28 Apr 2021 11:12:05 -0400
+Message-Id: <20210428151207.1212258-26-andrey.grodzovsky@amd.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
 References: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
@@ -68,51 +68,51 @@ X-ClientProxiedBy: YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM
  (2603:10b6:805:e9::17)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:13:12 +0000
+Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:13:15 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 625ebaae-f470-477a-a437-08d90a582457
+X-MS-Office365-Filtering-Correlation-Id: 63cad74e-bf15-4fc6-5073-08d90a582665
 X-MS-TrafficTypeDiagnostic: SN6PR12MB2749:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR12MB274964175B3BD1CE82E991AEEA409@SN6PR12MB2749.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1265;
+X-Microsoft-Antispam-PRVS: <SN6PR12MB274988ECFF05FCB15D21DC3AEA409@SN6PR12MB2749.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2089;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: h3OTczl7HeKmjtk3gdPLijTFYJGS7KM5qZovNp7hdgXvxYGECOi474/WNGbQidyhY3OWRqTxZK00REOtrcuDP8ccD6k9FK4rMS3FgrxU297zMAQ0huSKoNEL1oLoRCVE48ybe5n6SWyVMzBMF+Wsv1sdFGOwoYcptX+UFZxyIdYyRcjMG0ENFUkhR0UoZ24wYfGaTqhsJKg9NQpoMoD2P7uGd56zsh2aJcHAjoqFt+adNoiNNiqGgbgEDMwHNSUTo6jpynWyl3q4o4XKib1yi92r5U4oZ5mZc34KWHEvcGFBewju4Zpf0Qdf4gv5yzkvNyypPcq2SflKhxZT5SBtlGWsIcuKsXZaCa7i4lUajT0gKupIMu4tjvv/WKyPUXw/2zW9kznwBIJpX09nEx/PGHBldFlxdqasJ8l4EHBOCEC5w1edh7RfgxqinK/5KjX8xEbx4+8se6ea+dIY7PL0cIzABTL4LnK4zWDt2xb3/sFN+mkowJcAtiTBOWU3lMoaFUbA/+lNkaba4B3k4MEjfiaLzmSTcfUydwVbNbz9o5SmD1f6cXKV7EKxzFuQ6HTfABHLZ1vWoJtI7cm0CjGFblkIySdpPGk2S+lCcE+Lw2E=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB4623.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(39860400002)(136003)(396003)(366004)(16526019)(6666004)(6512007)(2616005)(1076003)(2906002)(6636002)(66556008)(186003)(86362001)(5660300002)(8936002)(83380400001)(6486002)(478600001)(44832011)(38100700002)(66946007)(52116002)(6506007)(66476007)(8676002)(4326008)(36756003)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?wxa3pv5Ogfbz29sWVuplnuwi88/2VCtgjXAD0evExDiDATlZDHYokxbewOKX?=
- =?us-ascii?Q?PYw8CVihWHUE+accSebIY8m89h0zKPdYo2JsQZnBz+vvb/LrwJuw3v8BUobG?=
- =?us-ascii?Q?LfGukKf5RzppRGAIMhNCKt6TJrmZks//+IdTkN3uN6pjpO2nuNB/qWC8i7t2?=
- =?us-ascii?Q?obGRg1Br7o6qVadbiAt0aX5rp4YJK7AIiMSaiHYLAV47iGdTHwdD94myJ7Pt?=
- =?us-ascii?Q?JxZpPnkwTJvzerKFiJrKEf/gm9MTfId8id9bnK8QRiMt1BMY2bxV5PVBYTBc?=
- =?us-ascii?Q?wtUjlADqrmZnDZ+NlEEn2MA0c9sq+0NeiJN/VnMTAV7kEzx4hg9ccxYf4nWM?=
- =?us-ascii?Q?/YPyOPZTjLulocG6CADTz1Nbs0HXPkioJiToDoAH71Ynw2ViaabRfEVIRdOv?=
- =?us-ascii?Q?C99RRqIW3c6I49cmwp08Rpmmk+xbwQlEDjgSHcKQzbEK8aBz8kM4FfkLnLZe?=
- =?us-ascii?Q?ZSWlofJB8VtqsqapQ/GY+pMv1dwQqNY8wbdr7f/0h5Z6hI9Y9kFtdycaheHl?=
- =?us-ascii?Q?GZFlXe+fqp6ompIIfOJwOby2+WpLz47hq7pSRV3ayrR/0tRhaGSpefBRnYqi?=
- =?us-ascii?Q?pssuHZRWlx7EY4Orb5K/32SRaa2laSDPx+uoPEzyL5/flSask6/XZTPXSO0q?=
- =?us-ascii?Q?o+sqaGXzd51QC5dsPKc2KPfRcJYnOinFBoavPzLni4FBZHXBMJYW26WNQR62?=
- =?us-ascii?Q?lpCfo42jVK3EMkBSLFYWUYyrLcQSGycBKe/cWxdcGqQyZ8IPP5zuK0UWpJ9A?=
- =?us-ascii?Q?sTjS3X/kDjrHKv2/TYeovzz2nUQl5hPiFOPHSHFnMNHAgf39njIvPK6l0uzU?=
- =?us-ascii?Q?Z9qMBFvhL5K0yjrn7VRngX4Nf29nCfQI3dYZLqtIqgiw1H1WWKkXhe35zJ5l?=
- =?us-ascii?Q?8tSVaaBUmmvpDujMDaAxqxzTYywkg4phC3bX3utpdyU2wd0psi5JTWudgrvZ?=
- =?us-ascii?Q?7BqleFpVxtFqaSZxXADd323X60A5TD2cB+YQafq8/FfdzFWegfvtMWznFVNe?=
- =?us-ascii?Q?H1tk3K7GnJYPRmA8cYkfRdvT9mej64vN4FDSJfcDkLpm3Wtcm8Kp1P8woASz?=
- =?us-ascii?Q?pfOiGIhTys2hYec5ICQ1YHAaYQ8UQydSqGpsjO9XB6BZzPIFJq3wBNYmZoLc?=
- =?us-ascii?Q?zCa7O2CRMrO1dVFycT1X8ME1dt3Yx5kEp1wzqHLr2stkycM6936572eiYHRm?=
- =?us-ascii?Q?UkGWVc72MbRluJNPI4i8SbOeaYZA+5Sc0A8P7kExlYvP2YcF9o2ywKPA13Lw?=
- =?us-ascii?Q?9wuIMMnWTyEaHWOFKWrWViaS4qpJ6q3Mbkxr7RM7C4JhF2g6On0jfQK15LQq?=
- =?us-ascii?Q?vkz060LvM6TsSLzsMA0jJMzTEK2XltCjxK57MPp9fP2UPAWkodVc2cBTRM4E?=
- =?us-ascii?Q?bY6gn73GQBUXLwfKughKSxwL53PM?=
+X-Microsoft-Antispam-Message-Info: mtAPMZ28dSDSvU8fs+OHMK0RdHsg4e3ixwPEnT6ctujX9K33ybH7oViJj7SzfpsmNA3OyE1bKKPI2Of7W7e+VI0lQPl80qhERan/xwBiMdagIzvP5aHt+XNTK5oYFPvpZipDLIUcY2estqVcwIfONuu/I/qQtfJM0w2bBB5avRKPmmvOaUYl6C15WgGxwy6N/2tfI7h6hTLEf2UUzM/tO/2QKIXYo45qQQZSwhxG55ZcYl1njlsD+wW6BxWDN2PGyM4a1C+K60Hf0C7qKd92lq9yTesfHvMD1DSN2wBaRBd0pdXVCK4VKQnVV4WyGxVB+xmz2dJ1vi/2C+PK5ltU2AndsO9CmN7LTnCQDBScM4c29sKXPzQWzBmNyvHopXsI9d2YRfETaDc9VG32hSO7jpN3BXuL38v/PWGkX3ewNtjXCw2JJxp672oTrJ5hFRzi9RjIJ9oHKl29NOAXfwJRr5pdmfZHc6X3AEBu0J2Y1O8Y3zaA1u/D0K4k05IzRFcTgwmngtzxMKRvx0rGZ24xwEdQZr/UeVber80cIPuKkwADa9kr4HaeijOR3rdfiiEIJglmaBz6osLWpxnRjt9gwQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB4623.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(39860400002)(136003)(396003)(366004)(16526019)(6666004)(6512007)(2616005)(1076003)(2906002)(30864003)(6636002)(66556008)(186003)(86362001)(5660300002)(8936002)(83380400001)(6486002)(478600001)(44832011)(38100700002)(66946007)(52116002)(6506007)(66476007)(8676002)(4326008)(36756003)(316002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?px8v/VbXivvcQlXeFlAcA46sthe5KYjJbgCFvyzFwQi2oblc+K9LQGss6fwl?=
+ =?us-ascii?Q?8vHvrpJYR1/Kg0T94LAkSopkaZlEKtpHdcu9nR1hqc2ER6PFjQLS9DmJDKOo?=
+ =?us-ascii?Q?OSQjJtOTZh0xfTjzmQ+Wlz4GuODZJTRHHv4aQraN2MKMjcRXRQ8yHHmPDIiq?=
+ =?us-ascii?Q?K3PMvLC6pBQyvWbOBWhidS59w19/VIz+xl71rQrdWSCP4Ijv/g/lR/+FLuSn?=
+ =?us-ascii?Q?0VsYS4fabj1Sj6Rvm35TVQPHU3Pfk1w2Fbm2oT23kAxs523eFfE4wHxyNuNk?=
+ =?us-ascii?Q?CUNReA4LE+CpAItcFu1wLR98TqQDJP80um9KWghjWHgOS2ofzXM0rEUCxGmR?=
+ =?us-ascii?Q?QisDtwo7Q/Q1xb8Sj20fjmYVSF0AO1lENXq+EQrFKhJUwQddeem9Of/NZYWM?=
+ =?us-ascii?Q?ckWO7a9900pTJL7tRVvY+uAg9tpT19hVNzo+n+/EvWuMdQvi5iU9QZ/YfAaL?=
+ =?us-ascii?Q?IJ0q2jOodXaobP19NpaI6H7FpjC0o8VbKIANHAT085+tsTmeaMemX5540V0h?=
+ =?us-ascii?Q?Mc/UCvsTPo5x35R4pyFkcmAvXShokhCS1I/pNs+WoMFScmfo5iTxPtv7PFXb?=
+ =?us-ascii?Q?RVjKhWJatfR3QOqLcEphgsP5fV922HZ6kOYlS0aRnHOEU2Hs1oMxOfDqb5b3?=
+ =?us-ascii?Q?MNWXMSOrCkTSjoFhRW1FGhpPo0eGyrI9Q4rPu6jay7a0JQnCImq7GuiVF30g?=
+ =?us-ascii?Q?AF9Co+4XEGnhgqGstbRbpVNuAoCrmMZSr414U/PMkxBdVFref5lvBnr8AHiQ?=
+ =?us-ascii?Q?pkFQV07rCL6NPM2T+BaeQZP0Mw7gFVU0uRRZhvVhmiXapz1zgARm/Hf05cey?=
+ =?us-ascii?Q?4m9BoIVE5njim528ojMcHnhFOzTHc9SXs2CJWy19ImnfZDmtLiuHV/AWWvsg?=
+ =?us-ascii?Q?rrEhH/abi7SCj9vX09r5WWud3JCp7yCDXr1v8A2tAkJECVsbulxB/5YoMNo7?=
+ =?us-ascii?Q?A2so+aBjVYWnRJ/tXxIuOioL8ysHXlnxKwhqxqxlXzKflO/PwRCyTrk2TUUW?=
+ =?us-ascii?Q?8blRqpHRMfF90wOPhKAAarLkaANL0fzMmgXvObqj5mbz1j1oD8DtqrcBmcxS?=
+ =?us-ascii?Q?J86WlpRXfYLX0i6Tp13Wk5SpK8jNCkPcTyX6jEHmNwGAYN/xLqNuT2S/y5FZ?=
+ =?us-ascii?Q?u7145U0hmXzG87gHfDuZf/w4qh4anqCl6GiNO1n0FPQrWjUQbEdG8ASv5gtk?=
+ =?us-ascii?Q?rwJ2TkcgZAbd1+cdL3fxCsX0PRdOvrezGGnRVSo5iBKBT83xuKQscbshRLJ0?=
+ =?us-ascii?Q?ukpKdeoFQhkY1twFa9vKXnOU/OCzbrWZ6hx1FHCJ8oUitVcC/p0vEGBoiEsd?=
+ =?us-ascii?Q?KjbPssHihFCps4SymwMpegdaGHZOBOYaWn9vOT/Q/xRft+3bWRmbC94jU4u4?=
+ =?us-ascii?Q?td4WLlk+2010moN5xt484cxl564r?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 625ebaae-f470-477a-a437-08d90a582457
+X-MS-Exchange-CrossTenant-Network-Message-Id: 63cad74e-bf15-4fc6-5073-08d90a582665
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB4623.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:13:13.3778
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:13:16.8838
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: J52UHNr5QWR1FHoWO7zP32aInnUr17tBEDAUAItPgNWKsisIoWbJ5zoEBYc4xFFm1GnI7TMyrcYOLKl6Vh/uxw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Ceq+4tNQ8FWDgtIMolQZqjUO9VQGDRiK04kAhy/Mavc0ivZmXTQZWUc6FuPw1oxBry7JCOuIREc5Po/KGkyb0Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB2749
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -123,131 +123,498 @@ remove.
 
 Signed-off-by: Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 ---
- drivers/gpu/drm/amd/pm/amdgpu_dpm.c       | 44 +++++++++++++----------
- drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c | 26 +++++++++++---
- 2 files changed, 47 insertions(+), 23 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd.c | 11 +++-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29 ++++++----
+ drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c    | 26 +++++++--
+ drivers/gpu/drm/amd/amdgpu/amdgpu_jpeg.c   | 28 ++++++----
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ras.c    | 55 ++++++++++++-------
+ drivers/gpu/drm/amd/amdgpu/amdgpu_uvd.c    | 43 ++++++++-------
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vce.c    | 30 ++++++-----
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c    | 61 ++++++++++++----------
+ drivers/gpu/drm/amd/amdgpu/gfx_v8_0.c      | 10 +++-
+ 9 files changed, 189 insertions(+), 104 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c b/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
-index 8fb12afe3c96..649e10d52d17 100644
---- a/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
-+++ b/drivers/gpu/drm/amd/pm/amdgpu_dpm.c
-@@ -31,6 +31,7 @@
- #include "amdgpu_display.h"
- #include "hwmgr.h"
- #include <linux/power_supply.h>
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd.c
+index 9edb35ba181b..f942496c2b35 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd.c
+@@ -30,6 +30,7 @@
+ #include <linux/dma-buf.h>
+ #include "amdgpu_xgmi.h"
+ #include <uapi/linux/kfd_ioctl.h>
 +#include <drm/drm_drv.h>
  
- #define WIDTH_4K 3840
- 
-@@ -1316,29 +1317,36 @@ void amdgpu_dpm_thermal_work_handler(struct work_struct *work)
- 	/* switch to the thermal state */
- 	enum amd_pm_state_type dpm_state = POWER_STATE_TYPE_INTERNAL_THERMAL;
- 	int temp, size = sizeof(temp);
+ /* Total memory size in system memory and all GPU VRAM. Used to
+  * estimate worst case amount of memory to reserve for page tables
+@@ -223,9 +224,15 @@ int amdgpu_amdkfd_post_reset(struct amdgpu_device *adev)
+ void amdgpu_amdkfd_gpu_reset(struct kgd_dev *kgd)
+ {
+ 	struct amdgpu_device *adev = (struct amdgpu_device *)kgd;
 +	int idx;
  
- 	if (!adev->pm.dpm_enabled)
- 		return;
+-	if (amdgpu_device_should_recover_gpu(adev))
+-		amdgpu_device_gpu_recover(adev, NULL);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		if (amdgpu_device_should_recover_gpu(adev))
++			amdgpu_device_gpu_recover(adev, NULL);
++
++		drm_dev_exit(idx);
++	}
+ }
  
--	if (!amdgpu_dpm_read_sensor(adev, AMDGPU_PP_SENSOR_GPU_TEMP,
--				    (void *)&temp, &size)) {
--		if (temp < adev->pm.dpm.thermal.min_temp)
--			/* switch back the user state */
--			dpm_state = adev->pm.dpm.user_state;
--	} else {
--		if (adev->pm.dpm.thermal.high_to_low)
--			/* switch back the user state */
--			dpm_state = adev->pm.dpm.user_state;
--	}
--	mutex_lock(&adev->pm.mutex);
--	if (dpm_state == POWER_STATE_TYPE_INTERNAL_THERMAL)
--		adev->pm.dpm.thermal_active = true;
--	else
--		adev->pm.dpm.thermal_active = false;
--	adev->pm.dpm.state = dpm_state;
--	mutex_unlock(&adev->pm.mutex);
+ int amdgpu_amdkfd_alloc_gtt_mem(struct kgd_dev *kgd, size_t size,
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index 55afc11c17e6..c30e0b0596a5 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -2674,24 +2674,35 @@ static void amdgpu_device_delayed_init_work_handler(struct work_struct *work)
+ {
+ 	struct amdgpu_device *adev =
+ 		container_of(work, struct amdgpu_device, delayed_init_work.work);
+-	int r;
++	int r, idx;
+ 
+-	r = amdgpu_ib_ring_tests(adev);
+-	if (r)
+-		DRM_ERROR("ib ring test failed (%d).\n", r);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++		r = amdgpu_ib_ring_tests(adev);
++		if (r)
++			DRM_ERROR("ib ring test failed (%d).\n", r);
++
++		drm_dev_exit(idx);
++	}
+ }
+ 
+ static void amdgpu_device_delay_enable_gfx_off(struct work_struct *work)
+ {
+ 	struct amdgpu_device *adev =
+ 		container_of(work, struct amdgpu_device, gfx.gfx_off_delay_work.work);
++	int idx;
++
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		mutex_lock(&adev->gfx.gfx_off_mutex);
++		if (!adev->gfx.gfx_off_state && !adev->gfx.gfx_off_req_count) {
++			if (!amdgpu_dpm_set_powergating_by_smu(adev, AMD_IP_BLOCK_TYPE_GFX, true))
++				adev->gfx.gfx_off_state = true;
++		}
++		mutex_unlock(&adev->gfx.gfx_off_mutex);
++
++		drm_dev_exit(idx);
+ 
+-	mutex_lock(&adev->gfx.gfx_off_mutex);
+-	if (!adev->gfx.gfx_off_state && !adev->gfx.gfx_off_req_count) {
+-		if (!amdgpu_dpm_set_powergating_by_smu(adev, AMD_IP_BLOCK_TYPE_GFX, true))
+-			adev->gfx.gfx_off_state = true;
+ 	}
+-	mutex_unlock(&adev->gfx.gfx_off_mutex);
+ }
+ 
+ /**
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
+index a922154953a7..5eda0d0fc974 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
+@@ -188,8 +188,15 @@ static void amdgpu_irq_handle_ih1(struct work_struct *work)
+ {
+ 	struct amdgpu_device *adev = container_of(work, struct amdgpu_device,
+ 						  irq.ih1_work);
++	int idx;
+ 
+-	amdgpu_ih_process(adev, &adev->irq.ih1);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		amdgpu_ih_process(adev, &adev->irq.ih1);
++
++		drm_dev_exit(idx);
++
++	}
+ }
+ 
+ /**
+@@ -203,8 +210,14 @@ static void amdgpu_irq_handle_ih2(struct work_struct *work)
+ {
+ 	struct amdgpu_device *adev = container_of(work, struct amdgpu_device,
+ 						  irq.ih2_work);
++	int idx;
++
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		amdgpu_ih_process(adev, &adev->irq.ih2);
+ 
+-	amdgpu_ih_process(adev, &adev->irq.ih2);
++		drm_dev_exit(idx);
++	}
+ }
+ 
+ /**
+@@ -218,8 +231,15 @@ static void amdgpu_irq_handle_ih_soft(struct work_struct *work)
+ {
+ 	struct amdgpu_device *adev = container_of(work, struct amdgpu_device,
+ 						  irq.ih_soft_work);
++	int idx;
++
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		amdgpu_ih_process(adev, &adev->irq.ih_soft);
+ 
+-	amdgpu_ih_process(adev, &adev->irq.ih_soft);
++		drm_dev_exit(idx);
++
++	}
+ }
+ 
+ /**
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_jpeg.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_jpeg.c
+index 8996cb4ed57a..1e8fd66c1e43 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_jpeg.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_jpeg.c
+@@ -29,6 +29,7 @@
+ #include "amdgpu_pm.h"
+ #include "soc15d.h"
+ #include "soc15_common.h"
++#include <drm/drm_drv.h>
+ 
+ #define JPEG_IDLE_TIMEOUT	msecs_to_jiffies(1000)
+ 
+@@ -78,20 +79,25 @@ static void amdgpu_jpeg_idle_work_handler(struct work_struct *work)
+ 	struct amdgpu_device *adev =
+ 		container_of(work, struct amdgpu_device, jpeg.idle_work.work);
+ 	unsigned int fences = 0;
+-	unsigned int i;
++	unsigned int i, idx;
+ 
+-	for (i = 0; i < adev->jpeg.num_jpeg_inst; ++i) {
+-		if (adev->jpeg.harvest_config & (1 << i))
+-			continue;
 +	if (drm_dev_enter(&adev->ddev, &idx)) {
  
--	amdgpu_pm_compute_clocks(adev);
-+		if (!amdgpu_dpm_read_sensor(adev, AMDGPU_PP_SENSOR_GPU_TEMP,
-+					    (void *)&temp, &size)) {
-+			if (temp < adev->pm.dpm.thermal.min_temp)
-+				/* switch back the user state */
-+				dpm_state = adev->pm.dpm.user_state;
-+		} else {
-+			if (adev->pm.dpm.thermal.high_to_low)
-+				/* switch back the user state */
-+				dpm_state = adev->pm.dpm.user_state;
+-		fences += amdgpu_fence_count_emitted(&adev->jpeg.inst[i].ring_dec);
+-	}
++		for (i = 0; i < adev->jpeg.num_jpeg_inst; ++i) {
++			if (adev->jpeg.harvest_config & (1 << i))
++				continue;
+ 
+-	if (!fences && !atomic_read(&adev->jpeg.total_submission_cnt))
+-		amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_JPEG,
+-						       AMD_PG_STATE_GATE);
+-	else
+-		schedule_delayed_work(&adev->jpeg.idle_work, JPEG_IDLE_TIMEOUT);
++			fences += amdgpu_fence_count_emitted(&adev->jpeg.inst[i].ring_dec);
 +		}
-+		mutex_lock(&adev->pm.mutex);
-+		if (dpm_state == POWER_STATE_TYPE_INTERNAL_THERMAL)
-+			adev->pm.dpm.thermal_active = true;
-+		else
-+			adev->pm.dpm.thermal_active = false;
-+		adev->pm.dpm.state = dpm_state;
-+		mutex_unlock(&adev->pm.mutex);
 +
-+		amdgpu_pm_compute_clocks(adev);
++		if (!fences && !atomic_read(&adev->jpeg.total_submission_cnt))
++			amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_JPEG,
++							       AMD_PG_STATE_GATE);
++		else
++			schedule_delayed_work(&adev->jpeg.idle_work, JPEG_IDLE_TIMEOUT);
++
++		drm_dev_exit(idx);
++	}
+ }
+ 
+ void amdgpu_jpeg_ring_begin_use(struct amdgpu_ring *ring)
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ras.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_ras.c
+index c0a16eac4923..97a6c028ac74 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ras.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ras.c
+@@ -27,6 +27,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/reboot.h>
+ #include <linux/syscalls.h>
++#include <drm/drm_drv.h>
+ 
+ #include "amdgpu.h"
+ #include "amdgpu_ras.h"
+@@ -1334,7 +1335,15 @@ static void amdgpu_ras_interrupt_process_handler(struct work_struct *work)
+ 	struct ras_manager *obj =
+ 		container_of(data, struct ras_manager, ih_data);
+ 
+-	amdgpu_ras_interrupt_handler(obj);
++	int idx;
++
++	if (drm_dev_enter(&obj->adev->ddev, &idx)) {
++
++		amdgpu_ras_interrupt_handler(obj);
 +
 +		drm_dev_exit(idx);
 +
 +	}
  }
  
- static struct amdgpu_ps *amdgpu_dpm_pick_power_state(struct amdgpu_device *adev,
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index d143ef1b460b..f034c8a5eb44 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -25,6 +25,8 @@
- #include <linux/firmware.h>
- #include <linux/pci.h>
+ int amdgpu_ras_interrupt_dispatch(struct amdgpu_device *adev,
+@@ -1565,31 +1574,37 @@ static void amdgpu_ras_do_recovery(struct work_struct *work)
+ 	struct amdgpu_device *remote_adev = NULL;
+ 	struct amdgpu_device *adev = ras->adev;
+ 	struct list_head device_list, *device_list_handle =  NULL;
++	int idx;
+ 
+-	if (!ras->disable_ras_err_cnt_harvest) {
+-		struct amdgpu_hive_info *hive = amdgpu_get_xgmi_hive(adev);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
+ 
+-		/* Build list of devices to query RAS related errors */
+-		if  (hive && adev->gmc.xgmi.num_physical_nodes > 1) {
+-			device_list_handle = &hive->device_list;
+-		} else {
+-			INIT_LIST_HEAD(&device_list);
+-			list_add_tail(&adev->gmc.xgmi.head, &device_list);
+-			device_list_handle = &device_list;
+-		}
++		if (!ras->disable_ras_err_cnt_harvest) {
++			struct amdgpu_hive_info *hive = amdgpu_get_xgmi_hive(adev);
+ 
+-		list_for_each_entry(remote_adev,
+-				device_list_handle, gmc.xgmi.head) {
+-			amdgpu_ras_query_err_status(remote_adev);
+-			amdgpu_ras_log_on_err_counter(remote_adev);
++			/* Build list of devices to query RAS related errors */
++			if  (hive && adev->gmc.xgmi.num_physical_nodes > 1) {
++				device_list_handle = &hive->device_list;
++			} else {
++				INIT_LIST_HEAD(&device_list);
++				list_add_tail(&adev->gmc.xgmi.head, &device_list);
++				device_list_handle = &device_list;
++			}
++
++			list_for_each_entry(remote_adev,
++					device_list_handle, gmc.xgmi.head) {
++				amdgpu_ras_query_err_status(remote_adev);
++				amdgpu_ras_log_on_err_counter(remote_adev);
++			}
++
++			amdgpu_put_xgmi_hive(hive);
+ 		}
+ 
+-		amdgpu_put_xgmi_hive(hive);
+-	}
++		if (amdgpu_device_should_recover_gpu(ras->adev))
++			amdgpu_device_gpu_recover(ras->adev, NULL);
++		atomic_set(&ras->in_recovery, 0);
+ 
+-	if (amdgpu_device_should_recover_gpu(ras->adev))
+-		amdgpu_device_gpu_recover(ras->adev, NULL);
+-	atomic_set(&ras->in_recovery, 0);
++		drm_dev_exit(idx);
++	}
+ }
+ 
+ /* alloc/realloc bps array */
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_uvd.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_uvd.c
+index df47f5ffa08f..19790afd2893 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_uvd.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_uvd.c
+@@ -1234,29 +1234,36 @@ static void amdgpu_uvd_idle_work_handler(struct work_struct *work)
+ 	struct amdgpu_device *adev =
+ 		container_of(work, struct amdgpu_device, uvd.idle_work.work);
+ 	unsigned fences = 0, i, j;
++	int idx;
+ 
+-	for (i = 0; i < adev->uvd.num_uvd_inst; ++i) {
+-		if (adev->uvd.harvest_config & (1 << i))
+-			continue;
+-		fences += amdgpu_fence_count_emitted(&adev->uvd.inst[i].ring);
+-		for (j = 0; j < adev->uvd.num_enc_rings; ++j) {
+-			fences += amdgpu_fence_count_emitted(&adev->uvd.inst[i].ring_enc[j]);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
++
++		for (i = 0; i < adev->uvd.num_uvd_inst; ++i) {
++			if (adev->uvd.harvest_config & (1 << i))
++				continue;
++			fences += amdgpu_fence_count_emitted(&adev->uvd.inst[i].ring);
++			for (j = 0; j < adev->uvd.num_enc_rings; ++j) {
++				fences += amdgpu_fence_count_emitted(&adev->uvd.inst[i].ring_enc[j]);
++			}
+ 		}
+-	}
+ 
+-	if (fences == 0) {
+-		if (adev->pm.dpm_enabled) {
+-			amdgpu_dpm_enable_uvd(adev, false);
++		if (fences == 0) {
++			if (adev->pm.dpm_enabled) {
++				amdgpu_dpm_enable_uvd(adev, false);
++			} else {
++				amdgpu_asic_set_uvd_clocks(adev, 0, 0);
++				/* shutdown the UVD block */
++				amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_UVD,
++								       AMD_PG_STATE_GATE);
++				amdgpu_device_ip_set_clockgating_state(adev, AMD_IP_BLOCK_TYPE_UVD,
++								       AMD_CG_STATE_GATE);
++			}
+ 		} else {
+-			amdgpu_asic_set_uvd_clocks(adev, 0, 0);
+-			/* shutdown the UVD block */
+-			amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_UVD,
+-							       AMD_PG_STATE_GATE);
+-			amdgpu_device_ip_set_clockgating_state(adev, AMD_IP_BLOCK_TYPE_UVD,
+-							       AMD_CG_STATE_GATE);
++			schedule_delayed_work(&adev->uvd.idle_work, UVD_IDLE_TIMEOUT);
+ 		}
+-	} else {
+-		schedule_delayed_work(&adev->uvd.idle_work, UVD_IDLE_TIMEOUT);
++
++		drm_dev_exit(idx);
++
+ 	}
+ }
+ 
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vce.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vce.c
+index 833203401ef4..81ad937936bb 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vce.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vce.c
+@@ -340,22 +340,28 @@ static void amdgpu_vce_idle_work_handler(struct work_struct *work)
+ 	struct amdgpu_device *adev =
+ 		container_of(work, struct amdgpu_device, vce.idle_work.work);
+ 	unsigned i, count = 0;
++	int idx;
+ 
+-	for (i = 0; i < adev->vce.num_rings; i++)
+-		count += amdgpu_fence_count_emitted(&adev->vce.ring[i]);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
+ 
+-	if (count == 0) {
+-		if (adev->pm.dpm_enabled) {
+-			amdgpu_dpm_enable_vce(adev, false);
++		for (i = 0; i < adev->vce.num_rings; i++)
++			count += amdgpu_fence_count_emitted(&adev->vce.ring[i]);
++
++		if (count == 0) {
++			if (adev->pm.dpm_enabled) {
++				amdgpu_dpm_enable_vce(adev, false);
++			} else {
++				amdgpu_asic_set_vce_clocks(adev, 0, 0);
++				amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_VCE,
++								       AMD_PG_STATE_GATE);
++				amdgpu_device_ip_set_clockgating_state(adev, AMD_IP_BLOCK_TYPE_VCE,
++								       AMD_CG_STATE_GATE);
++			}
+ 		} else {
+-			amdgpu_asic_set_vce_clocks(adev, 0, 0);
+-			amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_VCE,
+-							       AMD_PG_STATE_GATE);
+-			amdgpu_device_ip_set_clockgating_state(adev, AMD_IP_BLOCK_TYPE_VCE,
+-							       AMD_CG_STATE_GATE);
++			schedule_delayed_work(&adev->vce.idle_work, VCE_IDLE_TIMEOUT);
+ 		}
+-	} else {
+-		schedule_delayed_work(&adev->vce.idle_work, VCE_IDLE_TIMEOUT);
++
++		drm_dev_exit(idx);
+ 	}
+ }
+ 
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
+index b42db22761b8..0e7404653ac5 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vcn.c
+@@ -342,42 +342,47 @@ static void amdgpu_vcn_idle_work_handler(struct work_struct *work)
+ 		container_of(work, struct amdgpu_device, vcn.idle_work.work);
+ 	unsigned int fences = 0, fence[AMDGPU_MAX_VCN_INSTANCES] = {0};
+ 	unsigned int i, j;
+-	int r = 0;
++	int idx, r = 0;
+ 
+-	for (j = 0; j < adev->vcn.num_vcn_inst; ++j) {
+-		if (adev->vcn.harvest_config & (1 << j))
+-			continue;
++	if (drm_dev_enter(&adev->ddev, &idx)) {
+ 
+-		for (i = 0; i < adev->vcn.num_enc_rings; ++i) {
+-			fence[j] += amdgpu_fence_count_emitted(&adev->vcn.inst[j].ring_enc[i]);
+-		}
++		for (j = 0; j < adev->vcn.num_vcn_inst; ++j) {
++			if (adev->vcn.harvest_config & (1 << j))
++				continue;
+ 
+-		if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG)	{
+-			struct dpg_pause_state new_state;
++			for (i = 0; i < adev->vcn.num_enc_rings; ++i)
++				fence[j] += amdgpu_fence_count_emitted(&adev->vcn.inst[j].ring_enc[i]);
+ 
+-			if (fence[j] ||
+-				unlikely(atomic_read(&adev->vcn.inst[j].dpg_enc_submission_cnt)))
+-				new_state.fw_based = VCN_DPG_STATE__PAUSE;
+-			else
+-				new_state.fw_based = VCN_DPG_STATE__UNPAUSE;
++			if (adev->pg_flags & AMD_PG_SUPPORT_VCN_DPG)	{
++				struct dpg_pause_state new_state;
++
++				if (fence[j] ||
++					unlikely(atomic_read(&adev->vcn.inst[j].dpg_enc_submission_cnt)))
++					new_state.fw_based = VCN_DPG_STATE__PAUSE;
++				else
++					new_state.fw_based = VCN_DPG_STATE__UNPAUSE;
+ 
+-			adev->vcn.pause_dpg_mode(adev, j, &new_state);
++				adev->vcn.pause_dpg_mode(adev, j, &new_state);
++			}
++
++			fence[j] += amdgpu_fence_count_emitted(&adev->vcn.inst[j].ring_dec);
++			fences += fence[j];
+ 		}
+ 
+-		fence[j] += amdgpu_fence_count_emitted(&adev->vcn.inst[j].ring_dec);
+-		fences += fence[j];
+-	}
++		if (!fences && !atomic_read(&adev->vcn.total_submission_cnt)) {
++			amdgpu_gfx_off_ctrl(adev, true);
++			amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_VCN,
++			       AMD_PG_STATE_GATE);
++			r = amdgpu_dpm_switch_power_profile(adev, PP_SMC_POWER_PROFILE_VIDEO,
++					false);
++			if (r)
++				dev_warn(adev->dev, "(%d) failed to disable video power profile mode\n", r);
++		} else {
++			schedule_delayed_work(&adev->vcn.idle_work, VCN_IDLE_TIMEOUT);
++		}
++
++		drm_dev_exit(idx);
+ 
+-	if (!fences && !atomic_read(&adev->vcn.total_submission_cnt)) {
+-		amdgpu_gfx_off_ctrl(adev, true);
+-		amdgpu_device_ip_set_powergating_state(adev, AMD_IP_BLOCK_TYPE_VCN,
+-		       AMD_PG_STATE_GATE);
+-		r = amdgpu_dpm_switch_power_profile(adev, PP_SMC_POWER_PROFILE_VIDEO,
+-				false);
+-		if (r)
+-			dev_warn(adev->dev, "(%d) failed to disable video power profile mode\n", r);
+-	} else {
+-		schedule_delayed_work(&adev->vcn.idle_work, VCN_IDLE_TIMEOUT);
+ 	}
+ }
+ 
+diff --git a/drivers/gpu/drm/amd/amdgpu/gfx_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gfx_v8_0.c
+index 84d2eaa38101..4799290e5625 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gfx_v8_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gfx_v8_0.c
+@@ -57,6 +57,8 @@
+ 
+ #include "ivsrcid/ivsrcid_vislands30.h"
  
 +#include <drm/drm_drv.h>
 +
- #include "amdgpu.h"
- #include "amdgpu_smu.h"
- #include "smu_internal.h"
-@@ -904,21 +906,35 @@ static void smu_throttling_logging_work_fn(struct work_struct *work)
- {
- 	struct smu_context *smu = container_of(work, struct smu_context,
- 					       throttling_logging_work);
+ #define GFX8_NUM_GFX_RINGS     1
+ #define GFX8_MEC_HPD_SIZE 4096
+ 
+@@ -6793,8 +6795,14 @@ static void gfx_v8_0_sq_irq_work_func(struct work_struct *work)
+ 
+ 	struct amdgpu_device *adev = container_of(work, struct amdgpu_device, gfx.sq_work.work);
+ 	struct sq_work *sq_work = container_of(work, struct sq_work, work);
 +	int idx;
 +
-+
-+	if (drm_dev_enter(&smu->adev->ddev, &idx)) {
-+
-+		smu_log_thermal_throttling(smu);
++	if (drm_dev_enter(&adev->ddev, &idx)) {
  
--	smu_log_thermal_throttling(smu);
+-	gfx_v8_0_parse_sq_irq(adev, sq_work->ih_data);
++		gfx_v8_0_parse_sq_irq(adev, sq_work->ih_data);
++
 +		drm_dev_exit(idx);
 +	}
  }
  
- static void smu_interrupt_work_fn(struct work_struct *work)
- {
- 	struct smu_context *smu = container_of(work, struct smu_context,
- 					       interrupt_work);
-+	int idx;
- 
--	mutex_lock(&smu->mutex);
-+	if (drm_dev_enter(&smu->adev->ddev, &idx)) {
- 
--	if (smu->ppt_funcs && smu->ppt_funcs->interrupt_work)
--		smu->ppt_funcs->interrupt_work(smu);
-+		mutex_lock(&smu->mutex);
- 
--	mutex_unlock(&smu->mutex);
-+		if (smu->ppt_funcs && smu->ppt_funcs->interrupt_work)
-+			smu->ppt_funcs->interrupt_work(smu);
-+
-+		mutex_unlock(&smu->mutex);
-+
-+		drm_dev_exit(idx);
-+
-+	}
- }
- 
- static int smu_sw_init(void *handle)
+ static int gfx_v8_0_sq_irq(struct amdgpu_device *adev,
 -- 
 2.25.1
 
