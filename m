@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B32EC43603
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D3FEC43462
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0393F6143A
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4AED6143A
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239655AbhD1PO1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Apr 2021 11:14:27 -0400
+        id S239675AbhD1POZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Apr 2021 11:14:25 -0400
 Received: from mail-co1nam11on2062.outbound.protection.outlook.com ([40.107.220.62]:20864
         "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S239923AbhD1POT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Apr 2021 11:14:19 -0400
+        id S239841AbhD1POR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Apr 2021 11:14:17 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XcroSFWPYOc08gzEasYvlbcxvPgzvp+FlayonchB94aC8X2v1H3dZhiuXyOdGWaynYdX99p2W4U3y6YEt7HNCRyOnmJGZuBPeaRgdw2u9TmIspx6mMEceohtFoM+zKoa1oWABVWxZ5ZAWZfjqB0DmTQ66AhgmXXROrbVSv1CUQi+6kA2QG2Gz4A2TGMGBgsuqA0vkc7rWua3FhfxnTGAZKn0RGRww6IspHYsCDElOhV3VWAvnJGw5clRAqlxIsiCPvulmEBG/jbGYrd2YeLZ0OGBb+DwuhLk+sE6JjTOmjQSCHt43EcO97ut7SyuscVIgljvzk97EtapbsAPVpb16g==
+ b=XcazOf2KAz6f3OR5paLcKXq0To1s5nAWLaHPHQXzJteFYnUoh2CQjefoTyRfJqSg29Zpx3fqGcEUsVPCyDA03J4HuSyfL+Oz8ecUZRHBhmgK2wIYprDRA4O3oWJ+8TH/BYH3kRlmurmUM/fVZSEOJVA0c27Na7PkbXGhDFfv4R1f77nDeDwbvFby1Q2esaMI7yV2Dsw+yM40OHv3s5jCuAEo1uJCnpWpvj3Xad6mAezleD4BIy8Oe0jGKaeYyIuDXx8zeeSzXfRDXfDTgSVxnAVL7cAUKNyNbRwFwfo+uHBtYEgC0eJVkL2VzNj7I7zGZI6iW+8+LMIwVzyjRQPJSQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SOwkjT7+g+P7X9KE+MhAHVmjtjutqkkv/Olu4nEjCzI=;
- b=k8amwkmBGI50/cvVjEDmgXRbDZAMulfcX+8NEq0klFZr2hv+KWrI36Fkv/94dlf6L1A4W47CLBVH3R0UQr4Hpe5pYJA4OEbpuraztxjs51/H7t2z+gbS846hSrLDA6xDwXAq2Yk0lJjZT1HOdOZEig1MmKyoja9u7w7vjQkZkCz1Mc062SwuDstGb6CCq23pur4Iwnoz041cCpFdbJQq0yCuaHGxAzGqxRmSsHp6HtXEonLrz7yXExhbNujOUSV+I+0K0L427DAVXcxnehlU972ENvJBsy3iHcGgyAxvN1DJxPid0dbgSsplgnsJLKmK5Vk4G0hJ2s+y9YV0K9NGqw==
+ bh=SzivJfSoUBAQWvGZdfqbypvxwjVVB7vUjRR8QnYNApE=;
+ b=mPP1umtYOLRA7z/WXFYX8S5esESnhSAvFK3hkEcfTlK3sSlg9j0hafrnHYvDXTB4hP00ohsvql9ttxO1nwEquYCQDM+Dv2hLZ4xKIu3sGyUbfVFoyWNwLWEJZqk3bzs/Tpu22AaFQmnWrDa8KPCdexJkDALwnSoVNdGZE1N8HOnagx5bxovLtUtq+O2c/p/fW49EV/kEiy8uMNB2JFBAF3qWuqJ1/SizV/2gRyZaSByC7YmARUwrnKGi1oT69dWGkGjPPmTm8yQT0+1D0ngJa3WaaVv+sMPAsDIPckXZuB69czaYHaERfEK7+hDagLjSBT9+tH5ivHBx3mpNSDIdBA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SOwkjT7+g+P7X9KE+MhAHVmjtjutqkkv/Olu4nEjCzI=;
- b=iiuewlepIIbpaIM/7SW9cLySS9qoBm13KxH5xGljeFgSgs4mnfcWT7WTNzq16GBpyYnoNF2vFa4shqboi6Xj5QkNRQPczgJWp3sCub/bg7Vu+M3sClQ3iU6/tB4N5D95CYBT8fVA118UZyHTZann/s8ywizfr6qWms6av6V5sdw=
+ bh=SzivJfSoUBAQWvGZdfqbypvxwjVVB7vUjRR8QnYNApE=;
+ b=aAL47qo7B/r7tjOl/7Xt5c66QfjwcI8pgEpL0ygdSCtRxShJq0mo0tozWeUr53WZuelJC12QUZSWH8i0MHj1x9Qb/UrNqJC11+0tpdyM7wQR011KJUbQXiK9sAtenA10JWHT1E74xbpzZjfg86jQ7YymSjClkjg0/uQVngPzZfA=
 Authentication-Results: lists.freedesktop.org; dkim=none (message not signed)
  header.d=none;lists.freedesktop.org; dmarc=none action=none
  header.from=amd.com;
@@ -41,11 +41,11 @@ Received: from SN6PR12MB4623.namprd12.prod.outlook.com (2603:10b6:805:e9::17)
  by SN6PR12MB2749.namprd12.prod.outlook.com (2603:10b6:805:6d::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.22; Wed, 28 Apr
- 2021 15:13:18 +0000
+ 2021 15:13:11 +0000
 Received: from SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c]) by SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c%7]) with mapi id 15.20.4065.026; Wed, 28 Apr 2021
- 15:13:18 +0000
+ 15:13:11 +0000
 From:   Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 To:     dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
         linux-pci@vger.kernel.org, ckoenig.leichtzumerken@gmail.com,
@@ -54,9 +54,9 @@ Cc:     ppaalanen@gmail.com, Alexander.Deucher@amd.com,
         gregkh@linuxfoundation.org, helgaas@kernel.org,
         Felix.Kuehling@amd.com,
         Andrey Grodzovsky <andrey.grodzovsky@amd.com>
-Subject: [PATCH v5 26/27] drm/amd/display: Remove superflous drm_mode_config_cleanup
-Date:   Wed, 28 Apr 2021 11:12:06 -0400
-Message-Id: <20210428151207.1212258-27-andrey.grodzovsky@amd.com>
+Subject: [PATCH v5 22/27] drm/amd/display: Scope all DM queued work with drm_dev_enter/exit
+Date:   Wed, 28 Apr 2021 11:12:02 -0400
+Message-Id: <20210428151207.1212258-23-andrey.grodzovsky@amd.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
 References: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
@@ -68,75 +68,316 @@ X-ClientProxiedBy: YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM
  (2603:10b6:805:e9::17)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:13:17 +0000
+Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:13:10 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 776e3725-2352-45d1-f083-08d90a582769
+X-MS-Office365-Filtering-Correlation-Id: 5b85e3b6-4552-4279-9c70-08d90a58234c
 X-MS-TrafficTypeDiagnostic: SN6PR12MB2749:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR12MB274950B5A29C5C0A52A64F30EA409@SN6PR12MB2749.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:25;
+X-Microsoft-Antispam-PRVS: <SN6PR12MB2749FC451BB12EAD78E2DB42EA409@SN6PR12MB2749.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:68;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: NvKVH3tjJyf6MBKmxdadxmPIbZKRKiWpT+wa7qDGE0tHWJtVQAQtgAXMXAh1vOH2/l2FOYKnPyehdrmBgXu8/tRuK3u/zvETCkhjVNSuSGrI4jlUeEUBMVZaIlw3/Ln3tGrPMTcp1YQOevnZwKia5l3h5UqUVrHffJaOWEMa+4OB9hGwiiTBnMwv6yhOR+9pCAFyGKr1lNzLFAaxS+2KelA76HsH8EuXuKj7bapgq1vkn7uZgeGNuXHjHufCFmyRIk9mNfYyV7hwrPilJDQVMAsQdJS9tj2PHh3Sobt0EnKZP6DRadwy+uLVnELFybtYBHv7E4g8pr3otOgeVcbXYgQOUgVFozqqjZ+IZv7KEGlDOkZ9LR6IcYNW3HQ6s9AAQ39FbIHxJDwGCyN0rXGAAuinh7rutRYu/Bq0RTFJx7W0XUKonVYZDFYX4+AZ3OMOrsJq5CC9CUuKZ07suzFJg9Q0OT4paHRHql8phiJViXoY0IuicimsnHVyXP2Pv6f9wLubxVHKdlIf0Vvh6Gpsl6tla3zCtcQOoWrL+FPCG5+aMCmYJvHJgt0kkpMqSP7SrZHoo3ABKms1NgnF8otf1+yxjeYw/emhoQPRT1ZGS/w=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB4623.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(39860400002)(136003)(396003)(366004)(16526019)(4744005)(6666004)(6512007)(2616005)(1076003)(2906002)(6636002)(66556008)(186003)(86362001)(5660300002)(8936002)(83380400001)(6486002)(478600001)(44832011)(38100700002)(66946007)(52116002)(6506007)(66476007)(8676002)(4326008)(36756003)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?hKveRRbaOauvQ9omh08SvW27oGvQeHarmCMSPTPLHPpAO5XHBm/b70F/m4Nc?=
- =?us-ascii?Q?Wz+I5KE0lm7HGjvTEM8LIFNBYESrvSA+CiOVoIB2qNIC3FI0G3hoF66Wc4z7?=
- =?us-ascii?Q?46imhWSpPXUwzUHUoC9mUNdBdl8NG5Bm8vJO+nHwCBYKhjb9r/Fx/vpCyM9c?=
- =?us-ascii?Q?bzjk6rdrwpgwRzquWvdYj2Np/7rOoaVOoFGjU6gEyBcmobEX2k6/VpIztDMd?=
- =?us-ascii?Q?FsnvcoFPNnIfybc8MnwG7Fi6xAgzmVm3VQG7e7mUz0tx9aDuqDP13/0p0MQg?=
- =?us-ascii?Q?cJVDDRDuuKNpmlDIt3IbAUgmsvdxR868h/TuTdpn37myB4/QtNkf+mMh+WRp?=
- =?us-ascii?Q?3ZQTMoJ6vx3nJJ10V/ahg1kpRTNr75LJZQlfszrgx1VgOlGre8x5x0p0MJap?=
- =?us-ascii?Q?NuEQSOG4BAbJzZMfca3j8sFLFPpVHyRxbD962ZsrcN5Lb4MLy0+N5PgglUrb?=
- =?us-ascii?Q?RDI7yZX0qPk07ZKcIJtsBKM1ZfR87QD348sdVLWC+ibN+8knJL8jBTIT5+TS?=
- =?us-ascii?Q?AWv9FnMYIbd8vf7R617MfB4vpTG7LbNhpNtyZADhgg/eRKNulI7Qvvlq2GPN?=
- =?us-ascii?Q?DTWwoUhNuqCeLGNgkGxUqKJ3XZWE927pnDwT5zzf1QTHTsrDg8geUIvyOs0C?=
- =?us-ascii?Q?2N4LbbSD+EZgZEEgW/a0TyN4otpVcBZQFgSqR6/uzakUTGAagOW7iZqeBXQE?=
- =?us-ascii?Q?Ynw3TrWvm47t+VBj6pfFSDXgxGOggAXLc1So1qL2xtZYDFW3nj3NnUQsONb7?=
- =?us-ascii?Q?DdcauNjkJUuWPksfmbxYG/XIZHcECxViZ7BTPWRtatJKF9f4M/NjftOyj/A+?=
- =?us-ascii?Q?juUI9a2ZizFkQOWhT3KssKcDvYdxUgJntUumLxEx34A7nVlVFecWuLqtPqAJ?=
- =?us-ascii?Q?sXrRwzm9HvtT0BBSBk5BFKIxZcGfvpX9+cCadOKLzSjDUcYgzMzWh1v+QT7d?=
- =?us-ascii?Q?ZhVivO4W2oIY2U1LTtbVVMnZQHl0f8QRHcw9t3vsewR80QPudDtB8dglHbef?=
- =?us-ascii?Q?VudUrMuIHZDssEAWElPaozWX77UcCjxV+dHwIbzSTKR6E5gpWCOlNeYGJ3CG?=
- =?us-ascii?Q?/3gHgqbat6jMYc7DWon2fRt3mzznkJCRqp+ulmT4PELYFuH1ShiNgIPndC5F?=
- =?us-ascii?Q?hi0Tb5jFvQP+WYeSXiJSy2sWZbhuLoZ/rxNtdyYFuO1Rhi+0n/XOizN83jWG?=
- =?us-ascii?Q?xtIIXFFLlnZzImrmlVIbBZw3owRZ03wdQiHDVZ+7yoJXuPzVGweZKaqQj3Zs?=
- =?us-ascii?Q?weuMQm0m3CudD13hQqrTyxK5fwuu2latB2r7VKfE0tRa6rMYHauWnfZQzRTw?=
- =?us-ascii?Q?x9P57okeVE+hm57dJBuwPA1Vw7OFxMnK5UU7EHtjsmJ4oTzY45b+KkrXc2/f?=
- =?us-ascii?Q?TBOeBkfdkN1H76QuytUFeGVwBk3X?=
+X-Microsoft-Antispam-Message-Info: x1RKhK11Dr4WlnQRCmPDLr4VQufiF6dB+8G0kX4G2if+1tYdDihzDYaD6sIrzizs5CuTClgupHhMt8mxKgYMd+x9/M4Xp4N1ky4tQhLWnu2EFR0hNUP/GfmZdibjCkqCeMtAaujU7c2sqvzb4afXhCX9OWlDPkZau/qDd4sizZ7wlJe+6iUXomAEOumXY98hqt9kfv9PkOdGVty6JWYe14bx3+HD9OkVPOUxORpdIOTWZEfEnoS5ODdbi7V8nrd247gA/4i9vgyhxp1ETsSkhoIfYrn/ftw4j1C6Vw3eVq8ifSm0IQ1AUaF+f4KwMGZc+osMQzDGtr6A8DCsGyPSWlUo9kUXQnq6hz8DxDStPZ2bantXUIFX7BO31eaiuRv1x6u2JoqBR/tGixUv6oy6suGAFW1Cv4lKp24uo0NXaCAj2q+42SH/WMk64DH2PdiQTo41pulQQJC3IJGg4KaN3tI7/72q4IYEKXvKBKGvJuMJT53BfJV0S99Jsg/23Ujtx+6tBDaEq9XGzfxO6LkSmRjUxdzR3KnH2B/73X0jj3VqjDA4BqnqddnqCaIhF21YNcIJZ97QldnFNQkS/u53Hzi2e4s0aZoclzljeT97PY0=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB4623.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(39860400002)(136003)(396003)(366004)(16526019)(6666004)(6512007)(2616005)(1076003)(2906002)(6636002)(66556008)(186003)(86362001)(5660300002)(8936002)(83380400001)(6486002)(478600001)(44832011)(38100700002)(66946007)(52116002)(6506007)(66476007)(8676002)(4326008)(36756003)(316002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?2ACJ5KeH3uyXWQ4R1ud9fJbhGzafVSlyVvFWa4EnKV1zMKlFCW9cxicz45oa?=
+ =?us-ascii?Q?f8SvpMsJHtRFdwln3dFFovoAFopiLgt3j0crshQw/ffTs1Mt7lwAhGNRquQy?=
+ =?us-ascii?Q?E4Ql472DYqSa9VyZnDFZO4AJLY/m1HlDYfAn67gtzLSRkz6ABee1llXJIK/5?=
+ =?us-ascii?Q?UBaUIz37Y6Ox9sZNv9DZqV2DBZ8mN3FGRhFS0mORuUTSTZi8o9G6rAXxwzck?=
+ =?us-ascii?Q?GsEVBaAlGzqWE7yLeGAvFvDWHJ8pWXlEe5mHRpQTgf/BppTu3wOgX4LZ4y2U?=
+ =?us-ascii?Q?P4Pa1YsLK4hXRTfNKO5hSXI1C4DrU/ZidgTG1JkB4E12zGpZIiqtiWSOPvl7?=
+ =?us-ascii?Q?+C/mwnklnU+buQPtw4RWtptIsp0yN++HOSxEOIfq89TyvwG50zoB175l6CpR?=
+ =?us-ascii?Q?OtxomgsPUwy7P0y9olC/AP1GyGfHy4atn78e8DUdnQwRzXR+1vQtd/DdedOx?=
+ =?us-ascii?Q?fZRIiMS6efFCDLubLgSfRnCnqgLnvOYoARfES4UHzuoynf8oP07QIxb+m2Ye?=
+ =?us-ascii?Q?tDwhUxeh93ijClnFZshFvLnb4Id0e3qSOsYeDZb27Z9pEcFuVykZryh+F0j2?=
+ =?us-ascii?Q?g4UsUSUc6DQGCLYN8g/AtbyVOYV/IwSp6KwuaiJXDh9BOC/oRVhawd5gIVQV?=
+ =?us-ascii?Q?jzcDwQhjm55zV8DG232iAVdWbj+MCpsk/vluf0GqBxYtsij/FsUMxt50HE+B?=
+ =?us-ascii?Q?P4QYJ1XHp6kcpxImebPnXKrHCchYXbKBMoh3H0B2QfIgMZhnF6LaWS4tKvmd?=
+ =?us-ascii?Q?FJ2yHdSRvEsPV/JnV2exOf9HNt4guFN/P/ImRqieQCb47OLug+ZbdD2bCZRl?=
+ =?us-ascii?Q?+oL0oNF45hpjJ4dITlpZ2oQXPTxFkxGvK043v+u0otSK0IZU4H/ZIBOxunPi?=
+ =?us-ascii?Q?D/jzGB5XzWwGC7+K7r9NoucM6+fjcu4oCZ3frUe4FPInGBg0n+oEIyJ5q93/?=
+ =?us-ascii?Q?TfUfC7CE79iHNFWIa9uPU15+jHp5luWz55Nep39hF5QAcz+MocQDX42k/lsO?=
+ =?us-ascii?Q?/LSA227FpSHnFZFKO+NPd7OjmhpLmLqn2Kc41V7Q1oMAoUoYxBPb1o9GZg2s?=
+ =?us-ascii?Q?GRFJcIFFG8+mXmhQDc+VrJ5SwYcFyRGccuZjhOpVFC3Ouf/D97uX5YuM0gAU?=
+ =?us-ascii?Q?pZesVBycSLIZmqDpXZ70elEd9rhoJVERmJ3yo/YwvF0La8oCKLHEVHTpJHZZ?=
+ =?us-ascii?Q?jThMNetBOA36mCdl95XZpZeKAd4kHVbgTvbKbk2+C+UkMuLytJWsllPS3T7c?=
+ =?us-ascii?Q?LgijGt53wWXSJCG4hE7CrBmxju6SK0U+TYJC3HOZb9QfcpWmBGs8YF+X9Epy?=
+ =?us-ascii?Q?6ihIhrdBkeqasauFSxiBqYyNtN/QEf+kG+lOwpJozC/xkYs87N3InnnCc34Y?=
+ =?us-ascii?Q?ZfWD/MyeFWzGMe5lDMJJ6PGymlDv?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 776e3725-2352-45d1-f083-08d90a582769
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5b85e3b6-4552-4279-9c70-08d90a58234c
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB4623.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:13:18.6948
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:13:11.6638
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: D8AhbSkPZTjXltqmYFmv44lt3gN0KfmfDmYtGkpPJASH3S/bNuJ4/ZEsuUK/4zjw9S5VvQkLvgcUKcspA6SJUQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: PSTeXZTCwCPDbHYCOt9686yHGB60m7hCxTbxPgAcLinNusjfJHXFati8aP7dX0jBirwQrzv5QhiIi8RxYaPSnQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB2749
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's already being released by DRM core through devm
+To allow completion and further block of HW accesses post device PCI
+remove.
 
 Signed-off-by: Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 ---
- drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c | 1 -
- 1 file changed, 1 deletion(-)
+ .../amd/display/amdgpu_dm/amdgpu_dm_hdcp.c    | 124 +++++++++++-------
+ .../drm/amd/display/amdgpu_dm/amdgpu_dm_irq.c |  24 +++-
+ 2 files changed, 98 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-index c0b9abb773a4..b9aa15f22cfc 100644
---- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-+++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
-@@ -3590,7 +3590,6 @@ static int amdgpu_dm_initialize_drm_device(struct amdgpu_device *adev)
+diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_hdcp.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_hdcp.c
+index 0cdbfcd475ec..81ea5a1ea46b 100644
+--- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_hdcp.c
++++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_hdcp.c
+@@ -28,6 +28,7 @@
+ #include "amdgpu_dm.h"
+ #include "dm_helpers.h"
+ #include <drm/drm_hdcp.h>
++#include <drm/drm_drv.h>
+ #include "hdcp_psp.h"
  
- static void amdgpu_dm_destroy_drm_device(struct amdgpu_display_manager *dm)
+ /*
+@@ -260,20 +261,27 @@ void hdcp_handle_cpirq(struct hdcp_workqueue *hdcp_work, unsigned int link_index
+ static void event_callback(struct work_struct *work)
  {
--	drm_mode_config_cleanup(dm->ddev);
- 	drm_atomic_private_obj_fini(&dm->atomic_obj);
- 	return;
+ 	struct hdcp_workqueue *hdcp_work;
++	int idx;
+ 
+ 	hdcp_work = container_of(to_delayed_work(work), struct hdcp_workqueue,
+ 				      callback_dwork);
+ 
+-	mutex_lock(&hdcp_work->mutex);
++	if (drm_dev_enter(hdcp_work->aconnector->base.dev, &idx)) {
+ 
+-	cancel_delayed_work(&hdcp_work->callback_dwork);
++		mutex_lock(&hdcp_work->mutex);
+ 
+-	mod_hdcp_process_event(&hdcp_work->hdcp, MOD_HDCP_EVENT_CALLBACK,
+-			       &hdcp_work->output);
++		cancel_delayed_work(&hdcp_work->callback_dwork);
++
++		mod_hdcp_process_event(&hdcp_work->hdcp, MOD_HDCP_EVENT_CALLBACK,
++				       &hdcp_work->output);
+ 
+-	process_output(hdcp_work);
++		process_output(hdcp_work);
+ 
+-	mutex_unlock(&hdcp_work->mutex);
++		mutex_unlock(&hdcp_work->mutex);
++
++		drm_dev_exit(idx);
++
++	}
+ 
+ 
  }
+@@ -284,34 +292,41 @@ static void event_property_update(struct work_struct *work)
+ 	struct amdgpu_dm_connector *aconnector = hdcp_work->aconnector;
+ 	struct drm_device *dev = hdcp_work->aconnector->base.dev;
+ 	long ret;
++	int idx;
++
++	if (drm_dev_enter(dev, &idx)) {
++
++		drm_modeset_lock(&dev->mode_config.connection_mutex, NULL);
++		mutex_lock(&hdcp_work->mutex);
+ 
+-	drm_modeset_lock(&dev->mode_config.connection_mutex, NULL);
+-	mutex_lock(&hdcp_work->mutex);
+ 
++		if (aconnector->base.state->commit) {
++			ret = wait_for_completion_interruptible_timeout(&aconnector->base.state->commit->hw_done, 10 * HZ);
+ 
+-	if (aconnector->base.state->commit) {
+-		ret = wait_for_completion_interruptible_timeout(&aconnector->base.state->commit->hw_done, 10 * HZ);
++			if (ret == 0) {
++				DRM_ERROR("HDCP state unknown! Setting it to DESIRED");
++				hdcp_work->encryption_status = MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF;
++			}
++		}
+ 
+-		if (ret == 0) {
+-			DRM_ERROR("HDCP state unknown! Setting it to DESIRED");
+-			hdcp_work->encryption_status = MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF;
++		if (hdcp_work->encryption_status != MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF) {
++			if (aconnector->base.state->hdcp_content_type == DRM_MODE_HDCP_CONTENT_TYPE0 &&
++			    hdcp_work->encryption_status <= MOD_HDCP_ENCRYPTION_STATUS_HDCP2_TYPE0_ON)
++				drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_ENABLED);
++			else if (aconnector->base.state->hdcp_content_type == DRM_MODE_HDCP_CONTENT_TYPE1 &&
++				 hdcp_work->encryption_status == MOD_HDCP_ENCRYPTION_STATUS_HDCP2_TYPE1_ON)
++				drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_ENABLED);
++		} else {
++			drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_DESIRED);
+ 		}
+-	}
+ 
+-	if (hdcp_work->encryption_status != MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF) {
+-		if (aconnector->base.state->hdcp_content_type == DRM_MODE_HDCP_CONTENT_TYPE0 &&
+-		    hdcp_work->encryption_status <= MOD_HDCP_ENCRYPTION_STATUS_HDCP2_TYPE0_ON)
+-			drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_ENABLED);
+-		else if (aconnector->base.state->hdcp_content_type == DRM_MODE_HDCP_CONTENT_TYPE1 &&
+-			 hdcp_work->encryption_status == MOD_HDCP_ENCRYPTION_STATUS_HDCP2_TYPE1_ON)
+-			drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_ENABLED);
+-	} else {
+-		drm_hdcp_update_content_protection(&aconnector->base, DRM_MODE_CONTENT_PROTECTION_DESIRED);
+-	}
+ 
++		mutex_unlock(&hdcp_work->mutex);
++		drm_modeset_unlock(&dev->mode_config.connection_mutex);
++
++		drm_dev_exit(idx);
+ 
+-	mutex_unlock(&hdcp_work->mutex);
+-	drm_modeset_unlock(&dev->mode_config.connection_mutex);
++	}
+ }
+ 
+ static void event_property_validate(struct work_struct *work)
+@@ -320,58 +335,77 @@ static void event_property_validate(struct work_struct *work)
+ 		container_of(to_delayed_work(work), struct hdcp_workqueue, property_validate_dwork);
+ 	struct mod_hdcp_display_query query;
+ 	struct amdgpu_dm_connector *aconnector = hdcp_work->aconnector;
++	int idx;
+ 
+ 	if (!aconnector)
+ 		return;
+ 
+-	mutex_lock(&hdcp_work->mutex);
++	if (drm_dev_enter(hdcp_work->aconnector->base.dev, &idx)) {
+ 
+-	query.encryption_status = MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF;
+-	mod_hdcp_query_display(&hdcp_work->hdcp, aconnector->base.index, &query);
++		mutex_lock(&hdcp_work->mutex);
+ 
+-	if (query.encryption_status != hdcp_work->encryption_status) {
+-		hdcp_work->encryption_status = query.encryption_status;
+-		schedule_work(&hdcp_work->property_update_work);
+-	}
++		query.encryption_status = MOD_HDCP_ENCRYPTION_STATUS_HDCP_OFF;
++		mod_hdcp_query_display(&hdcp_work->hdcp, aconnector->base.index, &query);
++
++		if (query.encryption_status != hdcp_work->encryption_status) {
++			hdcp_work->encryption_status = query.encryption_status;
++			schedule_work(&hdcp_work->property_update_work);
++		}
++
++		mutex_unlock(&hdcp_work->mutex);
+ 
+-	mutex_unlock(&hdcp_work->mutex);
++		drm_dev_exit(idx);
++
++	}
+ }
+ 
+ static void event_watchdog_timer(struct work_struct *work)
+ {
+ 	struct hdcp_workqueue *hdcp_work;
++	int idx;
+ 
+ 	hdcp_work = container_of(to_delayed_work(work),
+ 				      struct hdcp_workqueue,
+ 				      watchdog_timer_dwork);
+ 
+-	mutex_lock(&hdcp_work->mutex);
++	if (drm_dev_enter(hdcp_work->aconnector->base.dev, &idx)) {
+ 
+-	cancel_delayed_work(&hdcp_work->watchdog_timer_dwork);
++		mutex_lock(&hdcp_work->mutex);
+ 
+-	mod_hdcp_process_event(&hdcp_work->hdcp,
+-			       MOD_HDCP_EVENT_WATCHDOG_TIMEOUT,
+-			       &hdcp_work->output);
++		cancel_delayed_work(&hdcp_work->watchdog_timer_dwork);
+ 
+-	process_output(hdcp_work);
++		mod_hdcp_process_event(&hdcp_work->hdcp,
++				       MOD_HDCP_EVENT_WATCHDOG_TIMEOUT,
++				       &hdcp_work->output);
+ 
+-	mutex_unlock(&hdcp_work->mutex);
++		process_output(hdcp_work);
++
++		mutex_unlock(&hdcp_work->mutex);
++
++		drm_dev_exit(idx);
++	}
+ 
+ }
+ 
+ static void event_cpirq(struct work_struct *work)
+ {
+ 	struct hdcp_workqueue *hdcp_work;
++	int idx;
+ 
+ 	hdcp_work = container_of(work, struct hdcp_workqueue, cpirq_work);
+ 
+-	mutex_lock(&hdcp_work->mutex);
++	if (drm_dev_enter(hdcp_work->aconnector->base.dev, &idx)) {
+ 
+-	mod_hdcp_process_event(&hdcp_work->hdcp, MOD_HDCP_EVENT_CPIRQ, &hdcp_work->output);
++		mutex_lock(&hdcp_work->mutex);
+ 
+-	process_output(hdcp_work);
++		mod_hdcp_process_event(&hdcp_work->hdcp, MOD_HDCP_EVENT_CPIRQ, &hdcp_work->output);
+ 
+-	mutex_unlock(&hdcp_work->mutex);
++		process_output(hdcp_work);
++
++		mutex_unlock(&hdcp_work->mutex);
++
++		drm_dev_exit(idx);
++	}
+ 
+ }
+ 
+diff --git a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_irq.c b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_irq.c
+index e0000c180ed1..d8ee552d373e 100644
+--- a/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_irq.c
++++ b/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_irq.c
+@@ -30,6 +30,8 @@
+ #include "amdgpu_dm.h"
+ #include "amdgpu_dm_irq.h"
+ 
++#include <drm/drm_drv.h>
++
+ /**
+  * DOC: overview
+  *
+@@ -115,15 +117,27 @@ static void dm_irq_work_func(struct work_struct *work)
+ 		container_of(work, struct irq_list_head, work);
+ 	struct list_head *handler_list = &irq_list_head->head;
+ 	struct amdgpu_dm_irq_handler_data *handler_data;
++	int idx;
++
++
++	handler_data = list_first_entry_or_null(handler_list, struct amdgpu_dm_irq_handler_data, list);
++
++	if (!handler_data)
++		return;
+ 
+-	list_for_each_entry(handler_data, handler_list, list) {
+-		DRM_DEBUG_KMS("DM_IRQ: work_func: for dal_src=%d\n",
++	if (drm_dev_enter(handler_data->dm->ddev, &idx)) {
++
++		list_for_each_entry(handler_data, handler_list, list) {
++			DRM_DEBUG_KMS("DM_IRQ: work_func: for dal_src=%d\n",
++					handler_data->irq_source);
++
++			DRM_DEBUG_KMS("DM_IRQ: schedule_work: for dal_src=%d\n",
+ 				handler_data->irq_source);
+ 
+-		DRM_DEBUG_KMS("DM_IRQ: schedule_work: for dal_src=%d\n",
+-			handler_data->irq_source);
++			handler_data->handler(handler_data->handler_arg);
++		}
+ 
+-		handler_data->handler(handler_data->handler_arg);
++		drm_dev_exit(idx);
+ 	}
+ 
+ 	/* Call a DAL subcomponent which registered for interrupt notification
 -- 
 2.25.1
 
