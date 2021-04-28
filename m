@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05388C433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2391CC43462
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:12:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C73F26143A
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:12:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E524961434
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Apr 2021 15:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238684AbhD1PNf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Apr 2021 11:13:35 -0400
-Received: from mail-bn7nam10on2052.outbound.protection.outlook.com ([40.107.92.52]:19669
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
+        id S239033AbhD1PNj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Apr 2021 11:13:39 -0400
+Received: from mail-dm6nam12on2081.outbound.protection.outlook.com ([40.107.243.81]:12288
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S238429AbhD1PNe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Apr 2021 11:13:34 -0400
+        id S238982AbhD1PNi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Apr 2021 11:13:38 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iPH8hBYl72Mc6J2ncQgzHXDLu1AVaY6BWab9rxElh3tT3BRk65hNKUFqECRNx82vjntc+O9q4JFy/bEhfxxlQVM/uCtgm6RQbqNhRsJqLviMJ3BMid4d70wMAOFRVn/R2buK1zDuykDM7Ji6L+K6Rf+sBg1Uzkl7PSrO+gQZCgg8jPTp4KWthv6mq1FJA7uHdupj7wC5cuJKiSVbQk+wmIsKMet/jZgRh88IBw/PqyZs13CjCPblY90GXBmoEh1TSc+cYEm9cJHTLhVpFuRKFV6nrirTqT6ZCv6FiqRcIy6NRNQpKcuiUcDd99RwiZXBARvNjRsMGs+/DOe8d3kxrw==
+ b=YENy3VyRcwy/D73IUjPpPyzcis+9CtCSy+7I71QYp0SPndqud7sFmXbHj5yEwDOUr9+SYZWzBk0Rlg8trCPPBwepSKR+8e9Dop2P2yrdiQMmAp4r+MZ5a/mesc1Vh8Y3Ey5ZmrDUsYr6RvdpXYbFGslDYxMWL2lQrPrO/1SZYaDomUAgT4GH3hWhFXCEf8PV55Xdnh9j/KMf3RvJxW7tGbP4nUYLoFkD8D2gAfVWZhld8xq/t3sITVs1+k5J2ZTXnMS2Ue73OsHAJDunV8CWpVFhM9oT+3m60asafhhxdXEfXJsgsyASVgS5321HPuwfxv29XBUosZ9hZPDDLsRdpw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GV16xVnQ4igK/MMYjr6sTVnZY2gMzJTw2X/+xlBmqIc=;
- b=jhB4sJorS3T0mqHq1oD/V9k9Jd1VZKVeBKMHPlr2f9yExZfz2oi95vQEyCvTt1BgTglnLDS1XhVIYnoPFtWJJ9JxwckggeiD0YJFx8E+0fuPRwESJmolQmszG53xmuwEuvliVzFj7FT6ECIYe0/d6VWPBdsTXlCRH6xy8UaCUn8SjP7+xvuYFRJc7KklC22a0vStYSja/SVhMDKORAoO43ki7R9DQRl6icDudN0h4r87YyVqRCF2aEXtGai4cD+ez8kTApEuaVv2qivqH9XaR1ICsMAILtHWIeqpESXdSy34bchALDA//3GAtwgo8q1ZKpnoYxzEyvTiIhKrs6EwFg==
+ bh=1ylkxX6mZ6oWnt6g0gOSaNMKTRfvHu/TDcdKALZjVVA=;
+ b=i7NvYa+waJ/hAro3h4kgjiZ/a6N6lQ28bt7YsYNrYex1hgPQu1Xb+pPJnNzutb0LFx+exLAH9QwrpO9UgTZ3QEDQ2avwDaosgAYKW7cHC1+HpCpEZ0FMyDKVqJnxhJrWzALoa77uoQKqVl7V5jjljMKMPhjAD4EREa8PFvOXuEwpWF1a+NRUzbPis0JO0+OguEHTcNrXjxy03JKwAn98cJq1nrOgQJXBrgciRevjYShAjyNa6NxAYCp2fD7nKK2jyLT6eRL9V/8AZel1q0Md4sdHRujLMCav360AuUm0WvWa4F+c0Iw5CYI79qQG9UwPTLxsgXxisuJfXobxgxyjew==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GV16xVnQ4igK/MMYjr6sTVnZY2gMzJTw2X/+xlBmqIc=;
- b=akOMQCHIJpZYHvHMUcdS9nkVE+I1OCiXMy/4xf7YX0WPZNY+SoAwaH95qZmXAtCtBwPfD1q0VM7LAJBliGnUEWmEdTsrJUF8Beg82G6E5PI+isBOvi1PruFniyVNTHgPXEbkODS5bHyM6NSGUGhdQYt9vurnOR2Dj3UK01KT0FA=
+ bh=1ylkxX6mZ6oWnt6g0gOSaNMKTRfvHu/TDcdKALZjVVA=;
+ b=mPUiojerRpgI0zaDLLb+F6jEklxt3+7/qWJUa2lHDbYUjQS2lTGbSTLdobpUrZYUQQTTErmEeOoV6N0npOQ6gms0H7ho2+2z3xcYNGGXGjGwvkg/BYWPkGtLaV68hHbkNyECT/Bg2Bd+B7nvQ4fWdGzQIPgY8312/BiAjts3E74=
 Authentication-Results: lists.freedesktop.org; dkim=none (message not signed)
  header.d=none;lists.freedesktop.org; dmarc=none action=none
  header.from=amd.com;
@@ -41,11 +41,11 @@ Received: from SN6PR12MB4623.namprd12.prod.outlook.com (2603:10b6:805:e9::17)
  by SA0PR12MB4462.namprd12.prod.outlook.com (2603:10b6:806:95::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.23; Wed, 28 Apr
- 2021 15:12:48 +0000
+ 2021 15:12:52 +0000
 Received: from SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c]) by SN6PR12MB4623.namprd12.prod.outlook.com
  ([fe80::ad51:8c49:b171:856c%7]) with mapi id 15.20.4065.026; Wed, 28 Apr 2021
- 15:12:48 +0000
+ 15:12:52 +0000
 From:   Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 To:     dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
         linux-pci@vger.kernel.org, ckoenig.leichtzumerken@gmail.com,
@@ -54,9 +54,9 @@ Cc:     ppaalanen@gmail.com, Alexander.Deucher@amd.com,
         gregkh@linuxfoundation.org, helgaas@kernel.org,
         Felix.Kuehling@amd.com,
         Andrey Grodzovsky <andrey.grodzovsky@amd.com>
-Subject: [PATCH v5 09/27] dmr/amdgpu: Move some sysfs attrs creation to default_attr
-Date:   Wed, 28 Apr 2021 11:11:49 -0400
-Message-Id: <20210428151207.1212258-10-andrey.grodzovsky@amd.com>
+Subject: [PATCH v5 11/27] drm/sched: Make timeout timer rearm conditional.
+Date:   Wed, 28 Apr 2021 11:11:51 -0400
+Message-Id: <20210428151207.1212258-12-andrey.grodzovsky@amd.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
 References: <20210428151207.1212258-1-andrey.grodzovsky@amd.com>
@@ -68,260 +68,102 @@ X-ClientProxiedBy: YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM
  (2603:10b6:805:e9::17)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:12:47 +0000
+Received: from agrodzovsky-All-Series.hitronhub.home (2607:fea8:3edf:49b0:7212:f93a:73b0:8f23) by YT1PR01CA0142.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:2f::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.25 via Frontend Transport; Wed, 28 Apr 2021 15:12:51 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3239da2b-0d71-42df-ca9e-08d90a581547
+X-MS-Office365-Filtering-Correlation-Id: 866bd927-0547-44ca-988c-08d90a5817e3
 X-MS-TrafficTypeDiagnostic: SA0PR12MB4462:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SA0PR12MB44625706D21A84217BF028D6EA409@SA0PR12MB4462.namprd12.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <SA0PR12MB4462C46306A0B76EF7F85597EA409@SA0PR12MB4462.namprd12.prod.outlook.com>
 X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: MvAoludBJ2Ya6iXNq6muBS7Gw5PsCnKuq8xT9lXvwK6rkNc/wHD3cUMFSg2XyWOCyCBxdmmC3EYZ/IfUbQk5V/bCoJRsDc6w6MKQD7qVSRjFPID3dYaM2tFgBhCRF74DW3oGtKecOJbBlzZwEOPQYSISNVPHO2uzMZvhKPX1gKT2v7tiXBOWVJfKdfgZVLoN1pXifgMs2B4huCGX0GptFok5/SFHGjNT6zg980xAJy/1P9qlLTHjDDd/aR9vzkMJDmk7GqbgiqgJx4NcDdFdh2m2rKFH2jVBsFlBdUJT+mTn2qZlK1hGlEyIXr4q80qenrphC5yD/qIJUzjpHxe06jt+T1+6du7G26FHsLUC+25YStALUq4bFLf5ocHOYC+Nrt5/LtKTVMZoc+NjOhfIw+70nWUmVw7gyLT5AqBMGS9QBR0Jo26Plp5IPD7WTRC1RtoijPsAIUCHi+VH0KdtN7ThORYf4KH7Hj5dwPDy6bE1UowRcyICscHM6ATgac5lhCb3zSRFCVqjhMLtz54NXeBYzWlicOiReWO3V0XIC8hhSoyq8joM4mgLgVR/mvy/J/5HeWkg8bFE8cXVohsQQJl0wE5i5oox+ptJ/O9ct/g=
+X-Microsoft-Antispam-Message-Info: 76bFNYBtnLjIx5GRtCRicTgOazg2aYyCr5wkNtHNop2IAAUu0uHOYK1bnY+nLgsi5eq+gD2Pfp5VxA/O697VTDwM2CojwTQGJTzabnnXzrKx0AWjtkJynyK2dF7Szron1HS+wkjmUXWMpl+LZbmP//vOQLtFVw7K0CfiDQ3fcryOr9f1jo/aFJ25pV9VTZYifHGwJoPelvDJcInnD+XT+FLq+kzS7J2rA7LE8KI8StGho7TRMu7bPH/HblkTBVQuz9d48ybnckr4rEaYSdV5o69/tTpczgK9Z0D0WVgY8pmEwkxeAuz5BEblIei32MsBPxkw+Zn1ViaGG5xb2rzBlbAwBxgFASD8RaLsw8Bk4zDVla2HNqn7YquN/7pTBQHKH/zeaCY2+57qgPDUJiAekm3zH+AV0R8qn4UtTPQGSmO9b9iyt69HlmAfDWJ7PpJeWpT8ykc1jWGB5TnyGzpN3WP9KlDmCrxsc98KOmlqJOEV/CbMSNkfcqowllqf+lwr8R/VExHe7A9QSVoyHpQ9ynZi3gSS/+MB4PlNKIi35yABiS5/kCEcv+tt7DSb6GdH27dSD9PMmVKYCpZ2CC1Z/frnkHLO7UZGeY7uNBcSTzs=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR12MB4623.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(396003)(136003)(39860400002)(376002)(366004)(6512007)(6636002)(66946007)(316002)(186003)(44832011)(2906002)(16526019)(36756003)(83380400001)(6506007)(4326008)(52116002)(8676002)(66476007)(5660300002)(66556008)(1076003)(2616005)(478600001)(86362001)(38100700002)(8936002)(6486002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?40IOY/rHkn2/XWhDEmMu0EEHk+sx9qU5D8umGdbPgJr+cWsQ3vGeR8Zks5U9?=
- =?us-ascii?Q?2SeO/O9q9ACZGyTsYGqpz1s1bzPfgkKCi10xzfYzKfCDjQxB9xA9csetuwHt?=
- =?us-ascii?Q?OlfEZ8NgmkAvg1Qd6RyWv7YoFmVgrZoDHRvXvwVzFxSN20AkUw7lWxgIfd+2?=
- =?us-ascii?Q?CiH2GpNQeDb16M1peOlJVngRpgl8F9W6IGfJejxNv3P/Bk/AGv0OeCxkJhec?=
- =?us-ascii?Q?ausETei1NeZ0zzVVXicO/5NBLBWg4SvyYx39196RdS6OA11fjc+fVshwEvji?=
- =?us-ascii?Q?Syi9MlqZ9S94WPTsVHWRQyOdWLxShIj71wIz8WU3PUlHWrJQCgkIprWJDo38?=
- =?us-ascii?Q?hsaJ9F5UwRWTyyhCv9Cwm0yPcz+utThkAea7TqVvKHBeTv66FI4zmPKZBnk4?=
- =?us-ascii?Q?co28gp06CgFEFOU6gTaDd9f0hLazDMRVKxGOZm5PalNBgiTxjpUNOJrJZaS7?=
- =?us-ascii?Q?wqVYnT8UfNmWQ6SznWHZJYSpEYO01IAgZyId6ykhXqXz/WrRQ5D/IPVeILDF?=
- =?us-ascii?Q?u+fsfwCn9EAheA/cVD3j2eOFcC+W2meQUNwiCYEHFJpfemXPs4CNoZoSWni5?=
- =?us-ascii?Q?Ko/VGI5AdlaDOhdczah1wH44zK/30znaXHd817Khv52xntFH1A1UBkje6FRT?=
- =?us-ascii?Q?QHhlU+1lIP5UxHYVTpNoy2wxGNQdOEvyb5aVzUyYkO0Iko/IMsS/TGcksxoL?=
- =?us-ascii?Q?Xk8KnKs26Ej6DZMdeU3zExF33xRjqD3g2qtIRX/fh2F2hkpH1TRKEXiy5Lxq?=
- =?us-ascii?Q?gjFmCG6cSLnNIJcnxVEobUXRobDpPZfW5dabSxG6ZZtdqSSdE8IU0hm0ktmS?=
- =?us-ascii?Q?Nwif+UjipgBJrYn4rl1QXGCM0e9kU8UhnfukWNrmRV5jvE0Ahg+/mTybMnEh?=
- =?us-ascii?Q?rxjm4082rLv18PA1b6pUkUju2+buUrxWvx/VQbSEorsqrXylJMUKgNBj92wb?=
- =?us-ascii?Q?nF6CANVnTZCQSakR/gOYETgdFZA05Xkbltq0n3zOPIXdqn47XfRoLyGUpN4E?=
- =?us-ascii?Q?nmMILREoT88UquM3H3Ekrplg/le019HekUigPwm4o0TtI4BZlRnbLIwCHFSg?=
- =?us-ascii?Q?BICVEsCv64mj0aHcKSSyeMhZRtxaoSSc8wbi+qKGaIGeS5pRC/hFLvFzZ5X7?=
- =?us-ascii?Q?0HV/Z5XzT7ULJhfJvt+f9jkxyuqWItY1OXgJeB4DOimE4yBALtFuDX2mf9mP?=
- =?us-ascii?Q?ITCvsEKwg58dt/rE9ApPSks5Ujxj2Do4Gf6Xbs6YIgLryuo3Tburhfa7IeB3?=
- =?us-ascii?Q?5b01iACKa+SpIo3+IrkkdbJ+zIscMl6sC9/aT3oBR83GWQ7VfCf+BaAQWr67?=
- =?us-ascii?Q?DVQGQTeeT2UbXxJx09qxDpYcOHJ3fJ5NO5T9ya9ohdW0Vtus9RxjfEgaWvLP?=
- =?us-ascii?Q?IkEVf2MJ0LKBQazsPDEXClHO2Rme?=
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?0OQ+DfrlsaUZoeEZ+G4hz1TYQGval0CAUPDVWcUU2TKxMyn75HsGnjI5GnZA?=
+ =?us-ascii?Q?Sdzvg68UpygPJXSWz126ubZ2sryM6kcIvCl2BPWo9em2oseWC2DqXDeTBJDQ?=
+ =?us-ascii?Q?NOq311mO2kfGlo54ZoyqEIiBAvJNQtI8zI2wXOs+aNOM/5phF/p1+4N0g4Zf?=
+ =?us-ascii?Q?IFBEap6vcwhoJuGCpPNJ0mncfWaO9AfGHboaEIHt3yKNH7VYHXxWkJtM/eOn?=
+ =?us-ascii?Q?G1N2BBXUMmyyadP2b6x8QCuzMw05vNX/qtTfVjbFXLdHXhGh+OJRnhS4mbFM?=
+ =?us-ascii?Q?V5kY1L3gt8DzhSuPCCG7N2HqWbVYy9K99Qx2WTsdr0AkQujWOInERPGVTp2u?=
+ =?us-ascii?Q?xIJbTWFKZl4h9DMfWpBd/7otC2902a+CBx2pbz/H+vWwDP36tcCfGVvEMFz7?=
+ =?us-ascii?Q?1fFurgN4E+1XCuHaaQoipw1Aw/Bwh7s5xCv/rYcnMPyx+0OBx60hcWI4zIbF?=
+ =?us-ascii?Q?eVUzRFLEeL8G0++m2d4K6fLCyqEU6YRERBLjM5h1qegoZ2DH0EaGB+OX3iC2?=
+ =?us-ascii?Q?NnRtm0Pk7hXHI9MOzWJOy0SAP+17p9bdtNOfA6GBWxDjtAq4lloFYot21YDt?=
+ =?us-ascii?Q?ZWIvCX+ll5LeR/MukqttX9eim9SrP8EYCYyobYbPQPQZ2gg5KWWckA/clctV?=
+ =?us-ascii?Q?iiymbEEY9TSmLch39tDRzI8fxNnccEB9jkIeievcWZhiBMWCiuJuKeVwciKZ?=
+ =?us-ascii?Q?H6LXxDCyNUWkQI0sjsGKZsQQhHtQVkAJ/bXU93pP34uH+ZSUtAWB7iBvAGxh?=
+ =?us-ascii?Q?WqU5tDJE2MC/k/H4ECXidp4sif/f05/JP5w59b6qN6lgI6Bd9VdcL5kGp7WY?=
+ =?us-ascii?Q?0eXciVbl1Y+qf9arXa1xTZZkulucBiU8WwlifJjgUoy7To/78I+Cmib9dh/o?=
+ =?us-ascii?Q?ERfMmHjMEogxRbpULUbsrv5ez4T7lc/tiC/5d6XWzckReENjIZoiKt0qBCGF?=
+ =?us-ascii?Q?maJN0727vxETInnTznWobnJUe9mj3FknmU9xS9iUBgyRn5nynKnhRpby9dvF?=
+ =?us-ascii?Q?Cp/s6eZBRkV9PSvhubjCKmvjUFfQ891L9p3Di0AqgArmIrwAHjYML3dpOiPM?=
+ =?us-ascii?Q?3X2q9dYAK19m+1+3LOTWUXbyGNBqFgksj+pu3hKIjmnWG3nvGP+N81pwjoaV?=
+ =?us-ascii?Q?BAE8TbLJW/NrzyAWQmKHzzGqGk8UZBeEZK7eCn6qoPSsD2tUwwpENloDX8Ca?=
+ =?us-ascii?Q?QR8unZL8ohEkhQjabbgKoKmMINhJiOBMR1BfWOJEhw/L1MszhHduoZJGNOz7?=
+ =?us-ascii?Q?JCGIfEcfkM5nrV1o+CXHxTWbjfZgRgVON0Xuq8FLk1LqOjFK2ysxWg8Ye5WP?=
+ =?us-ascii?Q?u/rIiTQxhtTyfEa2mfUI3Fpi/OurdEBnCTSgKJjF7c4WQ2HRjY4ZEP9iNzMO?=
+ =?us-ascii?Q?PJnEKii5inV77cleA2qyQ5duVlCB?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3239da2b-0d71-42df-ca9e-08d90a581547
+X-MS-Exchange-CrossTenant-Network-Message-Id: 866bd927-0547-44ca-988c-08d90a5817e3
 X-MS-Exchange-CrossTenant-AuthSource: SN6PR12MB4623.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:12:48.0841
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2021 15:12:52.4856
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YbeDRCExMKF9vABJx3RvKX3YPJ2g4TNdSh/2gRwh9LP0qGcDJIXVJkvr4rI6Crq3nUqRqQCIckRjQFtYGtJK7Q==
+X-MS-Exchange-CrossTenant-UserPrincipalName: dasEwWrwzh0D6SlaNehT+QZwEZDUA1PWrN9jKG1UVwczlyAPMX/VvncpKZL95da/m/GqferNpdIkpXpuI+ZrgQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4462
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This allows to remove explicit creation and destruction
-of those attrs and by this avoids warnings on device
-finilizing post physical device extraction.
+We don't want to rearm the timer if driver hook reports
+that the device is gone.
 
-v5: Use newly added pci_driver.dev_groups directly
+v5: Update drm_gpu_sched_stat values in code.
 
 Signed-off-by: Andrey Grodzovsky <andrey.grodzovsky@amd.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c | 17 ++++++-------
- drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c      | 13 ++++++++++
- drivers/gpu/drm/amd/amdgpu/amdgpu_gtt_mgr.c  | 25 ++++++++------------
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c | 14 ++++-------
- 4 files changed, 37 insertions(+), 32 deletions(-)
+ drivers/gpu/drm/scheduler/sched_main.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-index 86add0f4ea4d..0346e124ab8c 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
-@@ -1953,6 +1953,15 @@ static ssize_t amdgpu_atombios_get_vbios_version(struct device *dev,
- static DEVICE_ATTR(vbios_version, 0444, amdgpu_atombios_get_vbios_version,
- 		   NULL);
- 
-+static struct attribute *amdgpu_vbios_version_attrs[] = {
-+	&dev_attr_vbios_version.attr,
-+	NULL
-+};
-+
-+const struct attribute_group amdgpu_vbios_version_attr_group = {
-+	.attrs = amdgpu_vbios_version_attrs
-+};
-+
- /**
-  * amdgpu_atombios_fini - free the driver info and callbacks for atombios
-  *
-@@ -1972,7 +1981,6 @@ void amdgpu_atombios_fini(struct amdgpu_device *adev)
- 	adev->mode_info.atom_context = NULL;
- 	kfree(adev->mode_info.atom_card_info);
- 	adev->mode_info.atom_card_info = NULL;
--	device_remove_file(adev->dev, &dev_attr_vbios_version);
- }
- 
- /**
-@@ -1989,7 +1997,6 @@ int amdgpu_atombios_init(struct amdgpu_device *adev)
+diff --git a/drivers/gpu/drm/scheduler/sched_main.c b/drivers/gpu/drm/scheduler/sched_main.c
+index d82a7ebf6099..908b0b56032d 100644
+--- a/drivers/gpu/drm/scheduler/sched_main.c
++++ b/drivers/gpu/drm/scheduler/sched_main.c
+@@ -314,6 +314,7 @@ static void drm_sched_job_timedout(struct work_struct *work)
  {
- 	struct card_info *atom_card_info =
- 	    kzalloc(sizeof(struct card_info), GFP_KERNEL);
--	int ret;
+ 	struct drm_gpu_scheduler *sched;
+ 	struct drm_sched_job *job;
++	enum drm_gpu_sched_stat status = DRM_GPU_SCHED_STAT_NOMINAL;
  
- 	if (!atom_card_info)
- 		return -ENOMEM;
-@@ -2027,12 +2034,6 @@ int amdgpu_atombios_init(struct amdgpu_device *adev)
- 		amdgpu_atombios_allocate_fb_scratch(adev);
+ 	sched = container_of(work, struct drm_gpu_scheduler, work_tdr.work);
+ 
+@@ -331,7 +332,7 @@ static void drm_sched_job_timedout(struct work_struct *work)
+ 		list_del_init(&job->list);
+ 		spin_unlock(&sched->job_list_lock);
+ 
+-		job->sched->ops->timedout_job(job);
++		status = job->sched->ops->timedout_job(job);
+ 
+ 		/*
+ 		 * Guilty job did complete and hence needs to be manually removed
+@@ -345,9 +346,11 @@ static void drm_sched_job_timedout(struct work_struct *work)
+ 		spin_unlock(&sched->job_list_lock);
  	}
  
--	ret = device_create_file(adev->dev, &dev_attr_vbios_version);
--	if (ret) {
--		DRM_ERROR("Failed to create device file for VBIOS version\n");
--		return ret;
--	}
--
- 	return 0;
+-	spin_lock(&sched->job_list_lock);
+-	drm_sched_start_timeout(sched);
+-	spin_unlock(&sched->job_list_lock);
++	if (status != DRM_GPU_SCHED_STAT_ENODEV) {
++		spin_lock(&sched->job_list_lock);
++		drm_sched_start_timeout(sched);
++		spin_unlock(&sched->job_list_lock);
++	}
  }
  
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index 54cb5ee2f563..f799c40d7e72 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -1605,6 +1605,18 @@ static struct pci_error_handlers amdgpu_pci_err_handler = {
- 	.resume		= amdgpu_pci_resume,
- };
- 
-+extern const struct attribute_group amdgpu_vram_mgr_attr_group;
-+extern const struct attribute_group amdgpu_gtt_mgr_attr_group;
-+extern const struct attribute_group amdgpu_vbios_version_attr_group;
-+
-+static const struct attribute_group *amdgpu_sysfs_groups[] = {
-+	&amdgpu_vram_mgr_attr_group,
-+	&amdgpu_gtt_mgr_attr_group,
-+	&amdgpu_vbios_version_attr_group,
-+	NULL,
-+};
-+
-+
- static struct pci_driver amdgpu_kms_pci_driver = {
- 	.name = DRIVER_NAME,
- 	.id_table = pciidlist,
-@@ -1613,6 +1625,7 @@ static struct pci_driver amdgpu_kms_pci_driver = {
- 	.shutdown = amdgpu_pci_shutdown,
- 	.driver.pm = &amdgpu_pm_ops,
- 	.err_handler = &amdgpu_pci_err_handler,
-+	.dev_groups = amdgpu_sysfs_groups,
- };
- 
- static int __init amdgpu_init(void)
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_gtt_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_gtt_mgr.c
-index 8980329cded0..3b7150e1c5ed 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_gtt_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_gtt_mgr.c
-@@ -77,6 +77,16 @@ static DEVICE_ATTR(mem_info_gtt_total, S_IRUGO,
- static DEVICE_ATTR(mem_info_gtt_used, S_IRUGO,
- 	           amdgpu_mem_info_gtt_used_show, NULL);
- 
-+static struct attribute *amdgpu_gtt_mgr_attributes[] = {
-+	&dev_attr_mem_info_gtt_total.attr,
-+	&dev_attr_mem_info_gtt_used.attr,
-+	NULL
-+};
-+
-+const struct attribute_group amdgpu_gtt_mgr_attr_group = {
-+	.attrs = amdgpu_gtt_mgr_attributes
-+};
-+
- static const struct ttm_resource_manager_func amdgpu_gtt_mgr_func;
- /**
-  * amdgpu_gtt_mgr_init - init GTT manager and DRM MM
-@@ -91,7 +101,6 @@ int amdgpu_gtt_mgr_init(struct amdgpu_device *adev, uint64_t gtt_size)
- 	struct amdgpu_gtt_mgr *mgr = &adev->mman.gtt_mgr;
- 	struct ttm_resource_manager *man = &mgr->manager;
- 	uint64_t start, size;
--	int ret;
- 
- 	man->use_tt = true;
- 	man->func = &amdgpu_gtt_mgr_func;
-@@ -104,17 +113,6 @@ int amdgpu_gtt_mgr_init(struct amdgpu_device *adev, uint64_t gtt_size)
- 	spin_lock_init(&mgr->lock);
- 	atomic64_set(&mgr->available, gtt_size >> PAGE_SHIFT);
- 
--	ret = device_create_file(adev->dev, &dev_attr_mem_info_gtt_total);
--	if (ret) {
--		DRM_ERROR("Failed to create device file mem_info_gtt_total\n");
--		return ret;
--	}
--	ret = device_create_file(adev->dev, &dev_attr_mem_info_gtt_used);
--	if (ret) {
--		DRM_ERROR("Failed to create device file mem_info_gtt_used\n");
--		return ret;
--	}
--
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_TT, &mgr->manager);
- 	ttm_resource_manager_set_used(man, true);
- 	return 0;
-@@ -144,9 +142,6 @@ void amdgpu_gtt_mgr_fini(struct amdgpu_device *adev)
- 	drm_mm_takedown(&mgr->mm);
- 	spin_unlock(&mgr->lock);
- 
--	device_remove_file(adev->dev, &dev_attr_mem_info_gtt_total);
--	device_remove_file(adev->dev, &dev_attr_mem_info_gtt_used);
--
- 	ttm_resource_manager_cleanup(man);
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_TT, NULL);
- }
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-index c89b66bb70e2..68369b38aebb 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-@@ -154,7 +154,7 @@ static DEVICE_ATTR(mem_info_vis_vram_used, S_IRUGO,
- static DEVICE_ATTR(mem_info_vram_vendor, S_IRUGO,
- 		   amdgpu_mem_info_vram_vendor, NULL);
- 
--static const struct attribute *amdgpu_vram_mgr_attributes[] = {
-+static struct attribute *amdgpu_vram_mgr_attributes[] = {
- 	&dev_attr_mem_info_vram_total.attr,
- 	&dev_attr_mem_info_vis_vram_total.attr,
- 	&dev_attr_mem_info_vram_used.attr,
-@@ -163,6 +163,10 @@ static const struct attribute *amdgpu_vram_mgr_attributes[] = {
- 	NULL
- };
- 
-+const struct attribute_group amdgpu_vram_mgr_attr_group = {
-+	.attrs = amdgpu_vram_mgr_attributes
-+};
-+
- static const struct ttm_resource_manager_func amdgpu_vram_mgr_func;
- 
- /**
-@@ -176,7 +180,6 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- {
- 	struct amdgpu_vram_mgr *mgr = &adev->mman.vram_mgr;
- 	struct ttm_resource_manager *man = &mgr->manager;
--	int ret;
- 
- 	ttm_resource_manager_init(man, adev->gmc.real_vram_size >> PAGE_SHIFT);
- 
-@@ -187,11 +190,6 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- 	INIT_LIST_HEAD(&mgr->reservations_pending);
- 	INIT_LIST_HEAD(&mgr->reserved_pages);
- 
--	/* Add the two VRAM-related sysfs files */
--	ret = sysfs_create_files(&adev->dev->kobj, amdgpu_vram_mgr_attributes);
--	if (ret)
--		DRM_ERROR("Failed to register sysfs\n");
--
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_VRAM, &mgr->manager);
- 	ttm_resource_manager_set_used(man, true);
- 	return 0;
-@@ -229,8 +227,6 @@ void amdgpu_vram_mgr_fini(struct amdgpu_device *adev)
- 	drm_mm_takedown(&mgr->mm);
- 	spin_unlock(&mgr->lock);
- 
--	sysfs_remove_files(&adev->dev->kobj, amdgpu_vram_mgr_attributes);
--
- 	ttm_resource_manager_cleanup(man);
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_VRAM, NULL);
- }
+  /**
 -- 
 2.25.1
 
