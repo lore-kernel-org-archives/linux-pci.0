@@ -2,208 +2,517 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9255C433ED
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Apr 2021 00:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F04D1C433ED
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Apr 2021 01:42:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9359161424
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Apr 2021 00:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C90DF61450
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Apr 2021 01:42:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232101AbhD2Aui (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Apr 2021 20:50:38 -0400
-Received: from mail-co1nam11on2065.outbound.protection.outlook.com ([40.107.220.65]:19744
-        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229479AbhD2Auh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Apr 2021 20:50:37 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=i7rI9ah03PAMnbWuizCskj8IXhHRRHA2gwdMONBzrbVu7yrY9FJaimQIfRsxjXMMNb8JNIkOlAIU2dfAht6zb0Rp5Z0I52Q2ENwILqe7Yxag1kKw6vU7G76vdGHV98JoDMEND2M0aFCUv/AyWnVGEfoF8WCg3aka5nLvoyq/TQXLsKYl3XEUkWGuss7vR5X3iWgX+0a72rwpuSnUHqfnjyMX+seRiFWi2sCvMFP9J5fb8ngdaTJXVEYlpqgb3d2/qShU9FuKhdgkGSwG2qBVAk2UdfskSdwE424tlPGSKadD+5yDXZhXamkSxOup2Aq4Lpv7ht75AwWjVqILUDUVtw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zv0eB99yKphyaPeRkgf41ECxkdn4hM/x7pzwfWkxcgA=;
- b=lsTcUfRzgyvkDdqEMA6Y/Yn0E3HL6G7OWTWnhZ36cxHnLOHyQlSzcy2/pNmDXdCEmiyUfraegLcI8omLYxxxo1jC1mKpgKCmTVQ3pJXs82v5DJ7W99iQWFypIvWghNnJhXsxzKGI7Tu61sdOM1HMnYCOXsLIMiGJ0knbDvaiUPl20NrN1046yRGRkf5Tp5i/rFUDexyt19SDT1WOqk4AI+EUpm0xQ3ChaTEv33+xYl/LC8I7+EKnjDJ3neg46bkdD33WUdCWfF9nBKVEnla9SHRaqlbKGKI0sT6jSeUSDinikDyq17sv8yQzHcoeJSFvRw5lIKMYJXnCBeuNW6knEw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zv0eB99yKphyaPeRkgf41ECxkdn4hM/x7pzwfWkxcgA=;
- b=Yxy7f+1H2OH+1JnJZ7sFAAnk1gYzco8t43naac/CEYIWf8OWJOafU+ipepMoHLbVZnv/dENGxoC11b9qSVWV+JSwnEhNuCl0sFUJyS3ZrFlMdhxQYseA9uyLPXT0Du3TodLoqBMCg73IlGcCLZg7XQ1wFUjIAQnrUI9RpK4QI/nWmrwgdjxChfuQMaD2JDl4JJH6I5a8yqlXyWqBDOEWfrNT/rBy66VCuO0zF/RL1LyJHdLgoyvYMrSV7BZKOR/N+0RvLetx6ogMIlb1rNEMA4aBXNzBR0XZy3PDo8kL+C6fl2CKGIOsItcFdh3VlqsllB8XN1p37V70tTXIksNPdQ==
-Received: from BN9PR03CA0238.namprd03.prod.outlook.com (2603:10b6:408:f8::33)
- by MWHPR1201MB0061.namprd12.prod.outlook.com (2603:10b6:301:52::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4065.23; Thu, 29 Apr
- 2021 00:49:50 +0000
-Received: from BN8NAM11FT007.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:f8:cafe::79) by BN9PR03CA0238.outlook.office365.com
- (2603:10b6:408:f8::33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4087.25 via Frontend
- Transport; Thu, 29 Apr 2021 00:49:50 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.34; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.34) by
- BN8NAM11FT007.mail.protection.outlook.com (10.13.177.109) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4065.21 via Frontend Transport; Thu, 29 Apr 2021 00:49:50 +0000
-Received: from SDONTHINENI-DESKTOP.nvidia.com (172.20.145.6) by
- HQMAIL107.nvidia.com (172.20.187.13) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 29 Apr 2021 00:49:48 +0000
-From:   Shanker Donthineni <sdonthineni@nvidia.com>
-To:     Alex Williamson <alex.williamson@redhat.com>
-CC:     Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        Vikram Sethi <vsethi@nvidia.com>,
-        Amey Narkhede <ameynarkhede03@gmail.com>,
-        "Shanker Donthineni" <sdonthineni@nvidia.com>
-Subject: [PATCH v4 1/2] PCI: Add support for a function level reset based on _RST method
-Date:   Wed, 28 Apr 2021 19:49:06 -0500
-Message-ID: <20210429004907.29044-1-sdonthineni@nvidia.com>
-X-Mailer: git-send-email 2.17.1
+        id S234674AbhD2Bnh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Apr 2021 21:43:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41180 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233053AbhD2Bnh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Apr 2021 21:43:37 -0400
+Received: from mail-yb1-xb35.google.com (mail-yb1-xb35.google.com [IPv6:2607:f8b0:4864:20::b35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23C6EC06138B;
+        Wed, 28 Apr 2021 18:42:50 -0700 (PDT)
+Received: by mail-yb1-xb35.google.com with SMTP id j84so6795014ybj.9;
+        Wed, 28 Apr 2021 18:42:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=GIDwiv5sys1e94rCITD6CiJK3C1qUe5twGGLWWCXo34=;
+        b=n6YkrFHauSbemD41zcQzBaqPPDoaL8MHY4BPu5DcrmcwXx/a/8IYtUyztDS+2UkSzD
+         CaRii3QcRL768tIFGK6rkKwMtvdWj0gy7O4JC9I96Ol/m4ZklMfX0VOStGWbRGN6HOo9
+         qMr3b388gqL1wAGkXfQkqu3Ua8tf5rxUu0fBO4u5O8ZJfvp8eKrDrR3npE8mHfKUJ4wb
+         zuDXN9A8XEjN04LGJjUnNAKNmY4sBBfCYOe87oDk5F+SqNKePA351iBj25BaukOuBNGj
+         f73fBR3AfqWiRGw7lGlK6Uqq2hIDbTDYh93R4IMz5vldn0QMINZFbAjRTK1TOlVMTJRG
+         6ckw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=GIDwiv5sys1e94rCITD6CiJK3C1qUe5twGGLWWCXo34=;
+        b=QhBpETqDLon4Y4Qc9juS0xG+ZhAAn6RJq5pFpTK8zc2CZN7rJ4pBX8nD9s+N7I9U+h
+         lISUJIm1UeYJGvPiqaILeaFRQbQPK5jYO9GlZJoXULIT5o4T5dezDn8eJifO74mp85WA
+         FJIbDNE3mpWf01dcQ7si1RcJUW/WPkh9/DDry9iJz6m3ASuEoYkzyI8HANJfSHEQ3wkz
+         vrIxlBmQPKTfHhSKTAlvSfTfjSdYEpgrBrwuvpR3nM+6puk/Rn7JVmrY3C6GKBM3Ve1A
+         SFf/V6UyLjPEhLeBaSN1WvqAE22mIF6Bbo2qYkAfYHcXWusk3t3IkdaIdvKWXqpoPD+f
+         QJHA==
+X-Gm-Message-State: AOAM530x5SW4f4R4DRTXS/gLs2t6NKxYe0fMcnxYiW/UCPQ+fcv2OUuz
+        MJNGarqRU2b+0//7JtI1tgU1NFM9ukSQBZXKtNU=
+X-Google-Smtp-Source: ABdhPJx9DXc+BoF/J0bPPMtM7Wu9koVmQdf985eElfm/FmaOusy0nE3xMaURMSfBmNoaYBf2fH6IVEi8qa8pFIjARUc=
+X-Received: by 2002:a25:4946:: with SMTP id w67mr45672822yba.141.1619660569037;
+ Wed, 28 Apr 2021 18:42:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.20.145.6]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1d62703a-0023-4235-0348-08d90aa8b1c1
-X-MS-TrafficTypeDiagnostic: MWHPR1201MB0061:
-X-Microsoft-Antispam-PRVS: <MWHPR1201MB0061581EC8D9C90E42C486E1C75F9@MWHPR1201MB0061.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2089;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: iDJC9EoqQ/cpLMnA/Ni+Q4vuzbwkLA5IFCnC/m0pBL1wyWYUC8Bxwxee1Twi0uGMiVt8ezDRnqwON4ga2/AXx2E7r5c20YAzxYwWCxeYNxQfKqPaF7025NZsPedYeqJ035wamBmsKOduyDPBRc7Ndq/1JHAfnb+G2nOeHwS8R/HkDWofdWzinmbWHjIQAlJZwILLfrvj3eY3NUsL4+IeWm6zJG4mnIJJUoyuNFTM8MU0HNIWILKsun1a/MFbJQFdXowWOJOEpHv5YatgmscU/WuH4io62+j9Gk6QeNgdW/nN17E8qP7/TZPqDzst+WTmEdqCu9H11iYiyZc0pfofUbIOBRLRNK/YgYnvLcYDKdWWPJVko8/DrrqKC9XCeEEhABCt3Q+29MkdHrdxwYoVUncck8V2/Peo2qzWbBpVFOWBfhpQGlXIrvMljmzbhBtrFpvDbybYN2VnmCpgS10nDbtfT28r69MWo7y51n4A0ujsXZ56SGxr9y5ByBhNWAx1JDEBs8BhcTDWAx89M//PbPjjjFjX4Humc9edo0OzJPBTPmJ7pKsDlCReb6G/gtTNBkeco19LcX1dbTecEXz86cc58QAgWEjmuGPkxm6nKPNdj4mHxNDiyzJrDZz9CMF/9VmoGzSYrIunAwfLYlLGF1MRyQS+nnFj7Tq4IJPVCxbLmiu7LqLuWKhzh9xzbEM4gXUxhx/Skq1ycYtQ3+IyYV6/aaHTDIyw0/iHxtJWcXs=
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(376002)(136003)(39860400002)(346002)(396003)(36840700001)(46966006)(8936002)(70586007)(36860700001)(2906002)(356005)(4326008)(8676002)(966005)(1076003)(107886003)(5660300002)(6916009)(47076005)(83380400001)(2616005)(16526019)(316002)(26005)(186003)(54906003)(6666004)(7636003)(36756003)(82310400003)(7696005)(82740400003)(426003)(478600001)(336012)(86362001)(36906005)(70206006);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Apr 2021 00:49:50.0876
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1d62703a-0023-4235-0348-08d90aa8b1c1
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT007.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR1201MB0061
+References: <20210414070325.924789-1-xxm@rock-chips.com> <CAMdYzYqf3FhYrFR1DGrP=_CbNpq5uB+J-m42Mv=c6Pu71Jcxww@mail.gmail.com>
+ <5af0f6f8-bc29-f50e-ca14-94049b7d17ed@rock-chips.com>
+In-Reply-To: <5af0f6f8-bc29-f50e-ca14-94049b7d17ed@rock-chips.com>
+From:   Peter Geis <pgwipeout@gmail.com>
+Date:   Wed, 28 Apr 2021 21:42:37 -0400
+Message-ID: <CAMdYzYr=i7X22-38VyY-GQLWs+aV+ZcWwO_uDymFxmaNO8SpmA@mail.gmail.com>
+Subject: Re: [PATCH v7] PCI: rockchip: Add Rockchip RK356X host controller driver
+To:     Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     Simon Xue <xxm@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Johan Jonker <jbx6244@gmail.com>,
+        Heiko Stuebner <heiko@sntech.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The _RST is a standard method specified in the ACPI specification. It
-provides a function level reset when it is described in the acpi_device
-context associated with PCI-device.
+On Wed, Apr 28, 2021 at 8:46 PM Shawn Lin <shawn.lin@rock-chips.com> wrote:
+>
+> On 2021/4/29 0:20, Peter Geis wrote:
+> > On Wed, Apr 14, 2021 at 3:05 AM Simon Xue <xxm@rock-chips.com> wrote:
+> >>
+> >> Add a driver for the DesignWare-based PCIe controller found on
+> >> RK356X. The existing pcie-rockchip-host driver is only used for
+> >> the Rockchip-designed IP found on RK3399.
+> >
+> > Good Afternoon,
+> >
+> > I've encountered a bit of an issue with this driver.
+>
+> I'm sure your issue is GIC ITS support on RK356x platforms, nothing
+> really related to this driver itself. You can also sort out arm-gic
+> workaround patch from downstream vendor tree, if you want MSI support.
 
-Implement a new reset function pci_dev_acpi_reset() for probing RST
-method and execute if it is defined in the firmware. The ACPI binding
-information is available only after calling device_add(), so move
-pci_init_reset_methods() to end of the pci_device_add().
+I have functional MSI support, some devices do not support MSIs
+however and need legacy INTx.
+I'd like to point out that the downstream patch does not actually work
+on downstream.
+The GFP_DMA32 flag is discarded by the slab allocator, this breaks MSI
+allocation when the PCIe driver probes.
+I hacked together my own version which works but would definitely not
+be accepted for submission.
 
-The default priority of the acpi reset is set to below device-specific
-and above hardware resets.
+>
+> > Unfortunately it does not support legacy interrupts, meaning any PCIe
+> > device that doesn't support MSIs will fail to enumerate:
+> > [   14.932078] pcieport 0000:00:00.0: of_irq_parse_pci: failed with rc=
+=3D-22
+> > [   14.932708] snd_hda_intel 0000:01:00.1: assign IRQ: got 0
+> > [   14.933687] snd_hda_intel 0000:01:00.1: enabling device (0000 -> 000=
+2)
+> > [   14.934317] snd_hda_intel 0000:01:00.1: Disabling MSI
+> > [   14.934783] snd_hda_intel 0000:01:00.1: Force to snoop mode by modul=
+e option
+> > [   14.935534] snd_hda_intel 0000:01:00.1: enabling bus mastering
+> > [   14.939764] snd_hda_intel 0000:01:00.1: unable to grab IRQ 0,
+> > disabling device
+> >
+> > Are there plans to support legacy interrupts with the rk3568 controller=
+s?
+>
+> Yes, we did=EF=BC=8Cbut not now.
 
-Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
----
-changes since v2:
- - fix typo in the commit text
-changes since v2:
- - rebase patch on top of https://lore.kernel.org/linux-pci/20210409192324.30080-1-ameynarkhede03@gmail.com/
+This will significantly limit the devices that can work with the controller=
+.
+Is there any functional reason preventing legacy interrupts from working?
+I've so far not been successful plugging in support.
 
- drivers/pci/pci.c   | 30 ++++++++++++++++++++++++++++++
- drivers/pci/probe.c |  2 +-
- include/linux/pci.h |  2 +-
- 3 files changed, 32 insertions(+), 2 deletions(-)
+>
+> I really don't understand what is blocking this driver from landing
+> mainline?  I didn't find any comments from maintainers yet since v1. And
+> now the driver has been iterating for a long time.I believe Simon has
+> addressed all the review feedback during v1 to v7. Can we please land
+> this basic support first. If you can test it with arm-gic workaround,
+> a tested-by tag would be appreciated.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 664cf2d358d6..510f9224a3b0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5076,6 +5076,35 @@ static void pci_dev_restore(struct pci_dev *dev)
- 		err_handler->reset_done(dev);
- }
- 
-+/**
-+ * pci_dev_acpi_reset - do a function level reset using _RST method
-+ * @dev: device to reset
-+ * @probe: check if _RST method is included in the acpi_device context.
-+ */
-+static int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
-+{
-+#ifdef CONFIG_ACPI
-+	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+
-+	/* Return -ENOTTY if _RST method is not included in the dev context */
-+	if (!handle || !acpi_has_method(handle, "_RST"))
-+		return -ENOTTY;
-+
-+	/* Return 0 for probe phase indicating that we can reset this device */
-+	if (probe)
-+		return 0;
-+
-+	/* Invoke _RST() method to perform a function level reset */
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_RST", NULL, NULL))) {
-+		pci_warn(dev, "Failed to reset the device\n");
-+		return -EINVAL;
-+	}
-+	return 0;
-+#else
-+	return -ENOTTY;
-+#endif
-+}
-+
- /*
-  * The ordering for functions in pci_reset_fn_methods
-  * is required for reset_methods byte array defined
-@@ -5083,6 +5112,7 @@ static void pci_dev_restore(struct pci_dev *dev)
-  */
- const struct pci_reset_fn_method pci_reset_fn_methods[] = {
- 	{ .reset_fn = &pci_dev_specific_reset, .name = "device_specific" },
-+	{ .reset_fn = &pci_dev_acpi_reset, .name = "acpi_reset" },
- 	{ .reset_fn = &pcie_reset_flr, .name = "flr" },
- 	{ .reset_fn = &pci_af_flr, .name = "af_flr" },
- 	{ .reset_fn = &pci_pm_reset, .name = "pm" },
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4764e031a44b..d4becd6ffb52 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2403,7 +2403,6 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_rcec_init(dev);		/* Root Complex Event Collector */
- 
- 	pcie_report_downtraining(dev);
--	pci_init_reset_methods(dev);
- }
- 
- /*
-@@ -2494,6 +2493,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
- 	WARN_ON(ret < 0);
-+	pci_init_reset_methods(dev);
- }
- 
- struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9f8347799634..b4a5d2146542 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -49,7 +49,7 @@
- 			       PCI_STATUS_SIG_TARGET_ABORT | \
- 			       PCI_STATUS_PARITY)
- 
--#define PCI_RESET_FN_METHODS 5
-+#define PCI_RESET_FN_METHODS 6
- 
- /*
-  * The PCI interface treats multi-function devices as independent
--- 
-2.17.1
+Do you have the DT bindings for this patch available?
 
+Yes, at this stage what is implemented appears to function correctly, so:
+Tested-by: Peter Geis <pgwipeout@gmail.com>
+on the rk3566-quartz64 prototype development board.
+
+Dependent on the following patches:
+GICv3-ITS official errata for 32bit limitation and shareability limitation.
+Combo-phy support, no patches have been released to mainline yet.
+
+>
+> >
+> > Thanks,
+> > Peter Geis
+> >
+> >>
+> >> Signed-off-by: Simon Xue <xxm@rock-chips.com>
+> >> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >> ---
+> >>   drivers/pci/controller/dwc/Kconfig            |  10 +
+> >>   drivers/pci/controller/dwc/Makefile           |   1 +
+> >>   drivers/pci/controller/dwc/pcie-dw-rockchip.c | 277 ++++++++++++++++=
+++
+> >>   3 files changed, 288 insertions(+)
+> >>   create mode 100644 drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> >>
+> >> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controll=
+er/dwc/Kconfig
+> >> index 423d35872ce4..8ab027ba8c04 100644
+> >> --- a/drivers/pci/controller/dwc/Kconfig
+> >> +++ b/drivers/pci/controller/dwc/Kconfig
+> >> @@ -214,6 +214,16 @@ config PCIE_ARTPEC6_EP
+> >>            Enables support for the PCIe controller in the ARTPEC-6 SoC=
+ to work in
+> >>            endpoint mode. This uses the DesignWare core.
+> >>
+> >> +config PCIE_ROCKCHIP_DW_HOST
+> >> +       bool "Rockchip DesignWare PCIe controller"
+> >> +       select PCIE_DW
+> >> +       select PCIE_DW_HOST
+> >> +       depends on ARCH_ROCKCHIP || COMPILE_TEST
+> >> +       depends on OF
+> >> +       help
+> >> +         Enables support for the DesignWare PCIe controller in the
+> >> +         Rockchip SoC except RK3399.
+> >> +
+> >>   config PCIE_INTEL_GW
+> >>          bool "Intel Gateway PCIe host controller support"
+> >>          depends on OF && (X86 || COMPILE_TEST)
+> >> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/control=
+ler/dwc/Makefile
+> >> index 952d01941f23..0104659dfe88 100644
+> >> --- a/drivers/pci/controller/dwc/Makefile
+> >> +++ b/drivers/pci/controller/dwc/Makefile
+> >> @@ -14,6 +14,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE_EP) +=3D pci-layerscape-=
+ep.o
+> >>   obj-$(CONFIG_PCIE_QCOM) +=3D pcie-qcom.o
+> >>   obj-$(CONFIG_PCIE_ARMADA_8K) +=3D pcie-armada8k.o
+> >>   obj-$(CONFIG_PCIE_ARTPEC6) +=3D pcie-artpec6.o
+> >> +obj-$(CONFIG_PCIE_ROCKCHIP_DW_HOST) +=3D pcie-dw-rockchip.o
+> >>   obj-$(CONFIG_PCIE_INTEL_GW) +=3D pcie-intel-gw.o
+> >>   obj-$(CONFIG_PCIE_KIRIN) +=3D pcie-kirin.o
+> >>   obj-$(CONFIG_PCIE_HISI_STB) +=3D pcie-histb.o
+> >> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/p=
+ci/controller/dwc/pcie-dw-rockchip.c
+> >> new file mode 100644
+> >> index 000000000000..3f060144eeab
+> >> --- /dev/null
+> >> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> >> @@ -0,0 +1,277 @@
+> >> +// SPDX-License-Identifier: GPL-2.0
+> >> +/*
+> >> + * PCIe host controller driver for Rockchip SoCs.
+> >> + *
+> >> + * Copyright (C) 2021 Rockchip Electronics Co., Ltd.
+> >> + *             http://www.rock-chips.com
+> >> + *
+> >> + * Author: Simon Xue <xxm@rock-chips.com>
+> >> + */
+> >> +
+> >> +#include <linux/clk.h>
+> >> +#include <linux/gpio/consumer.h>
+> >> +#include <linux/mfd/syscon.h>
+> >> +#include <linux/module.h>
+> >> +#include <linux/of_device.h>
+> >> +#include <linux/phy/phy.h>
+> >> +#include <linux/platform_device.h>
+> >> +#include <linux/regmap.h>
+> >> +#include <linux/reset.h>
+> >> +
+> >> +#include "pcie-designware.h"
+> >> +
+> >> +/*
+> >> + * The upper 16 bits of PCIE_CLIENT_CONFIG are a write
+> >> + * mask for the lower 16 bits.
+> >> + */
+> >> +#define HIWORD_UPDATE(mask, val) (((mask) << 16) | (val))
+> >> +#define HIWORD_UPDATE_BIT(val) HIWORD_UPDATE(val, val)
+> >> +
+> >> +#define to_rockchip_pcie(x) dev_get_drvdata((x)->dev)
+> >> +
+> >> +#define PCIE_CLIENT_RC_MODE            HIWORD_UPDATE_BIT(0x40)
+> >> +#define PCIE_CLIENT_ENABLE_LTSSM       HIWORD_UPDATE_BIT(0xc)
+> >> +#define PCIE_SMLH_LINKUP               BIT(16)
+> >> +#define PCIE_RDLH_LINKUP               BIT(17)
+> >> +#define PCIE_LINKUP                    (PCIE_SMLH_LINKUP | PCIE_RDLH_=
+LINKUP)
+> >> +#define PCIE_L0S_ENTRY                 0x11
+> >> +#define PCIE_CLIENT_GENERAL_CONTROL    0x0
+> >> +#define PCIE_CLIENT_GENERAL_DEBUG      0x104
+> >> +#define PCIE_CLIENT_HOT_RESET_CTRL      0x180
+> >> +#define PCIE_CLIENT_LTSSM_STATUS       0x300
+> >> +#define PCIE_LTSSM_ENABLE_ENHANCE       BIT(4)
+> >> +
+> >> +struct rockchip_pcie {
+> >> +       struct dw_pcie                  pci;
+> >> +       void __iomem                    *apb_base;
+> >> +       struct phy                      *phy;
+> >> +       struct clk_bulk_data            *clks;
+> >> +       unsigned int                    clk_cnt;
+> >> +       struct reset_control            *rst;
+> >> +       struct gpio_desc                *rst_gpio;
+> >> +       struct regulator                *vpcie3v3;
+> >> +};
+> >> +
+> >> +static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
+> >> +                                            u32 reg)
+> >> +{
+> >> +       return readl(rockchip->apb_base + reg);
+> >> +}
+> >> +
+> >> +static void rockchip_pcie_writel_apb(struct rockchip_pcie *rockchip,
+> >> +                                               u32 val, u32 reg)
+> >> +{
+> >> +       writel(val, rockchip->apb_base + reg);
+> >> +}
+> >> +
+> >> +static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip=
+)
+> >> +{
+> >> +       rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
+> >> +                                PCIE_CLIENT_GENERAL_CONTROL);
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_link_up(struct dw_pcie *pci)
+> >> +{
+> >> +       struct rockchip_pcie *rockchip =3D to_rockchip_pcie(pci);
+> >> +       u32 val =3D rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_LTSS=
+M_STATUS);
+> >> +
+> >> +       if ((val & (PCIE_RDLH_LINKUP | PCIE_SMLH_LINKUP)) =3D=3D PCIE_=
+LINKUP &&
+> >> +           (val & GENMASK(5, 0)) =3D=3D PCIE_L0S_ENTRY)
+> >> +               return 1;
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_start_link(struct dw_pcie *pci)
+> >> +{
+> >> +       struct rockchip_pcie *rockchip =3D to_rockchip_pcie(pci);
+> >> +
+> >> +       /* Reset device */
+> >> +       gpiod_set_value_cansleep(rockchip->rst_gpio, 0);
+> >> +
+> >> +       rockchip_pcie_enable_ltssm(rockchip);
+> >> +
+> >> +       /*
+> >> +        * PCIe requires the refclk to be stable for 100=C2=B5s prior =
+to releasing
+> >> +        * PERST. See table 2-4 in section 2.6.2 AC Specifications of =
+the PCI
+> >> +        * Express Card Electromechanical Specification, 1.1. However,=
+ we don't
+> >> +        * know if the refclk is coming from RC's PHY or external OSC.=
+ If it's
+> >> +        * from RC, so enabling LTSSM is the just right place to relea=
+se #PERST.
+> >> +        * We need more extra time as before, rather than setting just
+> >> +        * 100us as we don't know how long should the device need to r=
+eset.
+> >> +        */
+> >> +       msleep(100);
+> >> +       gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_host_init(struct pcie_port *pp)
+> >> +{
+> >> +       struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+> >> +       struct rockchip_pcie *rockchip =3D to_rockchip_pcie(pci);
+> >> +       u32 val;
+> >> +
+> >> +       /* LTSSM enable control mode */
+> >> +       val =3D rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_HOT_RESE=
+T_CTRL);
+> >> +       val |=3D PCIE_LTSSM_ENABLE_ENHANCE | (PCIE_LTSSM_ENABLE_ENHANC=
+E << 16);
+> >> +       rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_=
+CTRL);
+> >> +
+> >> +       rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_RC_MODE,
+> >> +                                PCIE_CLIENT_GENERAL_CONTROL);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +
+> >> +static const struct dw_pcie_host_ops rockchip_pcie_host_ops =3D {
+> >> +       .host_init =3D rockchip_pcie_host_init,
+> >> +};
+> >> +
+> >> +static int rockchip_pcie_clk_init(struct rockchip_pcie *rockchip)
+> >> +{
+> >> +       struct device *dev =3D rockchip->pci.dev;
+> >> +       int ret;
+> >> +
+> >> +       ret =3D devm_clk_bulk_get_all(dev, &rockchip->clks);
+> >> +       if (ret < 0)
+> >> +               return ret;
+> >> +
+> >> +       rockchip->clk_cnt =3D ret;
+> >> +
+> >> +       return clk_bulk_prepare_enable(rockchip->clk_cnt, rockchip->cl=
+ks);
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_resource_get(struct platform_device *pdev,
+> >> +                                     struct rockchip_pcie *rockchip)
+> >> +{
+> >> +       rockchip->apb_base =3D devm_platform_ioremap_resource_byname(p=
+dev, "apb");
+> >> +       if (IS_ERR(rockchip->apb_base))
+> >> +               return PTR_ERR(rockchip->apb_base);
+> >> +
+> >> +       rockchip->rst_gpio =3D devm_gpiod_get_optional(&pdev->dev, "re=
+set",
+> >> +                                                    GPIOD_OUT_HIGH);
+> >> +       if (IS_ERR(rockchip->rst_gpio))
+> >> +               return PTR_ERR(rockchip->rst_gpio);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_phy_init(struct rockchip_pcie *rockchip)
+> >> +{
+> >> +       struct device *dev =3D rockchip->pci.dev;
+> >> +       int ret;
+> >> +
+> >> +       rockchip->phy =3D devm_phy_get(dev, "pcie-phy");
+> >> +       if (IS_ERR(rockchip->phy))
+> >> +               return dev_err_probe(dev, PTR_ERR(rockchip->phy),
+> >> +                                    "missing PHY\n");
+> >> +
+> >> +       ret =3D phy_init(rockchip->phy);
+> >> +       if (ret < 0)
+> >> +               return ret;
+> >> +
+> >> +       ret =3D phy_power_on(rockchip->phy);
+> >> +       if (ret)
+> >> +               phy_exit(rockchip->phy);
+> >> +
+> >> +       return ret;
+> >> +}
+> >> +
+> >> +static void rockchip_pcie_phy_deinit(struct rockchip_pcie *rockchip)
+> >> +{
+> >> +       phy_exit(rockchip->phy);
+> >> +       phy_power_off(rockchip->phy);
+> >> +}
+> >> +
+> >> +static int rockchip_pcie_reset_control_release(struct rockchip_pcie *=
+rockchip)
+> >> +{
+> >> +       struct device *dev =3D rockchip->pci.dev;
+> >> +
+> >> +       rockchip->rst =3D devm_reset_control_array_get_exclusive(dev);
+> >> +       if (IS_ERR(rockchip->rst))
+> >> +               return dev_err_probe(dev, PTR_ERR(rockchip->rst),
+> >> +                                    "failed to get reset lines\n");
+> >> +
+> >> +       return reset_control_deassert(rockchip->rst);
+> >> +}
+> >> +
+> >> +static const struct dw_pcie_ops dw_pcie_ops =3D {
+> >> +       .link_up =3D rockchip_pcie_link_up,
+> >> +       .start_link =3D rockchip_pcie_start_link,
+> >> +};
+> >> +
+> >> +static int rockchip_pcie_probe(struct platform_device *pdev)
+> >> +{
+> >> +       struct device *dev =3D &pdev->dev;
+> >> +       struct rockchip_pcie *rockchip;
+> >> +       struct pcie_port *pp;
+> >> +       int ret;
+> >> +
+> >> +       rockchip =3D devm_kzalloc(dev, sizeof(*rockchip), GFP_KERNEL);
+> >> +       if (!rockchip)
+> >> +               return -ENOMEM;
+> >> +
+> >> +       platform_set_drvdata(pdev, rockchip);
+> >> +
+> >> +       rockchip->pci.dev =3D dev;
+> >> +       rockchip->pci.ops =3D &dw_pcie_ops;
+> >> +
+> >> +       pp =3D &rockchip->pci.pp;
+> >> +       pp->ops =3D &rockchip_pcie_host_ops;
+> >> +
+> >> +       ret =3D rockchip_pcie_resource_get(pdev, rockchip);
+> >> +       if (ret)
+> >> +               return ret;
+> >> +
+> >> +       /* DON'T MOVE ME: must be enable before PHY init */
+> >> +       rockchip->vpcie3v3 =3D devm_regulator_get_optional(dev, "vpcie=
+3v3");
+> >> +       if (IS_ERR(rockchip->vpcie3v3))
+> >> +               if (PTR_ERR(rockchip->vpcie3v3) !=3D -ENODEV)
+> >> +                       return dev_err_probe(dev, PTR_ERR(rockchip->vp=
+cie3v3),
+> >> +                                       "failed to get vpcie3v3 regula=
+tor\n");
+> >> +
+> >> +       ret =3D regulator_enable(rockchip->vpcie3v3);
+> >> +       if (ret) {
+> >> +               dev_err(dev, "failed to enable vpcie3v3 regulator\n");
+> >> +               return ret;
+> >> +       }
+> >> +
+> >> +       ret =3D rockchip_pcie_phy_init(rockchip);
+> >> +       if (ret)
+> >> +               goto disable_regulator;
+> >> +
+> >> +       ret =3D rockchip_pcie_reset_control_release(rockchip);
+> >> +       if (ret)
+> >> +               goto deinit_phy;
+> >> +
+> >> +       ret =3D rockchip_pcie_clk_init(rockchip);
+> >> +       if (ret)
+> >> +               goto deinit_phy;
+> >> +
+> >> +       ret =3D dw_pcie_host_init(pp);
+> >> +       if (!ret)
+> >> +               return 0;
+> >> +
+> >> +       clk_bulk_disable_unprepare(rockchip->clk_cnt, rockchip->clks);
+> >> +deinit_phy:
+> >> +       rockchip_pcie_phy_deinit(rockchip);
+> >> +disable_regulator:
+> >> +       regulator_disable(rockchip->vpcie3v3);
+> >> +
+> >> +       return ret;
+> >> +}
+> >> +
+> >> +static const struct of_device_id rockchip_pcie_of_match[] =3D {
+> >> +       { .compatible =3D "rockchip,rk3568-pcie", },
+> >> +       {},
+> >> +};
+> >> +
+> >> +static struct platform_driver rockchip_pcie_driver =3D {
+> >> +       .driver =3D {
+> >> +               .name   =3D "rockchip-dw-pcie",
+> >> +               .of_match_table =3D rockchip_pcie_of_match,
+> >> +               .suppress_bind_attrs =3D true,
+> >> +       },
+> >> +       .probe =3D rockchip_pcie_probe,
+> >> +};
+> >> +builtin_platform_driver(rockchip_pcie_driver);
+> >> --
+> >> 2.25.1
+> >>
+> >>
+> >>
+> >>
+> >> _______________________________________________
+> >> Linux-rockchip mailing list
+> >> Linux-rockchip@lists.infradead.org
+> >> http://lists.infradead.org/mailman/listinfo/linux-rockchip
+> >
+> >
+> >
+>
+>
