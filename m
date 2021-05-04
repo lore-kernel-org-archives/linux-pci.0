@@ -2,193 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66C47C43461
-	for <linux-pci@archiver.kernel.org>; Tue,  4 May 2021 07:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD980C433B4
+	for <linux-pci@archiver.kernel.org>; Tue,  4 May 2021 07:38:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 468E361159
-	for <linux-pci@archiver.kernel.org>; Tue,  4 May 2021 07:20:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86F816139A
+	for <linux-pci@archiver.kernel.org>; Tue,  4 May 2021 07:38:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229996AbhEDHVI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 May 2021 03:21:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48088 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229904AbhEDHVH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 May 2021 03:21:07 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9FBC061761
-        for <linux-pci@vger.kernel.org>; Tue,  4 May 2021 00:20:13 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id o27so7631821qkj.9
-        for <linux-pci@vger.kernel.org>; Tue, 04 May 2021 00:20:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sifive.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=JggnRH2z+C5c6q5fwkNF9u7IZivIlxcnTgChvJQFvSA=;
-        b=csBKU8aJUh6TfQKqWkRRJuwzqfCx/gxbV1DQ6d4id1eoGXBhg76xsbhY2fA34UDX22
-         sZhPa7vaekhSABqSq3q7znGNkTGTxRXlf8Kiac//bM/Z3oVYKoZXXB9zyWWTH7tsAue2
-         1B3yweWVmqGH2oSfzokpJ9flNMRRfs9Ch/TZUvIWlFbtChX6zJmSSKrgWOdoAyamxI4t
-         MWCSaYfX4b6HMUDdhbJ98JhjtDEInNQGjQWG3kd5N5U5xZzC2NZbKSwi8I2ED9rQfmrz
-         7UAGrCn8PAB1iTBuS+TzkQAplICSN9l3apNNyz3X/NdhP+azrqtYr3WMCOS/YtBXCUbQ
-         fB6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=JggnRH2z+C5c6q5fwkNF9u7IZivIlxcnTgChvJQFvSA=;
-        b=N4l+Ji7DWESOgGPTJ2k0qNHYKIfzrrwwD0AY+pZ/BGKw1Jg8sg74wsVgGmm7im/9vQ
-         cCDa9m75EiXIm9dvX07dJe8E0guYVw28mTaK+Na3j1maU0fX1EfY7Bm3glJvRVsQGATL
-         rnmt3twrNfx73t8fpYQVPJRHwLQqYUSrkztJIbvYEJLaHhM7rU6nWJDvWs9ZlpxO1WOB
-         KPps5RW2uXT/XV//8UimPQSXrWSawxjoCuN5Gz8Z2KRjSAiwoGUTgufuW8WUO/Aazblf
-         fQkTBuIPkvNfLmBATSt3ZJk3mpecSU2kUmmTjrKnR2j1dS79faay8YGII/N1iSBHvgdz
-         xitg==
-X-Gm-Message-State: AOAM532om4DG++YIsvg3H5SzeB25VANzdVqmmjau89kT/RJLFy8QQgpd
-        05EBqLFSjomLItJG4t5nQQ27/29T53H+4fxYrSyMgw==
-X-Google-Smtp-Source: ABdhPJwSV0cJLUMNNy0lL94PwJnsWKOoPmVIkjaGTOqFfwKqrXom5YgkvcZWXnSt5nztkk0zIFsVQOCkdjO4/mVSk1Q=
-X-Received: by 2002:a05:620a:29c4:: with SMTP id s4mr20672337qkp.401.1620112812489;
- Tue, 04 May 2021 00:20:12 -0700 (PDT)
+        id S229987AbhEDHjj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 May 2021 03:39:39 -0400
+Received: from mout.kundenserver.de ([212.227.126.130]:52667 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229927AbhEDHjj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 May 2021 03:39:39 -0400
+Received: from mail-wr1-f50.google.com ([209.85.221.50]) by
+ mrelayeu.kundenserver.de (mreue012 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1MVrXh-1m5VXq3JsT-00RtKS for <linux-pci@vger.kernel.org>; Tue, 04 May 2021
+ 09:38:43 +0200
+Received: by mail-wr1-f50.google.com with SMTP id l14so8216520wrx.5
+        for <linux-pci@vger.kernel.org>; Tue, 04 May 2021 00:38:43 -0700 (PDT)
+X-Gm-Message-State: AOAM531O8Z3cjjXW7hsU/oOk/ThBA8lVP1mccBGact54VEcHyUKSUfkx
+        fV/OARIzR1ZmrsWqpYUQ7jwDi30m3uCP3Hnr2+M=
+X-Google-Smtp-Source: ABdhPJy/PLg85qe+tELF8CiCMULGw8CmLjaQh6B4KQDvEe6Nzd0MKq4dD8b7Vp6q6w6wwtp+vCevzl5yt4x3J/k0HPs=
+X-Received: by 2002:adf:c70b:: with SMTP id k11mr30476861wrg.165.1620113923438;
+ Tue, 04 May 2021 00:38:43 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210406092634.50465-1-greentime.hu@sifive.com> <20210503164023.GA919777@bjorn-Precision-5520>
-In-Reply-To: <20210503164023.GA919777@bjorn-Precision-5520>
-From:   Greentime Hu <greentime.hu@sifive.com>
-Date:   Tue, 4 May 2021 15:20:00 +0800
-Message-ID: <CAHCEeh+cMrEnHNG3W3ZNzdgT-m7BMorDawF6D8qkFYGg=RJMOw@mail.gmail.com>
-Subject: Re: [PATCH v5 0/6] Add SiFive FU740 PCIe host controller driver support
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Paul Walmsley <paul.walmsley@sifive.com>, hes@sifive.com,
-        Erik Danie <erik.danie@sifive.com>,
-        Zong Li <zong.li@sifive.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, robh+dt@kernel.org,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>, alex.dewar90@gmail.com,
-        khilman@baylibre.com, hayashi.kunihiko@socionext.com,
-        vidyas@nvidia.com, jh80.chung@samsung.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-clk@vger.kernel.org
+References: <20210503211649.4109334-1-linus.walleij@linaro.org> <20210503211649.4109334-2-linus.walleij@linaro.org>
+In-Reply-To: <20210503211649.4109334-2-linus.walleij@linaro.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 4 May 2021 09:38:02 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a26RU=9waCmLgfjy3DA0BKuE5=gda=7vmeJGMtDRjdz7g@mail.gmail.com>
+Message-ID: <CAK8P3a26RU=9waCmLgfjy3DA0BKuE5=gda=7vmeJGMtDRjdz7g@mail.gmail.com>
+Subject: Re: [PATCH 1/4] ARM/ixp4xx: Move the UART and exp bus virtbases
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Imre Kaloz <kaloz@openwrt.org>,
+        Krzysztof Halasa <khalasa@piap.pl>,
+        Zoltan HERPAI <wigyori@uid0.hu>,
+        Raylynn Knight <rayknight@me.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:NCVgW3jPzPFV8mOUztWcfktvR0Mkh7Ya8yYNXr3A3xqQ+uliIF9
+ RAqC3D35mjev7TJyVLT3SQ624a2yZZrhAV0neY5g2SLkteL/HZALePhQtwiHsj+PGjPXHar
+ mbMnqVkt64WZVKCYovIH8n9HBa0xm1piyAZHizglDXLJuXS2icSrqRUz61ZYWakLpTrRvlt
+ YmMV3IosaGCIh0X+9IaAA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:+5axUCIvhIo=:ReuPQzO/dusah7716auyrm
+ QnJTMKsSCTAK+guoYB6RbyqFLqs8xv+7vmB8WrBpFK28Vxn2XaZTA7AD4Hg7g/V5sAz9GbUtH
+ OxR01dUnNRrpkEqaMfAW42VQBcYJsCGBqRtYypx1ZdC2YlruVcewVT7TY2NOjkTKAlwD2Tc2y
+ bP1pdpgGM7C5HN/mJsxgL0dFilS0VYo3eqx/3f8V+xyKFqwpRkWtUqQKWiNlqwi52CLEwxeDQ
+ LnkT+2jIXsEwhtDa0LSwnKNdQLLfNr3jAEXr2/IUQovRclqPCufy82ZoY3melGjX9ZdXBcAk0
+ 5Ko5a3F/OXBKMUfmb2H3DbQ94B2VYmgOAq0JLsBfWsiF7GDYNWkxmHWREQrxWX5cjHTRWc9yE
+ SzZTwpMQTY2VWjiAwZ2dHExo5z2hSuRn6lqVCRy6eZCMG4QFhThGq+jMqC68oA5xGjf+PgpZP
+ zmfaIG+SZScj0jGtCfASQIT3LCVxWd76uRxfam1y+5oRczfYmQZXTPrVrz6YalqyLrur8bceg
+ sqO8XnL5Qe2l0gCdkfKkJvoCHOo5RAcSntaiRlRQyfSwIhzn46S8YDdEHZh6zvTBfMh6IkrDU
+ PF4f47ecw6TSab2NRSgv3RuNgi13UuOrSVHrfpdOOmjHCGGQfLRwfDKqDoIysuSNh0xIqIaWd
+ Rue8=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Bjorn Helgaas <helgaas@kernel.org> =E6=96=BC 2021=E5=B9=B45=E6=9C=884=E6=97=
-=A5 =E9=80=B1=E4=BA=8C =E4=B8=8A=E5=8D=8812:40=E5=AF=AB=E9=81=93=EF=BC=9A
+On Mon, May 3, 2021 at 11:16 PM Linus Walleij <linus.walleij@linaro.org> wrote:
 >
-> On Tue, Apr 06, 2021 at 05:26:28PM +0800, Greentime Hu wrote:
-> > This patchset includes SiFive FU740 PCIe host controller driver. We als=
-o
-> > add pcie_aux clock and pcie_power_on_reset controller to prci driver fo=
-r
-> > PCIe driver to use it.
+> UART1, UART2 and the expansion bus config registers
+> are the only registers mapped in a fixed location
+> when using device tree.
 >
-> I dropped this series because of the build problem I mentioned [1].
-> It will not be included in v5.13 unless the build problem is fixed
-> ASAP.
+> For device tree we also want to get rid of the custom
+> <mach/io.h> for IXP4xx. So we need to undefine
+> CONFIG_NEED_MACH_IO_H. Doing that activates the fixed
+> mapping of the PCI IO space to PCI_IO_VIRT_BASE which
+> is hardcoded to 0xFEE00000 and this would collide with
+> the old fixed mappings.
 >
-> [1] https://lore.kernel.org/r/20210428194713.GA314975@bjorn-Precision-552=
-0
+> Move the UART1 and UART2 to the beginning of the fixmap
+> region at 0xFFC80000-0xFFC81FFF and move the expansion
+> bus base to 0xFFC82000-0xFFC81FFF in order to be able to
+> accommodate for the fixed PCI virtual IO space.
+
+This doesn't feel right to me, for multiple reasons:
+
+- I don't think putting something into fixmap is valid unless you assign
+  a fixmap constant in arch/arm/include/asm/fixmap.h for it and
+  use that constant.
+  We do have FIX_EARLYCON_MEM_BASE already, and we could
+  in theory use the same constant for both debug_ll and earlycon
+  (I think), or we could have adjacent pages for the two.
+
+- IIRC, DEBUG_LL always uses a section map, so if you just need
+  a single page, it doesn't work right.
+
+Would it be sufficient if you just move IXP4XX_*_BASE_VIRT
+from 0xFEF????? to 0xFEC????? ?
+
+Idea I've had in the past was to treat DEBUG_UART_VIRT==0
+as a special case that automatically picks a reasonable fixed
+address, such as (0xfec00000 | (DEBUG_UART_PHYS & 0x1fffff)
+and document that area in Documentation/arm/memory.txt as
+the default place for debug_ll.
+
+        Arnd
+
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Imre Kaloz <kaloz@openwrt.org>
+> Cc: Krzysztof Halasa <khalasa@piap.pl>
+> Cc: Zoltan HERPAI <wigyori@uid0.hu>
+> Cc: Raylynn Knight <rayknight@me.com>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> PCI maintainers: this patch is mostly FYI, will be
+> merged through ARM SoC
+> ---
+>  arch/arm/Kconfig.debug                          | 4 ++--
+>  arch/arm/mach-ixp4xx/include/mach/ixp4xx-regs.h | 7 ++++---
+>  arch/arm/mach-ixp4xx/ixp4xx-of.c                | 8 ++++++--
+>  3 files changed, 12 insertions(+), 7 deletions(-)
 >
+> diff --git a/arch/arm/Kconfig.debug b/arch/arm/Kconfig.debug
+> index 9e0b5e7f12af..bbe799f6bc03 100644
+> --- a/arch/arm/Kconfig.debug
+> +++ b/arch/arm/Kconfig.debug
+> @@ -1803,8 +1803,8 @@ config DEBUG_UART_VIRT
+>         default 0xfedc0000 if DEBUG_EP93XX
+>         default 0xfee003f8 if DEBUG_FOOTBRIDGE_COM1
+>         default 0xfee20000 if DEBUG_NSPIRE_CLASSIC_UART || DEBUG_NSPIRE_CX_UART
+> -       default 0xfef00000 if ARCH_IXP4XX && !CPU_BIG_ENDIAN
+> -       default 0xfef00003 if ARCH_IXP4XX && CPU_BIG_ENDIAN
+> +       default 0xffc80000 if ARCH_IXP4XX && !CPU_BIG_ENDIAN
+> +       default 0xffc80003 if ARCH_IXP4XX && CPU_BIG_ENDIAN
+>         default 0xfef36000 if DEBUG_HIGHBANK_UART
+>         default 0xfefb0000 if DEBUG_OMAP1UART1 || DEBUG_OMAP7XXUART1
 
-Hi all,
+Please keep these sorted numerically
 
-This build failed in x86_64 is because CONFIG_GPIOLIB is disabled in
-the testing config.
-
-diff --git a/drivers/pci/controller/dwc/Kconfig
-b/drivers/pci/controller/dwc/Kconfig
-index 0a37d21ed64e..56b66e1fed53 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -323,6 +323,7 @@ config PCIE_FU740
-        depends on PCI_MSI_IRQ_DOMAIN
-        depends on SOC_SIFIVE || COMPILE_TEST
-        select PCIE_DW_HOST
-+       select GPIOLIB
-        help
-          Say Y here if you want PCIe controller support for the SiFive
-          FU740.
-
-After applying this change, it can build pass.
-
-> > This is tested with e1000e: Intel(R) PRO/1000 Network Card, AMD Radeon =
-R5
-> > 230 graphics card and SP M.2 PCIe Gen 3 SSD in SiFive Unmatched based o=
-n
-> > v5.11 Linux kernel.
-> >
-> > Changes in v5:
-> >  - Fix typo in comments
-> >  - Keep comments style consistent
-> >  - Refine some error handling codes
-> >  - Remove unneeded header file including
-> >  - Merge fu740_pcie_ltssm_enable implementation to fu740_pcie_start_lin=
-k
-> >
-> > Changes in v4:
-> >  - Fix Wunused-but-set-variable warning in prci driver
-> >
-> > Changes in v3:
-> >  - Remove items that has been defined
-> >  - Refine format of sifive,fu740-pcie.yaml
-> >  - Replace perstn-gpios with the common one
-> >  - Change DBI mapping space to 2GB from 4GB
-> >  - Refine drivers/reset/Kconfig
-> >
-> > Changes in v2:
-> >  - Refine codes based on reviewers' feedback
-> >  - Remove define and use the common one
-> >  - Replace __raw_writel with writel_relaxed
-> >  - Split fu740_phyregreadwrite to write function
-> >  - Use readl_poll_timeout in stead of while loop checking
-> >  - Use dwc common codes
-> >  - Use gpio descriptors and the gpiod_* api.
-> >  - Replace devm_ioremap_resource with devm_platform_ioremap_resource_by=
-name
-> >  - Replace devm_reset_control_get with devm_reset_control_get_exclusive
-> >  - Add more comments for delay and sleep
-> >  - Remove "phy ? x : y" expressions
-> >  - Refine code logic to remove possible infinite loop
-> >  - Replace magic number with meaningful define
-> >  - Remove fu740_pcie_pm_ops
-> >  - Use builtin_platform_driver
-> >
-> > Greentime Hu (5):
-> >   clk: sifive: Add pcie_aux clock in prci driver for PCIe driver
-> >   clk: sifive: Use reset-simple in prci driver for PCIe driver
-> >   MAINTAINERS: Add maintainers for SiFive FU740 PCIe driver
-> >   dt-bindings: PCI: Add SiFive FU740 PCIe host controller
-> >   riscv: dts: Add PCIe support for the SiFive FU740-C000 SoC
-> >
-> > Paul Walmsley (1):
-> >   PCI: fu740: Add SiFive FU740 PCIe host controller driver
-> >
-> >  .../bindings/pci/sifive,fu740-pcie.yaml       | 113 +++++++
-> >  MAINTAINERS                                   |   8 +
-> >  arch/riscv/boot/dts/sifive/fu740-c000.dtsi    |  33 ++
-> >  drivers/clk/sifive/Kconfig                    |   2 +
-> >  drivers/clk/sifive/fu740-prci.c               |  11 +
-> >  drivers/clk/sifive/fu740-prci.h               |   2 +-
-> >  drivers/clk/sifive/sifive-prci.c              |  54 +++
-> >  drivers/clk/sifive/sifive-prci.h              |  13 +
-> >  drivers/pci/controller/dwc/Kconfig            |   9 +
-> >  drivers/pci/controller/dwc/Makefile           |   1 +
-> >  drivers/pci/controller/dwc/pcie-fu740.c       | 308 ++++++++++++++++++
-> >  drivers/reset/Kconfig                         |   1 +
-> >  include/dt-bindings/clock/sifive-fu740-prci.h |   1 +
-> >  13 files changed, 555 insertions(+), 1 deletion(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/sifive,fu740-=
-pcie.yaml
-> >  create mode 100644 drivers/pci/controller/dwc/pcie-fu740.c
-> >
-> > --
-> > 2.30.2
-> >
+        Arnd
