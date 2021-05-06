@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A396FC43461
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5223AC43462
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80EBA61621
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DB1961417
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235628AbhEFPdu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45966 "EHLO mail.kernel.org"
+        id S235671AbhEFPdw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235460AbhEFPdr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 15D12613E3;
-        Thu,  6 May 2021 15:32:49 +0000 (UTC)
+        id S235368AbhEFPdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EA209613F5;
+        Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315169;
-        bh=qGv5xT5gD11qmr1DVmxcsAYsbpUCl4ZOEgFpdd7GuZ8=;
+        s=k20201202; t=1620315168;
+        bh=u1gZ4iCJ8EZuBq5+caF8WVSL+jyHUTpCgbqmTBAr8V8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IcczHnvLIHF6Yfx/K/MGhuGZyKTj2egYnSsbv/FT+g6FvPAVLwvBljubTWSu0MLC/
-         8cJ5tvUC4mbyvkJlm76qAUB8QGJ6/Eudcc3qTnBMBkv/HRuGb1c3DlG5vGWR1ludqo
-         uLZDbsTHo8YXU9pMepGBdLgGHvji8yxuge/lIi57C24hDVnOadn9S0A2FtuiC67Tk7
-         H1nnRear0F2QjTLUDwPcBS7Dqd2hqNSIB8+N8z/Y2DAJxvJJDzU/2ZzOvglFPBvDt8
-         ouxkk52VzJ33d3sj67QQtdVtGTZmuXMyPAmLYGsv/VaFcJn/pbqrcsKjsberwgqd2w
-         RuPj0zexOE0NQ==
+        b=oFxyk95u1LyOsMCxTvvj4v2FldyAmFLbYC+G5ZQUrf/8Oy6C4dBjQRshqVOcaJpa1
+         klQB3MKtwfzwXlRdVNPPoaWwfgzwpSAw4G70CyI2iDJnlcoe2+6b6eka574kPB8pzV
+         Xx72qrVdMlzTcxcPycxRnXnPTk2Fc5s4V/MbLbQ7qEDTORl+/KEMs26dWYrfoXnds2
+         o72XlXW3fgi4p5CgxtAMtsYDOYuadBgvTpKNk39zm+GbdPz/QhsilUYN7hLp9J6nDD
+         CKd2cu5Ch49OZbOAbRfSSVDxFSW2ifiT77d9s1eVsc2jmqLm3337CyRns3bRN1MZgX
+         0V1+ETSGO/hVg==
 Received: by pali.im (Postfix)
-        id C357A732; Thu,  6 May 2021 17:32:48 +0200 (CEST)
+        id 819311208; Thu,  6 May 2021 17:32:46 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 16/42] PCI: aardvark: Remove unneeded goto
-Date:   Thu,  6 May 2021 17:31:27 +0200
-Message-Id: <20210506153153.30454-17-pali@kernel.org>
+Subject: [PATCH 09/42] PCI: aardvark: Fix PCIe Max Payload Size setting
+Date:   Thu,  6 May 2021 17:31:20 +0200
+Message-Id: <20210506153153.30454-10-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,47 +57,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Simplify advk_pcie_init_irq_domain() function.
+Change PCIe Max Payload Size setting in PCIe Device Control register to 512
+bytes to align with PCIe Link Initialization sequence as defined in Marvell
+Armada 3700 Functional Specification. According to the specification,
+maximal Max Payload Size supported by this device is 512 bytes.
+
+Without this kernel prints suspicious line:
+
+    pci 0000:01:00.0: Upstream bridge's Max Payload Size set to 256 (was 16384, max 512)
+
+With this change it changes to:
+
+    pci 0000:01:00.0: Upstream bridge's Max Payload Size set to 256 (was 512, max 512)
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-aardvark.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index c50421af9d06..366d7480bc1b 100644
+index edeacd95297e..873efd79fffb 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1013,7 +1013,6 @@ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
- 	struct device_node *node = dev->of_node;
- 	struct device_node *pcie_intc_node;
- 	struct irq_chip *irq_chip;
--	int ret = 0;
+@@ -351,8 +351,9 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
+ 	reg &= ~PCI_EXP_DEVCTL_RELAX_EN;
+ 	reg &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
++	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
+ 	reg &= ~PCI_EXP_DEVCTL_READRQ;
+-	reg |= PCI_EXP_DEVCTL_PAYLOAD; /* Set max payload size */
++	reg |= PCI_EXP_DEVCTL_PAYLOAD_512B;
+ 	reg |= PCI_EXP_DEVCTL_READRQ_512B;
+ 	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
  
- 	pcie_intc_node =  of_get_next_child(node, NULL);
- 	if (!pcie_intc_node) {
-@@ -1029,15 +1028,15 @@ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
- 	pcie->irq_domain =
- 		irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
- 				      &advk_pcie_irq_domain_ops, pcie);
-+
-+	of_node_put(pcie_intc_node);
-+
- 	if (!pcie->irq_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		ret = -ENOMEM;
--		goto out_put_node;
-+		return -ENOMEM;
- 	}
- 
--out_put_node:
--	of_node_put(pcie_intc_node);
--	return ret;
-+	return 0;
- }
- 
- static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
 -- 
 2.20.1
 
