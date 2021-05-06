@@ -2,168 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7ADC433ED
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD817C433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:59:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34100613CD
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D30D610C8
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235933AbhEFPfs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:35:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45940 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235765AbhEFPeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:34:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0585F6192B;
-        Thu,  6 May 2021 15:32:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315176;
-        bh=REF2cZ76zLLt5itdjPFPEdxTt802EyaUEpYkfKBXnp0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bymXLmxPOCNDiGCwPxOj9Ki5Mh1U6YrCM+T34IowpaRXqHyKJzzFPG7dpzU2x029r
-         2t4BZmAzPudvus95KmfRSke7U0/JAgR+LnWhsGFKZFMX7AMomrx6hf+Y/1JKgGAYdI
-         pNhJWPlEIHhriq/ATU/Cah1LOf/e9EACgvlN0KzoQMgH8vKVEZ2WgAtSL/QoKsYw7e
-         PKHlSdx7IAswcp6n1dpK/QsrO4W8NfyhpatlE/+iosj+WqTGHlfDclBD4xzyYc0FS0
-         N1EHXcqOdpLUxDFnXpPeH2G4Bl5wII6kTXNZFv6PuYw8Qw4Ca6/G2+ZfPHlE0QH7rY
-         xx1oUB2YGeHaw==
-Received: by pali.im (Postfix)
-        id A8AD1732; Thu,  6 May 2021 17:32:55 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Remi Pommarel <repk@triplefau.lt>, Xogium <contact@xogium.me>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 40/42] PCI: pci-bridge-emul: re-arrange register tests
-Date:   Thu,  6 May 2021 17:31:51 +0200
-Message-Id: <20210506153153.30454-41-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
-References: <20210506153153.30454-1-pali@kernel.org>
+        id S235287AbhEFQAk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 12:00:40 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:57199 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S235285AbhEFQAi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 May 2021 12:00:38 -0400
+Received: (qmail 741677 invoked by uid 1000); 6 May 2021 11:59:39 -0400
+Date:   Thu, 6 May 2021 11:59:39 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Paul Menzel <pmenzel@molgen.mpg.de>, linux-usb@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: `quirk_usb_handoff_xhci` takes 60 ms with ASM1042
+Message-ID: <20210506155939.GA738638@rowland.harvard.edu>
+References: <YJK/bkJpCC+INPo3@kroah.com>
+ <20210506152300.GA1405893@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210506152300.GA1405893@bjorn-Precision-5520>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+On Thu, May 06, 2021 at 10:23:00AM -0500, Bjorn Helgaas wrote:
+> On Wed, May 05, 2021 at 05:53:18PM +0200, Greg Kroah-Hartman wrote:
+> > I think, if we don't do the handoff, then the BIOS/firmware tries to
+> > send the OS fake keyboard/mouse commands, and Linux isn't ready for that
+> > as we didn't allow hotplug PS/2 stuff.  But I could be wrong, it's been
+> > a long time since we did that logic.
+> 
+> I have no idea what "BIOS/firmware sending OS fake keyboard/mouse
+> commands" means.  From the OS point of view, does that look like USB
+> events that cause PCI interrupts?  PS/2 interrupts?  Are these
+> commands caused by the user typing or moving the mouse?  Or does BIOS
+> fabricate commands for other reasons?
 
-Re-arrange the tests for which sets of registers are being accessed so that
-it is easier to add further regions later. No functional change.
+Think of an old MSDOS operating system without USB support.  The BIOS 
+tries to be helpful by translating mouse and keyboard input it receives 
+over USB into PS/2 events that the operating system can handle.  
+Originally this was done using SMI; now it presumably is still a legacy 
+part of UEFI.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-[pali: Fix reading old value in pci_bridge_emul_conf_write]
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- drivers/pci/pci-bridge-emul.c | 61 ++++++++++++++++++-----------------
- 1 file changed, 31 insertions(+), 30 deletions(-)
+> The way you describe it, this *sounds* like a race, where Linux
+> mishandles commands that happen before the handoff quirk.  Do you
+> remember what happens if BIOS sends a fake command before Linux is
+> ready for it?  Unexpected interrupt?
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 5f8398f8d039..63959e4b188a 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -370,25 +370,25 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 	__le32 *cfgspace;
- 	const struct pci_bridge_reg_behavior *behavior;
- 
--	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END) {
--		*value = 0;
--		return PCIBIOS_SUCCESSFUL;
--	}
--
--	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END) {
-+	if (reg < PCI_BRIDGE_CONF_END) {
-+		/* Emulated PCI space */
-+		read_op = bridge->ops->read_base;
-+		cfgspace = (__le32 *) &bridge->conf;
-+		behavior = bridge->pci_regs_behavior;
-+	} else if (!bridge->has_pcie) {
-+		/* PCIe space is not implemented, and no PCI capabilities */
- 		*value = 0;
- 		return PCIBIOS_SUCCESSFUL;
--	}
--
--	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
-+	} else if (reg < PCI_CAP_PCIE_END) {
-+		/* Our emulated PCIe capability */
- 		reg -= PCI_CAP_PCIE_START;
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
- 	} else {
--		read_op = bridge->ops->read_base;
--		cfgspace = (__le32 *) &bridge->conf;
--		behavior = bridge->pci_regs_behavior;
-+		/* Beyond our PCIe space */
-+		*value = 0;
-+		return PCIBIOS_SUCCESSFUL;
- 	}
- 
- 	if (read_op)
-@@ -432,11 +432,27 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 	__le32 *cfgspace;
- 	const struct pci_bridge_reg_behavior *behavior;
- 
--	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END)
--		return PCIBIOS_SUCCESSFUL;
-+	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
-+	if (ret != PCIBIOS_SUCCESSFUL)
-+		return ret;
- 
--	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END)
-+	if (reg < PCI_BRIDGE_CONF_END) {
-+		/* Emulated PCI space */
-+		write_op = bridge->ops->write_base;
-+		cfgspace = (__le32 *) &bridge->conf;
-+		behavior = bridge->pci_regs_behavior;
-+	} else if (!bridge->has_pcie) {
-+		/* PCIe space is not implemented, and no PCI capabilities */
- 		return PCIBIOS_SUCCESSFUL;
-+	} else if (reg < PCI_CAP_PCIE_END) {
-+		/* Our emulated PCIe capability */
-+		reg -= PCI_CAP_PCIE_START;
-+		write_op = bridge->ops->write_pcie;
-+		cfgspace = (__le32 *) &bridge->pcie_conf;
-+		behavior = bridge->pcie_cap_regs_behavior;
-+	} else {
-+		return PCIBIOS_SUCCESSFUL;
-+	}
- 
- 	shift = (where & 0x3) * 8;
- 
-@@ -449,21 +465,6 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
--	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
--	if (ret != PCIBIOS_SUCCESSFUL)
--		return ret;
--
--	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
--		reg -= PCI_CAP_PCIE_START;
--		write_op = bridge->ops->write_pcie;
--		cfgspace = (__le32 *) &bridge->pcie_conf;
--		behavior = bridge->pcie_cap_regs_behavior;
--	} else {
--		write_op = bridge->ops->write_base;
--		cfgspace = (__le32 *) &bridge->conf;
--		behavior = bridge->pci_regs_behavior;
--	}
--
- 	/* Keep all bits, except the RW bits */
- 	new = old & (~mask | ~behavior[reg / 4].rw);
- 
--- 
-2.20.1
+I would be surprised if anybody still knows.  :-)
 
+Perhaps a reasonable experiment would be to boot a kernel with PS/2 
+support but not USB support (or at least, without CONFIG_USB_PCI) and 
+see what happens when you type on the USB keyboard or move the USB 
+mouse.
+
+It might very well turn out that the handoff operation can safely be 
+delayed until driver probe time.
+
+Alan Stern
