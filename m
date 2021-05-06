@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D41F0C43461
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7ADC433ED
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A408D613BA
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34100613CD
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235911AbhEFPfr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:35:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46638 "EHLO mail.kernel.org"
+        id S235933AbhEFPfs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:35:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45940 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235770AbhEFPeC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:34:02 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6ABBD613C2;
+        id S235765AbhEFPeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:34:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0585F6192B;
         Thu,  6 May 2021 15:32:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315176;
-        bh=YnX8Fz29kf60K0H0Lln7W4fAoz60MdG7mey2fziRxCc=;
+        bh=REF2cZ76zLLt5itdjPFPEdxTt802EyaUEpYkfKBXnp0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pGwE/af0ZzxIt4YljcqEMGH5eX1G4XH0FH/wq+Wu6hGOXOHP5EeITwkQfvf51FGeC
-         GCnpT701QVw8HwwEhHZFk1AaUsuuL8itj9fzS7YYndCijD17qAmaHdoKM3H1gGA+wu
-         U0G3bzUuH3WT1bEes0ympfcQVARGKDmnkDuKV0tYxjJenwtxklvC4nBlL3+TwcpbPg
-         XYLMT3gN3RovN8opGcjvQtwWdbSRUIQyV8irPJLXRtL1ZDC7gSt63FHQ+J65Nhxxx9
-         jyBmvDS/SwzxblHuMWGp4e5Wigf/8tMtSQy85leCb1ECXTDpXX6joQ3eOe6sgkJeoM
-         yJzLTerKqCSjQ==
+        b=bymXLmxPOCNDiGCwPxOj9Ki5Mh1U6YrCM+T34IowpaRXqHyKJzzFPG7dpzU2x029r
+         2t4BZmAzPudvus95KmfRSke7U0/JAgR+LnWhsGFKZFMX7AMomrx6hf+Y/1JKgGAYdI
+         pNhJWPlEIHhriq/ATU/Cah1LOf/e9EACgvlN0KzoQMgH8vKVEZ2WgAtSL/QoKsYw7e
+         PKHlSdx7IAswcp6n1dpK/QsrO4W8NfyhpatlE/+iosj+WqTGHlfDclBD4xzyYc0FS0
+         N1EHXcqOdpLUxDFnXpPeH2G4Bl5wII6kTXNZFv6PuYw8Qw4Ca6/G2+ZfPHlE0QH7rY
+         xx1oUB2YGeHaw==
 Received: by pali.im (Postfix)
-        id 249398A1; Thu,  6 May 2021 17:32:56 +0200 (CEST)
+        id A8AD1732; Thu,  6 May 2021 17:32:55 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 42/42] PCI: aardvark: Add support for Advanced Error Reporting registers on emulated bridge
-Date:   Thu,  6 May 2021 17:31:53 +0200
-Message-Id: <20210506153153.30454-43-pali@kernel.org>
+Subject: [PATCH 40/42] PCI: pci-bridge-emul: re-arrange register tests
+Date:   Thu,  6 May 2021 17:31:51 +0200
+Message-Id: <20210506153153.30454-41-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,119 +57,113 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI aardvark hardware supports access to Advanced Error Reporting
-configuration registers of PCIe core via PCIE_CORE_PCIERR_CAP.
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-Export them via emulated software root bridge through the new .read_ext and
-.write_ext emulated bridge callbacks.
+Re-arrange the tests for which sets of registers are being accessed so that
+it is easier to add further regions later. No functional change.
 
-Note that in Advanced Error Reporting Capability header, the offset to the
-next Extended Capability header is set, but it is not documented in Armada
-3700 Functional Specification. As this change adds support only for
-Advanced Error Reporting, explicitly clear PCI_EXT_CAP_NEXT bits in AER
-capability header.
-
-After this change, pcieport driver correctly detects AER support and allows
-PCIe AER driver to start receiving ERR interrupts. It prints into dmesg:
-
-    [    4.358401] pcieport 0000:00:00.0: AER: enabled with IRQ 52
-
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+[pali: Fix reading old value in pci_bridge_emul_conf_write]
 Signed-off-by: Pali Rohár <pali@kernel.org>
-Reviewed-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 74 +++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+ drivers/pci/pci-bridge-emul.c | 61 ++++++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index ac3ee48e69d7..8914af62ccc3 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -683,11 +683,85 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index 5f8398f8d039..63959e4b188a 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -370,25 +370,25 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ 	__le32 *cfgspace;
+ 	const struct pci_bridge_reg_behavior *behavior;
+ 
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END) {
+-		*value = 0;
+-		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END) {
++	if (reg < PCI_BRIDGE_CONF_END) {
++		/* Emulated PCI space */
++		read_op = bridge->ops->read_base;
++		cfgspace = (__le32 *) &bridge->conf;
++		behavior = bridge->pci_regs_behavior;
++	} else if (!bridge->has_pcie) {
++		/* PCIe space is not implemented, and no PCI capabilities */
+ 		*value = 0;
+ 		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
++	} else if (reg < PCI_CAP_PCIE_END) {
++		/* Our emulated PCIe capability */
+ 		reg -= PCI_CAP_PCIE_START;
+ 		read_op = bridge->ops->read_pcie;
+ 		cfgspace = (__le32 *) &bridge->pcie_conf;
+ 		behavior = bridge->pcie_cap_regs_behavior;
+ 	} else {
+-		read_op = bridge->ops->read_base;
+-		cfgspace = (__le32 *) &bridge->conf;
+-		behavior = bridge->pci_regs_behavior;
++		/* Beyond our PCIe space */
++		*value = 0;
++		return PCIBIOS_SUCCESSFUL;
  	}
- }
  
-+static pci_bridge_emul_read_status_t
-+advk_pci_bridge_emul_ext_conf_read(struct pci_bridge_emul *bridge,
-+				   int reg, u32 *value)
-+{
-+	struct advk_pcie *pcie = bridge->data;
-+
-+	switch (reg) {
-+	case 0:
-+		*value = advk_readl(pcie, PCIE_CORE_PCIERR_CAP + reg);
-+		/*
-+		 * Clear PCI_EXT_CAP_NEXT bits as they are set to 0x150 offset.
-+		 * Armada 3700 Functional Specification does not contain any
-+		 * documentation about registers at that address, so explicitly
-+		 * mark Advanced Error Reporting Capability header as the end of
-+		 * Extended Capabilities.
-+		 */
-+		*value &= 0x000fffff;
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+
-+	case PCI_ERR_UNCOR_STATUS:
-+	case PCI_ERR_UNCOR_MASK:
-+	case PCI_ERR_UNCOR_SEVER:
-+	case PCI_ERR_COR_STATUS:
-+	case PCI_ERR_COR_MASK:
-+	case PCI_ERR_CAP:
-+	case PCI_ERR_HEADER_LOG+0:
-+	case PCI_ERR_HEADER_LOG+4:
-+	case PCI_ERR_HEADER_LOG+8:
-+	case PCI_ERR_HEADER_LOG+12:
-+	case PCI_ERR_ROOT_COMMAND:
-+	case PCI_ERR_ROOT_STATUS:
-+	case PCI_ERR_ROOT_ERR_SRC:
-+		*value = advk_readl(pcie, PCIE_CORE_PCIERR_CAP + reg);
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+
-+	default:
-+		return PCI_BRIDGE_EMUL_NOT_HANDLED;
-+	}
-+}
-+
-+static void
-+advk_pci_bridge_emul_ext_conf_write(struct pci_bridge_emul *bridge,
-+				    int reg, u32 old, u32 new, u32 mask)
-+{
-+	struct advk_pcie *pcie = bridge->data;
-+
-+	switch (reg) {
-+	/* These are W1C registers, so clear other bits */
-+	case PCI_ERR_UNCOR_STATUS:
-+	case PCI_ERR_COR_STATUS:
-+	case PCI_ERR_ROOT_STATUS:
-+		new &= mask;
-+		fallthrough;
-+
-+	case PCI_ERR_UNCOR_MASK:
-+	case PCI_ERR_UNCOR_SEVER:
-+	case PCI_ERR_COR_MASK:
-+	case PCI_ERR_CAP:
-+	case PCI_ERR_HEADER_LOG+0:
-+	case PCI_ERR_HEADER_LOG+4:
-+	case PCI_ERR_HEADER_LOG+8:
-+	case PCI_ERR_HEADER_LOG+12:
-+	case PCI_ERR_ROOT_COMMAND:
-+	case PCI_ERR_ROOT_ERR_SRC:
-+		advk_writel(pcie, new, PCIE_CORE_PCIERR_CAP + reg);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
- static struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
- 	.read_base = advk_pci_bridge_emul_base_conf_read,
- 	.write_base = advk_pci_bridge_emul_base_conf_write,
- 	.read_pcie = advk_pci_bridge_emul_pcie_conf_read,
- 	.write_pcie = advk_pci_bridge_emul_pcie_conf_write,
-+	.read_ext = advk_pci_bridge_emul_ext_conf_read,
-+	.write_ext = advk_pci_bridge_emul_ext_conf_write,
- };
+ 	if (read_op)
+@@ -432,11 +432,27 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 	__le32 *cfgspace;
+ 	const struct pci_bridge_reg_behavior *behavior;
  
- /*
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END)
+-		return PCIBIOS_SUCCESSFUL;
++	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return ret;
+ 
+-	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END)
++	if (reg < PCI_BRIDGE_CONF_END) {
++		/* Emulated PCI space */
++		write_op = bridge->ops->write_base;
++		cfgspace = (__le32 *) &bridge->conf;
++		behavior = bridge->pci_regs_behavior;
++	} else if (!bridge->has_pcie) {
++		/* PCIe space is not implemented, and no PCI capabilities */
+ 		return PCIBIOS_SUCCESSFUL;
++	} else if (reg < PCI_CAP_PCIE_END) {
++		/* Our emulated PCIe capability */
++		reg -= PCI_CAP_PCIE_START;
++		write_op = bridge->ops->write_pcie;
++		cfgspace = (__le32 *) &bridge->pcie_conf;
++		behavior = bridge->pcie_cap_regs_behavior;
++	} else {
++		return PCIBIOS_SUCCESSFUL;
++	}
+ 
+ 	shift = (where & 0x3) * 8;
+ 
+@@ -449,21 +465,6 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+-	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
+-	if (ret != PCIBIOS_SUCCESSFUL)
+-		return ret;
+-
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
+-		reg -= PCI_CAP_PCIE_START;
+-		write_op = bridge->ops->write_pcie;
+-		cfgspace = (__le32 *) &bridge->pcie_conf;
+-		behavior = bridge->pcie_cap_regs_behavior;
+-	} else {
+-		write_op = bridge->ops->write_base;
+-		cfgspace = (__le32 *) &bridge->conf;
+-		behavior = bridge->pci_regs_behavior;
+-	}
+-
+ 	/* Keep all bits, except the RW bits */
+ 	new = old & (~mask | ~behavior[reg / 4].rw);
+ 
 -- 
 2.20.1
 
