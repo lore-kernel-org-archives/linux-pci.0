@@ -2,115 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9210CC433B4
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:23:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4176DC433B4
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6329C6101A
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:23:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 056046140F
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235121AbhEFPYA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:24:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37386 "EHLO mail.kernel.org"
+        id S235331AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45838 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235106AbhEFPYA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:24:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9138B6109E;
-        Thu,  6 May 2021 15:23:01 +0000 (UTC)
+        id S235179AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2DA3A611AE;
+        Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620314581;
-        bh=sHUTIMTtTpmn2ESx6TFbTaV3tr4wosylb0jOG+PJJRQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=E8PD+n0Kd1YVWT2QcItijE2+/6DqGrrlwiH8cFw6DDfcj6/r7d4we/ll8tSDWGzQJ
-         tN2IrM1su4D0bWm+8svA8p9N+JbIQNLs/L7j+eKSWUPlbNr+cqc5f8FCNWPcMx6BWY
-         Kt3yeqEvkdzZwTPJNk90R6ysRjX85GFmdw+MyRe4G/1SxF3l8AQPRDFB0oX21P0Vfa
-         r0m8upXmUf1jcVVPOiSDaBX6US7bC6XwC2XtZaxVW3xh2AaTi0DtihS17xgc+mPuHD
-         dEhKUDnZ5l7IUhwocSahM+1wQ/Kg7IeeCzoYaG8Hv2LztxmJOvm+Bo5jHhwK6f9N7P
-         rsXQjsHDZcl8g==
-Date:   Thu, 6 May 2021 10:23:00 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-usb@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: `quirk_usb_handoff_xhci` takes 60 ms with ASM1042
-Message-ID: <20210506152300.GA1405893@bjorn-Precision-5520>
+        s=k20201202; t=1620315167;
+        bh=IdVDiP6+1WGD69KpQ4ecO/tfD5bBRFQpZYGTE4VGzkg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=FFXKmiEySlP/tZydvoImG/r31EU1UBJOR46SWzqYuKF8d6dwqLioVT282SYuBon16
+         ZRsbVcR4jXWpUzObLhzWQlTxIRTpuABm6P1jZUKpalx6JkBewu7iPI+OlWWvQjUAUy
+         iTRvMZWwTZz4+yoPs4sr80K+rdlkqMVNnzB1/V9W2ndn/NZOkKf26pSL0JzpzOJE/g
+         aIrhLIf3SU5yM/BkX38DhYt7jHN3IARbpN9tQy/3fYWZZVHn6r9Sm2CfXK0W8a4lax
+         7WbduU0lKwoswL0nKcjbWNALDQsn9zmiT+jQpUdoNV+AzNSe/KDVWApIczPlRyTctW
+         BG7PP6ZanlpHA==
+Received: by pali.im (Postfix)
+        id 1E226E79; Thu,  6 May 2021 17:32:45 +0200 (CEST)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
+        Remi Pommarel <repk@triplefau.lt>, Xogium <contact@xogium.me>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 04/42] PCI: aardvark: Increase polling delay to 1.5s while waiting for PIO response
+Date:   Thu,  6 May 2021 17:31:15 +0200
+Message-Id: <20210506153153.30454-5-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
+References: <20210506153153.30454-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <YJK/bkJpCC+INPo3@kroah.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 05, 2021 at 05:53:18PM +0200, Greg Kroah-Hartman wrote:
-> On Wed, May 05, 2021 at 10:47:41AM -0500, Bjorn Helgaas wrote:
-> > On Wed, May 05, 2021 at 02:31:56PM +0200, Greg Kroah-Hartman wrote:
-> > > On Wed, May 05, 2021 at 02:15:26PM +0200, Paul Menzel wrote:
-> > > > Am 05.05.21 um 10:33 schrieb Greg Kroah-Hartman:
-> > > > > On Wed, May 05, 2021 at 10:27:52AM +0200, Paul Menzel wrote:
-> > > > > > Am 05.05.21 um 10:11 schrieb Greg Kroah-Hartman:
-> > 
-> > > > > > > If the driver is built as a module, there should not be any "hot
-> > > > > > > path" here as the module is loaded async when the device is
-> > > > > > > discovered, right?
-> > > > > >      obj-$(CONFIG_USB_PCI)   += pci-quirks.o
-> > > > > > 
-> > > > > > So all quirks are run independently of the USB “variant”
-> > > > > > (UHCI, OHCI, EHCI, xHCI).
-> > > > > > 
-> > > > > > Indeed, this driver is built into the Linux kernel.
-> > > > > > 
-> > > > > >      $ grep USB_PCI .config
-> > > > > >      CONFIG_USB_PCI=y
-> > > > > > 
-> > > > > > So, should `pci-quirks.c` be split up to have more fine
-> > > > > > grained control?
-> > > > > 
-> > > > > What control do you need here?
-> > > > 
-> > > > Good question, as I do not know the USB spec. I’d say,
-> > > > disabling certain quirks, or just run them, when the actual
-> > > > driver is loaded.
-> > > 
-> > > This is not a "quirk", it is part of how USB works.
-> > 
-> > I agree, this doesn't look like a "quirk" in the sense of working
-> > around a hardware defect; the handoff is just a normal part of
-> > operating the device.  But can you elaborate on why it must be done
-> > this way?
-> > 
-> > I'm looking at the xHCI r1.2 spec, sec 4.22.1.  It talks about the
-> > handoff synchronization process and says the OS driver shall use the
-> > defined protocol to request ownership before it uses the device.  But
-> > AFAICT there's no specific "early-startup" requirement.
-> > 
-> > quirk_usb_handoff_xhci() is in drivers/usb/host/pci-quirks.c, which is
-> > always built statically and the quirk runs during device enumeration,
-> > even if the xhcd driver itself is a module.  It looks like we run the
-> > quirk even if we never load the xhcd driver.
-> > 
-> > Why can't we just do the handoff in the xhcd driver probe?
-> 
-> I think, if we don't do the handoff, then the BIOS/firmware tries to
-> send the OS fake keyboard/mouse commands, and Linux isn't ready for that
-> as we didn't allow hotplug PS/2 stuff.  But I could be wrong, it's been
-> a long time since we did that logic.
+Measurements in different conditions showed that aardvark hardware PIO
+response can take up to 1.44s. Increase wait timeout from 1ms to 1.5s to
+ensure that we do not miss responses from hardware. After 1.44s hardware
+returns errors (e.g. Completer abort).
 
-I have no idea what "BIOS/firmware sending OS fake keyboard/mouse
-commands" means.  From the OS point of view, does that look like USB
-events that cause PCI interrupts?  PS/2 interrupts?  Are these
-commands caused by the user typing or moving the mouse?  Or does BIOS
-fabricate commands for other reasons?
+The previous two patches fixed checking for PIO status, so now we can use
+it to also catch errors which are reported by hardware after 1.44s.
 
-The way you describe it, this *sounds* like a race, where Linux
-mishandles commands that happen before the handoff quirk.  Do you
-remember what happens if BIOS sends a fake command before Linux is
-ready for it?  Unexpected interrupt?
+After applying this patch, kernel can detect and print PIO errors to dmesg:
 
-Bjorn
+    [    6.879999] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100004
+    [    6.896436] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100004
+    [    6.913049] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100010
+    [    6.929663] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100010
+    [    6.953558] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100014
+    [    6.970170] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100014
+    [    6.994328] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100004
+
+Without this patch kernel prints only a generic error to dmesg:
+
+    [    5.246847] advk-pcie d0070000.pcie: config read/write timed out
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Reviewed-by: Marek Behún <kabel@kernel.org>
+Cc: stable@vger.kernel.org # 7fbcb5da811b ("PCI: aardvark: Don't rely on jiffies while holding spinlock")
+---
+ drivers/pci/controller/pci-aardvark.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index a37ba86f1b2d..3f3c72927afb 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -166,7 +166,7 @@
+ #define PCIE_CONFIG_WR_TYPE0			0xa
+ #define PCIE_CONFIG_WR_TYPE1			0xb
+ 
+-#define PIO_RETRY_CNT			500
++#define PIO_RETRY_CNT			750000 /* 1.5 s */
+ #define PIO_RETRY_DELAY			2 /* 2 us*/
+ 
+ #define LINK_WAIT_MAX_RETRIES		10
+-- 
+2.20.1
+
