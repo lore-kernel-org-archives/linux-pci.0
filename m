@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F21C43470
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF962C433B4
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22131610C8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5004613BA
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235842AbhEFPfk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:35:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46132 "EHLO mail.kernel.org"
+        id S235486AbhEFPfl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:35:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45966 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235768AbhEFPeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235755AbhEFPeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:34:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 35EFD61919;
-        Thu,  6 May 2021 15:32:56 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8FC526191A;
+        Thu,  6 May 2021 15:32:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315176;
-        bh=hjo0BAh8/TrXrQZkushaXu4N5LMhaWkVsVmV1/6ftDk=;
+        s=k20201202; t=1620315175;
+        bh=xaJINrTisG+I3HDxwk8CIe8zyar1r6u5T6BaI1VDI0I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Dh1vhcJJYtbozzm9tYZuMVr3xW2todeA5yDuns656iomD3BgScMh9g4Cp5PbUmw38
-         7jbsRgj7iDlnpJ75OQ43qkrEbI7VgBraSEINnbkvhN3orBjYsjqhLStfl7yt4g3tXT
-         9zP6un2sviaI6VU/eWUEqoL2WC0nF8dlVgjEyc1eWrEdhCbPMqw9wfq/0yrJjm1zWJ
-         mMZ2ytRlFECFuKySVamBgQdcWQ7L0e6XtMrXlRu0X8Gk7DJ4OTNheqAZ6513100vJR
-         EksPYnhdly9pOg5a2g+WXCNguErI7b4nUKbyqEmwIAkRQGKMrb8YuiSBDaTAKs72s8
-         P7DIwL0F9ulvA==
+        b=tK+CMKcyNSHhKgWk2uetW7ilhmLdAZtALw4CNQm1trc6O55IcNW51XC0hhEhGsZEw
+         7bAvK5prQGM9NQypqQ/E2Qf4yc2KTUUzXkoeUSlTMAr3IBXjbmjZG2dOPEW8l/0nk6
+         ppMgRI7ONj8LYtqgCBwnRuyJy/Y0k38QkHsw5C4VCkiNowqyDaS+l1iTZISd6qssUR
+         dHjLTIJAZuJkms3KU9H/2lo5K8R9/PXgyST4uqNQy3In/gwFJEF9+4hyX4cjD5nluQ
+         34NYrhGS7sqKNIZe1HgbeQ9pTTlQUWWdg+MBt5RtyMHiNukxNKKbfhK6IO9NhtojLB
+         SQLf271YPE0wQ==
 Received: by pali.im (Postfix)
-        id E16FF89A; Thu,  6 May 2021 17:32:55 +0200 (CEST)
+        id 482E38A1; Thu,  6 May 2021 17:32:55 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,157 +44,145 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 41/42] PCI: pci-bridge-emul: add support for PCIe extended capabilities
-Date:   Thu,  6 May 2021 17:31:52 +0200
-Message-Id: <20210506153153.30454-42-pali@kernel.org>
+Subject: [PATCH 38/42] PCI: aardvark: Cleanup some register macros
+Date:   Thu,  6 May 2021 17:31:49 +0200
+Message-Id: <20210506153153.30454-39-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+Define SPEED_GEN_* macros with correct PCIE_GEN_SEL_SHIFT.
 
-Add support for PCIe extended capabilities, which we just redirect to the
-emulating driver.
+Simplify macro for setting root complex mode (use BIT instead of
+MSK+SHIFT).
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Rename PCIE_MSG_PM_PME_MASK to PCIE_ISR0_MSG_PM_PME to match existing
+naming convention, rename PCIE_ISR0_MSI_INT_PENDING to PCIE_ISR0_MSI_INT as
+it is used for both interrupt mask and pending bit.
+
+Change the code which disables strict ordering by doing it explicitly
+(instead of not specifying *_STRICT_ORDER_ENABLE macro, specify bitwise
+negation of that macro).
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Reviewed-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/pci-bridge-emul.c | 52 +++++++++++++++++++++++++----------
- drivers/pci/pci-bridge-emul.h | 15 ++++++++++
- 2 files changed, 53 insertions(+), 14 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 34 +++++++++++++--------------
+ 1 file changed, 16 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 63959e4b188a..236036fdeaa2 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -385,10 +385,16 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else {
--		/* Beyond our PCIe space */
-+	} else if (reg < PCI_CFG_SPACE_SIZE) {
-+		/* Rest of PCI space not implemented */
- 		*value = 0;
- 		return PCIBIOS_SUCCESSFUL;
-+	} else {
-+		/* PCIe extended capability space */
-+		reg -= PCI_CFG_SPACE_SIZE;
-+		read_op = bridge->ops->read_ext;
-+		cfgspace = NULL;
-+		behavior = NULL;
- 	}
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 2258b9ae1084..3c18e139b095 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -63,11 +63,10 @@
+ #define PCIE_CORE_CTRL0_REG			(CONTROL_BASE_ADDR + 0x0)
+ #define     PCIE_GEN_SEL_MSK			0x3
+ #define     PCIE_GEN_SEL_SHIFT			0x0
+-#define     SPEED_GEN_1				0
+-#define     SPEED_GEN_2				1
+-#define     SPEED_GEN_3				2
+-#define     IS_RC_MSK				1
+-#define     IS_RC_SHIFT				2
++#define     SPEED_GEN_1				(0 << PCIE_GEN_SEL_SHIFT)
++#define     SPEED_GEN_2				(1 << PCIE_GEN_SEL_SHIFT)
++#define     SPEED_GEN_3				(2 << PCIE_GEN_SEL_SHIFT)
++#define     IS_RC				BIT(2)
+ #define     LANE_CNT_MSK			0x18
+ #define     LANE_CNT_SHIFT			0x3
+ #define     LANE_COUNT_1			(0 << LANE_CNT_SHIFT)
+@@ -91,15 +90,15 @@
+ #define     PCIE_CORE_REF_CLK_TX_ENABLE		BIT(1)
+ #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
+ #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
+-#define PCIE_MSG_PM_PME_MASK			BIT(7)
+ #define PCIE_ISR0_MASK_REG			(CONTROL_BASE_ADDR + 0x44)
+-#define     PCIE_ISR0_MSI_INT_PENDING		BIT(24)
++#define     PCIE_ISR0_MSG_PM_PME		BIT(7)
+ #define     PCIE_ISR0_CORR_ERR			BIT(11)
+ #define     PCIE_ISR0_NFAT_ERR			BIT(12)
+ #define     PCIE_ISR0_FAT_ERR			BIT(13)
+ #define     PCIE_ISR0_INTX_ASSERT(val)		BIT(16 + (val))
+ #define     PCIE_ISR0_INTX_DEASSERT(val)	BIT(20 + (val))
+-#define	    PCIE_ISR0_ALL_MASK			GENMASK(26, 0)
++#define     PCIE_ISR0_MSI_INT			BIT(24)
++#define     PCIE_ISR0_ALL_MASK			GENMASK(26, 0)
+ #define PCIE_ISR1_REG				(CONTROL_BASE_ADDR + 0x48)
+ #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
+ #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
+@@ -345,7 +344,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- 	if (read_op)
-@@ -396,15 +402,20 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 	else
- 		ret = PCI_BRIDGE_EMUL_NOT_HANDLED;
- 
--	if (ret == PCI_BRIDGE_EMUL_NOT_HANDLED)
--		*value = le32_to_cpu(cfgspace[reg / 4]);
-+	if (ret == PCI_BRIDGE_EMUL_NOT_HANDLED) {
-+		if (cfgspace)
-+			*value = le32_to_cpu(cfgspace[reg / 4]);
-+		else
-+			*value = 0;
-+	}
+ 	/* Set PCI global control register to RC mode */
+ 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+-	reg |= (IS_RC_MSK << IS_RC_SHIFT);
++	reg |= IS_RC;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
  
  	/*
- 	 * Make sure we never return any reserved bit with a value
- 	 * different from 0.
- 	 */
--	*value &= behavior[reg / 4].ro | behavior[reg / 4].rw |
--		  behavior[reg / 4].w1c;
-+	if (behavior)
-+		*value &= behavior[reg / 4].ro | behavior[reg / 4].rw |
-+			  behavior[reg / 4].w1c;
+@@ -379,8 +378,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
  
- 	if (size == 1)
- 		*value = (*value >> (8 * (where & 3))) & 0xff;
-@@ -450,8 +461,15 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 		write_op = bridge->ops->write_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else {
-+	} else if (reg < PCI_CFG_SPACE_SIZE) {
-+		/* Rest of PCI space not implemented */
- 		return PCIBIOS_SUCCESSFUL;
-+	} else {
-+		/* PCIe extended capability space */
-+		reg -= PCI_CFG_SPACE_SIZE;
-+		write_op = bridge->ops->write_ext;
-+		cfgspace = NULL;
-+		behavior = NULL;
+ 	/* Program PCIe Control 2 to disable strict ordering */
+-	reg = PCIE_CORE_CTRL2_RESERVED |
+-		PCIE_CORE_CTRL2_TD_ENABLE;
++	reg = advk_readl(pcie, PCIE_CORE_CTRL2_REG);
++	reg &= ~PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
+ 
+ 	/* Set lane X1 */
+@@ -412,7 +411,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	/* Unmask summary MSI interrupt */
+ 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
++	reg &= ~PCIE_ISR0_MSI_INT;
+ 	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
+ 
+ 	/* Unmask bits for ERR interrupt */
+@@ -422,7 +421,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	/* Unmask PME interrupt for processing of PME requester */
+ 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	reg &= ~PCIE_MSG_PM_PME_MASK;
++	reg &= ~PCIE_ISR0_MSG_PM_PME;
+ 	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
+ 
+ 	/* Enable summary interrupt for GIC SPI source */
+@@ -1265,8 +1264,7 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ 			generic_handle_irq(virq);
  	}
  
- 	shift = (where & 0x3) * 8;
-@@ -465,16 +483,22 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
+-	advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
+-		    PCIE_ISR0_REG);
++	advk_writel(pcie, PCIE_ISR0_MSI_INT, PCIE_ISR0_REG);
+ }
  
--	/* Keep all bits, except the RW bits */
--	new = old & (~mask | ~behavior[reg / 4].rw);
-+	if (behavior) {
-+		/* Keep all bits, except the RW bits */
-+		new = old & (~mask | ~behavior[reg / 4].rw);
+ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+@@ -1290,8 +1288,8 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 		return;
  
--	/* Update the value of the RW bits */
--	new |= (value << shift) & (behavior[reg / 4].rw & mask);
-+		/* Update the value of the RW bits */
-+		new |= (value << shift) & (behavior[reg / 4].rw & mask);
+ 	/* Process PME interrupt as the first one to do not miss PME requester id */
+-	if (isr0_status & PCIE_MSG_PM_PME_MASK) {
+-		advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
++	if (isr0_status & PCIE_ISR0_MSG_PM_PME) {
++		advk_writel(pcie, PCIE_ISR0_MSG_PM_PME, PCIE_ISR0_REG);
+ 		/*
+ 		 * PCIE_MSG_LOG_REG contains the last inbound message,
+ 		 * so store requester id only when PME was not asserted yet.
+@@ -1326,7 +1324,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 	}
  
--	/* Clear the W1C bits */
--	new &= ~((value << shift) & (behavior[reg / 4].w1c & mask));
-+		/* Clear the W1C bits */
-+		new &= ~((value << shift) & (behavior[reg / 4].w1c & mask));
-+	} else {
-+		new = old & ~mask;
-+		new |= (value << shift) & mask;
-+	}
+ 	/* Process MSI interrupts */
+-	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
++	if (isr0_status & PCIE_ISR0_MSI_INT)
+ 		advk_pcie_handle_msi(pcie);
  
--	cfgspace[reg / 4] = cpu_to_le32(new);
-+	if (cfgspace)
-+		cfgspace[reg / 4] = cpu_to_le32(new);
- 
- 	if (write_op)
- 		write_op(bridge, reg, old, new, mask);
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index 49bbd37ee318..2552ab660b08 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -90,6 +90,14 @@ struct pci_bridge_emul_ops {
- 	 */
- 	pci_bridge_emul_read_status_t (*read_pcie)(struct pci_bridge_emul *bridge,
- 						   int reg, u32 *value);
-+
-+	/*
-+	 * Same as ->read_base(), except it is for reading from the
-+	 * PCIe extended capability configuration space.
-+	 */
-+	pci_bridge_emul_read_status_t (*read_ext)(struct pci_bridge_emul *bridge,
-+						  int reg, u32 *value);
-+
- 	/*
- 	 * Called when writing to the regular PCI bridge configuration
- 	 * space. old is the current value, new is the new value being
-@@ -105,6 +113,13 @@ struct pci_bridge_emul_ops {
- 	 */
- 	void (*write_pcie)(struct pci_bridge_emul *bridge, int reg,
- 			   u32 old, u32 new, u32 mask);
-+
-+	/*
-+	 * Same as ->write_base(), except it is for writing from the
-+	 * PCIe extended capability configuration space.
-+	 */
-+	void (*write_ext)(struct pci_bridge_emul *bridge, int reg,
-+			  u32 old, u32 new, u32 mask);
- };
- 
- struct pci_bridge_reg_behavior;
+ 	/* Process legacy interrupts */
 -- 
 2.20.1
 
