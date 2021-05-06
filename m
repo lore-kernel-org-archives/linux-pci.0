@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C882DC43460
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D362C43470
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 874EC613EC
+	by mail.kernel.org (Postfix) with ESMTP id 02F1A6140F
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235787AbhEFPeL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:34:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45934 "EHLO mail.kernel.org"
+        id S235805AbhEFPeM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:34:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46132 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235591AbhEFPdt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3FFB261444;
+        id S235610AbhEFPdu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D4DD86147E;
         Thu,  6 May 2021 15:32:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315171;
-        bh=BNybo/imm7XJtoxFMKGPLmZE6NxN+kmKnZtaTUumbOU=;
+        s=k20201202; t=1620315172;
+        bh=XSMv0I/QDrKbiP+dMRWG7vUJ6CvFhsuNwavmAeULpqY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VwIB4YyNY1qalXOuifdY/OX5Lr5ZidlVIaCsWkaCvH96DGZoQbfGYIf5ISVob5+KE
-         pN5GegVfTHQ1KT+VK+tlRGJMH8onCaGV4sPkRiymB1JxdF2H12vBvuw8IyfyNhFnWK
-         QQ1/Bq9NXvpvj3yTVBhL1YsuZoK3IFcSTj+QDJuiKxl5qfBxrGd0ezg4Pu0T1tgbZz
-         ROZm4n41SXYyFFZKCXb+TobGeOc3oPmtIGKt1TT4TGXxWT/2XYAlY9+rQU/gaKm/Kf
-         kodHF+9TrPMtie4G61xkoDnbSsIrBWB2+yeujXWJKQrX4r6MSm4hwczG3Zem8DCd2f
-         JvTrdf6qptqMQ==
+        b=W0WyADJSXGoh3a/vZpkVZmGTpx4WLbcZqMo/v639+04vX8rWMvDQXbYkg0TXzAUBn
+         B15MK53F7ZuNJCOEI5a081bbpsPLqGA4Oq6uM3RjF+2ONctil1h8eQJINed8lIdr5F
+         xDhbeV7ccDSas1j5+F5Wn6RA4B8VLo+q8SjQuP0xzzuWIS927jct2O6HGjfkrk39SR
+         PPgUh1GbhdCDHLGrCXaRzBt+YM/eRBGskj9068CfMqDxCQYWDhB5Gt6sMttrz2Uf5U
+         eNXArkP/BtiIab3AHvXOcUCLNpianEY3PmEZePpNH+fQtuJPtPee8cQqE8L+iN1hCz
+         bop5pwirNZi9Q==
 Received: by pali.im (Postfix)
-        id E76C08A1; Thu,  6 May 2021 17:32:50 +0200 (CEST)
+        id 8A6CA732; Thu,  6 May 2021 17:32:51 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 23/42] PCI: aardvark: Fix support for ERR interrupt on emulated bridge
-Date:   Thu,  6 May 2021 17:31:34 +0200
-Message-Id: <20210506153153.30454-24-pali@kernel.org>
+Subject: [PATCH 25/42] PCI: aardvark: Fix support for PME requester on emulated bridge
+Date:   Thu,  6 May 2021 17:31:36 +0200
+Message-Id: <20210506153153.30454-26-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,86 +57,168 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ERR interrupt is triggered when corresponding bit is unmasked in both ISR0
-and PCI_EXP_DEVCTL registers. Unmasking ERR bits in PCI_EXP_DEVCTL register
-is not enough. This means that currently the ERR interrupt is never
-triggered.
+PME requester id is stored in the PCIE_MSG_LOG_REG register, which contains
+the last inbound message. So when new inbound message is received by HW
+(including non-PM), the content in PCIE_MSG_LOG_REG register is replaced by
+a new value.
 
-Unmask ERR bits in ISR0 register at driver probe time. ERR interrupt is not
-triggered until ERR bits are unmasked also in PCI_EXP_DEVCTL register,
-which is done by AER driver. So it is safe to unconditionally unmask all
-ERR bits in aardvark probe.
+PCIe specification mandates that subsequent PMEs are kept pending until the
+PME Status Register bit is cleared by software by writing a 1b.
 
-Aardvark HW sets PCI_ERR_ROOT_AER_IRQ to zero and when corresponding bits
-in ISR0 and PCI_EXP_DEVCTL are enabled, the HW triggers a generic interrupt
-on GIC. Chain this interrupt to PCIe interrupt 0 with generic_handle_irq()
-to allow processing of ERR interrupts.
+Enable aardvark PME interrupt unconditionally by unmasking it and read PME
+requester id from PCIE_MSG_LOG_REG register to emulated bridge config space
+immediately after receiving interrupt.
+
+Support for masking/unmasking PME interrupt on emulated bridge via
+PCI_EXP_RTCTL_PMEIE bit is now implemented only in emulated bridge config
+space, to ensure that we do not miss any aardvark PME interrupt.
+
+Reading of PCI_EXP_RTCAP and PCI_EXP_RTSTA registers is simplified as final
+value is now always stored into emulated bridge config space by the
+interrupt handler, so there is no need to implement support for these
+registers in read_pcie callback.
+
+Clearing of W1C bit PCI_EXP_RTSTA_PME is now also simplified as it is done
+by pci-bridge-emul.c code for emulated bridge config space. So there is no
+need to implement support for clearing this bit in write_pcie callback.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
 Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
-Cc: stable@vger.kernel.org
+Cc: stable@vger.kernel.org # c0f05a6ab525 ("PCI: aardvark: Fix PCI_EXP_RTCTL register configuration")
 ---
- drivers/pci/controller/pci-aardvark.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 81 ++++++++++++---------------
+ 1 file changed, 36 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 8a5133226e41..2ea58ba10a97 100644
+index fac48797d922..6c860e67e5a2 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -104,6 +104,9 @@
- #define PCIE_MSG_PM_PME_MASK			BIT(7)
- #define PCIE_ISR0_MASK_REG			(CONTROL_BASE_ADDR + 0x44)
- #define     PCIE_ISR0_MSI_INT_PENDING		BIT(24)
-+#define     PCIE_ISR0_CORR_ERR			BIT(11)
-+#define     PCIE_ISR0_NFAT_ERR			BIT(12)
-+#define     PCIE_ISR0_FAT_ERR			BIT(13)
- #define     PCIE_ISR0_INTX_ASSERT(val)		BIT(16 + (val))
- #define     PCIE_ISR0_INTX_DEASSERT(val)	BIT(20 + (val))
- #define	    PCIE_ISR0_ALL_MASK			GENMASK(26, 0)
-@@ -416,6 +419,11 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
+@@ -424,6 +424,11 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg &= ~(PCIE_ISR0_FAT_ERR | PCIE_ISR0_NFAT_ERR | PCIE_ISR0_CORR_ERR);
  	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
  
-+	/* Unmask bits for ERR interrupt */
++	/* Unmask PME interrupt for processing of PME requester */
 +	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	reg &= ~(PCIE_ISR0_FAT_ERR | PCIE_ISR0_NFAT_ERR | PCIE_ISR0_CORR_ERR);
++	reg &= ~PCIE_MSG_PM_PME_MASK;
 +	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
 +
  	/* Enable summary interrupt for GIC SPI source */
  	reg = PCIE_IRQ_ALL_MASK & (~PCIE_IRQ_ENABLE_INTS_MASK);
  	advk_writel(pcie, reg, HOST_CTRL_INT_MASK_REG);
-@@ -1195,6 +1203,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+@@ -557,30 +562,17 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
  {
- 	u32 isr0_val, isr0_mask, isr0_status;
- 	u32 isr1_val, isr1_mask, isr1_status;
-+	u32 err_bits;
- 	int i, virq;
+ 	struct advk_pcie *pcie = bridge->data;
  
- 	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
-@@ -1205,9 +1214,22 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
- 	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
- 	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
++	/*
++	 * PCI_EXP_RTCTL and PCI_EXP_RTSTA registers are fully supported
++	 * but their values are stored only in emulated config space buffer.
++	 * So there is no need to handle them in read_pcie callback.
++	 */
  
-+	err_bits = isr0_status & (PCIE_ISR0_FAT_ERR | PCIE_ISR0_NFAT_ERR | PCIE_ISR0_CORR_ERR);
+ 	switch (reg) {
+ 	case PCI_EXP_SLTCTL:
+ 		*value = PCI_EXP_SLTSTA_PDS << 16;
+ 		return PCI_BRIDGE_EMUL_HANDLED;
+ 
+-	case PCI_EXP_RTCTL: {
+-		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-		*value = (val & PCIE_MSG_PM_PME_MASK) ? 0 : PCI_EXP_RTCTL_PMEIE;
+-		*value |= PCI_EXP_RTCTL_CRSSVE;
+-		*value |= PCI_EXP_RTCAP_CRSVIS << 16;
+-		return PCI_BRIDGE_EMUL_HANDLED;
+-	}
+-
+-	case PCI_EXP_RTSTA: {
+-		u32 isr0 = advk_readl(pcie, PCIE_ISR0_REG);
+-		u32 msglog = advk_readl(pcie, PCIE_MSG_LOG_REG);
+-		u32 val = msglog >> 16;
+-		if (isr0 & PCIE_MSG_PM_PME_MASK)
+-			val |= PCI_EXP_RTSTA_PME;
+-		*value = val;
+-		return PCI_BRIDGE_EMUL_HANDLED;
+-	}
+-
+ 	case PCI_EXP_LNKCTL: {
+ 		/* u32 contains both PCI_EXP_LNKCTL and PCI_EXP_LNKSTA */
+ 		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
+@@ -609,6 +601,12 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ {
+ 	struct advk_pcie *pcie = bridge->data;
+ 
++	/*
++	 * PCI_EXP_RTCTL and PCI_EXP_RTSTA registers are fully supported
++	 * but their values are stored only in emulated config space buffer.
++	 * So there is no need to handle them in write_pcie callback.
++	 */
 +
+ 	switch (reg) {
+ 	case PCI_EXP_DEVCTL:
+ 		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+@@ -620,23 +618,6 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 			advk_pcie_wait_for_retrain(pcie);
+ 		break;
+ 
+-	case PCI_EXP_RTCTL:
+-		/* Only mask/unmask PME interrupt */
+-		if (mask & PCI_EXP_RTCTL_PMEIE) {
+-			u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-			if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
+-				val |= PCIE_MSG_PM_PME_MASK;
+-			else
+-				val &= ~PCIE_MSG_PM_PME_MASK;
+-			advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
+-		}
+-		break;
+-
+-	case PCI_EXP_RTSTA:
+-		if (new & PCI_EXP_RTSTA_PME)
+-			advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
+-		break;
+-
+ 	default:
+ 		break;
+ 	}
+@@ -1224,19 +1205,29 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
  	if (!isr0_status && !isr1_status)
  		return;
  
-+	/* Process ERR interrupt */
-+	if (err_bits) {
-+		advk_writel(pcie, err_bits, PCIE_ISR0_REG);
-+		/* Aardvark HW returns zero for PCI_ERR_ROOT_AER_IRQ, so use PCIe interrupt 0 */
-+		virq = irq_find_mapping(pcie->irq_domain, 0);
-+		if (virq)
-+			generic_handle_irq(virq);
-+		else
-+			dev_err(&pcie->pdev->dev, "unexpected ERR IRQ\n");
-+	}
-+
- 	/* Process MSI interrupts */
- 	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
- 		advk_pcie_handle_msi(pcie);
+-	/* Process PME interrupt */
++	/* Process PME interrupt as the first one to do not miss PME requester id */
+ 	if (isr0_status & PCIE_MSG_PM_PME_MASK) {
++		advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
+ 		/*
+-		 * Do not clear PME interrupt bit in ISR0, it is cleared by IRQ
+-		 * receiver by writing to the PCI_EXP_RTSTA register of emulated
+-		 * root bridge. Aardvark HW returns zero for PCI_EXP_FLAGS_IRQ,
+-		 * so use PCIe interrupt 0.
++		 * PCIE_MSG_LOG_REG contains the last inbound message,
++		 * so store requester id only when PME was not asserted yet.
++		 * Also do not trigger PME interrupt when PME is still asserted.
+ 		 */
+-		virq = irq_find_mapping(pcie->irq_domain, 0);
+-		if (virq)
+-			generic_handle_irq(virq);
+-		else
+-			dev_err(&pcie->pdev->dev, "unexpected PME IRQ\n");
++		if (!(le32_to_cpu(pcie->bridge.pcie_conf.rootsta) & PCI_EXP_RTSTA_PME)) {
++			u32 requester = advk_readl(pcie, PCIE_MSG_LOG_REG) >> 16;
++			pcie->bridge.pcie_conf.rootsta = cpu_to_le32(requester | PCI_EXP_RTSTA_PME);
++			/*
++			 * Trigger PME interrupt only in case when PMEIE bit in Root Control is set.
++			 * Aardvark HW returns zero for PCI_EXP_FLAGS_IRQ, so use PCIe interrupt 0.
++			 */
++			if (le16_to_cpu(pcie->bridge.pcie_conf.rootctl) & PCI_EXP_RTCTL_PMEIE) {
++				virq = irq_find_mapping(pcie->irq_domain, 0);
++				if (virq)
++					generic_handle_irq(virq);
++				else
++					dev_err(&pcie->pdev->dev, "unexpected PME IRQ\n");
++			}
++		}
+ 	}
+ 
+ 	/* Process ERR interrupt */
 -- 
 2.20.1
 
