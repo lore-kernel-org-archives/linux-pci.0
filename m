@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6E7C43470
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E0C1C43600
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C563C610C8
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DD24613C5
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235445AbhEFPff (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:35:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45970 "EHLO mail.kernel.org"
+        id S235745AbhEFPfi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:35:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235690AbhEFPdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0526E61469;
+        id S235702AbhEFPdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 97FDC61625;
         Thu,  6 May 2021 15:32:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315174;
-        bh=zi+PML1cWSulO/GYWf9yak7a3W+RSD4MegJIQ/xyX/0=;
+        bh=0YkTEBWISevDvHgokN8XUsGMwtVKvfnG9KGkSIjT5Co=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EqDJhLO1Hbf8GkvCKJD0Nzd3ZOEPegQ4Ex2n1YeJtatlQl6Tr4bvmFR9YYqpgSfqb
-         BX4/PEJZLywUrkQrde7yaSPg/j5lrsNr8UlJ44x1jVDO5GS4GPG+/eJo+sGYb+OKro
-         GQHHh13UH+UCZ2TOlXFdq696tTnU9DaAsE3hhTnwH33W047YxWZ2ZixmzjtoF4AoqO
-         N7q6gFcsJOkOEEnUjLywFP7y/SJT+kIm4jDnurpRFmXqfb9+XYfe2YcR6Z/vsTru6I
-         lz+ngyp3uxxpZmbe5h7lWGZT1u1XE1WJLPaklxoistVSrSAkZsUXFwxF7xmFgyJC2U
-         GtL62ZeX3tDUA==
+        b=OMXkbHyayU7EJ06iuIZVStBfcPs+TIdvxPzRYPg8sKF16YEUQphEicjVbabUnZ6we
+         zAsro4QRH2vBWa45bDxXDGF8qn3RmOoKKofVmkL1CO1n1i9FIUeMaGEVca5rVP1V1V
+         R124NrK+EXSGLJDgSlFbliWaAJzrvsyuKjgHA+F8yYMmOVtkeAn+DnKZy5NUnjyKJZ
+         DT4AMkYg7Pun4Jz5Bln0vhpx1XjEOIhQqV75+fGsZUITSupwc8uY++tv8j1gJBlM5X
+         8RA2AW+hhHx8xJ+BtgdO18m9vakQXjItJtF6f2Rd9RI9Zpqpo2SB3w/26Bt7AH+cqe
+         aRxXLoC6NVivw==
 Received: by pali.im (Postfix)
-        id B509A8A1; Thu,  6 May 2021 17:32:53 +0200 (CEST)
+        id 535E389A; Thu,  6 May 2021 17:32:54 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 32/42] PCI: pci-bridge-emul: Add description for class_revision field
-Date:   Thu,  6 May 2021 17:31:43 +0200
-Message-Id: <20210506153153.30454-33-pali@kernel.org>
+Subject: [PATCH 34/42] PCI: aardvark: Add support for DEVCAP2, DEVCTL2, LNKCAP2 and LNKCTL2 registers on emulated bridge
+Date:   Thu,  6 May 2021 17:31:45 +0200
+Message-Id: <20210506153153.30454-35-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,32 +57,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make it clear why there is bitshift by 16 and rewrite the code to align
-with the new description.
+PCI aardvark hardware supports access to DEVCAP2, DEVCTL2, LNKCAP2 and
+LNKCTL2 configuration registers of PCIe core via PCIE_CORE_PCIEXP_CAP.
+Export them via emulated software root bridge.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
+Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
 ---
- drivers/pci/pci-bridge-emul.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-aardvark.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index fdaf86a888b7..2b6ea84f25af 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -265,7 +265,11 @@ int pci_bridge_emul_init(struct pci_bridge_emul *bridge,
- {
- 	BUILD_BUG_ON(sizeof(bridge->conf) != PCI_BRIDGE_CONF_END);
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index e724d05a61a8..13bbc0b5134d 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -610,8 +610,13 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+ 	case PCI_EXP_DEVCAP:
+ 	case PCI_EXP_DEVCTL:
+ 	case PCI_EXP_LNKCAP:
++	case PCI_EXP_DEVCAP2:
++	case PCI_EXP_DEVCTL2:
++	case PCI_EXP_LNKCAP2:
++	case PCI_EXP_LNKCTL2:
+ 		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
+ 		return PCI_BRIDGE_EMUL_HANDLED;
++
+ 	default:
+ 		return PCI_BRIDGE_EMUL_NOT_HANDLED;
+ 	}
+@@ -631,16 +636,18 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 	 */
  
--	bridge->conf.class_revision |= cpu_to_le32(PCI_CLASS_BRIDGE_PCI << 16);
-+	/*
-+	 * class_revision: Class is high 24bits and revision is low 8bit
-+	 * Class for PCI Bridge Normal Decode has 24bit value (PCI_CLASS_BRIDGE_PCI << 8)
-+	 */
-+	bridge->conf.class_revision |= cpu_to_le32((PCI_CLASS_BRIDGE_PCI << 8) << 8);
- 	bridge->conf.header_type = PCI_HEADER_TYPE_BRIDGE;
- 	bridge->conf.cache_line_size = 0x10;
- 	bridge->conf.status = cpu_to_le16(PCI_STATUS_CAP_LIST);
+ 	switch (reg) {
+-	case PCI_EXP_DEVCTL:
+-		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+-		break;
+-
+ 	case PCI_EXP_LNKCTL:
+ 		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+ 		if (new & PCI_EXP_LNKCTL_RL)
+ 			advk_pcie_wait_for_retrain(pcie);
+ 		break;
+ 
++	case PCI_EXP_DEVCTL:
++	case PCI_EXP_DEVCTL2:
++	case PCI_EXP_LNKCTL2:
++		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
++		break;
++
+ 	default:
+ 		break;
+ 	}
 -- 
 2.20.1
 
