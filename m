@@ -3,36 +3,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83D58C43470
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF63C43460
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54C7F61441
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A34C6141F
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235179AbhEFPdr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45898 "EHLO mail.kernel.org"
+        id S235444AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235295AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235267AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2FC8D6121F;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2B80F61168;
         Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315167;
-        bh=4PdOrm3ckyFyLCrz8KXjoYJ/bE97syCdXnf2iYht7P0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=nTYk0C0GB/2hQOoxxPHbZxsBuXKqffrD5pzDXMVjeBfVaXarD/c2bkjwkMbStG6Y9
-         Qh8sKqg8tP/80bLYac++BizFLF0W1LQTgbJHPoIMILv/S6/T63TLuJe7YIoRsBsSnh
-         lQAW653pZdTiQJvReyxgT41La1gK6UaqN+OWsD5+PuWsAtvfi8/jmNnXSC7kyvqMta
-         UsVXn3zYt9tEL4nmqy0AKV6o0z7IEU21xbhqPjP9S1E65Sj1e9Z8IA8pkrjqhNyslU
-         Lbo6o688qxIYeVd5z8fTVKdkcteuG49rc+nysfhXqRXH/40M3DZNxOaQRJPT0xvgwO
-         E97U50sdrjG1Q==
+        bh=Fu4/t9pMjXwvsBTR1oTGCXyaBjHyoagLyBJfrUrRITM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Tvv6Aru/o7L85xCaZOCy8rUW3aMkT6HCjU1p3R9hyH4Y06DgBjU6ma+WfLSk86O8C
+         J2bzfs9PBV9RCicsRr7kyOh673+gkaNBfb4BPPuPefC5HZ4wDjVsJ3t3uBiV7zO57j
+         CBr18OLYW4MkaFxwzGJMZqfO6cGgFVPUy0OvP4P6yQmLuSMdKcUPAf3y+Elp/qRwCd
+         YVdiCiL4lqocEHxmysDM7b2qSP5Vl3YaIN+mDmSkKekQRQoIZn+3i61kooaL16Jtx0
+         0iqmdbmL+i8P4tcl6Vw8bx0Ge86s2T6bB0PnlCn/5rtMspqoMy2Jlpr6W3eO3A8HZm
+         or+s1vmzqwNeg==
 Received: by pali.im (Postfix)
-        id 00869732; Thu,  6 May 2021 17:32:43 +0200 (CEST)
+        id CBBC4BF9; Thu,  6 May 2021 17:32:44 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,10 +44,12 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 00/42] PCI: aardvark: Various driver fixes
-Date:   Thu,  6 May 2021 17:31:11 +0200
-Message-Id: <20210506153153.30454-1-pali@kernel.org>
+Subject: [PATCH 03/42] PCI: aardvark: Fix checking for PIO status
+Date:   Thu,  6 May 2021 17:31:14 +0200
+Message-Id: <20210506153153.30454-4-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
+References: <20210506153153.30454-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -55,101 +57,208 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series fixes various issues in pci-aardvark.c driver
-(PCIe controller on Marvell Armada 3700 SoC) used on Espressobin
-and Turris Mox.
+From: Evan Wang <xswang@marvell.com>
 
-First patch fixes kernel panic (or TF-A panic depending on used
-firmware) during execution of PIO transfer and I would suggest to
-include this fix into v5.13 release to prevent future kernel panics.
+There is an issue that when PCIe switch is connected to an Armada 3700
+board, there will be lots of warnings about PIO errors when reading the
+config space. According to Aardvark PIO read and write sequence in HW
+specification, the current way to check PIO status has the following
+issues:
 
-Other patches then fixes PIO issues, PCIe link training, initialization
-of PCIe controller, accessing PCIe Root Bridge/Port registers, handling
-of interrupts (including ERR and PME), setup of Multi-MSI interrupts,
-adding support for masking MSI interrupts, adding support for more than
-32 MSI interrupts with MSI-X support, and adding support for AER.
+1) For PIO read operation, it reports the error message, which should be
+   avoided according to HW specification.
 
-Note that there are still some unresolved issues with PCIe on A3720.
-I asked Marvell for PCIe documentation or explanations but I have not
-received anything (yet).
+2) For PIO read and write operations, it only checks PIO operation complete
+   status, which is not enough, and error status should also be checked.
 
-Patch "Fix checking for PIO status" is taken from the Marvell github fork
-and adapted for inclusion into mainline kernel:
-https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/84444d22023c
+This patch aligns the code with Aardvark PIO read and write sequence in HW
+specification on PIO status check and fix the warnings when reading config
+space.
 
-Whole patch series is available also in my git branch pci-aardvark:
-https://git.kernel.org/pub/scm/linux/kernel/git/pali/linux.git/log/?h=pci-aardvark
+This patch also returns Completion Retry Status value when the read request
+timeout, to give the caller a chance to send the request again instead of
+failing.
 
-If you have Espressobin, Turris Mox or other A3720 board with PCIe
-please test this patch series with your favourite PCIe card if
-everything is working fine.
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Tested-by: Victor Gu <xigu@marvell.com>
+[pali: Return CRS also after timeout]
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Reviewed-by: Marek Behún <kabel@kernel.org>
+Cc: stable@vger.kernel.org # b1bd5714472c ("PCI: aardvark: Indicate error in 'val' when config read fails")
+---
+ drivers/pci/controller/pci-aardvark.c | 93 +++++++++++++++++++++++----
+ 1 file changed, 80 insertions(+), 13 deletions(-)
 
-Evan Wang (1):
-  PCI: aardvark: Fix checking for PIO status
-
-Pali Rohár (39):
-  PCI: aardvark: Fix kernel panic during PIO transfer
-  PCI: aardvark: Fix checking for PIO Non-posted Request
-  PCI: aardvark: Increase polling delay to 1.5s while waiting for PIO
-    response
-  PCI: pci-bridge-emul: Add PCIe Root Capabilities Register
-  PCI: aardvark: Fix reporting CRS Software Visibility on emulated
-    bridge
-  PCI: aardvark: Fix link training
-  PCI: Add PCI_EXP_DEVCTL_PAYLOAD_* macros
-  PCI: aardvark: Fix PCIe Max Payload Size setting
-  PCI: aardvark: Implement workaround for the readback value of VEND_ID
-  PCI: aardvark: Do not touch status bits of masked interrupts in
-    interrupt handler
-  PCI: aardvark: Check for virq mapping when processing INTx IRQ
-  PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
-  PCI: aardvark: Don't mask irq when mapping
-  PCI: aardvark: Change name of INTx irq_chip to advk-INT
-  PCI: aardvark: Remove unneeded goto
-  PCI: aardvark: Fix support for MSI interrupts
-  PCI: aardvark: Correctly clear and unmask all MSI interrupts
-  PCI: aardvark: Fix setting MSI address
-  PCI: aardvark: Add support for more than 32 MSI interrupts
-  PCI: aardvark: Add support for masking MSI interrupts
-  PCI: aardvark: Enable MSI-X support
-  PCI: aardvark: Fix support for ERR interrupt on emulated bridge
-  PCI: aardvark: Fix support for PME on emulated bridge
-  PCI: aardvark: Fix support for PME requester on emulated bridge
-  PCI: aardvark: Fix support for bus mastering and PCI_COMMAND on
-    emulated bridge
-  PCI: aardvark: Disable bus mastering and mask all interrupts when
-    unbinding driver
-  PCI: aardvark: Free config space for emulated root bridge when
-    unbinding driver to fix memory leak
-  PCI: aardvark: Reset PCIe card and disable PHY when unbinding driver
-  PCI: aardvark: Rewrite irq code to chained irq handler
-  PCI: aardvark: Use separate INTA interrupt for emulated root bridge
-  PCI: pci-bridge-emul: Add description for class_revision field
-  PCI: pci-bridge-emul: Add definitions for missing capabilities
-    registers
-  PCI: aardvark: Add support for DEVCAP2, DEVCTL2, LNKCAP2 and LNKCTL2
-    registers on emulated bridge
-  PCI: aardvark: Add support for PCI_BRIDGE_CTL_BUS_RESET on emulated
-    bridge
-  PCI: aardvark: Replace custom PCIE_CORE_ERR_CAPCTL_* macros by
-    linux/pci_regs.h macros
-  PCI: aardvark: Replace custom PCIE_CORE_INT_* macros by linux
-    PCI_INTERRUPT_* values
-  PCI: aardvark: Cleanup some register macros
-  PCI: aardvark: Add comments for OB_WIN_ENABLE and ADDR_WIN_DISABLE
-  PCI: aardvark: Add support for Advanced Error Reporting registers on
-    emulated bridge
-
-Russell King (2):
-  PCI: pci-bridge-emul: re-arrange register tests
-  PCI: pci-bridge-emul: add support for PCIe extended capabilities
-
- drivers/pci/controller/pci-aardvark.c | 980 +++++++++++++++++++-------
- drivers/pci/pci-bridge-emul.c         | 149 ++--
- drivers/pci/pci-bridge-emul.h         |  17 +-
- include/uapi/linux/pci_regs.h         |   6 +
- 4 files changed, 850 insertions(+), 302 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 2f8380a1f84f..a37ba86f1b2d 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -58,6 +58,7 @@
+ #define   PIO_COMPLETION_STATUS_CRS		2
+ #define   PIO_COMPLETION_STATUS_CA		4
+ #define   PIO_NON_POSTED_REQ			BIT(10)
++#define   PIO_ERR_STATUS			BIT(11)
+ #define PIO_ADDR_LS				(PIO_BASE_ADDR + 0x8)
+ #define PIO_ADDR_MS				(PIO_BASE_ADDR + 0xc)
+ #define PIO_WR_DATA				(PIO_BASE_ADDR + 0x10)
+@@ -176,6 +177,9 @@
+ 
+ #define MSI_IRQ_NUM			32
+ 
++#define CFG_RD_UR_VAL			0xffffffff
++#define CFG_RD_CRS_VAL			0xffff0001
++
+ struct advk_pcie {
+ 	struct platform_device *pdev;
+ 	void __iomem *base;
+@@ -461,7 +465,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	advk_writel(pcie, reg, PCIE_CORE_CMD_STATUS_REG);
+ }
+ 
+-static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
++static int advk_pcie_check_pio_status(struct advk_pcie *pcie, u32 *val)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+ 	u32 reg;
+@@ -472,15 +476,50 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
+ 	status = (reg & PIO_COMPLETION_STATUS_MASK) >>
+ 		PIO_COMPLETION_STATUS_SHIFT;
+ 
+-	if (!status)
+-		return;
+-
++	/*
++	 * According to HW spec, the PIO status check sequence as below:
++	 * 1) even if COMPLETION_STATUS(bit9:7) indicates successful,
++	 *    it still needs to check Error Status(bit11), only when this bit
++	 *    indicates no error happen, the operation is successful.
++	 * 2) value Unsupported Request(1) of COMPLETION_STATUS(bit9:7) only
++	 *    means a PIO write error, and for PIO read it is successful with
++	 *    a read value of 0xFFFFFFFF.
++	 * 3) value Completion Retry Status(CRS) of COMPLETION_STATUS(bit9:7)
++	 *    only means a PIO write error, and for PIO read it is successful
++	 *    with a read value of 0xFFFF0001.
++	 * 4) value Completer Abort (CA) of COMPLETION_STATUS(bit9:7) means
++	 *    error for both PIO read and PIO write operation.
++	 * 5) other errors are indicated as 'unknown'.
++	 */
+ 	switch (status) {
++	case PIO_COMPLETION_STATUS_OK:
++		if (reg & PIO_ERR_STATUS) {
++			strcomp_status = "COMP_ERR";
++			break;
++		}
++		/* Get the read result */
++		if (val)
++			*val = advk_readl(pcie, PIO_RD_DATA);
++		/* No error */
++		strcomp_status = NULL;
++		break;
+ 	case PIO_COMPLETION_STATUS_UR:
+-		strcomp_status = "UR";
++		if (val) {
++			/* For reading, UR is not an error status */
++			*val = CFG_RD_UR_VAL;
++			strcomp_status = NULL;
++		} else {
++			strcomp_status = "UR";
++		}
+ 		break;
+ 	case PIO_COMPLETION_STATUS_CRS:
+-		strcomp_status = "CRS";
++		if (val) {
++			/* For reading, CRS is not an error status */
++			*val = CFG_RD_CRS_VAL;
++			strcomp_status = NULL;
++		} else {
++			strcomp_status = "CRS";
++		}
+ 		break;
+ 	case PIO_COMPLETION_STATUS_CA:
+ 		strcomp_status = "CA";
+@@ -490,6 +529,9 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
+ 		break;
+ 	}
+ 
++	if (!strcomp_status)
++		return 0;
++
+ 	if (reg & PIO_NON_POSTED_REQ)
+ 		str_posted = "Non-posted";
+ 	else
+@@ -497,6 +539,8 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
+ 
+ 	dev_err(dev, "%s PIO Response Status: %s, %#x @ %#x\n",
+ 		str_posted, strcomp_status, reg, advk_readl(pcie, PIO_ADDR_LS));
++
++	return -EFAULT;
+ }
+ 
+ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+@@ -703,8 +747,17 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 						 size, val);
+ 
+ 	if (advk_pcie_pio_is_running(pcie)) {
+-		*val = 0xffffffff;
+-		return PCIBIOS_SET_FAILED;
++		/*
++		 * For PCI_VENDOR_ID register, return Completion Retry Status
++		 * so caller tries to issue the request again insted of failing
++		 */
++		if (where == PCI_VENDOR_ID) {
++			*val = CFG_RD_CRS_VAL;
++			return PCIBIOS_SUCCESSFUL;
++		} else {
++			*val = 0xffffffff;
++			return PCIBIOS_SET_FAILED;
++		}
+ 	}
+ 
+ 	/* Program the control register */
+@@ -729,15 +782,27 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 	advk_writel(pcie, 1, PIO_START);
+ 
+ 	ret = advk_pcie_wait_pio(pcie);
++	if (ret < 0) {
++		/*
++		 * For PCI_VENDOR_ID register, return Completion Retry Status
++		 * so caller tries to issue the request again instead of failing
++		 */
++		if (where == PCI_VENDOR_ID) {
++			*val = CFG_RD_CRS_VAL;
++			return PCIBIOS_SUCCESSFUL;
++		} else {
++			*val = 0xffffffff;
++			return PCIBIOS_SET_FAILED;
++		}
++	}
++
++	/* Check PIO status and get the read result */
++	ret = advk_pcie_check_pio_status(pcie, val);
+ 	if (ret < 0) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_SET_FAILED;
+ 	}
+ 
+-	advk_pcie_check_pio_status(pcie);
+-
+-	/* Get the read result */
+-	*val = advk_readl(pcie, PIO_RD_DATA);
+ 	if (size == 1)
+ 		*val = (*val >> (8 * (where & 3))) & 0xff;
+ 	else if (size == 2)
+@@ -801,7 +866,9 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (ret < 0)
+ 		return PCIBIOS_SET_FAILED;
+ 
+-	advk_pcie_check_pio_status(pcie);
++	ret = advk_pcie_check_pio_status(pcie, NULL);
++	if (ret < 0)
++		return PCIBIOS_SET_FAILED;
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
 -- 
 2.20.1
 
