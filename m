@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFC9C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 896E9C43462
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BFC0613BA
+	by mail.kernel.org (Postfix) with ESMTP id 5BBBD613BA
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235178AbhEFPfh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:35:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46432 "EHLO mail.kernel.org"
+        id S235707AbhEFPfg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:35:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235564AbhEFPdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DCD8161926;
-        Thu,  6 May 2021 15:32:54 +0000 (UTC)
+        id S235680AbhEFPdw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B6214613B5;
+        Thu,  6 May 2021 15:32:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315175;
-        bh=75Ia8fDMMjN9738pBwL6dSeC+rSyhLtGbCVaSNAnl5E=;
+        s=k20201202; t=1620315174;
+        bh=JtpzxROGnZVDcJeZYzWfrsnJEYa+UhigCuLwKzPz8pI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V7oZZZvz8KrPf3MxbDZcnpDiHlR3yQJiWXA7OBbCD8ij4wLxeJYntqob3tH3S8LIX
-         h/e6DaMEKIb3ov5GmP2FT6mrXCQXDvjzLZf6p61LeAqhBuVC0FtVbNJfeZIRe9uXPD
-         vyqgR6Mulfk4+fWddU0mnzDk1KYYyaZ56PwP+j8X7en+sg7GSCa5hLSbjWBJrzf8CL
-         9wbVeKuWz0+iP4FzOyMT7mdGOHf5EziHK9zAgvexO9wIerOp22dg33hISIBo8vZWs5
-         2bB7OniF2FMB8UVSUMf21LstrYByFi/HDk0uMEno+B7PLJDQz7mcW4wNd/n6SH505g
-         l54NAeaBeX+HA==
+        b=q7xwc5ANNXpJa4sYpgJ9cScgGOgl2KJRynZD6qVxsvTciEAhMSEZY9Rw/gOM1dJKR
+         YRhUlLxjn6KcSeiB6BFwCKxYxrndvvlneMqpRA/sDRPcWTX+Gy+cex9e+jaPjApjID
+         8M4Ep7ErS7+tGRKkm+MC9lhABLkBxjnM28NJCrR1vPOlIavw8lZdlwTRFt1RDXC2IT
+         FKLA0eSQkU6/MT+bkR4XTE8Rfmh8bPU/9nwWKsvQjQpJkuZDnwh2J/X+lRWhzOIPVj
+         YBhFanaOYqNc9ouWufijbUX/F22Qx27TkFLV6yxfNek2rwcHUO7upf1nVS1J12uBE1
+         BD5jRGzIsD4KA==
 Received: by pali.im (Postfix)
-        id 95D418A1; Thu,  6 May 2021 17:32:54 +0200 (CEST)
+        id 6A75189A; Thu,  6 May 2021 17:32:53 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 35/42] PCI: aardvark: Add support for PCI_BRIDGE_CTL_BUS_RESET on emulated bridge
-Date:   Thu,  6 May 2021 17:31:46 +0200
-Message-Id: <20210506153153.30454-36-pali@kernel.org>
+Subject: [PATCH 31/42] PCI: aardvark: Use separate INTA interrupt for emulated root bridge
+Date:   Thu,  6 May 2021 17:31:42 +0200
+Message-Id: <20210506153153.30454-32-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,68 +57,163 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI aardvark hardware supports PCIe Hot Reset via PCIE_CORE_CTRL1_REG
-register. Use it for implementing PCI_BRIDGE_CTL_BUS_RESET bit of
-PCI_BRIDGE_CONTROL register on emulated bridge.
+Emulated root bridge currently provides only one Legacy INTA interrupt
+which is used for reporting PCIe PME and ERR events and handled by kernel
+PCIe PME and AER drivers.
 
-With this change the function pci_reset_secondary_bus() starts working and
-can reset connected PCIe card. Also custom userspace script [1] which uses
-setpci can trigger PCIe Hot Reset and reset the card manually.
+Aardvark HW reports these PME and ERR events separately, so there is no
+need to mix real INTA interrupt and emulated INTA interrupt for PCIe PME
+and AER drivers.
 
-[1] - https://alexforencich.com/wiki/en/pcie/hot-reset-linux
+Register a new advk-EMU irq chip and a new irq domain for emulated root
+bridge and use this new separate irq domain for providing INTA interrupt
+from emulated root bridge for PME and ERR events.
+
+The real INTA interrupt from real devices is now separate.
+
+A custom map_irq callback function on PCI host bridge structure is used to
+allocate IRQ mapping for emulated root bridge from new irq domain. Original
+callback of_irq_parse_and_map_pci() is used for all other devices as before.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
-Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
 ---
- drivers/pci/controller/pci-aardvark.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 66 ++++++++++++++++++++++++++-
+ 1 file changed, 64 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 13bbc0b5134d..d8fb43604154 100644
+index f2ed276b7e18..e724d05a61a8 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -558,6 +558,22 @@ advk_pci_bridge_emul_base_conf_read(struct pci_bridge_emul *bridge,
- 		*value = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
- 		return PCI_BRIDGE_EMUL_HANDLED;
+@@ -194,6 +194,8 @@ struct advk_pcie {
+ 	struct platform_device *pdev;
+ 	void __iomem *base;
+ 	int irq;
++	struct irq_domain *emul_irq_domain;
++	struct irq_chip emul_irq_chip;
+ 	struct irq_domain *irq_domain;
+ 	struct irq_chip irq_chip;
+ 	struct irq_domain *msi_domain;
+@@ -1074,6 +1076,22 @@ static const struct irq_domain_ops advk_pcie_irq_domain_ops = {
+ 	.xlate = irq_domain_xlate_onecell,
+ };
  
-+	case PCI_INTERRUPT_LINE: {
-+		/*
-+		 * From the whole 32bit register we support propagating to HW
-+		 * only one bit: PCI_BRIDGE_CTL_BUS_RESET. Other bits are
-+		 * retrieved only from emulated config space buffer.
-+		 */
-+		__le32 *cfgspace = (__le32 *)&bridge->conf;
-+		u32 val = le32_to_cpu(cfgspace[PCI_INTERRUPT_LINE / 4]);
-+		if (advk_readl(pcie, PCIE_CORE_CTRL1_REG) & HOT_RESET_GEN)
-+			val |= PCI_BRIDGE_CTL_BUS_RESET << 16;
-+		else
-+			val &= ~(PCI_BRIDGE_CTL_BUS_RESET << 16);
-+		*value = val;
-+		return PCI_BRIDGE_EMUL_HANDLED;
++static int advk_pcie_emul_irq_map(struct irq_domain *h,
++				  unsigned int virq, irq_hw_number_t hwirq)
++{
++	struct advk_pcie *pcie = h->host_data;
++
++	irq_set_chip_and_handler(virq, &pcie->emul_irq_chip, handle_simple_irq);
++	irq_set_chip_data(virq, pcie);
++
++	return 0;
++}
++
++static const struct irq_domain_ops advk_pcie_emul_irq_domain_ops = {
++	.map = advk_pcie_emul_irq_map,
++	.xlate = irq_domain_xlate_onecell,
++};
++
+ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -1167,6 +1185,24 @@ static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
+ 	irq_domain_remove(pcie->irq_domain);
+ }
+ 
++static int advk_pcie_init_emul_irq_domain(struct advk_pcie *pcie)
++{
++	pcie->emul_irq_chip.name = "advk-EMU";
++	pcie->emul_irq_domain = irq_domain_add_linear(NULL, 1,
++				&advk_pcie_emul_irq_domain_ops, pcie);
++	if (!pcie->emul_irq_domain) {
++		dev_err(&pcie->pdev->dev, "Failed to add emul IRQ domain\n");
++		return -ENOMEM;
 +	}
 +
- 	default:
- 		return PCI_BRIDGE_EMUL_NOT_HANDLED;
- 	}
-@@ -574,6 +590,17 @@ advk_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
- 		advk_writel(pcie, new, PCIE_CORE_CMD_STATUS_REG);
- 		break;
- 
-+	case PCI_INTERRUPT_LINE:
-+		if (mask & (PCI_BRIDGE_CTL_BUS_RESET << 16)) {
-+			u32 val = advk_readl(pcie, PCIE_CORE_CTRL1_REG);
-+			if (new & (PCI_BRIDGE_CTL_BUS_RESET << 16))
-+				val |= HOT_RESET_GEN;
-+			else
-+				val &= ~HOT_RESET_GEN;
-+			advk_writel(pcie, val, PCIE_CORE_CTRL1_REG);
-+		}
-+		break;
++	return 0;
++}
 +
- 	default:
- 		break;
++static void advk_pcie_remove_emul_irq_domain(struct advk_pcie *pcie)
++{
++	irq_domain_remove(pcie->emul_irq_domain);
++}
++
+ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ {
+ 	struct irq_data *irq_data;
+@@ -1244,7 +1280,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 			 * Aardvark HW returns zero for PCI_EXP_FLAGS_IRQ, so use PCIe interrupt 0.
+ 			 */
+ 			if (le16_to_cpu(pcie->bridge.pcie_conf.rootctl) & PCI_EXP_RTCTL_PMEIE) {
+-				virq = irq_find_mapping(pcie->irq_domain, 0);
++				virq = irq_find_mapping(pcie->emul_irq_domain, 0);
+ 				if (virq)
+ 					generic_handle_irq(virq);
+ 				else
+@@ -1257,7 +1293,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 	if (err_bits) {
+ 		advk_writel(pcie, err_bits, PCIE_ISR0_REG);
+ 		/* Aardvark HW returns zero for PCI_ERR_ROOT_AER_IRQ, so use PCIe interrupt 0 */
+-		virq = irq_find_mapping(pcie->irq_domain, 0);
++		virq = irq_find_mapping(pcie->emul_irq_domain, 0);
+ 		if (virq)
+ 			generic_handle_irq(virq);
+ 		else
+@@ -1304,6 +1340,21 @@ static void advk_pcie_irq_handler(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
+ 
++static int advk_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	struct advk_pcie *pcie = dev->bus->sysdata;
++
++	/*
++	 * Emulated root bridge has itw own emulated irq chip and irq domain.
++	 * Variable pin is the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD) and
++	 * hwirq for irq_create_mapping() is indexed from zero.
++	 */
++	if (pci_is_root_bus(dev->bus))
++		return irq_create_mapping(pcie->emul_irq_domain, pin-1);
++	else
++		return of_irq_parse_and_map_pci(dev, slot, pin);
++}
++
+ static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
+ {
+ 	phy_power_off(pcie->phy);
+@@ -1432,13 +1483,23 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return ret;
  	}
+ 
++	ret = advk_pcie_init_emul_irq_domain(pcie);
++	if (ret) {
++		dev_err(dev, "Failed to initialize irq\n");
++		advk_pcie_remove_irq_domain(pcie);
++		advk_pcie_remove_msi_irq_domain(pcie);
++		return ret;
++	}
++
+ 	irq_set_chained_handler_and_data(pcie->irq, advk_pcie_irq_handler, pcie);
+ 
+ 	bridge->sysdata = pcie;
+ 	bridge->ops = &advk_pcie_ops;
++	bridge->map_irq = advk_pcie_map_irq;
+ 
+ 	ret = pci_host_probe(bridge);
+ 	if (ret < 0) {
++		advk_pcie_remove_emul_irq_domain(pcie);
+ 		advk_pcie_remove_msi_irq_domain(pcie);
+ 		advk_pcie_remove_irq_domain(pcie);
+ 		irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+@@ -1487,6 +1548,7 @@ static int advk_pcie_remove(struct platform_device *pdev)
+ 	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
+ 
+ 	/* Remove IRQ domains */
++	advk_pcie_remove_emul_irq_domain(pcie);
+ 	advk_pcie_remove_msi_irq_domain(pcie);
+ 	advk_pcie_remove_irq_domain(pcie);
+ 
 -- 
 2.20.1
 
