@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DF7C433ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1834C43461
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 557C76109E
+	by mail.kernel.org (Postfix) with ESMTP id A0770613BA
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235782AbhEFPeH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:34:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45970 "EHLO mail.kernel.org"
+        id S235793AbhEFPeL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:34:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45966 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235561AbhEFPdt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9EF3D6141A;
-        Thu,  6 May 2021 15:32:50 +0000 (UTC)
+        id S235595AbhEFPdu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 87A2861466;
+        Thu,  6 May 2021 15:32:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315171;
-        bh=yxzpn2O/vp9ZZpPVLIJ+HQxJFsDjVUX2z2EPhOuwt1k=;
+        bh=urrwtdifV1fz+XQqM6L88XpER1LnRW6X4GCyTMrByDI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KEyqYxHdE7ZKmqjuMa/tEldb+IFNCvdsnbMTcFJDpDGF7POsd9s6fhKcJUwDgPT/C
-         3f0Z+T0MNS32RTBEk0NTQvVoHdkQloqQxVrw05z3izZJJENXMswtI+eUYPmcgduWNS
-         QywErnFwoTp2UfCkgt0j2HApyfl+hDCBrh3gqnwNbgAyQ/m3Wb+YSUO5HiWGd1YPtH
-         oi+4BaBU1AKU3EISacHwGauI0j3g8fUx9d+C/AjaUBbUJRDKnu8jnwHpD/N48j6uWT
-         usMapfP502CQ3KBtQyqsxnP4N/7Q1w3DhggOMHQxw70zNll/qekFxqJ2zeidVorYDL
-         KlHt+MTfZ2q1g==
+        b=IAhpZGoDLMr/XM36LpXnUhmpuYoUZemfa69scs/apqACQh8Asvic7XO+S0i337uGG
+         DK1TdARfwbJny6lEsfYGdy1RdSSEhR/bw7uHhwcC8KpAek/F3+Tku2/6MhxRgl5E9S
+         B2JbMXxo+u6kSPTDkEXBYaK8lAsaPQ5TsrFofh5JOjKvaeZHzMFcaofoc611m/+MgC
+         FelmH4b66mUm0cvRU94SCd/dnm3n+yYWLC4APmCYOplQps7e7PJ9tDL6xaV0TWHElc
+         B/rQ+nPd5mK4m2ElrKyiO7kmvRnJJhGjVbabnGOWKFIesVYwP6T/MZdI2lVk0UTSRm
+         NbDcjjm9Jmy4g==
 Received: by pali.im (Postfix)
-        id 56A2A89A; Thu,  6 May 2021 17:32:50 +0200 (CEST)
+        id 3DA1589A; Thu,  6 May 2021 17:32:51 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 21/42] PCI: aardvark: Add support for masking MSI interrupts
-Date:   Thu,  6 May 2021 17:31:32 +0200
-Message-Id: <20210506153153.30454-22-pali@kernel.org>
+Subject: [PATCH 24/42] PCI: aardvark: Fix support for PME on emulated bridge
+Date:   Thu,  6 May 2021 17:31:35 +0200
+Message-Id: <20210506153153.30454-25-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,152 +57,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Aardvark HW does not support masking individual MSI interrupts. It supports
-masking only whole equivalence classes which consist of MSI interrupts with
-same lower 5 bits. So mask a whole equivalence class only if all interrupts
-in this class are masked.
+The emulated bridge returns incorrect value for PCI_EXP_RTSTA register
+during readout in advk_pci_bridge_emul_pcie_conf_read() function. Fix it by
+setting correct bit PCI_EXP_RTSTA_PME based on PCIE_MSG_PM_PME_MASK.
 
-For each equivalence class store a reference counter to indicate how many
-unmasked interrupts are in this class. Use this counter to decide when this
-class of MSI interrupts can be masked.
+Currently enabling PCI_EXP_RTSTA_PME bit in PCI_EXP_RTCTL register does
+nothing. This is because PCIe PME driver expects to receive PCIe interrupt
+defined in PCI_EXP_FLAGS_IRQ register. But aardvark hardware does not
+trigger PCIe INTx/MSI interrupt for PME event, rather it triggers custom
+aardvark interrupt which this driver is not processing yet.
+
+Fix this issue by handling PME interrupt in advk_pcie_handle_int() and
+chaining it to PCIe interrupt 0 with generic_handle_irq() (since aardvark
+hardware sets PCI_EXP_FLAGS_IRQ to zero). With this change PCIe PME driver
+finally starts receiving PME interrupt.
+
+To optimize advk_pci_bridge_emul_pcie_conf_write() code, touch
+PCIE_ISR0_REG and PCIE_ISR0_MASK_REG registers only when it is really
+needed, when processing PCI_EXP_RTCTL_PMEIE and PCI_EXP_RTSTA_PME bits.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
+Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
+Cc: stable@vger.kernel.org # c0f05a6ab525 ("PCI: aardvark: Fix PCI_EXP_RTCTL register configuration")
 ---
- drivers/pci/controller/pci-aardvark.c | 77 ++++++++++++++++++++++++---
- 1 file changed, 69 insertions(+), 8 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 40 ++++++++++++++++++++-------
+ 1 file changed, 30 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index d74e84b0e689..376f0666becc 100644
+index 2ea58ba10a97..fac48797d922 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -202,6 +202,7 @@ struct advk_pcie {
- 	struct msi_domain_info msi_domain_info;
- 	DECLARE_BITMAP(msi_used_linear, MSI_IRQ_LINEAR_COUNT);
- 	struct list_head msi_used_radix;
-+	u16 msi_used_ec_refcnt[32];
- 	struct mutex msi_used_lock;
- 	int link_gen;
- 	struct pci_bridge_emul bridge;
-@@ -405,12 +406,10 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
- 	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
- 
--	/* Disable All ISR0/1 Sources */
-+	/* Disable All ISR0/1 and MSI Sources */
- 	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_MASK_REG);
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
--
--	/* Unmask all MSIs */
--	advk_writel(pcie, ~(u32)PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
-+	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
- 
- 	/* Unmask summary MSI interrupt */
- 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-@@ -888,6 +887,54 @@ static int advk_msi_set_affinity(struct irq_data *irq_data,
- 	return -EINVAL;
- }
- 
-+static void advk_msi_irq_mask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u8 idx = hwirq & 31;
-+	u32 mask;
-+
-+	/*
-+	 * Aardvark HW does not support masking individual MSI interrupts. It
-+	 * supports masking only whole equivalence class idx which consist of
-+	 * MSI interrupts with same low 5 bits. So mask equivalence class idx
-+	 * only in case there is no used (unmasked) interrupt in this class.
-+	 */
-+
-+	if (--pcie->msi_used_ec_refcnt[idx] > 0)
-+		return;
-+
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask |= BIT(idx);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+}
-+
-+static void advk_msi_irq_unmask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u8 idx = hwirq & 31;
-+	u32 mask;
-+
-+	pcie->msi_used_ec_refcnt[idx]++;
-+
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask &= ~BIT(idx);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+}
-+
-+static void advk_msi_top_irq_mask(struct irq_data *d)
-+{
-+	pci_msi_mask_irq(d);
-+	irq_chip_mask_parent(d);
-+}
-+
-+static void advk_msi_top_irq_unmask(struct irq_data *d)
-+{
-+	pci_msi_unmask_irq(d);
-+	irq_chip_unmask_parent(d);
-+}
-+
- static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
- 				     unsigned int virq,
- 				     unsigned int nr_irqs, void *args)
-@@ -1025,9 +1072,13 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
- 	bottom_ic->name = "MSI";
- 	bottom_ic->irq_compose_msi_msg = advk_msi_irq_compose_msi_msg;
- 	bottom_ic->irq_set_affinity = advk_msi_set_affinity;
-+	bottom_ic->irq_mask = advk_msi_irq_mask;
-+	bottom_ic->irq_unmask = advk_msi_irq_unmask;
- 
- 	msi_ic = &pcie->msi_irq_chip;
- 	msi_ic->name = "advk-MSI";
-+	msi_ic->irq_mask = advk_msi_top_irq_mask;
-+	msi_ic->irq_unmask = advk_msi_top_irq_unmask;
- 
- 	msi_di = &pcie->msi_domain_info;
- 	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-@@ -1101,8 +1152,10 @@ static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
- 
- static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- {
--	u32 msi_val, msi_mask, msi_status, msi_idx;
-+	struct irq_data *irq_data;
-+	u32 msi_val, msi_mask, msi_status;
- 	u16 msi_data;
-+	u8 msi_idx;
- 	int virq;
- 
- 	msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-@@ -1119,11 +1172,19 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- 		 */
- 		advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
- 		msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & PCIE_MSI_DATA_MASK;
-+
-+		/*
-+		 * Aardvark HW does not support masking individual MSI interrupts.
-+		 * So call generic_handle_irq() only in case kernel has not masked
-+		 * received MSI interrupt.
-+		 */
- 		virq = irq_find_mapping(pcie->msi_inner_domain, msi_data);
--		if (virq)
--			generic_handle_irq(virq);
--		else
-+		irq_data = virq ? irq_get_irq_data(virq) : NULL;
-+
-+		if (!irq_data)
- 			dev_err(&pcie->pdev->dev, "unexpected MSI 0x%04hx\n", msi_data);
-+		else if (!irqd_irq_masked(irq_data))
-+			generic_handle_irq(virq);
+@@ -574,7 +574,10 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+ 	case PCI_EXP_RTSTA: {
+ 		u32 isr0 = advk_readl(pcie, PCIE_ISR0_REG);
+ 		u32 msglog = advk_readl(pcie, PCIE_MSG_LOG_REG);
+-		*value = (isr0 & PCIE_MSG_PM_PME_MASK) << 16 | (msglog >> 16);
++		u32 val = msglog >> 16;
++		if (isr0 & PCIE_MSG_PM_PME_MASK)
++			val |= PCI_EXP_RTSTA_PME;
++		*value = val;
+ 		return PCI_BRIDGE_EMUL_HANDLED;
  	}
  
- 	advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
+@@ -617,19 +620,21 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 			advk_pcie_wait_for_retrain(pcie);
+ 		break;
+ 
+-	case PCI_EXP_RTCTL: {
++	case PCI_EXP_RTCTL:
+ 		/* Only mask/unmask PME interrupt */
+-		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG) &
+-			~PCIE_MSG_PM_PME_MASK;
+-		if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
+-			val |= PCIE_MSG_PM_PME_MASK;
+-		advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
++		if (mask & PCI_EXP_RTCTL_PMEIE) {
++			u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
++			if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
++				val |= PCIE_MSG_PM_PME_MASK;
++			else
++				val &= ~PCIE_MSG_PM_PME_MASK;
++			advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
++		}
+ 		break;
+-	}
+ 
+ 	case PCI_EXP_RTSTA:
+-		new = (new & PCI_EXP_RTSTA_PME) >> 9;
+-		advk_writel(pcie, new, PCIE_ISR0_REG);
++		if (new & PCI_EXP_RTSTA_PME)
++			advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
+ 		break;
+ 
+ 	default:
+@@ -1219,6 +1224,21 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 	if (!isr0_status && !isr1_status)
+ 		return;
+ 
++	/* Process PME interrupt */
++	if (isr0_status & PCIE_MSG_PM_PME_MASK) {
++		/*
++		 * Do not clear PME interrupt bit in ISR0, it is cleared by IRQ
++		 * receiver by writing to the PCI_EXP_RTSTA register of emulated
++		 * root bridge. Aardvark HW returns zero for PCI_EXP_FLAGS_IRQ,
++		 * so use PCIe interrupt 0.
++		 */
++		virq = irq_find_mapping(pcie->irq_domain, 0);
++		if (virq)
++			generic_handle_irq(virq);
++		else
++			dev_err(&pcie->pdev->dev, "unexpected PME IRQ\n");
++	}
++
+ 	/* Process ERR interrupt */
+ 	if (err_bits) {
+ 		advk_writel(pcie, err_bits, PCIE_ISR0_REG);
 -- 
 2.20.1
 
