@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 321D3C43603
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC9CC43611
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDF7661483
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03C561483
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235470AbhEFPdr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:47 -0400
+        id S235579AbhEFPdt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:49 -0400
 Received: from mail.kernel.org ([198.145.29.99]:45934 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235342AbhEFPdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235405AbhEFPdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:33:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BA553613F0;
-        Thu,  6 May 2021 15:32:47 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5713F61410;
+        Thu,  6 May 2021 15:32:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315167;
-        bh=32yCzHDa56snda7ATUWNvJbqe/MsTwnPQCq/ie/OGr8=;
+        s=k20201202; t=1620315168;
+        bh=MpxK0wPuDd30O+SuegHQ8xNOoI7IRN6DCqL2Bjbkn/w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ErP9yH2LeaLujgtbGKxp68ZDWKMB5jm3IzZKTGPGq57lXpdi1Uz9yB3tuNZI7xzOi
-         3HWxx5zBi6YrfRWBq2q+lnsOk7FmJJUNqtIYsFivu3f8+CpUdBwfuRgzAb16/QdLbo
-         QLeTQLBUW9dv6MKE8rWczzA8sLjOtSoIYdyCnYmOyruViTgGcqyfr3pVDm00V83Wd+
-         ZL3xWLWFQFTfcGU+2khFew7h2SITYsJQ9e0FVAhegAkCbD9UDNLn5wiy429Npgzri/
-         65iQ5ppEaKjSPwHD4O9goaqCvT1egTE07zyD5v70Esz3kOGhZwBUcC2DqPZsVXARgS
-         NyhFTU5ue79gw==
+        b=bVnlrkf0qQBKjo9NL9mPkckQaCA36//4P2zgYDAMHIcMamihuIjFOg1guPhm5e1il
+         ajyTVmIF7L6OsnFhRPAg/LYPZKkh9ZA4+8kWS4A25Fws3YkbLqtM2mxF5MBZ+cwPUt
+         OnGX/U5yadN3/baS288c05N1xgb2qSDlyJ/3+jUDP0hCznirMRB6jJ7PR1n2KdgPB5
+         4iJQ+oK00Ub/OqmY7pNUFmTq7+kJhQzWj3qi1apH6tHomMsJMaL/+coOkoqReevPTI
+         rG6sfP9b+dBv03GcELuTxDgUngfuiORzWVreR1h4fPPz3b0IhO9esfMqxXtkY1/mRW
+         o5oYpgG+4stpg==
 Received: by pali.im (Postfix)
-        id 6A68010CD; Thu,  6 May 2021 17:32:45 +0200 (CEST)
+        id B2E11732; Thu,  6 May 2021 17:32:47 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 05/42] PCI: pci-bridge-emul: Add PCIe Root Capabilities Register
-Date:   Thu,  6 May 2021 17:31:16 +0200
-Message-Id: <20210506153153.30454-6-pali@kernel.org>
+Subject: [PATCH 13/42] PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
+Date:   Thu,  6 May 2021 17:31:24 +0200
+Message-Id: <20210506153153.30454-14-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,30 +57,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is 16-bit register at offset 0x1E. Rename current 'rsvd' struct member
-to 'rootcap'.
+Callback for irq_mask_ack is the same as for irq_mask. As there is no
+special handling for irq_ack, there is no need to define irq_mask_ack too.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
-Fixes: 23a5fba4d941 ("PCI: Introduce PCI bridge emulated config space common logic")
-Cc: stable@vger.kernel.org # e0d9d30b7354 ("PCI: pci-bridge-emul: Fix big-endian support")
 ---
- drivers/pci/pci-bridge-emul.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pci-aardvark.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index b31883022a8e..49bbd37ee318 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -54,7 +54,7 @@ struct pci_bridge_emul_pcie_conf {
- 	__le16 slotctl;
- 	__le16 slotsta;
- 	__le16 rootctl;
--	__le16 rsvd;
-+	__le16 rootcap;
- 	__le32 rootsta;
- 	__le32 devcap2;
- 	__le16 devctl2;
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index e7089db11f79..2aced8c9ae9f 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -1032,7 +1032,6 @@ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+ 	}
+ 
+ 	irq_chip->irq_mask = advk_pcie_irq_mask;
+-	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
+ 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
+ 
+ 	pcie->irq_domain =
 -- 
 2.20.1
 
