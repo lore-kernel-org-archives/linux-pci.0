@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 014EEC43461
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5887C43460
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBBB561404
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83D486109E
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:33:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235724AbhEFPd4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45966 "EHLO mail.kernel.org"
+        id S235749AbhEFPeA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:34:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235461AbhEFPds (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235506AbhEFPds (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:33:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0797B6144C;
-        Thu,  6 May 2021 15:32:50 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD95361432;
+        Thu,  6 May 2021 15:32:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315170;
-        bh=oZBRW1urfkXXBJqUlknYvRg4n9R+PwWJMKIKp7WdGLI=;
+        s=k20201202; t=1620315169;
+        bh=KvLt43DnzadPpOqnRUdrwzI2CtNEyAwAsOi6GeKBWRI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TLRgo/bzKb6pxtGTiIRV7bR7HxY1pDTOde57U9sQ9EiLklW/kbKVQigCECUOkCaM8
-         Z4qvB/d7r62YiXJCMQWgOgu+tiYWrFcHNaEFQsJLeYRcyL2ZgqXIO1TLvqzJZ53cXN
-         1Y7urItb0D0uSMcraCw8WVLjNE2uK+lizbApLtsMML/6icHGrDvI892SKSEfrqn0Nc
-         U8RZa/EchOaKiMC9W/PxLIwzexzqRfaTub66/MaImmI/ruV3CJWoATOMRFr0V9jYG9
-         nbwW9S+CQFXtvJ9ZtjrGpJS4JxsVmGE8IXPT0Qq6kDnac2nyiA2l+XUcCiR4Xie9BV
-         JJYwk8Yf5MSzQ==
+        b=WU2IKx3lHHR8r6UTGjfQHnZIfj7luYJDfEbfeuvSbQdMku7iYZMM/+feR26Wp2Nox
+         W8Q0rAK3DLiHWr6Kf17dKe10z4NuezdTK16Cz4d2ij3I8M+B/VsL+UE31ZJ+UyyJax
+         AQxL5VjaYeB9TYdmSWvSHxa6UpyBjZxSYv8HiW465hYI8dltXgWQGE2fLViAJtVC+N
+         Fym7Uq+SYDhtbzhL7MGy+PUXdNoLOOZBn/4asHNb4YG3o+H/Wr8+lA3pK4Eh07ejz4
+         IU5EcWTCI4XKJvwbdOZTVEEPka3J0AesHrqv9agNAG3yfdla8W0R+kr+2l/KlLd3Bb
+         qGTCqi1NeK8BQ==
 Received: by pali.im (Postfix)
-        id 2957489A; Thu,  6 May 2021 17:32:48 +0200 (CEST)
+        id 1D0971250; Thu,  6 May 2021 17:32:47 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 14/42] PCI: aardvark: Don't mask irq when mapping
-Date:   Thu,  6 May 2021 17:31:25 +0200
-Message-Id: <20210506153153.30454-15-pali@kernel.org>
+Subject: [PATCH 11/42] PCI: aardvark: Do not touch status bits of masked interrupts in interrupt handler
+Date:   Thu,  6 May 2021 17:31:22 +0200
+Message-Id: <20210506153153.30454-12-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,27 +57,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-By default, all Legacy INTx interrupts are masked, so there is no need to
-mask this interrupt during irq_map callback.
+It is incorrect to clear status bits of masked interrupts.
+
+The aardvark driver clears all status interrupt bits when no unmasked
+status bit was set. When some unmasked bit was set then masked bits were
+not cleared. Fix this so that masked bits are never cleared.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-aardvark.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/controller/pci-aardvark.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 2aced8c9ae9f..08f1157e1c5e 100644
+index cd4b427d7692..362faddae935 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -940,7 +940,6 @@ static int advk_pcie_irq_map(struct irq_domain *h,
- {
- 	struct advk_pcie *pcie = h->host_data;
+@@ -1090,11 +1090,8 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ 	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
+ 	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
  
--	advk_pcie_irq_mask(irq_get_irq_data(virq));
- 	irq_set_status_flags(virq, IRQ_LEVEL);
- 	irq_set_chip_and_handler(virq, &pcie->irq_chip,
- 				 handle_level_irq);
+-	if (!isr0_status && !isr1_status) {
+-		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
+-		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
++	if (!isr0_status && !isr1_status)
+ 		return;
+-	}
+ 
+ 	/* Process MSI interrupts */
+ 	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
 -- 
 2.20.1
 
