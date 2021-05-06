@@ -3,36 +3,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B249C433ED
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83D58C43470
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5311B6142D
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54C7F61441
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235370AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45828 "EHLO mail.kernel.org"
+        id S235179AbhEFPdr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235147AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235295AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 28B1761104;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2FC8D6121F;
         Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315167;
-        bh=ticgXE7CjNhWfVymrLf5bGBpQYvv4IhRaSX2oXSsd1I=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M7KJ+oKkDugqW1SIubabh+zVXWcvfilXeQofjOvulJH5lqSyxMlYCXZqKJGZftFch
-         tQgvE47XG8DnWi+gpTZyv6uOvnSVyVmLA7Dg9wOGHxdC8J/8+gEN5Q+bivDBT1qXrK
-         6FHe5MX1xciUQFjZdGKjOKDw2dvqmsAPUt54bp/idv22QxVN2PyBQVGC5LefR2twWS
-         m2eKpXwvT6v6AZgH6opcZnT+Kpqt27R5V5SMWNRvH9bLg0RQbIlyBcvqD3QNMqlDBN
-         U/cEMW9uB64eXFYDlamrhzD25hdjIMb7OryPDz+aZkXcp6pt/AmnTkqu3/232lYgvS
-         YRaf3iHQ/wyOQ==
+        bh=4PdOrm3ckyFyLCrz8KXjoYJ/bE97syCdXnf2iYht7P0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=nTYk0C0GB/2hQOoxxPHbZxsBuXKqffrD5pzDXMVjeBfVaXarD/c2bkjwkMbStG6Y9
+         Qh8sKqg8tP/80bLYac++BizFLF0W1LQTgbJHPoIMILv/S6/T63TLuJe7YIoRsBsSnh
+         lQAW653pZdTiQJvReyxgT41La1gK6UaqN+OWsD5+PuWsAtvfi8/jmNnXSC7kyvqMta
+         UsVXn3zYt9tEL4nmqy0AKV6o0z7IEU21xbhqPjP9S1E65Sj1e9Z8IA8pkrjqhNyslU
+         Lbo6o688qxIYeVd5z8fTVKdkcteuG49rc+nysfhXqRXH/40M3DZNxOaQRJPT0xvgwO
+         E97U50sdrjG1Q==
 Received: by pali.im (Postfix)
-        id 938538A1; Thu,  6 May 2021 17:32:44 +0200 (CEST)
+        id 00869732; Thu,  6 May 2021 17:32:43 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,12 +44,10 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 02/42] PCI: aardvark: Fix checking for PIO Non-posted Request
-Date:   Thu,  6 May 2021 17:31:13 +0200
-Message-Id: <20210506153153.30454-3-pali@kernel.org>
+Subject: [PATCH 00/42] PCI: aardvark: Various driver fixes
+Date:   Thu,  6 May 2021 17:31:11 +0200
+Message-Id: <20210506153153.30454-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
-References: <20210506153153.30454-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -57,29 +55,101 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PIO_NON_POSTED_REQ for PIO_STAT register is incorrectly defined. Bit 10 in
-register PIO_STAT indicates the response is to a non-posted request.
+This patch series fixes various issues in pci-aardvark.c driver
+(PCIe controller on Marvell Armada 3700 SoC) used on Espressobin
+and Turris Mox.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Reviewed-by: Marek Behún <kabel@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/pci/controller/pci-aardvark.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+First patch fixes kernel panic (or TF-A panic depending on used
+firmware) during execution of PIO transfer and I would suggest to
+include this fix into v5.13 release to prevent future kernel panics.
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index e3f5e7ab7606..2f8380a1f84f 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -57,7 +57,7 @@
- #define   PIO_COMPLETION_STATUS_UR		1
- #define   PIO_COMPLETION_STATUS_CRS		2
- #define   PIO_COMPLETION_STATUS_CA		4
--#define   PIO_NON_POSTED_REQ			BIT(0)
-+#define   PIO_NON_POSTED_REQ			BIT(10)
- #define PIO_ADDR_LS				(PIO_BASE_ADDR + 0x8)
- #define PIO_ADDR_MS				(PIO_BASE_ADDR + 0xc)
- #define PIO_WR_DATA				(PIO_BASE_ADDR + 0x10)
+Other patches then fixes PIO issues, PCIe link training, initialization
+of PCIe controller, accessing PCIe Root Bridge/Port registers, handling
+of interrupts (including ERR and PME), setup of Multi-MSI interrupts,
+adding support for masking MSI interrupts, adding support for more than
+32 MSI interrupts with MSI-X support, and adding support for AER.
+
+Note that there are still some unresolved issues with PCIe on A3720.
+I asked Marvell for PCIe documentation or explanations but I have not
+received anything (yet).
+
+Patch "Fix checking for PIO status" is taken from the Marvell github fork
+and adapted for inclusion into mainline kernel:
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/84444d22023c
+
+Whole patch series is available also in my git branch pci-aardvark:
+https://git.kernel.org/pub/scm/linux/kernel/git/pali/linux.git/log/?h=pci-aardvark
+
+If you have Espressobin, Turris Mox or other A3720 board with PCIe
+please test this patch series with your favourite PCIe card if
+everything is working fine.
+
+Evan Wang (1):
+  PCI: aardvark: Fix checking for PIO status
+
+Pali Rohár (39):
+  PCI: aardvark: Fix kernel panic during PIO transfer
+  PCI: aardvark: Fix checking for PIO Non-posted Request
+  PCI: aardvark: Increase polling delay to 1.5s while waiting for PIO
+    response
+  PCI: pci-bridge-emul: Add PCIe Root Capabilities Register
+  PCI: aardvark: Fix reporting CRS Software Visibility on emulated
+    bridge
+  PCI: aardvark: Fix link training
+  PCI: Add PCI_EXP_DEVCTL_PAYLOAD_* macros
+  PCI: aardvark: Fix PCIe Max Payload Size setting
+  PCI: aardvark: Implement workaround for the readback value of VEND_ID
+  PCI: aardvark: Do not touch status bits of masked interrupts in
+    interrupt handler
+  PCI: aardvark: Check for virq mapping when processing INTx IRQ
+  PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
+  PCI: aardvark: Don't mask irq when mapping
+  PCI: aardvark: Change name of INTx irq_chip to advk-INT
+  PCI: aardvark: Remove unneeded goto
+  PCI: aardvark: Fix support for MSI interrupts
+  PCI: aardvark: Correctly clear and unmask all MSI interrupts
+  PCI: aardvark: Fix setting MSI address
+  PCI: aardvark: Add support for more than 32 MSI interrupts
+  PCI: aardvark: Add support for masking MSI interrupts
+  PCI: aardvark: Enable MSI-X support
+  PCI: aardvark: Fix support for ERR interrupt on emulated bridge
+  PCI: aardvark: Fix support for PME on emulated bridge
+  PCI: aardvark: Fix support for PME requester on emulated bridge
+  PCI: aardvark: Fix support for bus mastering and PCI_COMMAND on
+    emulated bridge
+  PCI: aardvark: Disable bus mastering and mask all interrupts when
+    unbinding driver
+  PCI: aardvark: Free config space for emulated root bridge when
+    unbinding driver to fix memory leak
+  PCI: aardvark: Reset PCIe card and disable PHY when unbinding driver
+  PCI: aardvark: Rewrite irq code to chained irq handler
+  PCI: aardvark: Use separate INTA interrupt for emulated root bridge
+  PCI: pci-bridge-emul: Add description for class_revision field
+  PCI: pci-bridge-emul: Add definitions for missing capabilities
+    registers
+  PCI: aardvark: Add support for DEVCAP2, DEVCTL2, LNKCAP2 and LNKCTL2
+    registers on emulated bridge
+  PCI: aardvark: Add support for PCI_BRIDGE_CTL_BUS_RESET on emulated
+    bridge
+  PCI: aardvark: Replace custom PCIE_CORE_ERR_CAPCTL_* macros by
+    linux/pci_regs.h macros
+  PCI: aardvark: Replace custom PCIE_CORE_INT_* macros by linux
+    PCI_INTERRUPT_* values
+  PCI: aardvark: Cleanup some register macros
+  PCI: aardvark: Add comments for OB_WIN_ENABLE and ADDR_WIN_DISABLE
+  PCI: aardvark: Add support for Advanced Error Reporting registers on
+    emulated bridge
+
+Russell King (2):
+  PCI: pci-bridge-emul: re-arrange register tests
+  PCI: pci-bridge-emul: add support for PCIe extended capabilities
+
+ drivers/pci/controller/pci-aardvark.c | 980 +++++++++++++++++++-------
+ drivers/pci/pci-bridge-emul.c         | 149 ++--
+ drivers/pci/pci-bridge-emul.h         |  17 +-
+ include/uapi/linux/pci_regs.h         |   6 +
+ 4 files changed, 850 insertions(+), 302 deletions(-)
+
 -- 
 2.20.1
 
