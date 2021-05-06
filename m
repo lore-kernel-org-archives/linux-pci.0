@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4176DC433B4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B249C433ED
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 056046140F
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5311B6142D
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235331AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S235370AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 6 May 2021 11:33:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45838 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45828 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235179AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235147AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 6 May 2021 11:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2DA3A611AE;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 28B1761104;
         Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315167;
-        bh=IdVDiP6+1WGD69KpQ4ecO/tfD5bBRFQpZYGTE4VGzkg=;
+        bh=ticgXE7CjNhWfVymrLf5bGBpQYvv4IhRaSX2oXSsd1I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FFXKmiEySlP/tZydvoImG/r31EU1UBJOR46SWzqYuKF8d6dwqLioVT282SYuBon16
-         ZRsbVcR4jXWpUzObLhzWQlTxIRTpuABm6P1jZUKpalx6JkBewu7iPI+OlWWvQjUAUy
-         iTRvMZWwTZz4+yoPs4sr80K+rdlkqMVNnzB1/V9W2ndn/NZOkKf26pSL0JzpzOJE/g
-         aIrhLIf3SU5yM/BkX38DhYt7jHN3IARbpN9tQy/3fYWZZVHn6r9Sm2CfXK0W8a4lax
-         7WbduU0lKwoswL0nKcjbWNALDQsn9zmiT+jQpUdoNV+AzNSe/KDVWApIczPlRyTctW
-         BG7PP6ZanlpHA==
+        b=M7KJ+oKkDugqW1SIubabh+zVXWcvfilXeQofjOvulJH5lqSyxMlYCXZqKJGZftFch
+         tQgvE47XG8DnWi+gpTZyv6uOvnSVyVmLA7Dg9wOGHxdC8J/8+gEN5Q+bivDBT1qXrK
+         6FHe5MX1xciUQFjZdGKjOKDw2dvqmsAPUt54bp/idv22QxVN2PyBQVGC5LefR2twWS
+         m2eKpXwvT6v6AZgH6opcZnT+Kpqt27R5V5SMWNRvH9bLg0RQbIlyBcvqD3QNMqlDBN
+         U/cEMW9uB64eXFYDlamrhzD25hdjIMb7OryPDz+aZkXcp6pt/AmnTkqu3/232lYgvS
+         YRaf3iHQ/wyOQ==
 Received: by pali.im (Postfix)
-        id 1E226E79; Thu,  6 May 2021 17:32:45 +0200 (CEST)
+        id 938538A1; Thu,  6 May 2021 17:32:44 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 04/42] PCI: aardvark: Increase polling delay to 1.5s while waiting for PIO response
-Date:   Thu,  6 May 2021 17:31:15 +0200
-Message-Id: <20210506153153.30454-5-pali@kernel.org>
+Subject: [PATCH 02/42] PCI: aardvark: Fix checking for PIO Non-posted Request
+Date:   Thu,  6 May 2021 17:31:13 +0200
+Message-Id: <20210506153153.30454-3-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,48 +57,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Measurements in different conditions showed that aardvark hardware PIO
-response can take up to 1.44s. Increase wait timeout from 1ms to 1.5s to
-ensure that we do not miss responses from hardware. After 1.44s hardware
-returns errors (e.g. Completer abort).
-
-The previous two patches fixed checking for PIO status, so now we can use
-it to also catch errors which are reported by hardware after 1.44s.
-
-After applying this patch, kernel can detect and print PIO errors to dmesg:
-
-    [    6.879999] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100004
-    [    6.896436] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100004
-    [    6.913049] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100010
-    [    6.929663] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100010
-    [    6.953558] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100014
-    [    6.970170] advk-pcie d0070000.pcie: Non-posted PIO Response Status: CA, 0xe00 @ 0x100014
-    [    6.994328] advk-pcie d0070000.pcie: Posted PIO Response Status: COMP_ERR, 0x804 @ 0x100004
-
-Without this patch kernel prints only a generic error to dmesg:
-
-    [    5.246847] advk-pcie d0070000.pcie: config read/write timed out
+PIO_NON_POSTED_REQ for PIO_STAT register is incorrectly defined. Bit 10 in
+register PIO_STAT indicates the response is to a non-posted request.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
-Cc: stable@vger.kernel.org # 7fbcb5da811b ("PCI: aardvark: Don't rely on jiffies while holding spinlock")
+Cc: stable@vger.kernel.org
 ---
  drivers/pci/controller/pci-aardvark.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index a37ba86f1b2d..3f3c72927afb 100644
+index e3f5e7ab7606..2f8380a1f84f 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -166,7 +166,7 @@
- #define PCIE_CONFIG_WR_TYPE0			0xa
- #define PCIE_CONFIG_WR_TYPE1			0xb
- 
--#define PIO_RETRY_CNT			500
-+#define PIO_RETRY_CNT			750000 /* 1.5 s */
- #define PIO_RETRY_DELAY			2 /* 2 us*/
- 
- #define LINK_WAIT_MAX_RETRIES		10
+@@ -57,7 +57,7 @@
+ #define   PIO_COMPLETION_STATUS_UR		1
+ #define   PIO_COMPLETION_STATUS_CRS		2
+ #define   PIO_COMPLETION_STATUS_CA		4
+-#define   PIO_NON_POSTED_REQ			BIT(0)
++#define   PIO_NON_POSTED_REQ			BIT(10)
+ #define PIO_ADDR_LS				(PIO_BASE_ADDR + 0x8)
+ #define PIO_ADDR_MS				(PIO_BASE_ADDR + 0xc)
+ #define PIO_WR_DATA				(PIO_BASE_ADDR + 0x10)
 -- 
 2.20.1
 
