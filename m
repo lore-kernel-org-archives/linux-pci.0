@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-24.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B6FC43462
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE48C433B4
 	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0DD061494
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 969BC6147E
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235415AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45862 "EHLO mail.kernel.org"
+        id S235547AbhEFPds (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235207AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 22EC66101A;
+        id S235390AbhEFPdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DC524613F2;
         Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620315167;
-        bh=s/YJwMrqvoOsPJSEvD5WAEweomBui7Dy2w8ikfwL2rE=;
+        s=k20201202; t=1620315168;
+        bh=c7GGuyUtVyL1SLFfZcJF6dkFcBmF/f2vbvmIa4XMBGk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jMcfh4hFHod7LXZBOUUtvmvy4wKrI7+Jptr9J5rR2eVvG5FFNHPHSOEEb6liiPu8s
-         ne7QsyByM7KFV6dkVidzC6nn0oLthCWzodUR0UaW0zmSs+bGLH6IUkw4g9Qvr9maQ9
-         gLYST0fQlC+n9u2zAgGDodvZY4OjNlkaeMpRrsgLHZrlGacTTn2odt2/k4WEAigRow
-         g447gIpekZ5d9Mf5ju7AbcR3h4pLGUkjpAMjRy3j6jDlY10CUqm7EtYRgfx1FKvmcv
-         lL402eKQINe/Rdi2kYIKPgrEi2CdHF5NqIegO7TwoWYoEfNMmAQj8aa4uGrHUo+Y4z
-         bz5q802AXJzWA==
+        b=Uk752vva9+3aZbQc1d8zcNpDjPeI8l75tYIslNH6LmoLxAInnItGuzB4Em+wbZZ0/
+         H/WgaOS8wQgL3J01VyjMoLCvQK7mRJ1IfRNwVY1RL8yN1m8s1/pgtNIOSfa1WeM8KM
+         sCcz3CGju/FSqut+gU+PJJJLNhbP77uY6nFpZQNpTJXnYMIOJ/dVFw4dy6TOQN2i7y
+         EmcIx/4f1B0W8VMdXlphGnGNs44Dq7Vg5/LOgwiQ0Ar/puHsiMO4NWuYZ2gLgXZG8t
+         M7SqWIZMEvhiYt0i7+QmmWva36zdPAxVZIJSUSGfRkWUtU7rE/RjTwk6KRqmv37NmV
+         xu3AkBgCizWfg==
 Received: by pali.im (Postfix)
-        id 32F3D89A; Thu,  6 May 2021 17:32:44 +0200 (CEST)
+        id 14E4B11DA; Thu,  6 May 2021 17:32:46 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 01/42] PCI: aardvark: Fix kernel panic during PIO transfer
-Date:   Thu,  6 May 2021 17:31:12 +0200
-Message-Id: <20210506153153.30454-2-pali@kernel.org>
+Subject: [PATCH 07/42] PCI: aardvark: Fix link training
+Date:   Thu,  6 May 2021 17:31:18 +0200
+Message-Id: <20210506153153.30454-8-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,142 +57,317 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Trying to start a new PIO transfer by writing value 0 in PIO_START register
-when previous transfer has not yet completed (which is indicated by value 1
-in PIO_START) causes an External Abort on CPU, which results in kernel
-panic:
+Fix multiple link training issues in aardvark driver. The main reason of
+these issues was misunderstanding of what certain registers do, since their
+names and comments were misleading: before commit 96be36dbffac ("PCI:
+aardvark: Replace custom macros by standard linux/pci_regs.h macros"), the
+pci-aardvark.c driver used custom macros for accessing standard PCIe Root
+Bridge registers, and misleading comments did not help to understand what
+the code was really doing.
 
-    SError Interrupt on CPU0, code 0xbf000002 -- SError
-    Kernel panic - not syncing: Asynchronous SError Interrupt
+After doing more tests and experiments I've come to the conclusion that the
+SPEED_GEN register in aardvark sets the PCIe revision / generation
+compliance and forces maximal link speed. Both GEN3 and GEN2 values set the
+read-only PCI_EXP_FLAGS_VERS bits (PCIe capabilities version of Root
+Bridge) to value 2, while GEN1 value sets PCI_EXP_FLAGS_VERS to 1, which
+matches with PCI Express specifications revision 3, 2 and 1, respectively.
+Changing SPEED_GEN also sets the read-only bits PCI_EXP_LNKCAP_SLS and
+PCI_EXP_LNKCAP2_SLS to corresponding speed.
 
-To prevent kernel panic, it is required to reject a new PIO transfer when
-previous one has not finished yet.
+Note that PCI Express rev 1 specification does not define PCI_EXP_LNKCAP2
+and PCI_EXP_LNKCTL2 registers and when SPEED_GEN is set to GEN1 (which also
+sets PCI_EXP_FLAGS_VERS set to 1), lspci cannot access PCI_EXP_LNKCAP2 and
+PCI_EXP_LNKCTL2 registers.
 
-If previous PIO transfer is not finished yet, the kernel may issue a new
-PIO request only if the previous PIO transfer timed out.
+Changing PCIe link speed can be done via PCI_EXP_LNKCTL2_TLS bits of
+PCI_EXP_LNKCTL2 register. Armada 3700 Functional Specifications says that
+the default value of PCI_EXP_LNKCTL2_TLS is based on SPEED_GEN value, but
+tests showed that the default value is always 8.0 GT/s, independently of
+speed set by SPEED_GEN. So after setting SPEED_GEN, we must also set value
+in PCI_EXP_LNKCTL2 register via PCI_EXP_LNKCTL2_TLS bits.
 
-In the past the root cause of this issue was incorrectly identified (as it
-often happens during link retraining or after link down event) and special
-hack was implemented in Trusted Firmware to catch all SError events in EL3,
-to ignore errors with code 0xbf000002 and not forwarding any other errors
-to kernel and instead throw panic from EL3 Trusted Firmware handler.
+Triggering PCI_EXP_LNKCTL_RL bit immediately after setting LINK_TRAINING_EN
+bit actually doesn't do anything. Tests have shown that a delay is needed
+after enabling LINK_TRAINING_EN bit. As triggering PCI_EXP_LNKCTL_RL
+currently does nothing, remove it.
 
-Links to discussion and patches about this issue:
-https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git/commit/?id=3c7dcdac5c50
-https://lore.kernel.org/linux-pci/20190316161243.29517-1-repk@triplefau.lt/
-https://lore.kernel.org/linux-pci/971be151d24312cc533989a64bd454b4@www.loen.fr/
-https://review.trustedfirmware.org/c/TF-A/trusted-firmware-a/+/1541
+Commit 43fc679ced18 ("PCI: aardvark: Improve link training") introduced
+code which sets SPEED_GEN register based on negotiated link speed from
+PCI_EXP_LNKSTA_CLS bits of PCI_EXP_LNKSTA register. This code was added to
+fix detection of Compex WLE900VX (Atheros QCA9880) WiFi GEN1 PCIe cards, as
+otherwise these cards were "invisible" on PCIe bus (probably because they
+crashed). But apparently more people reported the same issues with these
+cards also with other PCIe controllers [1] and I was able to reproduce this
+issue also with other "noname" WiFi cards based on Atheros QCA9890 chip
+(with the same PCI vendor/device ids as Atheros QCA9880). So this is not an
+issue in aardvark but rather issue in Atheros QCA98xx chips. Also, this
+issue only exists if the kernel is compiled with PCIe ASPM support, and a
+generic workaround for this is to change PCIe Bridge to 2.5 GT/s link speed
+via PCI_EXP_LNKCTL2_TLS_2_5GT bits in PCI_EXP_LNKCTL2 register [2], before
+triggering PCI_EXP_LNKCTL_RL bit. This workaround also works when SPEED_GEN
+is set to value GEN2 (5 GT/s). So remove this hack completely in the
+aardvark driver and always set SPEED_GEN to value from 'max-link-speed' DT
+property. Fix for Atheros QCA98xx chips is handled separately by patch [2].
 
-But the real cause was the fact that during link retraning or after link
-down event the PIO transfer may take longer time, up to the 1.44s until it
-times out. This increased probability that a new PIO transfer would be
-issued by kernel while previous one has not finished yet.
+These two things (code for triggering PCI_EXP_LNKCTL_RL bit and changing
+SPEED_GEN value) also explain why commit 6964494582f5 ("PCI: aardvark:
+Train link immediately after enabling training") somehow fixed detection of
+those problematic Compex cards with Atheros chips: if triggering link
+retraining (via PCI_EXP_LNKCTL_RL bit) was done immediately after enabling
+link training (via LINK_TRAINING_EN), it did nothing. If there was a
+specific delay, aardvark HW already initialized PCIe link and therefore
+triggering link retraining caused the above issue. Compex cards triggered
+link down event and disappeared from the PCIe bus.
 
-After applying this change into the kernel, it is possible to revert the
-mentioned TF-A hack and SError events do not have to be caught in TF-A EL3.
+Commit f4c7d053d7f7 ("PCI: aardvark: Wait for endpoint to be ready before
+training link") added 100ms sleep before calling 'Start link training'
+command and explained that it is a requirement of PCI Express
+specification. But the code after this 100ms sleep was not doing 'Start
+link training', rather it triggered PCI_EXP_LNKCTL_RL bit via PCIe Root
+Bridge to put link into Recovery state.
+
+The required delay after fundamental reset is already done in function
+advk_pcie_wait_for_link() which also check when PCIe link is up.
+
+So after removing the code which triggers PCI_EXP_LNKCTL_RL bit on PCIe
+Root Bridge, there is no need to wait 100ms again. Remove the extra
+msleep() call and update comment about the delay required by the PCI
+Express specification.
+
+According to Marvell Armada 3700 Functional Specifications, Link training
+should be enabled via aardvark register LINK_TRAINING_EN after selecting
+PCIe generation and x1 lane. There is no need to disable it prior resetting
+card via PERST# signal. This disabling code was introduced in commit
+5169a9851daa ("PCI: aardvark: Issue PERST via GPIO") as a workaround for
+some Atheros cards. It turns out that this also is Atheros specific issue
+and affects any PCIe controller, not only aardvark. Moreover this Atheros
+issue was triggered by juggling with PCI_EXP_LNKCTL_RL, LINK_TRAINING_EN
+and SPEED_GEN bits interleaved with sleeps. Now, after removing triggering
+PCI_EXP_LNKCTL_RL, there is no need to explicitly disable LINK_TRAINING_EN
+bit. So remove this code too. The problematic Compex cards described in
+previous git commits are correctly detected in advk_pcie_train_link()
+function even after applying all these changes.
+
+Note that with this patch, and also prior this patch, some NVMe disks which
+support PCIe GEN3 with 8 GT/s speed are negotiated only at the lowest link
+speed 2.5 GT/s, independently of SPEED_GEN value. After manually triggering
+PCI_EXP_LNKCTL_RL bit (e.g. from userspace via setpci), these NVMe disks
+change link speed to 5 GT/s when SPEED_GEN was configured to GEN2. This
+issue first needs to be properly investigated. I will send a fix in the
+future.
+
+On the other hand, some other GEN2 PCIe cards with 5 GT/s speed are
+autonomously by HW autonegotiated at full 5 GT/s speed without need of any
+software interaction.
+
+Armada 3700 Functional Specifications describes the following steps for
+link training: set SPEED_GEN to GEN2, enable LINK_TRAINING_EN, poll until
+link training is complete, trigger PCI_EXP_LNKCTL_RL, poll until signal
+rate is 5 GT/s, poll until link training is complete, enable ASPM L0s.
+
+The requirement for triggering PCI_EXP_LNKCTL_RL can be explained by the
+need to achieve 5 GT/s speed (as changing link speed is done by throw to
+recovery state entered by PCI_EXP_LNKCTL_RL) or maybe as a part of enabling
+ASPM L0s (but in this case ASPM L0s should have been enabled prior
+PCI_EXP_LNKCTL_RL).
+
+It is unknown why the original pci-aardvark.c driver was triggering
+PCI_EXP_LNKCTL_RL bit before waiting for the link to be up. This does not
+align with neither PCIe base specifications nor with Armada 3700 Functional
+Specification. (Note that in older versions of aardvark, this bit was
+called incorrectly PCIE_CORE_LINK_TRAINING, so this may be the reason.)
+
+It is also unknown why Armada 3700 Functional Specification says that it is
+needed to trigger PCI_EXP_LNKCTL_RL for GEN2 mode, as according to PCIe
+base specification 5 GT/s speed negotiation is supposed to be entirely
+autonomous, even if initial speed is 2.5 GT/s.
+
+[1] - https://lore.kernel.org/linux-pci/87h7l8axqp.fsf@toke.dk/
+[2] - https://lore.kernel.org/linux-pci/20210326124326.21163-1-pali@kernel.org/
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
-Cc: stable@vger.kernel.org # 7fbcb5da811b ("PCI: aardvark: Don't rely on jiffies while holding spinlock")
+Cc: stable@vger.kernel.org # f4c7d053d7f7 ("PCI: aardvark: Wait for endpoint to be ready before training link")
+Cc: stable@vger.kernel.org # 6964494582f5 ("PCI: aardvark: Train link immediately after enabling training")
+Cc: stable@vger.kernel.org # 43fc679ced18 ("PCI: aardvark: Improve link training")
+Cc: stable@vger.kernel.org # 5169a9851daa ("PCI: aardvark: Issue PERST via GPIO")
+Cc: stable@vger.kernel.org # 96be36dbffac ("PCI: aardvark: Replace custom macros by standard linux/pci_regs.h macros")
+Cc: stable@vger.kernel.org # d0c6a3475b03 ("PCI: aardvark: Move PCIe reset card code to advk_pcie_train_link()")
+Cc: stable@vger.kernel.org # 1d1cd163d0de ("PCI: aardvark: Update comment about disabling link training")
 ---
- drivers/pci/controller/pci-aardvark.c | 49 ++++++++++++++++++++++-----
- 1 file changed, 40 insertions(+), 9 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 117 ++++++++------------------
+ 1 file changed, 34 insertions(+), 83 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 051b48bd7985..e3f5e7ab7606 100644
+index e297ec9ec390..edeacd95297e 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -514,7 +514,7 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 		udelay(PIO_RETRY_DELAY);
- 	}
- 
--	dev_err(dev, "config read/write timed out\n");
-+	dev_err(dev, "PIO read/write transfer time out\n");
- 	return -ETIMEDOUT;
+@@ -209,11 +209,6 @@ static inline u32 advk_readl(struct advk_pcie *pcie, u64 reg)
+ 	return readl(pcie->base + reg);
  }
  
-@@ -657,6 +657,35 @@ static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
- 	return true;
- }
- 
-+static bool advk_pcie_pio_is_running(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+
-+	/*
-+	 * Trying to start a new PIO transfer when previous has not completed
-+	 * cause External Abort on CPU which results in kernel panic:
-+	 *
-+	 *     SError Interrupt on CPU0, code 0xbf000002 -- SError
-+	 *     Kernel panic - not syncing: Asynchronous SError Interrupt
-+	 *
-+	 * Functions advk_pcie_rd_conf() and advk_pcie_wr_conf() are protected
-+	 * by raw_spin_lock_irqsave() at pci_lock_config() level to prevent
-+	 * concurrent calls at the same time. But because PIO transfer may take
-+	 * about 1.5s when link is down or card is disconnected, it means that
-+	 * advk_pcie_wait_pio() does not always have to wait for completion.
-+	 *
-+	 * Some versions of ARM Trusted Firmware handles this External Abort at
-+	 * EL3 level and mask it to prevent kernel panic. Relevant TF-A commit:
-+	 * https://git.trustedfirmware.org/TF-A/trusted-firmware-a.git/commit/?id=3c7dcdac5c50
-+	 */
-+	if (advk_readl(pcie, PIO_START)) {
-+		dev_err(dev, "Previous PIO read/write transfer is still running\n");
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 			     int where, int size, u32 *val)
+-static inline u16 advk_read16(struct advk_pcie *pcie, u64 reg)
+-{
+-	return advk_readl(pcie, (reg & ~0x3)) >> ((reg & 0x3) * 8);
+-}
+-
+ static int advk_pcie_link_up(struct advk_pcie *pcie)
  {
-@@ -673,9 +702,10 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 		return pci_bridge_emul_conf_read(&pcie->bridge, where,
- 						 size, val);
+ 	u32 val, ltssm_state;
+@@ -251,23 +246,9 @@ static void advk_pcie_wait_for_retrain(struct advk_pcie *pcie)
  
--	/* Start PIO */
--	advk_writel(pcie, 0, PIO_START);
--	advk_writel(pcie, 1, PIO_ISR);
-+	if (advk_pcie_pio_is_running(pcie)) {
-+		*val = 0xffffffff;
-+		return PCIBIOS_SET_FAILED;
-+	}
+ static void advk_pcie_issue_perst(struct advk_pcie *pcie)
+ {
+-	u32 reg;
+-
+ 	if (!pcie->reset_gpio)
+ 		return;
  
- 	/* Program the control register */
- 	reg = advk_readl(pcie, PIO_CTRL);
-@@ -694,7 +724,8 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	/* Program the data strobe */
- 	advk_writel(pcie, 0xf, PIO_WR_DATA_STRB);
+-	/*
+-	 * As required by PCI Express spec (PCI Express Base Specification, REV.
+-	 * 4.0 PCI Express, February 19 2014, 6.6.1 Conventional Reset) a delay
+-	 * for at least 100ms after de-asserting PERST# signal is needed before
+-	 * link training is enabled. So ensure that link training is disabled
+-	 * prior de-asserting PERST# signal to fulfill that PCI Express spec
+-	 * requirement.
+-	 */
+-	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+-	reg &= ~LINK_TRAINING_EN;
+-	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
+-
+ 	/* 10ms delay is needed for some cards */
+ 	dev_info(&pcie->pdev->dev, "issuing PERST via reset GPIO for 10ms\n");
+ 	gpiod_set_value_cansleep(pcie->reset_gpio, 1);
+@@ -275,53 +256,46 @@ static void advk_pcie_issue_perst(struct advk_pcie *pcie)
+ 	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+ }
  
--	/* Start the transfer */
-+	/* Clear PIO DONE ISR and start the transfer */
-+	advk_writel(pcie, 1, PIO_ISR);
- 	advk_writel(pcie, 1, PIO_START);
+-static int advk_pcie_train_at_gen(struct advk_pcie *pcie, int gen)
++static void advk_pcie_train_link(struct advk_pcie *pcie)
+ {
+-	int ret, neg_gen;
++	struct device *dev = &pcie->pdev->dev;
+ 	u32 reg;
++	int ret;
  
- 	ret = advk_pcie_wait_pio(pcie);
-@@ -734,9 +765,8 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	if (where % size)
- 		return PCIBIOS_SET_FAILED;
+-	/* Setup link speed */
++	/*
++	 * Setup PCIe rev / gen compliance based on device tree property
++	 * 'max-link-speed' which also forces maximal link speed.
++	 */
+ 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+ 	reg &= ~PCIE_GEN_SEL_MSK;
+-	if (gen == 3)
++	if (pcie->link_gen == 3)
+ 		reg |= SPEED_GEN_3;
+-	else if (gen == 2)
++	else if (pcie->link_gen == 2)
+ 		reg |= SPEED_GEN_2;
+ 	else
+ 		reg |= SPEED_GEN_1;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
  
--	/* Start PIO */
--	advk_writel(pcie, 0, PIO_START);
--	advk_writel(pcie, 1, PIO_ISR);
-+	if (advk_pcie_pio_is_running(pcie))
-+		return PCIBIOS_SET_FAILED;
+ 	/*
+-	 * Enable link training. This is not needed in every call to this
+-	 * function, just once suffices, but it does not break anything either.
++	 * Set maximal link speed value also into PCIe Link Control 2 register.
++	 * Armada 3700 Functional Specification says that default value is based
++	 * on SPEED_GEN but tests showed that default value is always 8.0 GT/s.
+ 	 */
++	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL2);
++	reg &= ~PCI_EXP_LNKCTL2_TLS;
++	if (pcie->link_gen == 3)
++		reg |= PCI_EXP_LNKCTL2_TLS_8_0GT;
++	else if (pcie->link_gen == 2)
++		reg |= PCI_EXP_LNKCTL2_TLS_5_0GT;
++	else
++		reg |= PCI_EXP_LNKCTL2_TLS_2_5GT;
++	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL2);
++
++	/* Enable link training after selecting PCIe generation */
+ 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+ 	reg |= LINK_TRAINING_EN;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
  
- 	/* Program the control register */
- 	reg = advk_readl(pcie, PIO_CTRL);
-@@ -763,7 +793,8 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	/* Program the data strobe */
- 	advk_writel(pcie, data_strobe, PIO_WR_DATA_STRB);
+-	/*
+-	 * Start link training immediately after enabling it.
+-	 * This solves problems for some buggy cards.
+-	 */
+-	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL);
+-	reg |= PCI_EXP_LNKCTL_RL;
+-	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKCTL);
+-
+-	ret = advk_pcie_wait_for_link(pcie);
+-	if (ret)
+-		return ret;
+-
+-	reg = advk_read16(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKSTA);
+-	neg_gen = reg & PCI_EXP_LNKSTA_CLS;
+-
+-	return neg_gen;
+-}
+-
+-static void advk_pcie_train_link(struct advk_pcie *pcie)
+-{
+-	struct device *dev = &pcie->pdev->dev;
+-	int neg_gen = -1, gen;
+-
+ 	/*
+ 	 * Reset PCIe card via PERST# signal. Some cards are not detected
+ 	 * during link training when they are in some non-initial state.
+@@ -332,41 +306,18 @@ static void advk_pcie_train_link(struct advk_pcie *pcie)
+ 	 * PERST# signal could have been asserted by pinctrl subsystem before
+ 	 * probe() callback has been called or issued explicitly by reset gpio
+ 	 * function advk_pcie_issue_perst(), making the endpoint going into
+-	 * fundamental reset. As required by PCI Express spec a delay for at
+-	 * least 100ms after such a reset before link training is needed.
+-	 */
+-	msleep(PCI_PM_D3COLD_WAIT);
+-
+-	/*
+-	 * Try link training at link gen specified by device tree property
+-	 * 'max-link-speed'. If this fails, iteratively train at lower gen.
+-	 */
+-	for (gen = pcie->link_gen; gen > 0; --gen) {
+-		neg_gen = advk_pcie_train_at_gen(pcie, gen);
+-		if (neg_gen > 0)
+-			break;
+-	}
+-
+-	if (neg_gen < 0)
+-		goto err;
+-
+-	/*
+-	 * After successful training if negotiated gen is lower than requested,
+-	 * train again on negotiated gen. This solves some stability issues for
+-	 * some buggy gen1 cards.
++	 * fundamental reset. As required by PCI Express spec (PCI Express
++	 * Base Specification, REV. 4.0 PCI Express, February 19 2014, 6.6.1
++	 * Conventional Reset) a delay for at least 100ms after such a reset
++	 * before sending a Configuration Request to the device is needed.
++	 * So wait until PCIe link is up. Function advk_pcie_wait_for_link()
++	 * waits for link at least 900ms.
+ 	 */
+-	if (neg_gen < gen) {
+-		gen = neg_gen;
+-		neg_gen = advk_pcie_train_at_gen(pcie, gen);
+-	}
+-
+-	if (neg_gen == gen) {
+-		dev_info(dev, "link up at gen %i\n", gen);
+-		return;
+-	}
+-
+-err:
+-	dev_err(dev, "link never came up\n");
++	ret = advk_pcie_wait_for_link(pcie);
++	if (ret < 0)
++		dev_err(dev, "link never came up\n");
++	else
++		dev_info(dev, "link up\n");
+ }
  
--	/* Start the transfer */
-+	/* Clear PIO DONE ISR and start the transfer */
-+	advk_writel(pcie, 1, PIO_ISR);
- 	advk_writel(pcie, 1, PIO_START);
- 
- 	ret = advk_pcie_wait_pio(pcie);
+ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
 -- 
 2.20.1
 
