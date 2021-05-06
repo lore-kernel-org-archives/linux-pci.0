@@ -2,101 +2,172 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D52C433B4
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 17:43:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD7DC433B4
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 20:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF62C610CE
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 17:43:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 134AF6112F
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 20:24:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236275AbhEFRon (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 13:44:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34818 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236286AbhEFRon (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 May 2021 13:44:43 -0400
-X-Greylist: delayed 312 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 06 May 2021 10:43:44 PDT
-Received: from forward100j.mail.yandex.net (forward100j.mail.yandex.net [IPv6:2a02:6b8:0:801:2::100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7AA0C061574
-        for <linux-pci@vger.kernel.org>; Thu,  6 May 2021 10:43:44 -0700 (PDT)
-Received: from myt5-70642c4590a1.qloud-c.yandex.net (myt5-70642c4590a1.qloud-c.yandex.net [IPv6:2a02:6b8:c12:2898:0:640:7064:2c45])
-        by forward100j.mail.yandex.net (Yandex) with ESMTP id 5B5E850E0C1C
-        for <linux-pci@vger.kernel.org>; Thu,  6 May 2021 20:38:28 +0300 (MSK)
-Received: from myt3-5a0d70690205.qloud-c.yandex.net (myt3-5a0d70690205.qloud-c.yandex.net [2a02:6b8:c12:4f2b:0:640:5a0d:7069])
-        by myt5-70642c4590a1.qloud-c.yandex.net (mxback/Yandex) with ESMTP id K7QNBTepQ9-cSIealA8;
-        Thu, 06 May 2021 20:38:28 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1620322708;
-        bh=0oTNph2dZC4eU/f0xJby8Sol/6DD5xZ3ZIoc3TSMnG0=;
-        h=Date:Subject:To:From:Message-Id:Cc;
-        b=tgEQayaCcuPkSmgPu2976zOCyne1f5CEqh7aRb84Q2JHSV03Bb8q26lrObi9GyDuf
-         BIRJg79u8KunnHrGmw6W8XFgfj/9q8/zAwE1xmEMqb4EZLir6vyA7TVA+XVgNrF25G
-         8qEHrSkW/MdUaqUjkfS8Bb94yi6Addhj7BTU7kuY=
-Authentication-Results: myt5-70642c4590a1.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
-Received: by myt3-5a0d70690205.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id dz985aXWLX-cRLedSm6;
-        Thu, 06 May 2021 20:38:27 +0300
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client certificate not present)
-From:   Konstantin Kharlamov <Hi-Angel@yandex.ru>
-To:     linux-pci@vger.kernel.org
-Cc:     hi-angel@yandex.ru
-Subject: [PATCH] PCI: don't power-off apple thunderbolt controller on s2idle
-Date:   Thu,  6 May 2021 20:38:20 +0300
-Message-Id: <20210506173820.21876-1-Hi-Angel@yandex.ru>
-X-Mailer: git-send-email 2.31.1
+        id S230106AbhEFUZb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 16:25:31 -0400
+Received: from mail-ot1-f51.google.com ([209.85.210.51]:45026 "EHLO
+        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229775AbhEFUZb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 May 2021 16:25:31 -0400
+Received: by mail-ot1-f51.google.com with SMTP id r26-20020a056830121ab02902a5ff1c9b81so6021065otp.11;
+        Thu, 06 May 2021 13:24:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=qRSy5HJ4wKKzzcIAmm8bwn1eA/q239E4iV9NKspBMgQ=;
+        b=KGv0/h/tAE1w1C9kdX+EgFdBtj2LMGMmww1ZtOhUEn+MI2xw5B+zRcZFdtbxZnlZNr
+         A1AjdIxtAtyM5b0jwCRLgop3kc2rHDSPtynk/RqxfvZEo2hN/nc1xohw5ajWOvBmDVHL
+         U+DJcKFETNh3cTsBDWdstyWVyLrgEKOgu9hLXBM2mpQ0ujIVnnOwXANXAayrcJF0BbIz
+         C6HGnrkLsJh33F3iIzn0nVLewXBIQjMB16AugQMdg6rPBLXcpr8yLoQaXCldoBFwu8is
+         0zh0ajE4rNSDXW4jugDKxWRG4sl5Is6TX67SCIxHaGMsbq1xVWchCszb8IIdkPEKn0lS
+         6iwg==
+X-Gm-Message-State: AOAM532cUhnKvgroiRJHhXl+iDSnLO5vgY0lokHOJoop/D0XunVVt8ml
+        CWSViqVoJOVVAa7z99mwJux4mxX+oA==
+X-Google-Smtp-Source: ABdhPJyHdQpgdWvIqGzC91XpsF2u/FFaWKm8P8CKZ+v8DqkKxTmKAuIl8NvguPGgI4RlIbsfQXJRcg==
+X-Received: by 2002:a9d:5a5:: with SMTP id 34mr5303714otd.353.1620332672219;
+        Thu, 06 May 2021 13:24:32 -0700 (PDT)
+Received: from robh.at.kernel.org (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id y11sm700130ooq.2.2021.05.06.13.24.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 May 2021 13:24:30 -0700 (PDT)
+Received: (nullmailer pid 744662 invoked by uid 1000);
+        Thu, 06 May 2021 20:24:29 -0000
+Date:   Thu, 6 May 2021 15:24:29 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, Imre Kaloz <kaloz@openwrt.org>,
+        Krzysztof Halasa <khalasa@piap.pl>,
+        Zoltan HERPAI <wigyori@uid0.hu>,
+        Raylynn Knight <rayknight@me.com>, devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/4] PCI: ixp4xx: Add device tree bindings for IXP4xx
+Message-ID: <20210506202429.GA740891@robh.at.kernel.org>
+References: <20210503211649.4109334-1-linus.walleij@linaro.org>
+ <20210503211649.4109334-4-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210503211649.4109334-4-linus.walleij@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Macbook 2013 resuming from s2idle results in external monitor no
-longer being detected, and dmesg having errors like:
+On Mon, May 03, 2021 at 11:16:48PM +0200, Linus Walleij wrote:
+> This adds device tree bindings for the Intel IXP4xx
+> PCI controller which can be used as both host and
+> option.
+> 
+> Cc: devicetree@vger.kernel.org
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Imre Kaloz <kaloz@openwrt.org>
+> Cc: Krzysztof Halasa <khalasa@piap.pl>
+> Cc: Zoltan HERPAI <wigyori@uid0.hu>
+> Cc: Raylynn Knight <rayknight@me.com>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> PCI maintainers: mainly looking for a review and ACK (if
+> you care about DT bindings) the patch will be merged
+> through ARM SoC.
+> ---
+>  .../bindings/pci/intel,ixp4xx-pci.yaml        | 96 +++++++++++++++++++
+>  1 file changed, 96 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml b/Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml
+> new file mode 100644
+> index 000000000000..5b6af2f5c2a5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml
+> @@ -0,0 +1,96 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/intel,ixp4xx-pci.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Intel IXP4xx PCI controller
+> +
+> +maintainers:
+> +  - Linus Walleij <linus.walleij@linaro.org>
+> +
+> +description: PCI host controller found in the Intel IXP4xx SoC series.
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/pci-bus.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - enum:
+> +          - intel,ixp42x-pci
+> +          - intel,ixp43x-pci
+> +    description: The two supported variants are ixp42x and ixp43x,
+> +      though more variants may exist.
+> +
+> +  reg:
+> +    items:
+> +      - description: IXP4xx-specific registers
+> +
+> +  ranges:
+> +    maxItems: 2
+> +    description: Typically one memory range of 64MB and one IO
+> +      space range of 64KB.
+> +
+> +  dma-ranges:
+> +    maxItems: 1
+> +    description: The DMA range tells the PCI host which addresses
+> +      the RAM is at. It can map only 64MB so if the RAM is bigger
+> +      than 64MB the DMA access has to be restricted to these
+> +      addresses.
+> +
+> +  "#interrupt-cells": true
+> +
+> +  interrupt-map: true
+> +
+> +  interrupt-map-mask:
+> +    items:
+> +      - const: 0xf800
+> +      - const: 0
+> +      - const: 0
+> +      - const: 7
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - ranges
 
-    pcieport 0000:06:00.0: can't change power state from D3hot to D0 (config space inaccessible)
+Already required by pci-bus.yaml I think.
 
-and a stacktrace. The reason turned out that the hw that the quirk
-powers off does not get powered on back on resume.
+> +  - dma-ranges
+> +  - "#interrupt-cells"
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    pci@c0000000 {
+> +      compatible = "intel,ixp43x-pci";
+> +      reg = <0xc0000000 0x1000>;
+> +      #address-cells = <3>;
+> +      #size-cells = <2>;
+> +      device_type = "pci";
+> +      bus-range = <0x00 0xff>;
+> +      status = "disabled";
 
-Thus, add a check for s2idle to the quirk, and do nothing if the suspend
-mode is s2idle.
+Don't show status in examples. 
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=212767
-Signed-off-by: Konstantin Kharlamov <Hi-Angel@yandex.ru>
----
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+I've really got to come up with an examples only schema to check this.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 653660e3ba9e..86fedcec37e2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -27,6 +27,7 @@
- #include <linux/nvme.h>
- #include <linux/platform_data/x86/apple.h>
- #include <linux/pm_runtime.h>
-+#include <linux/suspend.h>
- #include <linux/switchtec.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
-@@ -3646,6 +3647,13 @@ static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
- 		return;
- 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM)
- 		return;
-+
-+	/*
-+	 * If suspend mode is s2idle, power won't get restored on resume.
-+	 */
-+	if (!pm_suspend_via_firmware())
-+		return;
-+
- 	bridge = ACPI_HANDLE(&dev->dev);
- 	if (!bridge)
- 		return;
--- 
-2.31.1
-
+Rob
