@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF63C43460
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32492C4360C
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A34C6141F
-	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01B3E6147F
+	for <linux-pci@archiver.kernel.org>; Thu,  6 May 2021 15:32:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235444AbhEFPdq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 May 2021 11:33:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45878 "EHLO mail.kernel.org"
+        id S235508AbhEFPds (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 May 2021 11:33:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45940 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235267AbhEFPdp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 May 2021 11:33:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2B80F61168;
+        id S235352AbhEFPdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 May 2021 11:33:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C0C7A613E4;
         Thu,  6 May 2021 15:32:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1620315167;
-        bh=Fu4/t9pMjXwvsBTR1oTGCXyaBjHyoagLyBJfrUrRITM=;
+        bh=dHsqdNjyH3uEKBJHdSqdXMTYkvi4cwFKXYRKyfqwHMw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Tvv6Aru/o7L85xCaZOCy8rUW3aMkT6HCjU1p3R9hyH4Y06DgBjU6ma+WfLSk86O8C
-         J2bzfs9PBV9RCicsRr7kyOh673+gkaNBfb4BPPuPefC5HZ4wDjVsJ3t3uBiV7zO57j
-         CBr18OLYW4MkaFxwzGJMZqfO6cGgFVPUy0OvP4P6yQmLuSMdKcUPAf3y+Elp/qRwCd
-         YVdiCiL4lqocEHxmysDM7b2qSP5Vl3YaIN+mDmSkKekQRQoIZn+3i61kooaL16Jtx0
-         0iqmdbmL+i8P4tcl6Vw8bx0Ge86s2T6bB0PnlCn/5rtMspqoMy2Jlpr6W3eO3A8HZm
-         or+s1vmzqwNeg==
+        b=hCUkcoTnKQxQXmXSBCd/GlARbvZoU+rw8K89DtIUwxZ9FWx0T2FxmToOoseROJIPt
+         EbMQJwckfLttJTjMmp0CZ5QcCGEUbk7qeSERhshVV9QuEtdJTjUuU58n2bUKWslOKC
+         xKdI8T7nq/whQmzDwIibtK4pP1dcP5mm8Zc+wSH8HSBCVm1Pkp7pIyLmwXlpBBi+4M
+         9Q0ZiP8oYE7kKsgvHENJz3j1MM455BxNDEzyY7ZWV5jLSYsix3OaxK5z7RWUIRjePk
+         bq8HqOablna25truOZSUKba7UVWnPAqggA6x81wxntVKU7HHCjiMhqHhH37deWQf6P
+         jmhXzwsDzj70w==
 Received: by pali.im (Postfix)
-        id CBBC4BF9; Thu,  6 May 2021 17:32:44 +0200 (CEST)
+        id A824211AB; Thu,  6 May 2021 17:32:45 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -44,9 +44,9 @@ Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 03/42] PCI: aardvark: Fix checking for PIO status
-Date:   Thu,  6 May 2021 17:31:14 +0200
-Message-Id: <20210506153153.30454-4-pali@kernel.org>
+Subject: [PATCH 06/42] PCI: aardvark: Fix reporting CRS Software Visibility on emulated bridge
+Date:   Thu,  6 May 2021 17:31:17 +0200
+Message-Id: <20210506153153.30454-7-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210506153153.30454-1-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
@@ -57,208 +57,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Evan Wang <xswang@marvell.com>
+CRS Software Visibility is supported and always enabled by PIO.
+Correctly report this information via emulated root bridge.
 
-There is an issue that when PCIe switch is connected to an Armada 3700
-board, there will be lots of warnings about PIO errors when reading the
-config space. According to Aardvark PIO read and write sequence in HW
-specification, the current way to check PIO status has the following
-issues:
-
-1) For PIO read operation, it reports the error message, which should be
-   avoided according to HW specification.
-
-2) For PIO read and write operations, it only checks PIO operation complete
-   status, which is not enough, and error status should also be checked.
-
-This patch aligns the code with Aardvark PIO read and write sequence in HW
-specification on PIO status check and fix the warnings when reading config
-space.
-
-This patch also returns Completion Retry Status value when the read request
-timeout, to give the caller a chance to send the request again instead of
-failing.
-
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Tested-by: Victor Gu <xigu@marvell.com>
-[pali: Return CRS also after timeout]
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
-Cc: stable@vger.kernel.org # b1bd5714472c ("PCI: aardvark: Indicate error in 'val' when config read fails")
+Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-aardvark.c | 93 +++++++++++++++++++++++----
- 1 file changed, 80 insertions(+), 13 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 2f8380a1f84f..a37ba86f1b2d 100644
+index 3f3c72927afb..e297ec9ec390 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -58,6 +58,7 @@
- #define   PIO_COMPLETION_STATUS_CRS		2
- #define   PIO_COMPLETION_STATUS_CA		4
- #define   PIO_NON_POSTED_REQ			BIT(10)
-+#define   PIO_ERR_STATUS			BIT(11)
- #define PIO_ADDR_LS				(PIO_BASE_ADDR + 0x8)
- #define PIO_ADDR_MS				(PIO_BASE_ADDR + 0xc)
- #define PIO_WR_DATA				(PIO_BASE_ADDR + 0x10)
-@@ -176,6 +177,9 @@
+@@ -578,6 +578,8 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+ 	case PCI_EXP_RTCTL: {
+ 		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+ 		*value = (val & PCIE_MSG_PM_PME_MASK) ? 0 : PCI_EXP_RTCTL_PMEIE;
++		*value |= PCI_EXP_RTCTL_CRSSVE;
++		*value |= PCI_EXP_RTCAP_CRSVIS << 16;
+ 		return PCI_BRIDGE_EMUL_HANDLED;
+ 	}
  
- #define MSI_IRQ_NUM			32
- 
-+#define CFG_RD_UR_VAL			0xffffffff
-+#define CFG_RD_CRS_VAL			0xffff0001
-+
- struct advk_pcie {
- 	struct platform_device *pdev;
- 	void __iomem *base;
-@@ -461,7 +465,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	advk_writel(pcie, reg, PCIE_CORE_CMD_STATUS_REG);
- }
- 
--static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
-+static int advk_pcie_check_pio_status(struct advk_pcie *pcie, u32 *val)
+@@ -659,6 +661,7 @@ static struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
+ static int advk_sw_pci_bridge_init(struct advk_pcie *pcie)
  {
- 	struct device *dev = &pcie->pdev->dev;
- 	u32 reg;
-@@ -472,15 +476,50 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
- 	status = (reg & PIO_COMPLETION_STATUS_MASK) >>
- 		PIO_COMPLETION_STATUS_SHIFT;
+ 	struct pci_bridge_emul *bridge = &pcie->bridge;
++	int ret;
  
--	if (!status)
--		return;
--
-+	/*
-+	 * According to HW spec, the PIO status check sequence as below:
-+	 * 1) even if COMPLETION_STATUS(bit9:7) indicates successful,
-+	 *    it still needs to check Error Status(bit11), only when this bit
-+	 *    indicates no error happen, the operation is successful.
-+	 * 2) value Unsupported Request(1) of COMPLETION_STATUS(bit9:7) only
-+	 *    means a PIO write error, and for PIO read it is successful with
-+	 *    a read value of 0xFFFFFFFF.
-+	 * 3) value Completion Retry Status(CRS) of COMPLETION_STATUS(bit9:7)
-+	 *    only means a PIO write error, and for PIO read it is successful
-+	 *    with a read value of 0xFFFF0001.
-+	 * 4) value Completer Abort (CA) of COMPLETION_STATUS(bit9:7) means
-+	 *    error for both PIO read and PIO write operation.
-+	 * 5) other errors are indicated as 'unknown'.
-+	 */
- 	switch (status) {
-+	case PIO_COMPLETION_STATUS_OK:
-+		if (reg & PIO_ERR_STATUS) {
-+			strcomp_status = "COMP_ERR";
-+			break;
-+		}
-+		/* Get the read result */
-+		if (val)
-+			*val = advk_readl(pcie, PIO_RD_DATA);
-+		/* No error */
-+		strcomp_status = NULL;
-+		break;
- 	case PIO_COMPLETION_STATUS_UR:
--		strcomp_status = "UR";
-+		if (val) {
-+			/* For reading, UR is not an error status */
-+			*val = CFG_RD_UR_VAL;
-+			strcomp_status = NULL;
-+		} else {
-+			strcomp_status = "UR";
-+		}
- 		break;
- 	case PIO_COMPLETION_STATUS_CRS:
--		strcomp_status = "CRS";
-+		if (val) {
-+			/* For reading, CRS is not an error status */
-+			*val = CFG_RD_CRS_VAL;
-+			strcomp_status = NULL;
-+		} else {
-+			strcomp_status = "CRS";
-+		}
- 		break;
- 	case PIO_COMPLETION_STATUS_CA:
- 		strcomp_status = "CA";
-@@ -490,6 +529,9 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
- 		break;
- 	}
+ 	bridge->conf.vendor =
+ 		cpu_to_le16(advk_readl(pcie, PCIE_CORE_DEV_ID_REG) & 0xffff);
+@@ -682,7 +685,16 @@ static int advk_sw_pci_bridge_init(struct advk_pcie *pcie)
+ 	bridge->data = pcie;
+ 	bridge->ops = &advk_pci_bridge_emul_ops;
  
-+	if (!strcomp_status)
-+		return 0;
-+
- 	if (reg & PIO_NON_POSTED_REQ)
- 		str_posted = "Non-posted";
- 	else
-@@ -497,6 +539,8 @@ static void advk_pcie_check_pio_status(struct advk_pcie *pcie)
- 
- 	dev_err(dev, "%s PIO Response Status: %s, %#x @ %#x\n",
- 		str_posted, strcomp_status, reg, advk_readl(pcie, PIO_ADDR_LS));
-+
-+	return -EFAULT;
- }
- 
- static int advk_pcie_wait_pio(struct advk_pcie *pcie)
-@@ -703,8 +747,17 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 						 size, val);
- 
- 	if (advk_pcie_pio_is_running(pcie)) {
--		*val = 0xffffffff;
--		return PCIBIOS_SET_FAILED;
-+		/*
-+		 * For PCI_VENDOR_ID register, return Completion Retry Status
-+		 * so caller tries to issue the request again insted of failing
-+		 */
-+		if (where == PCI_VENDOR_ID) {
-+			*val = CFG_RD_CRS_VAL;
-+			return PCIBIOS_SUCCESSFUL;
-+		} else {
-+			*val = 0xffffffff;
-+			return PCIBIOS_SET_FAILED;
-+		}
- 	}
- 
- 	/* Program the control register */
-@@ -729,15 +782,27 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, 1, PIO_START);
- 
- 	ret = advk_pcie_wait_pio(pcie);
-+	if (ret < 0) {
-+		/*
-+		 * For PCI_VENDOR_ID register, return Completion Retry Status
-+		 * so caller tries to issue the request again instead of failing
-+		 */
-+		if (where == PCI_VENDOR_ID) {
-+			*val = CFG_RD_CRS_VAL;
-+			return PCIBIOS_SUCCESSFUL;
-+		} else {
-+			*val = 0xffffffff;
-+			return PCIBIOS_SET_FAILED;
-+		}
-+	}
-+
-+	/* Check PIO status and get the read result */
-+	ret = advk_pcie_check_pio_status(pcie, val);
- 	if (ret < 0) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_SET_FAILED;
- 	}
- 
--	advk_pcie_check_pio_status(pcie);
--
--	/* Get the read result */
--	*val = advk_readl(pcie, PIO_RD_DATA);
- 	if (size == 1)
- 		*val = (*val >> (8 * (where & 3))) & 0xff;
- 	else if (size == 2)
-@@ -801,7 +866,9 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	if (ret < 0)
- 		return PCIBIOS_SET_FAILED;
- 
--	advk_pcie_check_pio_status(pcie);
-+	ret = advk_pcie_check_pio_status(pcie, NULL);
+-	return pci_bridge_emul_init(bridge, 0);
++	/* PCIe config space can be initialized after pci_bridge_emul_init() */
++	ret = pci_bridge_emul_init(bridge, 0);
 +	if (ret < 0)
-+		return PCIBIOS_SET_FAILED;
- 
- 	return PCIBIOS_SUCCESSFUL;
++		return ret;
++
++	/* Completion Retry Status is supported and always enabled by PIO */
++	bridge->pcie_conf.rootctl = cpu_to_le16(PCI_EXP_RTCTL_CRSSVE);
++	bridge->pcie_conf.rootcap = cpu_to_le16(PCI_EXP_RTCAP_CRSVIS);
++
++	return 0;
  }
+ 
+ static bool advk_pcie_valid_device(struct advk_pcie *pcie, struct pci_bus *bus,
 -- 
 2.20.1
 
