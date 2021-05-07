@@ -2,199 +2,112 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C62AC433B4
-	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 10:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51479C43462
+	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 10:17:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42AC76145D
-	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 10:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FF5E6145D
+	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 10:17:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235909AbhEGKSB convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 May 2021 06:18:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38264 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229812AbhEGKSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 May 2021 06:18:01 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S235930AbhEGKSv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 May 2021 06:18:51 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:33506 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235935AbhEGKSv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 May 2021 06:18:51 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1620382672; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=Oud0HTulzNKsdmkcfvYSmVRENN5uGQTLxbcyfMHMM3E=; b=h/Ml9XuIy6bmvCGgHXOmCQIrwp4HN8oFZ/DuWelzvlUmey0iQatCHh8GowL3l9WlEXwjOggb
+ zLjXcxQytqNvWDCHgMWu32rgwkvFrZmtz2mz5RnfjXGus9tXm27Rif5Q8zueEOlAv/bMJIkP
+ Q9m41w4b9pexxrYRR5KXUH0D7rk=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 609513cc03cfff3452bc1bcb (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 07 May 2021 10:17:48
+ GMT
+Sender: pmaliset=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id B87F9C43145; Fri,  7 May 2021 10:17:47 +0000 (UTC)
+Received: from pmaliset-linux.qualcomm.com (unknown [202.46.22.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 64E906143F;
-        Fri,  7 May 2021 10:17:01 +0000 (UTC)
-Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.misterjones.org)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <maz@kernel.org>)
-        id 1lexXX-00BRMu-1h; Fri, 07 May 2021 11:16:59 +0100
-Date:   Fri, 07 May 2021 11:16:58 +0100
-Message-ID: <87czu2q25h.wl-maz@kernel.org>
-From:   Marc Zyngier <maz@kernel.org>
-To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>,
-        Remi Pommarel <repk@triplefau.lt>, Xogium <contact@xogium.me>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 17/42] PCI: aardvark: Fix support for MSI interrupts
-In-Reply-To: <20210506153153.30454-18-pali@kernel.org>
-References: <20210506153153.30454-1-pali@kernel.org>
-        <20210506153153.30454-18-pali@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
- (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-X-SA-Exim-Connect-IP: 62.31.163.78
-X-SA-Exim-Rcpt-To: pali@kernel.org, lorenzo.pieralisi@arm.com, thomas.petazzoni@bootlin.com, robh@kernel.org, bhelgaas@google.com, rmk+kernel@armlinux.org.uk, kabel@kernel.org, repk@triplefau.lt, contact@xogium.me, tmn505@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        (Authenticated sender: pmaliset)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6C13BC433D3;
+        Fri,  7 May 2021 10:17:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6C13BC433D3
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=pmaliset@codeaurora.org
+From:   Prasad Malisetty <pmaliset@codeaurora.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        mgautam@codeaurora.org, swboyd@chromium.org, dianders@chromium.org,
+        mka@chromium.org, Prasad Malisetty <pmaliset@codeaurora.org>
+Subject: [PATCH 1/3] dt-bindings: pci: qcom: Document PCIe bindings for SC720
+Date:   Fri,  7 May 2021 15:47:26 +0530
+Message-Id: <1620382648-17395-2-git-send-email-pmaliset@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1620382648-17395-1-git-send-email-pmaliset@codeaurora.org>
+References: <1620382648-17395-1-git-send-email-pmaliset@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 06 May 2021 16:31:28 +0100,
-Pali Rohár <pali@kernel.org> wrote:
-> 
-> MSI domain callback .alloc (implemented by advk_msi_irq_domain_alloc()
-> function) should return zero on success. Returning non-zero value indicates
-> failure. Fix return value of this function as in many cases it now returns
-> failure while allocating IRQs.
-> 
-> Aardvark hardware supports Multi-MSI and MSI_FLAG_MULTI_PCI_MSI is already
-> set. But when allocating MSI interrupt numbers for Multi-MSI, they need to
-> be properly aligned, otherwise endpoint devices send MSI interrupt with
-> incorrect numbers. Fix this issue by using function bitmap_find_free_region()
-> instead of bitmap_find_next_zero_area().
-> 
-> To ensure that aligned MSI interrupt numbers are used by endpoint devices,
-> we cannot use Linux virtual irq numbers (as they are random and not
-> properly aligned). So use hwirq numbers allocated by the function
-> bitmap_find_free_region(), which are aligned. This needs an update in
-> advk_msi_irq_compose_msi_msg() and advk_pcie_handle_msi() functions to do
-> proper mapping between Linux virtual irq numbers and hwirq MSI inner domain
-> numbers.
-> 
-> Also the whole 16-bit MSI number is stored in the PCIE_MSI_PAYLOAD_REG
-> register, not only lower 8 bits. Fix reading content of this register.
-> 
-> This change fixes receiving MSI interrupts on Armada 3720 boards and allows
-> using NVMe disks which use Multi-MSI feature with 3 interrupts.
-> 
-> Without this change, NVMe disks just freeze booting Linux on Armada 3720
-> boards as linux nvme-core.c driver is waiting 60s for an interrupt.
-> 
-> Signed-off-by: Pali Rohár <pali@kernel.org>
-> Reviewed-by: Marek Behún <kabel@kernel.org>
-> Cc: stable@vger.kernel.org # f21a8b1b6837 ("PCI: aardvark: Move to MSI handling using generic MSI support")
-> ---
->  drivers/pci/controller/pci-aardvark.c | 32 ++++++++++++++++-----------
->  1 file changed, 19 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> index 366d7480bc1b..498810c00b6d 100644
-> --- a/drivers/pci/controller/pci-aardvark.c
-> +++ b/drivers/pci/controller/pci-aardvark.c
-> @@ -118,6 +118,7 @@
->  #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
->  #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
->  #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
-> +#define     PCIE_MSI_DATA_MASK			GENMASK(15, 0)
+Document the PCIe DT bindings for SC7280 SoC.The PCIe IP is similar
+to the one used on SM8250. Add the compatible for SC7280.
 
-See my comment below about this addition.
+Signed-off-by: Prasad Malisetty <pmaliset@codeaurora.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
->  /* LMI registers base address and register offsets */
->  #define LMI_BASE_ADDR				0x6000
-> @@ -861,7 +862,7 @@ static void advk_msi_irq_compose_msi_msg(struct irq_data *data,
->  
->  	msg->address_lo = lower_32_bits(msi_msg);
->  	msg->address_hi = upper_32_bits(msi_msg);
-> -	msg->data = data->irq;
-> +	msg->data = data->hwirq;
->  }
->  
->  static int advk_msi_set_affinity(struct irq_data *irq_data,
-> @@ -878,15 +879,11 @@ static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
->  	int hwirq, i;
->  
->  	mutex_lock(&pcie->msi_used_lock);
-> -	hwirq = bitmap_find_next_zero_area(pcie->msi_used, MSI_IRQ_NUM,
-> -					   0, nr_irqs, 0);
-> -	if (hwirq >= MSI_IRQ_NUM) {
-> -		mutex_unlock(&pcie->msi_used_lock);
-> -		return -ENOSPC;
-> -	}
-> -
-> -	bitmap_set(pcie->msi_used, hwirq, nr_irqs);
-> +	hwirq = bitmap_find_free_region(pcie->msi_used, MSI_IRQ_NUM,
-> +					order_base_2(nr_irqs));
->  	mutex_unlock(&pcie->msi_used_lock);
-> +	if (hwirq < 0)
-> +		return -ENOSPC;
->  
->  	for (i = 0; i < nr_irqs; i++)
->  		irq_domain_set_info(domain, virq + i, hwirq + i,
-> @@ -894,7 +891,7 @@ static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
->  				    domain->host_data, handle_simple_irq,
->  				    NULL, NULL);
->  
-> -	return hwirq;
-> +	return 0;
->  }
->  
->  static void advk_msi_irq_domain_free(struct irq_domain *domain,
-> @@ -904,7 +901,7 @@ static void advk_msi_irq_domain_free(struct irq_domain *domain,
->  	struct advk_pcie *pcie = domain->host_data;
->  
->  	mutex_lock(&pcie->msi_used_lock);
-> -	bitmap_clear(pcie->msi_used, d->hwirq, nr_irqs);
-> +	bitmap_release_region(pcie->msi_used, d->hwirq, order_base_2(nr_irqs));
->  	mutex_unlock(&pcie->msi_used_lock);
->  }
->  
-> @@ -1048,6 +1045,7 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
->  {
->  	u32 msi_val, msi_mask, msi_status, msi_idx;
->  	u16 msi_data;
-> +	int virq;
->  
->  	msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
->  	msi_val = advk_readl(pcie, PCIE_MSI_STATUS_REG);
-> @@ -1057,9 +1055,17 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
->  		if (!(BIT(msi_idx) & msi_status))
->  			continue;
->  
-> +		/*
-> +		 * msi_idx contains bits [4:0] of the msi_data and msi_data
-> +		 * contains 16bit MSI interrupt number from MSI inner domain
-> +		 */
->  		advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
-> -		msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & 0xFF;
-> -		generic_handle_irq(msi_data);
-> +		msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & PCIE_MSI_DATA_MASK;
-
-Can this be moved to a separate patch? It seems like this patch should
-only focus on correctly dealing with the irq/hwirq issues.
-
-> +		virq = irq_find_mapping(pcie->msi_inner_domain, msi_data);
-> +		if (virq)
-> +			generic_handle_irq(virq);
-> +		else
-> +			dev_err(&pcie->pdev->dev, "unexpected MSI 0x%04hx\n", msi_data);
-
-Same concern about the unmitigated screaming.
-
-Thanks,
-
-	M.
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 0da458a..e5245ed 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -12,6 +12,7 @@
+ 			- "qcom,pcie-ipq4019" for ipq4019
+ 			- "qcom,pcie-ipq8074" for ipq8074
+ 			- "qcom,pcie-qcs404" for qcs404
++			- "qcom,pcie-sc7280" for sc7280
+ 			- "qcom,pcie-sdm845" for sdm845
+ 			- "qcom,pcie-sm8250" for sm8250
+ 
+@@ -133,6 +134,22 @@
+ 			- "slave_bus"	AXI Slave clock
+ 
+ - clock-names:
++	Usage: required for sc7280
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "aux"         Auxiliary clock
++			- "cfg"         Configuration clock
++			- "bus_master"  Master AXI clock
++			- "bus_slave"   Slave AXI clock
++			- "slave_q2a"   Slave Q2A clock
++			- "tbu"         PCIe TBU clock
++			- "ddrss_sf_tbu" PCIe SF TBU clock
++			- "pipe"        PIPE clock
++			- "pipe_src"    PIPE MUX
++			- "pipe_ext"    PIPE output clock
++			- "ref"         REFERENCE clock
++
++- clock-names:
+ 	Usage: required for sdm845
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
 -- 
-Without deviation from the norm, progress is not possible.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
