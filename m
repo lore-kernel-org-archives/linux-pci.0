@@ -2,34 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA29C433ED
-	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 09:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63382C43461
+	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 09:16:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0069C6145D
-	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 09:08:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31B1861457
+	for <linux-pci@archiver.kernel.org>; Fri,  7 May 2021 09:16:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231297AbhEGJJo convert rfc822-to-8bit (ORCPT
+        id S232012AbhEGJRH convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 May 2021 05:09:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35922 "EHLO mail.kernel.org"
+        Fri, 7 May 2021 05:17:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39486 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235911AbhEGJJZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 May 2021 05:09:25 -0400
+        id S235829AbhEGJQm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 May 2021 05:16:42 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 281E0613C0;
-        Fri,  7 May 2021 09:08:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4F3ED61426;
+        Fri,  7 May 2021 09:15:42 +0000 (UTC)
 Received: from 78.163-31-62.static.virginmediabusiness.co.uk ([62.31.163.78] helo=why.misterjones.org)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <maz@kernel.org>)
-        id 1lewT5-00BQju-1a; Fri, 07 May 2021 10:08:19 +0100
-Date:   Fri, 07 May 2021 10:08:18 +0100
-Message-ID: <87im3uq5bx.wl-maz@kernel.org>
+        id 1lewaC-00BQn9-4H; Fri, 07 May 2021 10:15:40 +0100
+Date:   Fri, 07 May 2021 10:15:39 +0100
+Message-ID: <87h7jeq4zo.wl-maz@kernel.org>
 From:   Marc Zyngier <maz@kernel.org>
 To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -42,10 +43,10 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Tomasz Maciej Nowak <tmn505@gmail.com>,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 15/42] PCI: aardvark: Change name of INTx irq_chip to advk-INT
-In-Reply-To: <20210506153153.30454-16-pali@kernel.org>
+Subject: Re: [PATCH 12/42] PCI: aardvark: Check for virq mapping when processing INTx IRQ
+In-Reply-To: <20210506153153.30454-13-pali@kernel.org>
 References: <20210506153153.30454-1-pali@kernel.org>
-        <20210506153153.30454-16-pali@kernel.org>
+        <20210506153153.30454-13-pali@kernel.org>
 User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
  FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
  (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
@@ -60,25 +61,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 06 May 2021 16:31:26 +0100,
+On Thu, 06 May 2021 16:31:23 +0100,
 Pali Rohár <pali@kernel.org> wrote:
 > 
-> This name is visible in /proc/interrupts file and for better reading it
-> should have at most 8 characters. Also there is no need to allocate this
-> name dynamically, since there is only one PCIe controller on Armada 37xx.
-> This aligns with how the MSI irq_chip in this driver names it's interrupt
-> ("advk-MSI").
+> It is possible that we receive spurious INTx interrupt. So add needed check
+> before calling generic_handle_irq() function.
+> 
+> Signed-off-by: Pali Rohár <pali@kernel.org>
+> Reviewed-by: Marek Behún <kabel@kernel.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 362faddae935..e7089db11f79 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -1106,7 +1106,10 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+>  			    PCIE_ISR1_REG);
+>  
+>  		virq = irq_find_mapping(pcie->irq_domain, i);
+> -		generic_handle_irq(virq);
+> +		if (virq)
+> +			generic_handle_irq(virq);
+> +		else
+> +			dev_err(&pcie->pdev->dev, "unexpected INT%c IRQ\n", (char)i+'A');
 
-And *because* the name is visible in /proc/interrupts, it has become
-an ABI, and cannot be changed anymore.
-
-We had the exact same issue with Tegra this merge window as I
-accidentally changed "Tegra" to "tegra", resulting in userspace
-programs failing find stuff in /proc/interrupts.
-
-Please keep the name as is, no matter how ugly it is.
-
-Thanks,
+Please don't scream like this. This is the best way to get into a DoS
+situation if you interrupt rate is high enough. At least rate-limit
+it.
 
 	M.
 
