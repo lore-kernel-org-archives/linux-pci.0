@@ -4,57 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59F61C433ED
-	for <linux-pci@archiver.kernel.org>; Sun,  9 May 2021 22:21:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA02C43462
+	for <linux-pci@archiver.kernel.org>; Sun,  9 May 2021 22:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F5DF613C9
-	for <linux-pci@archiver.kernel.org>; Sun,  9 May 2021 22:21:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A282613B6
+	for <linux-pci@archiver.kernel.org>; Sun,  9 May 2021 22:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229933AbhEIWWJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 May 2021 18:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47576 "EHLO
+        id S229699AbhEIWWO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 May 2021 18:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229973AbhEIWWJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 May 2021 18:22:09 -0400
+        with ESMTP id S229847AbhEIWWN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 May 2021 18:22:13 -0400
 Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AA24C061573
-        for <linux-pci@vger.kernel.org>; Sun,  9 May 2021 15:21:05 -0700 (PDT)
-Received: by mail-lf1-x134.google.com with SMTP id c3so20502850lfs.7
-        for <linux-pci@vger.kernel.org>; Sun, 09 May 2021 15:21:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76657C061573
+        for <linux-pci@vger.kernel.org>; Sun,  9 May 2021 15:21:08 -0700 (PDT)
+Received: by mail-lf1-x134.google.com with SMTP id x20so20529051lfu.6
+        for <linux-pci@vger.kernel.org>; Sun, 09 May 2021 15:21:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=zf+S7hvXyl8k4/OTCUtnv5DVgW50Qe9kDD2QLo75Eic=;
-        b=N5ug85ebB91Ju07EvncOpKAYdBT1sOVqmHUdsUsgsrOoJuEvxnJRiIDNV/Y8s9Bvm5
-         VVL7HRX+537AbZ6w1RAzREwmyBTh8rYUbL2f1MJ44NmBGHU9DjVjljIL96et25XIxj67
-         u9fH4cX3Fb5h8DOSSXPBYvx0YNewx5q6wA8sD7/Y0lYTEmO7/G0lyoDI4RNqdgBfCYdw
-         1H6Z5G3MfB8HgOh6ztH2tD0gLHwD0rV/RUL96YWPCdwdIbeQnzNo2KNzVYgmiLQRKzDN
-         HIXjQic8B9MMn6rMnBqwuAcK4JVQI7AO3HvTQvhAUmG5pELC4Ey8LUVmcyCBXomxfhFr
-         s8nw==
+        bh=6FxZJIZJKsIXSdwmLwW0dcAjXO7AU+sUjkMzDxOe2zQ=;
+        b=dNbB4YJOWtRNhJm2wJweaJu9aYxZOM2fQ7lxGl8DC5V8DlItGRk2z+ApMZpVuyVVyr
+         aQWR+wrYP96QuP4elWugjIGZ7F/T0VuhSxIMEZLArr4D4+rL90s+GIRCZuA7iE8qSVCw
+         6kNNUznDcB5FUIPajM7zM938PMVIlfI1r39GZK7MHpFnXEo51h53r8hbPnFmGN06XhpI
+         ccPVmXVL9G43jlFzEQQg0Q6vZOW8XqlJwILw3cQLu6A5kYmPIMAgy2wtlE4SgeKv5obp
+         vN39K9uKdPqwS9SDsg+rWmCFSk4YKLBadKW8gOXn0ob7wWnuoayB8G2m/4wYLajt4c9o
+         GFEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zf+S7hvXyl8k4/OTCUtnv5DVgW50Qe9kDD2QLo75Eic=;
-        b=ODkBlC9ARXGLWzrsUK1q2U9tZ9H2C/HXiG79lJBZ52kvH4qRKj9opOFobqwCpRPOUb
-         eKdvxZkdIGlXPB4G52PuARuquLtUEj6v8t8NfF3THjDlNLymO6bz2rqeOMwJEORe/Obj
-         8HZZVM2+wtP4Z9GDxKV/YMq9MEENiq2AZEyK9/IT25u/i/71pIJPXJWDM6JwhR/ODrYl
-         Z1NXdsdC3+u4DDwW1pGadU1t7WsWlF3SR6UEaDPi8UkJslm5iWUu5MD0jEJaivZ4NnhC
-         kjMNYK6//ettPbJ86awcZ0AHov6klD8m8WNLULagoF7h7jA11bPydSOEUoQ/IlC0YSZg
-         k8kA==
-X-Gm-Message-State: AOAM531uOKv/GEXmQTZdvjGDPQlBFdnU9sLW7eTB83j24nvy2gr/SzWN
-        JrgK6jV6FZipJKPniX0yjkT50g==
-X-Google-Smtp-Source: ABdhPJygLiDXDZtYmq8f0GFbVIJ8L9U7adTeiB5wUhFzMFYjEzXyvieC46iqA5iRNgU8NEkBfFOpfw==
-X-Received: by 2002:a05:6512:12d0:: with SMTP id p16mr14832876lfg.232.1620598863857;
-        Sun, 09 May 2021 15:21:03 -0700 (PDT)
+        bh=6FxZJIZJKsIXSdwmLwW0dcAjXO7AU+sUjkMzDxOe2zQ=;
+        b=l5ul/r0sOjlR/8YAxEbdFyFTEBMweKk74SPObV43bMdfHGidfoi9cRqeYKWHp9I+Yu
+         Pg7jTajBGOXAxYAjMGoTUF9XbqxPUixJEVQ6DG9mLlamxpeqnQkDqpmFzArsc6xZMeM/
+         iQuaI7vOiqrPaWyFjFHgQJwBBYCqBnqRJoG5s2wCezNv6DkMp+l31EPZr8KV6DsXL+0Q
+         gzOBZW7rjmVxpDRimUIlVInQZOlA2vCf5VKWkvdn9HF4ZJcMnKS5x/NisQQwstxPgqtP
+         SRahIfGTyjQFCpUsGvlUuJFbf7/9bdfK5sw7b1S2YBcKqC5ggltF87XnFdDjjrkpD1om
+         t/ZQ==
+X-Gm-Message-State: AOAM532pLFO1Euiz1u0BRgooHgFfEUG8sQqvfSZFWCMMg/c4DbFTF9YV
+        f1cXo0YvCu8VyEDFR7VaXRo6B9TBxftrig==
+X-Google-Smtp-Source: ABdhPJwsZG5hhkYgAVVyr3BgGn68+GmnJz5Nc0ymbw0PwuCzcgUHcQuJAhfrtNNK8UQUZHvpOfAQaA==
+X-Received: by 2002:ac2:528f:: with SMTP id q15mr15401765lfm.145.1620598866907;
+        Sun, 09 May 2021 15:21:06 -0700 (PDT)
 Received: from localhost.localdomain (c-fdcc225c.014-348-6c756e10.bbcust.telenor.se. [92.34.204.253])
-        by smtp.gmail.com with ESMTPSA id u12sm2978012ljo.82.2021.05.09.15.21.02
+        by smtp.gmail.com with ESMTPSA id u12sm2978012ljo.82.2021.05.09.15.21.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 May 2021 15:21:03 -0700 (PDT)
+        Sun, 09 May 2021 15:21:06 -0700 (PDT)
 From:   Linus Walleij <linus.walleij@linaro.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
@@ -63,9 +63,9 @@ Cc:     linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
         Zoltan HERPAI <wigyori@uid0.hu>,
         Raylynn Knight <rayknight@me.com>,
         Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 2/4 v3] ARM/ixp4xx: Make NEED_MACH_IO_H optional
-Date:   Mon, 10 May 2021 00:20:53 +0200
-Message-Id: <20210509222055.341945-3-linus.walleij@linaro.org>
+Subject: [PATCH 4/4 v3] PCI: ixp4xx: Add a new driver for IXP4xx
+Date:   Mon, 10 May 2021 00:20:55 +0200
+Message-Id: <20210509222055.341945-5-linus.walleij@linaro.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210509222055.341945-1-linus.walleij@linaro.org>
 References: <20210509222055.341945-1-linus.walleij@linaro.org>
@@ -75,23 +75,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to create a proper PCI driver for the IXP4xx
-we need to make the old PCI driver and its reliance
-on <mach/io.h> optional.
+This adds a new PCI controller driver for the Intel IXP4xx
+(IX425, IXP435 etc), based on the XScale microarchitecture.
 
-Create a new Kconfig symbol for the legacy PCI driver
-IXP4XX_PCI_LEGACY and only activate NEED_MACH_IO_H
-for this driver.
+This replaces the old driver in arch/arm/mach-ixp4xx/common-pci.c
+which utilized the ARM-specific BIOS32 PCI framework,
+and all parameterization for such things as memory and
+IO space as well as interrupt swizzling is done from the
+device tree.
 
-A few files need to be adjusted to explicitly include
-the <mach/hardware.h> and <mach/cpu.h> headers that
-they previously obtained implicitly using <linux/io.h>
-that would include <mach/io.h> and in turn include
-these two headers.
+The __raw_writel() and __raw_readl() are used for accessing
+the PCI controller for the same reason that these accessors
+are used in the timer, IRQ and GPIO drivers: the platform
+will alter its address bus pattern based on whether the
+system is booted in big- or little-endian mode. For this
+reason all register on IXP4xx must always be accessed in
+native (CPU) endianness.
 
-This breaks our reliance on the old PCI and indirect
-PCI support so we can reimplement a proper purely
-DT-based driver in the PCI subsystem.
+This driver supports 64MB of PCI memory space, but not the
+indirect access of 1GB that is available in the old driver.
+We can address that later if and only if there are users
+that need all 1GB of PCI address space.
+
+Tested by booting the NSLU2, attaching a USB stick, mounting
+and browsing the drive.
 
 Cc: Arnd Bergmann <arnd@arndb.de>
 Cc: Imre Kaloz <kaloz@openwrt.org>
@@ -101,272 +108,790 @@ Cc: Raylynn Knight <rayknight@me.com>
 Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
 ChangeLog v2->v3:
-- No changes, resend with the rest of the patches.
+- Fix a double assignment of .suppress_bind_attrs
+ChangeLog v1->v2:
+- Add dependencies on ARM to Kconfig since we are regisering
+  and ARM only abort handler.
+- Create ixp4xx_readl() and ixp4xx_writel() static inline
+  wrappers around the __raw_readl() and __raw_writel() calls
+  with a big comment block explaining what is going on.
+- Drop bus pointer from state container, it is only used in
+  probe()
+- Use pci_host_probe() and get rid of a lot of boilerplate.
+- Use builtin_driver_probe() and explain why this is
+  necessary with comments in the code.
 
-PCI maintainers: this patch is mostly FYI, will be
-merged through ARM SoC
+PCI maintainers: looking for review or ACK to take this
+driver throght ARM SoC since it is dependent on the first
+patches in the series in order not to cause build
+problems.
 ---
- arch/arm/Kconfig                         |  3 ++-
- arch/arm/mach-ixp4xx/Kconfig             | 33 +++++++++++++++---------
- arch/arm/mach-ixp4xx/common.c            |  1 -
- arch/arm/mach-ixp4xx/fsg-setup.c         |  1 +
- arch/arm/mach-ixp4xx/nas100d-setup.c     |  1 +
- arch/arm/mach-ixp4xx/nslu2-setup.c       |  1 +
- drivers/ata/pata_ixp4xx_cf.c             |  1 +
- drivers/net/ethernet/xscale/ixp4xx_eth.c |  1 +
- drivers/soc/ixp4xx/ixp4xx-npe.c          |  2 ++
- drivers/soc/ixp4xx/ixp4xx-qmgr.c         |  2 ++
- 10 files changed, 32 insertions(+), 14 deletions(-)
+ MAINTAINERS                         |   6 +
+ drivers/pci/controller/Kconfig      |   8 +
+ drivers/pci/controller/Makefile     |   1 +
+ drivers/pci/controller/pci-ixp4xx.c | 705 ++++++++++++++++++++++++++++
+ 4 files changed, 720 insertions(+)
+ create mode 100644 drivers/pci/controller/pci-ixp4xx.c
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 853aab5ab327..4ca2ab19d265 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -394,7 +394,8 @@ config ARCH_IXP4XX
- 	select HAVE_PCI
- 	select IXP4XX_IRQ
- 	select IXP4XX_TIMER
--	select NEED_MACH_IO_H
-+	# With the new PCI driver this is not needed
-+	select NEED_MACH_IO_H if PCI_IXP4XX_LEGACY
- 	select USB_EHCI_BIG_ENDIAN_DESC
- 	select USB_EHCI_BIG_ENDIAN_MMIO
- 	help
-diff --git a/arch/arm/mach-ixp4xx/Kconfig b/arch/arm/mach-ixp4xx/Kconfig
-index 165c184801e1..cabb37232704 100644
---- a/arch/arm/mach-ixp4xx/Kconfig
-+++ b/arch/arm/mach-ixp4xx/Kconfig
-@@ -20,7 +20,7 @@ config MACH_IXP4XX_OF
- config MACH_NSLU2
- 	bool
- 	prompt "Linksys NSLU2"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Linksys's
- 	  NSLU2 NAS device. For more information on this platform,
-@@ -28,7 +28,7 @@ config MACH_NSLU2
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d92f85ca831d..ae220d52a6d7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13692,6 +13692,12 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+ F:	drivers/pci/controller/dwc/*imx6*
  
- config MACH_AVILA
- 	bool "Avila"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support the Gateworks
- 	  Avila Network Platform. For more information on this platform,
-@@ -44,7 +44,7 @@ config MACH_LOFT
- 
- config ARCH_ADI_COYOTE
- 	bool "Coyote"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support the ADI 
- 	  Engineering Coyote Gateway Reference Platform. For more
-@@ -52,7 +52,7 @@ config ARCH_ADI_COYOTE
- 
- config MACH_GATEWAY7001
- 	bool "Gateway 7001"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Gateway's
- 	  7001 Access Point. For more information on this platform,
-@@ -60,7 +60,7 @@ config MACH_GATEWAY7001
- 
- config MACH_WG302V2
- 	bool "Netgear WG302 v2 / WAG302 v2"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Netgear's
- 	  WG302 v2 or WAG302 v2 Access Points. For more information
-@@ -68,6 +68,7 @@ config MACH_WG302V2
- 
- config ARCH_IXDP425
- 	bool "IXDP425"
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Intel's 
- 	  IXDP425 Development Platform (Also known as Richfield).  
-@@ -75,6 +76,7 @@ config ARCH_IXDP425
- 
- config MACH_IXDPG425
- 	bool "IXDPG425"
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Intel's
- 	  IXDPG425 Development Platform (Also known as Montajade).
-@@ -120,7 +122,7 @@ config ARCH_PRPMC1100
- config MACH_NAS100D
- 	bool
- 	prompt "NAS100D"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Iomega's
- 	  NAS 100d device. For more information on this platform,
-@@ -129,7 +131,7 @@ config MACH_NAS100D
- config MACH_DSMG600
- 	bool
- 	prompt "D-Link DSM-G600 RevA"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support D-Link's
- 	  DSM-G600 RevA device. For more information on this platform,
-@@ -143,7 +145,7 @@ config	ARCH_IXDP4XX
- config MACH_FSG
- 	bool
- 	prompt "Freecom FSG-3"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Freecom's
- 	  FSG-3 device. For more information on this platform,
-@@ -152,7 +154,7 @@ config MACH_FSG
- config MACH_ARCOM_VULCAN
- 	bool
- 	prompt "Arcom/Eurotech Vulcan"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support Arcom's
- 	  Vulcan board.
-@@ -173,7 +175,7 @@ config CPU_IXP43X
- config MACH_GTWX5715
- 	bool "Gemtek WX5715 (Linksys WRV54G)"
- 	depends on ARCH_IXP4XX
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 		This board is currently inside the Linksys WRV54G Gateways.
- 
-@@ -196,7 +198,7 @@ config MACH_DEVIXP
- 
- config MACH_MICCPT
- 	bool "Omicron MICCPT"
--	select FORCE_PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
- 	  Say 'Y' here if you want your kernel to support the MICCPT
- 	  board from OMICRON electronics GmbH.
-@@ -209,9 +211,16 @@ config MACH_MIC256
- 
- comment "IXP4xx Options"
- 
-+config IXP4XX_PCI_LEGACY
-+	bool "IXP4xx legacy PCI driver support"
-+	depends on PCI
-+	help
-+	  Selects legacy PCI driver.
-+	  Not recommended for new development.
++PCI DRIVER FOR INTEL IXP4XX
++M:	Linus Walleij <linus.walleij@linaro.org>
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml
++F:	drivers/pci/controller/pci-ixp4xx.c
 +
- config IXP4XX_INDIRECT_PCI
- 	bool "Use indirect PCI memory access"
--	depends on PCI
-+	depends on IXP4XX_PCI_LEGACY
- 	help
-           IXP4xx provides two methods of accessing PCI memory space:
+ PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
+ M:	Jonathan Derrick <jonathan.derrick@intel.com>
+ L:	linux-pci@vger.kernel.org
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 5aa8977d7b0f..b9a9a05be0e7 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -37,6 +37,14 @@ config PCI_FTPCI100
+ 	depends on OF
+ 	default ARCH_GEMINI
  
-diff --git a/arch/arm/mach-ixp4xx/common.c b/arch/arm/mach-ixp4xx/common.c
-index 000f672a94c9..431da1b4f6bd 100644
---- a/arch/arm/mach-ixp4xx/common.c
-+++ b/arch/arm/mach-ixp4xx/common.c
-@@ -32,7 +32,6 @@
- #include <linux/dma-map-ops.h>
- #include <mach/udc.h>
- #include <mach/hardware.h>
--#include <mach/io.h>
- #include <linux/uaccess.h>
- #include <asm/page.h>
- #include <asm/exception.h>
-diff --git a/arch/arm/mach-ixp4xx/fsg-setup.c b/arch/arm/mach-ixp4xx/fsg-setup.c
-index 507ee3878769..844329c5610d 100644
---- a/arch/arm/mach-ixp4xx/fsg-setup.c
-+++ b/arch/arm/mach-ixp4xx/fsg-setup.c
-@@ -28,6 +28,7 @@
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
- #include <asm/mach/flash.h>
-+#include <mach/hardware.h>
- 
- #include "irqs.h"
- 
-diff --git a/arch/arm/mach-ixp4xx/nas100d-setup.c b/arch/arm/mach-ixp4xx/nas100d-setup.c
-index 6959ad2e3aec..6133cf01cbe4 100644
---- a/arch/arm/mach-ixp4xx/nas100d-setup.c
-+++ b/arch/arm/mach-ixp4xx/nas100d-setup.c
-@@ -33,6 +33,7 @@
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
- #include <asm/mach/flash.h>
-+#include <mach/hardware.h>
- 
- #include "irqs.h"
- 
-diff --git a/arch/arm/mach-ixp4xx/nslu2-setup.c b/arch/arm/mach-ixp4xx/nslu2-setup.c
-index a428bb918703..8526a70e401b 100644
---- a/arch/arm/mach-ixp4xx/nslu2-setup.c
-+++ b/arch/arm/mach-ixp4xx/nslu2-setup.c
-@@ -31,6 +31,7 @@
- #include <asm/mach/arch.h>
- #include <asm/mach/flash.h>
- #include <asm/mach/time.h>
-+#include <mach/hardware.h>
- 
- #include "irqs.h"
- 
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index d1644a8ef9fa..9929d0150141 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -18,6 +18,7 @@
- #include <linux/irq.h>
- #include <linux/platform_device.h>
- #include <scsi/scsi_host.h>
-+#include <mach/hardware.h>
- 
- #define DRV_NAME	"pata_ixp4xx_cf"
- #define DRV_VERSION	"0.2"
-diff --git a/drivers/net/ethernet/xscale/ixp4xx_eth.c b/drivers/net/ethernet/xscale/ixp4xx_eth.c
-index 0152f1e70783..88ad1639a7da 100644
---- a/drivers/net/ethernet/xscale/ixp4xx_eth.c
-+++ b/drivers/net/ethernet/xscale/ixp4xx_eth.c
-@@ -36,6 +36,7 @@
- #include <linux/module.h>
- #include <linux/soc/ixp4xx/npe.h>
- #include <linux/soc/ixp4xx/qmgr.h>
-+#include <mach/hardware.h>
- 
- #include "ixp46x_ts.h"
- 
-diff --git a/drivers/soc/ixp4xx/ixp4xx-npe.c b/drivers/soc/ixp4xx/ixp4xx-npe.c
-index ec90b44fa0cd..0a16ac46ab59 100644
---- a/drivers/soc/ixp4xx/ixp4xx-npe.c
-+++ b/drivers/soc/ixp4xx/ixp4xx-npe.c
-@@ -20,6 +20,8 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/soc/ixp4xx/npe.h>
-+#include <mach/hardware.h>
-+#include <mach/cpu.h>
- 
- #define DEBUG_MSG			0
- #define DEBUG_FW			0
-diff --git a/drivers/soc/ixp4xx/ixp4xx-qmgr.c b/drivers/soc/ixp4xx/ixp4xx-qmgr.c
-index 8c968382cea7..1b1631ac0438 100644
---- a/drivers/soc/ixp4xx/ixp4xx-qmgr.c
-+++ b/drivers/soc/ixp4xx/ixp4xx-qmgr.c
-@@ -12,6 +12,8 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/soc/ixp4xx/qmgr.h>
-+#include <mach/hardware.h>
-+#include <mach/cpu.h>
- 
- static struct qmgr_regs __iomem *qmgr_regs;
- static int qmgr_irq_1;
++config PCI_IXP4XX
++	bool "Intel IXP4xx PCI controller"
++	depends on ARM && OF
++	default ARCH_IXP4XX
++	help
++	  Say Y here if you want support for the PCI host controller found
++	  in the Intel IXP4xx XScale-based network processor SoC.
++
+ config PCI_TEGRA
+ 	bool "NVIDIA Tegra PCIe controller"
+ 	depends on ARCH_TEGRA || COMPILE_TEST
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index e4559f2182f2..f81f3fd7a9e0 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-$(CONFIG_PCIE_CADENCE) += cadence/
+ obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
++obj-$(CONFIG_PCI_IXP4XX) += pci-ixp4xx.o
+ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+ obj-$(CONFIG_PCI_HYPERV_INTERFACE) += pci-hyperv-intf.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+diff --git a/drivers/pci/controller/pci-ixp4xx.c b/drivers/pci/controller/pci-ixp4xx.c
+new file mode 100644
+index 000000000000..c6912fd630b4
+--- /dev/null
++++ b/drivers/pci/controller/pci-ixp4xx.c
+@@ -0,0 +1,705 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Support for Intel IXP4xx PCI host controller
++ *
++ * Copyright (C) 2017 Linus Walleij <linus.walleij@linaro.org>
++ *
++ * Based on the IXP4xx arch/arm/mach-ixp4xx/common-pci.c driver
++ * Copyright (C) 2002 Intel Corporation
++ * Copyright (C) 2003 Greg Ungerer <gerg@linux-m68k.org>
++ * Copyright (C) 2003-2004 MontaVista Software, Inc.
++ * Copyright (C) 2005 Deepak Saxena <dsaxena@plexity.net>
++ * Copyright (C) 2005 Alessandro Zummo <a.zummo@towertech.it>
++ *
++ * TODO:
++ * - Test IO-space access
++ * - DMA support
++ */
++
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <linux/bits.h>
++
++/* Register offsets */
++#define IXP4XX_PCI_NP_AD		0x00
++#define IXP4XX_PCI_NP_CBE		0x04
++#define IXP4XX_PCI_NP_WDATA		0x08
++#define IXP4XX_PCI_NP_RDATA		0x0c
++#define IXP4XX_PCI_CRP_AD_CBE		0x10
++#define IXP4XX_PCI_CRP_WDATA		0x14
++#define IXP4XX_PCI_CRP_RDATA		0x18
++#define IXP4XX_PCI_CSR			0x1c
++#define IXP4XX_PCI_ISR			0x20
++#define IXP4XX_PCI_INTEN		0x24
++#define IXP4XX_PCI_DMACTRL		0x28
++#define IXP4XX_PCI_AHBMEMBASE		0x2c
++#define IXP4XX_PCI_AHBIOBASE		0x30
++#define IXP4XX_PCI_PCIMEMBASE		0x34
++#define IXP4XX_PCI_AHBDOORBELL		0x38
++#define IXP4XX_PCI_PCIDOORBELL		0x3C
++#define IXP4XX_PCI_ATPDMA0_AHBADDR	0x40
++#define IXP4XX_PCI_ATPDMA0_PCIADDR	0x44
++#define IXP4XX_PCI_ATPDMA0_LENADDR	0x48
++#define IXP4XX_PCI_ATPDMA1_AHBADDR	0x4C
++#define IXP4XX_PCI_ATPDMA1_PCIADDR	0x50
++#define IXP4XX_PCI_ATPDMA1_LENADDR	0x54
++
++/* CSR bit definitions */
++#define IXP4XX_PCI_CSR_HOST		BIT(0)
++#define IXP4XX_PCI_CSR_ARBEN		BIT(1)
++#define IXP4XX_PCI_CSR_ADS		BIT(2)
++#define IXP4XX_PCI_CSR_PDS		BIT(3)
++#define IXP4XX_PCI_CSR_ABE		BIT(4)
++#define IXP4XX_PCI_CSR_DBT		BIT(5)
++#define IXP4XX_PCI_CSR_ASE		BIT(8)
++#define IXP4XX_PCI_CSR_IC		BIT(15)
++#define IXP4XX_PCI_CSR_PRST		BIT(16)
++
++/* ISR (Interrupt status) Register bit definitions */
++#define IXP4XX_PCI_ISR_PSE		BIT(0)
++#define IXP4XX_PCI_ISR_PFE		BIT(1)
++#define IXP4XX_PCI_ISR_PPE		BIT(2)
++#define IXP4XX_PCI_ISR_AHBE		BIT(3)
++#define IXP4XX_PCI_ISR_APDC		BIT(4)
++#define IXP4XX_PCI_ISR_PADC		BIT(5)
++#define IXP4XX_PCI_ISR_ADB		BIT(6)
++#define IXP4XX_PCI_ISR_PDB		BIT(7)
++
++/* INTEN (Interrupt Enable) Register bit definitions */
++#define IXP4XX_PCI_INTEN_PSE		BIT(0)
++#define IXP4XX_PCI_INTEN_PFE		BIT(1)
++#define IXP4XX_PCI_INTEN_PPE		BIT(2)
++#define IXP4XX_PCI_INTEN_AHBE		BIT(3)
++#define IXP4XX_PCI_INTEN_APDC		BIT(4)
++#define IXP4XX_PCI_INTEN_PADC		BIT(5)
++#define IXP4XX_PCI_INTEN_ADB		BIT(6)
++#define IXP4XX_PCI_INTEN_PDB		BIT(7)
++
++/* Shift value for byte enable on NP cmd/byte enable register */
++#define IXP4XX_PCI_NP_CBE_BESL		4
++
++/* PCI commands supported by NP access unit */
++#define NP_CMD_IOREAD			0x2
++#define NP_CMD_IOWRITE			0x3
++#define NP_CMD_CONFIGREAD		0xa
++#define NP_CMD_CONFIGWRITE		0xb
++#define NP_CMD_MEMREAD			0x6
++#define	NP_CMD_MEMWRITE			0x7
++
++/* Constants for CRP access into local config space */
++#define CRP_AD_CBE_BESL         20
++#define CRP_AD_CBE_WRITE	0x00010000
++
++/* Special PCI configuration space registers for this controller */
++#define IXP4XX_PCI_RTOTTO		0x40
++
++struct ixp4xx_pci {
++	struct device *dev;
++	void __iomem *base;
++	raw_spinlock_t lock; /* Protects bus writes */
++	bool errata_hammer;
++	bool host_mode;
++};
++
++/*
++ * The IXP4xx has a peculiar address bus that will change the
++ * byte order on SoC peripherals depending on whether the device
++ * operates in big endian or little endian mode. That means that
++ * readl() and writel() that always use little-endian access
++ * will not work for SoC peripherals such as the PCI controller
++ * when used in big endian mode. The accesses to the individual
++ * PCI devices on the other hand, are always little-endian and
++ * can use readl() and writel().
++ *
++ * For local AHB bus access we need to use __raw_[readl|writel]()
++ * to make sure that we access the SoC devices in the CPU native
++ * endianness.
++ */
++static inline u32 ixp4xx_readl(struct ixp4xx_pci *p, u32 reg)
++{
++	return __raw_readl(p->base + reg);
++}
++
++static inline void ixp4xx_writel(struct ixp4xx_pci *p, u32 reg, u32 val)
++{
++	__raw_writel(val, p->base + reg);
++}
++
++static int ixp4xx_pci_check_master_abort(struct ixp4xx_pci *p)
++{
++	u32 isr = ixp4xx_readl(p, IXP4XX_PCI_ISR);
++
++	if (isr & IXP4XX_PCI_ISR_PFE) {
++		/* Make sure the master abort bit is reset */
++		ixp4xx_writel(p, IXP4XX_PCI_ISR, IXP4XX_PCI_ISR_PFE);
++		dev_dbg(p->dev, "master abort detected\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static int ixp4xx_pci_read(struct ixp4xx_pci *p, u32 addr, u32 cmd, u32 *data)
++{
++	unsigned long flags;
++	int ret;
++
++	raw_spin_lock_irqsave(&p->lock, flags);
++
++	ixp4xx_writel(p, IXP4XX_PCI_NP_AD, addr);
++
++	if (p->errata_hammer) {
++		int i;
++
++		/*
++		 * PCI workaround - only works if NP PCI space reads have
++		 * no side effects. Hammer the register and read twice 8
++		 * times. last one will be good.
++		 */
++		for (i = 0; i < 8; i++) {
++			ixp4xx_writel(p, IXP4XX_PCI_NP_CBE, cmd);
++			*data = ixp4xx_readl(p, IXP4XX_PCI_NP_RDATA);
++			*data = ixp4xx_readl(p, IXP4XX_PCI_NP_RDATA);
++		}
++	} else {
++		ixp4xx_writel(p, IXP4XX_PCI_NP_CBE, cmd);
++		*data = ixp4xx_readl(p, IXP4XX_PCI_NP_RDATA);
++	}
++
++	/* Check for master abort */
++	ret = ixp4xx_pci_check_master_abort(p);
++
++	raw_spin_unlock_irqrestore(&p->lock, flags);
++	return ret;
++}
++
++static int ixp4xx_pci_write(struct ixp4xx_pci *p, u32 addr, u32 cmd, u32 data)
++{
++	unsigned long flags;
++	int ret;
++
++	raw_spin_lock_irqsave(&p->lock, flags);
++
++	ixp4xx_writel(p, IXP4XX_PCI_NP_AD, addr);
++
++	/* Set up the write */
++	ixp4xx_writel(p, IXP4XX_PCI_NP_CBE, cmd);
++
++	/* Execute the write by writing to NP_WDATA */
++	ixp4xx_writel(p, IXP4XX_PCI_NP_WDATA, data);
++
++	/* Check for master abort */
++	ret = ixp4xx_pci_check_master_abort(p);
++
++	raw_spin_unlock_irqrestore(&p->lock, flags);
++	return ret;
++}
++
++static u32 ixp4xx_config_addr(u8 bus_num, u16 devfn, int where)
++{
++	u32 addr;
++
++	if (!bus_num) {
++		/* type 0 */
++		addr = BIT(32-PCI_SLOT(devfn)) | ((PCI_FUNC(devfn)) << 8) |
++			(where & ~3);
++	} else {
++		/* type 1 */
++		addr = (bus_num << 16) | ((PCI_SLOT(devfn)) << 11) |
++			((PCI_FUNC(devfn)) << 8) | (where & ~3) | 1;
++	}
++	return addr;
++}
++
++/*
++ * CRP functions are "Controller Configuration Port" accesses
++ * initiated from within this driver itself to read/write PCI
++ * control information in the config space.
++ */
++static u32 ixp4xx_crp_byte_lane_enable_bits(u32 n, int size)
++{
++	if (size == 1)
++		return (0xf & ~BIT(n)) << CRP_AD_CBE_BESL;
++	if (size == 2)
++		return (0xf & ~(BIT(n) | BIT(n+1))) << CRP_AD_CBE_BESL;
++	if (size == 4)
++		return 0;
++	return 0xffffffff;
++}
++
++static int ixp4xx_crp_read_config(struct ixp4xx_pci *p, int where, int size,
++				  u32 *value)
++{
++	unsigned long flags;
++	u32 n, cmd, val;
++
++	n = where % 4;
++	cmd = where & ~3;
++
++	dev_dbg(p->dev, "%s from %d size %d cmd %08x\n",
++		__func__, where, size, cmd);
++
++	raw_spin_lock_irqsave(&p->lock, flags);
++	ixp4xx_writel(p, IXP4XX_PCI_CRP_AD_CBE, cmd);
++	val = ixp4xx_readl(p, IXP4XX_PCI_CRP_RDATA);
++	raw_spin_unlock_irqrestore(&p->lock, flags);
++
++	val >>= (8*n);
++	switch (size) {
++	case 1:
++		val &= U8_MAX;
++		dev_dbg(p->dev, "%s read byte %02x\n", __func__, val);
++		break;
++	case 2:
++		val &= U16_MAX;
++		dev_dbg(p->dev, "%s read word %04x\n", __func__, val);
++		break;
++	case 4:
++		val &= U32_MAX;
++		dev_dbg(p->dev, "%s read long %08x\n", __func__, val);
++		break;
++	default:
++		/* Should not happen */
++		dev_err(p->dev, "%s illegal size\n", __func__);
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++	*value = val;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int ixp4xx_crp_write_config(struct ixp4xx_pci *p, int where, int size,
++				   u32 value)
++{
++	unsigned long flags;
++	u32 n, cmd, val;
++
++	n = where % 4;
++	cmd = ixp4xx_crp_byte_lane_enable_bits(n, size);
++	if (cmd == 0xffffffff)
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	cmd |= where & ~3;
++	cmd |= CRP_AD_CBE_WRITE;
++
++	val = value << (8*n);
++
++	dev_dbg(p->dev, "%s to %d size %d cmd %08x val %08x\n",
++		__func__, where, size, cmd, val);
++
++	raw_spin_lock_irqsave(&p->lock, flags);
++	ixp4xx_writel(p, IXP4XX_PCI_CRP_AD_CBE, cmd);
++	ixp4xx_writel(p, IXP4XX_PCI_CRP_WDATA, val);
++	raw_spin_unlock_irqrestore(&p->lock, flags);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++/*
++ * Then follows the functions that read and write from the common
++ * PCI configuration space.
++ */
++
++static u32 ixp4xx_byte_lane_enable_bits(u32 n, int size)
++{
++	if (size == 1)
++		return (0xf & ~BIT(n)) << 4;
++	if (size == 2)
++		return (0xf & ~(BIT(n) | BIT(n+1))) << 4;
++	if (size == 4)
++		return 0;
++	return 0xffffffff;
++}
++
++static int ixp4xx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
++				  int where, int size, u32 *value)
++{
++	struct ixp4xx_pci *p = bus->sysdata;
++	u32 n, addr, val, cmd;
++	u8 bus_num = bus->number;
++	int ret;
++
++	*value = 0xffffffff;
++	n = where % 4;
++	cmd = ixp4xx_byte_lane_enable_bits(n, size);
++	if (cmd == 0xffffffff)
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	addr = ixp4xx_config_addr(bus_num, devfn, where);
++	cmd |= NP_CMD_CONFIGREAD;
++	dev_dbg(p->dev, "read_config from %d size %d dev %d:%d:%d address: %08x cmd: %08x\n",
++		where, size, bus_num, PCI_SLOT(devfn), PCI_FUNC(devfn), addr, cmd);
++
++	ret = ixp4xx_pci_read(p, addr, cmd, &val);
++	if (ret)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	val >>= (8*n);
++	switch (size) {
++	case 1:
++		val &= U8_MAX;
++		dev_dbg(p->dev, "%s read byte %02x\n", __func__, val);
++		break;
++	case 2:
++		val &= U16_MAX;
++		dev_dbg(p->dev, "%s read word %04x\n", __func__, val);
++		break;
++	case 4:
++		val &= U32_MAX;
++		dev_dbg(p->dev, "%s read long %08x\n", __func__, val);
++		break;
++	default:
++		/* Should not happen */
++		dev_err(p->dev, "%s illegal size\n", __func__);
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++	*value = val;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int ixp4xx_pci_write_config(struct pci_bus *bus,  unsigned int devfn,
++				   int where, int size, u32 value)
++{
++	struct ixp4xx_pci *p = bus->sysdata;
++	u32 n, addr, val, cmd;
++	u8 bus_num = bus->number;
++	int ret;
++
++	n = where % 4;
++	cmd = ixp4xx_byte_lane_enable_bits(n, size);
++	if (cmd == 0xffffffff)
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	addr = ixp4xx_config_addr(bus_num, devfn, where);
++	cmd |= NP_CMD_CONFIGWRITE;
++	val = value << (8*n);
++
++	dev_dbg(p->dev, "write_config_byte %#x to %d size %d dev %d:%d:%d addr: %08x cmd %08x\n",
++		value, where, size, bus_num, PCI_SLOT(devfn), PCI_FUNC(devfn), addr, cmd);
++
++	ret = ixp4xx_pci_write(p, addr, cmd, val);
++	if (ret)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static struct pci_ops ixp4xx_pci_ops = {
++	.read = ixp4xx_pci_read_config,
++	.write = ixp4xx_pci_write_config,
++};
++
++static u32 ixp4xx_pci_addr_to_64mconf(phys_addr_t addr)
++{
++	u8 base;
++
++	base = ((addr & 0xff000000) >> 24);
++	return (base << 24) | ((base + 1) << 16)
++		| ((base + 2) << 8) | (base + 3);
++}
++
++static int ixp4xx_pci_parse_map_ranges(struct ixp4xx_pci *p)
++{
++	struct device *dev = p->dev;
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(p);
++	struct resource_entry *win;
++	struct resource *res;
++	phys_addr_t addr;
++
++	win = resource_list_first_type(&bridge->windows, IORESOURCE_MEM);
++	if (win) {
++		u32 pcimembase;
++
++		res = win->res;
++		addr = res->start - win->offset;
++
++		if (res->flags & IORESOURCE_PREFETCH)
++			res->name = "IXP4xx PCI PRE-MEM";
++		else
++			res->name = "IXP4xx PCI NON-PRE-MEM";
++
++		dev_dbg(dev, "%s window %pR, bus addr %pa\n",
++			res->name, res, &addr);
++		if (resource_size(res) != SZ_64M) {
++			dev_err(dev, "memory range is not 64MB\n");
++			return -EINVAL;
++		}
++
++		pcimembase = ixp4xx_pci_addr_to_64mconf(addr);
++		/* Commit configuration */
++		ixp4xx_writel(p, IXP4XX_PCI_PCIMEMBASE, pcimembase);
++	} else {
++		dev_err(dev, "no AHB memory mapping defined\n");
++	}
++
++	win = resource_list_first_type(&bridge->windows, IORESOURCE_IO);
++	if (win) {
++		res = win->res;
++
++		addr = pci_pio_to_address(res->start);
++		if (addr & 0xff) {
++			dev_err(dev, "IO mem at uneven address: %pa\n", &addr);
++			return -EINVAL;
++		}
++
++		res->name = "IXP4xx PCI IO MEM";
++		/*
++		 * Setup I/O space location for PCI->AHB access, the
++		 * upper 24 bits of the address goes into the lower
++		 * 24 bits of this register.
++		 */
++		ixp4xx_writel(p, IXP4XX_PCI_AHBIOBASE, (addr >> 8));
++	} else {
++		dev_info(dev, "no IO space AHB memory mapping defined\n");
++	}
++
++	return 0;
++}
++
++static int ixp4xx_pci_parse_map_dma_ranges(struct ixp4xx_pci *p)
++{
++	struct device *dev = p->dev;
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(p);
++	struct resource_entry *win;
++	struct resource *res;
++	phys_addr_t addr;
++	u32 ahbmembase;
++
++	win = resource_list_first_type(&bridge->dma_ranges, IORESOURCE_MEM);
++	if (win) {
++		res = win->res;
++		addr = res->start - win->offset;
++
++		if (resource_size(res) != SZ_64M) {
++			dev_err(dev, "DMA memory range is not 64MB\n");
++			return -EINVAL;
++		}
++
++		dev_dbg(dev, "DMA MEM BASE: %pa\n", &addr);
++		/*
++		 * 4 PCI-to-AHB windows of 16 MB each, write the 8 high bits
++		 * into each byte of the PCI_AHBMEMBASE register.
++		 */
++		ahbmembase = ixp4xx_pci_addr_to_64mconf(addr);
++		/* Commit AHB membase */
++		ixp4xx_writel(p, IXP4XX_PCI_AHBMEMBASE, ahbmembase);
++	} else {
++		dev_err(dev, "no DMA memory range defined\n");
++	}
++
++	return 0;
++}
++
++/* Only used to get context for abort handling */
++static struct ixp4xx_pci *ixp4xx_pci_abort_singleton;
++
++static int ixp4xx_pci_abort_handler(unsigned long addr, unsigned int fsr,
++				    struct pt_regs *regs)
++{
++	struct ixp4xx_pci *p = ixp4xx_pci_abort_singleton;
++	u32 isr, status;
++	int ret;
++
++	isr = ixp4xx_readl(p, IXP4XX_PCI_ISR);
++	ret = ixp4xx_crp_read_config(p, PCI_STATUS, 2, &status);
++	if (ret) {
++		dev_err(p->dev, "unable to read abort status\n");
++		return -EINVAL;
++	}
++
++	dev_err(p->dev,
++		"PCI: abort_handler addr = %#lx, isr = %#x, status = %#x\n",
++		addr, isr, status);
++
++	/* Make sure the Master Abort bit is reset */
++	ixp4xx_writel(p, IXP4XX_PCI_ISR, IXP4XX_PCI_ISR_PFE);
++	status |= PCI_STATUS_REC_MASTER_ABORT;
++	ret = ixp4xx_crp_write_config(p, PCI_STATUS, 2, status);
++	if (ret)
++		dev_err(p->dev, "unable to clear abort status bit\n");
++
++	/*
++	 * If it was an imprecise abort, then we need to correct the
++	 * return address to be _after_ the instruction.
++	 */
++	if (fsr & (1 << 10)) {
++		dev_err(p->dev, "imprecise abort\n");
++		regs->ARM_pc += 4;
++	}
++
++	return 0;
++}
++
++static int __init ixp4xx_pci_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct ixp4xx_pci *p;
++	struct pci_host_bridge *host;
++	int ret;
++	u32 val;
++	phys_addr_t addr;
++	u32 basereg[4] = {
++		PCI_BASE_ADDRESS_0,
++		PCI_BASE_ADDRESS_1,
++		PCI_BASE_ADDRESS_2,
++		PCI_BASE_ADDRESS_3,
++	};
++	int i;
++
++	host = devm_pci_alloc_host_bridge(dev, sizeof(*p));
++	if (!host)
++		return -ENOMEM;
++
++	host->ops = &ixp4xx_pci_ops;
++	p = pci_host_bridge_priv(host);
++	host->sysdata = p;
++	p->dev = dev;
++	raw_spin_lock_init(&p->lock);
++	dev_set_drvdata(dev, p);
++
++	/*
++	 * Set up quirk for erratic behaviour in the 42x variant
++	 * when accessing config space.
++	 */
++	if (of_device_is_compatible(np, "intel,ixp42x-pci")) {
++		p->errata_hammer = true;
++		dev_info(dev, "activate hammering errata\n");
++	}
++
++	p->base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(p->base))
++		return PTR_ERR(p->base);
++
++	val = ixp4xx_readl(p, IXP4XX_PCI_CSR);
++	p->host_mode = !!(val & IXP4XX_PCI_CSR_HOST);
++	dev_info(dev, "controller is in %s mode\n",
++		 p->host_mode ? "host" : "option");
++
++	/* Hook in our fault handler for PCI errors */
++	ixp4xx_pci_abort_singleton = p;
++	hook_fault_code(16+6, ixp4xx_pci_abort_handler, SIGBUS, 0,
++			"imprecise external abort");
++
++	ret = ixp4xx_pci_parse_map_ranges(p);
++	if (ret)
++		return ret;
++
++	ret = ixp4xx_pci_parse_map_dma_ranges(p);
++	if (ret)
++		return ret;
++
++	/* This is only configured in host mode */
++	if (p->host_mode) {
++		addr = __pa(PAGE_OFFSET);
++		/* This is a noop (0x00) but explains what is going on */
++		addr |= PCI_BASE_ADDRESS_SPACE_MEMORY;
++
++		for (i = 0; i < 4; i++) {
++			/* Write this directly into the config space */
++			ret = ixp4xx_crp_write_config(p, basereg[i], 4, addr);
++			if (ret)
++				dev_err(dev, "failed to set up PCI_BASE_ADDRESS_%d\n", i);
++			else
++				dev_info(dev, "set PCI_BASE_ADDR_%d to %pa\n", i, &addr);
++			addr += SZ_16M;
++		}
++
++		/*
++		 * Enable CSR window at 64 MiB to allow PCI masters to continue
++		 * prefetching past the 64 MiB boundary, if all AHB to PCI windows
++		 * are consecutive.
++		 */
++		ret = ixp4xx_crp_write_config(p, PCI_BASE_ADDRESS_4, 4, addr);
++		if (ret)
++			dev_err(dev, "failed to set up PCI_BASE_ADDRESS_4\n");
++		else
++			dev_info(dev, "set PCI_BASE_ADDR_4 to %pa\n", &addr);
++
++		/*
++		 * Put the IO memory at the very end of physical memory at
++		 * 0xfffffc00. This is when the PCI is trying to access IO
++		 * memory over AHB.
++		 */
++		addr = 0xfffffc00;
++		addr |= PCI_BASE_ADDRESS_SPACE_IO;
++		ret = ixp4xx_crp_write_config(p, PCI_BASE_ADDRESS_5, 4, addr);
++		if (ret)
++			dev_err(dev, "failed to set up PCI_BASE_ADDRESS_5\n");
++		else
++			dev_info(dev, "set PCI_BASE_ADDR_5 to %pa\n", &addr);
++
++		/*
++		 * Retry timeout to 0x80
++		 * Transfer ready timeout to 0xff
++		 */
++		ret = ixp4xx_crp_write_config(p, IXP4XX_PCI_RTOTTO, 4,
++					      0x000080ff);
++		if (ret)
++			dev_err(dev, "failed to set up TRDY limit\n");
++		else
++			dev_info(dev, "set TRDY limit to 0x80ff\n");
++	}
++
++	/* Clear interrupts */
++	val = IXP4XX_PCI_ISR_PSE | IXP4XX_PCI_ISR_PFE | IXP4XX_PCI_ISR_PPE | IXP4XX_PCI_ISR_AHBE;
++	ixp4xx_writel(p, IXP4XX_PCI_ISR, val);
++
++	/*
++	 * Set Initialize Complete in PCI Control Register: allow IXP4XX to
++	 * respond to PCI configuration cycles. Specify that the AHB bus is
++	 * operating in big endian mode. Set up byte lane swapping between
++	 * little-endian PCI and the big-endian AHB bus.
++	 */
++	val = IXP4XX_PCI_CSR_IC | IXP4XX_PCI_CSR_ABE;
++#ifdef __ARMEB__
++	val |= (IXP4XX_PCI_CSR_PDS | IXP4XX_PCI_CSR_ADS);
++#endif
++	ixp4xx_writel(p, IXP4XX_PCI_CSR, val);
++
++	ret = ixp4xx_crp_write_config(p, PCI_COMMAND, 2, PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY);
++	if (ret)
++		dev_err(dev, "unable to initialize master and command memory\n");
++	else
++		dev_info(dev, "initialized as master\n");
++
++	pci_host_probe(host);
++
++	return 0;
++}
++
++static const struct of_device_id ixp4xx_pci_of_match[] = {
++	{
++		.compatible = "intel,ixp42x-pci",
++	},
++	{
++		.compatible = "intel,ixp43x-pci",
++	},
++	{},
++};
++
++/*
++ * This driver needs to be a builtin module with suppressed bind
++ * attributes since the probe() is initializing a hard exception
++ * handler and this can only be done from __init-tagged code
++ * sections. This module cannot be removed and inserted at all.
++ */
++static struct platform_driver ixp4xx_pci_driver = {
++	.driver = {
++		.name = "ixp4xx-pci",
++		.suppress_bind_attrs = true,
++		.of_match_table = of_match_ptr(ixp4xx_pci_of_match),
++	},
++};
++/*
++ * This is the only way to have an __init tagged probe that does
++ * not cause link errors.
++ */
++builtin_platform_driver_probe(ixp4xx_pci_driver, ixp4xx_pci_probe);
 -- 
 2.30.2
 
