@@ -2,33 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6EBC43460
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 11:51:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 301D3C43462
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 13:21:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4E7F611CE
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 11:51:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0D1A6128B
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 13:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237423AbhEJLwU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 May 2021 07:52:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53416 "EHLO
+        id S240718AbhEJNW6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 May 2021 09:22:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241597AbhEJLiY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 May 2021 07:38:24 -0400
-X-Greylist: delayed 2404 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 10 May 2021 04:32:56 PDT
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC8CC0610D5;
-        Mon, 10 May 2021 04:32:56 -0700 (PDT)
-Received: from ip4d14bd53.dynamic.kabel-deutschland.de ([77.20.189.83] helo=[192.168.66.200]); authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1lg3Wn-0008EG-Lc; Mon, 10 May 2021 12:52:45 +0200
+        with ESMTP id S236863AbhEJNR0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 May 2021 09:17:26 -0400
+Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3A6C06138C;
+        Mon, 10 May 2021 06:16:19 -0700 (PDT)
+Received: by mail-wm1-x32b.google.com with SMTP id 82-20020a1c01550000b0290142562ff7c9so8868251wmb.3;
+        Mon, 10 May 2021 06:16:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Sh4i9feljTPFrIfpR/IU/E8n0D3Fda88xyQfypmum7w=;
+        b=GfQpYA/u/ESXNzCwhJN35I1L0Sb2vRVeukRNG83W8xG2OMlDA6+i5W0OODo/+LWE9E
+         ivWW5//Dci3M+PXPgJnH/odM7KtTO7yjQKrEe7KAvh4E7fvrd/ZuLkJAZP62sWtsDMuB
+         AIqgCRqoTLZzj0iGC6/REa3QuGlmZjiRxifV0mZYrMLJSap8JjiujnvbMmFTzTlx+O95
+         x9XnwiLNDr5qqWcsdoyW+ETG1hWAlzA+FW12aKJEwh2j5DlnppfpjkE6ahf9DAyZ8V+v
+         c4HLN0tsaWZM2+zfMzrOFU3u/mXI98pyg6LlDYSgFBtDuHlk1DmX0lhge4HX1KOLhtwA
+         z+4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Sh4i9feljTPFrIfpR/IU/E8n0D3Fda88xyQfypmum7w=;
+        b=cYGoVbnuzC8qi/rSzJ+ExaPcPY6WDiRnoQYrUOJUW/LDLaupeK70YlIz31CC6DpEIO
+         YjQqqXw2K1KRvLE2EmkMqZgmSNaOqjLw3WgaQER7nKYN78smSnUQvql/Lq9C3BYIAbbS
+         A89hiMUo84LxHpIIH5PXWbH2rmZnREpJ+CAq/H0QPEPvY3481ifRRLSpOK8Cv3AHyzwB
+         Y9C4Y5kQCgYC6MsNt9LSL+mATP7JJWBNR9KZjed7REYhOTmkJTYOrQnd1aSrwgzazjvo
+         Ixtv6yd4OPdU4nF7WYCxOtY9Watsai28mxpDWeEFK5xhy198jgxuKAvRFJqigderRiYZ
+         zU/w==
+X-Gm-Message-State: AOAM5320WfRdSTq1VXESkXjcB7G2WrDl9rtLEDxZcnwiFr7WOtK+XUaU
+        ikYqT3CuD1N4pbhEXWdxDhI=
+X-Google-Smtp-Source: ABdhPJysoQ4YBpE1J87NsTC/Z24p8NQqGLKPSudpVCmtLwZFhM2Wy0R7/k0aKiXMKdpTI23nPdYVEw==
+X-Received: by 2002:a05:600c:47d7:: with SMTP id l23mr36980376wmo.95.1620652578722;
+        Mon, 10 May 2021 06:16:18 -0700 (PDT)
+Received: from [192.168.1.122] (cpc159425-cmbg20-2-0-cust403.5-4.cable.virginm.net. [86.7.189.148])
+        by smtp.gmail.com with ESMTPSA id s1sm27945073wmj.8.2021.05.10.06.16.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 10 May 2021 06:16:17 -0700 (PDT)
 Subject: Re: [PATCH 00/53] Get rid of UTF-8 chars that can be mapped as ASCII
 To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        David Woodhouse <dwmw2@infradead.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
         alsa-devel@alsa-project.org, coresight@lists.linaro.org,
         dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
         intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
@@ -44,46 +76,63 @@ Cc:     linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
         mjpeg-users@lists.sourceforge.net, netdev@vger.kernel.org,
         rcu@vger.kernel.org, x86@kernel.org
 References: <cover.1620641727.git.mchehab+huawei@kernel.org>
-From:   Thorsten Leemhuis <linux@leemhuis.info>
-Message-ID: <c4479ced-f4d8-1a1e-ee54-9abc55344187@leemhuis.info>
-Date:   Mon, 10 May 2021 12:52:44 +0200
+ <2ae366fdff4bd5910a2270823e8da70521c859af.camel@infradead.org>
+ <20210510135518.305cc03d@coco.lan>
+From:   Edward Cree <ecree.xilinx@gmail.com>
+Message-ID: <df6b4567-030c-a480-c5a6-fe579830e8c0@gmail.com>
+Date:   Mon, 10 May 2021 14:16:16 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+ Thunderbird/78.5.0
 MIME-Version: 1.0
-In-Reply-To: <cover.1620641727.git.mchehab+huawei@kernel.org>
+In-Reply-To: <20210510135518.305cc03d@coco.lan>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-BS
+Content-Language: en-GB
 Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;linux@leemhuis.info;1620646377;def39258;
-X-HE-SMSGID: 1lg3Wn-0008EG-Lc
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On 10/05/2021 12:55, Mauro Carvalho Chehab wrote:
+> The main point on this series is to replace just the occurrences
+> where ASCII represents the symbol equally well
 
-On 10.05.21 12:26, Mauro Carvalho Chehab wrote:
->
-> As Linux developers are all around the globe, and not everybody has UTF-8
-> as their default charset, better to use UTF-8 only on cases where it is really
-> needed.
-> […]
-> The remaining patches on series address such cases on *.rst files and 
-> inside the Documentation/ABI, using this perl map table in order to do the
-> charset conversion:
-> 
-> my %char_map = (
-> […]
-> 	0x2013 => '-',		# EN DASH
-> 	0x2014 => '-',		# EM DASH
+> 	- U+2014 ('—'): EM DASH
+Em dash is not the same thing as hyphen-minus, and the latter does not
+ serve 'equally well'.  People use em dashes because — even in
+ monospace fonts — they make text easier to read and comprehend, when
+ used correctly.
+I accept that some of the other distinctions — like en dashes — are
+ needlessly pedantic (though I don't doubt there is someone out there
+ who will gladly defend them with the same fervour with which I argue
+ for the em dash) and I wouldn't take the trouble to use them myself;
+ but I think there is a reasonable assumption that when someone goes
+ to the effort of using a Unicode punctuation mark that is semantic
+ (rather than merely typographical), they probably had a reason for
+ doing so.
 
-I might be performing bike shedding here, but wouldn't it be better to
-replace those two with "--", as explained in
-https://en.wikipedia.org/wiki/Dash#Approximating_the_em_dash_with_two_or_three_hyphens
+> 	- U+2018 ('‘'): LEFT SINGLE QUOTATION MARK
+> 	- U+2019 ('’'): RIGHT SINGLE QUOTATION MARK
+> 	- U+201c ('“'): LEFT DOUBLE QUOTATION MARK
+> 	- U+201d ('”'): RIGHT DOUBLE QUOTATION MARK
+(These are purely typographic, I have no problem with dumping them.)
 
-For EM DASH there seems to be even "---", but I'd say that is a bit too
-much.
+> 	- U+00d7 ('×'): MULTIPLICATION SIGN
+Presumably this is appearing in mathematical formulae, in which case
+ changing it to 'x' loses semantic information.
 
-Or do you fear the extra work as some lines then might break the
-80-character limit then?
+> Using the above symbols will just trick tools like grep for no good
+> reason.
+NBSP, sure.  That one's probably an artefact of some document format
+ conversion somewhere along the line, anyway.
+But what kinds of things with × or — in are going to be grept for?
 
-Ciao, Thorsten
+If there are em dashes lying around that semantically _should_ be
+ hyphen-minus (one of your patches I've seen, for instance, fixes an
+ *en* dash moonlighting as the option character in an `ethtool`
+ command line), then sure, convert them.
+But any time someone is using a Unicode character to *express
+ semantics*, even if you happen to think the semantic distinction
+ involved is a pedantic or unimportant one, I think you need an
+ explicit grep case to justify ASCIIfying it.
+
+-ed
