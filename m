@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14608C43461
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 04:14:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5A8C433ED
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 04:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA146613DE
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 04:14:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2102261400
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 04:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbhEJEPf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 May 2021 00:15:35 -0400
-Received: from mail-ej1-f42.google.com ([209.85.218.42]:46030 "EHLO
-        mail-ej1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229933AbhEJEPe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 May 2021 00:15:34 -0400
-Received: by mail-ej1-f42.google.com with SMTP id u3so22359265eja.12
-        for <linux-pci@vger.kernel.org>; Sun, 09 May 2021 21:14:30 -0700 (PDT)
+        id S229933AbhEJEPh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 May 2021 00:15:37 -0400
+Received: from mail-ed1-f41.google.com ([209.85.208.41]:38572 "EHLO
+        mail-ed1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229934AbhEJEPg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 May 2021 00:15:36 -0400
+Received: by mail-ed1-f41.google.com with SMTP id n25so17077380edr.5
+        for <linux-pci@vger.kernel.org>; Sun, 09 May 2021 21:14:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XaBjjWzOw5dvTDC+qJZK86V8BlRmiuqHS5dgLumUkUo=;
-        b=iXmcqW0HEdmyYlu225A66jdg5vVSUtEFTRKd6aEYkZFVE4MfGw2KWidDwyzC6qf7DN
-         HDWADDsEALpcfEyCKZdTqjafgT9MlLPKYlXrvusUhJZXRrJ8xkrHs9TTEAunNWhAkGYs
-         5hg1hwMxT0GaopKnpZyAxcczABnXZi0o8aPVUZA4SJSvmhBINY7Zz+7/u1DmjqjZjkuC
-         yeEm3vzIrVi3VRdpiKQ4mFWiMPvfOmtYOwQMl6I4S5ML0m+wRLRGxWum42fuU+sCoiyO
-         tdNXRlXAsRtWWxlaofG/q8b/WW8Ei8PS0+gZHzuKpblKwtmJK/vptap+j4WdBo6yF7xg
-         TAvA==
-X-Gm-Message-State: AOAM530394KvNWSNVThKuTR8KG1cjO2ehRMpwHqcD4ZiZv06QW7MSu5Q
-        1JRhc3U6vF1zCYY7LZmI9KBrvt6QUcTfVQ==
-X-Google-Smtp-Source: ABdhPJyVN7OmrxmLXunnm+i/g7DrV7L4eUJP8vMwGRDaV0dhHNlOxv65JKYxSA9NZu4UydDdD9JbhQ==
-X-Received: by 2002:a17:906:5791:: with SMTP id k17mr23090058ejq.296.1620620069892;
-        Sun, 09 May 2021 21:14:29 -0700 (PDT)
+        bh=NDGawuhAJJmz73B7uj32A5EHuzQVuuXCnB1idlmDenc=;
+        b=QmFb4urJ6AS2jGPJ8x8tgE0wpvmwfgCZTDDQysixQ6kTyA25L3R5PU4IFMiukjFkPt
+         oe8GvQbksJStUKun7NIadkD9JhiDju/l2DKVNTuCx+HV+/1QTY7UkOVrnXsVy1lxlnnX
+         iXedOvCHW9v+xGegycpQNUBUD8YLQwIbjRqpCNJ9oxdhiXSw/BVJkF7mV17hYpfECGlW
+         W4j7oOXf/RrAAGE+NbWe3KXWBGHf6066xVLZiy7IZkBU49UV56BTm2CfeRxnSNza2ZCV
+         pZLnGENTWKMr6NINgRcMcG7x/xW5VX5zm78bxUtuLJ20JTeg7HqeL9ejPvGsT/+QDbNn
+         F1RQ==
+X-Gm-Message-State: AOAM531w4eAMka3b61xm8dFY00+lQcQpuoo6mezs+czE6jKlnvNq/cdy
+        RcZ0lV0sl/RvVzI0Ni4VVmA=
+X-Google-Smtp-Source: ABdhPJw8BjAeTOvXx1PzuicEvr2+9Hf6xbz/9p3ioUyMet+u4++O7hAY0Cmr1uZkz9NsrtS4fa+y9Q==
+X-Received: by 2002:a05:6402:702:: with SMTP id w2mr12541384edx.85.1620620072032;
+        Sun, 09 May 2021 21:14:32 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id e4sm8165006ejh.98.2021.05.09.21.14.28
+        by smtp.gmail.com with ESMTPSA id e4sm8165006ejh.98.2021.05.09.21.14.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 09 May 2021 21:14:29 -0700 (PDT)
+        Sun, 09 May 2021 21:14:31 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     "Oliver O'Halloran" <oohall@gmail.com>,
@@ -52,9 +52,9 @@ Cc:     "Oliver O'Halloran" <oohall@gmail.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
         Logan Gunthorpe <logang@deltatee.com>,
         linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 05/11] PCI/IOV: Use sysfs_emit() and sysfs_emit_at() in "show" functions
-Date:   Mon, 10 May 2021 04:14:18 +0000
-Message-Id: <20210510041424.233565-5-kw@linux.com>
+Subject: [PATCH 07/11] PCI/ASPM: Use sysfs_emit() and sysfs_emit_at() in "show" functions
+Date:   Mon, 10 May 2021 04:14:20 +0000
+Message-Id: <20210510041424.233565-7-kw@linux.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210510041424.233565-1-kw@linux.com>
 References: <20210510041424.233565-1-kw@linux.com>
@@ -83,67 +83,31 @@ Related to:
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/iov.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pcie/aspm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index afc06e6ce115..a71258347323 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -346,7 +346,7 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
- {
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index ac0557a305af..013a47f587ce 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1208,7 +1208,7 @@ static ssize_t aspm_attr_show_common(struct device *dev,
  	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
  
--	return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
-+	return sysfs_emit(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
+-	return sprintf(buf, "%d\n", (link->aspm_enabled & state) ? 1 : 0);
++	return sysfs_emit(buf, "%d\n", (link->aspm_enabled & state) ? 1 : 0);
  }
  
- static ssize_t sriov_numvfs_show(struct device *dev,
-@@ -361,7 +361,7 @@ static ssize_t sriov_numvfs_show(struct device *dev,
- 	num_vfs = pdev->sriov->num_VFs;
- 	device_unlock(&pdev->dev);
- 
--	return sprintf(buf, "%u\n", num_vfs);
-+	return sysfs_emit(buf, "%u\n", num_vfs);
- }
- 
- /*
-@@ -435,7 +435,7 @@ static ssize_t sriov_offset_show(struct device *dev,
- {
+ static ssize_t aspm_attr_store_common(struct device *dev,
+@@ -1265,7 +1265,7 @@ static ssize_t clkpm_show(struct device *dev,
  	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
  
--	return sprintf(buf, "%u\n", pdev->sriov->offset);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->offset);
+-	return sprintf(buf, "%d\n", link->clkpm_enabled);
++	return sysfs_emit(buf, "%d\n", link->clkpm_enabled);
  }
  
- static ssize_t sriov_stride_show(struct device *dev,
-@@ -444,7 +444,7 @@ static ssize_t sriov_stride_show(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%u\n", pdev->sriov->stride);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->stride);
- }
- 
- static ssize_t sriov_vf_device_show(struct device *dev,
-@@ -453,7 +453,7 @@ static ssize_t sriov_vf_device_show(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%x\n", pdev->sriov->vf_device);
-+	return sysfs_emit(buf, "%x\n", pdev->sriov->vf_device);
- }
- 
- static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
-@@ -462,7 +462,7 @@ static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->drivers_autoprobe);
- }
- 
- static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+ static ssize_t clkpm_store(struct device *dev,
 -- 
 2.31.1
 
