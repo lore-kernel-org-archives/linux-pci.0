@@ -2,247 +2,168 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0437EC433ED
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 22:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 063A2C433ED
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 23:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C996B61584
-	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 22:57:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD4CC611BF
+	for <linux-pci@archiver.kernel.org>; Mon, 10 May 2021 23:40:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229561AbhEJW6q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 May 2021 18:58:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34740 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229502AbhEJW6p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 May 2021 18:58:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0031761581;
-        Mon, 10 May 2021 22:57:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620687460;
-        bh=NTRA6l2RXVf53003Xt08bZ/H85OwvjJ6Zstq5QNAVO8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=s/7f2xqr+mYTxz/VJsntbYVA7DFgpH5WFnqTLBIdt0CZqrSuWBwMpA+DVbXpIUVpP
-         NvKsmf2sGoHi/uJ9xxQtoW3TiWJwWVqZCbscB7C7/OmpwopJUPiL4GkL2OGKz7wN3I
-         b3QH6ZgDuXwlmRF5H2ihkDlWPRSfgU5070ZmtXzmP44Wy3B6M5+FR48qF4lTU3VxI3
-         l++SL9HTf91ssKPeZj+L9uzS3h4Acgdhl0aPcbjjlo1o7hc69A8pi6MlAllKj4pvxM
-         K5IF9Jn9VH9r6fXfkbm41SZfvdc19RcI046mU8EeDoaHKmxO35gOCQ142Vt3vUfx+z
-         V/QLQIDcaaVRw==
-Date:   Mon, 10 May 2021 17:57:33 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Slivka, Danijel" <Danijel.Slivka@amd.com>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Subject: Re: [PATCH] PCI: Fix accessing freed memory in
- pci_remove_resource_files
-Message-ID: <20210510225733.GA2307664@bjorn-Precision-5520>
+        id S229973AbhEJXlq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 May 2021 19:41:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229561AbhEJXlp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 May 2021 19:41:45 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 247E0C061574;
+        Mon, 10 May 2021 16:40:40 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id w15so22856105ljo.10;
+        Mon, 10 May 2021 16:40:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4x0vN9DJqs7gJDwDfxyEg064VHqNhSWYWI838BdyA6Y=;
+        b=bv+qY0q2mO9tHNg79PZMj8hkZ9C8rxnsgQTKmo/G7H1nlKCoAMKWz7Bw0X25Cou4jU
+         IknSAu6Jq8pZ0M5/91i+w6wG4XX8btm6dMQ4QFmGR0GTRhQmZhLliRXUAc68CBtoLBMI
+         ZLLX7kJV2Ld+if87BOnwOGqel6FQy3k1Knai6gSjVXUWyvNVwKauZp1dvovV0JEEoyP4
+         mhjO8CFhNjZcmPzwVRv/e7dLqnoxbrqGKHCwXpJQFAX+vMR6ajjmjV5EVsLMhxyVDc+d
+         5LxZ/932j4mszXXmeMlynvNsST6XOZQer9Fkk/r4ycNUG4aa4q957Zd9eyp6g63OCS/C
+         6LoA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4x0vN9DJqs7gJDwDfxyEg064VHqNhSWYWI838BdyA6Y=;
+        b=QcPkAQMYd7tM5t30Mda+qYjjFvq3l7UqPnG37y7pb4+Eymz7FpSfglS08tCGMybkvx
+         XsqPGT+3ktnhAwVrxnb0VDh4EwoteapVa4+DtjeI6dE2+rSDfy16z0Gp1PVSCg1Qgo0P
+         /8tKn55X7csDXxx7BzacxhXrz7RzSANu6IoSVOkhxkbUcI0oYL0gUp9lvRZNf0WiVnIC
+         t1sYzv3FOPeI14tJzuPvDJjJDzBe0R7SrAVGpyeFMBAC3O1LQVHe6pzHfr5YiE3thdjd
+         CvWg2JQyQSq8gvHg0ZYQpAp/MNOuDTZ2dnFjH8Jihv9T3gLoZXDCpzsnYsd0eLq5ijsR
+         y9eQ==
+X-Gm-Message-State: AOAM532a11OoF5pjN2dar8Mjhw0p1yhD08FYCI0CBjH4ST0DgPYiFIrh
+        uqFOrVC1Gv15drRpeNeuOqU=
+X-Google-Smtp-Source: ABdhPJzQrUm5bDZEPSU5ieS3hk7r8BouKV4qqzcZDrrRCosV82J5oK0C5TjXP9oalqSbpSSxLWqE+Q==
+X-Received: by 2002:a2e:9b82:: with SMTP id z2mr19980857lji.366.1620690038713;
+        Mon, 10 May 2021 16:40:38 -0700 (PDT)
+Received: from xws.localdomain ([37.58.58.229])
+        by smtp.gmail.com with ESMTPSA id z12sm2398926lfe.195.2021.05.10.16.40.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 May 2021 16:40:38 -0700 (PDT)
+From:   Maximilian Luz <luzmaximilian@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Maximilian Luz <luzmaximilian@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [RFC PATCH] Revert "arm64: PCI: Exclude ACPI "consumer" resources from host bridge windows"
+Date:   Tue, 11 May 2021 01:40:20 +0200
+Message-Id: <20210510234020.1330087-1-luzmaximilian@gmail.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5d5f4f33c3f34830b37cbd70e421023b@amd.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Krzysztof]
+The Microsoft Surface Pro X has host bridges defined as
 
-See https://people.kernel.org/tglx/notes-about-netiquette about
-typical style for Linux mailing lists.
+    Name (_HID, EisaId ("PNP0A08") /* PCI Express Bus */)  // _HID: Hardware ID
+    Name (_CID, EisaId ("PNP0A03") /* PCI Bus */)  // _CID: Compatible ID
 
-On Mon, May 10, 2021 at 03:02:45PM +0000, Slivka, Danijel wrote:
-> Hi Bjorn,
-> 
-> Yes, I get segmentation fault on unloading custom module during the
-> check of error handling case.
->
-> There is no directly visible access to res_attr fields, as you
-> mentioned, other than the one in a call chain after a check in
-> pci_remove_resource_files() which seems to cause the issue
-> (accessing name).
->
-> Load and unload module will invoke pci_enable_sriov() and
-> disable_pci_sriov() respectively that are both having a call of
-> pci_remove_resource_files() in call chain.
->
-> In that function existing check is not behaving as expected since
-> memory is freed but pointers left dangling. 
->
-> Below is call trace and detail description. 
-> 
-> During loading of module pci_enable_sriov() is called, I have
-> following invoking sequence:
->
-> device_create_file
-> pci_create_capabilities_sysfs
-> pci_create_sysfs_dev_files
-> pci_bus_add_device
-> pci_iov_add_virtfn
-> sriov_enable
-> pci_enable_sriov
+    Method (_CRS, 0, NotSerialized)  // _CRS: Current Resource Settings
+    {
+        Name (RBUF, ResourceTemplate ()
+        {
+            Memory32Fixed (ReadWrite,
+                0x60200000,         // Address Base
+                0x01DF0000,         // Address Length
+                )
+            WordBusNumber (ResourceProducer, MinFixed, MaxFixed, PosDecode,
+                0x0000,             // Granularity
+                0x0000,             // Range Minimum
+                0x0001,             // Range Maximum
+                0x0000,             // Translation Offset
+                0x0002,             // Length
+                ,, )
+        })
+        Return (RBUF) /* \_SB_.PCI0._CRS.RBUF */
+    }
 
-OK.  For anybody following along, this call path changed in v5.13-rc1,
-so pci_create_capabilities_sysfs() longer exists.  But looking at
-v5.12, I think the sequence you're seeing is:
+meaning that the memory resources aren't (explicitly) defined as
+"producers", i.e. host bridge windows.
 
-  pci_create_sysfs_dev_files
-    pci_create_capabilities_sysfs
-      retval = device_create_file(&dev->dev, &dev_attr_reset)
-      return retval		# I guess this what failed, right?
-    if (retval) goto err_rom_file
-    err_rom_file:
-    ...
-    pci_remove_resource_files
-      sysfs_remove_bin_file(pdev->res_attr[i])
-      kfree(pdev->res_attr[i])
-      # pdev->res_attr[i] not set to NULL in v5.12
+Commit 8fd4391ee717 ("arm64: PCI: Exclude ACPI "consumer" resources from
+host bridge windows") introduced a check that removes such resources,
+causing BAR allocation failures later on:
 
-Later, on module unload, we have this sequence:
+    [ 0.150731] pci 0002:00:00.0: BAR 14: no space for [mem size 0x00100000]
+    [ 0.150744] pci 0002:00:00.0: BAR 14: failed to assign [mem size 0x00100000]
+    [ 0.150758] pci 0002:01:00.0: BAR 0: no space for [mem size 0x00004000 64bit]
+    [ 0.150769] pci 0002:01:00.0: BAR 0: failed to assign [mem size 0x00004000 64bit]
 
-  pci_disable_sriov
-    sriov_disable
-      sriov_del_vfs
-        pci_iov_remove_virtfn
-          pci_stop_and_remove_bus_device
-            pci_stop_bus_device
-              pci_stop_dev
-                pci_remove_sysfs_dev_files
-                  pci_remove_resource_files
-                    sysfs_remove_bin_file(pdev->res_attr[i])
-                    # pdev->res_attr[i] points to a freed object
+This eventually prevents the PCIe NVME drive from being accessible.
 
-Definitely seems like a problem.  Hmmm.  I'm not really a fan of
-checking the pointer to see whether it's been freed.  That seems like
-a band-aid.
+On x86 we already skip the check for producer/window due to some history
+with negligent firmware. It seems that Microsoft is intent on continuing
+that history on their ARM devices, so let's drop that check here too.
 
-Krzysztof did some really nice work in v5.13-rc1 that removes a lot of
-the explicit sysfs file management.  I think he's planning similar
-work for pdev->res_attr[], and I suspect that will solve this problem
-nicely.  But there are some wrinkles to work out before that's ready.
+Signed-off-by: Maximilian Luz <luzmaximilian@gmail.com>
+---
 
-Any ideas here, Krzysztof?  IIRC some of the wrinkles have to do with
-Alpha, which has its own pci_create_resource_files() implementation.
-If you have any work-in-progress that works on x86, I'd be curious to
-see if it would solve Danijel's problem.
+Please note: I am not sure if this is the right way to fix that, e.g. I
+don't know if any additional checks like on IA64 or x86 might be
+required instead, or if this might break things on other devices. So
+please consider this more as a bug report rather than a fix.
 
-> In case of a failure of device_create_file() for dev_attr_reset case
-> (which was the case I tested), it will call
-> pci_remove_resource_files(), which will free both, res_attr and
-> res_attr_wc array elements (pointers) without setting them to NULL.
->
-> Then failure is propagated only up to  pci_create_sysfs_dev_files
-> and return value is not checked inside of pci_bus_add_device.
->
-> That causes the same behavior as pci_enable_sriov function passed. 
-> 
-> On unload, during pci_disable_sriov(), pci_remove_resource_files()
-> will be regularly called to try to remove the files.
->
-> The check segment that currently exist will not prevent calling of
-> removal code since pointers are left as dangling pointers, even
-> though the resource files and attributes are already freed.
->
-> 
-> 		res_attr = pdev->res_attr[i];
-> 		if (res_attr) {
-> 			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
-> 			kfree(res_attr);
-> 		}
-> 
-> Attribute res_attr[i]->name is the one causing segmentation fault
-> when strlen() function is called in kernfs_name_hash().
+Apologies for the re-send, I seem to have unintentionally added a blank
+line before the subject.
 
-I think the "sysfs_remove_bin_file(pdev->res_attr[i])" is clearly
-wrong because we're passing a pointer to memory that has already been
-freed.
+---
+ arch/arm64/kernel/pci.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-> Here is the call trace:
-> 
-> [  991.796300] RIP: 0010:strlen+0x0/0x30
-> [  991.807240] Code: f8 48 89 fa 48 89 e5 74 09 48 83 c2 01 80 3a 00 75 f7 48 83 c6 01 0f b6 4e ff 48 83 c2 01 84 c9 88 4a ff 75 ed 5d c3 0f 1f 00 <80> 3f 00 55 48 89 e5 74 14 48 89 f8 48 83 c7 01 80 3f 00 75 f7 48
-> [  991.863423] RSP: 0018:ffffc1d68a9ffb80 EFLAGS: 00010246
-> [  991.879051] RAX: 0000000000000000 RBX: b5f8d4ce837e84cb RCX: 0000000000000000
-> [  991.900395] RDX: 0000000000000000 RSI: 0000000000000000 RDI: b5f8d4ce837e84cb
-> [  991.921739] RBP: ffffc1d68a9ffb98 R08: 0000000000000000 R09: ffffffff96964e01
-> [  991.943086] R10: ffffc1d68a9ffb78 R11: 0000000000000001 R12: 0000000000000000
-> [  991.964432] R13: 0000000000000000 R14: b5f8d4ce837e84cb R15: 0000000000000038
-> [  991.985777] FS:  00007f3c278b3740(0000) GS:ffffa0a61f740000(0000) knlGS:0000000000000000
-> [  992.009983] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  992.027168] CR2: 00007f3c27920340 CR3: 000000074c010004 CR4: 00000000003606e0
-> [  992.048516] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [  992.069861] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> [  992.091205] Call Trace:
-> [  992.098523]  ? kernfs_name_hash+0x17/0x80
-> [  992.110499]  kernfs_find_ns+0x3a/0xc0
-> [  992.121448]  kernfs_remove_by_name_ns+0x36/0xa0
-> [  992.134994]  sysfs_remove_bin_file+0x17/0x20
-> [  992.147760]  pci_remove_resource_files+0x38/0x80
-> [  992.161565]  pci_remove_sysfs_dev_files+0x5b/0xc0
-> [  992.175631]  pci_stop_bus_device+0x78/0x90
-> [  992.187875]  pci_stop_and_remove_bus_device+0x12/0x20
-> [  992.202983]  pci_iov_remove_virtfn+0xc3/0x110
-> [  992.216006]  sriov_disable+0x43/0x100
-> [  992.226953]  pci_disable_sriov+0x23/0x30
-> 
-> BR,
-> Danijel Slivka
-> 
-> -----Original Message-----
-> From: Bjorn Helgaas <helgaas@kernel.org> 
-> Sent: Saturday, May 8, 2021 12:07 AM
-> To: Slivka, Danijel <Danijel.Slivka@amd.com>
-> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH] PCI: Fix accessing freed memory in pci_remove_resource_files
-> 
-> Hi Danijel,
-> 
-> Thanks for the patch.
-> 
-> On Fri, May 07, 2021 at 06:27:06PM +0800, Danijel Slivka wrote:
-> > This patch fixes segmentation fault during accessing already freed pci 
-> > device resource files, as after freeing res_attr and res_attr_wc 
-> > elements, in pci_remove_resource_files function, they are left as 
-> > dangling pointers.
-> > 
-> > Signed-off-by: Danijel Slivka <danijel.slivka@amd.com>
-> > ---
-> >  drivers/pci/pci-sysfs.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c index 
-> > f8afd54ca3e1..bbdf6c57fcda 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -1130,12 +1130,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
-> >  		if (res_attr) {
-> >  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
-> >  			kfree(res_attr);
-> > +			pdev->res_attr[i] = NULL;
-> >  		}
-> >  
-> >  		res_attr = pdev->res_attr_wc[i];
-> >  		if (res_attr) {
-> >  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
-> >  			kfree(res_attr);
-> > +			pdev->res_attr_wc[i] = NULL;
-> 
-> If this patch fixes something, I would expect to see a test like this
-> somewhere:
-> 
->   if (pdev->res_attr[i])
->     pdev->res_attr[i]->size = 0;
-> 
-> But I don't see anything like that, so I can't figure out where we actually use res_attr[i] or res_attr_wc[i], except in
-> pci_remove_resource_files() itself.
-> 
-> Did you actually see a segmentation fault?  If so, where?
-> 
-> >  		}
-> >  	}
-> >  }
-> > --
-> > 2.20.1
-> > 
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 1006ed2d7c60..80f87fe0a2b8 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -94,19 +94,6 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
+-static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+-{
+-	struct resource_entry *entry, *tmp;
+-	int status;
+-
+-	status = acpi_pci_probe_root_resources(ci);
+-	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
+-		if (!(entry->res->flags & IORESOURCE_WINDOW))
+-			resource_list_destroy_entry(entry);
+-	}
+-	return status;
+-}
+-
+ /*
+  * Lookup the bus range for the domain in MCFG, and set up config space
+  * mapping.
+@@ -184,7 +171,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	root_ops->release_info = pci_acpi_generic_release_info;
+-	root_ops->prepare_resources = pci_acpi_root_prepare_resources;
+ 	root_ops->pci_ops = (struct pci_ops *)&ri->cfg->ops->pci_ops;
+ 	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+ 	if (!bus)
+-- 
+2.31.1
+
