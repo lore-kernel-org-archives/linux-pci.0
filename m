@@ -2,115 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63393C433ED
-	for <linux-pci@archiver.kernel.org>; Tue, 11 May 2021 06:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69497C433B4
+	for <linux-pci@archiver.kernel.org>; Tue, 11 May 2021 08:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41AD6616EB
-	for <linux-pci@archiver.kernel.org>; Tue, 11 May 2021 06:56:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A51F61155
+	for <linux-pci@archiver.kernel.org>; Tue, 11 May 2021 08:11:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230182AbhEKG5K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 May 2021 02:57:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58896 "EHLO
+        id S229935AbhEKIMz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 May 2021 04:12:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229931AbhEKG5K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 May 2021 02:57:10 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9B9C061574
-        for <linux-pci@vger.kernel.org>; Mon, 10 May 2021 23:56:03 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id l4so28133140ejc.10
-        for <linux-pci@vger.kernel.org>; Mon, 10 May 2021 23:56:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=1toSUP/AaDQn+kpmlAa3khwelYYn5sPMI8SmjGTagCQ=;
-        b=N/J54ruGrwq8pFl23R0IhoJx5i5wz54wTHbAhpylgexUUJ7nBAq4f942QlHcIssvJG
-         X+If8eJtXAJ4mCMZ+LuRjODG8BmDmVsINFFfgUHGqHPUKDRjAOi4sXcSbvzk/K9M+Zcg
-         7f0j8T0fSMu2k83PwnQ7PTR08uSCRRNR7T37VCojHcqcyhbD5iseJgf5gSt9aT0+oQjH
-         7B1fSfggVhA035Co+rwxVP/fAOpzv8oNzsLRLXdqQEOIYKOT2bVVHULwv2fiAF1mRb0H
-         vay8+a3E4NEIjMCstMTt9hNAUMq4o+d2K5Tn+/aOJJ1QinOGaD6Ktr/DvmBNGPh/GcTo
-         apsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=1toSUP/AaDQn+kpmlAa3khwelYYn5sPMI8SmjGTagCQ=;
-        b=JUq4w28PIhaFqFM6FFAW4B7voNdM/IXEWLt4niIvrs1KXG0VSPOSWC6Qq2gWFKongb
-         xs6Odv+estanYMfB98MlKa7/ZXZQCbHEZPYKM76yDL9ugtHIWphpyqyBy92WlOQkCmns
-         xR9NjEdNiwiTkJQFqHDfcbgxgpTNHJLXDV4E6UZT1BwcQmNs7eWTC103gVlc6J1bdHPw
-         BAj/S1CJXrqMVkmajHIjv3u0u1qzKNKbZSauSWODx4rLOWgXgGXnlPGy4Koa43C4N/cZ
-         N9sUmFWadDSbkCEfb3PZX+5g2IbWRHgyHSl831k1xJ4d/nzLVz4GrcOPwqn6f/auUHmH
-         oSow==
-X-Gm-Message-State: AOAM5320Od0KXN30lwAnFZQq+VbbTvUDXHMEOOFu69jAvlx/q2jLCRWd
-        0ytTBxcqPgAOAtZTHoSjj+s=
-X-Google-Smtp-Source: ABdhPJz2Xs+emszyd7P6ez0qEzKjruy/WoTOQ1rs7N8d7ThB9eLy0tSAfXUL8Y8cv7KFVTtVFChCbg==
-X-Received: by 2002:a17:906:8307:: with SMTP id j7mr28982463ejx.420.1620716161994;
-        Mon, 10 May 2021 23:56:01 -0700 (PDT)
-Received: from ?IPv6:2a02:908:1252:fb60:c3ab:ee01:d547:2c4e? ([2a02:908:1252:fb60:c3ab:ee01:d547:2c4e])
-        by smtp.gmail.com with ESMTPSA id w6sm8003653edc.25.2021.05.10.23.56.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 May 2021 23:56:01 -0700 (PDT)
-Subject: Re: [PATCH v6 16/16] drm/amdgpu: Verify DMA opearations from device
- are done
-To:     Andrey Grodzovsky <andrey.grodzovsky@amd.com>,
-        dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-        linux-pci@vger.kernel.org, daniel.vetter@ffwll.ch,
-        Harry.Wentland@amd.com
-Cc:     ppaalanen@gmail.com, Alexander.Deucher@amd.com,
-        gregkh@linuxfoundation.org, helgaas@kernel.org,
-        Felix.Kuehling@amd.com
-References: <20210510163625.407105-1-andrey.grodzovsky@amd.com>
- <20210510163625.407105-17-andrey.grodzovsky@amd.com>
-From:   =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
-Message-ID: <2660cf0e-d312-787d-3100-8e1006d8cc35@gmail.com>
-Date:   Tue, 11 May 2021 08:56:00 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        with ESMTP id S230130AbhEKIMz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 May 2021 04:12:55 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BC0EC061574
+        for <linux-pci@vger.kernel.org>; Tue, 11 May 2021 01:11:49 -0700 (PDT)
+Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=[IPv6:::1])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1lgNUV-0001xi-Cn; Tue, 11 May 2021 10:11:43 +0200
+Message-ID: <854ec10d9a32df97d1f53a784dffca4e5036b059.camel@pengutronix.de>
+Subject: Re: [PATCH 3/7] PCI: imx6: Rework PHY search and mapping
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        kernel@pengutronix.de, patchwork-lst@pengutronix.de
+Date:   Tue, 11 May 2021 10:11:42 +0200
+In-Reply-To: <20210510170510.GA276768@robh.at.kernel.org>
+References: <20210510141509.929120-1-l.stach@pengutronix.de>
+         <20210510141509.929120-3-l.stach@pengutronix.de>
+         <20210510170510.GA276768@robh.at.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.1 (3.40.1-1.fc34) 
 MIME-Version: 1.0
-In-Reply-To: <20210510163625.407105-17-andrey.grodzovsky@amd.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 10.05.21 um 18:36 schrieb Andrey Grodzovsky:
-> In case device remove is just simualted by sysfs then verify
-> device doesn't keep doing DMA to the released memory after
-> pci_remove is done.
->
-> Signed-off-by: Andrey Grodzovsky <andrey.grodzovsky@amd.com>
+Am Montag, dem 10.05.2021 um 12:05 -0500 schrieb Rob Herring:
+> On Mon, May 10, 2021 at 04:15:05PM +0200, Lucas Stach wrote:
+> > We don't need to have a phandle of the PHY, as we know the compatible
+> > of the node we are looking for. This will make it easier to put add
+> > more PHY handling for new generations later on, where the
+> > "fsl,imx7d-pcie-phy" phandle would be a misnomer.
+> > 
+> > Also we can use a helper function to get the resource for us,
+> > simplifying out driver code a bit.
+> 
+> Better yes, but really all the phy handling should be split out to 
+> its own driver even in the older h/w with shared phy registers.
+> 
+That would be a quite massive DT binding changing break, possibly even
+a separate driver. Maybe it's time to do this for i.MX8MM, as the
+current driver just kept piling on special cases for "almost the same"
+hardware that by now looks quite different to the original i.MX6 PCIe
+integration this driver was supposed to handle.
 
-Acked-by: Christian König <christian.koenig@amd.com>
+> Soon as there's a chip with 2 PCI hosts, you're going to need the phy 
+> binding.
 
-> ---
->   drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c | 6 ++++++
->   1 file changed, 6 insertions(+)
->
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-> index 83006f45b10b..5e6af9e0b7bf 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-> @@ -1314,7 +1314,13 @@ amdgpu_pci_remove(struct pci_dev *pdev)
->   	drm_dev_unplug(dev);
->   	amdgpu_driver_unload_kms(dev);
->   
-> +	/*
-> +	 * Flush any in flight DMA operations from device.
-> +	 * Clear the Bus Master Enable bit and then wait on the PCIe Device
-> +	 * StatusTransactions Pending bit.
-> +	 */
->   	pci_disable_device(pdev);
-> +	pci_wait_for_pending_transaction(pdev);
->   }
->   
->   static void
+Uh, there even is a chip like that already (i.MX8MQ), it just happened
+to not require any handling of the PHY registers. Don't know why I
+didn't think of this. :/
+
+Regards,
+Lucas
+
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt  |  5 ++---
+> >  drivers/pci/controller/dwc/pci-imx6.c           | 17 +++++------------
+> >  2 files changed, 7 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > index de4b2baf91e8..308540df99ef 100644
+> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > @@ -54,7 +54,6 @@ Additional required properties for imx7d-pcie and imx8mq-pcie:
+> >  	       - "pciephy"
+> >  	       - "apps"
+> >  	       - "turnoff"
+> > -- fsl,imx7d-pcie-phy: A phandle to an fsl,imx7d-pcie-phy node.
+> >  
+> >  Additional required properties for imx8mq-pcie:
+> >  - clock-names: Must include the following additional entries:
+> > @@ -88,8 +87,8 @@ Example:
+> >  
+> >  * Freescale i.MX7d PCIe PHY
+> >  
+> > -This is the PHY associated with the IMX7d PCIe controller.  It's used by the
+> > -PCI-e controller via the fsl,imx7d-pcie-phy phandle.
+> > +This is the PHY associated with the IMX7d PCIe controller.  It's looked up by
+> > +the PCI-e controller via the fsl,imx7d-pcie-phy compatible.
+> >  
+> >  Required properties:
+> >  - compatible:
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> > index 922c14361cd3..5e13758222e8 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -555,7 +555,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+> >  			writel(PCIE_PHY_CMN_REG26_ATT_MODE,
+> >  			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG26);
+> >  		} else {
+> > -			dev_warn(dev, "Unable to apply ERR010728 workaround. DT missing fsl,imx7d-pcie-phy phandle ?\n");
+> > +			dev_warn(dev, "Unable to apply ERR010728 workaround. DT missing fsl,imx7d-pcie-phy node?\n");
+> >  		}
+> >  
+> >  		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
+> > @@ -970,7 +970,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+> >  	struct device *dev = &pdev->dev;
+> >  	struct dw_pcie *pci;
+> >  	struct imx6_pcie *imx6_pcie;
+> > -	struct device_node *np;
+> > +	struct device_node *np = NULL;
+> >  	struct resource *dbi_base;
+> >  	struct device_node *node = dev->of_node;
+> >  	int ret;
+> > @@ -991,17 +991,10 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+> >  	imx6_pcie->pci = pci;
+> >  	imx6_pcie->drvdata = of_device_get_match_data(dev);
+> >  
+> > -	/* Find the PHY if one is defined, only imx7d uses it */
+> > -	np = of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
+> > +	/* Find the PHY if one is present in DT, only imx7d uses it */
+> > +	np = of_find_compatible_node(NULL, NULL, "fsl,imx7d-pcie-phy");
+> >  	if (np) {
+> > -		struct resource res;
+> > -
+> > -		ret = of_address_to_resource(np, 0, &res);
+> > -		if (ret) {
+> > -			dev_err(dev, "Unable to map PCIe PHY\n");
+> > -			return ret;
+> > -		}
+> > -		imx6_pcie->phy_base = devm_ioremap_resource(dev, &res);
+> > +		imx6_pcie->phy_base = devm_of_iomap(dev, np, 0, NULL);
+> >  		if (IS_ERR(imx6_pcie->phy_base)) {
+> >  			dev_err(dev, "Unable to map PCIe PHY\n");
+> >  			return PTR_ERR(imx6_pcie->phy_base);
+> > -- 
+> > 2.29.2
+> > 
+
 
