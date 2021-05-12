@@ -4,33 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0653C43603
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B590FC4363C
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 929F761430
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ED856143D
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244913AbhELSYM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 14:24:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52446 "EHLO mail.kernel.org"
+        id S245203AbhELSYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 14:24:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55186 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352886AbhELSEZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 May 2021 14:04:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6CF5161412;
-        Wed, 12 May 2021 18:03:15 +0000 (UTC)
+        id S1349973AbhELSKR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 May 2021 14:10:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 684F96193E;
+        Wed, 12 May 2021 18:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842596;
-        bh=lQVEHXpOkP+0xKhQL1ij6j/rrt8ZABA81dSlc2Bmugo=;
+        s=k20201202; t=1620842729;
+        bh=84ey2UjrGv61T0itePr91cHQ3aTRkpF+WMV1VJ404U4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SZKmukidSLUaAq2pgDFWyegg3FHCLtLKRxix+xMnsP26qLAa1KIyxx6D9zSZf/HXD
-         6pnCBu/dO9Xte0NokpVZYxnJjbHk0C9RgALhiKBH7b6k0xCr14qHgRlGNuUSldQfh4
-         rax7OZzlBj7NDtbphPFj3iHYqQNTDedoCWoERGm3NuLwHWcrxVhwTWLnEVg+z45dLP
-         GkN3tzK8wkEK2wKdtqEl1f8ygehDBFLFTqYYZqz9Jz4r0o2cRK4t/2mRaDwS/hPmoi
-         b4uZV2/cc/+jgir9+ewYb7gr6T6YJwcusdY+eEhpuy5Itmrs+rXhhi077gl8/QOrNA
-         OvLyrmKUu0xWg==
+        b=hxvFUaoQyUjjghhZt4BRIvt5bawWTXHW0OxRmlBssxJsYMIc4v2TXp+Hb4zndBWnO
+         urj/NDAniJdGfpyll4sy+2tYIyqgeL4bFx75Xv2/chrEvceDi8wYbBjiQUryJLLEob
+         DB6pJnTsGIQbmmlhi0mHqvTUEPrDfNIcfdvawesY3WMC6LUs4R6R13ujFpYcNa2K5K
+         sgcSQ2Ipnx0eEku9aduRq7dXc9Usg4rw9aLXiRo8O4h2/s3OHb6uHnacviuMmq348G
+         cWsmgx+No+e2uvkalEjru/grJg6tx1RpRgcC7bho63i00DDx+if3QcjL+SIdmc6H4a
+         9J7TfAjraas2A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Feilong Lin <linfeilong@huawei.com>,
@@ -39,12 +39,12 @@ Cc:     Feilong Lin <linfeilong@huawei.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 06/34] ACPI / hotplug / PCI: Fix reference count leak in enable_slot()
-Date:   Wed, 12 May 2021 14:02:37 -0400
-Message-Id: <20210512180306.664925-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/12] ACPI / hotplug / PCI: Fix reference count leak in enable_slot()
+Date:   Wed, 12 May 2021 14:05:14 -0400
+Message-Id: <20210512180522.665788-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180306.664925-1-sashal@kernel.org>
-References: <20210512180306.664925-1-sashal@kernel.org>
+In-Reply-To: <20210512180522.665788-1-sashal@kernel.org>
+References: <20210512180522.665788-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,11 +77,11 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 3365c93abf0e..f031302ad401 100644
+index f2c1008e0f76..40e936e3a480 100644
 --- a/drivers/pci/hotplug/acpiphp_glue.c
 +++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -533,6 +533,7 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
- 			slot->flags &= ~SLOT_ENABLED;
+@@ -509,6 +509,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 			slot->flags &= (~SLOT_ENABLED);
  			continue;
  		}
 +		pci_dev_put(dev);
