@@ -2,132 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADBDC43462
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEFD5C4363C
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 15:50:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0276961370
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2A136141C
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 15:50:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231192AbhELOjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 10:39:15 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2645 "EHLO
-        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231310AbhELOjL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 10:39:11 -0400
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FgHP81lGFzQmVD;
-        Wed, 12 May 2021 22:34:36 +0800 (CST)
-Received: from SZX1000464847.huawei.com (10.21.59.169) by
- DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
- 14.3.498.0; Wed, 12 May 2021 22:37:56 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-To:     <helgaas@kernel.org>, <hch@infradead.org>,
-        <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
-        <verkuil-cisco@xs4all.nl>
-CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V3 4/6] PCI: Enable 10-Bit tag support for PCIe Endpoint devices
-Date:   Wed, 12 May 2021 22:37:35 +0800
-Message-ID: <20210512143737.42352-5-liudongdong3@huawei.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210512143737.42352-1-liudongdong3@huawei.com>
-References: <20210512143737.42352-1-liudongdong3@huawei.com>
+        id S234630AbhELPv7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 11:51:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49178 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235091AbhELPfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 May 2021 11:35:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 455F961C3E;
+        Wed, 12 May 2021 15:17:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1620832672;
+        bh=zB2G4t5ozyJ72g68BGRplKf2lQRTS6CtRvJ7FVX3NWE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=DBjrvZcbfODq6o/u3ovhcKp34o3mQ/2g2kqOKbw7rqi0UbJcuDmNkgLMMy0M05dFs
+         mwfV7fdqIvkaHvs5FkFIxP3pQ5mW2wuelKsM0Zg1XI928MZ1g6hDtwlC/lZ6mTYtDn
+         L0yXyxJPdKzjgMXD6Vs/vdQOXuvQV+DBBKSwRDhM/LlZ9x9/DV6Qnq7MjBym4Ue3He
+         LklNFflnfSaW1SCikrvqRJriPDliUiNhIaGm2pb/3nXItDzT/4/obeOPpO0NPN/v0m
+         Pwish5sD0axq4vDEIuCSUJZyKrnPcy3P6Nd30IKN+fHXybC5E+QSyK+xdLgaNeWw/l
+         +EUyGcBOd8VUw==
+Date:   Wed, 12 May 2021 17:17:41 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     "Theodore Ts'o" <tytso@mit.edu>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Mali DP Maintainers <malidp@foss.arm.com>,
+        alsa-devel@alsa-project.org, coresight@lists.linaro.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
+        kvm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-hwmon@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-sgx@vger.kernel.org, linux-usb@vger.kernel.org,
+        mjpeg-users@lists.sourceforge.net, netdev@vger.kernel.org,
+        rcu@vger.kernel.org
+Subject: Re: [PATCH v2 00/40] Use ASCII subset instead of UTF-8 alternate
+ symbols
+Message-ID: <20210512171741.2870bcbc@coco.lan>
+In-Reply-To: <YJvi1L2ss5Tfi+My@mit.edu>
+References: <cover.1620823573.git.mchehab+huawei@kernel.org>
+        <YJvi1L2ss5Tfi+My@mit.edu>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.21.59.169]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-field size from 8 bits to 10 bits.
+Em Wed, 12 May 2021 10:14:44 -0400
+"Theodore Ts'o" <tytso@mit.edu> escreveu:
 
-For platforms where the RC supports 10-Bit Tag Completer capability,
-it is highly recommended for platform firmware or operating software
-that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-bit automatically in Endpoints with 10-Bit Tag Requester capability. This
-enables the important class of 10-Bit Tag capable adapters that send
-Memory Read Requests only to host memory.
+> On Wed, May 12, 2021 at 02:50:04PM +0200, Mauro Carvalho Chehab wrote:
+> > v2:
+> > - removed EM/EN DASH conversion from this patchset; =20
+>=20
+> Are you still thinking about doing the
+>=20
+> EN DASH --> "--"
+> EM DASH --> "---"
+>=20
+> conversion? =20
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/pci/probe.c | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 2 files changed, 38 insertions(+)
+Yes, but I intend to submit it on a separate patch series, probably after
+having this one merged. Let's first cleanup the large part of the=20
+conversion-generated UTF-8 char noise ;-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b9942cc..dfcd3d2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2046,6 +2046,41 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 	return 0;
- }
- 
-+static void pci_configure_10bit_tags(struct pci_dev *dev)
-+{
-+	struct pci_dev *bridge;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP))
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-+		dev->ext_10bit_tag = 1;
-+		return;
-+	}
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge && bridge->ext_10bit_tag)
-+		dev->ext_10bit_tag = 1;
-+
-+	/*
-+	 * 10-Bit Tag Requester Enable in Device Control 2 Register is RsvdP
-+	 * for VF.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT &&
-+	    dev->ext_10bit_tag == 1 &&
-+	    (dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ)) {
-+		pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+	}
-+}
-+
- /**
-  * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
-  * @dev: PCI device to query
-@@ -2182,6 +2217,7 @@ static void pci_configure_device(struct pci_dev *dev)
- {
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev, NULL);
-+	pci_configure_10bit_tags(dev);
- 	pci_configure_relaxed_ordering(dev);
- 	pci_configure_ltr(dev);
- 	pci_configure_eetlp_prefix(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2965620..f2b2b5b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -393,6 +393,8 @@ struct pci_dev {
- #endif
- 	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
- 
-+	unsigned int	ext_10bit_tag:1; /* 10-Bit Tag Completer Supported
-+					    from root to here */
- 	pci_channel_state_t error_state;	/* Current connectivity state */
- 	struct device	dev;			/* Generic device interface */
- 
--- 
-2.7.4
+> That's not going to change what the documentation will
+> look like in the HTML and PDF output forms, and I think it would make
+> life easier for people are reading and editing the Documentation/*
+> files in text form.
 
+Agreed. I'm also considering to add a couple of cases of this char:
+
+	- U+2026 ('=E2=80=A6'): HORIZONTAL ELLIPSIS
+
+As Sphinx also replaces "..." into HORIZONTAL ELLIPSIS.
+
+-
+
+Anyway, I'm opting to submitting those in separate because it seems
+that at least some maintainers added EM/EN DASH intentionally.
+
+So, it may generate case-per-case discussions.
+
+Also, IMO, at least a couple of EN/EM DASH cases would be better served=20
+with a single hyphen.
+
+Thanks,
+Mauro
