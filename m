@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C4CC433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADBDC43462
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3D5861407
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0276961370
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 14:38:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231352AbhELOjL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 10:39:11 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3736 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230398AbhELOjK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 10:39:10 -0400
+        id S231192AbhELOjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 10:39:15 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2645 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231310AbhELOjL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 10:39:11 -0400
 Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FgHP83hMMzqTY6;
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FgHP81lGFzQmVD;
         Wed, 12 May 2021 22:34:36 +0800 (CST)
 Received: from SZX1000464847.huawei.com (10.21.59.169) by
  DGGEMS406-HUB.china.huawei.com (10.3.19.206) with Microsoft SMTP Server id
@@ -30,9 +30,9 @@ To:     <helgaas@kernel.org>, <hch@infradead.org>,
         <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
         <verkuil-cisco@xs4all.nl>
 CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V3 6/6] PCI: Enable 10-Bit tag support for PCIe RP devices
-Date:   Wed, 12 May 2021 22:37:37 +0800
-Message-ID: <20210512143737.42352-7-liudongdong3@huawei.com>
+Subject: [PATCH V3 4/6] PCI: Enable 10-Bit tag support for PCIe Endpoint devices
+Date:   Wed, 12 May 2021 22:37:35 +0800
+Message-ID: <20210512143737.42352-5-liudongdong3@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210512143737.42352-1-liudongdong3@huawei.com>
 References: <20210512143737.42352-1-liudongdong3@huawei.com>
@@ -45,110 +45,88 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe spec 5.0r1.0 section 2.2.6.2 implementation note, In configurations
-where a Requester with 10-Bit Tag Requester capability needs to target
-multiple Completers, one needs to ensure that the Requester sends 10-Bit
-Tag Requests only to Completers that have 10-Bit Tag Completer capability.
-So we enable 10-Bit Tag Requester for root port only when the devices
-under the root port support 10-Bit Tag Completer.
+10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
+field size from 8 bits to 10 bits.
+
+For platforms where the RC supports 10-Bit Tag Completer capability,
+it is highly recommended for platform firmware or operating software
+that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
+bit automatically in Endpoints with 10-Bit Tag Requester capability. This
+enables the important class of 10-Bit Tag capable adapters that send
+Memory Read Requests only to host memory.
 
 Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 75 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 75 insertions(+)
+ drivers/pci/probe.c | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 ++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index c7ff1ee..baf413f 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -90,6 +90,78 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- #define PCIE_PORTDRV_PM_OPS	NULL
- #endif /* !PM */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b9942cc..dfcd3d2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2046,6 +2046,41 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+ 	return 0;
+ }
  
-+static int pci_10bit_tag_comp_support(struct pci_dev *dev, void *data)
++static void pci_configure_10bit_tags(struct pci_dev *dev)
 +{
-+	u8 *support = data;
++	struct pci_dev *bridge;
 +
-+	if (*support == 0)
-+		return 0;
++	if (!pci_is_pcie(dev))
++		return;
 +
-+	if (!pci_is_pcie(dev)) {
-+		*support = 0;
-+		return 0;
++	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP))
++		return;
++
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
++		dev->ext_10bit_tag = 1;
++		return;
 +	}
++
++	bridge = pci_upstream_bridge(dev);
++	if (bridge && bridge->ext_10bit_tag)
++		dev->ext_10bit_tag = 1;
 +
 +	/*
-+	 * PCIe spec 5.0r1.0 section 2.2.6.2 implementation note.
-+	 * For configurations where a Requester with 10-Bit Tag Requester
-+	 * capability targets Completers where some do and some do not have
-+	 * 10-Bit Tag Completer capability, how the Requester determines which
-+	 * NPRs include 10-Bit Tags is outside the scope of this specification.
-+	 * So we do not consider hotplug scenario.
++	 * 10-Bit Tag Requester Enable in Device Control 2 Register is RsvdP
++	 * for VF.
 +	 */
-+	if (dev->is_hotplug_bridge) {
-+		*support = 0;
-+		return 0;
-+	}
++	if (dev->is_virtfn)
++		return;
 +
-+	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP)) {
-+		*support = 0;
-+		return 0;
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT &&
++	    dev->ext_10bit_tag == 1 &&
++	    (dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ)) {
++		pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
++		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
++					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
 +	}
-+
-+	return 0;
 +}
 +
-+static void pci_configure_rp_10bit_tag(struct pci_dev *dev)
-+{
-+	u8 support = 1;
-+	struct pci_dev *pchild;
-+
-+	if (dev->subordinate == NULL)
-+		return;
-+
-+	/* If no devices under the root port, no need to enable 10-Bit Tag. */
-+	pchild = list_first_entry_or_null(&dev->subordinate->devices,
-+					  struct pci_dev, bus_list);
-+	if (pchild == NULL)
-+		return;
-+
-+	pci_10bit_tag_comp_support(dev, &support);
-+	if (!support)
-+		return;
-+
-+	/*
-+	 * PCIe spec 5.0r1.0 section 2.2.6.2 implementation note.
-+	 * In configurations where a Requester with 10-Bit Tag Requester
-+	 * capability needs to target multiple Completers, one needs to ensure
-+	 * that the Requester sends 10-Bit Tag Requests only to Completers
-+	 * that have 10-Bit Tag Completer capability. So we enable 10-Bit Tag
-+	 * Requester for root port only when the devices under the root port
-+	 * support 10-Bit Tag Completer.
-+	 */
-+	pci_walk_bus(dev->subordinate, pci_10bit_tag_comp_support, &support);
-+	if (!support)
-+		return;
-+
-+	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ))
-+		return;
-+
-+	pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+				 PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+}
-+
- /*
-  * pcie_portdrv_probe - Probe PCI-Express port devices
-  * @dev: PCI-Express port device being probed
-@@ -111,6 +183,9 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	     (type != PCI_EXP_TYPE_RC_EC)))
- 		return -ENODEV;
+ /**
+  * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
+  * @dev: PCI device to query
+@@ -2182,6 +2217,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ {
+ 	pci_configure_mps(dev);
+ 	pci_configure_extended_tags(dev, NULL);
++	pci_configure_10bit_tags(dev);
+ 	pci_configure_relaxed_ordering(dev);
+ 	pci_configure_ltr(dev);
+ 	pci_configure_eetlp_prefix(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2965620..f2b2b5b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -393,6 +393,8 @@ struct pci_dev {
+ #endif
+ 	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
  
-+	if (type == PCI_EXP_TYPE_ROOT_PORT)
-+		pci_configure_rp_10bit_tag(dev);
-+
- 	if (type == PCI_EXP_TYPE_RC_EC)
- 		pcie_link_rcec(dev);
++	unsigned int	ext_10bit_tag:1; /* 10-Bit Tag Completer Supported
++					    from root to here */
+ 	pci_channel_state_t error_state;	/* Current connectivity state */
+ 	struct device	dev;			/* Generic device interface */
  
 -- 
 2.7.4
