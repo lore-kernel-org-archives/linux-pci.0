@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF945C433ED
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E207C4361A
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A72976143C
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BD9D6143D
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245038AbhELSYT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 14:24:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53242 "EHLO mail.kernel.org"
+        id S245074AbhELSY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 14:24:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55186 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1352977AbhELSGd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 May 2021 14:06:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 766D06144C;
-        Wed, 12 May 2021 18:04:11 +0000 (UTC)
+        id S234279AbhELSIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 May 2021 14:08:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8C1D261628;
+        Wed, 12 May 2021 18:04:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842652;
-        bh=eN04/AW2PEcrYxJ8E8JcqPxfOpcx4dRmcXbZaH+Fb6M=;
+        s=k20201202; t=1620842694;
+        bh=LBtwEOIaJ4nCZqsS9YG3HNUNAC92HZWxjQNO35KTYu0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A770EtAvxWrx0iJat8wT/bKIuTFBOqzco7IWX/bc0wPjXzeMAUtEDs6WS5iOcrvsl
-         McKuP5ZDX94dm4X8SIqzs2fGb4HVmPQNuqgEYEJoPsWnasvY23YtTl0z4/J6geZmHE
-         pKYi6EA7cKPrBnx8X6bLN/ucNy8OAlQHE1V68ZVcQ5Zmzh57AM9JhjeRAeNzRC8+Zl
-         UkN7I0q6SWY407xU55oJPINfKlT/YqNFx25aAZzH+PJ5H3sufeqs/SQXM+aeME5PEh
-         6uHEpIIZrVIiGgUr4qw/pNZ8AzY2RZl4P9IpfQ18touHeM6p8vcM1YGq3JmNhBVrAe
-         mnp7CciZM3xog==
+        b=VaUmO8+IRjd0e+Ja7er7XKjmZ/2dd2SmtH20MDW0oNgHZ+57Zt3YTiAj4IPuNiYmN
+         uYV1FHGbDyGMYkkF4H0hCWzzqzQw4NYBb4TM7AzeW3O3b8dlrT+dM6Wx2Jt11GTm1e
+         zKdkDX3uD01aHqoket6C1bKPkfDxyWVUoAGreyMI6uJZymsyoSR/OyThdXJTFchPn/
+         08YXjkYgIbk55SrbDY9AQbq+xte4fOqoP8rcILY+ruI8crjQ95nzdrxrC6rx+ldsDd
+         CGIZvi1M4qSScS/Cs1wmLN3qZF8KpfEmnkS0uOgEOAKoalYuDMxBI0l+VXouegBv+V
+         J2az9se3wiLyw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
@@ -39,12 +39,12 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
         Robert Richter <rric@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 02/23] PCI: thunder: Fix compile testing
-Date:   Wed, 12 May 2021 14:03:46 -0400
-Message-Id: <20210512180408.665338-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 02/18] PCI: thunder: Fix compile testing
+Date:   Wed, 12 May 2021 14:04:33 -0400
+Message-Id: <20210512180450.665586-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180408.665338-1-sashal@kernel.org>
-References: <20210512180408.665338-1-sashal@kernel.org>
+In-Reply-To: <20210512180450.665586-1-sashal@kernel.org>
+References: <20210512180450.665586-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -130,10 +130,10 @@ index f127ce8bd4ef..1650ec2c35f9 100644
  #define PEM_MAX_DOM_IN_NODE	10
  
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index a5adc2e2c351..572c2f0a2f0c 100644
+index e9ede82ee2c2..39725b71300f 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -588,6 +588,12 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+@@ -473,6 +473,12 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
  #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
  int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
  			  struct resource *res);
