@@ -2,191 +2,167 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BF5C433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 22:38:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E036CC433ED
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 22:38:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC69161417
+	by mail.kernel.org (Postfix) with ESMTP id A9B1961073
 	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 22:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233196AbhELWji (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 18:39:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56016 "EHLO
+        id S235288AbhELWjg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 18:39:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349240AbhELWbB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 18:31:01 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86354C06135E
-        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 15:29:07 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id g4so6518075lfv.6
-        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 15:29:07 -0700 (PDT)
+        with ESMTP id S1347311AbhELVqT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 17:46:19 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 184D4C06134E
+        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 14:35:06 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id p64-20020a2529430000b02904f838e5bd13so29830185ybp.20
+        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 14:35:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=euIbK43tiaRQ+KGS8zmTT7eimhqDbUuewW75dr1LJ2I=;
-        b=jNbXcBcnCu5Ai7idr7/7XtKlD8XRb4+qbPNhsYNoPVH0oxlKvWs0bLqgDPH6s6sNEW
-         ajA6iWqM5ysmHP8NRRqk3m65e4Gb2+QIpiWECw2bayBuIV9MTidJeFJP4zHa2N/4Wo1a
-         MUpvsAlJMNR5gHEXbT+DZQ6FAACuaZGxaQfa3ITUEFea2gGShNuhHAl3Fc16vAxPMi1V
-         EJzTfKGlqLuhVD2B+ew3fbfonxUkhzFAVoI7IS7vuJXAiR2A1qLMmIdDMkGSzi4tLYd/
-         CLSPmdck5PGxKWLWKVnexrIFS9wM0wj5cwQ39nwUOONNQLiomRwvc5EQpI/G3xRQryKV
-         bTzA==
+        bh=O4prwy0dt076IdQhcTAcUnDE5VADW8jC/nkDuCrMp/E=;
+        b=cg5jrRhYrcGnbAPJsnJ/5EYIxyKKBKikA6TdWTgM6hM+NftKs1GDRfa0rm+EChPCuZ
+         t0L4Tq5/946AM60F0m7nlK2FWPIyXEp1S+RxTnYQBnWwKIMQ8XaeZTAh6YXklnGxXmG2
+         APCBf4UhSgHVeUqOQrA9ua0wH3PgO48v7agpbCJ1WztS5T0fe/eI/qqjaqIymxSRSplF
+         qZO865O4FLo0EzxPr/oLNQWgbxq7Yxh90O0YiLR1TevdUqpziX5IGY1u+ZKDuvs3YpS3
+         Q5NEueKOa+IPrzmQkst2OXlVbH2/mXDVqVYkHFPu6P5nlpruN6MUDj9x9esFSpc9btKT
+         zCag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=euIbK43tiaRQ+KGS8zmTT7eimhqDbUuewW75dr1LJ2I=;
-        b=C6h4rSOXShEsq+wEhJGZC15OWhM94+5mjVPSbjBYuGucjGq4ltXgpW37r2e8BVvJ3D
-         HsGqrF7v3d1panTlc6lzIrwwdo5J2RoS3Npzdvte/fkjbZE6hoeWPNZGjftsxNqld8+u
-         tlgy8cNGQ4UScUOZGcYcMT6MFP5BkzvXwzLjhVH8YYhOCIWaDAwLvRlybkvTs95M/PJT
-         Zi5Oi0UWh+TThCHvL0T4TYXeYD37HITMTYEy17AI7crWweGwdRCGo36D1qAl3QGdhyHY
-         LMNDcDhxD8cf7ETGifaLZBhnM92A+DlYplA7Fh76Vee0wIow4AhnW5swilED+b3vJxZ4
-         aAVA==
-X-Gm-Message-State: AOAM533+Tp0RDp5bw67iRXgBsZLnfZ60t+LOh0sxRffK1BxQtC90eqou
-        lpu43TuOyzkCJlw4T5398jqMuZgm+lzwmHVTvrDpkw==
-X-Google-Smtp-Source: ABdhPJyuzhlTIWKLKvHBWtG8ylpeaOs72St27ZpF7ovn55bVTWNgnn98m0MIov6W6+j3Y3H2/4RjrCgsoMPcY+WcAt8=
-X-Received: by 2002:a19:4086:: with SMTP id n128mr13570069lfa.464.1620858545793;
- Wed, 12 May 2021 15:29:05 -0700 (PDT)
-MIME-Version: 1.0
-References: <CACK8Z6GP415hmDUYU74LRrGYKCN4aAXGD-B=ctN8R7P3LnFUrw@mail.gmail.com>
- <20210511230228.GA2429744@bjorn-Precision-5520> <CACK8Z6GEJt4_XMzJuT4LXdW9VToRZzGTn3QowTpdZaUDv5osjA@mail.gmail.com>
-In-Reply-To: <CACK8Z6GEJt4_XMzJuT4LXdW9VToRZzGTn3QowTpdZaUDv5osjA@mail.gmail.com>
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=O4prwy0dt076IdQhcTAcUnDE5VADW8jC/nkDuCrMp/E=;
+        b=O5tvTC6QcJhZJTXzR9VTWK18KznitCo24GnPmF2HsWL/QruiabDmeNDi4VaEDz3G+g
+         x1YxkmxaIS6iYpIWtt1YsX+oUZ4rvwBhdP4XHoKG8AkQPR1QloVWK8ncfy6X4R5rNMfu
+         ay2ce1gZ+J3cG8opdglm961UoiuLcYMlXbAa0Z0FeXnm9q+wcD64V3/187nyHNTG0uL7
+         njkDS2MhHBan4Sm/xCt3a4wGf5/5xitl6U2OKifbgG/a0793egSCRZDbVw1KbOZMAMQl
+         QGJoQQGem3oCmDbZ8c2jpmzQ5yMcXiHLgjyPlQrDy674DzhpGirBF9FKeb2pt6BrIISr
+         lvVA==
+X-Gm-Message-State: AOAM533c+ZDSurMzxil1kYlvHrFsdXS9ZIWglpTnXTRskfO32BcVBz6/
+        u2SlSp8lxaTDcpmaMjfjePa0TvNSaoKm
+X-Google-Smtp-Source: ABdhPJxmhNKqohQCYBcFHAEgPzE3okQz2tv+sCqfcm/srb8tvpZZ3v51jWN+0aF+A7bm9uvOqqs5xcifsO3M
+X-Received: from rajat2.mtv.corp.google.com ([2620:15c:202:201:45af:4b75:ef28:4f6d])
+ (user=rajatja job=sendgmr) by 2002:a25:dc89:: with SMTP id
+ y131mr48833854ybe.493.1620855305337; Wed, 12 May 2021 14:35:05 -0700 (PDT)
+Date:   Wed, 12 May 2021 14:34:57 -0700
+In-Reply-To: <20210512213457.1310774-1-rajatja@google.com>
+Message-Id: <20210512213457.1310774-2-rajatja@google.com>
+Mime-Version: 1.0
+References: <20210512213457.1310774-1-rajatja@google.com>
+X-Mailer: git-send-email 2.31.1.607.g51e8a6a459-goog
+Subject: [PATCH v3 2/2] PCI: Add sysfs "removable" attribute
 From:   Rajat Jain <rajatja@google.com>
-Date:   Wed, 12 May 2021 15:28:29 -0700
-Message-ID: <CACK8Z6FNxHe_0KavGDOK=SOs_NHeSA-KsnZP28meESATazv8PQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] pci: Support "removable" attribute for PCI devices
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" 
-        <linux-usb@vger.kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Oliver Neukum <oneukum@suse.com>,
-        David Laight <David.Laight@aculab.com>
+        Rajat Jain <rajatja@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        helgaas@kernel.org, Oliver Neukum <oneukum@suse.com>,
+        David Laight <David.Laight@aculab.com>,
+        "=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=" <kw@linux.com>
+Cc:     rajatxjain@gmail.com, jsbarnes@google.com, dtor@google.com
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Posted v3 of this patch here:
-https://lore.kernel.org/patchwork/patch/1428134/
+A PCI device is "external_facing" if it's a Root Port with the ACPI
+"ExternalFacingPort" property or if it has the DT "external-facing"
+property.  We consider everything downstream from such a device to
+be removable by user.
 
-On Tue, May 11, 2021 at 5:02 PM Rajat Jain <rajatja@google.com> wrote:
->
-> On Tue, May 11, 2021 at 4:02 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > On Tue, May 11, 2021 at 03:15:11PM -0700, Rajat Jain wrote:
-> > > On Tue, May 11, 2021 at 2:30 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > On Fri, Apr 23, 2021 at 07:16:31PM -0700, Rajat Jain wrote:
-> > > > ...
-> > > > This looks like a good start.  I think it would be useful to have a
-> > > > more concrete example of how this information will be used.  I know
-> > > > that use would be in userspace, so an example probably would not be a
-> > > > kernel patch.  If you have user code published anywhere, that would
-> > > > help.  Or even a patch to an existing daemon.  Or pointers to how
-> > > > "removable" is used for USB devices.
-> > >
-> > > Sure, I'll point to some existing user space code (which will be using
-> > > a similar attribute we are carrying internally).
-> >
-> > Great, thanks!
-> >
-> > > > > +     set_pci_dev_removable(dev);
-> > > >
-> > > > So this *only* sets the "removable" attribute based on the
-> > > > ExternalFacingPort or external-facing properties.  I think Oliver and
-> > > > David were hinting that maybe we should also set it for devices in
-> > > > hotpluggable slots.  What do you think?
-> > >
-> > > I did think about it. So I have a mixed feeling about this. Primarily
-> > > because I have seen the use of hotpluggable slots in situations where
-> > > we wouldn't want to classify the device as removable:
-> > >
-> > > - Using link-state based hotplug as a way to work around unstable PCIe
-> > > links. I have seen PCIe devices marked as hot-pluggable only to ensure
-> > > that if the PCIe device falls off PCI bus due to some reason (e.g. due
-> > > to SI issues or device firmware bugs), the kernel should be able to
-> > > detect it if it does come back up (remember quick "Link-Down" /
-> > > "Link-Up" events in succession?).
-> > >
-> > > - Internal hot-pluggable PCI devices. In my past life, I was working
-> > > on a large system that would have hot-pluggable daughter cards, but
-> > > those wouldn't be user removable. Also, it is conceivable to have
-> > > hot-pluggable M.2 slots for PCIe devices such as NVMEs etc, but they
-> > > may still not be removable by user. I don't think these should be
-> > > treated as "removable". I was also looking at USB as an example where
-> > > this originally came from, USB does ensure that only devices that are
-> > > "user visible" devices are marked as "removable":
-> > >
-> > > 54d3f8c63d69 ("usb: Set device removable state based on ACPI USB data")
-> > > d35e70d50a06 ("usb: Use hub port data to determine whether a port is removable")
-> >
-> > IIUC your main concern is consumer platforms where PCI devices would
-> > be hotplugged via a Thunderbolt or similar cable, and that port
-> > would be marked as an "ExternalFacingPort" so we'd mark them as
-> > "removable".
->
-> Yes.
->
-> >
-> > A device in a server hotplug slot would probably *not* be marked as
-> > "removable".  The same device in an external chassis connected via an
-> > iPass or similar cable *might* be "removable" depending on whether the
-> > firmware calls the iPass port an "ExternalFacingPort".
->
-> Yes.
->
-> >
-> > Does the following capture some of what you're thinking?  Maybe some
-> > wordsmithed version of it would be useful in a comment and/or commit
-> > log?
->
-> Yes, you captured my thoughts perfectly. I shall update the commit log
-> and / or provide comments to reflect this.
->
-> >
-> >   We're mainly concerned with consumer platforms with accessible
-> >   Thunderbolt ports that are vulnerable to DMA attacks, and we expect
-> >   those ports to be identified as "ExternalFacingPort".
-> >
-> >   Devices in traditional hotplug slots are also "removable," but not
-> >   as vulnerable because these slots are less accessible to users.
-> >
-> > > > I wonder if this (and similar hooks like set_pcie_port_type(),
-> > > > set_pcie_untrusted(), set_pcie_thunderbolt(), etc) should go *after*
-> > > > the early fixups so we could use fixups to work around issues?
-> > >
-> > > I agree. We can do that if none of the early fixups actually use the
-> > > fields set by these functions. I think it should be ok to move
-> > > set_pcie_untrusted(), set_pcie_thunderbolt(), but I wonder if any
-> > > early fixups already use the pcie_cap or any other fields set by
-> > > set_pcie_port_type().
-> >
-> > I think you should move the one you're adding
-> > (set_pci_dev_removable()) and leave the others where they are for now.
->
-> Ack, will do.
->
-> Thanks,
->
-> Rajat
->
-> >
-> > No need to expand the scope of your patch; I was just thinking they're
-> > all basically similar and should ideally be done at similar times.
-> >
-> > > > >       /* Early fixups, before probing the BARs */
-> > > > >       pci_fixup_device(pci_fixup_early, dev);
-> > > > >
-> > > > > --
-> > > > > 2.31.1.498.g6c1eba8ee3d-goog
-> > > > >
+We're mainly concerned with consumer platforms with user accessible
+thunderbolt ports that are vulnerable to DMA attacks, and we expect those
+ports to be identified as "ExternalFacingPort". Devices in traditional
+hotplug slots can technically be removed, but the expectation is that
+unless the port is marked with "ExternalFacingPort", such devices are less
+accessible to user / may not be removed by end user, and thus not exposed
+as "removable" to userspace.
+
+Set pci_dev_type.supports_removable so the device core exposes the
+"removable" file in sysfs, and tell the device core about removable
+devices.
+
+This can be used by userspace to implment any policies it wants to,
+tailored specifically for user removable devices. Eg usage:
+https://chromium-review.googlesource.com/c/chromiumos/platform2/+/2591812
+https://chromium-review.googlesource.com/c/chromiumos/platform2/+/2795038
+(code uses such an attribute to remove external PCI devicces or disable
+features on them as needed by the policy desired)
+
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+v3: - commit log updated
+    - Rename set_pci_dev_removable() -> pci_set_removable()
+    - Call it after applying early PCI quirks.
+v2: Add documentation
+
+ Documentation/ABI/testing/sysfs-devices-removable |  3 ++-
+ drivers/pci/pci-sysfs.c                           |  1 +
+ drivers/pci/probe.c                               | 12 ++++++++++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-devices-removable b/Documentation/ABI/testing/sysfs-devices-removable
+index 9dabcad7cdcd..ec0b243f5db4 100644
+--- a/Documentation/ABI/testing/sysfs-devices-removable
++++ b/Documentation/ABI/testing/sysfs-devices-removable
+@@ -14,4 +14,5 @@ Description:
+ 
+ 		Currently this is only supported by USB (which infers the
+ 		information from a combination of hub descriptor bits and
+-		platform-specific data such as ACPI).
++		platform-specific data such as ACPI) and PCI (which gets this
++		from ACPI / device tree).
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index beb8d1f4fafe..38b3259ba333 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1541,4 +1541,5 @@ static const struct attribute_group *pci_dev_attr_groups[] = {
+ 
+ const struct device_type pci_dev_type = {
+ 	.groups = pci_dev_attr_groups,
++	.supports_removable = true,
+ };
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3a62d09b8869..3515afeeaba8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1575,6 +1575,16 @@ static void set_pcie_untrusted(struct pci_dev *dev)
+ 		dev->untrusted = true;
+ }
+ 
++static void pci_set_removable(struct pci_dev *dev)
++{
++	struct pci_dev *parent = pci_upstream_bridge(dev);
++	if (parent &&
++	    (parent->external_facing || dev_is_removable(&parent->dev)))
++		dev_set_removable(&dev->dev, DEVICE_REMOVABLE);
++	else
++		dev_set_removable(&dev->dev, DEVICE_FIXED);
++}
++
+ /**
+  * pci_ext_cfg_is_aliased - Is ext config space just an alias of std config?
+  * @dev: PCI device
+@@ -1822,6 +1832,8 @@ int pci_setup_device(struct pci_dev *dev)
+ 	/* Early fixups, before probing the BARs */
+ 	pci_fixup_device(pci_fixup_early, dev);
+ 
++	pci_set_removable(dev);
++
+ 	pci_info(dev, "[%04x:%04x] type %02x class %#08x\n",
+ 		 dev->vendor, dev->device, dev->hdr_type, dev->class);
+ 
+-- 
+2.31.1.607.g51e8a6a459-goog
+
