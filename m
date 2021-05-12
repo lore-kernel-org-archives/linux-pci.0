@@ -2,92 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A3FC433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDBAEC433ED
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 21:08:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD5186143B
-	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 18:29:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEE9E613D6
+	for <linux-pci@archiver.kernel.org>; Wed, 12 May 2021 21:08:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245213AbhELSYf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 May 2021 14:24:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60218 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1353211AbhELSK7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 May 2021 14:10:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D8F3661948;
-        Wed, 12 May 2021 18:05:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620842750;
-        bh=LBUiWkUiNLs9ar18JzgmZtwMR793r1nSTlH0UvyhSQ4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O8hJTEt1KTgYqqQ1MxNr/pa5f30+52DhWoUQh+bTsoNrbTSCJjTdS1CbHFLBW2oFb
-         0zUvzgwgN42KuDeebcJRbcVBVr4+cLu2zsvPWPFqRE8Ci2wTh6MS4M13dpCoOxVAvd
-         LltMDUWFS3UJwPrrPtROvyRPnkDTeSWca1f+cCOWkdyTRpvIs17+PSqo7nrMwwfnMj
-         UcUoQc91ycK8OIeQ5Kv2Rnl9h2KBlWdGAbnbPplHyA0UYxVZ6lXu1hsbtemnakreVN
-         JzvdTpiajVLxzFClC0WKBiC08uTKLBAeWKSWensc8AbNi3zRgk5M1WzsZGWX8Jnmew
-         kMMCbc3wkUHEw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Feilong Lin <linfeilong@huawei.com>,
-        Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 2/7] ACPI / hotplug / PCI: Fix reference count leak in enable_slot()
-Date:   Wed, 12 May 2021 14:05:39 -0400
-Message-Id: <20210512180545.665946-2-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210512180545.665946-1-sashal@kernel.org>
-References: <20210512180545.665946-1-sashal@kernel.org>
+        id S231894AbhELVH0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 May 2021 17:07:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33344 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358191AbhELSnF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 May 2021 14:43:05 -0400
+Received: from mail-oi1-x234.google.com (mail-oi1-x234.google.com [IPv6:2607:f8b0:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6136BC06138E
+        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 11:41:03 -0700 (PDT)
+Received: by mail-oi1-x234.google.com with SMTP id d21so23129547oic.11
+        for <linux-pci@vger.kernel.org>; Wed, 12 May 2021 11:41:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XmDVrHusp4k4TH4Rdds8NJAp7ze1VCqnR4KQ0dA02nk=;
+        b=cPiUw8YKF0IlUEvOkwooUMppYUibeTT+1Zm71RcrPyneGieTvof4BZfCFGB2zlY8Xe
+         a9mHHvlfJe8o8wWTt60H9qUplhz5axzLKmjBzr1Q5lCvms+VIkbuDIdWgjXPIus/+hhn
+         trHBoqby3bveL7IFhFVfLqDemFHKFd8MktxmCUJA216ZT2jLMHa9bRRFi6/jOHYO3V6X
+         48LDR0UgxIFTyvdJSW13Jgj+O5Pe5dIkJJsmgB+rcvJ4d2SCdpcaE8zSy5xMFKJKOfx8
+         FYAXywDrWCLliHnFwNgGRmTQamSKpWTBlMm9RynkpOmmg3rl6kXzALbCZZzsSod3Ltb9
+         yCjw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=XmDVrHusp4k4TH4Rdds8NJAp7ze1VCqnR4KQ0dA02nk=;
+        b=UZ4cOmnTnxJSOMD0q/ulgKuPSRk/QqEHZ+uG46QsGlQsihkaghQ47c9Fg1ilGt5acl
+         8EMLUBMGrLwa6dzAXmYPntufm0v37Oo/noXfFwSFeR3eV40nxyMA1rGpWK5F2BdOZ1o7
+         iawi+SfRiFC22rtVrUpywOJBZwOUlpoYX0wcNvX0GGJ579JWNTYFJc06RdIut3ZZ/O3J
+         prU+uceHoad4z5FxSrA3enLkLHwrYXeYDZOzZTDXWm9SbAyJsAprx4aRiv+akQizUxD1
+         YbQS2GP/i7eZSxQ8e7TSSyUSq9RwEDPgC0lSR3gW+mNELRX/jis3NKPwNUq6QAfpj7Kt
+         Uv2Q==
+X-Gm-Message-State: AOAM5319dlwwHVHp7XEP86D9Z3JkWzXojVMuOYGvnYYLvngn70E8HdTP
+        cIAwe2t6+PuzfcIODIQEatM=
+X-Google-Smtp-Source: ABdhPJxsFh1OjdlMaKOCeIzMXu3fgb8RyPetNQYo+w2MJstEs8Brpdo+0bp5yklgNKEp/pmPaAWkgg==
+X-Received: by 2002:a05:6808:d:: with SMTP id u13mr11221249oic.103.1620844862861;
+        Wed, 12 May 2021 11:41:02 -0700 (PDT)
+Received: from localhost.localdomain ([14.141.145.218])
+        by smtp.gmail.com with ESMTPSA id o1sm137432otj.39.2021.05.12.11.41.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 May 2021 11:41:02 -0700 (PDT)
+From:   Stuart Hayes <stuart.w.hayes@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc:     Lukas Wunner <lukas@wunner.de>,
+        Stuart Hayes <stuart.w.hayes@gmail.com>
+Subject: [PATCH] PCI/portdrv: Use link bandwidth notification capability bit
+Date:   Thu, 13 May 2021 00:10:50 +0530
+Message-Id: <20210512184050.2915-1-stuart.w.hayes@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Feilong Lin <linfeilong@huawei.com>
+The pcieport driver can fail to attach to a downstream port that doesn't
+support bandwidth notificaion.  This can happen when, in
+pcie_port_device_register(), pci_init_service_irqs() tries (and fails) to
+set up a bandwidth notificaion IRQ for a device that doesn't support it.
 
-[ Upstream commit 3bbfd319034ddce59e023837a4aa11439460509b ]
+This patch changes get_port_device_capability() to look at the link
+bandwidth notification capability bit in the link capabilities register of
+the port, instead of assuming that all downstream ports have that
+capability.
 
-In enable_slot(), if pci_get_slot() returns NULL, we clear the SLOT_ENABLED
-flag. When pci_get_slot() finds a device, it increments the device's
-reference count.  In this case, we did not call pci_dev_put() to decrement
-the reference count, so the memory of the device (struct pci_dev type) will
-eventually leak.
-
-Call pci_dev_put() to decrement its reference count when pci_get_slot()
-returns a PCI device.
-
-Link: https://lore.kernel.org/r/b411af88-5049-a1c6-83ac-d104a1f429be@huawei.com
-Signed-off-by: Feilong Lin <linfeilong@huawei.com>
-Signed-off-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pcie/portdrv_core.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 7f2b9ef185e4..f154b05f467f 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -538,6 +538,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 			slot->flags &= (~SLOT_ENABLED);
- 			continue;
- 		}
-+		pci_dev_put(dev);
- 	}
- }
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e1fed6649c41..3ee63968deaa 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -257,8 +257,13 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 		services |= PCIE_PORT_SERVICE_DPC;
  
+ 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+-	    pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+-		services |= PCIE_PORT_SERVICE_BWNOTIF;
++	    pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
++		u32 linkcap;
++
++		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &linkcap);
++		if (linkcap & PCI_EXP_LNKCAP_LBNC)
++			services |= PCIE_PORT_SERVICE_BWNOTIF;
++	}
+ 
+ 	return services;
+ }
 -- 
-2.30.2
+2.27.0
 
