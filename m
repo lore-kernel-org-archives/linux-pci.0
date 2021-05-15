@@ -2,50 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 134A7C43460
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E906C433B4
+	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E945D613EB
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12DF661401
+	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232432AbhEOF0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 15 May 2021 01:26:03 -0400
-Received: from mail-ej1-f54.google.com ([209.85.218.54]:39752 "EHLO
-        mail-ej1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233436AbhEOF0C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 May 2021 01:26:02 -0400
-Received: by mail-ej1-f54.google.com with SMTP id l1so1587216ejb.6
-        for <linux-pci@vger.kernel.org>; Fri, 14 May 2021 22:24:49 -0700 (PDT)
+        id S234368AbhEOFhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 15 May 2021 01:37:22 -0400
+Received: from mail-ej1-f48.google.com ([209.85.218.48]:36545 "EHLO
+        mail-ej1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232792AbhEOFhW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 May 2021 01:37:22 -0400
+Received: by mail-ej1-f48.google.com with SMTP id c20so1636644ejm.3
+        for <linux-pci@vger.kernel.org>; Fri, 14 May 2021 22:36:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=8I9eAMgW1d5+6SXiSWDrf1uaChlCS5v9S4POj4RPQdA=;
-        b=UEk43dBfc/9KXCdfGF+z5seRZrxKu9xlKXzTNfjpAyia2HRnCjzN8H+qYuPSptF2YE
-         99+XyD59ChD7Vf5TVjgZIuVIE7fho2KvF/ivfsGEH7Uo4qof8zay2SmEDQYyrT2JE5wl
-         +geiG2Io2WbbfDf9dYX2kIfjiPik9SuyPU/bMu3BWlPRZueLVMEhA0TOTTGIWympyLc0
-         slZcxQi2KMIM3y0qZ6rJfvVKSTZAAYJLRLJaGKtjMsmPVn4/x3sD0PtEMTV4PSIEoBuJ
-         z1mToWwgEZiArltxDvn11LMIDUuFXk2WJ4jzveC6/hY4pPf2fHdBR0EP9sYQ/NuDxhFK
-         W0hw==
-X-Gm-Message-State: AOAM530+ctvKISsK6pc5eGGCVMRqNZF3yMbtAY0MZlUH56xT1Pl8aG8B
-        iRAVM8Lk2A2bikzrUFbAC5o=
-X-Google-Smtp-Source: ABdhPJxvwuJ+Vc4f4aGryEC1IiRJpvd+1xHQx7CFoqRNrxuoykeL0ShP0qNJDTfuYBVia8rDk6gJDQ==
-X-Received: by 2002:a17:907:a06d:: with SMTP id ia13mr18482816ejc.484.1621056288974;
-        Fri, 14 May 2021 22:24:48 -0700 (PDT)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id kt21sm4821487ejb.5.2021.05.14.22.24.48
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=SDyLyYKMOMM01yAnQWwaEmsDx06DfWwmC9jVMwC267g=;
+        b=jdAnJe+2CTFcblQHrJGmjN2vkzOS5lgueM8vFX6DGAXRrCcMj9Fr+BfU6vQ5XtM/FR
+         482jkXNOPD0gMYl/lSuloEwpyl3r0giZqykpn/rnak7wUxu+yutDstI6c2+tlyKjwHgo
+         RyTkOZo28xtanurn+Lh6TLDVzlJBLkLHXO5aA0JveffGOiIVrV2hgGYw1mh7EVkOcuSE
+         J5AXtPMQBCwCwrnRM1RMlT9fV4UlJh8vmGAvOFpbBcFSvj0oHAAP9+v6MQWTC/Uu/MTL
+         1s24OxMf4G2B8UzdcYniD5ru3h99K6NCRGg0ExJri4rQLYjY/75smUNNJyCQIwjBG34t
+         wisg==
+X-Gm-Message-State: AOAM533ggVZZtXDMT4UtnJ9zrU5HTq+Ji2GQIqnG/tGYTT8VLmUvgOEf
+        YJxBZkBSRgifU/6tXtEnnZY=
+X-Google-Smtp-Source: ABdhPJwbr3Y/1auLCBpHvfjMGdiIbyXL5GfmX9Da+zC0OU0n75U9zQufvL5vkiUJg6bJsXEvC0LMeA==
+X-Received: by 2002:a17:906:27c3:: with SMTP id k3mr51691905ejc.519.1621056967989;
+        Fri, 14 May 2021 22:36:07 -0700 (PDT)
+Received: from rocinante.localdomain ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id y10sm4730405ejh.105.2021.05.14.22.36.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 22:24:48 -0700 (PDT)
-From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Fri, 14 May 2021 22:36:07 -0700 (PDT)
+Date:   Sat, 15 May 2021 07:36:06 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Joe Perches <joe@perches.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Paul Mackerras <paulus@samba.org>,
@@ -55,44 +56,26 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Vidya Sagar <vidyas@nvidia.com>,
         Xiongfeng Wang <wangxiongfeng2@huawei.com>,
         linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v2 13/14] PCI/sysfs: Add missing trailing newline to devspec_show()
-Date:   Sat, 15 May 2021 05:24:33 +0000
-Message-Id: <20210515052434.1413236-13-kw@linux.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210515052434.1413236-1-kw@linux.com>
+Subject: Re: [PATCH v2 01/14] PCI: Use sysfs_emit() and sysfs_emit_at() in
+ "show" functions
+Message-ID: <20210515053606.GA72086@rocinante.localdomain>
 References: <20210515052434.1413236-1-kw@linux.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20210515052434.1413236-1-kw@linux.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-At the moment, when the value of the "devspec" sysfs object is read from
-the user space there will be no newline present, and the utilities such
-as the "cat" command won't display the result of the read correctly in
-a shell, as the trailing newline is currently missing.
+Hello,
 
-To fix this, append a newline character in the show() function.
+[...]
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
----
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please disregard this "Reviewed-by" from Logan for this version, as I've
+forgotten to remove it before sending v2 after pulling patches using b4.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index beb8d1f4fafe..5d63df7c1820 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -537,7 +537,7 @@ static ssize_t devspec_show(struct device *dev,
- 
- 	if (np == NULL)
- 		return 0;
--	return sysfs_emit(buf, "%pOF", np);
-+	return sysfs_emit(buf, "%pOF\n", np);
- }
- static DEVICE_ATTR_RO(devspec);
- #endif
--- 
-2.31.1
+Apologies.
 
+Krzysztof
