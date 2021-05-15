@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA38CC433B4
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEB7C43460
+	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9675613CE
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA8EC613CE
+	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 05:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231320AbhEOFZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 15 May 2021 01:25:52 -0400
-Received: from mail-ed1-f50.google.com ([209.85.208.50]:38675 "EHLO
-        mail-ed1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230330AbhEOFZv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 May 2021 01:25:51 -0400
-Received: by mail-ed1-f50.google.com with SMTP id n25so858687edr.5
-        for <linux-pci@vger.kernel.org>; Fri, 14 May 2021 22:24:38 -0700 (PDT)
+        id S232372AbhEOFZy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 15 May 2021 01:25:54 -0400
+Received: from mail-ed1-f45.google.com ([209.85.208.45]:43649 "EHLO
+        mail-ed1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231625AbhEOFZx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 May 2021 01:25:53 -0400
+Received: by mail-ed1-f45.google.com with SMTP id s6so830227edu.10
+        for <linux-pci@vger.kernel.org>; Fri, 14 May 2021 22:24:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=3ZSUDlxK2gpwJ+aSZRfjJrhrQ1Sy5cBzVVlZ7n5R5NA=;
-        b=DY2ZIcubHKrhN2JJyGBg3SMrrzNHKxjokBnrw8i8rb/fHmSmWUFFaS+dXowN1993qj
-         xyDc3ECBABEWTr8rm662bC37NCc3d2s1IFd55ZJl2N2Gpsu3wzIKE7Vt8NhrqQxHRwsg
-         B7oJcbLUM5FD7QmBADqWR4RhwVYvbbaRZNaJ/nNlruUDQurmP7UKRvjP1/CDT1nebdal
-         t+a63f/QmxGx5c/GyshCYtRTrbuUbMf9sj6zC5nI/6BU2gjrOzRkNx+oXdve8kbQvh6T
-         QHckVKOINDCbOk+lQYFaB8KAMVb+Z8lvgsx5Rhn6QPpkzTpwR33qGP5zQiZHEgJq98+y
-         p8rg==
-X-Gm-Message-State: AOAM532JgcwOYibOfV9y+IcGcLdNJlPAPmWAPlr2Lwm2F94tKVSaHeTj
-        lJhQa4ojpRj6svF0/nwYEjQ=
-X-Google-Smtp-Source: ABdhPJyJzte6sbq66cNBekFBaDvvmVsrMqZqq1jO2TycXOtmpJpIHsRHKWSWGExUVijx0zjm8m/GsA==
-X-Received: by 2002:a05:6402:2750:: with SMTP id z16mr61413471edd.355.1621056277499;
-        Fri, 14 May 2021 22:24:37 -0700 (PDT)
+        bh=EQ3R2W3kyD0ic+vfu4svsuSqjX5xIeVtIEqsI3c2288=;
+        b=DpRrOO3AZ5PJE8/gObClbb9i6AaESRu2TNY9LBZakbGz2O/xj7u29DrcxLlhIXZt2c
+         qw4JWaNtos4giZi7NECQqtGaj8LohJID1JDEBst0wNXderw9nt8id6HrCFePiWw7IaPp
+         h2AGGLwejQEENKMNxpeHBosz1jHei1M0RSJrCy8exmdPs1FC79XBISx80Ki0pCajWhzN
+         DIa/WsjlHQ5NcsvkxlqbxpVhlJo2fkhejuPjm6MrkdQgq6U7L+GLmLm9CUOpHCFDuiUZ
+         eQAKBPBMRbWxPo5foCEcKsS2GNGvt9sTp5pLjXlmEdWw40/dWWE+3fkNq2728jD/AaXH
+         fIPw==
+X-Gm-Message-State: AOAM531wdqi/iezyM3fObXM6D98kU8uMWRee0URCq6PK0vBnWiFMuu/d
+        3101r8qlJ9eA4NA3QYFoYaU=
+X-Google-Smtp-Source: ABdhPJxnsAptxOx/HBJpYKJDCOzTTrrz2+pFB3BqgI1f0hBvz5p50K52vu7dJoKs7QYOOJjk4VYp9w==
+X-Received: by 2002:a05:6402:100c:: with SMTP id c12mr42219916edu.165.1621056279708;
+        Fri, 14 May 2021 22:24:39 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id kt21sm4821487ejb.5.2021.05.14.22.24.36
+        by smtp.gmail.com with ESMTPSA id kt21sm4821487ejb.5.2021.05.14.22.24.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 May 2021 22:24:37 -0700 (PDT)
+        Fri, 14 May 2021 22:24:39 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
@@ -55,9 +55,9 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Vidya Sagar <vidyas@nvidia.com>,
         Xiongfeng Wang <wangxiongfeng2@huawei.com>,
         linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v2 02/14] PCI/AER: Use sysfs_emit() and sysfs_emit_at() in "show" functions
-Date:   Sat, 15 May 2021 05:24:22 +0000
-Message-Id: <20210515052434.1413236-2-kw@linux.com>
+Subject: [PATCH v2 04/14] PCI/MSI: Use sysfs_emit() and sysfs_emit_at() in "show" functions
+Date:   Sat, 15 May 2021 05:24:24 +0000
+Message-Id: <20210515052434.1413236-4-kw@linux.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210515052434.1413236-1-kw@linux.com>
 References: <20210515052434.1413236-1-kw@linux.com>
@@ -86,54 +86,24 @@ Related to:
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/pcie/aer.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/pci/msi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index ec943cee5ecc..40ef7bed7a77 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -529,21 +529,23 @@ static const char *aer_agent_string[] = {
- 		     char *buf)						\
- {									\
- 	unsigned int i;							\
--	char *str = buf;						\
- 	struct pci_dev *pdev = to_pci_dev(dev);				\
- 	u64 *stats = pdev->aer_stats->stats_array;			\
-+	size_t len = 0;							\
- 									\
- 	for (i = 0; i < ARRAY_SIZE(strings_array); i++) {		\
- 		if (strings_array[i])					\
--			str += sprintf(str, "%s %llu\n",		\
--				       strings_array[i], stats[i]);	\
-+			len += sysfs_emit_at(buf, len, "%s %llu\n",	\
-+					     strings_array[i],		\
-+					     stats[i]);			\
- 		else if (stats[i])					\
--			str += sprintf(str, #stats_array "_bit[%d] %llu\n",\
--				       i, stats[i]);			\
-+			len += sysfs_emit_at(buf, len,			\
-+					     #stats_array "_bit[%d] %llu\n",\
-+					     i, stats[i]);		\
- 	}								\
--	str += sprintf(str, "TOTAL_%s %llu\n", total_string,		\
--		       pdev->aer_stats->total_field);			\
--	return str-buf;							\
-+	len += sysfs_emit_at(buf, len, "TOTAL_%s %llu\n", total_string,	\
-+			     pdev->aer_stats->total_field);		\
-+	return len;							\
- }									\
- static DEVICE_ATTR_RO(name)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 217dc9f0231f..dbfec59dfe41 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -465,8 +465,8 @@ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
  
-@@ -563,7 +565,7 @@ aer_stats_dev_attr(aer_dev_nonfatal, dev_nonfatal_errs,
- 		     char *buf)						\
- {									\
- 	struct pci_dev *pdev = to_pci_dev(dev);				\
--	return sprintf(buf, "%llu\n", pdev->aer_stats->field);		\
-+	return sysfs_emit(buf, "%llu\n", pdev->aer_stats->field);	\
- }									\
- static DEVICE_ATTR_RO(name)
+ 	entry = irq_get_msi_desc(irq);
+ 	if (entry)
+-		return sprintf(buf, "%s\n",
+-				entry->msi_attrib.is_msix ? "msix" : "msi");
++		return sysfs_emit(buf, "%s\n",
++				  entry->msi_attrib.is_msix ? "msix" : "msi");
  
+ 	return -ENODEV;
+ }
 -- 
 2.31.1
 
