@@ -2,36 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C570C433ED
-	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 21:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF21C433ED
+	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 21:26:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54AC260E0B
-	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 21:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D9F56115C
+	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 21:26:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230123AbhEPV1a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 16 May 2021 17:27:30 -0400
-Received: from lb3-smtp-cloud8.xs4all.net ([194.109.24.29]:40455 "EHLO
-        lb3-smtp-cloud8.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229600AbhEPV1a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 May 2021 17:27:30 -0400
-X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Sun, 16 May 2021 17:27:29 EDT
+        id S229600AbhEPV1n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 16 May 2021 17:27:43 -0400
+Received: from lb2-smtp-cloud8.xs4all.net ([194.109.24.25]:52865 "EHLO
+        lb2-smtp-cloud8.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230158AbhEPV1n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 May 2021 17:27:43 -0400
 Received: from copland.sibelius.xs4all.nl ([83.163.83.176])
         by smtp-cloud8.xs4all.net with ESMTP
-        id iOA9lJWwKWkKbiOAAlkPqJ; Sun, 16 May 2021 23:19:06 +0200
+        id iOA9lJWwKWkKbiOAPlkPrx; Sun, 16 May 2021 23:19:17 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xs4all.nl; s=s2;
-        t=1621199946; bh=1+zNzYaekEI6LowqbJIIfmttJzkR4J3dpjnqx+BQ46Q=;
+        t=1621199957; bh=HOikwmeJWakjyZ7lU+im9UqH19VkGuK5u0ycvEvKpYg=;
         h=From:To:Subject:Date:Message-Id:MIME-Version:From:Subject;
-        b=JyGl58Bya86gQ8HQUMWIuf0DLYyMpPZ1D/Afd/i1j3lUDYUGqhj0lPLBBzv31V38a
-         kx+M7tWg/igm2RqJV7lRpLEIC5YT4Yi14UQZMlXiCaF0v8MOKcNQJw9j0ZfGAb+o6m
-         qMofk2wcpwrxSrRlcIrEoWr2UleS4sFo38VUKeEavRlUj6lbDLoVKHGoai6vZX1fvC
-         iNqf8sicsPSRWZosRjioqs3AcJoLooNYUudAYRcV3aV55yXiCj7SqFto/hU7GiDn98
-         3kavto4ZAZA0lQra5rCSMRga8KFqGe5OmaX+4j6Jlfo6x9ZmxnMPz5SV0AvLzr1uHF
-         qztadK2ysqEiQ==
+        b=YQDeZVcVf6d38kGbeZ0705ZtiQkW7XYyau0Y9RpL3drHc9fwEbfB1bDVARECJbvA8
+         Z9WHsTSGEUQ+cxLWfOzyE8r4qrMLSiZIy0+g4vbccART7rB11EZ3VNJDm/IM+A61SW
+         GP+Mad4JxMH98+PAMKCScfziBg7C/rayfZpPbyW1AULWKg6kYx8JTycpAX7dBkPU2A
+         hxfTXeO0J2kychGYdfky4xNvmwIsX3eHP3I4Ej0SoU0MTAi5oNap93vNqDVEKmYJld
+         Vz6hj4ULV6p6Riig6uALO+H+RhHTwpnPKLiM/7g38Jpez+LArbX8OgyE1MObJvGoYD
+         hpcjoQdYJzZbQ==
 From:   Mark Kettenis <mark.kettenis@xs4all.nl>
 To:     devicetree@vger.kernel.org
 Cc:     maz@kernel.org, arnd@arndb.de,
@@ -41,61 +40,111 @@ Cc:     maz@kernel.org, arnd@arndb.de,
         Rob Herring <robh+dt@kernel.org>,
         linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 0/2] Apple M1 PCIe DT bindings
-Date:   Sun, 16 May 2021 23:18:45 +0200
-Message-Id: <20210516211851.74921-1-mark.kettenis@xs4all.nl>
+Subject: [PATCH 2/2] arm64: apple: Add PCIe node
+Date:   Sun, 16 May 2021 23:18:47 +0200
+Message-Id: <20210516211851.74921-3-mark.kettenis@xs4all.nl>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210516211851.74921-1-mark.kettenis@xs4all.nl>
+References: <20210516211851.74921-1-mark.kettenis@xs4all.nl>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMAE-Envelope: MS4xfJiHI2l9RTHm3qxrVyeOIGcmaqvKJeZGxTWKXxrtrQLTfs7o5p5UhmxDyW66fWImczopUkFQV4yzFaPibreJfR2PJ1G/aoDoL6xm9AqmRgTnW2LshxE5
- GEmigu7bvzEuecyGcq+QjNHCONjtEg0sw3mkRsb6Z2Hn0KonnlAM98EasnBSBNnUmaFJFD0FFYp8bkSBComXhD0k+aS4fFHtVsJfs5ngHPJEawjTBYjZvryS
- 8EFQcU5IGD5OCidvywtMrRrlGAkYBUJYSZbXgQ9JsmeOdsg+uOuPjeV2ziGbw12haOis/ZJPg0pHEph9DXOKxZwY2TFberLRgss5OahgadkVXhs/cNKQ6AWd
- iNUeCwrHwPyPyIWmqNDGbymFmyvDH+8ThFVwqwWKwVYQjIrEsErchyAHcDwrIsMzZ2VuZI6fupI/aHW0AlPni2y6tRz63OQN4eUC3APZhWSq37t/bEMKd9Vf
- w//BXkLHvqXAN4brbRS9ZUBscElABHHME+qBqA9471leJDlfndGlDRdXb0g=
+X-CMAE-Envelope: MS4xfFZK+xFYmI4iu+AvuNjdTrW1Fj61/71SG98CoULY7GKFiYRox6X/GCgTJdRU/rHlsuQvOAxBmauzAJjKYWoBowS1cXcCyTDlrNr4ipOS/AhaQO3jI47o
+ DKx3dgubfDSJZ39muL/J5dhiUDbbfD15VEcp2VYyIkbOUqg9lhPzw/eSpDeCJHEw/J/NPSn9tZEjcAx9smwN9Jwq/71hoHgJcL9L8vLZWIUzwhEpoYQmJ6Zg
+ SD3IFVLRLttF0UvFe8a3VHZwxzaD3azLQaBtIcTrKPbxTB0gz6HXW2FfQWe6xi4RlKiVSn6gvdit9Cd5ysyzAx7pUZBOY6kmqKyPMyTDeid/HngOG41m6iL/
+ 43092UZGvKmh93K36abWvEVU5P6HOtQXs58d5hx/JhXwJYNeXRJWEN6g0LYrGU4592/LB9V2xiIMJDObeMoRUXkIjeQYL6xk/B2o3oixyEADP0XVvT/HgoAQ
+ KQbSUMMYwkx2+l0kY4DA1uK7LHMahVlozumbRgZmJBNucP3VELyz8xnHtTI=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Mark Kettenis <kettenis@openbsd.org>
 
-This small series adds bindings for the PCIe controller found on the
-Apple M1 SoC.
+Add node corresponding to the apcie,t8103 node in the
+Apple device tree for the Mac mini (M1, 2020).
 
-At this point, the primary consumer for these bindings is U-Boot.
-With these bindings U-Boot can bring up the links for the root ports
-of the PCIe root complex.  A simple OS driver can then provide
-standard ECAM access and manage MSI interrupts to provide access
-to the built-in Ethernet and XHCI controllers of the Mac mini.
+Clock references and DART (IOMMU) references are left out at the
+moment and will be added once the appropriate bindings have been
+settled upon.
 
-The Apple controller incorporates Synopsys Designware PCIe logic
-to implement its root port.  But unlike other hardware currently
-supported by U-Boot and the Linux kernel the Apple hardware
-integrates multiple root ports.  As such the existing bindings
-for the DWC PCIe interface can't be used.  There is a single ECAM
-space for all root space, but separate GPIOs to take the PCI devices
-on those ports out of reset.  Therefore the standard "reset-gpio" and
-"max-link-speed" properties appear on the child nodes representing
-the PCI devices that correspond to the individual root ports.
+Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+---
+ arch/arm64/boot/dts/apple/t8103.dtsi | 64 ++++++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
 
-MSIs are handled by the PCIe controller and translated into "regular
-interrupts".  A range of 32 MSIs is provided.  These 32 MSIs can be
-distributed over the root ports as the OS sees fit by programming the
-PCIe controller port registers.
-
-These series depends on the pinctrl series I sent earlier (with a v2
-respin today).
-
-
-Mark Kettenis (2):
-  dt-bindings: pci: Add DT bindings for apple,pcie
-  arm64: apple: Add PCIe node
-
- .../devicetree/bindings/pci/apple,pcie.yaml   | 150 ++++++++++++++++++
- MAINTAINERS                                   |   1 +
- arch/arm64/boot/dts/apple/t8103.dtsi          |  64 ++++++++
- 3 files changed, 215 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/apple,pcie.yaml
-
+diff --git a/arch/arm64/boot/dts/apple/t8103.dtsi b/arch/arm64/boot/dts/apple/t8103.dtsi
+index 503a76fc30e6..102947935d63 100644
+--- a/arch/arm64/boot/dts/apple/t8103.dtsi
++++ b/arch/arm64/boot/dts/apple/t8103.dtsi
+@@ -214,5 +214,69 @@ pinctrl_smc: pinctrl@23e820000 {
+ 				     <AIC_IRQ 396 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <AIC_IRQ 397 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
++
++		pcie0: pcie@690000000 {
++			compatible = "apple,t8103-pcie", "apple,pcie";
++			device_type = "pci";
++
++			reg = <0x6 0x90000000 0x0 0x1000000>,
++			      <0x6 0x80000000 0x0 0x4000>,
++			      <0x6 0x8c000000 0x0 0x4000>,
++			      <0x6 0x81000000 0x0 0x8000>,
++			      <0x6 0x82000000 0x0 0x8000>,
++			      <0x6 0x83000000 0x0 0x8000>;
++			reg-names = "ecam", "rc", "phy", "port0", "port1", "port2";
++
++			interrupt-parent = <&aic>;
++			interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
++				     <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
++				     <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>;
++
++			msi-controller;
++			msi-parent = <&pcie0>;
++			msi-ranges = <704 32>;
++
++			bus-range = <0 7>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
++				 <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
++
++			pinctrl-0 = <&pcie_pins>;
++			pinctrl-names = "default";
++
++			pci@0,0 {
++				device_type = "pci";
++				reg = <0x0 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 152 0>;
++				max-link-speed = <2>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++
++			pci@1,0 {
++				device_type = "pci";
++				reg = <0x800 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 153 0>;
++				max-link-speed = <2>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++
++			pci@2,0 {
++				device_type = "pci";
++				reg = <0x1000 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 33 0>;
++				max-link-speed = <1>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++		};
+ 	};
+ };
 -- 
 2.31.1
 
