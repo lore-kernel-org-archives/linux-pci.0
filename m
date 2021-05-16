@@ -2,121 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A53AC43460
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 17:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EB45C433B4
+	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 10:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 545A8613C3
-	for <linux-pci@archiver.kernel.org>; Sat, 15 May 2021 17:35:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E817D61182
+	for <linux-pci@archiver.kernel.org>; Sun, 16 May 2021 10:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234137AbhEORgs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 15 May 2021 13:36:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42476 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234135AbhEORgr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 May 2021 13:36:47 -0400
-Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B97C061573
-        for <linux-pci@vger.kernel.org>; Sat, 15 May 2021 10:35:33 -0700 (PDT)
-Received: by mail-il1-x12a.google.com with SMTP id z1so2542520ils.0
-        for <linux-pci@vger.kernel.org>; Sat, 15 May 2021 10:35:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fatalsyntax-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:content-transfer-encoding:cc:subject:from:to:date
-         :message-id:in-reply-to;
-        bh=ECsAuXqf15dWO568NVSzYv1EWPK7FJKl+lqtYqv4WjM=;
-        b=GhrWtqA8WDo7J3ALnnGSbuE/f12hP55xaLn6+j7nn3Cg7IRHFEqAYOsTrqlIOL3B+A
-         BW4WGTmXPEVTBMcFU/8bqMkk2k1K8d36JYEXQLhG3dMGP24RhvVxjNmjpCGW8Iix59qK
-         sXHJM/9vDWIp72wcVfzgiEy6KypVswQI8jmrsQxbIytWWLGsUGhRMiqg14eWYaL1tLKf
-         VttMt9bT8uCw4W9ekKVHwAlHyqCCST6FuNHoHno4eUoMhOsL+DboOk77UQs/uaRWOUfQ
-         rFiIgzrgTTMynVSlAF9f/ECILVazpAIYu9ITUCxODQhUmeUDgXKUNRj4gDkNyjfeFyfI
-         u9Tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:content-transfer-encoding:cc
-         :subject:from:to:date:message-id:in-reply-to;
-        bh=ECsAuXqf15dWO568NVSzYv1EWPK7FJKl+lqtYqv4WjM=;
-        b=DWzXiP9CWPly0KM/C5d6127a3zyERPT8SYmFAiyO24KRby8iUpYFmbTaZo9v8ywWHe
-         vlpBy+28z9UrI1AZX2j1qlZ9X9kOgvqDa5o83r7ocp+DZe5leQteqO4eRedwgavbuG++
-         pwh+SQApQ9n9OD8WEowg3YcBjrmxo7tN6Fl1ZhRlDEdmrJTAk3HO66CNV+tWU1R3PF7V
-         xClyf0E1tlnhg39wrygDPYouNYzIJEmjFVUYsWQ4gamSSQh4/v1no0voC34OxQBasQ2K
-         d4M79Y/NndF83E1KCs9ENl+B5+a+AlLSEWgZj3NZbcFMH7UY0/MjQ02JcLiVKxbg0jPm
-         Hyhg==
-X-Gm-Message-State: AOAM531fGWLap5MPnbe1Cp7ftNLbn4N3FFlMt5hh+iSWf7o/CLUmxkB7
-        c8sdRoAmoxYXP0Tu6ppu9/6fXLuPWKe/cSwnDVSeXA==
-X-Google-Smtp-Source: ABdhPJy/rRDwwTjfwk0ae19NzmdLr9zilL3sOKeRp8K5fwv74zFSxDNvdqMJmKJktvMAonHm7jH03Q==
-X-Received: by 2002:a05:6e02:168f:: with SMTP id f15mr48359921ila.264.1621100133041;
-        Sat, 15 May 2021 10:35:33 -0700 (PDT)
-Received: from localhost (2603-6000-ca08-f320-6401-a7ff-fe72-256d.res6.spectrum.com. [2603:6000:ca08:f320:6401:a7ff:fe72:256d])
-        by smtp.gmail.com with ESMTPSA id x13sm4977602ilv.88.2021.05.15.10.35.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 15 May 2021 10:35:32 -0700 (PDT)
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+        id S231539AbhEPKTz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 16 May 2021 06:19:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37560 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230306AbhEPKTw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 May 2021 06:19:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 67143611AD;
+        Sun, 16 May 2021 10:18:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621160317;
+        bh=SHZV8r4pjkW40YyRuQWZWEnGPljHHQ0H17rp3banAMs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kEVCLFtDrc2jFijAFjMXQV3jVpiUHzeA8WMKzpAEjLqZQ/SbySRJhPYN8+8H9Wblc
+         ECNqQXkeDSUW4ZgwhZkAyArFOnnsrxYSQ4Vk/guPkWSafmSZV3bR24DR6WzgNkruJN
+         9cUlA6jubKsaLGEjd6wr7EMy8OKdhOxWG7P3vXqISC/zZABoZYO8uIIy3ZnqDNhxSQ
+         RkIgDQK2CwXZpa/hDUfVp/gK8PgPICBhfW6imJVcipRMmQQFPGRHPe3VMYBzzzT8Rz
+         DDll9Z6++RZHmbnDs2Dj7b1dQYdK1WJ49P5w1SnOE3HBXhMBYn893VetI/qgOAh7av
+         b1nmsYBnWQCSA==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1liDr1-003o8u-Kn; Sun, 16 May 2021 12:18:35 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        "Jonathan Corbet" <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 12/16] docs: PCI: acpi-info.rst: replace some characters
+Date:   Sun, 16 May 2021 12:18:29 +0200
+Message-Id: <320bafda201827dd63208af55b528ae63bcf8217.1621159997.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1621159997.git.mchehab+huawei@kernel.org>
+References: <cover.1621159997.git.mchehab+huawei@kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Cc:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        "Alex Williamson" <alex.williamson@redhat.com>
-Subject: Re: [PATCH] pci: add NVMe FLR quirk to the SM951 SSD
-From:   "Robert Straw" <drbawb@fatalsyntax.com>
-To:     "Bjorn Helgaas" <helgaas@kernel.org>
-Date:   Sat, 15 May 2021 12:20:05 -0500
-Message-Id: <CBDZPI1DXKMS.88UVUXVIGC5V@nagato>
-In-Reply-To: <20210430205105.GA683965@bjorn-Precision-5520>
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri Apr 30, 2021 at 3:51 PM CDT, Bjorn Helgaas wrote:
+The conversion tools used during DocBook/LaTeX/html/Markdown->ReST
+conversion and some cut-and-pasted text contain some characters that
+aren't easily reachable on standard keyboards and/or could cause
+troubles when parsed by the documentation build system.
 
-> Please make your subject line match ffb0863426eb ("PCI: Disable
-> Samsung SM961/PM961 NVMe before FLR")
+Replace the occurences of the following characters:
 
-I had done this in a V2 of this patch, but after some additional
-research I'm thinking the behavior of this quirk might be in-line=20
-w/ the NVMe specification more generally, I'll elaborate more below.
+	- U+00a0 (' '): NO-BREAK SPACE
+	  as it can cause lines being truncated on PDF output
 
-> I don't see anything in the PCIe spec about software being required to
-> do something special before initiating an FLR, so I assume this is a
-> hardware defect in the Samsung 950 PRO? Has Samsung published an
-> erratum or at least acknowledged it?
->
-> There's always the possibility that we are doing something wrong in
-> Linux *after* the FLR, e.g., not waiting long enough, not
-> reinitializing something correctly, etc.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/PCI/acpi-info.rst | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-I did some dumping of registers both with and without this patch, and
-determined the following to be true in my use-case:
+diff --git a/Documentation/PCI/acpi-info.rst b/Documentation/PCI/acpi-info.rst
+index 060217081c79..34c64a5a66ec 100644
+--- a/Documentation/PCI/acpi-info.rst
++++ b/Documentation/PCI/acpi-info.rst
+@@ -22,9 +22,9 @@ or if the device has INTx interrupts connected by platform interrupt
+ controllers and a _PRT is needed to describe those connections.
+ 
+ ACPI resource description is done via _CRS objects of devices in the ACPI
+-namespace [2].   The _CRS is like a generalized PCI BAR: the OS can read
++namespace [2].   The _CRS is like a generalized PCI BAR: the OS can read
+ _CRS and figure out what resource is being consumed even if it doesn't have
+-a driver for the device [3].  That's important because it means an old OS
++a driver for the device [3].  That's important because it means an old OS
+ can work correctly even on a system with new devices unknown to the OS.
+ The new devices might not do anything, but the OS can at least make sure no
+ resources conflict with them.
+@@ -41,15 +41,15 @@ ACPI, that device will have a specific _HID/_CID that tells the OS what
+ driver to bind to it, and the _CRS tells the OS and the driver where the
+ device's registers are.
+ 
+-PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
+-describe all the address space they consume.  This includes all the windows
++PCI host bridges are PNP0A03 or PNP0A08 devices.  Their _CRS should
++describe all the address space they consume.  This includes all the windows
+ they forward down to the PCI bus, as well as registers of the host bridge
+-itself that are not forwarded to PCI.  The host bridge registers include
++itself that are not forwarded to PCI.  The host bridge registers include
+ things like secondary/subordinate bus registers that determine the bus
+ range below the bridge, window registers that describe the apertures, etc.
+ These are all device-specific, non-architected things, so the only way a
+ PNP0A03/PNP0A08 driver can manage them is via _PRS/_CRS/_SRS, which contain
+-the device-specific details.  The host bridge registers also include ECAM
++the device-specific details.  The host bridge registers also include ECAM
+ space, since it is consumed by the host bridge.
+ 
+ ACPI defines a Consumer/Producer bit to distinguish the bridge registers
+@@ -66,7 +66,7 @@ the PNP0A03/PNP0A08 device itself.  The workaround was to describe the
+ bridge registers (including ECAM space) in PNP0C02 catch-all devices [6].
+ With the exception of ECAM, the bridge register space is device-specific
+ anyway, so the generic PNP0A03/PNP0A08 driver (pci_root.c) has no need to
+-know about it.  
++know about it.  
+ 
+ New architectures should be able to use "Consumer" Extended Address Space
+ descriptors in the PNP0A03 device for bridge registers, including ECAM,
+@@ -75,9 +75,9 @@ ia64 kernels assume all address space descriptors, including "Consumer"
+ Extended Address Space ones, are windows, so it would not be safe to
+ describe bridge registers this way on those architectures.
+ 
+-PNP0C02 "motherboard" devices are basically a catch-all.  There's no
++PNP0C02 "motherboard" devices are basically a catch-all.  There's no
+ programming model for them other than "don't use these resources for
+-anything else."  So a PNP0C02 _CRS should claim any address space that is
++anything else."  So a PNP0C02 _CRS should claim any address space that is
+ (1) not claimed by _CRS under any other device object in the ACPI namespace
+ and (2) should not be assigned by the OS to something else.
+ 
+-- 
+2.31.1
 
-1. My guest VM leaves the device in a state where SHN (shutdown
-notification) is set to 0b01 (normal shutdown)
-
-2. The guest also leaves CC.EN (controller enable) set to 0b1
-
-3. vfio-pci attempts to issue an FLR while the device is in this state.
-
-
-On page 40, sec 3.1.6 of the NVMe 1.1 spec, the documentation on SHST=20
-states the following:
-
-> To start executing commands on the controller after a shutdown=20
-> operation (CSTS.SHST set to 10b), a reset (CC.EN cleared to =E2=80=980=E2=
-=80=99)=20
-> is required. If host software submits commands to the controller=20
-> without issuing a reset, the behavior is undefined.
-
-In the case of the SM951/SM961 it appears the undefined behavior is that
-they stop responding to attempts to change their configuration if you do
-an FLR while the device is in this state. The reason this patch
-resolved the issue I was seeing is because the toggle of the CC.EN flag=20
-puts the drive in a known-good state after the guest's shutdown=20
-notification.
-
-Knowing this I would suspect we'd actually want to treat most NVMe
-drives in this manner *if the kernel sees the SHN/SHST has been set
-prior.* Perhaps other NVMe devices are more tolerant of not doing this?
-
-~ robert straw
