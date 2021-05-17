@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F9A7C43611
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC21C4360C
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B0EE611CA
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80DD061359
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244535AbhEQPrO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 May 2021 11:47:14 -0400
-Received: from hostingweb31-40.netsons.net ([89.40.174.40]:34160 "EHLO
+        id S244644AbhEQPrS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 May 2021 11:47:18 -0400
+Received: from hostingweb31-40.netsons.net ([89.40.174.40]:58627 "EHLO
         hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344185AbhEQPmy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:42:54 -0400
+        by vger.kernel.org with ESMTP id S1344188AbhEQPmz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:42:55 -0400
 Received: from [77.244.183.192] (port=64722 helo=melee.fritz.box)
         by hostingweb31.netsons.net with esmtpa (Exim 4.94.2)
         (envelope-from <luca@lucaceresoli.net>)
-        id 1lifNA-000Exi-RL; Mon, 17 May 2021 17:41:36 +0200
+        id 1lifNB-000Exi-NQ; Mon, 17 May 2021 17:41:37 +0200
 From:   Luca Ceresoli <luca@lucaceresoli.net>
 To:     linux-pci@vger.kernel.org
 Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
@@ -33,9 +33,9 @@ Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 1/5] PCI: dwc: export more symbols to allow modular drivers
-Date:   Mon, 17 May 2021 17:41:18 +0200
-Message-Id: <20210517154122.430544-2-luca@lucaceresoli.net>
+Subject: [PATCH 3/5] PCI: dwc: pci-dra7xx: allow to build as a loadable module
+Date:   Mon, 17 May 2021 17:41:20 +0200
+Message-Id: <20210517154122.430544-4-luca@lucaceresoli.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210517154122.430544-1-luca@lucaceresoli.net>
 References: <20210517154122.430544-1-luca@lucaceresoli.net>
@@ -55,39 +55,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-These symbols are used by the pci-dra7xx driver. Export them to allow
-building pci-dra7xx as a module.
+Allow the pci-dra7xx PCIe controller to be build as a loadable module.
 
 Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
- drivers/pci/controller/dwc/pcie-designware.c    | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/pci/controller/dwc/Kconfig | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 8d028a88b375..f2692a138216 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -83,6 +83,7 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- 	for (func_no = 0; func_no < funcs; func_no++)
- 		__dw_pcie_ep_reset_bar(pci, func_no, bar, 0);
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_reset_bar);
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 423d35872ce4..775ad590966e 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -17,10 +17,10 @@ config PCIE_DW_EP
+ 	select PCIE_DW
  
- static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie_ep *ep, u8 func_no,
- 		u8 cap_ptr, u8 cap)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index a945f0c0e73d..850b4533f4ef 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -538,6 +538,7 @@ int dw_pcie_link_up(struct dw_pcie *pci)
- 	return ((val & PCIE_PORT_DEBUG1_LINK_UP) &&
- 		(!(val & PCIE_PORT_DEBUG1_LINK_IN_TRAINING)));
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_link_up);
+ config PCI_DRA7XX
+-	bool
++	tristate
  
- void dw_pcie_upconfig_setup(struct dw_pcie *pci)
- {
+ config PCI_DRA7XX_HOST
+-	bool "TI DRA7xx PCIe controller Host Mode"
++	tristate "TI DRA7xx PCIe controller Host Mode"
+ 	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+@@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
+ 	  This uses the DesignWare core.
+ 
+ config PCI_DRA7XX_EP
+-	bool "TI DRA7xx PCIe controller Endpoint Mode"
++	tristate "TI DRA7xx PCIe controller Endpoint Mode"
+ 	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
 -- 
 2.25.1
 
