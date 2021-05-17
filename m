@@ -2,75 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8A4C43140
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C77EC43460
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79D8661108
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3331D61221
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:50:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244573AbhEQPrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 May 2021 11:47:15 -0400
-Received: from hostingweb31-40.netsons.net ([89.40.174.40]:39951 "EHLO
-        hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344184AbhEQPmy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:42:54 -0400
-Received: from [77.244.183.192] (port=64722 helo=melee.fritz.box)
-        by hostingweb31.netsons.net with esmtpa (Exim 4.94.2)
-        (envelope-from <luca@lucaceresoli.net>)
-        id 1lifNA-000Exi-CJ; Mon, 17 May 2021 17:41:36 +0200
-From:   Luca Ceresoli <luca@lucaceresoli.net>
-To:     linux-pci@vger.kernel.org
-Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 0/5] PCI: dwc: pci-dra7xx: miscellaneous improvements
-Date:   Mon, 17 May 2021 17:41:17 +0200
-Message-Id: <20210517154122.430544-1-luca@lucaceresoli.net>
-X-Mailer: git-send-email 2.25.1
+        id S245093AbhEQPvd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 May 2021 11:51:33 -0400
+Received: from ale.deltatee.com ([204.191.154.188]:48778 "EHLO
+        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343590AbhEQPtd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:49:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:MIME-Version:Date:
+        Message-ID:From:References:Cc:To:content-disposition;
+        bh=ci0Z22X/hoUCHCY6WnDB2dAMsmpgRh0tkZ7xIAwR5oQ=; b=ZROh44oGIOWHIEbPhglpJZHKyK
+        9zxWS2ovHdp9PqkLdpI7RAWV2Z7E6OzokO/5vDTl6c8SKJPLAHtISlAzzGIefD63MWLFHs6r5w7jI
+        cZMD7IvJYj7yLMuDO1+mNEOcttjt4M0C+5iAnCg2n9/eWCDrlI1GEH6Ee6dEt5PE/ZuFWb/e/g9eD
+        GZZ+yiM7mRGipZZZE/TJGO3RRbaN3hTIEwtKvdSmNO/RyUtYCQKAg7JIwuSVv+1bsPelWmdoM+Oot
+        LigEENaTOjx1bour1QPVDvAMUQ67u1fbXcTGjqCNDovWIm0Uf5MV518CpKjzZDzCnm19Vs0bn9e6r
+        nvm8AJ+g==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.92)
+        (envelope-from <logang@deltatee.com>)
+        id 1lifTU-0001Xm-KS; Mon, 17 May 2021 09:48:09 -0600
+To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Joe Perches <joe@perches.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+References: <20210515052434.1413236-1-kw@linux.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <b3be37d4-5d98-474e-05ca-afce4782c359@deltatee.com>
+Date:   Mon, 17 May 2021 09:48:03 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
+In-Reply-To: <20210515052434.1413236-1-kw@linux.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
 Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - hostingweb31.netsons.net
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - lucaceresoli.net
-X-Get-Message-Sender-Via: hostingweb31.netsons.net: authenticated_id: luca+lucaceresoli.net/only user confirmed/virtual account not confirmed
-X-Authenticated-Sender: hostingweb31.netsons.net: luca@lucaceresoli.net
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, wangxiongfeng2@huawei.com, vidyas@nvidia.com, kurt.schwemmer@microsemi.com, ruscur@russell.cc, tyreld@linux.ibm.com, paulus@samba.org, benh@kernel.crashing.org, mpe@ellerman.id.au, oohall@gmail.com, joe@perches.com, bhelgaas@google.com, kw@linux.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2 01/14] PCI: Use sysfs_emit() and sysfs_emit_at() in
+ "show" functions
+X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is an series of mixed improvements to the DRA7 PCI controller driver:
-allow building as a loadabel module, allow to get and enable a clock and a
-small cleanup.
 
-Luca
 
-Luca Ceresoli (5):
-  PCI: dwc: export more symbols to allow modular drivers
-  PCI: dwc: pci-dra7xx: make it a kernel module
-  PCI: dwc: pci-dra7xx: allow to build as a loadable module
-  PCI: dwc: pci-dra7xx: remove unused include
-  PCI: dwc: pci-dra7xx: get an optional clock
+On 2021-05-14 11:24 p.m., Krzysztof Wilczyński wrote:
+> The sysfs_emit() and sysfs_emit_at() functions were introduced to make
+> it less ambiguous which function is preferred when writing to the output
+> buffer in a device attribute's "show" callback [1].
+> 
+> Convert the PCI sysfs object "show" functions from sprintf(), snprintf()
+> and scnprintf() to sysfs_emit() and sysfs_emit_at() accordingly, as the
+> latter is aware of the PAGE_SIZE buffer and correctly returns the number
+> of bytes written into the buffer.
+> 
+> No functional change intended.
+> 
+> [1] Documentation/filesystems/sysfs.rst
+> 
+> Related to:
+>   commit ad025f8e46f3 ("PCI/sysfs: Use sysfs_emit() and sysfs_emit_at() in "show" functions")
+> 
+> Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
- drivers/pci/controller/dwc/Kconfig            |  6 +++---
- drivers/pci/controller/dwc/pci-dra7xx.c       | 21 +++++++++++++++++--
- .../pci/controller/dwc/pcie-designware-ep.c   |  1 +
- drivers/pci/controller/dwc/pcie-designware.c  |  1 +
- 4 files changed, 24 insertions(+), 5 deletions(-)
+I re-reviewed the whole series. It still looks good to me.
 
--- 
-2.25.1
+Very nice solution in patch 12 to the new line issue.
 
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+Thanks,
+
+Logan
