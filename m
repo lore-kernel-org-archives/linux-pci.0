@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC21C4360C
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A83CC04FF3
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80DD061359
-	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F429611CC
+	for <linux-pci@archiver.kernel.org>; Mon, 17 May 2021 15:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244644AbhEQPrS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 May 2021 11:47:18 -0400
-Received: from hostingweb31-40.netsons.net ([89.40.174.40]:58627 "EHLO
+        id S244899AbhEQPrU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 May 2021 11:47:20 -0400
+Received: from hostingweb31-40.netsons.net ([89.40.174.40]:47636 "EHLO
         hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1344188AbhEQPmz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:42:55 -0400
+        by vger.kernel.org with ESMTP id S1344190AbhEQPm4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 11:42:56 -0400
 Received: from [77.244.183.192] (port=64722 helo=melee.fritz.box)
         by hostingweb31.netsons.net with esmtpa (Exim 4.94.2)
         (envelope-from <luca@lucaceresoli.net>)
-        id 1lifNB-000Exi-NQ; Mon, 17 May 2021 17:41:37 +0200
+        id 1lifNC-000Exi-Ly; Mon, 17 May 2021 17:41:38 +0200
 From:   Luca Ceresoli <luca@lucaceresoli.net>
 To:     linux-pci@vger.kernel.org
 Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
@@ -33,9 +33,9 @@ Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH 3/5] PCI: dwc: pci-dra7xx: allow to build as a loadable module
-Date:   Mon, 17 May 2021 17:41:20 +0200
-Message-Id: <20210517154122.430544-4-luca@lucaceresoli.net>
+Subject: [PATCH 5/5] PCI: dwc: pci-dra7xx: get an optional clock
+Date:   Mon, 17 May 2021 17:41:22 +0200
+Message-Id: <20210517154122.430544-6-luca@lucaceresoli.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210517154122.430544-1-luca@lucaceresoli.net>
 References: <20210517154122.430544-1-luca@lucaceresoli.net>
@@ -55,39 +55,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allow the pci-dra7xx PCIe controller to be build as a loadable module.
+If the clock is provided externally we need to make sure it is enabled
+before starting PCI scan.
 
 Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
 ---
- drivers/pci/controller/dwc/Kconfig | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 423d35872ce4..775ad590966e 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -17,10 +17,10 @@ config PCIE_DW_EP
- 	select PCIE_DW
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 05d06806c300..8dd20b394d0c 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -7,6 +7,7 @@
+  * Authors: Kishon Vijay Abraham I <kishon@ti.com>
+  */
  
- config PCI_DRA7XX
--	bool
-+	tristate
++#include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/err.h>
+@@ -90,6 +91,7 @@ struct dra7xx_pcie {
+ 	int			phy_count;	/* DT phy-names count */
+ 	struct phy		**phy;
+ 	struct irq_domain	*irq_domain;
++	struct clk              *clk;
+ 	enum dw_pcie_device_mode mode;
+ };
  
- config PCI_DRA7XX_HOST
--	bool "TI DRA7xx PCIe controller Host Mode"
-+	tristate "TI DRA7xx PCIe controller Host Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on OF && HAS_IOMEM && TI_PIPE3
-@@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
- 	  This uses the DesignWare core.
+@@ -744,6 +746,15 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (!link)
+ 		return -ENOMEM;
  
- config PCI_DRA7XX_EP
--	bool "TI DRA7xx PCIe controller Endpoint Mode"
-+	tristate "TI DRA7xx PCIe controller Endpoint Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
- 	depends on PCI_ENDPOINT
- 	depends on OF && HAS_IOMEM && TI_PIPE3
++	dra7xx->clk = devm_clk_get_optional(dev, NULL);
++	if (IS_ERR(dra7xx->clk))
++		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
++				     "clock request failed");
++
++	ret = clk_prepare_enable(dra7xx->clk);
++	if (ret)
++		return ret;
++
+ 	for (i = 0; i < phy_count; i++) {
+ 		snprintf(name, sizeof(name), "pcie-phy%d", i);
+ 		phy[i] = devm_phy_get(dev, name);
+@@ -931,6 +942,8 @@ static void dra7xx_pcie_shutdown(struct platform_device *pdev)
+ 
+ 	pm_runtime_disable(dev);
+ 	dra7xx_pcie_disable_phy(dra7xx);
++
++	clk_disable_unprepare(dra7xx->clk);
+ }
+ 
+ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
 -- 
 2.25.1
 
