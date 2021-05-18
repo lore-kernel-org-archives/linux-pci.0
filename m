@@ -2,604 +2,249 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
-	DATE_IN_FUTURE_06_12,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8325C433B4
-	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 07:07:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4127C433B4
+	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 07:13:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D200C61263
-	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 07:07:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82FD561263
+	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 07:13:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346942AbhERHIm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 May 2021 03:08:42 -0400
-Received: from mga01.intel.com ([192.55.52.88]:58412 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1346648AbhERHIj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 May 2021 03:08:39 -0400
-IronPort-SDR: AzuV7HdHRfHdraXDrHAMJYf593GZhFgjRty+UCeFerPzN4nI1kiOUuHgAlyMpXEHQ/jREb6zNY
- mbvAR/6kKCyQ==
-X-IronPort-AV: E=McAfee;i="6200,9189,9987"; a="221695515"
-X-IronPort-AV: E=Sophos;i="5.82,309,1613462400"; 
-   d="scan'208";a="221695515"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2021 00:07:22 -0700
-IronPort-SDR: hkQAl5byfi6v57vQ+yJuJ0fKgaL8f8bIdisR0wxRwjKHqjwO4K4RhwNHEQFE/ZYqW+GRK8aPqd
- 8rMzdY7GuD/A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.82,309,1613462400"; 
-   d="scan'208";a="626966851"
-Received: from intel-z390-ud.iind.intel.com ([10.106.46.146])
-  by fmsmga006.fm.intel.com with ESMTP; 18 May 2021 00:07:18 -0700
-From:   srikanth.thokala@intel.com
-To:     robh+dt@kernel.org, lorenzo.pieralisi@arm.com
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        lakshmi.bai.raja.subramanian@intel.com,
-        mallikarjunappa.sangannavar@intel.com, kw@linux.com,
-        srikanth.thokala@intel.com
-Subject: [PATCH v9 2/2] PCI: keembay: Add support for Intel Keem Bay
-Date:   Tue, 18 May 2021 20:30:50 +0530
-Message-Id: <20210518150050.7427-3-srikanth.thokala@intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210518150050.7427-1-srikanth.thokala@intel.com>
-References: <20210518150050.7427-1-srikanth.thokala@intel.com>
+        id S1346113AbhERHPQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 May 2021 03:15:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39932 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244514AbhERHPP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 May 2021 03:15:15 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9634C061573
+        for <linux-pci@vger.kernel.org>; Tue, 18 May 2021 00:13:56 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id g11so4252427ilq.3
+        for <linux-pci@vger.kernel.org>; Tue, 18 May 2021 00:13:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=UMofkkhtzjxlDv1Oycbxs7kw2w9YacQFaftAekwJhW0=;
+        b=nF+oXyU4QswaoU7mI/dhEwwA7ORTu3SkTxnOqKwrHAtDR+0oDcJPGX78fKeTdhEFQF
+         5gI/o+Pvl0377OmCQ1uGImJXacNXZx2/Zow83oaWgwTsJJIWEoXvi0DH83KOxn3FR6AF
+         WTUZQX3rZNDAy9iNj510hTrtd6o3Aea1NHLFoZag1jpDEZauikdxOOGclv4a+QQgZXEN
+         cfqWePC+2FTxW2rZLSgsG2QKnfnuNDbEZg0Dt7O5NT/SeI58XIrGT/UWnJ1iRtEeI/Gf
+         C26JSIoCvp0WA/XzD0x4DMglE36OFNl/oA5mxKgTNy2jrMws8XN4xzBdy8tQCdMTrVMK
+         OVrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=UMofkkhtzjxlDv1Oycbxs7kw2w9YacQFaftAekwJhW0=;
+        b=g7HeWN8jx2ZpqklJaRdAM71sGnv3PAz6GT7s0YQ1Emar/3pcNraYeXqVl2S1bTsECV
+         NMKqkjcJheLu9VLdbGx9hrATnVLUbE6NpYJVabp5RlcjpCMp1uu56Wf61Wjn/67YBM0v
+         waYWllgjduLRCP8egaauQIQesD6Dk8FhzqIF+RR4QcRZAU2y8+TO3vsiV+NnMcWdMth5
+         GIZxJYNM8b0UgO/g5h9LOiS3W/BOrwRAmKcsJxdPT+tbXLXL5EJvncdyjrzZHcgBibyy
+         oLTLgQD4e5Q1H+IZoO4kTWAYRMypPJHbPRqgxGt20yxaHmtO72Z05HjPYsgrSZgZjHyV
+         htJg==
+X-Gm-Message-State: AOAM531Pe2XxZrELIeH5u7phTBct8FK6kmQmG6Svx+a5r4WhkQKNFYJ1
+        h8CMAgzc0rC4TnV5t0gQgWns1yvz/qD0MUmCUqk=
+X-Google-Smtp-Source: ABdhPJx1PfPXBEnBgBYDuZnry2oyZLlNWw49Z9lYBDuj5ATQuJfMwkkTXy6Iwmyl2m/yKazOEPyKbUPUgEzp1xQG+Pg=
+X-Received: by 2002:a05:6e02:1e05:: with SMTP id g5mr3029420ila.134.1621322035728;
+ Tue, 18 May 2021 00:13:55 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAAhV-H6E3vh9+SZg5qOmVbfjENRPi0=UbLqK-YHcCA0mzcx9aw@mail.gmail.com>
+ <20210517182810.GA29638@bjorn-Precision-5520>
+In-Reply-To: <20210517182810.GA29638@bjorn-Precision-5520>
+From:   Huacai Chen <chenhuacai@gmail.com>
+Date:   Tue, 18 May 2021 15:13:43 +0800
+Message-ID: <CAAhV-H6T4+qZktfEZ-6eKO5SBp_o3Okbu+aBnH+h7Hy6L-PaXA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] PCI: Support ASpeed VGA cards behind a misbehaving bridge
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Jingfeng Sui <suijingfeng@loongson.cn>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Srikanth Thokala <srikanth.thokala@intel.com>
+Hi, Bjorn,
 
-Add driver for Intel Keem Bay SoC PCIe controller. This controller
-is based on DesignWare PCIe core.
+On Tue, May 18, 2021 at 2:28 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Mon, May 17, 2021 at 08:53:43PM +0800, Huacai Chen wrote:
+> > On Sat, May 15, 2021 at 5:09 PM Huacai Chen <chenhuacai@gmail.com> wrote:
+> > > On Fri, May 14, 2021 at 11:10 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > On Fri, May 14, 2021 at 04:00:25PM +0800, Huacai Chen wrote:
+> > > > > According to PCI-to-PCI bridge spec, bit 3 of Bridge Control Register is
+> > > > > VGA Enable bit which modifies the response to VGA compatible addresses.
+> > > >
+> > > > The bridge spec is pretty old, and most of the content has been
+> > > > incorporated into the PCIe spec.  I think you can cite "PCIe r5.0, sec
+> > > > 7.5.1.3.13" here instead.
+> > > >
+> > > > > If the VGA Enable bit is set, the bridge will decode and forward the
+> > > > > following accesses on the primary interface to the secondary interface.
+> > > >
+> > > > *Which* following accesses?  The structure of English requires that if
+> > > > you say "the following accesses," you must continue by *listing* the
+> > > > accesses.
+> > > >
+> > > > > The ASpeed AST2500 hardward does not set the VGA Enable bit on its
+> > > > > bridge control register, which causes vgaarb subsystem don't think the
+> > > > > VGA card behind the bridge as a valid boot vga device.
+> > > >
+> > > > s/hardward/bridge/
+> > > > s/vga/VGA/ (also in code comments and dmesg strings below)
+> > > >
+> > > > From the code, it looks like AST2500 ([1a03:2000]) is a VGA device,
+> > > > since it apparently has a VGA class code.  But here you say the
+> > > > AST2500 has a Bridge Control register, which suggests that it's a
+> > > > bridge.  If AST2500 is some sort of combination that includes both a
+> > > > bridge and a VGA device, please outline that topology.
+> > > >
+> > > > But the hardware defect is that some bridges forward VGA accesses even
+> > > > though their VGA Enable bit is not set?  The quirk should be attached
+> > > > to broken *bridges*, not to VGA devices.
+> > > >
+> > > > If a bridge forwards VGA accesses regardless of how its VGA Enable bit
+> > > > is set, that means VGA arbitration (in vgaarb.c) cannot work
+> > > > correctly, so merely setting the default VGA device once in a quirk is
+> > > > not sufficient.  You would have to somehow disable any future attempts
+> > > > to use other VGA devices.  Only the VGA device below this defective
+> > > > bridge is usable.  Any other VGA devices in the system would be
+> > > > useless.
+> > > >
+> > > > > So we provide a quirk to fix Xorg auto-detection.
+> > > > >
+> > > > > See similar bug:
+> > > > >
+> > > > > https://patchwork.kernel.org/project/linux-pci/patch/20170619023528.11532-1-dja@axtens.net/
+> > > >
+> > > > This patch was never merged.  If we merged a revised version, please
+> > > > cite the SHA1 instead.
+> > >
+> > > This patch has never merged, and I found that it is unnecessary after
+> > > commit a37c0f48950b56f6ef2ee637 ("vgaarb: Select a default VGA device
+> > > even if there's no legacy VGA"). Maybe this ASpeed patch is also
+> > > unnecessary. If it is still needed, I'll investigate the root cause.
+> >
+> > I found that vga_arb_device_init() and pcibios_init() are both wrapped
+> > by subsys_initcall(), which means their sequence is unpredictable. And
+> > unfortunately, in our platform vga_arb_device_init() is called before
+> > pcibios_init(), which makes vga_arb_device_init() fail to set a
+> > default vga device. This is the root cause why we thought that we
+> > still need a quirk for AST2500.
+>
+> Does this mean there is no hardware defect here?  The VGA Enable bit
+> works correctly?
+>
+No, VGA Enable bit still doesn't set, but with commit
+a37c0f48950b56f6ef2ee637 ("vgaarb: Select a default VGA device even if
+there's no legacy VGA") we no longer depend on VGA Enable.
 
-In Root Complex mode, only internal reference clock is possible for
-Keem Bay A0. For Keem Bay B0, external reference clock can be used
-and will be the default configuration. Currently, keembay_pcie_of_data
-structure has one member. It will be expanded later to handle this
-difference.
+> > I think the best solution is make vga_arb_device_init() be wrapped by
+> > subsys_initcall_sync(), do you think so?
+>
+> Hmm.  Unfortunately the semantics of subsys_initcall_sync() are not
+> documented, so I'm not sure exactly *why* such a change would work and
+> whether we could rely on it to continue working.
+>
+> pcibios_init() isn't very consistent across arches.  On some,
+> including alpha, microblaze, some MIPS platforms, powerpc, and sh, it
+> enumerates PCI devices.  On others (ia64, parisc, sparc, x86), it does
+> basically nothing.  That makes life a little difficult.
+subsys_initcall_sync() is ensured after all subsys_initcall()
+functions, so at least it can solve the problem on platforms which use
+pcibios_init() to enumerate PCI devices (x86 and other ACPI-based
+platforms are also OK, because they use acpi_init()
+-->acpi_scan_init() -->pci_acpi_scan_root() to enumerate devices).
 
-Endpoint mode link initialization is handled by the boot firmware.
-
-Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
-Acked-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Srikanth Thokala <srikanth.thokala@intel.com>
----
- MAINTAINERS                               |   7 +
- drivers/pci/controller/dwc/Kconfig        |  28 ++
- drivers/pci/controller/dwc/Makefile       |   1 +
- drivers/pci/controller/dwc/pcie-keembay.c | 451 ++++++++++++++++++++++
- 4 files changed, 487 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index bd7aff0c120f..209d87f85f34 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14233,6 +14233,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
- F:	drivers/pci/controller/dwc/pcie-histb.c
- 
-+PCIE DRIVER FOR INTEL KEEM BAY
-+M:	Srikanth Thokala <srikanth.thokala@intel.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
-+F:	drivers/pci/controller/dwc/pcie-keembay.c
-+
- PCIE DRIVER FOR MEDIATEK
- M:	Ryder Lee <ryder.lee@mediatek.com>
- M:	Jianjun Wang <jianjun.wang@mediatek.com>
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 423d35872ce4..04430ddde8c4 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -225,6 +225,34 @@ config PCIE_INTEL_GW
- 	  The PCIe controller uses the DesignWare core plus Intel-specific
- 	  hardware wrappers.
- 
-+config PCIE_KEEMBAY
-+	bool
-+
-+config PCIE_KEEMBAY_HOST
-+	bool "Intel Keem Bay PCIe controller - Host mode"
-+	depends on ARCH_KEEMBAY || COMPILE_TEST
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	select PCIE_KEEMBAY
-+	help
-+	  Say 'Y' here to enable support for the PCIe controller in Keem Bay
-+	  to work in host mode.
-+	  The PCIe controller is based on DesignWare Hardware and uses
-+	  DesignWare core functions.
-+
-+config PCIE_KEEMBAY_EP
-+	bool "Intel Keem Bay PCIe controller - Endpoint mode"
-+	depends on ARCH_KEEMBAY || COMPILE_TEST
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	select PCIE_KEEMBAY
-+	help
-+	  Say 'Y' here to enable support for the PCIe controller in Keem Bay
-+	  to work in endpoint mode.
-+	  The PCIe controller is based on DesignWare Hardware and uses
-+	  DesignWare core functions.
-+
- config PCIE_KIRIN
- 	depends on OF && (ARM64 || COMPILE_TEST)
- 	bool "HiSilicon Kirin series SoCs PCIe controllers"
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index eca805c1a023..6932292b3f22 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -15,6 +15,7 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_INTEL_GW) += pcie-intel-gw.o
-+obj-$(CONFIG_PCIE_KEEMBAY) += pcie-keembay.o
- obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
- obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
- obj-$(CONFIG_PCI_MESON) += pci-meson.o
-diff --git a/drivers/pci/controller/dwc/pcie-keembay.c b/drivers/pci/controller/dwc/pcie-keembay.c
-new file mode 100644
-index 000000000000..91ebb461c8a3
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-keembay.c
-@@ -0,0 +1,451 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * PCIe controller driver for Intel Keem Bay
-+ * Copyright (C) 2020 Intel Corporation
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/bits.h>
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/err.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/init.h>
-+#include <linux/iopoll.h>
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/kernel.h>
-+#include <linux/mod_devicetable.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/property.h>
-+
-+#include "pcie-designware.h"
-+
-+/* PCIE_REGS_APB_SLV Registers */
-+#define PCIE_REGS_PCIE_CFG		0x0004
-+#define  PCIE_DEVICE_TYPE		BIT(8)
-+#define  PCIE_RSTN			BIT(0)
-+#define PCIE_REGS_PCIE_APP_CNTRL	0x0008
-+#define  APP_LTSSM_ENABLE		BIT(0)
-+#define PCIE_REGS_INTERRUPT_ENABLE	0x0028
-+#define  MSI_CTRL_INT_EN		BIT(8)
-+#define  EDMA_INT_EN			GENMASK(7, 0)
-+#define PCIE_REGS_INTERRUPT_STATUS	0x002c
-+#define  MSI_CTRL_INT			BIT(8)
-+#define PCIE_REGS_PCIE_SII_PM_STATE	0x00b0
-+#define  SMLH_LINK_UP			BIT(19)
-+#define  RDLH_LINK_UP			BIT(8)
-+#define  PCIE_REGS_PCIE_SII_LINK_UP	(SMLH_LINK_UP | RDLH_LINK_UP)
-+#define PCIE_REGS_PCIE_PHY_CNTL		0x0164
-+#define  PHY0_SRAM_BYPASS		BIT(8)
-+#define PCIE_REGS_PCIE_PHY_STAT		0x0168
-+#define  PHY0_MPLLA_STATE		BIT(1)
-+#define PCIE_REGS_LJPLL_STA		0x016c
-+#define  LJPLL_LOCK			BIT(0)
-+#define PCIE_REGS_LJPLL_CNTRL_0		0x0170
-+#define  LJPLL_EN			BIT(29)
-+#define  LJPLL_FOUT_EN			GENMASK(24, 21)
-+#define PCIE_REGS_LJPLL_CNTRL_2		0x0178
-+#define  LJPLL_REF_DIV			GENMASK(17, 12)
-+#define  LJPLL_FB_DIV			GENMASK(11, 0)
-+#define PCIE_REGS_LJPLL_CNTRL_3		0x017c
-+#define  LJPLL_POST_DIV3A		GENMASK(24, 22)
-+#define  LJPLL_POST_DIV2A		GENMASK(18, 16)
-+
-+#define PERST_DELAY_US		1000
-+#define AUX_CLK_RATE_HZ		24000000
-+
-+struct keembay_pcie {
-+	struct dw_pcie		pci;
-+	void __iomem		*apb_base;
-+	enum dw_pcie_device_mode mode;
-+
-+	struct clk		*clk_master;
-+	struct clk		*clk_aux;
-+	struct gpio_desc	*reset;
-+};
-+
-+struct keembay_pcie_of_data {
-+	enum dw_pcie_device_mode mode;
-+};
-+
-+static void keembay_ep_reset_assert(struct keembay_pcie *pcie)
-+{
-+	gpiod_set_value_cansleep(pcie->reset, 1);
-+	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-+}
-+
-+static void keembay_ep_reset_deassert(struct keembay_pcie *pcie)
-+{
-+	/*
-+	 * Ensure that PERST# is asserted for a minimum of 100ms.
-+	 *
-+	 * For more details, refer to PCI Express Card Electromechanical
-+	 * Specification Revision 1.1, Table-2.4.
-+	 */
-+	msleep(100);
-+
-+	gpiod_set_value_cansleep(pcie->reset, 0);
-+	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
-+}
-+
-+static void keembay_pcie_ltssm_set(struct keembay_pcie *pcie, bool enable)
-+{
-+	u32 val;
-+
-+	val = readl(pcie->apb_base + PCIE_REGS_PCIE_APP_CNTRL);
-+	if (enable)
-+		val |= APP_LTSSM_ENABLE;
-+	else
-+		val &= ~APP_LTSSM_ENABLE;
-+	writel(val, pcie->apb_base + PCIE_REGS_PCIE_APP_CNTRL);
-+}
-+
-+static int keembay_pcie_link_up(struct dw_pcie *pci)
-+{
-+	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-+	u32 val;
-+
-+	val = readl(pcie->apb_base + PCIE_REGS_PCIE_SII_PM_STATE);
-+
-+	return (val & PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP;
-+}
-+
-+static int keembay_pcie_start_link(struct dw_pcie *pci)
-+{
-+	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-+	u32 val;
-+	int ret;
-+
-+	if (pcie->mode == DW_PCIE_EP_TYPE)
-+		return 0;
-+
-+	keembay_pcie_ltssm_set(pcie, false);
-+
-+	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_PCIE_PHY_STAT,
-+				 val, val & PHY0_MPLLA_STATE, 20,
-+				 500 * USEC_PER_MSEC);
-+	if (ret) {
-+		dev_err(pci->dev, "MPLLA is not locked\n");
-+		return ret;
-+	}
-+
-+	keembay_pcie_ltssm_set(pcie, true);
-+
-+	return 0;
-+}
-+
-+static void keembay_pcie_stop_link(struct dw_pcie *pci)
-+{
-+	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-+
-+	keembay_pcie_ltssm_set(pcie, false);
-+}
-+
-+static const struct dw_pcie_ops keembay_pcie_ops = {
-+	.link_up	= keembay_pcie_link_up,
-+	.start_link	= keembay_pcie_start_link,
-+	.stop_link	= keembay_pcie_stop_link,
-+};
-+
-+static inline struct clk *keembay_pcie_probe_clock(struct device *dev,
-+						   const char *id, u64 rate)
-+{
-+	struct clk *clk;
-+	int ret;
-+
-+	clk = devm_clk_get(dev, id);
-+	if (IS_ERR(clk))
-+		return clk;
-+
-+	if (rate) {
-+		ret = clk_set_rate(clk, rate);
-+		if (ret)
-+			return ERR_PTR(ret);
-+	}
-+
-+	ret = clk_prepare_enable(clk);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	ret = devm_add_action_or_reset(dev,
-+				       (void(*)(void *))clk_disable_unprepare,
-+				       clk);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	return clk;
-+}
-+
-+static int keembay_pcie_probe_clocks(struct keembay_pcie *pcie)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	struct device *dev = pci->dev;
-+
-+	pcie->clk_master = keembay_pcie_probe_clock(dev, "master", 0);
-+	if (IS_ERR(pcie->clk_master))
-+		return dev_err_probe(dev, PTR_ERR(pcie->clk_master),
-+				     "Failed to enable master clock");
-+
-+	pcie->clk_aux = keembay_pcie_probe_clock(dev, "aux", AUX_CLK_RATE_HZ);
-+	if (IS_ERR(pcie->clk_aux))
-+		return dev_err_probe(dev, PTR_ERR(pcie->clk_aux),
-+				     "Failed to enable auxiliary clock");
-+
-+	return 0;
-+}
-+
-+/*
-+ * Initialize the internal PCIe PLL in Host mode.
-+ * See the following sections in Keem Bay data book,
-+ * (1) 6.4.6.1 PCIe Subsystem Example Initialization,
-+ * (2) 6.8 PCIe Low Jitter PLL for Ref Clk Generation.
-+ */
-+static int keembay_pcie_pll_init(struct keembay_pcie *pcie)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	u32 val;
-+	int ret;
-+
-+	val = FIELD_PREP(LJPLL_REF_DIV, 0) | FIELD_PREP(LJPLL_FB_DIV, 0x32);
-+	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_2);
-+
-+	val = FIELD_PREP(LJPLL_POST_DIV3A, 0x2) |
-+		FIELD_PREP(LJPLL_POST_DIV2A, 0x2);
-+	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_3);
-+
-+	val = FIELD_PREP(LJPLL_EN, 0x1) | FIELD_PREP(LJPLL_FOUT_EN, 0xc);
-+	writel(val, pcie->apb_base + PCIE_REGS_LJPLL_CNTRL_0);
-+
-+	ret = readl_poll_timeout(pcie->apb_base + PCIE_REGS_LJPLL_STA,
-+				 val, val & LJPLL_LOCK, 20,
-+				 500 * USEC_PER_MSEC);
-+	if (ret)
-+		dev_err(pci->dev, "Low jitter PLL is not locked\n");
-+
-+	return ret;
-+}
-+
-+static void keembay_pcie_msi_irq_handler(struct irq_desc *desc)
-+{
-+	struct keembay_pcie *pcie = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	u32 val, mask, status;
-+	struct pcie_port *pp;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	pp = &pcie->pci.pp;
-+	val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
-+	mask = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
-+
-+	status = val & mask;
-+
-+	if (status & MSI_CTRL_INT) {
-+		dw_handle_msi_irq(pp);
-+		writel(status, pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
-+	}
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static int keembay_pcie_setup_msi_irq(struct keembay_pcie *pcie)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	struct device *dev = pci->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	int irq;
-+
-+	irq = platform_get_irq_byname(pdev, "pcie");
-+	if (irq < 0)
-+		return irq;
-+
-+	irq_set_chained_handler_and_data(irq, keembay_pcie_msi_irq_handler,
-+					 pcie);
-+
-+	return 0;
-+}
-+
-+static void keembay_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct keembay_pcie *pcie = dev_get_drvdata(pci->dev);
-+
-+	writel(EDMA_INT_EN, pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
-+}
-+
-+static int keembay_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-+				     enum pci_epc_irq_type type,
-+				     u16 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		/* Legacy interrupts are not supported in Keem Bay */
-+		dev_err(pci->dev, "Legacy IRQ is not supported\n");
-+		return -EINVAL;
-+	case PCI_EPC_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-+	case PCI_EPC_IRQ_MSIX:
-+		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-+	default:
-+		dev_err(pci->dev, "Unknown IRQ type %d\n", type);
-+		return -EINVAL;
-+	}
-+}
-+
-+static const struct pci_epc_features keembay_pcie_epc_features = {
-+	.linkup_notifier	= false,
-+	.msi_capable		= true,
-+	.msix_capable		= true,
-+	.reserved_bar		= BIT(BAR_1) | BIT(BAR_3) | BIT(BAR_5),
-+	.bar_fixed_64bit	= BIT(BAR_0) | BIT(BAR_2) | BIT(BAR_4),
-+	.align			= SZ_16K,
-+};
-+
-+static const struct pci_epc_features *
-+keembay_pcie_get_features(struct dw_pcie_ep *ep)
-+{
-+	return &keembay_pcie_epc_features;
-+}
-+
-+static const struct dw_pcie_ep_ops keembay_pcie_ep_ops = {
-+	.ep_init	= keembay_pcie_ep_init,
-+	.raise_irq	= keembay_pcie_ep_raise_irq,
-+	.get_features	= keembay_pcie_get_features,
-+};
-+
-+static const struct dw_pcie_host_ops keembay_pcie_host_ops = {
-+};
-+
-+static int keembay_pcie_add_pcie_port(struct keembay_pcie *pcie,
-+				      struct platform_device *pdev)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
-+	struct device *dev = &pdev->dev;
-+	u32 val;
-+	int ret;
-+
-+	pp->ops = &keembay_pcie_host_ops;
-+	pp->msi_irq = -ENODEV;
-+
-+	ret = keembay_pcie_setup_msi_irq(pcie);
-+	if (ret)
-+		return ret;
-+
-+	pcie->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(pcie->reset))
-+		return PTR_ERR(pcie->reset);
-+
-+	ret = keembay_pcie_probe_clocks(pcie);
-+	if (ret)
-+		return ret;
-+
-+	val = readl(pcie->apb_base + PCIE_REGS_PCIE_PHY_CNTL);
-+	val |= PHY0_SRAM_BYPASS;
-+	writel(val, pcie->apb_base + PCIE_REGS_PCIE_PHY_CNTL);
-+
-+	writel(PCIE_DEVICE_TYPE, pcie->apb_base + PCIE_REGS_PCIE_CFG);
-+
-+	ret = keembay_pcie_pll_init(pcie);
-+	if (ret)
-+		return ret;
-+
-+	val = readl(pcie->apb_base + PCIE_REGS_PCIE_CFG);
-+	writel(val | PCIE_RSTN, pcie->apb_base + PCIE_REGS_PCIE_CFG);
-+	keembay_ep_reset_deassert(pcie);
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		keembay_ep_reset_assert(pcie);
-+		dev_err(dev, "Failed to initialize host: %d\n", ret);
-+		return ret;
-+	}
-+
-+	val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		val |= MSI_CTRL_INT_EN;
-+	writel(val, pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
-+
-+	return 0;
-+}
-+
-+static int keembay_pcie_probe(struct platform_device *pdev)
-+{
-+	const struct keembay_pcie_of_data *data;
-+	struct device *dev = &pdev->dev;
-+	struct keembay_pcie *pcie;
-+	struct dw_pcie *pci;
-+	enum dw_pcie_device_mode mode;
-+
-+	data = device_get_match_data(dev);
-+	if (!data)
-+		return -ENODEV;
-+
-+	mode = (enum dw_pcie_device_mode)data->mode;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pci = &pcie->pci;
-+	pci->dev = dev;
-+	pci->ops = &keembay_pcie_ops;
-+
-+	pcie->mode = mode;
-+
-+	pcie->apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
-+	if (IS_ERR(pcie->apb_base))
-+		return PTR_ERR(pcie->apb_base);
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	switch (pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_HOST))
-+			return -ENODEV;
-+
-+		return keembay_pcie_add_pcie_port(pcie, pdev);
-+	case DW_PCIE_EP_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_KEEMBAY_EP))
-+			return -ENODEV;
-+
-+		pci->ep.ops = &keembay_pcie_ep_ops;
-+		return dw_pcie_ep_init(&pci->ep);
-+	default:
-+		dev_err(dev, "Invalid device type %d\n", pcie->mode);
-+		return -ENODEV;
-+	}
-+}
-+
-+static const struct keembay_pcie_of_data keembay_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct keembay_pcie_of_data keembay_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct of_device_id keembay_pcie_of_match[] = {
-+	{
-+		.compatible = "intel,keembay-pcie",
-+		.data = &keembay_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "intel,keembay-pcie-ep",
-+		.data = &keembay_pcie_ep_of_data,
-+	},
-+	{}
-+};
-+
-+static struct platform_driver keembay_pcie_driver = {
-+	.driver = {
-+		.name = "keembay-pcie",
-+		.of_match_table = keembay_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe  = keembay_pcie_probe,
-+};
-+builtin_platform_driver(keembay_pcie_driver);
--- 
-2.17.1
-
+Huacai
+>
+> vga_arb_device_init() is a subsys_initcall() and wants to look through
+> all the PCI devices.  That's a little problematic for arches where
+> pcibios_init() is also a subsys_initcall() and enumerates PCI devices.
+>
+> Sorry, that's no answer for you.  Just more questions :)
+>
+> > > > > Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> > > > > Signed-off-by: Jingfeng Sui <suijingfeng@loongson.cn>
+> > > > > ---
+> > > > >  drivers/pci/quirks.c | 47 ++++++++++++++++++++++++++++++++++++++++++++
+> > > > >  1 file changed, 47 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > > > index 6ab4b3bba36b..adf5490706ad 100644
+> > > > > --- a/drivers/pci/quirks.c
+> > > > > +++ b/drivers/pci/quirks.c
+> > > > > @@ -28,6 +28,7 @@
+> > > > >  #include <linux/platform_data/x86/apple.h>
+> > > > >  #include <linux/pm_runtime.h>
+> > > > >  #include <linux/switchtec.h>
+> > > > > +#include <linux/vgaarb.h>
+> > > > >  #include <asm/dma.h> /* isa_dma_bridge_buggy */
+> > > > >  #include "pci.h"
+> > > > >
+> > > > > @@ -297,6 +298,52 @@ static void loongson_mrrs_quirk(struct pci_dev *dev)
+> > > > >  }
+> > > > >  DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, loongson_mrrs_quirk);
+> > > > >
+> > > > > +
+> > > > > +static void aspeed_fixup_vgaarb(struct pci_dev *pdev)
+> > > > > +{
+> > > > > +     struct pci_dev *bridge;
+> > > > > +     struct pci_bus *bus;
+> > > > > +     struct pci_dev *vdevp = NULL;
+> > > > > +     u16 config;
+> > > > > +
+> > > > > +     bus = pdev->bus;
+> > > > > +     bridge = bus->self;
+> > > > > +
+> > > > > +     /* Is VGA routed to us? */
+> > > > > +     if (bridge && (pci_is_bridge(bridge))) {
+> > > > > +             pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &config);
+> > > > > +
+> > > > > +             /* Yes, this bridge is PCI bridge-to-bridge spec compliant,
+> > > > > +              *  just return!
+> > > > > +              */
+> > > > > +             if (config & PCI_BRIDGE_CTL_VGA)
+> > > > > +                     return;
+> > > > > +
+> > > > > +             dev_warn(&pdev->dev, "VGA bridge control is not enabled\n");
+> > > > > +     }
+> > > >
+> > > > You cannot assume that a bridge is defective just because
+> > > > PCI_BRIDGE_CTL_VGA is not set.
+> > > >
+> > > > > +     /* Just return if the system already have a default device */
+> > > > > +     if (vga_default_device())
+> > > > > +             return;
+> > > > > +
+> > > > > +     /* No default vga device */
+> > > > > +     while ((vdevp = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, vdevp))) {
+> > > > > +             if (vdevp->vendor != 0x1a03) {
+> > > > > +                     /* Have other vga devcie in the system, do nothing */
+> > > > > +                     dev_info(&pdev->dev, "Another boot vga device: 0x%x:0x%x\n",
+> > > > > +                             vdevp->vendor, vdevp->device);
+> > > > > +                     return;
+> > > > > +             }
+> > > > > +     }
+> > > > > +
+> > > > > +     vga_set_default_device(pdev);
+> > > > > +
+> > > > > +     dev_info(&pdev->dev, "Boot vga device set as 0x%x:0x%x\n",
+> > > > > +                     pdev->vendor, pdev->device);
+> > > > > +}
+> > > > > +DECLARE_PCI_FIXUP_CLASS_FINAL(0x1a03, 0x2000, PCI_CLASS_DISPLAY_VGA, 8, aspeed_fixup_vgaarb);
+> > > > > +
+> > > > > +
+> > > > >  /*
+> > > > >   * The Mellanox Tavor device gives false positive parity errors.  Disable
+> > > > >   * parity error reporting.
+> > > > > --
+> > > > > 2.27.0
+> > > > >
