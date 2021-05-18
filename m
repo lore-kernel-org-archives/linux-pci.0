@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A9C4C43461
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E561C43460
 	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 03:41:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71B4E611CC
-	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 03:41:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D880761285
+	for <linux-pci@archiver.kernel.org>; Tue, 18 May 2021 03:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242900AbhERDmf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 May 2021 23:42:35 -0400
-Received: from mail-lj1-f173.google.com ([209.85.208.173]:33526 "EHLO
-        mail-lj1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241948AbhERDmd (ORCPT
+        id S238463AbhERDme (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 May 2021 23:42:34 -0400
+Received: from mail-lj1-f170.google.com ([209.85.208.170]:34538 "EHLO
+        mail-lj1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240994AbhERDmd (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 17 May 2021 23:42:33 -0400
-Received: by mail-lj1-f173.google.com with SMTP id o8so9845554ljp.0
-        for <linux-pci@vger.kernel.org>; Mon, 17 May 2021 20:41:16 -0700 (PDT)
+Received: by mail-lj1-f170.google.com with SMTP id b12so2550289ljp.1
+        for <linux-pci@vger.kernel.org>; Mon, 17 May 2021 20:41:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Ifk2YkSOqQpMJ9eIsFLnDFbL8FFLwhL1Jb7MgPI/dEI=;
-        b=SIoCjx86iOBaYux5zz808f46QfGMDH4g7Xw1YHvS2q1txBuVHKM/5LeX95Kj5MWzvx
-         B4dErXetFkRpXR1RuFU7Pr9Pk8Tc1oX5IbamXmu8Sh1uAIKfXFHSxWSRqSBF84wqrFPO
-         u+ra5WRyL5sx1aOEX9QsnY8Mhkk1/cCpwIfhxQBZcIkTfoF2w5EyOyAhIDZFIfrdadEN
-         Rdm4lB92QyFji/7e4uZxtmUJV1ka2BcZAVID2wvC1RVjGdA3gniCdb+izj9OZE7GTc5x
-         lVj/DjcdiK9BhGGl7MVx9QRYrT4VK8hTUlazfLRJKBg83DKOcg5YShj2QFnh+EQfkjTn
-         EBKw==
-X-Gm-Message-State: AOAM533tCLRtCcRo8GBSAu4do62qLM5sRv119S6npxh6DLm7o57+Qa3t
-        PILQGOQN3KqfO6+Y4otKC30=
-X-Google-Smtp-Source: ABdhPJzPUZOjS9/ZOs/DECq+1zNXpZQh4Vaf4qlznc+fZJxcJLIQnk5sYJYW+bkteJEXjFM1IG56gw==
-X-Received: by 2002:a2e:5c83:: with SMTP id q125mr2287393ljb.447.1621309275684;
-        Mon, 17 May 2021 20:41:15 -0700 (PDT)
+        bh=/WKcZ2buTC8QjlU8EYmZoE/Ho3jV5zhXARvIjdslqQA=;
+        b=LmtvhRwSRUMR0XMCtWLK+QA/V0uxUn7rKyfloA5ZfgAp4TA0NlGjWm7QKRoPIVRMIn
+         vCRpg8oeysrQ1HNXCVcCC/EsX8xeETz0BVuosYKcIGSRPJb7BKVlZEnwOI7euafY4JCb
+         ydafQdSoGopYX+gr42/lNw2NOvWw4EltxQZNlqBnNNRCHADuPIfZW67uVQ73/CkYfTM2
+         IctVfpllNxHaPfBpUDz8fAXlShotHr8sQi9rQiqC8b2FUJJwz1xl/fAqvMXiZ/NvoTv6
+         bU9KYDW6UHOqNGfEyFo9ceBE2wnqvcKfLL2w3/lcLK/Anwdz7iuS3wYizwjFFL+xcxPc
+         huqw==
+X-Gm-Message-State: AOAM53253ZCcA3AIX22Ay+ZOl5U+dYNyfe/nN/s7kS0WkxuhzYPIewGD
+        6GQ7hUKJCwQbSPTJp+AA7Js=
+X-Google-Smtp-Source: ABdhPJwmgKtgn+z0DVZCjCQ6tXlBf8RrkF/TT+4kv3wdf1d33A5SclWptHbWJsQ9/JqxdOM2aEi4YA==
+X-Received: by 2002:a2e:6c0c:: with SMTP id h12mr2396434ljc.278.1621309273666;
+        Mon, 17 May 2021 20:41:13 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id j23sm419112lfm.276.2021.05.17.20.41.14
+        by smtp.gmail.com with ESMTPSA id j23sm419112lfm.276.2021.05.17.20.41.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 May 2021 20:41:15 -0700 (PDT)
+        Mon, 17 May 2021 20:41:13 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
@@ -55,9 +55,9 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Vidya Sagar <vidyas@nvidia.com>,
         Xiongfeng Wang <wangxiongfeng2@huawei.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v3 05/14] PCI/IOV: Use sysfs_emit() and sysfs_emit_at() in "show" functions
-Date:   Tue, 18 May 2021 03:41:00 +0000
-Message-Id: <20210518034109.158450-5-kw@linux.com>
+Subject: [PATCH v3 03/14] PCI: Use sysfs_emit() and sysfs_emit_at() in "show" functions
+Date:   Tue, 18 May 2021 03:40:58 +0000
+Message-Id: <20210518034109.158450-3-kw@linux.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210518034109.158450-1-kw@linux.com>
 References: <20210518034109.158450-1-kw@linux.com>
@@ -77,6 +77,11 @@ and scnprintf() to sysfs_emit() and sysfs_emit_at() accordingly, as the
 latter is aware of the PAGE_SIZE buffer and correctly returns the number
 of bytes written into the buffer.
 
+Modify the function dsm_label_utf16s_to_utf8s() to directly return the
+number of bytes written into the buffer so that the strlen() used later
+to calculate the length of the buffer can be removed as it would no
+longer be needed.
+
 No functional change intended.
 
 [1] Documentation/filesystems/sysfs.rst
@@ -91,68 +96,103 @@ Changes in v2:
   None.
 Changes in v3:
   Added Logan Gunthorpe's "Reviewed-by".
+  Change style to the preferred one in the drivers/pci/slot.c file.
 
- drivers/pci/iov.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pci-label.c | 18 ++++++++++--------
+ drivers/pci/slot.c      | 18 +++++++++---------
+ 2 files changed, 19 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index afc06e6ce115..a71258347323 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -346,7 +346,7 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index c32f3b7540e8..000e169c7197 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -139,14 +139,17 @@ enum acpi_attr_enum {
+ 	ACPI_ATTR_INDEX_SHOW,
+ };
+ 
+-static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
++static int dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
-+	return sysfs_emit(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
+ 	int len;
++
+ 	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
+ 			      obj->buffer.length,
+ 			      UTF16_LITTLE_ENDIAN,
+ 			      buf, PAGE_SIZE);
+ 	buf[len] = '\n';
++
++	return len;
  }
  
- static ssize_t sriov_numvfs_show(struct device *dev,
-@@ -361,7 +361,7 @@ static ssize_t sriov_numvfs_show(struct device *dev,
- 	num_vfs = pdev->sriov->num_VFs;
- 	device_unlock(&pdev->dev);
- 
--	return sprintf(buf, "%u\n", num_vfs);
-+	return sysfs_emit(buf, "%u\n", num_vfs);
- }
- 
- /*
-@@ -435,7 +435,7 @@ static ssize_t sriov_offset_show(struct device *dev,
+ static int dsm_get_label(struct device *dev, char *buf,
+@@ -154,7 +157,7 @@ static int dsm_get_label(struct device *dev, char *buf,
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	acpi_handle handle = ACPI_HANDLE(dev);
+ 	union acpi_object *obj, *tmp;
+-	int len = -1;
++	int len = 0;
  
--	return sprintf(buf, "%u\n", pdev->sriov->offset);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->offset);
+ 	if (!handle)
+ 		return -1;
+@@ -175,20 +178,19 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 		 * this entry must return a null string.
+ 		 */
+ 		if (attr == ACPI_ATTR_INDEX_SHOW) {
+-			scnprintf(buf, PAGE_SIZE, "%llu\n", tmp->integer.value);
++			len = sysfs_emit(buf, "%llu\n", tmp->integer.value);
+ 		} else if (attr == ACPI_ATTR_LABEL_SHOW) {
+ 			if (tmp[1].type == ACPI_TYPE_STRING)
+-				scnprintf(buf, PAGE_SIZE, "%s\n",
+-					  tmp[1].string.pointer);
++				len = sysfs_emit(buf, "%s\n",
++						 tmp[1].string.pointer);
+ 			else if (tmp[1].type == ACPI_TYPE_BUFFER)
+-				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++				len = dsm_label_utf16s_to_utf8s(tmp + 1, buf);
+ 		}
+-		len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 	}
+ 
+ 	ACPI_FREE(obj);
+ 
+-	return len;
++	return len > 0 ? len : -1;
  }
  
- static ssize_t sriov_stride_show(struct device *dev,
-@@ -444,7 +444,7 @@ static ssize_t sriov_stride_show(struct device *dev,
+ static ssize_t label_show(struct device *dev, struct device_attribute *attr,
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index d627dd9179b4..751a26668e3a 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -39,19 +39,19 @@ static const struct sysfs_ops pci_slot_sysfs_ops = {
+ static ssize_t address_read_file(struct pci_slot *slot, char *buf)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%u\n", pdev->sriov->stride);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->stride);
+ 	if (slot->number == 0xff)
+-		return sprintf(buf, "%04x:%02x\n",
+-				pci_domain_nr(slot->bus),
+-				slot->bus->number);
+-	else
+-		return sprintf(buf, "%04x:%02x:%02x\n",
+-				pci_domain_nr(slot->bus),
+-				slot->bus->number,
+-				slot->number);
++		return sysfs_emit(buf, "%04x:%02x\n",
++				  pci_domain_nr(slot->bus),
++				  slot->bus->number);
++
++	return sysfs_emit(buf, "%04x:%02x:%02x\n",
++			  pci_domain_nr(slot->bus),
++			  slot->bus->number,
++			  slot->number);
  }
  
- static ssize_t sriov_vf_device_show(struct device *dev,
-@@ -453,7 +453,7 @@ static ssize_t sriov_vf_device_show(struct device *dev,
+ static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%x\n", pdev->sriov->vf_device);
-+	return sysfs_emit(buf, "%x\n", pdev->sriov->vf_device);
+-	return sprintf(buf, "%s\n", pci_speed_string(speed));
++	return sysfs_emit(buf, "%s\n", pci_speed_string(speed));
  }
  
- static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
-@@ -462,7 +462,7 @@ static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
-+	return sysfs_emit(buf, "%u\n", pdev->sriov->drivers_autoprobe);
- }
- 
- static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+ static ssize_t max_speed_read_file(struct pci_slot *slot, char *buf)
 -- 
 2.31.1
 
