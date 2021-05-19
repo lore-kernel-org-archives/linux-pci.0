@@ -2,73 +2,176 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52454C433B4
-	for <linux-pci@archiver.kernel.org>; Wed, 19 May 2021 08:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D8CC433ED
+	for <linux-pci@archiver.kernel.org>; Wed, 19 May 2021 09:49:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C5A361363
-	for <linux-pci@archiver.kernel.org>; Wed, 19 May 2021 08:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10AAF611BF
+	for <linux-pci@archiver.kernel.org>; Wed, 19 May 2021 09:49:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343652AbhESIqU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 May 2021 04:46:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47124 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343625AbhESIqT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 May 2021 04:46:19 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BBC2C06175F;
-        Wed, 19 May 2021 01:45:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=i4kTadda4oBt3afddYxcQHXtH210DToQIegrKDmu7Qs=; b=KayoCEogTLKFg5jrVgTEnTOVfZ
-        hb8/pRDvfaaqQHvTUh4wopMGPdhivz06WHgnbV72RvjsaXV+6cm6cFH9oW+SDqiZl4ZWVxv4T1lj0
-        CGk0x5+2pozw6bB+QbibCPFBLp9JSsxfVtUTv/EfK2GQdpAPkA/iYAjFGnKCeJQuUVJeZCJmDXa30
-        NLfXWuByzbVnzcOHnp5UqctgfTHdBHG2jOvp2H1gBpF96nPXsXh2RZKqj/coj841wT7xsNEel7S3m
-        nZ29e8D7ZPJNlG1996IoXbZc+8PU17eJvSUGAxKGrkljO99EBmA2NPiA31SK9awmPEjSoai5TU7YL
-        3d52UGgQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1ljHoG-00Em7l-Ci; Wed, 19 May 2021 08:44:21 +0000
-Date:   Wed, 19 May 2021 09:44:08 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Robert Straw <drbawb@fatalsyntax.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] pci: add NVMe FLR quirk to the SM951 SSD
-Message-ID: <YKTP2GQkLz5jma/q@infradead.org>
-References: <20210430205105.GA683965@bjorn-Precision-5520>
- <CBDZPI1DXKMS.88UVUXVIGC5V@nagato>
+        id S232470AbhESJvK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 May 2021 05:51:10 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:4681 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232281AbhESJvJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 May 2021 05:51:09 -0400
+Received: from dggems702-chm.china.huawei.com (unknown [172.30.72.58])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FlSh655hKz1BP9t;
+        Wed, 19 May 2021 17:47:02 +0800 (CST)
+Received: from dggema757-chm.china.huawei.com (10.1.198.199) by
+ dggems702-chm.china.huawei.com (10.3.19.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2176.2; Wed, 19 May 2021 17:49:47 +0800
+Received: from localhost.localdomain (10.69.192.56) by
+ dggema757-chm.china.huawei.com (10.1.198.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Wed, 19 May 2021 17:49:47 +0800
+From:   Qi Liu <liuqi115@huawei.com>
+To:     <will@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <zhangshaokun@hisilicon.com>
+Subject: [PATCH v4 1/2] docs: perf: Add description for HiSilicon PCIe PMU driver
+Date:   Wed, 19 May 2021 17:49:00 +0800
+Message-ID: <1621417741-5229-2-git-send-email-liuqi115@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1621417741-5229-1-git-send-email-liuqi115@huawei.com>
+References: <1621417741-5229-1-git-send-email-liuqi115@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CBDZPI1DXKMS.88UVUXVIGC5V@nagato>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggema757-chm.china.huawei.com (10.1.198.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, May 15, 2021 at 12:20:05PM -0500, Robert Straw wrote:
-> On page 40, sec 3.1.6 of the NVMe 1.1 spec, the documentation on SHST 
-> states the following:
+PCIe PMU Root Complex Integrated End Point(RCiEP) device is supported on
+HiSilicon HIP09 platform. Document it to provide guidance on how to
+use it.
 
-While it doesn't matter here, NVMe 1.1 is very much out of data, being
-a more than 8 year old specification.  The current version is 1.4b,
-with NVMe 2.0 about to be released.
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
+---
+ Documentation/admin-guide/perf/hisi-pcie-pmu.rst | 104 +++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
 
-> Knowing this I would suspect we'd actually want to treat most NVMe
-> drives in this manner *if the kernel sees the SHN/SHST has been set
-> prior.* Perhaps other NVMe devices are more tolerant of not doing this?
+diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+new file mode 100644
+index 0000000..2084b53
+--- /dev/null
++++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+@@ -0,0 +1,104 @@
++================================================
++HiSilicon PCIe Performance Monitoring Unit (PMU)
++================================================
++
++HiSilicon PCIe Performance Monitoring Unit (PMU) is a PCIe Root Complex
++integrated End Point (RCiEP) device. On Hip09, each PCIe Core has a PMU RCiEP
++to monitor multi Root Ports and all Endpoints downstream these Root Ports.
++
++HiSilicon PCIe PMU is supported to collect performance data of PCIe bus, such
++as: bandwidth, latency etc.
++
++
++HiSilicon PCIe PMU driver
++=========================
++
++The PCIe PMU driver registers a perf PMU with the name of its sicl-id and PCIe
++Core id.::
++
++  /sys/bus/event_source/hisi_pcie<sicl>_<core>
++
++PMU driver provides description of available events and filter options in sysfs,
++see /sys/bus/event_source/devices/hisi_pcie<sicl>_<core>.
++
++The "format" directory describes all formats of the config (events) and config1
++(filter options) fields of the perf_event_attr structure. The "events" directory
++describes all documented events shown in perf list.
++
++The "identifier" sysfs file allows users to identify the version of the
++PMU hardware device.
++
++The "bus" sysfs file allows users to get the bus number of Root Ports
++monitored by PMU.
++
++Example usage of perf::
++
++  $# perf list
++  hisi_pcie0_0/bw_rx/ [kernel PMU event]
++  ------------------------------------------
++
++  $# perf stat -e hisi_pcie0_0/bw_rx/ sleep 5
++
++The current driver does not support sampling. So "perf record" is unsupported.
++Also attach to a task is unsupported for PCIe PMU.
++
++Filter options
++--------------
++
++1. Target filter
++PMU could only monitor the performance of traffic downstream target Root Ports
++or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
++interfaces for users, and these two interfaces aren't supported at the same
++time.
++
++-port
++"port" filter can be used in all PCIe PMU events, target Root Port can be
++selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
++for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
++
++For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
++should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
++bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,port=0x1/ sleep 5
++
++-bdf
++
++"bdf" filter can only be used in bandwidth events, target Endpoint is selected
++by configuring BDF to "bdf". Counter only counts the bandwidth of message
++requested by target Endpoint.
++
++For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,bdf=0x3900/ sleep 5
++
++2. Trigger filter
++Event statistics start when the first time TLP length is greater/smaller
++than trigger condition. You can set the trigger condition by writing "trig_len",
++and set the trigger mode by writing "trig_mode". This filter can only be used
++in bandwidth events.
++
++For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
++means statistics start when TLP length > trigger condition, "trig_mode=1"
++means start when TLP length < condition.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,trig_len=0x4,trig_mode=1/ sleep 5
++
++3. Threshold filter
++Counter counts when TLP length within the specified range. You can set the
++threshold by writing "thr_len", and set the threshold mode by writing
++"thr_mode". This filter can only be used in bandwidth events.
++
++For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
++counter counts when TLP length >= threshold, and "thr_mode=1" means counts
++when TLP length < threshold.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,thr_len=0x4,thr_mode=1/ sleep 5
+-- 
+2.7.4
 
-No, we don't.  This is a bug particular to a specific implementation.
-In fact the whole existing NVMe shutdown before reset quirk is rather
-broken and dangerous, as it concurrently accesses the NVMe registers
-with the actual driver, which could be trivially triggered through the
-sysfs reset attribute.
-
-I'd much rather quirk these broken Samsung drivers to not allow
-assigning them to VFIO.
