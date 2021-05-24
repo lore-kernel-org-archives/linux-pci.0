@@ -2,122 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0EAC47083
-	for <linux-pci@archiver.kernel.org>; Mon, 24 May 2021 06:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC5BC47080
+	for <linux-pci@archiver.kernel.org>; Mon, 24 May 2021 06:59:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C50B60241
-	for <linux-pci@archiver.kernel.org>; Mon, 24 May 2021 06:31:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D891611CE
+	for <linux-pci@archiver.kernel.org>; Mon, 24 May 2021 06:59:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232311AbhEXGcI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 May 2021 02:32:08 -0400
-Received: from mo-csw1114.securemx.jp ([210.130.202.156]:44256 "EHLO
-        mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232291AbhEXGcF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 May 2021 02:32:05 -0400
-Received: by mo-csw.securemx.jp (mx-mo-csw1114) id 14O6UDpq011752; Mon, 24 May 2021 15:30:13 +0900
-X-Iguazu-Qid: 2wGrTXt2OTZ3JauveJ
-X-Iguazu-QSIG: v=2; s=0; t=1621837813; q=2wGrTXt2OTZ3JauveJ; m=hKCpCsnUM5F0fJr5XiY3dcIMiQR4Kw6R9ZxRrbWz2Lk=
-Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
-        by relay.securemx.jp (mx-mr1112) id 14O6UCbf007973
-        (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 24 May 2021 15:30:12 +0900
-Received: from enc01.toshiba.co.jp (enc01.toshiba.co.jp [106.186.93.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by imx2-a.toshiba.co.jp (Postfix) with ESMTPS id 1302E1000D0;
-        Mon, 24 May 2021 15:30:12 +0900 (JST)
-Received: from hop001.toshiba.co.jp ([133.199.164.63])
-        by enc01.toshiba.co.jp  with ESMTP id 14O6UBsj020955;
-        Mon, 24 May 2021 15:30:11 +0900
-From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, punit1.agrawal@toshiba.co.jp,
-        yuji2.ishikawa@toshiba.co.jp, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Subject: [PATCH v3 0/3]  Visconti: Add Toshiba Visconti PCIe host controller driver
-Date:   Mon, 24 May 2021 15:30:01 +0900
-X-TSB-HOP: ON
-Message-Id: <20210524063004.132043-1-nobuhiro1.iwamatsu@toshiba.co.jp>
-X-Mailer: git-send-email 2.31.1
+        id S232128AbhEXHAh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 May 2021 03:00:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43442 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232120AbhEXHAg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 May 2021 03:00:36 -0400
+Received: from forward103j.mail.yandex.net (forward103j.mail.yandex.net [IPv6:2a02:6b8:0:801:2::106])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92204C061574;
+        Sun, 23 May 2021 23:59:08 -0700 (PDT)
+Received: from forward100q.mail.yandex.net (forward100q.mail.yandex.net [IPv6:2a02:6b8:c0e:4b:0:640:4012:bb97])
+        by forward103j.mail.yandex.net (Yandex) with ESMTP id 247B6674176D;
+        Mon, 24 May 2021 09:59:05 +0300 (MSK)
+Received: from vla5-fcb6daabdc9a.qloud-c.yandex.net (vla5-fcb6daabdc9a.qloud-c.yandex.net [IPv6:2a02:6b8:c18:3521:0:640:fcb6:daab])
+        by forward100q.mail.yandex.net (Yandex) with ESMTP id 1EBD3708000A;
+        Mon, 24 May 2021 09:59:05 +0300 (MSK)
+Received: from vla5-3832771863b8.qloud-c.yandex.net (vla5-3832771863b8.qloud-c.yandex.net [2a02:6b8:c18:3417:0:640:3832:7718])
+        by vla5-fcb6daabdc9a.qloud-c.yandex.net (mxback/Yandex) with ESMTP id mVoIHMI1XR-x4JCIHHC;
+        Mon, 24 May 2021 09:59:05 +0300
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1621839545;
+        bh=GeX7MbASwVmRQF/6cg6/8VzJI+hPsGVhRXfV3rlutDc=;
+        h=In-Reply-To:Cc:To:From:Subject:Message-ID:References:Date;
+        b=MPSZ4arVgGZA+Fijh+uSq+PcjVZCXRgGZ61BRSmK8Z0Li9Y9nZ/igXf0nAOR3nufS
+         SKQF6HaGSp5BoAQWQOp/LlufyJSVQDoHuKXV7y1L6txYcuOgA60iRY89VdzFJhSq+Y
+         pdVFECZE22MWjiKcUP//sAVLO7W7XuH3JCr5Nl74=
+Authentication-Results: vla5-fcb6daabdc9a.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
+Received: by vla5-3832771863b8.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id tXTFGdnQFQ-x4Lqr9mf;
+        Mon, 24 May 2021 09:59:04 +0300
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client certificate not present)
+Message-ID: <0ea9febfe707c1bdb7bdac1d918209afb7d2c8a8.camel@yandex.ru>
+Subject: Re: [PATCH] PCI: don't power-off apple thunderbolt controller on
+ s2idle
+From:   Konstantin Kharlamov <hi-angel@yandex.ru>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Lukas Wunner <lukas@wunner.de>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Linux PM <linux-pm@vger.kernel.org>
+Date:   Mon, 24 May 2021 09:59:03 +0300
+In-Reply-To: <15121b9c3ad1683f0d81ebd44ace60509a9a9e82.camel@yandex.ru>
+References: <20210520194935.GA348608@bjorn-Precision-5520>
+         <15121b9c3ad1683f0d81ebd44ace60509a9a9e82.camel@yandex.ru>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+FTR, the patch is on `linux-pci` with all the CCs except `linux-pm`. I changed
+the title a bit based on the discussions here, it is:
 
-This series is the PCIe driver for Toshiba's ARM SoC, Visconti[0].
-This provides DT binding documentation, device driver, MAINTAINER files.
+	[PATCH v2] PCI: don't call firmware hooks on suspend unless it's fw-
+controlled
 
-Best regards,
-  Nobuhiro
+On Fri, 2021-05-21 at 02:28 +0300, Konstantin Kharlamov wrote:
+> Thank you very much. Well send then a v2 with the comment in a minute.
+> 
+> On Thu, 2021-05-20 at 14:49 -0500, Bjorn Helgaas wrote:
+> > On Thu, May 20, 2021 at 01:54:05PM +0200, Rafael J. Wysocki wrote:
+> > > On Thu, May 20, 2021 at 1:27 PM Rafael J. Wysocki <rafael@kernel.org>
+> > > wrote:
+> > > > On Wed, May 19, 2021 at 9:48 PM Bjorn Helgaas <helgaas@kernel.org>
+> > > > wrote:
+> > > > > On Wed, May 19, 2021 at 09:12:26PM +0200, Rafael J. Wysocki wrote:
+> > 
+> > > > > > The problem is related to the fact that in s2idle the platform
+> > > > > > firmware does not finalize the suspend transition and, consequently,
+> > > > > > it doesn't initiate the resume transition.  Therefore whatever power
+> > > > > > state the device was left in during suspend must be dealt with
+> > > > > > during
+> > > > > > the subsequent resume.  Hence, if whatever is done by SXIO/SXFP/SXLF
+> > > > > > in the suspend path cannot be reversed in the resume path by the
+> > > > > > kernel (because there is no known method to do that), they should
+> > > > > > not
+> > > > > > be invoked.  And that's exactly because the platform firmware will
+> > > > > > not
+> > > > > > finalize the suspend transition which is indicated by
+> > > > > > PM_SUSPEND_FLAG_FW_SUSPEND being unset.
+> > > > > 
+> > > > > How can we connect "if (!pm_suspend_via_firmware())" in this patch
+> > > > > with the fact that firmware doesn't finalize suspend (and consequently
+> > > > > does not reverse things in resume)?
+> > > > > 
+> > > > > I don't see any use of pm_suspend_via_firmware() or
+> > > > > PM_SUSPEND_FLAG_FW_SUSPEND that looks relevant.
+> > > > 
+> > > > First of all, there is a kerneldoc comment next to
+> > > > pm_suspend_via_firmware() which is relevant.  Especially the last
+> > > > paragraph of that comment applies directly to the case at hand IMV.
+> > 
+> > I do read kerneldoc, but I *rely* on the code, and it's nice when I
+> > can match up the kerneldoc with what the code is doing :)
+> > 
+> > Part of my confusion is that "passing control to platform firmware"
+> > isn't particularly useful in itself because it doesn't give a clue
+> > about what firmware is *doing*.  Without knowing what it does, we
+> > can't reason about how kernel's actions interact with firmware's
+> > actions.
+> > 
+> > > BTW, the problem at hand is not that s2idle in particular needs to be
+> > > treated in a special way (this appears to be the source of all
+> > > confusion here).  The problem is that the kernel cannot undo the
+> > > SXIO/SXFP/SXLF magic without passing control to the platform firmware.
+> > 
+> > I assume this is really a case of "the kernel doesn't know *what* to
+> > do, but platform firmware does," so in principle the kernel *could*
+> > undo the SXIO/SXFP/SXLF magic if it knew what to do.  
+> > 
+> > > And "passing control to the platform firmware" doesn't mean "executing
+> > > some AML" here, because control remains in the kernel when AML is
+> > > executed.  "Passing control to the platform firmware" means letting
+> > > some native firmware code (like SMM code) run which happens at the end
+> > > of S2/S3/S4 suspend transitions and it does not happen during S1
+> > > (standby) and s2idle suspend transitions.
+> > > 
+> > > That's why using SXIO/SXFP/SXLF is only valid during S2/S3/S4 suspend
+> > > transitions and it is not valid during s2idle and S1 suspend
+> > > transitions (and yes, S1 is also affected, so s2idle is not special in
+> > > that respect at all).
+> > > 
+> > > IMO the changelog of the patch needs to be rewritten, but the code
+> > > change made by it is reasonable.
+> > 
+> > So IIUC the comment should say something like:
+> > 
+> >   SXIO/SXFP/SXLF turns off power to the Thunderbolt controller.  We
+> >   don't know how to turn it back on again, but firmware does, so we
+> >   can only use SXIO/SXFP/SXLF if we're suspending via firmware.
+> > 
+> > Actually, it sounds like the important thing is that we rely on the
+> > firmware *resume* path to turn on the power again.
+> > 
+> > pm_resume_via_firmware() *sounds* like it would be appropriate, but
+> > the kerneldoc says that's for use after resume, and it tells us
+> > whether firmware has *already* handled the wakeup event.  And
+> > PM_SUSPEND_FLAG_FW_RESUME isn't set until after we've run these
+> > suspend_late fixups, so it wouldn't work here.
+> > 
+> > Bjorn
+> 
+> 
 
-[0]: https://toshiba.semicon-storage.com/ap-en/semiconductor/product/image-recognition-processors-visconti.html
 
-  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
-    v2 -> v3:
-      - No update.
-    v1 -> v2:
-      - Remove white space.
-      - Drop num-viewport and bus-range from required.
-      - Drop status line from example.
-      - Drop bus-range from required.
-      - Removed lines defined in pci-bus.yaml from required.
-
-  PCI: Visconti: Add Toshiba Visconti PCIe host controller driver
-    v2 -> v3:
-      - Update subject.
-      - Wrap description in 75 columns.
-      - Change config name to PCIE_VISCONTI_HOST.
-      - Update Kconfig text.
-      - Drop empty lines.
-      - Adjusted to 80 columns.
-      - Drop inline from functions for register access.
-      - Changed function name from visconti_pcie_check_link_status to
-        visconti_pcie_link_up.
-      - Update to using dw_pcie_host_init().
-      - Reorder these in the order of use in visconti_pcie_establish_link().
-      - Rewrite visconti_pcie_host_init() without dw_pcie_setup_rc().
-      - Change function name from  visconti_device_turnon() to
-        visconti_pcie_power_on().
-      - Unify formats such as dev_err().
-      - Drop error label in visconti_add_pcie_port(). 
-    v1 -> v2:
-      - Fix typo in commit message.
-      - Drop "depends on OF && HAS_IOMEM" from Kconfig.
-      - Stop using the pointer of struct dw_pcie.
-      - Use _relaxed variant.
-      - Drop dw_pcie_wait_for_link.
-      - Drop dbi resource processing.
-      - Drop MSI IRQ initialization processing.
-  
-  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
-    v2 -> v3:
-      - No update.
-    v1 -> v2:
-      - No update.
-
-Nobuhiro Iwamatsu (3):
-  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
-  PCI: Visconti: Add Toshiba Visconti PCIe host controller driver
-  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
-
- .../bindings/pci/toshiba,visconti-pcie.yaml   | 110 ++++++
- MAINTAINERS                                   |   2 +
- drivers/pci/controller/dwc/Kconfig            |   9 +
- drivers/pci/controller/dwc/Makefile           |   1 +
- drivers/pci/controller/dwc/pcie-visconti.c    | 369 ++++++++++++++++++
- 5 files changed, 491 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-visconti.c
-
--- 
-2.31.1
