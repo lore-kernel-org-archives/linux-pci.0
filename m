@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B051C4707F
-	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 13:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E491C47089
+	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 13:30:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C3EF613AC
-	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 13:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E1AC61059
+	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 13:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236477AbhE0NaA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 May 2021 09:30:00 -0400
-Received: from verein.lst.de ([213.95.11.211]:39102 "EHLO verein.lst.de"
+        id S236394AbhE0Nc0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 May 2021 09:32:26 -0400
+Received: from verein.lst.de ([213.95.11.211]:39143 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236488AbhE0N37 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 May 2021 09:29:59 -0400
+        id S236007AbhE0NcZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 May 2021 09:32:25 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 290AE68AFE; Thu, 27 May 2021 15:28:23 +0200 (CEST)
-Date:   Thu, 27 May 2021 15:28:22 +0200
+        id DA26F68AFE; Thu, 27 May 2021 15:30:46 +0200 (CEST)
+Date:   Thu, 27 May 2021 15:30:46 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Claire Chang <tientzu@chromium.org>
 Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
@@ -56,23 +56,33 @@ Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
         matthew.auld@intel.com, rodrigo.vivi@intel.com,
         thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v7 07/15] swiotlb: Update is_swiotlb_active to add a
- struct device argument
-Message-ID: <20210527132822.GE26160@lst.de>
-References: <20210518064215.2856977-1-tientzu@chromium.org> <20210518064215.2856977-8-tientzu@chromium.org>
+Subject: Re: [PATCH v7 13/15] dma-direct: Allocate memory from restricted
+ DMA pool if available
+Message-ID: <20210527133046.GF26160@lst.de>
+References: <20210518064215.2856977-1-tientzu@chromium.org> <20210518064215.2856977-14-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210518064215.2856977-8-tientzu@chromium.org>
+In-Reply-To: <20210518064215.2856977-14-tientzu@chromium.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> +	if (is_swiotlb_active(NULL)) {
+> +#ifdef CONFIG_DMA_RESTRICTED_POOL
+> +	if (swiotlb_free(dev, page, size))
+> +		return;
+> +#endif
 
-Passing a NULL argument to this doesn't make sense.  They all should have
-a struct device at hand, you'll just need to dig for it.
+Please avoid the ifdefs by either stubbing out the function to be a no-op
+or by using IS_ENABLED.
 
-And this function should be about to go away anyway, but until then we
-need to do this properly.
+> +#ifdef CONFIG_DMA_RESTRICTED_POOL
+> +	page = swiotlb_alloc(dev, size);
+> +	if (page && !dma_coherent_ok(dev, page_to_phys(page), size)) {
+> +		__dma_direct_free_pages(dev, page, size);
+> +		page = NULL;
+> +	}
+> +#endif
+
+Same here, for the stub it would just return NULL.
