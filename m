@@ -2,153 +2,154 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A96C4708B
-	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 19:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 501B8C4708A
+	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 20:16:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 561FB613E2
-	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 19:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 290CA613EB
+	for <linux-pci@archiver.kernel.org>; Thu, 27 May 2021 20:16:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235753AbhE0Trj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 May 2021 15:47:39 -0400
-Received: from mail-ot1-f54.google.com ([209.85.210.54]:35463 "EHLO
-        mail-ot1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235710AbhE0Trf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 May 2021 15:47:35 -0400
-Received: by mail-ot1-f54.google.com with SMTP id 69-20020a9d0a4b0000b02902ed42f141e1so1345185otg.2;
-        Thu, 27 May 2021 12:46:00 -0700 (PDT)
+        id S235034AbhE0US2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 May 2021 16:18:28 -0400
+Received: from mail-ej1-f42.google.com ([209.85.218.42]:43576 "EHLO
+        mail-ej1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235519AbhE0US2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 May 2021 16:18:28 -0400
+Received: by mail-ej1-f42.google.com with SMTP id f18so1981321ejq.10
+        for <linux-pci@vger.kernel.org>; Thu, 27 May 2021 13:16:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=aaVILIIQRpAt4fcQqCQzkC7Wo1WpArLqF54tXrfeHEk=;
-        b=iA38o8+DaGlZxZIptoJ4OEV7oS9tMKSdQmoE7mYbptLt+EXcqusE/C8WrvDLfOBBMq
-         O8DZygsI1p7R2drzwalspn2vsjCWHoQxazf4SYkg3/weC0dybRAYXDtUr4mmd5shdYz0
-         sA+CbA6ImLGYCQ9w6uUPzYShJkeUoVQTXUnUgSMhHsc0S5JPBsWfFtx1/1q1roYqVITA
-         LVzCoiwhzNPeb1d0EydOG5Grag27YfUzJY0jEMtM8iKrk6Ii0zndBwZegmxH2QJb32Qb
-         vlwPPd1lMdv1GVYS38U4A2TghVR/5OjPrVl5Jwjqy8g/8qYsUy3aoQNMn/SJrrbYQqd+
-         YimA==
-X-Gm-Message-State: AOAM532U8rt1TKiveEwl6zRh94NiwmV6luE+G2MEJQG/ttkKTRo0Ykh5
-        bVAYSOFlW0rM+cC5pVrQayHpuvYPxw==
-X-Google-Smtp-Source: ABdhPJxsAV9DnsZkTkzog9FHmjg+bEejEyf9p9gCoy4QJ0+VWzhuApSAzpE0JKzM+T7GVe6yF2qOIg==
-X-Received: by 2002:a05:6830:1013:: with SMTP id a19mr4045932otp.21.1622144759587;
-        Thu, 27 May 2021 12:45:59 -0700 (PDT)
-Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id m74sm665162oig.33.2021.05.27.12.45.57
+        bh=vSktK7xmva7Qa+bVz/3FMsgh0/OcR98/3N9+P2gYRT0=;
+        b=RXN44iQKZ6D8RPRn1QSSU+DNGqfzOjVNsn7RaIg+sComq9i9u2AwtG9SR4DX9LoM7a
+         lIhVwm1uanW0kMGuuGuKzB0Ygz38BBGp0AbgreRK9yzlwdi60M5dKWgw8oaj7QmT8G21
+         smsjgwVIUGaLXJN0u49+RQglEXMpJktNXueUKHqnc7ssIEgcqw47ZBHfcboKEsepiUcg
+         HPmOpRa1Zehm5ENnYsW9mIA8yDld1wiJqvTp4ztpdFkINMQL0DP285Bf6ElXWLY1sNWm
+         x02zdBTxc9xVjjV83anc/NJKg/IQZB7wGf+iSaAtbWMCoAkW1PbW+nL7ZqY2np50Cti0
+         z2AA==
+X-Gm-Message-State: AOAM533FFPDvdldhFNY+fkSpJQJpF6+DQojH5PaZDxTEU/rV6Q0JUYS4
+        alcX7HrOYW3Z9MiNe36hrf4=
+X-Google-Smtp-Source: ABdhPJw2QixuJ3qnvVYo8lhC3M+vcrX/vBEnDzEe6uADrkpTFpFRLHMmuD5GKPZHCVQPFsv8LUda/Q==
+X-Received: by 2002:a17:906:33da:: with SMTP id w26mr5861784eja.242.1622146613695;
+        Thu, 27 May 2021 13:16:53 -0700 (PDT)
+Received: from workstation.lan ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id o64sm492739eda.83.2021.05.27.13.16.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 May 2021 12:45:58 -0700 (PDT)
-From:   Rob Herring <robh@kernel.org>
-To:     devicetree@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH 4/4] of: Merge of_address_to_resource() and of_pci_address_to_resource() implementations
-Date:   Thu, 27 May 2021 14:45:47 -0500
-Message-Id: <20210527194547.1287934-5-robh@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210527194547.1287934-1-robh@kernel.org>
-References: <20210527194547.1287934-1-robh@kernel.org>
+        Thu, 27 May 2021 13:16:53 -0700 (PDT)
+From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Joe Perches <joe@perches.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v5 2/5] PCI/sysfs: Use return value from dsm_label_utf16s_to_utf8s() directly
+Date:   Thu, 27 May 2021 20:16:47 +0000
+Message-Id: <20210527201650.221944-2-kw@linux.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210527201650.221944-1-kw@linux.com>
+References: <20210527201650.221944-1-kw@linux.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-of_address_to_resource() and of_pci_address_to_resource() are almost the
-same except the former takes an index and the latter takes a BAR number.
-Now that __of_get_address() can take either one, refactor the functions
-to use a common implementation.
+Modify the function dsm_label_utf16s_to_utf8s() to directly return the
+number of bytes written into the buffer so that the strlen() used later
+to calculate the length of the buffer can be removed as it would no
+longer be needed.
 
-Cc: Frank Rowand <frowand.list@gmail.com>
-Signed-off-by: Rob Herring <robh@kernel.org>
+No functional change intended.
+
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/of/address.c | 44 ++++++++++++++++++--------------------------
- 1 file changed, 18 insertions(+), 26 deletions(-)
+Changes in v2:
+  None.
+Changes in v3:
+  None.
+Changes in v4:
+  Separated this patch from other trivial sysfs_emit()/sysfs_emit_at()
+  patches into a separate patch as per Bjorn Helgaas' request.
+  Added Logan Gunthorpe's "Reviewed-by".
+Changes in v5:
+  None.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index e643f999743a..3b2acca7e363 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -23,9 +23,8 @@
- #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
+ drivers/pci/pci-label.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 311dd48e2881..000e169c7197 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -139,14 +139,17 @@ enum acpi_attr_enum {
+ 	ACPI_ATTR_INDEX_SHOW,
+ };
  
- static struct of_bus *of_match_bus(struct device_node *np);
--static int __of_address_to_resource(struct device_node *dev,
--		const __be32 *addrp, u64 size, unsigned int flags,
--		const char *name, struct resource *r);
-+static int __of_address_to_resource(struct device_node *dev, int index,
-+		int bar_no, struct resource *r);
- static bool of_mmio_is_nonposted(struct device_node *np);
- 
- /* Debug utility */
-@@ -203,17 +202,11 @@ static int of_bus_pci_translate(__be32 *addr, u64 offset, int na)
- int of_pci_address_to_resource(struct device_node *dev, int bar,
- 			       struct resource *r)
+-static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
++static int dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
  {
--	const __be32	*addrp;
--	u64		size;
--	unsigned int	flags;
- 
- 	if (!IS_ENABLED(CONFIG_PCI))
- 		return -ENOSYS;
- 
--	addrp = of_get_pci_address(dev, bar, &size, &flags);
--	if (addrp == NULL)
--		return -EINVAL;
--	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
-+	return __of_address_to_resource(dev, -1, bar, r);
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
- 
-@@ -804,11 +797,22 @@ static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr,
- 	return port;
- }
- 
--static int __of_address_to_resource(struct device_node *dev,
--		const __be32 *addrp, u64 size, unsigned int flags,
--		const char *name, struct resource *r)
-+static int __of_address_to_resource(struct device_node *dev, int index, int bar_no,
-+		struct resource *r)
- {
- 	u64 taddr;
-+	const __be32	*addrp;
-+	u64		size;
-+	unsigned int	flags;
-+	const char	*name = NULL;
+ 	int len;
 +
-+	addrp = __of_get_address(dev, index, bar_no, &size, &flags);
-+	if (addrp == NULL)
-+		return -EINVAL;
+ 	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
+ 			      obj->buffer.length,
+ 			      UTF16_LITTLE_ENDIAN,
+ 			      buf, PAGE_SIZE);
+ 	buf[len] = '\n';
 +
-+	/* Get optional "reg-names" property to add a name to a resource */
-+	if (index >= 0)
-+		of_property_read_string_index(dev, "reg-names",	index, &name);
- 
- 	if (flags & IORESOURCE_MEM)
- 		taddr = of_translate_address(dev, addrp);
-@@ -846,19 +850,7 @@ static int __of_address_to_resource(struct device_node *dev,
- int of_address_to_resource(struct device_node *dev, int index,
- 			   struct resource *r)
- {
--	const __be32	*addrp;
--	u64		size;
--	unsigned int	flags;
--	const char	*name = NULL;
--
--	addrp = of_get_address(dev, index, &size, &flags);
--	if (addrp == NULL)
--		return -EINVAL;
--
--	/* Get optional "reg-names" property to add a name to a resource */
--	of_property_read_string_index(dev, "reg-names",	index, &name);
--
--	return __of_address_to_resource(dev, addrp, size, flags, name, r);
-+	return __of_address_to_resource(dev, index, -1, r);
++	return len;
  }
- EXPORT_SYMBOL_GPL(of_address_to_resource);
  
+ static int dsm_get_label(struct device *dev, char *buf,
+@@ -154,7 +157,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ {
+ 	acpi_handle handle = ACPI_HANDLE(dev);
+ 	union acpi_object *obj, *tmp;
+-	int len = -1;
++	int len = 0;
+ 
+ 	if (!handle)
+ 		return -1;
+@@ -175,20 +178,19 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 		 * this entry must return a null string.
+ 		 */
+ 		if (attr == ACPI_ATTR_INDEX_SHOW) {
+-			sysfs_emit(buf, "%llu\n", tmp->integer.value);
++			len = sysfs_emit(buf, "%llu\n", tmp->integer.value);
+ 		} else if (attr == ACPI_ATTR_LABEL_SHOW) {
+ 			if (tmp[1].type == ACPI_TYPE_STRING)
+-				sysfs_emit(buf, "%s\n",
+-					   tmp[1].string.pointer);
++				len = sysfs_emit(buf, "%s\n",
++						 tmp[1].string.pointer);
+ 			else if (tmp[1].type == ACPI_TYPE_BUFFER)
+-				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++				len = dsm_label_utf16s_to_utf8s(tmp + 1, buf);
+ 		}
+-		len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 	}
+ 
+ 	ACPI_FREE(obj);
+ 
+-	return len;
++	return len > 0 ? len : -1;
+ }
+ 
+ static ssize_t label_show(struct device *dev, struct device_attribute *attr,
 -- 
-2.27.0
+2.31.1
 
