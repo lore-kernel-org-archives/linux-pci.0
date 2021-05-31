@@ -2,90 +2,177 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E66C47082
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 13:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7CC4C47080
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 13:36:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6E0F61419
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 13:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC4AE6144C
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 13:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232316AbhEaNWu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 May 2021 09:22:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53846 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231579AbhEaNUo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 May 2021 09:20:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7A890613A9;
-        Mon, 31 May 2021 13:18:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622467128;
-        bh=9m+RsYSeUlrNwVCa1+L4Xk+683fS4psBxLrB0mG/5kY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IddtYeAKmYpnWsxBYWjTW17TjFLnwqDmdsAbNhb2MfEH9JJAHsaeNmnob0x5kXu50
-         ULP6hdnTFC3LE9lupvlnBTeyMmoaO7pIzjZcOIgAp/UZ7vZnBONClaklbICM6Psamg
-         ATqs3ORTWNaZrkN9VClKVX/DK8HuqiCW5uoV7SYdtL6TFPor4C7KviTf8rNRPOX0mS
-         N27ytuQ0FVz+r942KzrKpn4MT+sz5PMy2HohMteceDGZptlL+BoNApEcbbbz70Zs9H
-         wQBYuyWazVU2auXvDTH3TifxrgDUcX1qCOeJHIcrR3k6/C8z+8dY0q4fl7W7HelqOK
-         Q8Y23p1D1wAMg==
-Received: by pali.im (Postfix)
-        id 2D398B84; Mon, 31 May 2021 15:18:46 +0200 (CEST)
-Date:   Mon, 31 May 2021 15:18:45 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc:     Sergio Paracuellos <sergio.paracuellos@gmail.com>,
-        lorenzo.pieralisi@arm.com, Bjorn Helgaas <helgaas@kernel.org>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        John Crispin <john@phrozen.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-staging@lists.linux.dev,
-        Greg KH <gregkh@linuxfoundation.org>,
-        NeilBrown <neil@brown.name>,
-        Ilya Lipnitskiy <ilya.lipnitskiy@gmail.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/4] MIPS: ralink: pci: driver for Pcie controller in
- MT7621 SoCs
-Message-ID: <20210531131845.ookvz7njj6yrkaeh@pali>
-References: <20210515124055.22225-1-sergio.paracuellos@gmail.com>
- <20210519203628.GA254894@bjorn-Precision-5520>
- <CAMhs-H-7Ocjp6JLKcS9_hMn77H=st8JBdLXgxc+yYiypFTjrvQ@mail.gmail.com>
- <20210521102338.GA6989@alpha.franken.de>
+        id S231847AbhEaNhy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 May 2021 09:37:54 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6097 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232243AbhEaNft (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 09:35:49 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Ftx5D13J6zYnfS;
+        Mon, 31 May 2021 21:31:12 +0800 (CST)
+Received: from dggema757-chm.china.huawei.com (10.1.198.199) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2176.2; Mon, 31 May 2021 21:33:55 +0800
+Received: from localhost.localdomain (10.69.192.56) by
+ dggema757-chm.china.huawei.com (10.1.198.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Mon, 31 May 2021 21:33:54 +0800
+From:   Qi Liu <liuqi115@huawei.com>
+To:     <will@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <zhangshaokun@hisilicon.com>
+Subject: [PATCH v6 1/2] docs: perf: Add description for HiSilicon PCIe PMU driver
+Date:   Mon, 31 May 2021 21:32:30 +0800
+Message-ID: <1622467951-32114-2-git-send-email-liuqi115@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1622467951-32114-1-git-send-email-liuqi115@huawei.com>
+References: <1622467951-32114-1-git-send-email-liuqi115@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210521102338.GA6989@alpha.franken.de>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggema757-chm.china.huawei.com (10.1.198.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Friday 21 May 2021 12:23:38 Thomas Bogendoerfer wrote:
-> On Wed, May 19, 2021 at 11:18:36PM +0200, Sergio Paracuellos wrote:
-> > On Wed, May 19, 2021 at 10:36 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > But most of the similar drivers are in drivers/pci/controller/, where
-> > > I think it's easier to keep them up to date with changes in the PCI
-> > > core.  Have you considered putting this one there?
-> > 
-> > Most pci drivers in 'arch/mips/pci' are still using PCI_LEGACY stuff.
-> > In contrast mt7621-pci is using current pci generic apis but even most
-> > of the code is generic enough, there is one remaining thing which
-> > depends on mips architecture which is the iocu region configuration
-> > which must be done in the driver itself. This is the only reason to
-> > move this driver into 'arch/mips/pci' instead of
-> > 'drivers/pci/controller/'. So... I am all ears to listen to
-> > suggestions for the proper place for this driver. Thomas, do you have
-> > any thoughts on this?
-> 
-> I tried to put a pci-xtalk driver into drivers/pci/controller, but
-> Lorenzo didn't want it there for being MIPS and not DT based. So this
-> one is DT based, but still MIPS. I'm perfectly fine putting this
-> driver into drivers/pci/controller/
+PCIe PMU Root Complex Integrated End Point(RCiEP) device is supported on
+HiSilicon HIP09 platform. Document it to provide guidance on how to
+use it.
 
-In my personal opinion this driver could go into drivers/pci/controller/
+Reviewed-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
+---
+ Documentation/admin-guide/perf/hisi-pcie-pmu.rst | 104 +++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+
+diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+new file mode 100644
+index 0000000..2084b53
+--- /dev/null
++++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+@@ -0,0 +1,104 @@
++================================================
++HiSilicon PCIe Performance Monitoring Unit (PMU)
++================================================
++
++HiSilicon PCIe Performance Monitoring Unit (PMU) is a PCIe Root Complex
++integrated End Point (RCiEP) device. On Hip09, each PCIe Core has a PMU RCiEP
++to monitor multi Root Ports and all Endpoints downstream these Root Ports.
++
++HiSilicon PCIe PMU is supported to collect performance data of PCIe bus, such
++as: bandwidth, latency etc.
++
++
++HiSilicon PCIe PMU driver
++=========================
++
++The PCIe PMU driver registers a perf PMU with the name of its sicl-id and PCIe
++Core id.::
++
++  /sys/bus/event_source/hisi_pcie<sicl>_<core>
++
++PMU driver provides description of available events and filter options in sysfs,
++see /sys/bus/event_source/devices/hisi_pcie<sicl>_<core>.
++
++The "format" directory describes all formats of the config (events) and config1
++(filter options) fields of the perf_event_attr structure. The "events" directory
++describes all documented events shown in perf list.
++
++The "identifier" sysfs file allows users to identify the version of the
++PMU hardware device.
++
++The "bus" sysfs file allows users to get the bus number of Root Ports
++monitored by PMU.
++
++Example usage of perf::
++
++  $# perf list
++  hisi_pcie0_0/bw_rx/ [kernel PMU event]
++  ------------------------------------------
++
++  $# perf stat -e hisi_pcie0_0/bw_rx/ sleep 5
++
++The current driver does not support sampling. So "perf record" is unsupported.
++Also attach to a task is unsupported for PCIe PMU.
++
++Filter options
++--------------
++
++1. Target filter
++PMU could only monitor the performance of traffic downstream target Root Ports
++or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
++interfaces for users, and these two interfaces aren't supported at the same
++time.
++
++-port
++"port" filter can be used in all PCIe PMU events, target Root Port can be
++selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
++for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
++
++For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
++should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
++bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,port=0x1/ sleep 5
++
++-bdf
++
++"bdf" filter can only be used in bandwidth events, target Endpoint is selected
++by configuring BDF to "bdf". Counter only counts the bandwidth of message
++requested by target Endpoint.
++
++For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,bdf=0x3900/ sleep 5
++
++2. Trigger filter
++Event statistics start when the first time TLP length is greater/smaller
++than trigger condition. You can set the trigger condition by writing "trig_len",
++and set the trigger mode by writing "trig_mode". This filter can only be used
++in bandwidth events.
++
++For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
++means statistics start when TLP length > trigger condition, "trig_mode=1"
++means start when TLP length < condition.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,trig_len=0x4,trig_mode=1/ sleep 5
++
++3. Threshold filter
++Counter counts when TLP length within the specified range. You can set the
++threshold by writing "thr_len", and set the threshold mode by writing
++"thr_mode". This filter can only be used in bandwidth events.
++
++For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
++counter counts when TLP length >= threshold, and "thr_mode=1" means counts
++when TLP length < threshold.
++
++Example usage of perf::
++
++  $# perf stat -e hisi_pcie0_0/bw_rx,thr_len=0x4,thr_mode=1/ sleep 5
+-- 
+2.7.4
+
