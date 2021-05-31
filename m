@@ -2,173 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A7BC47080
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 16:35:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65BCC47080
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 17:38:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98AD761001
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 16:35:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA15F61108
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 17:38:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233712AbhEaQhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 May 2021 12:37:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42582 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234796AbhEaQfZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 12:35:25 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DC74C07E5F8
-        for <linux-pci@vger.kernel.org>; Mon, 31 May 2021 08:00:50 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id g6-20020a17090adac6b029015d1a9a6f1aso71490pjx.1
-        for <linux-pci@vger.kernel.org>; Mon, 31 May 2021 08:00:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wYKtm4IVSfVTnhnKghH2jNnLIsKH6Y+eNOaILu7ARSY=;
-        b=AqMEgYi53g30HYY0imJtzNViu05fOgAo/xQtrrm9XrM3n3KYgdCy6sM36TaTmgv0v6
-         XvIYBkRFfNiS9tcDp32kkkQRj9L5R+h86b+EJM1hUjC5ImiLdtusiOsddmyVTjrm3mI6
-         HVyluqo0OJwH1PN9FVBpuFPsEkrQe6YRuMK7k=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=wYKtm4IVSfVTnhnKghH2jNnLIsKH6Y+eNOaILu7ARSY=;
-        b=f+EmJrER4sCfxzTMu9z+W5pwMkWiAl55xlMYp/lamkjM31iucTfdWSbqTk/pvBW0C/
-         VEt6C/G+IGc1r6y4H06T3srpBcso4seRsP8dWs0/dRuPOYMVFxlDYK9aEqsaEeVnC6gf
-         fp7lUEXl0fAsUvH7znA3jFm8juPKqaa7C2QT0xmkj/svXnXZafXeZvDc/UYemCibTUV+
-         /yZb0O2t6svBbl1MVdjku2yBlBaIrvCWFK8wZIkiGxq+OpdqIAGet8EwMEzseX99m4Yp
-         uIRlsBwoQX5xGtSdDZ+mpxAJ4y/XnhWmOFBGwSpmT70UNx5EOZjvodUK9FuRo6GOfhIr
-         UUbA==
-X-Gm-Message-State: AOAM533xkdzY5S28/2fzwpuqIy2YUn8R9MLijWkh5bsg1HkKu6YyG5Ci
-        p8P33TGatR87Lle0yXrTo3CQeANfyo5Fyw==
-X-Google-Smtp-Source: ABdhPJynqma72wsqRCuTSS1dU1oirneaa3z5bvL1sCKjfGP1q4dYs3cJN44mka7ONEACR6FlID/XAg==
-X-Received: by 2002:a17:902:b70f:b029:f4:5445:cd9f with SMTP id d15-20020a170902b70fb02900f45445cd9fmr21494512pls.32.1622473249644;
-        Mon, 31 May 2021 08:00:49 -0700 (PDT)
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com. [209.85.215.172])
-        by smtp.gmail.com with ESMTPSA id p1sm10896484pfp.137.2021.05.31.08.00.48
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 31 May 2021 08:00:49 -0700 (PDT)
-Received: by mail-pg1-f172.google.com with SMTP id t9so4779457pgn.4
-        for <linux-pci@vger.kernel.org>; Mon, 31 May 2021 08:00:48 -0700 (PDT)
-X-Received: by 2002:a6b:690c:: with SMTP id e12mr17489820ioc.69.1622473237437;
- Mon, 31 May 2021 08:00:37 -0700 (PDT)
+        id S233617AbhEaRj4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 May 2021 13:39:56 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:43512 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232870AbhEaRj2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 13:39:28 -0400
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 2.0.5)
+ id e732ecc29d476c8b; Mon, 31 May 2021 19:37:46 +0200
+Received: from kreacher.localnet (89-64-82-42.dynamic.chello.pl [89.64.82.42])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by v370.home.net.pl (Postfix) with ESMTPSA id A98F966980A;
+        Mon, 31 May 2021 19:37:45 +0200 (CEST)
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Utkarsh H Patel <utkarsh.h.patel@intel.com>,
+        Koba Ko <koba.ko@canonical.com>,
+        Rajat Jain <rajatja@google.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/PM: Target PM state is D3cold if the upstream bridge is power manageable
+Date:   Mon, 31 May 2021 19:37:45 +0200
+Message-ID: <4650685.31r3eYUQgx@kreacher>
+In-Reply-To: <20210531133435.53259-1-mika.westerberg@linux.intel.com>
+References: <20210531133435.53259-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-References: <20210518064215.2856977-1-tientzu@chromium.org>
- <20210518064215.2856977-2-tientzu@chromium.org> <170a54f2-be20-ec29-1d7f-3388e5f928c6@gmail.com>
- <20210527130211.GA24344@lst.de> <bab261b4-f801-05af-8fd9-c440ed219591@amd.com>
- <e59d4799-a6ff-6d13-0fed-087fc3482587@amd.com>
-In-Reply-To: <e59d4799-a6ff-6d13-0fed-087fc3482587@amd.com>
-From:   Claire Chang <tientzu@chromium.org>
-Date:   Mon, 31 May 2021 23:00:26 +0800
-X-Gmail-Original-Message-ID: <CALiNf29=suiQbDL28tBUXt6-E+-JJC_76X9Uxcdk2s+MSXrp2g@mail.gmail.com>
-Message-ID: <CALiNf29=suiQbDL28tBUXt6-E+-JJC_76X9Uxcdk2s+MSXrp2g@mail.gmail.com>
-Subject: Re: [PATCH v7 01/15] swiotlb: Refactor swiotlb init functions
-To:     Tom Lendacky <thomas.lendacky@amd.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        benh@kernel.crashing.org, paulus@samba.org,
-        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        sstabellini@kernel.org, Robin Murphy <robin.murphy@arm.com>,
-        grant.likely@arm.com, xypron.glpk@gmx.de,
-        Thierry Reding <treding@nvidia.com>, mingo@kernel.org,
-        bauerman@linux.ibm.com, peterz@infradead.org,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        heikki.krogerus@linux.intel.com,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        linux-devicetree <devicetree@vger.kernel.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
-        Nicolas Boichat <drinkcat@chromium.org>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Tomasz Figa <tfiga@chromium.org>, bskeggs@redhat.com,
-        Bjorn Helgaas <bhelgaas@google.com>, chris@chris-wilson.co.uk,
-        Daniel Vetter <daniel@ffwll.ch>, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        jani.nikula@linux.intel.com, Jianxiong Gao <jxgao@google.com>,
-        joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
-        maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
-        rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
+Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 89.64.82.42
+X-CLIENT-HOSTNAME: 89-64-82-42.dynamic.chello.pl
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduledrvdelfedgudduiecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepteeggfelteegudehueegieekveduleeuledvueefjeefffegfeejudfgteefhefhnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepkeelrdeigedrkedvrdegvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeekledrieegrdekvddrgedvpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepuhhtkhgrrhhshhdrhhdrphgrthgvlhesihhnthgvlhdrtghomhdprhgtphhtthhopehkohgsrgdrkhhosegtrghnohhnihgtrghlrdgtohhmpdhrtghpthhtohep
+ rhgrjhgrthhjrgesghhoohhglhgvrdgtohhmpdhrtghpthhtohepkhgrihdrhhgvnhhgrdhfvghnghestggrnhhonhhitggrlhdrtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-DCC--Metrics: v370.home.net.pl 1024; Body=8 Fuz1=8 Fuz2=8
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 28, 2021 at 12:32 AM Tom Lendacky <thomas.lendacky@amd.com> wrote:
->
-> On 5/27/21 9:41 AM, Tom Lendacky wrote:
-> > On 5/27/21 8:02 AM, Christoph Hellwig wrote:
-> >> On Wed, May 19, 2021 at 11:50:07AM -0700, Florian Fainelli wrote:
-> >>> You convert this call site with swiotlb_init_io_tlb_mem() which did not
-> >>> do the set_memory_decrypted()+memset(). Is this okay or should
-> >>> swiotlb_init_io_tlb_mem() add an additional argument to do this
-> >>> conditionally?
-> >>
-> >> The zeroing is useful and was missing before.  I think having a clean
-> >> state here is the right thing.
-> >>
-> >> Not sure about the set_memory_decrypted, swiotlb_update_mem_attributes
-> >> kinda suggests it is too early to set the memory decrupted.
-> >>
-> >> Adding Tom who should now about all this.
-> >
-> > The reason for adding swiotlb_update_mem_attributes() was because having
-> > the call to set_memory_decrypted() in swiotlb_init_with_tbl() triggered a
-> > BUG_ON() related to interrupts not being enabled yet during boot. So that
-> > call had to be delayed until interrupts were enabled.
->
-> I pulled down and tested the patch set and booted with SME enabled. The
-> following was seen during the boot:
->
-> [    0.134184] BUG: Bad page state in process swapper  pfn:108002
-> [    0.134196] page:(____ptrval____) refcount:0 mapcount:-128 mapping:0000000000000000 index:0x0 pfn:0x108002
-> [    0.134201] flags: 0x17ffffc0000000(node=0|zone=2|lastcpupid=0x1fffff)
-> [    0.134208] raw: 0017ffffc0000000 ffff88847f355e28 ffff88847f355e28 0000000000000000
-> [    0.134210] raw: 0000000000000000 0000000000000001 00000000ffffff7f 0000000000000000
-> [    0.134212] page dumped because: nonzero mapcount
-> [    0.134213] Modules linked in:
-> [    0.134218] CPU: 0 PID: 0 Comm: swapper Not tainted 5.13.0-rc2-sos-custom #3
-> [    0.134221] Hardware name: ...
-> [    0.134224] Call Trace:
-> [    0.134233]  dump_stack+0x76/0x94
-> [    0.134244]  bad_page+0xa6/0xf0
-> [    0.134252]  __free_pages_ok+0x331/0x360
-> [    0.134256]  memblock_free_all+0x158/0x1c1
-> [    0.134267]  mem_init+0x1f/0x14c
-> [    0.134273]  start_kernel+0x290/0x574
-> [    0.134279]  secondary_startup_64_no_verify+0xb0/0xbb
->
-> I see this about 40 times during the boot, each with a different PFN. The
-> system boots (which seemed odd), but I don't know if there will be side
-> effects to this (I didn't stress the system).
->
-> I modified the code to add a flag to not do the set_memory_decrypted(), as
-> suggested by Florian, when invoked from swiotlb_init_with_tbl(), and that
-> eliminated the bad page state BUG.
+On Monday, May 31, 2021 3:34:35 PM CEST Mika Westerberg wrote:
+> Some PCIe devices only support PME (Power Management Event) from D3cold.
+> One example is ASMedia xHCI controller:
+> 
+> 11:00.0 USB controller: ASMedia Technology Inc. ASM1042A USB 3.0 Host Controller (prog-if 30 [XHCI])
+>   ...
+>   Capabilities: [78] Power Management version 3
+>   	  Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+> 	  Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> 
+> With such devices, if it has wake enabled, the kernel selects lowest
+> possible power state to be D0 in pci_target_state(). This is problematic
+> because it prevents the root port it is connected to enter low power
+> state too which makes the system consume more energy than necessary.
 
-Thanks. Will add a flag to skip set_memory_decrypted() in v9.
+But this is not the only case affected by the patch AFAICS.
 
->
-> Thanks,
-> Tom
->
-> >
-> > Thanks,
-> > Tom
-> >
-> >>
+> The problem in pci_target_state() is that it only accounts the "current"
+> device state, so when the bridge above it (a root port for instance) is
+> transitioned into D3hot the device transitions into D3cold.
+
+Well, as designed, pci_target_state() is about states the the device can
+be programmed into, which cannot be D3cold if the device has not platform PM.
+
+> This is because when the root port is first transitioned into D3hot then the
+> ACPI power resource is turned off which puts the PCIe link to L2/L3 (and
+> the root port and the device are in D3cold). If the root port is kept in
+> D3hot it still means that the device below it is still effectively in
+> D3cold as no configuration messages pass through. Furthermore the
+> implementation note of PCIe 5.0 sec 5.3.1.4 says that the device should
+> expect to be transitioned into D3cold soon after its link transitions
+> into L2/L3 Ready state.
+
+That's true, but the prerequisite is to put the endpoint device into D3hot
+and not to attempt to put it into D3cold.
+
+> Taking the above into consideration, instead of forcing the device stay
+> in D0 we look at the upstream bridge and whether it is allowed to enter
+> D3 (hot/cold). If this is the case we conclude that the actual target
+> state of the device is D3cold. This also follows the logic in
+> pci_set_power_state() that sets power state of the subordinate devices
+> to D3cold after the bridge itself is transitioned into D3cold.
+
+IMO what needs to be fixed is what happens when the "wakeup" argument is "true"
+and that simply needs to special-case D3hot.
+
+Namely, if wakeup from D3hot is not supported, D3hot should still be returned
+if wakeup from D3cold is supported and the upstream bridge supports D3cold.
+
+Returning D3cold from pci_target_state() for devices that cannot be programmed
+into D3cold would be confusing IMV.
+
+> Reported-by: Utkarsh H Patel <utkarsh.h.patel@intel.com>
+> Reported-by: Koba Ko <koba.ko@canonical.com>
+> Tested-by: Koba Ko <koba.ko@canonical.com>
+> Acked-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> Previous version of the patch can be found here:
+> 
+>   https://patchwork.kernel.org/project/linux-pci/patch/20210510102647.40322-1-mika.westerberg@linux.intel.com/
+> 
+> Changes from the previous version:
+> 
+>   * Added Ack from Kai-Heng
+>   * Reworked the commit log according to Bjorn's comments (I tried my best
+>     to answer the questions and explain the issue).
+>   * Expanded the comment to mention why the target state is D3cold.
+> 
+>  drivers/pci/pci.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b717680377a9..71c6a6437406 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2578,8 +2578,21 @@ static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
+>  		return target_state;
+>  	}
+>  
+> -	if (!dev->pm_cap)
+> +	if (!dev->pm_cap) {
+>  		target_state = PCI_D0;
+> +	} else {
+> +		struct pci_dev *bridge;
+> +
+> +		/*
+> +		 * Look at the upstream bridge and whether it is allowed to
+> +		 * enter D3hot (or D3cold). In both cases this device is
+> +		 * not accessible anymore and its effective power state
+> +		 * becomes D3cold.
+> +		 */
+> +		bridge = pci_upstream_bridge(dev);
+> +		if (bridge && pci_bridge_d3_possible(bridge))
+> +			target_state = PCI_D3cold;
+> +	}
+>  
+>  	/*
+>  	 * If the device is in D3cold even though it's not power-manageable by
+> 
+
+
+
+
