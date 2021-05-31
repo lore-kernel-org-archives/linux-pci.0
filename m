@@ -2,178 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-22.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40DE0C47083
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 14:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63954C47083
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 14:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 249026103E
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 14:35:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C6A061364
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 14:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233122AbhEaOhX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 May 2021 10:37:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60974 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233071AbhEaOfK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 May 2021 10:35:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2EC2361C49;
-        Mon, 31 May 2021 13:50:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622469044;
-        bh=2hB1FM6ZqXS6rP1wgN1/iBHGjsSsIUt5rITLK+PQftg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EBJSJzAVAAqwPHVXZpQxMRb+PDJc5H8rfzRyAamo/3Fb+2jxnnrwMJfviLoCWSsPj
-         nAe1YvlbFeZ/MqcLd5mK5UeWno51r3CNGyFzlAkpJ1F1wo8Wt/2nVeKUU18VzEyl4O
-         bgb+obacin2M8crnRRger0lHvz2NcvQvbEfeZNPU5upgmaN4/QNlQ8+PgULWX+dj8b
-         YTIOrYiXArammEpBto6ouJS8g/4kbO1wxAkSiBFX0tNbGfAWo5xrGfibD/ofYrYl6G
-         pXUwATwqzwEqjmKnJa5yrEV6n+mkGkr0IBha2NM6LGwNvjLm4uj7Roi8GwI1BgSBjz
-         tX/mgynY6SvGw==
-Received: by pali.im (Postfix)
-        id B7C04B84; Mon, 31 May 2021 15:50:41 +0200 (CEST)
-Date:   Mon, 31 May 2021 15:50:41 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Cc:     "open list:MIPS" <linux-mips@vger.kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        John Crispin <john@phrozen.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-staging@lists.linux.dev,
-        Greg KH <gregkh@linuxfoundation.org>,
-        NeilBrown <neil@brown.name>,
-        Ilya Lipnitskiy <ilya.lipnitskiy@gmail.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/4] MIPS: pci: Add driver for MT7621 PCIe controller
-Message-ID: <20210531135041.42ovpmbwuc3yfkaw@pali>
-References: <20210515124055.22225-1-sergio.paracuellos@gmail.com>
- <20210515124055.22225-3-sergio.paracuellos@gmail.com>
- <20210531131431.bzsvmefqdyawmeo2@pali>
- <CAMhs-H80=7jctPT70rOmcwcqPw+9iUF84_ZCgGr-TKwJ4eB2Lg@mail.gmail.com>
+        id S232466AbhEaOpR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 May 2021 10:45:17 -0400
+Received: from mail-wr1-f51.google.com ([209.85.221.51]:39571 "EHLO
+        mail-wr1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231712AbhEaOmY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 10:42:24 -0400
+Received: by mail-wr1-f51.google.com with SMTP id l2so3706991wrw.6
+        for <linux-pci@vger.kernel.org>; Mon, 31 May 2021 07:40:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=UhAKSxwqbTqNpIA9TBDclmDBGCmKwmqWFDzjmFaPa6s=;
+        b=a5tKP/irQ/dIs9GqtfUaDk1ayITxV+UuLuNy7ZK4qjQ1vip4ZWswKQeDITCNNBhnsW
+         7p/WnGyXV108S86irZUugVo0wGux+JHBiSG56nh53aKUgT9y5f7KKJELyE1nPoMlfP7I
+         j5o73+uF8N8mCO3nimfsd5zPyTBRtrhIiHjfi8aC10UEp7PgtyylLwKg3im6SSQbV4cl
+         snx23DRADTk1buvUs6HEbBRQiYlZba4ari/HsNl7efbAne5Xu20ZHqrmcnq9oCa1Vvqe
+         GZhezU2PK1zeaR+VKF2aP7o51ovln6KMFLaV6P14nXh1Kfd2LmN7T/ErN329+T7U9C91
+         N7gA==
+X-Gm-Message-State: AOAM531R4c8222CafT8lzr/SAf2sWfAWEWFQ0yQOY5jvGuhwrCnf1oP7
+        nQEUw8RAPwlTl76MgwsNUPc=
+X-Google-Smtp-Source: ABdhPJxZEbDYwhiQ6e+F+jKDvTB8H9i0VIH3Gi8v9zTI9RGfzWtgNoHtK7WWxg40k7vkKudVyxkHeQ==
+X-Received: by 2002:adf:df87:: with SMTP id z7mr7278724wrl.56.1622472042672;
+        Mon, 31 May 2021 07:40:42 -0700 (PDT)
+Received: from rocinante.localdomain ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id z5sm17175128wrn.69.2021.05.31.07.40.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 May 2021 07:40:42 -0700 (PDT)
+Date:   Mon, 31 May 2021 16:40:41 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Evan Quan <evan.quan@amd.com>
+Cc:     linux-pci@vger.kernel.org, Alexander.Deucher@amd.com
+Subject: Re: [PATCH] PCI: Mark AMD Navi14 GPU 0x7341 rev 0x00 ATS as broken
+Message-ID: <20210531144041.GB157228@rocinante.localdomain>
+References: <20210531081031.919611-1-evan.quan@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMhs-H80=7jctPT70rOmcwcqPw+9iUF84_ZCgGr-TKwJ4eB2Lg@mail.gmail.com>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20210531081031.919611-1-evan.quan@amd.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Monday 31 May 2021 15:39:55 Sergio Paracuellos wrote:
-> Hi Pali,
-> 
-> Thanks for your comments.
-> 
-> On Mon, May 31, 2021 at 3:14 PM Pali Rohár <pali@kernel.org> wrote:
-> >
-> > On Saturday 15 May 2021 14:40:53 Sergio Paracuellos wrote:
-> > > This patch adds a driver for the PCIe controller of MT7621 SoC.
-> > >
-> > > Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
-> > > ---
-> > >  arch/mips/pci/Makefile     |   1 +
-> > >  arch/mips/pci/pci-mt7621.c | 624 +++++++++++++++++++++++++++++++++++++
-> > >  arch/mips/ralink/Kconfig   |   9 +-
-> > >  3 files changed, 633 insertions(+), 1 deletion(-)
-> > >  create mode 100644 arch/mips/pci/pci-mt7621.c
-> > >
-> > > diff --git a/arch/mips/pci/Makefile b/arch/mips/pci/Makefile
-> > > index f3eecc065e5c..178c550739c4 100644
-> > > --- a/arch/mips/pci/Makefile
-> > > +++ b/arch/mips/pci/Makefile
-> > > @@ -24,6 +24,7 @@ obj-$(CONFIG_PCI_AR2315)    += pci-ar2315.o
-> > >  obj-$(CONFIG_SOC_AR71XX)     += pci-ar71xx.o
-> > >  obj-$(CONFIG_PCI_AR724X)     += pci-ar724x.o
-> > >  obj-$(CONFIG_PCI_XTALK_BRIDGE)       += pci-xtalk-bridge.o
-> > > +obj-$(CONFIG_PCI_MT7621)     += pci-mt7621.o
-> > >  #
-> > >  # These are still pretty much in the old state, watch, go blind.
-> > >  #
-> > > diff --git a/arch/mips/pci/pci-mt7621.c b/arch/mips/pci/pci-mt7621.c
-> > > new file mode 100644
-> > > index 000000000000..fe1945819d25
-> > > --- /dev/null
-> > > +++ b/arch/mips/pci/pci-mt7621.c
-> > ...
-> > > +static int mt7621_pcie_enable_ports(struct mt7621_pcie *pcie)
-> > > +{
-> > > +     struct device *dev = pcie->dev;
-> > > +     struct mt7621_pcie_port *port;
-> > > +     u8 num_slots_enabled = 0;
-> > > +     u32 slot;
-> > > +     u32 val;
-> > > +     int err;
-> > > +
-> > > +     /* Setup MEMWIN and IOWIN */
-> > > +     pcie_write(pcie, 0xffffffff, RALINK_PCI_MEMBASE);
-> > > +     pcie_write(pcie, pcie->io.start, RALINK_PCI_IOBASE);
-> > > +
-> > > +     list_for_each_entry(port, &pcie->ports, list) {
-> > > +             if (port->enabled) {
-> > > +                     err = clk_prepare_enable(port->clk);
-> > > +                     if (err) {
-> > > +                             dev_err(dev, "enabling clk pcie%d\n", slot);
-> > > +                             return err;
-> > > +                     }
-> > > +
-> > > +                     mt7621_pcie_enable_port(port);
-> > > +                     dev_info(dev, "PCIE%d enabled\n", port->slot);
-> > > +                     num_slots_enabled++;
-> > > +             }
-> > > +     }
-> > > +
-> > > +     for (slot = 0; slot < num_slots_enabled; slot++) {
-> > > +             val = read_config(pcie, slot, PCI_COMMAND);
-> > > +             val |= PCI_COMMAND_MASTER;
-> > > +             write_config(pcie, slot, PCI_COMMAND, val);
-> >
-> > Hello! Is this part of code correct? Because it looks strange if PCIe
-> > controller driver automatically enables PCI bus mastering, prior device
-> > driver initialize itself.
-> >
-> > Moreover kernel has already function pci_set_master() for this purpose
-> > which is used by device drivers.
-> >
-> > So I think this code can confuse some device drivers...
-> 
-> I agree that we have pci_set_master() to be used in pci device driver
-> code. Original controller driver set this bit for enabled slots. Since
-> there is no documentation at all for the PCI in this SoC
+Hi Evan,
 
-I see... this is really a big problem to do any driver development...
+Thank you for sending the patch over!
 
-> I have
-> maintained the setting in the driver in a cleaner way. See original
-> driver code and the setting here [0]. There is no other reason than
-> that. I am ok with removing this from here and testing with my two
-> devices that everything is still ok if having this setting in the pci
-> controller driver is a real problem.
+A small nitpick: the subject line could just say:
 
-You can run lspci -nnvv with and without PCI_COMMAND_MASTER code and
-then compare outputs.
+  Add quirk for AMD Navi 14 to disable ATS support
 
-Device drivers for sure enable PCI_COMMAND_MASTER at the time when it is
-needed, so it is possible that there would be no difference in lspci
-output.
+Or something along these lines, as I am not sure how useful the ID and
+revision are in the subject, especially since the commit message
+explains in details what hardware is affected, etc.
 
-> [0]: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/tree/drivers/staging/mt7621-pci/pci-mt7621.c?h=v4.18#n676
-> 
-> Best regards,
->     Sergio Paracuellos
-> >
-> > > +             /* configure RC FTS number to 250 when it leaves L0s */
-> > > +             val = read_config(pcie, slot, PCIE_FTS_NUM);
-> > > +             val &= ~PCIE_FTS_NUM_MASK;
-> > > +             val |= PCIE_FTS_NUM_L0(0x50);
-> > > +             write_config(pcie, slot, PCIE_FTS_NUM, val);
-> > > +     }
-> > > +
-> > > +     return 0;
-> > > +}
+> Unexpected GPU hang was observed during runpm stress test
+> on 0x7341 rev 0x00. Further debugging shows broken ATS is
+> related. Thus as a followup of commit 5e89cd303e3a ("PCI:
+> Mark AMD Navi14 GPU rev 0xc5 ATS as broken"), we disable
+> the ATS for the specific SKU also.
+
+As this might be a candidate for a back-port to current stable and
+long-term kernels, does it have any "Fixes" tag we could include here
+for reference?  If not, then it's OK.
+
+> Change-Id: I3d9d570bd473762e3bfbb251cf8abaf5af38ced9
+
+I assume this is from some code review service like Gerrit?  We usually
+as people to drop these when sending patches to be included in the
+kernel (so when sending patches upstream).
+
+	Krzysztof
