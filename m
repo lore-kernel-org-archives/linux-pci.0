@@ -5,24 +5,24 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62AD5C47097
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 08:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51494C47082
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 08:59:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43D7B60FDA
-	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 08:59:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CFA361248
+	for <linux-pci@archiver.kernel.org>; Mon, 31 May 2021 08:59:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230423AbhEaJBf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 May 2021 05:01:35 -0400
-Received: from hostingweb31-40.netsons.net ([89.40.174.40]:54289 "EHLO
+        id S229522AbhEaJBg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 May 2021 05:01:36 -0400
+Received: from hostingweb31-40.netsons.net ([89.40.174.40]:60810 "EHLO
         hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229646AbhEaJBc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 05:01:32 -0400
+        by vger.kernel.org with ESMTP id S230257AbhEaJBd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 May 2021 05:01:33 -0400
 Received: from [77.244.183.192] (port=63376 helo=melee.fritz.box)
         by hostingweb31.netsons.net with esmtpa (Exim 4.94.2)
         (envelope-from <luca@lucaceresoli.net>)
-        id 1lndm3-0005h2-Sa; Mon, 31 May 2021 10:59:51 +0200
+        id 1lndm4-0005h2-Np; Mon, 31 May 2021 10:59:52 +0200
 From:   Luca Ceresoli <luca@lucaceresoli.net>
 To:     linux-pci@vger.kernel.org
 Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
@@ -33,9 +33,9 @@ Cc:     Luca Ceresoli <luca@lucaceresoli.net>, linux-omap@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v2 2/4] PCI: dra7xx: Make it a kernel module
-Date:   Mon, 31 May 2021 10:59:32 +0200
-Message-Id: <20210531085934.2662457-3-luca@lucaceresoli.net>
+Subject: [PATCH v2 4/4] PCI: dra7xx: Get an optional clock
+Date:   Mon, 31 May 2021 10:59:34 +0200
+Message-Id: <20210531085934.2662457-5-luca@lucaceresoli.net>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210531085934.2662457-1-luca@lucaceresoli.net>
 References: <20210531085934.2662457-1-luca@lucaceresoli.net>
@@ -55,77 +55,64 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable building the driver as a loadable kernel module.
+If the clock is provided externally we need to make sure it is enabled
+before starting PCI scan.
 
 Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
 
 ---
 
 Changes v1 -> v2:
- - Update commit subject (Bjorn)
- - Update commit message body (Rob)
- - Add MODULE_DEVICE_TABLE() for autoloading (Rob)
+ - Update commit subject as suggested by Bjorn
 ---
- drivers/pci/controller/dwc/Kconfig      | 6 +++---
- drivers/pci/controller/dwc/pci-dra7xx.c | 8 +++++++-
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 423d35872ce4..775ad590966e 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -17,10 +17,10 @@ config PCIE_DW_EP
- 	select PCIE_DW
- 
- config PCI_DRA7XX
--	bool
-+	tristate
- 
- config PCI_DRA7XX_HOST
--	bool "TI DRA7xx PCIe controller Host Mode"
-+	tristate "TI DRA7xx PCIe controller Host Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	depends on OF && HAS_IOMEM && TI_PIPE3
-@@ -36,7 +36,7 @@ config PCI_DRA7XX_HOST
- 	  This uses the DesignWare core.
- 
- config PCI_DRA7XX_EP
--	bool "TI DRA7xx PCIe controller Endpoint Mode"
-+	tristate "TI DRA7xx PCIe controller Endpoint Mode"
- 	depends on SOC_DRA7XX || COMPILE_TEST
- 	depends on PCI_ENDPOINT
- 	depends on OF && HAS_IOMEM && TI_PIPE3
 diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index 6457695df00c..9fcadd7dd943 100644
+index a8daa356f7e6..11f392b7a9a2 100644
 --- a/drivers/pci/controller/dwc/pci-dra7xx.c
 +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -15,6 +15,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/module.h>
- #include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/of_pci.h>
-@@ -611,6 +612,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	},
- 	{},
- };
-+MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
+@@ -7,6 +7,7 @@
+  * Authors: Kishon Vijay Abraham I <kishon@ti.com>
+  */
  
- /*
-  * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
-@@ -949,4 +951,8 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	},
- 	.shutdown = dra7xx_pcie_shutdown,
++#include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/err.h>
+@@ -90,6 +91,7 @@ struct dra7xx_pcie {
+ 	int			phy_count;	/* DT phy-names count */
+ 	struct phy		**phy;
+ 	struct irq_domain	*irq_domain;
++	struct clk              *clk;
+ 	enum dw_pcie_device_mode mode;
  };
--builtin_platform_driver(dra7xx_pcie_driver);
-+module_platform_driver(dra7xx_pcie_driver);
+ 
+@@ -745,6 +747,15 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (!link)
+ 		return -ENOMEM;
+ 
++	dra7xx->clk = devm_clk_get_optional(dev, NULL);
++	if (IS_ERR(dra7xx->clk))
++		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
++				     "clock request failed");
 +
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_DESCRIPTION("PCIe controller driver for TI DRA7xx SoCs");
-+MODULE_LICENSE("GPL v2");
++	ret = clk_prepare_enable(dra7xx->clk);
++	if (ret)
++		return ret;
++
+ 	for (i = 0; i < phy_count; i++) {
+ 		snprintf(name, sizeof(name), "pcie-phy%d", i);
+ 		phy[i] = devm_phy_get(dev, name);
+@@ -932,6 +943,8 @@ static void dra7xx_pcie_shutdown(struct platform_device *pdev)
+ 
+ 	pm_runtime_disable(dev);
+ 	dra7xx_pcie_disable_phy(dra7xx);
++
++	clk_disable_unprepare(dra7xx->clk);
+ }
+ 
+ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
 -- 
 2.25.1
 
