@@ -2,107 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD39C47082
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3DC8C47082
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:39:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B139613B8
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:38:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F9606101B
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:39:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229702AbhFCKkc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Jun 2021 06:40:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49476 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbhFCKkc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jun 2021 06:40:32 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34E69C061756
-        for <linux-pci@vger.kernel.org>; Thu,  3 Jun 2021 03:38:35 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id x10so2659788plg.3
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jun 2021 03:38:35 -0700 (PDT)
+        id S229506AbhFCKlI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Jun 2021 06:41:08 -0400
+Received: from mail-pj1-f50.google.com ([209.85.216.50]:33557 "EHLO
+        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229661AbhFCKlI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jun 2021 06:41:08 -0400
+Received: by mail-pj1-f50.google.com with SMTP id k22-20020a17090aef16b0290163512accedso3188026pjz.0
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jun 2021 03:39:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MBGbqvseaowVXgAUsLtxjTmL1uju2aQqqvQPrdOEUMI=;
-        b=PtUIFX5j6+rZW5fTyueSPbez0QVHLoGyxaF0Xk260gvCiKzzUF/F057MwftAPyketT
-         IOEzWxFOg5qGolkIJfCnFB4WQArM3fALgXkuTxBIZxs/x5ItQ6D08Gwg4D7JVFyrpQYk
-         CgOLh21NWiEuMxa2EZ4Ji1KTUAtTS6mFeMnCALAc3UvKJDfR6ekbSXilJJmbt+RypvI/
-         JvQh31+mFFJu2OAC0lc4L02wK8rz4sJWUUBfRaSQmysIyzW/favy1J5BRxSfEnXFraJv
-         kkXjmoTXN3833DbXVge3JAIilnlTZFUve2s/k56YRWk0EG4bhzpPtibJQTzTkXRzJUiV
-         xDSg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pRg79UT6E/Gj74wGPI8V0FYVbz3jkCUsXaAsm44vs+g=;
+        b=T4sE1cyf15ztjxxnjWVzAtElXiP/nRBYyn2vr5v4vHgqpXUieoec8O3DK0vp/WPvV0
+         B5C1QVWhFMavalpOFa5hHC3JGlTBPJrqgnO0ncxBJupE39lEQyByH/w0eK7k0mtNmav4
+         mvUDM8FEmKbTUUWcBNHsE5do4D//Y6fYfHVasv9ilHwFEtpWlVsuvyps3s16HON3R1C/
+         l4L4iMwGcnpzLg3LccfhfBEDp/nmUOp+m0L7AGwLw01kE9Ce49o9pG7rD43gDIhkC86O
+         lMghye1L74Z61P68mI4/ONasCV0+NN/yDz6omGkybOEbD9Vzg4XLLGszhH8uFCpy9gmP
+         qOgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MBGbqvseaowVXgAUsLtxjTmL1uju2aQqqvQPrdOEUMI=;
-        b=F/IT8YPHdpPAq9DeTsqhPF6v7kRMaCs1i8ARd7eiD+KLHEdKPn+/mNHbyXcca/tw52
-         7LpXYiyI16swV/6KKhsjICpbSXIadSr4KA/Q/msjq366c3IZJ9B6+oHohZO4Q/R3o4g/
-         tIMT0ISE+KXYSpU3ptjIkFk4XvjBuN8c9W8udW3b4snImXpWYLoJgO4Vr1I+Za3bR86q
-         2Nrfe48Z1a4EMNPftCzW7YKcErvWGUn6KxcEFMpQcE6Kto5moqKmPuANuuHRR3MSnImj
-         +8t6QolY6NCwan4JH410jN19YY1NAapZ9bqyKCqTLa6THgLyI8yVcAPMEFZh/EYWVgSn
-         HD+A==
-X-Gm-Message-State: AOAM531Q6vmupz9T9bYDXb1WyurT1v9NHbzJ2Jj4yXdu9ReH/RU/yFZY
-        w7S+mmr5VGH3G+mV/Vwldl0m
-X-Google-Smtp-Source: ABdhPJwFnpLXEPr9AyaW4L1Hrgj1B6bqjOOn9Hd9qW37QhWeTeQE8lPs1HMgmrYB44H/jybAqv5pog==
-X-Received: by 2002:a17:902:8a8b:b029:10d:af46:f3d5 with SMTP id p11-20020a1709028a8bb029010daf46f3d5mr3117703plo.22.1622716714689;
-        Thu, 03 Jun 2021 03:38:34 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pRg79UT6E/Gj74wGPI8V0FYVbz3jkCUsXaAsm44vs+g=;
+        b=GFXxMKulzdiZWDaaPamXR44HT0d19vcJeODUJCLSaPATNhJS/j/Ht2RZ2C9hIZzGr5
+         Fy6ioPaWs6MZs9eC+qvYlIJbt/xBihU3ESaZK084HirhtZzbixw36beYDL5LPdd14GXB
+         vZLqstapY2zQfaqi4LZwDMt2J8yWSgFyUYdXV68y5qkLpDHMHcizMxqxHQn2T4x7mnoZ
+         RUA0pP9dMkGzTPE9bxmp7PGfWYobJXkwfdl6O8byibkpfF43xrr+GbfEepzX0KWBkxhx
+         j8NXt/PKXobIjJyEBiUPUVc+sy+9/AU01enwd3qH87CtRwdGme2QFATzeBcT0BxDG8tE
+         /EQQ==
+X-Gm-Message-State: AOAM530SorW+1L17j6VFOEwh5mwxKZmCKUFyMZ5OMy5ZgANzrd2D59vO
+        ZXidqZH6BKfdcUOSe3zL+pee
+X-Google-Smtp-Source: ABdhPJwexUDiehxBzS/6kyi+GFZp5yt7L/1dwn0Ks+AyLd1s9HY3PLCoPBjJZLQj7O2YsrA9u7EHOQ==
+X-Received: by 2002:a17:902:7684:b029:f4:b82b:b893 with SMTP id m4-20020a1709027684b02900f4b82bb893mr34494121pll.67.1622716703839;
+        Thu, 03 Jun 2021 03:38:23 -0700 (PDT)
 Received: from localhost.localdomain ([120.138.12.41])
-        by smtp.gmail.com with ESMTPSA id v67sm2053370pfb.193.2021.06.03.03.38.31
+        by smtp.gmail.com with ESMTPSA id v67sm2053370pfb.193.2021.06.03.03.38.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jun 2021 03:38:34 -0700 (PDT)
+        Thu, 03 Jun 2021 03:38:23 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com
 Cc:     bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 3/3] MAINTAINERS: Add entry for Qualcomm PCIe Endpoint driver and binding
-Date:   Thu,  3 Jun 2021 16:08:14 +0530
-Message-Id: <20210603103814.95177-4-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 0/3] Add Qualcomm PCIe Endpoint driver support
+Date:   Thu,  3 Jun 2021 16:08:11 +0530
+Message-Id: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
-References: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add MAINTAINERS entry for Qualcomm PCIe Endpoint driver and its
-devicetree binding. While at it, let's also fix the PCIE RC entry to
-cover only the RC driver.
+Hello,
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- MAINTAINERS | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+This series adds support for Qualcomm PCIe Endpoint controller found
+in platforms like SDX55. The Endpoint controller is based on the designware
+core with additional Qualcomm wrappers around the core.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index bd7aff0c120f..cdd370138b9f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14254,7 +14254,15 @@ M:	Stanimir Varbanov <svarbanov@mm-sol.com>
- L:	linux-pci@vger.kernel.org
- L:	linux-arm-msm@vger.kernel.org
- S:	Maintained
--F:	drivers/pci/controller/dwc/*qcom*
-+F:	drivers/pci/controller/dwc/pcie-qcom.c
-+
-+PCIE ENDPOINT DRIVER FOR QUALCOMM
-+M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-msm@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-+F:	drivers/pci/controller/dwc/pcie-qcom-ep.c
- 
- PCIE DRIVER FOR ROCKCHIP
- M:	Shawn Lin <shawn.lin@rock-chips.com>
+The driver is added separately unlike other Designware based drivers that
+combine RC and EP in a single driver. This is done to avoid complexity and
+to maintain this driver autonomously.
+
+The driver has been validated with an out of tree MHI function driver on
+SDX55 based Telit FN980 EVB connected to x86 host machine over PCIe.
+
+Thanks,
+Mani
+
+Changes in v2:
+
+* Addressed the comments from Rob on bindings patch
+* Modified the driver as per binding change
+* Fixed the warnings reported by Kbuild bot
+* Removed the PERST# "enable_irq" call from probe()
+
+Manivannan Sadhasivam (3):
+  dt-bindings: pci: Add devicetree binding for Qualcomm PCIe EP
+    controller
+  PCI: dwc: Add Qualcomm PCIe Endpoint controller driver
+  MAINTAINERS: Add entry for Qualcomm PCIe Endpoint driver and binding
+
+ .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 144 ++++
+ MAINTAINERS                                   |  10 +-
+ drivers/pci/controller/dwc/Kconfig            |  10 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     | 780 ++++++++++++++++++
+ 5 files changed, 944 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-qcom-ep.c
+
 -- 
 2.25.1
 
