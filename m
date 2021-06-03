@@ -2,114 +2,123 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA10C47092
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jun 2021 22:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF779C4708F
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 00:01:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 800E2613BF
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jun 2021 22:41:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C1F4613E9
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 00:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbhFBWmp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Jun 2021 18:42:45 -0400
-Received: from jabberwock.ucw.cz ([46.255.230.98]:45762 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229583AbhFBWmp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jun 2021 18:42:45 -0400
-Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
-        id 1F91F1C0B76; Thu,  3 Jun 2021 00:41:00 +0200 (CEST)
-Date:   Thu, 3 Jun 2021 00:40:59 +0200
-From:   Pavel Machek <pavel@ucw.cz>
-To:     stuart hayes <stuart.w.hayes@gmail.com>
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>, kw@linux.com,
-        "linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>
-Subject: Re: [PATCH v2] Add support for PCIe SSD status LED management
-Message-ID: <20210602224059.GA19673@duo.ucw.cz>
-References: <20210601203820.3647-1-stuart.w.hayes@gmail.com>
- <3d1272b8-4edc-f2b1-85ea-f5cea65b4871@infradead.org>
- <20210601223812.GA5128@amd>
- <6ee11975-fad7-1a82-f7f3-279ebd4f67cb@gmail.com>
- <20210602090504.GA10900@amd>
- <552ca26f-c7ab-3496-743f-f95e80eb578b@gmail.com>
+        id S229611AbhFCADH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Jun 2021 20:03:07 -0400
+Received: from mail-wr1-f52.google.com ([209.85.221.52]:44936 "EHLO
+        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229541AbhFCADH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jun 2021 20:03:07 -0400
+Received: by mail-wr1-f52.google.com with SMTP id f2so3924353wri.11
+        for <linux-pci@vger.kernel.org>; Wed, 02 Jun 2021 17:01:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=zA3/cfdzVIr5cLh/J+wg9gDOYGj6S6m5ZJD71R+yPk4=;
+        b=b9En4xt8RpriDfK1+pKQrEsDAXkXPntqXAMxcwy8zIqAX+nL3x1aQb0Ahdd0hVTG8O
+         3E38W1eovc1Q//UKeR4IFRe6+eKZArlLTz8lnw91sqiDSUdBh9B20zkjfV1XX6KVqE0V
+         b4eh1JAECINfnbSffxJS2a1W+k1Rr20M+J/ON9aKqLcR5ZznpRUWNda70hIfmQOSYveD
+         AgzeLwJutXRzGNN2lBa/MxY6494h4sTIwVv/hWlKlViTc2VYlaVs7UIwOofJsUVN4Bh6
+         qlgQj/MMwyodglEiMu6r0WZTz8pvMYpggCMEMItjnwVvSplVzP80e28hBvnaD63Ae7l1
+         OgaQ==
+X-Gm-Message-State: AOAM530cdif/Qj5yv1kj6Xr98Znqh4B7/kAgEmIcf4eqtVPTwRSuzqPN
+        kJwyXakjE96zXO9CFUKM4lI=
+X-Google-Smtp-Source: ABdhPJwzeVEAwsomDW0efFIz/tfw5FvH3kbiutKwNaOqyd9Ur8akCO3TiSmko1UmxM2s2QJ9lxgKqA==
+X-Received: by 2002:a05:6000:180f:: with SMTP id m15mr8739885wrh.60.1622678482563;
+        Wed, 02 Jun 2021 17:01:22 -0700 (PDT)
+Received: from workstation.lan ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id c7sm1424669wrs.23.2021.06.02.17.01.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Jun 2021 17:01:22 -0700 (PDT)
+From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Joe Perches <joe@perches.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Xiongfeng Wang <wangxiongfeng2@huawei.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v6 6/6] PCI/sysfs: Fix a buffer overrun problem with dsm_label_utf16s_to_utf8s()
+Date:   Thu,  3 Jun 2021 00:01:12 +0000
+Message-Id: <20210603000112.703037-7-kw@linux.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210603000112.703037-1-kw@linux.com>
+References: <20210603000112.703037-1-kw@linux.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="VS++wcV0S1rZb1Fb"
-Content-Disposition: inline
-In-Reply-To: <552ca26f-c7ab-3496-743f-f95e80eb578b@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+When using ACPI to retrieve a device label from _DSM using the
+dsm_get_label() function the result can be retrieved either as a string
+value or a pointer to a buffer.
 
---VS++wcV0S1rZb1Fb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Should it be the latter, then an additional function called
+dsm_label_utf16s_to_utf8s() will be invoked to convert any UTF16
+characters to UTF8 so that the value could be safely stored and later
+displayed through a relevant sysfs object.
 
-Hi!
+Internally, dsm_label_utf16s_to_utf8s() calls the utf16s_to_utf8s()
+function to handle the conversion setting the limit of the data that can
+be saved into a provided buffer as a result of the character conversion
+to be a total of PAGE_SIZE.  The utf16s_to_utf8s() function returns an
+integer value denoting the number of bytes that have been written into
+the provided buffer.
 
-> > > This would cause the system to somehow show the user that that this d=
-rive
-> > > (or drive slot) is the one that it wants a person to be able to physi=
-cally
-> > > locate (possibly by flashing a blue LED on/near the drive), and also =
-that
-> > > the drive is OK.  It would presumably do that by lighting the LEDs on=
-/near
-> > > the drive with certain colors and/or flashing patterns, though it cou=
-ld, in
-> > > theory, put "OK" in an LCD on the drive slot.  How the states are dis=
-played
-> > > to the user is beyond the scope of the specs.
-> > >=20
-> > > (The _DSM and NPEM specs provide for a way to control status LEDs on =
-a drive
-> > > or drive slot.  Typically drives will have 2 or 3 LEDs that are illum=
-inated
-> > > in different colors or flashing patterns to indicate various states (=
-like
-> > > those listed in IBPI / SFF-8489), though the _DSM / NPEM specs do not
-> > > specify how the states are displayed.)
-> >=20
-> > Well, LED subsystem expects to know how many LEDs are there and what
-> > the LEDs are, and expects individual control over them.
-> >=20
-> > "2 or 3 LEDs with unknown patterns", or LCD display is outside of scope
-> > of LED subsystem, so this should be independend.
+Following the execution of the utf16s_to_utf8s() a newline character
+will be added at the end of the resulting buffer so that when the value
+is read in the userspace through the sysfs object then it would include
+newline making it more accessible when working with the sysfs file
+system in the shell, etc.  Normally, this wouldn't be a problem, but if
+the function utf16s_to_utf8s() happens to return the number of bytes
+written to be precisely PAGE_SIZE, then we would overrun the buffer and
+write the newline character outside the allotted space which can have
+undefined consequences or result in a failure.
 
->=20
-> Yes... I had originally submitted this without using the LED subsystem, a=
-nd
-> Greg K-H said I had to (see
-> https://www.spinics.net/lists/linux-pci/msg102013.html).  Here's the
-> relevant bit.
+To fix this buffer overrun, ensure that there always is enough space
+left for the newline character to be safely appended.
 
-=2E..
+Fixes: 6058989bad05 ("PCI: Export ACPI _DSM provided firmware instance number and string name to sysfs")
+Reported-by: Joe Perches <joe@perches.com>
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+---
+ drivers/pci/pci-label.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> So I'm not sure what to do.
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 000e169c7197..0c6446519640 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -146,8 +146,8 @@ static int dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
+ 	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
+ 			      obj->buffer.length,
+ 			      UTF16_LITTLE_ENDIAN,
+-			      buf, PAGE_SIZE);
+-	buf[len] = '\n';
++			      buf, PAGE_SIZE - 1);
++	buf[len++] = '\n';
+ 
+ 	return len;
+ }
+-- 
+2.31.1
 
-Explain to Greg that you don't know how particular system implements
-the indication. It can be small display, 2 LEDs, 3 LEDs, etc... LED
-subsystem expects direct LED control.
-
-Best regards,
-								Pavel
---=20
-http://www.livejournal.com/~pavelmachek
-
---VS++wcV0S1rZb1Fb
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQRPfPO7r0eAhk010v0w5/Bqldv68gUCYLgI+wAKCRAw5/Bqldv6
-8kykAJ9dyoWhTggfJ0iwRUlJlM9S4ODhugCfZFeHTIX7D/7Axs8FeMCfV7dnViU=
-=Xqva
------END PGP SIGNATURE-----
-
---VS++wcV0S1rZb1Fb--
