@@ -2,234 +2,148 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14902C47096
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6157BC47082
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 11:06:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAC186138C
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 10:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4265D613D7
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jun 2021 11:06:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbhFCKlM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Jun 2021 06:41:12 -0400
-Received: from mail-pj1-f47.google.com ([209.85.216.47]:39506 "EHLO
-        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229934AbhFCKlM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jun 2021 06:41:12 -0400
-Received: by mail-pj1-f47.google.com with SMTP id o17-20020a17090a9f91b029015cef5b3c50so5216595pjp.4
-        for <linux-pci@vger.kernel.org>; Thu, 03 Jun 2021 03:39:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1PUdWT8u4uVKn934qZyRyKaFpSaDcuxgXKUIM2NUcww=;
-        b=JQd0CW00L5PfyoKqy241YpEHRLDpXL7J428pHGoLWV5gL4KfpN45zGESE3IzqZl5Ps
-         2JIOOKC9MJyyb6LtsnE9qwCfMBkbmZiMVk/ZEPIjmE/gLqPvYM62uS37g0TpRg94m0pK
-         yTm1pQRWAkdAKAVmOkTp2PZakbgaCUbYMbxEcTQHEM8NgKXQvhoTkrzzQGhR6xq0iiKF
-         BQPL2FIwjZ19vcmniXY6qF7UJJo9QbK1IWshTNZoTsZiawgJoj0612tHAGBZYYXu4r71
-         D8YQvSgJujk6ITifGfShobCC+YmFuhROTG0O1UOuE9X7m/GRTOuiB3lVGhgnBTWPH9Ij
-         r3pg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1PUdWT8u4uVKn934qZyRyKaFpSaDcuxgXKUIM2NUcww=;
-        b=AEiPGr2hNqrCABFiqXq1UnX66mMv8XmAg5MpfvRm70IVvdw9h/4uf0mMsxMidl2SWa
-         10RXXReQs5IuNOGcNLVsUNyvEAqp0IKzugaEItuOzFRJzDqc8Ceeoqx+TW6AFxjZHOlM
-         NixeISbzwN4XwDw3Jpm9tRAgkc8AoSzq8yjBre8GMceymRs2MNk3i5g0I8c8dk0zfPvK
-         ekC0bojQ7OBIMmZQPQliAw23KTTt1bM4yIcwbfy1RjBxiiG/KBQFuNOqRvB0QYj816Z0
-         PORrFYObFIZ4DobJrNgh7cE/DRlFkymR516hXBbZuzkCVu1PBvITj9ew1RzLFSPohfMT
-         x+Yg==
-X-Gm-Message-State: AOAM532El7zhfcDgO9CBNltqX9zejy4GCSv30EwLOl1/tqtRdgi4HORV
-        zJfxKNqdELfFTW/i6ij77IxJ
-X-Google-Smtp-Source: ABdhPJxILU2zQtIZwfvk5zV2uJrCJhKVKLv/i58JTXA5joJs94szP/0rR3KDxLDg5Nxp0mI935HNIA==
-X-Received: by 2002:a17:902:bcc7:b029:ed:6f73:ffc4 with SMTP id o7-20020a170902bcc7b02900ed6f73ffc4mr34721411pls.1.1622716707528;
-        Thu, 03 Jun 2021 03:38:27 -0700 (PDT)
-Received: from localhost.localdomain ([120.138.12.41])
-        by smtp.gmail.com with ESMTPSA id v67sm2053370pfb.193.2021.06.03.03.38.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Jun 2021 03:38:27 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com
-Cc:     bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 1/3] dt-bindings: pci: Add devicetree binding for Qualcomm PCIe EP controller
-Date:   Thu,  3 Jun 2021 16:08:12 +0530
-Message-Id: <20210603103814.95177-2-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
-References: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
+        id S229772AbhFCLII (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Jun 2021 07:08:08 -0400
+Received: from mga05.intel.com ([192.55.52.43]:12730 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229697AbhFCLII (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Jun 2021 07:08:08 -0400
+IronPort-SDR: nsIBv/uyF7cgLTuZSTN1A8neRaNu72u1gX99nlqBtBekRBP7UFJT6t2DEMNeeQPS+toHkZ9TBJ
+ 9ovKO9eJ7vYg==
+X-IronPort-AV: E=McAfee;i="6200,9189,10003"; a="289649229"
+X-IronPort-AV: E=Sophos;i="5.83,244,1616482800"; 
+   d="scan'208";a="289649229"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2021 04:06:22 -0700
+IronPort-SDR: Zwk4n1u2Lp+9UNvKqBN2LdbTy0mhfqycav/H6/lfzFNUqHIKrVAvX8lCW5VLOMMWimCe34usUI
+ j4t480D+wJHA==
+X-IronPort-AV: E=Sophos;i="5.83,244,1616482800"; 
+   d="scan'208";a="446250520"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2021 04:06:18 -0700
+Received: by lahna (sSMTP sendmail emulation); Thu, 03 Jun 2021 14:06:16 +0300
+Date:   Thu, 3 Jun 2021 14:06:16 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Utkarsh H Patel <utkarsh.h.patel@intel.com>,
+        Koba Ko <koba.ko@canonical.com>,
+        Rajat Jain <rajatja@google.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/PM: Target PM state is D3cold if the upstream
+ bridge is power manageable
+Message-ID: <YLi3qI1xEM7jT2B8@lahna.fi.intel.com>
+References: <20210531133435.53259-1-mika.westerberg@linux.intel.com>
+ <4650685.31r3eYUQgx@kreacher>
+ <YLXlzLG199IuVb/G@lahna.fi.intel.com>
+ <1792040.tdWV9SEqCh@kreacher>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1792040.tdWV9SEqCh@kreacher>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add devicetree binding for Qualcomm PCIe EP controller used in platforms
-like SDX55. The EP controller is based on the Designware core with
-Qualcomm specific wrappers.
+On Wed, Jun 02, 2021 at 08:02:38PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, June 1, 2021 9:46:20 AM CEST Mika Westerberg wrote:
+> > Hi Rafael,
+> > 
+> > On Mon, May 31, 2021 at 07:37:45PM +0200, Rafael J. Wysocki wrote:
+> > > On Monday, May 31, 2021 3:34:35 PM CEST Mika Westerberg wrote:
+> > > > Some PCIe devices only support PME (Power Management Event) from D3cold.
+> > > > One example is ASMedia xHCI controller:
+> > > > 
+> > > > 11:00.0 USB controller: ASMedia Technology Inc. ASM1042A USB 3.0 Host Controller (prog-if 30 [XHCI])
+> > > >   ...
+> > > >   Capabilities: [78] Power Management version 3
+> > > >   	  Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0-,D1-,D2-,D3hot-,D3cold+)
+> > > > 	  Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> > > > 
+> > > > With such devices, if it has wake enabled, the kernel selects lowest
+> > > > possible power state to be D0 in pci_target_state(). This is problematic
+> > > > because it prevents the root port it is connected to enter low power
+> > > > state too which makes the system consume more energy than necessary.
+> > > 
+> > > But this is not the only case affected by the patch AFAICS.
+> > 
+> > Right.
+> > 
+> > > > The problem in pci_target_state() is that it only accounts the "current"
+> > > > device state, so when the bridge above it (a root port for instance) is
+> > > > transitioned into D3hot the device transitions into D3cold.
+> > > 
+> > > Well, as designed, pci_target_state() is about states the the device can
+> > > be programmed into, which cannot be D3cold if the device has not platform PM.
+> > 
+> > Fair enough but the device itself does not need to have platform PM. It
+> > is enough that the root port far up in the hierarchy has it.
+> > 
+> > > > This is because when the root port is first transitioned into D3hot then the
+> > > > ACPI power resource is turned off which puts the PCIe link to L2/L3 (and
+> > > > the root port and the device are in D3cold). If the root port is kept in
+> > > > D3hot it still means that the device below it is still effectively in
+> > > > D3cold as no configuration messages pass through. Furthermore the
+> > > > implementation note of PCIe 5.0 sec 5.3.1.4 says that the device should
+> > > > expect to be transitioned into D3cold soon after its link transitions
+> > > > into L2/L3 Ready state.
+> > > 
+> > > That's true, but the prerequisite is to put the endpoint device into D3hot
+> > > and not to attempt to put it into D3cold.
+> > 
+> > Okay.
+> > 
+> > > > Taking the above into consideration, instead of forcing the device stay
+> > > > in D0 we look at the upstream bridge and whether it is allowed to enter
+> > > > D3 (hot/cold). If this is the case we conclude that the actual target
+> > > > state of the device is D3cold. This also follows the logic in
+> > > > pci_set_power_state() that sets power state of the subordinate devices
+> > > > to D3cold after the bridge itself is transitioned into D3cold.
+> > > 
+> > > IMO what needs to be fixed is what happens when the "wakeup" argument is "true"
+> > > and that simply needs to special-case D3hot.
+> > > 
+> > > Namely, if wakeup from D3hot is not supported, D3hot should still be returned
+> > > if wakeup from D3cold is supported and the upstream bridge supports D3cold.
+> > 
+> > This sounds like a good solution except that we probably need to look
+> > further up then to see if any of the bridges above support D3cold,
+> > right? For instance if the device is part of TBT topology there may be
+> > multiple bridges (PCIe upstream ports, downstream ports) between it and
+> > the root port that has the platform PM "support".
+> 
+> Moreover, pci_enable_wake() would need to be modified to also enable PME if the
+> target state is D3hot and only wakeup from D3cold is supported.
+> 
+> But if pci_enable_wake() is modified this way, we don't need to worry about the
+> upstream bridges.  Worst-case wakeup will not work (even though enabled) if the
+> device stays in D3hot.
+> 
+> So pci_target_state() should return D3hot even if wakeup from D3hot itself is
+> not supported, but wakeup from D3cold is supported, regardless of what the
+> upstream bridges can do (with the assumption that power will get removed from
+> the device via an upstream bridge) and pci_enable_wake() should be modified to
+> enable PME if the target state is D3hot, but the device can only signal wakeup
+> from D3cold.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 144 ++++++++++++++++++
- 1 file changed, 144 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+OK thanks. Let me try this in v3.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-new file mode 100644
-index 000000000000..3e357cb03a5c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-@@ -0,0 +1,144 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/qcom,pcie-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Qualcomm PCIe Endpoint Controller binding
-+
-+maintainers:
-+  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+
-+allOf:
-+  - $ref: "pci-ep.yaml#"
-+
-+properties:
-+  compatible:
-+    const: qcom,sdx55-pcie-ep
-+
-+  reg:
-+    items:
-+      - description: Qualcomm specific PARF configuration registers
-+      - description: Designware PCIe registers
-+      - description: External local bus interface registers
-+      - description: Address Translation Unit (ATU) registers
-+      - description: Memory region used to map remote RC address space
-+      - description: Qualcomm specific TCSR registers
-+
-+  reg-names:
-+    items:
-+      - const: parf
-+      - const: dbi
-+      - const: elbi
-+      - const: atu
-+      - const: addr_space
-+      - const: tcsr
-+
-+  clocks:
-+    items:
-+      - description: PCIe Auxiliary clock
-+      - description: PCIe CFG AHB clock
-+      - description: PCIe Master AXI clock
-+      - description: PCIe Slave AXI clock
-+      - description: PCIe Slave Q2A AXI clock
-+      - description: PCIe Sleep clock
-+      - description: PCIe Reference clock
-+
-+  clock-names:
-+    items:
-+      - const: aux
-+      - const: cfg
-+      - const: bus_master
-+      - const: bus_slave
-+      - const: slave_q2a
-+      - const: sleep
-+      - const: ref
-+
-+  interrupts:
-+    maxItems: 1
-+    description: PCIe Global interrupt
-+
-+  interrupt-names:
-+    const: global
-+
-+  reset-gpios:
-+    description: GPIO that is being used as PERST# input signal
-+    maxItems: 1
-+
-+  wake-gpios:
-+    description: GPIO that is being used as WAKE# output signal
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  reset-names:
-+    const: core
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  phys:
-+    maxItems: 1
-+
-+  phy-names:
-+    const: pciephy
-+
-+  num-lanes:
-+    default: 2
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - clocks
-+  - clock-names
-+  - interrupts
-+  - interrupt-names
-+  - reset-gpios
-+  - resets
-+  - reset-names
-+  - power-domains
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/qcom,gcc-sdx55.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    pcie_ep: pcie-ep@40000000 {
-+        compatible = "qcom,sdx55-pcie-ep";
-+        reg = <0x01c00000 0x3000>,
-+              <0x40000000 0xf1d>,
-+              <0x40000f20 0xc8>,
-+              <0x40001000 0x1000>,
-+              <0x42000000 0x1000>,
-+              <0x01fcb000 0x1000>;
-+        reg-names = "parf", "dbi", "elbi", "atu", "addr_space",
-+                    "tcsr";
-+
-+        clocks = <&gcc GCC_PCIE_AUX_CLK>,
-+             <&gcc GCC_PCIE_CFG_AHB_CLK>,
-+             <&gcc GCC_PCIE_MSTR_AXI_CLK>,
-+             <&gcc GCC_PCIE_SLV_AXI_CLK>,
-+             <&gcc GCC_PCIE_SLV_Q2A_AXI_CLK>,
-+             <&gcc GCC_PCIE_SLEEP_CLK>,
-+             <&gcc GCC_PCIE_0_CLKREF_CLK>;
-+        clock-names = "aux", "cfg", "bus_master", "bus_slave",
-+                      "slave_q2a", "sleep", "ref";
-+
-+        interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
-+        interrupt-names = "global";
-+        reset-gpios = <&tlmm 57 GPIO_ACTIVE_HIGH>;
-+        wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
-+        resets = <&gcc GCC_PCIE_BCR>;
-+        reset-names = "core";
-+        power-domains = <&gcc PCIE_GDSC>;
-+        phys = <&pcie0_lane>;
-+        phy-names = "pciephy";
-+        max-link-speed = <3>;
-+        num-lanes = <2>;
-+
-+        status = "disabled";
-+    };
--- 
-2.25.1
+> IMO, allowing PME support from D3cold only without providing any means to put
+> the device into D3cold is not a valid configuration and it need not be taken
+> into account here.
 
+AFAIK you don't need the device to have any other means than that it
+responds to the L2/3 handshake properly according to the spec (so that
+the link can be put to L2). I think this is perfectly valid configuration :)
