@@ -2,128 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24309C4743D
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A7FC4743D
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 033EB6140F
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:04:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 715EE6140C
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbhFDTGT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 15:06:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49450 "EHLO mail.kernel.org"
+        id S230177AbhFDTHe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 15:07:34 -0400
+Received: from mga06.intel.com ([134.134.136.31]:48564 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229810AbhFDTGT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jun 2021 15:06:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4AE5B601FA;
-        Fri,  4 Jun 2021 19:04:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622833472;
-        bh=cer+Bvra6ed4Y1JhppV0+conxTw5XnnGzF6r3B03UOU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Pgs6fH6TcnnUw8hfgWKlTOSTVfaEuwrfVRR8ujvSBTO324x6uWtuGOckoBCpzJ7Cb
-         /wzC0Ws51l1cn/h0+mHDypRuLpORZWRkK2rN6n7inGVpTy0sIOtSEXE6TY7iUrtQNv
-         IUbVAs85WZLnsAkjma8Xxz5Bl0Qjb/iTQTSAYHDUWXSfU/U6tDwXaZcC/SWh9T9F8y
-         BZyhgWZxGfSS21qyebdNulqatlFqmMZx9cyuQjVNQpkXXgzIsy+i4lV/jxM98CNFYp
-         40mrZty5gLW8tBI/pwa+/em5NIcUR1AWXQh8Yny2fywHYDvi1pGqGlh36R+RCqF3Qx
-         RsgLqKfpASVOA==
-Date:   Fri, 4 Jun 2021 14:04:30 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Wang Xingang <wangxingang5@huawei.com>
-Cc:     robh@kernel.org, will@kernel.org, joro@8bytes.org,
-        robh+dt@kernel.org, gregkh@linuxfoundation.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, xieyingtai@huawei.com,
-        John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH v4] iommu/of: Fix pci_request_acs() before enumerating
- PCI devices
-Message-ID: <20210604190430.GA2220179@bjorn-Precision-5520>
+        id S229823AbhFDTHd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jun 2021 15:07:33 -0400
+IronPort-SDR: CmsX79GpxVSyeMlYCK/sCr3EDu0FjoUXLqIUf+u1Bol0ZFcH7UGbWOK4/f39WokFrPWT/01Nj2
+ ZsOTo9dG7sXw==
+X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513934"
+X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
+   d="scan'208";a="265513934"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
+IronPort-SDR: ZU+5V4L68kbEnP2eDF0yqzS/neR0B0TCPFoQf1eYuDWJYHskWV87S12iQSpL10WqcTuEpHAG+9
+ VPNrq52Wg8kg==
+X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
+   d="scan'208";a="401049108"
+Received: from abathaly-mobl2.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.138.37])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:45 -0700
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     linux-pci@vger.kernel.org
+Cc:     =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Ben Widawsky <ben.widawsky@intel.com>
+Subject: [PATCH 2/9] cxl: Make id check more explicit
+Date:   Fri,  4 Jun 2021 12:05:34 -0700
+Message-Id: <20210604190541.175602-3-ben.widawsky@intel.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210604190541.175602-1-ben.widawsky@intel.com>
+References: <20210604190541.175602-1-ben.widawsky@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1621566204-37456-1-git-send-email-wangxingang5@huawei.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc John, who tested 6bf6c24720d3]
+Currently only type 0 DVSEC caps are handled. Moving this check will
+allow more robust type handling in the future.
 
-On Fri, May 21, 2021 at 03:03:24AM +0000, Wang Xingang wrote:
-> From: Xingang Wang <wangxingang5@huawei.com>
-> 
-> When booting with devicetree, the pci_request_acs() is called after the
-> enumeration and initialization of PCI devices, thus the ACS is not
-> enabled. And ACS should be enabled when IOMMU is detected for the
-> PCI host bridge, so add check for IOMMU before probe of PCI host and call
-> pci_request_acs() to make sure ACS will be enabled when enumerating PCI
-> devices.
+Should be no functional change.
 
-I'm happy to apply this, but I'm a little puzzled about 6bf6c24720d3
-("iommu/of: Request ACS from the PCI core when configuring IOMMU
-linkage").  It was tested and fixed a problem, but I don't understand
-how.
+Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+---
+ ls-ecaps.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-6bf6c24720d3 added the call to pci_request_acs() in
-of_iommu_configure() so it currently looks like this:
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index edb4401..83ca93e 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -690,7 +690,7 @@ cap_rcec(struct device *d, int where)
+ }
+ 
+ static void
+-cap_dvsec_cxl(struct device *d, int where)
++cap_dvsec_cxl(struct device *d, int id, int where)
+ {
+   u16 w;
+ 
+@@ -698,6 +698,9 @@ cap_dvsec_cxl(struct device *d, int where)
+   if (verbose < 2)
+     return;
+ 
++  if (id != 0)
++    return;
++
+   if (!config_fetch(d, where + PCI_CXL_CAP, 12))
+     return;
+ 
+@@ -734,8 +737,8 @@ cap_dvsec(struct device *d, int where)
+   u16 id = get_conf_long(d, where + PCI_DVSEC_HEADER2);
+ 
+   printf("Vendor=%04x ID=%04x Rev=%d Len=%d", vendor, id, rev, len);
+-  if (vendor == PCI_DVSEC_VENDOR_ID_CXL && id == PCI_DVSEC_ID_CXL && len >= 16)
+-    cap_dvsec_cxl(d, where);
++  if (vendor == PCI_DVSEC_VENDOR_ID_CXL && len >= 16)
++    cap_dvsec_cxl(d, id, where);
+   else
+     printf(" <?>\n");
+ }
+-- 
+2.31.1
 
-  of_iommu_configure(dev, ...)
-  {
-    if (dev_is_pci(dev))
-      pci_request_acs();
-
-pci_request_acs() sets pci_acs_enable, which tells us to enable ACS
-when enumerating PCI devices in the future.  But we only call
-pci_request_acs() if we already *have* a PCI device.
-
-So maybe 6bf6c24720d3 fixed a problem for *some* PCI devices, but not
-all?  E.g., did we call of_iommu_configure() for one PCI device before
-enumerating the rest?
-
-> Fixes: 6bf6c24720d33 ("iommu/of: Request ACS from the PCI core when
-> configuring IOMMU linkage")
-> Signed-off-by: Xingang Wang <wangxingang5@huawei.com>
-> ---
->  drivers/iommu/of_iommu.c | 1 -
->  drivers/pci/of.c         | 8 +++++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index a9d2df001149..54a14da242cc 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -205,7 +205,6 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
->  			.np = master_np,
->  		};
->  
-> -		pci_request_acs();
->  		err = pci_for_each_dma_alias(to_pci_dev(dev),
->  					     of_pci_iommu_init, &info);
->  	} else {
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index da5b414d585a..2313c3f848b0 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -581,9 +581,15 @@ static int pci_parse_request_of_pci_ranges(struct device *dev,
->  
->  int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
->  {
-> -	if (!dev->of_node)
-> +	struct device_node *node = dev->of_node;
-> +
-> +	if (!node)
->  		return 0;
->  
-> +	/* Detect IOMMU and make sure ACS will be enabled */
-> +	if (of_property_read_bool(node, "iommu-map"))
-> +		pci_request_acs();
-> +
->  	bridge->swizzle_irq = pci_common_swizzle;
->  	bridge->map_irq = of_irq_parse_and_map_pci;
->  
-> -- 
-> 2.19.1
-> 
