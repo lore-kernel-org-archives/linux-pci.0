@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1833CC47083
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2060EC07E94
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 011D1613F9
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07C71613FE
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbhFDNeh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 09:34:37 -0400
-Received: from mail-qv1-f54.google.com ([209.85.219.54]:45951 "EHLO
-        mail-qv1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230264AbhFDNeg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jun 2021 09:34:36 -0400
-Received: by mail-qv1-f54.google.com with SMTP id g12so4900787qvx.12
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jun 2021 06:32:34 -0700 (PDT)
+        id S230205AbhFDNem (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 09:34:42 -0400
+Received: from mail-qk1-f181.google.com ([209.85.222.181]:44640 "EHLO
+        mail-qk1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230269AbhFDNek (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jun 2021 09:34:40 -0400
+Received: by mail-qk1-f181.google.com with SMTP id h20so9244430qko.11
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jun 2021 06:32:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=NisYeHKln3MzOLTTHZfaXkG1o79TFAV02ojtv0Vp5CI=;
-        b=Xc5glfv0+PQBWJupLXb6swfSnYRh14uDnrVHr4TYPYsekFiUG7HjkPNdPJrmpeAiXI
-         jFeNpt5qQYItmLWJBvfxTH5NYKp0O4B2LudAFjnwKMt9WiZ5j+QjY28Vo1C1zzIUOYNv
-         PYMqCoco3zFl3JRZh2hD0BQ3nRZ32JrOOd9Wy3tD79kKEg4Uk3iRIrpueS9vO0TlALb8
-         YvQSpFazYCcPc8pdrvhN2c1fnhuuRbqBFL5+GsbcHZSon7KJIkOOJ5Aj/7JKx1tSU+Bt
-         gXIMZ4xVTuS1of2tBMYIrXiG1VmSmmCvH9Mef9prj1i/cEP9PBUbh5MIIjMPWZoBZnKY
-         sfoQ==
-X-Gm-Message-State: AOAM5315yxoK+cggP/KO51XyQzU3RMSUnhW8dPyiQYN7ZTvt4eIh6ZI3
-        Q0LGhKqKznaMrezrJ6QWg4k=
-X-Google-Smtp-Source: ABdhPJxQLDZZkMlloC/GavHnjEBWQ0diQQwvrbq2frk1ePS3FxczN/ZbAONmpifqkbqFUhtTbQ0fPg==
-X-Received: by 2002:ad4:44a1:: with SMTP id n1mr2267680qvt.14.1622813554451;
-        Fri, 04 Jun 2021 06:32:34 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=esgfLavaw+XZk4GOeBas9K6OiHOa2qiDYxRXO/T0WrQ=;
+        b=P6b9Dp/Ro2RCdKH90u1NBMkDTf61+V8I7aHVX7nY7pfERGgq8JTzRgiHg+NQWg80qC
+         ZHyz7himEKxlwyemCLca7GjcYfLCsH12d0IOCk2kX3OfULQE0NVdN4KPvza8FiTRPaqm
+         i3BBW0IYOETzB+R/EA2fkcx/hU233AnAvbd4Gn6Jkx8rMANYBh3GbvSavcSz7rQo9phy
+         CjGi2jI/r78lkUasIOCVZao+/6l7BvLNAl+YnANDjkVurOvdykrO5haVV+MSeV3q5LuD
+         lZYNOBSraqGjo4nqkWKfo5jeesA/6D2ms+j1Hczf5crG5BKWtoTCMFas1WFrMNAIyYv3
+         AKpQ==
+X-Gm-Message-State: AOAM530zNItnuYIogFNzuYQO2FMgbg/5EKpyJSO9t4wjVwpk+qg0JNBQ
+        9cbtG6/TmbjEMo23KFPo4oc=
+X-Google-Smtp-Source: ABdhPJwU2RdoBpkSdrGbnhs9zCceAH1czCQfN9u8j1DJSP50adacfc+gfL+KiSQGca2b6jPWMexdsA==
+X-Received: by 2002:a37:9d93:: with SMTP id g141mr4320273qke.350.1622813559447;
+        Fri, 04 Jun 2021 06:32:39 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id b189sm3965912qkc.91.2021.06.04.06.32.32
+        by smtp.gmail.com with ESMTPSA id b189sm3965912qkc.91.2021.06.04.06.32.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Jun 2021 06:32:33 -0700 (PDT)
+        Fri, 04 Jun 2021 06:32:38 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
@@ -55,10 +55,12 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Vidya Sagar <vidyas@nvidia.com>,
         Xiongfeng Wang <wangxiongfeng2@huawei.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v7 0/6] PCI/sysfs: Use sysfs_emit() and sysfs_emit_at() in "show" functions
-Date:   Fri,  4 Jun 2021 13:32:24 +0000
-Message-Id: <20210604133230.983956-1-kw@linux.com>
+Subject: [PATCH v7 2/6] PCI/sysfs: Use return value from dsm_label_utf16s_to_utf8s() directly
+Date:   Fri,  4 Jun 2021 13:32:26 +0000
+Message-Id: <20210604133230.983956-3-kw@linux.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210604133230.983956-1-kw@linux.com>
+References: <20210604133230.983956-1-kw@linux.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -66,109 +68,77 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+Modify the function dsm_label_utf16s_to_utf8s() to directly return the
+number of bytes written into the buffer so that the strlen() used later
+to calculate the length of the buffer can be removed as it would no
+longer be needed.
 
-This series aims to bring support for the sysfs_emit() and
-sysfs_emit_at() functions to the existing PCI-related sysfs objects.
-These new functions were introduced to make it less ambiguous which
-function is preferred when writing to the output buffer in a device
-attribute's "show" callback [1].
-
-Thus, the existing PCI sysfs objects "show" functions will be converted
-from the using the sprintf(), snprintf() and scnprintf() functions to
-sysfs_emit() and sysfs_emit_at() accordingly, as the latter is aware of
-the PAGE_SIZE buffer limit that the sysfs object has and correctly
-returns the number of bytes written into the buffer.
-
-This series will also address inconsistency related to the presence (or
-lack of thereof) of a trailing newline in the show() functions adding it
-where it's currently missing.  This will allow for utilities such as the
-"cat" command to display the result of the read from a particular sysfs
-object correctly in a shell.
-
-While working on this series a problem with newline handling related to
-how the value of the "resource_alignment" sysfs object was parsed and
-then persisted has been found and corrected.  Also, while at it,
-a change enabling support for the value of "resource_alignment"
-previously set using either a command-line argument or through the sysfs
-object to be cleared at run-time was also included, and thus aligning
-this particular sysfs object with the behaviour of other such objects
-that allow for the value to be dynamically updated and cleared as
-required.
-
-Additionally, a fix to a potential buffer overrun that has been found in
-the dsm_label_utf16s_to_utf8s() function that is responsible for the
-character conversion from UTF16 to UTF8 of the buffer that holds the
-device label obtained through the ACPI _DSM mechanism is included as
-part of this series.
-
-Finally, a minor fix is also included in this series that has been added
-to ensure that the value of the "driver_override" variable is only
-exposed through the corresponding sysfs object when a value is set or
-otherwise if the value has not been set, the object would return
-a string representation of the NULL value.  This will also align this
-particular sysfs object's behaviour with others, where when there is no
-value then nothing is returned.
-
-[1] Documentation/filesystems/sysfs.rst
-
-This series is related to:
-  commit ad025f8 ("PCI/sysfs: Use sysfs_emit() and sysfs_emit_at() in "show" functions")
+No functional change intended.
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
-
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 ---
-Changes in v2:
-  None.
+ drivers/pci/pci-label.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-Changes in v3:
-  Added Logan Gunthorpe's "Reviewed-by".
-
-Changes in v4:
-  Separated and squashed all the trivial sysfs_emit()/sysfs_emit_at()
-  changes into a single patch as per Bjorn Helgaas' request.
-  Carried Logan Gunthorpe's "Reviewed-by" over.
-
-Changes in v5:
-  Added check to the resource_alignment_show() function to ensure that
-  there is an extra space left in the buffer for the newline character,
-  assuming that it might be provided.
-
-Changes in v6:
-  Added a cover letter as per Bjorn Helgaas' request.
-  New patch addressing a potential buffer overrun in the
-  dsm_label_utf16s_to_utf8s() function has been added.
-
-Changes in v7:
-  Use correct variable name in the resource_alignment_store() function
-  when freeing allocation made using kstrndup() if the value sent from
-  the userspace is an empty string intended to clear the currently set
-  resource alignment.
-
-Krzysztof Wilczyński (6):
-  PCI/sysfs: Use sysfs_emit() and sysfs_emit_at() in "show" functions
-  PCI/sysfs: Use return value from dsm_label_utf16s_to_utf8s() directly
-  PCI/sysfs: Fix trailing newline handling of resource_alignment_param
-  PCI/sysfs: Add missing trailing newline to devspec_show()
-  PCI/sysfs: Only show value when driver_override is not NULL
-  PCI/sysfs: Fix a buffer overrun problem with
-    dsm_label_utf16s_to_utf8s()
-
- drivers/pci/hotplug/pci_hotplug_core.c |  8 +++---
- drivers/pci/hotplug/rpadlpar_sysfs.c   |  4 +--
- drivers/pci/hotplug/shpchp_sysfs.c     | 38 ++++++++++++++------------
- drivers/pci/iov.c                      | 12 ++++----
- drivers/pci/msi.c                      |  8 +++---
- drivers/pci/p2pdma.c                   |  7 ++---
- drivers/pci/pci-label.c                | 22 ++++++++-------
- drivers/pci/pci-sysfs.c                |  7 +++--
- drivers/pci/pci.c                      | 34 +++++++++++++----------
- drivers/pci/pcie/aer.c                 | 20 ++++++++------
- drivers/pci/pcie/aspm.c                |  4 +--
- drivers/pci/slot.c                     | 18 ++++++------
- drivers/pci/switch/switchtec.c         | 18 ++++++------
- 13 files changed, 107 insertions(+), 93 deletions(-)
-
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 311dd48e2881..000e169c7197 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -139,14 +139,17 @@ enum acpi_attr_enum {
+ 	ACPI_ATTR_INDEX_SHOW,
+ };
+ 
+-static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
++static int dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
+ {
+ 	int len;
++
+ 	len = utf16s_to_utf8s((const wchar_t *)obj->buffer.pointer,
+ 			      obj->buffer.length,
+ 			      UTF16_LITTLE_ENDIAN,
+ 			      buf, PAGE_SIZE);
+ 	buf[len] = '\n';
++
++	return len;
+ }
+ 
+ static int dsm_get_label(struct device *dev, char *buf,
+@@ -154,7 +157,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ {
+ 	acpi_handle handle = ACPI_HANDLE(dev);
+ 	union acpi_object *obj, *tmp;
+-	int len = -1;
++	int len = 0;
+ 
+ 	if (!handle)
+ 		return -1;
+@@ -175,20 +178,19 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 		 * this entry must return a null string.
+ 		 */
+ 		if (attr == ACPI_ATTR_INDEX_SHOW) {
+-			sysfs_emit(buf, "%llu\n", tmp->integer.value);
++			len = sysfs_emit(buf, "%llu\n", tmp->integer.value);
+ 		} else if (attr == ACPI_ATTR_LABEL_SHOW) {
+ 			if (tmp[1].type == ACPI_TYPE_STRING)
+-				sysfs_emit(buf, "%s\n",
+-					   tmp[1].string.pointer);
++				len = sysfs_emit(buf, "%s\n",
++						 tmp[1].string.pointer);
+ 			else if (tmp[1].type == ACPI_TYPE_BUFFER)
+-				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++				len = dsm_label_utf16s_to_utf8s(tmp + 1, buf);
+ 		}
+-		len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 	}
+ 
+ 	ACPI_FREE(obj);
+ 
+-	return len;
++	return len > 0 ? len : -1;
+ }
+ 
+ static ssize_t label_show(struct device *dev, struct device_attribute *attr,
 -- 
 2.31.1
 
