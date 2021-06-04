@@ -2,113 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68866C48BE0
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72B10C4743D
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:11:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 541836140F
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54DA5611F0
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230394AbhFDTHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 15:07:37 -0400
-Received: from mga06.intel.com ([134.134.136.31]:48564 "EHLO mga06.intel.com"
+        id S229913AbhFDTN3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 15:13:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53204 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229823AbhFDTHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jun 2021 15:07:36 -0400
-IronPort-SDR: 4ihZaKe9kVacOgEUPLpbhuDl9ODK095U7ctnHqjSRr4r+0jip9lve3cEZE0un9VTwrVcBg/PYm
- kP2ZvnYBSZ5A==
-X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513933"
-X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="265513933"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
-IronPort-SDR: VIbn0inN8QFLJJwUIUTA/pJlhCe7egVGgBkIX2877wjGLDLgqVnxr51EfqY/9BPNrV78BXom6C
- 7Aj9I+g0gIgg==
-X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="401049105"
-Received: from abathaly-mobl2.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.138.37])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:45 -0700
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     linux-pci@vger.kernel.org
-Cc:     =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>
-Subject: [PATCH 0/9] Add CXL 2.0 DVSEC Decoding
-Date:   Fri,  4 Jun 2021 12:05:32 -0700
-Message-Id: <20210604190541.175602-1-ben.widawsky@intel.com>
-X-Mailer: git-send-email 2.31.1
+        id S229501AbhFDTN3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jun 2021 15:13:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9F124611CA;
+        Fri,  4 Jun 2021 19:11:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622833902;
+        bh=1OYdqDIJbvdktP3Zf73pda90ObsQDgTAwi6d/Ny82Eg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=l3i12KfTeZrShaULtvDX781siDXGZbz0OUJ+Ol0XmgrK96i8fm7u8a5uw75tem93O
+         42zIsE9/ELfzCz/uD5tZnbGsXOf3XoKpo6VjGqDU1kH+enyI04JkHtvhet1CK2B0E6
+         OoCeRk/kBeWiAIQX16+fj3wMxjh1F+iKL/chbiD/Vl2Nn+0U7wwO9HulXIhMwONHPC
+         PKpmVK39lMsb9LmI8d9RsWN9eWZ7Evt/u0Unp/njgKsmia+XzA02xlH35pmRehGVJg
+         9k7ENbxVddwLmwV4c3JsQQgsD/iRprECdGonip0thoGKQ8/GcFYi4vFo76H+fdRgP4
+         0NU+egalfRzTg==
+Date:   Fri, 4 Jun 2021 14:11:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Michael Walle <michael@walle.cc>
+Cc:     netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH net v2 2/2] MAINTAINERS: move Murali Karicheri to credits
+Message-ID: <20210604191141.GA2228033@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210429090521.554-2-michael@walle.cc>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series improves decoding of CXL 2.0 DVSEC registers by adding more DVSEC
-identifiers and adding fields for the existing decoded identifier. Not all DVSEC
-fields from 2.0 spec are enabled here, only enough for what we needed in driver
-bring-up. The restructuring of the code does make it easy to add support for the
-remaining fields. I submitted a PR for this on github a few months ago [1]. The
-spec is available for download [2].
+On Thu, Apr 29, 2021 at 11:05:21AM +0200, Michael Walle wrote:
+> His email bounces with permanent error "550 Invalid recipient". His last
+> email was from 2020-09-09 on the LKML and he seems to have left TI.
+> 
+> Signed-off-by: Michael Walle <michael@walle.cc>
 
-Breakdown of patches:
-1-5: Rework existing decoding to support more DVSEC IDs
-6: Improve CXL Device Decoding (8.1.3 from CXL 2.0 spec)
-7: Add port capabilities (8.1.5 from CXL 2.0 spec)
-8: Add register locator (8.1.9 from CXL 2.0 spec)
-9: Report undecoded DVSECs
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# TI KeyStone PCI driver
 
-Here is an example decoded output of a 5.12 based kernel running in QEMU
-emulation [3]
+I could take both, given a networking ack for [1/2].  Or both could go
+via the networking tree.
 
-36:00.0 Memory controller [0502]: Intel Corporation Device 0d93 (rev 01) (prog-if 10)
-	Subsystem: Red Hat, Inc. Device 1100
-
-	<...>
-
-	Capabilities: [100 v1] Designated Vendor-Specific: Vendor=1e98 ID=0000 Rev=1 Len=56: CXL
-		CXLCap:	Cache- IO+ Mem+ Mem HW Init+ HDMCount 1 Viral-
-		CXLCtl:	Cache- IO+ Mem+ Cache SF Cov 0 Cache SF Gran 0 Cache Clean- Viral-
-		CXLSta:	Viral-
-		CXLSta2:	ResetComplete+ ResetError- PMComplete-
-		Cache Size Not Reported
-		Range1: 10000000-fffffff
-			Valid+ Active+ Type=CDAT Class=CDAT interleave=0 timeout=1s
-		Range2: 0-ffffffffffffffff
-			Valid- Active- Type=Volatile Class=DRAM interleave=0 timeout=1s
-	Capabilities: [138 v1] Designated Vendor-Specific: Vendor=1e98 ID=0008 Rev=0 Len=36: CXL
-		Block2	BIR: bar0	ID: component registers
-			RegisterOffset: 0000000000000000
-		Block3	BIR: bar2	ID: CXL device registers
-			RegisterOffset: 0000000000000000
-	Kernel driver in use: cxl_pci
-
-Ben Widawsky (9):
-  cxl: Rename variable to match other code
-  cxl: Make id check more explicit
-  cxl: Collect all DVSEC Device fields
-  cxl: Rework caps to new function
-  cxl: Rename caps to be device caps
-  cxl: Implement more device DVSEC decoding
-  cxl: Add support for DVSEC port cap
-  cxl: Add DVSEC Register Locator
-  cxl: Add placeholder for undecoded DVSECs
-
- lib/header.h |  78 ++++++++++++++-----
- ls-ecaps.c   | 206 ++++++++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 249 insertions(+), 35 deletions(-)
-
-[1]: https://github.com/pciutils/pciutils/pull/59
-[2]: https://www.computeexpresslink.org/download-the-specification
-[3]: https://gitlab.com/bwidawsk/qemu
-
--- 
-2.31.1
-
-
--- 
-2.31.1
-
+> ---
+> changes since v1:
+>  - rebased to net
+> 
+>  CREDITS     |  5 +++++
+>  MAINTAINERS | 13 -------------
+>  2 files changed, 5 insertions(+), 13 deletions(-)
+> 
+> diff --git a/CREDITS b/CREDITS
+> index cef83b958cbe..80d096dbf262 100644
+> --- a/CREDITS
+> +++ b/CREDITS
+> @@ -1874,6 +1874,11 @@ S: Krosenska' 543
+>  S: 181 00 Praha 8
+>  S: Czech Republic
+>  
+> +N: Murali Karicheri
+> +E: m-karicheri2@ti.com
+> +D: Keystone NetCP driver
+> +D: Keystone PCIe host controller driver
+> +
+>  N: Jan "Yenya" Kasprzak
+>  E: kas@fi.muni.cz
+>  D: Author of the COSA/SRP sync serial board driver.
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 04f4a2116b35..e264e63f09c0 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -13780,13 +13780,6 @@ F:	Documentation/devicetree/bindings/pci/ti-pci.txt
+>  F:	drivers/pci/controller/cadence/pci-j721e.c
+>  F:	drivers/pci/controller/dwc/pci-dra7xx.c
+>  
+> -PCI DRIVER FOR TI KEYSTONE
+> -M:	Murali Karicheri <m-karicheri2@ti.com>
+> -L:	linux-pci@vger.kernel.org
+> -L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> -S:	Maintained
+> -F:	drivers/pci/controller/dwc/pci-keystone.c
+> -
+>  PCI DRIVER FOR V3 SEMICONDUCTOR V360EPC
+>  M:	Linus Walleij <linus.walleij@linaro.org>
+>  L:	linux-pci@vger.kernel.org
+> @@ -17974,12 +17967,6 @@ F:	drivers/power/supply/lp8788-charger.c
+>  F:	drivers/regulator/lp8788-*.c
+>  F:	include/linux/mfd/lp8788*.h
+>  
+> -TI NETCP ETHERNET DRIVER
+> -M:	Murali Karicheri <m-karicheri2@ti.com>
+> -L:	netdev@vger.kernel.org
+> -S:	Maintained
+> -F:	drivers/net/ethernet/ti/netcp*
+> -
+>  TI PCM3060 ASoC CODEC DRIVER
+>  M:	Kirill Marinushkin <kmarinushkin@birdec.com>
+>  L:	alsa-devel@alsa-project.org (moderated for non-subscribers)
+> -- 
+> 2.20.1
+> 
