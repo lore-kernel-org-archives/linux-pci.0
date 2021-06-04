@@ -2,43 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D70D6C4743C
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C87C4743F
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD978601FA
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90CDC601FA
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230383AbhFDTHf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 15:07:35 -0400
+        id S230254AbhFDTHg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 15:07:36 -0400
 Received: from mga06.intel.com ([134.134.136.31]:48564 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229880AbhFDTHd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jun 2021 15:07:33 -0400
-IronPort-SDR: 9u38mVsjHPuAjHm6nafBo8QIfl+CkupI93rp4XGpXQit/pp5DFl/BI4AxT6zyShcTD95UsXSNy
- al71yLRIn33Q==
-X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513931"
+        id S230319AbhFDTHf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jun 2021 15:07:35 -0400
+IronPort-SDR: iutIhCEes9pFAMl2eaWLHx+3AcvA8J5h2qhbMncA8EwbNbJmNCDeWSnrLdowJ01Islq4TRnnuB
+ NuSfrZPEo5nQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513935"
 X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="265513931"
+   d="scan'208";a="265513935"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:45 -0700
-IronPort-SDR: 7yIl4I0bHiaT4siA51rao5h+U0gnmmtvQ3xiLjB49ECa9dL0CcJDEnoQTBdtiiUH10oncfTRCd
- sYudfQoggMBg==
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
+IronPort-SDR: z/HlabLCIGXnyuUr/Ijry5oAQxW/MPzwADybkkJ9wCM4/3l+kr3vhEePEh5JGiEkxxpDctKGLw
+ MQfk5i9uWUCg==
 X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="401049101"
+   d="scan'208";a="401049113"
 Received: from abathaly-mobl2.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.138.37])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:45 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-pci@vger.kernel.org
 Cc:     =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
         Dan Williams <dan.j.williams@intel.com>,
         Ben Widawsky <ben.widawsky@intel.com>
-Subject: [PATCH 1/9] cxl: Rename variable to match other code
-Date:   Fri,  4 Jun 2021 12:05:33 -0700
-Message-Id: <20210604190541.175602-2-ben.widawsky@intel.com>
+Subject: [PATCH 3/9] cxl: Collect all DVSEC Device fields
+Date:   Fri,  4 Jun 2021 12:05:35 -0700
+Message-Id: <20210604190541.175602-4-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210604190541.175602-1-ben.widawsky@intel.com>
 References: <20210604190541.175602-1-ben.widawsky@intel.com>
@@ -48,54 +49,24 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The current variable is word sized, and so this makes the CXL code match
-the rest of the code.
+Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
- ls-ecaps.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ ls-ecaps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 99c55ff..edb4401 100644
+index 83ca93e..2b3f0f9 100644
 --- a/ls-ecaps.c
 +++ b/ls-ecaps.c
-@@ -692,7 +692,7 @@ cap_rcec(struct device *d, int where)
- static void
- cap_dvsec_cxl(struct device *d, int where)
- {
--  u16 l;
-+  u16 w;
- 
-   printf(": CXL\n");
-   if (verbose < 2)
-@@ -701,19 +701,19 @@ cap_dvsec_cxl(struct device *d, int where)
-   if (!config_fetch(d, where + PCI_CXL_CAP, 12))
+@@ -701,7 +701,7 @@ cap_dvsec_cxl(struct device *d, int id, int where)
+   if (id != 0)
      return;
  
--  l = get_conf_word(d, where + PCI_CXL_CAP);
-+  w = get_conf_word(d, where + PCI_CXL_CAP);
-   printf("\t\tCXLCap:\tCache%c IO%c Mem%c Mem HW Init%c HDMCount %d Viral%c\n",
--    FLAG(l, PCI_CXL_CAP_CACHE), FLAG(l, PCI_CXL_CAP_IO), FLAG(l, PCI_CXL_CAP_MEM),
--    FLAG(l, PCI_CXL_CAP_MEM_HWINIT), PCI_CXL_CAP_HDM_CNT(l), FLAG(l, PCI_CXL_CAP_VIRAL));
-+    FLAG(w, PCI_CXL_CAP_CACHE), FLAG(w, PCI_CXL_CAP_IO), FLAG(w, PCI_CXL_CAP_MEM),
-+    FLAG(w, PCI_CXL_CAP_MEM_HWINIT), PCI_CXL_CAP_HDM_CNT(w), FLAG(w, PCI_CXL_CAP_VIRAL));
+-  if (!config_fetch(d, where + PCI_CXL_CAP, 12))
++  if (!config_fetch(d, where + PCI_CXL_CAP, 0x38 - 0xa))
+     return;
  
--  l = get_conf_word(d, where + PCI_CXL_CTRL);
-+  w = get_conf_word(d, where + PCI_CXL_CTRL);
-   printf("\t\tCXLCtl:\tCache%c IO%c Mem%c Cache SF Cov %d Cache SF Gran %d Cache Clean%c Viral%c\n",
--    FLAG(l, PCI_CXL_CTRL_CACHE), FLAG(l, PCI_CXL_CTRL_IO), FLAG(l, PCI_CXL_CTRL_MEM),
--    PCI_CXL_CTRL_CACHE_SF_COV(l), PCI_CXL_CTRL_CACHE_SF_GRAN(l), FLAG(l, PCI_CXL_CTRL_CACHE_CLN),
--    FLAG(l, PCI_CXL_CTRL_VIRAL));
-+    FLAG(w, PCI_CXL_CTRL_CACHE), FLAG(w, PCI_CXL_CTRL_IO), FLAG(w, PCI_CXL_CTRL_MEM),
-+    PCI_CXL_CTRL_CACHE_SF_COV(w), PCI_CXL_CTRL_CACHE_SF_GRAN(w), FLAG(w, PCI_CXL_CTRL_CACHE_CLN),
-+    FLAG(w, PCI_CXL_CTRL_VIRAL));
- 
--  l = get_conf_word(d, where + PCI_CXL_STATUS);
--  printf("\t\tCXLSta:\tViral%c\n", FLAG(l, PCI_CXL_STATUS_VIRAL));
-+  w = get_conf_word(d, where + PCI_CXL_STATUS);
-+  printf("\t\tCXLSta:\tViral%c\n", FLAG(w, PCI_CXL_STATUS_VIRAL));
- }
- 
- static void
+   w = get_conf_word(d, where + PCI_CXL_CAP);
 -- 
 2.31.1
 
