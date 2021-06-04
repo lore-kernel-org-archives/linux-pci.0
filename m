@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B96F2C48BCD
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8E3C48BD1
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A41C4613FA
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A3386140F
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 19:05:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230319AbhFDTHg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 15:07:36 -0400
+        id S229880AbhFDTHh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 15:07:37 -0400
 Received: from mga06.intel.com ([134.134.136.31]:48569 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230353AbhFDTHf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jun 2021 15:07:35 -0400
-IronPort-SDR: G/KW68iix+rajNgDxU9sOuYD81qKk8dnUvKj/n1UTiPnw49X3/hjGVM8QJ8mUwRIuJNiW9ZyVn
- dzG7qV4S02eA==
-X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513937"
+        id S230400AbhFDTHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jun 2021 15:07:36 -0400
+IronPort-SDR: TNsCLdvjeYbHPEq/T5W31wNusLgRe9/3onM2tnW19ZDEEKIZjp6JYQrLH88POR1Udy1iNIOzjW
+ LdpDWT5esY0A==
+X-IronPort-AV: E=McAfee;i="6200,9189,10005"; a="265513944"
 X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="265513937"
+   d="scan'208";a="265513944"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
-IronPort-SDR: 8EfE01evzaYKIUR4wp2QqheqqhQEkl1n2ju9EQDPdg/PPjlQXF6mGumft1kKRnzoeWN6GHV8iT
- Mwpzq8X8hoXA==
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:47 -0700
+IronPort-SDR: h8aBLckqNqjM7/uZ1yYSm85K2auNXkv6S9EuSufXx5isu2a21RRue61j22JC0yOuORDw954a3/
+ PFCXWACujDJQ==
 X-IronPort-AV: E=Sophos;i="5.83,248,1616482800"; 
-   d="scan'208";a="401049116"
+   d="scan'208";a="401049134"
 Received: from abathaly-mobl2.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.138.37])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:46 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2021 12:05:47 -0700
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-pci@vger.kernel.org
 Cc:     =?UTF-8?q?Martin=20Mare=C5=A1?= <mj@ucw.cz>,
         Dan Williams <dan.j.williams@intel.com>,
         Ben Widawsky <ben.widawsky@intel.com>
-Subject: [PATCH 4/9] cxl: Rework caps to new function
-Date:   Fri,  4 Jun 2021 12:05:36 -0700
-Message-Id: <20210604190541.175602-5-ben.widawsky@intel.com>
+Subject: [PATCH 9/9] cxl: Add placeholder for undecoded DVSECs
+Date:   Fri,  4 Jun 2021 12:05:41 -0700
+Message-Id: <20210604190541.175602-10-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210604190541.175602-1-ben.widawsky@intel.com>
 References: <20210604190541.175602-1-ben.widawsky@intel.com>
@@ -49,79 +49,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This will help upcoming caps
-
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
- ls-ecaps.c | 38 ++++++++++++++++++++++++++------------
- 1 file changed, 26 insertions(+), 12 deletions(-)
+ ls-ecaps.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 2b3f0f9..c2a13d5 100644
+index a0ef83d..2d064be 100644
 --- a/ls-ecaps.c
 +++ b/ls-ecaps.c
-@@ -690,35 +690,49 @@ cap_rcec(struct device *d, int where)
- }
+@@ -868,6 +868,21 @@ cap_dvsec_cxl(struct device *d, int id, int where)
  
- static void
--cap_dvsec_cxl(struct device *d, int id, int where)
-+dvsec_cxl_device(uint8_t *data, int rev)
- {
-   u16 w;
- 
--  printf(": CXL\n");
--  if (verbose < 2)
--    return;
--
--  if (id != 0)
--    return;
--
--  if (!config_fetch(d, where + PCI_CXL_CAP, 0x38 - 0xa))
-+  /* Legacy 1.1 revs aren't handled */
-+  if (rev != 1)
-     return;
- 
--  w = get_conf_word(d, where + PCI_CXL_CAP);
-+  w = *(u16 *)(data + PCI_CXL_CAP);
-   printf("\t\tCXLCap:\tCache%c IO%c Mem%c Mem HW Init%c HDMCount %d Viral%c\n",
-     FLAG(w, PCI_CXL_CAP_CACHE), FLAG(w, PCI_CXL_CAP_IO), FLAG(w, PCI_CXL_CAP_MEM),
-     FLAG(w, PCI_CXL_CAP_MEM_HWINIT), PCI_CXL_CAP_HDM_CNT(w), FLAG(w, PCI_CXL_CAP_VIRAL));
- 
--  w = get_conf_word(d, where + PCI_CXL_CTRL);
-+  w = *(u16 *)(data + PCI_CXL_CTRL);
-   printf("\t\tCXLCtl:\tCache%c IO%c Mem%c Cache SF Cov %d Cache SF Gran %d Cache Clean%c Viral%c\n",
-     FLAG(w, PCI_CXL_CTRL_CACHE), FLAG(w, PCI_CXL_CTRL_IO), FLAG(w, PCI_CXL_CTRL_MEM),
-     PCI_CXL_CTRL_CACHE_SF_COV(w), PCI_CXL_CTRL_CACHE_SF_GRAN(w), FLAG(w, PCI_CXL_CTRL_CACHE_CLN),
-     FLAG(w, PCI_CXL_CTRL_VIRAL));
- 
--  w = get_conf_word(d, where + PCI_CXL_STATUS);
-+  w = *(u16 *)(data + PCI_CXL_STATUS);
-   printf("\t\tCXLSta:\tViral%c\n", FLAG(w, PCI_CXL_STATUS_VIRAL));
- }
- 
-+static void
-+cap_dvsec_cxl(struct device *d, int id, int where)
-+{
-+  u8 rev;
-+
-+  printf(": CXL\n");
-+  if (verbose < 2)
-+    return;
-+
-+  if (id != 0)
-+    return;
-+
-+  rev = BITS(get_conf_byte(d, where + 0x6), 0, 4);
-+
-+  if (!config_fetch(d, where, 0x38))
-+    return;
-+
-+  dvsec_cxl_device(d->config + where, rev);
-+}
-+
- static void
- cap_dvsec(struct device *d, int where)
- {
+       dvsec_cxl_register_locator(d->config + where, len, rev);
+       break;
++    case 2:
++      printf("\t\tNon-CXL Function Map DVSEC\n");
++      break;
++    case 4:
++      printf("\t\tGPF DVSEC for Port\n");
++      break;
++    case 5:
++      printf("\t\tGPF DVSEC for Device\n");
++      break;
++    case 7:
++      printf("\t\tPCIe DVSEC Flex Bus Port\n");
++      break;
++    case 9:
++      printf("\t\tMLD DVSEC\n");
++      break;
+     default:
+       break;
+   }
 -- 
 2.31.1
 
