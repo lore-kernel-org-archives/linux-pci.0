@@ -2,50 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74F33C47098
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87195C07E94
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:38:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F5DE613FE
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:32:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B27B61402
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jun 2021 13:38:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230264AbhFDNen (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jun 2021 09:34:43 -0400
-Received: from mail-qk1-f169.google.com ([209.85.222.169]:42610 "EHLO
-        mail-qk1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230265AbhFDNek (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jun 2021 09:34:40 -0400
-Received: by mail-qk1-f169.google.com with SMTP id o27so9256028qkj.9
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jun 2021 06:32:42 -0700 (PDT)
+        id S230198AbhFDNkR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jun 2021 09:40:17 -0400
+Received: from mail-qt1-f175.google.com ([209.85.160.175]:43875 "EHLO
+        mail-qt1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230122AbhFDNkR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jun 2021 09:40:17 -0400
+Received: by mail-qt1-f175.google.com with SMTP id c10so6944520qtx.10
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jun 2021 06:38:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=UeeHNCauFmswUDoqniVsTD5Y6l0ADeVu3kWVNWDJXJs=;
-        b=R4XRcoH9HjGxXGZbToYAbzOb+voOdLnrnOMQYg5gv8lvWzeR5Mkw6K1u5MguyxiF8h
-         Lu+ubFcnKq0nHvDDcGyNPdAhDynbebSp3cj0xJ8DlBr0vXT3puLhmctg2uvmRd8cw9XO
-         gWkIXzAyu857Hof82vAEEYllxeK/fKUDzRiAULX+bRTHBO5/2AwvIuCEJD+5s/1/G0Ix
-         /utjp4zj+cp7deDz2NPxQH3xHqw7INDgPyOrMAdyE3/fReg+jojJGs6G4r8SHeh1dZYE
-         /Rxwu1m2fOA1NMdBV0ZegkRtykQg85iYdT6n+rc61OlRB2uKPrz8lcGVdd9Nxhz5JqVC
-         rUyg==
-X-Gm-Message-State: AOAM532P77htH7ZtEVH4CSBX/7IClvAQtkodPH9jnqaq2YZ+onhk8rff
-        i/K/rLUfSHc82BH060/B9Xw=
-X-Google-Smtp-Source: ABdhPJxx2WUm9TRk0WEqYv2itSoZF4mMO24oJDpYgWymm3QPib5R3Ox3tD+OCjNZvADINLl2pNSA4g==
-X-Received: by 2002:a37:4392:: with SMTP id q140mr4428544qka.49.1622813561855;
-        Fri, 04 Jun 2021 06:32:41 -0700 (PDT)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id b189sm3965912qkc.91.2021.06.04.06.32.39
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hFfiaKSJj+MsPgijaTAyIXTI7ThvW7l6x3tonfCt1pY=;
+        b=ICGNpG2jlxPT+khtaofssaOeXsDSOsnkFVlfv3svm19AvLbh/GZn6mBZNh0TCQRIVd
+         z+Nmel497r+OQ5b7arvWeHyV33iobRuuuCLgVEbk1F10NFkDWSyvUOzEvi0iDcdA23sb
+         FBIu0xHpBvchlcDfMj2VA6Pgz1IMpKEontR2NTidWmNkiUl18i7GBb53sreSUSUh14BK
+         D9Pei8xBhqHAiDUYlhKvxqMY8JBgc0Gy36YerW2YJGhFcDJ/swxFg8NR5wbiuE+foVM5
+         AOhwuZQuoOaa+AWpNZ6syCe4uzU0FAOPTmffm5+ztAQyXXbNbBgT9K8Xy0M0Hsn6Cpg2
+         tIRg==
+X-Gm-Message-State: AOAM531O491Hj5f0/wO4Hr/JdePlQdvQwVy4/Hy09ywfwHvGuDjX3BtM
+        QjUVSEkxEnvYhYx4dxCI76k=
+X-Google-Smtp-Source: ABdhPJwiSW2GYpqESt9ar7kcVej2W9Th+Us6M/ymrBAFMBYhGYD3Nzd8uOrFdD9PULqybx1Zaoc07g==
+X-Received: by 2002:ac8:6898:: with SMTP id m24mr4703467qtq.8.1622813896976;
+        Fri, 04 Jun 2021 06:38:16 -0700 (PDT)
+Received: from rocinante.localdomain ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id j30sm3901466qki.60.2021.06.04.06.38.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Jun 2021 06:32:41 -0700 (PDT)
-From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Fri, 04 Jun 2021 06:38:16 -0700 (PDT)
+Date:   Fri, 4 Jun 2021 15:38:13 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
         Joe Perches <joe@perches.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Paul Mackerras <paulus@samba.org>,
@@ -55,119 +56,33 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Vidya Sagar <vidyas@nvidia.com>,
         Xiongfeng Wang <wangxiongfeng2@huawei.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v7 3/6] PCI/sysfs: Fix trailing newline handling of resource_alignment_param
-Date:   Fri,  4 Jun 2021 13:32:27 +0000
-Message-Id: <20210604133230.983956-4-kw@linux.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210604133230.983956-1-kw@linux.com>
-References: <20210604133230.983956-1-kw@linux.com>
+Subject: Re: [PATCH v6 0/6] PCI/sysfs: Use sysfs_emit() and sysfs_emit_at()
+ in "show" functions
+Message-ID: <20210604133813.GA442452@rocinante.localdomain>
+References: <20210603000112.703037-1-kw@linux.com>
+ <20210604040749.GA2170475@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20210604040749.GA2170475@bjorn-Precision-5520>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The value of the "resource_alignment" can be specified using a kernel
-command-line argument (using the "pci=resource_alignment=") or through
-the corresponding sysfs object under the /sys/bus/pci path.
+Hello Bjorn,
 
-Currently, when the value is set via the kernel command-line argument,
-and then subsequently accessed through sysfs object, the value read back
-will not be correct, as per:
+[...]
+> I applied these to pci/resource for v5.14, thanks!
 
-  # grep -oE 'pci=resource_alignment.+' /proc/cmdline
-  pci=resource_alignment=20@00:1f.2
-  # cat /sys/bus/pci/resource_alignment
-  20@00:1f.
+Thank you!
 
-This is also true when the value is set through the sysfs object, but
-the trailing newline has not been included, as per:
+[...]
+> If we need to tweak the resource_alignment_param patch, I can just
+> squash in incremental changes.
 
-  # echo -n 20@00:1f.2 > /sys/bus/pci/resource_alignment
-  # cat /sys/bus/pci/resource_alignment
-  20@00:1f.
+If you can pick the patch from the following:
+  https://lore.kernel.org/linux-pci/20210604133230.983956-4-kw@linux.com/T/#u
 
-When the value set through the sysfs object includes the trailing
-newline, then reading it back will work as intended, as per:
+Sorry for troubles!
 
-  # echo 20@00:1f.2 > /sys/bus/pci/resource_alignment
-  # cat /sys/bus/pci/resource_alignment
-  20@00:1f.2
-
-To fix this inconsistency, append a trailing newline in the show()
-function and strip the trailing line in the store() function if one is
-present.
-
-Also, allow for the value previously set using either a command-line
-argument or through the sysfs object to be cleared at run-time.
-
-Fixes: e499081da1a2 ("PCI: Force trailing new line to resource_alignment_param in sysfs")
-Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/pci.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5ed316ea5831..68f57d86b243 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6439,34 +6439,40 @@ static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
- 
- 	spin_lock(&resource_alignment_lock);
- 	if (resource_alignment_param)
--		count = sysfs_emit(buf, "%s", resource_alignment_param);
-+		count = sysfs_emit(buf, "%s\n", resource_alignment_param);
- 	spin_unlock(&resource_alignment_lock);
- 
--	/*
--	 * When set by the command line, resource_alignment_param will not
--	 * have a trailing line feed, which is ugly. So conditionally add
--	 * it here.
--	 */
--	if (count >= 2 && buf[count - 2] != '\n' && count < PAGE_SIZE - 1) {
--		buf[count - 1] = '\n';
--		buf[count++] = 0;
--	}
--
- 	return count;
- }
- 
- static ssize_t resource_alignment_store(struct bus_type *bus,
- 					const char *buf, size_t count)
- {
--	char *param = kstrndup(buf, count, GFP_KERNEL);
-+	char *param, *old, *end;
-+
-+	if (count >= (PAGE_SIZE - 1))
-+		return -EINVAL;
- 
-+	param = kstrndup(buf, count, GFP_KERNEL);
- 	if (!param)
- 		return -ENOMEM;
- 
-+	end = strchr(param, '\n');
-+	if (end)
-+		*end = '\0';
-+
- 	spin_lock(&resource_alignment_lock);
--	kfree(resource_alignment_param);
--	resource_alignment_param = param;
-+	old = resource_alignment_param;
-+	if (strlen(param)) {
-+		resource_alignment_param = param;
-+	} else {
-+		kfree(param);
-+		resource_alignment_param = NULL;
-+	}
- 	spin_unlock(&resource_alignment_lock);
-+
-+	kfree(old);
-+
- 	return count;
- }
- 
--- 
-2.31.1
-
+	Krzysztof
