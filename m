@@ -5,63 +5,63 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60ADAC4743F
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jun 2021 07:06:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 192F0C4743D
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Jun 2021 07:06:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 410716142B
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jun 2021 07:06:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02D79610FB
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Jun 2021 07:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbhFFHIT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 6 Jun 2021 03:08:19 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:43524 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbhFFHIT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jun 2021 03:08:19 -0400
-Received: by mail-pj1-f41.google.com with SMTP id l10-20020a17090a150ab0290162974722f2so8452113pja.2;
-        Sun, 06 Jun 2021 00:06:20 -0700 (PDT)
+        id S230212AbhFFHIj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 6 Jun 2021 03:08:39 -0400
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:34539 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229478AbhFFHIi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jun 2021 03:08:38 -0400
+Received: by mail-pf1-f170.google.com with SMTP id g6so10732378pfq.1;
+        Sun, 06 Jun 2021 00:06:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ameoA/1J9JC1e+hvEKFvbOF1rkxU/AqC4eK5zMBiLI8=;
-        b=I4SEo+19gR7uX9BiDaAf3R15E3yDqb+EV6ziZYDIJXRO07fB9OD6xDdqpFPin5sVEL
-         tIHCOyHpLzWuwGTxtlnPH+c8Vln56msa0lcNYx1XVIUbUQTKxVDN9yNGQGOWJyRl9oWo
-         c/YJ3OlSHtio7SxHwij4mojXn4NZQ1ckrP4TvhQbrv5+VjDLE+p0jt3q2FmY0XTB82/M
-         NAlr8bvLOdlkwxGr+/EXaRiEytlwOzqbrF3jYJTHq5liAKUdMQZkle23XkOtPIh24gaA
-         mJLML7Ja8HCNywIBONrFEQFsOQYNUPNz0v9sSjOWhowyz29KIGfxxuZVkvDHNTSjctD0
-         oTgw==
+        bh=J66R96VtW8mDJcT/ONY8la0SES4Mp5OfgngGRV1e+uk=;
+        b=ltrbs7IsuU4rxW0IuBq8ZcSDmgXcvj6QkaagoafdrzFvzuunQ546pBuc4JU1gJGyOZ
+         /bbDkmXHzMlZhE8neVmq0/T5o27L9UkrvZCagQEtrJyGtpJ3tPZOqTYQ90pFxgrQ42iU
+         4ibBiG3yumJmfZbBSTUooG0seI1RIVLo5Ci7Klpm0IxlIbengCS7ZrTvlcNQqd+gKNNO
+         inOWm6zANk+GJ8zwgFziPS/eh7HTHFBBS4iIctNnbQMqviPgFnUNKluD4r9oxGPZqjuc
+         aVDTYjoGtgB3+6IIuyllodJtjRrQp+4UaznGaqmQSgbT2wgKFWhsNg2GJ5h/ZB9TCE4C
+         sQSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ameoA/1J9JC1e+hvEKFvbOF1rkxU/AqC4eK5zMBiLI8=;
-        b=UHu4QxpFQb0QBHYvrWscIysbAqsQEkwdxaSivgc+DoLP5MaLgRXN8zBCXhWWDsQuHi
-         kCUv8nNwmmOPstH1gU4CNevHgcQq6H2qN6FwK2FC6LDbv/LWUIr92y9R2fV11Oh7To2j
-         a8vgaPjjDnmuvWYBXC79AxkC/x8XZNE69OGI0UPW95YHnGUrcaRJQeDzNHNUL6je6gpV
-         N4VqahZOeo0YzSmr1qVqUBj3R5/WQeP+6NuH4W88krudOgOHlR8YSFZaC7TKRmdEso41
-         2ZDBZ8mS5Poi5/nKPfVz5Qf/IiaWerWH5RCj0HVCLf1VrhM0CXXH/PLpnecyJUTG7JK4
-         qSoQ==
-X-Gm-Message-State: AOAM533JnUWkYt42co784n6eDSKFhQVDyyJc80YVi4B7IzjPqPRDGiyN
-        xOR8oP1zuGweDyXS8fDR12Y=
-X-Google-Smtp-Source: ABdhPJwHe+fu6+k3PJUxr4V+xmq/fCR4yxqhySIErvOeE6x3nKsV0UU04/QFYOxirG7MAqOrgzdInA==
-X-Received: by 2002:a17:90a:17ad:: with SMTP id q42mr26334023pja.181.1622963120512;
-        Sun, 06 Jun 2021 00:05:20 -0700 (PDT)
+        bh=J66R96VtW8mDJcT/ONY8la0SES4Mp5OfgngGRV1e+uk=;
+        b=QTkNLVQ/de+VvsVMloUevdxnivMxVKpLp+DINOpEwffP0hSECsWvUV/BcAHqzTQYP1
+         Oxksxm+UTq/AjN6bnXtQvXoPZxG1T96FUEtPMCs/p0dxNXYnUbJCfmAzyXuY+/dxyqzr
+         GKtBdl+4F17V0AShP7mDR6xr7U1nIgozBbfrcMd+JBBO5Ni/Lazgt8PRPTJtdY3/8nX9
+         PM+Cy0+Xg7sSQKOTpkdW+xtDTkK2APhKsLIw230zAsMHjxS/j2fbvuasXC0BgGSeYfHj
+         B9i4xdu4KcQAADZY1zezHrPgf5HAEvpDo+kxfuHGOciXVZA57IzGUaW6y9fvOVwm0S3G
+         kZpw==
+X-Gm-Message-State: AOAM530GWK/4k5/XQkwb6U/S7/4FJnJeixxcArR+8VwHXFzwfESn8vBA
+        gmDMuXZ+4SnzeWzgBk1KcPA=
+X-Google-Smtp-Source: ABdhPJx7OClakPR3VGNnt9/EOTYx/4ErJNqw79iJSYkGFxZ20rHXgLaRwkw1G7FKE/PNubW2gD18pQ==
+X-Received: by 2002:a62:1743:0:b029:2ef:6014:62d5 with SMTP id 64-20020a6217430000b02902ef601462d5mr1375817pfx.63.1622963133427;
+        Sun, 06 Jun 2021 00:05:33 -0700 (PDT)
 Received: from localhost (185.212.56.112.16clouds.com. [185.212.56.112])
-        by smtp.gmail.com with ESMTPSA id 21sm5081227pfh.103.2021.06.06.00.05.20
+        by smtp.gmail.com with ESMTPSA id k9sm5735976pgq.27.2021.06.06.00.05.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Jun 2021 00:05:20 -0700 (PDT)
+        Sun, 06 Jun 2021 00:05:33 -0700 (PDT)
 From:   Dejin Zheng <zhengdejin5@gmail.com>
 To:     helgaas@kernel.org, corbet@lwn.net, jarkko.nikula@linux.intel.com,
         andriy.shevchenko@linux.intel.com, mika.westerberg@linux.intel.com,
         rric@kernel.org, bhelgaas@google.com, linux-doc@vger.kernel.org,
         linux-i2c@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Dejin Zheng <zhengdejin5@gmail.com>
-Subject: [PATCH v6 1/4] PCI: Introduce pcim_alloc_irq_vectors()
-Date:   Sun,  6 Jun 2021 15:05:08 +0800
-Message-Id: <20210606070511.778487-2-zhengdejin5@gmail.com>
+Subject: [PATCH v6 4/4] i2c: thunderx: Use pcim_alloc_irq_vectors() to allocate IRQ vectors
+Date:   Sun,  6 Jun 2021 15:05:11 +0800
+Message-Id: <20210606070511.778487-5-zhengdejin5@gmail.com>
 X-Mailer: git-send-email 2.30.1
 In-Reply-To: <20210606070511.778487-1-zhengdejin5@gmail.com>
 References: <20210606070511.778487-1-zhengdejin5@gmail.com>
@@ -71,90 +71,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce pcim_alloc_irq_vectors(), a device-managed version of
-pci_alloc_irq_vectors(). Introducing this function can simplify
-the error handling path in many drivers.
+The pcim_alloc_irq_vectors() function, an explicit device-managed version
+of pci_alloc_irq_vectors(). If pcim_enable_device() has been called
+before, then pci_alloc_irq_vectors() is actually a device-managed
+function. It is used here as a device-managed function, So replace it
+with pcim_alloc_irq_vectors().
 
-And use pci_free_irq_vectors() to replace some code in pcim_release(),
-they are equivalent, and no functional change. It is more explicit
-that pcim_alloc_irq_vectors() is a device-managed function.
-
-Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Robert Richter <rric@kernel.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Robert Richter <rric@kernel.org>
 Signed-off-by: Dejin Zheng <zhengdejin5@gmail.com>
 ---
 v5 -> v6:
 	- rebase to 5.13-rc4
 v4 -> v5:
-	- Remove the check of enable device in pcim_alloc_irq_vectors()
-	  and make it as a static line function.
+	- Modify the subject name.
 v3 -> v4:
-	- No change
+	- No change.
 v2 -> v3:
-	- Add some commit comments for replace some codes in
-	  pcim_release() by pci_free_irq_vectors().
+	- No change.
 v1 -> v2:
-	- Use pci_free_irq_vectors() to replace some code in
-	  pcim_release().
 	- Modify some commit messages.
 
- drivers/pci/pci.c   |  5 +----
- include/linux/pci.h | 24 ++++++++++++++++++++++++
- 2 files changed, 25 insertions(+), 4 deletions(-)
+ drivers/i2c/busses/i2c-thunderx-pcidrv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b717680377a9..6319e5889688 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1989,10 +1989,7 @@ static void pcim_release(struct device *gendev, void *res)
- 	struct pci_devres *this = res;
- 	int i;
+diff --git a/drivers/i2c/busses/i2c-thunderx-pcidrv.c b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+index 12c90aa0900e..63354e9fb726 100644
+--- a/drivers/i2c/busses/i2c-thunderx-pcidrv.c
++++ b/drivers/i2c/busses/i2c-thunderx-pcidrv.c
+@@ -192,7 +192,7 @@ static int thunder_i2c_probe_pci(struct pci_dev *pdev,
+ 	i2c->hlc_int_enable = thunder_i2c_hlc_int_enable;
+ 	i2c->hlc_int_disable = thunder_i2c_hlc_int_disable;
  
--	if (dev->msi_enabled)
--		pci_disable_msi(dev);
--	if (dev->msix_enabled)
--		pci_disable_msix(dev);
-+	pci_free_irq_vectors(dev);
+-	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
++	ret = pcim_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+ 	if (ret < 0)
+ 		goto error;
  
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
- 		if (this->region_mask & (1 << i))
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c20211e59a57..e9c95cab2540 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1825,6 +1825,30 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 					      NULL);
- }
- 
-+/**
-+ * pcim_alloc_irq_vectors - a device-managed pci_alloc_irq_vectors()
-+ * @dev:		PCI device to operate on
-+ * @min_vecs:		minimum number of vectors required (must be >= 1)
-+ * @max_vecs:		maximum (desired) number of vectors
-+ * @flags:		flags or quirks for the allocation
-+ *
-+ * Return the number of vectors allocated, (which might be smaller than
-+ * @max_vecs) if successful, or a negative error code on error. If less
-+ * than @min_vecs interrupt vectors are available for @dev the function
-+ * will fail with -ENOSPC.
-+ *
-+ * It depends on calling pcim_enable_device() to make IRQ resources
-+ * manageable.
-+ */
-+static inline int
-+pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-+			unsigned int max_vecs, unsigned int flags)
-+{
-+	if (!pci_is_managed(dev))
-+		return -EINVAL;
-+	return pci_alloc_irq_vectors(dev, min_vecs, max_vecs, flags);
-+}
-+
- /* Include architecture-dependent settings and functions */
- 
- #include <asm/pci.h>
 -- 
 2.30.1
 
