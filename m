@@ -2,154 +2,255 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E26FC47095
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B94D7C47094
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C69061108
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:19:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99B6361003
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbhFGSVH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 14:21:07 -0400
-Received: from mail-dm6nam11on2051.outbound.protection.outlook.com ([40.107.223.51]:58208
-        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230333AbhFGSVG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Jun 2021 14:21:06 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=guCWbo+axKDCnxWODTfB95Js5cDt799eQ6pTPJDCKXaiVESxRewnKGRRvdkdpaX9zCEo4Kz2h8yCRsn81Jl9efsjn54ZGg+A2RAJamnPkN/AQ4p3b4EVRrormUhHQUwM8zycN2DWdqc8vOOX2BmSiGTIi4Ov/fjofRrYlTb0l9G8I9nhLvpSwQrEl+vU6ROQlRVkmUvTKpDhnICYwBwDjjzNbTEgrZf/ZbNPzXlahYYgeYyJoesFHV1geRtPxg0URYnL+XNXv+Tccc+4hMof7pF9qN+4POKw5uIZhaDLMQx1U7X5La7H8xMFMVGRrVO77QccFos9qElEXBmup3oVzQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RN504FY98AKYqF2OO0Zq7Q97VdjfmU96v+dxFtu7oPA=;
- b=I97/1cNCVvJuA4GZJYI3PxIOIuCxW6JWEnvvq/ggYJPHzo/MEejQhkrRUDiHBfkCMi7sVtuTZqkFk6L+t4ppeMc22GaB8bB2HfwFctm2ds7PgJXN89esrLnh140Uxj421QqMfLS5hFfQSzZTUUnB+WIiSbV49qipGR6JpA+73tQMS7hYC2CYxoM4izhybfHo3tKDitWg2sYSRX6kJW8+M34ASkHmX6D0RjuMVoJqx/QdYRX3bPZPNf0Y7jSBbkzAN1hbLWa+X+G7t8UFTqljs8BGNw/R4rahja3iNTwpM26kPXGPXUfP6MlwIK59BI+wNkGRzFK1OmjJuQ34DwIcXQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RN504FY98AKYqF2OO0Zq7Q97VdjfmU96v+dxFtu7oPA=;
- b=gUGl0TwdYxJfp0fHeE9jqjAq4Xmz659MckRMBXg29ATsShH+TXzszHldQQEDw7TBl/iNHSCgYHB+M59Uu3u43KBIkLRYYDEVDRmAjJOAyfVaEpyU/GxaHiQfehRkTMjNh3o0dSFhIpBCohjRgfDP5Vk4Si1HURnHAGLWIgmHFGq2sEBWMdUeIRecMb/431UfRIyfXYTbCSUfnCHO+aNZ1mPb7vK+acRBS+x5EVwOxXnHnvmqKBqIOQK5Tc4YDD0KSgT8P8V96KPMSmuTeCuJRA/q7j6OkoI2dTxwjgqUajeRcXhRbKbaKNCTn+cnw8tyLBj0kkPgppy/iXHfCSH6wQ==
-Received: from CO2PR04CA0157.namprd04.prod.outlook.com (2603:10b6:104:4::11)
- by DM6PR12MB4419.namprd12.prod.outlook.com (2603:10b6:5:2aa::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.24; Mon, 7 Jun
- 2021 18:19:12 +0000
-Received: from CO1NAM11FT048.eop-nam11.prod.protection.outlook.com
- (2603:10b6:104:4:cafe::64) by CO2PR04CA0157.outlook.office365.com
- (2603:10b6:104:4::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.22 via Frontend
- Transport; Mon, 7 Jun 2021 18:19:12 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; google.com; dkim=none (message not signed)
- header.d=none;google.com; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.34; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.34) by
- CO1NAM11FT048.mail.protection.outlook.com (10.13.175.148) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4195.22 via Frontend Transport; Mon, 7 Jun 2021 18:19:12 +0000
-Received: from [10.26.49.10] (172.20.187.6) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 7 Jun
- 2021 18:19:10 +0000
-Subject: Re: [PATCH V3] PCI: tegra: Fix building Tegra194 PCIe driver
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>
-References: <20210607171842.GA2507565@bjorn-Precision-5520>
-From:   Jon Hunter <jonathanh@nvidia.com>
-Message-ID: <0457da33-3ddd-2234-1d09-20d5537b8993@nvidia.com>
-Date:   Mon, 7 Jun 2021 19:19:08 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S230291AbhFGSY3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jun 2021 14:24:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48830 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230287AbhFGSY2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:24:28 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24B07C061789;
+        Mon,  7 Jun 2021 11:22:37 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id e20so2540002pgg.0;
+        Mon, 07 Jun 2021 11:22:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
+        b=MIjew5yVD0th6cQq/FJP+aarKoKhSpZOm1Qah4059J/tpntR2hNOgmF7HxVrje22at
+         l9ufVrRh9X8TmNc3bk5zFG8P7g9Acd5xnpTopJ0lk7w8Rdy8lYdIeEeuLxyQZvN3rPqK
+         fzPm8DVCCWXffNDyIb0uORmHygVzBAamqkQmiTuRsdkBxj8bZZV7EBa+pAEjQqDETyJ6
+         1X4ypa4Ue3ijxLPi4iaMblnb3OLi+tucUboDVGzIgGMdkFKN7IMZE3d+pcMYzXFQl85j
+         F48zPKv7rk3XkLak0Wv43oZ+Dv72CCVHT3DB3oc/1kJC6DBW/BJyI6W6vTs0OlYIF7fx
+         lI8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
+        b=QkRQK4EhGfYlTgsWzP/p/tRUioe1rUhuLQ8ln/Wf6f2Hw4igs0bj4K6J8LmlgDas59
+         HdWK/5/3c+yCQER/rSAWOwt50mDbDb7Xa3ENmNOSfBTPY1PnVlATdWjKAGwOZlBDQriA
+         6bUr3v8Oj7QZPgQaRyM679K9893YVQhYBLs1IWGgxPr5gTosEFU3UYHttmlaAwfc2HeN
+         fwTmH5k1Yoneq+eMcGNMXaV9RbRiMHHYA29nE6MRL4XP8m6su/U5eP1JskVN2QbvbAo9
+         /gMjE4lq2MqeSRG+oY8MJBRDRoNmL2sOAKbHM1qa7VFuwbGaWvoyAHEceJ9Gn+YPLOwt
+         w7pQ==
+X-Gm-Message-State: AOAM530MRk3rmwIjxCd6636/aSYDwvm8hNmk2ZS8RpYpatabbuE2aqfN
+        XcLiDUXYmr1HoixROoAhyNQVcEIyBvfugQ==
+X-Google-Smtp-Source: ABdhPJxC5P7m1JL/YO3vsYyXTRhcXG5b+o58cWEj43c18k0KVk0MAfK1ZE8CZscsvaTxj2z2VCpfhw==
+X-Received: by 2002:a63:404:: with SMTP id 4mr9761593pge.180.1623090156731;
+        Mon, 07 Jun 2021 11:22:36 -0700 (PDT)
+Received: from localhost.localdomain ([103.200.106.115])
+        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Jun 2021 11:22:36 -0700 (PDT)
+From:   Amey Narkhede <ameynarkhede03@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     alex.williamson@redhat.com,
+        Raphael Norwitz <raphael.norwitz@nutanix.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Amey Narkhede <ameynarkhede03@gmail.com>
+Subject: [PATCH v6 4/8] PCI/sysfs: Allow userspace to query and set device reset mechanism
+Date:   Mon,  7 Jun 2021 23:51:33 +0530
+Message-Id: <20210607182137.5794-5-ameynarkhede03@gmail.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210607182137.5794-1-ameynarkhede03@gmail.com>
+References: <20210607182137.5794-1-ameynarkhede03@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20210607171842.GA2507565@bjorn-Precision-5520>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [172.20.187.6]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 50a92c0c-250c-454d-a8dd-08d929e0c06b
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4419:
-X-Microsoft-Antispam-PRVS: <DM6PR12MB4419B784197DB8AAD67E8DB8D9389@DM6PR12MB4419.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ZDsbWxA3CvpnDgM35WYnGYolbkbSH17VirNbcGpsp/PUs7sdeE9yRGEOQTQBPXYAj7oi6pMloGFf8idGvDMBT5JrLZW/qc0a8kUxcQ3kQJ6D4bjsG7Gc5lu0CTekiUrrVug3g22jreMu2hxXIOE0Tzp75UABAkoi5qDCViF8kzP0TW+SBvxg6S6vf4658Fy70m3RsoH6F60ul8ormgpS1xS5L1HQidTYUU4/MkMxTYkFib6/rz5gMU2eVzcJ7yjKhbXKT9E/ercSyEEixuboR5Ur07zFTzsOLZQFCqTjaR8YVMKe28ytioHkppfqwcSNPuyJBAFxD1tp6KuN2mcK51W7GVNh/tUUcSlnP/jgWnlyE7N8jCJaHaWvWllpobpKNmNpBJBXI8Oe0i/HWjz3ysTr0F2IBTYELa936ONKeoxAX5p5Vu0utSvvIWLrEfaaM2b3o3QmUSqRE8NTfW/zuMoRTPUoVVW/7il71+bLYBYqEbhK36IsmQDQ24pO2u3fumH3FUOcQ40gmLq4vAvHwVMr3KY9rgqKigtwsFWwFY1I9oEt3KlBD4mQ9W6RGPHRCu1nGEdhxGtFGFuS+vQ9cnYosftEXg3ens0Ug3+ZqYof+TMDC/zQ4vL7RdYZ4D+m6mfrvuTa0ni8bYwiw1nFIy8aWLflVm0pKUvr/chOmQxSBlke3PROg7so87B64Czv
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(136003)(39860400002)(376002)(396003)(346002)(36840700001)(46966006)(16526019)(356005)(31686004)(36756003)(5660300002)(336012)(8676002)(36860700001)(47076005)(478600001)(186003)(86362001)(7636003)(6916009)(16576012)(2616005)(36906005)(4326008)(31696002)(70206006)(53546011)(70586007)(54906003)(83380400001)(82740400003)(82310400003)(316002)(2906002)(426003)(26005)(8936002)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jun 2021 18:19:12.6356
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 50a92c0c-250c-454d-a8dd-08d929e0c06b
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT048.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4419
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add reset_method sysfs attribute to enable user to
+query and set user preferred device reset methods and
+their ordering.
 
-On 07/06/2021 18:18, Bjorn Helgaas wrote:
-> On Mon, Jun 07, 2021 at 04:50:34PM +0100, Jon Hunter wrote:
->> Hi Bjorn, Lorenzo,
->>
->> On 26/05/2021 13:33, Jon Hunter wrote:
->>> Commit 7f100744749e ("PCI: tegra: Add Tegra194 MCFG quirks for ECAM
->>> errata") caused a few build regressions for the Tegra194 PCIe driver
->>> which are:
->>>
->>> 1. The Tegra194 PCIe driver can no longer be built as a module. This
->>>    was caused by removing the Makefile entry to build the pcie-tegra.c
->>>    based upon the CONFIG_PCIE_TEGRA194 option. Therefore, restore this
->>>    so that we can build the driver as a module.
->>> 2. 7f100744749e ("PCI: tegra: Add Tegra194 MCFG quirks for ECAM
->>>    errata") added "#ifdef CONFIG_PCIE_TEGRA194" around the native
->>>    driver. But if we set CONFIG_PCIE_TEGRA194=m to build the driver as a
->>>    module, autoconf.h contains "#define CONFIG_PCIE_TEGRA194_MODULE 1"
->>>    (not "#define CONFIG_PCIE_TEGRA194 1"), so the #ifdef excludes the
->>>    driver. Instead, use "IS_ENABLED(CONFIG_PCIE_TEGRA194)", which checks
->>>    for either CONFIG_PCIE_TEGRA194 or CONFIG_PCIE_TEGRA194_MODULE.
->>> 3. The below build warnings that are seen with particular kernel
->>>    configurations. Fix these by moving these structure definitions to
->>>    within the necessary guards.
->>>
->>>   drivers/pci/controller/dwc/pcie-tegra194.c:259:18: warning:
->>>   	‘event_cntr_data_offset’ defined but not used [-Wunused-const-variable=]
->>>   drivers/pci/controller/dwc/pcie-tegra194.c:250:18: warning:
->>>   	‘event_cntr_ctrl_offset’ defined but not used [-Wunused-const-variable=]
->>>   drivers/pci/controller/dwc/pcie-tegra194.c:243:27: warning:
->>>   	‘pcie_gen_freq’ defined but not used [-Wunused-const-variable=]
->>>
->>> Fixes: 7f100744749e ("PCI: tegra: Add Tegra194 MCFG quirks for ECAM errata")
->>> Signed-off-by: Jon Hunter <jonathanh@nvidia.com>
->>
->>
->> Any feedback on this? We need this for v5.13.
-> 
-> Thanks for the reminder, I'll take a look at this.  It looks like we
-> broke this in v5.13-rc1, so we should fix it before v5.13.
-> 
+Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci |  16 ++++
+ drivers/pci/pci-sysfs.c                 | 118 ++++++++++++++++++++++++
+ 2 files changed, 134 insertions(+)
 
-Thanks. Yes this is needed before v5.13.
-
-Jon
-
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index ef00fada2..cf6dbbb3c 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -121,6 +121,22 @@ Description:
+ 		child buses, and re-discover devices removed earlier
+ 		from this part of the device tree.
+ 
++What:		/sys/bus/pci/devices/.../reset_method
++Date:		March 2021
++Contact:	Amey Narkhede <ameynarkhede03@gmail.com>
++Description:
++		Some devices allow an individual function to be reset
++		without affecting other functions in the same slot.
++		For devices that have this support, a file named reset_method
++		will be present in sysfs. Reading this file will give names
++		of the device supported reset methods and their ordering.
++		Writing the name or comma separated list of names of any of
++		the device supported reset methods to this file will set the
++		reset methods and their ordering to be used when resetting
++		the device. Writing empty string to this file will disable
++		ability to reset the device and writing "default" will return
++		to the original value.
++
+ What:		/sys/bus/pci/devices/.../reset
+ Date:		July 2009
+ Contact:	Michael S. Tsirkin <mst@redhat.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 316f70c3e..52def79aa 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1334,6 +1334,123 @@ static const struct attribute_group pci_dev_rom_attr_group = {
+ 	.is_bin_visible = pci_dev_rom_attr_is_visible,
+ };
+ 
++static ssize_t reset_method_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	ssize_t len = 0;
++	int i, prio;
++
++	for (prio = PCI_RESET_METHODS_NUM; prio; prio--) {
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
++			if (prio == pdev->reset_methods[i]) {
++				len += sysfs_emit_at(buf, len, "%s%s",
++						     len ? "," : "",
++						     pci_reset_fn_methods[i].name);
++				break;
++			}
++		}
++
++		if (i == PCI_RESET_METHODS_NUM)
++			break;
++	}
++
++	if (len)
++		len += sysfs_emit_at(buf, len, "\n");
++
++	return len;
++}
++
++static ssize_t reset_method_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	u8 reset_methods[PCI_RESET_METHODS_NUM];
++	struct pci_dev *pdev = to_pci_dev(dev);
++	u8 prio = PCI_RESET_METHODS_NUM;
++	char *name, *options;
++	int i;
++
++	if (count >= (PAGE_SIZE - 1))
++		return -EINVAL;
++
++	options = kstrndup(buf, count, GFP_KERNEL);
++	if (!options)
++		return -ENOMEM;
++
++	/*
++	 * Initialize reset_method such that 0xff indicates
++	 * supported but not currently enabled reset methods
++	 * as we only use priority values which are within
++	 * the range of PCI_RESET_FN_METHODS array size
++	 */
++	for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
++		reset_methods[i] = pdev->reset_methods[i] ? 0xff : 0;
++
++	if (sysfs_streq(options, "")) {
++		pci_warn(pdev, "All device reset methods disabled by user");
++		goto set_reset_methods;
++	}
++
++	if (sysfs_streq(options, "default")) {
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
++			reset_methods[i] = reset_methods[i] ? prio-- : 0;
++		goto set_reset_methods;
++	}
++
++	while ((name = strsep(&options, ",")) != NULL) {
++		if (sysfs_streq(name, ""))
++			continue;
++
++		name = strim(name);
++
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
++			if (reset_methods[i] &&
++			    sysfs_streq(name, pci_reset_fn_methods[i].name)) {
++				reset_methods[i] = prio--;
++				break;
++			}
++		}
++
++		if (i == PCI_RESET_METHODS_NUM) {
++			kfree(options);
++			return -EINVAL;
++		}
++	}
++
++	if (reset_methods[0] &&
++	    reset_methods[0] != PCI_RESET_METHODS_NUM)
++		pci_warn(pdev, "Device specific reset disabled/de-prioritized by user");
++
++set_reset_methods:
++	kfree(options);
++	memcpy(pdev->reset_methods, reset_methods, sizeof(reset_methods));
++	return count;
++}
++static DEVICE_ATTR_RW(reset_method);
++
++static struct attribute *pci_dev_reset_method_attrs[] = {
++	&dev_attr_reset_method.attr,
++	NULL,
++};
++
++static umode_t pci_dev_reset_method_attr_is_visible(struct kobject *kobj,
++						    struct attribute *a, int n)
++{
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
++
++	if (!pci_reset_supported(pdev))
++		return 0;
++
++	return a->mode;
++}
++
++static const struct attribute_group pci_dev_reset_method_attr_group = {
++	.attrs = pci_dev_reset_method_attrs,
++	.is_visible = pci_dev_reset_method_attr_is_visible,
++};
++
+ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+ 			   const char *buf, size_t count)
+ {
+@@ -1491,6 +1608,7 @@ const struct attribute_group *pci_dev_groups[] = {
+ 	&pci_dev_config_attr_group,
+ 	&pci_dev_rom_attr_group,
+ 	&pci_dev_reset_attr_group,
++	&pci_dev_reset_method_attr_group,
+ 	&pci_dev_vpd_attr_group,
+ #ifdef CONFIG_DMI
+ 	&pci_dev_smbios_attr_group,
 -- 
-nvpublic
+2.31.1
+
