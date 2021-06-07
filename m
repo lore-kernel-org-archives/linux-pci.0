@@ -8,62 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0EDAC47082
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49EB0C47082
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD75F61003
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33CA061003
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230365AbhFGSZf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 14:25:35 -0400
-Received: from mail-pl1-f173.google.com ([209.85.214.173]:41884 "EHLO
-        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230333AbhFGSZe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:25:34 -0400
-Received: by mail-pl1-f173.google.com with SMTP id o12so5813113plk.8;
-        Mon, 07 Jun 2021 11:23:33 -0700 (PDT)
+        id S230483AbhFGSZl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jun 2021 14:25:41 -0400
+Received: from mail-pf1-f177.google.com ([209.85.210.177]:39511 "EHLO
+        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230333AbhFGSZk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:25:40 -0400
+Received: by mail-pf1-f177.google.com with SMTP id k15so13732434pfp.6;
+        Mon, 07 Jun 2021 11:23:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=PqaJy/AjovIrG5BqeRkyRVaad0hxL4Cbogzxl2VFgCg=;
-        b=ZcayHVrf0Al8yfcf2lWVDiYosAnraB/PknbEJMkJ3jC1tVC7cYvm6PVNa1vNM0BAtP
-         jSy2NrrWJallrjR+Du/S89tnqQCvGsC1qfMCtpdN+Kop5YtLs1FoUX5IMEttNUpSPSUJ
-         +sdS/mK++cYsPmjTTED+eHOqE8DOyFPEWXW8tR4b4lEJN7EshGhn4Nq+u8o10RfDdhiN
-         K0OTjcn0Z5P0EBP+psjV7jNOsta+2tTODMf0JA7DHsoU6xy3A0BO6a71v+f4fWmobnkR
-         W8KN2GWWBrb8LDKgvU8VIoNiAXguqEtY5L6FpzRc9hRBRgUYBz/iETPLs26XWrh8RmAO
-         CrQg==
+        bh=fW5wfb8x41zglgHyAcUMAuIIBSAY+Ni+6lOFyDzIdFA=;
+        b=o3G5oOU6//tIJmKmhES2tEXoxirzr608aHOc8pwpPnv8aQk+CdhyQcuc7joomfsHRT
+         +PD6CMJS3QYCqh9nU1seiNikpZP/zHYeTf1au17XNqyzo3KxwNzttzJvnJGQmURZbEyc
+         6B8b4Z6K9SvsplGvLt6/DXoLmOgCA1xjkW1iYR/JaC1cKDa84xPGRs3Ddwy5AXllWd6B
+         HzH3PYxry0KPMnpAN/BkX6/iank5e1G7OqqTg+yhkHaadhOUQpWcI4X2HafI6uGZTV06
+         Wzwzfl4PgvtZKP1LwQ449Nx9aLi74HRq0sDkIHKn0SQZj/i/Oe867Mdaa7YLLaL9Qjpv
+         C7Kw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=PqaJy/AjovIrG5BqeRkyRVaad0hxL4Cbogzxl2VFgCg=;
-        b=aOLH0LjyitE2RjxE6Ft1ACx8w6Q+kGR6xwIyU6o4z9JlrMLBYOw+3nxZ3NhcVbA9bB
-         uhWJALnwAaI65NcKYhbflQugVLJRZ+iEwfR6hVAyM99hx2XDtWdChW5T+e892AKT6GhY
-         lMzpZjqkpETKhiD2QF29CV92S5ztix245qXMgGaV7q3zt98FxaoyWSNPlYTTXIVcNNFm
-         YG+JQ7HTgtq2cQC39S7pSV0MCXVer5JfGVBJh8IKycTQ1a7dISpaRsNpmeB8tsF1geIT
-         PwUPqfTSDqX0OtJD4vlkqdMY2SWsy+g0r1jRIfrsagsq2xmw+bgaXg3QCvtGm/d8KbZD
-         FvuA==
-X-Gm-Message-State: AOAM531eDEnJx/X5tJKxdturBD7ZUDjWAfOyQr1LRa0AKuxCixSh4jzM
-        9B2VyOrpEL6ON/Jw7hUsJ1o=
-X-Google-Smtp-Source: ABdhPJyNEfMl2bi8IWQI/ULXvVG+geO4fnyWRNC3dwc5S07c+R0G91U7jymYfREohRvK+iSeGRugew==
-X-Received: by 2002:a17:90a:fb46:: with SMTP id iq6mr452961pjb.228.1623090153276;
-        Mon, 07 Jun 2021 11:22:33 -0700 (PDT)
+        bh=fW5wfb8x41zglgHyAcUMAuIIBSAY+Ni+6lOFyDzIdFA=;
+        b=sLYEYxEKAx4OT+2NE0FgDNjq53sVVBvMMk96HS8WhrAawHaR5Ms2EeVvPmBOOGgJDt
+         daQdSmeV4pKyiUhLCug8R7XtVv4F9s9z9/A00OTxtXf7yKmnHGulK/f/ntTcJ84/jaTx
+         r/jWHxQuDRDyEpGrSFprLIeOTq4+hRbeRkfcdN2aCLqSXCdof0K2h9q4FvyYiNuNYNJN
+         WrdfU9vL/B0ng/SeTIfEl382eAKNIdv3iB+UFEsdgGlnNkZX94SQfyQParA0bO4XECTD
+         KFystQFVXYTsZKy7jCitWhs/GwrrkBpbajHahgefYhN/QxuMq5PcGHpdHqy0hE2Ae7Oz
+         +2kw==
+X-Gm-Message-State: AOAM533zEEp2mh4UpXfH3nfJ0efMt6er+2mjDBSBPqHoPuLLqvM9k0c/
+        2wbNMmZJ8nxeBUxqKN2D6Kw=
+X-Google-Smtp-Source: ABdhPJxO6nuThz+aF2UXb1doXP7+lOWOJraO2hEpY3HD/g0jVsAVCm2yzSE/X1QuvzF+ieQN3iN1fQ==
+X-Received: by 2002:a62:30c2:0:b029:289:116c:ec81 with SMTP id w185-20020a6230c20000b0290289116cec81mr18598706pfw.42.1623090159879;
+        Mon, 07 Jun 2021 11:22:39 -0700 (PDT)
 Received: from localhost.localdomain ([103.200.106.115])
-        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.30
+        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 11:22:33 -0700 (PDT)
+        Mon, 07 Jun 2021 11:22:39 -0700 (PDT)
 From:   Amey Narkhede <ameynarkhede03@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     alex.williamson@redhat.com,
         Raphael Norwitz <raphael.norwitz@nutanix.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Amey Narkhede <ameynarkhede03@gmail.com>
-Subject: [PATCH v6 3/8] PCI: Remove reset_fn field from pci_dev
-Date:   Mon,  7 Jun 2021 23:51:32 +0530
-Message-Id: <20210607182137.5794-4-ameynarkhede03@gmail.com>
+        Sinan Kaya <okaya@kernel.org>
+Subject: [PATCH v6 5/8] PCI: Setup ACPI_COMPANION early
+Date:   Mon,  7 Jun 2021 23:51:34 +0530
+Message-Id: <20210607182137.5794-6-ameynarkhede03@gmail.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210607182137.5794-1-ameynarkhede03@gmail.com>
 References: <20210607182137.5794-1-ameynarkhede03@gmail.com>
@@ -73,136 +72,84 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-reset_fn field is used to indicate whether the device supports any reset
-mechanism or not. Remove the use of reset_fn in favor of new reset_methods
-array which can be used to keep track of all supported reset mechanisms of
-a device and their ordering.
+From: Shanker Donthineni <sdonthineni@nvidia.com>
 
-The octeon driver is incorrectly using
-reset_fn field to detect if the device supports FLR or not. Use
-pcie_reset_flr() to probe whether it supports FLR or not.
+Currently, the ACPI_COMPANION is not available until device_add().
+The software features which have dependency on ACPI fwnode properties
+and needs to be handled before device_add() will not work. One use
+case, software has to check the existence of _RST method to support
+ACPI based reset mechanism.
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-Reviewed-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
-Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
+This patch adds a new function pci_set_acpi_fwnode() for setting the
+ACPI_COMPANION, same code which is available in acpi_pci_bridge_d3().
+
+Call pci_set_acpi_fwnode() from pci_scan_device() to fix the issue.
+
+Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
 ---
- drivers/net/ethernet/cavium/liquidio/lio_vf_main.c | 2 +-
- drivers/pci/pci-sysfs.c                            | 2 +-
- drivers/pci/pci.c                                  | 6 +++---
- drivers/pci/probe.c                                | 1 -
- drivers/pci/quirks.c                               | 2 +-
- drivers/pci/remove.c                               | 1 -
- include/linux/pci.h                                | 1 -
- 7 files changed, 6 insertions(+), 9 deletions(-)
+ drivers/pci/pci-acpi.c | 12 ++++++++----
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/probe.c    |  2 ++
+ 3 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-index 516f166ce..336d149ee 100644
---- a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-+++ b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-@@ -526,7 +526,7 @@ static void octeon_destroy_resources(struct octeon_device *oct)
- 			oct->irq_name_storage = NULL;
- 		}
- 		/* Soft reset the octeon device before exiting */
--		if (oct->pci_dev->reset_fn)
-+		if (!pcie_reset_flr(oct->pci_dev, 1))
- 			octeon_pci_flr(oct);
- 		else
- 			cn23xx_vf_ask_pf_to_do_flr(oct);
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index beb8d1f4f..316f70c3e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1367,7 +1367,7 @@ static umode_t pci_dev_reset_attr_is_visible(struct kobject *kobj,
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 36bc23e21..eaddbf701 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -934,6 +934,13 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
+ 
+ static struct acpi_device *acpi_pci_find_companion(struct device *dev);
+ 
++void pci_set_acpi_fwnode(struct pci_dev *dev)
++{
++	if (!ACPI_COMPANION(&dev->dev) && !pci_dev_is_added(dev))
++		ACPI_COMPANION_SET(&dev->dev,
++				   acpi_pci_find_companion(&dev->dev));
++}
++
+ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
  {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	const struct fwnode_handle *fwnode;
+@@ -945,11 +952,8 @@ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
+ 		return false;
  
--	if (!pdev->reset_fn)
-+	if (!pci_reset_supported(pdev))
- 		return 0;
+ 	/* Assume D3 support if the bridge is power-manageable by ACPI. */
++	pci_set_acpi_fwnode(dev);
+ 	adev = ACPI_COMPANION(&dev->dev);
+-	if (!adev && !pci_dev_is_added(dev)) {
+-		adev = acpi_pci_find_companion(&dev->dev);
+-		ACPI_COMPANION_SET(&dev->dev, adev);
+-	}
  
- 	return a->mode;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 39a9ea8bb..2302aa421 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5232,7 +5232,7 @@ int pci_reset_function(struct pci_dev *dev)
+ 	if (adev && acpi_device_power_manageable(adev))
+ 		return true;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 13ec6bd6f..d22da6d3c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -703,7 +703,9 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
+ #ifdef CONFIG_ACPI
+ int pci_acpi_program_hp_params(struct pci_dev *dev);
+ extern const struct attribute_group pci_dev_acpi_attr_group;
++void pci_set_acpi_fwnode(struct pci_dev *dev);
+ #else
++static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
+ static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
  {
- 	int rc;
- 
--	if (!dev->reset_fn)
-+	if (!pci_reset_supported(dev))
- 		return -ENOTTY;
- 
- 	pci_dev_lock(dev);
-@@ -5268,7 +5268,7 @@ int pci_reset_function_locked(struct pci_dev *dev)
- {
- 	int rc;
- 
--	if (!dev->reset_fn)
-+	if (!pci_reset_supported(dev))
- 		return -ENOTTY;
- 
- 	pci_dev_save_and_disable(dev);
-@@ -5291,7 +5291,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- {
- 	int rc;
- 
--	if (!dev->reset_fn)
-+	if (!pci_reset_supported(dev))
- 		return -ENOTTY;
- 
- 	if (!pci_dev_trylock(dev))
+ 	return -ENODEV;
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8cf532681..90fd4f61f 100644
+index 90fd4f61f..dfefa5ed0 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -2405,7 +2405,6 @@ static void pci_init_capabilities(struct pci_dev *dev)
+@@ -2359,6 +2359,8 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 		return NULL;
+ 	}
  
- 	pcie_report_downtraining(dev);
- 	pci_init_reset_methods(dev);
--	dev->reset_fn = pci_reset_supported(dev);
++	pci_set_acpi_fwnode(dev);
++
+ 	return dev;
  }
  
- /*
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f977ba79a..e86cf4a3b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5589,7 +5589,7 @@ static void quirk_reset_lenovo_thinkpad_p50_nvgpu(struct pci_dev *pdev)
- 
- 	if (pdev->subsystem_vendor != PCI_VENDOR_ID_LENOVO ||
- 	    pdev->subsystem_device != 0x222e ||
--	    !pdev->reset_fn)
-+	    !pci_reset_supported(pdev))
- 		return;
- 
- 	if (pci_enable_device_mem(pdev))
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index dd12c2fcc..4c54c7505 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -19,7 +19,6 @@ static void pci_stop_dev(struct pci_dev *dev)
- 	pci_pme_active(dev, false);
- 
- 	if (pci_dev_is_added(dev)) {
--		dev->reset_fn = 0;
- 
- 		device_release_driver(&dev->dev);
- 		pci_proc_detach_device(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0955246f8..6e9bc4f9c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -429,7 +429,6 @@ struct pci_dev {
- 	unsigned int	state_saved:1;
- 	unsigned int	is_physfn:1;
- 	unsigned int	is_virtfn:1;
--	unsigned int	reset_fn:1;
- 	unsigned int	is_hotplug_bridge:1;
- 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
- 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
 -- 
 2.31.1
 
