@@ -2,70 +2,68 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0C0C47094
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCDBC47082
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE9DA61107
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AB906100B
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:23:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230316AbhFGSYs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 14:24:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48858 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230239AbhFGSYr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:24:47 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8F74C061766;
-        Mon,  7 Jun 2021 11:22:43 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id 69so9186175plc.5;
-        Mon, 07 Jun 2021 11:22:43 -0700 (PDT)
+        id S230267AbhFGSZS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jun 2021 14:25:18 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:55902 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230404AbhFGSZR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:25:17 -0400
+Received: by mail-pj1-f54.google.com with SMTP id k7so10376192pjf.5;
+        Mon, 07 Jun 2021 11:23:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=iNHrhq0IL96XZ0EI6v9hmr0ajyowuoqEGQEPG1rii/A=;
-        b=L+XKyK9Xc/iP3xTzUjajXyy/0+DpVV+nzcEUa1HjSrX7McmLVt0we7X0ORMACcJgOu
-         yeJCMAg+k19OdXBwPvh7c69u1/+evJzWDI8vfBioPgZrKBZhBE1AHH5gcySMN8BiOwJp
-         GZla0MTWk3vIvF3Qj3esUtQMr+eIAa+Vq39XcP0AjZZMzb6evwVbL/PHPszcRMcpLhIP
-         Abvr9n3ui7gNXbAneO/0XoAOrSneIZQ4CUeiraBWOIAhBRvBfCVps5Iu8GabKnAZ40r/
-         BlDXtH20og75bN11CmEWwq/KU74wMeXxD9MBMoe+V40fQyQwsfTWb3JBvIsptfc0Q2Kx
-         zowg==
+        bh=VqQOpJKxzJ4iXeJuu/O3h8CrpjPwv08YHWrIZDj9y8w=;
+        b=UhVtkOrf8h3YD5jYJPMreHL+BTACBxsBowp8rbmH0bPN0cu5a2w0YWBX8WzKe/xuXb
+         kE6mP3/CT3NBRaT7uyIqvmyxa7umr3i1JaD9YmJENoUfkJumj1r20QAoNPpZSpE8UTNg
+         Zb9To9lcv8Tgfc1Iujl0iDOqx6FvPtMnJRYyxwrP+a/dpdAxEHUE5RkFYgRfPJUI5v0I
+         gG3mL/jvGmSxDphTDPn/g/KOOo5pDpCLMXE0N17iyYnSi708/M+myV2Sgt/2x9dCzN36
+         I44G4XdQr2MoDGjCncrG8quP62yz81h/IgA4e7FQNVDodx+yGlu57dfXVqjJvaqaEDzA
+         /HBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=iNHrhq0IL96XZ0EI6v9hmr0ajyowuoqEGQEPG1rii/A=;
-        b=fy/QtNOPmDuRvm3EzUCNZ9i3KZSbF0AyJ2fNaM2v457BUk1jDF5qLtC/gfGQBtYQb+
-         5VokcncbDDdfNyu8z45+nC2ynT3CEjeeHZqWmLxEwWPbkMfDmqN/UG08W1PkFJEH94LN
-         NBplcetQ2Z0HkuZCeGh40QOsezsj1mHVeepxRMQsA8q1D9rc7s3tUBaxCnwWIHCVZ2Y0
-         JrZbIHvIPN1IO6lMJCQH8Y1iAdIlhf26Vw1JscEEJeqlDKIntdQVaAYMtqBv7Onvj82L
-         q/yaPTZcUv/05buPtEeG+FuCGDtpKACMwiZT7/onyW/nawz/RHVBd6S3xmwNyQ4i5xJD
-         w9DQ==
-X-Gm-Message-State: AOAM531Zjpm3FugxCJI9NxR3gm9B/ZZch7OPx9bevC87RMOTklK6HNFy
-        sPNDL+MluXDDCfg9aHcd/sc=
-X-Google-Smtp-Source: ABdhPJyTd0NkNIcVCMuvAgAaJVLy0DNbcZp4xeRSF9wybLHr5rTfUZdUo3r56WY3t6PsjWEfuu2HGw==
-X-Received: by 2002:a17:90a:9511:: with SMTP id t17mr22014125pjo.108.1623090163365;
-        Mon, 07 Jun 2021 11:22:43 -0700 (PDT)
+        bh=VqQOpJKxzJ4iXeJuu/O3h8CrpjPwv08YHWrIZDj9y8w=;
+        b=bnFY1eGOP6wxDOQqbSSkQdP5SCfndEAlB8jW/kza8eqDDRzooBXGF2Sc52dzM6KtVH
+         Terfk5OQ8BXWadAL1xdTnwgyZLaO5gH56FmcRB1nc1kE8x8l52F6AW+M4LvHlg7KlRlr
+         dYndI2+/nJdGW6xmffYeawq+D5r6DOh0zlmwI/ArYYPbGBIv5rXutpknTy1k4mCO5TRz
+         AuNzjUVdjNUjDay85eWM4xgmmCtXH9FALOkHEaReYlfDX56rZ78x6WbDVEVuYOnGavvf
+         R/1lYMpb28nAm0LXUXnb50wtTuQsJcUvw1kjDOnSE95V5RfZN9J4wjSS3YGHGQZozkwD
+         WCcQ==
+X-Gm-Message-State: AOAM531o0Mk3EwRdn9rhW63DfrHpJRAaYziaFhQN5gfC9AwJKUaS4xUD
+        dt3bHJIGa6vuK87aaDNq/ws=
+X-Google-Smtp-Source: ABdhPJwVJ24itLA60f9hv2N8GulmTtsjsA5UTSDXS+lhHBW7nXR9Fb99XhZrdU+SqRRhFu0dowTrHA==
+X-Received: by 2002:a17:902:8ec4:b029:fb:33ad:e86f with SMTP id x4-20020a1709028ec4b02900fb33ade86fmr19108451plo.4.1623090146101;
+        Mon, 07 Jun 2021 11:22:26 -0700 (PDT)
 Received: from localhost.localdomain ([103.200.106.115])
-        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.40
+        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 11:22:43 -0700 (PDT)
+        Mon, 07 Jun 2021 11:22:25 -0700 (PDT)
 From:   Amey Narkhede <ameynarkhede03@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     alex.williamson@redhat.com,
         Raphael Norwitz <raphael.norwitz@nutanix.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v6 6/8] PCI: Add support for ACPI _RST reset method
-Date:   Mon,  7 Jun 2021 23:51:35 +0530
-Message-Id: <20210607182137.5794-7-ameynarkhede03@gmail.com>
+        Sinan Kaya <okaya@kernel.org>,
+        Amey Narkhede <ameynarkhede03@gmail.com>
+Subject: [PATCH v6 1/8] PCI: Add pcie_reset_flr to follow calling convention of other reset methods
+Date:   Mon,  7 Jun 2021 23:51:30 +0530
+Message-Id: <20210607182137.5794-2-ameynarkhede03@gmail.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210607182137.5794-1-ameynarkhede03@gmail.com>
 References: <20210607182137.5794-1-ameynarkhede03@gmail.com>
@@ -75,104 +73,203 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Shanker Donthineni <sdonthineni@nvidia.com>
+Currently there is separate function pcie_has_flr() to probe if pcie flr is
+supported by the device which does not match the calling convention
+followed by reset methods which use second function argument to decide
+whether to probe or not.  Add new function pcie_reset_flr() that follows
+the calling convention of reset methods.
 
-The _RST is a standard method specified in the ACPI specification. It
-provides a function level reset when it is described in the acpi_device
-context associated with PCI-device. Implement a new reset function
-pci_dev_acpi_reset() for probing RST method and execute if it is defined
-in the firmware.
-
-The default priority of the ACPI reset is set to below device-specific
-and above hardware resets.
-
-Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
-Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-Reviewed-by: Sinan Kaya <okaya@kernel.org>
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+Reviewed-by: Raphael Norwitz <raphael.norwitz@nutanix.com>
+Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
 ---
- drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
- drivers/pci/pci.c      |  1 +
- drivers/pci/pci.h      |  6 ++++++
- include/linux/pci.h    |  2 +-
- 4 files changed, 31 insertions(+), 1 deletion(-)
+ drivers/crypto/cavium/nitrox/nitrox_main.c |  4 +-
+ drivers/pci/pci.c                          | 62 ++++++++++++----------
+ drivers/pci/pcie/aer.c                     | 12 ++---
+ drivers/pci/quirks.c                       |  9 ++--
+ include/linux/pci.h                        |  2 +-
+ 5 files changed, 43 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index eaddbf701..40dd24cd3 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -941,6 +941,29 @@ void pci_set_acpi_fwnode(struct pci_dev *dev)
- 				   acpi_pci_find_companion(&dev->dev));
+diff --git a/drivers/crypto/cavium/nitrox/nitrox_main.c b/drivers/crypto/cavium/nitrox/nitrox_main.c
+index facc8e6bc..15d6c8452 100644
+--- a/drivers/crypto/cavium/nitrox/nitrox_main.c
++++ b/drivers/crypto/cavium/nitrox/nitrox_main.c
+@@ -306,9 +306,7 @@ static int nitrox_device_flr(struct pci_dev *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-	/* check flr support */
+-	if (pcie_has_flr(pdev))
+-		pcie_flr(pdev);
++	pcie_reset_flr(pdev, 0);
+ 
+ 	pci_restore_state(pdev);
+ 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 452351025..3bf36924c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4611,32 +4611,12 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
  }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ 
+-/**
+- * pcie_has_flr - check if a device supports function level resets
+- * @dev: device to check
+- *
+- * Returns true if the device advertises support for PCIe function level
+- * resets.
+- */
+-bool pcie_has_flr(struct pci_dev *dev)
+-{
+-	u32 cap;
+-
+-	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+-		return false;
+-
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	return cap & PCI_EXP_DEVCAP_FLR;
+-}
+-EXPORT_SYMBOL_GPL(pcie_has_flr);
+-
+ /**
+  * pcie_flr - initiate a PCIe function level reset
+  * @dev: device to reset
+  *
+- * Initiate a function level reset on @dev.  The caller should ensure the
+- * device supports FLR before calling this function, e.g. by using the
+- * pcie_has_flr() helper.
++ * Initiate a function level reset unconditionally on @dev without
++ * checking any flags and DEVCAP
+  */
+ int pcie_flr(struct pci_dev *dev)
+ {
+@@ -4659,6 +4639,31 @@ int pcie_flr(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
  
 +/**
-+ * pci_dev_acpi_reset - do a function level reset using _RST method
++ * pcie_reset_flr - initiate a PCIe function level reset
 + * @dev: device to reset
-+ * @probe: check if _RST method is included in the acpi_device context.
++ * @probe: If set, only check if the device can be reset this way.
++ *
++ * Initiate a function level reset on @dev.
 + */
-+int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
++int pcie_reset_flr(struct pci_dev *dev, int probe)
 +{
-+	acpi_handle handle = ACPI_HANDLE(&dev->dev);
++	u32 cap;
 +
-+	if (!handle || !acpi_has_method(handle, "_RST"))
++	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
++		return -ENOTTY;
++
++	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
++	if (!(cap & PCI_EXP_DEVCAP_FLR))
 +		return -ENOTTY;
 +
 +	if (probe)
 +		return 0;
 +
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_RST", NULL, NULL))) {
-+		pci_warn(dev, "ACPI _RST failed\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
++	return pcie_flr(dev);
 +}
++EXPORT_SYMBOL_GPL(pcie_reset_flr);
 +
- static bool acpi_pci_bridge_d3(struct pci_dev *dev)
+ static int pci_af_flr(struct pci_dev *dev, int probe)
  {
- 	const struct fwnode_handle *fwnode;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2302aa421..2e7efd7e7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5121,6 +5121,7 @@ static void pci_dev_restore(struct pci_dev *dev)
+ 	int pos;
+@@ -5139,11 +5144,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	rc = pci_dev_specific_reset(dev, 0);
+ 	if (rc != -ENOTTY)
+ 		return rc;
+-	if (pcie_has_flr(dev)) {
+-		rc = pcie_flr(dev);
+-		if (rc != -ENOTTY)
+-			return rc;
+-	}
++	rc = pcie_reset_flr(dev, 0);
++	if (rc != -ENOTTY)
++		return rc;
+ 	rc = pci_af_flr(dev, 0);
+ 	if (rc != -ENOTTY)
+ 		return rc;
+@@ -5174,8 +5177,9 @@ int pci_probe_reset_function(struct pci_dev *dev)
+ 	rc = pci_dev_specific_reset(dev, 1);
+ 	if (rc != -ENOTTY)
+ 		return rc;
+-	if (pcie_has_flr(dev))
+-		return 0;
++	rc = pcie_reset_flr(dev, 1);
++	if (rc != -ENOTTY)
++		return rc;
+ 	rc = pci_af_flr(dev, 1);
+ 	if (rc != -ENOTTY)
+ 		return rc;
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index ec943cee5..98077595a 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -1405,13 +1405,11 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	}
+ 
+ 	if (type == PCI_EXP_TYPE_RC_EC || type == PCI_EXP_TYPE_RC_END) {
+-		if (pcie_has_flr(dev)) {
+-			rc = pcie_flr(dev);
+-			pci_info(dev, "has been reset (%d)\n", rc);
+-		} else {
+-			pci_info(dev, "not reset (no FLR support)\n");
+-			rc = -ENOTTY;
+-		}
++		rc = pcie_reset_flr(dev, 0);
++		if (!rc)
++			pci_info(dev, "has been reset\n");
++		else
++			pci_info(dev, "not reset (no FLR support: %d)\n", rc);
+ 	} else {
+ 		rc = pci_bus_error_reset(dev);
+ 		pci_info(dev, "%s Port link has been reset (%d)\n",
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d85914afe..f977ba79a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3819,7 +3819,7 @@ static int nvme_disable_and_flr(struct pci_dev *dev, int probe)
+ 	u32 cfg;
+ 
+ 	if (dev->class != PCI_CLASS_STORAGE_EXPRESS ||
+-	    !pcie_has_flr(dev) || !pci_resource_start(dev, 0))
++	    pcie_reset_flr(dev, 1) || !pci_resource_start(dev, 0))
+ 		return -ENOTTY;
+ 
+ 	if (probe)
+@@ -3888,13 +3888,10 @@ static int nvme_disable_and_flr(struct pci_dev *dev, int probe)
   */
- const struct pci_reset_fn_method pci_reset_fn_methods[] = {
- 	{ &pci_dev_specific_reset, .name = "device_specific" },
-+	{ &pci_dev_acpi_reset, .name = "acpi" },
- 	{ &pcie_reset_flr, .name = "flr" },
- 	{ &pci_af_flr, .name = "af_flr" },
- 	{ &pci_pm_reset, .name = "pm" },
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d22da6d3c..e9cfb7cd6 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -704,7 +704,13 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
- int pci_acpi_program_hp_params(struct pci_dev *dev);
- extern const struct attribute_group pci_dev_acpi_attr_group;
- void pci_set_acpi_fwnode(struct pci_dev *dev);
-+int pci_dev_acpi_reset(struct pci_dev *dev, int probe);
- #else
-+static inline int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
-+{
-+	return -ENOTTY;
-+}
-+
- static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
- static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
+ static int delay_250ms_after_flr(struct pci_dev *dev, int probe)
  {
+-	if (!pcie_has_flr(dev))
+-		return -ENOTTY;
++	int ret = pcie_reset_flr(dev, probe);
+ 
+ 	if (probe)
+-		return 0;
+-
+-	pcie_flr(dev);
++		return ret;
+ 
+ 	msleep(250);
+ 
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6e9bc4f9c..a7f063da2 100644
+index c20211e59..20b90c205 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -49,7 +49,7 @@
- 			       PCI_STATUS_SIG_TARGET_ABORT | \
- 			       PCI_STATUS_PARITY)
- 
--#define PCI_RESET_METHODS_NUM 5
-+#define PCI_RESET_METHODS_NUM 6
- 
- /*
-  * The PCI interface treats multi-function devices as independent
+@@ -1225,7 +1225,7 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
+ 			     enum pci_bus_speed *speed,
+ 			     enum pcie_link_width *width);
+ void pcie_print_link_status(struct pci_dev *dev);
+-bool pcie_has_flr(struct pci_dev *dev);
++int pcie_reset_flr(struct pci_dev *dev, int probe);
+ int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
 -- 
 2.31.1
 
