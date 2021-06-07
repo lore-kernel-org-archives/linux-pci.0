@@ -2,115 +2,81 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C2C8C47094
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:24:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCEA5C48BD1
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 20:43:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1C0B60FE4
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C55FD61153
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 20:43:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230468AbhFGSZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 14:25:52 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:42550 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230517AbhFGSZv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:25:51 -0400
-Received: by mail-pg1-f171.google.com with SMTP id i34so8055694pgl.9;
-        Mon, 07 Jun 2021 11:23:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=IWfL/IMqwLqFbs476iJcEczTrUNwgxx26bfBJrumYEY=;
-        b=t4niVb4NyxkyQjtsiCndAlVFKwNMPVVuC6HsFIwj3dBdzmpr423OuRwwn2qZr+O/t3
-         x4PYH0E5CW5CSU+FEXmWq7QZKJmQ03tSIROUrSJ/M+cjWlQx1NFqumi1rf3lwZKWGxGO
-         9PBaJtSu0u5eJP6EVO9grTVfeOLaMf5zF3ufn7ZRKxqASBAu9Tusk7Rb8f685CRj20Jc
-         VG3qeyPnXuepqRr26Hu7jLK2nq4J2BuwQCztMFlGirVCScY9BDezVWSmTurrtIIo0pCT
-         B19y8DzHNpYZ+JcO0/bP0FPIE0tqULvyay/8sMYOmMAw7ZnK0iqDw4QgGzWUibTC27Sg
-         yu8g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=IWfL/IMqwLqFbs476iJcEczTrUNwgxx26bfBJrumYEY=;
-        b=ejZGAlVyffLlklTpn/942IQG6u170FObS1lDN12ligyuYiuhesYfPSNUzxAyeuDb0a
-         /B6jsc8lGg8FN1R9JuSEkszQANLuMMTStby67p3NrJjUjNqB0G5CcW04tk1Rw8fsqQ5q
-         LGLjdZg+2IzYytfFlB0h2SRxMIYuSQ0VGga4aOh5wzbJMoIMMs3UIY2I/4Rn0TIvNNZA
-         GBVnVHxp8H4wJvxHhEhNiwALvLwNh80jja5ktQbalw6QYoFqhyv+9ZXbuHy/VczrhG33
-         6PWBKqdIALDYBpBheEKx+w2R30JUNMV6jfi5GlSvQguxtsvqKpgJDVwTQSDJYKbDIGUb
-         glhA==
-X-Gm-Message-State: AOAM532Wk25G0QND/ZMEILHWYfetHvGYw/Im93WK9ZDYu5DLCxd5t8gd
-        JP6aYFggpU+jF6xNiVwTXQU=
-X-Google-Smtp-Source: ABdhPJy+jgkF8ojBGMdLKOcnpcqCKTBTJcOe0/s5bziiC8emszZ93nSxgbMja9k9wjTTnzO44vwcdQ==
-X-Received: by 2002:aa7:97b8:0:b029:2e9:df45:f83f with SMTP id d24-20020aa797b80000b02902e9df45f83fmr18817831pfq.10.1623090166822;
-        Mon, 07 Jun 2021 11:22:46 -0700 (PDT)
-Received: from localhost.localdomain ([103.200.106.115])
-        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 11:22:46 -0700 (PDT)
-From:   Amey Narkhede <ameynarkhede03@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     alex.williamson@redhat.com,
-        Raphael Norwitz <raphael.norwitz@nutanix.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v6 7/8] PCI: Enable NO_BUS_RESET quirk for Nvidia GPUs
-Date:   Mon,  7 Jun 2021 23:51:36 +0530
-Message-Id: <20210607182137.5794-8-ameynarkhede03@gmail.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210607182137.5794-1-ameynarkhede03@gmail.com>
-References: <20210607182137.5794-1-ameynarkhede03@gmail.com>
+        id S230330AbhFGUpB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jun 2021 16:45:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60002 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230291AbhFGUpB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Jun 2021 16:45:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A547260FDA;
+        Mon,  7 Jun 2021 20:43:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623098589;
+        bh=PkOSHdutYw/N1gzeRvQ9b1rv0ngrRIeGldIWf4KjaWk=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Cb5UObu2jIdMLEWPFdRmcCs8u5B0K2+NDM3EBN/vNiLPYNup8WaqNUxS79GKNzlST
+         8LzhGAkJkdhKZouoPCOjQ00YDr/zP0cXB58wksOaE8BqKXXST51Bs+mx27LAw3E7dB
+         rMbus+xvtT6y0eoxilCvo2FU3KCpI5xtSiS6d5h7FNJVmqhPB1bWNEP7vcgeZf9Rby
+         DSp9QmyRn/cH0KBo/HQt/aAqUurqf8BHroB/qZlzggvfqk/kPe2YQedFnh+JLMZ0DN
+         fnJqJ2FIZEHF+kfRof08UtCxze4qMp9MSJoAwUhm8l8HH9D7gMXYz1cJlgFiuG8Hg0
+         QhrPsWwM10tvA==
+Subject: Re: [PATCH V2 1/4] PCI/portdrv: Don't disable device during shutdown
+To:     Huacai Chen <chenhuacai@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, huangshuai@loongson.cn
+Cc:     Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Tiezhu Yang <yangtiezhu@loongson.cn>
+References: <20210528071503.1444680-2-chenhuacai@loongson.cn>
+ <20210528214309.GA1523480@bjorn-Precision-5520>
+ <CAAhV-H4paNzoF4tEJd1_Z2VgBr64t3evfjdmrrA3CZMw=AXrGw@mail.gmail.com>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <21b1495f-689f-2d75-d896-2a33c03b186b@kernel.org>
+Date:   Mon, 7 Jun 2021 23:43:05 +0300
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAAhV-H4paNzoF4tEJd1_Z2VgBr64t3evfjdmrrA3CZMw=AXrGw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Shanker Donthineni <sdonthineni@nvidia.com>
+On 6/4/2021 12:24 PM, Huacai Chen wrote:
+>> So you need to explain why we need to allow DMA from those devices
+>> even after we shutdown the port.  "It makes reboot work" is not a
+>> sufficient explanation.
+> I think only the designer of LS7A can tell us why. So, Mr. Shuai
+> Huang, could you please explain this?
+> 
 
-On select platforms, some Nvidia GPU devices do not work with SBR.
-Triggering SBR would leave the device inoperable for the current
-system boot. It requires a system hard-reboot to get the GPU device
-back to normal operating condition post-SBR. For the affected
-devices, enable NO_BUS_RESET quirk to fix the issue.
+Could there be some kind of a shutdown/init problem on your graphics
+card driver?
 
-This issue will be fixed in the next generation of hardware.
+During shutdown, remove() callback of all endpoints get called. This is
+the opportunity for your graphics driver to put hardware into safe
+state.
 
-Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
-Reviewed-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/quirks.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+If there is a problem with the hardware/driver, it should be a quirk as
+opposed to changing the default safe behavior for all devices.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e86cf4a3b..45a8c3caa 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3546,6 +3546,18 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
- 	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
- }
- 
-+/*
-+ * Some Nvidia GPU devices do not work with bus reset, SBR needs to be
-+ * prevented for those affected devices.
-+ */
-+static void quirk_nvidia_no_bus_reset(struct pci_dev *dev)
-+{
-+	if ((dev->device & 0xffc0) == 0x2340)
-+		quirk_no_bus_reset(dev);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
-+			 quirk_nvidia_no_bus_reset);
-+
- /*
-  * Some Atheros AR9xxx and QCA988x chips do not behave after a bus reset.
-  * The device will throw a Link Down error on AER-capable systems and
--- 
-2.31.1
+The port driver here prevents memory from getting corrupted by rogue
+hardware. There is a window during kexec where hardware can write to
+system memory addresses if IOVA addresses and system memory addresses
+overlap.
 
