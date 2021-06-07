@@ -2,60 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B94D7C47094
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E50C4743F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99B6361003
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49DEC611C0
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jun 2021 18:22:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230291AbhFGSY3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 14:24:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48830 "EHLO
+        id S230410AbhFGSYa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jun 2021 14:24:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230287AbhFGSY2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:24:28 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24B07C061789;
-        Mon,  7 Jun 2021 11:22:37 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id e20so2540002pgg.0;
-        Mon, 07 Jun 2021 11:22:37 -0700 (PDT)
+        with ESMTP id S230374AbhFGSY3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jun 2021 14:24:29 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49C0CC061766;
+        Mon,  7 Jun 2021 11:22:23 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id o9so11648093pgd.2;
+        Mon, 07 Jun 2021 11:22:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
-        b=MIjew5yVD0th6cQq/FJP+aarKoKhSpZOm1Qah4059J/tpntR2hNOgmF7HxVrje22at
-         l9ufVrRh9X8TmNc3bk5zFG8P7g9Acd5xnpTopJ0lk7w8Rdy8lYdIeEeuLxyQZvN3rPqK
-         fzPm8DVCCWXffNDyIb0uORmHygVzBAamqkQmiTuRsdkBxj8bZZV7EBa+pAEjQqDETyJ6
-         1X4ypa4Ue3ijxLPi4iaMblnb3OLi+tucUboDVGzIgGMdkFKN7IMZE3d+pcMYzXFQl85j
-         F48zPKv7rk3XkLak0Wv43oZ+Dv72CCVHT3DB3oc/1kJC6DBW/BJyI6W6vTs0OlYIF7fx
-         lI8g==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KOpjpKhJVE8UzEqMVCHON7lHpeTVYDRI0KE/MmWnE44=;
+        b=qPXdVPe4D6QysWvy9E8c9H6dxc5vFPtkaXyY3Chtjmv0LxlrMauDEaqgz4LzfLaMy5
+         RIkgS2f4RSO7cf4d1/WrnwExz81toNYGCNrwfTSzwfkeTs/VuOsq9hdu6HxvilK7e1s3
+         mo00GWHyAqOXin5oQlvqnDPDcHX4Ez7WQb0CsZzJWIQBb7uC9iv2XmctDJ01AbN6SB9k
+         Hfsxchpj/q55Nwvdn2N3gXt9hth5C6TXRDgTbVrCyZrYR84DCirm0fqNokJ8CgBthZNZ
+         YJzowkz5QocoR12Xhip/6Grorp71D7yxqb+rtVQHIPpdg1WXTMY7gTmCa0eL0f4zbfms
+         wnaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
-        b=QkRQK4EhGfYlTgsWzP/p/tRUioe1rUhuLQ8ln/Wf6f2Hw4igs0bj4K6J8LmlgDas59
-         HdWK/5/3c+yCQER/rSAWOwt50mDbDb7Xa3ENmNOSfBTPY1PnVlATdWjKAGwOZlBDQriA
-         6bUr3v8Oj7QZPgQaRyM679K9893YVQhYBLs1IWGgxPr5gTosEFU3UYHttmlaAwfc2HeN
-         fwTmH5k1Yoneq+eMcGNMXaV9RbRiMHHYA29nE6MRL4XP8m6su/U5eP1JskVN2QbvbAo9
-         /gMjE4lq2MqeSRG+oY8MJBRDRoNmL2sOAKbHM1qa7VFuwbGaWvoyAHEceJ9Gn+YPLOwt
-         w7pQ==
-X-Gm-Message-State: AOAM530MRk3rmwIjxCd6636/aSYDwvm8hNmk2ZS8RpYpatabbuE2aqfN
-        XcLiDUXYmr1HoixROoAhyNQVcEIyBvfugQ==
-X-Google-Smtp-Source: ABdhPJxC5P7m1JL/YO3vsYyXTRhcXG5b+o58cWEj43c18k0KVk0MAfK1ZE8CZscsvaTxj2z2VCpfhw==
-X-Received: by 2002:a63:404:: with SMTP id 4mr9761593pge.180.1623090156731;
-        Mon, 07 Jun 2021 11:22:36 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KOpjpKhJVE8UzEqMVCHON7lHpeTVYDRI0KE/MmWnE44=;
+        b=GO8En6n58H+6zBdXjHf0XCfgwX2tIwYgFfm17lQWsd6xOE7kl5g5an5KWRjFmwRx6k
+         qBALc9Tsc9fQQYfikQenGzOJS4wiB6uxWjql9CYygmc5SezylG6OvVUXi980LEKiCwcX
+         iLLSRbwZy0UQqxDG+qeDz+GJuN9ohXR5GxFjR4Z0TN1yaNLmHugJpgiO5lb2EEf8obmP
+         frBqBVIyC6Svv5FbEm+CyUGlpp7bNc8gVoklW4vjKZDSzOckdHNapZY06FGdrSg4WPjG
+         lxkR7G+yDn13g8MW6NwCho2MjKWNNTbnvch2ARJs2jB60Zoha5TWCWL9gPxo+frt+l5H
+         F8jw==
+X-Gm-Message-State: AOAM532nn75/YaUJlhqoQnogKzocfFD+fDBoc79CeFS316szFPRsbTwK
+        3AjYOypdG5KIJiW2l/XNiiM=
+X-Google-Smtp-Source: ABdhPJy8Uu6z04Cv48koy1dbTA3UckLhD9H6pq4UvaZ58LENJtgZ/d2JPabOVxcShW4TKCjsBBD7yg==
+X-Received: by 2002:a63:4d0:: with SMTP id 199mr19322070pge.423.1623090142825;
+        Mon, 07 Jun 2021 11:22:22 -0700 (PDT)
 Received: from localhost.localdomain ([103.200.106.115])
-        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.33
+        by smtp.googlemail.com with ESMTPSA id k1sm8687656pfa.30.2021.06.07.11.22.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 11:22:36 -0700 (PDT)
+        Mon, 07 Jun 2021 11:22:22 -0700 (PDT)
 From:   Amey Narkhede <ameynarkhede03@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     alex.williamson@redhat.com,
@@ -64,193 +63,96 @@ Cc:     alex.williamson@redhat.com,
         kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
         Sinan Kaya <okaya@kernel.org>,
         Amey Narkhede <ameynarkhede03@gmail.com>
-Subject: [PATCH v6 4/8] PCI/sysfs: Allow userspace to query and set device reset mechanism
-Date:   Mon,  7 Jun 2021 23:51:33 +0530
-Message-Id: <20210607182137.5794-5-ameynarkhede03@gmail.com>
+Subject: [PATCH v6 0/8] Expose and manage PCI device reset
+Date:   Mon,  7 Jun 2021 23:51:29 +0530
+Message-Id: <20210607182137.5794-1-ameynarkhede03@gmail.com>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210607182137.5794-1-ameynarkhede03@gmail.com>
-References: <20210607182137.5794-1-ameynarkhede03@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add reset_method sysfs attribute to enable user to
-query and set user preferred device reset methods and
-their ordering.
+PCI and PCIe devices may support a number of possible reset mechanisms
+for example Function Level Reset (FLR) provided via Advanced Feature or
+PCIe capabilities, Power Management reset, bus reset, or device specific reset.
+Currently the PCI subsystem creates a policy prioritizing these reset methods
+which provides neither visibility nor control to userspace.
 
-Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
----
- Documentation/ABI/testing/sysfs-bus-pci |  16 ++++
- drivers/pci/pci-sysfs.c                 | 118 ++++++++++++++++++++++++
- 2 files changed, 134 insertions(+)
+Expose the reset methods available per device to userspace, via sysfs
+and allow an administrative user or device owner to have ability to
+manage per device reset method priorities or exclusions.
+This feature aims to allow greater control of a device for use cases
+as device assignment, where specific device or platform issues may
+interact poorly with a given reset method, and for which device specific
+quirks have not been developed.
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index ef00fada2..cf6dbbb3c 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -121,6 +121,22 @@ Description:
- 		child buses, and re-discover devices removed earlier
- 		from this part of the device tree.
- 
-+What:		/sys/bus/pci/devices/.../reset_method
-+Date:		March 2021
-+Contact:	Amey Narkhede <ameynarkhede03@gmail.com>
-+Description:
-+		Some devices allow an individual function to be reset
-+		without affecting other functions in the same slot.
-+		For devices that have this support, a file named reset_method
-+		will be present in sysfs. Reading this file will give names
-+		of the device supported reset methods and their ordering.
-+		Writing the name or comma separated list of names of any of
-+		the device supported reset methods to this file will set the
-+		reset methods and their ordering to be used when resetting
-+		the device. Writing empty string to this file will disable
-+		ability to reset the device and writing "default" will return
-+		to the original value.
-+
- What:		/sys/bus/pci/devices/.../reset
- Date:		July 2009
- Contact:	Michael S. Tsirkin <mst@redhat.com>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 316f70c3e..52def79aa 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1334,6 +1334,123 @@ static const struct attribute_group pci_dev_rom_attr_group = {
- 	.is_bin_visible = pci_dev_rom_attr_is_visible,
- };
- 
-+static ssize_t reset_method_show(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	ssize_t len = 0;
-+	int i, prio;
-+
-+	for (prio = PCI_RESET_METHODS_NUM; prio; prio--) {
-+		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
-+			if (prio == pdev->reset_methods[i]) {
-+				len += sysfs_emit_at(buf, len, "%s%s",
-+						     len ? "," : "",
-+						     pci_reset_fn_methods[i].name);
-+				break;
-+			}
-+		}
-+
-+		if (i == PCI_RESET_METHODS_NUM)
-+			break;
-+	}
-+
-+	if (len)
-+		len += sysfs_emit_at(buf, len, "\n");
-+
-+	return len;
-+}
-+
-+static ssize_t reset_method_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	u8 reset_methods[PCI_RESET_METHODS_NUM];
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u8 prio = PCI_RESET_METHODS_NUM;
-+	char *name, *options;
-+	int i;
-+
-+	if (count >= (PAGE_SIZE - 1))
-+		return -EINVAL;
-+
-+	options = kstrndup(buf, count, GFP_KERNEL);
-+	if (!options)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Initialize reset_method such that 0xff indicates
-+	 * supported but not currently enabled reset methods
-+	 * as we only use priority values which are within
-+	 * the range of PCI_RESET_FN_METHODS array size
-+	 */
-+	for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
-+		reset_methods[i] = pdev->reset_methods[i] ? 0xff : 0;
-+
-+	if (sysfs_streq(options, "")) {
-+		pci_warn(pdev, "All device reset methods disabled by user");
-+		goto set_reset_methods;
-+	}
-+
-+	if (sysfs_streq(options, "default")) {
-+		for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
-+			reset_methods[i] = reset_methods[i] ? prio-- : 0;
-+		goto set_reset_methods;
-+	}
-+
-+	while ((name = strsep(&options, ",")) != NULL) {
-+		if (sysfs_streq(name, ""))
-+			continue;
-+
-+		name = strim(name);
-+
-+		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
-+			if (reset_methods[i] &&
-+			    sysfs_streq(name, pci_reset_fn_methods[i].name)) {
-+				reset_methods[i] = prio--;
-+				break;
-+			}
-+		}
-+
-+		if (i == PCI_RESET_METHODS_NUM) {
-+			kfree(options);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	if (reset_methods[0] &&
-+	    reset_methods[0] != PCI_RESET_METHODS_NUM)
-+		pci_warn(pdev, "Device specific reset disabled/de-prioritized by user");
-+
-+set_reset_methods:
-+	kfree(options);
-+	memcpy(pdev->reset_methods, reset_methods, sizeof(reset_methods));
-+	return count;
-+}
-+static DEVICE_ATTR_RW(reset_method);
-+
-+static struct attribute *pci_dev_reset_method_attrs[] = {
-+	&dev_attr_reset_method.attr,
-+	NULL,
-+};
-+
-+static umode_t pci_dev_reset_method_attr_is_visible(struct kobject *kobj,
-+						    struct attribute *a, int n)
-+{
-+	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
-+
-+	if (!pci_reset_supported(pdev))
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+static const struct attribute_group pci_dev_reset_method_attr_group = {
-+	.attrs = pci_dev_reset_method_attrs,
-+	.is_visible = pci_dev_reset_method_attr_is_visible,
-+};
-+
- static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
- 			   const char *buf, size_t count)
- {
-@@ -1491,6 +1608,7 @@ const struct attribute_group *pci_dev_groups[] = {
- 	&pci_dev_config_attr_group,
- 	&pci_dev_rom_attr_group,
- 	&pci_dev_reset_attr_group,
-+	&pci_dev_reset_method_attr_group,
- 	&pci_dev_vpd_attr_group,
- #ifdef CONFIG_DMI
- 	&pci_dev_smbios_attr_group,
--- 
+Changes in v6:
+	- Address Bjorn's and Krzysztof's review comments
+	- Add Shanker's updated patches along with new
+	  "PCI: Setup ACPI_COMPANION early" patch
+
+Changes in v5:
+	- Rebase the series over pci/reset branch of
+	  Bjorn's pci tree to avoid merge conflicts
+	  caused by recent changes in existing reset
+	  sysfs attribute
+
+Changes in v4:
+	- Change the order or strlen and strim in reset_method_store
+	  function to avoid extra strlen call.
+	- Use consistent terminology in new
+	  pci_reset_mode enum and rename the probe argument
+	  of reset functions.
+
+Changes in v3:
+	- Dropped "PCI: merge slot and bus reset implementations" which was
+	  already accepted separately
+	- Grammar fixes
+	- Added Shanker's patches which were rebased on v2 of this series
+	- Added "PCI: Change the type of probe argument in reset functions"
+	  and additional user input sanitization code in reset_method_store
+	  function per review feedback from Krzysztof
+
+Changes in v2:
+	- Use byte array instead of bitmap to keep track of
+	  ordering of reset methods
+	- Fix incorrect use of reset_fn field in octeon driver
+	- Allow writing comma separated list of names of supported reset
+	  methods to reset_method sysfs attribute
+	- Writing empty string instead of "none" to reset_method attribute
+	  disables ability of reset the device
+
+Amey Narkhede (5):
+  PCI: Add pcie_reset_flr to follow calling convention of other reset
+    methods
+  PCI: Add new array for keeping track of ordering of reset methods
+  PCI: Remove reset_fn field from pci_dev
+  PCI/sysfs: Allow userspace to query and set device reset mechanism
+  PCI: Change the type of probe argument in reset functions
+
+Shanker Donthineni (3):
+  PCI: Setup ACPI_COMPANION early
+  PCI: Add support for ACPI _RST reset method
+  PCI: Enable NO_BUS_RESET quirk for Nvidia GPUs
+
+ Documentation/ABI/testing/sysfs-bus-pci       |  16 ++
+ drivers/crypto/cavium/nitrox/nitrox_main.c    |   4 +-
+ .../ethernet/cavium/liquidio/lio_vf_main.c    |   2 +-
+ drivers/pci/hotplug/pciehp.h                  |   2 +-
+ drivers/pci/hotplug/pciehp_hpc.c              |   4 +-
+ drivers/pci/pci-acpi.c                        |  39 ++-
+ drivers/pci/pci-sysfs.c                       | 120 ++++++++-
+ drivers/pci/pci.c                             | 238 +++++++++++-------
+ drivers/pci/pci.h                             |  22 +-
+ drivers/pci/pcie/aer.c                        |  12 +-
+ drivers/pci/probe.c                           |   6 +-
+ drivers/pci/quirks.c                          |  54 ++--
+ drivers/pci/remove.c                          |   1 -
+ include/linux/pci.h                           |  16 +-
+ include/linux/pci_hotplug.h                   |   2 +-
+ 15 files changed, 393 insertions(+), 145 deletions(-)
+
+--
 2.31.1
-
