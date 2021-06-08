@@ -2,155 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B24C47082
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 05:50:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 689DEC4743E
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 06:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BAD861289
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 05:50:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 530E06124C
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 06:56:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230222AbhFHFwl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jun 2021 01:52:41 -0400
-Received: from mail-ot1-f46.google.com ([209.85.210.46]:41917 "EHLO
-        mail-ot1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230226AbhFHFwi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jun 2021 01:52:38 -0400
-Received: by mail-ot1-f46.google.com with SMTP id 36-20020a9d0ba70000b02902e0a0a8fe36so19218812oth.8;
-        Mon, 07 Jun 2021 22:50:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=fW5wfb8x41zglgHyAcUMAuIIBSAY+Ni+6lOFyDzIdFA=;
-        b=U9LTh4XCT1IWjmtmFLeSM4suqXmmEe/ALoHU9zT9il0Do+8j6r5Ib/HNg0giZJ0/ui
-         SQE4iZwsTAie99pWRhL5UIpd9fSFv1txr0Ud3MY5PjAz1GIaX1lFH3By1fvna95KwB0j
-         Co4x/+qxvVHzUTeKyw96P7SIw8BW/ZhqXhYyJxFRIHZ+UEcNQUlW53JTrBFdMXV1rvBD
-         VRA6k2a++WGIZBjf9nmhvsMWfmkbdcLoa/Q4kQ7OzxIXl3Wwe5iSGvdDpWX99/7iZ7BH
-         vfYVmy7UGjlVfJTQkL1E0Xh80edU4k/QWymk8EvtpaSloFec24npe4T09AV6mHpk3Ku1
-         9qMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=fW5wfb8x41zglgHyAcUMAuIIBSAY+Ni+6lOFyDzIdFA=;
-        b=Ol5Y9gRF1rzyQ0IztjwUOsEtq1KtG7kjrDuZWo/gHT0KaTKTYKwntmkYvZMGnSqfsY
-         TDBpAu6AZ5wq5bY9xUeZIVpsV9ZeRnKQO/YcXHdGxITCmjOnmYh0rGVj+40rvYINovIE
-         XPZm3BbeCHZlrkpHDw+O/WvJHUcbQC6YaIof4oiHFZxmJdbaIw+s1LuiSjFVHPrxZxaj
-         8IocP5fc278N9PTqZbBAlpNPMiAqrwn1iSgQoNeafLpyc1QHTZBPbE1lpGtea6JiXqJk
-         Ljy83l/UU0a5gs4ijwBtGEJLgL3LRJBABervvd0/uLEUvr8vcfIhpdfC6IHt9gt5cq2Z
-         vjKA==
-X-Gm-Message-State: AOAM532Ha92FwqeBNzBwrmKYgJMm0SvuAneUiHuvkFw61QAou+V9kD4N
-        m1rotJuYc6kjo+DdOLNn0B0=
-X-Google-Smtp-Source: ABdhPJx1T3kEivj7whKbneIcR7gSz9veM4lk0UFN3Op+vMaKz7HEOFm8ZhjuL9jD8j5KPSkfCKoUnw==
-X-Received: by 2002:a05:6830:34a7:: with SMTP id c39mr16451469otu.357.1623131370062;
-        Mon, 07 Jun 2021 22:49:30 -0700 (PDT)
-Received: from localhost.localdomain (static-198-54-128-46.cust.tzulo.com. [198.54.128.46])
-        by smtp.googlemail.com with ESMTPSA id o2sm2489730oom.26.2021.06.07.22.49.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jun 2021 22:49:29 -0700 (PDT)
-From:   Amey Narkhede <ameynarkhede03@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     alex.williamson@redhat.com,
-        Raphael Norwitz <raphael.norwitz@nutanix.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
-        Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH v7 5/8] PCI: Setup ACPI_COMPANION early
-Date:   Tue,  8 Jun 2021 11:18:54 +0530
-Message-Id: <20210608054857.18963-6-ameynarkhede03@gmail.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210608054857.18963-1-ameynarkhede03@gmail.com>
-References: <20210608054857.18963-1-ameynarkhede03@gmail.com>
+        id S229507AbhFHG55 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jun 2021 02:57:57 -0400
+Received: from regular1.263xmail.com ([211.150.70.206]:47228 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230323AbhFHG54 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jun 2021 02:57:56 -0400
+X-Greylist: delayed 406 seconds by postgrey-1.27 at vger.kernel.org; Tue, 08 Jun 2021 02:57:56 EDT
+Received: from localhost (unknown [192.168.167.32])
+        by regular1.263xmail.com (Postfix) with ESMTP id 92D1C1B43;
+        Tue,  8 Jun 2021 14:48:47 +0800 (CST)
+X-MAIL-GRAY: 0
+X-MAIL-DELIVERY: 1
+X-ADDR-CHECKED4: 1
+X-ANTISPAM-LEVEL: 2
+X-SKE-CHECKED: 1
+X-ABS-CHECKED: 1
+Received: from [172.16.12.64] (unknown [58.22.7.114])
+        by smtp.263.net (postfix) whith ESMTP id P30809T139674015004416S1623134925256256_;
+        Tue, 08 Jun 2021 14:48:46 +0800 (CST)
+X-IP-DOMAINF: 1
+X-UNIQUE-TAG: <f6723536972b33749120c29e955b16f5>
+X-RL-SENDER: shawn.lin@rock-chips.com
+X-SENDER: lintao@rock-chips.com
+X-LOGIN-NAME: shawn.lin@rock-chips.com
+X-FST-TO: javierm@redhat.com
+X-RCPT-COUNT: 11
+X-SENDER-IP: 58.22.7.114
+X-ATTACHMENT-NUM: 0
+X-System-Flag: 0
+Message-ID: <c3f49fe5-edbe-2889-bd59-92891adc807b@rock-chips.com>
+Date:   Tue, 8 Jun 2021 14:48:45 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101
+ Thunderbird/90.0
+Cc:     shawn.lin@rock-chips.com, Peter Robinson <pbrobinson@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: =?UTF-8?Q?Re=3a_=5bPATCH=5d_PCI=3a_rockchip=3a_Avoid_accessing_PCIe?=
+ =?UTF-8?B?IHJlZ2lzdGVycyB3aXRoIGNsb2NrcyBnYXRlZOOAkOivt+azqOaEj++8jOmCrg==?=
+ =?UTF-8?Q?=e4=bb=b6=e7=94=b1linux-rockchip-bounces+shawn=2elin=3drock-chips?=
+ =?UTF-8?B?LmNvbUBsaXN0cy5pbmZyYWRlYWQub3Jn5Luj5Y+R44CR?=
+To:     Javier Martinez Canillas <javierm@redhat.com>
+References: <20210607213328.1711570-1-javierm@redhat.com>
+From:   Shawn Lin <shawn.lin@rock-chips.com>
+In-Reply-To: <20210607213328.1711570-1-javierm@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Shanker Donthineni <sdonthineni@nvidia.com>
+On 2021/6/8 5:33, Javier Martinez Canillas wrote:
+> IRQ handlers that are registered for shared interrupts can be called at
+> any time after have been registered using the request_irq() function.
+> 
+> It's up to drivers to ensure that's always safe for these to be called.
+> 
+> Both the "pcie-sys" and "pcie-client" interrupts are shared, but since
+> their handlers are registered very early in the probe function, an error
+> later can lead to these handlers being executed before all the required
+> have been properly setup.
+> 
+> For example, the rockchip_pcie_read() function used by these IRQ handlers
+> expects that some PCIe clocks will already be enabled, otherwise trying
+> to access the PCIe registers causes the read to hang and never return.
+> 
+> The CONFIG_DEBUG_SHIRQ option tests if drivers are able to cope with their
+> shared interrupt handlers being called, by generating a spurious interrupt
+> just before a shared interrupt handler is unregistered.
+> 
+> But this means that if the option is enabled, any error in the probe path
+> of this driver could lead to one of the IRQ handlers to be executed.
+> 
+> In a rockpro64 board, the following sequence of events happens:
+> 
+>    1) "pcie-sys" IRQ is requested and its handler registered.
+>    2) "pcie-client" IRQ is requested and its handler registered.
+>    3) probe later fails due readl_poll_timeout() returning a timeout.
+>    4) the "pcie-sys" IRQ is unregistered.
+>    5) CONFIG_DEBUG_SHIRQ triggers a spurious interrupt.
+>    6) "pcie-client" IRQ handler is called for this spurious interrupt.
+>    7) IRQ handler tries to read PCIE_CLIENT_INT_STATUS with clocks gated.
+>    8) the machine hangs because rockchip_pcie_read() call never returns.
+> 
+> To avoid cases like this, the handlers don't have to be registered until
+> very late in the probe function, once all the resources have been setup.
+> 
+> So let's just move all the IRQ init before the pci_host_probe() call, that
+> will prevent issues like this and seems to be the correct thing to do too.
+> 
 
-Currently, the ACPI_COMPANION is not available until device_add().
-The software features which have dependency on ACPI fwnode properties
-and needs to be handled before device_add() will not work. One use
-case, software has to check the existence of _RST method to support
-ACPI based reset mechanism.
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-This patch adds a new function pci_set_acpi_fwnode() for setting the
-ACPI_COMPANION, same code which is available in acpi_pci_bridge_d3().
+Thanks.
 
-Call pci_set_acpi_fwnode() from pci_scan_device() to fix the issue.
+> Reported-by: Peter Robinson <pbrobinson@gmail.com>
+> Signed-off-by: Javier Martinez Canillas <javierm@redhat.com>
+> ---
+> 
+>   drivers/pci/controller/pcie-rockchip-host.c | 12 ++++++------
+>   1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+> index f1d08a1b159..78d04ac29cd 100644
+> --- a/drivers/pci/controller/pcie-rockchip-host.c
+> +++ b/drivers/pci/controller/pcie-rockchip-host.c
+> @@ -592,10 +592,6 @@ static int rockchip_pcie_parse_host_dt(struct rockchip_pcie *rockchip)
+>   	if (err)
+>   		return err;
+>   
+> -	err = rockchip_pcie_setup_irq(rockchip);
+> -	if (err)
+> -		return err;
+> -
+>   	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
+>   	if (IS_ERR(rockchip->vpcie12v)) {
+>   		if (PTR_ERR(rockchip->vpcie12v) != -ENODEV)
+> @@ -973,8 +969,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>   	if (err)
+>   		goto err_vpcie;
+>   
+> -	rockchip_pcie_enable_interrupts(rockchip);
+> -
+>   	err = rockchip_pcie_init_irq_domain(rockchip);
+>   	if (err < 0)
+>   		goto err_deinit_port;
+> @@ -992,6 +986,12 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>   	bridge->sysdata = rockchip;
+>   	bridge->ops = &rockchip_pcie_ops;
+>   
+> +	err = rockchip_pcie_setup_irq(rockchip);
+> +	if (err)
+> +		goto err_remove_irq_domain;
+> +
+> +	rockchip_pcie_enable_interrupts(rockchip);
+> +
+>   	err = pci_host_probe(bridge);
+>   	if (err < 0)
+>   		goto err_remove_irq_domain;
+> 
 
-Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
----
- drivers/pci/pci-acpi.c | 12 ++++++++----
- drivers/pci/pci.h      |  2 ++
- drivers/pci/probe.c    |  2 ++
- 3 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 36bc23e21..eaddbf701 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -934,6 +934,13 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
- 
- static struct acpi_device *acpi_pci_find_companion(struct device *dev);
- 
-+void pci_set_acpi_fwnode(struct pci_dev *dev)
-+{
-+	if (!ACPI_COMPANION(&dev->dev) && !pci_dev_is_added(dev))
-+		ACPI_COMPANION_SET(&dev->dev,
-+				   acpi_pci_find_companion(&dev->dev));
-+}
-+
- static bool acpi_pci_bridge_d3(struct pci_dev *dev)
- {
- 	const struct fwnode_handle *fwnode;
-@@ -945,11 +952,8 @@ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
- 		return false;
- 
- 	/* Assume D3 support if the bridge is power-manageable by ACPI. */
-+	pci_set_acpi_fwnode(dev);
- 	adev = ACPI_COMPANION(&dev->dev);
--	if (!adev && !pci_dev_is_added(dev)) {
--		adev = acpi_pci_find_companion(&dev->dev);
--		ACPI_COMPANION_SET(&dev->dev, adev);
--	}
- 
- 	if (adev && acpi_device_power_manageable(adev))
- 		return true;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 13ec6bd6f..d22da6d3c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -703,7 +703,9 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
- #ifdef CONFIG_ACPI
- int pci_acpi_program_hp_params(struct pci_dev *dev);
- extern const struct attribute_group pci_dev_acpi_attr_group;
-+void pci_set_acpi_fwnode(struct pci_dev *dev);
- #else
-+static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
- static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
- {
- 	return -ENODEV;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 90fd4f61f..dfefa5ed0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2359,6 +2359,8 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 		return NULL;
- 	}
- 
-+	pci_set_acpi_fwnode(dev);
-+
- 	return dev;
- }
- 
--- 
-2.31.1
 
