@@ -2,280 +2,256 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5AF0C47095
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 02:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D27C9C47082
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 05:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A66F360241
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 02:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF2F861287
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jun 2021 05:49:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231270AbhFHCVl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jun 2021 22:21:41 -0400
-Received: from mga11.intel.com ([192.55.52.93]:42048 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230209AbhFHCVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Jun 2021 22:21:41 -0400
-IronPort-SDR: PGB0gMrt1QQfNjVSGwqrFREn2P5zPPS+7Pz+tThu+mzbgksa7VrdC6vZQY7vCqFziGWM2q2mvl
- Enscl6taYBew==
-X-IronPort-AV: E=McAfee;i="6200,9189,10008"; a="201738758"
-X-IronPort-AV: E=Sophos;i="5.83,256,1616482800"; 
-   d="scan'208";a="201738758"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2021 19:19:47 -0700
-IronPort-SDR: RcnwwTcdgtUWUjda98+FTyGgmfaPQZmpYDoqUjeTXFPUD1GPIrChHqpPMoEiLx46M3JTZ4E1sY
- v+NlJrT+Xq/w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,256,1616482800"; 
-   d="scan'208";a="401896550"
-Received: from lkp-server02.sh.intel.com (HELO 1ec8406c5392) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 07 Jun 2021 19:19:45 -0700
-Received: from kbuild by 1ec8406c5392 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1lqRLE-0008hK-TZ; Tue, 08 Jun 2021 02:19:44 +0000
-Date:   Tue, 08 Jun 2021 10:18:45 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/virtualization] BUILD SUCCESS
- abcb1449378eef5df7b99967da78eb6374ba7b7f
-Message-ID: <60bed385.2BhlmYQbsyJcjEz+%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S229556AbhFHFvd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jun 2021 01:51:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57202 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229507AbhFHFvd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jun 2021 01:51:33 -0400
+Received: from mail-oi1-x234.google.com (mail-oi1-x234.google.com [IPv6:2607:f8b0:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D2F9C061574;
+        Mon,  7 Jun 2021 22:49:26 -0700 (PDT)
+Received: by mail-oi1-x234.google.com with SMTP id u11so20502353oiv.1;
+        Mon, 07 Jun 2021 22:49:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
+        b=SAutUqtz+4NRqO7uYwZ+5el2wu14Cw3paIbS7yvlhgtFT6x8jnYfInvAofMUlGEzIE
+         v+Pw0Zu9Pepp8qDh25bqkM1l6aCYDmxyOfidJLB8yz33giAh/BNwJCPQDcGTtvEbvtY7
+         kZHUcWvbDbPtOp8YleZdi51lr3FOwXIpUEJUPOi1NtiW6wW8EvxxlGHGa/EpJ2Tt3Lfs
+         VvdHRzIVfxA6yUuYc936dr0rtpLh2k1tm6ZSl4NA1ctrQf8ZegU1AzhqwWkFiZoW6Fx2
+         CxPNom4vRpKX1/vhmn3FbdvC2mendID5OuHhxJ5LgfqzVxpBmcm1amEtX96RmpF8OY+M
+         vN2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=2GwU7xVOO3aHdi2ZowTA3j4dg4Dx7tydRNZ94ujj3N0=;
+        b=Je0eFZxKrQZt1CbmaFCia1yrw5z4DTYiYynfoGjmifvjDR2vOgBo03ZEKssxgKKDJM
+         FRjn/Cucyj+oOgSs2mNrFTjC0LBPxVitZWsMtze/2PE/C+UT2laXMTRIVdiwl2kRgGuf
+         STUgF/KKACmIQAIeb4Wwtgw6sTmNtXblAj/F9DUagV1C2BTP5m8cGLbAYsIxoH4DNFuZ
+         i7n919EelH/GHnfTVdI2F/jNWPDeQfIOq4ym6H6oGPdKRY60dZbO42j8pz+dw3IClI6s
+         h3ABubmADaIauVevZyx130Wpbwe+byTu3IdhNwRvyV1veB8gIR7Vf8WL+aHpRg2In701
+         fN0g==
+X-Gm-Message-State: AOAM531CQ5gAXlFsHmhwGROVyl3HUR4/r0iqctV00czBIFobD/LwXSC8
+        LODjM/q+UWtOFrTFbmX+dJ8=
+X-Google-Smtp-Source: ABdhPJzE6GmpfIvCizhkX04GrJxFqQ/WQ5k95I1/Wy2VH0i5ssw1487H9FKLagxjh/baEe9YsLIEGQ==
+X-Received: by 2002:aca:d0a:: with SMTP id 10mr1758233oin.40.1623131365782;
+        Mon, 07 Jun 2021 22:49:25 -0700 (PDT)
+Received: from localhost.localdomain (static-198-54-128-46.cust.tzulo.com. [198.54.128.46])
+        by smtp.googlemail.com with ESMTPSA id o2sm2489730oom.26.2021.06.07.22.49.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Jun 2021 22:49:25 -0700 (PDT)
+From:   Amey Narkhede <ameynarkhede03@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     alex.williamson@redhat.com,
+        Raphael Norwitz <raphael.norwitz@nutanix.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
+        Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Amey Narkhede <ameynarkhede03@gmail.com>
+Subject: [PATCH v7 4/8] PCI/sysfs: Allow userspace to query and set device reset mechanism
+Date:   Tue,  8 Jun 2021 11:18:53 +0530
+Message-Id: <20210608054857.18963-5-ameynarkhede03@gmail.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210608054857.18963-1-ameynarkhede03@gmail.com>
+References: <20210608054857.18963-1-ameynarkhede03@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/virtualization
-branch HEAD: abcb1449378eef5df7b99967da78eb6374ba7b7f  PCI: Mark AMD Navi14 GPU ATS as broken
+Add reset_method sysfs attribute to enable user to
+query and set user preferred device reset methods and
+their ordering.
 
-elapsed time: 730m
-
-configs tested: 210
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-mips                     loongson2k_defconfig
-sh                          r7780mp_defconfig
-arc                    vdk_hs38_smp_defconfig
-arm                      pxa255-idp_defconfig
-arm                         assabet_defconfig
-arc                          axs103_defconfig
-arm                     davinci_all_defconfig
-powerpc64                           defconfig
-powerpc                     sbc8548_defconfig
-arm                       versatile_defconfig
-arm                        oxnas_v6_defconfig
-powerpc                 mpc836x_mds_defconfig
-powerpc                     akebono_defconfig
-openrisc                  or1klitex_defconfig
-powerpc                       ppc64_defconfig
-arm                        multi_v7_defconfig
-powerpc                    sam440ep_defconfig
-m68k                         amcore_defconfig
-arm                           viper_defconfig
-sh                     sh7710voipgw_defconfig
-s390                          debug_defconfig
-arc                            hsdk_defconfig
-mips                            e55_defconfig
-powerpc                 mpc85xx_cds_defconfig
-mips                         tb0219_defconfig
-sh                ecovec24-romimage_defconfig
-arm                            mmp2_defconfig
-arm                           tegra_defconfig
-xtensa                           alldefconfig
-powerpc                      makalu_defconfig
-mips                          rm200_defconfig
-powerpc                 mpc8560_ads_defconfig
-arm                           omap1_defconfig
-powerpc                 xes_mpc85xx_defconfig
-sh                             sh03_defconfig
-arm                           sama5_defconfig
-mips                        omega2p_defconfig
-s390                             alldefconfig
-sh                            migor_defconfig
-openrisc                         alldefconfig
-powerpc                    mvme5100_defconfig
-mips                  decstation_64_defconfig
-mips                          ath79_defconfig
-powerpc                      ppc44x_defconfig
-m68k                            q40_defconfig
-powerpc                 mpc8272_ads_defconfig
-arm                             ezx_defconfig
-riscv             nommu_k210_sdcard_defconfig
-sh                           se7343_defconfig
-arc                     nsimosci_hs_defconfig
-powerpc                     powernv_defconfig
-mips                           rs90_defconfig
-arm                         mv78xx0_defconfig
-sh                  sh7785lcr_32bit_defconfig
-arm                          simpad_defconfig
-mips                      pic32mzda_defconfig
-riscv                            alldefconfig
-arm                        cerfcube_defconfig
-sh                   sh7724_generic_defconfig
-mips                       capcella_defconfig
-mips                           ip32_defconfig
-powerpc                     skiroot_defconfig
-powerpc                  mpc866_ads_defconfig
-sh                 kfr2r09-romimage_defconfig
-x86_64                           allyesconfig
-arm                            lart_defconfig
-riscv                          rv32_defconfig
-powerpc                   motionpro_defconfig
-ia64                             allmodconfig
-arm                      jornada720_defconfig
-arm                        realview_defconfig
-m68k                            mac_defconfig
-x86_64                            allnoconfig
-powerpc                     tqm8548_defconfig
-powerpc                     tqm8540_defconfig
-arm                           sunxi_defconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                    adder875_defconfig
-x86_64                           alldefconfig
-arm                            hisi_defconfig
-arm                             pxa_defconfig
-arm                        shmobile_defconfig
-sh                   sh7770_generic_defconfig
-m68k                                defconfig
-xtensa                           allyesconfig
-mips                       bmips_be_defconfig
-s390                                defconfig
-powerpc                      pasemi_defconfig
-mips                           ci20_defconfig
-arm                         axm55xx_defconfig
-mips                         db1xxx_defconfig
-arm                      footbridge_defconfig
-h8300                     edosk2674_defconfig
-nds32                             allnoconfig
-sh                          sdk7780_defconfig
-mips                           jazz_defconfig
-arm                        mvebu_v5_defconfig
-arc                        nsimosci_defconfig
-xtensa                  nommu_kc705_defconfig
-powerpc                 mpc832x_mds_defconfig
-sh                             espt_defconfig
-arc                           tb10x_defconfig
-powerpc                         wii_defconfig
-powerpc                    ge_imp3a_defconfig
-powerpc                         ps3_defconfig
-powerpc                     mpc5200_defconfig
-m68k                       m5208evb_defconfig
-sparc                       sparc64_defconfig
-powerpc                 canyonlands_defconfig
-sh                          lboxre2_defconfig
-powerpc                 mpc836x_rdk_defconfig
-mips                           ip28_defconfig
-powerpc                      ep88xc_defconfig
-mips                        maltaup_defconfig
-arm                        vexpress_defconfig
-sh                           se7619_defconfig
-mips                          rb532_defconfig
-mips                         tb0226_defconfig
-powerpc                     ppa8548_defconfig
-um                           x86_64_defconfig
-powerpc                mpc7448_hpc2_defconfig
-arm                            qcom_defconfig
-mips                           mtx1_defconfig
-arm                         s5pv210_defconfig
-arc                        vdk_hs38_defconfig
-nios2                         10m50_defconfig
-parisc                              defconfig
-sh                         microdev_defconfig
-sh                     magicpanelr2_defconfig
-powerpc                 linkstation_defconfig
-ia64                        generic_defconfig
-powerpc                     taishan_defconfig
-arm                         palmz72_defconfig
-arm                         lpc32xx_defconfig
-sh                      rts7751r2d1_defconfig
-sh                                  defconfig
-powerpc                        warp_defconfig
-powerpc                 mpc8315_rdb_defconfig
-powerpc                          allmodconfig
-arm                          lpd270_defconfig
-powerpc               mpc834x_itxgp_defconfig
-powerpc                        fsp2_defconfig
-x86_64                              defconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20210607
-i386                 randconfig-a006-20210607
-i386                 randconfig-a004-20210607
-i386                 randconfig-a001-20210607
-i386                 randconfig-a002-20210607
-i386                 randconfig-a005-20210607
-x86_64               randconfig-a015-20210607
-x86_64               randconfig-a011-20210607
-x86_64               randconfig-a014-20210607
-x86_64               randconfig-a012-20210607
-x86_64               randconfig-a016-20210607
-x86_64               randconfig-a013-20210607
-i386                 randconfig-a015-20210607
-i386                 randconfig-a011-20210607
-i386                 randconfig-a012-20210607
-i386                 randconfig-a013-20210607
-i386                 randconfig-a016-20210607
-i386                 randconfig-a014-20210607
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-um                             i386_defconfig
-um                            kunit_defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-b001-20210607
-x86_64               randconfig-a002-20210607
-x86_64               randconfig-a004-20210607
-x86_64               randconfig-a003-20210607
-x86_64               randconfig-a006-20210607
-x86_64               randconfig-a005-20210607
-x86_64               randconfig-a001-20210607
-
+Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ Documentation/ABI/testing/sysfs-bus-pci |  16 ++++
+ drivers/pci/pci-sysfs.c                 | 118 ++++++++++++++++++++++++
+ 2 files changed, 134 insertions(+)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index ef00fada2..cf6dbbb3c 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -121,6 +121,22 @@ Description:
+ 		child buses, and re-discover devices removed earlier
+ 		from this part of the device tree.
+ 
++What:		/sys/bus/pci/devices/.../reset_method
++Date:		March 2021
++Contact:	Amey Narkhede <ameynarkhede03@gmail.com>
++Description:
++		Some devices allow an individual function to be reset
++		without affecting other functions in the same slot.
++		For devices that have this support, a file named reset_method
++		will be present in sysfs. Reading this file will give names
++		of the device supported reset methods and their ordering.
++		Writing the name or comma separated list of names of any of
++		the device supported reset methods to this file will set the
++		reset methods and their ordering to be used when resetting
++		the device. Writing empty string to this file will disable
++		ability to reset the device and writing "default" will return
++		to the original value.
++
+ What:		/sys/bus/pci/devices/.../reset
+ Date:		July 2009
+ Contact:	Michael S. Tsirkin <mst@redhat.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 316f70c3e..52def79aa 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1334,6 +1334,123 @@ static const struct attribute_group pci_dev_rom_attr_group = {
+ 	.is_bin_visible = pci_dev_rom_attr_is_visible,
+ };
+ 
++static ssize_t reset_method_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	ssize_t len = 0;
++	int i, prio;
++
++	for (prio = PCI_RESET_METHODS_NUM; prio; prio--) {
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
++			if (prio == pdev->reset_methods[i]) {
++				len += sysfs_emit_at(buf, len, "%s%s",
++						     len ? "," : "",
++						     pci_reset_fn_methods[i].name);
++				break;
++			}
++		}
++
++		if (i == PCI_RESET_METHODS_NUM)
++			break;
++	}
++
++	if (len)
++		len += sysfs_emit_at(buf, len, "\n");
++
++	return len;
++}
++
++static ssize_t reset_method_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	u8 reset_methods[PCI_RESET_METHODS_NUM];
++	struct pci_dev *pdev = to_pci_dev(dev);
++	u8 prio = PCI_RESET_METHODS_NUM;
++	char *name, *options;
++	int i;
++
++	if (count >= (PAGE_SIZE - 1))
++		return -EINVAL;
++
++	options = kstrndup(buf, count, GFP_KERNEL);
++	if (!options)
++		return -ENOMEM;
++
++	/*
++	 * Initialize reset_method such that 0xff indicates
++	 * supported but not currently enabled reset methods
++	 * as we only use priority values which are within
++	 * the range of PCI_RESET_FN_METHODS array size
++	 */
++	for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
++		reset_methods[i] = pdev->reset_methods[i] ? 0xff : 0;
++
++	if (sysfs_streq(options, "")) {
++		pci_warn(pdev, "All device reset methods disabled by user");
++		goto set_reset_methods;
++	}
++
++	if (sysfs_streq(options, "default")) {
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++)
++			reset_methods[i] = reset_methods[i] ? prio-- : 0;
++		goto set_reset_methods;
++	}
++
++	while ((name = strsep(&options, ",")) != NULL) {
++		if (sysfs_streq(name, ""))
++			continue;
++
++		name = strim(name);
++
++		for (i = 0; i < PCI_RESET_METHODS_NUM; i++) {
++			if (reset_methods[i] &&
++			    sysfs_streq(name, pci_reset_fn_methods[i].name)) {
++				reset_methods[i] = prio--;
++				break;
++			}
++		}
++
++		if (i == PCI_RESET_METHODS_NUM) {
++			kfree(options);
++			return -EINVAL;
++		}
++	}
++
++	if (reset_methods[0] &&
++	    reset_methods[0] != PCI_RESET_METHODS_NUM)
++		pci_warn(pdev, "Device specific reset disabled/de-prioritized by user");
++
++set_reset_methods:
++	kfree(options);
++	memcpy(pdev->reset_methods, reset_methods, sizeof(reset_methods));
++	return count;
++}
++static DEVICE_ATTR_RW(reset_method);
++
++static struct attribute *pci_dev_reset_method_attrs[] = {
++	&dev_attr_reset_method.attr,
++	NULL,
++};
++
++static umode_t pci_dev_reset_method_attr_is_visible(struct kobject *kobj,
++						    struct attribute *a, int n)
++{
++	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
++
++	if (!pci_reset_supported(pdev))
++		return 0;
++
++	return a->mode;
++}
++
++static const struct attribute_group pci_dev_reset_method_attr_group = {
++	.attrs = pci_dev_reset_method_attrs,
++	.is_visible = pci_dev_reset_method_attr_is_visible,
++};
++
+ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+ 			   const char *buf, size_t count)
+ {
+@@ -1491,6 +1608,7 @@ const struct attribute_group *pci_dev_groups[] = {
+ 	&pci_dev_config_attr_group,
+ 	&pci_dev_rom_attr_group,
+ 	&pci_dev_reset_attr_group,
++	&pci_dev_reset_method_attr_group,
+ 	&pci_dev_vpd_attr_group,
+ #ifdef CONFIG_DMI
+ 	&pci_dev_smbios_attr_group,
+-- 
+2.31.1
+
