@@ -8,51 +8,51 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F38C48BCF
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Jun 2021 14:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E6ABC48BE5
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Jun 2021 14:03:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 666A4613AD
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Jun 2021 14:03:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 882FF61364
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Jun 2021 14:03:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237303AbhFIOFB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Jun 2021 10:05:01 -0400
-Received: from mail-wr1-f54.google.com ([209.85.221.54]:40939 "EHLO
-        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237226AbhFIOE7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jun 2021 10:04:59 -0400
-Received: by mail-wr1-f54.google.com with SMTP id y7so20982706wrh.7;
-        Wed, 09 Jun 2021 07:03:04 -0700 (PDT)
+        id S237337AbhFIOFD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Jun 2021 10:05:03 -0400
+Received: from mail-wr1-f41.google.com ([209.85.221.41]:37853 "EHLO
+        mail-wr1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237227AbhFIOFC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jun 2021 10:05:02 -0400
+Received: by mail-wr1-f41.google.com with SMTP id i94so20589360wri.4;
+        Wed, 09 Jun 2021 07:03:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7yE+bj7E/38rPyfMQ2Y7dkil8U8S07gxBd4g0tEIxB0=;
-        b=WB0mQW93aLe0XCJEduYwuCEbPh8fSgth2vOFaI9jksGO436mZxlTOCOi9B4RCUiW9B
-         YB5Yl1P/wPzg4MUG/7j2k4AHMzYqhD9f82sYCGfw2LGJ4zk6KoId+LUtv2wNxP2nukI3
-         wotwnRRvd8d17fUr1tww/Dh19h+2xNCpkCVg2FZq4gFFhZ/j3kzBfl/EBcK1b+Z1y49/
-         ydxGyBsu4lKEfbC1HKolK5fkmgosTJKR203dA0D+OgCKTrw28luKbTD8zs2bzce9JeiM
-         qtp+lID54399quyLhqBQpOAeVbV0CBFh0w8WSYTQZV5VjMgwaKEM4QbIof1fBGwYF2K0
-         T/aQ==
+        bh=AYWDI6BG8IdRoFPaJz/bP9vC9WkcUEC9Y1+RTob9aXc=;
+        b=b5m4IM3yjBet0AWST2O9Jpwxqjd2kDUCn92XMVhC72ujjOfkDoVI4N41Z0NTFy5VpE
+         OglH+M9cHy9M3rUqXKcFYPNr3qBW51d5WebmAHdVIjFkUcfVn3F3Y8Q6Rxt5HpJl2DK7
+         PFdUjeD0uO+NFVCQJHsP2sUMqtC5aA3tbVEKs9gJNFHh3c4rkVAe7k8QLlKkoK5QxtkU
+         o3Gdi6kAVjOU2MnTvDPB5oFQT3IhDOoM/eJyQK9ABnYQvXqYBgT09bo29dStiR32Hakl
+         onIiJnMpNpr6WheKCJTWb8PyeY+SFdBNaflEzsojeh306rMxNJh+2ipkEMCRXTL6/bRb
+         6M1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7yE+bj7E/38rPyfMQ2Y7dkil8U8S07gxBd4g0tEIxB0=;
-        b=D1xKC/ZhZWJ4WgFju5iZpt/+tdD8QKX93qF91aKOxOpn+tZo0CKQ3EHSw4KZ+Z/fxv
-         NkV6POFuZr3iEe7i9CoGRPj5UkaIWFRotHgsW2dkH8BAPM5DjUnpS/gIao6OfEtIJpRh
-         IHLhEUqBNxHMom+Wf03i4h31TrowMzYh4SqZD6tyf3AJxczz8qxoFXFjZER2o3YOBTe4
-         gi9UUlWe0hKHiv1rqE9zfW6J6gjeH/LQxh+wIiD+o8B9zyTjn9hoXxoQa44Ahhan/mFM
-         euAFWLMgZsncmYemwTauQtR+/0z3ci9Gk/A6G3xKqQcbgwwQUWza/7pBTaIpK251PxHA
-         ns1A==
-X-Gm-Message-State: AOAM531gB4c26KlLtvZW0300/l8Sky5k6tQlZT3JHH/zE/LPsghhQsSV
-        ns9CDoUJ7snnCgoHY/ieJuowmudRtMANtA==
-X-Google-Smtp-Source: ABdhPJwcu313t4cHLi5huMgbhItuz+9FzoqplAwz1E0g+t8h/trcjldWLl02okuffAMbvIZ3ozVdGQ==
-X-Received: by 2002:a5d:6c6d:: with SMTP id r13mr28364425wrz.350.1623247323612;
-        Wed, 09 Jun 2021 07:02:03 -0700 (PDT)
+        bh=AYWDI6BG8IdRoFPaJz/bP9vC9WkcUEC9Y1+RTob9aXc=;
+        b=NNd2FnlS2I6499ZEdHcrcmTKgqKQVHdfgGVu9BhGGHSlhhcl9AJqXKvcsL+Btg+I9T
+         cL4r76wJ+p0Tu4P6rO8Dznm3QU+Dj1gYW4cXwH4l6fSAfaxqpnKb3EYe6uLmSve4TDjF
+         UctlXA1yxJx55nrcQ0yIa4Bophc3KETzItYC3HeslngeZXmtEvsKpy6mMHAiCS7T5VWs
+         LRE0t47lMuQsNvI9Gr81tztaOqlluUjStwFocqv9y4M+q8kHbvVnyWlzrElDRNQTwaVk
+         4B+3oc4+3HhDeN+L8+/Dae3cOzdP3H76JLHjBXQaULGurvZK/aCApdcgs+f2nNQJAdzu
+         wJcg==
+X-Gm-Message-State: AOAM533hFj/LViusQeXAmhJz5w+ty5gZ6J5gmXbD23zrFtweMBTOIIfD
+        NmjX6x/yTRLCD6f8qw5jtbTBVDvj125Dfg==
+X-Google-Smtp-Source: ABdhPJyyaptNj1K8oWVB9T8IptJSFw4/2SNsjIpbwawKmVfW8s1K4w8ilEL0kkh4lazfgShnc3pfhQ==
+X-Received: by 2002:adf:e401:: with SMTP id g1mr27533771wrm.415.1623247325881;
+        Wed, 09 Jun 2021 07:02:05 -0700 (PDT)
 Received: from localhost.localdomain (103.red-81-47-144.staticip.rima-tde.net. [81.47.144.103])
-        by smtp.gmail.com with ESMTPSA id m23sm5673912wms.2.2021.06.09.07.02.02
+        by smtp.gmail.com with ESMTPSA id m23sm5673912wms.2.2021.06.09.07.02.04
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 09 Jun 2021 07:02:03 -0700 (PDT)
+        Wed, 09 Jun 2021 07:02:05 -0700 (PDT)
 From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-mips@vger.kernel.org, tsbogend@alpha.franken.de,
@@ -61,9 +61,9 @@ Cc:     linux-mips@vger.kernel.org, tsbogend@alpha.franken.de,
         linux-staging@lists.linux.dev, gregkh@linuxfoundation.org,
         neil@brown.name, ilya.lipnitskiy@gmail.com,
         linux-kernel@vger.kernel.org, pali@kernel.org
-Subject: [PATCH v2 1/3] dt-bindings: mt7621-pci: PCIe binding documentation for MT7621 SoCs
-Date:   Wed,  9 Jun 2021 16:01:57 +0200
-Message-Id: <20210609140159.20476-2-sergio.paracuellos@gmail.com>
+Subject: [PATCH v2 3/3] MAINTAINERS: add myself as maintainer of the MT7621 PCI controller driver
+Date:   Wed,  9 Jun 2021 16:01:59 +0200
+Message-Id: <20210609140159.20476-4-sergio.paracuellos@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210609140159.20476-1-sergio.paracuellos@gmail.com>
 References: <20210609140159.20476-1-sergio.paracuellos@gmail.com>
@@ -73,162 +73,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add device tree binding documentation for PCIe in MT7621 SoCs.
+Add myself as maintainer of the PCie Controlller driver for
+MT7621 SoCs.
 
 Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
 ---
- .../bindings/pci/mediatek,mt7621-pci.yaml     | 142 ++++++++++++++++++
- 1 file changed, 142 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml
+ MAINTAINERS | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml b/Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml
-new file mode 100644
-index 000000000000..716b77d6c830
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml
-@@ -0,0 +1,142 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/mediatek,mt7621-pci.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9c55fdcc1514..2e58fba01289 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11574,6 +11574,12 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/i2c/i2c-mt7621.txt
+ F:	drivers/i2c/busses/i2c-mt7621.c
+ 
++MEDIATEK MT7621 PCI CONTROLLER DRIVER
++M:	Sergio Paracuellos <sergio.paracuellos@gmail.com>
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml
++F:	drivers/pci/controller/pci-mt7621.c
 +
-+title: MediaTek MT7621 PCIe controller
-+
-+maintainers:
-+  - Sergio Paracuellos <sergio.paracuellos@gmail.com>
-+
-+description: |+
-+  MediaTek MT7621 PCIe subsys supports single Root complex (RC)
-+  with 3 Root Ports. Each Root Ports supports a Gen1 1-lane Link
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    const: mediatek,mt7621-pci
-+
-+  reg:
-+    items:
-+      - description: host-pci bridge registers
-+      - description: pcie port 0 RC control registers
-+      - description: pcie port 1 RC control registers
-+      - description: pcie port 2 RC control registers
-+
-+  ranges:
-+    maxItems: 2
-+
-+patternProperties:
-+  'pcie@[0-2],0':
-+    type: object
-+    $ref: /schemas/pci/pci-bus.yaml#
-+
-+    properties:
-+      resets:
-+        maxItems: 1
-+
-+      clocks:
-+        maxItems: 1
-+
-+      phys:
-+        maxItems: 1
-+
-+    required:
-+      - "#interrupt-cells"
-+      - interrupt-map-mask
-+      - interrupt-map
-+      - resets
-+      - clocks
-+      - phys
-+      - phy-names
-+      - ranges
-+
-+    unevaluatedProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - ranges
-+  - "#interrupt-cells"
-+  - interrupt-map-mask
-+  - interrupt-map
-+  - reset-gpios
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interrupt-controller/mips-gic.h>
-+
-+    pcie: pcie@1e140000 {
-+        compatible = "mediatek,mt7621-pci";
-+        reg = <0x1e140000 0x100>,
-+              <0x1e142000 0x100>,
-+              <0x1e143000 0x100>,
-+              <0x1e144000 0x100>;
-+
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        pinctrl-names = "default";
-+        pinctrl-0 = <&pcie_pins>;
-+        device_type = "pci";
-+        ranges = <0x02000000 0 0x00000000 0x60000000 0 0x10000000>,  /* pci memory */
-+                 <0x01000000 0 0x00000000 0x1e160000 0 0x00010000>;  /* io space */
-+        #interrupt-cells = <1>;
-+        interrupt-map-mask = <0xF800 0 0 0>;
-+        interrupt-map = <0x0000 0 0 0 &gic GIC_SHARED 4 IRQ_TYPE_LEVEL_HIGH>,
-+                        <0x0800 0 0 0 &gic GIC_SHARED 24 IRQ_TYPE_LEVEL_HIGH>,
-+                        <0x1000 0 0 0 &gic GIC_SHARED 25 IRQ_TYPE_LEVEL_HIGH>;
-+        reset-gpios = <&gpio 19 GPIO_ACTIVE_LOW>;
-+
-+        pcie@0,0 {
-+            reg = <0x0000 0 0 0 0>;
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            device_type = "pci";
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0>;
-+            interrupt-map = <0 0 0 0 &gic GIC_SHARED 4 IRQ_TYPE_LEVEL_HIGH>;
-+            resets = <&rstctrl 24>;
-+            clocks = <&clkctrl 24>;
-+            phys = <&pcie0_phy 1>;
-+            phy-names = "pcie-phy0";
-+            ranges;
-+        };
-+
-+        pcie@1,0 {
-+            reg = <0x0800 0 0 0 0>;
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            device_type = "pci";
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0>;
-+            interrupt-map = <0 0 0 0 &gic GIC_SHARED 24 IRQ_TYPE_LEVEL_HIGH>;
-+            resets = <&rstctrl 25>;
-+            clocks = <&clkctrl 25>;
-+            phys = <&pcie0_phy 1>;
-+            phy-names = "pcie-phy1";
-+            ranges;
-+        };
-+
-+        pcie@2,0 {
-+            reg = <0x1000 0 0 0 0>;
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            device_type = "pci";
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0>;
-+            interrupt-map = <0 0 0 0 &gic GIC_SHARED 25 IRQ_TYPE_LEVEL_HIGH>;
-+            resets = <&rstctrl 26>;
-+            clocks = <&clkctrl 26>;
-+            phys = <&pcie2_phy 0>;
-+            phy-names = "pcie-phy2";
-+            ranges;
-+        };
-+    };
-+...
+ MEDIATEK MT7621 PHY PCI DRIVER
+ M:	Sergio Paracuellos <sergio.paracuellos@gmail.com>
+ S:	Maintained
 -- 
 2.25.1
 
