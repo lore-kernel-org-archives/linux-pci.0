@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D71C48BE6
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84327C48BE6
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 538DA613F8
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68BA860FEA
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230344AbhFJQIQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Jun 2021 12:08:16 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:60150 "EHLO
+        id S230406AbhFJQIT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Jun 2021 12:08:19 -0400
+Received: from ale.deltatee.com ([204.191.154.188]:60178 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230262AbhFJQIP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 12:08:15 -0400
+        with ESMTP id S230364AbhFJQIR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 12:08:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=ecVQN1myFhNKBV+atAyPDZ6lDFiBiAGm9A4aOtek3/g=; b=O+RUxQEfumKDvQ0B/Ew/JdU8fV
-        gBmRlklFWe0xIg+xEL1m4vstjByraehGmTPmMDiUlcKVCqK6G8hCf+PjrQiKMPsf9JcjH2zhwXsSe
-        ld58irkzM5Vkwnmaf+hvdCHWPBqiJPq06Xz1oITkmaeOPRQ3xraYco0wtXAJJq4XZV5Yx0BTaAwYk
-        W+s1DmIieVPH+bQ+2O4NsAw1GaVX4F+YAlZUKxpvvD2Mo57kMyJycD+HfuMRX87OB+u5nojpcWszA
-        b5uLvU12UnNcc+huth0rX4dAY534WDeUtFrr+geWUMJBVRQWksTNJ9pCRz/lqZGkswmDS5d5b40ar
-        +DpgoGAw==;
+        bh=V8wti9Rbd9gM9W3eLoa9VESkzHe3fDUB5qnOwryji5s=; b=EAuVPPWYpAgnjMxfy/hj2I32Vf
+        +JJFwEARwbnRG5My05BB39xig5RZb2TkrRO/y6baz7GKBIBum7fQfTLr2U0FfrsCfGplHwlGLCJNu
+        cUwO6t6TatP3R079/lBIDjf+R4/jlOCfw22/+SNgsAj8wp7/gQcYwcWb6lMZHZrcNtriQ0+b9//cL
+        S8yWhNy9ben89b71mxXeWBNxWLui0q/5CGQPSzNj8GTAcIavnE0PGNiUKLqnvx0mScCGQ7TefpsHy
+        pi2h0NaP3HfO1b6dWH0gNYdVLrD84Z392tJVZGHmqK/Mysyq9GnGH5gBjIHSagY8Za+JD3uwJcgnq
+        5K0o9iyQ==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNCD-0000Jh-Lb; Thu, 10 Jun 2021 10:06:18 -0600
+        id 1lrNCD-0000Jj-G9; Thu, 10 Jun 2021 10:06:21 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNC8-0007Ps-Uk; Thu, 10 Jun 2021 10:06:12 -0600
+        id 1lrNC9-0007Pv-20; Thu, 10 Jun 2021 10:06:13 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <helgaas@kernel.org>
@@ -47,8 +47,8 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         John Hubbard <jhubbard@nvidia.com>,
         Don Dutile <ddutile@redhat.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 10 Jun 2021 10:06:08 -0600
-Message-Id: <20210610160609.28447-6-logang@deltatee.com>
+Date:   Thu, 10 Jun 2021 10:06:09 -0600
+Message-Id: <20210610160609.28447-7-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210610160609.28447-1-logang@deltatee.com>
 References: <20210610160609.28447-1-logang@deltatee.com>
@@ -57,85 +57,85 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, helgaas@kernel.org, sbates@raithlin.com, hch@lst.de, dan.j.williams@intel.com, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 5/6] PCI/P2PDMA: Refactor pci_p2pdma_map_type() to take pagemap and device
+Subject: [PATCH v1 6/6] PCI/P2PDMA: Avoid pci_get_slot() which sleeps
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All callers of pci_p2pdma_map_type() have a struct dev_pgmap and a
-struct device (of the client doing the DMA transfer). Thus move the
-conversion to struct pci_devs for the provider and client into this
-function.
+In order to use upstream_bridge_distance_warn() from a dma_map function,
+it must not sleep. However, pci_get_slot() takes the pci_bus_sem so it
+might sleep.
+
+In order to avoid this, try to get the host bridge's device from the first
+element in the device list. It should be impossible for the host bridge's
+device to go away while references are held on child devices, so the first
+element should not be able to change and, thus, this should be safe.
+
+Introduce a static function called pci_host_bridge_dev() to obtain the
+host bridge's root device.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/p2pdma.c | 30 ++++++++++++------------------
- 1 file changed, 12 insertions(+), 18 deletions(-)
+ drivers/pci/p2pdma.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 2de4a9e2da58..5dc1f9f62a93 100644
+index 5dc1f9f62a93..c7ecd0196102 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -814,12 +814,20 @@ void pci_p2pmem_publish(struct pci_dev *pdev, bool publish)
- }
- EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
+@@ -308,10 +308,41 @@ static const struct pci_p2pdma_whitelist_entry {
+ 	{}
+ };
  
--static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct pci_dev *provider,
--						    struct pci_dev *client)
-+static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct dev_pagemap *pgmap,
-+						    struct device *dev)
- {
-+	struct pci_dev *provider = to_p2p_pgmap(pgmap)->provider;
-+	struct pci_dev *client;
++/*
++ * This lookup function tries to find the PCI device corresponding to a given
++ * host bridge.
++ *
++ * It assumes the host bridge device is the first PCI device in the
++ * bus->devices list and that the devfn is 00.0. These assumptions should hold
++ * for all the devices in the whitelist above.
++ *
++ * This function is equivalent to pci_get_slot(host->bus, 0), however it does
++ * not take the pci_bus_sem lock seeing __host_bridge_whitelist() must not
++ * sleep.
++ *
++ * For this to be safe, the caller should hold a reference to a device on the
++ * bridge, which should ensure the host_bridge device will not be freed
++ * or removed from the head of the devices list.
++ */
++static struct pci_dev *pci_host_bridge_dev(struct pci_host_bridge *host)
++{
++	struct pci_dev *root;
 +
- 	if (!provider->p2pdma)
- 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
- 
-+	if (!dev_is_pci(dev))
-+		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
++	root = list_first_entry_or_null(&host->bus->devices,
++					struct pci_dev, bus_list);
 +
-+	client = to_pci_dev(dev);
++	if (!root)
++		return NULL;
++	if (root->devfn != PCI_DEVFN(0, 0))
++		return NULL;
 +
- 	return xa_to_value(xa_load(&provider->p2pdma->map_types,
- 				   map_types_idx(client)));
- }
-@@ -856,14 +864,8 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
++	return root;
++}
++
+ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
+ 				    bool same_host_bridge, bool warn)
  {
- 	struct pci_p2pdma_pagemap *p2p_pgmap =
- 		to_p2p_pgmap(sg_page(sg)->pgmap);
--	struct pci_dev *client;
--
--	if (WARN_ON_ONCE(!dev_is_pci(dev)))
--		return 0;
+-	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
++	struct pci_dev *root = pci_host_bridge_dev(host);
+ 	const struct pci_p2pdma_whitelist_entry *entry;
+ 	unsigned short vendor, device;
  
--	client = to_pci_dev(dev);
--
--	switch (pci_p2pdma_map_type(p2p_pgmap->provider, client)) {
-+	switch (pci_p2pdma_map_type(sg_page(sg)->pgmap, dev)) {
- 	case PCI_P2PDMA_MAP_THRU_HOST_BRIDGE:
- 		return dma_map_sg_attrs(dev, sg, nents, dir, attrs);
- 	case PCI_P2PDMA_MAP_BUS_ADDR:
-@@ -887,17 +889,9 @@ EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg_attrs);
- void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
- 		int nents, enum dma_data_direction dir, unsigned long attrs)
- {
--	struct pci_p2pdma_pagemap *p2p_pgmap =
--		to_p2p_pgmap(sg_page(sg)->pgmap);
- 	enum pci_p2pdma_map_type map_type;
--	struct pci_dev *client;
--
--	if (WARN_ON_ONCE(!dev_is_pci(dev)))
--		return;
--
--	client = to_pci_dev(dev);
+@@ -320,7 +351,6 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
  
--	map_type = pci_p2pdma_map_type(p2p_pgmap->provider, client);
-+	map_type = pci_p2pdma_map_type(sg_page(sg)->pgmap, dev);
+ 	vendor = root->vendor;
+ 	device = root->device;
+-	pci_dev_put(root);
  
- 	if (map_type == PCI_P2PDMA_MAP_THRU_HOST_BRIDGE)
- 		dma_unmap_sg_attrs(dev, sg, nents, dir, attrs);
+ 	for (entry = pci_p2pdma_whitelist; entry->vendor; entry++) {
+ 		if (vendor != entry->vendor || device != entry->device)
 -- 
 2.20.1
 
