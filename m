@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99EECC49360
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D30C48BE5
 	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B80261412
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B73A613D0
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230134AbhFJQIT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Jun 2021 12:08:19 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:60182 "EHLO
+        id S230377AbhFJQIU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Jun 2021 12:08:20 -0400
+Received: from ale.deltatee.com ([204.191.154.188]:60186 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230365AbhFJQIR (ORCPT
+        with ESMTP id S230368AbhFJQIR (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 12:08:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=uTuIg5mKeN6pJVVu/O7o+wA1lV0rKGuorgSswjSfG3E=; b=B2UPU8PGdl4qQMrZIsQmEW9Coq
-        AtisDEAON2S5Igmn3dg0JPEn00jxtyda1xznM7k2ha8j2LZD+UxeEgmCjIt9GT0hFZ20LLNozgRYd
-        zL8rN6HJtuAxzckW9Er1mSKMQDQHYFzAQPVBaBX7T13TI4dzK9xB3+wmJ6eeW/yC3YjVHtNE85uRf
-        VoZTQnDteQgvbEe/taVw77O96UaqOj6wS/ABR3tTrk2J2VZDkYZz1WeDZTn6vd94yR14hqaxE7kod
-        E+mErARPmMKXMQQD6uYQaGd7sLCTSVUiHUNaugFlrqkhKkBUx12ZsmHHhSu+cIo6qu0sEWTZWf4Bg
-        XSJ5vrYw==;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=QeMDlTK6S7rVNcdHO1iGH78RGAnpL8RDeAFDcSCpHHg=; b=XrSLkbPI2G3LBEDiqZW6cM4HtU
+        R44bH+nZDfJABLhQ+SEQPH9MB2l/2KgjG3CzWglXqHILUL9fD+z0wyFbpJkeXe4JnCa1TLjC7WbQm
+        GDLb+4X106ViW3DRNfnjepTIuEOnj0IwR8pIbjpFD+vmel1jKasORiNygjmOhztQ2F1CTFsuO5qPK
+        6pn9KgHLH6yV89uRwk/OHSPY3KLT7g9h+oXEAgyb1nUP7MDJbGGD1/eeZ/wB0GyORXI41AFvQRPhG
+        ov7mvzwBZUDruT+zrlyH+48sDTqA+4gIIHnqrZQdn4V8G6FPjiXy0nv+eKbvqTsRop7zjuyBX+MZe
+        kIJT2y4Q==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNCA-0000Jg-Kn; Thu, 10 Jun 2021 10:06:21 -0600
+        id 1lrNCA-0000Jk-Kn; Thu, 10 Jun 2021 10:06:21 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNC8-0007Pe-9x; Thu, 10 Jun 2021 10:06:12 -0600
+        id 1lrNC8-0007Pp-Qy; Thu, 10 Jun 2021 10:06:12 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <helgaas@kernel.org>
@@ -47,62 +47,88 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         John Hubbard <jhubbard@nvidia.com>,
         Don Dutile <ddutile@redhat.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 10 Jun 2021 10:06:03 -0600
-Message-Id: <20210610160609.28447-1-logang@deltatee.com>
+Date:   Thu, 10 Jun 2021 10:06:07 -0600
+Message-Id: <20210610160609.28447-5-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20210610160609.28447-1-logang@deltatee.com>
+References: <20210610160609.28447-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, helgaas@kernel.org, sbates@raithlin.com, hch@lst.de, dan.j.williams@intel.com, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 0/6] P2PDMA Cleanup
+Subject: [PATCH v1 4/6] PCI/P2PDMA: Print a warning if the host bridge is not in the whitelist
 X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+If the host bridge is not in the whitelist print a warning in the
+calc_map_type_and_dist_warn() path detailing the vendor and device IDs
+that would need to be added to the whitelist.
 
-This patch series consists of the P2PDMA cleanup and prep patches based
-on feedback from  my P2PDMA mapping operations series (most recently
-posted at [1]). I've reduced the recipient list of this series to those
-that I thought would be interested or have provided the feedback that
-inspired these patches.
+Suggested-by: Don Dutile <ddutile@redhat.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-Please consider taking these patches in the near term ahead of my mapping
-ops series. These patches are largely cleanup and other minor fixes. The only
-functional change is Patch 4 which adds a new warning that was suggested by
-Don.
-
-Patch 6 arguably isn't necessary yet as we don't care about sleeping
-yet -- but it'd be a nice to have to reduce the number of prep patches for my
-other series. However, if you don't want to take this patch now, I can
-carry it in my other series.
-
-I'm happy to make further fixes and update this series if anyone finds any
-additional issues on review.
-
-Thanks,
-
-Logan
-
-[1] https://lore.kernel.org/linux-block/20210513223203.5542-1-logang@deltatee.com/
-
---
-
-Logan Gunthorpe (6):
-  PCI/P2PDMA: Rename upstream_bridge_distance() and rework documentation
-  PCI/P2PDMA: Use a buffer on the stack for collecting the acs list
-  PCI/P2PDMA: Cleanup type for return value of calc_map_type_and_dist()
-  PCI/P2PDMA: Print a warning if the host bridge is not in the whitelist
-  PCI/P2PDMA: Refactor pci_p2pdma_map_type() to take pagemap and device
-  PCI/P2PDMA: Avoid pci_get_slot() which sleeps
-
- drivers/pci/p2pdma.c | 157 +++++++++++++++++++++++++------------------
- 1 file changed, 92 insertions(+), 65 deletions(-)
-
-
-base-commit: 614124bea77e452aa6df7a8714e8bc820b489922
---
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 09c864f193d2..2de4a9e2da58 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -309,7 +309,7 @@ static const struct pci_p2pdma_whitelist_entry {
+ };
+ 
+ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
+-				    bool same_host_bridge)
++				    bool same_host_bridge, bool warn)
+ {
+ 	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
+ 	const struct pci_p2pdma_whitelist_entry *entry;
+@@ -331,6 +331,10 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
+ 		return true;
+ 	}
+ 
++	if (warn)
++		pci_warn(root, "Host bridge not in P2PDMA whitelist: %04x:%04x\n",
++			 vendor, device);
++
+ 	return false;
+ }
+ 
+@@ -338,16 +342,17 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
+  * If we can't find a common upstream bridge take a look at the root
+  * complex and compare it to a whitelist of known good hardware.
+  */
+-static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b)
++static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b,
++				  bool warn)
+ {
+ 	struct pci_host_bridge *host_a = pci_find_host_bridge(a->bus);
+ 	struct pci_host_bridge *host_b = pci_find_host_bridge(b->bus);
+ 
+ 	if (host_a == host_b)
+-		return __host_bridge_whitelist(host_a, true);
++		return __host_bridge_whitelist(host_a, true, warn);
+ 
+-	if (__host_bridge_whitelist(host_a, false) &&
+-	    __host_bridge_whitelist(host_b, false))
++	if (__host_bridge_whitelist(host_a, false, warn) &&
++	    __host_bridge_whitelist(host_b, false, warn))
+ 		return true;
+ 
+ 	return false;
+@@ -483,7 +488,7 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 
+ 	if (map_type == PCI_P2PDMA_MAP_THRU_HOST_BRIDGE) {
+ 		if (!cpu_supports_p2pdma() &&
+-		    !host_bridge_whitelist(provider, client))
++		    !host_bridge_whitelist(provider, client, acs_redirects))
+ 			map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
+ 	}
+ 
+-- 
 2.20.1
+
