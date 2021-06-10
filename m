@@ -2,133 +2,198 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D30C48BE5
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BD9C48BD1
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:07:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B73A613D0
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:06:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73C3F613FE
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 16:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230377AbhFJQIU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Jun 2021 12:08:20 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:60186 "EHLO
-        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230368AbhFJQIR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 12:08:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=QeMDlTK6S7rVNcdHO1iGH78RGAnpL8RDeAFDcSCpHHg=; b=XrSLkbPI2G3LBEDiqZW6cM4HtU
-        R44bH+nZDfJABLhQ+SEQPH9MB2l/2KgjG3CzWglXqHILUL9fD+z0wyFbpJkeXe4JnCa1TLjC7WbQm
-        GDLb+4X106ViW3DRNfnjepTIuEOnj0IwR8pIbjpFD+vmel1jKasORiNygjmOhztQ2F1CTFsuO5qPK
-        6pn9KgHLH6yV89uRwk/OHSPY3KLT7g9h+oXEAgyb1nUP7MDJbGGD1/eeZ/wB0GyORXI41AFvQRPhG
-        ov7mvzwBZUDruT+zrlyH+48sDTqA+4gIIHnqrZQdn4V8G6FPjiXy0nv+eKbvqTsRop7zjuyBX+MZe
-        kIJT2y4Q==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNCA-0000Jk-Kn; Thu, 10 Jun 2021 10:06:21 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1lrNC8-0007Pp-Qy; Thu, 10 Jun 2021 10:06:12 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 10 Jun 2021 10:06:07 -0600
-Message-Id: <20210610160609.28447-5-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210610160609.28447-1-logang@deltatee.com>
-References: <20210610160609.28447-1-logang@deltatee.com>
+        id S230482AbhFJQJj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Jun 2021 12:09:39 -0400
+Received: from mail-io1-f53.google.com ([209.85.166.53]:38656 "EHLO
+        mail-io1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229823AbhFJQJj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 12:09:39 -0400
+Received: by mail-io1-f53.google.com with SMTP id b25so27585628iot.5;
+        Thu, 10 Jun 2021 09:07:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kaZZOzSfE1U5InL076uxyCd5lJ1IWiQoV9yIjLnIADw=;
+        b=qbAbRmanGuulXPWSE0XZvvrwSNUznnKaCIHS1SS8ovq2dtMtjFtSsRHZL20EeoS6Ds
+         uR4gsgN0er8NXBRSx2QOhfaDkCoud5d0ktBOhYHvBt77KF3+J2KIX/e+TMcpJOZYUwiN
+         MyT+C6ERLDQ/mF7l/jFboZXQg0MTNujEjAGa8iM51V8ih0rHp9bgQAWn2hXmbZLVFqen
+         FxOn6xdei4ha/w4FObg80KnoQbPpk+qSE57I2Hi/m0cwmsSsxtAx8OPM4xYeh3blSJq5
+         TZaLjE98g4ToNJXdhi0Jpd+sSWPuXIlGqEJA7KCbjFKOxnLRYFa+CnZpHnEV8bmM0MvG
+         z6hQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=kaZZOzSfE1U5InL076uxyCd5lJ1IWiQoV9yIjLnIADw=;
+        b=H13Q4Rzm0WBbpabcpZLQT++9Ya4qIE5PlANOenFYPDM8dpWFe+FgLXWsLBa2zrInib
+         ntOVVPWVA1GPTPwzg+iVtC++E1oz4ARen8wVUwvpC/AKLloQ5n5n2Q+HJlhxz0w4dMr8
+         gn8C/35t+Kh6iwlH9K7LkLnff74obipkGhj6SrbKjAePY/bORScm/OwTJSVZH4R5ZPjb
+         8SK6z6LhOs/3eXu1TZ93Ce3ee0w41efq95ECCVp+D1zJ3ej1yxnGq4aiaW/C9WYJVavz
+         iN710rx+M53HsSYWltM92r7UMNpYPcpEWMt1UClxjUgxF4UXh3hOturmmTBk1ijlUWtm
+         ku6g==
+X-Gm-Message-State: AOAM533dbV/CheazrnSMcDey1+HovAxmBtwGVIQdjgH3K/1j7JyQN4KQ
+        xG13HmdcgQeR6kXMgoaiMaE=
+X-Google-Smtp-Source: ABdhPJxigYlkk+pjqfHrmEMr5uTSCmwPjamxfNT0l33BZoCn7VfgR6LOdlUu9NUC6+N8LT/CPnQYkg==
+X-Received: by 2002:a5e:8510:: with SMTP id i16mr4466522ioj.40.1623341189938;
+        Thu, 10 Jun 2021 09:06:29 -0700 (PDT)
+Received: from auth1-smtp.messagingengine.com (auth1-smtp.messagingengine.com. [66.111.4.227])
+        by smtp.gmail.com with ESMTPSA id i6sm2205768ilq.57.2021.06.10.09.06.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Jun 2021 09:06:29 -0700 (PDT)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailauth.nyi.internal (Postfix) with ESMTP id 5D89127C0054;
+        Thu, 10 Jun 2021 12:06:27 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Thu, 10 Jun 2021 12:06:28 -0400
+X-ME-Sender: <xms:gjjCYKNvzRNcyy9DyLKGHimonsauZ0fhAuESqa-ZhLMyJG-0ZK5fAw>
+    <xme:gjjCYI8W_4wz7aYJyyrsftg9zOy2e2xI3xMS7VXBeuBL0FZ94_nmsdj4pDwllXrpT
+    c7Oi0H9GbcQZ0Hq3g>
+X-ME-Received: <xmr:gjjCYBRtFfz-q22horoIMZu2lLWRvOip2KYxeGRbA2vbqRArp1m16-o0q0k>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduledrfedufedgleehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhn
+    ucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrth
+    htvghrnhepvdejvdeutdfgfeffgeehkeevteffffekkefgffetieetteeghfefgfetteeg
+    gfetnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghdpihhnfhhrrgguvggrugdrohhrgh
+    enucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegsohhq
+    uhhnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedqud
+    ejjeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmhgv
+    rdhnrghmvg
+X-ME-Proxy: <xmx:gjjCYKvVcsCSZmN_93-Wgpcrv0o1q-YivwUUs5OQYo7y61Pjz8FLPg>
+    <xmx:gjjCYCdgxJwc5sKyOzzFUn_NYihVsaW2qwfRtLaKFi19BngMKb76wA>
+    <xmx:gjjCYO2W2iREyc-1lKfidSTQfJPRTkFE2KkLSbRleIBJKH1p02rHuA>
+    <xmx:gzjCYJCKebPZ6crTqBVroPNLY7F2SQtpJEREaEEeXw_bBr17eBP0owHYHWs>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 10 Jun 2021 12:06:26 -0400 (EDT)
+Date:   Fri, 11 Jun 2021 00:06:21 +0800
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Marc Zyngier <maz@misterjones.org>
+Cc:     Ard Biesheuvel <ardb@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-hyperv@vger.kernel.org, PCI <linux-pci@vger.kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>, Clint Sbisa <csbisa@amazon.com>,
+        Sunil Muthuswamy <sunilmut@microsoft.com>
+Subject: Re: [RFC v3 0/7] PCI: hv: Support host bridge probing on ARM64
+Message-ID: <YMI4fWkHzrD3GKTW@boqun-archlinux>
+References: <20210609163211.3467449-1-boqun.feng@gmail.com>
+ <CAMj1kXGwa28T5Cr_64OC4rqE3qhwWQz+BJPwjdr54G-pVf9+pA@mail.gmail.com>
+ <2283b22ae7832db348bd9b3eff3aab16@misterjones.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, helgaas@kernel.org, sbates@raithlin.com, hch@lst.de, dan.j.williams@intel.com, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v1 4/6] PCI/P2PDMA: Print a warning if the host bridge is not in the whitelist
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2283b22ae7832db348bd9b3eff3aab16@misterjones.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the host bridge is not in the whitelist print a warning in the
-calc_map_type_and_dist_warn() path detailing the vendor and device IDs
-that would need to be added to the whitelist.
+On Thu, Jun 10, 2021 at 04:42:45PM +0100, Marc Zyngier wrote:
+> On 2021-06-10 16:01, Ard Biesheuvel wrote:
+> > On Wed, 9 Jun 2021 at 18:32, Boqun Feng <boqun.feng@gmail.com> wrote:
+> > > 
+> > > Hi Bjorn, Arnd and Marc,
+> > > 
+> > 
+> > Instead of cc'ing Arnd, you cc'ed me (Ard)
+> 
+> And I don't know if you intended to Cc me, but you definitely didn't.
+> 
 
-Suggested-by: Don Dutile <ddutile@redhat.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/pci/p2pdma.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+Weird.. seems my sending script got somewhere wrong. Apologies for you
+both, and Arnd.. I did intend to Cc you and Arnd.
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 09c864f193d2..2de4a9e2da58 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -309,7 +309,7 @@ static const struct pci_p2pdma_whitelist_entry {
- };
- 
- static bool __host_bridge_whitelist(struct pci_host_bridge *host,
--				    bool same_host_bridge)
-+				    bool same_host_bridge, bool warn)
- {
- 	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
- 	const struct pci_p2pdma_whitelist_entry *entry;
-@@ -331,6 +331,10 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
- 		return true;
- 	}
- 
-+	if (warn)
-+		pci_warn(root, "Host bridge not in P2PDMA whitelist: %04x:%04x\n",
-+			 vendor, device);
-+
- 	return false;
- }
- 
-@@ -338,16 +342,17 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
-  * If we can't find a common upstream bridge take a look at the root
-  * complex and compare it to a whitelist of known good hardware.
-  */
--static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b)
-+static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b,
-+				  bool warn)
- {
- 	struct pci_host_bridge *host_a = pci_find_host_bridge(a->bus);
- 	struct pci_host_bridge *host_b = pci_find_host_bridge(b->bus);
- 
- 	if (host_a == host_b)
--		return __host_bridge_whitelist(host_a, true);
-+		return __host_bridge_whitelist(host_a, true, warn);
- 
--	if (__host_bridge_whitelist(host_a, false) &&
--	    __host_bridge_whitelist(host_b, false))
-+	if (__host_bridge_whitelist(host_a, false, warn) &&
-+	    __host_bridge_whitelist(host_b, false, warn))
- 		return true;
- 
- 	return false;
-@@ -483,7 +488,7 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
- 
- 	if (map_type == PCI_P2PDMA_MAP_THRU_HOST_BRIDGE) {
- 		if (!cpu_supports_p2pdma() &&
--		    !host_bridge_whitelist(provider, client))
-+		    !host_bridge_whitelist(provider, client, acs_redirects))
- 			map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
- 	}
- 
--- 
-2.20.1
+How do you want this to proceed? I could do a resend right now, or I
+could wait for a few days (and see others' feedback) and send a V4 next
+week. Sorry again ;-(
 
+Regards,
+Boqun
+
+> Thanks,
+> 
+>         M.
+> 
+> > 
+> > > This is the v3 for the preparation of virtual PCI support on Hyper-V
+> > > ARM64. Previous versions:
+> > > 
+> > > v1:     https://lore.kernel.org/lkml/20210319161956.2838291-1-boqun.feng@gmail.com/
+> > > v2:     https://lore.kernel.org/lkml/20210503144635.2297386-1-boqun.feng@gmail.com/
+> > > 
+> > > Changes since last version:
+> > > 
+> > > *       Use a sentinel value approach instead of calling
+> > >         pci_bus_find_domain_nr() for every CONFIG_PCI_DOMAIN_GENERIC=y
+> > >         arch as per suggestion from
+> > > 
+> > > *       Improve the commit log and comments for patch #6.
+> > > 
+> > > *       Rebase to the latest mainline.
+> > > 
+> > > The basic problem we need to resolve is that ARM64 is an arch with
+> > > PCI_DOMAINS_GENERIC=y, so the bus sysdata is pci_config_window.
+> > > However,
+> > > Hyper-V PCI provides a paravirtualized PCI interface, so there is no
+> > > actual pci_config_window for a PCI host bridge, so no information
+> > > can be
+> > > retrieve from the pci_config_window of a Hyper-V virtual PCI bus. Also
+> > > there is no corresponding ACPI device for the Hyper-V PCI root bridge.
+> > > 
+> > > With this patchset, we could enable the virtual PCI on Hyper-V ARM64
+> > > guest with other code under development.
+> > > 
+> > > Comments and suggestions are welcome.
+> > > 
+> > > Regards,
+> > > Boqun
+> > > 
+> > > Arnd Bergmann (1):
+> > >   PCI: hv: Generify PCI probing
+> > > 
+> > > Boqun Feng (6):
+> > >   PCI: Introduce domain_nr in pci_host_bridge
+> > >   PCI: Allow msi domain set-up at host probing time
+> > >   PCI: hv: Use pci_host_bridge::domain_nr for PCI domain
+> > >   PCI: hv: Set up msi domain at bridge probing time
+> > >   arm64: PCI: Support root bridge preparation for Hyper-V PCI
+> > >   PCI: hv: Turn on the host bridge probing on ARM64
+> > > 
+> > >  arch/arm64/kernel/pci.c             |  7 ++-
+> > >  drivers/pci/controller/pci-hyperv.c | 87
+> > > +++++++++++++++++------------
+> > >  drivers/pci/probe.c                 |  9 ++-
+> > >  include/linux/pci.h                 | 10 ++++
+> > >  4 files changed, 73 insertions(+), 40 deletions(-)
+> > > 
+> > > --
+> > > 2.30.2
+> > > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> -- 
+> Who you jivin' with that Cosmik Debris?
