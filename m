@@ -2,116 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D0B4C48BDF
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 21:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67500C48BDF
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 22:05:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 043A7611CD
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 21:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 402B5613CB
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jun 2021 22:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230160AbhFJVzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Jun 2021 17:55:23 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:35468 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230077AbhFJVzW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jun 2021 17:55:22 -0400
-Received: by mail-pg1-f171.google.com with SMTP id o9so838710pgd.2;
-        Thu, 10 Jun 2021 14:53:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=iEZb1HAGunNhdY/5Q0B2TV+VUw7SSqmOp3IfiC1KV6w=;
-        b=LlM0EbxyzOdNSgxyKNDPYtwDG1WVHV+v4fouU3DbziOjdnCFbtqXLM7cBPaqmHn/wY
-         zQrUE1e6OaFw6hcH0WXCkqqRxcukL3q3bzaCOTTqfBRCiYcmu03tF2nbNubikt92uekU
-         o3vVJgH0RGd7biDy05iNc6pqv2cdGIwToCXOtACVtx0zSuKs7biRJzGjaALlyKHbPm6/
-         uQ685VztdDyalme+cY9E6FAM8r81704fyMvE6Kz/KRLt9E+fFt/Qk+eT2LUJNhXAketD
-         jAW9uloYiRJtQr1YXyIBnnyRJmw69R3cLbvNIsHr+3oOY5dDHSOnpEyT4TTbBfUJbnS/
-         BcOw==
-X-Gm-Message-State: AOAM531yJYGQ0hsuUnP8uxb5UR1U2kh7K0j7Bn3tI9aVm0LNJXV53mvr
-        Z5TmPRvPZNOiF4OmSlc1M7gGZRzaVQ==
-X-Google-Smtp-Source: ABdhPJw2uSITGPgILdhT5spNIAo7woiW7K/FwcK/RX8wK9+o6A5ugRaagkUTjKfKG++E54w8NU8sRw==
-X-Received: by 2002:a63:e316:: with SMTP id f22mr470463pgh.100.1623361993434;
-        Thu, 10 Jun 2021 14:53:13 -0700 (PDT)
-Received: from robh.at.kernel.org ([208.184.162.218])
-        by smtp.gmail.com with ESMTPSA id h8sm3326621pjf.7.2021.06.10.14.52.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Jun 2021 14:53:11 -0700 (PDT)
-Received: (nullmailer pid 2435399 invoked by uid 1000);
-        Thu, 10 Jun 2021 21:46:48 -0000
-Date:   Thu, 10 Jun 2021 16:46:48 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] dt-bindings: pci: Add devicetree binding for
- Qualcomm PCIe EP controller
-Message-ID: <20210610214648.GA2407603@robh.at.kernel.org>
-References: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
- <20210603103814.95177-2-manivannan.sadhasivam@linaro.org>
- <YLw9de/J7h5KZtHu@builder.lan>
+        id S230077AbhFJWHk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Jun 2021 18:07:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58980 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229941AbhFJWHk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Jun 2021 18:07:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 38D0F613F1;
+        Thu, 10 Jun 2021 22:05:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623362743;
+        bh=1RMKsOthF8nmbzYW+O/oUW/rwdCTpBe6yg9JLjyQ8T0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=lr3lkVZ4BUJbcw5jiV8LlIxBUMD1m04SiDmDqiomWiEHFD2c4VWO1wFnmqkkNJ8d5
+         465rSgbip64DmlIbTLOi8tIk4N37KmWE7AQnhCYSwSlw9iQ/8aa/3ipt5Kzlq37QoX
+         Km3f6pmLIfNqJcITrS5u4x0GNQmGN/UhaKFmT9aHW7UOGfjC0QVSYiB02ft+CKJfeH
+         YcP9HWVXSEwvJTaCUrAZJFSagvjcdNhTHfT2j6qIHzX5Vu6Hit56QWZjs225kb5MmF
+         GJMLOihlIOnFsZG3kKKSK1h2AEH6Paths5CjWCIKOX+DSX8/dyLITPXPOniFHExVod
+         Equc5kSo0NJmQ==
+Date:   Thu, 10 Jun 2021 17:05:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH v1 1/6] PCI/P2PDMA: Rename upstream_bridge_distance() and
+ rework documentation
+Message-ID: <20210610220541.GA2779926@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YLw9de/J7h5KZtHu@builder.lan>
+In-Reply-To: <20210610160609.28447-2-logang@deltatee.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Jun 05, 2021 at 10:13:57PM -0500, Bjorn Andersson wrote:
-> On Thu 03 Jun 05:38 CDT 2021, Manivannan Sadhasivam wrote:
+On Thu, Jun 10, 2021 at 10:06:04AM -0600, Logan Gunthorpe wrote:
+> The function upstream_bridge_distance() has evolved such that it's name
+> is no longer entirely reflective of what the function does.
 > 
-> > Add devicetree binding for Qualcomm PCIe EP controller used in platforms
-> > like SDX55. The EP controller is based on the Designware core with
-> > Qualcomm specific wrappers.
-> > 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 144 ++++++++++++++++++
-> >  1 file changed, 144 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-> > new file mode 100644
-> > index 000000000000..3e357cb03a5c
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-> > @@ -0,0 +1,144 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/pci/qcom,pcie-ep.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Qualcomm PCIe Endpoint Controller binding
-> > +
-> > +maintainers:
-> > +  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > +
-> > +allOf:
-> > +  - $ref: "pci-ep.yaml#"
-> > +
-> > +properties:
-> > +  compatible:
-> > +    const: qcom,sdx55-pcie-ep
+> The function not only calculates the distance between two peers but also
+> calculates how the DMA addresses for those two peers should be mapped.
 > 
-> The binding looks good, but this is going to cause us an inevitable
-> warning as we'd have to describe the controller twice (rc + ep) in the
-> sdx55.dtsi.
+> Thus, rename the function to calc_map_type_and_dist() and rework the
+> documentation to better describe the two pieces of information the
+> function returns.
 > 
-> @Rob, what do you suggest we do about this, because it's the same
-> problem currently responsible for hundreds of warnings in the case of
-> GENI (where each node is duplicated for different functions).
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/pci/p2pdma.c | 63 ++++++++++++++++++++++----------------------
+>  1 file changed, 32 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 196382630363..6f90e9812f6e 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -354,7 +354,7 @@ static bool host_bridge_whitelist(struct pci_dev *a, struct pci_dev *b)
+>  }
+>  
+>  static enum pci_p2pdma_map_type
+> -__upstream_bridge_distance(struct pci_dev *provider, struct pci_dev *client,
+> +__calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+>  		int *dist, bool *acs_redirects, struct seq_buf *acs_list)
+>  {
+>  	struct pci_dev *a = provider, *b = client, *bb;
+> @@ -433,17 +433,18 @@ static unsigned long map_types_idx(struct pci_dev *client)
+>  }
+>  
+>  /*
+> - * Find the distance through the nearest common upstream bridge between
+> - * two PCI devices.
+> + * Calculate the P2PDMA mapping type and distance between two PCI devices.
+>   *
+> - * If the two devices are the same device then 0 will be returned.
+> + * If the two devices are the same device then PCI_P2PDMA_MAP_BUS_ADDR
+> + * and a distance of 0 will be returned.
+>   *
+>   * If there are two virtual functions of the same device behind the same
+> - * bridge port then 2 will be returned (one step down to the PCIe switch,
+> - * then one step back to the same device).
+> + * bridge port then PCI_P2PDMA_MAP_BUS_ADDR and a distance of 2 will be
+> + * returned (one step down to the PCIe switch, then one step back to the
+> + * same device).
 
-What determines the mode? Assuming it is fixed for a platform, can't you 
-just have 2 .dtsi files and include the right one. The SoC file could 
-have the common h/w specific parts (clks, resets, etc.) as those 
-shouldn't really be different depending on the mode. IIRC, some PCI 
-bindings do this by design (meaning there's only one definition).
+The new text is:
 
-Rob
+  If there are two virtual functions of the same device behind the same
+  bridge port then PCI_P2PDMA_MAP_BUS_ADDR and a distance of 2 will be
+  returned (one step down to the PCIe switch, then one step back to the
+  same device).
+
+I *think* this includes two functions of the same multi-function
+device, or two virtual functions of the same device, right?  In both
+cases, the two devices are obviously behind the same bridge port.
+
+Is this usage of "down to the PCIe switch" the common usage in P2PDMA?
+I normally think of going from an endpoint to a switch as being "up"
+toward the CPU.  But PCIe made it all confusing by putting downstream
+ports at the upstream end of links and vice versa.
+
+We also have a bit of a mix in terminology between "bridge," "switch,"
+"bridge port."  I'd probably write something like:
+
+  If they are two functions of the same device behind the same bridge,
+  return PCI_P2PDMA_MAP_BUS_ADDR and a distance of 2 (one hop up to
+  the bridge, then one hop back down to another function of the same
+  device).
+
+No need to repost for this; just let me know what you think and I can
+tweak accordingly.
+
+Bjorn
