@@ -2,162 +2,241 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F955C48BD1
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 14:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB7BC48BD1
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:27:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3963760E09
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 14:39:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9C47611AE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:27:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230508AbhFKOlL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 10:41:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56634 "EHLO
+        id S231742AbhFKP3r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jun 2021 11:29:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231698AbhFKOlJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 10:41:09 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5600C061574;
-        Fri, 11 Jun 2021 07:38:54 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id h1so2951386plt.1;
-        Fri, 11 Jun 2021 07:38:54 -0700 (PDT)
+        with ESMTP id S231318AbhFKP3r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:29:47 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08506C061574
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:27:49 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id n12so2728238pgs.13
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:27:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:references:date:in-reply-to:message-id
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=8lYrWaWj8rXB/t2XiDxhDEhaWgsjpf7zHZODYkct5sY=;
-        b=oYN9j5Z/Cjd7h021FHyj8wxm8sPCqMSSKS+PshjShNgbATg0/a07QGcEO+TPGy/BcR
-         dnNfXLSH/p4J2eBZ+C+EYOutekG4GiJnzsTZlAC/JVREJkDwI3wosR299n4LQHLuMLDt
-         7OoIXY+s15J2V/G7504nJ5oNitQNa5eY+LE9cLIEpGhcByotkmlCjHibHFGGDoSQKyTT
-         rE6KhxFyg68jWlm+L8EcaAZvxic+wLcjXY3fbgYvWa4cC95z3jJL1pFM6tvm8Jm175wl
-         TW9GEu3grV0id3YJEBP4pqcDDcHDpTk/oxs6KLuFEvj8pxcnWT+xPktjhaEtHzixxSiz
-         F8mQ==
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=z3csfjTdnaGEbW5Yiu81rOYxUROdkDuu0pkC+1dIGAc=;
+        b=IkC7yFFhO8hIfNYdMdJ54k4hExWD/qoffPbEBXy7aMHVEBwdwVaaywxk2mt0G3QZuk
+         kHNUXds8Y0K0b8H58qwuxnw/8yQrewipm9rVIDVGn4pqLKNyquN2PKy3qJ+VVeLcukCR
+         pIHcSWbnGwWNwrAuGd/5jq088bjDa5bnVis6E=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:references:date:in-reply-to
-         :message-id:user-agent:mime-version:content-transfer-encoding;
-        bh=8lYrWaWj8rXB/t2XiDxhDEhaWgsjpf7zHZODYkct5sY=;
-        b=melMc5ISQnPn0qk+YLUwQhpp5BHRFAgyRDXjB9CpJsvaqHOpuFL9l+9mKgiDBbRn/3
-         JcDLeTcByzcOWEAkbzrSbHAbmHSSMozbDeRiegQD+UQKIAqGKAsChevt7wFtLai0pVGf
-         mfXZKDlGpb/cwPWjXs+oIryzj6W/8Vt2KGPEOMmeNo4U+mOJpO7VUbQy1jqm+mndC8um
-         QgvU3r0yQvWEr+rXwXx8xF46Nqzl/fjFDY7p/Sz8p9wWuKlcTPsxEDr/jh5c+foc2Yru
-         ZEU6IS/KU7CPnfMpD4Jyh63KaJWAdDpc7KmsIEdzbht2PfCzpue8IHJE7WSYMcY4cy8g
-         P9Zg==
-X-Gm-Message-State: AOAM5328Pcz0Us3kuvD4LUIJvqUinbsWstSUu8ov/7MVILRpp4CoADmg
-        hrfnaj12ozGYm0vqd+29Zo0=
-X-Google-Smtp-Source: ABdhPJwaPJKGmSKoSUrGQKKB1LbnTDaqRXUIvShM3eoRuGHjdDT+qfmx817r+169+oLLB8OLjcRTHQ==
-X-Received: by 2002:a17:90a:6002:: with SMTP id y2mr9656377pji.197.1623422334188;
-        Fri, 11 Jun 2021 07:38:54 -0700 (PDT)
-Received: from localhost (122x211x248x161.ap122.ftth.ucom.ne.jp. [122.211.248.161])
-        by smtp.gmail.com with ESMTPSA id fy16sm10572998pjb.49.2021.06.11.07.38.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Jun 2021 07:38:53 -0700 (PDT)
-From:   Punit Agrawal <punitagrawal@gmail.com>
-To:     Heiko =?utf-8?Q?St=C3=BCbner?= <heiko@sntech.de>
-Cc:     helgaas@kernel.org, robh+dt@kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, alexandru.elisei@arm.com, wqu@suse.com,
-        robin.murphy@arm.com, pgwipeout@gmail.com, ardb@kernel.org,
-        briannorris@chromium.org, shawn.lin@rock-chips.com
-Subject: Re: [PATCH v3 4/4] arm64: dts: rockchip: Update PCI host bridge
- window to 32-bit address memory
-References: <20210607112856.3499682-1-punitagrawal@gmail.com>
-        <20210607112856.3499682-5-punitagrawal@gmail.com>
-        <3105233.izSxrag8PF@diego>
-Date:   Fri, 11 Jun 2021 23:38:50 +0900
-In-Reply-To: <3105233.izSxrag8PF@diego> ("Heiko =?utf-8?Q?St=C3=BCbner=22'?=
- =?utf-8?Q?s?= message of "Thu, 10
-        Jun 2021 23:50:40 +0200")
-Message-ID: <87r1h8ihz9.fsf@stealth>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=z3csfjTdnaGEbW5Yiu81rOYxUROdkDuu0pkC+1dIGAc=;
+        b=LuM4xpgtjrvTyv7wv+A4nwyD/4HtzZAzit0B1NgRsE5atnbeNhHrywzG4egdR8FyVh
+         VyTft5NXoi1kDEu0tKvwpWEy3W8yY7oxhUCeND8kXtCt9LkpUZM47INuHT7TSyvjUnFT
+         7TRBPoHEGzbZE4rlotC0FSxSBK3PwheA6Rq65IONPeRteICh6a8VJdrc8PUGatN9IXjt
+         bEsf02iTWvSRfpiYs17G0aQ44KPiZ2Zdqx/XqROuGFuaF8N9NeGaC/yTcunz+HVmvqDC
+         6kDrFW/Y/rQSBexRr3foWSYyR8pT+P18mbKizWxJy+6ohUssxvIzPPcBU0rHV56MigJR
+         siAw==
+X-Gm-Message-State: AOAM533FlYy8txF630rkps076ETV7gnyUMBCEfbTxKMSr5o/zrn9ljRt
+        Bo1tCTm3lEWj3+gYt4nNQPxSNg==
+X-Google-Smtp-Source: ABdhPJyj9WektlHINHWsfATaExSaFcZYhgD+NDtqPb5EwrK4uHwBuEuhV53c0IRLlzaKiXoj5cmzYw==
+X-Received: by 2002:aa7:84c7:0:b029:2e9:2d18:54a5 with SMTP id x7-20020aa784c70000b02902e92d1854a5mr8750291pfn.44.1623425268566;
+        Fri, 11 Jun 2021 08:27:48 -0700 (PDT)
+Received: from localhost ([2401:fa00:95:205:33c8:8e01:1161:6797])
+        by smtp.gmail.com with UTF8SMTPSA id m2sm5324723pjf.24.2021.06.11.08.27.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Jun 2021 08:27:48 -0700 (PDT)
+From:   Claire Chang <tientzu@chromium.org>
+To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>
+Cc:     benh@kernel.crashing.org, paulus@samba.org,
+        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        sstabellini@kernel.org, Robin Murphy <robin.murphy@arm.com>,
+        grant.likely@arm.com, xypron.glpk@gmx.de,
+        Thierry Reding <treding@nvidia.com>, mingo@kernel.org,
+        bauerman@linux.ibm.com, peterz@infradead.org,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Saravana Kannan <saravanak@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        heikki.krogerus@linux.intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        linux-devicetree <devicetree@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
+        Nicolas Boichat <drinkcat@chromium.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>, tfiga@chromium.org,
+        bskeggs@redhat.com, bhelgaas@google.com, chris@chris-wilson.co.uk,
+        tientzu@chromium.org, daniel@ffwll.ch, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        jani.nikula@linux.intel.com, jxgao@google.com,
+        joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
+        maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
+        rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
+Subject: [PATCH v9 04/14] swiotlb: Add restricted DMA pool initialization
+Date:   Fri, 11 Jun 2021 23:26:49 +0800
+Message-Id: <20210611152659.2142983-5-tientzu@chromium.org>
+X-Mailer: git-send-email 2.32.0.272.g935e593368-goog
+In-Reply-To: <20210611152659.2142983-1-tientzu@chromium.org>
+References: <20210611152659.2142983-1-tientzu@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Heiko,
+Add the initialization function to create restricted DMA pools from
+matching reserved-memory nodes.
 
-Heiko St=C3=BCbner <heiko@sntech.de> writes:
+Signed-off-by: Claire Chang <tientzu@chromium.org>
+---
+ include/linux/swiotlb.h |  3 +-
+ kernel/dma/Kconfig      | 14 ++++++++
+ kernel/dma/swiotlb.c    | 75 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 91 insertions(+), 1 deletion(-)
 
-> Hi,
->
-> Am Montag, 7. Juni 2021, 13:28:56 CEST schrieb Punit Agrawal:
->> The PCIe host bridge on RK3399 advertises a single 64-bit memory
->> address range even though it lies entirely below 4GB.
->>=20
->> Previously the OF PCI range parser treated 64-bit ranges more
->> leniently (i.e., as 32-bit), but since commit 9d57e61bf723 ("of/pci:
->> Add IORESOURCE_MEM_64 to resource flags for 64-bit memory addresses")
->> the code takes a stricter view and treats the ranges as advertised in
->> the device tree (i.e, as 64-bit).
->>=20
->> The change in behaviour causes failure when allocating bus addresses
->> to devices connected behind a PCI-to-PCI bridge that require
->> non-prefetchable memory ranges. The allocation failure was observed
->> for certain Samsung NVMe drives connected to RockPro64 boards.
->>=20
->> Update the host bridge window attributes to treat it as 32-bit address
->> memory. This fixes the allocation failure observed since commit
->> 9d57e61bf723.
->>=20
->> Reported-by: Alexandru Elisei <alexandru.elisei@arm.com>
->> Link: https://lore.kernel.org/r/7a1e2ebc-f7d8-8431-d844-41a9c36a8911@arm=
-.com
->> Suggested-by: Robin Murphy <robin.murphy@arm.com>
->> Signed-off-by: Punit Agrawal <punitagrawal@gmail.com>
->> Tested-by: Alexandru Elisei <alexandru.elisei@arm.com>
->> Cc: Heiko Stuebner <heiko@sntech.de>
->> Cc: Rob Herring <robh+dt@kernel.org>
->
-> just for clarity, should I just pick this patch separately for 5.13-rc to
-> make it easy for people using current kernel devicetrees, or should
-> this wait for the update mentioned in the cover-letter response
-> and should go all together through the PCI tree?
+diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+index 008125ccd509..ec0c01796c8a 100644
+--- a/include/linux/swiotlb.h
++++ b/include/linux/swiotlb.h
+@@ -72,7 +72,8 @@ extern enum swiotlb_force swiotlb_force;
+  *		range check to see if the memory was in fact allocated by this
+  *		API.
+  * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
+- *		@end. This is command line adjustable via setup_io_tlb_npages.
++ *		@end. For default swiotlb, this is command line adjustable via
++ *		setup_io_tlb_npages.
+  * @used:	The number of used IO TLB block.
+  * @list:	The free list describing the number of free entries available
+  *		from each index.
+diff --git a/kernel/dma/Kconfig b/kernel/dma/Kconfig
+index 77b405508743..3e961dc39634 100644
+--- a/kernel/dma/Kconfig
++++ b/kernel/dma/Kconfig
+@@ -80,6 +80,20 @@ config SWIOTLB
+ 	bool
+ 	select NEED_DMA_MAP_STATE
+ 
++config DMA_RESTRICTED_POOL
++	bool "DMA Restricted Pool"
++	depends on OF && OF_RESERVED_MEM
++	select SWIOTLB
++	help
++	  This enables support for restricted DMA pools which provide a level of
++	  DMA memory protection on systems with limited hardware protection
++	  capabilities, such as those lacking an IOMMU.
++
++	  For more information see
++	  <Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt>
++	  and <kernel/dma/swiotlb.c>.
++	  If unsure, say "n".
++
+ #
+ # Should be selected if we can mmap non-coherent mappings to userspace.
+ # The only thing that is really required is a way to set an uncached bit
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 29b950ab1351..c4a071d6a63f 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -39,6 +39,13 @@
+ #ifdef CONFIG_DEBUG_FS
+ #include <linux/debugfs.h>
+ #endif
++#ifdef CONFIG_DMA_RESTRICTED_POOL
++#include <linux/io.h>
++#include <linux/of.h>
++#include <linux/of_fdt.h>
++#include <linux/of_reserved_mem.h>
++#include <linux/slab.h>
++#endif
+ 
+ #include <asm/io.h>
+ #include <asm/dma.h>
+@@ -688,3 +695,71 @@ static int __init swiotlb_create_default_debugfs(void)
+ late_initcall(swiotlb_create_default_debugfs);
+ 
+ #endif
++
++#ifdef CONFIG_DMA_RESTRICTED_POOL
++static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
++				    struct device *dev)
++{
++	struct io_tlb_mem *mem = rmem->priv;
++	unsigned long nslabs = rmem->size >> IO_TLB_SHIFT;
++
++	/*
++	 * Since multiple devices can share the same pool, the private data,
++	 * io_tlb_mem struct, will be initialized by the first device attached
++	 * to it.
++	 */
++	if (!mem) {
++		mem = kzalloc(struct_size(mem, slots, nslabs), GFP_KERNEL);
++		if (!mem)
++			return -ENOMEM;
++
++		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false, true);
++
++		rmem->priv = mem;
++
++		if (IS_ENABLED(CONFIG_DEBUG_FS)) {
++			mem->debugfs =
++				debugfs_create_dir(rmem->name, debugfs_dir);
++			swiotlb_create_debugfs_files(mem);
++		}
++	}
++
++	dev->dma_io_tlb_mem = mem;
++
++	return 0;
++}
++
++static void rmem_swiotlb_device_release(struct reserved_mem *rmem,
++					struct device *dev)
++{
++	dev->dma_io_tlb_mem = io_tlb_default_mem;
++}
++
++static const struct reserved_mem_ops rmem_swiotlb_ops = {
++	.device_init = rmem_swiotlb_device_init,
++	.device_release = rmem_swiotlb_device_release,
++};
++
++static int __init rmem_swiotlb_setup(struct reserved_mem *rmem)
++{
++	unsigned long node = rmem->fdt_node;
++
++	if (of_get_flat_dt_prop(node, "reusable", NULL) ||
++	    of_get_flat_dt_prop(node, "linux,cma-default", NULL) ||
++	    of_get_flat_dt_prop(node, "linux,dma-default", NULL) ||
++	    of_get_flat_dt_prop(node, "no-map", NULL))
++		return -EINVAL;
++
++	if (PageHighMem(pfn_to_page(PHYS_PFN(rmem->base)))) {
++		pr_err("Restricted DMA pool must be accessible within the linear mapping.");
++		return -EINVAL;
++	}
++
++	rmem->ops = &rmem_swiotlb_ops;
++	pr_info("Reserved memory: created restricted DMA pool at %pa, size %ld MiB\n",
++		&rmem->base, (unsigned long)rmem->size / SZ_1M);
++	return 0;
++}
++
++RESERVEDMEM_OF_DECLARE(dma, "restricted-dma-pool", rmem_swiotlb_setup);
++#endif /* CONFIG_DMA_RESTRICTED_POOL */
+-- 
+2.32.0.272.g935e593368-goog
 
-The device tree change is independent of the other patches in the
-series. It would be great if you can pick this one - I am waiting on
-feedback from Rob before sending an update on the remaining patches.
-
-Thanks,
-Punit
-
-> If so, I can provide an
-> Acked-by: Heiko Stuebner <heiko@sntech.de>
->
->
->
->> ---
->>  arch/arm64/boot/dts/rockchip/rk3399.dtsi | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>=20
->> diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi b/arch/arm64/boot/=
-dts/rockchip/rk3399.dtsi
->> index 634a91af8e83..4b854eb21f72 100644
->> --- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
->> +++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
->> @@ -227,7 +227,7 @@ pcie0: pcie@f8000000 {
->>  		       <&pcie_phy 2>, <&pcie_phy 3>;
->>  		phy-names =3D "pcie-phy-0", "pcie-phy-1",
->>  			    "pcie-phy-2", "pcie-phy-3";
->> -		ranges =3D <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x1e00000>,
->> +		ranges =3D <0x82000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x1e00000>,
->>  			 <0x81000000 0x0 0xfbe00000 0x0 0xfbe00000 0x0 0x100000>;
->>  		resets =3D <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
->>  			 <&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE>,
->>=20
->
->
->
->
->
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
