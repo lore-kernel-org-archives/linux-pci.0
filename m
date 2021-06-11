@@ -7,51 +7,48 @@ X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FDEAC48BD1
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85E68C48BE5
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:29:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3ADC161404
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FAD361400
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231843AbhFKPbf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 11:31:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39580 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231946AbhFKPb2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:31:28 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75693C0613A2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:29:17 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id l1so2776111pgm.1
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:29:17 -0700 (PDT)
+        id S232003AbhFKPbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jun 2021 11:31:40 -0400
+Received: from mail-pf1-f169.google.com ([209.85.210.169]:36511 "EHLO
+        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231977AbhFKPbb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:31:31 -0400
+Received: by mail-pf1-f169.google.com with SMTP id c12so4739353pfl.3
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:29:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=/h+uMK5EvTU9y/lCGU3ZvCTAZDjSKC/jtJCWXvTsWEE=;
-        b=HhpdzooM/9OahuuJNkXbvXBqmvqw8FUa6EKj2BaW6crQMvq/ScwxDhTvwyC0rkCxs+
-         qdWlvtSqQ4JGBA/bijy6bpuQWOxgyJPJ9pxnXvbdvDkSLuKEZ1SJkRU0zubFn6wd3k5G
-         bES3BFVcePGohMbxPDI0s9cBVMuc2zmUCtVw8=
+        bh=DIGkdODP5I9MRpEvhkJ7HW1s6uTYZn4rnCzwtz1SAMY=;
+        b=lhAYxyf+2EghTuKgem3YKjDes+j3ljet4Ra8WAuPAmfLRQfXVHLYxk9WtJsBCtY28E
+         IuaqxaEDW5QIxfOZvX0LKXau3+uxIIgMfu0x386ocAscsOejf4LbnCS7xFpX/SEkViXk
+         qWH7bieG65MLRgMm+LFtf2LJCaC8caomnkZGw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/h+uMK5EvTU9y/lCGU3ZvCTAZDjSKC/jtJCWXvTsWEE=;
-        b=PX67MubvSYxBTFI/+jejp7LaPVwN7gJIFEvxkVZifGGL1xvyTf1vvGemlcg1gdVQ2M
-         H/VBxQ/8SdPtGpdIk/cj27xuP9cCvUUhfL6+X9LxOWZD8hrhVuDOhPFw4auVKEnowZn/
-         3BWdX/6yUsg+9akY58qnft2QBDZBdmYvv4fdqo8kkBr7sxlUiubeb6MdAwzg3wqi00Vx
-         8kicvgeUWe4Q4d0FnqlrzL0X/XIteUAUVV+a146ce0kS/zjrW6l3FsvGJdnKTTJDqYnx
-         v3au6XXvKRzHLi6+v7flyM4mnsPvAq1Kuuo2wDKGGImS6ifH82RWIqeQmFzT0Uun64R2
-         prjw==
-X-Gm-Message-State: AOAM5304b85Mt3CnTQDL54gI8k+aWuZzG7UgEuRKvr08raXQmrv73+Ld
-        z58aa0rlBTGTl2QZeULQzX0plg==
-X-Google-Smtp-Source: ABdhPJxm0sDDpDqGQ8rNYiECVqpZ7eLqxfJ9mC0qI8JX65WyVERI818aqtVbmfi4eNxIlAsNsotgSA==
-X-Received: by 2002:a63:e954:: with SMTP id q20mr1993869pgj.332.1623425356990;
-        Fri, 11 Jun 2021 08:29:16 -0700 (PDT)
+        bh=DIGkdODP5I9MRpEvhkJ7HW1s6uTYZn4rnCzwtz1SAMY=;
+        b=nVNEetsZ9BQZFK4iI9h+W31V1d2t+ZONbaq5LzPOgE2YlG6S4QKzCS/DXP49/gRHWB
+         J401iRCYX+pBzJ3HLbS1K0/UTpQyupxkENs0ux4ej02xK/F4mEJ1z1W/MwhP/5250p4z
+         J+BYbWCj66fHqemQE/qpZCXwEW3xwBOZM19ueQYdyQOvJ+W4Wt/aABwcx/5d9gvAMiq5
+         R1jSLeRPqQ2PHJLkkOYSe8RLjRR+B2tFh9jqBH3tdgAZFXVHWc1mq4CiGajYlk7x/blC
+         Hj16Gk6Gm+uSwTxcCLe2SNIHRutWzWYjYqR6Vk/m8oCtcQP91FNspwbdF8cKpa8LcG4a
+         u02Q==
+X-Gm-Message-State: AOAM533GMGircygASgO6+z/6nJKRZv6OWMSLlPq5HSRyuy6jKxgL1c9+
+        Xblm30z0kTWAsrvzTQuFGte7lA==
+X-Google-Smtp-Source: ABdhPJzQPgrFOqie91DIAajE2oiuNE8F7FW4Yfc8mGamEZxew4gLUUvHH/uFdPCPIOoRHfVNxt8tNA==
+X-Received: by 2002:a63:571d:: with SMTP id l29mr4136061pgb.179.1623425312945;
+        Fri, 11 Jun 2021 08:28:32 -0700 (PDT)
 Received: from localhost ([2401:fa00:95:205:33c8:8e01:1161:6797])
-        by smtp.gmail.com with UTF8SMTPSA id n11sm5376420pfu.29.2021.06.11.08.29.09
+        by smtp.gmail.com with UTF8SMTPSA id j12sm5784068pgs.83.2021.06.11.08.28.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Jun 2021 08:29:16 -0700 (PDT)
+        Fri, 11 Jun 2021 08:28:32 -0700 (PDT)
 From:   Claire Chang <tientzu@chromium.org>
 To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
@@ -86,9 +83,9 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
         maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
         rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
-Subject: [PATCH v9 14/14] of: Add plumbing for restricted DMA pool
-Date:   Fri, 11 Jun 2021 23:26:59 +0800
-Message-Id: <20210611152659.2142983-15-tientzu@chromium.org>
+Subject: [PATCH v9 09/14] swiotlb: Refactor swiotlb_tbl_unmap_single
+Date:   Fri, 11 Jun 2021 23:26:54 +0800
+Message-Id: <20210611152659.2142983-10-tientzu@chromium.org>
 X-Mailer: git-send-email 2.32.0.272.g935e593368-goog
 In-Reply-To: <20210611152659.2142983-1-tientzu@chromium.org>
 References: <20210611152659.2142983-1-tientzu@chromium.org>
@@ -98,104 +95,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If a device is not behind an IOMMU, we look up the device node and set
-up the restricted DMA when the restricted-dma-pool is presented.
+Add a new function, release_slots, to make the code reusable for supporting
+different bounce buffer pools, e.g. restricted DMA pool.
 
 Signed-off-by: Claire Chang <tientzu@chromium.org>
 ---
- drivers/of/address.c    | 33 +++++++++++++++++++++++++++++++++
- drivers/of/device.c     |  3 +++
- drivers/of/of_private.h |  6 ++++++
- 3 files changed, 42 insertions(+)
+ kernel/dma/swiotlb.c | 35 ++++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 3b2acca7e363..c8066d95ff0e 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -8,6 +8,7 @@
- #include <linux/logic_pio.h>
- #include <linux/module.h>
- #include <linux/of_address.h>
-+#include <linux/of_reserved_mem.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/sizes.h>
-@@ -1001,6 +1002,38 @@ int of_dma_get_range(struct device_node *np, const struct bus_dma_region **map)
- 	of_node_put(node);
- 	return ret;
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 364c6c822063..a6562573f090 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -554,27 +554,15 @@ phys_addr_t swiotlb_tbl_map_single(struct device *dev, phys_addr_t orig_addr,
+ 	return tlb_addr;
  }
-+
-+int of_dma_set_restricted_buffer(struct device *dev, struct device_node *np)
-+{
-+	struct device_node *node, *of_node = dev->of_node;
-+	int count, i;
-+
-+	count = of_property_count_elems_of_size(of_node, "memory-region",
-+						sizeof(u32));
-+	/*
-+	 * If dev->of_node doesn't exist or doesn't contain memory-region, try
-+	 * the OF node having DMA configuration.
-+	 */
-+	if (count <= 0) {
-+		of_node = np;
-+		count = of_property_count_elems_of_size(
-+			of_node, "memory-region", sizeof(u32));
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+		node = of_parse_phandle(of_node, "memory-region", i);
-+		/*
-+		 * There might be multiple memory regions, but only one
-+		 * restricted-dma-pool region is allowed.
-+		 */
-+		if (of_device_is_compatible(node, "restricted-dma-pool") &&
-+		    of_device_is_available(node))
-+			return of_reserved_mem_device_init_by_idx(dev, of_node,
-+								  i);
-+	}
-+
-+	return 0;
-+}
- #endif /* CONFIG_HAS_DMA */
  
- /**
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 1defdf15ba95..ba4656e77502 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -168,6 +168,9 @@ int of_dma_configure_id(struct device *dev, struct device_node *np,
- 	if (IS_ENABLED(CONFIG_SWIOTLB))
- 		swiotlb_set_io_tlb_default_mem(dev);
- 
-+	if (!iommu)
-+		return of_dma_set_restricted_buffer(dev, np);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(of_dma_configure_id);
-diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
-index 631489f7f8c0..376462798f7e 100644
---- a/drivers/of/of_private.h
-+++ b/drivers/of/of_private.h
-@@ -163,12 +163,18 @@ struct bus_dma_region;
- #if defined(CONFIG_OF_ADDRESS) && defined(CONFIG_HAS_DMA)
- int of_dma_get_range(struct device_node *np,
- 		const struct bus_dma_region **map);
-+int of_dma_set_restricted_buffer(struct device *dev, struct device_node *np);
- #else
- static inline int of_dma_get_range(struct device_node *np,
- 		const struct bus_dma_region **map)
+-/*
+- * tlb_addr is the physical address of the bounce buffer to unmap.
+- */
+-void swiotlb_tbl_unmap_single(struct device *hwdev, phys_addr_t tlb_addr,
+-			      size_t mapping_size, enum dma_data_direction dir,
+-			      unsigned long attrs)
++static void release_slots(struct device *dev, phys_addr_t tlb_addr)
  {
- 	return -ENODEV;
- }
-+static inline int of_dma_set_restricted_buffer(struct device *dev,
-+					       struct device_node *np)
-+{
-+	return -ENODEV;
-+}
- #endif
+-	struct io_tlb_mem *mem = hwdev->dma_io_tlb_mem;
++	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
+ 	unsigned long flags;
+-	unsigned int offset = swiotlb_align_offset(hwdev, tlb_addr);
++	unsigned int offset = swiotlb_align_offset(dev, tlb_addr);
+ 	int index = (tlb_addr - offset - mem->start) >> IO_TLB_SHIFT;
+ 	int nslots = nr_slots(mem->slots[index].alloc_size + offset);
+ 	int count, i;
  
- void fdt_init_reserved_mem(void);
+-	/*
+-	 * First, sync the memory before unmapping the entry
+-	 */
+-	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
+-	    (dir == DMA_FROM_DEVICE || dir == DMA_BIDIRECTIONAL))
+-		swiotlb_bounce(hwdev, tlb_addr, mapping_size, DMA_FROM_DEVICE);
+-
+ 	/*
+ 	 * Return the buffer to the free list by setting the corresponding
+ 	 * entries to indicate the number of contiguous entries available.
+@@ -609,6 +597,23 @@ void swiotlb_tbl_unmap_single(struct device *hwdev, phys_addr_t tlb_addr,
+ 	spin_unlock_irqrestore(&mem->lock, flags);
+ }
+ 
++/*
++ * tlb_addr is the physical address of the bounce buffer to unmap.
++ */
++void swiotlb_tbl_unmap_single(struct device *dev, phys_addr_t tlb_addr,
++			      size_t mapping_size, enum dma_data_direction dir,
++			      unsigned long attrs)
++{
++	/*
++	 * First, sync the memory before unmapping the entry
++	 */
++	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
++	    (dir == DMA_FROM_DEVICE || dir == DMA_BIDIRECTIONAL))
++		swiotlb_bounce(dev, tlb_addr, mapping_size, DMA_FROM_DEVICE);
++
++	release_slots(dev, tlb_addr);
++}
++
+ void swiotlb_sync_single_for_device(struct device *dev, phys_addr_t tlb_addr,
+ 		size_t size, enum dma_data_direction dir)
+ {
 -- 
 2.32.0.272.g935e593368-goog
 
