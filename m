@@ -2,160 +2,372 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1040C4743D
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 04:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A95A3C48BE0
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 06:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A136361374
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 04:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D93061374
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 06:10:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbhFKErr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 00:47:47 -0400
-Received: from mail-pl1-f181.google.com ([209.85.214.181]:37789 "EHLO
-        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbhFKErq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 00:47:46 -0400
-Received: by mail-pl1-f181.google.com with SMTP id h12so2209759plf.4
-        for <linux-pci@vger.kernel.org>; Thu, 10 Jun 2021 21:45:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=fRxLBozaN4SltyilUViQPuK+PpihOctfxY+FQg2HMuM=;
-        b=Ie7xmferhpcr9Yhmc5415IDEf7zXz7R6ygX4f8Coa/dxeb6OEkqDtCYa1piGT+S4ca
-         rOHGBVQRmKXx9L5V5i7ahqfzUgaJhW0fVzfXkwmJpYmlje7AQrNdhgv4lz+K3n4TA/A+
-         tvR9qo1GRA2COvzwFlTlfJ8oWavvuW08bUEJLdbY7bLBZkZQVOdKFOPTxtRl+Pwk6j93
-         LKuruUUTnqhUe6fs2kBlu57LqZwDLtL44mpnMWji4iBnhRmpwN1BXpOoQqlHly4XCtEL
-         wPTVq/g0XSHsLqJQa4m/AXQHYXIOifhLHD1XXNsX2zlgaZMCwQJ/bMEJ4cCWBGBBsYMz
-         t7nA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=fRxLBozaN4SltyilUViQPuK+PpihOctfxY+FQg2HMuM=;
-        b=TpGH+2o/zaO/DVO3ZAWHgwKUfJqf0qtX4/INhzxcvKHIWRRgEGln+uQt9NZtETCCYC
-         uzzxeiLhmkxrjsEcsyZUsh3uDVj1W+leB2Unx6qiFfxuMLuZ9JWUCA6hOCZA24fqaPC0
-         y/RbVtYxzB5PPgMwXl2JdsMfaOFNAgfn5m+u7QhlWJssdaznOdXfqrX9+yLM4+Bn5COh
-         cuUTPwn4YlyrxrmlJ32ynhCwzqxFmiF8MLEEyKZEuHZmxM1CdE5sp0eeYmQrPhGmrxWV
-         RDI56wnEkwXp451xSEsmeljISZe1sqFxOVNBONYSlNPRC/S6tq6Gh1/c/Z0MjUrRDy2G
-         ORCg==
-X-Gm-Message-State: AOAM533p2Q68ZM7B5D0aQ3/oa36ln3KwcTFYv2Z3yn4pM4LO7QujXsBl
-        w6CW3SdAK/KwY79lnbEywPEy
-X-Google-Smtp-Source: ABdhPJyXE5YbnRFjaJKPHPKLkZ0eXnaLHFVXDGyku5AZygmgIdkaC9PWx9cEvRiPPkSF8vurPdsuOA==
-X-Received: by 2002:a17:90a:a481:: with SMTP id z1mr6987736pjp.165.1623386677654;
-        Thu, 10 Jun 2021 21:44:37 -0700 (PDT)
-Received: from thinkpad ([2409:4072:6281:d9a2:40f:351d:828b:fc1a])
-        by smtp.gmail.com with ESMTPSA id h6sm3730181pfk.40.2021.06.10.21.44.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Jun 2021 21:44:37 -0700 (PDT)
-Date:   Fri, 11 Jun 2021 10:14:28 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     lorenzo.pieralisi@arm.com, robh@kernel.org, bhelgaas@google.com,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Siddartha Mohanadoss <smohanad@codeaurora.org>
-Subject: Re: [PATCH v2 2/3] PCI: dwc: Add Qualcomm PCIe Endpoint controller
- driver
-Message-ID: <20210611044428.GA6950@thinkpad>
-References: <20210603103814.95177-1-manivannan.sadhasivam@linaro.org>
- <20210603103814.95177-3-manivannan.sadhasivam@linaro.org>
- <YLw744UeM6fj/xoS@builder.lan>
- <20210609085152.GB15118@thinkpad>
- <YMLmgQ2hWAxj+vuy@builder.lan>
+        id S231151AbhFKGMh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jun 2021 02:12:37 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47967 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230463AbhFKGMg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 02:12:36 -0400
+X-UUID: a28ca98363074f08b5f67f6218992671-20210611
+X-UUID: a28ca98363074f08b5f67f6218992671-20210611
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <chuanjia.liu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1180648093; Fri, 11 Jun 2021 14:10:36 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 11 Jun 2021 14:10:34 +0800
+Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 11 Jun 2021 14:10:33 +0800
+From:   Chuanjia Liu <chuanjia.liu@mediatek.com>
+To:     <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>
+CC:     <ryder.lee@mediatek.com>, <jianjun.wang@mediatek.com>,
+        <yong.wu@mediatek.com>, <chuanjia.liu@mediatek.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v10 1/4] dt-bindings: PCI: mediatek: Update the Device tree bindings
+Date:   Fri, 11 Jun 2021 14:08:59 +0800
+Message-ID: <20210611060902.12418-2-chuanjia.liu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20210611060902.12418-1-chuanjia.liu@mediatek.com>
+References: <20210611060902.12418-1-chuanjia.liu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YMLmgQ2hWAxj+vuy@builder.lan>
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 10, 2021 at 11:28:49PM -0500, Bjorn Andersson wrote:
-> On Wed 09 Jun 03:51 CDT 2021, Manivannan Sadhasivam wrote:
-> > On Sat, Jun 05, 2021 at 10:07:15PM -0500, Bjorn Andersson wrote:
-> > > On Thu 03 Jun 05:38 CDT 2021, Manivannan Sadhasivam wrote:
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> [..]
-> > > > +static irqreturn_t qcom_pcie_ep_perst_threaded_irq(int irq, void *data)
-> > > > +{
-> > > > +	struct qcom_pcie_ep *pcie_ep = data;
-> > > > +	struct dw_pcie *pci = &pcie_ep->pci;
-> > > > +	struct device *dev = pci->dev;
-> > > > +	u32 perst;
-> > > > +
-> > > > +	perst = gpiod_get_value(pcie_ep->reset);
-> > > > +
-> > > > +	if (perst) {
-> > > > +		/* Start link training */
-> > > > +		dev_info(dev, "PERST de-asserted by host. Starting link training!\n");
-> > > > +		qcom_pcie_establish_link(pci);
-> > > > +	} else {
-> > > > +		/* Shutdown the link if the link is already on */
-> > > > +		dev_info(dev, "PERST asserted by host. Shutting down the PCIe link!\n");
-> > > > +		qcom_pcie_disable_link(pci);
-> > > > +	}
-> > > > +
-> > > > +	/* Set trigger type based on the next expected value of perst gpio */
-> > > > +	irq_set_irq_type(gpiod_to_irq(pcie_ep->reset),
-> > > > +			 (perst ? IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH));
-> > > 
-> > > Looks like you're manually implementing edge triggering, is there any
-> > > reason for that? EDGE_BOTH seems to do the same thing...
-> > > 
-> > 
-> > PERST is a level based signal, so I don't think we can use EDGE_BOTH here.
-> > 
-> 
-> Afaict it's just a gpio and you define if the hardware should fire of
-> interrupts given its level or if it should detect transitions.
-> 
-> That said, if the gpio is already high when registering the irq handler
-> there's no transition.
-> 
+There are two independent PCIe controllers in MT2712 and MT7622
+platform. Each of them should contain an independent MSI domain.
 
-Right, that's one of the issue with edge triggering. PERST# can be deasserted by
-the host before EP driver probes. So if we wait for edge transition then we'll
-be stuck.
+In old dts architecture, MSI domain will be inherited from the root
+bridge, and all of the devices will share the same MSI domain.
+Hence that, the PCIe devices will not work properly if the irq number
+which required is more than 32.
 
-> > > > +
-> > > > +	return IRQ_HANDLED;
-> > > > +}
-> [..]
-> > > > +static struct platform_driver qcom_pcie_ep_driver = {
-> > > > +	.probe	= qcom_pcie_ep_probe,
-> > > > +	.driver	= {
-> > > > +		.name		= "qcom-pcie-ep",
-> > > 
-> > > Skip the indentation of the '='.
-> > > 
-> > > > +		.suppress_bind_attrs = true,
-> > > 
-> > > Why do we suppress_bind_attrs?
-> > > 
-> > 
-> > This driver doesn't support remove() callback and I don't think it is necessary
-> > for this platform driver. So this flag is here to prevent unbind from sysfs.
-> > 
-> 
-> Right, that part makes sense. But do you know why this is, why it's not
-> possible to have the PCI controller built as a module? (GKI should
-> want this).
-> 
+Split the PCIe node for MT2712 and MT7622 platform to comply with
+the hardware design and fix MSI issue.
 
-For an endpoint, making this driver built-in makes sense since this forms the
-basic functionality of the device and we do want it to probe asap (without
-initramfs dance). But looking at other drivers, most of them (including Qcom RC)
-doesn't support tristate.
+Signed-off-by: Chuanjia Liu <chuanjia.liu@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+Reviewed-by: Rob Herring <robh+dt@kernel.org>
+---
+ .../bindings/pci/mediatek-pcie-cfg.yaml       |  39 ++++
+ .../devicetree/bindings/pci/mediatek-pcie.txt | 201 ++++++++++--------
+ 2 files changed, 146 insertions(+), 94 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie-cfg.yaml
 
-But for the GKI requirement, I can add it.
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-cfg.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-cfg.yaml
+new file mode 100644
+index 000000000000..841a3d284bbf
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-cfg.yaml
+@@ -0,0 +1,39 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/mediatek-pcie-cfg.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: MediaTek PCIECFG controller
++
++maintainers:
++  - Chuanjia Liu <chuanjia.liu@mediatek.com>
++  - Jianjun Wang <jianjun.wang@mediatek.com>
++
++description: |
++  The MediaTek PCIECFG controller controls some feature about
++  LTSSM, ASPM and so on.
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - mediatek,generic-pciecfg
++      - const: syscon
++
++  reg:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++
++additionalProperties: false
++
++examples:
++  - |
++    pciecfg: pciecfg@1a140000 {
++        compatible = "mediatek,generic-pciecfg", "syscon";
++        reg = <0x1a140000 0x1000>;
++    };
++...
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+index 7468d666763a..604792c9b1dc 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+@@ -8,7 +8,7 @@ Required properties:
+ 	"mediatek,mt7623-pcie"
+ 	"mediatek,mt7629-pcie"
+ - device_type: Must be "pci"
+-- reg: Base addresses and lengths of the PCIe subsys and root ports.
++- reg: Base addresses and lengths of the root ports.
+ - reg-names: Names of the above areas to use during resource lookup.
+ - #address-cells: Address representation for root ports (must be 3)
+ - #size-cells: Size representation for root ports (must be 2)
+@@ -143,130 +143,143 @@ Examples for MT7623:
+ 
+ Examples for MT2712:
+ 
+-	pcie: pcie@11700000 {
++	pcie1: pcie@112ff000 {
+ 		compatible = "mediatek,mt2712-pcie";
+ 		device_type = "pci";
+-		reg = <0 0x11700000 0 0x1000>,
+-		      <0 0x112ff000 0 0x1000>;
+-		reg-names = "port0", "port1";
++		reg = <0 0x112ff000 0 0x1000>;
++		reg-names = "port1";
++		linux,pci-domain = <1>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+-		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
+-			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+-		clocks = <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
+-			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>,
+-			 <&pericfg CLK_PERI_PCIE0>,
++		interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "pcie_irq";
++		clocks = <&topckgen CLK_TOP_PE2_MAC_P1_SEL>,
+ 			 <&pericfg CLK_PERI_PCIE1>;
+-		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1";
+-		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
+-		phy-names = "pcie-phy0", "pcie-phy1";
++		clock-names = "sys_ck1", "ahb_ck1";
++		phys = <&u3port1 PHY_TYPE_PCIE>;
++		phy-names = "pcie-phy1";
+ 		bus-range = <0x00 0xff>;
+-		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
++		ranges = <0x82000000 0 0x11400000  0x0 0x11400000  0 0x300000>;
++		status = "disabled";
+ 
+-		pcie0: pcie@0,0 {
+-			reg = <0x0000 0 0 0 0>;
+-			#address-cells = <3>;
+-			#size-cells = <2>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc1 0>,
++				<0 0 0 2 &pcie_intc1 1>,
++				<0 0 0 3 &pcie_intc1 2>,
++				<0 0 0 4 &pcie_intc1 3>;
++		pcie_intc1: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
+ 			#interrupt-cells = <1>;
+-			ranges;
+-			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+-					<0 0 0 2 &pcie_intc0 1>,
+-					<0 0 0 3 &pcie_intc0 2>,
+-					<0 0 0 4 &pcie_intc0 3>;
+-			pcie_intc0: interrupt-controller {
+-				interrupt-controller;
+-				#address-cells = <0>;
+-				#interrupt-cells = <1>;
+-			};
+ 		};
++	};
+ 
+-		pcie1: pcie@1,0 {
+-			reg = <0x0800 0 0 0 0>;
+-			#address-cells = <3>;
+-			#size-cells = <2>;
++	pcie0: pcie@11700000 {
++		compatible = "mediatek,mt2712-pcie";
++		device_type = "pci";
++		reg = <0 0x11700000 0 0x1000>;
++		reg-names = "port0";
++		linux,pci-domain = <0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "pcie_irq";
++		clocks = <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
++			 <&pericfg CLK_PERI_PCIE0>;
++		clock-names = "sys_ck0", "ahb_ck0";
++		phys = <&u3port0 PHY_TYPE_PCIE>;
++		phy-names = "pcie-phy0";
++		bus-range = <0x00 0xff>;
++		ranges = <0x82000000 0 0x20000000 0x0 0x20000000 0 0x10000000>;
++		status = "disabled";
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc0 0>,
++				<0 0 0 2 &pcie_intc0 1>,
++				<0 0 0 3 &pcie_intc0 2>,
++				<0 0 0 4 &pcie_intc0 3>;
++		pcie_intc0: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
+ 			#interrupt-cells = <1>;
+-			ranges;
+-			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+-					<0 0 0 2 &pcie_intc1 1>,
+-					<0 0 0 3 &pcie_intc1 2>,
+-					<0 0 0 4 &pcie_intc1 3>;
+-			pcie_intc1: interrupt-controller {
+-				interrupt-controller;
+-				#address-cells = <0>;
+-				#interrupt-cells = <1>;
+-			};
+ 		};
+ 	};
+ 
+ Examples for MT7622:
+ 
+-	pcie: pcie@1a140000 {
++	pcie0: pcie@1a143000 {
+ 		compatible = "mediatek,mt7622-pcie";
+ 		device_type = "pci";
+-		reg = <0 0x1a140000 0 0x1000>,
+-		      <0 0x1a143000 0 0x1000>,
+-		      <0 0x1a145000 0 0x1000>;
+-		reg-names = "subsys", "port0", "port1";
++		reg = <0 0x1a143000 0 0x1000>;
++		reg-names = "port0";
++		linux,pci-domain = <0>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+-		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>,
+-			     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
++		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-names = "pcie_irq";
+ 		clocks = <&pciesys CLK_PCIE_P0_MAC_EN>,
+-			 <&pciesys CLK_PCIE_P1_MAC_EN>,
+ 			 <&pciesys CLK_PCIE_P0_AHB_EN>,
+-			 <&pciesys CLK_PCIE_P1_AHB_EN>,
+ 			 <&pciesys CLK_PCIE_P0_AUX_EN>,
+-			 <&pciesys CLK_PCIE_P1_AUX_EN>,
+ 			 <&pciesys CLK_PCIE_P0_AXI_EN>,
+-			 <&pciesys CLK_PCIE_P1_AXI_EN>,
+ 			 <&pciesys CLK_PCIE_P0_OBFF_EN>,
+-			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
+-			 <&pciesys CLK_PCIE_P0_PIPE_EN>,
+-			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
+-		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1",
+-			      "aux_ck0", "aux_ck1", "axi_ck0", "axi_ck1",
+-			      "obff_ck0", "obff_ck1", "pipe_ck0", "pipe_ck1";
+-		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
+-		phy-names = "pcie-phy0", "pcie-phy1";
++			 <&pciesys CLK_PCIE_P0_PIPE_EN>;
++		clock-names = "sys_ck0", "ahb_ck0", "aux_ck0",
++			      "axi_ck0", "obff_ck0", "pipe_ck0";
++
+ 		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
+ 		bus-range = <0x00 0xff>;
+-		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
++		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x8000000>;
++		status = "disabled";
+ 
+-		pcie0: pcie@0,0 {
+-			reg = <0x0000 0 0 0 0>;
+-			#address-cells = <3>;
+-			#size-cells = <2>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc0 0>,
++				<0 0 0 2 &pcie_intc0 1>,
++				<0 0 0 3 &pcie_intc0 2>,
++				<0 0 0 4 &pcie_intc0 3>;
++		pcie_intc0: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
+ 			#interrupt-cells = <1>;
+-			ranges;
+-			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+-					<0 0 0 2 &pcie_intc0 1>,
+-					<0 0 0 3 &pcie_intc0 2>,
+-					<0 0 0 4 &pcie_intc0 3>;
+-			pcie_intc0: interrupt-controller {
+-				interrupt-controller;
+-				#address-cells = <0>;
+-				#interrupt-cells = <1>;
+-			};
+ 		};
++	};
+ 
+-		pcie1: pcie@1,0 {
+-			reg = <0x0800 0 0 0 0>;
+-			#address-cells = <3>;
+-			#size-cells = <2>;
++	pcie1: pcie@1a145000 {
++		compatible = "mediatek,mt7622-pcie";
++		device_type = "pci";
++		reg = <0 0x1a145000 0 0x1000>;
++		reg-names = "port1";
++		linux,pci-domain = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupts = <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-names = "pcie_irq";
++		clocks = <&pciesys CLK_PCIE_P1_MAC_EN>,
++			 /* designer has connect RC1 with p0_ahb clock */
++			 <&pciesys CLK_PCIE_P0_AHB_EN>,
++			 <&pciesys CLK_PCIE_P1_AUX_EN>,
++			 <&pciesys CLK_PCIE_P1_AXI_EN>,
++			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
++			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
++		clock-names = "sys_ck1", "ahb_ck1", "aux_ck1",
++			      "axi_ck1", "obff_ck1", "pipe_ck1";
++
++		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
++		bus-range = <0x00 0xff>;
++		ranges = <0x82000000 0 0x28000000  0x0 0x28000000  0 0x8000000>;
++		status = "disabled";
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc1 0>,
++				<0 0 0 2 &pcie_intc1 1>,
++				<0 0 0 3 &pcie_intc1 2>,
++				<0 0 0 4 &pcie_intc1 3>;
++		pcie_intc1: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
+ 			#interrupt-cells = <1>;
+-			ranges;
+-			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+-					<0 0 0 2 &pcie_intc1 1>,
+-					<0 0 0 3 &pcie_intc1 2>,
+-					<0 0 0 4 &pcie_intc1 3>;
+-			pcie_intc1: interrupt-controller {
+-				interrupt-controller;
+-				#address-cells = <0>;
+-				#interrupt-cells = <1>;
+-			};
+ 		};
+ 	};
+-- 
+2.18.0
 
-Thanks,
-Mani
-
-> Regards,
-> Bjorn
