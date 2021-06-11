@@ -2,62 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D88DC48BD1
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2128C48BD1
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 844CD61400
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B558613E1
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:32:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232020AbhFKPcJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 11:32:09 -0400
-Received: from mail-pj1-f45.google.com ([209.85.216.45]:44849 "EHLO
-        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232025AbhFKPb5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:31:57 -0400
-Received: by mail-pj1-f45.google.com with SMTP id h12-20020a17090aa88cb029016400fd8ad8so6188943pjq.3
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:29:50 -0700 (PDT)
+        id S231886AbhFKPeZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jun 2021 11:34:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40288 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231857AbhFKPeZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:34:25 -0400
+Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CF25C061574
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:32:16 -0700 (PDT)
+Received: by mail-io1-xd33.google.com with SMTP id a6so31636482ioe.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:32:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=kF6lfFlm47ewlGSwNHdOa0bRh+k/2w/JyGCG+Bsk7jg=;
-        b=H/C67oW7mc9oS6nqFrlyQ5bKo2M4IEytOonNmobjWozjPKJmD5foT/Xw7AFSNzd2Jo
-         0wjSUN2RW/ppa8UiQ09kGN695gbXZ6TGfgjGghWkAaCeHdylaYggXNn7A87sM831TjH9
-         l31C3Fl2eMIXd/0uX15rNLpBd42Axwn6s/C8I=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=89FDdm5otB6kfSIY1wN8GtI+ciQx5v+glSl+A+k1+x0=;
+        b=UdgbVNlCM2Z2m4AZZMvHuq5iZqq6a6B1k1NgNWN8Vbr0FhlXEkOMcXQOmqkTt81W9l
+         ZZvZ8qEfilw4IVJQmcyphxlOFoGk0yzalYprjSKjTm0i0iDciVsO4hDbAAQ2CGlI10y9
+         ZbSgy3asVidQE8sG2vEkYEnh2JJM0V3DCy6O0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=kF6lfFlm47ewlGSwNHdOa0bRh+k/2w/JyGCG+Bsk7jg=;
-        b=TNXC+6LnltAVOmvDayqwNpNK8a+S0LBlkS0HKJhJL6C6wdkWUFi0mW+A7ACby5CHv+
-         yw1/B9Dxut+QM9YlBLz8dgUAFWmT9FJOw09B4IEbgIfUQLLiD24HrexZq3b7GiPfqL9y
-         N2JqH7bsFMtEEfcgArduX6wzDUvkN/h8JvTYnleKdKUJXI0NxNimbBMAzmocRKw5Oi92
-         AK9cYs2O9FUCt/Lu86GpzqnyPFNbgI5i7hLbFfMEIKL1AxNmIdi0hwOANvCktJmr+QLX
-         2pFzZIDgiQFbJR6Vhg/ZUf7t98bNbYN0i3ZkO8sIpE1R2LdImLhyZ9OaIiVWe2ARj3lv
-         dY7w==
-X-Gm-Message-State: AOAM533mv2S2hmCaVH0EM2XBdjtXCXZ2P5qnxjnc1draS+NO6YYfpJgw
-        NgZdDjaxCo2vMGJoXEdU0H835g==
-X-Google-Smtp-Source: ABdhPJwmTa5xH/d7onV720jkujld6c+EE1EDx86RTuZajd94EHAxdcF++t/hrsHfq11H6lXLYCr71w==
-X-Received: by 2002:a17:902:d4d0:b029:113:fb3d:3644 with SMTP id o16-20020a170902d4d0b0290113fb3d3644mr4373020plg.58.1623425330334;
-        Fri, 11 Jun 2021 08:28:50 -0700 (PDT)
-Received: from localhost ([2401:fa00:95:205:33c8:8e01:1161:6797])
-        by smtp.gmail.com with UTF8SMTPSA id p11sm3312697pjj.43.2021.06.11.08.28.43
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=89FDdm5otB6kfSIY1wN8GtI+ciQx5v+glSl+A+k1+x0=;
+        b=P0XoQuFt2rTNyCKrbcxMV9Y063+RLTWlDJLCZKSAaVMmqpfYFz4T9uavCQGK0HaDm+
+         FSAME6NoulvvDLDXnUZHu8q4nbGEqy9j1G5mZgLQL2zTUXMj+vffOScP+HHugE7gpuNs
+         8FZ+E85FDuDOjvJ/MAGP5rZ68WyykqRk/fmPx8YLpnBCK9u6zs384ScXW69QIzZOmm69
+         eL5omEAE6f/c8apG4t9mI3Q1YTPVBWVpde1PkA7OU4E9dyExXbAFqSSPYS3hbOC2zVvR
+         qSK/RPEQxNNwaqBN7kQwJNlYBQKAjNoLa4uXasTU1SjihktcGLiifYJvmZLPenM3kxgQ
+         /+Rw==
+X-Gm-Message-State: AOAM5313eVZmF35zWefNd9GVkF6zG6SgiHmWBX87G8lbKZpDuCAoOGwi
+        gdr1kIwfZvkAcFrQ7Wv7EUXVJ6/jqBNDug==
+X-Google-Smtp-Source: ABdhPJwxd7qh3Wr5kZE5fDfD4i7OyDnZToMyoRn2SIE0uT67QcAfnTlq1vtiHRFp8L3AXJMijuUfoQ==
+X-Received: by 2002:a6b:b554:: with SMTP id e81mr3760886iof.163.1623425535476;
+        Fri, 11 Jun 2021 08:32:15 -0700 (PDT)
+Received: from mail-io1-f51.google.com (mail-io1-f51.google.com. [209.85.166.51])
+        by smtp.gmail.com with ESMTPSA id h7sm3443386ilr.44.2021.06.11.08.32.13
+        for <linux-pci@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Jun 2021 08:28:49 -0700 (PDT)
+        Fri, 11 Jun 2021 08:32:13 -0700 (PDT)
+Received: by mail-io1-f51.google.com with SMTP id q3so8323708iop.11
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:32:13 -0700 (PDT)
+X-Received: by 2002:a05:6638:151:: with SMTP id y17mr4471864jao.128.1623425522838;
+ Fri, 11 Jun 2021 08:32:02 -0700 (PDT)
+MIME-Version: 1.0
+References: <20210527125845.1852284-1-tientzu@chromium.org>
+ <20210604174818.GC3703@willie-the-truck> <CALiNf29=z2uBM1ZA_GTu04iFS2dJwH0npdGvid1PL5KQM_HrxA@mail.gmail.com>
+In-Reply-To: <CALiNf29=z2uBM1ZA_GTu04iFS2dJwH0npdGvid1PL5KQM_HrxA@mail.gmail.com>
 From:   Claire Chang <tientzu@chromium.org>
-To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+Date:   Fri, 11 Jun 2021 23:31:52 +0800
+X-Gmail-Original-Message-ID: <CALiNf29RGoFq7L+t_Bi6TsE-93-=m49DdV6QrVBV=pvoAjKsvw@mail.gmail.com>
+Message-ID: <CALiNf29RGoFq7L+t_Bi6TsE-93-=m49DdV6QrVBV=pvoAjKsvw@mail.gmail.com>
+Subject: Re: [PATCH v8 00/15] Restricted DMA
+To:     Will Deacon <will@kernel.org>
+Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
+        Joerg Roedel <joro@8bytes.org>,
         Frank Rowand <frowand.list@gmail.com>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         boris.ostrovsky@oracle.com, jgross@suse.com,
         Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>
-Cc:     benh@kernel.crashing.org, paulus@samba.org,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        benh@kernel.crashing.org, paulus@samba.org,
         "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
         sstabellini@kernel.org, Robin Murphy <robin.murphy@arm.com>,
         grant.likely@arm.com, xypron.glpk@gmx.de,
@@ -75,112 +92,80 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         lkml <linux-kernel@vger.kernel.org>,
         linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
         Nicolas Boichat <drinkcat@chromium.org>,
-        Jim Quinlan <james.quinlan@broadcom.com>, tfiga@chromium.org,
-        bskeggs@redhat.com, bhelgaas@google.com, chris@chris-wilson.co.uk,
-        tientzu@chromium.org, daniel@ffwll.ch, airlied@linux.ie,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Tomasz Figa <tfiga@chromium.org>, bskeggs@redhat.com,
+        Bjorn Helgaas <bhelgaas@google.com>, chris@chris-wilson.co.uk,
+        Daniel Vetter <daniel@ffwll.ch>, airlied@linux.ie,
         dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        jani.nikula@linux.intel.com, jxgao@google.com,
+        jani.nikula@linux.intel.com, Jianxiong Gao <jxgao@google.com>,
         joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
         maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
         rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
-Subject: [PATCH v9 11/14] swiotlb: Add restricted DMA alloc/free support.
-Date:   Fri, 11 Jun 2021 23:26:56 +0800
-Message-Id: <20210611152659.2142983-12-tientzu@chromium.org>
-X-Mailer: git-send-email 2.32.0.272.g935e593368-goog
-In-Reply-To: <20210611152659.2142983-1-tientzu@chromium.org>
-References: <20210611152659.2142983-1-tientzu@chromium.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the functions, swiotlb_{alloc,free} to support the memory allocation
-from restricted DMA pool.
+v9 here: https://lore.kernel.org/patchwork/cover/1445081/
 
-Signed-off-by: Claire Chang <tientzu@chromium.org>
----
- include/linux/swiotlb.h | 15 +++++++++++++++
- kernel/dma/swiotlb.c    | 35 +++++++++++++++++++++++++++++++++--
- 2 files changed, 48 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-index 8200c100fe10..d3374497a4f8 100644
---- a/include/linux/swiotlb.h
-+++ b/include/linux/swiotlb.h
-@@ -162,4 +162,19 @@ static inline void swiotlb_adjust_size(unsigned long size)
- extern void swiotlb_print_info(void);
- extern void swiotlb_set_max_segment(unsigned int);
- 
-+#ifdef CONFIG_DMA_RESTRICTED_POOL
-+struct page *swiotlb_alloc(struct device *dev, size_t size);
-+bool swiotlb_free(struct device *dev, struct page *page, size_t size);
-+#else
-+static inline struct page *swiotlb_alloc(struct device *dev, size_t size)
-+{
-+	return NULL;
-+}
-+static inline bool swiotlb_free(struct device *dev, struct page *page,
-+				size_t size)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_DMA_RESTRICTED_POOL */
-+
- #endif /* __LINUX_SWIOTLB_H */
-diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-index a6562573f090..0a19858da5b8 100644
---- a/kernel/dma/swiotlb.c
-+++ b/kernel/dma/swiotlb.c
-@@ -461,8 +461,9 @@ static int find_slots(struct device *dev, phys_addr_t orig_addr,
- 
- 	index = wrap = wrap_index(mem, ALIGN(mem->index, stride));
- 	do {
--		if ((slot_addr(tbl_dma_addr, index) & iotlb_align_mask) !=
--		    (orig_addr & iotlb_align_mask)) {
-+		if (orig_addr &&
-+		    (slot_addr(tbl_dma_addr, index) & iotlb_align_mask) !=
-+			    (orig_addr & iotlb_align_mask)) {
- 			index = wrap_index(mem, index + 1);
- 			continue;
- 		}
-@@ -702,6 +703,36 @@ late_initcall(swiotlb_create_default_debugfs);
- #endif
- 
- #ifdef CONFIG_DMA_RESTRICTED_POOL
-+struct page *swiotlb_alloc(struct device *dev, size_t size)
-+{
-+	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
-+	phys_addr_t tlb_addr;
-+	int index;
-+
-+	if (!mem)
-+		return NULL;
-+
-+	index = find_slots(dev, 0, size);
-+	if (index == -1)
-+		return NULL;
-+
-+	tlb_addr = slot_addr(mem->start, index);
-+
-+	return pfn_to_page(PFN_DOWN(tlb_addr));
-+}
-+
-+bool swiotlb_free(struct device *dev, struct page *page, size_t size)
-+{
-+	phys_addr_t tlb_addr = page_to_phys(page);
-+
-+	if (!is_swiotlb_buffer(dev, tlb_addr))
-+		return false;
-+
-+	release_slots(dev, tlb_addr);
-+
-+	return true;
-+}
-+
- static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
- 				    struct device *dev)
- {
--- 
-2.32.0.272.g935e593368-goog
-
+On Mon, Jun 7, 2021 at 11:28 AM Claire Chang <tientzu@chromium.org> wrote:
+>
+> On Sat, Jun 5, 2021 at 1:48 AM Will Deacon <will@kernel.org> wrote:
+> >
+> > Hi Claire,
+> >
+> > On Thu, May 27, 2021 at 08:58:30PM +0800, Claire Chang wrote:
+> > > This series implements mitigations for lack of DMA access control on
+> > > systems without an IOMMU, which could result in the DMA accessing the
+> > > system memory at unexpected times and/or unexpected addresses, possibly
+> > > leading to data leakage or corruption.
+> > >
+> > > For example, we plan to use the PCI-e bus for Wi-Fi and that PCI-e bus is
+> > > not behind an IOMMU. As PCI-e, by design, gives the device full access to
+> > > system memory, a vulnerability in the Wi-Fi firmware could easily escalate
+> > > to a full system exploit (remote wifi exploits: [1a], [1b] that shows a
+> > > full chain of exploits; [2], [3]).
+> > >
+> > > To mitigate the security concerns, we introduce restricted DMA. Restricted
+> > > DMA utilizes the existing swiotlb to bounce streaming DMA in and out of a
+> > > specially allocated region and does memory allocation from the same region.
+> > > The feature on its own provides a basic level of protection against the DMA
+> > > overwriting buffer contents at unexpected times. However, to protect
+> > > against general data leakage and system memory corruption, the system needs
+> > > to provide a way to restrict the DMA to a predefined memory region (this is
+> > > usually done at firmware level, e.g. MPU in ATF on some ARM platforms [4]).
+> > >
+> > > [1a] https://googleprojectzero.blogspot.com/2017/04/over-air-exploiting-broadcoms-wi-fi_4.html
+> > > [1b] https://googleprojectzero.blogspot.com/2017/04/over-air-exploiting-broadcoms-wi-fi_11.html
+> > > [2] https://blade.tencent.com/en/advisories/qualpwn/
+> > > [3] https://www.bleepingcomputer.com/news/security/vulnerabilities-found-in-highly-popular-firmware-for-wifi-chips/
+> > > [4] https://github.com/ARM-software/arm-trusted-firmware/blob/master/plat/mediatek/mt8183/drivers/emi_mpu/emi_mpu.c#L132
+> > >
+> > > v8:
+> > > - Fix reserved-memory.txt and add the reg property in example.
+> > > - Fix sizeof for of_property_count_elems_of_size in
+> > >   drivers/of/address.c#of_dma_set_restricted_buffer.
+> > > - Apply Will's suggestion to try the OF node having DMA configuration in
+> > >   drivers/of/address.c#of_dma_set_restricted_buffer.
+> > > - Fix typo in the comment of drivers/of/address.c#of_dma_set_restricted_buffer.
+> > > - Add error message for PageHighMem in
+> > >   kernel/dma/swiotlb.c#rmem_swiotlb_device_init and move it to
+> > >   rmem_swiotlb_setup.
+> > > - Fix the message string in rmem_swiotlb_setup.
+> >
+> > Thanks for the v8. It works for me out of the box on arm64 under KVM, so:
+> >
+> > Tested-by: Will Deacon <will@kernel.org>
+> >
+> > Note that something seems to have gone wrong with the mail threading, so
+> > the last 5 patches ended up as a separate thread for me. Probably worth
+> > posting again with all the patches in one place, if you can.
+>
+> Thanks for testing.
+>
+> Christoph also added some comments in v7, so I'll prepare v9.
+>
+> >
+> > Cheers,
+> >
+> > Will
