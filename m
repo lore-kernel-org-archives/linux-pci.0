@@ -4,54 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB7BC48BD1
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:27:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFFBC48BE6
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:28:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9C47611AE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:27:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79E8F61403
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 15:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231742AbhFKP3r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 11:29:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39208 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231318AbhFKP3r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:29:47 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08506C061574
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:27:49 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id n12so2728238pgs.13
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:27:49 -0700 (PDT)
+        id S231861AbhFKPad (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jun 2021 11:30:33 -0400
+Received: from mail-pf1-f175.google.com ([209.85.210.175]:44928 "EHLO
+        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231722AbhFKPaW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 11:30:22 -0400
+Received: by mail-pf1-f175.google.com with SMTP id u18so4707375pfk.11
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 08:28:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=z3csfjTdnaGEbW5Yiu81rOYxUROdkDuu0pkC+1dIGAc=;
-        b=IkC7yFFhO8hIfNYdMdJ54k4hExWD/qoffPbEBXy7aMHVEBwdwVaaywxk2mt0G3QZuk
-         kHNUXds8Y0K0b8H58qwuxnw/8yQrewipm9rVIDVGn4pqLKNyquN2PKy3qJ+VVeLcukCR
-         pIHcSWbnGwWNwrAuGd/5jq088bjDa5bnVis6E=
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=HzdTumh9BrSYWktV5WZf7y51LbAaw3C3h39TEtEC61A=;
+        b=glnoPPl5BjuEU+aHwo6DAiEerdZdwKnsli+A2zYzDPxEZiqMUG0n7GdfkjKsK9QW0e
+         93P4fACu9M1YhL7kJ17IJaADBozzkAYJ7IX93Y7kPx7ZOfCFV+3jbYHpDWgy2cTfANYo
+         0mhxwlPjX1zbtnhLTHogjuk/5yAGZZVOgaVh4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=z3csfjTdnaGEbW5Yiu81rOYxUROdkDuu0pkC+1dIGAc=;
-        b=LuM4xpgtjrvTyv7wv+A4nwyD/4HtzZAzit0B1NgRsE5atnbeNhHrywzG4egdR8FyVh
-         VyTft5NXoi1kDEu0tKvwpWEy3W8yY7oxhUCeND8kXtCt9LkpUZM47INuHT7TSyvjUnFT
-         7TRBPoHEGzbZE4rlotC0FSxSBK3PwheA6Rq65IONPeRteICh6a8VJdrc8PUGatN9IXjt
-         bEsf02iTWvSRfpiYs17G0aQ44KPiZ2Zdqx/XqROuGFuaF8N9NeGaC/yTcunz+HVmvqDC
-         6kDrFW/Y/rQSBexRr3foWSYyR8pT+P18mbKizWxJy+6ohUssxvIzPPcBU0rHV56MigJR
-         siAw==
-X-Gm-Message-State: AOAM533FlYy8txF630rkps076ETV7gnyUMBCEfbTxKMSr5o/zrn9ljRt
-        Bo1tCTm3lEWj3+gYt4nNQPxSNg==
-X-Google-Smtp-Source: ABdhPJyj9WektlHINHWsfATaExSaFcZYhgD+NDtqPb5EwrK4uHwBuEuhV53c0IRLlzaKiXoj5cmzYw==
-X-Received: by 2002:aa7:84c7:0:b029:2e9:2d18:54a5 with SMTP id x7-20020aa784c70000b02902e92d1854a5mr8750291pfn.44.1623425268566;
-        Fri, 11 Jun 2021 08:27:48 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=HzdTumh9BrSYWktV5WZf7y51LbAaw3C3h39TEtEC61A=;
+        b=ooGB3aM3h/e3t4b2jYJBmnl2EkKal4LQYPfBg1QU33KADfPCWG6zyOyG+GMeQizhHR
+         KZB8cg9qxZt7XXSsQFd/V1Es6xf5zSKLsgdFp04ZEzYFDPhNArETQILrlayuDjxra7fA
+         HoajWn9QK7gLf3ZPthw/YupSNYtE8x+dvjTaUZkH44SO01EA/t+d+cV0InvRFRdMPbDJ
+         y19J6uMxwSmuuCyX2NZNC1brtYC4aWpRM5w7VaUd6aZjMcvGdD/0rE9D2DzRffOIprnA
+         Ai46K9u2cyc1iAi0cNXayTwHbEZVYBxDpFObmHzNBREh/8kLeg/Jv//5U/TNxeCzF57D
+         RC/w==
+X-Gm-Message-State: AOAM532CDGxDp6IYuNSyyB9irgufS+/q3MM8jqZPrnN2BXHmi3Ux/kYR
+        bkERgEorv4yOKrm4xl9LBPCyvg==
+X-Google-Smtp-Source: ABdhPJz1S7kolJJDhDCqvr+nlVhh2CsYK+ut0dTmzSatQWDsZRkoRFJesVPfEDUsaDthsVEt0zyWaw==
+X-Received: by 2002:aa7:828f:0:b029:200:6e27:8c8f with SMTP id s15-20020aa7828f0000b02902006e278c8fmr8819226pfm.44.1623425232214;
+        Fri, 11 Jun 2021 08:27:12 -0700 (PDT)
 Received: from localhost ([2401:fa00:95:205:33c8:8e01:1161:6797])
-        by smtp.gmail.com with UTF8SMTPSA id m2sm5324723pjf.24.2021.06.11.08.27.41
+        by smtp.gmail.com with UTF8SMTPSA id m18sm5552391pff.88.2021.06.11.08.27.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 11 Jun 2021 08:27:48 -0700 (PDT)
+        Fri, 11 Jun 2021 08:27:11 -0700 (PDT)
 From:   Claire Chang <tientzu@chromium.org>
 To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
@@ -86,157 +83,130 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
         maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
         rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
-Subject: [PATCH v9 04/14] swiotlb: Add restricted DMA pool initialization
-Date:   Fri, 11 Jun 2021 23:26:49 +0800
-Message-Id: <20210611152659.2142983-5-tientzu@chromium.org>
+Subject: [PATCH v9 00/14] Restricted DMA 
+Date:   Fri, 11 Jun 2021 23:26:45 +0800
+Message-Id: <20210611152659.2142983-1-tientzu@chromium.org>
 X-Mailer: git-send-email 2.32.0.272.g935e593368-goog
-In-Reply-To: <20210611152659.2142983-1-tientzu@chromium.org>
-References: <20210611152659.2142983-1-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the initialization function to create restricted DMA pools from
-matching reserved-memory nodes.
+This series implements mitigations for lack of DMA access control on
+systems without an IOMMU, which could result in the DMA accessing the
+system memory at unexpected times and/or unexpected addresses, possibly
+leading to data leakage or corruption.
 
-Signed-off-by: Claire Chang <tientzu@chromium.org>
----
- include/linux/swiotlb.h |  3 +-
- kernel/dma/Kconfig      | 14 ++++++++
- kernel/dma/swiotlb.c    | 75 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 91 insertions(+), 1 deletion(-)
+For example, we plan to use the PCI-e bus for Wi-Fi and that PCI-e bus is
+not behind an IOMMU. As PCI-e, by design, gives the device full access to
+system memory, a vulnerability in the Wi-Fi firmware could easily escalate
+to a full system exploit (remote wifi exploits: [1a], [1b] that shows a
+full chain of exploits; [2], [3]).
 
-diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-index 008125ccd509..ec0c01796c8a 100644
---- a/include/linux/swiotlb.h
-+++ b/include/linux/swiotlb.h
-@@ -72,7 +72,8 @@ extern enum swiotlb_force swiotlb_force;
-  *		range check to see if the memory was in fact allocated by this
-  *		API.
-  * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
-- *		@end. This is command line adjustable via setup_io_tlb_npages.
-+ *		@end. For default swiotlb, this is command line adjustable via
-+ *		setup_io_tlb_npages.
-  * @used:	The number of used IO TLB block.
-  * @list:	The free list describing the number of free entries available
-  *		from each index.
-diff --git a/kernel/dma/Kconfig b/kernel/dma/Kconfig
-index 77b405508743..3e961dc39634 100644
---- a/kernel/dma/Kconfig
-+++ b/kernel/dma/Kconfig
-@@ -80,6 +80,20 @@ config SWIOTLB
- 	bool
- 	select NEED_DMA_MAP_STATE
- 
-+config DMA_RESTRICTED_POOL
-+	bool "DMA Restricted Pool"
-+	depends on OF && OF_RESERVED_MEM
-+	select SWIOTLB
-+	help
-+	  This enables support for restricted DMA pools which provide a level of
-+	  DMA memory protection on systems with limited hardware protection
-+	  capabilities, such as those lacking an IOMMU.
-+
-+	  For more information see
-+	  <Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt>
-+	  and <kernel/dma/swiotlb.c>.
-+	  If unsure, say "n".
-+
- #
- # Should be selected if we can mmap non-coherent mappings to userspace.
- # The only thing that is really required is a way to set an uncached bit
-diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-index 29b950ab1351..c4a071d6a63f 100644
---- a/kernel/dma/swiotlb.c
-+++ b/kernel/dma/swiotlb.c
-@@ -39,6 +39,13 @@
- #ifdef CONFIG_DEBUG_FS
- #include <linux/debugfs.h>
- #endif
-+#ifdef CONFIG_DMA_RESTRICTED_POOL
-+#include <linux/io.h>
-+#include <linux/of.h>
-+#include <linux/of_fdt.h>
-+#include <linux/of_reserved_mem.h>
-+#include <linux/slab.h>
-+#endif
- 
- #include <asm/io.h>
- #include <asm/dma.h>
-@@ -688,3 +695,71 @@ static int __init swiotlb_create_default_debugfs(void)
- late_initcall(swiotlb_create_default_debugfs);
- 
- #endif
-+
-+#ifdef CONFIG_DMA_RESTRICTED_POOL
-+static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
-+				    struct device *dev)
-+{
-+	struct io_tlb_mem *mem = rmem->priv;
-+	unsigned long nslabs = rmem->size >> IO_TLB_SHIFT;
-+
-+	/*
-+	 * Since multiple devices can share the same pool, the private data,
-+	 * io_tlb_mem struct, will be initialized by the first device attached
-+	 * to it.
-+	 */
-+	if (!mem) {
-+		mem = kzalloc(struct_size(mem, slots, nslabs), GFP_KERNEL);
-+		if (!mem)
-+			return -ENOMEM;
-+
-+		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false, true);
-+
-+		rmem->priv = mem;
-+
-+		if (IS_ENABLED(CONFIG_DEBUG_FS)) {
-+			mem->debugfs =
-+				debugfs_create_dir(rmem->name, debugfs_dir);
-+			swiotlb_create_debugfs_files(mem);
-+		}
-+	}
-+
-+	dev->dma_io_tlb_mem = mem;
-+
-+	return 0;
-+}
-+
-+static void rmem_swiotlb_device_release(struct reserved_mem *rmem,
-+					struct device *dev)
-+{
-+	dev->dma_io_tlb_mem = io_tlb_default_mem;
-+}
-+
-+static const struct reserved_mem_ops rmem_swiotlb_ops = {
-+	.device_init = rmem_swiotlb_device_init,
-+	.device_release = rmem_swiotlb_device_release,
-+};
-+
-+static int __init rmem_swiotlb_setup(struct reserved_mem *rmem)
-+{
-+	unsigned long node = rmem->fdt_node;
-+
-+	if (of_get_flat_dt_prop(node, "reusable", NULL) ||
-+	    of_get_flat_dt_prop(node, "linux,cma-default", NULL) ||
-+	    of_get_flat_dt_prop(node, "linux,dma-default", NULL) ||
-+	    of_get_flat_dt_prop(node, "no-map", NULL))
-+		return -EINVAL;
-+
-+	if (PageHighMem(pfn_to_page(PHYS_PFN(rmem->base)))) {
-+		pr_err("Restricted DMA pool must be accessible within the linear mapping.");
-+		return -EINVAL;
-+	}
-+
-+	rmem->ops = &rmem_swiotlb_ops;
-+	pr_info("Reserved memory: created restricted DMA pool at %pa, size %ld MiB\n",
-+		&rmem->base, (unsigned long)rmem->size / SZ_1M);
-+	return 0;
-+}
-+
-+RESERVEDMEM_OF_DECLARE(dma, "restricted-dma-pool", rmem_swiotlb_setup);
-+#endif /* CONFIG_DMA_RESTRICTED_POOL */
+To mitigate the security concerns, we introduce restricted DMA. Restricted
+DMA utilizes the existing swiotlb to bounce streaming DMA in and out of a
+specially allocated region and does memory allocation from the same region.
+The feature on its own provides a basic level of protection against the DMA
+overwriting buffer contents at unexpected times. However, to protect
+against general data leakage and system memory corruption, the system needs
+to provide a way to restrict the DMA to a predefined memory region (this is
+usually done at firmware level, e.g. MPU in ATF on some ARM platforms [4]).
+
+[1a] https://googleprojectzero.blogspot.com/2017/04/over-air-exploiting-broadcoms-wi-fi_4.html
+[1b] https://googleprojectzero.blogspot.com/2017/04/over-air-exploiting-broadcoms-wi-fi_11.html
+[2] https://blade.tencent.com/en/advisories/qualpwn/
+[3] https://www.bleepingcomputer.com/news/security/vulnerabilities-found-in-highly-popular-firmware-for-wifi-chips/
+[4] https://github.com/ARM-software/arm-trusted-firmware/blob/master/plat/mediatek/mt8183/drivers/emi_mpu/emi_mpu.c#L132
+
+v9:
+Address the comments in v7 to
+  - set swiotlb active pool to dev->dma_io_tlb_mem
+  - get rid of get_io_tlb_mem
+  - dig out the device struct for is_swiotlb_active
+  - move debugfs_create_dir out of swiotlb_create_debugfs
+  - do set_memory_decrypted conditionally in swiotlb_init_io_tlb_mem
+  - use IS_ENABLED in kernel/dma/direct.c
+  - fix redefinition of 'of_dma_set_restricted_buffer'
+
+v8:
+- Fix reserved-memory.txt and add the reg property in example.
+- Fix sizeof for of_property_count_elems_of_size in
+  drivers/of/address.c#of_dma_set_restricted_buffer.
+- Apply Will's suggestion to try the OF node having DMA configuration in
+  drivers/of/address.c#of_dma_set_restricted_buffer.
+- Fix typo in the comment of drivers/of/address.c#of_dma_set_restricted_buffer.
+- Add error message for PageHighMem in
+  kernel/dma/swiotlb.c#rmem_swiotlb_device_init and move it to
+  rmem_swiotlb_setup.
+- Fix the message string in rmem_swiotlb_setup.
+https://lore.kernel.org/patchwork/cover/1437112/
+
+v7:
+Fix debugfs, PageHighMem and comment style in rmem_swiotlb_device_init
+https://lore.kernel.org/patchwork/cover/1431031/
+
+v6:
+Address the comments in v5
+https://lore.kernel.org/patchwork/cover/1423201/
+
+v5:
+Rebase on latest linux-next
+https://lore.kernel.org/patchwork/cover/1416899/
+
+v4:
+- Fix spinlock bad magic
+- Use rmem->name for debugfs entry
+- Address the comments in v3
+https://lore.kernel.org/patchwork/cover/1378113/
+
+v3:
+Using only one reserved memory region for both streaming DMA and memory
+allocation.
+https://lore.kernel.org/patchwork/cover/1360992/
+
+v2:
+Building on top of swiotlb.
+https://lore.kernel.org/patchwork/cover/1280705/
+
+v1:
+Using dma_map_ops.
+https://lore.kernel.org/patchwork/cover/1271660/
+
+
+Claire Chang (14):
+  swiotlb: Refactor swiotlb init functions
+  swiotlb: Refactor swiotlb_create_debugfs
+  swiotlb: Set dev->dma_io_tlb_mem to the swiotlb pool used
+  swiotlb: Add restricted DMA pool initialization
+  swiotlb: Update is_swiotlb_buffer to add a struct device argument
+  swiotlb: Update is_swiotlb_active to add a struct device argument
+  swiotlb: Bounce data from/to restricted DMA pool if available
+  swiotlb: Move alloc_size to find_slots
+  swiotlb: Refactor swiotlb_tbl_unmap_single
+  dma-direct: Add a new wrapper __dma_direct_free_pages()
+  swiotlb: Add restricted DMA alloc/free support.
+  dma-direct: Allocate memory from restricted DMA pool if available
+  dt-bindings: of: Add restricted DMA pool
+  of: Add plumbing for restricted DMA pool
+
+ .../reserved-memory/reserved-memory.txt       |  36 ++-
+ drivers/gpu/drm/i915/gem/i915_gem_internal.c  |   2 +-
+ drivers/gpu/drm/nouveau/nouveau_ttm.c         |   2 +-
+ drivers/iommu/dma-iommu.c                     |  12 +-
+ drivers/of/address.c                          |  33 +++
+ drivers/of/device.c                           |   6 +
+ drivers/of/of_private.h                       |   6 +
+ drivers/pci/xen-pcifront.c                    |   2 +-
+ drivers/xen/swiotlb-xen.c                     |   2 +-
+ include/linux/device.h                        |   4 +
+ include/linux/swiotlb.h                       |  45 +++-
+ kernel/dma/Kconfig                            |  14 +
+ kernel/dma/direct.c                           |  62 +++--
+ kernel/dma/direct.h                           |   9 +-
+ kernel/dma/swiotlb.c                          | 242 +++++++++++++-----
+ 15 files changed, 376 insertions(+), 101 deletions(-)
+
 -- 
 2.32.0.272.g935e593368-goog
 
