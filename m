@@ -2,299 +2,204 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D45C48BD1
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 23:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF0FC48BE5
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Jun 2021 04:18:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8CFE613EE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jun 2021 23:33:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B4D16128A
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Jun 2021 04:18:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230130AbhFKXf5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jun 2021 19:35:57 -0400
-Received: from mail-wm1-f43.google.com ([209.85.128.43]:35393 "EHLO
-        mail-wm1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbhFKXf5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jun 2021 19:35:57 -0400
-Received: by mail-wm1-f43.google.com with SMTP id k5-20020a05600c1c85b02901affeec3ef8so9564701wms.0;
-        Fri, 11 Jun 2021 16:33:58 -0700 (PDT)
+        id S229819AbhFLEUC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Jun 2021 00:20:02 -0400
+Received: from mail-io1-f49.google.com ([209.85.166.49]:45688 "EHLO
+        mail-io1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229532AbhFLEUB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jun 2021 00:20:01 -0400
+Received: by mail-io1-f49.google.com with SMTP id k5so23583984iow.12
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jun 2021 21:17:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qMfo9SmEDWrsy733ImgWnawPC4LCVIr7AQPFKgdlarY=;
+        b=eICZ1vtB1g2I5oiIG42S/0sKHItJhiaTGBlodWA/ip18xPj9rocyTqcfs9rP7jIIDx
+         byNXPNZKPo4zfUjFYC6CSWc09bcIwiTuDORG1OPt+rzqKGN47X75QNARz8BX8Wkv6ig2
+         SBGkSp/iEGRf2UUtaNtAQNplGw3W0f/Fbus95lxDy4Ezfs7QLfptJJd7dE+IMfjSqVLG
+         sOo7A8XJ9Rk0aOIXZ8PFgv0/PCLJl69S8u+GYghgWyNXq2NwsO/bPHss72SK3v6wgy4c
+         Q26ldOdmxiVAzVcMhcKt9Rmjx2Ln6LGQaHUzi/zdmn1klJ2MbpjZuOgmiCFaoUfoHZt3
+         t+hg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=Z2zlmHj+1HcVsICU+2gdJrF/4o7OgOCN/FyHrCzGZ6g=;
-        b=pLLVtIyg5sIEWCzB8C4qKBzG/fFWwcDsAZJm35I8bEEwZqYRN+qXhQSn7Z33mQPf+i
-         q5ARARdwMGdjduzz37ujN3IJE/PGdPsOC+7+OSjVr3Zs8Rrrdhvel1ayWBGH3cpFAgiS
-         jCh+jZtMYlaEgWxBgnJBe9tWWwMs6qEWMmHvGOxspQUznf+eOabjA1dR0c9KHukE9dCU
-         6LThNkzWDb+hRUB6hspBhNSigWIHtFe1WxO5SOxX8eyrd9FVcyNo4Lgj9yGIji2O0xX2
-         hi4+ctGtO6izD1dtcOGxVE+OgsQs/VwUCXxidfstL1vnXkGhBrUXYqZFiSwkHuwLhG+u
-         ymGg==
-X-Gm-Message-State: AOAM531chuivuQIFg2cA9I2HcpX+pAI+GmWzNQTlIavnX2NgD/+86SN8
-        A6AVn39YIfMP3DN0UjoF4xo=
-X-Google-Smtp-Source: ABdhPJzZbySWhRyOkrWp6EOaPa7zyUyPkaWhFMgfEwdFMTM6Jbyt9M95x8X/q/432QsPVybj8D6RFw==
-X-Received: by 2002:a7b:c192:: with SMTP id y18mr22530884wmi.65.1623454437589;
-        Fri, 11 Jun 2021 16:33:57 -0700 (PDT)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id x7sm8838753wre.8.2021.06.11.16.33.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Jun 2021 16:33:56 -0700 (PDT)
-Date:   Sat, 12 Jun 2021 01:33:55 +0200
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Qi Liu <liuqi115@huawei.com>
-Cc:     will@kernel.org, mark.rutland@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        zhangshaokun@hisilicon.com
-Subject: Re: [PATCH v6 2/2] drivers/perf: hisi: Add driver for HiSilicon PCIe
- PMU
-Message-ID: <20210611233355.GA183580@rocinante>
-References: <1622467951-32114-1-git-send-email-liuqi115@huawei.com>
- <1622467951-32114-3-git-send-email-liuqi115@huawei.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qMfo9SmEDWrsy733ImgWnawPC4LCVIr7AQPFKgdlarY=;
+        b=TEXP6XYl6nPjB6t6HrLfOqfCVmimdP2p2Apnxk4Zouvirqtr6ZSm+tKGahXsOWco8Y
+         i8iD9QuhVbqDPgHBBLM4AWsh9MCIb72sQLolAhRaxUi5x72bgk9GPwIGfzkl/jekqtF6
+         WrdBBOstXZG3DvOSM0FwSudSJFCJ5YLt95SZUNEotHj4+uNIX/UujeTM8EkUSaPw0IRu
+         onQQoPJkxD8p5RafT1tTs7/o436n5D+k4kTjRpTymEqr7GoTEsVZMVtzl5CzVDibdSAS
+         ME2QQH020h51p71BhPHfKVDOvd84QKuglRMUFUE3s6gCLbhfCPT6jPiaRKHCs8BkZTiB
+         82Fg==
+X-Gm-Message-State: AOAM531rQxXggzkqlkMTZ5chIR1mseY5sBC9jeYbHE8lGobcZC0Zu9YW
+        pxyphVPdg4VQnRM+ySK3VgsNjnH06GxhPzlc6y4=
+X-Google-Smtp-Source: ABdhPJzDzOD4nZXKITX+RFw+DNi/gIT+pNzkljq5PG6Tyi74eQYT6NalRvCvO5ZBwAfD1Nn2mrYZsggHAnnjFm+0mMY=
+X-Received: by 2002:a05:6638:1202:: with SMTP id n2mr6862932jas.57.1623471411209;
+ Fri, 11 Jun 2021 21:16:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1622467951-32114-3-git-send-email-liuqi115@huawei.com>
+References: <CAAhV-H4FhW=D0am2QMx+HAMBXiZSap2OTgaBd2QhB-ZVCjzNdg@mail.gmail.com>
+ <20210605213448.GA2327732@bjorn-Precision-5520>
+In-Reply-To: <20210605213448.GA2327732@bjorn-Precision-5520>
+From:   Huacai Chen <chenhuacai@gmail.com>
+Date:   Sat, 12 Jun 2021 12:16:39 +0800
+Message-ID: <CAAhV-H5kM9Q9F7O6xJ4gDYgyK+6eSmZJM5x5ER0UcxuMTwXaoQ@mail.gmail.com>
+Subject: Re: [PATCH V2 3/4] PCI: Improve the MRRS quirk for LS7A
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     huangshuai@loongson.cn, Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Qi,
+Hi, Bjorn,
 
-Thank you for sending the patch over!
+On Sun, Jun 6, 2021 at 5:34 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, Jun 04, 2021 at 05:43:36PM +0800, Huacai Chen wrote:
+> > Hi, Bjorn,
+> >
+> > On Sat, May 29, 2021 at 4:32 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >
+> > > On Fri, May 28, 2021 at 03:15:02PM +0800, Huacai Chen wrote:
+> > > > In new revision of LS7A, some PCIe ports support larger value than 256,
+> > > > but their maximum supported MRRS values are not detectable. Moreover,
+> > > > the current loongson_mrrs_quirk() cannot avoid devices increasing its
+> > > > MRRS after pci_enable_device(). So the only possible way is configure
+> > > > MRRS of all devices in BIOS, and add a PCI device flag (PCI_DEV_FLAGS_
+> > > > NO_INCREASE_MRRS) to stop the increasing MRRS operations.
+> > >
+> > > It's still not clear what the problem is.
+> > >
+> > > As far as I can tell from the PCIe spec, it is legal for an OS to
+> > > program any value for MRRS, and it is legal for an endpoint to
+> > > generate a Read Request with any size up to its MRRS.  If you
+> > > disagree, please cite the relevant section in the spec.
+> > >
+> > > There is no requirement for the OS to limit the MRRS based on a
+> > > restriction elsewhere in the system.  There is no mechanism for the OS
+> > > to even discover such a restriction.
+> > >
+> > > Of course, there is also no requirement that the PCIe Completions
+> > > carrying the read data be the same size as the MRRS.  If the non-PCIe
+> > > part of the system has a restriction on read burst size, that part of
+> > > the system can certainly break up the read and respond with several
+> > > PCIe Completions.
+> > >
+> > > If LS7A can't break up read requests, that sounds like a problem in
+> > > the LS7A design.  We should have a description of this erratum.  And
+> > > we should have some statement about this being fixed in future
+> > > designs, because we don't want to have to update the fixup with the
+> > > PCI vendor/device IDs every time new versions come out.
+> >
+> > Thanks for your information, but I think only Mr. Shuai Huang can
+> > explain the root cause, too.
+> >
+> > > I also don't want to rely on some value left in MRRS by BIOS.  If
+> > > certain bridges have specific limits on what MRRS can be, the fixup
+> > > should have those limits in it.
+> >
+> > As I know, each port of LS7A has a different maximum MRRS value (Yes,
+> > as you said, this is unreasonable in PCIe spec. but it is a fact in
+> > LS7A), and also different between hardware revisions. So, the kernel
+> > cannot configure it, and relying on BIOS is the only way.
+>
+> Maybe we should just set MRRS to the minimum (128 bytes) for
+> everything on this platform.
+>
+> The generic MPS/MRRS config is messy enough already, and I'm hesitant
+> to add much complication for what seems to be a fairly broken PCIe
+> controller.
+I have had an offline discussion with Mr. Shuai Huang, and he told me
+that the root cause is LS7A doesn't break up large read requests (Yes,
+that is a problem in the LS7A design). But I think set MRRS to 128
+bytes in the quirk is not enough, because as I said before, some
+devices (e.g. Realtek 8169) set a big value in its driver. We cannot
+block such operations if we don't touch the PCIe core.
 
-[...]
-> +/*
-> + * This driver adds support for PCIe PMU RCiEP device. Related
-> + * perf events are bandwidth, bandwidth utilization, latency
-> + * etc.
-> + *
-> + * Copyright (C) 2021 HiSilicon Limited
-> + * Author: Qi Liu<liuqi115@huawei.com>
-> + */
-
-A small nitpick: missing space between your name and the e-mail address.
-
-[...]
-> +static ssize_t hisi_pcie_event_sysfs_show(struct device *dev,
-> +				   struct device_attribute *attr, char *buf)
-> +{
-> +	struct dev_ext_attribute *eattr;
-> +
-> +	eattr = container_of(attr, struct dev_ext_attribute, attr);
-> +
-> +	return sysfs_emit(buf, "config=0x%lx\n", (unsigned long)eattr->var);
-> +}
-
-I am not that familiar with the perf drivers, thus I might be completely
-wrong here, but usually for sysfs objects a single value is preferred,
-so that this "config=" technically would not be needed, unless this is
-somewhat essential to the consumers of this attribute to know what the
-value is?  What do you think?
-
-[...]
-> +static ssize_t hisi_pcie_identifier_show(struct device *dev,
-> +					 struct device_attribute *attr,
-> +					 char *buf)
-> +{
-> +	struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(dev_get_drvdata(dev));
-> +
-> +	return sysfs_emit(buf, "0x%x\n", pcie_pmu->identifier);
-> +}
-
-What about using the "%#x" formatting flag?  It would automatically
-added the "0x" prefix, etc.
-
-> +static ssize_t hisi_pcie_bus_show(struct device *dev,
-> +				  struct device_attribute *attr, char *buf)
-> +{
-> +	struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(dev_get_drvdata(dev));
-> +
-> +	return sysfs_emit(buf, "0x%02x\n", PCI_BUS_NUM(pcie_pmu->bdf_min));
-> +}
-
-Same as above, what about "%#02x"?
-
-[...]
-> +static bool hisi_pcie_pmu_valid_filter(struct perf_event *event,
-> +				       struct hisi_pcie_pmu *pcie_pmu)
-> +{
-> +	u32 subev_idx = hisi_pcie_get_subevent(event);
-> +	u32 event_idx = hisi_pcie_get_event(event);
-> +	u32 requester_id = hisi_pcie_get_bdf(event);
-> +
-> +	if (subev_idx > HISI_PCIE_SUBEVENT_MAX ||
-> +	    event_idx > HISI_PCIE_EVENT_MAX) {
-> +		pci_err(pcie_pmu->pdev,
-> +			"Max event index and max subevent index is: %d, %d.\n",
-> +			HISI_PCIE_EVENT_MAX, HISI_PCIE_SUBEVENT_MAX);
-> +		return false;
-> +	}
-
-Was this error message above intended to be a debug message?  It's a bit
-opaque in terms what the error actually is here.  We might need to clear
-it up a little.
-
-[...]
-> +static bool hisi_pcie_pmu_validate_event_group(struct perf_event *event)
-> +{
-> +	struct perf_event *sibling, *leader = event->group_leader;
-> +	int counters = 1;
-
-How big this counter could become?
-
-Would it ever be greater than HISI_PCIE_MAX_COUNTERS?  I am asking, as
-if it would be ever greater, then perhaps unsigned int would be better
-to use, and if not, then perhaps something smaller than int?  What do
-you think, does this even make sense to change?
-
-[...]
-> +static int hisi_pcie_pmu_event_init(struct perf_event *event)
-> +{
-> +	struct hisi_pcie_pmu *pcie_pmu = to_pcie_pmu(event->pmu);
-> +
-> +	event->cpu = pcie_pmu->on_cpu;
-> +
-> +	if (event->attr.type != event->pmu->type)
-> +		return -ENOENT;
-> +
-> +	/* Sampling is not supported. */
-> +	if (is_sampling_event(event) || event->attach_state & PERF_ATTACH_TASK)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (!hisi_pcie_pmu_valid_filter(event, pcie_pmu)) {
-> +		pci_err(pcie_pmu->pdev, "Invalid filter!\n");
-> +		return -EINVAL;
-> +	}
-
-[...]
-> +/*
-> + * The bandwidth, latency, bus utilization and buffer occupancy features are
-> + * calculated from data in HISI_PCIE_CNT and extended data in HISI_PCIE_EXT_CNT.
-> + * Other features are obtained only by HISI_PCIE_CNT.
-> + * So data and data_ext are processed in this function to get performanace
-> + * value like, bandwidth, latency, etc.
-> + */
-
-A small typo in the world "performance" above.
-
-[...]
-> +static u64 hisi_pcie_pmu_get_performance(struct perf_event *event, u64 data,
-> +					 u64 data_ext)
-> +{
-> +#define CONVERT_DW_TO_BYTE(x)	(sizeof(u32) * (x))
-
-I would move this macro at the top alongside other constants and macros,
-as here it makes the code harder to read.  What do you think?
-
-[...]
-> +static int hisi_pcie_pmu_irq_register(struct pci_dev *pdev,
-> +				      struct hisi_pcie_pmu *pcie_pmu)
-> +{
-> +	int irq, ret;
-> +
-> +	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
-> +	if (ret < 0) {
-> +		pci_err(pdev, "Failed to enable MSI vectors, ret = %d!\n", ret);
-> +		return ret;
-> +	}
-
-This is a nitpick, so feel free to ignore it, but what do you think of
-changing this (and also other messages alike) message to be, for
-example:
-
-  pci_err(pdev, "Failed to enable MSI vectors: %d\n", ret);
-
-Why?  I personally don't find displaying a return code/value followed by
-a punctuation easy to read, especially when looking through a lot of
-lines and other messages in the kernel ring buffer.
-
-[...]
-> +
-> +	irq = pci_irq_vector(pdev, 0);
-> +	ret = request_irq(irq, hisi_pcie_pmu_irq,
-> +			  IRQF_NOBALANCING | IRQF_NO_THREAD, "hisi_pcie_pmu",
-> +			  pcie_pmu);
-> +	if (ret) {
-> +		pci_err(pdev, "Failed to register irq, ret = %d!\n", ret);
-> +		pci_free_irq_vectors(pdev);
-> +		return ret;
-> +	}
-
-It would be "IRQ" in the error message above.
-
-[...]
-> +static int hisi_pcie_pmu_offline_cpu(unsigned int cpu, struct hlist_node *node)
-> +{
-> +	struct hisi_pcie_pmu *pcie_pmu = hlist_entry_safe(node,
-> +					 struct hisi_pcie_pmu, node);
-> +	unsigned int target;
-> +
-> +	/* Nothing to do if this CPU doesn't own the PMU */
-> +	if (pcie_pmu->on_cpu != cpu)
-> +		return 0;
-> +
-> +	/* Choose a new CPU from all online cpus. */
-> +	target = cpumask_first(cpu_online_mask);
-> +	if (target >= nr_cpu_ids) {
-> +		pci_err(pcie_pmu->pdev, "There is no cpu to set!\n");
-> +		return 0;
-> +	}
-
-To be consistent, it would be "CPUs" and "CPU" in the above.
-
-[...]
-> +static struct device_attribute hisi_pcie_pmu_bus_attr =
-> +	__ATTR(bus, 0444, hisi_pcie_bus_show, NULL);
-[...]
-> +static struct device_attribute hisi_pcie_pmu_cpumask_attr =
-> +	__ATTR(cpumask, 0444, hisi_pcie_cpumask_show, NULL);
-[...]
-> +static struct device_attribute hisi_pcie_pmu_identifier_attr =
-> +	__ATTR(identifier, 0444, hisi_pcie_identifier_show, NULL);
-
-Would it be at possible for any of the above __ATTR() macros to be
-replaced with the DEVICE_ATTR_RO() macro?  Or perhaps with __ATTR_RO()
-if the other one would be a good fit?
-
-[...]
-> +static int hisi_pcie_init_dev(struct pci_dev *pdev)
-> +{
-> +	int ret;
-> +
-> +	ret = pci_enable_device(pdev);
-> +	if (ret) {
-> +		pci_err(pdev, "Failed to enable pci device, ret = %d.\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ret = pci_request_mem_regions(pdev, "hisi_pcie_pmu");
-> +	if (ret < 0) {
-> +		pci_err(pdev, "Failed to request pci mem regions, ret = %d.\n",
-> +			ret);
-> +		pci_disable_device(pdev);
-> +		return ret;
-> +	}
-
-It would be "PCI" in both error messages above.
-
-[...]
-> +static int __init hisi_pcie_module_init(void)
-> +{
-> +	int ret;
-> +
-> +	ret = cpuhp_setup_state_multi(CPUHP_AP_PERF_ARM_HISI_PCIE_PMU_ONLINE,
-> +				      "AP_PERF_ARM_HISI_PCIE_PMU_ONLINE",
-> +				      hisi_pcie_pmu_online_cpu,
-> +				      hisi_pcie_pmu_offline_cpu);
-> +	if (ret) {
-> +		pr_err("Failed to setup PCIE PMU hotplug, ret = %d.\n", ret);
-> +		return ret;
-> +	}
-
-It would be "PCIe" in the error message above.
-
-	Krzysztof
+Huacai
+>
+> > > loongson_mrrs_quirk() doesn't look efficient.  We should not have to
+> > > run the fixup for *every* PCI device in the system.  Also, we should
+> > > not mark every *device* below an LS7A, because it's not the devices
+> > > that are defective.
+> > >
+> > > If it's the root port or the host bridge that's defective, we should
+> > > mark *that*, e.g., something along the lines of how quirk_no_ext_tags()
+> > > works.
+> > OK, I'll improve my code.
+> >
+> > Huacai
+> > >
+> > > > Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> > > > ---
+> > > >  drivers/pci/pci.c    | 5 +++++
+> > > >  drivers/pci/quirks.c | 6 ++++++
+> > > >  include/linux/pci.h  | 2 ++
+> > > >  3 files changed, 13 insertions(+)
+> > > >
+> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > index b717680377a9..6f0d2f5b6f30 100644
+> > > > --- a/drivers/pci/pci.c
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -5802,6 +5802,11 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+> > > >
+> > > >       v = (ffs(rq) - 8) << 12;
+> > > >
+> > > > +     if (dev->dev_flags & PCI_DEV_FLAGS_NO_INCREASE_MRRS) {
+> > > > +             if (rq > pcie_get_readrq(dev))
+> > > > +                     return -EINVAL;
+> > > > +     }
+> > > > +
+> > > >       ret = pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+> > > >                                                 PCI_EXP_DEVCTL_READRQ, v);
+> > > >
+> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > > index 66e4bea69431..10b3b2057940 100644
+> > > > --- a/drivers/pci/quirks.c
+> > > > +++ b/drivers/pci/quirks.c
+> > > > @@ -264,6 +264,12 @@ static void loongson_mrrs_quirk(struct pci_dev *dev)
+> > > >                * any devices attached under these ports.
+> > > >                */
+> > > >               if (pci_match_id(bridge_devids, bridge)) {
+> > > > +                     dev->dev_flags |= PCI_DEV_FLAGS_NO_INCREASE_MRRS;
+> > > > +
+> > > > +                     if (pcie_bus_config == PCIE_BUS_DEFAULT ||
+> > > > +                         pcie_bus_config == PCIE_BUS_TUNE_OFF)
+> > > > +                             break;
+> > > > +
+> > > >                       if (pcie_get_readrq(dev) > 256) {
+> > > >                               pci_info(dev, "limiting MRRS to 256\n");
+> > > >                               pcie_set_readrq(dev, 256);
+> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > index c20211e59a57..7fb2072a83b8 100644
+> > > > --- a/include/linux/pci.h
+> > > > +++ b/include/linux/pci.h
+> > > > @@ -227,6 +227,8 @@ enum pci_dev_flags {
+> > > >       PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+> > > >       /* Don't use Relaxed Ordering for TLPs directed at this device */
+> > > >       PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
+> > > > +     /* Don't increase BIOS's MRRS configuration */
+> > > > +     PCI_DEV_FLAGS_NO_INCREASE_MRRS = (__force pci_dev_flags_t) (1 << 12),
+> > > >  };
+> > > >
+> > > >  enum pci_irq_reroute_variant {
+> > > > --
+> > > > 2.27.0
+> > > >
