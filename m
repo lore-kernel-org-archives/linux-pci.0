@@ -2,25 +2,26 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 967F6C49360
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jun 2021 06:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 692F7C48BE6
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jun 2021 06:21:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81A1F610A2
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jun 2021 06:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FD2161245
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jun 2021 06:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232385AbhFNGXZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jun 2021 02:23:25 -0400
-Received: from verein.lst.de ([213.95.11.211]:42684 "EHLO verein.lst.de"
+        id S232357AbhFNGXp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jun 2021 02:23:45 -0400
+Received: from verein.lst.de ([213.95.11.211]:42717 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232045AbhFNGXY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Jun 2021 02:23:24 -0400
+        id S232134AbhFNGXp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Jun 2021 02:23:45 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id B72AF67373; Mon, 14 Jun 2021 08:21:18 +0200 (CEST)
-Date:   Mon, 14 Jun 2021 08:21:18 +0200
+        id 2608B68AFE; Mon, 14 Jun 2021 08:21:40 +0200 (CEST)
+Date:   Mon, 14 Jun 2021 08:21:39 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Claire Chang <tientzu@chromium.org>
 Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
@@ -56,23 +57,19 @@ Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
         matthew.auld@intel.com, rodrigo.vivi@intel.com,
         thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v9 04/14] swiotlb: Add restricted DMA pool
- initialization
-Message-ID: <20210614062118.GD28343@lst.de>
-References: <20210611152659.2142983-1-tientzu@chromium.org> <20210611152659.2142983-5-tientzu@chromium.org>
+Subject: Re: [PATCH v9 05/14] swiotlb: Update is_swiotlb_buffer to add a
+ struct device argument
+Message-ID: <20210614062139.GE28343@lst.de>
+References: <20210611152659.2142983-1-tientzu@chromium.org> <20210611152659.2142983-6-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210611152659.2142983-5-tientzu@chromium.org>
+In-Reply-To: <20210611152659.2142983-6-tientzu@chromium.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 11, 2021 at 11:26:49PM +0800, Claire Chang wrote:
-> Add the initialization function to create restricted DMA pools from
-> matching reserved-memory nodes.
+Looks good,
 
-Bisection hazard:  we should only add the new config option when the
-code is actually read to be used.  So this patch should move to the end
-of the series.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
