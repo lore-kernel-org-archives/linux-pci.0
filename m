@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3697C48BE8
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD61C49EA4
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDA3161439
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F9A861474
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:38:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231629AbhFONkb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:40:31 -0400
-Received: from verein.lst.de ([213.95.11.211]:49103 "EHLO verein.lst.de"
+        id S231710AbhFONkq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jun 2021 09:40:46 -0400
+Received: from verein.lst.de ([213.95.11.211]:49140 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230187AbhFONkW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:40:22 -0400
+        id S231719AbhFONkk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:40:40 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id CC6DF68AFE; Tue, 15 Jun 2021 15:38:12 +0200 (CEST)
-Date:   Tue, 15 Jun 2021 15:38:12 +0200
+        id B7C1668B05; Tue, 15 Jun 2021 15:38:32 +0200 (CEST)
+Date:   Tue, 15 Jun 2021 15:38:32 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Claire Chang <tientzu@chromium.org>
 Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
@@ -57,23 +57,18 @@ Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
         matthew.auld@intel.com, rodrigo.vivi@intel.com,
         thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v10 02/12] swiotlb: Refactor swiotlb_create_debugfs
-Message-ID: <20210615133812.GB20389@lst.de>
-References: <20210615132711.553451-1-tientzu@chromium.org> <20210615132711.553451-3-tientzu@chromium.org>
+Subject: Re: [PATCH v10 03/12] swiotlb: Set dev->dma_io_tlb_mem to the
+ swiotlb pool used
+Message-ID: <20210615133831.GC20389@lst.de>
+References: <20210615132711.553451-1-tientzu@chromium.org> <20210615132711.553451-4-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210615132711.553451-3-tientzu@chromium.org>
+In-Reply-To: <20210615132711.553451-4-tientzu@chromium.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-
-On Tue, Jun 15, 2021 at 09:27:01PM +0800, Claire Chang wrote:
-> Split the debugfs creation to make the code reusable for supporting
-> different bounce buffer pools.
-> 
-> Signed-off-by: Claire Chang <tientzu@chromium.org>
 
 Looks good,
 
