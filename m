@@ -2,77 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD829C48BE5
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77281C49361
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9A7061477
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65B5B61490
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:39:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231741AbhFONlN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:41:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56914 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231811AbhFONks (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jun 2021 09:40:48 -0400
-Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62838C061767
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jun 2021 06:38:43 -0700 (PDT)
-Received: by mail-il1-x136.google.com with SMTP id i13so15323100ilk.3
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jun 2021 06:38:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UDZeAXhtUGNxVigPWnCAmqvhZ5xmOZkpwoxu/kotpBc=;
-        b=BkGuougKdpvJFSjPDCYcuDM+EfC9+Z6Iw8t63OKFUyvGcy9WEOaTZOyzUjDtlqxxWx
-         b+f6+GiSSKCn4V8zlclen8CemZkaZyLB8FJKB0g3go6na2Mkb6J76IEsPQg2PB5YFP++
-         oJX8/uFYscqhRRWgaBEXbZGZq7TD88YFqCsf4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UDZeAXhtUGNxVigPWnCAmqvhZ5xmOZkpwoxu/kotpBc=;
-        b=awXPzK6jSaQSRGIVBSCHEu/pnlfq72C3phIAiY+VBjh5qn/4UDu9m9WQyGDB/Ef14t
-         KbweL3q2CPNpfdl7IQHFzg9bNst71J0I2+Hbr7oeAOS4ziEqChD3z5oe7kEsm8sd+ZNg
-         yXod38p7FXJM92NyEf6HwgHE4zo1WKIlbLQ9t/UYuoIyA+JD3KmvQ5W+KJeUTQ7eOV39
-         PXwOVIsl0ocICYcrp1B+7tDNcr7h+WfBFqWdS/QJJoSIJCsfJ2GEeGn7pFdjfewsl8cH
-         6H/sPRu4IJWLPOWmaZ4Kv0K+Z6wObz0dfx3kJPKapvYS55QLSrQlmlx3Ytn9SEdfppXP
-         LlZg==
-X-Gm-Message-State: AOAM5326hEHet9s1bbM8TqLbn7jAoEv9RAtYqNhi84Ku6nglmb/S5JMy
-        ZsFxKENRQogCCpngN9bum6yWf1O5KJFooA==
-X-Google-Smtp-Source: ABdhPJz2L6CVjiXconGYYdifvnJE/rA6iMQx2BaiiRHwL+D304tbwbLvwCSc2c13udxWSOUXzRtkYw==
-X-Received: by 2002:a05:6e02:cd1:: with SMTP id c17mr17881622ilj.210.1623764322645;
-        Tue, 15 Jun 2021 06:38:42 -0700 (PDT)
-Received: from mail-io1-f45.google.com (mail-io1-f45.google.com. [209.85.166.45])
-        by smtp.gmail.com with ESMTPSA id i12sm9147113ilk.22.2021.06.15.06.38.42
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Jun 2021 06:38:42 -0700 (PDT)
-Received: by mail-io1-f45.google.com with SMTP id l64so21806240ioa.7
-        for <linux-pci@vger.kernel.org>; Tue, 15 Jun 2021 06:38:42 -0700 (PDT)
-X-Received: by 2002:a05:6e02:219d:: with SMTP id j29mr17936278ila.64.1623763835517;
- Tue, 15 Jun 2021 06:30:35 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210611152659.2142983-1-tientzu@chromium.org>
-In-Reply-To: <20210611152659.2142983-1-tientzu@chromium.org>
-From:   Claire Chang <tientzu@chromium.org>
-Date:   Tue, 15 Jun 2021 21:30:24 +0800
-X-Gmail-Original-Message-ID: <CALiNf28fb4rZ0Afun8wAWRYJY4gqc+-vRvDBZT3x2JgSPL_iVQ@mail.gmail.com>
-Message-ID: <CALiNf28fb4rZ0Afun8wAWRYJY4gqc+-vRvDBZT3x2JgSPL_iVQ@mail.gmail.com>
-Subject: Re: [PATCH v9 00/14] Restricted DMA
-To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
+        id S231326AbhFONlQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jun 2021 09:41:16 -0400
+Received: from verein.lst.de ([213.95.11.211]:49177 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231726AbhFONk5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:40:57 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 1FDA367373; Tue, 15 Jun 2021 15:38:50 +0200 (CEST)
+Date:   Tue, 15 Jun 2021 15:38:49 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Claire Chang <tientzu@chromium.org>
+Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
         Frank Rowand <frowand.list@gmail.com>,
         Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         boris.ostrovsky@oracle.com, jgross@suse.com,
         Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>
-Cc:     benh@kernel.crashing.org, paulus@samba.org,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        benh@kernel.crashing.org, paulus@samba.org,
         "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
         sstabellini@kernel.org, Robin Murphy <robin.murphy@arm.com>,
         grant.likely@arm.com, xypron.glpk@gmx.de,
@@ -90,18 +49,33 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         lkml <linux-kernel@vger.kernel.org>,
         linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
         Nicolas Boichat <drinkcat@chromium.org>,
-        Jim Quinlan <james.quinlan@broadcom.com>,
-        Tomasz Figa <tfiga@chromium.org>, bskeggs@redhat.com,
-        Bjorn Helgaas <bhelgaas@google.com>, chris@chris-wilson.co.uk,
-        Daniel Vetter <daniel@ffwll.ch>, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        jani.nikula@linux.intel.com, Jianxiong Gao <jxgao@google.com>,
-        joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
-        maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
-        rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
-Content-Type: text/plain; charset="UTF-8"
+        Jim Quinlan <james.quinlan@broadcom.com>, tfiga@chromium.org,
+        bskeggs@redhat.com, bhelgaas@google.com, chris@chris-wilson.co.uk,
+        daniel@ffwll.ch, airlied@linux.ie, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, jani.nikula@linux.intel.com,
+        jxgao@google.com, joonas.lahtinen@linux.intel.com,
+        linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
+        matthew.auld@intel.com, rodrigo.vivi@intel.com,
+        thomas.hellstrom@linux.intel.com
+Subject: Re: [PATCH v10 04/12] swiotlb: Update is_swiotlb_buffer to add a
+ struct device argument
+Message-ID: <20210615133849.GD20389@lst.de>
+References: <20210615132711.553451-1-tientzu@chromium.org> <20210615132711.553451-5-tientzu@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210615132711.553451-5-tientzu@chromium.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-v10 here: https://lore.kernel.org/patchwork/cover/1446882/
+On Tue, Jun 15, 2021 at 09:27:03PM +0800, Claire Chang wrote:
+> Update is_swiotlb_buffer to add a struct device argument. This will be
+> useful later to allow for different pools.
+> 
+> Signed-off-by: Claire Chang <tientzu@chromium.org>
+
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
