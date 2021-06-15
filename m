@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC6D3C49361
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D832C48BE5
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB1D16147E
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8863B61477
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jun 2021 13:40:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231519AbhFONmP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jun 2021 09:42:15 -0400
-Received: from verein.lst.de ([213.95.11.211]:49288 "EHLO verein.lst.de"
+        id S231538AbhFONmb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jun 2021 09:42:31 -0400
+Received: from verein.lst.de ([213.95.11.211]:49322 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230079AbhFONlx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Jun 2021 09:41:53 -0400
+        id S230361AbhFONmJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jun 2021 09:42:09 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4BA0568AFE; Tue, 15 Jun 2021 15:39:46 +0200 (CEST)
-Date:   Tue, 15 Jun 2021 15:39:45 +0200
+        id BE0D967373; Tue, 15 Jun 2021 15:40:02 +0200 (CEST)
+Date:   Tue, 15 Jun 2021 15:40:02 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Claire Chang <tientzu@chromium.org>
 Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
@@ -57,24 +57,17 @@ Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
         matthew.auld@intel.com, rodrigo.vivi@intel.com,
         thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v10 07/12] swiotlb: Move alloc_size to
- swiotlb_find_slots
-Message-ID: <20210615133945.GG20389@lst.de>
-References: <20210615132711.553451-1-tientzu@chromium.org> <20210615132711.553451-8-tientzu@chromium.org>
+Subject: Re: [PATCH v10 08/12] swiotlb: Refactor swiotlb_tbl_unmap_single
+Message-ID: <20210615134002.GH20389@lst.de>
+References: <20210615132711.553451-1-tientzu@chromium.org> <20210615132711.553451-9-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210615132711.553451-8-tientzu@chromium.org>
+In-Reply-To: <20210615132711.553451-9-tientzu@chromium.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-
-On Tue, Jun 15, 2021 at 09:27:06PM +0800, Claire Chang wrote:
-> Rename find_slots to swiotlb_find_slots and move the maintenance of
-> alloc_size to it for better code reusability later.
-> 
-> Signed-off-by: Claire Chang <tientzu@chromium.org>
 
 Looks good,
 
