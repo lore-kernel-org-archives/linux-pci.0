@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2004EC48BE5
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 07:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCBE5C48BE5
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 07:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F348D61055
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 07:39:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B368261055
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 07:39:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231636AbhFPHlg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jun 2021 03:41:36 -0400
-Received: from verein.lst.de ([213.95.11.211]:52999 "EHLO verein.lst.de"
+        id S232031AbhFPHlx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jun 2021 03:41:53 -0400
+Received: from verein.lst.de ([213.95.11.211]:53033 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231187AbhFPHlf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Jun 2021 03:41:35 -0400
+        id S232038AbhFPHlu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Jun 2021 03:41:50 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9C8526736F; Wed, 16 Jun 2021 09:39:22 +0200 (CEST)
-Date:   Wed, 16 Jun 2021 09:39:22 +0200
+        id 329CC68B05; Wed, 16 Jun 2021 09:39:42 +0200 (CEST)
+Date:   Wed, 16 Jun 2021 09:39:42 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Claire Chang <tientzu@chromium.org>
 Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
@@ -57,23 +57,28 @@ Cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
         matthew.auld@intel.com, rodrigo.vivi@intel.com,
         thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v12 06/12] swiotlb: Use is_swiotlb_force_bounce for
- swiotlb data bouncing
-Message-ID: <20210616073922.GA2326@lst.de>
-References: <20210616062157.953777-1-tientzu@chromium.org> <20210616062157.953777-7-tientzu@chromium.org>
+Subject: Re: [PATCH v12 09/12] swiotlb: Add restricted DMA alloc/free
+ support
+Message-ID: <20210616073942.GB2326@lst.de>
+References: <20210616062157.953777-1-tientzu@chromium.org> <20210616062157.953777-10-tientzu@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210616062157.953777-7-tientzu@chromium.org>
+In-Reply-To: <20210616062157.953777-10-tientzu@chromium.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 16, 2021 at 02:21:51PM +0800, Claire Chang wrote:
-> Propagate the swiotlb_force into io_tlb_default_mem->force_bounce and
-> use it to determine whether to bounce the data or not. This will be
-> useful later to allow for different pools.
+On Wed, Jun 16, 2021 at 02:21:54PM +0800, Claire Chang wrote:
+> Add the functions, swiotlb_{alloc,free} and is_swiotlb_for_alloc to
+> support the memory allocation from restricted DMA pool.
+> 
+> The restricted DMA pool is preferred if available.
+> 
+> Note that since coherent allocation needs remapping, one must set up
+> another device coherent pool by shared-dma-pool and use
+> dma_alloc_from_dev_coherent instead for atomic coherent allocation.
 > 
 > Signed-off-by: Claire Chang <tientzu@chromium.org>
 
