@@ -5,44 +5,46 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B46DC49EBA
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3073C48BE6
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:28:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63282613D0
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D9B4613DE
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:28:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231789AbhFPGaB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jun 2021 02:30:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59948 "EHLO mail.kernel.org"
+        id S231942AbhFPGaJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jun 2021 02:30:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59992 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231678AbhFPG3z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Jun 2021 02:29:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B5BE86141D;
+        id S231676AbhFPG34 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Jun 2021 02:29:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B104B6141B;
         Wed, 16 Jun 2021 06:27:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1623824868;
-        bh=MzVBXfG1BKEroabGxLV1n0BhCSj3Ci7z9YuRqrErxvo=;
+        bh=My1ZHNSGoHRHq4FA9ySxIEbkvWlKRcsgp6LpqtXUf2I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mD6Kp5QEvk7O022uVIpL6FiHtnhbg481oWC/kFvecjPy/cLCox5wlJL4ScQnoyX9u
-         oqEyxE10kS0uFxg4MFpXG+DgcR1l2/HtTO5z9ugInQsKbR5nxnjiBck2cJALW3PpwJ
-         08QmYZlLy0j3vqRf5tLrBxtroEJjms2nQjvtb2odYpEV7ALk42SDowmhzzEQS3FbjN
-         zNi3whiqXZ0R/yevK4Ww+aeklnfggeFXPKYHZZj+VfzlPHfinE2RaDElh0GyTWyMzU
-         ouO7vZaNHYl/gESsSF25L1JS9nyDbe75NTQnlOHHK7imfyoNnv/KU2RPpQn4Bpw32N
-         f06Q+j23VAx/w==
+        b=t/F21QnzCLB1Q2iC1siLmWTPEBhcM3dtUTJff27YXlbAd1jFtQvsaLxsY4ZGhps36
+         /MJnHNwxFMOh5W21sN6WVf9QjpwmrzKQyzDlB2rVBHli6tayuLVyaJgSFS6ZCuNHYY
+         RU9odDLZuTyf27dPTGsT62N4h3gYpNT7nYg+7r4CVVB96ksTeIrjj9wkNtScCdpUqE
+         GnCiTEY76oO4NI3nsOPr/Sk7B5oQEDfw0pDb7A851hN0a+R4LVQ/EBBav4mJ0Lpt6T
+         V1/rkmDaN4psvzSXpntBTrGX+ghzK9WM36GVGdriJEbEmJ4XJqzS5MhH4VW993flin
+         CBdBkL8Er1ehQ==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1ltP1f-004kJi-0B; Wed, 16 Jun 2021 08:27:47 +0200
+        id 1ltP1e-004kJe-Uw; Wed, 16 Jun 2021 08:27:46 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 22/29] docs: PCI: pci.rst: avoid using ReST :doc:`foo` markup
-Date:   Wed, 16 Jun 2021 08:27:37 +0200
-Message-Id: <8697cf945390f6b45fefb4c5fe22ed1c8070e32e.1623824363.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v2 21/29] docs: PCI: endpoint: pci-endpoint-cfs.rst: avoid using ReST :doc:`foo` markup
+Date:   Wed, 16 Jun 2021 08:27:36 +0200
+Message-Id: <4b18febe4a4f030dd9d43e5e6a2a0aa28bd5b734.1623824363.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1623824363.git.mchehab+huawei@kernel.org>
 References: <cover.1623824363.git.mchehab+huawei@kernel.org>
@@ -56,42 +58,22 @@ X-Mailing-List: linux-pci@vger.kernel.org
 The :doc:`foo` tag is auto-generated via automarkup.py.
 So, use the filename at the sources, instead of :doc:`foo`.
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- Documentation/PCI/pci.rst | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ Documentation/PCI/endpoint/pci-endpoint-cfs.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/PCI/pci.rst b/Documentation/PCI/pci.rst
-index 814b40f8360b..fa651e25d98c 100644
---- a/Documentation/PCI/pci.rst
-+++ b/Documentation/PCI/pci.rst
-@@ -265,7 +265,7 @@ Set the DMA mask size
- ---------------------
- .. note::
-    If anything below doesn't make sense, please refer to
--   :doc:`/core-api/dma-api`. This section is just a reminder that
-+   Documentation/core-api/dma-api.rst. This section is just a reminder that
-    drivers need to indicate DMA capabilities of the device and is not
-    an authoritative source for DMA interfaces.
+diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
+index 696f8eeb4738..db609b97ad58 100644
+--- a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
++++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
+@@ -125,4 +125,4 @@ all the EPF devices are created and linked with the EPC device.
+ 						| interrupt_pin
+ 						| function
  
-@@ -291,7 +291,7 @@ Many 64-bit "PCI" devices (before PCI-X) and some PCI-X devices are
- Setup shared control data
- -------------------------
- Once the DMA masks are set, the driver can allocate "consistent" (a.k.a. shared)
--memory.  See :doc:`/core-api/dma-api` for a full description of
-+memory.  See Documentation/core-api/dma-api.rst for a full description of
- the DMA APIs. This section is just a reminder that it needs to be done
- before enabling DMA on the device.
- 
-@@ -421,7 +421,7 @@ owners if there is one.
- 
- Then clean up "consistent" buffers which contain the control data.
- 
--See :doc:`/core-api/dma-api` for details on unmapping interfaces.
-+See Documentation/core-api/dma-api.rst for details on unmapping interfaces.
- 
- 
- Unregister from other subsystems
+-[1] :doc:`pci-endpoint`
++[1] Documentation/PCI/endpoint/pci-endpoint.rst
 -- 
 2.31.1
 
