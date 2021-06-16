@@ -2,78 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3073C48BE6
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D04C48BE5
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:51:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D9B4613DE
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:28:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53B1F61246
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jun 2021 06:51:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231942AbhFPGaJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jun 2021 02:30:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59992 "EHLO mail.kernel.org"
+        id S231570AbhFPGxP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jun 2021 02:53:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231676AbhFPG34 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Jun 2021 02:29:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B104B6141B;
-        Wed, 16 Jun 2021 06:27:48 +0000 (UTC)
+        id S231774AbhFPGxP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Jun 2021 02:53:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B8F62613B9;
+        Wed, 16 Jun 2021 06:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623824868;
-        bh=My1ZHNSGoHRHq4FA9ySxIEbkvWlKRcsgp6LpqtXUf2I=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t/F21QnzCLB1Q2iC1siLmWTPEBhcM3dtUTJff27YXlbAd1jFtQvsaLxsY4ZGhps36
-         /MJnHNwxFMOh5W21sN6WVf9QjpwmrzKQyzDlB2rVBHli6tayuLVyaJgSFS6ZCuNHYY
-         RU9odDLZuTyf27dPTGsT62N4h3gYpNT7nYg+7r4CVVB96ksTeIrjj9wkNtScCdpUqE
-         GnCiTEY76oO4NI3nsOPr/Sk7B5oQEDfw0pDb7A851hN0a+R4LVQ/EBBav4mJ0Lpt6T
-         V1/rkmDaN4psvzSXpntBTrGX+ghzK9WM36GVGdriJEbEmJ4XJqzS5MhH4VW993flin
-         CBdBkL8Er1ehQ==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1ltP1e-004kJe-Uw; Wed, 16 Jun 2021 08:27:46 +0200
+        s=k20201202; t=1623826269;
+        bh=vFYUc/FPXe7v29rZc6G7piYAomJ6yWfSv9/yeEoUkxI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=TS6XOoGL4KFZ2jcCPUwlMc0J6sXPc0KOW84TacDfvAAZzhzoYsfTc0o8UaAgCmrk0
+         L6OsejPKQEPNzyNv1UJXCQJ9Zxt5fZ9r0nva+0JrnYk1nXFrgHLWTJsOc8mWUd7dCW
+         U7JPDYD1ZoHLVk3hvO4hMrAn3j+IHfpWPgPidSOIG8QKGGstIQpHeRx1WixmbzYdIo
+         9hiPJWevjQLpKtVpMiet/U+H7teRA+CJVUn1IlSDOWt9Atdv27qH1Z5rVbQPg27PfZ
+         /kogiKhOC9XguMKoiBLCUQK3XwN+0wocHAEEVM/JOJIwOkiIQCWb49qy6U8BIYexYe
+         MghCqGcPgKO0A==
+Date:   Wed, 16 Jun 2021 08:51:04 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Jonathan Corbet <corbet@lwn.net>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 21/29] docs: PCI: endpoint: pci-endpoint-cfs.rst: avoid using ReST :doc:`foo` markup
-Date:   Wed, 16 Jun 2021 08:27:36 +0200
-Message-Id: <4b18febe4a4f030dd9d43e5e6a2a0aa28bd5b734.1623824363.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1623824363.git.mchehab+huawei@kernel.org>
-References: <cover.1623824363.git.mchehab+huawei@kernel.org>
+Subject: Re: [PATCH v3 12/16] docs: PCI: acpi-info.rst: replace some
+ characters
+Message-ID: <20210616085104.0477bd7b@coco.lan>
+In-Reply-To: <20210519214731.GA262176@bjorn-Precision-5520>
+References: <320bafda201827dd63208af55b528ae63bcf8217.1621159997.git.mchehab+huawei@kernel.org>
+        <20210519214731.GA262176@bjorn-Precision-5520>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The :doc:`foo` tag is auto-generated via automarkup.py.
-So, use the filename at the sources, instead of :doc:`foo`.
+Em Wed, 19 May 2021 16:47:31 -0500
+Bjorn Helgaas <helgaas@kernel.org> escreveu:
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
----
- Documentation/PCI/endpoint/pci-endpoint-cfs.rst | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Sun, May 16, 2021 at 12:18:29PM +0200, Mauro Carvalho Chehab wrote:
+> > The conversion tools used during DocBook/LaTeX/html/Markdown->ReST
+> > conversion and some cut-and-pasted text contain some characters that
+> > aren't easily reachable on standard keyboards and/or could cause
+> > troubles when parsed by the documentation build system.
+> >=20
+> > Replace the occurences of the following characters:
+> >=20
+> > 	- U+00a0 ('=C2=A0'): NO-BREAK SPACE
+> > 	  as it can cause lines being truncated on PDF output
+> >=20
+> > Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org> =20
+>=20
+> Apparently you missed
+> https://lore.kernel.org/r/20210512212938.GA2516413@bjorn-Precision-5520
+> where I pointed out a couple issues (3 spaces after period in first
+> hunk, extra whitespace at end of "know about it." hunk) and added my
+> ack.
+>=20
+> The subject line would be more useful as:
+>=20
+>   docs: PCI: Replace non-breaking spaces to avoid PDF issues
+>=20
+> It's fine to defer those issues if you want,=20
 
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-index 696f8eeb4738..db609b97ad58 100644
---- a/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-@@ -125,4 +125,4 @@ all the EPF devices are created and linked with the EPC device.
- 						| interrupt_pin
- 						| function
- 
--[1] :doc:`pci-endpoint`
-+[1] Documentation/PCI/endpoint/pci-endpoint.rst
--- 
-2.31.1
+Yeah, I opted to separate the changes into parts. This one is focused
+on problematic chars that could lead into output issues.=20
 
+Once those get merged, I'll submit a separate one with things like curly
+commas and dashes, as a couple of maintainers seem to have different
+opinions about that.
+
+> but this is still:
+>=20
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Thanks!
+
+Regards,
+Mauro
