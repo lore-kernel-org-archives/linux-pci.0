@@ -2,177 +2,223 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BED2C48BE5
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 00:47:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C27BEC48BE5
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 06:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3DB8613CB
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 00:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FBF761075
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 06:00:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231569AbhFQAtQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jun 2021 20:49:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60956 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231496AbhFQAtQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Jun 2021 20:49:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C7A2B613B9;
-        Thu, 17 Jun 2021 00:47:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623890829;
-        bh=WCzGPQl/aym123sINb8QnvJYTwJNBRaVx2zLf3Bv1N8=;
-        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-        b=rMohPe+tbKQa0AYXnI+IW3OaFUpO6B0eUu0gZForopqzfrCjPyFI1Ewjobgur6/dk
-         bLRtb8PIYvryWZweFMXTwAbMWtg0nctMUoV8kxk6uELmUKnBiVw5LeKCqL5SBhOByE
-         jiTek0nnewDrHmhCidXDSQ3WaahCsU5g4GDabRezUbSedVXgMEydAYEHuXFwzTS91g
-         cJMCyter7dx77I2E16IUKEfK8pcdYqTSbuwilDTS8T+uuTkXRJvXElaDgqvBEXf5YU
-         0wAWL6nOk87f0a1jJqezXJtxglL4nvT9peSjxOtxRa83ff4UqBDa3CGXSoXj4TqnFN
-         tHVw/jZbmu50w==
-Date:   Wed, 16 Jun 2021 17:47:07 -0700 (PDT)
-From:   Stefano Stabellini <sstabellini@kernel.org>
-X-X-Sender: sstabellini@sstabellini-ThinkPad-T480s
-To:     Claire Chang <tientzu@chromium.org>
-cc:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        benh@kernel.crashing.org, paulus@samba.org,
-        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        sstabellini@kernel.org, Robin Murphy <robin.murphy@arm.com>,
-        grant.likely@arm.com, xypron.glpk@gmx.de,
-        Thierry Reding <treding@nvidia.com>, mingo@kernel.org,
-        bauerman@linux.ibm.com, peterz@infradead.org,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        heikki.krogerus@linux.intel.com,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        linux-devicetree <devicetree@vger.kernel.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
-        Nicolas Boichat <drinkcat@chromium.org>,
-        Jim Quinlan <james.quinlan@broadcom.com>, tfiga@chromium.org,
-        bskeggs@redhat.com, bhelgaas@google.com, chris@chris-wilson.co.uk,
-        daniel@ffwll.ch, airlied@linux.ie, dri-devel@lists.freedesktop.org,
-        intel-gfx@lists.freedesktop.org, jani.nikula@linux.intel.com,
-        jxgao@google.com, joonas.lahtinen@linux.intel.com,
-        linux-pci@vger.kernel.org, maarten.lankhorst@linux.intel.com,
-        matthew.auld@intel.com, rodrigo.vivi@intel.com,
-        thomas.hellstrom@linux.intel.com
-Subject: Re: [PATCH v12 06/12] swiotlb: Use is_swiotlb_force_bounce for
- swiotlb data bouncing
-In-Reply-To: <20210616062157.953777-7-tientzu@chromium.org>
-Message-ID: <alpine.DEB.2.21.2106161711030.24906@sstabellini-ThinkPad-T480s>
-References: <20210616062157.953777-1-tientzu@chromium.org> <20210616062157.953777-7-tientzu@chromium.org>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S229580AbhFQGCw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Jun 2021 02:02:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34326 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229515AbhFQGCv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jun 2021 02:02:51 -0400
+Received: from mail-ua1-x935.google.com (mail-ua1-x935.google.com [IPv6:2607:f8b0:4864:20::935])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89161C061574;
+        Wed, 16 Jun 2021 23:00:38 -0700 (PDT)
+Received: by mail-ua1-x935.google.com with SMTP id o3so1676623uaw.5;
+        Wed, 16 Jun 2021 23:00:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nI7yEuG2ARK23uejO9nhB9zAo4xzWVauJN211Odr0ag=;
+        b=S3EyK0G1UBktsOleWFm/MmnmHW2LeOl67vQAXqw+sSV/y6rb5Kzn8/0e/P2xbwqove
+         boggjxcWiH4UnbuXOGKNbuBU364gWdeijLrnuQcI0aolnbkvF1MpdshBPi3W5GZI26iZ
+         VE9ZJQxmSB86xzPT3SBE+PqwKbppwEuqNlhk8NyjiCGmSJ1ifz8JtJgtojOY+/fgtanv
+         MOqv7LVJox0XJ2d1NN6HtmRUwyXaxp5pbsEH0rADbHrlKrejuIDhoW6G+0RbmMIUKvCu
+         sDLKjaYJtfQ0HG+UyfHs6y04Ob8slrJFvpRTMSB3UomwoLt+0xr94/dR3ExVLicO83w6
+         dxGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=nI7yEuG2ARK23uejO9nhB9zAo4xzWVauJN211Odr0ag=;
+        b=Yyv8EU0czP3abKR+Mgo9oHWGNnoILneJSZluLd6P0zGTzmw+qrTyoGIEdauv3her9Y
+         RnGXiPMvDsepY8LUjghHiZyZ6G2C3l+yk1PEcc36v+wGbUGMyOV3bKSwPpabc/FrN3oM
+         2QfvX+6Za9gPvIkdwztPOzadCMs1ShM3qQO4K7mb3VNmeBskGRD5+Cvf4FlzmszrNBkE
+         dysSZJFukEprQuQgaZbpDBelhaEisrzcvBfXAJnuWFh17gWsxOC7F9aUY1tBXo8La4AZ
+         /kirxAckK6jobNr2c9MDKe0h4m4rkiwFVDZFws1Pu+0gtkZe2/56LBZfetVkPSgGaTsX
+         +kMA==
+X-Gm-Message-State: AOAM533WQ0xMO5WAGi2ThkBow4KSlR7lDkkV8FBKHScKHDZo8Hrntuv+
+        jizV53iOkkTyqTyoIIDQlxCNvZZ3D7mjFX8q5PeFajlY2iVwxg==
+X-Google-Smtp-Source: ABdhPJyRLlGAMJvGoiPaWvpNElF/xJHOqBPZOWBpR2vkSoib2df0R18MIhqUWtQohPkb7vDP4sEy/87V/xLthopwClk=
+X-Received: by 2002:ab0:49aa:: with SMTP id e39mr3733325uad.0.1623909637178;
+ Wed, 16 Jun 2021 23:00:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <20210609140159.20476-1-sergio.paracuellos@gmail.com>
+In-Reply-To: <20210609140159.20476-1-sergio.paracuellos@gmail.com>
+From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date:   Thu, 17 Jun 2021 08:00:25 +0200
+Message-ID: <CAMhs-H9659uAEb9A-xxfOEqcsUuFE1tNTu_VAj+AskwKUUD8dw@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] PCI: mt7621: Add MediaTek MT7621 PCIe host
+ controller driver
+To:     linux-pci@vger.kernel.org
+Cc:     "open list:MIPS" <linux-mips@vger.kernel.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        John Crispin <john@phrozen.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-staging@lists.linux.dev,
+        Greg KH <gregkh@linuxfoundation.org>,
+        NeilBrown <neil@brown.name>,
+        Ilya Lipnitskiy <ilya.lipnitskiy@gmail.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 16 Jun 2021, Claire Chang wrote:
-> Propagate the swiotlb_force into io_tlb_default_mem->force_bounce and
-> use it to determine whether to bounce the data or not. This will be
-> useful later to allow for different pools.
-> 
-> Signed-off-by: Claire Chang <tientzu@chromium.org>
-> ---
->  include/linux/swiotlb.h | 11 +++++++++++
->  kernel/dma/direct.c     |  2 +-
->  kernel/dma/direct.h     |  2 +-
->  kernel/dma/swiotlb.c    |  4 ++++
->  4 files changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-> index dd1c30a83058..8d8855c77d9a 100644
-> --- a/include/linux/swiotlb.h
-> +++ b/include/linux/swiotlb.h
-> @@ -84,6 +84,7 @@ extern enum swiotlb_force swiotlb_force;
->   *		unmap calls.
->   * @debugfs:	The dentry to debugfs.
->   * @late_alloc:	%true if allocated using the page allocator
-> + * @force_bounce: %true if swiotlb bouncing is forced
->   */
->  struct io_tlb_mem {
->  	phys_addr_t start;
-> @@ -94,6 +95,7 @@ struct io_tlb_mem {
->  	spinlock_t lock;
->  	struct dentry *debugfs;
->  	bool late_alloc;
-> +	bool force_bounce;
->  	struct io_tlb_slot {
->  		phys_addr_t orig_addr;
->  		size_t alloc_size;
-> @@ -109,6 +111,11 @@ static inline bool is_swiotlb_buffer(struct device *dev, phys_addr_t paddr)
->  	return mem && paddr >= mem->start && paddr < mem->end;
->  }
->  
-> +static inline bool is_swiotlb_force_bounce(struct device *dev)
-> +{
-> +	return dev->dma_io_tlb_mem->force_bounce;
-> +}
->  void __init swiotlb_exit(void);
->  unsigned int swiotlb_max_segment(void);
->  size_t swiotlb_max_mapping_size(struct device *dev);
-> @@ -120,6 +127,10 @@ static inline bool is_swiotlb_buffer(struct device *dev, phys_addr_t paddr)
->  {
->  	return false;
->  }
-> +static inline bool is_swiotlb_force_bounce(struct device *dev)
-> +{
-> +	return false;
-> +}
->  static inline void swiotlb_exit(void)
->  {
->  }
-> diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
-> index 7a88c34d0867..a92465b4eb12 100644
-> --- a/kernel/dma/direct.c
-> +++ b/kernel/dma/direct.c
-> @@ -496,7 +496,7 @@ size_t dma_direct_max_mapping_size(struct device *dev)
->  {
->  	/* If SWIOTLB is active, use its maximum mapping size */
->  	if (is_swiotlb_active(dev) &&
-> -	    (dma_addressing_limited(dev) || swiotlb_force == SWIOTLB_FORCE))
-> +	    (dma_addressing_limited(dev) || is_swiotlb_force_bounce(dev)))
->  		return swiotlb_max_mapping_size(dev);
->  	return SIZE_MAX;
->  }
-> diff --git a/kernel/dma/direct.h b/kernel/dma/direct.h
-> index 13e9e7158d94..4632b0f4f72e 100644
-> --- a/kernel/dma/direct.h
-> +++ b/kernel/dma/direct.h
-> @@ -87,7 +87,7 @@ static inline dma_addr_t dma_direct_map_page(struct device *dev,
->  	phys_addr_t phys = page_to_phys(page) + offset;
->  	dma_addr_t dma_addr = phys_to_dma(dev, phys);
->  
-> -	if (unlikely(swiotlb_force == SWIOTLB_FORCE))
-> +	if (is_swiotlb_force_bounce(dev))
->  		return swiotlb_map(dev, phys, size, dir, attrs);
+Hi,
+
+On Wed, Jun 9, 2021 at 4:02 PM Sergio Paracuellos
+<sergio.paracuellos@gmail.com> wrote:
 >
->  	if (unlikely(!dma_capable(dev, dma_addr, size, true))) {
+> MediaTek MT7621 PCIe subsys supports single Root complex (RC)
+> with 3 Root Ports. Each Root Ports supports a Gen1 1-lane Link.
+> Topology is as follows:
+>
+>                           MT7621 PCIe HOST Topology
+>
+>                                    .-------.
+>                                    |       |
+>                                    |  CPU  |
+>                                    |       |
+>                                    '-------'
+>                                        |
+>                                        |
+>                                        |
+>                                        v
+>                               .------------------.
+>                   .-----------|  HOST/PCI Bridge |------------.
+>                   |           '------------------'            |     Type1
+>          BUS0     |                     |                     |    Access
+>                   v                     v                     v    On Bus0
+>           .-------------.        .-------------.       .-------------.
+>           | VIRTUAL P2P |        | VIRTUAL P2P |       | VIRTUAL P2P |
+>           |    BUS0     |        |    BUS0     |       |    BUS0     |
+>           |    DEV0     |        |    DEV1     |       |    DEV2     |
+>           '-------------'        '-------------'       '-------------'
+>     Type0        |          Type0       |         Type0       |
+>    Access   BUS1 |         Access   BUS2|        Access   BUS3|
+>    On Bus1       v         On Bus2      v        On Bus3      v
+>            .----------.           .----------.          .----------.
+>            | Device 0 |           | Device 0 |          | Device 0 |
+>            |  Func 0  |           |  Func 0  |          |  Func 0  |
+>            '----------'           '----------'          '----------'
+>
+> This driver has been very long time in staging and I have been cleaning
+> it from its first versions where there was code kaos and PCI_LEGACY support.
+> Original code came probably from openWRT based on mediatek's SDK code. There
+> is no documentation at all about the mt7621 PCI subsystem.
+> I have been cleaning it targeting mt7621 SoC which is the one I use in
+> my GNUBee PC1 board and HiLink HLK-MT7621A evaluation board.
+>
+> Now I think is clean enough to be moved into 'drivers/pci/controller'.
+> This driver is mips/ralink architecture and need 'mips_cps_numiocu()'
+> to properly configure iocu regions for mips.
+>
+> This driver also uses already mainlined pci phy driver located in
+> 'drivers/phy/ralink/phy-mt7621-pci.c'. There are two instances of
+> the phy being the first one dual ported for pci0 and pci1, and the
+> second one not dual ported dedicated to pci2. Because of writing twice
+> some phy registers of the dual-ported one sometimes become in not
+> confident boot cycles we have to take care of this when device link
+> is checked here in controller driver. We power on the dual ported-phy
+> if there is something connected in pcie0 or pcie1. In the same manner
+> we have to properly disable it only if nothing is connected in of both
+> pcie0 and pcie1 slots.
+>
+> Another thing that must be mentioned is that this driver uses IO
+> in physical address 0x001e160000. IO_SPACE_LIMIT for MIPS is 0xffff
+> so some generic PCI functions (like of_pci_range_to_resource) won't
+> work and the resource ranges part for IO is set manually.
 
-Should we also make the same change in
-drivers/xen/swiotlb-xen.c:xen_swiotlb_map_page ?
+This has been fixed and now there is no need to set io resources manually.
+See [0].
 
-If I make that change, I can see that everything is working as
-expected for a restricted-dma device with Linux running as dom0 on Xen.
-However, is_swiotlb_force_bounce returns non-zero even for normal
-non-restricted-dma devices. That shouldn't happen, right?
+>
+> Changes in v2:
+>     - Make one commit moving driver directly from staging into
+>      'drivers/pci/controllers' instead of two commits making
+>      one add and a later remove.
+>     - Update binding documentation moving 'clocks', 'resets' and
+>      'phys' properties to child root bridge nodes.
+>     - Update code to properly be able to use new bindings.
+>     - Kconfig: add || (MIPS && COMPILE_TEST).
+>     - Use {read/write}_relaxed versions.
+>     - Use 'PCI_BASE_ADDRESS_0' instead of a custom definition.
+>     - Avoid to set 'PCI_COMMAND_MASTER' and re-do functions
+>      'mt7621_pcie_enable_ports' and 'mt7621_pcie_enable_port'.
 
-It looks like struct io_tlb_slot is not zeroed on allocation.
-Adding memset(mem, 0x0, struct_size) in swiotlb_late_init_with_tbl
-solves the issue.
+I forgot to comment that all of these changes are rebased on the top
+of staging-next.
+Since this is a 'git mv' as I was told to do by Bjorn, last version of
+the code is available
+here [1] with the following added changes to the ones listed above
+from previously submitted v1 series:
 
-With those two changes, the series passes my tests and you can add my
-tested-by.
+- Define PCI_IOBASE for mips (spaces.h) to avoid parsing io resources manually
+so 'mt7621_pci_parse_request_of_pci_ranges' is not needed anymore.
+- Don't store resources in driver private data but just get them to properly
+set io window register and mips iocu memory regions.
+
+Thanks in advance for your time.
+
+Best regards,
+    Sergio Paracuellos
+
+[0]: https://lore.kernel.org/linux-staging/20210614100617.28753-1-sergio.paracuellos@gmail.com/T/#t
+[1]: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/tree/drivers/staging/mt7621-pci/pci-mt7621.c?h=staging-next
+
+>
+> NOTE: Greg, I have maintained your Acked-by from previous series in
+> delete driver commit and added in the one which is moving code here
+> and delete the remaining stuff. If you are not ok with this, just
+> let me now and I'll drop it and resend.
+>
+> Thanks in advance for your time.
+>
+> Best regards,
+>     Sergio Paracuellos
+>
+> Sergio Paracuellos (3):
+>   dt-bindings: mt7621-pci: PCIe binding documentation for MT7621 SoCs
+>   PCI: mt7621: Add MediaTek MT7621 PCIe host controller driver
+>   MAINTAINERS: add myself as maintainer of the MT7621 PCI controller
+>     driver
+>
+>  .../bindings/pci/mediatek,mt7621-pci.yaml     | 142 ++++++++++++++++++
+>  MAINTAINERS                                   |   6 +
+>  arch/mips/ralink/Kconfig                      |   2 +-
+>  drivers/pci/controller/Kconfig                |   8 +
+>  drivers/pci/controller/Makefile               |   1 +
+>  .../controller}/pci-mt7621.c                  |   0
+>  drivers/staging/Kconfig                       |   2 -
+>  drivers/staging/Makefile                      |   1 -
+>  drivers/staging/mt7621-pci/Kconfig            |   8 -
+>  drivers/staging/mt7621-pci/Makefile           |   2 -
+>  drivers/staging/mt7621-pci/TODO               |   4 -
+>  .../mt7621-pci/mediatek,mt7621-pci.txt        | 104 -------------
+>  12 files changed, 158 insertions(+), 122 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7621-pci.yaml
+>  rename drivers/{staging/mt7621-pci => pci/controller}/pci-mt7621.c (100%)
+>  delete mode 100644 drivers/staging/mt7621-pci/Kconfig
+>  delete mode 100644 drivers/staging/mt7621-pci/Makefile
+>  delete mode 100644 drivers/staging/mt7621-pci/TODO
+>  delete mode 100644 drivers/staging/mt7621-pci/mediatek,mt7621-pci.txt
+>
+> --
+> 2.25.1
+>
