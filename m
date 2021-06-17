@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9939C49361
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 11:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B17C2B9F4
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 11:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE088613BF
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 11:16:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACD0B6113E
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jun 2021 11:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232477AbhFQLSq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jun 2021 07:18:46 -0400
-Received: from mga12.intel.com ([192.55.52.136]:47682 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231187AbhFQLSp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S232441AbhFQLSp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 17 Jun 2021 07:18:45 -0400
-IronPort-SDR: RDRlFcIPRX+AGMHsZGjah/xVnCDWNyjaWpghgKHH93OxlIl7QIY69FwqSW2g16E04MooiNkOiG
- vas66ZRKTVWg==
-X-IronPort-AV: E=McAfee;i="6200,9189,10017"; a="186040912"
+Received: from mga01.intel.com ([192.55.52.88]:22194 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231187AbhFQLSo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Jun 2021 07:18:44 -0400
+IronPort-SDR: N5+lk+VhbN/vWPFIk3m6F29L8GLm549z8mmIb2sVz88aCNEWmf84+G18I0WmRROT+uJvkkDmRy
+ wlmCbScBf9mA==
+X-IronPort-AV: E=McAfee;i="6200,9189,10017"; a="227861796"
 X-IronPort-AV: E=Sophos;i="5.83,280,1616482800"; 
-   d="scan'208";a="186040912"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2021 04:16:38 -0700
-IronPort-SDR: 2KXVUOF6WZc+j66A4S8jQK0PItj+7agexv3Gt6ywnGCSSc55lXK4nEGF9HIKPyc3TpDgdk/gAn
- f0UIdSN824Ag==
+   d="scan'208";a="227861796"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2021 04:16:37 -0700
+IronPort-SDR: 6Bt/ERKIe6CdROQf9bA7CzmSBhWFpLpcLuqbQceGFU1xaAhyqN7KpFuWV+k8eWzC8+z5l/xr9l
+ ot44zywC6a4A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.83,280,1616482800"; 
-   d="scan'208";a="450987687"
+   d="scan'208";a="555175585"
 Received: from lkp-server01.sh.intel.com (HELO 4aae0cb4f5b5) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 17 Jun 2021 04:16:36 -0700
+  by fmsmga001.fm.intel.com with ESMTP; 17 Jun 2021 04:16:36 -0700
 Received: from kbuild by 4aae0cb4f5b5 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1ltq0h-0001zO-Jm; Thu, 17 Jun 2021 11:16:35 +0000
-Date:   Thu, 17 Jun 2021 19:16:27 +0800
+        id 1ltq0h-0001zR-MC; Thu, 17 Jun 2021 11:16:35 +0000
+Date:   Thu, 17 Jun 2021 19:16:22 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/enumeration] BUILD SUCCESS
- 8fe55ef23387ce3c7488375b1fd539420d7654bb
-Message-ID: <60cb2f0b.eKjt4/xzR+S5GuOY%lkp@intel.com>
+Subject: [pci:pci/hotplug] BUILD SUCCESS
+ a97396c6eb13f65bea894dbe7739b2e883d40a3e
+Message-ID: <60cb2f06.kbTc6fIpN9jb5bHX%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -50,12 +50,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration
-branch HEAD: 8fe55ef23387ce3c7488375b1fd539420d7654bb  PCI: Dynamically map ECAM regions
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
+branch HEAD: a97396c6eb13f65bea894dbe7739b2e883d40a3e  PCI: pciehp: Ignore Link Down/Up caused by DPC
 
 elapsed time: 739m
 
-configs tested: 156
+configs tested: 154
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -78,16 +78,15 @@ arc                         haps_hs_defconfig
 mips                    maltaup_xpa_defconfig
 riscv             nommu_k210_sdcard_defconfig
 mips                           ip32_defconfig
-powerpc                   motionpro_defconfig
-powerpc                      pcm030_defconfig
-nios2                         10m50_defconfig
-mips                            e55_defconfig
-arm                          pxa910_defconfig
 powerpc                      tqm8xx_defconfig
 arm                            qcom_defconfig
 arc                 nsimosci_hs_smp_defconfig
 mips                          malta_defconfig
 powerpc                      ppc64e_defconfig
+powerpc                 mpc832x_rdb_defconfig
+mips                             allyesconfig
+arm                         palmz72_defconfig
+xtensa                  nommu_kc705_defconfig
 mips                         tb0219_defconfig
 mips                      pistachio_defconfig
 um                               alldefconfig
@@ -173,7 +172,6 @@ i386                             allyesconfig
 sparc                            allyesconfig
 sparc                               defconfig
 i386                                defconfig
-mips                             allyesconfig
 powerpc                          allyesconfig
 powerpc                          allmodconfig
 powerpc                           allnoconfig
