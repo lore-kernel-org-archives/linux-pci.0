@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 837C5C49EA3
-	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A09FC49361
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:43:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 716D361374
-	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:42:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3380E613F2
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:43:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235722AbhFSDod (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Jun 2021 23:44:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53092 "EHLO
+        id S235770AbhFSDpJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Jun 2021 23:45:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235739AbhFSDo3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jun 2021 23:44:29 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAABAC0611C3
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:41:57 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id g6so9242153pfq.1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:41:57 -0700 (PDT)
+        with ESMTP id S235810AbhFSDon (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jun 2021 23:44:43 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F1ADC0617A8
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:33 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id z26so9214008pfj.5
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=yBt4hQLYm3mqRXyO6Ue9ozYRrGCBFDovL1RqQBClg04=;
-        b=kUc0aW3NrRDs5U6B12hrWDg0XWc0HZESQnTqGuqF1lOwto9c+7mt8gkEytThboQsHz
-         XLan+5H8MDt3PRVY3ReT+qPhu28xh6wjPY72lJEd12tdFryWy7Q2zgQsEGYf4tF3oitf
-         PfRsCwU9hKassTMBsMhc64Ic4q5xVPJYHDueg=
+        bh=YPdZA059qJtBhHo92L+QtxB+I/HHPOi+M+A9tEqXqKY=;
+        b=Wu0eLHFq0Y/87UVuH2wG2UQKehneEtjyPBVQdTP1lnkewLoZWvPjWvbDIzh+Arzpty
+         6/gTzGLkVnr6kmY9LH3UOa/5MBfVIDw2V2Pk6DizW41XnS2UTJ+egFCFXcGunjOko5uu
+         NFfdBa59v19TyyGjeObnddQmZaP9dKr5Tb8k0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yBt4hQLYm3mqRXyO6Ue9ozYRrGCBFDovL1RqQBClg04=;
-        b=alS900zollC/V1EzqrFkGnoAJ99bUz9FPxRGMx/lNjUOVEk++7cuaikmSPmRhGQqeC
-         /tJ5BkBrYLAjkDtIvv3MZOTSjcMiFlzoW4bXOIHz3q90bIxGkH08X49ERmJqoTD4H+Lb
-         5M6zF0HyuuitfJLs6bVUe5P7JWnt71KZukMVGXuIVc8quDcVc50ujEyEWDvJWryin8Zm
-         slYY26liJQ0gAMZn031QrkNBtxNw+QQnWDsJX5uQSWtfXonS9AJd6hdjshzfPGaJ6c9n
-         IRL5wzVcTtgnhEVpMnl1HK9apeasIAvYbikeoJIVJ7Atu46z5xR728mhsBE61kr8v9N3
-         HeOg==
-X-Gm-Message-State: AOAM533odrN7q16yrH/flvn8Xmpw03O1ozR9bdp3+e5CdTbCmXakDBLE
-        4DM6zeSjqNQTkaoFZBhmaE72+Q==
-X-Google-Smtp-Source: ABdhPJz6BPgqX8oIJ5DFtEDFLRXoE9Gt4G8MSlnWyfHJyjQTUFcAShEWPij+Zot6PwERvV6L2IAQtA==
-X-Received: by 2002:a63:dd4a:: with SMTP id g10mr12899661pgj.144.1624074117138;
-        Fri, 18 Jun 2021 20:41:57 -0700 (PDT)
+        bh=YPdZA059qJtBhHo92L+QtxB+I/HHPOi+M+A9tEqXqKY=;
+        b=orgLjhr1cXWhotNksfO/XgdWqgLDg37JY443d+kC1clYDwyG3Y/bg2SgEjXMZOtHLJ
+         dRZ4lYNUG/6uQHdJNVrMsfMDk7/qgqDK5Ccn6yFL/Oyf2UqAC0M2PGbqW7ysz2J3UUAy
+         EG0ipo2Ml6pe8SUNtSa4ykszWJ/q+flXQvj3L5zRHBaMh3TL1IeOLsrQOfLFQe40prYB
+         YQ9P9hXDmCjPYlINC0cXmnC6PeJab7ADTdR46KxEcGIMQnQYKWRWUU8kvvZ1IyPyRzXG
+         3IOosrfAS9j6VCyNm3NuZYWQWENBknssHomKqngZDvNByjbGjqYYVWlhc+tbuBSG+Qdy
+         kkQQ==
+X-Gm-Message-State: AOAM532/sH4vrDo+lnEHOaNRUQ1GNRtkhfYicnBrS6k181NnLH/bzbl0
+        FKw5b8exwMUP3hjIkpb0QsmyGQ==
+X-Google-Smtp-Source: ABdhPJzLaZpsZm1niTfUb8nxR32Zg+/27KFI+rEZFvk6OtIgjDsZGMpMmjJEaTHEl6JDmRuEDbffng==
+X-Received: by 2002:a63:6644:: with SMTP id a65mr12953547pgc.431.1624074152888;
+        Fri, 18 Jun 2021 20:42:32 -0700 (PDT)
 Received: from localhost ([2401:fa00:95:205:4a46:e208:29e8:e076])
-        by smtp.gmail.com with UTF8SMTPSA id d8sm9801812pfq.198.2021.06.18.20.41.49
+        by smtp.gmail.com with UTF8SMTPSA id h8sm10337503pgr.43.2021.06.18.20.42.25
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Jun 2021 20:41:56 -0700 (PDT)
+        Fri, 18 Jun 2021 20:42:32 -0700 (PDT)
 From:   Claire Chang <tientzu@chromium.org>
 To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
@@ -87,9 +87,9 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
         rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com,
         thomas.lendacky@amd.com
-Subject: [PATCH v14 07/12] swiotlb: Move alloc_size to swiotlb_find_slots
-Date:   Sat, 19 Jun 2021 11:40:38 +0800
-Message-Id: <20210619034043.199220-8-tientzu@chromium.org>
+Subject: [PATCH v14 11/12] dt-bindings: of: Add restricted DMA pool
+Date:   Sat, 19 Jun 2021 11:40:42 +0800
+Message-Id: <20210619034043.199220-12-tientzu@chromium.org>
 X-Mailer: git-send-email 2.32.0.288.g62a8d224e6-goog
 In-Reply-To: <20210619034043.199220-1-tientzu@chromium.org>
 References: <20210619034043.199220-1-tientzu@chromium.org>
@@ -99,67 +99,84 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rename find_slots to swiotlb_find_slots and move the maintenance of
-alloc_size to it for better code reusability later.
+Introduce the new compatible string, restricted-dma-pool, for restricted
+DMA. One can specify the address and length of the restricted DMA memory
+region by restricted-dma-pool in the reserved-memory node.
 
 Signed-off-by: Claire Chang <tientzu@chromium.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Tested-by: Stefano Stabellini <sstabellini@kernel.org>
 Tested-by: Will Deacon <will@kernel.org>
 ---
- kernel/dma/swiotlb.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ .../reserved-memory/reserved-memory.txt       | 36 +++++++++++++++++--
+ 1 file changed, 33 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-index 0d294bbf274c..daf38a52e66d 100644
---- a/kernel/dma/swiotlb.c
-+++ b/kernel/dma/swiotlb.c
-@@ -432,8 +432,8 @@ static unsigned int wrap_index(struct io_tlb_mem *mem, unsigned int index)
-  * Find a suitable number of IO TLB entries size that will fit this request and
-  * allocate a buffer from that IO TLB pool.
-  */
--static int find_slots(struct device *dev, phys_addr_t orig_addr,
--		size_t alloc_size)
-+static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
-+			      size_t alloc_size)
- {
- 	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
- 	unsigned long boundary_mask = dma_get_seg_boundary(dev);
-@@ -488,8 +488,11 @@ static int find_slots(struct device *dev, phys_addr_t orig_addr,
- 	return -1;
+diff --git a/Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt b/Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
+index e8d3096d922c..39b5f4c5a511 100644
+--- a/Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
++++ b/Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
+@@ -51,6 +51,23 @@ compatible (optional) - standard definition
+           used as a shared pool of DMA buffers for a set of devices. It can
+           be used by an operating system to instantiate the necessary pool
+           management subsystem if necessary.
++        - restricted-dma-pool: This indicates a region of memory meant to be
++          used as a pool of restricted DMA buffers for a set of devices. The
++          memory region would be the only region accessible to those devices.
++          When using this, the no-map and reusable properties must not be set,
++          so the operating system can create a virtual mapping that will be used
++          for synchronization. The main purpose for restricted DMA is to
++          mitigate the lack of DMA access control on systems without an IOMMU,
++          which could result in the DMA accessing the system memory at
++          unexpected times and/or unexpected addresses, possibly leading to data
++          leakage or corruption. The feature on its own provides a basic level
++          of protection against the DMA overwriting buffer contents at
++          unexpected times. However, to protect against general data leakage and
++          system memory corruption, the system needs to provide way to lock down
++          the memory access, e.g., MPU. Note that since coherent allocation
++          needs remapping, one must set up another device coherent pool by
++          shared-dma-pool and use dma_alloc_from_dev_coherent instead for atomic
++          coherent allocation.
+         - vendor specific string in the form <vendor>,[<device>-]<usage>
+ no-map (optional) - empty property
+     - Indicates the operating system must not create a virtual mapping
+@@ -85,10 +102,11 @@ memory-region-names (optional) - a list of names, one for each corresponding
  
- found:
--	for (i = index; i < index + nslots; i++)
-+	for (i = index; i < index + nslots; i++) {
- 		mem->slots[i].list = 0;
-+		mem->slots[i].alloc_size =
-+			alloc_size - ((i - index) << IO_TLB_SHIFT);
-+	}
- 	for (i = index - 1;
- 	     io_tlb_offset(i) != IO_TLB_SEGSIZE - 1 &&
- 	     mem->slots[i].list; i--)
-@@ -530,7 +533,7 @@ phys_addr_t swiotlb_tbl_map_single(struct device *dev, phys_addr_t orig_addr,
- 		return (phys_addr_t)DMA_MAPPING_ERROR;
- 	}
+ Example
+ -------
+-This example defines 3 contiguous regions are defined for Linux kernel:
++This example defines 4 contiguous regions for Linux kernel:
+ one default of all device drivers (named linux,cma@72000000 and 64MiB in size),
+-one dedicated to the framebuffer device (named framebuffer@78000000, 8MiB), and
+-one for multimedia processing (named multimedia-memory@77000000, 64MiB).
++one dedicated to the framebuffer device (named framebuffer@78000000, 8MiB),
++one for multimedia processing (named multimedia-memory@77000000, 64MiB), and
++one for restricted dma pool (named restricted_dma_reserved@0x50000000, 64MiB).
  
--	index = find_slots(dev, orig_addr, alloc_size + offset);
-+	index = swiotlb_find_slots(dev, orig_addr, alloc_size + offset);
- 	if (index == -1) {
- 		if (!(attrs & DMA_ATTR_NO_WARN))
- 			dev_warn_ratelimited(dev,
-@@ -544,11 +547,8 @@ phys_addr_t swiotlb_tbl_map_single(struct device *dev, phys_addr_t orig_addr,
- 	 * This is needed when we sync the memory.  Then we sync the buffer if
- 	 * needed.
- 	 */
--	for (i = 0; i < nr_slots(alloc_size + offset); i++) {
-+	for (i = 0; i < nr_slots(alloc_size + offset); i++)
- 		mem->slots[index + i].orig_addr = slot_addr(orig_addr, i);
--		mem->slots[index + i].alloc_size =
--			alloc_size - (i << IO_TLB_SHIFT);
--	}
- 	tlb_addr = slot_addr(mem->start, index) + offset;
- 	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
- 	    (dir == DMA_TO_DEVICE || dir == DMA_BIDIRECTIONAL))
+ / {
+ 	#address-cells = <1>;
+@@ -120,6 +138,11 @@ one for multimedia processing (named multimedia-memory@77000000, 64MiB).
+ 			compatible = "acme,multimedia-memory";
+ 			reg = <0x77000000 0x4000000>;
+ 		};
++
++		restricted_dma_reserved: restricted_dma_reserved {
++			compatible = "restricted-dma-pool";
++			reg = <0x50000000 0x4000000>;
++		};
+ 	};
+ 
+ 	/* ... */
+@@ -138,4 +161,11 @@ one for multimedia processing (named multimedia-memory@77000000, 64MiB).
+ 		memory-region = <&multimedia_reserved>;
+ 		/* ... */
+ 	};
++
++	pcie_device: pcie_device@0,0 {
++		reg = <0x83010000 0x0 0x00000000 0x0 0x00100000
++		       0x83010000 0x0 0x00100000 0x0 0x00100000>;
++		memory-region = <&restricted_dma_reserved>;
++		/* ... */
++	};
+ };
 -- 
 2.32.0.288.g62a8d224e6-goog
 
