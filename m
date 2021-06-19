@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30481C49EA2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BED5C2B9F4
 	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FAB661184
+	by mail.kernel.org (Postfix) with ESMTP id 320A1613D1
 	for <linux-pci@archiver.kernel.org>; Sat, 19 Jun 2021 03:42:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235674AbhFSDof (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Jun 2021 23:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53098 "EHLO
+        id S235718AbhFSDoi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Jun 2021 23:44:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235748AbhFSDoc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jun 2021 23:44:32 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD88C0611DD
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:06 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id s17-20020a17090a8811b029016e89654f93so9302187pjn.1
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:06 -0700 (PDT)
+        with ESMTP id S235729AbhFSDof (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jun 2021 23:44:35 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319D6C06175F
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:24 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id y15so3390494pfl.4
+        for <linux-pci@vger.kernel.org>; Fri, 18 Jun 2021 20:42:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6UYcmj71Nciebm6oUVf56G+z9ljUTqD3hIvM0xvNwlw=;
-        b=CvzIlEZzhAOxT+qjDZ+7NzV4sGhDEmWKj9nbd5uDoHpJqzgCuGiJUhHaLcawz3/br/
-         6Le30VZKk818Tu1yH7ZE7vV0/ya4I+xpPNn/tUWCeTGbH9HsAFe0ZC4NYZBO9G7TYfyS
-         3lkrZEYq4wbjCO3JNlcKxJtKWZiG1vegiLrIs=
+        bh=siEy8G7PeUIP5SwwgMvapyAkxanEyejlu7ONUZ9yGrs=;
+        b=PVzE47oPcF725/coDqsJRzac3T/wkFYs0l0OUgKwwlqVYtfZ1VcPE+apLpO3PiE39E
+         hroZdkWyJ1FY8+MMxcIXfLg8mSzUQOWKW1HghPEs/CnHdT3B8XoNEo0T/Ku1bIExGIif
+         gFdxf+gYkQKTSymCtV+BwSVCd70PKzuU3VIss=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6UYcmj71Nciebm6oUVf56G+z9ljUTqD3hIvM0xvNwlw=;
-        b=iUBvsZcWyASU8rJS2VeVWzZyrPnWdAekZMLK5Umxq1AYYlt2fyXjj4xfgs/7Y5zLhF
-         GKjOrY5hjHWM+lQWdgeTYnsD6ShzF8BUSgk1waWg3r2qwCiMjfyB7vAVAaxxy3wvV2TP
-         fIHY1+2UijyIgXOD4itNYzf/BTOXLuPEgbAiTzFfFwGyrT6qZdSdLxOvn4iBiu0610et
-         B1zyyjyi0yuU3ZHqU/CXt7E7SiNy7Ond2jJ/KgbKKK9oC+Gi+mU6zcwI3TkzcwwEWKfE
-         /0R+0/c7TT0bF86sCmXCPTnvAmi4gaT1JBwy4/xB1961+09Jwpqu/k2s3CWGmohkEXC4
-         /mYA==
-X-Gm-Message-State: AOAM53308au9/eGnRvg8lvhumCeci9B8v5rNdjonl9wc8CkfYfs7BT6m
-        IsaYEaqtevZLI/z6DbfIGMJeiA==
-X-Google-Smtp-Source: ABdhPJxlbApkRXsP2fgkAdUNCHQ1WjOiOdFp1rz7jZq5s11WVxe5ByFrpAGijwIKxprmkrdki9AO2Q==
-X-Received: by 2002:a17:902:e843:b029:109:4dbc:d4ed with SMTP id t3-20020a170902e843b02901094dbcd4edmr7628002plg.74.1624074126329;
-        Fri, 18 Jun 2021 20:42:06 -0700 (PDT)
+        bh=siEy8G7PeUIP5SwwgMvapyAkxanEyejlu7ONUZ9yGrs=;
+        b=DNPlAb3ekrBkSVUXj/Q3er+BOIERfc7J2FHBsJG4fD+kXtx4H4RC2KkKQqKygYMMuz
+         Vn2qZZzD6qg+DD3sjS4E3aJlio/65cvaM5oIWkWOjBeSAuef3J7aPdmi+eJ01OlHrgIw
+         Z3+2BM3Mfvap/K3cniy60T8nlWxqGPzLJ4h+0bTEZKeQXbvfc6Pq3SKAA7GoW9UAkQn0
+         jSpXSV3lkiW5jLyaQaruJ8A24avpqYtXAreznoGC+0XxIPOLaWfY3CpsfY553DLgIH2m
+         XrvKKWZ3KdTqQntBNLkup5ZxvNlmgr8wkFMLfiaLyvf+89vDOiw4m7afS4SfXcN4kHG2
+         Fb2w==
+X-Gm-Message-State: AOAM532q0tAvGQmr2eNq5DTH9dvbJmVZBZHrC4o2sz5Dma1djUePZDR0
+        bk5d9r7isYztUsYvfUDMI5ajQA==
+X-Google-Smtp-Source: ABdhPJwzMKzuXPBcXuPpa9pE0clhI9Qb+YkVTpTbg16/nkn2r8LOUuO+QRq9ZqpeBfYYhrJIx8pKXg==
+X-Received: by 2002:a63:d305:: with SMTP id b5mr13411892pgg.67.1624074143723;
+        Fri, 18 Jun 2021 20:42:23 -0700 (PDT)
 Received: from localhost ([2401:fa00:95:205:4a46:e208:29e8:e076])
-        by smtp.gmail.com with UTF8SMTPSA id a25sm4118804pfg.47.2021.06.18.20.41.58
+        by smtp.gmail.com with UTF8SMTPSA id o72sm3823389pfg.102.2021.06.18.20.42.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Jun 2021 20:42:05 -0700 (PDT)
+        Fri, 18 Jun 2021 20:42:23 -0700 (PDT)
 From:   Claire Chang <tientzu@chromium.org>
 To:     Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
         Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
@@ -87,9 +87,9 @@ Cc:     benh@kernel.crashing.org, paulus@samba.org,
         maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
         rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com,
         thomas.lendacky@amd.com
-Subject: [PATCH v14 08/12] swiotlb: Refactor swiotlb_tbl_unmap_single
-Date:   Sat, 19 Jun 2021 11:40:39 +0800
-Message-Id: <20210619034043.199220-9-tientzu@chromium.org>
+Subject: [PATCH v14 10/12] swiotlb: Add restricted DMA pool initialization
+Date:   Sat, 19 Jun 2021 11:40:41 +0800
+Message-Id: <20210619034043.199220-11-tientzu@chromium.org>
 X-Mailer: git-send-email 2.32.0.288.g62a8d224e6-goog
 In-Reply-To: <20210619034043.199220-1-tientzu@chromium.org>
 References: <20210619034043.199220-1-tientzu@chromium.org>
@@ -99,76 +99,158 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new function, swiotlb_release_slots, to make the code reusable for
-supporting different bounce buffer pools.
+Add the initialization function to create restricted DMA pools from
+matching reserved-memory nodes.
+
+Regardless of swiotlb setting, the restricted DMA pool is preferred if
+available.
+
+The restricted DMA pools provide a basic level of protection against the
+DMA overwriting buffer contents at unexpected times. However, to protect
+against general data leakage and system memory corruption, the system
+needs to provide a way to lock down the memory access, e.g., MPU.
 
 Signed-off-by: Claire Chang <tientzu@chromium.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Tested-by: Stefano Stabellini <sstabellini@kernel.org>
 Tested-by: Will Deacon <will@kernel.org>
 ---
- kernel/dma/swiotlb.c | 35 ++++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
+ include/linux/swiotlb.h |  3 +-
+ kernel/dma/Kconfig      | 14 ++++++++
+ kernel/dma/swiotlb.c    | 76 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 92 insertions(+), 1 deletion(-)
 
+diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+index a73fad460162..175b6c113ed8 100644
+--- a/include/linux/swiotlb.h
++++ b/include/linux/swiotlb.h
+@@ -73,7 +73,8 @@ extern enum swiotlb_force swiotlb_force;
+  *		range check to see if the memory was in fact allocated by this
+  *		API.
+  * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
+- *		@end. This is command line adjustable via setup_io_tlb_npages.
++ *		@end. For default swiotlb, this is command line adjustable via
++ *		setup_io_tlb_npages.
+  * @used:	The number of used IO TLB block.
+  * @list:	The free list describing the number of free entries available
+  *		from each index.
+diff --git a/kernel/dma/Kconfig b/kernel/dma/Kconfig
+index 77b405508743..3e961dc39634 100644
+--- a/kernel/dma/Kconfig
++++ b/kernel/dma/Kconfig
+@@ -80,6 +80,20 @@ config SWIOTLB
+ 	bool
+ 	select NEED_DMA_MAP_STATE
+ 
++config DMA_RESTRICTED_POOL
++	bool "DMA Restricted Pool"
++	depends on OF && OF_RESERVED_MEM
++	select SWIOTLB
++	help
++	  This enables support for restricted DMA pools which provide a level of
++	  DMA memory protection on systems with limited hardware protection
++	  capabilities, such as those lacking an IOMMU.
++
++	  For more information see
++	  <Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt>
++	  and <kernel/dma/swiotlb.c>.
++	  If unsure, say "n".
++
+ #
+ # Should be selected if we can mmap non-coherent mappings to userspace.
+ # The only thing that is really required is a way to set an uncached bit
 diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-index daf38a52e66d..e79383df5d4a 100644
+index 273b21090ee8..1aef294c82b5 100644
 --- a/kernel/dma/swiotlb.c
 +++ b/kernel/dma/swiotlb.c
-@@ -556,27 +556,15 @@ phys_addr_t swiotlb_tbl_map_single(struct device *dev, phys_addr_t orig_addr,
- 	return tlb_addr;
+@@ -39,6 +39,13 @@
+ #ifdef CONFIG_DEBUG_FS
+ #include <linux/debugfs.h>
+ #endif
++#ifdef CONFIG_DMA_RESTRICTED_POOL
++#include <linux/io.h>
++#include <linux/of.h>
++#include <linux/of_fdt.h>
++#include <linux/of_reserved_mem.h>
++#include <linux/slab.h>
++#endif
+ 
+ #include <asm/io.h>
+ #include <asm/dma.h>
+@@ -736,4 +743,73 @@ bool swiotlb_free(struct device *dev, struct page *page, size_t size)
+ 	return true;
  }
  
--/*
-- * tlb_addr is the physical address of the bounce buffer to unmap.
-- */
--void swiotlb_tbl_unmap_single(struct device *hwdev, phys_addr_t tlb_addr,
--			      size_t mapping_size, enum dma_data_direction dir,
--			      unsigned long attrs)
-+static void swiotlb_release_slots(struct device *dev, phys_addr_t tlb_addr)
- {
--	struct io_tlb_mem *mem = hwdev->dma_io_tlb_mem;
-+	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
- 	unsigned long flags;
--	unsigned int offset = swiotlb_align_offset(hwdev, tlb_addr);
-+	unsigned int offset = swiotlb_align_offset(dev, tlb_addr);
- 	int index = (tlb_addr - offset - mem->start) >> IO_TLB_SHIFT;
- 	int nslots = nr_slots(mem->slots[index].alloc_size + offset);
- 	int count, i;
- 
--	/*
--	 * First, sync the memory before unmapping the entry
--	 */
--	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
--	    (dir == DMA_FROM_DEVICE || dir == DMA_BIDIRECTIONAL))
--		swiotlb_bounce(hwdev, tlb_addr, mapping_size, DMA_FROM_DEVICE);
--
- 	/*
- 	 * Return the buffer to the free list by setting the corresponding
- 	 * entries to indicate the number of contiguous entries available.
-@@ -611,6 +599,23 @@ void swiotlb_tbl_unmap_single(struct device *hwdev, phys_addr_t tlb_addr,
- 	spin_unlock_irqrestore(&mem->lock, flags);
- }
- 
-+/*
-+ * tlb_addr is the physical address of the bounce buffer to unmap.
-+ */
-+void swiotlb_tbl_unmap_single(struct device *dev, phys_addr_t tlb_addr,
-+			      size_t mapping_size, enum dma_data_direction dir,
-+			      unsigned long attrs)
++static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
++				    struct device *dev)
 +{
-+	/*
-+	 * First, sync the memory before unmapping the entry
-+	 */
-+	if (!(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
-+	    (dir == DMA_FROM_DEVICE || dir == DMA_BIDIRECTIONAL))
-+		swiotlb_bounce(dev, tlb_addr, mapping_size, DMA_FROM_DEVICE);
++	struct io_tlb_mem *mem = rmem->priv;
++	unsigned long nslabs = rmem->size >> IO_TLB_SHIFT;
 +
-+	swiotlb_release_slots(dev, tlb_addr);
++	/*
++	 * Since multiple devices can share the same pool, the private data,
++	 * io_tlb_mem struct, will be initialized by the first device attached
++	 * to it.
++	 */
++	if (!mem) {
++		mem = kzalloc(struct_size(mem, slots, nslabs), GFP_KERNEL);
++		if (!mem)
++			return -ENOMEM;
++
++		set_memory_decrypted((unsigned long)phys_to_virt(rmem->base),
++				     rmem->size >> PAGE_SHIFT);
++		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false);
++		mem->force_bounce = true;
++		mem->for_alloc = true;
++
++		rmem->priv = mem;
++
++		if (IS_ENABLED(CONFIG_DEBUG_FS)) {
++			mem->debugfs =
++				debugfs_create_dir(rmem->name, debugfs_dir);
++			swiotlb_create_debugfs_files(mem);
++		}
++	}
++
++	dev->dma_io_tlb_mem = mem;
++
++	return 0;
 +}
 +
- void swiotlb_sync_single_for_device(struct device *dev, phys_addr_t tlb_addr,
- 		size_t size, enum dma_data_direction dir)
- {
++static void rmem_swiotlb_device_release(struct reserved_mem *rmem,
++					struct device *dev)
++{
++	dev->dma_io_tlb_mem = io_tlb_default_mem;
++}
++
++static const struct reserved_mem_ops rmem_swiotlb_ops = {
++	.device_init = rmem_swiotlb_device_init,
++	.device_release = rmem_swiotlb_device_release,
++};
++
++static int __init rmem_swiotlb_setup(struct reserved_mem *rmem)
++{
++	unsigned long node = rmem->fdt_node;
++
++	if (of_get_flat_dt_prop(node, "reusable", NULL) ||
++	    of_get_flat_dt_prop(node, "linux,cma-default", NULL) ||
++	    of_get_flat_dt_prop(node, "linux,dma-default", NULL) ||
++	    of_get_flat_dt_prop(node, "no-map", NULL))
++		return -EINVAL;
++
++	if (PageHighMem(pfn_to_page(PHYS_PFN(rmem->base)))) {
++		pr_err("Restricted DMA pool must be accessible within the linear mapping.");
++		return -EINVAL;
++	}
++
++	rmem->ops = &rmem_swiotlb_ops;
++	pr_info("Reserved memory: created restricted DMA pool at %pa, size %ld MiB\n",
++		&rmem->base, (unsigned long)rmem->size / SZ_1M);
++	return 0;
++}
++
++RESERVEDMEM_OF_DECLARE(dma, "restricted-dma-pool", rmem_swiotlb_setup);
+ #endif /* CONFIG_DMA_RESTRICTED_POOL */
 -- 
 2.32.0.288.g62a8d224e6-goog
 
