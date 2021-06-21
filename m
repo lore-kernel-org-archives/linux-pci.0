@@ -2,130 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26397C49EAF
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 08:45:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83377C49EA2
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 09:32:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F42861164
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 08:45:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65B77611B0
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 09:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbhFUIrk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jun 2021 04:47:40 -0400
-Received: from mailout1.secunet.com ([62.96.220.44]:57870 "EHLO
-        mailout1.secunet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229946AbhFUIrk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jun 2021 04:47:40 -0400
-X-Greylist: delayed 582 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Jun 2021 04:47:37 EDT
-Received: from cas-essen-01.secunet.de (unknown [10.53.40.201])
-        by mailout1.secunet.com (Postfix) with ESMTP id BAFED80004E;
-        Mon, 21 Jun 2021 10:35:39 +0200 (CEST)
-Received: from mbx-essen-01.secunet.de (10.53.40.197) by
- cas-essen-01.secunet.de (10.53.40.201) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Mon, 21 Jun 2021 10:35:39 +0200
-Received: from gauss2.secunet.de (10.182.7.193) by mbx-essen-01.secunet.de
- (10.53.40.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 21 Jun
- 2021 10:35:39 +0200
-Received: by gauss2.secunet.de (Postfix, from userid 1000)
-        id 249D031803E8; Mon, 21 Jun 2021 10:35:39 +0200 (CEST)
-Date:   Mon, 21 Jun 2021 10:35:39 +0200
-From:   Steffen Klassert <steffen.klassert@secunet.com>
-To:     Ondrej Mosnacek <omosnace@redhat.com>
-CC:     <linux-security-module@vger.kernel.org>,
-        James Morris <jmorris@namei.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Herbert Xu" <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        Paul Moore <paul@paul-moore.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        <selinux@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-        <x86@kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-cxl@vger.kernel.org>, <linux-efi@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>, <linux-serial@vger.kernel.org>,
-        <bpf@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <kexec@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        Casey Schaufler <casey@schaufler-ca.com>
-Subject: Re: [PATCH v3] lockdown,selinux: fix wrong subject in some SELinux
- lockdown checks
-Message-ID: <20210621083539.GY40979@gauss3.secunet.de>
-References: <20210616085118.1141101-1-omosnace@redhat.com>
+        id S230189AbhFUJec (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jun 2021 05:34:32 -0400
+Received: from mail-dm6nam11on2075.outbound.protection.outlook.com ([40.107.223.75]:61497
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229597AbhFUJeb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Jun 2021 05:34:31 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DtM9fIchsN0/uO9pQEnF3S01UMWG/DnsAazKx0bJqlpOBn0llxV/qhGMD1xUYtz6imX8m/i1TEbvlarODoilkx0DKz1hfP+oj1y8eqKBIrJjj924rt22l04z9PiCO2MKAqXZZ1I6ComayozbcQsr6S+719HElQusG96sqkyB7jHhEBc3MGTDVpH/Unt7Sc1LnPRl8khtsQJjDZI3v3BlodfIYGqwYxJxGFPbKSa1iI1TidtOnu4N8NHE1DyHDakg5dogUXBh7NpqO71792sEVFIvl/azOa6UvyvscGtucOSZaHDAVyjgiOdYMDxi5lh8YmiXNt5x7RCCIkEB/znqRQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pzIvKC/j5e5RN+JNSAQ5DnewpfLxEAHlZ9MBygMV56o=;
+ b=bGgCbYGE75DLFnuWUh3i2FDnceovVriTfbNqn2b389GJ0cSbtA+4puy2Ap/2e2S8HC6u9j8UD6MOI7ah0iTg2LIFVocjKtPt8AqepD7mAcvFvUSnqWLuGUlccugDqexomCIHuEbjbKoBNhcspelq8td9V+0SMq+YJvpt0fdVMWHeyO1+hJPsPmhutkgSU8vFHrR+n4waiK0t1CdcN0XQwVYHIaATmNyRR4ODguE5tv1QRMggCM+t0he8TbBMELEKcz7XnVG09gRrFwJIJEIPuKQiMlPUPi0CcNsWWw3GQOjrhv9yYurpi7AaQtI9dWZKMQxOwxNFQ8DFGcfi84E/2Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.34) smtp.rcpttodomain=arm.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pzIvKC/j5e5RN+JNSAQ5DnewpfLxEAHlZ9MBygMV56o=;
+ b=SR5NqV+Yp9G907h52u5yiehEkQrjLZJ7FJNMtLWoPhE980kEQ8GXJ5/QWFMayVisOYVyZpprd8gT3cfd8z6YmlibALWJDGYOxMnhJ45ybd5VDIWbkZsMpWf892WiOrNJJhcC8/xarV1iY41YYDiaROB2RYmpaXTRffoXlVv5SNeOjCNmq0t2deEboBQfoSzW74xg1PFnHFKBUQfbZyi5sU0rU6YHdC6jYgsO2V/4M7grqrc35ccfehV+BucBU5zBM4iU12vYpQOHxA8HBQxbsf7qEPsQ/UZWaKqGc+zDPgn+W5u+DHaRryry39rgsG3C3h5Hq8NlxVy+8DTqzEDNPQ==
+Received: from BN6PR18CA0022.namprd18.prod.outlook.com (2603:10b6:404:121::32)
+ by CY4PR12MB1525.namprd12.prod.outlook.com (2603:10b6:910:11::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19; Mon, 21 Jun
+ 2021 09:32:16 +0000
+Received: from BN8NAM11FT040.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:404:121:cafe::a7) by BN6PR18CA0022.outlook.office365.com
+ (2603:10b6:404:121::32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.19 via Frontend
+ Transport; Mon, 21 Jun 2021 09:32:16 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
+ smtp.mailfrom=nvidia.com; arm.com; dkim=none (message not signed)
+ header.d=none;arm.com; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.34; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.34) by
+ BN8NAM11FT040.mail.protection.outlook.com (10.13.177.166) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4242.16 via Frontend Transport; Mon, 21 Jun 2021 09:32:15 +0000
+Received: from [10.40.204.223] (172.20.187.6) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 21 Jun
+ 2021 09:32:11 +0000
+Subject: Re: [PATCH V2 0/5] Update pcie-tegra194 driver
+To:     <kw@linux.com>, <helgaas@kernel.org>, <vidyas@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>
+References: <20210606082204.14222-1-omp@nvidia.com>
+From:   Om Prakash Singh <omp@nvidia.com>
+Message-ID: <2fdb1d89-88d5-6895-ec20-0e2ce4cacb85@nvidia.com>
+Date:   Mon, 21 Jun 2021 15:02:07 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20210616085118.1141101-1-omosnace@redhat.com>
-X-ClientProxiedBy: cas-essen-01.secunet.de (10.53.40.201) To
- mbx-essen-01.secunet.de (10.53.40.197)
-X-EXCLAIMER-MD-CONFIG: 2c86f778-e09b-4440-8b15-867914633a10
+In-Reply-To: <20210606082204.14222-1-omp@nvidia.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [172.20.187.6]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 3a8483d5-e28e-4350-f07e-08d934977526
+X-MS-TrafficTypeDiagnostic: CY4PR12MB1525:
+X-Microsoft-Antispam-PRVS: <CY4PR12MB1525AC0AF536B2B708B4FF92DA0A9@CY4PR12MB1525.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: mwvd+FEYSNHqQ44CJX+2LIeSrIQ1oFNqKv5sI6yDgguenM87OkFJj4KZkTHoHdgEmhZ2yyB/N0fzhbw7FuTyzgRbbJX7Io1CJbxrs9d/tKBqBRkQxiqOzMup2vS9EToKB06sXp0w3PNVT72Rb+xyfqFHgPV21mPgTFljr2rfKI6xsTlPwpwSofUBVYjpwUXiYp5bRdshMXxb29ZCldIy+wk5W/Bb9azmhpr4iHC8soRt9voQeab0Kqvl2zRIdh7Cd2ZXLY+d7dv3sJQAsKpsm9j12CyxAvxGrPRh5t8LKgtBJ5Ubx38wDwBCcMnhKLFdbs8Ma2JCf+i8jEXLYbRKZFB9pHBBbzzcVm5qjtr3L1UQgN9pDH9FOOrFvtn4nJaEUKEG5+XA9t8/pKTrzg5Mb6FUF7mJswAl6RFXl9YSWOMYBYPQEFTeb1jschtq4WSh/wZPXCaAYoix9ujiFj9bzWIWd0l8o29loioddiDgbHWdU4CyyJUc1nUuw9BkSkcvkS2av5lfDHjuXInQ3fBls7y2UU9+WXQJIsfX4dAx5Mol22tHZrZXSj2foiUgeHes2yauB+i3uQ+F8fD3QVr7ng4c4eFws4lpMrJQGhju+8w/3lJNqdgDDYiTMDZdXFYvvPSWygoTmK6dg5ur9g5qCYZ8a0rnFzLfKxP0R2tVhwzVRPxB+QxvVIi5/YYxPYhvTune1mrbFmfsUnVMr9o99zKKr5FHZ6QoyjQ3kwmk+W+YciH/yYwYHPckB4YfBW0OY9oimAuhUDGtktX4bNvRZj4ccLXqQlKqUkyYQvf8rn7ZbFxqFZvcwPHHq6ufkW64
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(376002)(136003)(346002)(39860400002)(46966006)(36840700001)(966005)(8936002)(26005)(6666004)(82740400003)(47076005)(86362001)(36756003)(15650500001)(82310400003)(8676002)(4326008)(6636002)(53546011)(84040400003)(107886003)(7636003)(478600001)(70586007)(70206006)(356005)(36860700001)(2906002)(31696002)(16526019)(2616005)(5660300002)(16576012)(316002)(54906003)(36906005)(336012)(83380400001)(31686004)(186003)(426003)(110136005)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jun 2021 09:32:15.7979
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a8483d5-e28e-4350-f07e-08d934977526
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT040.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1525
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 16, 2021 at 10:51:18AM +0200, Ondrej Mosnacek wrote:
-> Commit 59438b46471a ("security,lockdown,selinux: implement SELinux
-> lockdown") added an implementation of the locked_down LSM hook to
-> SELinux, with the aim to restrict which domains are allowed to perform
-> operations that would breach lockdown.
-> 
-> However, in several places the security_locked_down() hook is called in
-> situations where the current task isn't doing any action that would
-> directly breach lockdown, leading to SELinux checks that are basically
-> bogus.
-> 
-> To fix this, add an explicit struct cred pointer argument to
-> security_lockdown() and define NULL as a special value to pass instead
-> of current_cred() in such situations. LSMs that take the subject
-> credentials into account can then fall back to some default or ignore
-> such calls altogether. In the SELinux lockdown hook implementation, use
-> SECINITSID_KERNEL in case the cred argument is NULL.
-> 
-> Most of the callers are updated to pass current_cred() as the cred
-> pointer, thus maintaining the same behavior. The following callers are
-> modified to pass NULL as the cred pointer instead:
-> 1. arch/powerpc/xmon/xmon.c
->      Seems to be some interactive debugging facility. It appears that
->      the lockdown hook is called from interrupt context here, so it
->      should be more appropriate to request a global lockdown decision.
-> 2. fs/tracefs/inode.c:tracefs_create_file()
->      Here the call is used to prevent creating new tracefs entries when
->      the kernel is locked down. Assumes that locking down is one-way -
->      i.e. if the hook returns non-zero once, it will never return zero
->      again, thus no point in creating these files. Also, the hook is
->      often called by a module's init function when it is loaded by
->      userspace, where it doesn't make much sense to do a check against
->      the current task's creds, since the task itself doesn't actually
->      use the tracing functionality (i.e. doesn't breach lockdown), just
->      indirectly makes some new tracepoints available to whoever is
->      authorized to use them.
-> 3. net/xfrm/xfrm_user.c:copy_to_user_*()
->      Here a cryptographic secret is redacted based on the value returned
->      from the hook. There are two possible actions that may lead here:
->      a) A netlink message XFRM_MSG_GETSA with NLM_F_DUMP set - here the
->         task context is relevant, since the dumped data is sent back to
->         the current task.
->      b) When adding/deleting/updating an SA via XFRM_MSG_xxxSA, the
->         dumped SA is broadcasted to tasks subscribed to XFRM events -
->         here the current task context is not relevant as it doesn't
->         represent the tasks that could potentially see the secret.
->      It doesn't seem worth it to try to keep using the current task's
->      context in the a) case, since the eventual data leak can be
->      circumvented anyway via b), plus there is no way for the task to
->      indicate that it doesn't care about the actual key value, so the
->      check could generate a lot of "false alert" denials with SELinux.
->      Thus, let's pass NULL instead of current_cred() here faute de
->      mieux.
-> 
-> Improvements-suggested-by: Casey Schaufler <casey@schaufler-ca.com>
-> Improvements-suggested-by: Paul Moore <paul@paul-moore.com>
-> Fixes: 59438b46471a ("security,lockdown,selinux: implement SELinux lockdown")
-> Signed-off-by: Ondrej Mosnacek <omosnace@redhat.com>
+Hi Lorenzo, Bjorn,
+Can you help review this patch series please?
 
-For the xfrm part:
+Thanks,
+Om
 
-Acked-by: Steffen Klassert <steffen.klassert@secunet.com>
 
+On 6/6/2021 1:51 PM, Om Prakash Singh wrote:
+> Update pcie-tegra194 driver with bug fixing and cleanup
+> 
+> Changes from V1->V2
+>    PCI: tegra: Fix handling BME_CHGED event
+> 	- Update variable naming
+>    PCI: tegra: Fix MSI-X programming
+> 	- No change
+>    PCI: tegra: Disable interrupts before entering L2
+> 	- Rephrase the commit message
+>    PCI: tegra: Don't allow suspend when Tegra PCIe is in EP mode
+> 	- Update return value to -ENOTSUPP.
+>    PCI: tegra: Cleanup unused code
+> 	- No Change
+> 
+> V1:
+> http://patchwork.ozlabs.org/project/linux-pci/patch/20210527115246.20509-2-omp@nvidia.com/
+> 
+> Om Prakash Singh (5):
+>    PCI: tegra: Fix handling BME_CHGED event
+>    PCI: tegra: Fix MSI-X programming
+>    PCI: tegra: Disable interrupts before entering L2
+>    PCI: tegra: Don't allow suspend when Tegra PCIe is in EP mode
+>    PCI: tegra: Cleanup unused code
+> 
+>   drivers/pci/controller/dwc/pcie-tegra194.c | 36 +++++++++++++---------
+>   1 file changed, 22 insertions(+), 14 deletions(-)
+> 
