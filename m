@@ -2,142 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C3EC4743C
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12029C48BC2
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36FB16100B
+	by mail.kernel.org (Postfix) with ESMTP id F068661040
 	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 18:04:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233776AbhFUSG4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jun 2021 14:06:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45490 "EHLO mail.kernel.org"
+        id S233806AbhFUSG5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jun 2021 14:06:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233850AbhFUSCS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Jun 2021 14:02:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 479D861400;
-        Mon, 21 Jun 2021 17:55:14 +0000 (UTC)
+        id S234341AbhFUSFG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Jun 2021 14:05:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 94438611CE;
+        Mon, 21 Jun 2021 17:59:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624298115;
-        bh=Xg3ckCh4MrK9PKspTRjU2MM4Mq3C/p5v9MLKyXw03lI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h6wyXSwdOUQeXAoaS/GBtRCiNRP1qNHCHdb699cOdXWg8KJHAYOmTrCSAsEpFKJae
-         MWc7rYnOC0H1RWugAhTD1SsHg1Z8OSi8ATB+T7EeABJQUADkDxAGdAsVQFYdMc2vUo
-         apr/0mo3aEkkBMaLQCRKLYhTlAFa22Q/DrCoiGEMPkZuGVfzNZiko7INm0S/G+ILUf
-         kz1YJRWNQH3ulGr3/6vIgsiAkVDV326FYAzZLt8DKwznC3cTyjl1HIgS/Zz0DTG6sr
-         xSKF786aafEMMpGa6gkB836hwFyH9VXfGB6oxq4Fe1XaAj4FsSwKaKnRFSohWcmEh5
-         Q2iiBA+3p8BOw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mikel Rychliski <mikel@mikelr.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 15/16] PCI: Add AMD RS690 quirk to enable 64-bit DMA
-Date:   Mon, 21 Jun 2021 13:54:49 -0400
-Message-Id: <20210621175450.736067-15-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210621175450.736067-1-sashal@kernel.org>
-References: <20210621175450.736067-1-sashal@kernel.org>
+        s=k20201202; t=1624298362;
+        bh=y8attfyCFvmhE/rEq1lKuxtMSlY+L9uu0zEo4FMjkv8=;
+        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
+        b=nVdx/hwygYr/MG4oSfAecQoTkcAWFsVr6dFhXJUhFXwqSbH08hcJcQHHaJ6yNTgwJ
+         WFFrnk+RLaMbXPz1Xtr0MorwwBCBRCnNVEqXP2tUXHhGV2Usf3U4gjEu3zxeInr5od
+         B9ktxTxXUHFXTSVy1nFGEpPSBK9O5Aws7oD7ucKaVc2hx8hm7IAXVZOQ8U1l9ZRj62
+         sEXsTrg9MCBDzVl47wBX5+3xzZhCsWmVRvgAWZv47Xmzv8udI19xFqd0CjGvBvgqzh
+         BtSw3vV40r9z2Jdokw3+RVbueWCN8P3KLA5YE9ZkG0ZSqiTJvVk9SGjw4FEHT8nF7N
+         esGUOKjtCMepQ==
+Date:   Mon, 21 Jun 2021 10:59:20 -0700 (PDT)
+From:   Stefano Stabellini <sstabellini@kernel.org>
+X-X-Sender: sstabellini@sstabellini-ThinkPad-T480s
+To:     Christoph Hellwig <hch@lst.de>
+cc:     Tom Lendacky <thomas.lendacky@amd.com>,
+        Claire Chang <tientzu@chromium.org>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        benh@kernel.crashing.org, paulus@samba.org,
+        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
+        Robin Murphy <robin.murphy@arm.com>, grant.likely@arm.com,
+        xypron.glpk@gmx.de, Thierry Reding <treding@nvidia.com>,
+        mingo@kernel.org, bauerman@linux.ibm.com, peterz@infradead.org,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Saravana Kannan <saravanak@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        heikki.krogerus@linux.intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        linux-devicetree <devicetree@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
+        Nicolas Boichat <drinkcat@chromium.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Tomasz Figa <tfiga@chromium.org>, bskeggs@redhat.com,
+        Bjorn Helgaas <bhelgaas@google.com>, chris@chris-wilson.co.uk,
+        Daniel Vetter <daniel@ffwll.ch>, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        jani.nikula@linux.intel.com, Jianxiong Gao <jxgao@google.com>,
+        joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
+        maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
+        rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com
+Subject: Re: [PATCH v13 01/12] swiotlb: Refactor swiotlb init functions
+In-Reply-To: <20210618143212.GA19284@lst.de>
+Message-ID: <alpine.DEB.2.21.2106211052270.24906@sstabellini-ThinkPad-T480s>
+References: <20210617062635.1660944-1-tientzu@chromium.org> <20210617062635.1660944-2-tientzu@chromium.org> <alpine.DEB.2.21.2106171434480.24906@sstabellini-ThinkPad-T480s> <CALiNf29SJ0jXirWVDhJw4BUNvkjUeGPyGNJK9m8c30OPX41=5Q@mail.gmail.com>
+ <741a34cc-547c-984d-8af4-2f309880acfa@amd.com> <20210618143212.GA19284@lst.de>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mikel Rychliski <mikel@mikelr.com>
+On Fri, 18 Jun 2021, Christoph Hellwig wrote:
+> On Fri, Jun 18, 2021 at 09:09:17AM -0500, Tom Lendacky wrote:
+> > > swiotlb_init_with_tbl uses memblock_alloc to allocate the io_tlb_mem
+> > > and memblock_alloc[1] will do memset in memblock_alloc_try_nid[2], so
+> > > swiotlb_init_with_tbl is also good.
+> > > I'm happy to add the memset in swiotlb_init_io_tlb_mem if you think
+> > > it's clearer and safer.
+> > 
+> > On x86, if the memset is done before set_memory_decrypted() and memory
+> > encryption is active, then the memory will look like ciphertext afterwards
+> > and not be zeroes. If zeroed memory is required, then a memset must be
+> > done after the set_memory_decrypted() calls.
+> 
+> Which should be fine - we don't care that the memory is cleared to 0,
+> just that it doesn't leak other data.  Maybe a comment would be useful,
+> though,
 
-[ Upstream commit cacf994a91d3a55c0c2f853d6429cd7b86113915 ]
+Just as a clarification: I was referring to the zeroing of "mem" in
+swiotlb_late_init_with_tbl and swiotlb_init_with_tbl. While it looks
+like Tom and Christoph are talking about the zeroing of "tlb".
 
-Although the AMD RS690 chipset has 64-bit DMA support, BIOS implementations
-sometimes fail to configure the memory limit registers correctly.
+The zeroing of "mem" is required as some fields of struct io_tlb_mem
+need to be initialized to zero. While the zeroing of "tlb" is not
+required except from the point of view of not leaking sensitive data as
+Christoph mentioned.
 
-The Acer F690GVM mainboard uses this chipset and a Marvell 88E8056 NIC. The
-sky2 driver programs the NIC to use 64-bit DMA, which will not work:
-
-  sky2 0000:02:00.0: error interrupt status=0x8
-  sky2 0000:02:00.0 eth0: tx timeout
-  sky2 0000:02:00.0 eth0: transmit ring 0 .. 22 report=0 done=0
-
-Other drivers required by this mainboard either don't support 64-bit DMA,
-or have it disabled using driver specific quirks. For example, the ahci
-driver has quirks to enable or disable 64-bit DMA depending on the BIOS
-version (see ahci_sb600_enable_64bit() in ahci.c). This ahci quirk matches
-against the SB600 SATA controller, but the real issue is almost certainly
-with the RS690 PCI host that it was commonly attached to.
-
-To avoid this issue in all drivers with 64-bit DMA support, fix the
-configuration of the PCI host. If the kernel is aware of physical memory
-above 4GB, but the BIOS never configured the PCI host with this
-information, update the registers with our values.
-
-[bhelgaas: drop PCI_DEVICE_ID_ATI_RS690 definition]
-Link: https://lore.kernel.org/r/20210611214823.4898-1-mikel@mikelr.com
-Signed-off-by: Mikel Rychliski <mikel@mikelr.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- arch/x86/pci/fixup.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 0c67a5a94de3..76959a7d88c8 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -779,4 +779,48 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
- 
-+#define RS690_LOWER_TOP_OF_DRAM2	0x30
-+#define RS690_LOWER_TOP_OF_DRAM2_VALID	0x1
-+#define RS690_UPPER_TOP_OF_DRAM2	0x31
-+#define RS690_HTIU_NB_INDEX		0xA8
-+#define RS690_HTIU_NB_INDEX_WR_ENABLE	0x100
-+#define RS690_HTIU_NB_DATA		0xAC
-+
-+/*
-+ * Some BIOS implementations support RAM above 4GB, but do not configure the
-+ * PCI host to respond to bus master accesses for these addresses. These
-+ * implementations set the TOP_OF_DRAM_SLOT1 register correctly, so PCI DMA
-+ * works as expected for addresses below 4GB.
-+ *
-+ * Reference: "AMD RS690 ASIC Family Register Reference Guide" (pg. 2-57)
-+ * https://www.amd.com/system/files/TechDocs/43372_rs690_rrg_3.00o.pdf
-+ */
-+static void rs690_fix_64bit_dma(struct pci_dev *pdev)
-+{
-+	u32 val = 0;
-+	phys_addr_t top_of_dram = __pa(high_memory - 1) + 1;
-+
-+	if (top_of_dram <= (1ULL << 32))
-+		return;
-+
-+	pci_write_config_dword(pdev, RS690_HTIU_NB_INDEX,
-+				RS690_LOWER_TOP_OF_DRAM2);
-+	pci_read_config_dword(pdev, RS690_HTIU_NB_DATA, &val);
-+
-+	if (val)
-+		return;
-+
-+	pci_info(pdev, "Adjusting top of DRAM to %pa for 64-bit DMA support\n", &top_of_dram);
-+
-+	pci_write_config_dword(pdev, RS690_HTIU_NB_INDEX,
-+		RS690_UPPER_TOP_OF_DRAM2 | RS690_HTIU_NB_INDEX_WR_ENABLE);
-+	pci_write_config_dword(pdev, RS690_HTIU_NB_DATA, top_of_dram >> 32);
-+
-+	pci_write_config_dword(pdev, RS690_HTIU_NB_INDEX,
-+		RS690_LOWER_TOP_OF_DRAM2 | RS690_HTIU_NB_INDEX_WR_ENABLE);
-+	pci_write_config_dword(pdev, RS690_HTIU_NB_DATA,
-+		top_of_dram | RS690_LOWER_TOP_OF_DRAM2_VALID);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7910, rs690_fix_64bit_dma);
-+
- #endif
--- 
-2.30.2
-
+Either way, Claire's v14 patch 01/12 looks fine to me.
