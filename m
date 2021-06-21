@@ -2,81 +2,93 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40043C48BE5
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 09:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E76B1C4743C
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28A4861151
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 09:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C97F3611C1
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbhFUJti (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jun 2021 05:49:38 -0400
-Received: from foss.arm.com ([217.140.110.172]:59930 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229890AbhFUJt2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Jun 2021 05:49:28 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0E3771FB;
-        Mon, 21 Jun 2021 02:47:14 -0700 (PDT)
-Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 932403F718;
-        Mon, 21 Jun 2021 02:47:12 -0700 (PDT)
-Date:   Mon, 21 Jun 2021 10:47:06 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Rob Herring <robh@kernel.org>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
-        Xogium <contact@xogium.me>, linux-pci@vger.kernel.org,
-        Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH] PCI: aardvark: Fix kernel panic during PIO
- transfer
-Message-ID: <20210621094706.GA26022@lpieralisi>
-References: <162322862108.3345.4160808336030929680.b4-ty@arm.com>
- <20210617201523.GA3104553@bjorn-Precision-5520>
+        id S230071AbhFUKak (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jun 2021 06:30:40 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:5416 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229837AbhFUKaj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jun 2021 06:30:39 -0400
+Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G7lyt02hbz71t1;
+        Mon, 21 Jun 2021 18:25:10 +0800 (CST)
+Received: from SZX1000464847.huawei.com (10.21.59.169) by
+ dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Mon, 21 Jun 2021 18:28:23 +0800
+From:   Dongdong Liu <liudongdong3@huawei.com>
+To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
+        <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
+        <hverkuil-cisco@xs4all.nl>
+CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH V5 5/6] PCI/IOV: Enable 10-Bit tag support for PCIe VF devices
+Date:   Mon, 21 Jun 2021 18:27:21 +0800
+Message-ID: <1624271242-111890-6-git-send-email-liudongdong3@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1624271242-111890-1-git-send-email-liudongdong3@huawei.com>
+References: <1624271242-111890-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210617201523.GA3104553@bjorn-Precision-5520>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
+X-Originating-IP: [10.21.59.169]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggeme758-chm.china.huawei.com (10.3.19.104)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 17, 2021 at 03:15:23PM -0500, Bjorn Helgaas wrote:
-> On Wed, Jun 09, 2021 at 09:50:39AM +0100, Lorenzo Pieralisi wrote:
-> > On Tue, 8 Jun 2021 22:36:55 +0200, Pali Roh�r wrote:
-> > > Trying to start a new PIO transfer by writing value 0 in PIO_START register
-> > > when previous transfer has not yet completed (which is indicated by value 1
-> > > in PIO_START) causes an External Abort on CPU, which results in kernel
-> > > panic:
-> > > 
-> > >     SError Interrupt on CPU0, code 0xbf000002 -- SError
-> > >     Kernel panic - not syncing: Asynchronous SError Interrupt
-> > > 
-> > > [...]
-> > 
-> > Applied to pci/aardvark, thanks!
-> > 
-> > [1/1] PCI: aardvark: Fix kernel panic during PIO transfer
-> >       https://git.kernel.org/lpieralisi/pci/c/f77378171b
-> 
-> Since this fixes a panic and only affects aardvark, I cherry picked
-> this to my for-linus branch.
-> 
-> Can you drop it, Lorenzo?  It's currently the only thing on your
-> pci/aardvark branch, so I just dropped that whole branch from -next.
+Enable VF 10-Bit Tag Requester when it's upstream component support
+10-bit Tag Completer.
 
-I have dropped the branch from my tree as well as requested.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/iov.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Thanks,
-Lorenzo
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index afc06e6..3eb4348 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -627,6 +627,10 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ 	pci_iov_set_numvfs(dev, nr_virtfn);
+ 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
++	if ((iov->cap & PCI_SRIOV_CAP_VF_10BIT_TAG_REQ) &&
++	    dev->ext_10bit_tag)
++		iov->ctrl |= PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN;
++
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	msleep(100);
+@@ -643,6 +647,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ err_pcibios:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
++	if (iov->ctrl & PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN)
++		iov->ctrl &= ~PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	ssleep(1);
+@@ -675,6 +681,8 @@ static void sriov_disable(struct pci_dev *dev)
+ 
+ 	sriov_del_vfs(dev);
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
++	if (iov->ctrl & PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN)
++		iov->ctrl &= ~PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN;
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	ssleep(1);
+-- 
+2.7.4
+
