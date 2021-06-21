@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B18FDC49EA7
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 239E2C4743C
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A043611C1
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 002AF61059
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jun 2021 10:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229837AbhFUKan (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jun 2021 06:30:43 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:5059 "EHLO
+        id S230403AbhFUKar (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jun 2021 06:30:47 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:5060 "EHLO
         szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229890AbhFUKaj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jun 2021 06:30:39 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G7lwg6RmlzXjKP;
+        with ESMTP id S229946AbhFUKak (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jun 2021 06:30:40 -0400
+Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G7lwg2mVDzXjKM;
         Mon, 21 Jun 2021 18:23:15 +0800 (CST)
 Received: from SZX1000464847.huawei.com (10.21.59.169) by
  dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
@@ -31,9 +31,9 @@ To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
         <hverkuil-cisco@xs4all.nl>
 CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V5 4/6] PCI: Enable 10-Bit tag support for PCIe Endpoint devices
-Date:   Mon, 21 Jun 2021 18:27:20 +0800
-Message-ID: <1624271242-111890-5-git-send-email-liudongdong3@huawei.com>
+Subject: [PATCH V5 1/6] PCI: Use cached Device Capabilities Register
+Date:   Mon, 21 Jun 2021 18:27:17 +0800
+Message-ID: <1624271242-111890-2-git-send-email-liudongdong3@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1624271242-111890-1-git-send-email-liudongdong3@huawei.com>
 References: <1624271242-111890-1-git-send-email-liudongdong3@huawei.com>
@@ -47,87 +47,169 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-field size from 8 bits to 10 bits.
+It will make sense to store the pcie_devcap value in the pci_dev
+structure instead of reading Device Capabilities Register multiple
+times. The fisrt place to use pcie_devcap is in set_pcie_port_type(),
+get the pcie_devcap value here, then use cached pcie_devcap in the
+needed place.
 
-For platforms where the RC supports 10-Bit Tag Completer capability,
-it is highly recommended for platform firmware or operating software
-that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-bit automatically in Endpoints with 10-Bit Tag Requester capability. This
-enables the important class of 10-Bit Tag capable adapters that send
-Memory Read Requests only to host memory.
-
+Acked-by: Hans Verkuil <hverkuil-cisco@xs4all.nl>
 Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/probe.c | 33 +++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 2 files changed, 35 insertions(+)
+ drivers/media/pci/cobalt/cobalt-driver.c |  5 +++--
+ drivers/pci/pci.c                        |  5 +----
+ drivers/pci/pcie/aspm.c                  | 11 ++++-------
+ drivers/pci/probe.c                      | 11 +++--------
+ drivers/pci/quirks.c                     |  3 +--
+ include/linux/pci.h                      |  1 +
+ 6 files changed, 13 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
+index 839503e..7ec50d7 100644
+--- a/drivers/media/pci/cobalt/cobalt-driver.c
++++ b/drivers/media/pci/cobalt/cobalt-driver.c
+@@ -193,11 +193,12 @@ void cobalt_pcie_status_show(struct cobalt *cobalt)
+ 		return;
+ 
+ 	/* Device */
+-	pcie_capability_read_dword(pci_dev, PCI_EXP_DEVCAP, &capa);
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_DEVCTL, &ctrl);
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_DEVSTA, &stat);
+ 	cobalt_info("PCIe device capability 0x%08x: Max payload %d\n",
+-		    capa, get_payload_size(capa & PCI_EXP_DEVCAP_PAYLOAD));
++		    pci_dev->pcie_devcap,
++		    get_payload_size(pci_dev->pcie_devcap &
++				     PCI_EXP_DEVCAP_PAYLOAD));
+ 	cobalt_info("PCIe device control 0x%04x: Max payload %d. Max read request %d\n",
+ 		    ctrl,
+ 		    get_payload_size((ctrl & PCI_EXP_DEVCTL_PAYLOAD) >> 5),
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b717680..68ccd77 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4620,13 +4620,10 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+  */
+ bool pcie_has_flr(struct pci_dev *dev)
+ {
+-	u32 cap;
+-
+ 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+ 		return false;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	return cap & PCI_EXP_DEVCAP_FLR;
++	return dev->pcie_devcap & PCI_EXP_DEVCAP_FLR;
+ }
+ EXPORT_SYMBOL_GPL(pcie_has_flr);
+ 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index ac0557a..d637564 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -660,7 +660,7 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 
+ 	/* Get and check endpoint acceptable latencies */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
+-		u32 reg32, encoding;
++		u32 encoding;
+ 		struct aspm_latency *acceptable =
+ 			&link->acceptable[PCI_FUNC(child->devfn)];
+ 
+@@ -668,12 +668,11 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 		    pci_pcie_type(child) != PCI_EXP_TYPE_LEG_END)
+ 			continue;
+ 
+-		pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
+ 		/* Calculate endpoint L0s acceptable latency */
+-		encoding = (reg32 & PCI_EXP_DEVCAP_L0S) >> 6;
++		encoding = (child->pcie_devcap & PCI_EXP_DEVCAP_L0S) >> 6;
+ 		acceptable->l0s = calc_l0s_acceptable(encoding);
+ 		/* Calculate endpoint L1 acceptable latency */
+-		encoding = (reg32 & PCI_EXP_DEVCAP_L1) >> 9;
++		encoding = (child->pcie_devcap & PCI_EXP_DEVCAP_L1) >> 9;
+ 		acceptable->l1 = calc_l1_acceptable(encoding);
+ 
+ 		pcie_aspm_check_latency(child);
+@@ -808,7 +807,6 @@ static void free_link_state(struct pcie_link_state *link)
+ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ {
+ 	struct pci_dev *child;
+-	u32 reg32;
+ 
+ 	/*
+ 	 * Some functions in a slot might not all be PCIe functions,
+@@ -831,8 +829,7 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+ 		 * RBER bit to determine if a function is 1.1 version device
+ 		 */
+-		pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
+-		if (!(reg32 & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
++		if (!(child->pcie_devcap & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
+ 			pci_info(child, "disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'\n");
+ 			return -EINVAL;
+ 		}
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0208865..33241fb 100644
+index 2752046..76ddc89 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -2048,6 +2048,38 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 	return 0;
- }
+@@ -1498,8 +1498,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	pdev->pcie_cap = pos;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 	pdev->pcie_flags_reg = reg16;
+-	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+-	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++	pci_read_config_dword(pdev, pos + PCI_EXP_DEVCAP, &pdev->pcie_devcap);
++	pdev->pcie_mpss = pdev->pcie_devcap & PCI_EXP_DEVCAP_PAYLOAD;
  
-+static void pci_configure_10bit_tags(struct pci_dev *dev)
-+{
-+	struct pci_dev *bridge;
-+
-+	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP))
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-+		dev->ext_10bit_tag = 1;
-+		return;
-+	}
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge && bridge->ext_10bit_tag)
-+		dev->ext_10bit_tag = 1;
-+
-+	/*
-+	 * 10-Bit Tag Requester Enable in Device Control 2 Register is RsvdP
-+	 * for VF.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT &&
-+	    dev->ext_10bit_tag == 1 &&
-+	    (dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ)) {
-+		pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+	}
-+}
-+
- /**
-  * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
-  * @dev: PCI device to query
-@@ -2184,6 +2216,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 	parent = pci_upstream_bridge(pdev);
+ 	if (!parent)
+@@ -2009,18 +2009,13 @@ static void pci_configure_mps(struct pci_dev *dev)
+ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
  {
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev, NULL);
-+	pci_configure_10bit_tags(dev);
- 	pci_configure_relaxed_ordering(dev);
- 	pci_configure_ltr(dev);
- 	pci_configure_eetlp_prefix(dev);
+ 	struct pci_host_bridge *host;
+-	u32 cap;
+ 	u16 ctl;
+ 	int ret;
+ 
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
+ 
+-	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	if (ret)
+-		return 0;
+-
+-	if (!(cap & PCI_EXP_DEVCAP_EXT_TAG))
++	if (!(dev->pcie_devcap & PCI_EXP_DEVCAP_EXT_TAG))
+ 		return 0;
+ 
+ 	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index dcb229d..b89b438 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5073,8 +5073,7 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+ 		pdev->pcie_cap = pos;
+ 		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 		pdev->pcie_flags_reg = reg16;
+-		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+-		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++		pdev->pcie_mpss = pdev->pcie_devcap & PCI_EXP_DEVCAP_PAYLOAD;
+ 
+ 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
+ 		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index de1fc24..445d102 100644
+index 2430650..0674161 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -393,6 +393,8 @@ struct pci_dev {
- #endif
- 	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
+@@ -340,6 +340,7 @@ struct pci_dev {
+ 	u8		rom_base_reg;	/* Config register controlling ROM */
+ 	u8		pin;		/* Interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* Cached PCIe Capabilities Register */
++	u32		pcie_devcap;	/* Cached Device Capabilities Register */
+ 	unsigned long	*dma_alias_mask;/* Mask of enabled devfn aliases */
  
-+	unsigned int	ext_10bit_tag:1; /* 10-Bit Tag Completer Supported
-+					    from root to here */
- 	pci_channel_state_t error_state;	/* Current connectivity state */
- 	struct device	dev;			/* Generic device interface */
- 
+ 	struct pci_driver *driver;	/* Driver bound to this device */
 -- 
 2.7.4
 
