@@ -2,66 +2,82 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59030C48BC2
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Jun 2021 15:23:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1BCCC48BE5
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Jun 2021 16:21:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CB316112D
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Jun 2021 15:23:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B511A6101D
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Jun 2021 16:21:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230392AbhFWPZp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Jun 2021 11:25:45 -0400
-Received: from foss.arm.com ([217.140.110.172]:36852 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229523AbhFWPZp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Jun 2021 11:25:45 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id ED1B331B;
-        Wed, 23 Jun 2021 08:23:27 -0700 (PDT)
-Received: from e123427-lin.arm.com (unknown [10.57.46.124])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C3D1E3F718;
-        Wed, 23 Jun 2021 08:23:26 -0700 (PDT)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jon Hunter <jonathanh@nvidia.com>,
-        Vidya Sagar <vidyas@nvidia.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Fix shiftTooManyBitsSigned warning for Tegra194
-Date:   Wed, 23 Jun 2021 16:23:20 +0100
-Message-Id: <162446177943.19852.7323663097557808562.b4-ty@arm.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20210618160219.303092-1-jonathanh@nvidia.com>
-References: <20210618160219.303092-1-jonathanh@nvidia.com>
+        id S229801AbhFWQXY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Jun 2021 12:23:24 -0400
+Received: from mail-ot1-f49.google.com ([209.85.210.49]:33418 "EHLO
+        mail-ot1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229726AbhFWQXY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jun 2021 12:23:24 -0400
+Received: by mail-ot1-f49.google.com with SMTP id o17-20020a9d76510000b02903eabfc221a9so2533498otl.0;
+        Wed, 23 Jun 2021 09:21:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=35WsYJT9YpRPnzEEhoqfjKbQt4vKvTmr17v8IGf8pkA=;
+        b=sYAtF3zWwgT0vjuCBM1ozsHW6O+zcXHTrlpOn/qlwwtqe3hhzc0dL1xHVQC3tlXcD6
+         40g6uk8yFFie9GKfV8MfBZ7ejiMeMwJzOk2YFce98HA88itoBVVgPsKqZBIxiZN2BIeI
+         ZZ1Ys4SRgjYahkjZg6DtkDVTVnOhITfjHq7YvWX2b539UbyVFF0RcEeGCEWG6g53wXAO
+         i0Uzb9GTeJXLdD/JXrC2tVg2VoqcUXJmD4oUJ3kGT4szkXzlXrQv0D1utPPGYPSNYTbp
+         4WnUSLiIez/bWI3n9lMCpF+0WWSgajCooovSRyftgzt46tJmkW07C+VYWV/tO77aps0X
+         lIoA==
+X-Gm-Message-State: AOAM532qxeyZIe/VJN8kMK3epXDtRPfRShmqWJ6F06ndCOHH8oZgrj54
+        N/FseOxXaSQmi3hU2yDisId+uHWJb18BxA+VilrCPQmbpmc=
+X-Google-Smtp-Source: ABdhPJzBgjWy+VqeBJbt+KGxoD1N/UTshnFIiaEUPd2SEQOGfdsJ3Kqg/RQuV+59rHsN4vwCi3U7bejsvXkGw+6ep8U=
+X-Received: by 2002:a9d:1905:: with SMTP id j5mr598865ota.321.1624465265283;
+ Wed, 23 Jun 2021 09:21:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 23 Jun 2021 18:20:54 +0200
+Message-ID: <CAJZ5v0gcogmEi_-wcycEv77443_LT9w-7Ln_x1eiBm=mPiX9hA@mail.gmail.com>
+Subject: [GIT PULL] Power management fix for v5.13-rc8
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 18 Jun 2021 17:02:19 +0100, Jon Hunter wrote:
-> The cppcheck tool issues the following warning for the Tegra194 PCIe
-> driver ...
-> 
->  $ cppcheck --enable=all drivers/pci/controller/dwc/pcie-tegra194.c
->  Checking drivers/pci/controller/dwc/pcie-tegra194.c ...
-> 
->  drivers/pci/controller/dwc/pcie-tegra194.c:1829:23: portability:
-> 	Shifting signed 32-bit value by 31 bits is
-> 	implementation-defined behaviour. See condition at line 1826.
-> 	[shiftTooManyBitsSigned]
-> 
-> [...]
+Hi Linus,
 
-Applied to pci/tegra, thanks!
+Please pull from the tag
 
-[1/1] PCI: tegra194: Fix shiftTooManyBitsSigned warning for Tegra194
-      https://git.kernel.org/lpieralisi/pci/c/b1eca3a544
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm-5.13-rc8
 
-Thanks,
-Lorenzo
+with top-most commit 4d6035f9bf4ea12776322746a216e856dfe46698
+
+ Revert "PCI: PM: Do not read power state in pci_enable_device_flags()"
+
+on top of commit 13311e74253fe64329390df80bed3f07314ddd61
+
+ Linux 5.13-rc7
+
+to receive a power management fix for 5.13-rc8.
+
+This reverts a recent PCI power management commit that causes
+initialization issues to appear on some systems.
+
+Thanks!
+
+
+---------------
+
+Rafael J. Wysocki (1):
+      Revert "PCI: PM: Do not read power state in pci_enable_device_flags()"
+
+---------------
+
+ drivers/pci/pci.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
