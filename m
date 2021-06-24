@@ -2,117 +2,98 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C152C49EA6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 23:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C54DC49EA6
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 23:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 457F5613AB
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 23:18:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C80036138C
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 23:28:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232695AbhFXXVQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jun 2021 19:21:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51586 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbhFXXVP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jun 2021 19:21:15 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C104EC06175F
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jun 2021 16:18:55 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id t17so13199551lfq.0
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jun 2021 16:18:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=BVdHxGZqj8DMPWxofgWa1I04A+xffaUTJE88j4FN/wI=;
-        b=XGO3Cc09FjQEhHh0lHOesLy9TqBpH2/g6YJUnMWTvs09c1TglgCcAgc+QKJG/laf+C
-         83tQycrusn3X7g2GO+zqiaDhM6/XyU4m1k+XQQ4reEY7hotEcRkbVl7dKc9x2gMBnfdj
-         NY3SuFe9EmM0/PS3un+IhY5QzR9Cs36jck65OMo9Mfn3wjpu8TayCex4TXCqUSgyGTu5
-         hK+hPeY5KAFGc8qAYjoXEpbUxmYw9LvLTO+YJik7wa2oQUosQwzc+SGsIP33FQfqnMiV
-         JJvG3vG11+C0CMAwtOkRgQ0XJ1O122HecuiVI1DbtdfWiE1SENFL+UO8bDUQEL9iuPVE
-         /qZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=BVdHxGZqj8DMPWxofgWa1I04A+xffaUTJE88j4FN/wI=;
-        b=mR3eG75Gxvo18QKRhe3IZI3c6iODBAZ3efmMgsiKHX9vRCDpf8ITm2FT2KROr7Yivt
-         +bExSSs87Slos1hBGTi+mgCRxLchDYlwDykF9qMFelY7gS7xxZdnaUQ0V02J2PCzSv9s
-         qJKBQzPay96CIMwtiFIG0sccblAp99ftVH7cg+AaF3DTr8lFrP0ClobW9r6xGp/dQdlx
-         5AwaISgGLYuUYOdRLs2YdHvQ3WO+vofkuXSHQgUDD2bIQX5wZLEfX8L5YrrWM/axkovc
-         KAqgrHbXrlyvg+NuWQDzLhZVsRQFWCekzgksbfdg7ft5h2/N3BRybSK/HAjt7nmgvAqF
-         U/LA==
-X-Gm-Message-State: AOAM533ihkObTxhy9w650AJR1aBAZqzPINWuoWEwz1F6hPk3KTCRTxK+
-        wG2Sw9Wv4LKjkehQc0UxOFnvjhB5elDn/ltFI6TNoA==
-X-Google-Smtp-Source: ABdhPJwk8S3QEeOsps68MYw/zcn52DmnN71rZXFr+zwTJ02PcUgRfpmPpJoGy9M1V9S8AX/AyDnRuKhlI+5T4ITFgcQ=
-X-Received: by 2002:a05:6512:3f08:: with SMTP id y8mr5509140lfa.649.1624576734131;
- Thu, 24 Jun 2021 16:18:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <8207a53c-4de9-d0e5-295a-c165e7237e36@lucaceresoli.net>
- <20210622110627.aqzxxtf2j3uxfeyl@pali> <20210622115604.GA25503@lpieralisi>
- <20210622121649.ouiaecdvwutgdyy5@pali> <18a104a9-2cb8-7535-a5b2-f5f049adff47@lucaceresoli.net>
- <4d4c0d4d-41b4-4756-5189-bffa15f88406@ti.com> <20210622205220.ypu22tuxhpdn2jwz@pali>
- <2873969e-ac56-a41f-0cc9-38e387542aa1@lucaceresoli.net> <20210622211901.ikulpy32d6qlr4yw@pali>
- <588741e4-b085-8ae2-3311-27037c040a57@lucaceresoli.net> <20210622222328.3lfgkrhsdy6izedv@pali>
-In-Reply-To: <20210622222328.3lfgkrhsdy6izedv@pali>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Fri, 25 Jun 2021 01:18:43 +0200
-Message-ID: <CACRpkdai2cvoNFR8yH2MHP+R27nQm1HZNK4-mJ50mE7DHrBmXw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: dra7xx: Fix reset behaviour
-To:     =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-Cc:     Luca Ceresoli <luca@lucaceresoli.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+        id S229712AbhFXXbD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jun 2021 19:31:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55388 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229521AbhFXXbC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jun 2021 19:31:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7F6726109D;
+        Thu, 24 Jun 2021 23:28:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1624577322;
+        bh=ldX9RoquT9Rh15kfP3FoVZ10xacgMSNt/9jIwP+BvEY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=SsYrM7WMbzNsbAGWMcs0kcP8ECXwziLWX8RgMfJCnKWub1yrt5UXYJL9w3VUEykjL
+         3uxLK5T/08vZg1d34q7VgSuXohvkB3WpNf7zjH7ZZrPSzQxvzY7pYfO+BDG6Q+S2BK
+         HdtYhARYSiPn3GDJDU/7ZOZEdrDCNlVqWIIxeow45bKDtxQw/6g5dz7h5EFZMYEVLD
+         kOE3Gr9bm2E30hnODihqtIAvU98kS7Fzdb0V6Q8DGPF56D3k3+bMdbOZbtOZk+6m/p
+         dACxFFLrh0nqm8nIrNNU9GDxmkQ9iBe2ZK1eI4SxocJCnEZ13pPkBFluQ3h8I3I8yD
+         esQ/F6WP/heoA==
+Date:   Thu, 24 Jun 2021 18:28:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Javier Martinez Canillas <javierm@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-OMAP <linux-omap@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
         Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: rockchip: Avoid accessing PCIe registers with
+ clocks gated
+Message-ID: <20210624232841.GA3579021@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44c551d7-fee4-13cf-2929-6d2383dd5497@arm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 23, 2021 at 12:23 AM Pali Roh=C3=A1r <pali@kernel.org> wrote:
+On Fri, Jun 25, 2021 at 12:18:48AM +0100, Robin Murphy wrote:
+> On 2021-06-24 22:57, Bjorn Helgaas wrote:
+> > On Tue, Jun 08, 2021 at 10:04:09AM +0200, Javier Martinez Canillas wrote:
+> > > IRQ handlers that are registered for shared interrupts can be called at
+> > > any time after have been registered using the request_irq() function.
+> > > 
+> > > It's up to drivers to ensure that's always safe for these to be called.
+> > > 
+> > > Both the "pcie-sys" and "pcie-client" interrupts are shared, but since
+> > > their handlers are registered very early in the probe function, an error
+> > > later can lead to these handlers being executed before all the required
+> > > resources have been properly setup.
+> > > 
+> > > For example, the rockchip_pcie_read() function used by these IRQ handlers
+> > > expects that some PCIe clocks will already be enabled, otherwise trying
+> > > to access the PCIe registers causes the read to hang and never return.
+> > 
+> > The read *never* completes?  That might be a bit problematic because
+> > it implies that we may not be able to recover from PCIe errors.  Most
+> > controllers will timeout eventually, log an error, and either
+> > fabricate some data (typically ~0) to complete the CPU's read or cause
+> > some kind of abort or machine check.
+> > 
+> > Just asking in case there's some controller configuration that should
+> > be tweaked.
+> 
+> If I'm following correctly, that'll be a read transaction to the native side
+> of the controller itself; it can't complete that read, or do anything else
+> either, because it's clock-gated, and thus completely oblivious (it might be
+> that if another CPU was able to enable the clocks then everything would
+> carry on as normal, or it might end up totally deadlocking the SoC
+> interconnect). I think it's safe to assume that in that state nothing of
+> importance would be happening on the PCIe side, and even if it was we'd
+> never get to know about it.
 
-> Lorenzo asked a good question how GPIO drives PERST#. And maybe it would
-> be a good idea to unify all pci controller drivers to use same GPIO
-> value for asserting PERST# pin. If it is possible. As we can see it is a
-> big mess.
->
-> Personally I would like to a see two helper functions like
->
->   void pcie_assert_perst(struct gpio_desc *gpio);
->   void pcie_deassert_perst(struct gpio_desc *gpio);
->
-> which pci controller driver will use and we will not more handle active
-> high / low state or polarity inversion and meditate if gpio set to zero
-> means assert or de-assert.
+Oh, right, that makes sense.  I was thinking about the PCIe side, but
+if the controller itself isn't working, of course we wouldn't get that
+far.
 
-GPIO descriptors (as are used in this driver) are supposed to hide
-and encapsulate polarity inversion so:
+I would expect that the CPU itself would have some kind of timeout for
+the read, but that's far outside of the PCI world.
 
-gpiod_set_value(gpiod, 1) =3D=3D assert the line
-gpiod_set_value(gpiod, 0) =3D=3D de-assert the line
-
-Whether the line is asserted by physically driving the line low or
-high should not be a concern, that is handled in the machine
-description, we support OF, ACPI and even board files to
-define this.
-
-I would use gpiod_set_value() directly as above and maybe
-add some comments explaining what is going on and that
-the resulting polarity inversion is handled inside gpiolib.
-
-Because of common misunderstandings we have pondered to just
-search/replace the last argument of gpiod_set_value() from
-an (int value) to a (bool asserted) to make things clear.
-I just never get around to do that.
-
-Yours,
-Linus Walleij
+Bjorn
