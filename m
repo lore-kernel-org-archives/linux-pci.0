@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55AFDC49EA5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED7A4C49EA6
 	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 22:27:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3996C613A9
+	by mail.kernel.org (Postfix) with ESMTP id D3AE2613A9
 	for <linux-pci@archiver.kernel.org>; Thu, 24 Jun 2021 22:27:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232859AbhFXW3a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jun 2021 18:29:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38000 "EHLO mail.kernel.org"
+        id S232715AbhFXW3b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jun 2021 18:29:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38050 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232845AbhFXW33 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jun 2021 18:29:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E16606137D;
-        Thu, 24 Jun 2021 22:27:09 +0000 (UTC)
+        id S232848AbhFXW3a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jun 2021 18:29:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A635E613AB;
+        Thu, 24 Jun 2021 22:27:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1624573630;
-        bh=bSHnjsAOWAaXk6MagAsbXeDOrNG/Ncxs7ohUVA+0BuE=;
+        bh=Abh9XGgE1ipE6laKxqtRrQbaboUN5YYNzU9KrJVJ4A4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uRWhlRafjZbl+wBmI/y7AraGDR5rU9KdfJQc0ku6xPvkckDKJaijFM1CSZ4TWQ67V
-         zK796sQS6yGypRB1t39rp+IpMkVj45LRUykEo//kvDaqx4+1RH/Q3LKPQketQ5Cmx8
-         XGHmSi/K2oKN4c/vtWjglLIQKKMskPYntKoKzieo+32Pz2u9b7WtXEFiC6FZmndBac
-         nQP3C/tr5J79qEi6ipmCR1hjUr+rFOM21VyBVQo9XWfj1FvCL433RD6WoNGJVjjEB+
-         LDO9EO1ObUoMxC9T4mk/mWE8Luizo/NQugBARVa2NXgIikTcJlEm8g8cRTnDvKIBY3
-         DgECG4jXtwYXw==
+        b=QPb9HZhfiRsegh08jXRFFjTY7QMb5lQk8SmScz+r8HO8aR6VTOvDijtiU8YVjDz5W
+         M3y9WSYIgv/cQwe0uHVmo1AscxNAkMQGHuvjEwGLGJ2ecIp44c9ORpcW18awGuwQsP
+         Dvd7hLFlkAJP3eqdfye+s6goRTsa7W0JoqhcdzA7AEfbuPOGLTp6p1ONZdzsR1BTCG
+         1HDKO0H1nE/WdFzZLSduvzdnk4o0IiXArDZ4SgMnMjhJK7yAF9n8eybAmhYO2toQCW
+         z4uUi6cQAPAdBsCmsZ1rq+LYECN0wYxhtG1x+rYrhR3yg2oEehXxYUF2h5jcvnEPJM
+         fqOopr45O+Xqg==
 Received: by pali.im (Postfix)
-        id 1717FBFC; Fri, 25 Jun 2021 00:27:08 +0200 (CEST)
+        id 64C9C8A3; Fri, 25 Jun 2021 00:27:10 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -46,9 +46,9 @@ Cc:     =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
         Kostya Porotchkin <kostap@marvell.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-Subject: [RESEND PATCH 2/5] PCI: Add PCI_EXP_DEVCTL_PAYLOAD_* macros
-Date:   Fri, 25 Jun 2021 00:26:18 +0200
-Message-Id: <20210624222621.4776-3-pali@kernel.org>
+Subject: [RESEND PATCH 4/5] PCI: aardvark: Implement workaround for the readback value of VEND_ID
+Date:   Fri, 25 Jun 2021 00:26:20 +0200
+Message-Id: <20210624222621.4776-5-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210624222621.4776-1-pali@kernel.org>
 References: <20210624222621.4776-1-pali@kernel.org>
@@ -59,32 +59,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Define a macro PCI_EXP_DEVCTL_PAYLOAD_* for every possible Max Payload
-Size in linux/pci_regs.h, in the same style as PCI_EXP_DEVCTL_READRQ_*.
+Marvell Armada 3700 Functional Errata, Guidelines, and Restrictions
+document describes in erratum 4.1 PCIe value of vendor ID (Ref #: 243):
+
+    The readback value of VEND_ID (RD0070000h [15:0]) is 1B4Bh, while it
+    should read 11ABh.
+
+    The firmware can write the correct value, 11ABh, through VEND_ID
+    (RD0076044h [15:0]).
+
+Implement this workaround in aardvark driver for both PCI vendor id and PCI
+subsystem vendor id.
+
+This change affects and fixes PCI vendor id of emulated PCIe root bridge.
+After this change emulated PCIe root bridge has correct vendor id.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Reviewed-by: Marek Behún <kabel@kernel.org>
+Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
+Cc: stable@vger.kernel.org
 ---
- include/uapi/linux/pci_regs.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e709ae8235e7..ff6ccbc6efe9 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -504,6 +504,12 @@
- #define  PCI_EXP_DEVCTL_URRE	0x0008	/* Unsupported Request Reporting En. */
- #define  PCI_EXP_DEVCTL_RELAX_EN 0x0010 /* Enable relaxed ordering */
- #define  PCI_EXP_DEVCTL_PAYLOAD	0x00e0	/* Max_Payload_Size */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_128B 0x0000 /* 128 Bytes */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_256B 0x0020 /* 256 Bytes */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_512B 0x0040 /* 512 Bytes */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_1024B 0x0060 /* 1024 Bytes */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_2048B 0x0080 /* 2048 Bytes */
-+#define  PCI_EXP_DEVCTL_PAYLOAD_4096B 0x00a0 /* 4096 Bytes */
- #define  PCI_EXP_DEVCTL_EXT_TAG	0x0100	/* Extended Tag Field Enable */
- #define  PCI_EXP_DEVCTL_PHANTOM	0x0200	/* Phantom Functions Enable */
- #define  PCI_EXP_DEVCTL_AUX_PME	0x0400	/* Auxiliary Power PM Enable */
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 397431d641f6..9ff68abd8d1e 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -166,6 +166,7 @@
+ #define     LTSSM_MASK				0x3f
+ #define     LTSSM_L0				0x10
+ #define     RC_BAR_CONFIG			0x300
++#define VENDOR_ID_REG				(LMI_BASE_ADDR + 0x44)
+ 
+ /* PCIe core controller registers */
+ #define CTRL_CORE_BASE_ADDR			0x18000
+@@ -417,6 +418,16 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg |= (IS_RC_MSK << IS_RC_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
+ 
++	/*
++	 * Replace incorrect PCI vendor id value 0x1b4b by correct value 0x11ab.
++	 * VENDOR_ID_REG contains vendor id in low 16 bits and subsystem vendor
++	 * id in high 16 bits. Updating this register changes readback value of
++	 * read-only vendor id bits in PCIE_CORE_DEV_ID_REG register. Workaround
++	 * for erratum 4.1: "The value of device and vendor ID is incorrect".
++	 */
++	reg = (PCI_VENDOR_ID_MARVELL << 16) | PCI_VENDOR_ID_MARVELL;
++	advk_writel(pcie, reg, VENDOR_ID_REG);
++
+ 	/* Set Advanced Error Capabilities and Control PF0 register */
+ 	reg = PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX |
+ 		PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN |
 -- 
 2.20.1
 
