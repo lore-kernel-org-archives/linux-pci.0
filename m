@@ -2,44 +2,45 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E7D0C49EA7
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 23:31:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A81C2B9F4
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 23:31:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B0FC61954
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 23:31:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42B1861954
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 23:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229934AbhFYXdp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Jun 2021 19:33:45 -0400
-Received: from mail-ed1-f44.google.com ([209.85.208.44]:37620 "EHLO
-        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229884AbhFYXdn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jun 2021 19:33:43 -0400
-Received: by mail-ed1-f44.google.com with SMTP id i24so15632263edx.4
-        for <linux-pci@vger.kernel.org>; Fri, 25 Jun 2021 16:31:21 -0700 (PDT)
+        id S229940AbhFYXdr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Jun 2021 19:33:47 -0400
+Received: from mail-ed1-f54.google.com ([209.85.208.54]:40933 "EHLO
+        mail-ed1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229938AbhFYXdr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jun 2021 19:33:47 -0400
+Received: by mail-ed1-f54.google.com with SMTP id t3so15617740edc.7
+        for <linux-pci@vger.kernel.org>; Fri, 25 Jun 2021 16:31:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=grWbq2F+Cd1mhUpOOh41AdDJ1fHAAT0Gk3rXj3mM/e0=;
-        b=luc5Lr0RtEXBVeqT6lQ/pogNx+obmPv/KrXLQ2AqoXi2FXmCWG+0gN/AoFCHw/r5Vm
-         r879I3lKJ5HnZb4KIehhnZzvrj78cAAKKXeE5FJrOnYiLAUqQPXKNZ/G1kJzxtO0ke4w
-         oNQJWSflpddgKDbSWT42NCZ3QL+bfyAtNZwyYLuvx0iPFE4MubORYkCBuv+TgmqxuHP/
-         zBxmF7w/ZuDF4D/k5tBA3dtghwofRRd85OEL7s6xSmAnAAh+WryQdg5iKpws+jjEU9NI
-         Py1VE4j/TXCKd4auHIF3qouD5wI2gs9Fq9X0NxXaIyO8TX+YpZSLG9bLIEW+TDeANDGO
-         7xdQ==
-X-Gm-Message-State: AOAM5337odEvdPYmTMuJQzwYQ2nTMsg/VKiWRIUS+4h79hw0zcmUON+T
-        MJOBUI6ITvcsKPpwRGE6ZfI=
-X-Google-Smtp-Source: ABdhPJxRXt20Wu1Zz7tjGF5rQgutsqmXp4iQ3kJPCFspK+pf1XGEhrymoP3kjSEVME0VlchlyD/WxQ==
-X-Received: by 2002:a05:6402:4248:: with SMTP id g8mr18212498edb.368.1624663879755;
-        Fri, 25 Jun 2021 16:31:19 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=4GSicSMy/nF6trnS/MfRL+W4ghg4phn0UKLi5jH9tX0=;
+        b=dHh2I8uFDjmv4hg0aVa6hD6TImzsFuNkpVoNOvplAZVO9D0jo7r2weQksRFqtoJi7O
+         os8MbiSi4AXSSRjaEqwDWU/qgRPI3vHjG4tsEAMsGSNSw8IXjClSy/NfFm9rDx2jlnps
+         DdeNFZ/M4W/9jb+BarOz5sZPz3xd06rD0aoMMzQscGz/JdVp778/0ELl/hujJ6pU3uV8
+         PvKdtBnmcFm4LwTz+9vR7Bao6PkLCXsTnmV9zjso5Z2VbllSfzrxcU6Luxn5YcfsROME
+         hqBLyMjLxhQKq5sRbxWRSsJf+o/3iU/V07hp64nj3SLxmwPU6IXTszU4g4COvGOTmCry
+         BKGA==
+X-Gm-Message-State: AOAM530NnrLF4MyDi2HL0pIZxHtega6/guB4yFMiBHrnU2FJEpETGf6N
+        2L2lajTXoqtVy7hoD5BMztw=
+X-Google-Smtp-Source: ABdhPJxcwVf9Ujl44620E7ruXJyLFgSSTjsl1l7fOmqWeKzz9Qf8o+1gglnW9qFQ+OBy56Qtdtd6bA==
+X-Received: by 2002:aa7:c256:: with SMTP id y22mr18306948edo.177.1624663881680;
+        Fri, 25 Jun 2021 16:31:21 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id b8sm4741015edr.42.2021.06.25.16.31.18
+        by smtp.gmail.com with ESMTPSA id b8sm4741015edr.42.2021.06.25.16.31.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Jun 2021 16:31:19 -0700 (PDT)
+        Fri, 25 Jun 2021 16:31:21 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Dan Williams <dan.j.williams@intel.com>,
@@ -48,10 +49,12 @@ Cc:     Dan Williams <dan.j.williams@intel.com>,
         Kees Cook <keescook@chromium.org>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         "Oliver O'Halloran" <oohall@gmail.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] Allow deferred execution of iomem_get_mapping()
-Date:   Fri, 25 Jun 2021 23:31:16 +0000
-Message-Id: <20210625233118.2814915-1-kw@linux.com>
+Subject: [PATCH 2/2] PCI/sysfs: Pass iomem_get_mapping() as a function pointer
+Date:   Fri, 25 Jun 2021 23:31:18 +0000
+Message-Id: <20210625233118.2814915-3-kw@linux.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210625233118.2814915-1-kw@linux.com>
+References: <20210625233118.2814915-1-kw@linux.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -59,56 +62,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+The struct bin_attribute requires the "mapping" member to be a function
+pointer with a signature requiring the return type to be a pointer to
+the struct address_space.
 
-At the moment, the dependency on iomem_get_mapping() that is currently
-used in the pci_create_resource_files() and pci_create_legacy_files()
-stops us from completely retiring the late_initcall() that is used to
-invoke pci_sysfs_init() when creating sysfs object for PCI devices.
+Thus, convert every invocation of iomem_get_mapping() into a function
+pointer assignment, therefore allowing for the iomem_get_mapping()
+invocation to be deferred to when the sysfs open callback runs.
 
-This dependency on iomem_get_mapping() stops us from retiring the
-late_initcall at the moment as when we convert dynamically added sysfs
-objects, that are primarily added in the pci_create_resource_files() and
-pci_create_legacy_files(), as these attributes are added before the VFS
-completes its initialisation, and since most of the PCI devices are
-typically enumerated in subsys_initcall this leads to a failure and an
-Oops related to iomem_get_mapping() access.
-
-See relevant conversations:
-  https://lore.kernel.org/linux-pci/20210204165831.2703772-1-daniel.vetter@ffwll.ch/
-  https://lore.kernel.org/linux-pci/20210313215747.GA2394467@bjorn-Precision-5520/
-  
-After some deliberation about the problem at hand, Dan Williams
-suggested a solution to the problem, see:
-  https://lore.kernel.org/linux-pci/CAPcyv4i0y_4cMGEpNVShLUyUk3nyWH203Ry3S87BqnDJE0Rmxg@mail.gmail.com/
-
-The idea is to defer execution of the iomem_get_mapping() to only when
-the sysfs open callback is run, and thus removing the reliance of
-fs_initcalls to complete before any other sub-system that uses the
-iomem_get_mapping().
-
-Currently, the PCI sub-system will benefit the most from this change
-allowing for it to complete the transition from dynamically created to
-static sysfs objects.
-
-This series aims to take Dan Williams' idea through the finish line.
-
-Related to:
-  https://lore.kernel.org/linux-pci/20210527205845.GA1421476@bjorn-Precision-5520/
-  https://lore.kernel.org/linux-pci/20210507102706.7658-1-danijel.slivka@amd.com/
-  https://lore.kernel.org/linux-pci/20200716110423.xtfyb3n6tn5ixedh@pali/
-
-	Krzysztof
-
-Krzysztof Wilczyński (2):
-  sysfs: Invoke iomem_get_mapping() from the sysfs open callback
-  PCI/sysfs: Pass iomem_get_mapping() as a function pointer
-
+Co-authored-by: Dan Williams <dan.j.williams@intel.com>
+Suggested-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+---
  drivers/pci/pci-sysfs.c | 6 +++---
- fs/sysfs/file.c         | 2 +-
- include/linux/sysfs.h   | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index beb8d1f4fafe..cff1c121eb08 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -965,7 +965,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_io->read = pci_read_legacy_io;
+ 	b->legacy_io->write = pci_write_legacy_io;
+ 	b->legacy_io->mmap = pci_mmap_legacy_io;
+-	b->legacy_io->mapping = iomem_get_mapping();
++	b->legacy_io->mapping = iomem_get_mapping;
+ 	pci_adjust_legacy_attr(b, pci_mmap_io);
+ 	error = device_create_bin_file(&b->dev, b->legacy_io);
+ 	if (error)
+@@ -978,7 +978,7 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_mem->size = 1024*1024;
+ 	b->legacy_mem->attr.mode = 0600;
+ 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
+-	b->legacy_io->mapping = iomem_get_mapping();
++	b->legacy_io->mapping = iomem_get_mapping;
+ 	pci_adjust_legacy_attr(b, pci_mmap_mem);
+ 	error = device_create_bin_file(&b->dev, b->legacy_mem);
+ 	if (error)
+@@ -1195,7 +1195,7 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 		}
+ 	}
+ 	if (res_attr->mmap)
+-		res_attr->mapping = iomem_get_mapping();
++		res_attr->mapping = iomem_get_mapping;
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = 0600;
+ 	res_attr->size = pci_resource_len(pdev, num);
 -- 
 2.32.0
 
