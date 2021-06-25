@@ -2,74 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2A08C2B9F4
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 12:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD98C49EAF
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 13:19:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6F3961942
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 12:52:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A43861965
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jun 2021 13:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbhFYMy5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Jun 2021 08:54:57 -0400
-Received: from foss.arm.com ([217.140.110.172]:55144 "EHLO foss.arm.com"
+        id S231405AbhFYNVX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Jun 2021 09:21:23 -0400
+Received: from 8bytes.org ([81.169.241.247]:52276 "EHLO theia.8bytes.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229470AbhFYMy4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Jun 2021 08:54:56 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8B72A31B;
-        Fri, 25 Jun 2021 05:52:35 -0700 (PDT)
-Received: from e123427-lin.arm.com (unknown [10.57.47.118])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 094593F694;
-        Fri, 25 Jun 2021 05:52:31 -0700 (PDT)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        linux-pci@vger.kernel.org, Xogium <contact@xogium.me>,
-        linux-kernel@vger.kernel.org, Remi Pommarel <repk@triplefau.lt>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Kostya Porotchkin <kostap@marvell.com>
-Subject: Re: [RESEND PATCH 0/5] PCI: aardvark: Initialization fixes
-Date:   Fri, 25 Jun 2021 13:52:25 +0100
-Message-Id: <162462543780.14822.10606953515342691039.b4-ty@arm.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20210624222621.4776-1-pali@kernel.org>
-References: <20210624222621.4776-1-pali@kernel.org>
+        id S230151AbhFYNVW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Jun 2021 09:21:22 -0400
+Received: by theia.8bytes.org (Postfix, from userid 1000)
+        id A7AA23FC; Fri, 25 Jun 2021 15:18:59 +0200 (CEST)
+Date:   Fri, 25 Jun 2021 15:18:58 +0200
+From:   Joerg Roedel <joro@8bytes.org>
+To:     Douglas Anderson <dianders@chromium.org>
+Cc:     will@kernel.org, robin.murphy@arm.com, bjorn.andersson@linaro.org,
+        ulf.hansson@linaro.org, adrian.hunter@intel.com,
+        bhelgaas@google.com, john.garry@huawei.com, robdclark@chromium.org,
+        quic_c_gdjako@quicinc.com, saravanak@google.com,
+        rajatja@google.com, saiprakash.ranjan@codeaurora.org,
+        vbadigan@codeaurora.org, linux-mmc@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, sonnyrao@chromium.org,
+        joel@joelfernandes.org, Andrew Morton <akpm@linux-foundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Jordan Crouse <jordan@cosmicpenguin.net>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Krishna Reddy <vdumpa@nvidia.com>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>,
+        Nicolin Chen <nicoleotsuka@gmail.com>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] iommu: Enable non-strict DMA on QCom SD/MMC
+Message-ID: <YNXXwvuErVnlHt+s@8bytes.org>
+References: <20210624171759.4125094-1-dianders@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210624171759.4125094-1-dianders@chromium.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 25 Jun 2021 00:26:16 +0200, Pali Rohár wrote:
-> Per Lorenzo's request [1] I'm resending [2] some other aardvark patches
-> which fixes initialization.
-> 
-> The last patch 5/5 is the new and was not in previous patch series [2].
-> Please see detailed description and additional comment after --- section.
-> 
-> [1] - https://lore.kernel.org/linux-pci/20210603151605.GA18917@lpieralisi/
-> [2] - https://lore.kernel.org/linux-pci/20210506153153.30454-1-pali@kernel.org/
-> 
-> [...]
+Hi Douglas,
 
-Cherry picked this patch for the next merge window.
+On Thu, Jun 24, 2021 at 10:17:56AM -0700, Douglas Anderson wrote:
+> The goal of this patch series is to get better SD/MMC performance on
+> Qualcomm eMMC controllers and in generally nudge us forward on the
+> path of allowing some devices to be in strict mode and others to be in
+> non-strict mode.
 
-Applied to pci/aardvark:
+So if I understand it right, this patch-set wants a per-device decision
+about setting dma-mode to strict vs. non-strict.
 
-[1/1] PCI: aardvark: Implement workaround for the readback value of VEND_ID
-      https://git.kernel.org/lpieralisi/pci/c/7f71a409fe
+I think we should get to the reason why strict mode is used by default
+first. Is the default on ARM platforms to use iommu-strict mode by
+default and if so, why?
 
-Thanks,
-Lorenzo
+The x86 IOMMUs use non-strict mode by default (yes, it is a security
+trade-off).
+
+Regards,
+
+	Joerg
