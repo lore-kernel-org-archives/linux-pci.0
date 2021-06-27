@@ -2,70 +2,174 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C317C49EA6
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Jun 2021 20:54:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDA7C49EA5
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Jun 2021 00:01:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47FD561C3D
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Jun 2021 20:54:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D79DD61C49
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Jun 2021 00:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230180AbhFZU5D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 26 Jun 2021 16:57:03 -0400
-Received: from rere.qmqm.pl ([91.227.64.183]:31485 "EHLO rere.qmqm.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230136AbhFZU5C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 26 Jun 2021 16:57:02 -0400
-X-Greylist: delayed 353 seconds by postgrey-1.27 at vger.kernel.org; Sat, 26 Jun 2021 16:57:02 EDT
-Received: from remote.user (localhost [127.0.0.1])
-        by rere.qmqm.pl (Postfix) with ESMTPSA id 4GC5Z45C8Zz9Y;
-        Sat, 26 Jun 2021 22:48:44 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rere.qmqm.pl; s=1;
-        t=1624740525; bh=N3BHprkJhkvG8c5OZUcBjldm3+eO0q2pJn3cIdbUnEg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=N7J4SSA1DiXs3EpahhSQb//SXpvQwA6+yFbBs73C0zcdAbQY34bn7ssK40TRSzQEp
-         2RNivYNEYO7EbTHHTtGVzQjNb7dz6kWURY8IWVd1k93NIuUmvsrrlXqMloCGbBrxdb
-         lC8XIFou1kxwmxkTOQe6sxxbETwihjMHEV0ZNq7p5g7uSRxLYBOT9EDJ+SzXZFXLxR
-         K9PZ0wnMEAT2fPE7HlkhfBLlRwK8ONKlF9QFTCWtE+raQq9nlEOmYThBkdiKGKd4u7
-         i9Ex+cIY89a8CA2ZNZZgPy+0gdoUS/4v9dOAj5WVaSwRgqEFSyiDGDNv2QmhKux6/r
-         ZgtEMWAaAsFGg==
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.103.2 at mail
-Date:   Sat, 26 Jun 2021 22:48:43 +0200
-From:   =?iso-8859-2?B?TWljaGGzoE1pcm9zs2F3?= <mirq-linux@rere.qmqm.pl>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     Tian Tao <tiantao6@hisilicon.com>, p.zabel@pengutronix.de,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: tegra: move to use request_irq by IRQF_NO_AUTOEN
- flag
-Message-ID: <YNeSq7HcQOBza0x6@qmqm.qmqm.pl>
-References: <1621213953-54030-1-git-send-email-tiantao6@hisilicon.com>
- <7e203ed5-526f-3a45-9f82-ba3f567bcc83@nvidia.com>
- <78dd0d27-aca7-9d99-a79d-8587a2fbbbfb@nvidia.com>
+        id S230104AbhF0ADR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Jun 2021 20:03:17 -0400
+Received: from mo-csw1116.securemx.jp ([210.130.202.158]:35002 "EHLO
+        mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229850AbhF0ADQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Jun 2021 20:03:16 -0400
+Received: by mo-csw.securemx.jp (mx-mo-csw1116) id 15R00SVB011057; Sun, 27 Jun 2021 09:00:28 +0900
+X-Iguazu-Qid: 2wGr6xj2Av23yqJIaQ
+X-Iguazu-QSIG: v=2; s=0; t=1624752027; q=2wGr6xj2Av23yqJIaQ; m=JWDH5ldToPndZdG/ZCv/gnc4JZgTuIDCsOg5hq5hK6c=
+Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
+        by relay.securemx.jp (mx-mr1111) id 15R00PaA021429
+        (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
+        Sun, 27 Jun 2021 09:00:26 +0900
+Received: from enc01.toshiba.co.jp (enc01.toshiba.co.jp [106.186.93.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by imx2-a.toshiba.co.jp (Postfix) with ESMTPS id 5A8211000C4;
+        Sun, 27 Jun 2021 09:00:25 +0900 (JST)
+Received: from hop001.toshiba.co.jp ([133.199.164.63])
+        by enc01.toshiba.co.jp  with ESMTP id 15R00OM0007276;
+        Sun, 27 Jun 2021 09:00:24 +0900
+Date:   Sun, 27 Jun 2021 09:00:23 +0900
+From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+To:     Rob Herring <robh+dt@kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        Punit Agrawal <punit1.agrawal@toshiba.co.jp>,
+        yuji2.ishikawa@toshiba.co.jp,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v3 2/3] PCI: Visconti: Add Toshiba Visconti PCIe host
+ controller driver
+X-TSB-HOP: ON
+Message-ID: <20210627000023.54t4vz5wvva525ng@toshiba.co.jp>
+References: <20210524063004.132043-3-nobuhiro1.iwamatsu@toshiba.co.jp>
+ <20210524185839.GA1102116@bjorn-Precision-5520>
+ <CAL_JsqLMdxA_yVdz6_s7XP8SsCDhwctUxG+3+jAnJs5fwyk=MA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <78dd0d27-aca7-9d99-a79d-8587a2fbbbfb@nvidia.com>
+In-Reply-To: <CAL_JsqLMdxA_yVdz6_s7XP8SsCDhwctUxG+3+jAnJs5fwyk=MA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 31, 2021 at 03:32:33PM +0530, Vidya Sagar wrote:
-> I want to re-examine this patch.
-> I don't see any references in the kernel where IRQ_NOAUTOEN is passed
-> directly in request_irq APIs. It is always set explicitly through
-> irq_set_status_flags() *before* calling request_irq APIs.
-[...]
+Hi,
 
-The request_irq() flag is called IRQF_NO_AUTOEN. As far as I can read
-the cod, it does seem equivalent to changing irq_settings. I'm not sure
-why we have two methods to do this in the kernel, though.
 
-Hope that helps.
+Thanks for your comment.
 
-Best Regards
-Micha³ Miros³aw
+On Wed, Jun 16, 2021 at 10:32:05AM -0600, Rob Herring wrote:
+> On Mon, May 24, 2021 at 12:58 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > [+cc Kishon for cpu_addr_fixup() question]
+> >
+> > Please make the subject "PCI: visconti: Add ..." since the driver
+> > names are usually lower-case.  When referring to the hardware itself,
+> > use "Visconti", of course.
+> >
+> > On Mon, May 24, 2021 at 03:30:03PM +0900, Nobuhiro Iwamatsu wrote:
+> > > Add support to PCIe RC controller on Toshiba Visconti ARM SoCs. PCIe
+> > > controller is based of Synopsys DesignWare PCIe core.
+> > >
+> > > This patch does not yet use the clock framework to control the clock.
+> > > This will be replaced in the future.
+> > >
+> > > v2 -> v3:
+> > >   - Update subject.
+> > >   - Wrap description in 75 columns.
+> > >   - Change config name to PCIE_VISCONTI_HOST.
+> > >   - Update Kconfig text.
+> > >   - Drop blank lines.
+> > >   - Adjusted to 80 columns.
+> > >   - Drop inline from functions for register access.
+> > >   - Changed function name from visconti_pcie_check_link_status to
+> > >     visconti_pcie_link_up.
+> > >   - Update to using dw_pcie_host_init().
+> > >   - Reorder these in the order of use in visconti_pcie_establish_link.
+> > >   - Rewrite visconti_pcie_host_init() without dw_pcie_setup_rc().
+> > >   - Change function name from  visconti_device_turnon() to
+> > >     visconti_pcie_power_on().
+> > >   - Unify formats such as dev_err().
+> > >   - Drop error label in visconti_add_pcie_port().
+> > >
+> > > v1 -> v2:
+> > >   - Fix typo in commit message.
+> > >   - Drop "depends on OF && HAS_IOMEM" from Kconfig.
+> > >   - Stop using the pointer of struct dw_pcie.
+> > >   - Use _relaxed variant.
+> > >   - Drop dw_pcie_wait_for_link.
+> > >   - Drop dbi resource processing.
+> > >   - Drop MSI IRQ initialization processing.
+> >
+> > Thanks for the changelog.  Please move it after the "---" line for
+> > future versions.  That way it won't appear in the commit log when this
+> > is merged.  The notes about v1->v2, v2->v3, etc are useful during
+> > review, but not after this is merged.
+> >
+> > > Signed-off-by: Yuji Ishikawa <yuji2.ishikawa@toshiba.co.jp>
+> > > Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+> > > ---
+> > >  drivers/pci/controller/dwc/Kconfig         |   9 +
+> > >  drivers/pci/controller/dwc/Makefile        |   1 +
+> > >  drivers/pci/controller/dwc/pcie-visconti.c | 369 +++++++++++++++++++++
+> > >  3 files changed, 379 insertions(+)
+> > >  create mode 100644 drivers/pci/controller/dwc/pcie-visconti.c
+> 
+> 
+> > > +static u64 visconti_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+> > > +{
+> > > +     return pci_addr - PCIE_BUS_OFFSET;
+> >
+> > This is called from __dw_pcie_prog_outbound_atu() as:
+> >
+> >   cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+> >
+> > so I think the parameter here should be *cpu_addr*, not pci_addr.
+> >
+> > dra7xx and artpec6 also call it "pci_addr", which is at best
+> > confusing.
+> >
+> > I'm also confused about exactly what .cpu_addr_fixup() does.  Is it
+> > applying an offset that cannot be deduced from the DT description?  If
+> > so, *should* this offset be described in DT?
+> 
+> It could be perhaps, but it would be a custom property, not something
+> we can handle in 'ranges'. I'd rather it be implicit from the
+> compatible than a custom property.
+> 
+> AIUI, the issue is the cpu address gets masked (high bits discarded).
+> This can happen when the internal bus address decoding throws away
+> upper address bits.
+> 
+> For example:
+> 
+> 0xa0000000 -> 0x20000000    -> 0x00000000
+> cpu addr   -> DW local addr -> PCI bus addr
+> 
+> DT has the first and last addresses, but iATU needs the middle and last address.
+> 
+> This could be just a data value rather than an ops function. While a
+> subtract works here, that's fragile (the DT needs to match the
+> #define) and I think a mask would be more appropriate.a
+
+In this SoC specification, the CPU bus outputs the offset value from
+0x40000000 to the PCIE bus, so 0x40000000 is subtracted from the CPU
+bus address. This 0x40000000 is also based on io_base from DT.
+Therefore, how about the following processing?
+
+return cpu_addr - pp->io_base;
+
+If I use a mask, it will be as follows.
+
+return cpu_addr & ~pp->io_base;
+
+Best regards,
+  Nobuhiro
