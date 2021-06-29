@@ -2,36 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 978BAC11F69
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 23:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7307DC11F68
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 23:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D41461D7C
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 23:50:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5698661D88
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 23:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235506AbhF2XxG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jun 2021 19:53:06 -0400
-Received: from mo-csw1116.securemx.jp ([210.130.202.158]:48874 "EHLO
+        id S233056AbhF2XxM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jun 2021 19:53:12 -0400
+Received: from mo-csw1114.securemx.jp ([210.130.202.156]:43784 "EHLO
         mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233056AbhF2XxC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jun 2021 19:53:02 -0400
-Received: by mo-csw.securemx.jp (mx-mo-csw1116) id 15TNo5fA027394; Wed, 30 Jun 2021 08:50:05 +0900
-X-Iguazu-Qid: 2wGqimLSptaMBrzYf3
-X-Iguazu-QSIG: v=2; s=0; t=1625010605; q=2wGqimLSptaMBrzYf3; m=8tXOEjdEbXlzXauNDjXtyxN5zZQtkWtU8usVbLVyB3s=
-Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
-        by relay.securemx.jp (mx-mr1113) id 15TNo3b5034107
+        with ESMTP id S235271AbhF2XxD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jun 2021 19:53:03 -0400
+Received: by mo-csw.securemx.jp (mx-mo-csw1114) id 15TNo59m031402; Wed, 30 Jun 2021 08:50:05 +0900
+X-Iguazu-Qid: 2wGqym8JOOUgALT3sx
+X-Iguazu-QSIG: v=2; s=0; t=1625010605; q=2wGqym8JOOUgALT3sx; m=JE5zEni1aB2/CSJMo+AK715I7/BPoUx5dfmfnQ9hmBo=
+Received: from imx12-a.toshiba.co.jp (imx12-a.toshiba.co.jp [61.202.160.135])
+        by relay.securemx.jp (mx-mr1113) id 15TNo3BR034120
         (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
         Wed, 30 Jun 2021 08:50:04 +0900
-Received: from enc01.toshiba.co.jp (enc01.toshiba.co.jp [106.186.93.100])
+Received: from enc02.toshiba.co.jp (enc02.toshiba.co.jp [61.202.160.51])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by imx2-a.toshiba.co.jp (Postfix) with ESMTPS id 1F7111000FD;
+        by imx12-a.toshiba.co.jp (Postfix) with ESMTPS id 5E18F1000F6;
         Wed, 30 Jun 2021 08:50:03 +0900 (JST)
-Received: from hop001.toshiba.co.jp ([133.199.164.63])
-        by enc01.toshiba.co.jp  with ESMTP id 15TNo23H001568;
+Received: from hop101.toshiba.co.jp ([133.199.85.107])
+        by enc02.toshiba.co.jp  with ESMTP id 15TNo2Zn011747;
         Wed, 30 Jun 2021 08:50:02 +0900
 From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,96 +44,44 @@ Cc:     linux-pci@vger.kernel.org,
         punit1.agrawal@toshiba.co.jp, yuji2.ishikawa@toshiba.co.jp,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Subject: [PATCH v4 0/3] Visconti: Add Toshiba Visconti PCIe host controller driver
-Date:   Wed, 30 Jun 2021 08:49:49 +0900
+Subject: [PATCH v4 3/3] MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
+Date:   Wed, 30 Jun 2021 08:49:52 +0900
 X-TSB-HOP: ON
-Message-Id: <20210629234952.306578-1-nobuhiro1.iwamatsu@toshiba.co.jp>
+Message-Id: <20210629234952.306578-4-nobuhiro1.iwamatsu@toshiba.co.jp>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210629234952.306578-1-nobuhiro1.iwamatsu@toshiba.co.jp>
+References: <20210629234952.306578-1-nobuhiro1.iwamatsu@toshiba.co.jp>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Add entries for Toshiba Visconti PCIe controller binding and driver.
 
-This series is the PCIe driver for Toshiba's ARM SoC, Visconti[0].
-This provides DT binding documentation, device driver, MAINTAINER files.
-This patch series is v4, and the updating record of each file is below:
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+---
+ MAINTAINERS | 2 ++
+ 1 file changed, 2 insertions(+)
 
-  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
-    v3 -> v4:
-     - Changed the redundant clock name.
-    v2 -> v3:
-      - No update.
-    v1 -> v2:
-      - Remove white space.
-      - Drop num-viewport and bus-range from required.
-      - Drop status line from example.
-      - Drop bus-range from required.
-      - Removed lines defined in pci-bus.yaml from required.
-
-  PCI: visconti: Add Toshiba Visconti PCIe host controller driver
-    v3 -> v4:
-      - Change variable from pci_addr to cpu_addr in visconti_pcie_cpu_addr_fixup().
-      - Change the calculation method of CPU addres from subtraction to mask, and
-        add comment.
-      - Drop dma_set_mask_and_coherent().
-      - Drop set MAX_MSI_IRQS.
-      - Drop dev_dbg for Link speed.
-      - Use use the dev_err_probe() to handle the devm_clk_get() failed.
-      - Changed the redundant clock name.
-    v2 -> v3:
-      - Update subject.
-      - Wrap description in 75 columns.
-      - Change config name to PCIE_VISCONTI_HOST.
-      - Update Kconfig text.
-      - Drop empty lines.
-      - Adjusted to 80 columns.
-      - Drop inline from functions for register access.
-      - Changed function name from visconti_pcie_check_link_status to
-        visconti_pcie_link_up.
-      - Update to using dw_pcie_host_init().
-      - Reorder these in the order of use in visconti_pcie_establish_link().
-      - Rewrite visconti_pcie_host_init() without dw_pcie_setup_rc().
-      - Change function name from  visconti_device_turnon() to
-        visconti_pcie_power_on().
-      - Unify formats such as dev_err().
-      - Drop error label in visconti_add_pcie_port(). 
-    v1 -> v2:
-      - Fix typo in commit message.
-      - Drop "depends on OF && HAS_IOMEM" from Kconfig.
-      - Stop using the pointer of struct dw_pcie.
-      - Use _relaxed variant.
-      - Drop dw_pcie_wait_for_link.
-      - Drop dbi resource processing.
-      - Drop MSI IRQ initialization processing.
-  
-  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
-    v3 -> v4:
-      - No update.
-    v2 -> v3:
-      - No update.
-    v1 -> v2:
-      - No update.
-
-Best regards,
-  Nobuhiro
-
-Nobuhiro Iwamatsu (3):
-  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
-  PCI: visconti: Add Toshiba Visconti PCIe host controller driver
-  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
-
- .../bindings/pci/toshiba,visconti-pcie.yaml   | 110 ++++++
- MAINTAINERS                                   |   2 +
- drivers/pci/controller/dwc/Kconfig            |   9 +
- drivers/pci/controller/dwc/Makefile           |   1 +
- drivers/pci/controller/dwc/pcie-visconti.c    | 360 ++++++++++++++++++
- 5 files changed, 482 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-visconti.c
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index bd7aff0c120f..8554e02de0cc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2663,11 +2663,13 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iwamatsu/linux-visconti.git
+ F:	Documentation/devicetree/bindings/arm/toshiba.yaml
+ F:	Documentation/devicetree/bindings/net/toshiba,visconti-dwmac.yaml
+ F:	Documentation/devicetree/bindings/gpio/toshiba,gpio-visconti.yaml
++F:	Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+ F:	Documentation/devicetree/bindings/pinctrl/toshiba,tmpv7700-pinctrl.yaml
+ F:	Documentation/devicetree/bindings/watchdog/toshiba,visconti-wdt.yaml
+ F:	arch/arm64/boot/dts/toshiba/
+ F:	drivers/net/ethernet/stmicro/stmmac/dwmac-visconti.c
+ F:	drivers/gpio/gpio-visconti.c
++F:	drivers/pci/controller/dwc/pcie-visconti.c
+ F:	drivers/pinctrl/visconti/
+ F:	drivers/watchdog/visconti_wdt.c
+ N:	visconti
 -- 
 2.32.0
 
