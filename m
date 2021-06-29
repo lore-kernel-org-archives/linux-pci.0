@@ -2,178 +2,119 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60700C11F67
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 16:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BEFCC11F67
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 19:42:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4992061DC0
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 16:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 707A661D74
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 19:42:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234221AbhF2QGJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jun 2021 12:06:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38794 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234386AbhF2QFN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jun 2021 12:05:13 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E895AC0617AF;
-        Tue, 29 Jun 2021 09:02:25 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id g22so639818pgl.7;
-        Tue, 29 Jun 2021 09:02:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=6HqcttSPSxQWqSamFTVqADhPL4KJRBGfKQDkHy62/cQ=;
-        b=Z937Z+/bc5q1eotJlAYSgx2YR5/5V/h1R9f5M2LhnYzqbcZJft7/dV7GTgfwzguuhi
-         n1cRk4yXipkr9b40f/YR3P1Ws2lQHSLztPchMVrTdggFDa0usxwd3C5dLsdo4qgzVtUS
-         8HASx9DxN1HlJftf39xaUZHzMjzBwVBwNt3kDYMNAcDKEGywdl5j8PjzObk+R2vCXx4W
-         wsQirvY4SMhwgHhtL45oaEjVK56AQgJgjK/8s8nfipIl9qT0CUApRnVh3W9LAcMVKBtX
-         z+O1unl8w4YierpUYSdkoAQ6NHRMEC9YgBOvkhlFYVgOQuKU5B/k/dbw2EVdDPjXVL1u
-         tVHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6HqcttSPSxQWqSamFTVqADhPL4KJRBGfKQDkHy62/cQ=;
-        b=P88IQ9J9U6nyNVOblipXHH+GW6rWiVFqVm8K0QiU2fYkrMYjKKuqZ5CqjHNT+ZPMpy
-         3C+yHxEQldQhELbMj5heZnpDVoZSGJ4aFioY6RBqErpLDVnVJTb+zVVQMEh3CxtNFZgg
-         hrIoIObqBIJQu9xTYvVAJGgsoSa1W/D9TniDiqUZ3aNidTbHc7cb0LvJxJGy9pey7fG0
-         DCH52GlnXjTJQzZ5aPFlMJww1ChR05gX2lnrCmrD8aCBV2aC931tEQoVVNzxQhr6+0bE
-         SrMxqsh9xsibB5qeUKbAMA4EPYoy5V4qDmMZW5I5QOvCM+r+WZCTTqSNjFLvF+nyZo0E
-         YRTQ==
-X-Gm-Message-State: AOAM530NDj0H9m12En7vDaZsxVBJpPQVtWRtjN9M8EDFw1pK4zcUuxlN
-        EJLi1oV7TqjHDGpJXN0S2S8=
-X-Google-Smtp-Source: ABdhPJzauRG4TJLCMqNZY3Mrt6Tq8SobPcyXVoRk/zXrLfWuSVC/HE5PbIoYEtUU6fCuJrAqjI9TzA==
-X-Received: by 2002:a05:6a00:2395:b029:304:7a51:6f1d with SMTP id f21-20020a056a002395b02903047a516f1dmr31349705pfc.53.1624982545558;
-        Tue, 29 Jun 2021 09:02:25 -0700 (PDT)
-Received: from localhost.localdomain ([103.200.106.119])
-        by smtp.googlemail.com with ESMTPSA id m14sm19166240pgu.84.2021.06.29.09.02.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Jun 2021 09:02:25 -0700 (PDT)
-From:   Amey Narkhede <ameynarkhede03@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     alex.williamson@redhat.com,
-        Raphael Norwitz <raphael.norwitz@nutanix.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
-        Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH v8 7/8] PCI: Add support for ACPI _RST reset method
-Date:   Tue, 29 Jun 2021 21:31:03 +0530
-Message-Id: <20210629160104.2893-8-ameynarkhede03@gmail.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210629160104.2893-1-ameynarkhede03@gmail.com>
-References: <20210629160104.2893-1-ameynarkhede03@gmail.com>
+        id S232602AbhF2TpY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jun 2021 15:45:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36298 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232573AbhF2TpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jun 2021 15:45:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2CB71613E3;
+        Tue, 29 Jun 2021 19:42:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1624995774;
+        bh=iuRiPxJWbOWvWA3ZtgCp3sBWPHpm/XMAzYn47v0LG3c=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=sNo66bWyrTn//DTNMFnCZ0pVbBljYVD51AvLUz0IXLBiBZqP2W823Uau/5YgOlxws
+         TWiy6jpJ+Gz+FHIMwp9I846EPhlwZbtjnlz9isB+Qpm3Msurvxm4C+RZe8KxRRSjsa
+         69sNXiU0AR4hrtt+K1XOn2OPmryJMCrgB8ZpmJnQGqJ+UwmdBAHvck8U3SP2EAT+SN
+         7AonfPy4l2Wap+xwV28mL2CMF0uXlMdS5UC4V7HQuwdRRFxFMXrSObjLuiGtu5BflR
+         4wWtay4YRJkAg+Oo5NzuFqR/uWLAlkGIJ88V82Ti4JJmGZbh1Eg5cL+ntCht66vVMs
+         ignFFjq/dO2YA==
+Date:   Tue, 29 Jun 2021 14:42:52 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Huacai Chen <chenhuacai@gmail.com>
+Cc:     Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>
+Subject: Re: [PATCH V4 3/4] PCI: Improve the MRRS quirk for LS7A
+Message-ID: <20210629194252.GA4079683@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAhV-H72fyOHGyOMk7OE5HmZUec5J1vE2K3D2bxrerikk9QBUw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Shanker Donthineni <sdonthineni@nvidia.com>
+On Tue, Jun 29, 2021 at 11:20:45AM +0800, Huacai Chen wrote:
+> On Tue, Jun 29, 2021 at 6:35 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Jun 28, 2021 at 06:10:26PM +0800, Huacai Chen wrote:
+> > > In new revision of LS7A, some PCIe ports support larger value than 256,
+> > > but their maximum supported MRRS values are not detectable. Moreover,
+> > > the current loongson_mrrs_quirk() cannot avoid devices increasing its
+> > > MRRS after pci_enable_device(), and some devices (e.g. Realtek 8169)
+> > > will actually set a big value in its driver. So the only possible way
+> > > is configure MRRS of all devices in BIOS, and add a PCI bus flag (i.e.,
+> > > PCI_BUS_FLAGS_NO_INC_MRRS) to stop the increasing MRRS operations.
+> > >
+> > > However, according to PCIe Spec, it is legal for an OS to program any
+> > > value for MRRS, and it is also legal for an endpoint to generate a Read
+> > > Request with any size up to its MRRS. As the hardware engineers say, the
+> > > root cause here is LS7A doesn't break up large read requests. In detail,
+> > > LS7A PCIe port reports CA (Completer Abort) if it receives a Memory Read
+> > > request with a size that's "too big" (Yes, that is a problem in the LS7A
+> > > hardware design).
+> > >
+> > > Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> > > ---
+> > >  drivers/pci/pci.c    |  5 +++++
+> > >  drivers/pci/quirks.c | 41 +++++++++++------------------------------
+> > >  include/linux/pci.h  |  1 +
+> > >  3 files changed, 17 insertions(+), 30 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index 8d4ebe095d0c..0f1ff4a6fe44 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -5812,6 +5812,11 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+> > >
+> > >       v = (ffs(rq) - 8) << 12;
+> > >
+> > > +     if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_INC_MRRS) {
+> > > +             if (rq > pcie_get_readrq(dev))
+> > > +                     return -EINVAL;
+> >
+> > I'd prefer to make this simpler, so we just never touch MRRS at all,
+> > like this:
+> >
+> >   @@ -5785,6 +5785,9 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+> >           u16 v;
+> >           int ret;
+> >
+> >   +       if (<loongson-quirk>)
+> >   +               return -EINVAL;
+> >   +
+> >           if (rq < 128 || rq > 4096 || !is_power_of_2(rq))
+> >                   return -EINVAL;
+> >
+> > What would that break?  It's just harder to analyze the behavior if it
+> > depends on what the driver is trying to do.  AFAIK, devices should
+> > *work* correctly with any value of MRRS.
+>
+> This disables both increase and decrease MRRS, and so make
+> pcie_bus_config completely useless. I think allowing decrease MRRS is
+> useful in the PEER2PEER case.
 
-The _RST is a standard method specified in the ACPI specification. It
-provides a function level reset when it is described in the acpi_device
-context associated with PCI-device. Implement a new reset function
-pci_dev_acpi_reset() for probing RST method and execute if it is defined
-in the firmware.
+True.  The MPS/MRRS algorithm, including pcie_bus_config, is very
+complicated and poorly understood, so I'm a little hesitant to
+complicate it even more with one-off quirks.  I'd really prefer to
+push LS7A off into a corner and have the generic MPS/MRRS algorithm
+ignore it completely.
 
-The default priority of the ACPI reset is set to below device-specific
-and above hardware resets.
+But I guess just keeping pcie_set_readrq() from *increasing* MRRS
+doesn't add too much complication and should always be safe.
 
-Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
-Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-Reviewed-by: Sinan Kaya <okaya@kernel.org>
----
- drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
- drivers/pci/pci.c      |  1 +
- drivers/pci/pci.h      |  6 ++++++
- include/linux/pci.h    |  2 +-
- 4 files changed, 31 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index dae021322..b6de71d15 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -941,6 +941,29 @@ void pci_set_acpi_fwnode(struct pci_dev *dev)
- 				   acpi_pci_find_companion(&dev->dev));
- }
- 
-+/**
-+ * pci_dev_acpi_reset - do a function level reset using _RST method
-+ * @dev: device to reset
-+ * @probe: check if _RST method is included in the acpi_device context.
-+ */
-+int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
-+{
-+	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+
-+	if (!handle || !acpi_has_method(handle, "_RST"))
-+		return -ENOTTY;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_RST", NULL, NULL))) {
-+		pci_warn(dev, "ACPI _RST failed\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static bool acpi_pci_bridge_d3(struct pci_dev *dev)
- {
- 	const struct fwnode_handle *fwnode;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index db4e035cf..ec9fec952 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5116,6 +5116,7 @@ static void pci_dev_restore(struct pci_dev *dev)
- const struct pci_reset_fn_method pci_reset_fn_methods[] = {
- 	{ },
- 	{ &pci_dev_specific_reset, .name = "device_specific" },
-+	{ &pci_dev_acpi_reset, .name = "acpi" },
- 	{ &pcie_reset_flr, .name = "flr" },
- 	{ &pci_af_flr, .name = "af_flr" },
- 	{ &pci_pm_reset, .name = "pm" },
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 990b73e90..2c12017ed 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -705,7 +705,13 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
- int pci_acpi_program_hp_params(struct pci_dev *dev);
- extern const struct attribute_group pci_dev_acpi_attr_group;
- void pci_set_acpi_fwnode(struct pci_dev *dev);
-+int pci_dev_acpi_reset(struct pci_dev *dev, int probe);
- #else
-+static inline int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
-+{
-+	return -ENOTTY;
-+}
-+
- static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
- static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a295e621f..d091b2948 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -50,7 +50,7 @@
- 			       PCI_STATUS_PARITY)
- 
- /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
--#define PCI_NUM_RESET_METHODS 6
-+#define PCI_NUM_RESET_METHODS 7
- 
- /*
-  * The PCI interface treats multi-function devices as independent
--- 
-2.32.0
-
+Bjorn
