@@ -2,126 +2,306 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E056C11F69
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 15:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD57C11F68
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 16:03:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7304C613F0
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 15:31:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22AA661D88
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jun 2021 16:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234905AbhF2Pdp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jun 2021 11:33:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58543 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235051AbhF2PdT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jun 2021 11:33:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624980651;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Th3vaV2j817/WDzJbZssbF/Balmf7wt+58Irkccy28s=;
-        b=EobHfkf3xW9bbcD2rzr3+kS81yGtr6ANuzdMIgH8StPwaDYehznHVFM/Vgz/Rc6KWeaio2
-        iD1oEmmXwzEqR1kZ3Ra32PLnejbUWVND5uqZwX0D93VY5MkaacEDzDuOeZvyGFyB3ZKAcn
-        g/0Udw8LvGdkPOKx6e0Akf+eQURMpNk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-282-pJLjhAeOOoyzK9YxMKT_sA-1; Tue, 29 Jun 2021 11:30:49 -0400
-X-MC-Unique: pJLjhAeOOoyzK9YxMKT_sA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 662EF804140;
-        Tue, 29 Jun 2021 15:30:44 +0000 (UTC)
-Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 52421604CC;
-        Tue, 29 Jun 2021 15:30:35 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com, nilal@redhat.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com
-Subject: [PATCH v2 14/14] net/mlx4: Use irq_update_affinity_hint
-Date:   Tue, 29 Jun 2021 11:27:46 -0400
-Message-Id: <20210629152746.2953364-15-nitesh@redhat.com>
-In-Reply-To: <20210629152746.2953364-1-nitesh@redhat.com>
-References: <20210629152746.2953364-1-nitesh@redhat.com>
+        id S233252AbhF2QFp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jun 2021 12:05:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234174AbhF2QE5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jun 2021 12:04:57 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 859F3C061787;
+        Tue, 29 Jun 2021 09:02:04 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id x16so17517650pfa.13;
+        Tue, 29 Jun 2021 09:02:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=CZSBgqj9QSjJVReWLwltrNpmZs8/2VpT4dw7D/o1wQY=;
+        b=iCKfMF/AzzicNI0mEH63rxWvxLgW0vL/6ZYUMf5hmIqFkZC3MpZ32F/PtliC74IEK3
+         sJ8NSMAsA5oPJ7Ka0MNvfmO9heKlhbipAvq8OQlXWLPe/wk5JjKcf/wlL0It80rbv/SI
+         JaZC/wHtRpMghb6hp9CdC+zvdvvY92eh6L84vQbBkSz6uAWIi6cQNfN8ZhQ9n/UDxv97
+         8vH6/bP3xFbtaDZgQEuW32Tnve/lEG/MT0lpbYvrYYOgIVPGPFmx5PvgZ5dEE+Sjm8Nc
+         XmwpEqXDNhiQgJJR8OHHT6WoxXaIyJrRUDMD/WNmLT2VFGCu7fahb5Wz61sGiCPCfpVP
+         tWYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=CZSBgqj9QSjJVReWLwltrNpmZs8/2VpT4dw7D/o1wQY=;
+        b=nG6yeZW3x58OerZsdMy1CNZ9TMaPGzwAWIdI5rrMF2OFvegI/MaRmdup/Lxbvzc9MN
+         1SmCU9Ays96F+WpK5wm5IZHbDzIfjwX0LhRu3xO+niUWWK+kJHaJm4/rRAcGC3+Y0J81
+         1TRoER1MwJ1MWuytVCDynUGFz8B0HLooVB7FF8EuXWCohQ7yiikwgO2C084gZ8NVqF/K
+         T4FXD0jCrBB5k6Ne9/ckOmuQTGXbtfzMKgJ9tdyB6veUDzqs248RJ/nfmbzehCQAnZ+3
+         9QyDUmCMTfZ0QZR0DhEtZvm1xPthfWh+Lbk7Ar52FIbP715Vpp7oanIlYOvqwynrMuyV
+         5W1Q==
+X-Gm-Message-State: AOAM533/8MdNZOm+2AI+M+fhGCCf6HJCPen+TzzSTBRqUqnEsxoQ3Gxa
+        hopwcLrPyWvvZcygKH3y/76h0e9IHZNb6Q==
+X-Google-Smtp-Source: ABdhPJwD4h2ZABpSKa7FBDw8oyttKODArdoitDxwFdT0B49ZD2CBT8dR5PLFiI/GI/3KHXlXJp9GDQ==
+X-Received: by 2002:aa7:9a5e:0:b029:305:5d37:7622 with SMTP id x30-20020aa79a5e0000b02903055d377622mr385115pfj.2.1624982524091;
+        Tue, 29 Jun 2021 09:02:04 -0700 (PDT)
+Received: from localhost.localdomain ([103.200.106.119])
+        by smtp.googlemail.com with ESMTPSA id m14sm19166240pgu.84.2021.06.29.09.01.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Jun 2021 09:02:03 -0700 (PDT)
+From:   Amey Narkhede <ameynarkhede03@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     alex.williamson@redhat.com,
+        Raphael Norwitz <raphael.norwitz@nutanix.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
+        Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Amey Narkhede <ameynarkhede03@gmail.com>
+Subject: [PATCH v8 2/8] PCI: Add new array for keeping track of ordering of reset methods
+Date:   Tue, 29 Jun 2021 21:30:58 +0530
+Message-Id: <20210629160104.2893-3-ameynarkhede03@gmail.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210629160104.2893-1-ameynarkhede03@gmail.com>
+References: <20210629160104.2893-1-ameynarkhede03@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() to update the affinity_hint mask
-that is consumed by the userspace to distribute the interrupts. However,
-under the hood irq_set_affinity_hint() also applies the provided cpumask
-(if not NULL) as the affinity for the given interrupt which is an
-undocumented side effect.
+Introduce a new array reset_methods in struct pci_dev to keep track of
+reset mechanisms supported by the device and their ordering.
 
-To remove this side effect irq_set_affinity_hint() has been marked
-as deprecated and new interfaces have been introduced. Hence, replace the
-irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
-that only updates the affinity_hint pointer.
+Also refactor probing and reset functions to take advantage of calling
+convention of reset functions.
 
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+Co-developed-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Amey Narkhede <ameynarkhede03@gmail.com>
 ---
- drivers/net/ethernet/mellanox/mlx4/eq.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/pci/pci.c   | 97 ++++++++++++++++++++++++++-------------------
+ drivers/pci/pci.h   |  9 ++++-
+ drivers/pci/probe.c |  5 +--
+ include/linux/pci.h |  7 ++++
+ 4 files changed, 74 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
-index 9e48509ed3b2..414e390e6b48 100644
---- a/drivers/net/ethernet/mellanox/mlx4/eq.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
-@@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
- 	    cpumask_empty(eq->affinity_mask))
- 		return;
- 
--	hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
-+	hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
- 	if (hint_err)
--		mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
-+		mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 28f099a4f..1932c7ec4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -72,6 +72,14 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
+ 		msleep(delay);
  }
- #endif
  
-@@ -1123,9 +1123,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
- 	for (i = 0; i < dev->caps.num_comp_vectors + 1; ++i)
- 		if (eq_table->eq[i].have_irq) {
- 			free_cpumask_var(eq_table->eq[i].affinity_mask);
--#if defined(CONFIG_SMP)
--			irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
--#endif
-+			irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
- 			free_irq(eq_table->eq[i].irq, eq_table->eq + i);
- 			eq_table->eq[i].have_irq = 0;
- 		}
++int pci_reset_supported(struct pci_dev *dev)
++{
++	u8 null_reset_methods[PCI_NUM_RESET_METHODS] = { 0 };
++
++	return memcmp(null_reset_methods,
++		      dev->reset_methods, sizeof(null_reset_methods));
++}
++
+ #ifdef CONFIG_PCI_DOMAINS
+ int pci_domains_supported = 1;
+ #endif
+@@ -5101,6 +5109,19 @@ static void pci_dev_restore(struct pci_dev *dev)
+ 		err_handler->reset_done(dev);
+ }
+ 
++/*
++ * The ordering for functions in pci_reset_fn_methods is required for
++ * reset_methods byte array defined in struct pci_dev.
++ */
++const struct pci_reset_fn_method pci_reset_fn_methods[] = {
++	{ },
++	{ &pci_dev_specific_reset, .name = "device_specific" },
++	{ &pcie_reset_flr, .name = "flr" },
++	{ &pci_af_flr, .name = "af_flr" },
++	{ &pci_pm_reset, .name = "pm" },
++	{ &pci_reset_bus_function, .name = "bus" },
++};
++
+ /**
+  * __pci_reset_function_locked - reset a PCI device function while holding
+  * the @dev mutex lock.
+@@ -5123,65 +5144,61 @@ static void pci_dev_restore(struct pci_dev *dev)
+  */
+ int __pci_reset_function_locked(struct pci_dev *dev)
+ {
+-	int rc;
++	int i, m, rc = -ENOTTY;
+ 
+ 	might_sleep();
+ 
+ 	/*
+-	 * A reset method returns -ENOTTY if it doesn't support this device
+-	 * and we should try the next method.
++	 * A reset method returns -ENOTTY if it doesn't support this device and
++	 * we should try the next method.
+ 	 *
+-	 * If it returns 0 (success), we're finished.  If it returns any
+-	 * other error, we're also finished: this indicates that further
+-	 * reset mechanisms might be broken on the device.
++	 * If it returns 0 (success), we're finished.  If it returns any other
++	 * error, we're also finished: this indicates that further reset
++	 * mechanisms might be broken on the device.
+ 	 */
+-	rc = pci_dev_specific_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pcie_reset_flr(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_af_flr(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 0);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	return pci_reset_bus_function(dev, 0);
++	for (i = 0; i <  PCI_NUM_RESET_METHODS && (m = dev->reset_methods[i]); i++) {
++		rc = pci_reset_fn_methods[m].reset_fn(dev, 0);
++		if (!rc)
++			return 0;
++		if (rc != -ENOTTY)
++			return rc;
++	}
++
++	return -ENOTTY;
+ }
+ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
+ 
+ /**
+- * pci_probe_reset_function - check whether the device can be safely reset
+- * @dev: PCI device to reset
++ * pci_init_reset_methods - check whether device can be safely reset
++ * and store supported reset mechanisms.
++ * @dev: PCI device to check for reset mechanisms
+  *
+  * Some devices allow an individual function to be reset without affecting
+  * other functions in the same device.  The PCI device must be responsive
+- * to PCI config space in order to use this function.
++ * to reads and writes to its PCI config space in order to use this function.
+  *
+- * Returns 0 if the device function can be reset or negative if the
+- * device doesn't support resetting a single function.
++ * Stores reset mechanisms supported by device in reset_methods byte array
++ * which is a member of struct pci_dev.
+  */
+-int pci_probe_reset_function(struct pci_dev *dev)
++void pci_init_reset_methods(struct pci_dev *dev)
+ {
+-	int rc;
++	int i, n, rc;
++	u8 reset_methods[PCI_NUM_RESET_METHODS] = { 0 };
+ 
+-	might_sleep();
++	n = 0;
+ 
+-	rc = pci_dev_specific_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pcie_reset_flr(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_af_flr(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
+-	rc = pci_pm_reset(dev, 1);
+-	if (rc != -ENOTTY)
+-		return rc;
++	BUILD_BUG_ON(ARRAY_SIZE(pci_reset_fn_methods) != PCI_NUM_RESET_METHODS);
+ 
+-	return pci_reset_bus_function(dev, 1);
++	might_sleep();
++
++	for (i = 1; i < PCI_NUM_RESET_METHODS; i++) {
++		rc = pci_reset_fn_methods[i].reset_fn(dev, 1);
++		if (!rc)
++			reset_methods[n++] = i;
++		else if (rc != -ENOTTY)
++			break;
++	}
++	memcpy(dev->reset_methods, reset_methods, sizeof(reset_methods));
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 37c913bbc..db1ad94e7 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -33,7 +33,8 @@ enum pci_mmap_api {
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
+ 
+-int pci_probe_reset_function(struct pci_dev *dev);
++int pci_reset_supported(struct pci_dev *dev);
++void pci_init_reset_methods(struct pci_dev *dev);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ int pci_bus_error_reset(struct pci_dev *dev);
+ 
+@@ -606,6 +607,12 @@ struct pci_dev_reset_methods {
+ 	int (*reset)(struct pci_dev *dev, int probe);
+ };
+ 
++struct pci_reset_fn_method {
++	int (*reset_fn)(struct pci_dev *pdev, int probe);
++	char *name;
++};
++
++extern const struct pci_reset_fn_method pci_reset_fn_methods[];
+ #ifdef CONFIG_PCI_QUIRKS
+ int pci_dev_specific_reset(struct pci_dev *dev, int probe);
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 862d91615..7355769f8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2406,9 +2406,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_rcec_init(dev);		/* Root Complex Event Collector */
+ 
+ 	pcie_report_downtraining(dev);
+-
+-	if (pci_probe_reset_function(dev) == 0)
+-		dev->reset_fn = 1;
++	pci_init_reset_methods(dev);
++	dev->reset_fn = pci_reset_supported(dev);
+ }
+ 
+ /*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 74f42a2cd..bce3d3e52 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -49,6 +49,9 @@
+ 			       PCI_STATUS_SIG_TARGET_ABORT | \
+ 			       PCI_STATUS_PARITY)
+ 
++/* Number of reset methods used in pci_reset_fn_methods array in pci.c */
++#define PCI_NUM_RESET_METHODS 6
++
+ /*
+  * The PCI interface treats multi-function devices as independent
+  * devices.  The slot/function address of each device is encoded
+@@ -504,6 +507,10 @@ struct pci_dev {
+ 	char		*driver_override; /* Driver name to force a match */
+ 
+ 	unsigned long	priv_flags;	/* Private flags for the PCI driver */
++	/*
++	 * See pci_reset_fn_methods array in pci.c for ordering.
++	 */
++	u8 reset_methods[PCI_NUM_RESET_METHODS];	/* Reset methods ordered by priority */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
 -- 
-2.27.0
+2.32.0
 
