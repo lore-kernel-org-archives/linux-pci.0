@@ -2,140 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0BFDC11F67
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Jul 2021 15:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1EBFC11F64
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Jul 2021 15:30:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85C536140A
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Jul 2021 15:25:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3F5061400
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Jul 2021 15:30:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233335AbhGAP1p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Jul 2021 11:27:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46892 "EHLO mail.kernel.org"
+        id S233478AbhGAPdF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Jul 2021 11:33:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48582 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233064AbhGAP1p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Jul 2021 11:27:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E12A96140A;
-        Thu,  1 Jul 2021 15:25:14 +0000 (UTC)
+        id S233064AbhGAPdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Jul 2021 11:33:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1C4506140C;
+        Thu,  1 Jul 2021 15:30:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625153114;
-        bh=+xwpidjwxHnbYP8ChZRNxTaoNpy++W26pPBlNiZG1Es=;
+        s=k20201202; t=1625153434;
+        bh=KplcsUz5EPujORenVsapc0TaiOFOj0cwWG8KLoYP5h4=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=YE1gmcnGC9g80E48RRI74yVfqEgwwBB2bKAeTy4DSkuQhlA9/8EOdAK+quQe0R/fZ
-         QZGdA60OQIAmf8X54geE76/5GIhw2kc8aPAkegkan+nwD+yYdnrOEtLGHngCzXszMi
-         z/8iYsXxwzLtyuUWHEHaNgvnIaIqwYcbmg3uLh+9ukbLGgk8D9/d+WsfqdzShslDRC
-         4E8DyJ+UVGFQSXByxm0ESUjpqZIfzPhXLbe5XTP4BzMppZXitZ5m/4k6rLQCPs31zX
-         8eOwQWjYoLw2uXyx+edD60Yd9zlQEUdA8T2OksazGEWz2WvimcIHL1CKGuKlMRx0Y2
-         h9ro5wQDaYH3g==
-Received: by mail-ej1-f45.google.com with SMTP id bg14so11020110ejb.9;
-        Thu, 01 Jul 2021 08:25:14 -0700 (PDT)
-X-Gm-Message-State: AOAM5321ZNxX9mQ30BQBya0tz6yj0neSExHS0EUuFz0/u+toUPQdhbk4
-        dogHXhxWwkmCMCoVLYOAOrViU96aaOxzBkEY8w==
-X-Google-Smtp-Source: ABdhPJzUEsTvx8EteF/IK3c/gYkviXw1F7trsPeasxSHv8iu+ZIaHLTIVsLiLpAQlbHQOTQVV45g91QrmyohrBAw17o=
-X-Received: by 2002:a17:907:3e8a:: with SMTP id hs10mr372288ejc.359.1625153113214;
- Thu, 01 Jul 2021 08:25:13 -0700 (PDT)
+        b=KKb6nteJLe9Ab0ti6zI+eReHimNncjem6stUroePoFj6ZH7nXRcZUOZls5qTLiJ25
+         8YEaB0QJueBFTq0N5RcQ4Dgqy2tj4r8WF7AENnmz5lv4OHZw5KeG7osxeHFDKDE8bM
+         MqbPgdESSqTcNwsOVZEfzoAMObxYldHwetAYknLiLZptnAOqes55L7Zn+6NdXXfYum
+         WmTjnpSVLWQEUHmAVFGXaImhe1LYY38Udb3LVztEr6VZwf0bgNSBNvC0Y8bjOVUQtE
+         yqPhm5907r9K8oFuCxvFdNFZY4Ga7eiY73McgKyL2r3gGjkZqcySZ6lImtYvI2F5BA
+         BAwgCc16iC6ig==
+Received: by mail-ed1-f45.google.com with SMTP id x12so9013658eds.5;
+        Thu, 01 Jul 2021 08:30:34 -0700 (PDT)
+X-Gm-Message-State: AOAM533YAz7k3GW/B9cp//wLQvX9+dE9w9dibuTmwHJfXe3XeSoNBpV2
+        033ormgYzcPslPFBAXKt0gPno3oEMQExPuNBWA==
+X-Google-Smtp-Source: ABdhPJzIvcS3XZE1OUYeuHNDEAGCqgevyqYZlOCL0nBdsk7GZwOgyCOOawNz0q9OYmjZTjT79/uhD90cUACnd6TAa2Y=
+X-Received: by 2002:a05:6402:ca2:: with SMTP id cn2mr580847edb.62.1625153432682;
+ Thu, 01 Jul 2021 08:30:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210630034653.10260-1-manivannan.sadhasivam@linaro.org>
-In-Reply-To: <20210630034653.10260-1-manivannan.sadhasivam@linaro.org>
-From:   Rob Herring <robh@kernel.org>
-Date:   Thu, 1 Jul 2021 09:25:01 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqLHp3kBc1VtGVRxVr_k69GqSC_JX88jo3stdM4W9Qq6AQ@mail.gmail.com>
-Message-ID: <CAL_JsqLHp3kBc1VtGVRxVr_k69GqSC_JX88jo3stdM4W9Qq6AQ@mail.gmail.com>
-Subject: Re: [PATCH v5 0/3] Add Qualcomm PCIe Endpoint driver support
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+References: <20210629234952.306578-1-nobuhiro1.iwamatsu@toshiba.co.jp> <20210629234952.306578-2-nobuhiro1.iwamatsu@toshiba.co.jp>
+In-Reply-To: <20210629234952.306578-2-nobuhiro1.iwamatsu@toshiba.co.jp>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Thu, 1 Jul 2021 09:30:21 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKqM8yFLsB3kBDqv=_8HqY4Cv2JOT5CmQA3q-WebdmXpw@mail.gmail.com>
+Message-ID: <CAL_JsqKqM8yFLsB3kBDqv=_8HqY4Cv2JOT5CmQA3q-WebdmXpw@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] dt-bindings: pci: Add DT binding for Toshiba
+ Visconti PCIe controller
+To:     Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        hemantk@codeaurora.org,
-        Siddartha Mohanadoss <smohanad@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Sriharsha Allenki <sallenki@codeaurora.org>,
-        skananth@codeaurora.org, vpernami@codeaurora.org,
-        Veerabhadrarao Badiganti <vbadigan@codeaurora.org>
+        PCI <linux-pci@vger.kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Punit Agrawal <punit1.agrawal@toshiba.co.jp>,
+        yuji2.ishikawa@toshiba.co.jp,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 29, 2021 at 9:47 PM Manivannan Sadhasivam
-<manivannan.sadhasivam@linaro.org> wrote:
+On Tue, Jun 29, 2021 at 5:50 PM Nobuhiro Iwamatsu
+<nobuhiro1.iwamatsu@toshiba.co.jp> wrote:
 >
-> Hello,
+> This commit adds the Device Tree binding documentation that allows
+> to describe the PCIe controller found in Toshiba Visconti SoCs.
 >
-> This series adds support for Qualcomm PCIe Endpoint controller found
-> in platforms like SDX55. The Endpoint controller is based on the designware
-> core with additional Qualcomm wrappers around the core.
->
-> The driver is added separately unlike other Designware based drivers that
-> combine RC and EP in a single driver. This is done to avoid complexity and
-> to maintain this driver autonomously.
->
-> The driver has been validated with an out of tree MHI function driver on
-> SDX55 based Telit FN980 EVB connected to x86 host machine over PCIe.
->
-> Thanks,
-> Mani
->
-> Changes in v5:
->
-> * Removed the DBI register settings that are not needed
-> * Used the standard definitions available in pci_regs.h
-> * Added defines for all the register fields
-> * Removed the left over code from previous iteration
->
-> Changes in v4:
->
-> * Removed the active_config settings needed for IPA integration
-> * Switched to writel for couple of relaxed versions that sneaked in
+> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+> ---
+>  .../bindings/pci/toshiba,visconti-pcie.yaml   | 110 ++++++++++++++++++
+>  1 file changed, 110 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
 
-I thought we resolved this discussion. Use _relaxed variants unless
-you need the stronger ones.
+Please resend to DT list so that automated checks run.
 
 Rob
-
->
-> Changes in v3:
->
-> * Lot of minor cleanups to the driver patch based on review from Bjorn and Stan.
-> * Noticeable changes are:
->   - Got rid of _relaxed calls and used readl/writel
->   - Got rid of separate TCSR memory region and used syscon for getting the
->     register offsets for Perst registers
->   - Changed the wake gpio handling logic
->   - Added remove() callback and removed "suppress_bind_attrs"
->   - stop_link() callback now just disables PERST IRQ
-> * Added MMIO region and doorbell interrupt to the binding
-> * Added logic to write MMIO physicall address to MHI base address as it is
->   for the function driver to work
->
-> Changes in v2:
->
-> * Addressed the comments from Rob on bindings patch
-> * Modified the driver as per binding change
-> * Fixed the warnings reported by Kbuild bot
-> * Removed the PERST# "enable_irq" call from probe()
->
-> Manivannan Sadhasivam (3):
->   dt-bindings: pci: Add devicetree binding for Qualcomm PCIe EP
->     controller
->   PCI: dwc: Add Qualcomm PCIe Endpoint controller driver
->   MAINTAINERS: Add entry for Qualcomm PCIe Endpoint driver and binding
->
->  .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 160 ++++
->  MAINTAINERS                                   |  10 +-
->  drivers/pci/controller/dwc/Kconfig            |  10 +
->  drivers/pci/controller/dwc/Makefile           |   1 +
->  drivers/pci/controller/dwc/pcie-qcom-ep.c     | 742 ++++++++++++++++++
->  5 files changed, 922 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
->  create mode 100644 drivers/pci/controller/dwc/pcie-qcom-ep.c
->
-> --
-> 2.25.1
->
