@@ -2,167 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7564C07E9C
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1475EC07E96
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:15:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D529462046
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:15:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0052062046
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232684AbhGFMSY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:18:24 -0400
-Received: from angie.orcam.me.uk ([78.133.224.34]:60366 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234232AbhGFLdW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jul 2021 07:33:22 -0400
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 2848992009C; Tue,  6 Jul 2021 13:30:41 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 20E3B92009B;
-        Tue,  6 Jul 2021 13:30:41 +0200 (CEST)
-Date:   Tue, 6 Jul 2021 13:30:41 +0200 (CEST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Nikolai Zhubr <zhubr.2@gmail.com>,
+        id S232568AbhGFMS2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jul 2021 08:18:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52398 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243274AbhGFMDZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jul 2021 08:03:25 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 250ABC0613AC;
+        Tue,  6 Jul 2021 04:42:37 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id j11so27557227edq.6;
+        Tue, 06 Jul 2021 04:42:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CDGtQ2yb8IShQ7cIRYFiJmp1Uu5BANeA/6Jg/xILJy0=;
+        b=TwRJy6+J3urIn/EOHkX70XQHrPpIXFIOoiquz6eJSwyU/SQIQ4dADKORnRQAYcVLDd
+         bGmCH+O3vZ/zwAN03+xnrlCOWn/T/Pz6KfPYlHzOgGXWb72eEAEAjVLMxY3sV52LOQiu
+         4sMepvP8f2M/NuGTEEUpcS9djTSXyNUocbOOHuCxDZ/swc4Yj2krBjOK18+xBOWwYw7y
+         O/LcWjnu0kdZ4pmyv7jFfFo0qSdeTOdmtP2CciCXwcdnQ5FYkYueWY1vZLSQqxLbXVdx
+         xHWyXJmiVDLrlTvE9QGQSNArUJUGdY04ySHX3mfxNurDFI1sFLhNw1IKyh/ZzycJEC6f
+         piBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CDGtQ2yb8IShQ7cIRYFiJmp1Uu5BANeA/6Jg/xILJy0=;
+        b=cSIW3JOIioAioIfgYKQyQqSazD73CO2PhkvK0JpGSXcRxwlVCIhPlMy2RNwRC1MezP
+         BZ6h7/kkDgQ3vWimxPSP4mzUaGDt3EzWppD0JS17YAmF+WeMh8uX+T8RGBLrP1yn9PRd
+         7eiSxAMicNAC7ITetPISq3ES+JtI8d2MqrQXZ9OrUMbvPlFwZGfhN0arPSs6IUkqCOcX
+         7/5i+a2zAxbp3eKkAsq1+S0YeP3DdunBCJ7tBY5HrLzTvvsMNevnmiKoKYvViPuTMssR
+         3sCbpDUd/WDNCgYKdsmah+f8KbMhn4fyLfNLhWiuKnOWvf1HIIgc7XRx6t2Flm9df9IF
+         dO8A==
+X-Gm-Message-State: AOAM531si/HgMyvSBgLiARPQKINfzHpo1CAX05lwHmmBW914p2HvS2Mz
+        xYqcLlPqWc3xfYVAzVqH/8c=
+X-Google-Smtp-Source: ABdhPJwOR9RYbuFI1V8zYqZEcawlLdGKboqfR9DJ6TrIpurxtzPOHwaABH2lGpOOBvACTZh8ZOEU1A==
+X-Received: by 2002:a05:6402:1c06:: with SMTP id ck6mr22330893edb.287.1625571755735;
+        Tue, 06 Jul 2021 04:42:35 -0700 (PDT)
+Received: from [192.168.2.202] (pd9e5a48a.dip0.t-ipconnect.de. [217.229.164.138])
+        by smtp.gmail.com with ESMTPSA id eb9sm5646083ejc.32.2021.07.06.04.42.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 06 Jul 2021 04:42:35 -0700 (PDT)
+Subject: Re: [PATCH] bus: Make remove callback return void
+To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Jiri Kosina <jikos@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Johannes Thumshirn <morbidrsa@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>
-cc:     Arnd Bergmann <arnd@kernel.org>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] x86/PCI: Handle PIRQ routing tables with no router device
- given
-Message-ID: <alpine.DEB.2.21.2107061320570.1711@angie.orcam.me.uk>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        Hans de Goede <hdegoede@redhat.com>,
+        Mark Gross <mgross@linux.intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Mark Brown <broonie@kernel.org>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Rob Herring <robh@kernel.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-sunxi@lists.linux.dev, linux-cxl@vger.kernel.org,
+        nvdimm@lists.linux.dev, dmaengine@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-fpga@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-arm-msm@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-staging@lists.linux.dev,
+        greybus-dev@lists.linaro.org, target-devel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org
+References: <20210706095037.1425211-1-u.kleine-koenig@pengutronix.de>
+From:   Maximilian Luz <luzmaximilian@gmail.com>
+Message-ID: <07c08230-6c71-2a73-c89f-05b9b5de78ab@gmail.com>
+Date:   Tue, 6 Jul 2021 13:42:31 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20210706095037.1425211-1-u.kleine-koenig@pengutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PIRQ routing tables provided by the PCI BIOS usually specify the PCI 
-vendor:device ID as well as the bus address of the device implementing 
-the PIRQ router, e.g.:
+On 7/6/21 11:50 AM, Uwe Kleine-König wrote:
+> The driver core ignores the return value of this callback because there
+> is only little it can do when a device disappears.
+> 
+> This is the final bit of a long lasting cleanup quest where several
+> buses were converted to also return void from their remove callback.
+> Additionally some resource leaks were fixed that were caused by drivers
+> returning an error code in the expectation that the driver won't go
+> away.
+> 
+> With struct bus_type::remove returning void it's prevented that newly
+> implemented buses return an ignored error code and so don't anticipate
+> wrong expectations for driver authors.
+> 
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
-PCI: Interrupt Routing Table found at 0xc00fde10
-[...]
-PCI: Attempting to find IRQ router for [8086:7000]
-pci 0000:00:07.0: PIIX/ICH IRQ router [8086:7000]
+>   drivers/platform/surface/aggregator/bus.c | 4 +---
 
-however in some cases they do not, in which case we fail to match the 
-router handler, e.g.:
-
-PCI: Interrupt Routing Table found at 0xc00fdae0
-[...]
-PCI: Attempting to find IRQ router for [0000:0000]
-PCI: Interrupt router not found at 00:00
-
-This is because we always match the vendor:device ID and the bus address 
-literally, even if they are all zeros.
-
-Handle this case then and iterate over all PCI devices until we find a 
-matching router handler if the vendor ID given by the routing table is 
-the invalid value of zero.
-
-Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
----
-Changes from v1:
-
-- preinitialise `dev' in `pirq_find_router' for `for_each_pci_dev',
-
-- avoid calling `pirq_try_router' with null `dev'.
----
- arch/x86/pci/irq.c |   64 ++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 44 insertions(+), 20 deletions(-)
-
-linux-x86-pirq-router-nodev.diff
-Index: linux-macro-ide-tty/arch/x86/pci/irq.c
-===================================================================
---- linux-macro-ide-tty.orig/arch/x86/pci/irq.c
-+++ linux-macro-ide-tty/arch/x86/pci/irq.c
-@@ -908,10 +908,32 @@ static struct pci_dev *pirq_router_dev;
-  *	chipset" ?
-  */
- 
-+static bool __init pirq_try_router(struct irq_router *r,
-+				   struct irq_routing_table *rt,
-+				   struct pci_dev *dev)
-+{
-+	struct irq_router_handler *h;
-+
-+	DBG(KERN_DEBUG "PCI: Trying IRQ router for [%04x:%04x]\n",
-+	    dev->vendor, dev->device);
-+
-+	for (h = pirq_routers; h->vendor; h++) {
-+		/* First look for a router match */
-+		if (rt->rtr_vendor == h->vendor &&
-+		    h->probe(r, dev, rt->rtr_device))
-+			return true;
-+		/* Fall back to a device match */
-+		if (dev->vendor == h->vendor &&
-+		    h->probe(r, dev, dev->device))
-+			return true;
-+	}
-+	return false;
-+}
-+
- static void __init pirq_find_router(struct irq_router *r)
- {
- 	struct irq_routing_table *rt = pirq_table;
--	struct irq_router_handler *h;
-+	struct pci_dev *dev;
- 
- #ifdef CONFIG_PCI_BIOS
- 	if (!rt->signature) {
-@@ -930,27 +952,29 @@ static void __init pirq_find_router(stru
- 	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
- 	    rt->rtr_vendor, rt->rtr_device);
- 
--	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
--						      rt->rtr_devfn);
--	if (!pirq_router_dev) {
--		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
--			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
--		return;
-+	/* Use any vendor:device provided by the routing table or try all.  */
-+	if (rt->rtr_vendor) {
-+		dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
-+						  rt->rtr_devfn);
-+		if (dev && pirq_try_router(r, rt, dev))
-+			pirq_router_dev = dev;
-+	} else {
-+		dev = NULL;
-+		for_each_pci_dev(dev) {
-+			if (pirq_try_router(r, rt, dev)) {
-+				pirq_router_dev = dev;
-+				break;
-+			}
-+		}
- 	}
- 
--	for (h = pirq_routers; h->vendor; h++) {
--		/* First look for a router match */
--		if (rt->rtr_vendor == h->vendor &&
--			h->probe(r, pirq_router_dev, rt->rtr_device))
--			break;
--		/* Fall back to a device match */
--		if (pirq_router_dev->vendor == h->vendor &&
--			h->probe(r, pirq_router_dev, pirq_router_dev->device))
--			break;
--	}
--	dev_info(&pirq_router_dev->dev, "%s IRQ router [%04x:%04x]\n",
--		 pirq_router.name,
--		 pirq_router_dev->vendor, pirq_router_dev->device);
-+	if (pirq_router_dev)
-+		dev_info(&pirq_router_dev->dev, "%s IRQ router [%04x:%04x]\n",
-+			 pirq_router.name,
-+			 pirq_router_dev->vendor, pirq_router_dev->device);
-+	else
-+		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
-+		    "%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
- 
- 	/* The device remains referenced for the kernel lifetime */
- }
+Acked-by: Maximilian Luz <luzmaximilian@gmail.com>
