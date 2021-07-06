@@ -2,304 +2,382 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EC3C07E96
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E45C07E9B
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 13:24:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A79CD61C80
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 12:44:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DADF61C42
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jul 2021 13:24:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237594AbhGFMqm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jul 2021 08:46:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34174 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231994AbhGFMqf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jul 2021 08:46:35 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A469C028B9B
-        for <linux-pci@vger.kernel.org>; Tue,  6 Jul 2021 05:21:19 -0700 (PDT)
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m0jyQ-0001jl-7p; Tue, 06 Jul 2021 14:14:46 +0200
-Received: from ukl by ptx.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m0jyP-0001fC-Gy; Tue, 06 Jul 2021 14:14:45 +0200
-Date:   Tue, 6 Jul 2021 14:14:45 +0200
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Cornelia Huck <cohuck@redhat.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        nvdimm@lists.linux.dev, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
-        Jens Taprogge <jens.taprogge@taprogge.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Julien Grall <jgrall@amazon.com>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alex Elder <elder@kernel.org>, linux-parisc@vger.kernel.org,
-        Geoff Levand <geoff@infradead.org>, linux-fpga@vger.kernel.org,
-        linux-usb@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
-        Thorsten Scherer <t.scherer@eckelmann.de>,
-        kernel@pengutronix.de, Jon Mason <jdmason@kudzu.us>,
-        linux-ntb@googlegroups.com, Wu Hao <hao.wu@intel.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        virtualization@lists.linux-foundation.org,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        target-devel@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        linux-i2c@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        id S231494AbhGFN1P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jul 2021 09:27:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37300 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231415AbhGFN1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Jul 2021 09:27:14 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BE61061164;
+        Tue,  6 Jul 2021 13:24:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625577874;
+        bh=1b6k92EMOVzHgyTq1RFb48ZKUcEXJlaaPAFN5oqwmF4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Tx92MCkf/DXZd6nh5mgnaOshLB4ggq26FqyP7BRdqm4hXED58hUYg3wTzF/ZikCOl
+         U+1P1/gbNfCqV4xnZ7pHjCf8/b987/nQ/mVKU1HbWyoJyOKg9fJOcN462l6+qNBbsk
+         mG027LEWXpfZtreWSaiuUnUFKCuYwjJn+lLcTB45MSBdJeGNl0JTrXgxYvizMLKavG
+         ZjJErAdgAQUwjFypjPCvRFBu+p+iugJjiDv/3nE/dAIeatFPDVEKPcPUEgF80LgmiZ
+         dhxesW61+bCVt47G9QVFd9FVhqxuurozkVLZ3Q4Ql0HvqNzplvnBtOnAkUoP1it1tH
+         ndRwRZDbWWvhQ==
+Date:   Tue, 6 Jul 2021 14:24:23 +0100
+From:   Will Deacon <will@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Nathan Chancellor <nathan@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Claire Chang <tientzu@chromium.org>,
+        Rob Herring <robh+dt@kernel.org>, mpe@ellerman.id.au,
+        Joerg Roedel <joro@8bytes.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        benh@kernel.crashing.org, paulus@samba.org,
+        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
         Stefano Stabellini <sstabellini@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Ira Weiny <ira.weiny@intel.com>, Helge Deller <deller@gmx.de>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        industrypack-devel@lists.sourceforge.net,
-        linux-mips@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        alsa-devel@alsa-project.org, linux-arm-msm@vger.kernel.org,
-        linux-media@vger.kernel.org, Maxime Ripard <mripard@kernel.org>,
-        Johan Hovold <johan@kernel.org>, greybus-dev@lists.linaro.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Johannes Thumshirn <morbidrsa@gmail.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Stephen Boyd <sboyd@kernel.org>, Wolfram Sang <wsa@kernel.org>,
-        Joey Pabalan <jpabalanb@gmail.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Tom Rix <trix@redhat.com>, Jason Wang <jasowang@redhat.com>,
-        SeongJae Park <sjpark@amazon.de>, linux-hyperv@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, Frank Li <lznuaa@gmail.com>,
-        netdev@vger.kernel.org, Qinglang Miao <miaoqinglang@huawei.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Mark Gross <mgross@linux.intel.com>,
-        linux-staging@lists.linux.dev, Dexuan Cui <decui@microsoft.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Chen-Yu Tsai <wens@csie.org>, linux-input@vger.kernel.org,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Allen Hubbe <allenbh@gmail.com>, Alex Dubov <oakad@yahoo.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Vladimir Zapolskiy <vz@mleia.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        Moritz Fischer <mdf@kernel.org>, linux-cxl@vger.kernel.org,
-        Michael Buesch <m@bues.ch>,
+        grant.likely@arm.com, xypron.glpk@gmx.de,
+        Thierry Reding <treding@nvidia.com>, mingo@kernel.org,
+        bauerman@linux.ibm.com, peterz@infradead.org,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Saravana Kannan <saravanak@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        heikki.krogerus@linux.intel.com,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
         Dan Williams <dan.j.williams@intel.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Cristian Marussi <cristian.marussi@arm.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-mmc@vger.kernel.org, linux-sunxi@lists.linux.dev,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Sven Van Asbroeck <TheSven73@gmail.com>, kvm@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        linux-remoteproc@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-i3c@lists.infradead.org,
-        linux1394-devel@lists.sourceforge.net,
-        Lee Jones <lee.jones@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Andy Gross <agross@kernel.org>, linux-serial@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        Michael Jamet <michael.jamet@intel.com>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Juergen Gross <jgross@suse.com>, linuxppc-dev@lists.ozlabs.org,
-        Takashi Iwai <tiwai@suse.com>,
-        Alexandre Bounine <alex.bou9@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>, Mark Brown <broonie@kernel.org>,
-        Marc Zyngier <maz@kernel.org>, dmaengine@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Maximilian Luz <luzmaximilian@gmail.com>
-Subject: Re: [PATCH] bus: Make remove callback return void
-Message-ID: <20210706121445.o3nxgi4bhzrw5w73@pengutronix.de>
-References: <20210706095037.1425211-1-u.kleine-koenig@pengutronix.de>
- <87pmvvhfqq.fsf@redhat.com>
- <87mtqzhesu.fsf@redhat.com>
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        linux-devicetree <devicetree@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, xen-devel@lists.xenproject.org,
+        Nicolas Boichat <drinkcat@chromium.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Tomasz Figa <tfiga@chromium.org>, bskeggs@redhat.com,
+        Bjorn Helgaas <bhelgaas@google.com>, chris@chris-wilson.co.uk,
+        Daniel Vetter <daniel@ffwll.ch>, airlied@linux.ie,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        jani.nikula@linux.intel.com, Jianxiong Gao <jxgao@google.com>,
+        joonas.lahtinen@linux.intel.com, linux-pci@vger.kernel.org,
+        maarten.lankhorst@linux.intel.com, matthew.auld@intel.com,
+        rodrigo.vivi@intel.com, thomas.hellstrom@linux.intel.com,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Qian Cai <quic_qiancai@quicinc.com>
+Subject: Re: [PATCH v15 06/12] swiotlb: Use is_swiotlb_force_bounce for
+ swiotlb data bouncing
+Message-ID: <20210706132422.GA20327@willie-the-truck>
+References: <CALiNf2-a-haQN0-4+gX8+wa++52-0CnO2O4BEkxrQCxoTa_47w@mail.gmail.com>
+ <20210630114348.GA8383@willie-the-truck>
+ <YNyUQwiagNeZ9YeJ@Ryzen-9-3900X.localdomain>
+ <20210701074045.GA9436@willie-the-truck>
+ <ea28db1f-846e-4f0a-4f13-beb67e66bbca@kernel.org>
+ <20210702135856.GB11132@willie-the-truck>
+ <0f7bd903-e309-94a0-21d7-f0e8e9546018@arm.com>
+ <YN/7xcxt/XGAKceZ@Ryzen-9-3900X.localdomain>
+ <20210705190352.GA19461@willie-the-truck>
+ <20210706044848.GA13640@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="qlv3rwmw2vf6tbvn"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87mtqzhesu.fsf@redhat.com>
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+In-Reply-To: <20210706044848.GA13640@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Tue, Jul 06, 2021 at 06:48:48AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 05, 2021 at 08:03:52PM +0100, Will Deacon wrote:
+> > So at this point, the AMD IOMMU driver does:
+> > 
+> > 	swiotlb        = (iommu_default_passthrough() || sme_me_mask) ? 1 : 0;
+> > 
+> > where 'swiotlb' is a global variable indicating whether or not swiotlb
+> > is in use. It's picked up a bit later on by pci_swiotlb_late_init(), which
+> > will call swiotlb_exit() if 'swiotlb' is false.
+> > 
+> > Now, that used to work fine, because swiotlb_exit() clears
+> > 'io_tlb_default_mem' to NULL, but now with the restricted DMA changes, I
+> > think that all the devices which have successfully probed beforehand will
+> > have stale pointers to the freed structure in their 'dev->dma_io_tlb_mem'
+> > field.
+> 
+> Yeah.  I don't think we can do that anymore, and I also think it is
+> a bad idea to start with.
 
---qlv3rwmw2vf6tbvn
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've had a crack at reworking things along the following lines:
 
-On Tue, Jul 06, 2021 at 01:17:37PM +0200, Cornelia Huck wrote:
-> On Tue, Jul 06 2021, Cornelia Huck <cohuck@redhat.com> wrote:
->=20
-> > On Tue, Jul 06 2021, Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de=
-> wrote:
-> >
-> >> The driver core ignores the return value of this callback because there
-> >> is only little it can do when a device disappears.
-> >>
-> >> This is the final bit of a long lasting cleanup quest where several
-> >> buses were converted to also return void from their remove callback.
-> >> Additionally some resource leaks were fixed that were caused by drivers
-> >> returning an error code in the expectation that the driver won't go
-> >> away.
-> >>
-> >> With struct bus_type::remove returning void it's prevented that newly
-> >> implemented buses return an ignored error code and so don't anticipate
-> >> wrong expectations for driver authors.
-> >
-> > Yay!
-> >
-> >>
-> >> Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
-> >> ---
-> >> Hello,
-> >>
-> >> this patch depends on "PCI: endpoint: Make struct pci_epf_driver::remo=
-ve
-> >> return void" that is not yet applied, see
-> >> https://lore.kernel.org/r/20210223090757.57604-1-u.kleine-koenig@pengu=
-tronix.de.
-> >>
-> >> I tested it using allmodconfig on amd64 and arm, but I wouldn't be
-> >> surprised if I still missed to convert a driver. So it would be great =
-to
-> >> get this into next early after the merge window closes.
-> >
-> > I'm afraid you missed the s390-specific busses in drivers/s390/cio/
-> > (css/ccw/ccwgroup).
+  - io_tlb_default_mem now lives in the BSS, the flexible array member
+    is now a pointer and that part is allocated dynamically (downside of
+    this is an extra indirection to get at the slots).
 
-:-\
+  - io_tlb_default_mem.nslabs tells you whether the thing is valid
 
-> The change for vfio/mdev looks good.
->=20
-> The following should do the trick for s390; not sure if other
-> architectures have easy-to-miss busses as well.
->=20
-> diff --git a/drivers/s390/cio/ccwgroup.c b/drivers/s390/cio/ccwgroup.c
-> index 9748165e08e9..a66f416138ab 100644
-> --- a/drivers/s390/cio/ccwgroup.c
-> +++ b/drivers/s390/cio/ccwgroup.c
-> @@ -439,17 +439,15 @@ module_exit(cleanup_ccwgroup);
-> =20
->  /************************** driver stuff ******************************/
-> =20
-> -static int ccwgroup_remove(struct device *dev)
-> +static void ccwgroup_remove(struct device *dev)
->  {
->  	struct ccwgroup_device *gdev =3D to_ccwgroupdev(dev);
->  	struct ccwgroup_driver *gdrv =3D to_ccwgroupdrv(dev->driver);
-> =20
->  	if (!dev->driver)
-> -		return 0;
-> +		return;
+  - swiotlb_exit() frees the slots array and clears the rest of the
+    structure to 0. I also extended it to free the actual slabs, but I'm
+    not sure why it wasn't doing that before.
 
-This is fine to be squashed into my patch. In the long run: in a remove
-callback dev->driver cannot be NULL, so this if could go away.
+So a non-NULL dev->dma_io_tlb_mem should always be valid to follow.
 
->  	if (gdrv->remove)
->  		gdrv->remove(gdev);
-> -
-> -	return 0;
->  }
-> =20
->  static void ccwgroup_shutdown(struct device *dev)
-> diff --git a/drivers/s390/cio/css.c b/drivers/s390/cio/css.c
-> index a974943c27da..ebc321edba51 100644
-> --- a/drivers/s390/cio/css.c
-> +++ b/drivers/s390/cio/css.c
-> @@ -1371,15 +1371,14 @@ static int css_probe(struct device *dev)
->  	return ret;
->  }
-> =20
-> -static int css_remove(struct device *dev)
-> +static void css_remove(struct device *dev)
->  {
->  	struct subchannel *sch;
-> -	int ret;
-> =20
->  	sch =3D to_subchannel(dev);
-> -	ret =3D sch->driver->remove ? sch->driver->remove(sch) : 0;
-> +	if (sch->driver->remove)
-> +		sch->driver->remove(sch);
+Untested diff below... Nathan, it would be ace if you're brave enough
+to give this a shot.
 
-Maybe the return type for this function pointer can be changed to void,
-too.
+Will
 
-I will add these changes to a v2 that I plan to send out after the dust
-settles some more.
+--->8
 
-Thanks
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---qlv3rwmw2vf6tbvn
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmDkSTIACgkQwfwUeK3K
-7AmpKwf/cEGBSAtr38Z6g8D5Sb7wD6N+VKt79z1eeeFykI81lxaibOS1hxqeDq28
-jW5itKeFVh1+cP8UVt8l7VJlvhIUO+xFsMgJ/LrRGoynkDBqMdlbTfQnZ/yOULyX
-KI6vecR8mDHh+M0cs+KxsmbHXtKL+WJfAnGYMVFhrq7cayZ2ZnflKlVAFFyN1iWR
-ewHXQduLqDi718k76IDgu9PZfUuQbRNLuX69ZAwyVl1F+BpBxMCvnMU2apcdJQ1B
-ovWeCbDSh+HLgMrfUAYcVddvRKo81lrMn1i24FK2RuVnrnYdupIRl3L+Y5V4D7Pd
-xOqLOUY6yncBK5uZwnZctg9p3aX8wA==
-=Zesi
------END PGP SIGNATURE-----
-
---qlv3rwmw2vf6tbvn--
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index bbad7c559901..9e1218f89e4b 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2820,7 +2820,7 @@ void device_initialize(struct device *dev)
+ 	dev->dma_coherent = dma_default_coherent;
+ #endif
+ #ifdef CONFIG_SWIOTLB
+-	dev->dma_io_tlb_mem = io_tlb_default_mem;
++	dev->dma_io_tlb_mem = &io_tlb_default_mem;
+ #endif
+ }
+ EXPORT_SYMBOL_GPL(device_initialize);
+diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
+index 785ec7e8be01..f06d9b4f1e0f 100644
+--- a/drivers/xen/swiotlb-xen.c
++++ b/drivers/xen/swiotlb-xen.c
+@@ -164,7 +164,7 @@ int __ref xen_swiotlb_init(void)
+ 	int rc = -ENOMEM;
+ 	char *start;
+ 
+-	if (io_tlb_default_mem != NULL) {
++	if (io_tlb_default_mem.nslabs) {
+ 		pr_warn("swiotlb buffer already initialized\n");
+ 		return -EEXIST;
+ 	}
+@@ -547,7 +547,7 @@ xen_swiotlb_sync_sg_for_device(struct device *dev, struct scatterlist *sgl,
+ static int
+ xen_swiotlb_dma_supported(struct device *hwdev, u64 mask)
+ {
+-	return xen_phys_to_dma(hwdev, io_tlb_default_mem->end - 1) <= mask;
++	return xen_phys_to_dma(hwdev, io_tlb_default_mem.end - 1) <= mask;
+ }
+ 
+ const struct dma_map_ops xen_swiotlb_dma_ops = {
+diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+index 39284ff2a6cd..b0cb2a9973f4 100644
+--- a/include/linux/swiotlb.h
++++ b/include/linux/swiotlb.h
+@@ -103,9 +103,9 @@ struct io_tlb_mem {
+ 		phys_addr_t orig_addr;
+ 		size_t alloc_size;
+ 		unsigned int list;
+-	} slots[];
++	} *slots;
+ };
+-extern struct io_tlb_mem *io_tlb_default_mem;
++extern struct io_tlb_mem io_tlb_default_mem;
+ 
+ static inline bool is_swiotlb_buffer(struct device *dev, phys_addr_t paddr)
+ {
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 0ffbaae9fba2..91cd1d413027 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -70,7 +70,7 @@
+ 
+ enum swiotlb_force swiotlb_force;
+ 
+-struct io_tlb_mem *io_tlb_default_mem;
++struct io_tlb_mem io_tlb_default_mem;
+ 
+ /*
+  * Max segment that we can provide which (if pages are contingous) will
+@@ -101,7 +101,7 @@ early_param("swiotlb", setup_io_tlb_npages);
+ 
+ unsigned int swiotlb_max_segment(void)
+ {
+-	return io_tlb_default_mem ? max_segment : 0;
++	return io_tlb_default_mem.nslabs ? max_segment : 0;
+ }
+ EXPORT_SYMBOL_GPL(swiotlb_max_segment);
+ 
+@@ -134,9 +134,9 @@ void __init swiotlb_adjust_size(unsigned long size)
+ 
+ void swiotlb_print_info(void)
+ {
+-	struct io_tlb_mem *mem = io_tlb_default_mem;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
+ 
+-	if (!mem) {
++	if (!mem->nslabs) {
+ 		pr_warn("No low mem\n");
+ 		return;
+ 	}
+@@ -163,11 +163,11 @@ static inline unsigned long nr_slots(u64 val)
+  */
+ void __init swiotlb_update_mem_attributes(void)
+ {
+-	struct io_tlb_mem *mem = io_tlb_default_mem;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
+ 	void *vaddr;
+ 	unsigned long bytes;
+ 
+-	if (!mem || mem->late_alloc)
++	if (!mem->nslabs || mem->late_alloc)
+ 		return;
+ 	vaddr = phys_to_virt(mem->start);
+ 	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
+@@ -201,25 +201,24 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
+ 
+ int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
+ {
+-	struct io_tlb_mem *mem;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
+ 	size_t alloc_size;
+ 
+ 	if (swiotlb_force == SWIOTLB_NO_FORCE)
+ 		return 0;
+ 
+ 	/* protect against double initialization */
+-	if (WARN_ON_ONCE(io_tlb_default_mem))
++	if (WARN_ON_ONCE(mem->nslabs))
+ 		return -ENOMEM;
+ 
+-	alloc_size = PAGE_ALIGN(struct_size(mem, slots, nslabs));
+-	mem = memblock_alloc(alloc_size, PAGE_SIZE);
+-	if (!mem)
++	alloc_size = PAGE_ALIGN(array_size(sizeof(*mem->slots), nslabs));
++	mem->slots = memblock_alloc(alloc_size, PAGE_SIZE);
++	if (!mem->slots)
+ 		panic("%s: Failed to allocate %zu bytes align=0x%lx\n",
+ 		      __func__, alloc_size, PAGE_SIZE);
+ 
+ 	swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
+ 
+-	io_tlb_default_mem = mem;
+ 	if (verbose)
+ 		swiotlb_print_info();
+ 	swiotlb_set_max_segment(mem->nslabs << IO_TLB_SHIFT);
+@@ -304,26 +303,24 @@ swiotlb_late_init_with_default_size(size_t default_size)
+ int
+ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
+ {
+-	struct io_tlb_mem *mem;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
+ 	unsigned long bytes = nslabs << IO_TLB_SHIFT;
+ 
+ 	if (swiotlb_force == SWIOTLB_NO_FORCE)
+ 		return 0;
+ 
+ 	/* protect against double initialization */
+-	if (WARN_ON_ONCE(io_tlb_default_mem))
++	if (WARN_ON_ONCE(mem->nslabs))
+ 		return -ENOMEM;
+ 
+-	mem = (void *)__get_free_pages(GFP_KERNEL,
+-		get_order(struct_size(mem, slots, nslabs)));
+-	if (!mem)
++	mem->slots = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
++		get_order(array_size(sizeof(*mem->slots), nslabs)));
++	if (!mem->slots)
+ 		return -ENOMEM;
+ 
+-	memset(mem, 0, sizeof(*mem));
+ 	set_memory_decrypted((unsigned long)tlb, bytes >> PAGE_SHIFT);
+ 	swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
+ 
+-	io_tlb_default_mem = mem;
+ 	swiotlb_print_info();
+ 	swiotlb_set_max_segment(mem->nslabs << IO_TLB_SHIFT);
+ 	return 0;
+@@ -331,18 +328,23 @@ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
+ 
+ void __init swiotlb_exit(void)
+ {
+-	struct io_tlb_mem *mem = io_tlb_default_mem;
+-	size_t size;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
++	size_t tbl_size, slots_size;
+ 
+-	if (!mem)
++	if (!mem->nslabs)
+ 		return;
+ 
+-	size = struct_size(mem, slots, mem->nslabs);
+-	if (mem->late_alloc)
+-		free_pages((unsigned long)mem, get_order(size));
+-	else
+-		memblock_free_late(__pa(mem), PAGE_ALIGN(size));
+-	io_tlb_default_mem = NULL;
++	tbl_size = mem->end - mem->start;
++	slots_size = array_size(sizeof(*mem->slots), mem->nslabs);
++	if (mem->late_alloc) {
++		free_pages((unsigned long)mem->start, get_order(tbl_size));
++		free_pages((unsigned long)mem->slots, get_order(slots_size));
++	} else {
++		memblock_free_late(__pa(mem->start), PAGE_ALIGN(tbl_size));
++		memblock_free_late(__pa(mem->slots), PAGE_ALIGN(slots_size));
++	}
++
++	memset(mem, 0, sizeof(*mem));
+ }
+ 
+ /*
+@@ -682,7 +684,9 @@ size_t swiotlb_max_mapping_size(struct device *dev)
+ 
+ bool is_swiotlb_active(struct device *dev)
+ {
+-	return dev->dma_io_tlb_mem != NULL;
++	struct io_tlb_mem *mem = dev->dma_io_tlb_mem;
++
++	return mem && mem->nslabs;
+ }
+ EXPORT_SYMBOL_GPL(is_swiotlb_active);
+ 
+@@ -697,10 +701,10 @@ static void swiotlb_create_debugfs_files(struct io_tlb_mem *mem)
+ 
+ static int __init swiotlb_create_default_debugfs(void)
+ {
+-	struct io_tlb_mem *mem = io_tlb_default_mem;
++	struct io_tlb_mem *mem = &io_tlb_default_mem;
+ 
+ 	debugfs_dir = debugfs_create_dir("swiotlb", NULL);
+-	if (mem) {
++	if (mem->nslabs) {
+ 		mem->debugfs = debugfs_dir;
+ 		swiotlb_create_debugfs_files(mem);
+ 	}
+@@ -754,10 +758,17 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
+ 	 * to it.
+ 	 */
+ 	if (!mem) {
+-		mem = kzalloc(struct_size(mem, slots, nslabs), GFP_KERNEL);
++		mem = kzalloc(sizeof(*mem), GFP_KERNEL);
+ 		if (!mem)
+ 			return -ENOMEM;
+ 
++		mem->slots = kzalloc(array_size(sizeof(*mem->slots), nslabs),
++				     GFP_KERNEL);
++		if (!mem->slots) {
++			kfree(mem);
++			return -ENOMEM;
++		}
++
+ 		set_memory_decrypted((unsigned long)phys_to_virt(rmem->base),
+ 				     rmem->size >> PAGE_SHIFT);
+ 		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false);
+@@ -781,7 +792,7 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
+ static void rmem_swiotlb_device_release(struct reserved_mem *rmem,
+ 					struct device *dev)
+ {
+-	dev->dma_io_tlb_mem = io_tlb_default_mem;
++	dev->dma_io_tlb_mem = &io_tlb_default_mem;
+ }
+ 
+ static const struct reserved_mem_ops rmem_swiotlb_ops = {
