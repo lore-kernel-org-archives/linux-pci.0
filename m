@@ -2,97 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5A1BC07E96
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 15:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ACAAC07E9C
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 15:50:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BDA6616EA
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 15:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 839D26195D
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 15:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231139AbhGHPse (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Jul 2021 11:48:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55948 "EHLO mail.kernel.org"
+        id S232048AbhGHPxG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Jul 2021 11:53:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229592AbhGHPse (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jul 2021 11:48:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0E64661483;
-        Thu,  8 Jul 2021 15:45:51 +0000 (UTC)
+        id S231139AbhGHPxF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jul 2021 11:53:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8D90261621;
+        Thu,  8 Jul 2021 15:50:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625759152;
-        bh=is2esSXTGi4HPbNrzyvxZE08UDJJDrKAa6KsWAWVLfM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=GX8McskDedTlTLJrVfjZb34JA8f5rdAJlKwE8m37vzrTJw9iA7vgMYepWYnsNnMsH
-         0kACvi25IB6lVrfJJdKmiEVWplYdtYj9UY0gA5OC9MaeRoLK9GNiFMADkxtS8g3yFB
-         GFnfz7UpqLQOnLACPm2SU+LdDawagvbYCpG2LLSGg8nJaOYa04GD1PIy9W2XL7h5yb
-         t/pY3XBm0TWCaz62S7rhF/VXfTPo3BWvcpbNN7EPNXmmkaBmkHaa6MnXEGih6F6/QQ
-         TOOKHQ1iV1cl1qdbiQHEfPlHKLT0T9da4NKyQM5MpP93odHDdHFbRksZNH3lJr0VeT
-         FULhHpIlib+fA==
-Date:   Thu, 8 Jul 2021 10:45:50 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Oliver O'Halloran <oohall@gmail.com>
-Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Aaron Ma <aaron.ma@canonical.com>, jesse.brandeburg@intel.com,
-        anthony.l.nguyen@intel.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] igc: don't rd/wr iomem when PCI is removed
-Message-ID: <20210708154550.GA1019947@bjorn-Precision-5520>
+        s=k20201202; t=1625759423;
+        bh=xEtFsGe/nvgIp++LyqaQ4D6RN/JlX1hRQoJR0nM7xCg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=m8s5yUQeTgWi8eo5peF7561VxDxeM742XOxEdZ/F/mclKn9KSdEm71YCmAoFqeN49
+         byHn/3F1JaoVuZa5IHbj1s92KeGusY5M9oWAkTV7gZV1DdMnPyLWskP7ZineKHFGqd
+         jAaKx2HzgzXGq4qPs7KsYdAkqMSsnassAnyCH76H2SkRfs1Fo7LGwMtV0lT9zOhGPW
+         VWqKIht1zLjLdEXXhYcHxDm9I5Aeb6+ORsCE59KcZxeAlkJqny0ewiM8v1uzZha78D
+         lGCa5Fik3MGkkOKl9K4t+gYNVa9QYYGFJqTzxugZnh4k8UvKahAHxEqXRjrdCvO43f
+         i67eh73Vskq3w==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1m1WI4-008VVC-Hx; Thu, 08 Jul 2021 17:50:16 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Herring <robh@kernel.org>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH RFC 4/7] bindings: kirin-pcie.txt: drop PHY properties
+Date:   Thu,  8 Jul 2021 17:50:11 +0200
+Message-Id: <de0710266c8838f52551dad59896d045c46e9202.1625758732.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1625758732.git.mchehab+huawei@kernel.org>
+References: <cover.1625758732.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOSf1CGVpogQGAatuY_N0db6OL2BFegGtj6VTLA9KFz0TqYBQg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 08, 2021 at 12:04:02PM +1000, Oliver O'Halloran wrote:
-> On Thu, Jul 8, 2021 at 8:40 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > If we add the check as proposed in this patch, I think people will
-> > read it and think this is the correct way to avoid MMIO errors.  It
-> > does happen to avoid some MMIO errors, but it cannot avoid them all,
-> > so it's not a complete solution and it gives a false sense of
-> > security.
-> 
-> I think it's helpful to classify MMIO errors as either benign or
-> poisonous with the poison MMIOs causing some kind of crash. Most of
-> the discussions about pci_dev_is_disconnected(), including this one,
-> seem to stem from people trying to use it to avoid the poison case. I
-> agree that using pci_dev_is_disconnected() that way is hacky and
-> doesn't really fix the problem, but considering poison MMIOs usually
-> stem from broken hardware or firmware maybe we should allow it
-> anyway. We can't do anything better and it's an improvement compared
-> to crashing.
+There are several properties there that belong to the PHY
+interface. Drop them, as a new binding file will describe
+the PHY properties for Kirin 960.
 
-Apologies for rehashing what's probably obvious to everybody but me.
-I'm trying to get a better handle on benign vs poisonous errors.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../devicetree/bindings/pci/kirin-pcie.txt    | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-MMIO means CPU reads or writes to the device.  In PCI, writes are
-posted and don't receive a response, so a driver will never see
-writel() return an error (although an error may be reported
-asynchronously via AER or similar).
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+index 71cac2b74002..21fb41a3ee3b 100644
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -10,13 +10,11 @@ Additional properties are described here:
+ Required properties
+ - compatible:
+ 	"hisilicon,kirin960-pcie"
+-- reg: Should contain rc_dbi, apb, phy, config registers location and length.
++- reg: Should contain rc_dbi, apb, config registers location and length.
+ - reg-names: Must include the following entries:
+   "dbi": controller configuration registers;
+   "apb": apb Ctrl register defined by Kirin;
+-  "phy": apb PHY register defined by Kirin;
+   "config": PCIe configuration space registers.
+-- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+ 
+ Optional properties:
+ 
+@@ -25,8 +23,8 @@ Example based on kirin960:
+ 	pcie@f4000000 {
+ 		compatible = "hisilicon,kirin960-pcie";
+ 		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+-		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
+-		reg-names = "dbi","apb","phy", "config";
++		      <0x0 0xF4000000 0 0x2000>;
++		reg-names = "dbi","apb", "config";
+ 		bus-range = <0x0  0x1>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+@@ -39,12 +37,7 @@ Example based on kirin960:
+ 				<0x0 0 0 2 &gic 0 0 0  283 4>,
+ 				<0x0 0 0 3 &gic 0 0 0  284 4>,
+ 				<0x0 0 0 4 &gic 0 0 0  285 4>;
+-		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+-			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+-			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+-		clock-names = "pcie_phy_ref", "pcie_aux",
+-			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+-		reset-gpios = <&gpio11 1 0 >;
++		clocks = <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>;
++		clock-names = "pcie_aux", "pcie_apb_sys";
+ 	};
+-- 
+2.31.1
 
-So I think we're mostly talking about CPU reads here.  We expect a PCI
-response containing the data.  Sometimes there's no response or an
-error response.  The behavior of the host bridge in these error cases
-is not defined by PCI, so what the CPU sees is not consistent across
-platforms.  In some cases, the bridge handles this as a catastrophic
-error that forces a system restart.
-
-But in most cases, at least on x86, the bridge logs an error and
-fabricates ~0 data so the CPU read can complete.  Then it's up to
-software to recognize that an error occurred and decide what to do
-about it.  Is this a benign or a poisonous error?
-
-I'd say this is a benign error.  It certainly can't be ignored, but as
-long as the driver recognizes the error, it should be able to deal
-with it without crashing the whole system and forcing a restart.
-
-Bjorn
