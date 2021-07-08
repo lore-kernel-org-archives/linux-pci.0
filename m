@@ -2,108 +2,204 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54792C07E9C
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 13:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F16AC07E96
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 14:36:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31CEB61493
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 13:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F5B86146E
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 14:36:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231563AbhGHN1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Jul 2021 09:27:51 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:54244 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbhGHN1u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jul 2021 09:27:50 -0400
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 2.1.0)
- id cece774477dad180; Thu, 8 Jul 2021 15:25:07 +0200
-Received: from kreacher.localnet (89-64-81-140.dynamic.chello.pl [89.64.81.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 981EA669C1D;
-        Thu,  8 Jul 2021 15:25:06 +0200 (CEST)
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Maximilian Luz <luzmaximilian@gmail.com>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH][RFT] PCI: Use pci_update_current_state() in pci_enable_device_flags()
-Date:   Thu, 08 Jul 2021 15:25:06 +0200
-Message-ID: <4327888.LvFx2qVVIh@kreacher>
+        id S231756AbhGHOjT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Jul 2021 10:39:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50794 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229738AbhGHOjT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jul 2021 10:39:19 -0400
+Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48975C061574
+        for <linux-pci@vger.kernel.org>; Thu,  8 Jul 2021 07:36:36 -0700 (PDT)
+Received: by mail-qk1-x735.google.com with SMTP id j184so5836373qkd.6
+        for <linux-pci@vger.kernel.org>; Thu, 08 Jul 2021 07:36:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=72Nulo0ReEKh1o09njcEPjT3ZEsb/u/uPS+kUmVy8sU=;
+        b=FWRbODpJvUDW1Hvvw6jBbIxh3B4HQaPFbePSQUSLSnU3oLIOtqDyL5r0r30yICdLR5
+         yPDKdQ08N64edmb3D42lPuwAt1byFqGLzD6Q9oAWRnvo2NBTHJameLigCEbX0UTLUCUf
+         YeA2vARMIdIU5/CZ+Oz55gYoydq3XkuhCgH0U=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=72Nulo0ReEKh1o09njcEPjT3ZEsb/u/uPS+kUmVy8sU=;
+        b=IxJbzSh95GnPwVeuDUztNCh/CPdSxduotUMrYFtW76ZwQnqbTlctl6FHHt9frfVp8V
+         w8NRd94s6S4Et/fOW9s3w6t3wbvo3CIs3ZWThBSr8ObByFuHhjSrrY8ot8MNU23ldEJv
+         K7/KuQzG1mRR5eaSuDgStslpTdpyPqwzdazOP0/xhK4NPkp3eAnuaiHv3SagTB0KUhAJ
+         MYWIEWhSxfkCtvQEs1e5TvCMMPIONjzR0fl04osnuMLMExd0cPZ06jicC+vHvpbPyHy8
+         K8rF2qv83XJYDOB3oc4bEVWPWKqKEFyPGklHFqbKkUbh+E4iUo3CrZoCmFYGmzsSvtoj
+         IDkg==
+X-Gm-Message-State: AOAM533MXaYVDIxnfKjoYtv9Sgm/KXiBQDXaMrrfVcJ9VLjNjiD85sbR
+        ZTRJPmy4S9A8i19NxbBte4u3ul1yYN8P5g==
+X-Google-Smtp-Source: ABdhPJzGR/xE4x3NQSPXdrYmWstDTJOKym0opsAoziby/CplFQZMQ+XZ/PfwkziMiDRoELSnQkziYg==
+X-Received: by 2002:a37:9c1:: with SMTP id 184mr20593704qkj.275.1625754995317;
+        Thu, 08 Jul 2021 07:36:35 -0700 (PDT)
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
+        by smtp.gmail.com with ESMTPSA id a66sm1063719qkg.73.2021.07.08.07.36.33
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Jul 2021 07:36:34 -0700 (PDT)
+Received: by mail-yb1-f169.google.com with SMTP id g19so9257148ybe.11
+        for <linux-pci@vger.kernel.org>; Thu, 08 Jul 2021 07:36:33 -0700 (PDT)
+X-Received: by 2002:a25:6088:: with SMTP id u130mr41384789ybb.257.1625754992872;
+ Thu, 08 Jul 2021 07:36:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
+References: <20210624171759.4125094-1-dianders@chromium.org>
+ <YNXXwvuErVnlHt+s@8bytes.org> <CAD=FV=UFxZH7g8gH5+M=Fv4Y-e1bsLkNkPGJhNwhvVychcGQcQ@mail.gmail.com>
+ <CAD=FV=W=HmgH3O3z+nThWL6U+X4Oh37COe-uTzVB9SanP2n86w@mail.gmail.com> <YOaymBHc4g2cIfRn@8bytes.org>
+In-Reply-To: <YOaymBHc4g2cIfRn@8bytes.org>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Thu, 8 Jul 2021 07:36:20 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=U_mKPaGfWyN1SVi9S2hPBpG=rE_p89+Jvjr95d0TvgsA@mail.gmail.com>
+Message-ID: <CAD=FV=U_mKPaGfWyN1SVi9S2hPBpG=rE_p89+Jvjr95d0TvgsA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] iommu: Enable non-strict DMA on QCom SD/MMC
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        John Garry <john.garry@huawei.com>,
+        Rob Clark <robdclark@chromium.org>, quic_c_gdjako@quicinc.com,
+        Saravana Kannan <saravanak@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Sai Prakash Ranjan <saiprakash.ranjan@codeaurora.org>,
+        Veerabhadrarao Badiganti <vbadigan@codeaurora.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-pci@vger.kernel.org,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>,
+        Sonny Rao <sonnyrao@chromium.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Jordan Crouse <jordan@cosmicpenguin.net>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Krishna Reddy <vdumpa@nvidia.com>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>,
+        Nicolin Chen <nicoleotsuka@gmail.com>,
+        "Paul E. McKenney" <paulmck@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 89.64.81.140
-X-CLIENT-HOSTNAME: 89-64-81-140.dynamic.chello.pl
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrtdeggdeivdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvufffkfgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepvdevgfetueetheekudeuvdduteelvefftdfftdejjeeukeffteeikefgiefghedunecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepkeelrdeigedrkedurddugedtnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepkeelrdeigedrkedurddugedtpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtoheplhhuiihmrgigihhmihhlihgrnhesghhmrghilhdrtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthht
- ohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi,
 
-Updating the current_state field of struct pci_dev the way it is done
-in pci_enable_device_flags() before calling do_pci_enable_device() may
-not work.  For example, if the given PCI device depends on an ACPI
-power resource whose _STA method initially returns 0 ("off"), but the
-config space of the PCI device is accessible and the power state
-retrieved from the PCI_PM_CTRL register is D0, the current_state
-field in the struct pci_dev representing that device will get out of
-sync with the power.state of its ACPI companion object and that will
-lead to power management issues going forward.
+On Thu, Jul 8, 2021 at 1:09 AM Joerg Roedel <joro@8bytes.org> wrote:
+>
+> On Wed, Jul 07, 2021 at 01:00:13PM -0700, Doug Anderson wrote:
+> > a) Nothing is inherently broken with my current approach.
+> >
+> > b) My current approach doesn't make anybody terribly upset even if
+> > nobody is totally in love with it.
+>
+> Well, no, sorry :)
+>
+> I don't think it is a good idea to allow drivers to opt-out of the
+> strict-setting. This is a platform or user decision, and the driver
+> should accept whatever it gets.
 
-To avoid such issues, make pci_enable_device_flags() call
-pci_update_current_state() which takes ACPI device power management
-into account, if present, to retrieve the current power state of the
-device.
-
-Link: https://lore.kernel.org/lkml/20210314000439.3138941-1-luzmaximilian@gmail.com/
-Reported-by: Maximilian Luz <luzmaximilian@gmail.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-Hi Maximilian,
-
-Because commit 4514d991d992 ("PCI: PM: Do not read power state in
-pci_enable_device_flags()"), the issue addressed by it is back, so
-we need an alternative way to address it.
-
-Can you please check if this patch makes that issue go away?
-
-Thanks!
-
----
- drivers/pci/pci.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -1906,11 +1906,7 @@ static int pci_enable_device_flags(struc
- 	 * so that things like MSI message writing will behave as expected
- 	 * (e.g. if the device really is in D0 at enable time).
- 	 */
--	if (dev->pm_cap) {
--		u16 pmcsr;
--		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
--		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
--	}
-+	pci_update_current_state(dev, dev->current_state);
- 
- 	if (atomic_inc_return(&dev->enable_cnt) > 1)
- 		return 0;		/* already enabled */
+Sure, I agree with you there. The driver shouldn't ever be able to
+override and make things less strict than the user or platform wants.
+It feels like that can be accomplished. See below.
 
 
+> So the real question is still why strict is the default setting and how
+> to change that.
 
+I guess there are two strategies if we agree that there's a benefit to
+running some devices in strict and others in non-strict:
+
+* opt-in to strict: default is non-strict and we have to explicitly
+list what we want to be strict.
+
+* opt-out of strict: default is strict and we have to explicitly list
+what we want to be non-strict.
+
+I guess the question is: do we allow both strategies or only one of
+them? I think you are suggesting that the kernel should support
+"opt-in" to strict and that that matches the status quo with PCI on
+x86. I'm pushing for some type of "opt-out" of strict support. I have
+heard from security folks that they'd prefer "opt-out" of strict as
+well. If we're willing to accept more complex config options we could
+support both choosable by KConfig. How it'd all work in my mind:
+
+Command line:
+
+* iommu.strict=0 - suggest non-strict by default
+* iommu.strict=1 - force strict for all drivers
+* iommu.strict not specified - no opinion
+
+Kconfig:
+
+* IOMMU_DEFAULT_LAZY - suggest non-strict by default; drivers can
+opt-in to strict
+* IOMMU_DEFAULT_STRICT - force strict for all drivers
+* IOMMU_DEFAULT_LOOSE_STRICT - allow explicit suggestions for laziness
+but default to strict if no votes.
+
+Drivers:
+* suggest lazy - suggest non-strict
+* force strict - force strict
+* no vote
+
+
+How the above work together:
+
+* if _any_ of the three things wants strict then it's strict.
+
+* if _all_ of the three things want lazy then it's lazy.
+
+* If the KConfig is "loose strict" and the command line is set to
+"lazy" then it's equivalent to the KConfig saying "lazy". In other
+words drivers could still "opt-in" to strict but otherwise we'd be
+lazy.
+
+* The only way for a driver's "suggest lazy" vote to have any effect
+at all is if "iommu.strict" wasn't specified on the command line _and_
+if the KConfig was "loose strict". This is effectively the "opt-out"
+of lazy.
+
+
+If you think the strategy I describe above is garbage then would you
+be OK if I re-worked my patchset to at least allow non-PCI drivers to
+"opt-in" to strict? Effectively I'd change patch #3 to list all of the
+peripherals on my SoC _except_ the USB and SD/MMC and request that
+they all be strict. If other people expressed their preference for the
+"opt-out" of strict strategy would that change your mind?
+
+
+> Or document for the users that want performance how to
+> change the setting, so that they can decide.
+
+Pushing this to the users can make sense for a Linux distribution but
+probably less sense for an embedded platform. So I'm happy to make
+some way for a user to override this (like via kernel command line),
+but I also strongly believe there should be a default that users don't
+have to futz with that we think is correct.
+
+-Doug
