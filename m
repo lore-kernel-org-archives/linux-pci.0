@@ -2,64 +2,69 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 678E7C07E96
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 19:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75984C07E96
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 20:19:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4581D61629
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 19:49:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 597F561878
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Jul 2021 20:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230155AbhGHTwA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Jul 2021 15:52:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55384 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229631AbhGHTwA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jul 2021 15:52:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id CBEB16141E;
-        Thu,  8 Jul 2021 19:49:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625773757;
-        bh=WTJ8UavVAdBvcncxyhwKqeDpvOWQ22qQ90/5ehNgq3U=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=OXt8aAZjTZwRthj2zik4jeqYZle8/tFYfG3GqS5nOhm2QJUsnZH/b9qwh5G/iriWZ
-         dcy0xsBYZ16Z7mfJF7jiVciQ21lUPpy3gU/GuWpJTgdt9Hqoj4kgf3e7fulxKpowg+
-         osiRFYn81aKrI0x0Iu50dCkd/4uh5VdxEUk2nzAiCi/ZHqDb4eU0zVFLx3MISJ8C44
-         AxAxCQTVMBaf2TluOuvAHYJ3q1MPs0vWhY82VuFOZ+YEyLGLi3RRjLJ7QCthDllVwd
-         arCRkIGnbeBviXN2ygOu9faOQl5XgRAO2FV0zeilcUdP4MaradTpSSqbiIay31zgQu
-         cf/VrgGxPYjzg==
-Subject: Re: [GIT PULL] PCI changes for v5.14
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20210707214240.GA937039@bjorn-Precision-5520>
-References: <20210707214240.GA937039@bjorn-Precision-5520>
-X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20210707214240.GA937039@bjorn-Precision-5520>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.14-changes
-X-PR-Tracked-Commit-Id: d58b2061105956f6e69691bf0259b1dd1e9fb601
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 316a2c9b6a5f6f056441275f748e077027179f36
-Message-Id: <162577375769.18035.3357898383161596606.pr-tracker-bot@kernel.org>
-Date:   Thu, 08 Jul 2021 19:49:17 +0000
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S230313AbhGHUVk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Jul 2021 16:21:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42880 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230238AbhGHUVk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jul 2021 16:21:40 -0400
+X-Greylist: delayed 82512 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 08 Jul 2021 13:18:57 PDT
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B127CC061574;
+        Thu,  8 Jul 2021 13:18:57 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 0526F92009C; Thu,  8 Jul 2021 22:18:55 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id EAD1292009B;
+        Thu,  8 Jul 2021 22:18:55 +0200 (CEST)
+Date:   Thu, 8 Jul 2021 22:18:55 +0200 (CEST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: Do not restore firmware BAR assignments behind a
+ PCI-PCI bridge
+In-Reply-To: <alpine.DEB.2.21.2104211620400.44318@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2107082210480.6599@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2104211620400.44318@angie.orcam.me.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pull request you sent on Wed, 7 Jul 2021 16:42:40 -0500:
+On Wed, 7 Jul 2021, Maciej W. Rozycki wrote:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.14-changes
+> This may work for a device directly on the root bus decoded by the host 
+> bridge only, but for a device behind one or more PCI-to-PCI (or CardBus) 
+> bridges those bridges' forwarding windows have been standardised and 
+> need to be respected, or leaving whatever has been there in a downstream 
+> device's BAR will have no effect as cycles for the addresses recorded 
+> there will have no chance to appear on the bus the device has been 
+> immediately attached to.
+> 
+> Do not restore the firmware assignment for a device behind a PCI-to-PCI 
+> bridge then, fixing the system concerned as follows:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/316a2c9b6a5f6f056441275f748e077027179f36
+ Scrap it.
 
-Thank you!
+ Something kept bothering me about this fix and I have double-checked with 
+PR 16263, and the problematic device there also was behind a PCI-to-PCI 
+bridge, which I have somehow missed previously, though within the bridge's 
+forwarding window.  So a more stringent rule will be required to keep both 
+cases happy and I'll make v2 shortly that only refrains from restoring the 
+original assignment when it is outside the relevant upstream bridge's 
+forwarding window.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+  Maciej
