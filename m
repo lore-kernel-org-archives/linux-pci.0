@@ -2,166 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2264C07E9B
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:24:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B97C07E99
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8516D6124C
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8808613ED
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232010AbhGIK1V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Jul 2021 06:27:21 -0400
-Received: from mail-wm1-f46.google.com ([209.85.128.46]:53950 "EHLO
-        mail-wm1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232006AbhGIK1V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jul 2021 06:27:21 -0400
-Received: by mail-wm1-f46.google.com with SMTP id w13so6010400wmc.3;
-        Fri, 09 Jul 2021 03:24:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=cAfemKVKaAPq40ft5rYBbrNJJ0FxZzS3NBhkFBnKSzI=;
-        b=YAW3U4TOhh9jayB20oqIkMIbn+6IlNyrt+m2wQxcJG+1ope3QDQS/7WtJ2qyEdcAij
-         nXCyzZKfc+AKkbCp5bv3Yjcgh7ZTClRW3LkkSEw619K1hchuypXujudHmFJgvXxkTaJo
-         XFgFNgr8P8vr99RzkiTqpoU2crGGqHcu1/GAfCFhEph4C3H51XdXOmr2OsVQrrwTg5Qq
-         CJYdnLOFbjEaQ5+zykCHG9c+aU+f2odg4DQfOQJP6CMbVaXWEg3swaWWdyyRmOUZ9PRD
-         25UvOunY5Asg1XBjfOmRKMIrgef9FygU1izOS9xTevHyEN/MLIoTt1c6OhbvaDk/c8g2
-         wZpQ==
-X-Gm-Message-State: AOAM531IIt2ZSzlc1hyEz6ZbSXVdtTkvxWhvrTnITClw+GcSYULIdLFK
-        2Lgg8pVXdSPtA+vQkgKDZaU=
-X-Google-Smtp-Source: ABdhPJz7KdWD9EJLU17W1kLv6XakRSsjJEumz5JxJkpi9BFIWNd/m8DAe9BoZPX7TXQA5ORW8lv8ug==
-X-Received: by 2002:a1c:e90d:: with SMTP id q13mr38611656wmc.163.1625826276878;
-        Fri, 09 Jul 2021 03:24:36 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id j1sm11370711wms.7.2021.07.09.03.24.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 03:24:36 -0700 (PDT)
-Date:   Fri, 9 Jul 2021 10:24:34 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Sunil Muthuswamy <sunilmut@microsoft.com>
-Cc:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <liuwe@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
+        id S230091AbhGIKog (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Jul 2021 06:44:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47528 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229863AbhGIKoe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 9 Jul 2021 06:44:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 34FD9613D3;
+        Fri,  9 Jul 2021 10:41:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625827311;
+        bh=D+ZGOha9YIyNnfYr6FuOOJKEz9zpdtF5nyb6I85glxg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=An8RPckRGPoa6R+tY/aceyDL2qxuh9qQ4zUTILbWKiB2Lq+SrlpIf24Vpw9rhNfrd
+         xkrUOtYJt4ph+fPbUkBijEXPn4vV9rZrsgaWhEBbliuU7mDN/0ROHTbi9mHcNT9/An
+         tKxceuF7NuMh4M9zD5XPINq47w4/gLXgdI0GzmN58ZQ+hPuRzkGDR/OiFHCk3LnWSU
+         BUuq7EUYjzMC5N2j4W9yAJZFzOqo9ICORynT96ATKDhAu78ys3G9Wp+EIyTm3O5fac
+         69kBiOlwxbWf0oCrlm2jZB5+teoy9VqY0LC/XFwRPBKrPxmfFIZws+6//EnH7FJ7MW
+         TZ4mZa+qxSsSw==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1m1nx7-00B5Fe-9z; Fri, 09 Jul 2021 12:41:49 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Herring <robh@kernel.org>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Liu <wei.liu@kernel.org>
-Subject: Re: [PATCH 1/1] PCI: hv: Support for create interrupt v3
-Message-ID: <20210709102434.c4hj4iehumf7qbj7@liuwe-devbox-debian-v2>
-References: <MW4PR21MB20025B945D77BBFDF61C6DA8C0199@MW4PR21MB2002.namprd21.prod.outlook.com>
+        Rob Herring <robh+dt@kernel.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v3 4/9] dt-bindings: PCI: kirin: drop PHY properties
+Date:   Fri,  9 Jul 2021 12:41:40 +0200
+Message-Id: <2c5920d1a7a826ecfd480e7cb3b3230b0290d1e5.1625826353.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1625826353.git.mchehab+huawei@kernel.org>
+References: <cover.1625826353.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MW4PR21MB20025B945D77BBFDF61C6DA8C0199@MW4PR21MB2002.namprd21.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 08, 2021 at 11:04:49PM +0000, Sunil Muthuswamy wrote:
-> Hyper-V vPCI protocol version 1_4 adds support for create interrupt
-> v3. Create interrupt v3 essentially makes the size of the vector
-> field bigger in the message, thereby allowing bigger vector values.
-> For example, that will come into play for supporting LPI vectors
-> on ARM, which start at 8192.
-> 
-> Signed-off-by: Sunil Muthuswamy <sunilmut@microsoft.com>
-> ---
->  drivers/pci/controller/pci-hyperv.c | 74 ++++++++++++++++++++++++++---
->  1 file changed, 68 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index bebe3eeebc4e..de61b20f9604 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -64,6 +64,7 @@ enum pci_protocol_version_t {
->  	PCI_PROTOCOL_VERSION_1_1 = PCI_MAKE_VERSION(1, 1),	/* Win10 */
->  	PCI_PROTOCOL_VERSION_1_2 = PCI_MAKE_VERSION(1, 2),	/* RS1 */
->  	PCI_PROTOCOL_VERSION_1_3 = PCI_MAKE_VERSION(1, 3),	/* Vibranium */
-> +	PCI_PROTOCOL_VERSION_1_4 = PCI_MAKE_VERSION(1, 4),      /* Fe */
->  };
->  
->  #define CPU_AFFINITY_ALL	-1ULL
-> @@ -73,6 +74,7 @@ enum pci_protocol_version_t {
->   * first.
->   */
->  static enum pci_protocol_version_t pci_protocol_versions[] = {
-> +	PCI_PROTOCOL_VERSION_1_4,
->  	PCI_PROTOCOL_VERSION_1_3,
->  	PCI_PROTOCOL_VERSION_1_2,
->  	PCI_PROTOCOL_VERSION_1_1,
-> @@ -122,6 +124,8 @@ enum pci_message_type {
->  	PCI_CREATE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x17,
->  	PCI_DELETE_INTERRUPT_MESSAGE2	= PCI_MESSAGE_BASE + 0x18, /* unused */
->  	PCI_BUS_RELATIONS2		= PCI_MESSAGE_BASE + 0x19,
-> +	PCI_RESOURCES_ASSIGNED3         = PCI_MESSAGE_BASE + 0x1A,
-> +	PCI_CREATE_INTERRUPT_MESSAGE3   = PCI_MESSAGE_BASE + 0x1B,
->  	PCI_MESSAGE_MAXIMUM
->  };
->  
-> @@ -235,6 +239,21 @@ struct hv_msi_desc2 {
->  	u16	processor_array[32];
->  } __packed;
->  
-> +/*
-> + * struct hv_msi_desc3 - 1.3 version of hv_msi_desc
-> + *	Everything is the same as in 'hv_msi_desc2' except that the size
-> + *	of the 'vector_count' field is larger to support bigger vector
-> + *	values. For ex: LPI vectors on ARM.
-> + */
-> +struct hv_msi_desc3 {
-> +	u32	vector;
-> +	u8	delivery_mode;
-> +	u8	reserved;
-> +	u16	vector_count;
-> +	u16	processor_count;
-> +	u16	processor_array[32];
-> +} __packed;
-> +
->  /**
->   * struct tran_int_desc
->   * @reserved:		unused, padding
-> @@ -383,6 +402,12 @@ struct pci_create_interrupt2 {
->  	struct hv_msi_desc2 int_desc;
->  } __packed;
->  
-> +struct pci_create_interrupt3 {
-> +	struct pci_message message_type;
-> +	union win_slot_encoding wslot;
-> +	struct hv_msi_desc3 int_desc;
-> +} __packed;
-> +
->  struct pci_delete_interrupt {
->  	struct pci_message message_type;
->  	union win_slot_encoding wslot;
-> @@ -1334,26 +1359,55 @@ static u32 hv_compose_msi_req_v1(
->  	return sizeof(*int_pkt);
->  }
->  
-> +static void hv_compose_msi_req_get_cpu(struct cpumask *affinity, int *cpu,
-> +				       u16 *count)
+There are several properties there that belong to the PHY
+interface. Drop them, as a new binding file will describe
+the PHY properties for Kirin 960.
 
-Isn't count redundant here? I don't see how this can be used safely for
-passing back more than 1 cpu, since if cpu is pointing to an array, its
-size is not specified.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../devicetree/bindings/pci/kirin-pcie.txt       | 16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
-Wei.
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+index 71cac2b74002..a93a8cfa1afb 100644
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -10,13 +10,11 @@ Additional properties are described here:
+ Required properties
+ - compatible:
+ 	"hisilicon,kirin960-pcie"
+-- reg: Should contain rc_dbi, apb, phy, config registers location and length.
++- reg: Should contain rc_dbi, apb, config registers location and length.
+ - reg-names: Must include the following entries:
+   "dbi": controller configuration registers;
+   "apb": apb Ctrl register defined by Kirin;
+-  "phy": apb PHY register defined by Kirin;
+   "config": PCIe configuration space registers.
+-- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+ 
+ Optional properties:
+ 
+@@ -25,8 +23,8 @@ Example based on kirin960:
+ 	pcie@f4000000 {
+ 		compatible = "hisilicon,kirin960-pcie";
+ 		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+-		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
+-		reg-names = "dbi","apb","phy", "config";
++		      <0x0 0xF4000000 0 0x2000>;
++		reg-names = "dbi","apb", "config";
+ 		bus-range = <0x0  0x1>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+@@ -39,12 +37,4 @@ Example based on kirin960:
+ 				<0x0 0 0 2 &gic 0 0 0  283 4>,
+ 				<0x0 0 0 3 &gic 0 0 0  284 4>,
+ 				<0x0 0 0 4 &gic 0 0 0  285 4>;
+-		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+-			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+-			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+-		clock-names = "pcie_phy_ref", "pcie_aux",
+-			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+-		reset-gpios = <&gpio11 1 0 >;
+ 	};
+-- 
+2.31.1
 
-> +{
-> +	/*
-> +	 * Create MSI w/ dummy vCPU set targeting just one vCPU, overwritten
-> +	 * by subsequent retarget in hv_irq_unmask().
-> +	 */
-> +	*cpu = cpumask_first_and(affinity, cpu_online_mask);
-> +	*count = 1;
-> +}
-> +
