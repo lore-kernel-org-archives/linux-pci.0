@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B97C07E99
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32815C07E9E
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8808613ED
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1623661404
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230091AbhGIKog (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Jul 2021 06:44:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47528 "EHLO mail.kernel.org"
+        id S230178AbhGIKoh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Jul 2021 06:44:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47508 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229863AbhGIKoe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S229790AbhGIKoe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 9 Jul 2021 06:44:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 34FD9613D3;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3039B613CF;
         Fri,  9 Jul 2021 10:41:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1625827311;
-        bh=D+ZGOha9YIyNnfYr6FuOOJKEz9zpdtF5nyb6I85glxg=;
+        bh=myJOBw0Qp5XaQjPzlyLNLDqOfG7j4IJ/JolTRs3S2tY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=An8RPckRGPoa6R+tY/aceyDL2qxuh9qQ4zUTILbWKiB2Lq+SrlpIf24Vpw9rhNfrd
-         xkrUOtYJt4ph+fPbUkBijEXPn4vV9rZrsgaWhEBbliuU7mDN/0ROHTbi9mHcNT9/An
-         tKxceuF7NuMh4M9zD5XPINq47w4/gLXgdI0GzmN58ZQ+hPuRzkGDR/OiFHCk3LnWSU
-         BUuq7EUYjzMC5N2j4W9yAJZFzOqo9ICORynT96ATKDhAu78ys3G9Wp+EIyTm3O5fac
-         69kBiOlwxbWf0oCrlm2jZB5+teoy9VqY0LC/XFwRPBKrPxmfFIZws+6//EnH7FJ7MW
-         TZ4mZa+qxSsSw==
+        b=VeZCaZ7qEGzJFmdXmhVCSGcVjShqYNehadFFfRUP6nWcapnkmmWi/vjK4JLSXUcDO
+         XCPHt5br62DqzZ2ZEnskT6BFn3M6nAaeNBiztigUUEfdmtHkMdV9u6t6kQFm0rnmcc
+         SM2pcdsJQYdsZ1Cuu29cikVRb6wUBCf71CgGsbY8oMEsSJ8qJdtEEoD5X5lDOg2EwD
+         x9mPOZVyRtJgovKlzpolIxxMKH4xkQR048xCQYHE+ZjNnVeAtGp/cBetDGBTnzw379
+         GIJUVvJ8q2AdrWV1eGz1pYkXU2BRr/Fr2AXUur12bwqmPFG20nlTvmNrLcRzgbMWAy
+         6a9C7mqXCXR3w==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1m1nx7-00B5Fe-9z; Fri, 09 Jul 2021 12:41:49 +0200
+        id 1m1nx7-00B5Fs-Fm; Fri, 09 Jul 2021 12:41:49 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Manivannan Sadhasivam <mani@kernel.org>,
         Rob Herring <robh@kernel.org>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Binghui Wang <wangbinghui@hisilicon.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3 4/9] dt-bindings: PCI: kirin: drop PHY properties
-Date:   Fri,  9 Jul 2021 12:41:40 +0200
-Message-Id: <2c5920d1a7a826ecfd480e7cb3b3230b0290d1e5.1625826353.git.mchehab+huawei@kernel.org>
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 7/9] PCI: kirin: use regmap for APB registers
+Date:   Fri,  9 Jul 2021 12:41:43 +0200
+Message-Id: <f6e980b8de11fca921e876c9facbd996abf6c06b.1625826353.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1625826353.git.mchehab+huawei@kernel.org>
 References: <cover.1625826353.git.mchehab+huawei@kernel.org>
@@ -58,58 +58,119 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are several properties there that belong to the PHY
-interface. Drop them, as a new binding file will describe
-the PHY properties for Kirin 960.
+The PHY layer need to access APB registers too, for Kirin 970.
+So, place them into a named regmap.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../devicetree/bindings/pci/kirin-pcie.txt       | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+ drivers/pci/controller/dwc/pcie-kirin.c | 49 +++++++++++++------------
+ 1 file changed, 26 insertions(+), 23 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-index 71cac2b74002..a93a8cfa1afb 100644
---- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -10,13 +10,11 @@ Additional properties are described here:
- Required properties
- - compatible:
- 	"hisilicon,kirin960-pcie"
--- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg: Should contain rc_dbi, apb, config registers location and length.
- - reg-names: Must include the following entries:
-   "dbi": controller configuration registers;
-   "apb": apb Ctrl register defined by Kirin;
--  "phy": apb PHY register defined by Kirin;
-   "config": PCIe configuration space registers.
--- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index a77bbecbf11f..78271dddf2e8 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -54,28 +54,30 @@
+ struct kirin_pcie {
+ 	struct dw_pcie	*pci;
+ 	struct phy	*phy;
+-	void __iomem	*apb_base;
++	struct regmap	*apb;
+ };
  
- Optional properties:
+-/* Registers in PCIeCTRL */
+-static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
+-					 u32 val, u32 reg)
+-{
+-	writel(val, kirin_pcie->apb_base + reg);
+-}
+-
+-static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
+-{
+-	return readl(kirin_pcie->apb_base + reg);
+-}
++static const struct regmap_config pcie_kirin_regmap_conf = {
++	.name = "kirin_pcie_apb",
++	.reg_bits = 32,
++	.val_bits = 32,
++	.reg_stride = 4,
++};
  
-@@ -25,8 +23,8 @@ Example based on kirin960:
- 	pcie@f4000000 {
- 		compatible = "hisilicon,kirin960-pcie";
- 		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
--		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
--		reg-names = "dbi","apb","phy", "config";
-+		      <0x0 0xF4000000 0 0x2000>;
-+		reg-names = "dbi","apb", "config";
- 		bus-range = <0x0  0x1>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-@@ -39,12 +37,4 @@ Example based on kirin960:
- 				<0x0 0 0 2 &gic 0 0 0  283 4>,
- 				<0x0 0 0 3 &gic 0 0 0  284 4>,
- 				<0x0 0 0 4 &gic 0 0 0  285 4>;
--		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
--			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
--			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
--			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
--			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
--		clock-names = "pcie_phy_ref", "pcie_aux",
--			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
--		reset-gpios = <&gpio11 1 0 >;
- 	};
+ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ 				    struct platform_device *pdev)
+ {
+-	kirin_pcie->apb_base =
+-		devm_platform_ioremap_resource_byname(pdev, "apb");
+-	if (IS_ERR(kirin_pcie->apb_base))
+-		return PTR_ERR(kirin_pcie->apb_base);
++	struct device *dev = &pdev->dev;
++	void __iomem *apb_base;
++
++	apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
++	if (IS_ERR(apb_base))
++		return PTR_ERR(apb_base);
++
++	kirin_pcie->apb = devm_regmap_init_mmio(dev, apb_base,
++						&pcie_kirin_regmap_conf);
++	if (IS_ERR(kirin_pcie->apb))
++		return PTR_ERR(kirin_pcie->apb);
+ 
+ 	return 0;
+ }
+@@ -96,13 +98,13 @@ static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, val);
+ }
+ 
+ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+@@ -110,13 +112,13 @@ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, val);
+ }
+ 
+ static int kirin_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
+@@ -176,8 +178,9 @@ static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+ static int kirin_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+-	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++	u32 val;
+ 
++	regmap_read(kirin_pcie->apb, PCIE_APB_PHY_STATUS0, &val);
+ 	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
+ 		return 1;
+ 
+@@ -189,8 +192,8 @@ static int kirin_pcie_start_link(struct dw_pcie *pci)
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+ 
+ 	/* assert LTSSM enable */
+-	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
+-			      PCIE_APP_LTSSM_ENABLE);
++	regmap_write(kirin_pcie->apb, PCIE_APP_LTSSM_ENABLE,
++		     PCIE_LTSSM_ENABLE_BIT);
+ 
+ 	return 0;
+ }
 -- 
 2.31.1
 
