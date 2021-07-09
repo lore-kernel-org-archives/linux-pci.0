@@ -2,478 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55DBBC11F6D
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE22C07E99
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 11:21:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3743B613D6
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 10:41:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C36F4613B6
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Jul 2021 11:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230354AbhGIKoj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Jul 2021 06:44:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47686 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230075AbhGIKog (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Jul 2021 06:44:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 15ABC613E1;
-        Fri,  9 Jul 2021 10:41:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625827313;
-        bh=fPefUPSOWcPfKD2PSYIT5O1A1N5dDc1L1HZoEEtQR8c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uG6ZogdC+m1wNmaB9uxasVYdv1/fXFr+crHt11+yqbNtj77nsGb/pcx7Mt5wWwtWR
-         hv9nSsFKILNpabNwfzzOcuevaFSuL5LuMgQDCr6CSgfTU500+uapLHWWh5GWgldItC
-         gLY3xyp+7xbLIlSIy8ycKPgohgvmgSYZscLyIlGj0fj+s3camBeULvFXH+M4vhYM3N
-         fUnrQZVLkPQqnK5mlC+6NkMmGc7eFT7LoljKm2i+MlpQM8StjL++M+8esGFtHV13Iq
-         XqFGlPqD1Is0pzAfRhE0vNJLxOqpAk0qQx9ImDEWA0lk4WolHYhRrziD6iUQsBpqw1
-         uIbtjefcP0dOA==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1m1nx7-00B5Fo-Dd; Fri, 09 Jul 2021 12:41:49 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Manivannan Sadhasivam <mani@kernel.org>,
-        Rob Herring <robh@kernel.org>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Wei Xu <xuwei5@hisilicon.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 6/9] PCI: kirin: drop the PHY logic from the driver
-Date:   Fri,  9 Jul 2021 12:41:42 +0200
-Message-Id: <29ccfead1f665ed8028d4a3e7e3d28c573b632f1.1625826353.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1625826353.git.mchehab+huawei@kernel.org>
-References: <cover.1625826353.git.mchehab+huawei@kernel.org>
+        id S230470AbhGILYF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Jul 2021 07:24:05 -0400
+Received: from mail-oi1-f180.google.com ([209.85.167.180]:33338 "EHLO
+        mail-oi1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230091AbhGILYF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jul 2021 07:24:05 -0400
+Received: by mail-oi1-f180.google.com with SMTP id s17so11888814oij.0;
+        Fri, 09 Jul 2021 04:21:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pJBfn8KrookS9VA95B+AE2i8GXpFZrKK3T2F0bIumXM=;
+        b=aRc+NklbSTsnfQpicbSPgqTYz7uxH4Q8uLRJtUa32G54awU6QbaW2vgeUK8UvhQ90J
+         MCSR0f4lYd9d6vZE+AjP4dflHDTq4VbmFDRNs690cQb0Tm+CQ5cfDAdXF+kvdhTokx4+
+         DhaYOncmRGQ4X8IsOUJt0w6kDg8B++en/su8IfnOBVqj03yipqbg67qWWlKp7GRQauNb
+         2Z72AY1X0vW+jEQkTWrLjl5U6nr66hm6EQ84me9bmqbXJnOUylwQnbhfytAiAHhajecV
+         N996kkk7wKMfbxEkja3FNfh4iDi5i/1PCNIpc8NOQBxxxd+SxcrY8Gs47DORuf1crdK8
+         ljUw==
+X-Gm-Message-State: AOAM53391wvwXp7Pz6saGQCmMj6BhrJ9dbJX5vchZzi3b7zSsXQ+7Lp2
+        IKEGwLKE0lxSYGpjlo0juyzzdXoBybK2/pkjWUE=
+X-Google-Smtp-Source: ABdhPJz9yAt/PUrlHk09vA7sJVdy62jMOZClvCnSc027dfScoZVvS7LtBwJ72GxAOGWJR67ndQvr7S5AgSL8Ny9/ozU=
+X-Received: by 2002:aca:c457:: with SMTP id u84mr17485471oif.69.1625829681556;
+ Fri, 09 Jul 2021 04:21:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+References: <4327888.LvFx2qVVIh@kreacher> <5327028b-6e0b-e83c-b147-da083a23634c@gmail.com>
+In-Reply-To: <5327028b-6e0b-e83c-b147-da083a23634c@gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 9 Jul 2021 13:21:09 +0200
+Message-ID: <CAJZ5v0iCyLircAL928bA4-+Pd1UtaBcZ-PVRNk3qJScSybzwCQ@mail.gmail.com>
+Subject: Re: [PATCH][RFT] PCI: Use pci_update_current_state() in pci_enable_device_flags()
+To:     Maximilian Luz <luzmaximilian@gmail.com>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pcie-kirin PCIe driver contains internally a PHY interface for
-a Kirin 960. Drop it and add support for using the new PHY driver
-for Kirin 960, updating DT accordingly.
+On Thu, Jul 8, 2021 at 10:34 PM Maximilian Luz <luzmaximilian@gmail.com> wrote:
+>
+> On 7/8/21 3:25 PM, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Updating the current_state field of struct pci_dev the way it is done
+> > in pci_enable_device_flags() before calling do_pci_enable_device() may
+> > not work.  For example, if the given PCI device depends on an ACPI
+> > power resource whose _STA method initially returns 0 ("off"), but the
+> > config space of the PCI device is accessible and the power state
+> > retrieved from the PCI_PM_CTRL register is D0, the current_state
+> > field in the struct pci_dev representing that device will get out of
+> > sync with the power.state of its ACPI companion object and that will
+> > lead to power management issues going forward.
+> >
+> > To avoid such issues, make pci_enable_device_flags() call
+> > pci_update_current_state() which takes ACPI device power management
+> > into account, if present, to retrieve the current power state of the
+> > device.
+> >
+> > Link: https://lore.kernel.org/lkml/20210314000439.3138941-1-luzmaximilian@gmail.com/
+> > Reported-by: Maximilian Luz <luzmaximilian@gmail.com>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >
+> > Hi Maximilian,
+> >
+> > Because commit 4514d991d992 ("PCI: PM: Do not read power state in
+> > pci_enable_device_flags()"), the issue addressed by it is back, so
+> > we need an alternative way to address it.
+> >
+> > Can you please check if this patch makes that issue go away?
+>
+> Hi,
+>
+> just tested this on v5.13 and it works, thanks! Feel free to add
+>
+> Tested-by: Maximilian Luz <luzmaximilian@gmail.com>
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
----
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi |  29 ++-
- drivers/pci/controller/dwc/pcie-kirin.c   | 252 +++-------------------
- 2 files changed, 47 insertions(+), 234 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index 53890e8052a7..07a616b352f5 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -1001,17 +1001,33 @@ spi3: spi@ff3b3000 {
- 			status = "disabled";
- 		};
- 
-+		pcie_phy: pcie-phy@f3f2000 {
-+			compatible = "hisilicon,hi960-pcie-phy";
-+			reg = <0x0 0xf3f20000 0x0 0x40000>;
-+			reg-names = "phy";
-+			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+			clock-names = "pcie_phy_ref", "pcie_aux",
-+				      "pcie_apb_phy", "pcie_apb_sys",
-+				      "pcie_aclk";
-+			reset-gpios = <&gpio11 1 0 >;
-+			#phy-cells = <0>;
-+		};
-+
- 		pcie@f4000000 {
- 			compatible = "hisilicon,kirin960-pcie";
- 			reg = <0x0 0xf4000000 0x0 0x1000>,
- 			      <0x0 0xff3fe000 0x0 0x1000>,
--			      <0x0 0xf3f20000 0x0 0x40000>,
- 			      <0x0 0xf5000000 0x0 0x2000>;
--			reg-names = "dbi", "apb", "phy", "config";
-+			reg-names = "dbi", "apb", "config";
- 			bus-range = <0x0  0x1>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-+			phys = <&pcie_phy>;
- 			ranges = <0x02000000 0x0 0x00000000
- 				  0x0 0xf6000000
- 				  0x0 0x02000000>;
-@@ -1028,15 +1044,6 @@ &gic GIC_SPI 283 IRQ_TYPE_LEVEL_HIGH>,
- 					 &gic GIC_SPI 284 IRQ_TYPE_LEVEL_HIGH>,
- 					<0x0 0 0 4
- 					 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
--				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
--				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
--				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
--				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
--			clock-names = "pcie_phy_ref", "pcie_aux",
--				      "pcie_apb_phy", "pcie_apb_sys",
--				      "pcie_aclk";
--			reset-gpios = <&gpio11 1 0 >;
- 		};
- 
- 		/* UFS */
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 026fd1e42a55..a77bbecbf11f 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -9,7 +9,6 @@
-  */
- 
- #include <linux/compiler.h>
--#include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/gpio.h>
-@@ -21,6 +20,7 @@
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
- #include <linux/regmap.h>
- #include <linux/resource.h>
- #include <linux/types.h>
-@@ -28,26 +28,17 @@
- 
- #define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
- 
--#define REF_CLK_FREQ			100000000
--
- /* PCIe ELBI registers */
- #define SOC_PCIECTRL_CTRL0_ADDR		0x000
- #define SOC_PCIECTRL_CTRL1_ADDR		0x004
--#define SOC_PCIEPHY_CTRL2_ADDR		0x008
--#define SOC_PCIEPHY_CTRL3_ADDR		0x00c
- #define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
- 
- /* info located in APB */
- #define PCIE_APP_LTSSM_ENABLE	0x01c
--#define PCIE_APB_PHY_CTRL0	0x0
--#define PCIE_APB_PHY_CTRL1	0x4
- #define PCIE_APB_PHY_STATUS0	0x400
- #define PCIE_LINKUP_ENABLE	(0x8020)
- #define PCIE_LTSSM_ENABLE_BIT	(0x1 << 11)
- #define PIPE_CLK_STABLE		(0x1 << 19)
--#define PHY_REF_PAD_BIT		(0x1 << 8)
--#define PHY_PWR_DOWN_BIT	(0x1 << 22)
--#define PHY_RST_ACK_BIT		(0x1 << 16)
- 
- /* info located in sysctrl */
- #define SCTRL_PCIE_CMOS_OFFSET	0x60
-@@ -60,36 +51,10 @@
- #define PCIE_DEBOUNCE_PARAM	0xF0F400
- #define PCIE_OE_BYPASS		(0x3 << 28)
- 
--/* peri_crg ctrl */
--#define CRGCTRL_PCIE_ASSERT_OFFSET	0x88
--#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
--
--/* Time for delay */
--#define REF_2_PERST_MIN		20000
--#define REF_2_PERST_MAX		25000
--#define PERST_2_ACCESS_MIN	10000
--#define PERST_2_ACCESS_MAX	12000
--#define LINK_WAIT_MIN		900
--#define LINK_WAIT_MAX		1000
--#define PIPE_CLK_WAIT_MIN	550
--#define PIPE_CLK_WAIT_MAX	600
--#define TIME_CMOS_MIN		100
--#define TIME_CMOS_MAX		105
--#define TIME_PHY_PD_MIN		10
--#define TIME_PHY_PD_MAX		11
--
- struct kirin_pcie {
- 	struct dw_pcie	*pci;
-+	struct phy	*phy;
- 	void __iomem	*apb_base;
--	void __iomem	*phy_base;
--	struct regmap	*crgctrl;
--	struct regmap	*sysctrl;
--	struct clk	*apb_sys_clk;
--	struct clk	*apb_phy_clk;
--	struct clk	*phy_ref_clk;
--	struct clk	*pcie_aclk;
--	struct clk	*pcie_aux_clk;
--	int		gpio_id_reset;
- };
- 
- /* Registers in PCIeCTRL */
-@@ -104,46 +69,6 @@ static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
- 	return readl(kirin_pcie->apb_base + reg);
- }
- 
--/* Registers in PCIePHY */
--static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
--					u32 val, u32 reg)
--{
--	writel(val, kirin_pcie->phy_base + reg);
--}
--
--static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
--{
--	return readl(kirin_pcie->phy_base + reg);
--}
--
--static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
--			       struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--
--	kirin_pcie->phy_ref_clk = devm_clk_get(dev, "pcie_phy_ref");
--	if (IS_ERR(kirin_pcie->phy_ref_clk))
--		return PTR_ERR(kirin_pcie->phy_ref_clk);
--
--	kirin_pcie->pcie_aux_clk = devm_clk_get(dev, "pcie_aux");
--	if (IS_ERR(kirin_pcie->pcie_aux_clk))
--		return PTR_ERR(kirin_pcie->pcie_aux_clk);
--
--	kirin_pcie->apb_phy_clk = devm_clk_get(dev, "pcie_apb_phy");
--	if (IS_ERR(kirin_pcie->apb_phy_clk))
--		return PTR_ERR(kirin_pcie->apb_phy_clk);
--
--	kirin_pcie->apb_sys_clk = devm_clk_get(dev, "pcie_apb_sys");
--	if (IS_ERR(kirin_pcie->apb_sys_clk))
--		return PTR_ERR(kirin_pcie->apb_sys_clk);
--
--	kirin_pcie->pcie_aclk = devm_clk_get(dev, "pcie_aclk");
--	if (IS_ERR(kirin_pcie->pcie_aclk))
--		return PTR_ERR(kirin_pcie->pcie_aclk);
--
--	return 0;
--}
--
- static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 				    struct platform_device *pdev)
- {
-@@ -152,149 +77,18 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 	if (IS_ERR(kirin_pcie->apb_base))
- 		return PTR_ERR(kirin_pcie->apb_base);
- 
--	kirin_pcie->phy_base =
--		devm_platform_ioremap_resource_byname(pdev, "phy");
--	if (IS_ERR(kirin_pcie->phy_base))
--		return PTR_ERR(kirin_pcie->phy_base);
--
--	kirin_pcie->crgctrl =
--		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
--	if (IS_ERR(kirin_pcie->crgctrl))
--		return PTR_ERR(kirin_pcie->crgctrl);
--
--	kirin_pcie->sysctrl =
--		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
--	if (IS_ERR(kirin_pcie->sysctrl))
--		return PTR_ERR(kirin_pcie->sysctrl);
--
- 	return 0;
- }
- 
--static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
--{
--	struct device *dev = kirin_pcie->pci->dev;
--	u32 reg_val;
--
--	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
--	reg_val &= ~PHY_REF_PAD_BIT;
--	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
--
--	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
--	reg_val &= ~PHY_PWR_DOWN_BIT;
--	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
--	usleep_range(TIME_PHY_PD_MIN, TIME_PHY_PD_MAX);
--
--	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
--	reg_val &= ~PHY_RST_ACK_BIT;
--	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
--
--	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
--	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
--	if (reg_val & PIPE_CLK_STABLE) {
--		dev_err(dev, "PIPE clk is not stable\n");
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
--static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
--{
--	u32 val;
--
--	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
--	val |= PCIE_DEBOUNCE_PARAM;
--	val &= ~PCIE_OE_BYPASS;
--	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
--}
--
--static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
--{
--	int ret = 0;
--
--	if (!enable)
--		goto close_clk;
--
--	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
--	if (ret)
--		return ret;
--
--	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
--	if (ret)
--		return ret;
--
--	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
--	if (ret)
--		goto apb_sys_fail;
--
--	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
--	if (ret)
--		goto apb_phy_fail;
--
--	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
--	if (ret)
--		goto aclk_fail;
--
--	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
--	if (ret)
--		goto aux_clk_fail;
--
--	return 0;
--
--close_clk:
--	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
--aux_clk_fail:
--	clk_disable_unprepare(kirin_pcie->pcie_aclk);
--aclk_fail:
--	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
--apb_phy_fail:
--	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
--apb_sys_fail:
--	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
--
--	return ret;
--}
--
- static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
- {
- 	int ret;
- 
--	/* Power supply for Host */
--	regmap_write(kirin_pcie->sysctrl,
--		     SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
--	usleep_range(TIME_CMOS_MIN, TIME_CMOS_MAX);
--	kirin_pcie_oe_enable(kirin_pcie);
--
--	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
-+	ret = phy_init(kirin_pcie->phy);
- 	if (ret)
- 		return ret;
- 
--	/* ISO disable, PCIeCtrl, PHY assert and clk gate clear */
--	regmap_write(kirin_pcie->sysctrl,
--		     SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
--	regmap_write(kirin_pcie->crgctrl,
--		     CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
--	regmap_write(kirin_pcie->sysctrl,
--		     SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
--
--	ret = kirin_pcie_phy_init(kirin_pcie);
--	if (ret)
--		goto close_clk;
--
--	/* perst assert Endpoint */
--	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
--		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
--		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
--		if (ret)
--			goto close_clk;
--		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
--
--		return 0;
--	}
--
--close_clk:
--	kirin_pcie_clk_ctrl(kirin_pcie, false);
--	return ret;
-+	return phy_power_on(kirin_pcie->phy);
- }
- 
- static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
-@@ -444,30 +238,41 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	pci->pp.ops = &kirin_pcie_host_ops;
- 	kirin_pcie->pci = pci;
- 
--	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
--	if (ret)
--		return ret;
-+	kirin_pcie->phy = devm_of_phy_get(dev, dev->of_node, NULL);
-+	if (IS_ERR(kirin_pcie->phy))
-+		return PTR_ERR(kirin_pcie->phy);
- 
- 	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
- 	if (ret)
- 		return ret;
- 
--	kirin_pcie->gpio_id_reset = of_get_named_gpio(dev->of_node,
--						      "reset-gpios", 0);
--	if (kirin_pcie->gpio_id_reset == -EPROBE_DEFER) {
--		return -EPROBE_DEFER;
--	} else if (!gpio_is_valid(kirin_pcie->gpio_id_reset)) {
--		dev_err(dev, "unable to get a valid gpio pin\n");
--		return -ENODEV;
--	}
--
- 	ret = kirin_pcie_power_on(kirin_pcie);
- 	if (ret)
- 		return ret;
- 
- 	platform_set_drvdata(pdev, kirin_pcie);
- 
--	return dw_pcie_host_init(&pci->pp);
-+	ret = dw_pcie_host_init(&pci->pp);
-+	if (ret) {
-+		phy_power_off(kirin_pcie->phy);
-+		goto err;
-+	}
-+
-+	return 0;
-+err:
-+	phy_exit(kirin_pcie->phy);
-+
-+	return ret;
-+}
-+
-+static int __exit kirin_pcie_remove(struct platform_device *pdev)
-+{
-+	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
-+
-+	phy_power_off(kirin_pcie->phy);
-+	phy_exit(kirin_pcie->phy);
-+
-+	return 0;
- }
- 
- static const struct of_device_id kirin_pcie_match[] = {
-@@ -477,6 +282,7 @@ static const struct of_device_id kirin_pcie_match[] = {
- 
- static struct platform_driver kirin_pcie_driver = {
- 	.probe			= kirin_pcie_probe,
-+	.remove	        	= __exit_p(kirin_pcie_remove),
- 	.driver			= {
- 		.name			= "kirin-pcie",
- 		.of_match_table = kirin_pcie_match,
--- 
-2.31.1
-
+Thank you!
