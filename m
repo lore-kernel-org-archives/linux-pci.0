@@ -5,51 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33498C11F69
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D8FC07E9C
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A17161355
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C630D61184
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232490AbhGJXwV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Jul 2021 19:52:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39010 "EHLO mail.kernel.org"
+        id S232403AbhGJXw0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Jul 2021 19:52:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39250 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232137AbhGJXwL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 10 Jul 2021 19:52:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3E47A61355;
-        Sat, 10 Jul 2021 23:49:24 +0000 (UTC)
+        id S232405AbhGJXwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 10 Jul 2021 19:52:19 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EED88610CA;
+        Sat, 10 Jul 2021 23:49:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625960965;
-        bh=qjAee10GKoNtEd3QJvJ5ofikK7mIpHulu3nelTdmX4M=;
+        s=k20201202; t=1625960973;
+        bh=yZ19D2EA1OUhyCLOW/hS71/J5T/SbBrNsg3xivWuV4A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gL9m5323Mwr1qKlu7X++woiy5Qo0vwny+GsDEHBS+1avkn9sLv0F32dcw3cJaywR9
-         Rga0NybJXrARDGRgAiDFr12jV5NClAUl07kooQ2/h8w9lGHeK8dck5mIR6kNA8g3RX
-         3tf3P5+kJQa7ut/v+upo5IsZuTLSh3MIQTbql9xCJdJvmt/Meq5dOT83uYdgr430mR
-         FshAHuiZ820Y8WPiVDU7LjerpE56ZP3/yk8Uyy16KYuf7J0df4KCTzL9PQzEA6Fdrz
-         MHUJn+MFMHZ1l2qheaunTdVVmNYOoWJ5b2ZJcfE2jKDRSTcwE3XKA+Qn3fgtIus9q1
-         xjv8GkyjZMMpw==
+        b=lYNnltzu1ZaITfdos5QI2ncu2JwZJYzyYB9u9eKVwinpnO1J70XTtRu+BqExL+KwH
+         B1PWUtDgFK1EuWnH+mPMv7ztzjFbU0XZx4wbE9iiYdHtYyp1EhFtpkduSH3r3RaxBO
+         3yW3Z5biDxMRy4u9yM0bEzD4Sm8TMSMo7SSotctoEwBNsyGsSfd3S7eWx9wlY61pwC
+         u3Sr2QHGDBVR4krStPl3CeK4sKMcTgrsndSRzpqsGRA5lfMwvekIO0yrGj/vPnzzmf
+         nV1tRTPrguIQLC4zAVn3XOYjYsca7n8iR9S0KR2xubY83SpYlJ0EuMrvD+v/gz15Ty
+         yGktGkhIAg7IQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        kernel test robot <lkp@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-mips@vger.kernel.org, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 05/43] PCI: ftpci100: Rename macro name collision
-Date:   Sat, 10 Jul 2021 19:48:37 -0400
-Message-Id: <20210710234915.3220342-5-sashal@kernel.org>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.12 11/43] PCI/P2PDMA: Avoid pci_get_slot(), which may sleep
+Date:   Sat, 10 Jul 2021 19:48:43 -0400
+Message-Id: <20210710234915.3220342-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710234915.3220342-1-sashal@kernel.org>
 References: <20210710234915.3220342-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -57,118 +50,85 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-[ Upstream commit 5be967d5016ac5ffb9c4d0df51b48441ee4d5ed1 ]
+[ Upstream commit 3ec0c3ec2d92c09465534a1ff9c6f9d9506ffef6 ]
 
-PCI_IOSIZE is defined in mach-loongson64/spaces.h, so change the name
-of the PCI_* macros in pci-ftpci100.c to use FTPCI_* so that they are
-more localized and won't conflict with other drivers or arches.
+In order to use upstream_bridge_distance_warn() from a dma_map function, it
+must not sleep. However, pci_get_slot() takes the pci_bus_sem so it might
+sleep.
 
-../drivers/pci/controller/pci-ftpci100.c:37: warning: "PCI_IOSIZE" redefined
-   37 | #define PCI_IOSIZE 0x00
-      |
-In file included from ../arch/mips/include/asm/addrspace.h:13,
-...              from ../drivers/pci/controller/pci-ftpci100.c:15:
-arch/mips/include/asm/mach-loongson64/spaces.h:11: note: this is the location of the previous definition
-   11 | #define PCI_IOSIZE SZ_16M
+In order to avoid this, try to get the host bridge's device from the first
+element in the device list. It should be impossible for the host bridge's
+device to go away while references are held on child devices, so the first
+element should not be able to change and, thus, this should be safe.
 
-Suggested-by: Linus Walleij <linus.walleij@linaro.org>
-Link: https://lore.kernel.org/r/20210517234117.3660-1-rdunlap@infradead.org
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Cc: Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Krzysztof Wilczyński <kw@linux.com>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-mips@vger.kernel.org
+Introduce a static function called pci_host_bridge_dev() to obtain the host
+bridge's root device.
+
+Link: https://lore.kernel.org/r/20210610160609.28447-7-logang@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-ftpci100.c | 30 +++++++++++++--------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/pci/p2pdma.c | 34 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
-index da3cd216da00..aefef1986201 100644
---- a/drivers/pci/controller/pci-ftpci100.c
-+++ b/drivers/pci/controller/pci-ftpci100.c
-@@ -34,12 +34,12 @@
-  * Special configuration registers directly in the first few words
-  * in I/O space.
-  */
--#define PCI_IOSIZE	0x00
--#define PCI_PROT	0x04 /* AHB protection */
--#define PCI_CTRL	0x08 /* PCI control signal */
--#define PCI_SOFTRST	0x10 /* Soft reset counter and response error enable */
--#define PCI_CONFIG	0x28 /* PCI configuration command register */
--#define PCI_DATA	0x2C
-+#define FTPCI_IOSIZE	0x00
-+#define FTPCI_PROT	0x04 /* AHB protection */
-+#define FTPCI_CTRL	0x08 /* PCI control signal */
-+#define FTPCI_SOFTRST	0x10 /* Soft reset counter and response error enable */
-+#define FTPCI_CONFIG	0x28 /* PCI configuration command register */
-+#define FTPCI_DATA	0x2C
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 196382630363..c49c13a5fedc 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -308,10 +308,41 @@ static const struct pci_p2pdma_whitelist_entry {
+ 	{}
+ };
  
- #define FARADAY_PCI_STATUS_CMD		0x04 /* Status and command */
- #define FARADAY_PCI_PMC			0x40 /* Power management control */
-@@ -195,9 +195,9 @@ static int faraday_raw_pci_read_config(struct faraday_pci *p, int bus_number,
- 			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
- 			PCI_CONF_WHERE(config) |
- 			PCI_CONF_ENABLE,
--			p->base + PCI_CONFIG);
-+			p->base + FTPCI_CONFIG);
++/*
++ * This lookup function tries to find the PCI device corresponding to a given
++ * host bridge.
++ *
++ * It assumes the host bridge device is the first PCI device in the
++ * bus->devices list and that the devfn is 00.0. These assumptions should hold
++ * for all the devices in the whitelist above.
++ *
++ * This function is equivalent to pci_get_slot(host->bus, 0), however it does
++ * not take the pci_bus_sem lock seeing __host_bridge_whitelist() must not
++ * sleep.
++ *
++ * For this to be safe, the caller should hold a reference to a device on the
++ * bridge, which should ensure the host_bridge device will not be freed
++ * or removed from the head of the devices list.
++ */
++static struct pci_dev *pci_host_bridge_dev(struct pci_host_bridge *host)
++{
++	struct pci_dev *root;
++
++	root = list_first_entry_or_null(&host->bus->devices,
++					struct pci_dev, bus_list);
++
++	if (!root)
++		return NULL;
++	if (root->devfn != PCI_DEVFN(0, 0))
++		return NULL;
++
++	return root;
++}
++
+ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
+ 				    bool same_host_bridge)
+ {
+-	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
++	struct pci_dev *root = pci_host_bridge_dev(host);
+ 	const struct pci_p2pdma_whitelist_entry *entry;
+ 	unsigned short vendor, device;
  
--	*value = readl(p->base + PCI_DATA);
-+	*value = readl(p->base + FTPCI_DATA);
+@@ -320,7 +351,6 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
  
- 	if (size == 1)
- 		*value = (*value >> (8 * (config & 3))) & 0xFF;
-@@ -230,17 +230,17 @@ static int faraday_raw_pci_write_config(struct faraday_pci *p, int bus_number,
- 			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
- 			PCI_CONF_WHERE(config) |
- 			PCI_CONF_ENABLE,
--			p->base + PCI_CONFIG);
-+			p->base + FTPCI_CONFIG);
+ 	vendor = root->vendor;
+ 	device = root->device;
+-	pci_dev_put(root);
  
- 	switch (size) {
- 	case 4:
--		writel(value, p->base + PCI_DATA);
-+		writel(value, p->base + FTPCI_DATA);
- 		break;
- 	case 2:
--		writew(value, p->base + PCI_DATA + (config & 3));
-+		writew(value, p->base + FTPCI_DATA + (config & 3));
- 		break;
- 	case 1:
--		writeb(value, p->base + PCI_DATA + (config & 3));
-+		writeb(value, p->base + FTPCI_DATA + (config & 3));
- 		break;
- 	default:
- 		ret = PCIBIOS_BAD_REGISTER_NUMBER;
-@@ -469,7 +469,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 		if (!faraday_res_to_memcfg(io->start - win->offset,
- 					   resource_size(io), &val)) {
- 			/* setup I/O space size */
--			writel(val, p->base + PCI_IOSIZE);
-+			writel(val, p->base + FTPCI_IOSIZE);
- 		} else {
- 			dev_err(dev, "illegal IO mem size\n");
- 			return -EINVAL;
-@@ -477,11 +477,11 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	}
- 
- 	/* Setup hostbridge */
--	val = readl(p->base + PCI_CTRL);
-+	val = readl(p->base + FTPCI_CTRL);
- 	val |= PCI_COMMAND_IO;
- 	val |= PCI_COMMAND_MEMORY;
- 	val |= PCI_COMMAND_MASTER;
--	writel(val, p->base + PCI_CTRL);
-+	writel(val, p->base + FTPCI_CTRL);
- 	/* Mask and clear all interrupts */
- 	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2 + 2, 2, 0xF000);
- 	if (variant->cascaded_irq) {
+ 	for (entry = pci_p2pdma_whitelist; entry->vendor; entry++) {
+ 		if (vendor != entry->vendor || device != entry->device)
 -- 
 2.30.2
 
