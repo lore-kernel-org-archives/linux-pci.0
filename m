@@ -7,38 +7,39 @@ X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D8FC07E9C
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2887DC07E9B
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C630D61184
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12CE161107
+	for <linux-pci@archiver.kernel.org>; Sat, 10 Jul 2021 23:49:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232403AbhGJXw0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Jul 2021 19:52:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39250 "EHLO mail.kernel.org"
+        id S232680AbhGJXwe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 10 Jul 2021 19:52:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39158 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232405AbhGJXwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 10 Jul 2021 19:52:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EED88610CA;
-        Sat, 10 Jul 2021 23:49:32 +0000 (UTC)
+        id S232235AbhGJXwX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 10 Jul 2021 19:52:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5869861154;
+        Sat, 10 Jul 2021 23:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625960973;
-        bh=yZ19D2EA1OUhyCLOW/hS71/J5T/SbBrNsg3xivWuV4A=;
+        s=k20201202; t=1625960978;
+        bh=Uy2w6FbZRCR+yDAAarJQObrAw8O6iiCpycv6FkGX1BQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lYNnltzu1ZaITfdos5QI2ncu2JwZJYzyYB9u9eKVwinpnO1J70XTtRu+BqExL+KwH
-         B1PWUtDgFK1EuWnH+mPMv7ztzjFbU0XZx4wbE9iiYdHtYyp1EhFtpkduSH3r3RaxBO
-         3yW3Z5biDxMRy4u9yM0bEzD4Sm8TMSMo7SSotctoEwBNsyGsSfd3S7eWx9wlY61pwC
-         u3Sr2QHGDBVR4krStPl3CeK4sKMcTgrsndSRzpqsGRA5lfMwvekIO0yrGj/vPnzzmf
-         nV1tRTPrguIQLC4zAVn3XOYjYsca7n8iR9S0KR2xubY83SpYlJ0EuMrvD+v/gz15Ty
-         yGktGkhIAg7IQ==
+        b=glVPFtWhx/jGU5rpxBY7xDETNpKswoYwUw8AXwyInriJnw2Zl1FgokCsJ2bUwEPrP
+         UlHEvAvR2DIGNWGMpaVUFCQtHwgpEW5pL8TDgnXorAGz8/UtxU22Ds9YSWerdVorHY
+         RQh7zOeSVk8KSLK8AIidNXQ8vXVFUWEppYhZ4z7o2RYIlYrfzziNFiw/hl3QJzIXIB
+         li/uYagYlMomvXkVJTaKyWyOPFls3SbqBM4F1Rp1smITJkSbjOow/h+EzD9H6CV14a
+         VEpzmNjd0nBiKzx9uNBsqqslEec9K7dOs8aInR7zN3RZcNYdB7sbBNkxzsSjf+TlLU
+         fk/ZWNv0LwxnQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
+Cc:     Russell King <rmk+kernel@armlinux.org.uk>,
+        Arnd Bergmann <arnd@arndb.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 11/43] PCI/P2PDMA: Avoid pci_get_slot(), which may sleep
-Date:   Sat, 10 Jul 2021 19:48:43 -0400
-Message-Id: <20210710234915.3220342-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 14/43] PCI: Dynamically map ECAM regions
+Date:   Sat, 10 Jul 2021 19:48:46 -0400
+Message-Id: <20210710234915.3220342-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710234915.3220342-1-sashal@kernel.org>
 References: <20210710234915.3220342-1-sashal@kernel.org>
@@ -50,85 +51,160 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-[ Upstream commit 3ec0c3ec2d92c09465534a1ff9c6f9d9506ffef6 ]
+[ Upstream commit 8fe55ef23387ce3c7488375b1fd539420d7654bb ]
 
-In order to use upstream_bridge_distance_warn() from a dma_map function, it
-must not sleep. However, pci_get_slot() takes the pci_bus_sem so it might
-sleep.
+Attempting to boot 32-bit ARM kernels under QEMU's 3.x virt models fails
+when we have more than 512M of RAM in the model as we run out of vmalloc
+space for the PCI ECAM regions. This failure will be silent when running
+libvirt, as the console in that situation is a PCI device.
 
-In order to avoid this, try to get the host bridge's device from the first
-element in the device list. It should be impossible for the host bridge's
-device to go away while references are held on child devices, so the first
-element should not be able to change and, thus, this should be safe.
+In this configuration, the kernel maps the whole ECAM, which QEMU sets up
+for 256 buses, even when maybe only seven buses are in use.  Each bus uses
+1M of ECAM space, and ioremap() adds an additional guard page between
+allocations. The kernel vmap allocator will align these regions to 512K,
+resulting in each mapping eating 1.5M of vmalloc space. This means we need
+384M of vmalloc space just to map all of these, which is very wasteful of
+resources.
 
-Introduce a static function called pci_host_bridge_dev() to obtain the host
-bridge's root device.
+Fix this by only mapping the ECAM for buses we are going to be using.  In
+my setups, this is around seven buses in most guests, which is 10.5M of
+vmalloc space - way smaller than the 384M that would otherwise be required.
+This also means that the kernel can boot without forcing extra RAM into
+highmem with the vmalloc= argument, or decreasing the virtual RAM available
+to the guest.
 
-Link: https://lore.kernel.org/r/20210610160609.28447-7-logang@deltatee.com
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Link: https://lore.kernel.org/r/E1lhCAV-0002yb-50@rmk-PC.armlinux.org.uk
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/p2pdma.c | 34 ++++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+ drivers/pci/ecam.c       | 54 ++++++++++++++++++++++++++++++++++------
+ include/linux/pci-ecam.h |  1 +
+ 2 files changed, 47 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 196382630363..c49c13a5fedc 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -308,10 +308,41 @@ static const struct pci_p2pdma_whitelist_entry {
- 	{}
- };
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index d2a1920bb055..1c40d2506aef 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -32,7 +32,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ 	struct pci_config_window *cfg;
+ 	unsigned int bus_range, bus_range_max, bsz;
+ 	struct resource *conflict;
+-	int i, err;
++	int err;
  
-+/*
-+ * This lookup function tries to find the PCI device corresponding to a given
-+ * host bridge.
-+ *
-+ * It assumes the host bridge device is the first PCI device in the
-+ * bus->devices list and that the devfn is 00.0. These assumptions should hold
-+ * for all the devices in the whitelist above.
-+ *
-+ * This function is equivalent to pci_get_slot(host->bus, 0), however it does
-+ * not take the pci_bus_sem lock seeing __host_bridge_whitelist() must not
-+ * sleep.
-+ *
-+ * For this to be safe, the caller should hold a reference to a device on the
-+ * bridge, which should ensure the host_bridge device will not be freed
-+ * or removed from the head of the devices list.
-+ */
-+static struct pci_dev *pci_host_bridge_dev(struct pci_host_bridge *host)
+ 	if (busr->start > busr->end)
+ 		return ERR_PTR(-EINVAL);
+@@ -50,6 +50,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ 	cfg->busr.start = busr->start;
+ 	cfg->busr.end = busr->end;
+ 	cfg->busr.flags = IORESOURCE_BUS;
++	cfg->bus_shift = bus_shift;
+ 	bus_range = resource_size(&cfg->busr);
+ 	bus_range_max = resource_size(cfgres) >> bus_shift;
+ 	if (bus_range > bus_range_max) {
+@@ -77,13 +78,6 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+ 		cfg->winp = kcalloc(bus_range, sizeof(*cfg->winp), GFP_KERNEL);
+ 		if (!cfg->winp)
+ 			goto err_exit_malloc;
+-		for (i = 0; i < bus_range; i++) {
+-			cfg->winp[i] =
+-				pci_remap_cfgspace(cfgres->start + i * bsz,
+-						   bsz);
+-			if (!cfg->winp[i])
+-				goto err_exit_iomap;
+-		}
+ 	} else {
+ 		cfg->win = pci_remap_cfgspace(cfgres->start, bus_range * bsz);
+ 		if (!cfg->win)
+@@ -129,6 +123,44 @@ void pci_ecam_free(struct pci_config_window *cfg)
+ }
+ EXPORT_SYMBOL_GPL(pci_ecam_free);
+ 
++static int pci_ecam_add_bus(struct pci_bus *bus)
 +{
-+	struct pci_dev *root;
++	struct pci_config_window *cfg = bus->sysdata;
++	unsigned int bsz = 1 << cfg->bus_shift;
++	unsigned int busn = bus->number;
++	phys_addr_t start;
 +
-+	root = list_first_entry_or_null(&host->bus->devices,
-+					struct pci_dev, bus_list);
++	if (!per_bus_mapping)
++		return 0;
 +
-+	if (!root)
-+		return NULL;
-+	if (root->devfn != PCI_DEVFN(0, 0))
-+		return NULL;
++	if (busn < cfg->busr.start || busn > cfg->busr.end)
++		return -EINVAL;
 +
-+	return root;
++	busn -= cfg->busr.start;
++	start = cfg->res.start + busn * bsz;
++
++	cfg->winp[busn] = pci_remap_cfgspace(start, bsz);
++	if (!cfg->winp[busn])
++		return -ENOMEM;
++
++	return 0;
 +}
 +
- static bool __host_bridge_whitelist(struct pci_host_bridge *host,
- 				    bool same_host_bridge)
- {
--	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
-+	struct pci_dev *root = pci_host_bridge_dev(host);
- 	const struct pci_p2pdma_whitelist_entry *entry;
- 	unsigned short vendor, device;
- 
-@@ -320,7 +351,6 @@ static bool __host_bridge_whitelist(struct pci_host_bridge *host,
- 
- 	vendor = root->vendor;
- 	device = root->device;
--	pci_dev_put(root);
- 
- 	for (entry = pci_p2pdma_whitelist; entry->vendor; entry++) {
- 		if (vendor != entry->vendor || device != entry->device)
++static void pci_ecam_remove_bus(struct pci_bus *bus)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++	unsigned int busn = bus->number;
++
++	if (!per_bus_mapping || busn < cfg->busr.start || busn > cfg->busr.end)
++		return;
++
++	busn -= cfg->busr.start;
++	if (cfg->winp[busn]) {
++		iounmap(cfg->winp[busn]);
++		cfg->winp[busn] = NULL;
++	}
++}
++
+ /*
+  * Function to implement the pci_ops ->map_bus method
+  */
+@@ -167,6 +199,8 @@ EXPORT_SYMBOL_GPL(pci_ecam_map_bus);
+ /* ECAM ops */
+ const struct pci_ecam_ops pci_generic_ecam_ops = {
+ 	.pci_ops	= {
++		.add_bus	= pci_ecam_add_bus,
++		.remove_bus	= pci_ecam_remove_bus,
+ 		.map_bus	= pci_ecam_map_bus,
+ 		.read		= pci_generic_config_read,
+ 		.write		= pci_generic_config_write,
+@@ -178,6 +212,8 @@ EXPORT_SYMBOL_GPL(pci_generic_ecam_ops);
+ /* ECAM ops for 32-bit access only (non-compliant) */
+ const struct pci_ecam_ops pci_32b_ops = {
+ 	.pci_ops	= {
++		.add_bus	= pci_ecam_add_bus,
++		.remove_bus	= pci_ecam_remove_bus,
+ 		.map_bus	= pci_ecam_map_bus,
+ 		.read		= pci_generic_config_read32,
+ 		.write		= pci_generic_config_write32,
+@@ -187,6 +223,8 @@ const struct pci_ecam_ops pci_32b_ops = {
+ /* ECAM ops for 32-bit read only (non-compliant) */
+ const struct pci_ecam_ops pci_32b_read_ops = {
+ 	.pci_ops	= {
++		.add_bus	= pci_ecam_add_bus,
++		.remove_bus	= pci_ecam_remove_bus,
+ 		.map_bus	= pci_ecam_map_bus,
+ 		.read		= pci_generic_config_read32,
+ 		.write		= pci_generic_config_write,
+diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+index 65d3d83015c3..944da75ff25c 100644
+--- a/include/linux/pci-ecam.h
++++ b/include/linux/pci-ecam.h
+@@ -55,6 +55,7 @@ struct pci_ecam_ops {
+ struct pci_config_window {
+ 	struct resource			res;
+ 	struct resource			busr;
++	unsigned int			bus_shift;
+ 	void				*priv;
+ 	const struct pci_ecam_ops	*ops;
+ 	union {
 -- 
 2.30.2
 
