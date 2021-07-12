@@ -2,152 +2,176 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2398CC07E99
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F831C07E99
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:46:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06B4961249
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:27:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0617261284
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234693AbhGLVaO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Jul 2021 17:30:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:28905 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233663AbhGLVaN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jul 2021 17:30:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626125244;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=50O7XoIosnaTFvNclTBE2xrsoJwPx7yETNcoEdpke38=;
-        b=b4nZHnLhdbs7sYzzsbjDTSWGvXFnGBGlemT1kZfRv39IGIXgZlFeeQ1O/GHDXavvQvFS/c
-        JC8DVSMlxnbKyFW0eHBPtyFsZaHBnxoDL4fg54Zc80soP6Qx0KLVxlMzLUIQzcqxsITAJA
-        T1Yk9SD5BIThWzjzZ4NpnFWX8BPM9YA=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-418-9XtrdDBuP9yYlpWMWv3few-1; Mon, 12 Jul 2021 17:27:19 -0400
-X-MC-Unique: 9XtrdDBuP9yYlpWMWv3few-1
-Received: by mail-lf1-f71.google.com with SMTP id q10-20020a196e4a0000b02903534d3ea26dso7098501lfk.2
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jul 2021 14:27:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=50O7XoIosnaTFvNclTBE2xrsoJwPx7yETNcoEdpke38=;
-        b=A+N7/gfUWE+bVjpC8o01XzDk9T7+aR0d/mCZnNXUSDS05/oN+7rQee/tjE8VfPWcLe
-         Bj6pCBSP+fwJastCpLeWFi0G5R1BqbSQxJezBiLN4u2gKFprJHngQg1UPDzVOAhIIzt0
-         argxkN4HfW+LOFfpsoXykqJnKk/7a5jMyae4OAY6Hg8QFq7o+y4oxA+EaeZbPPNJxs7j
-         PKJZ2AbI6VDm8Sn3wKqNYFwf1KwlRmvKtmJ340386Vt0Sp9f0/GdVWv3y0FkAEV+QCFM
-         rRtFxmvxVaTssBh7uHYKe+LScFm+D7POyOHFIOJKFbP0sTu0G4G4m1xGMhl8NXbRJ4je
-         7TXQ==
-X-Gm-Message-State: AOAM531rPJFnIOs6zYDaG2q9wheodUA1JSRbi73qYRrVE5eJ0uIQB9A7
-        SDvVpD8g8pLQ+3K0DHbCk0xSyGldWZaQhuqG3z8CaB3fK6BDGNX9J0AKbQC8e3ZBzr3D0mT1xoE
-        9dVcoPyTZnt3hiIC8WkVvSi9qZLzdf+zaaY0i
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr632516lfg.114.1626125237446;
-        Mon, 12 Jul 2021 14:27:17 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxMir1sZ9GqMa7WvPLCmNlPEblioxslUn0DyeGBQ95oerEYIFyQhf9KJgWR3Td5whCmT13/5lNHXg0IXQuMJlU=
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr632454lfg.114.1626125237173;
- Mon, 12 Jul 2021 14:27:17 -0700 (PDT)
+        id S229725AbhGLVtj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Jul 2021 17:49:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51652 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229475AbhGLVtj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Jul 2021 17:49:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 60E6E611AD;
+        Mon, 12 Jul 2021 21:46:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626126410;
+        bh=3ShMha9fcOy4Zy5RJ0NyvdKbD2EB5A+y8lByu+ZSUPU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=moha1sWMc2ovnlWjbBXqdTkgfU/0v7rYbtSHd4rqrbDetjKT+RZzhgCkB0zkCZpDp
+         hXtPybFuyMVvfCPHwZuAhP0j6vAFvZqpAzn54LWhknYBcQX+LOOuKIs3yvl8PknZoC
+         NlNIHqnPQDnIV61QWnUmkoHwAKuidxEcJ92s/7opEGRq9UVQ1IuPgZivJy25WZT1fd
+         PSSS/pZT/Xwz+Fr2C8jbeJdBOv3pn+o1WYrIKw6OfsUicxYS+JbUMir+QK1VtsIJRu
+         Pmfh1KblLwHagZmUAotIweNXHvSOS/0I7san3HV06UBhtHmCOgdmQ7ZM5/EFyw8ZCM
+         YOH+F/nF3RbkQ==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1m33lI-005VRd-EM; Mon, 12 Jul 2021 23:46:48 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        "Manivannan Sadhasivam" <mani@kernel.org>,
+        "Rob Herring" <robh@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v4 8/8] PCI: kirin: Use regmap for APB registers
+Date:   Mon, 12 Jul 2021 23:46:46 +0200
+Message-Id: <1bd40601a0893b112ad6623d5992cf5a7c1629a9.1626126198.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1626126198.git.mchehab+huawei@kernel.org>
+References: <cover.1626126198.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-References: <20210629152746.2953364-1-nitesh@redhat.com> <CAFki+LnUGiEE-7Uf-x8-TQZYZ+3Migrr=81gGLYszxaK-6A9WQ@mail.gmail.com>
- <YOrWqPYPkZp6nRLS@unreal>
-In-Reply-To: <YOrWqPYPkZp6nRLS@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 12 Jul 2021 17:27:05 -0400
-Message-ID: <CAFki+L=FYOTQ1+-MHWmTuA6ZxTUcZA9t41HRL2URYgv03oFbDg@mail.gmail.com>
-Subject: Re: [PATCH v2 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
-To:     Leon Romanovsky <leonro@nvidia.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
-        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
-        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Leon,
+The PHY layer need to access APB registers too, for Kirin 970.
+So, place them into a named regmap.
 
-On Sun, Jul 11, 2021 at 7:32 AM Leon Romanovsky <leonro@nvidia.com> wrote:
->
-> On Thu, Jul 08, 2021 at 03:24:20PM -0400, Nitesh Lal wrote:
-> > On Tue, Jun 29, 2021 at 11:28 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
->
-> <...>
->
-> > >
-> > >  drivers/infiniband/hw/i40iw/i40iw_main.c      |  4 +-
-> > >  drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
-> > >  drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
-> > >  drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
-> > >  drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
-> > >  drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
-> > >  drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
-> > >  .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  6 +--
-> > >  drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
-> > >  drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
-> > >  include/linux/interrupt.h                     | 53 ++++++++++++++++++-
-> > >  kernel/irq/manage.c                           |  8 +--
-> > >  15 files changed, 113 insertions(+), 64 deletions(-)
-> > >
-> > > --
-> > >
-> > >
-> >
-> > Gentle ping.
-> > Any comments or suggestions on any of the patches included in this series?
->
-> Please wait for -rc1, rebase and resend.
-> At least i40iw was deleted during merge window.
->
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-kirin.c | 49 +++++++++++++------------
+ 1 file changed, 26 insertions(+), 23 deletions(-)
 
-In -rc1 some non-trivial mlx5 changes also went in.  I was going through
-these changes and it seems after your patch
-
-e4e3f24b822f: ("net/mlx5: Provide cpumask at EQ creation phase")
-
-we do want to control the affinity for the mlx5 interrupts from the driver.
-Is that correct? This would mean that we should use
-irq_set_affinity_and_hint() instead
-of irq_update_affinity_hint().
-
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 66662f7b0fc9..c51745f9b56b 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -54,28 +54,30 @@
+ struct kirin_pcie {
+ 	struct dw_pcie	*pci;
+ 	struct phy	*phy;
+-	void __iomem	*apb_base;
++	struct regmap	*apb;
+ };
+ 
+-/* Registers in PCIeCTRL */
+-static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
+-					 u32 val, u32 reg)
+-{
+-	writel(val, kirin_pcie->apb_base + reg);
+-}
+-
+-static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
+-{
+-	return readl(kirin_pcie->apb_base + reg);
+-}
++static const struct regmap_config pcie_kirin_regmap_conf = {
++	.name = "kirin_pcie_apb",
++	.reg_bits = 32,
++	.val_bits = 32,
++	.reg_stride = 4,
++};
+ 
+ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ 				    struct platform_device *pdev)
+ {
+-	kirin_pcie->apb_base =
+-		devm_platform_ioremap_resource_byname(pdev, "apb");
+-	if (IS_ERR(kirin_pcie->apb_base))
+-		return PTR_ERR(kirin_pcie->apb_base);
++	struct device *dev = &pdev->dev;
++	void __iomem *apb_base;
++
++	apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
++	if (IS_ERR(apb_base))
++		return PTR_ERR(apb_base);
++
++	kirin_pcie->apb = devm_regmap_init_mmio(dev, apb_base,
++						&pcie_kirin_regmap_conf);
++	if (IS_ERR(kirin_pcie->apb))
++		return PTR_ERR(kirin_pcie->apb);
+ 
+ 	return 0;
+ }
+@@ -96,13 +98,13 @@ static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, val);
+ }
+ 
+ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+@@ -110,13 +112,13 @@ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, val);
+ }
+ 
+ static int kirin_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
+@@ -176,8 +178,9 @@ static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+ static int kirin_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+-	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++	u32 val;
+ 
++	regmap_read(kirin_pcie->apb, PCIE_APB_PHY_STATUS0, &val);
+ 	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
+ 		return 1;
+ 
+@@ -189,8 +192,8 @@ static int kirin_pcie_start_link(struct dw_pcie *pci)
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+ 
+ 	/* assert LTSSM enable */
+-	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
+-			      PCIE_APP_LTSSM_ENABLE);
++	regmap_write(kirin_pcie->apb, PCIE_APP_LTSSM_ENABLE,
++		     PCIE_LTSSM_ENABLE_BIT);
+ 
+ 	return 0;
+ }
 -- 
-Thanks
-Nitesh
+2.31.1
 
