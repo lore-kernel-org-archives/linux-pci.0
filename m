@@ -2,56 +2,55 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D6D0C11F67
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55229C07E9A
 	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:46:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69B846128C
+	by mail.kernel.org (Postfix) with ESMTP id 3D13A6128C
 	for <linux-pci@archiver.kernel.org>; Mon, 12 Jul 2021 21:46:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230229AbhGLVtk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230153AbhGLVtk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 12 Jul 2021 17:49:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51678 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:51688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229500AbhGLVtj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S229506AbhGLVtj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 12 Jul 2021 17:49:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6D82561106;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7370E61283;
         Mon, 12 Jul 2021 21:46:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1626126410;
-        bh=D+ZGOha9YIyNnfYr6FuOOJKEz9zpdtF5nyb6I85glxg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nxsj0WCalAveF801CqzH6x8w5UJ77zrTxIHYYMZ3nUxqdjw07QmJ2A5DU4ZQtO2KZ
-         Y/+qBWBTtPePfZJfzX+6QxYQ1UPOgc6L+ldW0BYM3mrXeJyus/AcvaVuXqs+TWqQ8/
-         MwnIjzeas2crQU7ohomJSTK6oNzocLgalzlyBFC0pL4EOIFDnGgpmE792jP3nt+GCj
-         ovC6V6SA5XAbvBEs/iYgAh8ghzNwBq3auYgGLuJgZcSMIP8ZmPoZxPSq/wwqti80xl
-         D1bEj/MNLrtGA4MHArQdCYcXHmrRCnxqoOaDZsoeX/WkkiO3BnOVLfQVoPZS7lzaK2
-         JLWd6yaF70u5g==
+        bh=A76EkqYiw8xU6iK26AVR4gpO0yvhJufnbCFehnXsBi8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Fs1mKSM6TgpgZey0UJenqO3qL0HDyVvZ8HHLiyzGxbvQ3rNzf1twwDiINu6Q19IBl
+         Dnzcx3Ynr2fkmbXUkvYnTC8i3EjcoEPl92dj6ka2R2aiv3Z1eXZwJgNOjMk4qxLv7M
+         pG0iV13LoKHcj4bSG6d1eGYVuhtQZNjd3xmtgt8h8ZbMIJS9PDH2nqDmSlMMAHj/Th
+         rnq0ICOAGTq/OWxUn9FK18jsAeX7mbwTAGQR7uA9Ur5CwYed7XRkWADafHFrT2WLzS
+         5OMgp9ITh4N9cmLJVsntDEIrkWa86Rno+fPJB5hgNO2sNkjKERn6y+Qljhcb9pGYEz
+         x0G4a6uk0x7iQ==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1m33lI-005VRN-8x; Mon, 12 Jul 2021 23:46:48 +0200
+        id 1m33lI-005VR8-4U; Mon, 12 Jul 2021 23:46:48 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        "Manivannan Sadhasivam" <mani@kernel.org>,
-        "Rob Herring" <robh@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v4 4/8] dt-bindings: PCI: kirin: Drop PHY properties
-Date:   Mon, 12 Jul 2021 23:46:42 +0200
-Message-Id: <a04c9c92187ceaee0fd4b8d4721e2a3275d97518.1626126198.git.mchehab+huawei@kernel.org>
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org
+Subject: [PATCH v4 0/8] Add support for Hikey 970 PCIe
+Date:   Mon, 12 Jul 2021 23:46:38 +0200
+Message-Id: <cover.1626126198.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1626126198.git.mchehab+huawei@kernel.org>
-References: <cover.1626126198.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
@@ -59,58 +58,101 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are several properties there that belong to the PHY
-interface. Drop them, as a new binding file will describe
-the PHY properties for Kirin 960.
+As requested by Rob Herring, this series split the PHY part into a separate driver.
+Then, it adds support for Kirin 970 on a single patch.
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+With this change, the PHY-specific device tree bindings for Kirin 960 moved
+to its own PHY properties.
+
+Tested on Hikey970:
+
+  $ lspci
+  00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
+  01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
+  06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
+
+  $ ethtool enp6s0
+  Settings for enp6s0:
+	Supported ports: [ TP	 MII ]
+	Supported link modes:   10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Half 1000baseT/Full
+	Supported pause frame use: Symmetric Receive-only
+	Supports auto-negotiation: Yes
+	Supported FEC modes: Not reported
+	Advertised link modes:  10baseT/Half 10baseT/Full
+	                        100baseT/Half 100baseT/Full
+	                        1000baseT/Half 1000baseT/Full
+	Advertised pause frame use: Symmetric Receive-only
+	Advertised auto-negotiation: Yes
+	Advertised FEC modes: Not reported
+	Link partner advertised link modes:  10baseT/Half 10baseT/Full
+	                                     100baseT/Half 100baseT/Full
+	Link partner advertised pause frame use: Symmetric Receive-only
+	Link partner advertised auto-negotiation: Yes
+	Link partner advertised FEC modes: Not reported
+	Speed: 100Mb/s
+	Duplex: Full
+	Auto-negotiation: on
+	master-slave cfg: preferred slave
+	master-slave status: slave
+	Port: Twisted Pair
+	PHYAD: 0
+	Transceiver: external
+	MDI-X: Unknown
+  netlink error: Operation not permitted
+	Link detected: yes
+
+Partially tested on Hikey 960[1]:
+
+  $ lspci
+  00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
+
+[1] The Hikey 960 doesn't come with any internal PCIe device.
+    Its hardware supports just an external device via a M.2 slot that
+    doesn't support SATA. I ordered a NVMe device to test, but the vendor
+    is currently out of supply. It should take 4-5 weeks to arrive here. I'll
+    run an extra test on it once it arrives.
+
 ---
- .../devicetree/bindings/pci/kirin-pcie.txt       | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-index 71cac2b74002..a93a8cfa1afb 100644
---- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -10,13 +10,11 @@ Additional properties are described here:
- Required properties
- - compatible:
- 	"hisilicon,kirin960-pcie"
--- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg: Should contain rc_dbi, apb, config registers location and length.
- - reg-names: Must include the following entries:
-   "dbi": controller configuration registers;
-   "apb": apb Ctrl register defined by Kirin;
--  "phy": apb PHY register defined by Kirin;
-   "config": PCIe configuration space registers.
--- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
- 
- Optional properties:
- 
-@@ -25,8 +23,8 @@ Example based on kirin960:
- 	pcie@f4000000 {
- 		compatible = "hisilicon,kirin960-pcie";
- 		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
--		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
--		reg-names = "dbi","apb","phy", "config";
-+		      <0x0 0xF4000000 0 0x2000>;
-+		reg-names = "dbi","apb", "config";
- 		bus-range = <0x0  0x1>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-@@ -39,12 +37,4 @@ Example based on kirin960:
- 				<0x0 0 0 2 &gic 0 0 0  283 4>,
- 				<0x0 0 0 3 &gic 0 0 0  284 4>,
- 				<0x0 0 0 4 &gic 0 0 0  285 4>;
--		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
--			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
--			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
--			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
--			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
--		clock-names = "pcie_phy_ref", "pcie_aux",
--			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
--		reset-gpios = <&gpio11 1 0 >;
- 	};
+v4:
+
+- dropped the DTS patch, as it depends on a PMIC-related patch series;
+- minor changes at the patch description;
+- HiKey and HiSilicon are now using the preferred CamelCase format.
+
+Mauro Carvalho Chehab (8):
+  dt-bindings: phy: Add bindings for HiKey 960 PCIe PHY
+  dt-bindings: phy: Add bindings for HiKey 970 PCIe PHY
+  dt-bindings: PCI: kirin: Fix compatible string
+  dt-bindings: PCI: kirin: Drop PHY properties
+  phy: HiSilicon: Add driver for Kirin 960 PCIe PHY
+  phy: HiSilicon: add driver for Kirin 970 PCIe PHY
+  PCI: kirin: Drop the PHY logic from the driver
+  PCI: kirin: Use regmap for APB registers
+
+ .../devicetree/bindings/pci/kirin-pcie.txt    |  21 +-
+ .../phy/hisilicon,phy-hi3660-pcie.yaml        |  82 ++
+ .../phy/hisilicon,phy-hi3670-pcie.yaml        | 101 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi     |  29 +-
+ drivers/pci/controller/dwc/pcie-kirin.c       | 298 ++----
+ drivers/phy/hisilicon/Kconfig                 |  20 +
+ drivers/phy/hisilicon/Makefile                |   2 +
+ drivers/phy/hisilicon/phy-hi3660-pcie.c       | 325 +++++++
+ drivers/phy/hisilicon/phy-hi3670-pcie.c       | 892 ++++++++++++++++++
+ 9 files changed, 1500 insertions(+), 270 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/hisilicon,phy-hi3660-pcie.yaml
+ create mode 100644 Documentation/devicetree/bindings/phy/hisilicon,phy-hi3670-pcie.yaml
+ create mode 100644 drivers/phy/hisilicon/phy-hi3660-pcie.c
+ create mode 100644 drivers/phy/hisilicon/phy-hi3670-pcie.c
+
 -- 
 2.31.1
+
 
