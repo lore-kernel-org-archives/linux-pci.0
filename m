@@ -2,104 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A19C11F68
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 18:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE7A5C07E95
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 19:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 383D761369
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 18:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D734F61284
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 19:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233676AbhGMSKC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Jul 2021 14:10:02 -0400
-Received: from foss.arm.com ([217.140.110.172]:48602 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229478AbhGMSKB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Jul 2021 14:10:01 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 243A61FB;
-        Tue, 13 Jul 2021 11:07:11 -0700 (PDT)
-Received: from [10.57.36.240] (unknown [10.57.36.240])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C0FC43F7D8;
-        Tue, 13 Jul 2021 11:07:05 -0700 (PDT)
-Subject: Re: [PATCH v2 0/3] iommu: Enable non-strict DMA on QCom SD/MMC
-To:     Doug Anderson <dianders@chromium.org>,
-        Joerg Roedel <joro@8bytes.org>
-Cc:     Will Deacon <will@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        John Garry <john.garry@huawei.com>,
-        Rob Clark <robdclark@chromium.org>, quic_c_gdjako@quicinc.com,
-        Saravana Kannan <saravanak@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Sai Prakash Ranjan <saiprakash.ranjan@codeaurora.org>,
-        Veerabhadrarao Badiganti <vbadigan@codeaurora.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org,
-        Sonny Rao <sonnyrao@chromium.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Jordan Crouse <jordan@cosmicpenguin.net>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Krishna Reddy <vdumpa@nvidia.com>,
-        "Maciej W. Rozycki" <macro@orcam.me.uk>,
-        Nicolin Chen <nicoleotsuka@gmail.com>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20210624171759.4125094-1-dianders@chromium.org>
- <YNXXwvuErVnlHt+s@8bytes.org>
- <CAD=FV=UFxZH7g8gH5+M=Fv4Y-e1bsLkNkPGJhNwhvVychcGQcQ@mail.gmail.com>
- <CAD=FV=W=HmgH3O3z+nThWL6U+X4Oh37COe-uTzVB9SanP2n86w@mail.gmail.com>
- <YOaymBHc4g2cIfRn@8bytes.org>
- <CAD=FV=U_mKPaGfWyN1SVi9S2hPBpG=rE_p89+Jvjr95d0TvgsA@mail.gmail.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <e3555c49-2978-355f-93bb-dbfa7d09cab8@arm.com>
-Date:   Tue, 13 Jul 2021 19:07:00 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S234933AbhGMTiZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Jul 2021 15:38:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58154 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234957AbhGMTiY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jul 2021 15:38:24 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CA76C0613DD
+        for <linux-pci@vger.kernel.org>; Tue, 13 Jul 2021 12:35:34 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3OBj-0001GX-UC; Tue, 13 Jul 2021 21:35:27 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3OBi-0006pC-9J; Tue, 13 Jul 2021 21:35:26 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3OBi-0002dA-8L; Tue, 13 Jul 2021 21:35:26 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     kernel@pengutronix.de, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v4 1/5] PCI: endpoint: Make struct pci_epf_driver::remove return void
+Date:   Tue, 13 Jul 2021 21:35:18 +0200
+Message-Id: <20210713193522.1770306-2-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
+References: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <CAD=FV=U_mKPaGfWyN1SVi9S2hPBpG=rE_p89+Jvjr95d0TvgsA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=9dRuqNo/F0QuUsC0gOJNJtkYBeA+dIcgMdqc7T89QOM=; m=snXqztb6LzIi8DAPeqNx+9PxnuQ34OAUQf7w5ELTVEo=; p=mQYpkE+33DGoHOLv2dnUwlNBxobIypWigLJdWjDllyE=; g=e5c7b97ea399fddc2695e8cf5d0c02d14175abac
+X-Patch-Sig: m=pgp; i=uwe@kleine-koenig.org; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmDt6sYACgkQwfwUeK3K7AkK6Af7B6T ql8oxdYh0O3IErVVz0t0YciQNR0KZ1CJMcU9N6WcaHI/tmLUZbP9PUpXpJmuN9viRBNbuvjWstz/N RjULK0LgMIupkxNTCeskTgT7wukyRLdBRoHTbx5D5EhZ9mK6YiWIq5UlQgboikntuYDe0xRYyKZv2 vJrVkHRPK4VhAy7MABwUvWQPItN0lRYd33ENupaCKS0CAjYAd77+Jm2xTFg2AOfgClZYUGYinv1zI ykA/CcYC8Ro/V+97473Z06BdC8cP7eERjJpR3JYwxDEvg1/hK+/Crqgy0I2yKhakJbORcwKb5bZ3C vIvn4hr8OOQEFKRcWpPotMHfCuZjg2A==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021-07-08 15:36, Doug Anderson wrote:
-[...]
->> Or document for the users that want performance how to
->> change the setting, so that they can decide.
-> 
-> Pushing this to the users can make sense for a Linux distribution but
-> probably less sense for an embedded platform. So I'm happy to make
-> some way for a user to override this (like via kernel command line),
-> but I also strongly believe there should be a default that users don't
-> have to futz with that we think is correct.
+The driver core ignores the return value of pci_epf_device_remove()
+(because there is only little it can do when a device disappears) and
+there are no pci_epf_drivers with a remove callback.
 
-FYI I did make progress on the "punt it to userspace" approach. I'm not 
-posting it even as an RFC yet because I still need to set up a machine 
-to try actually testing any of it (it's almost certainly broken 
-somewhere), but in the end it comes out looking surprisingly not too bad 
-overall. If you're curious to take a look in the meantime I put it here:
+So make it impossible for future drivers to return an unused error code
+by changing the remove prototype to return void.
 
-https://gitlab.arm.com/linux-arm/linux-rm/-/commits/iommu/fq
+The real motivation for this change is the quest to make struct
+bus_type::remove return void, too.
 
-Cheers,
-Robin.
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/pci/endpoint/pci-epf-core.c | 5 ++---
+ include/linux/pci-epf.h             | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index e9289d10f822..4b9ad96bf1b2 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -389,15 +389,14 @@ static int pci_epf_device_probe(struct device *dev)
+ 
+ static int pci_epf_device_remove(struct device *dev)
+ {
+-	int ret = 0;
+ 	struct pci_epf *epf = to_pci_epf(dev);
+ 	struct pci_epf_driver *driver = to_pci_epf_driver(dev->driver);
+ 
+ 	if (driver->remove)
+-		ret = driver->remove(epf);
++		driver->remove(epf);
+ 	epf->driver = NULL;
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static struct bus_type pci_epf_bus_type = {
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index 2debc27ba95e..8292420426f3 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -85,7 +85,7 @@ struct pci_epf_ops {
+  */
+ struct pci_epf_driver {
+ 	int	(*probe)(struct pci_epf *epf);
+-	int	(*remove)(struct pci_epf *epf);
++	void	(*remove)(struct pci_epf *epf);
+ 
+ 	struct device_driver	driver;
+ 	struct pci_epf_ops	*ops;
+-- 
+2.30.2
+
