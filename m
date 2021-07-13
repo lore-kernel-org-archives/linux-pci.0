@@ -2,192 +2,153 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83992C11F75
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 11:18:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B63C11F66
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 11:32:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 734F561362
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 11:18:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04C26611C0
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 11:32:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236075AbhGMLVC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Jul 2021 07:21:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48124 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236070AbhGMLVB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Jul 2021 07:21:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 502A26128D;
-        Tue, 13 Jul 2021 11:18:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626175091;
-        bh=Sd+vNC05cQNpKJwLdrzAgfE4188+OVEtaXATT2wCqhI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=StWWf4MxhMSKQKrjAw+tfgKNHFxsypXDkWtY3pKWFd+B7jLODj7Tr9sg/LjjsGqZJ
-         TMwAtYHzXmAmSJQhsDDTZW6RKaIZtvJA6bqnKl5oiNlaQpfSW/pMLmXQUx9soJhfTC
-         ZkasYDuUyhCBeRgfhTX6L3rE2On8YXsu+3mEgyqP/8zWfmnAvmOECHEUWbPE/ub5ZF
-         L0pu+TZ2cSlXz2+iQasnJA3zgZ265lwyPXU/M0jGCsRUB1EA2zVxJTvKVnGkQYdq0F
-         WQ8g+43cSkJIyESwLbgSrMM4NxHOISI/66Ctjwtcb4EKtqXMGF/7famgg5hkv4IQBn
-         eYrL5OFST2qUg==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1m3GQK-006b3e-V1; Tue, 13 Jul 2021 13:18:00 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v4 2/5] dt-bindings: PCI: add snps,dw-pcie-ep.yaml
-Date:   Tue, 13 Jul 2021 13:17:52 +0200
-Message-Id: <58b78aa8bbafe8aa721b015dfc42bff474284f37.1626174242.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1626174242.git.mchehab+huawei@kernel.org>
-References: <cover.1626174242.git.mchehab+huawei@kernel.org>
+        id S235848AbhGMLfW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Jul 2021 07:35:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60240 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235875AbhGMLfV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jul 2021 07:35:21 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE252C0613EE;
+        Tue, 13 Jul 2021 04:32:31 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id w13so13399071wmc.3;
+        Tue, 13 Jul 2021 04:32:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:references:from:subject:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=VxdNMTgC7RTJI/82gSAHHxnwIsTXy+NvVdODaOq4tmU=;
+        b=jbrgQaNivHHWkIhys33LFvPyuiYLHxbq70sxVdJgim8ewGwhZtO9FUjdIMTe+omB3s
+         DAxzDDGIqKo0OQ4mC/0OzgOEqLh4pCc3mhTZQ70dyfup1z3oHLB+wvyqZZKTjynnOwUX
+         uNjy5YwuC3Qhe1z6V0DKxCgWr+pJv5vjLLaboqX9Fl1VGs2cX27ipJqIQ0UluoCiMNDm
+         h9sIW5o7je9YRHhbDIcAQoh+Jid5V0oKBpKlgTph0zoL6xzX/+RkXYwPO4s6+XbUXbck
+         alJLAHgki3I65JeyuI0yJ+rbagfm1mc6OZPVt5QCANqVd+IEQxTCzzsFjJdbUnbAjh+G
+         K90w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:references:from:subject:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=VxdNMTgC7RTJI/82gSAHHxnwIsTXy+NvVdODaOq4tmU=;
+        b=b/FW6vu3GX/ddrgwq+B5IH8QTfVkdbTBxTEWNuije76ukAMfckn4amDvviuR7OKiQ6
+         e9g5EavDsqeKB1vCuyryLJpjQG2MjTdWuALke3ENMRZ8Ev9Jw7H3uQ4k/vw5qWTK6AcX
+         R1ea90A7CxXFFjbA0QPQ0z4O/eaigAnobipDik3wHuu9LF4CdyI5szBC5A9lswHqSrOb
+         tO8+ZTnGORC3UIk8Tize525zWDSg/o9giZXjUkYQ5fRF68JF6Mj5/NMfxBkWaWDilMuk
+         Q9e4emvHN5R6P+fBsLUsW1Xnur8Va5fvxAmQAQHSQXLObeOD1knfzsRLylTAibUjbRB9
+         wt0w==
+X-Gm-Message-State: AOAM5321p1t1pTJLzI3hzuCbQ5vTl5wdg6pNJHI9sJ3mac11QJwo+srn
+        rWDpBuhGJC8o8n0p69zNVA87Fyt9DnWyUQ==
+X-Google-Smtp-Source: ABdhPJxiGPc++BzEpZlBMmV+XlyZZlbgyEGXgaNiGp0hI/Tv7hPRxDVW7mz937Gx9gR/Y6p1sdMtyg==
+X-Received: by 2002:a7b:c042:: with SMTP id u2mr4495286wmc.86.1626175950253;
+        Tue, 13 Jul 2021 04:32:30 -0700 (PDT)
+Received: from ziggy.stardust ([213.195.127.100])
+        by smtp.gmail.com with ESMTPSA id r16sm2056532wmg.11.2021.07.13.04.32.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Jul 2021 04:32:29 -0700 (PDT)
+To:     Chuanjia Liu <chuanjia.liu@mediatek.com>,
+        lorenzo.pieralisi@arm.com, robh+dt@kernel.org, bhelgaas@google.com
+Cc:     ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
+        yong.wu@mediatek.com, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20210611060902.12418-1-chuanjia.liu@mediatek.com>
+ <20210611060902.12418-3-chuanjia.liu@mediatek.com>
+From:   Matthias Brugger <matthias.bgg@gmail.com>
+Subject: Re: [PATCH v10 2/4] PCI: mediatek: Add new method to get shared
+ pcie-cfg base address and parse node
+Message-ID: <e462d9f0-2fa3-6106-f060-9753dc604b9f@gmail.com>
+Date:   Tue, 13 Jul 2021 13:32:28 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
+In-Reply-To: <20210611060902.12418-3-chuanjia.liu@mediatek.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently, the designware schema is defined on a text file:
-	designware-pcie.txt
 
-It contains two separate schemas on it:
 
-- snps,dw-pcie
-  This one uses the pci-bus.yaml schema;
-- snps,dw-pcie-ep
-  This one uses the pci-ep.yaml schema.
+On 11/06/2021 08:09, Chuanjia Liu wrote:
+> For the new dts format, add a new method to get
+> shared pcie-cfg base address and parse node.
+> 
+> Signed-off-by: Chuanjia Liu <chuanjia.liu@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 
-As the:
-	AllOf:
-	  - $ref: <foo>
+You missed the
+Reviewed-by: Rob Herring <robh@kernel.org>
+given in v8. Or were there any substantial changes in this patch?
 
-for the endpoint part is different than the PCI one, place
-it on a separate yaml file.
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 52 +++++++++++++++++++-------
+>  1 file changed, 39 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 62a042e75d9a..950f577a2f44 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/irqchip/chained_irq.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+> +#include <linux/mfd/syscon.h>
+>  #include <linux/msi.h>
+>  #include <linux/module.h>
+>  #include <linux/of_address.h>
+> @@ -23,6 +24,7 @@
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/pm_runtime.h>
+> +#include <linux/regmap.h>
+>  #include <linux/reset.h>
+>  
+>  #include "../pci.h"
+> @@ -207,6 +209,7 @@ struct mtk_pcie_port {
+>   * struct mtk_pcie - PCIe host information
+>   * @dev: pointer to PCIe device
+>   * @base: IO mapped register base
+> + * @cfg: IO mapped register map for PCIe config
+>   * @free_ck: free-run reference clock
+>   * @mem: non-prefetchable memory resource
+>   * @ports: pointer to PCIe port information
+> @@ -215,6 +218,7 @@ struct mtk_pcie_port {
+>  struct mtk_pcie {
+>  	struct device *dev;
+>  	void __iomem *base;
+> +	struct regmap *cfg;
+>  	struct clk *free_ck;
+>  
+>  	struct list_head ports;
+> @@ -650,7 +654,11 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+>  		return err;
+>  	}
+>  
+> -	port->irq = platform_get_irq(pdev, port->slot);
+> +	if (of_find_property(dev->of_node, "interrupt-names", NULL))
+> +		port->irq = platform_get_irq_byname(pdev, "pcie_irq");
+> +	else
+> +		port->irq = platform_get_irq(pdev, port->slot);
+> +
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
----
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 90 +++++++++++++++++++
- MAINTAINERS                                   |  1 +
- 2 files changed, 91 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+Do I understand that this is used for backwards compatibility with older DTS? I
+just wonder why we don't need to mandate
+interrupt-names = "pcie_irq"
+in the binding description.
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-new file mode 100644
-index 000000000000..43baf29f8dd6
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -0,0 +1,90 @@
-+# SPDX-License-Identifier: GPL-2.0
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/snps,dw-pcie-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Synopsys DesignWare PCIe endpoint interface
-+
-+maintainers:
-+  - Jingoo Han <jingoohan1@gmail.com>
-+  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+
-+description: |
-+  Synopsys DesignWare PCIe host controller endpoint
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-ep.yaml#
-+
-+properties:
-+  compatible:
-+    anyOf:
-+      - {}
-+      - const: snps,dw-pcie-ep
-+
-+  reg:
-+    description: |
-+      It should contain Data Bus Interface (dbi) and config registers for all
-+      versions.
-+      For designware core version >= 4.80, it may contain ATU address space.
-+    minItems: 2
-+    maxItems: 4
-+
-+  reg-names:
-+    minItems: 2
-+    maxItems: 4
-+    items:
-+      enum: [dbi, dbi2, config, atu, addr_space, link]
-+
-+  reset-gpio:
-+    description: GPIO pin number of PERST# signal
-+    maxItems: 1
-+    deprecated: true
-+
-+  reset-gpios:
-+    description: GPIO controlled connection to PERST# signal
-+    maxItems: 1
-+
-+  snps,enable-cdm-check:
-+    type: boolean
-+    description: |
-+      This is a boolean property and if present enables
-+      automatic checking of CDM (Configuration Dependent Module) registers
-+      for data corruption. CDM registers include standard PCIe configuration
-+      space registers, Port Logic registers, DMA and iATU (internal Address
-+      Translation Unit) registers.
-+
-+  num-ib-windows:
-+    description: number of inbound address translation windows
-+    maxItems: 1
-+    deprecated: true
-+
-+  num-ob-windows:
-+    description: number of outbound address translation windows
-+    maxItems: 1
-+    deprecated: true
-+
-+  max-functions:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: maximum number of functions that can be configured
-+
-+required:
-+  - reg
-+  - reg-names
-+  - compatible
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    bus {
-+      #address-cells = <1>;
-+      #size-cells = <1>;
-+      pcie-ep@dfd00000 {
-+        compatible = "snps,dw-pcie-ep";
-+        reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+              <0xdfc01000 0x0001000>, /* IP registers 2 */
-+              <0xd0000000 0x2000000>; /* Configuration space */
-+        reg-names = "dbi", "dbi2", "addr_space";
-+      };
-+    };
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f0115c590731..f0cf510c26fd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14284,6 +14284,7 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
- F:	Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+F:	Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
- F:	drivers/pci/controller/dwc/*designware*
- 
- PCI DRIVER FOR TI DRA7XX/J721E
--- 
-2.31.1
-
+Regards,
+Matthias
