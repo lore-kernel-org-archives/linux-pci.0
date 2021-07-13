@@ -7,253 +7,113 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0EEC07E95
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 07:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC89C07E95
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 07:40:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3AC1861284
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 07:31:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFE3561279
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jul 2021 07:40:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234205AbhGMHej (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Jul 2021 03:34:39 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:41159 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233762AbhGMHej (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Jul 2021 03:34:39 -0400
-Received: from localhost.localdomain (ip5f5aeb78.dynamic.kabel-deutschland.de [95.90.235.120])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id D066F61E30BCC;
-        Tue, 13 Jul 2021 09:31:47 +0200 (CEST)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Guohan Lu <lguohan@gmail.com>, balsup <balsup@contoso.com>,
-        Madhava Reddy Siddareddygari <msiddare@cisco.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Reserve address space for powered-off devices behind PCIe bridges
-Date:   Tue, 13 Jul 2021 09:31:24 +0200
-Message-Id: <20210713073124.177027-1-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.32.0
+        id S234359AbhGMHnU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Jul 2021 03:43:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34718 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234333AbhGMHnT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jul 2021 03:43:19 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF00AC0613DD
+        for <linux-pci@vger.kernel.org>; Tue, 13 Jul 2021 00:40:29 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3D1j-0003xH-SF; Tue, 13 Jul 2021 09:40:23 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3D1h-0006Pv-CG; Tue, 13 Jul 2021 09:40:21 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1m3D1h-0000tH-BB; Tue, 13 Jul 2021 09:40:21 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     kernel@pengutronix.de, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 1/5] PCI: endpoint: Make struct pci_epf_driver::remove return void
+Date:   Tue, 13 Jul 2021 09:40:10 +0200
+Message-Id: <20210713074014.684791-2-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210713074014.684791-1-u.kleine-koenig@pengutronix.de>
+References: <20210713074014.684791-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=9dRuqNo/F0QuUsC0gOJNJtkYBeA+dIcgMdqc7T89QOM=; m=snXqztb6LzIi8DAPeqNx+9PxnuQ34OAUQf7w5ELTVEo=; p=mQYpkE+33DGoHOLv2dnUwlNBxobIypWigLJdWjDllyE=; g=e5c7b97ea399fddc2695e8cf5d0c02d14175abac
+X-Patch-Sig: m=pgp; i=uwe@kleine-koenig.org; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmDtQzQACgkQwfwUeK3K7AmsAwgAgBX Eg3QvGOVoHKutG61D0lZAg0iNugKpWXyEFo77039z7MjKIpe3DPlUUOt3161Uj/ZNx1IU01hqp9pO s/3fhgXIyRXS4egHwKq0FXf3OOagCAHeqU8j8wKd6UzjbOo8idL7ULHhA0Vg8ElK6K+OeBO1V6dDF casP0br39xYNBYV1lnywnpM9JRcx8knhNqxKxTQ6rNxRmGjEJ/JeJcWdeI/bzhHFEKnspg1BbB849 4ZOv4X7hUB7pQduElDi5Mcsol7RP2WxWsCeH9m997I6AorIt7Rm9QuedIA/du/q0o71xLpLh15lb5 tC5XTwKYjrs8CbJvXo2DXMbBySRcYlQ==
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: balsup <balsup@contoso.com>
+The driver core ignores the return value of pci_epf_device_remove()
+(because there is only little it can do when a device disappears) and
+there are no pci_epf_drivers with a remove callback.
 
-Data path devices are powered off by default, they will not be visible at
-BIOS stage and memory for these devices is not reserved.
+So make it impossible for future drivers to return an unused error code
+by changing the remove prototype to return void.
 
-By default, no address space would be reserved on the bridges for these
-unpowered devices. When they were powered up, they could fail to initialize
-because there was no appropriately aligned window available for a given
-BAR.
+The real motivation for this change is the quest to make struct
+bus_type::remove return void, too.
 
-This patch will reserve address space for data path devices that are behind
-PCIe bridge, so that when devices are available PCIe subsystem will be
-assign the address within the specified range.
-
-Signed-off-by: Madhava Reddy Siddareddygari <msiddare@cisco.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
-This patch was submitted to the SONiC project for a Cisco device [1].
-It’s better to have it reviewed and committed upstream though.
+ drivers/pci/endpoint/pci-epf-core.c | 5 ++---
+ include/linux/pci-epf.h             | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
- drivers/pci/setup-bus.c | 159 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 159 insertions(+)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2ce636937c6e..266097984e19 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -967,6 +967,148 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
- 	return min_align;
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index e9289d10f822..4b9ad96bf1b2 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -389,15 +389,14 @@ static int pci_epf_device_probe(struct device *dev)
+ 
+ static int pci_epf_device_remove(struct device *dev)
+ {
+-	int ret = 0;
+ 	struct pci_epf *epf = to_pci_epf(dev);
+ 	struct pci_epf_driver *driver = to_pci_epf_driver(dev->driver);
+ 
+ 	if (driver->remove)
+-		ret = driver->remove(epf);
++		driver->remove(epf);
+ 	epf->driver = NULL;
+ 
+-	return ret;
++	return 0;
  }
  
-+#define PLX_RES_MAGIC_VALUE            0xABBA
-+#define PLX_RES_DS_PORT_REG0           0xC6C
-+#define PLX_RES_DS_PORT_REG1           0xC70
-+#define PLX_RES_MAGIC_OFFSET           0xC76
-+#define PLX_RES_NP_MASK                0x1
-+#define PLX_RES_P_MASK                 0x1F
-+
-+static struct pci_dev *
-+plx_find_nt_device(struct pci_bus *bus, unsigned short brg_dev_id)
-+{
-+	struct pci_dev *dev, *nt_virt_dev = NULL;
-+	struct pci_bus *child_bus;
-+	unsigned short vendor, devid, class;
-+
-+	if (!bus)
-+		return NULL;
-+
-+	list_for_each_entry(child_bus, &bus->children, node) {
-+		list_for_each_entry(dev, &child_bus->devices, bus_list) {
-+			vendor = dev->vendor;
-+			devid = dev->device;
-+			class = dev->class >> 8;
-+
-+			if ((vendor == PCI_VENDOR_ID_PLX) &&
-+					(brg_dev_id == devid) &&
-+					(class == PCI_CLASS_BRIDGE_OTHER)) {
-+				dev_dbg(&dev->dev, "Found NT device 0x%x\n",
-+						devid);
-+				nt_virt_dev = dev;
-+				break;
-+			}
-+		}
-+
-+		if (nt_virt_dev)
-+			break;
-+	}
-+	return nt_virt_dev;
-+}
-+
-+static resource_size_t
-+pci_get_plx_downstream_res_size(struct pci_bus *bus, unsigned long res_type)
-+{
-+	int depth = 0;
-+	resource_size_t size = 0;
-+	struct pci_dev *dev = bus->self;
-+	struct pci_bus *tmp_bus;
-+	struct pci_dev *nt_virt_dev;
-+	u16 res_magic = 0;
-+
-+	/*
-+	 * 32 bits to store the memory requirement for PLX ports.
-+	 * Following is the layout:
-+	 * np32_0:1;  --> non-prefetchable port 0
-+	 * p64_0:5;   --> prefetchable port 0
-+	 * np32_1:1;  --> non-prefetchable port 1
-+	 * p64_1:5;   --> prefetchable port 1
-+	 * np32_2:1;  --> non-prefetchable port 2
-+	 * p64_2:5;   --> prefetchable port 2
-+	 * np32_3:1;  --> non-prefetchable port 3
-+	 * p64_3:5;   --> prefetchable port 3
-+	 * np32_4:1;  --> non-prefetchable port 4
-+	 * p64_4:5;   --> prefetchable port 4
-+	 * reserved:2;
-+	 */
-+	unsigned int port_bitmap;
-+
-+	u32 mem_res_bitmap = 0;
-+	unsigned int ds_port_offset = 0;
-+	unsigned short multiplier = 0;
-+	unsigned short np_size = 0;
-+
-+	/*
-+	 * PLX8713 used on FC4 and FC8
-+	 * PLX8725 used on FC12 and FC18
-+	 */
-+	if (!dev || dev->vendor != PCI_VENDOR_ID_PLX ||
-+			((dev->device & 0xFF00) != 0x8700))
-+		return size;
-+
-+	tmp_bus = bus;
-+	while (tmp_bus->parent) {
-+		tmp_bus = tmp_bus->parent;
-+		depth++;
-+	}
-+
-+	/* Only for Second level bridges */
-+	if (depth != 5)
-+		return size;
-+
-+	nt_virt_dev = plx_find_nt_device(bus->parent, 0x87b0);
-+	if (nt_virt_dev) {
-+		pci_read_config_word(nt_virt_dev, PLX_RES_MAGIC_OFFSET,
-+				&res_magic);
-+		dev_dbg(&nt_virt_dev->dev,
-+				"Magic offset of 0x%x found in NT device\n", res_magic);
-+	}
-+
-+	if (res_magic == PLX_RES_MAGIC_VALUE) {
-+		/*
-+		 * The pacifics are connected on PLX ports:
-+		 *  FC4 and FC8: #3, #4
-+		 *  FC12       : #3, #4, #5
-+		 *  FC18       : #3, #4, #5, #11
-+		 */
-+
-+		/* Calculate resource based on EEPROM values */
-+		ds_port_offset = (bus->number - bus->parent->number) - 1;
-+		if (ds_port_offset < 5) {
-+			pci_read_config_dword(nt_virt_dev, PLX_RES_DS_PORT_REG0,
-+					&mem_res_bitmap);
-+		} else {
-+			ds_port_offset -= 5;
-+			pci_read_config_dword(nt_virt_dev, PLX_RES_DS_PORT_REG1,
-+					&mem_res_bitmap);
-+		}
-+		port_bitmap = mem_res_bitmap;
-+		dev_dbg(&bus->dev, "Port offset: 0x%x, res bitmap 0x%x\n",
-+				ds_port_offset, mem_res_bitmap);
-+
-+		if (ds_port_offset < 5) {
-+			u8 m[] = { 26, 20, 14, 8, 2 };
-+			u8 s[] = { 31, 25, 19, 13, 7 };
-+
-+			multiplier = (port_bitmap >> m[ds_port_offset]) & PLX_RES_P_MASK;
-+			np_size = (port_bitmap >> s[ds_port_offset]) & PLX_RES_NP_MASK;
-+
-+			dev_dbg(&bus->dev, "Multiplier: %d, np_size: %d\n",
-+					multiplier, np_size);
-+
-+			if (res_type & IORESOURCE_PREFETCH) {
-+				size = 0x100000 << (multiplier - 1);
-+				dev_dbg(&bus->dev, "Pref Multiplier %d, Size 0x%llx\n",
-+						multiplier, (long long) size);
-+			} else if (np_size) {
-+				size = 0x100000;
-+				dev_dbg(&bus->dev, "NP Size 0x%llx\n", (long long) size);
-+			}
-+		}
-+	}
-+	return size;
-+}
-+
- /**
-  * pbus_size_mem() - Size the memory window of a given bus
-  *
-@@ -1001,6 +1143,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	resource_size_t children_add_size = 0;
- 	resource_size_t children_add_align = 0;
- 	resource_size_t add_align = 0;
-+	unsigned int dev_count = 0;
+ static struct bus_type pci_epf_bus_type = {
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index 2debc27ba95e..8292420426f3 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -85,7 +85,7 @@ struct pci_epf_ops {
+  */
+ struct pci_epf_driver {
+ 	int	(*probe)(struct pci_epf *epf);
+-	int	(*remove)(struct pci_epf *epf);
++	void	(*remove)(struct pci_epf *epf);
  
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -1016,6 +1159,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-+		dev_count++;
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
-@@ -1071,6 +1215,21 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
-+	/* Static allocation for FC pacific */
-+	if (!size && !dev_count) {
-+		size = pci_get_plx_downstream_res_size(bus, type);
-+		if (size) {
-+			order = __ffs(size);
-+			dev_dbg(&bus->self->dev, "order for %llx is %u\n", (long long) size, order);
-+			if ((order >= 20) &&
-+					((order -= 20) < ARRAY_SIZE(aligns)) &&
-+					(order > max_order)) {
-+				max_order = order;
-+				dev_dbg(&bus->self->dev, "max_order reset to %d; size %zx\n", max_order, (size_t)size);
-+			}
-+		}
-+	}
-+
- 	min_align = calculate_mem_align(aligns, max_order);
- 	min_align = max(min_align, window_alignment(bus, b_res->flags));
- 	size0 = calculate_memsize(size, min_size, 0, 0, resource_size(b_res), min_align);
+ 	struct device_driver	driver;
+ 	struct pci_epf_ops	*ops;
 -- 
-2.32.0
+2.30.2
 
