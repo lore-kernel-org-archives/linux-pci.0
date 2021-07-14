@@ -2,120 +2,162 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08857C11F68
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6030FC11F66
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFE0C61363
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CA0B61154
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237997AbhGNKcL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Jul 2021 06:32:11 -0400
-Received: from foss.arm.com ([217.140.110.172]:33100 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237788AbhGNKcL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Jul 2021 06:32:11 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 51AFAD6E;
-        Wed, 14 Jul 2021 03:29:19 -0700 (PDT)
-Received: from [10.57.36.240] (unknown [10.57.36.240])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B4FA73F774;
-        Wed, 14 Jul 2021 03:29:14 -0700 (PDT)
-Subject: Re: [PATCH v2 0/3] iommu: Enable non-strict DMA on QCom SD/MMC
-To:     Joerg Roedel <joro@8bytes.org>
-Cc:     Doug Anderson <dianders@chromium.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-pci@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Rajat Jain <rajatja@google.com>, Will Deacon <will@kernel.org>,
-        Rob Clark <robdclark@chromium.org>,
-        Saravana Kannan <saravanak@google.com>,
-        Jonathan Corbet <corbet@lwn.net>, quic_c_gdjako@quicinc.com,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Veerabhadrarao Badiganti <vbadigan@codeaurora.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sonny Rao <sonnyrao@chromium.org>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "list@263.net:IOMMU DRIVERS" <iommu@lists.linux-foundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Maciej W. Rozycki" <macro@orcam.me.uk>
-References: <20210624171759.4125094-1-dianders@chromium.org>
- <YNXXwvuErVnlHt+s@8bytes.org>
- <CAD=FV=UFxZH7g8gH5+M=Fv4Y-e1bsLkNkPGJhNwhvVychcGQcQ@mail.gmail.com>
- <CAD=FV=W=HmgH3O3z+nThWL6U+X4Oh37COe-uTzVB9SanP2n86w@mail.gmail.com>
- <YOaymBHc4g2cIfRn@8bytes.org> <edd1de35-5b9e-b679-9428-23c6d5005740@arm.com>
- <YO65OOScL5vru1Kr@8bytes.org>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <255adda2-3b5f-b080-4da1-f3c5d5a4f7a6@arm.com>
-Date:   Wed, 14 Jul 2021 11:29:08 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S238071AbhGNKcW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Jul 2021 06:32:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34440 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237996AbhGNKcW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jul 2021 06:32:22 -0400
+Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C357C06175F;
+        Wed, 14 Jul 2021 03:29:30 -0700 (PDT)
+Received: by mail-qk1-x72f.google.com with SMTP id r125so1066037qkf.1;
+        Wed, 14 Jul 2021 03:29:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=gX+DylQFl+b5aUUhEFVAqofxq/SEoe+L/4Ef9sTaObs=;
+        b=Q+oIjxWan9rWu2vHb/qP/x9du4L5QsWJ9jpepPvnbmM+3WNvgKn4Ibm7zwwYFOJ7fk
+         0NwyVaPd3q7Ap0OdhZzQOjqNfW9jUWppfeXmSUZWhgAN0Ql41A+a6Hd9ofJ5RCXgSXNs
+         hoNonFwnuyAR567DDdQDdm/vezNuamvzzNS7YkIIOKONwpwA2RS8FU4e0pBc/gRMPbfS
+         L9gBWtnQ9n5So9k08u6Aa8oSUmjpma7G5jb1ySKyQcw/yk10z/BEpHvaIeZtkG6nysvF
+         nZ46Qwg/5wwU5G9lxT2kSE46q9KTktkgFWxaeDod9zo8erkv8ByCrmT22v3wXqvVfEgX
+         nukA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=gX+DylQFl+b5aUUhEFVAqofxq/SEoe+L/4Ef9sTaObs=;
+        b=K2HV4vO3ikHihf7qLD6MsRkBxiOaOGv4A9bKk9lrFynV/NciDYwcXJWk7v7BvlSL0p
+         xb5c0R5A5ZjoNshyJ8Qaga64OQ9RmYIZAgxrVayOULPj8htijeDkNvUmocp885ZfdP6S
+         LPNriOEqqzjTX/EzKNcKuTv0+kjd2VcAqRBM3k7srbWNBGgylU9Q/ioe0mSup5eQ+QHy
+         UmgpIqKhB62LIqJcRLRMb/sSwn3NZ/r8nPqBVfDgmdnptDNLlSjiyk3C4tIKBMZMyfQj
+         IfRrPXS+ZqHJewViEBGtrDf6gqVt2hkpVOE5Hp2us1jcWCLDoQQRPxRagVgtgFamu2is
+         N2RA==
+X-Gm-Message-State: AOAM532JM/cjZRk98hTWdF3jFPjbV7prThUFkOFKO4g2NZTgFTHDIiRw
+        Wb7wlY42o2pXCG+uxo6PNBLfeGLIJ8w=
+X-Google-Smtp-Source: ABdhPJzoXMzoj4ECc+ahSyiMClRxrusvrrEi+GiSacx8hbeCnlSRQIvBzrJmLLC5yNLTtMDOAUHl6w==
+X-Received: by 2002:a37:ac14:: with SMTP id e20mr9317563qkm.362.1626258569161;
+        Wed, 14 Jul 2021 03:29:29 -0700 (PDT)
+Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
+        by smtp.gmail.com with ESMTPSA id f19sm836967qkg.70.2021.07.14.03.29.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jul 2021 03:29:28 -0700 (PDT)
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailauth.nyi.internal (Postfix) with ESMTP id D94AF27C0054;
+        Wed, 14 Jul 2021 06:29:27 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute1.internal (MEProxy); Wed, 14 Jul 2021 06:29:27 -0400
+X-ME-Sender: <xms:hrzuYKzhzRljOsssx9L6Nb6_7MO05NK6-PtpOpUe0GcGcPdq4F5HCw>
+    <xme:hrzuYGS6729ENTURt1st6pNPjAvWAdP1_8lIpTodFHKDPtPddVYJtzsiBTzIAFdUQ
+    TDGlwu_mvybasvzyA>
+X-ME-Received: <xmr:hrzuYMWMGI4l6CgFFHH89g4vHxIENJB0MAr2FLCX9xxLff1E9m4zl4H0WEPodg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrudekgddvkecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefhvffufffkofgggfestdekredtredttdenucfhrhhomhepuehoqhhunhcuhfgv
+    nhhguceosghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmqeenucggtffrrghtthgvrh
+    hnpeeiueevjeelheduteefveeflefgjeetfeehvdekudekgfegudeghfduhfetveejuden
+    ucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptdenuc
+    frrghrrghmpehmrghilhhfrhhomhepsghoqhhunhdomhgvshhmthhprghuthhhphgvrhhs
+    ohhnrghlihhthidqieelvdeghedtieegqddujeejkeehheehvddqsghoqhhunhdrfhgvnh
+    hgpeepghhmrghilhdrtghomhesfhhigihmvgdrnhgrmhgv
+X-ME-Proxy: <xmx:hrzuYAhabG9Zs-hb3gWXAUQbMIxKPwXKvrXfR-HdVp3iFMUrp7bZLA>
+    <xmx:hrzuYMBJqfWBKBukdvk483_t9cCZ0pGSA-cK6_W_zin1JgYQ-HncYw>
+    <xmx:hrzuYBKDPa9IHVrYKM1JHGJTgNqIVijjLIPE4wgvLWB4f1D-Sb3bnQ>
+    <xmx:h7zuYE7xNqeTBCiLZKBDbhYJq86iDsWSx6vzdL_jCwBUHvxRjdudI_M2Oa4>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 14 Jul 2021 06:29:26 -0400 (EDT)
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Boqun Feng <boqun.feng@gmail.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        Sunil Muthuswamy <sunilmut@microsoft.com>,
+        Mike Rapoport <rppt@kernel.org>
+Subject: [RFC v4 0/7] PCI: hv: Support host bridge probing on ARM64
+Date:   Wed, 14 Jul 2021 18:27:30 +0800
+Message-Id: <20210714102737.198432-1-boqun.feng@gmail.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <YO65OOScL5vru1Kr@8bytes.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021-07-14 11:15, Joerg Roedel wrote:
-> Hi Robin,
-> 
-> On Fri, Jul 09, 2021 at 02:56:47PM +0100, Robin Murphy wrote:
->> As I mentioned before, conceptually I think this very much belongs in sysfs
->> as a user decision. We essentially have 4 levels of "strictness":
->>
->> 1: DMA domain with bounce pages
->> 2: DMA domain
->> 3: DMA domain with flush queue
->> 4: Identity domain
-> 
-> Together with reasonable defaults (influenced by compile-time
-> options) it seems to be a good thing to configure at runtime via
-> sysfs.
-> 
-> We already have CONFIG_IOMMU_DEFAULT_PASSTHROUGH, which can probably be
-> extended to be an option list:
-> 
-> 	- CONFIG_IOMMU_DEFAULT_PASSTHROUGH: Trusted devices are identity
-> 					    mapped
-> 
-> 	- CONFIG_IOMMU_DEFAULT_DMA_STRICT: Trusted devices are DMA
-> 					   mapped with strict flush
-> 					   behavior on unmap
-> 
-> 	- CONFIG_IOMMU_DEFAULT_DMA_LAZY: Trusted devices are DMA mapped
-> 					 with flush queues for performance
+Hi Bjorn, Arnd and Marc,
 
-Indeed, I got focused on the sysfs angle, but rearranging the Kconfig 
-default that way to match makes a lot of sense, and is another thing 
-which should fall out really easily from my domain type rework, so I'll 
-add that to my branch now before I forget again.
+This is the v4 for the preparation of virtual PCI support on Hyper-V
+ARM64. Previous versions:
 
-> Untrusted devices always get into the DMA domain with bounce pages by
-> default.
-> 
-> The defaults can be changed at runtime via sysfs. We already have basic
-> support for runtime switching of the default domain, so that can be
-> re-used.
+v1:	https://lore.kernel.org/lkml/20210319161956.2838291-1-boqun.feng@gmail.com/
+v2:	https://lore.kernel.org/lkml/20210503144635.2297386-1-boqun.feng@gmail.com/
+v3:	https://lore.kernel.org/lkml/20210609163211.3467449-1-boqun.feng@gmail.com/
 
-As mentioned yesterday, already done! I'm hoping to be able to post the 
-patches next week after some testing :)
+Changes since last version:
 
-Cheers,
-Robin.
+*	Rebase to 5.14-rc1.
+
+*	Change the ordering of patches, now the first three patches are
+	non Hyper-V specific ones (i.e. patches touch general code),
+	make it convenient to review.
+
+The basic problem we need to resolve is that ARM64 is an arch with
+PCI_DOMAINS_GENERIC=y, so the bus sysdata is pci_config_window. However,
+Hyper-V PCI provides a paravirtualized PCI interface, so there is no
+actual pci_config_window for a PCI host bridge, so no information can be
+retrieve from the pci_config_window of a Hyper-V virtual PCI bus. Also
+there is no corresponding ACPI device for the Hyper-V PCI root bridge,
+which introduces a special case when trying to find the ACPI device from
+the sysdata (see patch #3).
+
+With this patchset, we could enable the virtual PCI on Hyper-V ARM64
+guest with other code under development.
+
+Comments and suggestions are welcome.
+
+Regards,
+Boqun
+
+Arnd Bergmann (1):
+  PCI: hv: Generify PCI probing
+
+Boqun Feng (6):
+  PCI: Introduce domain_nr in pci_host_bridge
+  PCI: Allow msi domain set-up at host probing time
+  arm64: PCI: Support root bridge preparation for Hyper-V PCI
+  PCI: hv: Use pci_host_bridge::domain_nr for PCI domain
+  PCI: hv: Set up msi domain at bridge probing time
+  PCI: hv: Turn on the host bridge probing on ARM64
+
+ arch/arm64/kernel/pci.c             |  8 ++-
+ drivers/pci/controller/pci-hyperv.c | 86 +++++++++++++++++------------
+ drivers/pci/probe.c                 | 11 +++-
+ include/linux/pci.h                 | 10 ++++
+ 4 files changed, 76 insertions(+), 39 deletions(-)
+
+-- 
+2.30.2
+
