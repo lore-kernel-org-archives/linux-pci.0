@@ -2,156 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EAE7C11F6E
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1045BC11F66
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:30:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AC9F61363
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:29:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEB106135A
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 10:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238917AbhGNKcc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Jul 2021 06:32:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34504 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239129AbhGNKcb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jul 2021 06:32:31 -0400
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 591FBC061762;
-        Wed, 14 Jul 2021 03:29:40 -0700 (PDT)
-Received: by mail-qk1-x72a.google.com with SMTP id 201so1025615qkj.13;
-        Wed, 14 Jul 2021 03:29:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MjtB63O8D6JZEGLQ/GVfQXEaFWYKcg+D2+varZhpuDo=;
-        b=LjjPBgmN78m+5VJLZrewYnBR6ZZfRjNoneQMnEhrS8cFOWElmH+4HuwQyWnXuPcXM4
-         iCQwcyvT8BTPK1FIFjkX52293Yp8b8UTC53P7nmMTZucD4LUpG6KNwp7kJZP+UKbiGN8
-         cIJ3gfHHwxtUE+YIMpsvMIu3d8CBccf9I4+iSwJtLLi2LXaJoFW6Am4STjGjCYTmTQVJ
-         ex0DYEh8X6fT+fn8hymR2j63fp3x5bt/66pSU0O5DzwskWcacPErIy3HFb6C+B5iKVPf
-         GJu6F1XpFIgumjfo5l7D2WP+EcMFIf3RBEWclTmwg60T7Rub9TZo+swD06lSfT7kBgM5
-         BOpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MjtB63O8D6JZEGLQ/GVfQXEaFWYKcg+D2+varZhpuDo=;
-        b=eTwfpBuyLUbS2d5grrCR4OD2/B08nQ8e61oSDc2LGZcrB4NcTf+2+2fZ3GpX/MIUJ7
-         bdqF5p+3eUBtA/WsUZD+s+KCEjRmOHg+dn9X9yBc7R91z5uQEhUTCsV+xk6LiLcXMFf4
-         r/ixRyUQpqpgsbmHUDDMJ0Mys7ALHC2cNheSBHENA9BRr/Z3+Wbe/bC6aQw7ccP+pdEJ
-         sY6Lrx3N80mvZHUtj+kMXMG912LdMO+ft4y9/QJs+DEcYCwe3tOu0tKo6/5J4GhfBPQF
-         ht8tP+tPP6lAgHqryA5yFDo0TajO6IWdXT+nOpyUz2aECopEJDpasO3PQ3oTcIFGsN+z
-         +ZvA==
-X-Gm-Message-State: AOAM5323PDrDft8QddnE7o3ZUDTdOGPVl36efqFa0rvRIdeHXnnDyFey
-        lXuZcQHiYUgZvblf8ll6fbc=
-X-Google-Smtp-Source: ABdhPJyIQ4bAu5TuRkSktzpUaxKE9S5Kn2Eipv5skl92L4xZ/DaDosYBF1hPBKslEuM4tJ2Q72EAww==
-X-Received: by 2002:ae9:e002:: with SMTP id m2mr9208764qkk.474.1626258578690;
-        Wed, 14 Jul 2021 03:29:38 -0700 (PDT)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id k6sm614543qtg.78.2021.07.14.03.29.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Jul 2021 03:29:38 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 72D4F27C005A;
-        Wed, 14 Jul 2021 06:29:37 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute5.internal (MEProxy); Wed, 14 Jul 2021 06:29:37 -0400
-X-ME-Sender: <xms:kbzuYDViUfRItF8rPHX6vN-ic8is2MZWkqlW_bXywEo6Jrl5nibUHA>
-    <xme:kbzuYLmKtOvCqIwXhLl7WmY7BRuDXzVGcOtzlADRJROXPgcIOJ_l96vDq5blR8aqw
-    _RDQJ-v01JDLI7LCA>
-X-ME-Received: <xmr:kbzuYPaebdiUUw5n5lWFDeq_0BaIMtRcnlA5PPyhn0NVJs_UvQZdSwB1zyhIpQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrudekgddvkecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefhvffufffkofgjfhgggfestdekredtredttdenucfhrhhomhepuehoqhhunhcu
-    hfgvnhhguceosghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmqeenucggtffrrghtth
-    gvrhhnpeehvdevteefgfeiudettdefvedvvdelkeejueffffelgeeuhffhjeetkeeiueeu
-    leenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepmhgrihhlfhhrohhmpegsoh
-    hquhhnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedq
-    udejjeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmh
-    gvrdhnrghmvg
-X-ME-Proxy: <xmx:kbzuYOUeKcfcythj7uzBsnvXkLUEruYwgfH4En_JWPMTrEvtmu6WNA>
-    <xmx:kbzuYNmpowsRfbNGzZYYya4v1-pWzunrJO3_SZu8H_YdkyzURBIj_g>
-    <xmx:kbzuYLfjOkJu3TxOJ-WO9o8n2Gd9uk_XjmlMWDILc9wDbtzmWKmIEw>
-    <xmx:kbzuYMfbLHVurHIjUzOYJ7AwOxYUVtcmfbpkSyZ0kzUgFCJevzVTAAMMzEQ>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 14 Jul 2021 06:29:37 -0400 (EDT)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <maz@kernel.org>
-Cc:     Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Boqun Feng <boqun.feng@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sunil Muthuswamy <sunilmut@microsoft.com>,
-        Mike Rapoport <rppt@kernel.org>
-Subject: [RFC v4 7/7] PCI: hv: Turn on the host bridge probing on ARM64
-Date:   Wed, 14 Jul 2021 18:27:37 +0800
-Message-Id: <20210714102737.198432-8-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210714102737.198432-1-boqun.feng@gmail.com>
-References: <20210714102737.198432-1-boqun.feng@gmail.com>
+        id S239137AbhGNKdE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Jul 2021 06:33:04 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:57456 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S239084AbhGNKdD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jul 2021 06:33:03 -0400
+X-UUID: 11ce90c742ac4fcc87812fa62567ad2a-20210714
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=aMvi45gbpJSoRaiIcIqBkq7M/xz+yG1kS/cPkMPAaJA=;
+        b=eHXtz8DBbyuUZWQWH+qo31Gf1BSf+nCcjclfx1fyYJJGD5oMxQoYTtOenoM3z0R+N4B+q6Q3KsfT6lnVmtE52NlXaHcj6NY7YfmZH/82EcFR2/4PjfVp9JIo/+q8hZZXav1KSH0QFgfbck8kKXzrgUcHbKSm7IIsY9ARwzozxqA=;
+X-UUID: 11ce90c742ac4fcc87812fa62567ad2a-20210714
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <chuanjia.liu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1769286616; Wed, 14 Jul 2021 18:30:09 +0800
+Received: from mtkcas10.mediatek.inc (172.21.101.39) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 14 Jul 2021 18:30:08 +0800
+Received: from [10.17.3.153] (10.17.3.153) by mtkcas10.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 14 Jul 2021 18:30:07 +0800
+Message-ID: <1626258607.13880.9.camel@mhfsdcap03>
+Subject: Re: [PATCH v10 2/4] PCI: mediatek: Add new method to get shared
+ pcie-cfg base address and parse node
+From:   Chuanjia Liu <chuanjia.liu@mediatek.com>
+To:     Matthias Brugger <matthias.bgg@gmail.com>
+CC:     <lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+        <bhelgaas@google.com>, <ryder.lee@mediatek.com>,
+        <jianjun.wang@mediatek.com>, <yong.wu@mediatek.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        Frank Wunderlich <frank-w@public-files.de>
+Date:   Wed, 14 Jul 2021 18:30:07 +0800
+In-Reply-To: <e462d9f0-2fa3-6106-f060-9753dc604b9f@gmail.com>
+References: <20210611060902.12418-1-chuanjia.liu@mediatek.com>
+         <20210611060902.12418-3-chuanjia.liu@mediatek.com>
+         <e462d9f0-2fa3-6106-f060-9753dc604b9f@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.10.4-0ubuntu2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now we have everything we need, just provide a proper sysdata type for
-the bus to use on ARM64 and everything else works.
-
-Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
----
- drivers/pci/controller/pci-hyperv.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index e6276aaa4659..62dbe98d1fe1 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -40,6 +40,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/delay.h>
- #include <linux/semaphore.h>
- #include <linux/irqdomain.h>
-@@ -448,7 +449,11 @@ enum hv_pcibus_state {
- };
- 
- struct hv_pcibus_device {
-+#ifdef CONFIG_X86
- 	struct pci_sysdata sysdata;
-+#elif defined(CONFIG_ARM64)
-+	struct pci_config_window sysdata;
-+#endif
- 	struct pci_host_bridge *bridge;
- 	struct fwnode_handle *fwnode;
- 	/* Protocol version negotiated with the host */
-@@ -3075,7 +3080,9 @@ static int hv_pci_probe(struct hv_device *hdev,
- 			 dom_req, dom);
- 
- 	hbus->bridge->domain_nr = dom;
-+#ifdef CONFIG_X86
- 	hbus->sysdata.domain = dom;
-+#endif
- 
- 	hbus->hdev = hdev;
- 	INIT_LIST_HEAD(&hbus->children);
--- 
-2.30.2
+T24gVHVlLCAyMDIxLTA3LTEzIGF0IDEzOjMyICswMjAwLCBNYXR0aGlhcyBCcnVnZ2VyIHdyb3Rl
+Og0KPiANCj4gT24gMTEvMDYvMjAyMSAwODowOSwgQ2h1YW5qaWEgTGl1IHdyb3RlOg0KPiA+IEZv
+ciB0aGUgbmV3IGR0cyBmb3JtYXQsIGFkZCBhIG5ldyBtZXRob2QgdG8gZ2V0DQo+ID4gc2hhcmVk
+IHBjaWUtY2ZnIGJhc2UgYWRkcmVzcyBhbmQgcGFyc2Ugbm9kZS4NCj4gPiANCj4gPiBTaWduZWQt
+b2ZmLWJ5OiBDaHVhbmppYSBMaXUgPGNodWFuamlhLmxpdUBtZWRpYXRlay5jb20+DQo+ID4gQWNr
+ZWQtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCj4gDQo+IFlvdSBtaXNz
+ZWQgdGhlDQo+IFJldmlld2VkLWJ5OiBSb2IgSGVycmluZyA8cm9iaEBrZXJuZWwub3JnPg0KPiBn
+aXZlbiBpbiB2OC4gT3Igd2VyZSB0aGVyZSBhbnkgc3Vic3RhbnRpYWwgY2hhbmdlcyBpbiB0aGlz
+IHBhdGNoPw0KPiANClRoYW5rcyBmb3IgeW91ciByZXZpZXchDQoNCk9ubHkgYSBzbWFsbCBjaGFu
+Z2XvvIxhcyBzaG93biBiZWxvdw0KDQogCQlpZiAoZXJyKQ0KLQkJCWdvdG8gZXJyb3JfcHV0X25v
+ZGU7DQorCQkJcmV0dXJuIGVycjsNCiAJfQ0KSSBoYXZlIGEgZGVzY3JpcHRpb24gaW4gdGhlIFY5
+IHZlcnNpb246DQpmaXgga2VybmVsLWNpIGJvdCB3YXJuaW5n77yMSW4gdGhlIHNjZW5lIG9mIHVz
+aW5nIG5ldyBkdHMgZm9ybWF0LA0Kd2hlbiBtdGtfcGNpZV9wYXJzZV9wb3J0IGZhaWxzLCBvZl9u
+b2RlX3B1dCBkb24ndCBuZWVkIHRvIGJlIGNhbGxlZC4NCg0KU28gSSBkaWRuJ3QgYWRkIHJldmll
+d2VkLWJ5IHJvYiBiZWNhdXNlIEkgY2hhbmdlZCB0aGUgcGF0Y2jjgIINCj4gPiAtLS0NCj4gPiAg
+ZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLW1lZGlhdGVrLmMgfCA1MiArKysrKysrKysrKysr
+KysrKysrLS0tLS0tLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMzkgaW5zZXJ0aW9ucygrKSwgMTMg
+ZGVsZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xs
+ZXIvcGNpZS1tZWRpYXRlay5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLW1lZGlhdGVr
+LmMNCj4gPiBpbmRleCA2MmEwNDJlNzVkOWEuLjk1MGY1NzdhMmY0NCAxMDA2NDQNCj4gPiAtLS0g
+YS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL3BjaWUtbWVkaWF0ZWsuYw0KPiA+ICsrKyBiL2RyaXZl
+cnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1tZWRpYXRlay5jDQo+ID4gQEAgLTE0LDYgKzE0LDcgQEAN
+Cj4gPiAgI2luY2x1ZGUgPGxpbnV4L2lycWNoaXAvY2hhaW5lZF9pcnEuaD4NCj4gPiAgI2luY2x1
+ZGUgPGxpbnV4L2lycWRvbWFpbi5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgva2VybmVsLmg+DQo+
+ID4gKyNpbmNsdWRlIDxsaW51eC9tZmQvc3lzY29uLmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9t
+c2kuaD4NCj4gPiAgI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KPiA+ICAjaW5jbHVkZSA8bGlu
+dXgvb2ZfYWRkcmVzcy5oPg0KPiA+IEBAIC0yMyw2ICsyNCw3IEBADQo+ID4gICNpbmNsdWRlIDxs
+aW51eC9waHkvcGh5Lmg+DQo+ID4gICNpbmNsdWRlIDxsaW51eC9wbGF0Zm9ybV9kZXZpY2UuaD4N
+Cj4gPiAgI2luY2x1ZGUgPGxpbnV4L3BtX3J1bnRpbWUuaD4NCj4gPiArI2luY2x1ZGUgPGxpbnV4
+L3JlZ21hcC5oPg0KPiA+ICAjaW5jbHVkZSA8bGludXgvcmVzZXQuaD4NCj4gPiAgDQo+ID4gICNp
+bmNsdWRlICIuLi9wY2kuaCINCj4gPiBAQCAtMjA3LDYgKzIwOSw3IEBAIHN0cnVjdCBtdGtfcGNp
+ZV9wb3J0IHsNCj4gPiAgICogc3RydWN0IG10a19wY2llIC0gUENJZSBob3N0IGluZm9ybWF0aW9u
+DQo+ID4gICAqIEBkZXY6IHBvaW50ZXIgdG8gUENJZSBkZXZpY2UNCj4gPiAgICogQGJhc2U6IElP
+IG1hcHBlZCByZWdpc3RlciBiYXNlDQo+ID4gKyAqIEBjZmc6IElPIG1hcHBlZCByZWdpc3RlciBt
+YXAgZm9yIFBDSWUgY29uZmlnDQo+ID4gICAqIEBmcmVlX2NrOiBmcmVlLXJ1biByZWZlcmVuY2Ug
+Y2xvY2sNCj4gPiAgICogQG1lbTogbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgcmVzb3VyY2UNCj4g
+PiAgICogQHBvcnRzOiBwb2ludGVyIHRvIFBDSWUgcG9ydCBpbmZvcm1hdGlvbg0KPiA+IEBAIC0y
+MTUsNiArMjE4LDcgQEAgc3RydWN0IG10a19wY2llX3BvcnQgew0KPiA+ICBzdHJ1Y3QgbXRrX3Bj
+aWUgew0KPiA+ICAJc3RydWN0IGRldmljZSAqZGV2Ow0KPiA+ICAJdm9pZCBfX2lvbWVtICpiYXNl
+Ow0KPiA+ICsJc3RydWN0IHJlZ21hcCAqY2ZnOw0KPiA+ICAJc3RydWN0IGNsayAqZnJlZV9jazsN
+Cj4gPiAgDQo+ID4gIAlzdHJ1Y3QgbGlzdF9oZWFkIHBvcnRzOw0KPiA+IEBAIC02NTAsNyArNjU0
+LDExIEBAIHN0YXRpYyBpbnQgbXRrX3BjaWVfc2V0dXBfaXJxKHN0cnVjdCBtdGtfcGNpZV9wb3J0
+ICpwb3J0LA0KPiA+ICAJCXJldHVybiBlcnI7DQo+ID4gIAl9DQo+ID4gIA0KPiA+IC0JcG9ydC0+
+aXJxID0gcGxhdGZvcm1fZ2V0X2lycShwZGV2LCBwb3J0LT5zbG90KTsNCj4gPiArCWlmIChvZl9m
+aW5kX3Byb3BlcnR5KGRldi0+b2Zfbm9kZSwgImludGVycnVwdC1uYW1lcyIsIE5VTEwpKQ0KPiA+
+ICsJCXBvcnQtPmlycSA9IHBsYXRmb3JtX2dldF9pcnFfYnluYW1lKHBkZXYsICJwY2llX2lycSIp
+Ow0KPiA+ICsJZWxzZQ0KPiA+ICsJCXBvcnQtPmlycSA9IHBsYXRmb3JtX2dldF9pcnEocGRldiwg
+cG9ydC0+c2xvdCk7DQo+ID4gKw0KPiANCj4gRG8gSSB1bmRlcnN0YW5kIHRoYXQgdGhpcyBpcyB1
+c2VkIGZvciBiYWNrd2FyZHMgY29tcGF0aWJpbGl0eSB3aXRoIG9sZGVyIERUUz8gSQ0KPiBqdXN0
+IHdvbmRlciB3aHkgd2UgZG9uJ3QgbmVlZCB0byBtYW5kYXRlDQo+IGludGVycnVwdC1uYW1lcyA9
+ICJwY2llX2lycSINCj4gaW4gdGhlIGJpbmRpbmcgZGVzY3JpcHRpb24uDQpZZXPvvIx0aGlzIGlz
+IHVzZWQgZm9yIGJhY2t3YXJkcyBjb21wYXRpYmlsaXR5IHdpdGggb2xkZXIgRFRT44CCDQpJZiBu
+ZWNlc3NhcnksIEkgd2lsbCBhZGQgdGhlIGZvbGxvd2luZyBpbiBiaW5kaW5nIGRlc2NyaXB0aW9u
+Lg0KLSBpbnRlcnJ1cHQtbmFtZXPvvJpNdXN0IGluY2x1ZGUgdGhlIGZvbGxvd2luZyBlbnRyaWVz
+77yaDQogICAgLSAicGNpZV9pcnEi77yaIFRoZSBpbnRlcnJ1cHQgdGhhdCBpcyBhc3NlcnRlZCB3
+aGVuIGFuIE1TSS9JTlRYIGlzDQpyZWNlaXZlZA0KDQpCZXN0IHJlZ2FyZHMNCkNodWFuamlhDQo+
+IA0KPiBSZWdhcmRzLA0KPiBNYXR0aGlhcw0KDQo=
 
