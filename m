@@ -2,103 +2,86 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25138C47E48
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 19:39:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55DE4C47E48
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 19:55:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1332A613E0
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 19:39:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4091F613D9
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jul 2021 19:55:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234297AbhGNTmk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Jul 2021 15:42:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36840 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234769AbhGNTmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Jul 2021 15:42:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 907CB613DA;
-        Wed, 14 Jul 2021 19:39:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626291561;
-        bh=3Rr6koHIQmRr8tLClangiNtlx32anz5IDP9dT1csPoQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=V3FiFKJYUhSvfEpC0i6gYvAdyUppbBHOrArHPVvPnGeBNubloc5ZEQjvXeYFWJSGD
-         KVV3Pxi/440isDrzgF2Am6UFS+28spBz0q54e/J9+QHjX3OZQSN82f+mx8zT1LU8S4
-         HLgGU6DFKDvPxYKCN8RnOHgp96MMi6P0ydHVQNvzJnegrJbPjEdQ44Ysvk5/wf5CKj
-         61bk+ucv25UBWofdmPkgkITl83Kw7UeUBoQOupyhkJ9Y7cOgakr1jm6bHc7LJk8bHS
-         PjmX90K6V7EGh2HjDdDjC9l5sreEdnLFh2zjz6fOxoxM7Wo9cOVpGpaRHrAnVrX4ah
-         9E+dx9dafiB8Q==
-Date:   Wed, 14 Jul 2021 14:39:20 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Boqun Feng <boqun.feng@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Marc Zyngier <maz@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        Sunil Muthuswamy <sunilmut@microsoft.com>,
-        Mike Rapoport <rppt@kernel.org>
-Subject: Re: [RFC v4 2/7] PCI: Allow msi domain set-up at host probing time
-Message-ID: <20210714193920.GA1868875@bjorn-Precision-5520>
+        id S241051AbhGNT5s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Jul 2021 15:57:48 -0400
+Received: from mail-io1-f42.google.com ([209.85.166.42]:41934 "EHLO
+        mail-io1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240778AbhGNTuE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jul 2021 15:50:04 -0400
+Received: by mail-io1-f42.google.com with SMTP id z9so3538219iob.8;
+        Wed, 14 Jul 2021 12:47:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=3V8nZmi/KX6WV/3eY0dps9KX5cZgW01GINnuyCZFNQ8=;
+        b=lkca+N7KzKC7iSwakJfi+XnZk2e2bROh/CchHE7/ukwkxM88OtsdEqbhShQem/EfeR
+         KKtfAKxFVOJ6pKbKoW6GLStUmV10E0dhbaekDGFsZDSDl97vRIRu04elCsLShwVW7U2P
+         NGBAs0GOTs85tggaob750INCz+MDFluvL6MO3QSzliA1DrxFI4YR11VYgkDOeoH8C32F
+         PAgj/9LXS1hLW2v487PDwvKUy2Z0KbvNozidaLtvDmVhhLCJsZVUw/kpVak/dIzSxX2t
+         KhEouHZNfKAD2WrXn1x2KyrQDiacvp/8coukg0xp02QmD64rGTRlSLfPLXfghOE0yimJ
+         /bfQ==
+X-Gm-Message-State: AOAM533FYnBx8qjpwINoqs4WYQlOaviEBf+PZ5Kt6pNilf5CgBOeXzNP
+        x6Y5EgK/rmWEAsdBVB3Gtg==
+X-Google-Smtp-Source: ABdhPJwpbtBXJYHQG5252lxL69KkSHkS5KRtgQnqEhEK/RRyDCmq/ly16p21u7NdLsnKBh1SpzA4dA==
+X-Received: by 2002:a5d:87cc:: with SMTP id q12mr8285823ios.131.1626292031269;
+        Wed, 14 Jul 2021 12:47:11 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.248])
+        by smtp.gmail.com with ESMTPSA id b3sm1594371ilm.73.2021.07.14.12.47.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jul 2021 12:47:10 -0700 (PDT)
+Received: (nullmailer pid 3236404 invoked by uid 1000);
+        Wed, 14 Jul 2021 19:47:08 -0000
+Date:   Wed, 14 Jul 2021 13:47:08 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Michal Simek <michal.simek@xilinx.com>
+Cc:     git@xilinx.com, monstr@monstr.eu, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        kw@linux.com, bharat.kumar.gogada@xilinx.com,
+        Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v3 1/2] dt-bindings: pci: xilinx-nwl: Document optional
+ clock property
+Message-ID: <20210714194708.GA3236304@robh.at.kernel.org>
+References: <cover.1624618100.git.michal.simek@xilinx.com>
+ <67aa2c189337181bb2d7721fb616db5640587d2a.1624618100.git.michal.simek@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210714102737.198432-3-boqun.feng@gmail.com>
+In-Reply-To: <67aa2c189337181bb2d7721fb616db5640587d2a.1624618100.git.michal.simek@xilinx.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Capitalize "MSI" in subject and commit log.
-
-On Wed, Jul 14, 2021 at 06:27:32PM +0800, Boqun Feng wrote:
-> For GENERIC_MSI_IRQ_DOMAIN drivers, we can set up the msi domain via
-> dev_set_msi_domain() at probing time, and drivers can use this more
-> generic way to set up the msi domain for the host bridge.
-
-This doesn't tell me what this patch *does* or why we need it.
-
-> This is the preparation for ARM64 Hyper-V PCI support.
+On Fri, 25 Jun 2021 12:48:22 +0200, Michal Simek wrote:
+> Clock property hasn't been documented in binding document but it is used
+> for quite a long time where clock was specified by commit 9c8a47b484ed
+> ("arm64: dts: xilinx: Add the clock nodes for zynqmp").
 > 
-> Originally-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
+> Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 > ---
->  drivers/pci/probe.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 60c50d4f156f..539b5139e376 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -829,11 +829,14 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  {
->  	struct irq_domain *d;
->  
-> +	/* Default set by host bridge driver */
-> +	d = dev_get_msi_domain(bus->bridge);
-
-Add blank line here between executable code and the following comment.
-
->  	/*
->  	 * Any firmware interface that can resolve the msi_domain
->  	 * should be called from here.
->  	 */
-> -	d = pci_host_bridge_of_msi_domain(bus);
-> +	if (!d)
-> +		d = pci_host_bridge_of_msi_domain(bus);
->  	if (!d)
->  		d = pci_host_bridge_acpi_msi_domain(bus);
->  
-> -- 
-> 2.30.2
+> (no changes since v2)
 > 
+> Changes in v2:
+> - new patch in this series because I found that it has never been sent
+> 
+> Bharat: Can you please start to work on converting it to yaml?
+> 
+> ---
+>  Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+
+Acked-by: Rob Herring <robh@kernel.org>
