@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D069C636CA
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16944C636CE
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41744613EB
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01DD861289
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231462AbhGOWDO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Jul 2021 18:03:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49278 "EHLO mail.kernel.org"
+        id S231459AbhGOWDP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Jul 2021 18:03:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49404 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231342AbhGOWDK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jul 2021 18:03:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 953A0610C7;
-        Thu, 15 Jul 2021 22:00:16 +0000 (UTC)
+        id S231247AbhGOWDP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jul 2021 18:03:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 559A1610C7;
+        Thu, 15 Jul 2021 22:00:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626386416;
-        bh=7ik2o5DzC87ePSGVyDb14Q44TcV8OQwmLXrv0d+tdfc=;
+        s=k20201202; t=1626386421;
+        bh=2277Bu4KNEpmiIPbnq6vMfKjJ0AKuRTGi1urAIdLul0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eDmjtrEHE9Rq6vzvDNNwSWbXhht3guH2k0aK6Tzw5TO18CodMzfOqHCprGmIf3U0z
-         ee5u7+bd7+7vM1D8oWmtm2Y+sTXGvZnTExmLOrQL29ALoH0hrIzQTFOKASndXhujBo
-         ECEQAGOkQFIXNFpidNlwXEhgzKbLz7E6iE9Juh2bjHqliNjISSMICP6wVruPQD8jtb
-         bvXQHX7HlWhAOuprVyYk5ckse7/9nDWKvK7n7mRsW3gtMXH2qw+hrDIAGldnLhS/cw
-         T9wAGyznvoIzKRqhBpQjMjcvi6+msl7MRmrBWWyQwJrEqYM4j5oIP7vykRKVVrGaz8
-         6zhALQluaI/6A==
+        b=lFUDQEkvMxuvKaz4RBDmT1SfztVwhzpSZYWTUvuCnFPjfG87uSRfejJS9gg6Q8WYJ
+         3kLYZSgBJ37gnTqBc+4DR8lyGrcAJ5l6NT4mPQ1nFtM2oe8jzFHAm0qydGL0ZueuzR
+         vLAfoGPjdWS8MSrSiJ5Cfm6W2s1fVQ4HVxL9/b9RT58YpfpF82hoGBuwwYtO69K7uW
+         tG/bTlu1sg6iT04Ru6zlPf+GZf3n+mL5zna71QXduLjtoqppgwdHkuL4uIV7S0JngQ
+         n2X9b4MoNjD8RRijVzmeCpA6aJuSEXV1Aun8HN65/w2hpLtb9VNuZ1WHZwEHA21A+7
+         dwXTCQWWZ4gvw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Heiner Kallweit <hkallweit1@gmail.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/5] PCI/VPD: Check Resource tags against those valid for type
-Date:   Thu, 15 Jul 2021 16:59:56 -0500
-Message-Id: <20210715215959.2014576-3-helgaas@kernel.org>
+Subject: [PATCH 5/5] PCI/VPD: Allow access to valid parts of VPD if some is invalid
+Date:   Thu, 15 Jul 2021 16:59:59 -0500
+Message-Id: <20210715215959.2014576-6-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210715215959.2014576-1-helgaas@kernel.org>
 References: <dc566e6c-4c9b-bcd5-1f33-edba94cedd00@gmail.com>
@@ -50,54 +50,48 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Previously, we checked for PCI_VPD_STIN_END, PCI_VPD_LTIN_ID_STRING, etc.,
-outside the Large and Small Resource cases, so we checked Large Resource
-tags against a Small Resource name and vice versa.
+Previously, if we found any error in the VPD, we returned size 0, which
+prevents access to all of VPD.  But there may be valid resources in VPD
+before the error, and there's no reason to prevent access to those.
 
-Move these tests into the Large and Small Resource cases, so we only check
-PCI_VPD_STIN_END for Small Resources and PCI_VPD_LTIN_* for Large
-Resources.
+"off" covers only VPD resources known to have valid header tags.  In case
+of error, return "off" (which may be zero if we haven't found any valid
+header tags at all).
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/vpd.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ drivers/pci/vpd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 7bfb8fc4251b..9b54dd95e42c 100644
+index d7a4a9f05bd6..92acbbcc8059 100644
 --- a/drivers/pci/vpd.c
 +++ b/drivers/pci/vpd.c
-@@ -98,24 +98,18 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
- 				}
- 				off += PCI_VPD_LRDT_TAG_SIZE +
- 					pci_vpd_lrdt_size(header);
-+			} else {
-+				pci_warn(dev, "invalid large VPD tag %02x at offset %zu",
-+					 tag, off);
-+				return 0;
- 			}
- 		} else {
- 			/* Short Resource Data Type Tag */
- 			off += PCI_VPD_SRDT_TAG_SIZE +
- 				pci_vpd_srdt_size(header);
- 			tag = pci_vpd_srdt_tag(header);
--		}
--
--		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
--			return off;
--
--		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
--		    (tag != PCI_VPD_LTIN_RO_DATA) &&
--		    (tag != PCI_VPD_LTIN_RW_DATA)) {
--			pci_warn(dev, "invalid %s VPD tag %02x at offset %zu",
--				 (header[0] & PCI_VPD_LRDT) ? "large" : "short",
--				 tag, off);
--			return 0;
-+			if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
+@@ -85,7 +85,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ 			if (pci_read_vpd(dev, off + 1, 2, &header[1]) != 2) {
+ 				pci_warn(dev, "failed VPD read at offset %zu",
+ 					 off + 1);
+-				return 0;
 +				return off;
+ 			}
+ 			size = pci_vpd_lrdt_size(header);
+ 
+@@ -115,13 +115,13 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ 				return off;
  		}
  	}
- 	return 0;
+-	return 0;
++	return off;
+ 
+ error:
+ 	pci_info(dev, "invalid VPD tag %#04x at offset %zu%s\n",
+ 		 header[0], off, off == 0 ?
+ 		 "; assume missing optional EEPROM" : "");
+-	return 0;
++	return off;
+ }
+ 
+ /*
 -- 
 2.25.1
 
