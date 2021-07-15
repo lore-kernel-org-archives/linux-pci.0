@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50BABC636C9
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33610C636CB
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C64F61289
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AB56613D2
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Jul 2021 22:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229462AbhGOWDN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Jul 2021 18:03:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49196 "EHLO mail.kernel.org"
+        id S231624AbhGOWDO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Jul 2021 18:03:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231624AbhGOWDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jul 2021 18:03:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E8C706117A;
-        Thu, 15 Jul 2021 22:00:14 +0000 (UTC)
+        id S231685AbhGOWDN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jul 2021 18:03:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BD94560FE7;
+        Thu, 15 Jul 2021 22:00:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626386415;
-        bh=VUyVyFpC1GhZ1oTojiMVCfJ51v4Scqb1UgexiQO2eqA=;
+        s=k20201202; t=1626386420;
+        bh=7GX89LyvSQPClxnegp6N1W9nDIfrwiEDYQISro10bos=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Qo+O7sF/JuPIvfZZr6FZigvTFJ20HZCid/8TkyIdk03wkOo/A4ZARV9H67FicBJg/
-         W3B6JvOr1UJF0OaYJifXCQFDoTLpmbg0npQbuZa7VJiSXf4Ly3Wfa2oOgnyKYsxham
-         z6CURXh72qCm4BnBwKbiPyxEGbgdzeKy9DBh6C8ESNqL2nXV0UA4dm4A1pvJo/unI7
-         natCIzZ8DaCuILm2axUo0FLFrFXihM/O92lPXTfucqb2NJTYDC8MYmwsetES++r/dH
-         v9JyNwqUffvCq7xMkbtaV4/3YdhTyh+oGN2/zrXO1o0bAyUvys4E3b8n44/O2SIygT
-         a2jrdH4cM+jSQ==
+        b=fhLANE8hEbxYfivzMrReud/kBGHjRBwqNSyA621Q5ERlu9GY0VyZamUdiRr8gNbvc
+         FD/ue5QAPgZiyK+ITUyhErDE/nirB6+wGGffdL4gnmngIORWHRA8IYN3ITB8cSBbK1
+         7k8IzddVyzRFVgHqX/SG7Ym9mLHJg4sgExZPtpGQ7ffGuchUxoddPJSt06fnMsZfbh
+         ka3+wws6Hheqq9UvxbSexAEPxbubyU+cy8kC3NAlTQ9hELp4QskCcKDdJpHXJNv5HT
+         oDt6qyr+kDQV3NGnJdawtxlDZRi6nxcGYsI7e27TWN/knTVRrOjFtCAxnxekBRbPIL
+         5dqbp49Bwtm6w==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Heiner Kallweit <hkallweit1@gmail.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/5] PCI/VPD: Correct diagnostic for VPD read failure
-Date:   Thu, 15 Jul 2021 16:59:55 -0500
-Message-Id: <20210715215959.2014576-2-helgaas@kernel.org>
+Subject: [PATCH 4/5] PCI/VPD: Don't check Large Resource types for validity
+Date:   Thu, 15 Jul 2021 16:59:58 -0500
+Message-Id: <20210715215959.2014576-5-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210715215959.2014576-1-helgaas@kernel.org>
 References: <dc566e6c-4c9b-bcd5-1f33-edba94cedd00@gmail.com>
@@ -50,29 +50,68 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Previously, when a VPD read failed, we warned about an "invalid large
-VPD tag".  Warn about the VPD read failure instead.
+VPD consists of a series of Small and Large Resources.  Computing the size
+of VPD requires only the length of each, which is specified in the generic
+tag of each resource.  We only expect to see ID_STRING, RO_DATA, and
+RW_DATA in VPD, but it's not a problem if it contains other resource types.
+
+Drop the validity checking of Large Resource items.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/vpd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/vpd.c | 37 ++++++++++++++-----------------------
+ 1 file changed, 14 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 26bf7c877de5..7bfb8fc4251b 100644
+index 9c2744d79b53..d7a4a9f05bd6 100644
 --- a/drivers/pci/vpd.c
 +++ b/drivers/pci/vpd.c
-@@ -92,8 +92,8 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
- 			    (tag == PCI_VPD_LTIN_RW_DATA)) {
- 				if (pci_read_vpd(dev, off+1, 2,
- 						 &header[1]) != 2) {
--					pci_warn(dev, "invalid large VPD tag %02x size at offset %zu",
--						 tag, off + 1);
-+					pci_warn(dev, "failed VPD read at offset %zu",
-+						 off + 1);
- 					return 0;
- 				}
- 				off += PCI_VPD_LRDT_TAG_SIZE +
+@@ -82,31 +82,22 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ 		if (header[0] & PCI_VPD_LRDT) {
+ 			/* Large Resource Data Type Tag */
+ 			tag = pci_vpd_lrdt_tag(header);
+-			/* Only read length from known tag items */
+-			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
+-			    (tag == PCI_VPD_LTIN_RO_DATA) ||
+-			    (tag == PCI_VPD_LTIN_RW_DATA)) {
+-				if (pci_read_vpd(dev, off+1, 2,
+-						 &header[1]) != 2) {
+-					pci_warn(dev, "failed VPD read at offset %zu",
+-						 off + 1);
+-					return 0;
+-				}
+-				size = pci_vpd_lrdt_size(header);
+-
+-				/*
+-				 * Missing EEPROM may read as 0xff.
+-				 * Length of 0xffff (65535) cannot be valid
+-				 * because VPD can't be that large.
+-				 */
+-				if (size > PCI_VPD_MAX_SIZE)
+-					goto error;
+-				off += PCI_VPD_LRDT_TAG_SIZE + size;
+-			} else {
+-				pci_warn(dev, "invalid large VPD tag %02x at offset %zu",
+-					 tag, off);
++			if (pci_read_vpd(dev, off + 1, 2, &header[1]) != 2) {
++				pci_warn(dev, "failed VPD read at offset %zu",
++					 off + 1);
+ 				return 0;
+ 			}
++			size = pci_vpd_lrdt_size(header);
++
++			/*
++			 * Missing EEPROM may read as 0xff.  Length of
++			 * 0xffff (65535) cannot be valid because VPD can't
++			 * be that large.
++			 */
++			if (size > PCI_VPD_MAX_SIZE)
++				goto error;
++
++			off += PCI_VPD_LRDT_TAG_SIZE + size;
+ 		} else {
+ 			/* Short Resource Data Type Tag */
+ 			tag = pci_vpd_srdt_tag(header);
 -- 
 2.25.1
 
