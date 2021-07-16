@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96509C12002
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Jul 2021 15:24:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E677C636CB
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Jul 2021 15:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 837BC613F6
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Jul 2021 15:24:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6926E611F1
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Jul 2021 15:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240945AbhGPP1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Jul 2021 11:27:38 -0400
-Received: from mail-dm6nam12on2055.outbound.protection.outlook.com ([40.107.243.55]:51520
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        id S240965AbhGPP1j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Jul 2021 11:27:39 -0400
+Received: from mail-mw2nam12on2053.outbound.protection.outlook.com ([40.107.244.53]:20289
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S240765AbhGPP1c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Jul 2021 11:27:32 -0400
+        id S240913AbhGPP1e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Jul 2021 11:27:34 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TBCXfLpB6OhC33mIz1lje+kDWr2o9DmObgPO2GD/LixwX1JNjZg6GZXQx7lH/iv9KFaXvJI7g9GOlcxRkRE1yAupkRNHQbSPr+PWhxHcX1HozGSHwTDaMzvAUWBhvcPRyq43tLkRklXks5XqebOTuXzo9gDJGsmzTfCpTQi/wipx7vV8nGJ1bpV351YNmOh8/ZzOZCMEwK9rSlEpRN2sXTD3U9c2z/elD03tDUy3XuTixiOeAQHFo2DZXvSrNEDuypBNwzR/XAwDXDjqDl/BdZRsYPrbFnaVKWGSWqh5GWmsSIpRLCPmIVj9IzmXCVyQlykjLQNDy2OXrqOEHCTJaA==
+ b=hP1tH9CfPwTRZQYkhqa95uK6EgdViS3NeLidCdXyAxUWin+8WaA/TfTOw/WD8+1MNtQZUZ+ZsU6tP91LcR3o3KoGIzmCuI0HbJGEea4X8cuLyppiQVnWBsFd3nZ1VXSr6M6qkZEslOJaT8Jni8T3TvbYiDrgvIUQ0ecXGaXvf8AsIdYcxoas29g3OVaDhBfX60iaJOL9gzInxvzFavT+ZhgxDh+LDD6bJpbtBUMoEDOro9gaf7a8MUbmqcqem3uuT/BuskppWzYVXg6W1g5T+z+zK3onKosgCYqJq5LIEuBlv1LFN7KTntp94YpeGnEI7g2HLV2wNfA+qvl4gcgKew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3ZGzr3fqG83VjVOwKMXfakYtivzpnToDyWUHo11oIx0=;
- b=cKEJGn1xyJifdsbxW7HC6PUo+lG51aXahZRCCoJ85B63fROBMDB6m9ZtCDlhBsUFWhQoYIuBrkcqPhQckWo7JzbxU0MVe0kl7Bzu+sGC6Vos51t3lTrpLVHrBDTiTtgfIX8Jj+4L+eCTc2gPEAZr3ipHotiN2fJSEJGfSNwtRNCfPt/VR4zYxGjV3XflZ83SRwBe2HGph8NWXum1IhNlhqZsk0qzgTQX0sC4zeSzhST/fIoo1Lu+czBsntOPXAAZT47vXbmmV+QRa2yQXI/9F24KNA06o9YHxr7PrqscHvU/61lDKXDhZRLUErsuLzGB2gx6H73syQ7ORyHQZzc2nQ==
+ bh=ovzB+Qvsy37ejW46W9js0hCw+OSIiSu1ZGqRrn3/sv0=;
+ b=GRkMAMYbwgiwPPavxumlueO7p0N+mzbCgy+MzQD3NLt7JrsBkgjlgOk11EOC0FRurLcOei2ZeXmUa70yLV/6/IM8oP+L4VPdLP/sQp9HI5UTczcbjEypOjRg8+7JADi6jL86+/MQG+EYTRpVptRSff1N9GUiHCoHbXKa7XEPDP1uEbc6zUwv0mhW0stIZ38fV44krXVrOaeJtxsAd2omT6tKvytlsKR2A00i4RXO+ly3VydX8T5QAyBpHObN/jHu2tf+YYbia+04is4V84MRhuDdQRpv55F2+uUofiXbXrt3r37g+mgy7pqNAtOOg9EsWQgGDMc1cIovIKuoc2ph0w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.112.34) smtp.rcpttodomain=rjwysocki.net smtp.mailfrom=nvidia.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
@@ -34,18 +34,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3ZGzr3fqG83VjVOwKMXfakYtivzpnToDyWUHo11oIx0=;
- b=mob0N+PL43djlHa4kY1N3Tu1x75ptj9Rv+YSkiAtnyQ2IneeAhJK06tNwKUAv0cVeVO4Yl39idWp/axtXC5xtY1vhYKbWiO7OQ+IyjjIZIU41hnh92GELtK4FR2+FQ9DWGwtSrET3MQbwmuHW8touS+BrzQ+2y06PiQmdT5SFTgBhdKSbG6cabN6ap7+aNL0vNY22i5znBGQmm3UJxFhiefPa/bIyVWk7cpCdoqelvm9JOsP+tGbgTANGr+0syI1Qy6NNl9TfOmIoWqQq9Hc5J/ybYWvq9cYyaZmMbNE4sRlQoSyL2S1FBmf4vI6mJ0UDlWPNpAz5H8w35nFnA+0UQ==
-Received: from BN9PR03CA0632.namprd03.prod.outlook.com (2603:10b6:408:13b::7)
- by BY5PR12MB3857.namprd12.prod.outlook.com (2603:10b6:a03:196::28) with
+ bh=ovzB+Qvsy37ejW46W9js0hCw+OSIiSu1ZGqRrn3/sv0=;
+ b=c6izm6JAKJEdCct8oS40OPIT1LYGPGABezo30kvgi+IFRcLY4//jL8kzAO5+dywyUVvFtS0VADvNWYcEyoMcFhKFFRttnoDvsNmvW37Y5Tb521P6cPpq2xcArxE7yH+v8sxzEghTGA6tOlQxmT67wBZTeldCMOZs8m8vEA+ljvMQz8kns1vvhdQrgxwChLOly3fkLYTQLz7xa9pc/X++ey/HXPgKuZ0Nfo1eZe2stuT8uPjXq25R1FNJUG7H39i+9KnYk3URGV/dYlgBWVxsgyoOMh1O4t2XcRWNczkUtmBivBql9DEFTmspLoFDagnlyD4cHtI0KQGD12L9ZoVtuw==
+Received: from BN9PR03CA0656.namprd03.prod.outlook.com (2603:10b6:408:13b::31)
+ by MWHPR12MB1389.namprd12.prod.outlook.com (2603:10b6:300:13::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.23; Fri, 16 Jul
- 2021 15:24:35 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.21; Fri, 16 Jul
+ 2021 15:24:38 +0000
 Received: from BN8NAM11FT015.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:13b:cafe::b0) by BN9PR03CA0632.outlook.office365.com
- (2603:10b6:408:13b::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.22 via Frontend
- Transport; Fri, 16 Jul 2021 15:24:35 +0000
+ (2603:10b6:408:13b:cafe::14) by BN9PR03CA0656.outlook.office365.com
+ (2603:10b6:408:13b::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.21 via Frontend
+ Transport; Fri, 16 Jul 2021 15:24:38 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
  smtp.mailfrom=nvidia.com; rjwysocki.net; dkim=none (message not signed)
  header.d=none;rjwysocki.net; dmarc=pass action=none header.from=nvidia.com;
@@ -55,10 +55,10 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (216.228.112.34) by
  BN8NAM11FT015.mail.protection.outlook.com (10.13.176.90) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4331.21 via Frontend Transport; Fri, 16 Jul 2021 15:24:34 +0000
+ 15.20.4331.21 via Frontend Transport; Fri, 16 Jul 2021 15:24:37 +0000
 Received: from SDONTHINENI-DESKTOP.nvidia.com (172.20.187.6) by
  HQMAIL107.nvidia.com (172.20.187.13) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 16 Jul 2021 15:24:32 +0000
+ 15.0.1497.2; Fri, 16 Jul 2021 15:24:35 +0000
 From:   Shanker Donthineni <sdonthineni@nvidia.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 CC:     Alex Williamson <alex.williamson@redhat.com>,
@@ -68,9 +68,9 @@ CC:     Alex Williamson <alex.williamson@redhat.com>,
         Sinan Kaya <okaya@kernel.org>,
         "Amey Narkhede" <ameynarkhede03@gmail.com>,
         Shanker Donthineni <sdonthineni@nvidia.com>
-Subject: [PATCH v12 5/8] PCI: Define a function to set ACPI_COMPANION in pci_dev
-Date:   Fri, 16 Jul 2021 10:19:43 -0500
-Message-ID: <20210716151946.690-6-sdonthineni@nvidia.com>
+Subject: [PATCH v12 7/8] PCI: Add support for ACPI _RST reset method
+Date:   Fri, 16 Jul 2021 10:19:45 -0500
+Message-ID: <20210716151946.690-8-sdonthineni@nvidia.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210716151946.690-1-sdonthineni@nvidia.com>
 References: <20210716151946.690-1-sdonthineni@nvidia.com>
@@ -82,86 +82,126 @@ X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
  HQMAIL107.nvidia.com (172.20.187.13)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 27357afa-ef47-4200-55cd-08d9486dd143
-X-MS-TrafficTypeDiagnostic: BY5PR12MB3857:
-X-Microsoft-Antispam-PRVS: <BY5PR12MB3857FD695A353C7A415BE521C7119@BY5PR12MB3857.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2582;
+X-MS-Office365-Filtering-Correlation-Id: 25bd0648-dc28-4eab-d3eb-08d9486dd330
+X-MS-TrafficTypeDiagnostic: MWHPR12MB1389:
+X-Microsoft-Antispam-PRVS: <MWHPR12MB1389E084B4EDD8A535A2CF7FC7119@MWHPR12MB1389.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8Sp9X3WWeC0EkLg+ApInu0Uj8Jur9PLPI2WQoPnS+6xki7mo3vMEycR8XUnRat91WpBlxttsSS/IRhtk/HVUc6lear4vLuszbaah+ois2zOogInlVJjpFc8ungwpjF2fiage4WHXaX7evaxHXMMoBqDPo51m8cL6kaGiU4vyaT1edAFDnEsKD4Coe4PX8JsPG1aciAACUGq1Sr7az7jNYroyy6piesTPM4/TGgxHCV4Gk9jxtK/kYWHS0hxJos//X3kT5ix4IIhDCfYLAoe52xhkVjLuqyeXGScCVaR24jMfzjaVewi5iXhjjgfxstU/oQAjN5lnc0LMbKGJjzU/SDJP75KSXuIDOXcG+f9RBwoTQziRttldl2RnTcgqbWINbJUpntBkvDyK+OxCGjS198NgVpESYmLhUogJ0qTKjIdf+Y7dpv9Lokzdqc0kGyC/QMqlRY8qfL2RgymIfeKVHAD9fcVik3KFQE8VtCN07vNjvTcpaSoX7NNzH9zmfFy6gmBjtGaTk6RsyaVC3w61EPcLV6fgzTi/X183H0RDrC8FuTzTJsoIr3yjl5tLyN5f2Vg5yX/pSgACayP92S+cBxjURWRbxHSLdvxjbHEU5jpiHsAdy+lh4Rz0ehXOEzRvxgzodQ085pbwndzaEP0P8APBNSCpSi40GXGl9I5g7HV4z5ANNnqQHWUxMGM1rFhv40gYJpxEnWVGTonFA5ypXVLG1vOfaC2KkDkej64V2Po=
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(376002)(346002)(136003)(396003)(39860400002)(36840700001)(46966006)(36906005)(7696005)(5660300002)(356005)(6666004)(2906002)(8936002)(7636003)(34020700004)(26005)(82310400003)(336012)(36860700001)(478600001)(86362001)(54906003)(186003)(316002)(6916009)(82740400003)(107886003)(70206006)(70586007)(83380400001)(426003)(16526019)(4326008)(2616005)(47076005)(1076003)(36756003)(8676002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: YfCmMGBlr732wJkhI1KeYGlNtQLocENOggKw6hdG0JxCOcvdDZq/LS2H7raIlcobIMSZe8PUKh+YTaTeAoePZYBudnk728uDEGKPxfEe4DfRidr7QXmNbCf0s4gama9Zfo73NVvSuWb+yvhLMFuDJjG2Zjm+UdebB252SrfLX1O1cm7DC09mJugS08Mcl2MAX7UOS9Frjr3EuvpWp5XhcL8lH/nTLinJzkFVXoeHiTWXPIwpXFjKvG5wSiDbU9s4EPK7P5QiGY4PbCbuOIEeq9wuwURfBuEQU8vta7l9QBWVyMqmdteRpxWDthjzt1LB0WPw9u0g3+prXZ8jYo6DwzAIJQlEJcM0QmyBsY5GMUlYnBtvsUWrYs01FLHzA83TA0DgQKbMI5rRa35+HH/Sr95IfGc+O5Y4/yvDZRwHu+8ku02S7ChoxaIOiJb82CM2++f2ylpWO+oHpaLUVKRMkYEudhHkpFB/G4VnZfuPTsdJeu0nQjJD38oIHbvR7T6eTPtxjmO+sRr5hxW533bbNZTrHI53OepYEk90l5FDPsXYg2o8sJ8zA1NLwl3JDFH/ckgfew1ZIi+dVWXpBATrWgOgvojaR/nLjvyWss6IfbkNyC7e4ko16LewQ2EeCB1xtEErDeKsWxPWypN2SDmS00c6/UEL8/Tfj/q+uxmqa3nV5geJ2lRA3M80FE/WE7DbPCXnUFqFxSZvtjvtNagp9alTV6zpJs6u8l8sAB5n8jo=
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(356005)(4326008)(107886003)(83380400001)(26005)(36860700001)(1076003)(316002)(186003)(36756003)(54906003)(6916009)(5660300002)(36906005)(16526019)(47076005)(34020700004)(8936002)(2906002)(7636003)(426003)(6666004)(70586007)(2616005)(7696005)(86362001)(82310400003)(336012)(508600001)(8676002)(70206006);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2021 15:24:34.7362
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2021 15:24:37.9534
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 27357afa-ef47-4200-55cd-08d9486dd143
+X-MS-Exchange-CrossTenant-Network-Message-Id: 25bd0648-dc28-4eab-d3eb-08d9486dd330
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT015.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB3857
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1389
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move the existing code logic from acpi_pci_bridge_d3() to a separate
-function pci_set_acpi_fwnode() to set the ACPI fwnode.
+The _RST is a standard method specified in the ACPI specification. It
+provides a function level reset when it is described in the acpi_device
+context associated with PCI-device. Implement a new reset function
+pci_dev_acpi_reset() for probing RST method and execute if it is defined
+in the firmware.
 
-No functional change with this patch.
+The default priority of the ACPI reset is set to below device-specific
+and above hardware resets.
 
 Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
+Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+Reviewed-by: Sinan Kaya <okaya@kernel.org>
 Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/pci-acpi.c | 12 ++++++++----
- drivers/pci/pci.h      |  2 ++
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/pci/pci-acpi.c | 23 +++++++++++++++++++++++
+ drivers/pci/pci.c      |  1 +
+ drivers/pci/pci.h      |  6 ++++++
+ include/linux/pci.h    |  2 +-
+ 4 files changed, 31 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 36bc23e217592..eaddbf7017594 100644
+index dae021322b3fc..31f76746741f5 100644
 --- a/drivers/pci/pci-acpi.c
 +++ b/drivers/pci/pci-acpi.c
-@@ -934,6 +934,13 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
+@@ -941,6 +941,29 @@ void pci_set_acpi_fwnode(struct pci_dev *dev)
+ 				   acpi_pci_find_companion(&dev->dev));
+ }
  
- static struct acpi_device *acpi_pci_find_companion(struct device *dev);
- 
-+void pci_set_acpi_fwnode(struct pci_dev *dev)
++/**
++ * pci_dev_acpi_reset - do a function level reset using _RST method
++ * @dev: device to reset
++ * @probe: check if _RST method is included in the acpi_device context.
++ */
++int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
 +{
-+	if (!ACPI_COMPANION(&dev->dev) && !pci_dev_is_added(dev))
-+		ACPI_COMPANION_SET(&dev->dev,
-+				   acpi_pci_find_companion(&dev->dev));
++	acpi_handle handle = ACPI_HANDLE(&dev->dev);
++
++	if (!handle || !acpi_has_method(handle, "_RST"))
++		return -ENOTTY;
++
++	if (probe)
++		return 0;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_RST", NULL, NULL))) {
++		pci_warn(dev, "ACPI _RST failed\n");
++		return -ENOTTY;
++	}
++
++	return 0;
 +}
 +
  static bool acpi_pci_bridge_d3(struct pci_dev *dev)
  {
  	const struct fwnode_handle *fwnode;
-@@ -945,11 +952,8 @@ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
- 		return false;
- 
- 	/* Assume D3 support if the bridge is power-manageable by ACPI. */
-+	pci_set_acpi_fwnode(dev);
- 	adev = ACPI_COMPANION(&dev->dev);
--	if (!adev && !pci_dev_is_added(dev)) {
--		adev = acpi_pci_find_companion(&dev->dev);
--		ACPI_COMPANION_SET(&dev->dev, adev);
--	}
- 
- 	if (adev && acpi_device_power_manageable(adev))
- 		return true;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index cc9f96effa546..8aab4097f80bc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5127,6 +5127,7 @@ static void pci_dev_restore(struct pci_dev *dev)
+ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+ 	{ },
+ 	{ &pci_dev_specific_reset, .name = "device_specific" },
++	{ &pci_dev_acpi_reset, .name = "acpi" },
+ 	{ &pcie_reset_flr, .name = "flr" },
+ 	{ &pci_af_flr, .name = "af_flr" },
+ 	{ &pci_pm_reset, .name = "pm" },
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 482d26cff7912..37381734fcc78 100644
+index 37381734fcc78..699d14243867a 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -708,7 +708,9 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
- #ifdef CONFIG_ACPI
+@@ -709,7 +709,13 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
  int pci_acpi_program_hp_params(struct pci_dev *dev);
  extern const struct attribute_group pci_dev_acpi_attr_group;
-+void pci_set_acpi_fwnode(struct pci_dev *dev);
+ void pci_set_acpi_fwnode(struct pci_dev *dev);
++int pci_dev_acpi_reset(struct pci_dev *dev, int probe);
  #else
-+static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
++static inline int pci_dev_acpi_reset(struct pci_dev *dev, int probe)
++{
++	return -ENOTTY;
++}
++
+ static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
  static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
  {
- 	return -ENODEV;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 58cc2e2b05051..698a668828f66 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -50,7 +50,7 @@
+ 			       PCI_STATUS_PARITY)
+ 
+ /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+-#define PCI_NUM_RESET_METHODS 6
++#define PCI_NUM_RESET_METHODS 7
+ 
+ /*
+  * The PCI interface treats multi-function devices as independent
 -- 
 2.25.1
 
