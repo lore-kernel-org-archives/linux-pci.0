@@ -2,192 +2,205 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF603C63793
-	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F169C636C8
+	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 14:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E73A1611AC
-	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79BFE611AC
+	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 14:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233062AbhGRLn5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 18 Jul 2021 07:43:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60816 "EHLO mail.kernel.org"
+        id S232224AbhGRO3o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 18 Jul 2021 10:29:44 -0400
+Received: from mga17.intel.com ([192.55.52.151]:25530 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232716AbhGRLn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Jul 2021 07:43:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B4A0C6108B;
-        Sun, 18 Jul 2021 11:40:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626608458;
-        bh=Yxg6f6Vl7O5HHJp418DNs74biL5Q8SHGgoxNBhxuF/c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EItQsymLmRgQje+Sximp2sA51G07ycSl7pHA9zhaVDs8InEHOwKSir8Yy1X/qDQhC
-         iSJOpTbWSS7cXrYCib7jFgxHB4fy6iDfULSwUOL8wjd0pk/7AB2zciRbzqD+/Vb4D2
-         lk6eNUshu4Ec2E50dqpW26czWwscYY1CinbaT/WXbwxdaxu8jTWt5KiYbw00YCeJdi
-         4xPpRmilm7UFoGFn8s//SsIllBnsXe3qP5JWUki4B+yr+TG0OHJ4dBJT//DLZhao6H
-         mYkYiQs2F3oEsJBzoWTnB7L9TnoFp0ZgPtN64pEIRT7wFD8TuZUR9cgGKc2wkFUgmf
-         6+CmKmEmcraPA==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1m55AE-001Dvw-7W; Sun, 18 Jul 2021 13:40:54 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v5 1/5] dt-bindings: PCI: add snps,dw-pcie.yaml
-Date:   Sun, 18 Jul 2021 13:40:48 +0200
-Message-Id: <53363a7609176ca56c47ef57287466ee84087dc5.1626608375.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1626608375.git.mchehab+huawei@kernel.org>
-References: <cover.1626608375.git.mchehab+huawei@kernel.org>
+        id S230307AbhGRO3o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Jul 2021 10:29:44 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10049"; a="191230828"
+X-IronPort-AV: E=Sophos;i="5.84,249,1620716400"; 
+   d="scan'208";a="191230828"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2021 07:26:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,249,1620716400"; 
+   d="scan'208";a="414071228"
+Received: from lkp-server01.sh.intel.com (HELO a467b34d8c10) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 18 Jul 2021 07:26:45 -0700
+Received: from kbuild by a467b34d8c10 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1m57ki-0000LE-Fo; Sun, 18 Jul 2021 14:26:44 +0000
+Date:   Sun, 18 Jul 2021 22:26:07 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:pci/resource] BUILD SUCCESS
+ a67462fc9de8b958d6a2c2c34d0195733a8c61a6
+Message-ID: <60f439ff.eigffAmEEM0l7+yU%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently, the designware schema is defined on a text file:
-	designware-pcie.txt
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/resource
+branch HEAD: a67462fc9de8b958d6a2c2c34d0195733a8c61a6  PCI: Refactor pci_ioremap_bar() and pci_ioremap_wc_bar()
 
-Convert the pci-bus part into a schema.
+elapsed time: 738m
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+configs tested: 139
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                       mainstone_defconfig
+sh                          landisk_defconfig
+arm                            lart_defconfig
+mips                            ar7_defconfig
+sh                               allmodconfig
+arm                  colibri_pxa300_defconfig
+powerpc                       ebony_defconfig
+arm                         s3c6400_defconfig
+arm                      footbridge_defconfig
+arm                            hisi_defconfig
+arm                       versatile_defconfig
+nios2                         3c120_defconfig
+arc                        vdk_hs38_defconfig
+sh                            shmin_defconfig
+powerpc                 canyonlands_defconfig
+powerpc                        cell_defconfig
+microblaze                      mmu_defconfig
+h8300                     edosk2674_defconfig
+mips                     cu1830-neo_defconfig
+arm                         lpc18xx_defconfig
+sh                          rsk7203_defconfig
+arm                         at91_dt_defconfig
+mips                           rs90_defconfig
+powerpc                   bluestone_defconfig
+powerpc                    amigaone_defconfig
+m68k                       m5208evb_defconfig
+powerpc                  storcenter_defconfig
+um                                  defconfig
+sh                          urquell_defconfig
+powerpc                 mpc8313_rdb_defconfig
+xtensa                  audio_kc705_defconfig
+m68k                        m5272c3_defconfig
+arm                          collie_defconfig
+mips                  maltasmvp_eva_defconfig
+arm                        spear6xx_defconfig
+sh                        dreamcast_defconfig
+m68k                           sun3_defconfig
+microblaze                          defconfig
+powerpc                  mpc885_ads_defconfig
+ia64                            zx1_defconfig
+powerpc                      chrp32_defconfig
+sh                           se7206_defconfig
+arm                        mini2440_defconfig
+powerpc                 mpc837x_mds_defconfig
+sh                      rts7751r2d1_defconfig
+arc                    vdk_hs38_smp_defconfig
+mips                            gpr_defconfig
+arm                         cm_x300_defconfig
+riscv                            alldefconfig
+arm                        realview_defconfig
+powerpc                      ppc64e_defconfig
+arm                         palmz72_defconfig
+arm                     davinci_all_defconfig
+sh                           se7751_defconfig
+arm                           h5000_defconfig
+sh                           se7780_defconfig
+sh                          polaris_defconfig
+powerpc                      ep88xc_defconfig
+mips                          rb532_defconfig
+powerpc                     tqm8560_defconfig
+openrisc                            defconfig
+arm                            dove_defconfig
+x86_64                            allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a005-20210718
+x86_64               randconfig-a004-20210718
+x86_64               randconfig-a002-20210718
+x86_64               randconfig-a003-20210718
+x86_64               randconfig-a006-20210718
+x86_64               randconfig-a001-20210718
+i386                 randconfig-a005-20210718
+i386                 randconfig-a004-20210718
+i386                 randconfig-a006-20210718
+i386                 randconfig-a001-20210718
+i386                 randconfig-a003-20210718
+i386                 randconfig-a002-20210718
+i386                 randconfig-a014-20210718
+i386                 randconfig-a015-20210718
+i386                 randconfig-a011-20210718
+i386                 randconfig-a013-20210718
+i386                 randconfig-a016-20210718
+i386                 randconfig-a012-20210718
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-b001-20210718
+x86_64               randconfig-a013-20210718
+x86_64               randconfig-a015-20210718
+x86_64               randconfig-a012-20210718
+x86_64               randconfig-a014-20210718
+x86_64               randconfig-a011-20210718
+x86_64               randconfig-a016-20210718
+
 ---
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 102 ++++++++++++++++++
- MAINTAINERS                                   |   1 +
- 2 files changed, 103 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-new file mode 100644
-index 000000000000..d4441d822b91
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -0,0 +1,102 @@
-+# SPDX-License-Identifier: GPL-2.0
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/snps,dw-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Synopsys DesignWare PCIe interface
-+
-+maintainers:
-+  - Jingoo Han <jingoohan1@gmail.com>
-+  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+
-+description: |
-+  Synopsys DesignWare PCIe host controller
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    anyOf:
-+      - {}
-+      - const: snps,dw-pcie
-+
-+  reg:
-+    description: |
-+      It should contain Data Bus Interface (dbi) and config registers for all
-+      versions.
-+      For designware core version >= 4.80, it may contain ATU address space.
-+    minItems: 2
-+    maxItems: 5
-+
-+  reg-names:
-+    minItems: 2
-+    maxItems: 5
-+    items:
-+      enum: [dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link]
-+
-+  num-lanes:
-+    $ref: '/schemas/types.yaml#/definitions/uint32'
-+    description: |
-+      number of lanes to use (this property should be specified unless
-+      the link is brought already up in BIOS)
-+    maximum: 16
-+
-+  reset-gpio:
-+    description: GPIO pin number of PERST# signal
-+    maxItems: 1
-+    deprecated: true
-+
-+  reset-gpios:
-+    description: GPIO controlled connection to PERST# signal
-+    maxItems: 1
-+
-+  interrupts: true
-+
-+  interrupt-names: true
-+
-+  clocks: true
-+
-+  snps,enable-cdm-check:
-+    type: boolean
-+    description: |
-+      This is a boolean property and if present enables
-+      automatic checking of CDM (Configuration Dependent Module) registers
-+      for data corruption. CDM registers include standard PCIe configuration
-+      space registers, Port Logic registers, DMA and iATU (internal Address
-+      Translation Unit) registers.
-+
-+  num-viewport:
-+    description: |
-+      number of view ports configured in hardware. If a platform
-+      does not specify it, the driver autodetects it.
-+    deprecated: true
-+
-+unevaluatedProperties: false
-+
-+required:
-+  - reg
-+  - reg-names
-+  - compatible
-+
-+examples:
-+  - |
-+    bus {
-+      #address-cells = <1>;
-+      #size-cells = <1>;
-+      pcie@dfc00000 {
-+        device_type = "pci";
-+        compatible = "snps,dw-pcie";
-+        reg = <0xdfc00000 0x0001000>, /* IP registers */
-+              <0xd0000000 0x0002000>; /* Configuration space */
-+        reg-names = "dbi", "config";
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
-+                 <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+        interrupts = <25>, <24>;
-+        #interrupt-cells = <1>;
-+        num-lanes = <1>;
-+      };
-+    };
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fb6971bc28c5..c88f6cb37e47 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14306,6 +14306,7 @@ M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
-+F:	Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
- F:	drivers/pci/controller/dwc/*designware*
- 
- PCI DRIVER FOR TI DRA7XX/J721E
--- 
-2.31.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
