@@ -2,193 +2,192 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3CAC636C8
-	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 10:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E890EC636CA
+	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EABA561166
-	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 10:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1926611BE
+	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232557AbhGRK6G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 18 Jul 2021 06:58:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45366 "EHLO mail.kernel.org"
+        id S233033AbhGRLn5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 18 Jul 2021 07:43:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60820 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230461AbhGRK6G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 18 Jul 2021 06:58:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4282360E09;
-        Sun, 18 Jul 2021 10:55:06 +0000 (UTC)
+        id S232685AbhGRLn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 18 Jul 2021 07:43:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BCD1F61181;
+        Sun, 18 Jul 2021 11:40:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626605708;
-        bh=IbtTbduagSl46TiZq6dHHvm7L6082HA3Xm8jM1+Pkps=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=c5EeEyh6UJstCmymZEE59uhejrYUfXl3NeBcZgpqlZdioFyw665uC8wN0gsyLwCUm
-         CyckWCJ52+cchqyQcUbUciadgF+Cyh0YImU5OFaqEbQRrOD0f4yQXT4O5UxNZITTSC
-         o5cy6wjRU01CHtWU3WZNqz8DTVmy45biQgxNE7NHJBpk3LxbNdo3eVgTX18FDGGnwU
-         7ZJQ9NOkgkouzZzDUT06TKo566wSAEXIZ9HfDf471qf5ECVgZM724sZb6lYVUGfvag
-         7KhdjlJcqfm9DmJxr0PFgvLNZelBr6fPq1mrgW2bVOmtV2q7qTpIRwsHjoLL00aVmR
-         b+s7KFwqlGAxw==
-Date:   Sun, 18 Jul 2021 12:55:03 +0200
+        s=k20201202; t=1626608458;
+        bh=0bFVagzdp1XGgS+X1lOG3Ht/cN8VMfcZGqfv6GMLViM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nyP25/nmZukyw+2KP+YE3Qn1HS/hUApC78eRYJADhAGar0YdDute4Y6f3BpWzBZ1n
+         NdRgcF3i3jZ9ZTK7WwMqcN/ZyX6U//V3CIblT7tapzSBhTWUy9n9EsO4oOUBdH7Pjm
+         /NjXmvwwqe/fAMQSxaj8R38k66pDhsfErhGR3UHMSHLmSdrjQDn4afOo2n9KLcVoAu
+         rIssSvua6PaPlGNy1W1WLT+2Oheg9TPwlLXtQ95s+7NbhyCRyLFGPHAsUOb01rDNjK
+         OhsC6XiGfyBpveGDTnew+4SgdwyGFnWiSn+ishcjr13ttMei/06qYQR0DJHiwiFRt9
+         QkEdIlB1AcsXw==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1m55AE-001Dvz-9V; Sun, 18 Jul 2021 13:40:54 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Rob Herring <robh@kernel.org>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>, devicetree@vger.kernel.org,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/5] dt-bindings: PCI: add snps,dw-pcie.yaml
-Message-ID: <20210718125503.395515e7@coco.lan>
-In-Reply-To: <20210718115916.3a37f969@coco.lan>
-References: <cover.1626174242.git.mchehab+huawei@kernel.org>
-        <0454d09414d74d9789213f5e7779002bcc024537.1626174242.git.mchehab+huawei@kernel.org>
-        <20210715172337.GA1263164@robh.at.kernel.org>
-        <20210718115916.3a37f969@coco.lan>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
+Subject: [PATCH v5 2/5] dt-bindings: PCI: add snps,dw-pcie-ep.yaml
+Date:   Sun, 18 Jul 2021 13:40:49 +0200
+Message-Id: <26025b256232c2e4bd91954907b9d92db27199a3.1626608375.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1626608375.git.mchehab+huawei@kernel.org>
+References: <cover.1626608375.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Sun, 18 Jul 2021 11:59:16 +0200
-Mauro Carvalho Chehab <mchehab+huawei@kernel.org> escreveu:
+Currently, the designware schema is defined on a text file:
+	designware-pcie.txt
 
-> Em Thu, 15 Jul 2021 11:23:37 -0600
-> Rob Herring <robh@kernel.org> escreveu:
-> 
-> > On Tue, Jul 13, 2021 at 01:17:51PM +0200, Mauro Carvalho Chehab wrote:  
-> > > Currently, the designware schema is defined on a text file:
-> > > 	designware-pcie.txt
-> > > 
-> > > Convert the pci-bus part into a schema.
-> > > 
-> > > Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-> > > ---
-> > >  .../devicetree/bindings/pci/snps,dw-pcie.yaml | 96 +++++++++++++++++++
-> > >  MAINTAINERS                                   |  1 +
-> > >  2 files changed, 97 insertions(+)
-> > >  create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-> > > 
-> > > diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-> > > new file mode 100644
-> > > index 000000000000..fd372d715ab4
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-> > > @@ -0,0 +1,96 @@
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +%YAML 1.2
-> > > +---
-> > > +$id: http://devicetree.org/schemas/pci/snps,dw-pcie.yaml#
-> > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > > +
-> > > +title: Synopsys DesignWare PCIe interface
-> > > +
-> > > +maintainers:
-> > > +  - Jingoo Han <jingoohan1@gmail.com>
-> > > +  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> > > +
-> > > +description: |
-> > > +  Synopsys DesignWare PCIe host controller
-> > > +
-> > > +allOf:
-> > > +  - $ref: /schemas/pci/pci-bus.yaml#
-> > > +
-> > > +properties:
-> > > +  compatible:
-> > > +    anyOf:
-> > > +      - {}
-> > > +      - const: snps,dw-pcie
-> > > +
-> > > +  reg:
-> > > +    description: |
-> > > +      It should contain Data Bus Interface (dbi) and config registers for all
-> > > +      versions.
-> > > +      For designware core version >= 4.80, it may contain ATU address space.
-> > > +    minItems: 2
-> > > +    maxItems: 4
-> > > +
-> > > +  reg-names:
-> > > +    minItems: 2
-> > > +    maxItems: 4
-> > > +    items:
-> > > +      enum: [dbi, dbi2, config, atu, addr_space, app, elbi, mgmt]    
-> > 
-> > Isn't 'config' only for host and 'addr_space' only for endpoint?  
-> 
-> The problem on enforcing an enum here is that severa *.dts files violate it. 
-> In the specific case of 'addr_space', there is (are?) place(s) where the wrong
-> compatible was used, like on arch/arm/boot/dts/artpec6.dtsi:
-> 
-> 	pcie: pcie@f8050000 {
-> 		compatible = "axis,artpec6-pcie", "snps,dw-pcie";
-> 		reg = <0xf8050000 0x2000
-> 		       0xf8040000 0x1000
-> 		       0xc0000000 0x2000>;
-> 		reg-names = "dbi", "phy", "config";
-> 		#address-cells = <3>;
-> 		#size-cells = <2>;
-> 		device_type = "pci";
-> 			  /* downstream I/O */
-> 		ranges = <0x81000000 0 0 0xc0002000 0 0x00010000
-> 			  /* non-prefetchable memory */
-> 			  0x82000000 0 0xc0012000 0xc0012000 0 0x1ffee000>;
-> 		num-lanes = <2>;
-> 		bus-range = <0x00 0xff>;
-> 		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-> 		interrupt-names = "msi";
-> 		#interrupt-cells = <1>;
-> 		interrupt-map-mask = <0 0 0 0x7>;
-> 		interrupt-map = <0 0 0 1 &intc GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-> 				<0 0 0 2 &intc GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-> 				<0 0 0 3 &intc GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
-> 				<0 0 0 4 &intc GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
-> 		axis,syscon-pcie = <&syscon>;
-> 		status = "disabled";
-> 	};
-> 
-> 	pcie_ep: pcie_ep@f8050000 {
-> 		compatible = "axis,artpec6-pcie-ep", "snps,dw-pcie";
-> 		reg = <0xf8050000 0x2000
-> 		       0xf8051000 0x2000
-> 		       0xf8040000 0x1000
-> 		       0xc0000000 0x20000000>;
-> 		reg-names = "dbi", "dbi2", "phy", "addr_space";
-> 		num-ib-windows = <6>;
-> 		num-ob-windows = <2>;
-> 		num-lanes = <2>;
-> 		axis,syscon-pcie = <&syscon>;
-> 		status = "disabled";
-> 	};
-> 
-> (funny enough, this is not generating warnings here).
-> 
-> Btw, besides the above, there are some DTS that use something different
-> from what's there at the enum:
-> 
-> 
-> 	$ make CROSS_COMPILE=aarch64-linux-gnu- ARCH=arm64 dtbs_check 2>&1 |tee dtbs_check.log
-> 	$ grep "\['dbi', 'dbi2', 'config', 'atu', 'app', 'elbi', 'mgmt'\]" dtbs_check.log|sed "s,From schema:,,"|cut -d: -f 2-|cut -d' ' -f 4-|sort|uniq -c|sort -n -r
-> 	     51 'ctrl' is not one of ['dbi', 'dbi2', 'config', 'atu', 'app', 'elbi', 'mgmt']
-> 	     44 'parf' is not one of ['dbi', 'dbi2', 'config', 'atu', 'app', 'elbi', 'mgmt']
-> 	     18 'cfg' is not one of ['dbi', 'dbi2', 'config', 'atu', 'app', 'elbi', 'mgmt']
-> 	      4 'link' is not one of ['dbi', 'dbi2', 'config', 'atu', 'app', 'elbi', 'mgmt']
-> 
-> In order to use an enum and not having warnings, the enum should be 
-> instead:
-> 
-> 	reg-names:
-> 	  minItems: 2
-> 	  maxItems: 4
-> 	  items:
-> 	    enum: [dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link] 
+It contains two separate schemas on it:
 
-Actually, some reg definitions have 5 items.
+- snps,dw-pcie
+  This one uses the pci-bus.yaml schema;
+- snps,dw-pcie-ep
+  This one uses the pci-ep.yaml schema.
 
-I'm sending an updated patch series.
+As the:
+	AllOf:
+	  - $ref: <foo>
 
-Thanks,
-Mauro
+for the endpoint part is different than the PCI one, place
+it on a separate yaml file.
+
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../bindings/pci/snps,dw-pcie-ep.yaml         | 90 +++++++++++++++++++
+ MAINTAINERS                                   |  1 +
+ 2 files changed, 91 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+new file mode 100644
+index 000000000000..b5935b1b153f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -0,0 +1,90 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/snps,dw-pcie-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Synopsys DesignWare PCIe endpoint interface
++
++maintainers:
++  - Jingoo Han <jingoohan1@gmail.com>
++  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++
++description: |
++  Synopsys DesignWare PCIe host controller endpoint
++
++allOf:
++  - $ref: /schemas/pci/pci-ep.yaml#
++
++properties:
++  compatible:
++    anyOf:
++      - {}
++      - const: snps,dw-pcie-ep
++
++  reg:
++    description: |
++      It should contain Data Bus Interface (dbi) and config registers for all
++      versions.
++      For designware core version >= 4.80, it may contain ATU address space.
++    minItems: 2
++    maxItems: 4
++
++  reg-names:
++    minItems: 2
++    maxItems: 4
++    items:
++      enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
++
++  reset-gpio:
++    description: GPIO pin number of PERST# signal
++    maxItems: 1
++    deprecated: true
++
++  reset-gpios:
++    description: GPIO controlled connection to PERST# signal
++    maxItems: 1
++
++  snps,enable-cdm-check:
++    type: boolean
++    description: |
++      This is a boolean property and if present enables
++      automatic checking of CDM (Configuration Dependent Module) registers
++      for data corruption. CDM registers include standard PCIe configuration
++      space registers, Port Logic registers, DMA and iATU (internal Address
++      Translation Unit) registers.
++
++  num-ib-windows:
++    description: number of inbound address translation windows
++    maxItems: 1
++    deprecated: true
++
++  num-ob-windows:
++    description: number of outbound address translation windows
++    maxItems: 1
++    deprecated: true
++
++  max-functions:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: maximum number of functions that can be configured
++
++required:
++  - reg
++  - reg-names
++  - compatible
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    bus {
++      #address-cells = <1>;
++      #size-cells = <1>;
++      pcie-ep@dfd00000 {
++        compatible = "snps,dw-pcie-ep";
++        reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
++              <0xdfc01000 0x0001000>, /* IP registers 2 */
++              <0xd0000000 0x2000000>; /* Configuration space */
++        reg-names = "dbi", "dbi2", "addr_space";
++      };
++    };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c88f6cb37e47..5818733eace7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14307,6 +14307,7 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+ F:	Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++F:	Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+ F:	drivers/pci/controller/dwc/*designware*
+ 
+ PCI DRIVER FOR TI DRA7XX/J721E
+-- 
+2.31.1
+
