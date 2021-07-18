@@ -2,57 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A553BC636CB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1532C6377E
 	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2ED61184
+	by mail.kernel.org (Postfix) with ESMTP id C4A09611AC
 	for <linux-pci@archiver.kernel.org>; Sun, 18 Jul 2021 11:41:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233122AbhGRLn6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 18 Jul 2021 07:43:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60848 "EHLO mail.kernel.org"
+        id S233197AbhGRLoA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 18 Jul 2021 07:44:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60854 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232851AbhGRLn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S232859AbhGRLn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Sun, 18 Jul 2021 07:43:56 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C29DB611AD;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B843161184;
         Sun, 18 Jul 2021 11:40:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1626608458;
-        bh=3r+ZJ2a/sCjL++ntc+WZnrTk0ubp8K3+zZZ4PPnoCDs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cX0vEmyFJvWdDz2GDub0q5Evrfuz5TWhTAO4PTTcSIjo3PN8Htz3NmYRq8yxhEys0
-         kBW/bZOE2ziuzNJ+uGSvJ3Pj42C/5QpDtxIzf+zmDHk4E2jwmmj4JJnqPkaeQgiHRK
-         2OHxCf+oz2UTpW6xywqJX07AcfzP78deOuElK1lwy2tralsQH8iZ0r8Z8Tj2oX+SoA
-         wplTKiKOcsLf28NuhozUJ58o9afWIJiLlsDuiajbknMYrtcS5YDyY0e8KXe37qE5/c
-         Vgc97DkRz4wnw2Ul7FJips9qLI+MpWd9Ik1mQppTynMXSMC/BBdGr0rA7sghxZJib1
-         P0KvWzvE1EewQ==
+        bh=Vegbn4flDicHKXx7lHf5cMiwPfbQHkr1Aa8q19WmyQ0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=RsF3O5tv/+spITV5IChI+SHmK6QckQ44Cc0MdYNjtYTxu80psQ69MUn023cJmSHgm
+         OBg0ciYlxEN5/qLqn7XOuzcGbqrSq4n1vvyCHnSIekBu2qyloR65GksFjNoUeqIkud
+         MyG7U7eZ+XIMxGyvlQknkUq30rb1rnPNEKegK6HXX2MU6+gCoqq988RPrMkvw1QdXy
+         dTo7ac9m5MPCSVSOyiiqBsAqvAE3xAx3rgS45g6CYDowPu6dxp0/9ufSAoBQXFdK9q
+         EwUbQuX+1rhWK3jRSs8PXiD8T94MTiMYAov3GBUi7xWFilnXnPdpNSjk3y2Dsn8gDl
+         sK+IPF/mc+iXg==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1m55AE-001DwD-DS; Sun, 18 Jul 2021 13:40:54 +0200
+        id 1m55AE-001Dvt-5w; Sun, 18 Jul 2021 13:40:54 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Rob Herring <robh@kernel.org>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, JC Kuo <jckuo@nvidia.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
+        Andy Gross <agross@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        Greentime Hu <greentime.hu@sifive.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Jonathan Chocron <jonnyc@amazon.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Sameer Pujar <spujar@nvidia.com>,
-        Sowjanya Komatineni <skomatineni@nvidia.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Vidya Sagar <vidyas@nvidia.com>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        devicetree@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
         linux-tegra@vger.kernel.org
-Subject: [PATCH v5 5/5] dt-bindings: arm64: tegra: fix pcie-ep DT nodes
-Date:   Sun, 18 Jul 2021 13:40:52 +0200
-Message-Id: <15cf5067c0567614d5b186d006ebd88395d56b63.1626608375.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v5 0/5] convert designware-pcie.txt to yaml
+Date:   Sun, 18 Jul 2021 13:40:47 +0200
+Message-Id: <cover.1626608375.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1626608375.git.mchehab+huawei@kernel.org>
-References: <cover.1626608375.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
@@ -60,112 +81,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As defined by Documentation/devicetree/bindings/pci/pci-ep.yaml,
-PCIe endpoints match this pattern:
+This series convert designware-pcie.txt to DT schema.
 
-	properties:
-	  $nodename:
-	    pattern: "^pcie-ep@"
+I opted to move the pcie-kirin.txt changes out of this series. I'll submit
+it in separate, as they should come after some changes I'm doing at
+pcie-kirin.c driver.
 
-Change the existing ones in order to avoid those warnings:
+v5:
+- Addressed some issues pointed by Rob Herring:
+  Added interrupts and interrupt-cells to DT;
+  Addressed warnings generated with make dbs-check on existing
+  *.dts* files.
 
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0001.dt.yaml: pcie_ep@14160000: $nodename:0: 'pcie_ep@14160000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0001.dt.yaml: pcie_ep@14180000: $nodename:0: 'pcie_ep@14180000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0001.dt.yaml: pcie_ep@141a0000: $nodename:0: 'pcie_ep@141a0000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0000.dt.yaml: pcie_ep@14160000: $nodename:0: 'pcie_ep@14160000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0000.dt.yaml: pcie_ep@14180000: $nodename:0: 'pcie_ep@14180000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p3509-0000+p3668-0000.dt.yaml: pcie_ep@141a0000: $nodename:0: 'pcie_ep@141a0000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dt.yaml: pcie_ep@14160000: $nodename:0: 'pcie_ep@14160000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dt.yaml: pcie_ep@14180000: $nodename:0: 'pcie_ep@14180000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-	arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dt.yaml: pcie_ep@141a0000: $nodename:0: 'pcie_ep@141a0000' does not match '^pcie-ep@'
-		From schema: Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+Mauro Carvalho Chehab (5):
+  dt-bindings: PCI: add snps,dw-pcie.yaml
+  dt-bindings: PCI: add snps,dw-pcie-ep.yaml
+  dt-bindings: PCI: update references to Designware schema
+  dt-bindings: PCI: remove designware-pcie.txt
+  dt-bindings: arm64: tegra: fix pcie-ep DT nodes
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
----
- .../devicetree/bindings/pci/nvidia,tegra194-pcie.txt        | 2 +-
- arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts          | 2 +-
- arch/arm64/boot/dts/nvidia/tegra194-p3509-0000.dtsi         | 2 +-
- arch/arm64/boot/dts/nvidia/tegra194.dtsi                    | 6 +++---
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ .../bindings/pci/amlogic,meson-pcie.txt       |   4 +-
+ .../bindings/pci/axis,artpec6-pcie.txt        |   2 +-
+ .../bindings/pci/designware-pcie.txt          |  77 -------------
+ .../bindings/pci/fsl,imx6q-pcie.txt           |   2 +-
+ .../bindings/pci/hisilicon-histb-pcie.txt     |   2 +-
+ .../devicetree/bindings/pci/kirin-pcie.txt    |   2 +-
+ .../bindings/pci/layerscape-pci.txt           |   2 +-
+ .../bindings/pci/nvidia,tegra194-pcie.txt     |   7 +-
+ .../devicetree/bindings/pci/pci-armada8k.txt  |   2 +-
+ .../devicetree/bindings/pci/pcie-al.txt       |   2 +-
+ .../devicetree/bindings/pci/qcom,pcie.txt     |  14 +--
+ .../bindings/pci/samsung,exynos-pcie.yaml     |   4 +-
+ .../bindings/pci/sifive,fu740-pcie.yaml       |   4 +-
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |  90 ++++++++++++++++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml | 102 ++++++++++++++++++
+ .../pci/socionext,uniphier-pcie-ep.yaml       |   4 +-
+ .../devicetree/bindings/pci/ti-pci.txt        |   4 +-
+ .../devicetree/bindings/pci/uniphier-pcie.txt |   2 +-
+ MAINTAINERS                                   |   3 +-
+ .../boot/dts/nvidia/tegra194-p2972-0000.dts   |   2 +-
+ .../boot/dts/nvidia/tegra194-p3509-0000.dtsi  |   2 +-
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi      |   6 +-
+ 22 files changed, 228 insertions(+), 111 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-index 6a99d2aa8075..8e4f9bfb316d 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-@@ -197,7 +197,7 @@ Tegra194 RC mode:
- Tegra194 EP mode:
- -----------------
- 
--	pcie_ep@141a0000 {
-+	pcie-ep@141a0000 {
- 		compatible = "nvidia,tegra194-pcie-ep", "snps,dw-pcie-ep";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8A>;
- 		reg = <0x00 0x141a0000 0x0 0x00020000   /* appl registers (128K)      */
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts b/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
-index 96bd01cadb18..542bf761c097 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
-+++ b/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
-@@ -764,7 +764,7 @@ pcie@141a0000 {
- 			    "p2u-5", "p2u-6", "p2u-7";
- 	};
- 
--	pcie_ep@141a0000 {
-+	pcie-ep@141a0000 {
- 		status = "disabled";
- 
- 		vddio-pex-ctl-supply = <&vdd_1v8ao>;
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194-p3509-0000.dtsi b/arch/arm64/boot/dts/nvidia/tegra194-p3509-0000.dtsi
-index 836a7e0a4267..a71848177849 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194-p3509-0000.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra194-p3509-0000.dtsi
-@@ -741,7 +741,7 @@ pcie@141a0000 {
- 			    "p2u-5", "p2u-6", "p2u-7";
- 	};
- 
--	pcie_ep@141a0000 {
-+	pcie-ep@141a0000 {
- 		status = "disabled";
- 
- 		vddio-pex-ctl-supply = <&vdd_1v8ao>;
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-index 5ba7a4519b95..606065fc373f 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-@@ -2121,7 +2121,7 @@ pcie@141a0000 {
- 		dma-coherent;
- 	};
- 
--	pcie_ep@14160000 {
-+	pcie-ep@14160000 {
- 		compatible = "nvidia,tegra194-pcie-ep", "snps,dw-pcie-ep";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX4A>;
- 		reg = <0x00 0x14160000 0x0 0x00020000>, /* appl registers (128K)      */
-@@ -2161,7 +2161,7 @@ pcie_ep@14160000 {
- 		dma-coherent;
- 	};
- 
--	pcie_ep@14180000 {
-+	pcie-ep@14180000 {
- 		compatible = "nvidia,tegra194-pcie-ep", "snps,dw-pcie-ep";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
- 		reg = <0x00 0x14180000 0x0 0x00020000>, /* appl registers (128K)      */
-@@ -2201,7 +2201,7 @@ pcie_ep@14180000 {
- 		dma-coherent;
- 	};
- 
--	pcie_ep@141a0000 {
-+	pcie-ep@141a0000 {
- 		compatible = "nvidia,tegra194-pcie-ep", "snps,dw-pcie-ep";
- 		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8A>;
- 		reg = <0x00 0x141a0000 0x0 0x00020000>, /* appl registers (128K)      */
 -- 
 2.31.1
+
 
