@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71795C12002
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Jul 2021 07:36:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6DFC636C9
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Jul 2021 07:36:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5ACA96109E
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Jul 2021 07:36:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 042CD6109E
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Jul 2021 07:36:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234937AbhGSHjU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Jul 2021 03:39:20 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:51718 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234932AbhGSHjQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 03:39:16 -0400
-X-UUID: 4b35b5eab87a446e8ee2467ad1738dad-20210719
-X-UUID: 4b35b5eab87a446e8ee2467ad1738dad-20210719
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        id S234932AbhGSHjf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Jul 2021 03:39:35 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:53366 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S234973AbhGSHjb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 03:39:31 -0400
+X-UUID: 507f5b2cbd15414990cec59e6459f561-20210719
+X-UUID: 507f5b2cbd15414990cec59e6459f561-20210719
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
         (envelope-from <chuanjia.liu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 686826628; Mon, 19 Jul 2021 15:36:13 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1406639603; Mon, 19 Jul 2021 15:36:27 +0800
 Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 19 Jul 2021 15:36:11 +0800
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Mon, 19 Jul 2021 15:36:25 +0800
 Received: from localhost.localdomain (10.17.3.153) by mtkcas10.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 19 Jul 2021 15:36:10 +0800
+ Transport; Mon, 19 Jul 2021 15:36:24 +0800
 From:   Chuanjia Liu <chuanjia.liu@mediatek.com>
 To:     <robh+dt@kernel.org>, <bhelgaas@google.com>,
         <matthias.bgg@gmail.com>, <lorenzo.pieralisi@arm.com>
@@ -40,9 +40,9 @@ CC:     <ryder.lee@mediatek.com>, <jianjun.wang@mediatek.com>,
         <linux-mediatek@lists.infradead.org>, <devicetree@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v11 2/4] PCI: mediatek: Add new method to get shared pcie-cfg base address and parse node
-Date:   Mon, 19 Jul 2021 15:34:54 +0800
-Message-ID: <20210719073456.28666-3-chuanjia.liu@mediatek.com>
+Subject: [PATCH v11 4/4] ARM: dts: mediatek: Update MT7629 PCIe node for new format
+Date:   Mon, 19 Jul 2021 15:34:56 +0800
+Message-ID: <20210719073456.28666-5-chuanjia.liu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20210719073456.28666-1-chuanjia.liu@mediatek.com>
 References: <20210719073456.28666-1-chuanjia.liu@mediatek.com>
@@ -53,138 +53,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For the new dts format, add a new method to get
-shared pcie-cfg base address and parse node.
+To match the new dts binding. Remove "subsys",unused
+interrupt and slot node.Add "interrupt-names",
+"linux,pci-domain" and pciecfg node.
 
 Signed-off-by: Chuanjia Liu <chuanjia.liu@mediatek.com>
 Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/controller/pcie-mediatek.c | 52 +++++++++++++++++++-------
- 1 file changed, 39 insertions(+), 13 deletions(-)
+ arch/arm/boot/dts/mt7629-rfb.dts |  3 ++-
+ arch/arm/boot/dts/mt7629.dtsi    | 45 +++++++++++++++-----------------
+ 2 files changed, 23 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 25bee693834f..928e0983a900 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -14,6 +14,7 @@
- #include <linux/irqchip/chained_irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-+#include <linux/mfd/syscon.h>
- #include <linux/msi.h>
- #include <linux/module.h>
- #include <linux/of_address.h>
-@@ -23,6 +24,7 @@
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/regmap.h>
- #include <linux/reset.h>
+diff --git a/arch/arm/boot/dts/mt7629-rfb.dts b/arch/arm/boot/dts/mt7629-rfb.dts
+index 9980c10c6e29..eb536cbebd9b 100644
+--- a/arch/arm/boot/dts/mt7629-rfb.dts
++++ b/arch/arm/boot/dts/mt7629-rfb.dts
+@@ -140,9 +140,10 @@
+ 	};
+ };
  
- #include "../pci.h"
-@@ -207,6 +209,7 @@ struct mtk_pcie_port {
-  * struct mtk_pcie - PCIe host information
-  * @dev: pointer to PCIe device
-  * @base: IO mapped register base
-+ * @cfg: IO mapped register map for PCIe config
-  * @free_ck: free-run reference clock
-  * @mem: non-prefetchable memory resource
-  * @ports: pointer to PCIe port information
-@@ -215,6 +218,7 @@ struct mtk_pcie_port {
- struct mtk_pcie {
- 	struct device *dev;
- 	void __iomem *base;
-+	struct regmap *cfg;
- 	struct clk *free_ck;
+-&pcie {
++&pcie1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie_pins>;
++	status = "okay";
+ };
  
- 	struct list_head ports;
-@@ -650,7 +654,11 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- 		return err;
- 	}
+ &pciephy1 {
+diff --git a/arch/arm/boot/dts/mt7629.dtsi b/arch/arm/boot/dts/mt7629.dtsi
+index 874043f0490d..46fc236e1b89 100644
+--- a/arch/arm/boot/dts/mt7629.dtsi
++++ b/arch/arm/boot/dts/mt7629.dtsi
+@@ -361,16 +361,21 @@
+ 			#reset-cells = <1>;
+ 		};
  
--	port->irq = platform_get_irq(pdev, port->slot);
-+	if (of_find_property(dev->of_node, "interrupt-names", NULL))
-+		port->irq = platform_get_irq_byname(pdev, "pcie_irq");
-+	else
-+		port->irq = platform_get_irq(pdev, port->slot);
+-		pcie: pcie@1a140000 {
++		pciecfg: pciecfg@1a140000 {
++			compatible = "mediatek,generic-pciecfg", "syscon";
++			reg = <0x1a140000 0x1000>;
++		};
 +
- 	if (port->irq < 0)
- 		return port->irq;
++		pcie1: pcie@1a145000 {
+ 			compatible = "mediatek,mt7629-pcie";
+ 			device_type = "pci";
+-			reg = <0x1a140000 0x1000>,
+-			      <0x1a145000 0x1000>;
+-			reg-names = "subsys","port1";
++			reg = <0x1a145000 0x1000>;
++			reg-names = "port1";
++			linux,pci-domain = <1>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+-			interrupts = <GIC_SPI 176 IRQ_TYPE_LEVEL_LOW>,
+-				     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
++			interrupts = <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
++			interrupt-names = "pcie_irq";
+ 			clocks = <&pciesys CLK_PCIE_P1_MAC_EN>,
+ 				 <&pciesys CLK_PCIE_P0_AHB_EN>,
+ 				 <&pciesys CLK_PCIE_P1_AUX_EN>,
+@@ -391,26 +396,18 @@
+ 			power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
+ 			bus-range = <0x00 0xff>;
+ 			ranges = <0x82000000 0 0x20000000 0x20000000 0 0x10000000>;
++			status = "disabled";
  
-@@ -682,6 +690,10 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 		val |= PCIE_CSR_LTSSM_EN(port->slot) |
- 		       PCIE_CSR_ASPM_L1_EN(port->slot);
- 		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-+	} else if (pcie->cfg) {
-+		val = PCIE_CSR_LTSSM_EN(port->slot) |
-+		      PCIE_CSR_ASPM_L1_EN(port->slot);
-+		regmap_update_bits(pcie->cfg, PCIE_SYS_CFG_V2, val, val);
- 	}
- 
- 	/* Assert all reset signals */
-@@ -985,6 +997,7 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct resource *regs;
-+	struct device_node *cfg_node;
- 	int err;
- 
- 	/* get shared registers, which are optional */
-@@ -995,6 +1008,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 			return PTR_ERR(pcie->base);
- 	}
- 
-+	cfg_node = of_find_compatible_node(NULL, NULL,
-+					   "mediatek,generic-pciecfg");
-+	if (cfg_node) {
-+		pcie->cfg = syscon_node_to_regmap(cfg_node);
-+		if (IS_ERR(pcie->cfg))
-+			return PTR_ERR(pcie->cfg);
-+	}
-+
- 	pcie->free_ck = devm_clk_get(dev, "free_ck");
- 	if (IS_ERR(pcie->free_ck)) {
- 		if (PTR_ERR(pcie->free_ck) == -EPROBE_DEFER)
-@@ -1027,22 +1048,27 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- 	struct device *dev = pcie->dev;
- 	struct device_node *node = dev->of_node, *child;
- 	struct mtk_pcie_port *port, *tmp;
--	int err;
-+	int err, slot;
-+
-+	slot = of_get_pci_domain_nr(dev->of_node);
-+	if (slot < 0) {
-+		for_each_available_child_of_node(node, child) {
-+			err = of_pci_get_devfn(child);
-+			if (err < 0) {
-+				dev_err(dev, "failed to get devfn: %d\n", err);
-+				goto error_put_node;
-+			}
- 
--	for_each_available_child_of_node(node, child) {
--		int slot;
-+			slot = PCI_SLOT(err);
- 
--		err = of_pci_get_devfn(child);
--		if (err < 0) {
--			dev_err(dev, "failed to parse devfn: %d\n", err);
--			goto error_put_node;
-+			err = mtk_pcie_parse_port(pcie, child, slot);
-+			if (err)
-+				goto error_put_node;
- 		}
+-			pcie1: pcie@1,0 {
+-				device_type = "pci";
+-				reg = <0x0800 0 0 0 0>;
+-				#address-cells = <3>;
+-				#size-cells = <2>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
++					<0 0 0 2 &pcie_intc1 1>,
++					<0 0 0 3 &pcie_intc1 2>,
++					<0 0 0 4 &pcie_intc1 3>;
++			pcie_intc1: interrupt-controller {
++				interrupt-controller;
++				#address-cells = <0>;
+ 				#interrupt-cells = <1>;
+-				ranges;
+-				num-lanes = <1>;
+-				interrupt-map-mask = <0 0 0 7>;
+-				interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+-						<0 0 0 2 &pcie_intc1 1>,
+-						<0 0 0 3 &pcie_intc1 2>,
+-						<0 0 0 4 &pcie_intc1 3>;
 -
--		slot = PCI_SLOT(err);
--
--		err = mtk_pcie_parse_port(pcie, child, slot);
-+	} else {
-+		err = mtk_pcie_parse_port(pcie, node, slot);
- 		if (err)
--			goto error_put_node;
-+			return err;
- 	}
+-				pcie_intc1: interrupt-controller {
+-					interrupt-controller;
+-					#address-cells = <0>;
+-					#interrupt-cells = <1>;
+-				};
+ 			};
+ 		};
  
- 	err = mtk_pcie_subsys_powerup(pcie);
 -- 
 2.18.0
 
