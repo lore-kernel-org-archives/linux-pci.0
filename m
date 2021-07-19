@@ -6,87 +6,72 @@ X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3799C07E95
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0098BC07E9B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0EEE610CC
+	by mail.kernel.org (Postfix) with ESMTP id E993F610CC
 	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242883AbhGTC1E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Jul 2021 22:27:04 -0400
-Received: from mail-il1-f176.google.com ([209.85.166.176]:34548 "EHLO
-        mail-il1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359637AbhGSVVr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 17:21:47 -0400
-Received: by mail-il1-f176.google.com with SMTP id e13so17414846ilc.1;
-        Mon, 19 Jul 2021 15:02:26 -0700 (PDT)
+        id S244428AbhGTC1I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Jul 2021 22:27:08 -0400
+Received: from mail-il1-f173.google.com ([209.85.166.173]:40502 "EHLO
+        mail-il1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1359658AbhGSVWA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 17:22:00 -0400
+Received: by mail-il1-f173.google.com with SMTP id b14so17411599ilf.7;
+        Mon, 19 Jul 2021 15:02:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=yrNVD6owLaXgePWd4CismjZJlEUasygzpIYO3eYDGuQ=;
-        b=kZrpC62p9A1khNOqegVZUWTp1kYuPyDwXtK3EUeNF3oBdOOL3yyb0wHbLKzk1AMP2a
-         QJyDDnai7wf2LEZxNSEkfdHFdEI6nriuTJLne6R+lmhVNWaHwCCiDNEHwDFoUFs8YA49
-         tF3pQlYMBcQq0/v40Vc/pI81iX8QMZfq8C20XD0dVVDTwubNP/nLEZcZVSE5i0jW8uSN
-         3+/VpBlZii7neU/Ivdsk5xGkFdVkend0sNQRFKh9PbczCF4gYsAggzO5YhS9f6dfsv8o
-         6RqO2/SAsmzjp3YHWW9QqwVkoevT0ZI4iJJdur/sxB0xgyHnNAhQN7fubOzTLgDwG2Wx
-         GsFw==
-X-Gm-Message-State: AOAM5319hBIIb7ebJhwU1lQO42/az7cOepa83wLo7qrJN907XLxedC49
-        VBOO6WrODjIt9v9oKrAt0A==
-X-Google-Smtp-Source: ABdhPJx9PzdfGU03OIEVW7jTxu0UaiqhSeyJNTt+ZIebHFWFGLejJX0wxg6uDOreC9dDNhc/Gv+dbA==
-X-Received: by 2002:a92:cb0f:: with SMTP id s15mr19327369ilo.11.1626732144287;
-        Mon, 19 Jul 2021 15:02:24 -0700 (PDT)
+        bh=pxD+Cus6QToWUCkMrsmBw2UQ5ikpfGFz25k3lebVLec=;
+        b=IZgNgi64+DPMqn/qD8WFtu+2ObaM434ktchd5W+Hzz44UfDYFpIeOzdsu9hQydsc9A
+         LTf6OzJ/WiS04ZZBfHrMsKvRS7xyoS8n2WIsTY+PB6IzQzPVprxcbm/+6g/gSP6k9xSN
+         Q7IdY4R9fGayfYDOXYYd1gQ3jZIvexRo7KHFfj95khnhVoMfoZ7W/2+o0dSN24KJTVC5
+         pa+/J3xw7X1ztUg2A+2ah5r3yqshb/5T3EsMSa0g/GGxYIv3WQALwr+MrtYdBwx4ZS8F
+         7XVhBNVhX5ksnux10Pa3Iq3e7jsp2NtM85WoZxkS0Zm9bPPCwClgJqxAet9MLkBnmMOZ
+         oBcw==
+X-Gm-Message-State: AOAM531S7kpWULSLGxBz8Q3J7jhnTcgA1tz6OqpFh1x2Espq/a8hWGdC
+        gs9kefHpMdStal49jPwyvA==
+X-Google-Smtp-Source: ABdhPJxj9rrfMRfCKDXsPGXrgyI2rNuALj8hbfDOvwGqlJHRW6z1ufZWYhiPBNUXqtmZAVzwpUfGtg==
+X-Received: by 2002:a92:c54d:: with SMTP id a13mr6120613ilj.74.1626732158251;
+        Mon, 19 Jul 2021 15:02:38 -0700 (PDT)
 Received: from robh.at.kernel.org ([64.188.179.248])
-        by smtp.gmail.com with ESMTPSA id d8sm10150955ilq.88.2021.07.19.15.02.21
+        by smtp.gmail.com with ESMTPSA id t24sm11481232ioh.24.2021.07.19.15.02.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jul 2021 15:02:23 -0700 (PDT)
-Received: (nullmailer pid 2676858 invoked by uid 1000);
-        Mon, 19 Jul 2021 22:02:20 -0000
-Date:   Mon, 19 Jul 2021 16:02:20 -0600
+        Mon, 19 Jul 2021 15:02:37 -0700 (PDT)
+Received: (nullmailer pid 2677241 invoked by uid 1000);
+        Mon, 19 Jul 2021 22:02:32 -0000
+Date:   Mon, 19 Jul 2021 16:02:32 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
-        mauro.chehab@huawei.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Cc:     linux-pci@vger.kernel.org, mauro.chehab@huawei.com,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        Jingoo Han <jingoohan1@gmail.com>, linuxarm@huawei.com
-Subject: Re: [PATCH v5 2/5] dt-bindings: PCI: add snps,dw-pcie-ep.yaml
-Message-ID: <20210719220220.GA2676706@robh.at.kernel.org>
+        linuxarm@huawei.com, Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v5 4/5] dt-bindings: PCI: remove designware-pcie.txt
+Message-ID: <20210719220232.GA2677156@robh.at.kernel.org>
 References: <cover.1626608375.git.mchehab+huawei@kernel.org>
- <26025b256232c2e4bd91954907b9d92db27199a3.1626608375.git.mchehab+huawei@kernel.org>
+ <c93261b41f9ffe8d97d8c930f57b41aaf7de5264.1626608375.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <26025b256232c2e4bd91954907b9d92db27199a3.1626608375.git.mchehab+huawei@kernel.org>
+In-Reply-To: <c93261b41f9ffe8d97d8c930f57b41aaf7de5264.1626608375.git.mchehab+huawei@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 18 Jul 2021 13:40:49 +0200, Mauro Carvalho Chehab wrote:
-> Currently, the designware schema is defined on a text file:
-> 	designware-pcie.txt
-> 
-> It contains two separate schemas on it:
-> 
-> - snps,dw-pcie
->   This one uses the pci-bus.yaml schema;
-> - snps,dw-pcie-ep
->   This one uses the pci-ep.yaml schema.
-> 
-> As the:
-> 	AllOf:
-> 	  - $ref: <foo>
-> 
-> for the endpoint part is different than the PCI one, place
-> it on a separate yaml file.
+On Sun, 18 Jul 2021 13:40:51 +0200, Mauro Carvalho Chehab wrote:
+> Now that the properties defined there were converted to DT schema,
+> and the other dt-bindings are pointing to the new schemas,
+> drop it.
 > 
 > Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 > ---
->  .../bindings/pci/snps,dw-pcie-ep.yaml         | 90 +++++++++++++++++++
->  MAINTAINERS                                   |  1 +
->  2 files changed, 91 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+>  .../bindings/pci/designware-pcie.txt          | 77 -------------------
+>  MAINTAINERS                                   |  1 -
+>  2 files changed, 78 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
 > 
 
 Applied, thanks!
