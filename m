@@ -2,115 +2,62 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C709C07E9B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 21:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66ADBC07E95
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 21:26:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E509F6120E
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 21:06:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 391AE61003
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 21:26:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231537AbhGTUXh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jul 2021 16:23:37 -0400
-Received: from mga06.intel.com ([134.134.136.31]:37796 "EHLO mga06.intel.com"
+        id S230368AbhGTUpe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jul 2021 16:45:34 -0400
+Received: from mga09.intel.com ([134.134.136.24]:42766 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234263AbhGTULc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Jul 2021 16:11:32 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10051"; a="272440829"
+        id S233545AbhGTUpF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Jul 2021 16:45:05 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10051"; a="211329654"
 X-IronPort-AV: E=Sophos;i="5.84,256,1620716400"; 
-   d="scan'208";a="272440829"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2021 13:51:42 -0700
+   d="scan'208";a="211329654"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2021 14:25:43 -0700
 X-IronPort-AV: E=Sophos;i="5.84,256,1620716400"; 
-   d="scan'208";a="415371396"
-Received: from unknown (HELO localhost.ch.intel.com) ([10.2.248.31])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2021 13:51:42 -0700
-From:   Nirmal Patel <nirmal.patel@linux.intel.com>
-To:     Nirmal Patel <nirmal.patel@linux.intel.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 2/2] PCI: vmd: Issue vmd domain window reset
-Date:   Tue, 20 Jul 2021 13:50:09 -0700
-Message-Id: <20210720205009.111806-3-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210720205009.111806-1-nirmal.patel@linux.intel.com>
+   d="scan'208";a="661661150"
+Received: from patelni-mobl1.amr.corp.intel.com (HELO [10.212.64.39]) ([10.212.64.39])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2021 14:25:42 -0700
+Subject: Re: [PATCH v2 0/2] Issue secondary bus reset and domain window reset
+To:     Jon Derrick <jonathan.derrick@intel.com>, linux-pci@vger.kernel.org
 References: <20210720205009.111806-1-nirmal.patel@linux.intel.com>
+From:   "Patel, Nirmal" <nirmal.patel@linux.intel.com>
+Message-ID: <4fde3255-ae6c-aac9-d76b-dcdff934d5c9@linux.intel.com>
+Date:   Tue, 20 Jul 2021 14:25:37 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210720205009.111806-1-nirmal.patel@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to properly re-initialize the VMD domain during repetitive driver
-attachment or reboot tests, ensure that the VMD root ports are re-initialized
-to a blank state that can be re-enumerated appropriately by the PCI core.
-This is performed by re-initializing all of the bridge windows to ensure
-that PCI core enumeration does not detect potentially invalid bridge windows
-and misinterpret them as firmware-assigned windows, when they simply may be
-invalid bridge window information from a previous boot.
-
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Reviewed-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/controller/vmd.c | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 6e1c60048774..e52bdb95218e 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -651,6 +651,39 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
- 	return 0;
- }
- 
-+
-+static void vmd_domain_reset_windows(struct vmd_dev *vmd)
-+{
-+	u8 hdr_type;
-+	char __iomem *addr;
-+	int dev_seq;
-+	u8 functions;
-+	u8 fn_seq;
-+	int max_devs = resource_size(&vmd->resources[0]) * 32;
-+
-+	for (dev_seq = 0; dev_seq < max_devs; dev_seq++) {
-+		addr = VMD_DEVICE_BASE(vmd, dev_seq) + PCI_VENDOR_ID;
-+		if (readw(addr) != PCI_VENDOR_ID_INTEL)
-+			continue;
-+
-+		addr = VMD_DEVICE_BASE(vmd, dev_seq) + PCI_HEADER_TYPE;
-+		hdr_type = readb(addr) & PCI_HEADER_TYPE_MASK;
-+		if (hdr_type != PCI_HEADER_TYPE_BRIDGE)
-+			continue;
-+
-+		functions = !!(hdr_type & 0x80) ? 8 : 1;
-+		for (fn_seq = 0; fn_seq < functions; fn_seq++)
-+		{
-+			addr = VMD_FUNCTION_BASE(vmd, dev_seq, fn_seq) + PCI_VENDOR_ID;
-+			if (readw(addr) != PCI_VENDOR_ID_INTEL)
-+				continue;
-+
-+			memset_io((VMD_FUNCTION_BASE(vmd, dev_seq, fn_seq) + PCI_IO_BASE),
-+			 0, PCI_ROM_ADDRESS1 - PCI_IO_BASE);
-+		}
-+	}
-+}
-+
- static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- {
- 	struct pci_sysdata *sd = &vmd->sysdata;
-@@ -741,6 +774,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		.parent = res,
- 	};
- 
-+	vmd_domain_reset_windows(vmd);
-+
- 	sd->vmd_dev = vmd->dev;
- 	sd->domain = vmd_find_free_domain();
- 	if (sd->domain < 0)
--- 
-2.27.0
+On 7/20/2021 1:50 PM, Nirmal Patel wrote:
+> During VT-d pass-through, the VMD driver occasionally fails to
+> enumerate underlying NVMe devices when repetitive reboots are
+> performed in the guest OS. The issue seems to be resolved by
+> performing secondary bus resets and reinitializing the root
+> port's bridge windows.
+>
+> Nirmal Patel (2):
+>   PCI: vmd: Trigger secondary bus reset
+>   PCI: vmd: Issue vmd domain window reset
+>
+>  drivers/pci/controller/vmd.c | 81 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 81 insertions(+)
+>
+There is no v1 of this patch. I made a newbie mistake and didn't remove v2 after internal review. Please let me know if you have alternate suggestion to fix this issue.
 
