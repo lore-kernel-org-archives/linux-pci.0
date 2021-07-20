@@ -2,238 +2,223 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4101BC07E9B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AECDC636C8
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:27:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 192A26113B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:26:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 732FD6124B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:27:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233487AbhGTWqH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jul 2021 18:46:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51058 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234499AbhGTWqD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Jul 2021 18:46:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3338E610D2;
-        Tue, 20 Jul 2021 23:26:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626823600;
-        bh=/8zNYfsDamCGJhQ1wohZAhFPeMbTvfp5/6fWraoi0qU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=U6qCzEKSTOjdHTiHe+WshSbfpyr/BZAD0T1G6dIy+oLAR2kMtYinpSuzpbFaaffEH
-         PyUJ8bwC0qkQxNbjJGDQ2KQmwjYTjo8jwuHMrnODiCB5vZS7xO2G5fxj22Tbg/D/fv
-         EJrVKqD75NcUDsZyBD9OgKophdSBfn0FTjEKby2b9Aadi1FMF/cFR9anz45KgMjLBr
-         tjJBSCBcvR3WoC/kDSs1Nuzwy3eykpu9lI8XNvvJmEkh50sckamsH+K5cncLBm+TpO
-         eAL/B0VHlfwH2fESXKOUOuUEdVNGK3uE/l/CKhTnocR8XBHNMz9TUKXsnTJPThWr/Z
-         SG/OFSWdnTdYA==
-Date:   Tue, 20 Jul 2021 18:26:38 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Rob Herring <robh@kernel.org>, linuxarm@huawei.com,
-        mauro.chehab@huawei.com,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 2/9] PCI: kirin: add support for a PHY layer
-Message-ID: <20210720232638.GA140319@bjorn-Precision-5520>
+        id S235695AbhGTWqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jul 2021 18:46:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55461 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234725AbhGTWqH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 18:46:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1626823603;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8qwJ8QWsQyg6yDCqte1+0YiYPKWYX+C0w9lgnqdx8jY=;
+        b=hWny+PJfN1T+/1guwDGMLAgN4cIzMDJnRd3wNUeUOKSvT/1QqXxg625y02nF0Hdsb1rKdL
+        0FMkkE8uw7jSFAq9T16ZNwmbUcYn6ABmugkdo2mJAJv3DuzpHRQHjrv9jPnorrGLR2kA+g
+        mcZLS4PbIkZ+1tsXJGTsvp/ZsPO5dsM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-599-UVkORPB-PCCzXzPFZZCzBA-1; Tue, 20 Jul 2021 19:26:41 -0400
+X-MC-Unique: UVkORPB-PCCzXzPFZZCzBA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9FA66100C61C;
+        Tue, 20 Jul 2021 23:26:39 +0000 (UTC)
+Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D6B9E69CB4;
+        Tue, 20 Jul 2021 23:26:34 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
+        tglx@linutronix.de, jesse.brandeburg@intel.com,
+        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
+        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
+        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
+        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
+        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
+        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
+        somnath.kotur@broadcom.com, nilal@redhat.com,
+        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
+        ahs3@redhat.com, leonro@nvidia.com,
+        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
+        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
+        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
+        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        _govind@gmx.com, kabel@kernel.org, viresh.kumar@linaro.org,
+        Tushar.Khandelwal@arm.com, kuba@kernel.org
+Subject: [PATCH v5 01/14] genirq: Provide new interfaces for affinity hints
+Date:   Tue, 20 Jul 2021 19:26:11 -0400
+Message-Id: <20210720232624.1493424-2-nitesh@redhat.com>
+In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
+References: <20210720232624.1493424-1-nitesh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4f0580412968c2b2807251e36ba32da9aa092605.1626768323.git.mchehab+huawei@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In subject:
+From: Thomas Gleixner <tglx@linutronix.de>
 
-  PCI: kirin: Add support for a PHY later
+The discussion about removing the side effect of irq_set_affinity_hint() of
+actually applying the cpumask (if not NULL) as affinity to the interrupt,
+unearthed a few unpleasantries:
 
-(s/add/Add/)
+  1) The modular perf drivers rely on the current behaviour for the very
+     wrong reasons.
 
-On Tue, Jul 20, 2021 at 10:09:04AM +0200, Mauro Carvalho Chehab wrote:
-> While it is too late to remove the Kirin 960 PHY, the driver
-> should be able to support different PHYs used by other devices.
+  2) While none of the other drivers prevents user space from changing
+     the affinity, a cursorily inspection shows that there are at least
+     expectations in some drivers.
 
-Commit log doesn't actually say what this patch does.
+#1 needs to be cleaned up anyway, so that's not a problem
 
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-> ---
->  drivers/pci/controller/dwc/pcie-kirin.c | 95 +++++++++++++++++++++----
->  1 file changed, 80 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> index b4063a3434df..558188476372 100644
-> --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> @@ -8,16 +8,18 @@
->   * Author: Xiaowei Song <songxiaowei@huawei.com>
->   */
->  
-> -#include <linux/compiler.h>
->  #include <linux/clk.h>
-> +#include <linux/compiler.h>
->  #include <linux/delay.h>
->  #include <linux/err.h>
->  #include <linux/gpio.h>
->  #include <linux/interrupt.h>
->  #include <linux/mfd/syscon.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_gpio.h>
->  #include <linux/of_pci.h>
-> +#include <linux/phy/phy.h>
->  #include <linux/pci.h>
->  #include <linux/pci_regs.h>
->  #include <linux/platform_device.h>
-> @@ -50,11 +52,18 @@
->  #define PCIE_DEBOUNCE_PARAM	0xF0F400
->  #define PCIE_OE_BYPASS		(0x3 << 28)
->  
-> +enum pcie_kirin_phy_type {
-> +	PCIE_KIRIN_INTERNAL_PHY,
-> +	PCIE_KIRIN_EXTERNAL_PHY
-> +};
-> +
->  struct kirin_pcie {
-> +	enum pcie_kirin_phy_type	type;
-> +
->  	struct dw_pcie	*pci;
->  	struct phy	*phy;
->  	void __iomem	*apb_base;
-> -	void		*phy_priv;	/* Needed for Kirin 960 PHY */
-> +	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
->  };
->  
->  /*
-> @@ -476,8 +485,63 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
->  	.host_init = kirin_pcie_host_init,
->  };
->  
-> +static const struct of_device_id kirin_pcie_match[] = {
-> +	{
-> +		.compatible = "hisilicon,kirin960-pcie",
-> +		.data = (void *)PCIE_KIRIN_INTERNAL_PHY
-> +	},
-> +	{},
-> +};
+#2 might result in subtle regressions especially when irqbalanced (which
+   nowadays ignores the affinity hint) is disabled.
 
-Is there a benefit to moving kirin_pcie_match[] up here?  Seemed nice
-to have it close to its use in kirin_pcie_driver, and would make the
-diff easier to read.  But if it helps to move it, no big deal.
+Provide new interfaces:
 
-> +static int kirin_pcie_power_on(struct platform_device *pdev,
-> +			       struct kirin_pcie *kirin_pcie)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	int ret;
-> +
-> +	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
-> +		ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
-> +		if (ret)
-> +			return ret;
-> +
-> +		return hi3660_pcie_phy_power_on(kirin_pcie);
-> +	}
-> +
-> +	kirin_pcie->phy = devm_of_phy_get(dev, dev->of_node, NULL);
-> +	if (IS_ERR(kirin_pcie->phy))
-> +		return PTR_ERR(kirin_pcie->phy);
-> +
-> +	ret = phy_init(kirin_pcie->phy);
-> +	if (ret)
-> +		goto err;
-> +
-> +	ret = phy_power_on(kirin_pcie->phy);
-> +	if (ret)
-> +		goto err;
-> +
-> +	return 0;
-> +err:
-> +	phy_exit(kirin_pcie->phy);
-> +	return ret;
-> +}
-> +
-> +static int __exit kirin_pcie_remove(struct platform_device *pdev)
-> +{
-> +	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
-> +
-> +	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
-> +		return 0;
-> +
-> +	phy_power_off(kirin_pcie->phy);
-> +	phy_exit(kirin_pcie->phy);
-> +
-> +	return 0;
-> +}
-> +
->  static int kirin_pcie_probe(struct platform_device *pdev)
->  {
-> +	enum pcie_kirin_phy_type phy_type;
-> +	const struct of_device_id *of_id;
->  	struct device *dev = &pdev->dev;
->  	struct kirin_pcie *kirin_pcie;
->  	struct dw_pcie *pci;
-> @@ -488,6 +552,14 @@ static int kirin_pcie_probe(struct platform_device *pdev)
->  		return -EINVAL;
->  	}
->  
-> +	of_id = of_match_device(kirin_pcie_match, dev);
-> +	if (!of_id) {
-> +		dev_err(dev, "OF data missing\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	phy_type = (enum pcie_kirin_phy_type)of_id->data;
-> +
->  	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
->  	if (!kirin_pcie)
->  		return -ENOMEM;
-> @@ -500,31 +572,24 @@ static int kirin_pcie_probe(struct platform_device *pdev)
->  	pci->ops = &kirin_dw_pcie_ops;
->  	pci->pp.ops = &kirin_pcie_host_ops;
->  	kirin_pcie->pci = pci;
-> -
-> -	ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
-> -	if (ret)
-> -		return ret;
-> +	kirin_pcie->type = phy_type;
->  
->  	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
->  	if (ret)
->  		return ret;
->  
-> -	ret = hi3660_pcie_phy_power_on(kirin_pcie);
-> -	if (ret)
-> -		return ret;
-> -
->  	platform_set_drvdata(pdev, kirin_pcie);
->  
-> +	ret = kirin_pcie_power_on(pdev, kirin_pcie);
-> +	if (ret)
-> +		return ret;
-> +
->  	return dw_pcie_host_init(&pci->pp);
->  }
->  
-> -static const struct of_device_id kirin_pcie_match[] = {
-> -	{ .compatible = "hisilicon,kirin960-pcie" },
-> -	{},
-> -};
-> -
->  static struct platform_driver kirin_pcie_driver = {
->  	.probe			= kirin_pcie_probe,
-> +	.remove	        	= __exit_p(kirin_pcie_remove),
->  	.driver			= {
->  		.name			= "kirin-pcie",
->  		.of_match_table		= kirin_pcie_match,
-> -- 
-> 2.31.1
-> 
+  irq_update_affinity_hint()  - Only sets the affinity hint pointer
+  irq_set_affinity_and_hint() - Set the pointer and apply the affinity to
+                                the interrupt
+
+Make irq_set_affinity_hint() a wrapper around irq_apply_affinity_hint() and
+document it to be phased out.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+Link: https://lore.kernel.org/r/20210501021832.743094-1-jesse.brandeburg@intel.com
+---
+ include/linux/interrupt.h | 53 ++++++++++++++++++++++++++++++++++++++-
+ kernel/irq/manage.c       |  8 +++---
+ 2 files changed, 56 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 2ed65b01c961..c2563a9321d7 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -328,7 +328,46 @@ extern int irq_force_affinity(unsigned int irq, const struct cpumask *cpumask);
+ extern int irq_can_set_affinity(unsigned int irq);
+ extern int irq_select_affinity(unsigned int irq);
+ 
+-extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
++extern int __irq_apply_affinity_hint(unsigned int irq, const struct cpumask *m,
++				     bool setaffinity);
++
++/**
++ * irq_update_affinity_hint - Update the affinity hint
++ * @irq:	Interrupt to update
++ * @m:		cpumask pointer (NULL to clear the hint)
++ *
++ * Updates the affinity hint, but does not change the affinity of the interrupt.
++ */
++static inline int
++irq_update_affinity_hint(unsigned int irq, const struct cpumask *m)
++{
++	return __irq_apply_affinity_hint(irq, m, false);
++}
++
++/**
++ * irq_set_affinity_and_hint - Update the affinity hint and apply the provided
++ *			     cpumask to the interrupt
++ * @irq:	Interrupt to update
++ * @m:		cpumask pointer (NULL to clear the hint)
++ *
++ * Updates the affinity hint and if @m is not NULL it applies it as the
++ * affinity of that interrupt.
++ */
++static inline int
++irq_set_affinity_and_hint(unsigned int irq, const struct cpumask *m)
++{
++	return __irq_apply_affinity_hint(irq, m, true);
++}
++
++/*
++ * Deprecated. Use irq_update_affinity_hint() or irq_set_affinity_and_hint()
++ * instead.
++ */
++static inline int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
++{
++	return irq_set_affinity_and_hint(irq, m);
++}
++
+ extern int irq_update_affinity_desc(unsigned int irq,
+ 				    struct irq_affinity_desc *affinity);
+ 
+@@ -360,6 +399,18 @@ static inline int irq_can_set_affinity(unsigned int irq)
+ 
+ static inline int irq_select_affinity(unsigned int irq)  { return 0; }
+ 
++static inline int irq_update_affinity_hint(unsigned int irq,
++					   const struct cpumask *m)
++{
++	return -EINVAL;
++}
++
++static inline int irq_set_affinity_and_hint(unsigned int irq,
++					    const struct cpumask *m)
++{
++	return -EINVAL;
++}
++
+ static inline int irq_set_affinity_hint(unsigned int irq,
+ 					const struct cpumask *m)
+ {
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index ef30b4762947..837b63e63111 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -487,7 +487,8 @@ int irq_force_affinity(unsigned int irq, const struct cpumask *cpumask)
+ }
+ EXPORT_SYMBOL_GPL(irq_force_affinity);
+ 
+-int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
++int __irq_apply_affinity_hint(unsigned int irq, const struct cpumask *m,
++			      bool setaffinity)
+ {
+ 	unsigned long flags;
+ 	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+@@ -496,12 +497,11 @@ int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
+ 		return -EINVAL;
+ 	desc->affinity_hint = m;
+ 	irq_put_desc_unlock(desc, flags);
+-	/* set the initial affinity to prevent every interrupt being on CPU0 */
+-	if (m)
++	if (m && setaffinity)
+ 		__irq_set_affinity(irq, m, false);
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(irq_set_affinity_hint);
++EXPORT_SYMBOL_GPL(__irq_apply_affinity_hint);
+ 
+ static void irq_affinity_notify(struct work_struct *work)
+ {
+-- 
+2.27.0
+
