@@ -5,29 +5,29 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D8EC636C9
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04AE2C636C8
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83CBC6113B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1CBF6108B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346376AbhGTCro (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Jul 2021 22:47:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34266 "EHLO
+        id S1346560AbhGTCrr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Jul 2021 22:47:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235999AbhGTCrO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 22:47:14 -0400
+        with ESMTP id S233549AbhGTCre (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 22:47:34 -0400
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E01EBC061574;
-        Mon, 19 Jul 2021 20:27:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9F164C061574;
+        Mon, 19 Jul 2021 20:28:13 -0700 (PDT)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 67F0892009D; Tue, 20 Jul 2021 05:27:49 +0200 (CEST)
+        id 1FAF89200BF; Tue, 20 Jul 2021 05:28:09 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 609F192009B;
-        Tue, 20 Jul 2021 05:27:49 +0200 (CEST)
-Date:   Tue, 20 Jul 2021 05:27:49 +0200 (CEST)
+        by angie.orcam.me.uk (Postfix) with ESMTP id 1A3049200BB;
+        Tue, 20 Jul 2021 05:28:09 +0200 (CEST)
+Date:   Tue, 20 Jul 2021 05:28:09 +0200 (CEST)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Nikolai Zhubr <zhubr.2@gmail.com>,
         Thomas Gleixner <tglx@linutronix.de>,
@@ -45,10 +45,9 @@ To:     Nikolai Zhubr <zhubr.2@gmail.com>,
 cc:     x86@kernel.org, linux-pci@vger.kernel.org,
         linux-pm@vger.kernel.org, kvm@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/6] x86: Add support for 0x22/0x23 port I/O configuration
- space
+Subject: [PATCH 5/6] x86: Avoid magic number with ELCR register accesses
 In-Reply-To: <alpine.DEB.2.21.2107171813230.9461@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2107182353140.9461@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2107200237300.9461@angie.orcam.me.uk>
 References: <alpine.DEB.2.21.2107171813230.9461@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
@@ -57,174 +56,153 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Define macros and accessors for the configuration space addressed 
-indirectly with an index register and a data register at the port I/O 
-locations of 0x22 and 0x23 respectively.
-
-This space is defined by the Intel MultiProcessor Specification for the 
-IMCR register used to switch between the PIC and the APIC mode[1], by 
-Cyrix processors for their configuration[2][3], and also some chipsets.
-
-Given the lack of atomicity with the indirect addressing a spinlock is 
-required to protect accesses, although for Cyrix processors it is enough 
-if accesses are executed with interrupts locally disabled, because the 
-registers are local to the accessing CPU, and IMCR is only ever poked at 
-by the BSP and early enough for interrupts not to have been configured 
-yet.  Therefore existing code does not have to change or use the new 
-spinlock and neither it does.
-
-Put the spinlock in a library file then, so that it does not get pulled 
-unnecessarily for configurations that do not refer it.
-
-Convert Cyrix accessors to wrappers so as to retain the brevity and 
-clarity of the `getCx86' and `setCx86' calls.
-
-References:
-
-[1] "MultiProcessor Specification", Version 1.4, Intel Corporation, 
-    Order Number: 242016-006, May 1997, Section 3.6.2.1 "PIC Mode", pp. 
-    3-7, 3-8
-
-[2] "5x86 Microprocessor", Cyrix Corporation, Order Number: 94192-00, 
-    July 1995, Section 2.3.2.4 "Configuration Registers", p. 2-23
-
-[3] "6x86 Processor", Cyrix Corporation, Order Number: 94175-01, March 
-    1996, Section 2.4.4 "6x86 Configuration Registers", p. 2-23
+Define PIC_ELCR1 and PIC_ELCR2 macros for accesses to the ELCR registers 
+implemented by many chipsets in their embedded 8259A PIC cores, avoiding 
+magic numbers that are difficult to handle, and complementing the macros 
+we already have for registers originally defined with discrete 8259A PIC 
+implementations.  No functional change.
 
 Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
 ---
-Verified with `objdump' not to change arch/x86/kernel/apic/apic.o or 
-arch/x86/kernel/cpu/cyrix.o code produced.
+This deliberately doesn't touch KVM, which refrains from using macros for 
+any PIC accesses.
 ---
- arch/x86/include/asm/pc-conf-reg.h     |   33 +++++++++++++++++++++++++++++++++
- arch/x86/include/asm/processor-cyrix.h |    8 ++++----
- arch/x86/kernel/apic/apic.c            |    9 +++------
- arch/x86/lib/Makefile                  |    1 +
- arch/x86/lib/pc-conf-reg.c             |   13 +++++++++++++
- 5 files changed, 54 insertions(+), 10 deletions(-)
+ arch/x86/include/asm/i8259.h   |    2 ++
+ arch/x86/kernel/acpi/boot.c    |    6 +++---
+ arch/x86/kernel/apic/io_apic.c |    2 +-
+ arch/x86/kernel/apic/vector.c  |    2 +-
+ arch/x86/kernel/i8259.c        |    8 ++++----
+ arch/x86/kernel/mpparse.c      |    3 ++-
+ arch/x86/pci/irq.c             |    3 ++-
+ 7 files changed, 15 insertions(+), 11 deletions(-)
 
-linux-x86-pc-conf-reg.diff
-Index: linux-macro-pirq/arch/x86/include/asm/pc-conf-reg.h
+linux-x86-pic-elcr.diff
+Index: linux-macro-pirq/arch/x86/include/asm/i8259.h
 ===================================================================
---- /dev/null
-+++ linux-macro-pirq/arch/x86/include/asm/pc-conf-reg.h
-@@ -0,0 +1,33 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Support for the configuration register space at port I/O locations
-+ * 0x22 and 0x23 variously used by PC architectures, e.g. the MP Spec,
-+ * Cyrix CPUs, numerous chipsets.
-+ */
-+#ifndef _ASM_X86_PC_CONF_REG_H
-+#define _ASM_X86_PC_CONF_REG_H
-+
-+#include <linux/io.h>
-+#include <linux/spinlock.h>
-+#include <linux/types.h>
-+
-+#define PC_CONF_INDEX		0x22
-+#define PC_CONF_DATA		0x23
-+
-+#define PC_CONF_MPS_IMCR	0x70
-+
-+extern raw_spinlock_t pc_conf_lock;
-+
-+static inline u8 pc_conf_get(u8 reg)
-+{
-+	outb(reg, PC_CONF_INDEX);
-+	return inb(PC_CONF_DATA);
-+}
-+
-+static inline void pc_conf_set(u8 reg, u8 data)
-+{
-+	outb(reg, PC_CONF_INDEX);
-+	outb(data, PC_CONF_DATA);
-+}
-+
-+#endif /* _ASM_X86_PC_CONF_REG_H */
-Index: linux-macro-pirq/arch/x86/include/asm/processor-cyrix.h
+--- linux-macro-pirq.orig/arch/x86/include/asm/i8259.h
++++ linux-macro-pirq/arch/x86/include/asm/i8259.h
+@@ -19,6 +19,8 @@ extern unsigned int cached_irq_mask;
+ #define PIC_MASTER_OCW3		PIC_MASTER_ISR
+ #define PIC_SLAVE_CMD		0xa0
+ #define PIC_SLAVE_IMR		0xa1
++#define PIC_ELCR1		0x4d0
++#define PIC_ELCR2		0x4d1
+ 
+ /* i8259A PIC related value */
+ #define PIC_CASCADE_IR		2
+Index: linux-macro-pirq/arch/x86/kernel/acpi/boot.c
 ===================================================================
---- linux-macro-pirq.orig/arch/x86/include/asm/processor-cyrix.h
-+++ linux-macro-pirq/arch/x86/include/asm/processor-cyrix.h
-@@ -5,14 +5,14 @@
-  * Access order is always 0x22 (=offset), 0x23 (=value)
+--- linux-macro-pirq.orig/arch/x86/kernel/acpi/boot.c
++++ linux-macro-pirq/arch/x86/kernel/acpi/boot.c
+@@ -570,7 +570,7 @@ void __init acpi_pic_sci_set_trigger(uns
+ 	unsigned int old, new;
+ 
+ 	/* Real old ELCR mask */
+-	old = inb(0x4d0) | (inb(0x4d1) << 8);
++	old = inb(PIC_ELCR1) | (inb(PIC_ELCR2) << 8);
+ 
+ 	/*
+ 	 * If we use ACPI to set PCI IRQs, then we should clear ELCR
+@@ -596,8 +596,8 @@ void __init acpi_pic_sci_set_trigger(uns
+ 		return;
+ 
+ 	pr_warn("setting ELCR to %04x (from %04x)\n", new, old);
+-	outb(new, 0x4d0);
+-	outb(new >> 8, 0x4d1);
++	outb(new, PIC_ELCR1);
++	outb(new >> 8, PIC_ELCR2);
+ }
+ 
+ int acpi_gsi_to_irq(u32 gsi, unsigned int *irqp)
+Index: linux-macro-pirq/arch/x86/kernel/apic/io_apic.c
+===================================================================
+--- linux-macro-pirq.orig/arch/x86/kernel/apic/io_apic.c
++++ linux-macro-pirq/arch/x86/kernel/apic/io_apic.c
+@@ -764,7 +764,7 @@ static bool irq_active_low(int idx)
+ static bool EISA_ELCR(unsigned int irq)
+ {
+ 	if (irq < nr_legacy_irqs()) {
+-		unsigned int port = 0x4d0 + (irq >> 3);
++		unsigned int port = PIC_ELCR1 + (irq >> 3);
+ 		return (inb(port) >> (irq & 7)) & 1;
+ 	}
+ 	apic_printk(APIC_VERBOSE, KERN_INFO
+Index: linux-macro-pirq/arch/x86/kernel/apic/vector.c
+===================================================================
+--- linux-macro-pirq.orig/arch/x86/kernel/apic/vector.c
++++ linux-macro-pirq/arch/x86/kernel/apic/vector.c
+@@ -1299,7 +1299,7 @@ static void __init print_PIC(void)
+ 
+ 	pr_debug("... PIC  ISR: %04x\n", v);
+ 
+-	v = inb(0x4d1) << 8 | inb(0x4d0);
++	v = inb(PIC_ELCR2) << 8 | inb(PIC_ELCR1);
+ 	pr_debug("... PIC ELCR: %04x\n", v);
+ }
+ 
+Index: linux-macro-pirq/arch/x86/kernel/i8259.c
+===================================================================
+--- linux-macro-pirq.orig/arch/x86/kernel/i8259.c
++++ linux-macro-pirq/arch/x86/kernel/i8259.c
+@@ -235,15 +235,15 @@ static char irq_trigger[2];
   */
- 
-+#include <asm/pc-conf-reg.h>
-+
- static inline u8 getCx86(u8 reg)
+ static void restore_ELCR(char *trigger)
  {
--	outb(reg, 0x22);
--	return inb(0x23);
-+	return pc_conf_get(reg);
+-	outb(trigger[0], 0x4d0);
+-	outb(trigger[1], 0x4d1);
++	outb(trigger[0], PIC_ELCR1);
++	outb(trigger[1], PIC_ELCR2);
  }
  
- static inline void setCx86(u8 reg, u8 data)
+ static void save_ELCR(char *trigger)
  {
--	outb(reg, 0x22);
--	outb(data, 0x23);
-+	pc_conf_set(reg, data);
+ 	/* IRQ 0,1,2,8,13 are marked as reserved */
+-	trigger[0] = inb(0x4d0) & 0xF8;
+-	trigger[1] = inb(0x4d1) & 0xDE;
++	trigger[0] = inb(PIC_ELCR1) & 0xF8;
++	trigger[1] = inb(PIC_ELCR2) & 0xDE;
  }
-Index: linux-macro-pirq/arch/x86/kernel/apic/apic.c
+ 
+ static void i8259A_resume(void)
+Index: linux-macro-pirq/arch/x86/kernel/mpparse.c
 ===================================================================
---- linux-macro-pirq.orig/arch/x86/kernel/apic/apic.c
-+++ linux-macro-pirq/arch/x86/kernel/apic/apic.c
-@@ -38,6 +38,7 @@
+--- linux-macro-pirq.orig/arch/x86/kernel/mpparse.c
++++ linux-macro-pirq/arch/x86/kernel/mpparse.c
+@@ -19,6 +19,7 @@
+ #include <linux/smp.h>
+ #include <linux/pci.h>
  
- #include <asm/trace/irq_vectors.h>
- #include <asm/irq_remapping.h>
-+#include <asm/pc-conf-reg.h>
- #include <asm/perf_event.h>
- #include <asm/x86_init.h>
- #include <linux/atomic.h>
-@@ -132,18 +133,14 @@ static int enabled_via_apicbase __ro_aft
-  */
- static inline void imcr_pic_to_apic(void)
++#include <asm/i8259.h>
+ #include <asm/io_apic.h>
+ #include <asm/acpi.h>
+ #include <asm/irqdomain.h>
+@@ -251,7 +252,7 @@ static int __init ELCR_trigger(unsigned
  {
--	/* select IMCR register */
--	outb(0x70, 0x22);
- 	/* NMI and 8259 INTR go through APIC */
--	outb(0x01, 0x23);
-+	pc_conf_set(PC_CONF_MPS_IMCR, 0x01);
+ 	unsigned int port;
+ 
+-	port = 0x4d0 + (irq >> 3);
++	port = PIC_ELCR1 + (irq >> 3);
+ 	return (inb(port) >> (irq & 7)) & 1;
  }
  
- static inline void imcr_apic_to_pic(void)
- {
--	/* select IMCR register */
--	outb(0x70, 0x22);
- 	/* NMI and 8259 INTR go directly to BSP */
--	outb(0x00, 0x23);
-+	pc_conf_set(PC_CONF_MPS_IMCR, 0x00);
- }
- #endif
+Index: linux-macro-pirq/arch/x86/pci/irq.c
+===================================================================
+--- linux-macro-pirq.orig/arch/x86/pci/irq.c
++++ linux-macro-pirq/arch/x86/pci/irq.c
+@@ -18,6 +18,7 @@
+ #include <linux/irq.h>
+ #include <linux/acpi.h>
  
-Index: linux-macro-pirq/arch/x86/lib/Makefile
-===================================================================
---- linux-macro-pirq.orig/arch/x86/lib/Makefile
-+++ linux-macro-pirq/arch/x86/lib/Makefile
-@@ -44,6 +44,7 @@ obj-$(CONFIG_SMP) += msr-smp.o cache-smp
- lib-y := delay.o misc.o cmdline.o cpu.o
- lib-y += usercopy_$(BITS).o usercopy.o getuser.o putuser.o
- lib-y += memcpy_$(BITS).o
-+lib-y += pc-conf-reg.o
- lib-$(CONFIG_ARCH_HAS_COPY_MC) += copy_mc.o copy_mc_64.o
- lib-$(CONFIG_INSTRUCTION_DECODER) += insn.o inat.o insn-eval.o
- lib-$(CONFIG_RANDOMIZE_BASE) += kaslr.o
-Index: linux-macro-pirq/arch/x86/lib/pc-conf-reg.c
-===================================================================
---- /dev/null
-+++ linux-macro-pirq/arch/x86/lib/pc-conf-reg.c
-@@ -0,0 +1,13 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Support for the configuration register space at port I/O locations
-+ * 0x22 and 0x23 variously used by PC architectures, e.g. the MP Spec,
-+ * Cyrix CPUs, numerous chipsets.  As the space is indirectly addressed
-+ * it may have to be protected with a spinlock, depending on the context.
-+ */
-+
-+#include <linux/spinlock.h>
-+
-+#include <asm/pc-conf-reg.h>
-+
-+DEFINE_RAW_SPINLOCK(pc_conf_lock);
++#include <asm/i8259.h>
+ #include <asm/pc-conf-reg.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -159,7 +160,7 @@ static void __init pirq_peer_trick(void)
+ void elcr_set_level_irq(unsigned int irq)
+ {
+ 	unsigned char mask = 1 << (irq & 7);
+-	unsigned int port = 0x4d0 + (irq >> 3);
++	unsigned int port = PIC_ELCR1 + (irq >> 3);
+ 	unsigned char val;
+ 	static u16 elcr_irq_mask;
+ 
