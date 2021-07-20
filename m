@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7903C07E9B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53EFBC636C8
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F3F2611CE
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:33:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 384E761001
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236844AbhGTWwu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jul 2021 18:52:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56779 "EHLO
+        id S231761AbhGTXBS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jul 2021 19:01:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32103 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236233AbhGTWrV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 18:47:21 -0400
+        by vger.kernel.org with ESMTP id S235067AbhGTWqS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 18:46:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626823677;
+        s=mimecast20190719; t=1626823615;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=tEPNOxkaSwVynI5bC9ITnmbjNbhpuULp2AY9Cx1gq1w=;
-        b=a/n+JuUB5hf98u8shmXO6KWpK0DRPrjTGkueaGN8LYDmHw4aLbSo+fiQsIXcB5IbS55XNO
-        kPbn1iFRBnN6SNw4mBrZpYRDvpdkxxW0PIcFLwsSErNR/xx2ivGjp3LN1Iu6eN75tP3hOm
-        fhapB+7nWwoA/dgM2cUAi+JTd0cUZJ4=
+        bh=Nhh0ybWcggmNFHzIxWUnjcT654bVMG/l5DZlZ7Mot4o=;
+        b=h9UvARjV+/P0fJHsTKYJnmJ0v7eVWhoexzR2DmySQQY7iPFLfApYrS1tQPimLKC40/6pnj
+        8cpjYIEMkgHKHQ2v/AQsdjxYDpyavG4UoewJZJJUNT9PZuRB/fcGgmSesx77/ISGQhW6Xu
+        8XqOaDlMYZv0MuQzwO7Me3UVE5M1zgU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-247-BA7Jin6zPPO1eS4usxWFSA-1; Tue, 20 Jul 2021 19:27:56 -0400
-X-MC-Unique: BA7Jin6zPPO1eS4usxWFSA-1
+ us-mta-229-_-xhb9uUOGux2J5_hNnWyw-1; Tue, 20 Jul 2021 19:26:54 -0400
+X-MC-Unique: _-xhb9uUOGux2J5_hNnWyw-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 04179100C618;
-        Tue, 20 Jul 2021 23:27:55 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C00EE100C610;
+        Tue, 20 Jul 2021 23:26:52 +0000 (UTC)
 Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6462B69CB4;
-        Tue, 20 Jul 2021 23:27:50 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A76B069FAD;
+        Tue, 20 Jul 2021 23:26:44 +0000 (UTC)
 From:   Nitesh Narayan Lal <nitesh@redhat.com>
 To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
@@ -72,9 +72,9 @@ To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
         _govind@gmx.com, kabel@kernel.org, viresh.kumar@linaro.org,
         Tushar.Khandelwal@arm.com, kuba@kernel.org
-Subject: [PATCH v5 14/14] net/mlx4: Use irq_update_affinity_hint
-Date:   Tue, 20 Jul 2021 19:26:24 -0400
-Message-Id: <20210720232624.1493424-15-nitesh@redhat.com>
+Subject: [PATCH v5 03/14] i40e: Use irq_update_affinity_hint
+Date:   Tue, 20 Jul 2021 19:26:13 -0400
+Message-Id: <20210720232624.1493424-4-nitesh@redhat.com>
 In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
 References: <20210720232624.1493424-1-nitesh@redhat.com>
 MIME-Version: 1.0
@@ -84,51 +84,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() to update the affinity_hint mask
-that is consumed by the userspace to distribute the interrupts. However,
-under the hood irq_set_affinity_hint() also applies the provided cpumask
-(if not NULL) as the affinity for the given interrupt which is an
-undocumented side effect.
+The driver uses irq_set_affinity_hint() for two purposes:
 
-To remove this side effect irq_set_affinity_hint() has been marked
-as deprecated and new interfaces have been introduced. Hence, replace the
-irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
-that only updates the affinity_hint pointer.
+- To set the affinity_hint which is consumed by the userspace for
+  distributing the interrupts
+
+- To apply an affinity that it provides for the i40e interrupts
+
+The latter is done to ensure that all the interrupts are evenly spread
+across all available CPUs. However, since commit a0c9259dc4e1 ("irq/matrix:
+Spread interrupts on allocation") the spreading of interrupts is
+dynamically performed at the time of allocation. Hence, there is no need
+for the drivers to enforce their own affinity for the spreading of
+interrupts.
+
+Also, irq_set_affinity_hint() applying the provided cpumask as an affinity
+for the interrupt is an undocumented side effect. To remove this side
+effect irq_set_affinity_hint() has been marked as deprecated and new
+interfaces have been introduced. Hence, replace the irq_set_affinity_hint()
+with the new interface irq_update_affinity_hint() that only sets the
+pointer for the affinity_hint.
 
 Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
-Reviewed-by: Tariq Toukan <tariqt@nvidia.com>
+Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
 ---
- drivers/net/ethernet/mellanox/mlx4/eq.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/intel/i40e/i40e_main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
-index 9e48509ed3b2..414e390e6b48 100644
---- a/drivers/net/ethernet/mellanox/mlx4/eq.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
-@@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
- 	    cpumask_empty(eq->affinity_mask))
- 		return;
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index 861e59a350bd..e2c525a6cab3 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -3873,10 +3873,10 @@ static int i40e_vsi_request_irq_msix(struct i40e_vsi *vsi, char *basename)
+ 		 *
+ 		 * get_cpu_mask returns a static constant mask with
+ 		 * a permanent lifetime so it's ok to pass to
+-		 * irq_set_affinity_hint without making a copy.
++		 * irq_update_affinity_hint without making a copy.
+ 		 */
+ 		cpu = cpumask_local_spread(q_vector->v_idx, -1);
+-		irq_set_affinity_hint(irq_num, get_cpu_mask(cpu));
++		irq_update_affinity_hint(irq_num, get_cpu_mask(cpu));
+ 	}
  
--	hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
-+	hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
- 	if (hint_err)
--		mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
-+		mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
- }
- #endif
+ 	vsi->irqs_ready = true;
+@@ -3887,7 +3887,7 @@ static int i40e_vsi_request_irq_msix(struct i40e_vsi *vsi, char *basename)
+ 		vector--;
+ 		irq_num = pf->msix_entries[base + vector].vector;
+ 		irq_set_affinity_notifier(irq_num, NULL);
+-		irq_set_affinity_hint(irq_num, NULL);
++		irq_update_affinity_hint(irq_num, NULL);
+ 		free_irq(irq_num, &vsi->q_vectors[vector]);
+ 	}
+ 	return err;
+@@ -4695,7 +4695,7 @@ static void i40e_vsi_free_irq(struct i40e_vsi *vsi)
+ 			/* clear the affinity notifier in the IRQ descriptor */
+ 			irq_set_affinity_notifier(irq_num, NULL);
+ 			/* remove our suggested affinity mask for this IRQ */
+-			irq_set_affinity_hint(irq_num, NULL);
++			irq_update_affinity_hint(irq_num, NULL);
+ 			synchronize_irq(irq_num);
+ 			free_irq(irq_num, vsi->q_vectors[i]);
  
-@@ -1123,9 +1123,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
- 	for (i = 0; i < dev->caps.num_comp_vectors + 1; ++i)
- 		if (eq_table->eq[i].have_irq) {
- 			free_cpumask_var(eq_table->eq[i].affinity_mask);
--#if defined(CONFIG_SMP)
--			irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
--#endif
-+			irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
- 			free_irq(eq_table->eq[i].irq, eq_table->eq + i);
- 			eq_table->eq[i].have_irq = 0;
- 		}
 -- 
 2.27.0
 
