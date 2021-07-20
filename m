@@ -2,121 +2,164 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD829C07E9B
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 739FCC636C9
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEA18610CC
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:08:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58FB2611EF
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 03:28:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234778AbhGTC1F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Jul 2021 22:27:05 -0400
-Received: from mail-il1-f169.google.com ([209.85.166.169]:35609 "EHLO
-        mail-il1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359656AbhGSVWA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 17:22:00 -0400
-Received: by mail-il1-f169.google.com with SMTP id a11so17437935ilf.2;
-        Mon, 19 Jul 2021 15:02:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=f1jPjrRlaCoGW6NcDg+XE1Qycqf9T6zQzCIsLWnTwZQ=;
-        b=GE7hs4aKssR+tkCZ2JdLeIsRsAPN6hDYNRJ3NaB0O/YuXKBJMzW4flKrJJoNVbAu+c
-         gKiH/95MU5l93sLt9JX2CiGKSTHfL0YjmoTAdUgofZY5rPcj4onCmufaErvN4hd8ghNh
-         rWVfvTiPBW93WBwbgEK1fC+Q+opfj94Ms0Rorzq/g/f0chqSgbBcV5f/XknYfq9CsLex
-         8xy4wh+J9JLR/unBHeH6l8Y7l24kA1z6v635284N0hVsx1fwF2IXrHnsdgs/Rmv010/p
-         f+ENTIQY7CD5WD7wWnJ/R8MztAawlhYWHz6+1yvUxCalT6cFAultsPQ+SbvaV2UmAYGC
-         Mq+Q==
-X-Gm-Message-State: AOAM533Nod60KTqSkrIhjmv1RiNmeLfBxfjZ5pBZdATuBnyUt5ZBr63d
-        UST1dpMhhuF7kEPOvKAEfw==
-X-Google-Smtp-Source: ABdhPJw7EeICoNwI7faYsy/ynAxnzY/CYjaXAly9aLu6w9Sr0yXeF9bmNozCXqaxmtS1LZg+Uz4WKw==
-X-Received: by 2002:a92:d706:: with SMTP id m6mr17728297iln.78.1626732154753;
-        Mon, 19 Jul 2021 15:02:34 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.248])
-        by smtp.gmail.com with ESMTPSA id o13sm10372829ilq.58.2021.07.19.15.02.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jul 2021 15:02:34 -0700 (PDT)
-Received: (nullmailer pid 2677074 invoked by uid 1000);
-        Mon, 19 Jul 2021 22:02:27 -0000
-Date:   Mon, 19 Jul 2021 16:02:27 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     linux-samsung-soc@vger.kernel.org,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        linux-kernel@vger.kernel.org, Palmer Dabbelt <palmer@dabbelt.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        mauro.chehab@huawei.com, Jonathan Hunter <jonathanh@nvidia.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        linux-amlogic@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        linux-omap@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        linux-arm-kernel@axis.com, Rob Herring <robh+dt@kernel.org>,
-        linux-tegra@vger.kernel.org, Andy Gross <agross@kernel.org>,
-        linux-riscv@lists.infradead.org,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        linux-arm-msm@vger.kernel.org,
-        Greentime Hu <greentime.hu@sifive.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Jonathan Chocron <jonnyc@amazon.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        devicetree@vger.kernel.org, Shawn Guo <shawnguo@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        linuxarm@huawei.com, Thierry Reding <thierry.reding@gmail.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: Re: [PATCH v5 3/5] dt-bindings: PCI: update references to Designware
- schema
-Message-ID: <20210719220227.GA2676918@robh.at.kernel.org>
-References: <cover.1626608375.git.mchehab+huawei@kernel.org>
- <dfff4d94631546c53450d1baeddc694dd26b5c36.1626608375.git.mchehab+huawei@kernel.org>
+        id S244953AbhGTCrk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Jul 2021 22:47:40 -0400
+Received: from angie.orcam.me.uk ([78.133.224.34]:60906 "EHLO
+        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242865AbhGTCr0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jul 2021 22:47:26 -0400
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 32C1C9200BC; Tue, 20 Jul 2021 05:28:04 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id 2B64C9200BB;
+        Tue, 20 Jul 2021 05:28:04 +0200 (CEST)
+Date:   Tue, 20 Jul 2021 05:28:04 +0200 (CEST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Nikolai Zhubr <zhubr.2@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Wanpeng Li <wanpengli@tencent.com>,
+        Jim Mattson <jmattson@google.com>,
+        Joerg Roedel <joro@8bytes.org>
+cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/6] x86/PCI: Add support for the Intel 82426EX PIRQ router
+In-Reply-To: <alpine.DEB.2.21.2107171813230.9461@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2107200213490.9461@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2107171813230.9461@angie.orcam.me.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dfff4d94631546c53450d1baeddc694dd26b5c36.1626608375.git.mchehab+huawei@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 18 Jul 2021 13:40:50 +0200, Mauro Carvalho Chehab wrote:
-> Now that its contents were converted to a DT schema, replace
-> the references for the old file on existing properties.
-> 
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-> ---
->  .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  4 ++--
->  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |  2 +-
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  2 +-
->  .../bindings/pci/hisilicon-histb-pcie.txt          |  2 +-
->  .../devicetree/bindings/pci/kirin-pcie.txt         |  2 +-
->  .../devicetree/bindings/pci/layerscape-pci.txt     |  2 +-
->  .../bindings/pci/nvidia,tegra194-pcie.txt          |  5 +++--
->  .../devicetree/bindings/pci/pci-armada8k.txt       |  2 +-
->  Documentation/devicetree/bindings/pci/pcie-al.txt  |  2 +-
->  .../devicetree/bindings/pci/qcom,pcie.txt          | 14 +++++++-------
->  .../bindings/pci/samsung,exynos-pcie.yaml          |  4 ++--
->  .../devicetree/bindings/pci/sifive,fu740-pcie.yaml |  4 ++--
->  .../bindings/pci/socionext,uniphier-pcie-ep.yaml   |  4 ++--
->  Documentation/devicetree/bindings/pci/ti-pci.txt   |  4 ++--
->  .../devicetree/bindings/pci/uniphier-pcie.txt      |  2 +-
->  15 files changed, 28 insertions(+), 27 deletions(-)
-> 
+The Intel 82426EX ISA Bridge (IB), a part of the Intel 82420EX PCIset, 
+implements PCI interrupt steering with a PIRQ router in the form of two 
+PIRQ Route Control registers, available in the PCI configuration space 
+at locations 0x66 and 0x67 for the PIRQ0# and PIRQ1# lines respectively.
 
-Applied, thanks!
+The semantics is the same as with the PIIX router, however it is not
+clear if BIOSes use register indices or line numbers as the cookie to
+identify PCI interrupts in their routing tables and therefore support
+either scheme.
+
+The IB is directly attached to the Intel 82425EX PCI System Controller 
+(PSC) component of the chipset via a dedicated PSC/IB Link interface 
+rather than the host bus or PCI.  Therefore it does not itself appear in 
+the PCI configuration space even though it responds to configuration 
+cycles addressing registers it implements.  Use 82425EX's identification 
+then for determining the presence of the IB.
+
+References:
+
+[1] "82420EX PCIset Data Sheet, 82425EX PCI System Controller (PSC) and 
+    82426EX ISA Bridge (IB)", Intel Corporation, Order Number: 
+    290488-004, December 1995, Section 3.3.18 "PIRQ1RC/PIRQ0RC--PIRQ 
+    Route Control Registers", p. 61
+
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+---
+ arch/x86/pci/irq.c      |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h |    1 
+ 2 files changed, 50 insertions(+)
+
+linux-x86-pirq-router-ib.diff
+Index: linux-macro-pirq/arch/x86/pci/irq.c
+===================================================================
+--- linux-macro-pirq.orig/arch/x86/pci/irq.c
++++ linux-macro-pirq/arch/x86/pci/irq.c
+@@ -447,6 +447,50 @@ static int pirq_piix_set(struct pci_dev
+ }
+ 
+ /*
++ *	PIRQ routing for the 82426EX ISA Bridge (IB) ASIC used with the
++ *	Intel 82420EX PCIset.
++ *
++ *	There are only two PIRQ Route Control registers, available in the
++ *	combined 82425EX/82426EX PCI configuration space, at 0x66 and 0x67
++ *	for the PIRQ0# and PIRQ1# lines respectively.  The semantics is
++ *	the same as with the PIIX router.
++ *
++ *	References:
++ *
++ *	"82420EX PCIset Data Sheet, 82425EX PCI System Controller (PSC)
++ *	and 82426EX ISA Bridge (IB)", Intel Corporation, Order Number:
++ *	290488-004, December 1995
++ */
++
++#define PCI_I82426EX_PIRQ_ROUTE_CONTROL	0x66u
++
++static int pirq_ib_get(struct pci_dev *router, struct pci_dev *dev, int pirq)
++{
++	int reg;
++	u8 x;
++
++	reg = pirq;
++	if (reg >= 1 && reg <= 2)
++		reg += PCI_I82426EX_PIRQ_ROUTE_CONTROL - 1;
++
++	pci_read_config_byte(router, reg, &x);
++	return (x < 16) ? x : 0;
++}
++
++static int pirq_ib_set(struct pci_dev *router, struct pci_dev *dev, int pirq,
++		       int irq)
++{
++	int reg;
++
++	reg = pirq;
++	if (reg >= 1 && reg <= 2)
++		reg += PCI_I82426EX_PIRQ_ROUTE_CONTROL - 1;
++
++	pci_write_config_byte(router, reg, irq);
++	return 1;
++}
++
++/*
+  * The VIA pirq rules are nibble-based, like ALI,
+  * but without the ugly irq number munging.
+  * However, PIRQD is in the upper instead of lower 4 bits.
+@@ -892,6 +936,11 @@ static __init int intel_router_probe(str
+ 		r->get = pirq_piix_get;
+ 		r->set = pirq_piix_set;
+ 		return 1;
++	case PCI_DEVICE_ID_INTEL_82425:
++		r->name = "PSC/IB";
++		r->get = pirq_ib_get;
++		r->set = pirq_ib_set;
++		return 1;
+ 	}
+ 
+ 	if ((device >= PCI_DEVICE_ID_INTEL_5_3400_SERIES_LPC_MIN && 
+Index: linux-macro-pirq/include/linux/pci_ids.h
+===================================================================
+--- linux-macro-pirq.orig/include/linux/pci_ids.h
++++ linux-macro-pirq/include/linux/pci_ids.h
+@@ -2644,6 +2644,7 @@
+ #define PCI_DEVICE_ID_INTEL_82375	0x0482
+ #define PCI_DEVICE_ID_INTEL_82424	0x0483
+ #define PCI_DEVICE_ID_INTEL_82378	0x0484
++#define PCI_DEVICE_ID_INTEL_82425	0x0486
+ #define PCI_DEVICE_ID_INTEL_MRST_SD0	0x0807
+ #define PCI_DEVICE_ID_INTEL_MRST_SD1	0x0808
+ #define PCI_DEVICE_ID_INTEL_MFD_SD	0x0820
