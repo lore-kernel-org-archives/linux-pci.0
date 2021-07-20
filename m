@@ -2,194 +2,188 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD49C07E95
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 12:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F78C07E9B
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 13:48:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B90C61165
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 12:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 053216113A
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 13:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229944AbhGTMQw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jul 2021 08:16:52 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:12230 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229631AbhGTMQt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 08:16:49 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GTdrV452mz1CLPX;
-        Tue, 20 Jul 2021 20:51:38 +0800 (CST)
-Received: from dggpemm500002.china.huawei.com (7.185.36.229) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 20 Jul 2021 20:57:24 +0800
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- dggpemm500002.china.huawei.com (7.185.36.229) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 20 Jul 2021 20:57:23 +0800
-From:   Xiongfeng Wang <wangxiongfeng2@huawei.com>
-To:     <bhelgaas@google.com>, <keith.busch@intel.com>, <lukas@wunner.de>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <wangxiongfeng2@huawei.com>
-Subject: [PATCH] PCI/sysfs: Take reference on device to be removed
-Date:   Tue, 20 Jul 2021 21:04:00 +0800
-Message-ID: <20210720130400.49153-1-wangxiongfeng2@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S238930AbhGTNH4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jul 2021 09:07:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32770 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239056AbhGTNGg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 09:06:36 -0400
+Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46772C0613E8;
+        Tue, 20 Jul 2021 06:46:40 -0700 (PDT)
+Received: by mail-io1-xd33.google.com with SMTP id x10so23986966ion.9;
+        Tue, 20 Jul 2021 06:46:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=thGMbJJZ1ZuhHFpa40ihsNvSFL+Lp/KJuygOWQUDDHk=;
+        b=B3jHVJ684EyY62l1Ktt/FYbeUJEkstzc7G/JT+14006HJWgNy0Eplk1QYcQ7uxfakk
+         ekgx71Q0/MMAxxhPeJs0dNkfgIvv/qRKQOo+VZoUwnPFviSWaGhBXDkcNjNczTQm49IB
+         3i4KLR2/rZqRUFhc0AnjjXmtCelN0ppTvKvS9ev8TcwFiPtNIwPo6pf+EL2ncTTHsh6M
+         4IpmBk8cTeiGM0i64WQled86nIixLTcvz6BOoSHmXTbMa5yxZBz4JITs81dZUdSesYNz
+         QnxIbETLqIZZA0RJ9K1pf6ZzfR+bXwXCau8bAvs/JlGnsX5WSh4dCngSfe1w8DjrcYNY
+         F+Tw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=thGMbJJZ1ZuhHFpa40ihsNvSFL+Lp/KJuygOWQUDDHk=;
+        b=WJeCWVmk27+kUqaEyIUJNuzPLUvD9JXRfSklnIZU+i6QhjepAl9NugaCjNqES9H1m5
+         WSKpq8ytzd6fOtWDeri2lYBUL8f8TrrliVwFSqJ55LLYvrOAwLpQWLVBD9BhjcMyctW3
+         ThlZoAFGHd6GGgpWAuP7iFA3PcM+QjlXlUF28mqXwTzmeDo9Qi545xIxLi2hlUcnQ0x9
+         NYfgt7TTSaNoIrjvGAZRnMa2z8y1kOE6WJVV82D4rznakQQchHjq+GK7nmN9FbkoEoaj
+         LTPZ7XbyCC6tjVvvrckNnECHb09XCQhYPFQByoWNq4OoNn0CXMGh+zCmZHONNpdiPRsF
+         /YwA==
+X-Gm-Message-State: AOAM5327rm+2nCrs1Ei9Y6r/CT4yc8yANWIbJN60i576GMrTTWmmeAcH
+        KsXqAVw7Ziax+xneXyGvEEQ=
+X-Google-Smtp-Source: ABdhPJylVA1+R92dqNID8oGrh4/2MwKva9nl457AalJWCWLlYBql922UKD7Zb3NtxRxWBMC+x8Yluw==
+X-Received: by 2002:a02:cc19:: with SMTP id n25mr26570131jap.140.1626788800118;
+        Tue, 20 Jul 2021 06:46:40 -0700 (PDT)
+Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
+        by smtp.gmail.com with ESMTPSA id t24sm12665726ioh.24.2021.07.20.06.46.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Jul 2021 06:46:39 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailauth.nyi.internal (Postfix) with ESMTP id BD11D27C005A;
+        Tue, 20 Jul 2021 09:46:38 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute4.internal (MEProxy); Tue, 20 Jul 2021 09:46:38 -0400
+X-ME-Sender: <xms:vtP2YKId4_HPKBlGZeos6K9uTFDq9dodvwmmmasd0gZ2qGwsDnAFTA>
+    <xme:vtP2YCJGoR9MKAZVDe-ed4uYffu5FBzjjZr3bvMpkohWJE3AQRV_3ax54_8GhsLbu
+    rsIH6HVFAO9EnzEtg>
+X-ME-Received: <xmr:vtP2YKvAZXdJqnyWce_pA9qPP_z78doDAfYHlNw10HyC6G1fn7Kgrjx9Qvg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrfedvgdeikecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefhvffufffkofgjfhgggfestdekredtredttdenucfhrhhomhepuehoqhhunhcu
+    hfgvnhhguceosghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmqeenucggtffrrghtth
+    gvrhhnpeehvdevteefgfeiudettdefvedvvdelkeejueffffelgeeuhffhjeetkeeiueeu
+    leenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepmhgrihhlfhhrohhmpegsoh
+    hquhhnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedq
+    udejjeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmh
+    gvrdhnrghmvg
+X-ME-Proxy: <xmx:vtP2YPYW9G36XbcALIarPtWn1O0gBCm8ZZeSxp1jTtYYek52Eq08vw>
+    <xmx:vtP2YBaPmthV7geDso9bMWBjJHr84dO-spdU1ew88b8wg52BdyeF4w>
+    <xmx:vtP2YLBMi5PYCRn4FPz-fZT-WfJEZ_BnxdEKSLEHOIPP00vMgz6S_g>
+    <xmx:vtP2YOT8kRph40HvWghVCaUQr3Z8E7XqrB_ku_w1FiayUsrNxKBv8g0eMg4>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 20 Jul 2021 09:46:38 -0400 (EDT)
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Boqun Feng <boqun.feng@gmail.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        Sunil Muthuswamy <sunilmut@microsoft.com>,
+        Mike Rapoport <rppt@kernel.org>
+Subject: [RFC v5 7/8] PCI: hv: Set up MSI domain at bridge probing time
+Date:   Tue, 20 Jul 2021 21:44:28 +0800
+Message-Id: <20210720134429.511541-8-boqun.feng@gmail.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210720134429.511541-1-boqun.feng@gmail.com>
+References: <20210720134429.511541-1-boqun.feng@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500002.china.huawei.com (7.185.36.229)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When I do some aer-inject and sysfs remove stress tests, I got the
-following use-after-free Calltrace:
+Since PCI_HYPERV depends on PCI_MSI_IRQ_DOMAIN which selects
+GENERIC_MSI_IRQ_DOMAIN, we can use dev_set_msi_domain() to set up the
+MSI domain at probing time, and this works for both x86 and ARM64.
 
- ==================================================================
- BUG: KASAN: use-after-free in pci_stop_bus_device+0x174/0x178
- Read of size 8 at addr fffffc3e2e402218 by task bash/26311
+Therefore use it as the preparation for ARM64 Hyper-V PCI support.
 
- CPU: 38 PID: 26311 Comm: bash Tainted: G        W         4.19.105+ #82
- Hardware name: Huawei TaiShan 2280 V2/BC82AMDC, BIOS 2280-V2 CS V5.B161.01 06/10/2021
- Call trace:
-  dump_backtrace+0x0/0x360
-  show_stack+0x24/0x30
-  dump_stack+0x130/0x164
-  print_address_description+0x68/0x278
-  kasan_report+0x204/0x330
-  __asan_report_load8_noabort+0x30/0x40
-  pci_stop_bus_device+0x174/0x178
-  pci_stop_and_remove_bus_device_locked+0x24/0x40
-  remove_store+0x1c8/0x1e0
-  dev_attr_store+0x60/0x80
-  sysfs_kf_write+0x104/0x170
-  kernfs_fop_write+0x23c/0x430
-  __vfs_write+0xec/0x4e0
-  vfs_write+0x12c/0x3d0
-  ksys_write+0xe8/0x208
-  __arm64_sys_write+0x70/0xa0
-  el0_svc_common+0x10c/0x450
-  el0_svc_handler+0x50/0xc0
-  el0_svc+0x10/0x14
+As a result, no longer need to maintain ->fwnode in x86 specific
+pci_sysdata, and make hv_pcibus_device own it instead.
 
- Allocated by task 684:
-  kasan_kmalloc+0xe0/0x190
-  kmem_cache_alloc_trace+0x110/0x240
-  pci_alloc_dev+0x4c/0x110
-  pci_scan_single_device+0x100/0x218
-  pci_scan_slot+0x8c/0x2d8
-  pci_scan_child_bus_extend+0x90/0x628
-  pci_scan_child_bus+0x24/0x30
-  pci_scan_bridge_extend+0x3b8/0xb28
-  pci_scan_child_bus_extend+0x350/0x628
-  pci_rescan_bus+0x24/0x48
-  pcie_do_fatal_recovery+0x390/0x4b0
-  handle_error_source+0x124/0x158
-  aer_isr+0x5a0/0x800
-  process_one_work+0x598/0x1250
-  worker_thread+0x384/0xf08
-  kthread+0x2a4/0x320
-  ret_from_fork+0x10/0x18
-
- Freed by task 685:
-  __kasan_slab_free+0x120/0x228
-  kasan_slab_free+0x10/0x18
-  kfree+0x88/0x218
-  pci_release_dev+0xb4/0xd8
-  device_release+0x6c/0x1c0
-  kobject_put+0x12c/0x400
-  put_device+0x24/0x30
-  pci_dev_put+0x24/0x30
-  handle_error_source+0x12c/0x158
-  aer_isr+0x5a0/0x800
-  process_one_work+0x598/0x1250
-  worker_thread+0x384/0xf08
-  kthread+0x2a4/0x320
-  ret_from_fork+0x10/0x18
-
- The buggy address belongs to the object at fffffc3e2e402200
-  which belongs to the cache kmalloc-4096 of size 4096
- The buggy address is located 24 bytes inside of
-  4096-byte region [fffffc3e2e402200, fffffc3e2e403200)
- The buggy address belongs to the page:
- page:ffff7ff0f8b90000 count:1 mapcount:0 mapping:ffffdc365f016e00 index:0x0 compound_mapcount: 0
- flags: 0x6ffffe0000008100(slab|head)
- raw: 6ffffe0000008100 ffff7f70d83aae00 0000000300000003 ffffdc365f016e00
- raw: 0000000000000000 0000000080070007 00000001ffffffff 0000000000000000
- page dumped because: kasan: bad access detected
-
- Memory state around the buggy address:
-  fffffc3e2e402100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  fffffc3e2e402180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- >fffffc3e2e402200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                             ^
-  fffffc3e2e402280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-  fffffc3e2e402300: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ==================================================================
-
-It is caused by the following race condition:
-
-	CPU0					CPU1
-remove_store()				aer_isr()
- device_remove_file_self()		 handle_error_source()
- pci_stop_and_remove_bus_device_locked	  pcie_do_fatal_recovery()
-  (blocked)				   pci_lock_rescan_remove()	#CPU1 acquire the lock
-					   pci_stop_and_remove_bus_device()
-					   pci_unlock_rescan_remove()   #CPU1 release the lock
-  pci_lock_rescan_remove()						#CPU0 acquire the lock
-					  pci_dev_put()			#free pci_dev
-  pci_stop_and_remove_bus_device()
-   pci_stop_bus_device()						#use-after-free
-  pci_unlock_rescan_remove()
-
-An AER interrupt is triggered on CPU1. CPU1 starts to process it. A work
-'aer_isr()' is scheduled on CPU1. It calling into
-pcie_do_fatal_recovery(), and aquire lock 'pci_rescan_remove_lock'.
-Before it removes the sysfs corresponding to the error pci device, a
-sysfs remove operation is executed on CPU0. CPU0 use
-device_remove_file_self() to remove the sysfs directory and wait for the
-lock to be released. After CPU1 finish pci_stop_and_remove_bus_device(),
-it release the lock and free the 'pci_dev' in pci_dev_put(). CPU0 acquire
-the lock and access the 'pci_dev'. Then a use-after-free is triggered.
-
-To fix this issue, we increase the reference count in remove_store()
-before remove the device and decrease the reference count in the end.
-
-Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
 ---
- drivers/pci/pci-sysfs.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-hyperv.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 5d63df7c1820..2188e0c637fc 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -462,13 +462,17 @@ static struct device_attribute dev_attr_dev_rescan = __ATTR(rescan, 0200, NULL,
- static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 			    const char *buf, size_t count)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 5741b1dd3c14..e6276aaa4659 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -450,6 +450,7 @@ enum hv_pcibus_state {
+ struct hv_pcibus_device {
+ 	struct pci_sysdata sysdata;
+ 	struct pci_host_bridge *bridge;
++	struct fwnode_handle *fwnode;
+ 	/* Protocol version negotiated with the host */
+ 	enum pci_protocol_version_t protocol_version;
+ 	enum hv_pcibus_state state;
+@@ -1565,7 +1566,7 @@ static int hv_pcie_init_irq_domain(struct hv_pcibus_device *hbus)
+ 	hbus->msi_info.handler = handle_edge_irq;
+ 	hbus->msi_info.handler_name = "edge";
+ 	hbus->msi_info.data = hbus;
+-	hbus->irq_domain = pci_msi_create_irq_domain(hbus->sysdata.fwnode,
++	hbus->irq_domain = pci_msi_create_irq_domain(hbus->fwnode,
+ 						     &hbus->msi_info,
+ 						     x86_vector_domain);
+ 	if (!hbus->irq_domain) {
+@@ -1574,6 +1575,8 @@ static int hv_pcie_init_irq_domain(struct hv_pcibus_device *hbus)
+ 		return -ENODEV;
+ 	}
  
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
-+	pci_dev_get(pdev);
- 	if (val && device_remove_file_self(dev, attr))
--		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
-+		pci_stop_and_remove_bus_device_locked(pdev);
-+	pci_dev_put(pdev);
++	dev_set_msi_domain(&hbus->bridge->dev, hbus->irq_domain);
 +
- 	return count;
+ 	return 0;
  }
- static DEVICE_ATTR_IGNORE_LOCKDEP(remove, 0220, NULL,
+ 
+@@ -3118,9 +3121,9 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 		goto unmap;
+ 	}
+ 
+-	hbus->sysdata.fwnode = irq_domain_alloc_named_fwnode(name);
++	hbus->fwnode = irq_domain_alloc_named_fwnode(name);
+ 	kfree(name);
+-	if (!hbus->sysdata.fwnode) {
++	if (!hbus->fwnode) {
+ 		ret = -ENOMEM;
+ 		goto unmap;
+ 	}
+@@ -3198,7 +3201,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ free_irq_domain:
+ 	irq_domain_remove(hbus->irq_domain);
+ free_fwnode:
+-	irq_domain_free_fwnode(hbus->sysdata.fwnode);
++	irq_domain_free_fwnode(hbus->fwnode);
+ unmap:
+ 	iounmap(hbus->cfg_addr);
+ free_config:
+@@ -3314,7 +3317,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 	hv_free_config_window(hbus);
+ 	hv_pci_free_bridge_windows(hbus);
+ 	irq_domain_remove(hbus->irq_domain);
+-	irq_domain_free_fwnode(hbus->sysdata.fwnode);
++	irq_domain_free_fwnode(hbus->fwnode);
+ 
+ 	hv_put_dom_num(hbus->bridge->domain_nr);
+ 
 -- 
-2.20.1
+2.30.2
 
