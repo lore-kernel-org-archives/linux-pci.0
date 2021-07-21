@@ -2,212 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15C22C636C9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B11C636CE
 	for <linux-pci@archiver.kernel.org>; Wed, 21 Jul 2021 09:01:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F20A460C40
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Jul 2021 09:01:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D8D46124B
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Jul 2021 09:01:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237184AbhGUIUa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Jul 2021 04:20:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50204 "EHLO mail.kernel.org"
+        id S236865AbhGUIUf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Jul 2021 04:20:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53844 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237042AbhGUH77 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 21 Jul 2021 03:59:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7008660D07;
-        Wed, 21 Jul 2021 08:39:19 +0000 (UTC)
+        id S237454AbhGUIOX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 21 Jul 2021 04:14:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3116E6101E;
+        Wed, 21 Jul 2021 08:54:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626856759;
-        bh=Qq1imSQJcW+JM2nPOv5o8/qLfHa/MxqP6bvtnPhpMCo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=hU4hNYT+8MFbXA+BTSuShi3SLjQNCMAiHF31H+H9FPuocqkjhSoCZMfN8Uo0c/6mp
-         hKMNBQ7iCGlHjdGzJL+FyNh0AtQQdtbgaIAYfOGVTO0+1sLp6YFfv1XbUMgz5ncgoX
-         sKOMKvi+DHZsVu5dcFa0I7X36275ujGS6CGhucRskdnkdD3M3wfXtv4o6Ihn0fqI/y
-         pjuzUmqWEoG4zvLYp3+8P91X9rmaul476JUlWzjEr8zkfEz1UFQIOPWQ5BB91mQgiS
-         VXe/bPKTr9cJp/Puq4kGg4EIpHReGWA4YgeQseQM5d01uCnOnB8eeGMaV2wejNSs7I
-         nkUhMQW0QsaqA==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1m67l5-0022dG-66; Wed, 21 Jul 2021 10:39:15 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: [PATCH v7 00/10] Add support for Hikey 970 PCIe
-Date:   Wed, 21 Jul 2021 10:39:02 +0200
-Message-Id: <cover.1626855713.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        s=k20201202; t=1626857696;
+        bh=kd+4dTdc2/L0vdJ20rKYVTfc7Q/zfKE6gLw9cC1PYtE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aWLz2Phc1fiyB0bLMX+hR88Rgg/HKiYl+O1AE0G5MWYJb9vhW5zQIOCwqdc9nYdDj
+         3TPW1YCfTKcnWELCxXofDyVMsY4m4s6MVuyVpZIIa80/xnSrlHACctpiFLeL7Ip8os
+         XUcEXwWtRfTZ2xQInRVlTy88UNLlVYUos2FW7wUTMwBJKpbJTs2rLZOKWGyJ39RGQ8
+         RaC+ogT/QA0jM4rJQQ/xP4jzvq/emEmJojtKCIJOkaS71hl1cPpD7wS0fZ5wQXBVDP
+         Nm/f+nKTEA+aJLymWlV+Zhy+Da+AtezBWzL5TT/WwDMGKFigyTEUz0PH06dFNgpdvm
+         Jeo1pV9YtJsWQ==
+Received: by pali.im (Postfix)
+        id A6A8779B; Wed, 21 Jul 2021 10:54:53 +0200 (CEST)
+Date:   Wed, 21 Jul 2021 10:54:53 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
+        Ingmar Klein <ingmar_klein@web.de>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: QCA6174 pcie wifi: Add pci quirks
+Message-ID: <20210721085453.aqd73h22j6clzcfs@pali>
+References: <20210415195338.icpo5644bo76rzuc@pali>
+ <20210525221215.GA1235899@bjorn-Precision-5520>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+In-Reply-To: <20210525221215.GA1235899@bjorn-Precision-5520>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series depends on this one:
-	https://lore.kernel.org/lkml/cover.1626515862.git.mchehab+huawei@kernel.org/
+On Tuesday 25 May 2021 17:12:15 Bjorn Helgaas wrote:
+> On Thu, Apr 15, 2021 at 09:53:38PM +0200, Pali Rohár wrote:
+> > Hello!
+> > 
+> > On Thursday 15 April 2021 13:01:19 Alex Williamson wrote:
+> > > [cc +Pali]
+> > > 
+> > > On Thu, 15 Apr 2021 20:02:23 +0200
+> > > Ingmar Klein <ingmar_klein@web.de> wrote:
+> > > 
+> > > > First thanks to you both, Alex and Bjorn!
+> > > > I am in no way an expert on this topic, so I have to fully rely on your
+> > > > feedback, concerning this issue.
+> > > > 
+> > > > If you should have any other solution approach, in form of patch-set, I
+> > > > would be glad to test it out. Just let me know, what you think might
+> > > > make sense.
+> > > > I will wait for your further feedback on the issue. In the meantime I
+> > > > have my current workaround via quirk entry.
+> > > > 
+> > > > By the way, my layman's question:
+> > > > Do you think, that the following topic might also apply for the QCA6174?
+> > > > https://www.spinics.net/lists/linux-pci/msg106395.html
+> > 
+> > I have been testing more ath cards and I'm going to send a new version
+> > of this patch with including more PCI ids.
+> 
+> Dropping this patch in favor of Pali's new version.
 
-It is available, with its patch dependencies against v5.14-rc1 at:
-	https://github.com/mchehab/linux/commits/pcie-alternate
-
-This series add support at the pcie-kirin dirver for it to use a separate PHY driver.
-
-Yet, in order to preserve the existing DT schema for Kirin 960, it keeps the
-Kirin 960 PHY inside the pci driver. I tried to find a way to split it while keeping
-the DT schema backward-compatible, but currently the PHY core doesn't allow
-that, as it relies on a "phy" property at the pcie node in order to recognize the
-PHY driver.
-
-Once the pci-kiring is modified to support an external PHY driver, add a
-Kirin 970 PHY and add the needed properties for the HiKey 970 board to
-detect the PCIe.
-
-It should be noticed that the HiKey 970 design uses 4 different GPIO pins, one 
-for each PERST# signal for each PCIe bus device:
-
-    - GPIO 56 has a pullup logic from 1V8 to 2V5
-      connected to a PCIe bridge chip (PEX 8606);
-    - GPIO 25 has a pullup logic from 1V8 to 3V3
-      connected to the PERST# pin at the M.2 slot;
-    - GPIO 220 has a pullup logic from 1V8 to 3V3
-      connected to the PERST# pin at the PCIe mini slot;
-    - GPIO 203 has a pullup logic from 1V8 to 3V3
-      connected to the PERST# pin at the Ethernet chipset.
-
-At the first versions, those were mapped as part of the pci-bus, but the
-pci-bus.yaml schema only allows a single PERST# GPIO. So, on v5, those
-were moved to the PHY DT schema. However, as Rob complained, on this
-version, I opted to add a separate patch (the last one) that moves those
-back to the PCIe of-node. 
-
-If such patch 09/09 is accepted, then this patch for the DT schema should 
-also be accepted:
-
-   https://github.com/devicetree-org/dt-schema/pull/56
-
-Tested on Hikey970:
-
-  $ lspci
-  00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-  01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-
-  $ ethtool enp6s0
-  Settings for enp6s0:
-	Supported ports: [ TP	 MII ]
-	Supported link modes:   10baseT/Half 10baseT/Full
-	                        100baseT/Half 100baseT/Full
-	                        1000baseT/Half 1000baseT/Full
-	Supported pause frame use: Symmetric Receive-only
-	Supports auto-negotiation: Yes
-	Supported FEC modes: Not reported
-	Advertised link modes:  10baseT/Half 10baseT/Full
-	                        100baseT/Half 100baseT/Full
-	                        1000baseT/Half 1000baseT/Full
-	Advertised pause frame use: Symmetric Receive-only
-	Advertised auto-negotiation: Yes
-	Advertised FEC modes: Not reported
-	Link partner advertised link modes:  10baseT/Half 10baseT/Full
-	                                     100baseT/Half 100baseT/Full
-	Link partner advertised pause frame use: Symmetric Receive-only
-	Link partner advertised auto-negotiation: Yes
-	Link partner advertised FEC modes: Not reported
-	Speed: 100Mb/s
-	Duplex: Full
-	Auto-negotiation: on
-	master-slave cfg: preferred slave
-	master-slave status: slave
-	Port: Twisted Pair
-	PHYAD: 0
-	Transceiver: external
-	MDI-X: Unknown
-  netlink error: Operation not permitted
-	Link detected: yes
-
-Also tested  that Hikey 960 keeps being supported:
-
-  $ lspci
-  00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
-
----
-
-v7:
-- Moved kirin_pcie_match to be closer to the probe function;
-- Improved patch description for:
-	"PCI: kirin: add support for a PHY layer"
-- Added missing MODULE_*() macros on both PCI and PHY drivers;
-- Fixed a warning at hisilicon,phy-hi3670-pcie.yaml reported by
-  Rob Herring's bot.
-
-v6:
-- Use an alternative approach, in order to keep the Kirin 960 PHY internal to 
-  the driver, in order to not break the DT schema. The PHY-specific code
-  were made self-contained at pcie-kirin, in order to make easier to split
-  it in the future, if needed.
-
-v5:
-- added "static" to hi3670_pcie_get_eyeparam() declaration on patch 6/8
-
-v4:
-
-- dropped the DTS patch, as it depends on a PMIC-related patch series;
-- minor changes at the patch description;
-- HiKey and HiSilicon are now using the preferred CamelCase format.
-
-
-Manivannan Sadhasivam (1):
-  arm64: dts: HiSilicon: Add support for HiKey 970 PCIe controller
-    hardware
-
-Mauro Carvalho Chehab (9):
-  PCI: kirin: Reorganize the PHY logic inside the driver
-  PCI: kirin: Add support for a PHY layer
-  PCI: kirin: Use regmap for APB registers
-  PCI: kirin: Add MODULE_* macros
-  dt-bindings: PCI: kirin: Fix compatible string
-  dt-bindings: phy: Add bindings for HiKey 970 PCIe PHY
-  phy: HiSilicon: Add driver for Kirin 970 PCIe PHY
-  dt-bindings: PCI: kirin-pcie.txt: Convert it to yaml
-  phy-hi3670-pcie: Move reset-gpios to the PCIe DT schema
-
- .../bindings/pci/hisilicon,kirin-pcie.yaml    |  87 ++
- .../devicetree/bindings/pci/kirin-pcie.txt    |  50 -
- .../devicetree/bindings/pci/snps,dw-pcie.yaml |   2 +-
- .../phy/hisilicon,phy-hi3670-pcie.yaml        |  88 ++
- MAINTAINERS                                   |   2 +-
- arch/arm64/boot/dts/hisilicon/hi3670.dtsi     |  70 ++
- .../boot/dts/hisilicon/hikey970-pmic.dtsi     |   1 -
- drivers/pci/controller/dwc/pcie-kirin.c       | 413 +++++---
- drivers/phy/hisilicon/Kconfig                 |  10 +
- drivers/phy/hisilicon/Makefile                |   1 +
- drivers/phy/hisilicon/phy-hi3670-pcie.c       | 902 ++++++++++++++++++
- 11 files changed, 1429 insertions(+), 197 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
- delete mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/hisilicon,phy-hi3670-pcie.yaml
- create mode 100644 drivers/phy/hisilicon/phy-hi3670-pcie.c
-
--- 
-2.31.1
-
-
+Hello Bjorn! Seems that it would take much more time to finish my
+version of patch. So could you take Ingmar's patch with cc:stable tag
+for now, which just adds PCI device id into list of problematic devices?
