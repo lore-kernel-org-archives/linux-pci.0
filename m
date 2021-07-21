@@ -2,150 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53EFBC636C8
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF069C636C8
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Jul 2021 00:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 384E761001
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jul 2021 23:42:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D13E06101B
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Jul 2021 00:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231761AbhGTXBS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jul 2021 19:01:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32103 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235067AbhGTWqS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jul 2021 18:46:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626823615;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Nhh0ybWcggmNFHzIxWUnjcT654bVMG/l5DZlZ7Mot4o=;
-        b=h9UvARjV+/P0fJHsTKYJnmJ0v7eVWhoexzR2DmySQQY7iPFLfApYrS1tQPimLKC40/6pnj
-        8cpjYIEMkgHKHQ2v/AQsdjxYDpyavG4UoewJZJJUNT9PZuRB/fcGgmSesx77/ISGQhW6Xu
-        8XqOaDlMYZv0MuQzwO7Me3UVE5M1zgU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-229-_-xhb9uUOGux2J5_hNnWyw-1; Tue, 20 Jul 2021 19:26:54 -0400
-X-MC-Unique: _-xhb9uUOGux2J5_hNnWyw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C00EE100C610;
-        Tue, 20 Jul 2021 23:26:52 +0000 (UTC)
-Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A76B069FAD;
-        Tue, 20 Jul 2021 23:26:44 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com, nilal@redhat.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
-        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
-        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
-        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        _govind@gmx.com, kabel@kernel.org, viresh.kumar@linaro.org,
-        Tushar.Khandelwal@arm.com, kuba@kernel.org
-Subject: [PATCH v5 03/14] i40e: Use irq_update_affinity_hint
-Date:   Tue, 20 Jul 2021 19:26:13 -0400
-Message-Id: <20210720232624.1493424-4-nitesh@redhat.com>
-In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
-References: <20210720232624.1493424-1-nitesh@redhat.com>
+        id S235185AbhGTXXW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jul 2021 19:23:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57496 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232511AbhGTXWR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 20 Jul 2021 19:22:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3CDDF610A7;
+        Wed, 21 Jul 2021 00:02:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626825774;
+        bh=4X+MY49rjryZvvRXxK8ssEFNb0cXmxMn4lOtd87aZxE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=rjFCPPAdZPh9XywpEjPFp6/MIt1SRmKb5g6mNv8Qah2yKKjraFf0D5cupzLRnaBDZ
+         iSb52ue3lJRevQ6sHJQQScfm2HPFuPMjxXvzAzY2HGde07Rj1BkgrmABQ9idiabfQk
+         gp4NDCokkL07DuidcKWgCel+Tt2jwVoy9Pq2sOhnStErhuBL9bfomg5nLg5b5ei7hm
+         oCAe4vmUYe5ptudQD8TfnMvw857nIQF58WrxTNo39YxJphpY23eeeQFrwB5exHFOv0
+         D1xtPraRaENGQKMtSK0aRin6EH0TGnRLaBoAx7dhddh5pTYg+NVvvYdu5DyzYpW7GZ
+         6Yan3VJCnXjKQ==
+Date:   Tue, 20 Jul 2021 19:02:53 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2] genirq/affinity: add helper of irq_affinity_calc_sets
+Message-ID: <20210721000253.GA143407@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210720075025.GA17565@lst.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() for two purposes:
+On Tue, Jul 20, 2021 at 09:50:25AM +0200, Christoph Hellwig wrote:
+> > +int irq_affinity_calc_sets(unsigned int affvecs, struct irq_affinity *affd)
+> > +{
+> > +	/*
+> > +	 * Simple invocations do not provide a calc_sets() callback. Call
+> > +	 * the generic one.
+> > +	 */
+> > +	if (!affd->calc_sets)
+> > +		default_calc_sets(affd, affvecs);
+> > +	else
+> > +		affd->calc_sets(affd, affvecs);
+> 
+> Nit: avoid pointless negations:
+> 
+> 	if (affd->calc_sets)
+> 		affd->calc_sets(affd, affvecs);
+> 	else
+> 		default_calc_sets(affd, affvecs);
 
-- To set the affinity_hint which is consumed by the userspace for
-  distributing the interrupts
++1
 
-- To apply an affinity that it provides for the i40e interrupts
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-The latter is done to ensure that all the interrupts are evenly spread
-across all available CPUs. However, since commit a0c9259dc4e1 ("irq/matrix:
-Spread interrupts on allocation") the spreading of interrupts is
-dynamically performed at the time of allocation. Hence, there is no need
-for the drivers to enforce their own affinity for the spreading of
-interrupts.
+Thanks for doing this!  For the PCI part:
 
-Also, irq_set_affinity_hint() applying the provided cpumask as an affinity
-for the interrupt is an undocumented side effect. To remove this side
-effect irq_set_affinity_hint() has been marked as deprecated and new
-interfaces have been introduced. Hence, replace the irq_set_affinity_hint()
-with the new interface irq_update_affinity_hint() that only sets the
-pointer for the affinity_hint.
-
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
----
- drivers/net/ethernet/intel/i40e/i40e_main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-index 861e59a350bd..e2c525a6cab3 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-@@ -3873,10 +3873,10 @@ static int i40e_vsi_request_irq_msix(struct i40e_vsi *vsi, char *basename)
- 		 *
- 		 * get_cpu_mask returns a static constant mask with
- 		 * a permanent lifetime so it's ok to pass to
--		 * irq_set_affinity_hint without making a copy.
-+		 * irq_update_affinity_hint without making a copy.
- 		 */
- 		cpu = cpumask_local_spread(q_vector->v_idx, -1);
--		irq_set_affinity_hint(irq_num, get_cpu_mask(cpu));
-+		irq_update_affinity_hint(irq_num, get_cpu_mask(cpu));
- 	}
- 
- 	vsi->irqs_ready = true;
-@@ -3887,7 +3887,7 @@ static int i40e_vsi_request_irq_msix(struct i40e_vsi *vsi, char *basename)
- 		vector--;
- 		irq_num = pf->msix_entries[base + vector].vector;
- 		irq_set_affinity_notifier(irq_num, NULL);
--		irq_set_affinity_hint(irq_num, NULL);
-+		irq_update_affinity_hint(irq_num, NULL);
- 		free_irq(irq_num, &vsi->q_vectors[vector]);
- 	}
- 	return err;
-@@ -4695,7 +4695,7 @@ static void i40e_vsi_free_irq(struct i40e_vsi *vsi)
- 			/* clear the affinity notifier in the IRQ descriptor */
- 			irq_set_affinity_notifier(irq_num, NULL);
- 			/* remove our suggested affinity mask for this IRQ */
--			irq_set_affinity_hint(irq_num, NULL);
-+			irq_update_affinity_hint(irq_num, NULL);
- 			synchronize_irq(irq_num);
- 			free_irq(irq_num, vsi->q_vectors[i]);
- 
--- 
-2.27.0
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
