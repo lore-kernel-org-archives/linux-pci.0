@@ -2,53 +2,57 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1105CC4338F
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 03:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C8CC432BE
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 03:36:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB24A60EBD
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 03:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC46160EBD
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 03:36:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233625AbhGWCzy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Jul 2021 22:55:54 -0400
-Received: from mx21.baidu.com ([220.181.3.85]:37624 "EHLO baidu.com"
+        id S233641AbhGWCzz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Jul 2021 22:55:55 -0400
+Received: from mx20.baidu.com ([111.202.115.85]:37656 "EHLO baidu.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233612AbhGWCzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Jul 2021 22:55:53 -0400
-Received: from BJHW-Mail-Ex03.internal.baidu.com (unknown [10.127.64.13])
-        by Forcepoint Email with ESMTPS id 54C61CC6DD851F5524AF;
+        id S233619AbhGWCzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Jul 2021 22:55:55 -0400
+Received: from BJHW-Mail-Ex05.internal.baidu.com (unknown [10.127.64.15])
+        by Forcepoint Email with ESMTPS id D58211CC44CE1330BCF0;
         Fri, 23 Jul 2021 11:36:26 +0800 (CST)
 Received: from BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) by
- BJHW-Mail-Ex03.internal.baidu.com (10.127.64.13) with Microsoft SMTP Server
+ BJHW-Mail-Ex05.internal.baidu.com (10.127.64.15) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
  15.1.2308.14; Fri, 23 Jul 2021 11:36:26 +0800
 Received: from LAPTOP-UKSR4ENP.internal.baidu.com (172.31.63.8) by
  BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.14; Fri, 23 Jul 2021 11:36:25 +0800
+ 15.1.2308.14; Fri, 23 Jul 2021 11:36:26 +0800
 From:   Cai Huoqing <caihuoqing@baidu.com>
 To:     <kw@linux.com>, <bhelgaas@google.com>,
         <jonathan.derrick@intel.com>, <lorenzo.pieralisi@arm.com>,
         <robh@kernel.org>
 CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Cai Huoqing <caihuoqing@baidu.com>
-Subject: [PATCH v3 0/2] PCI: Make use of PCI_DEVICE_XXX() helper macro
-Date:   Fri, 23 Jul 2021 11:36:16 +0800
-Message-ID: <20210723033618.1025-1-caihuoqing@baidu.com>
+Subject: [PATCH v3 1/2] PCI: Make use of PCI_DEVICE_SUB/_CLASS() helper macro
+Date:   Fri, 23 Jul 2021 11:36:17 +0800
+Message-ID: <20210723033618.1025-2-caihuoqing@baidu.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210723033618.1025-1-caihuoqing@baidu.com>
+References: <20210723033618.1025-1-caihuoqing@baidu.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.31.63.8]
 X-ClientProxiedBy: BJHW-Mail-Ex03.internal.baidu.com (10.127.64.13) To
  BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42)
+X-Baidu-BdMsfe-DateCheck: 1_BJHW-Mail-Ex05_2021-07-23 11:36:26:894
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Could make use of PCI_DEVICE_XXX() helper macro
+We could make use of PCI_DEVICE_SUB/CLASS() helper macro
 
 v1->v2: *fix extra indent for git-apply failure
 
@@ -57,16 +61,69 @@ v2->v3: *update the subject line from "function" to "macro"
 
 commit date: 7-23-2021 11:00
 
-Cai Huoqing (2):
-  PCI: Make use of PCI_DEVICE_SUB/_CLASS() helper macro
-  PCI: vmd: Make use of PCI_DEVICE_DATA() helper macro
+Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+---
+ drivers/pci/hotplug/cpqphp_core.c | 13 ++-----------
+ drivers/pci/search.c              | 14 ++------------
+ 2 files changed, 4 insertions(+), 23 deletions(-)
 
- drivers/pci/controller/vmd.c      | 38 +++++++++++++++----------------
- drivers/pci/hotplug/cpqphp_core.c | 13 ++---------
- drivers/pci/search.c              | 14 ++----------
- include/linux/pci_ids.h           |  2 ++
- 4 files changed, 25 insertions(+), 42 deletions(-)
-
+diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+index f99a7927e5a8..407206a233c8 100644
+--- a/drivers/pci/hotplug/cpqphp_core.c
++++ b/drivers/pci/hotplug/cpqphp_core.c
+@@ -1357,18 +1357,9 @@ static void __exit unload_cpqphpd(void)
+ }
+ 
+ static const struct pci_device_id hpcd_pci_tbl[] = {
+-	{
+ 	/* handle any PCI Hotplug controller */
+-	.class =        ((PCI_CLASS_SYSTEM_PCI_HOTPLUG << 8) | 0x00),
+-	.class_mask =   ~0,
+-
+-	/* no matter who makes it */
+-	.vendor =       PCI_ANY_ID,
+-	.device =       PCI_ANY_ID,
+-	.subvendor =    PCI_ANY_ID,
+-	.subdevice =    PCI_ANY_ID,
+-
+-	}, { /* end: all zeroes */ }
++	{ PCI_DEVICE_CLASS(((PCI_CLASS_SYSTEM_PCI_HOTPLUG << 8) | 0x00), ~0) },
++	{ /* end: all zeroes */ },
+ };
+ 
+ MODULE_DEVICE_TABLE(pci, hpcd_pci_tbl);
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index b4c138a6ec02..528c4fe33171 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -303,11 +303,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       struct pci_dev *from)
+ {
+ 	struct pci_device_id id = {
+-		.vendor = vendor,
+-		.device = device,
+-		.subvendor = ss_vendor,
+-		.subdevice = ss_device,
+-	};
++		PCI_DEVICE_SUB(vendor, device, ss_vendor, ss_device) };
+ 
+ 	return pci_get_dev_by_id(&id, from);
+ }
+@@ -351,13 +347,7 @@ EXPORT_SYMBOL(pci_get_device);
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+ {
+ 	struct pci_device_id id = {
+-		.vendor = PCI_ANY_ID,
+-		.device = PCI_ANY_ID,
+-		.subvendor = PCI_ANY_ID,
+-		.subdevice = PCI_ANY_ID,
+-		.class_mask = PCI_ANY_ID,
+-		.class = class,
+-	};
++		PCI_DEVICE_CLASS(PCI_ANY_ID, class) };
+ 
+ 	return pci_get_dev_by_id(&id, from);
+ }
 -- 
 2.25.1
 
