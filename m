@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10369C4320E
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 392D6C4320E
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7AD160E75
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25D5B60725
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234261AbhGWK2B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Jul 2021 06:28:01 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:12291 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232566AbhGWK1x (ORCPT
+        id S234084AbhGWK2A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Jul 2021 06:28:00 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:11464 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231574AbhGWK1x (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jul 2021 06:27:53 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4GWRJg1TrWz7xKp;
-        Fri, 23 Jul 2021 19:03:47 +0800 (CST)
+Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GWRL373rJzchNN;
+        Fri, 23 Jul 2021 19:04:59 +0800 (CST)
 Received: from SZX1000464847.huawei.com (10.21.59.169) by
  dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Fri, 23 Jul 2021 19:08:25 +0800
+ 15.1.2176.2; Fri, 23 Jul 2021 19:08:24 +0800
 From:   Dongdong Liu <liudongdong3@huawei.com>
 To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
         <logang@deltatee.com>, <linux-pci@vger.kernel.org>,
         <rajur@chelsio.com>, <hverkuil-cisco@xs4all.nl>
 CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V6 7/8] PCI: Add "pci=disable_10bit_tag=" parameter for peer-to-peer support
-Date:   Fri, 23 Jul 2021 19:06:41 +0800
-Message-ID: <1627038402-114183-8-git-send-email-liudongdong3@huawei.com>
+Subject: [PATCH V6 1/8] PCI: Use cached Device Capabilities Register
+Date:   Fri, 23 Jul 2021 19:06:35 +0800
+Message-ID: <1627038402-114183-2-git-send-email-liudongdong3@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
 References: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
@@ -47,214 +47,169 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe spec 5.0 r1.0 section 2.2.6.2 says that if an Endpoint supports
-sending Requests to other Endpoints (as opposed to host memory), the
-Endpoint must not send 10-Bit Tag Requests to another given Endpoint
-unless an implementation-specific mechanism determines that the Endpoint
-supports 10-Bit Tag Completer capability. Add "pci=disable_10bit_tag="
-parameter to disable 10-Bit Tag Requester if the peer device does not
-support the 10-Bit Tag Completer. This will make P2P traffic safe.
+It will make sense to store the pcie_devcap value in the pci_dev
+structure instead of reading Device Capabilities Register multiple
+times. The fisrt place to use pcie_devcap is in set_pcie_port_type(),
+get the pcie_devcap value here, then use cached pcie_devcap in the
+needed place.
 
+Acked-by: Hans Verkuil <hverkuil-cisco@xs4all.nl>
 Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  7 ++++
- drivers/pci/pci.c                               | 56 +++++++++++++++++++++++++
- drivers/pci/pci.h                               |  1 +
- drivers/pci/pcie/portdrv_pci.c                  | 13 +++---
- drivers/pci/probe.c                             |  9 ++--
- 5 files changed, 78 insertions(+), 8 deletions(-)
+ drivers/media/pci/cobalt/cobalt-driver.c |  5 +++--
+ drivers/pci/pci.c                        |  5 +----
+ drivers/pci/pcie/aspm.c                  | 11 ++++-------
+ drivers/pci/probe.c                      | 11 +++--------
+ drivers/pci/quirks.c                     |  3 +--
+ include/linux/pci.h                      |  1 +
+ 6 files changed, 13 insertions(+), 23 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index bdb2200..c2c4585 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4019,6 +4019,13 @@
- 				bridges without forcing it upstream. Note:
- 				this removes isolation between devices and
- 				may put more devices in an IOMMU group.
-+		disable_10bit_tag=<pci_dev>[; ...]
-+				  Specify one or more PCI devices (in the format
-+				  specified above) separated by semicolons.
-+				  Disable 10-Bit Tag Requester if the peer
-+				  device does not support the 10-Bit Tag
-+				  Completer.This will make P2P traffic safe.
-+
- 		force_floating	[S390] Force usage of floating interrupts.
- 		nomio		[S390] Do not use MIO instructions.
- 		norid		[S390] ignore the RID field and force use of
+diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
+index 16af58f..23c6436 100644
+--- a/drivers/media/pci/cobalt/cobalt-driver.c
++++ b/drivers/media/pci/cobalt/cobalt-driver.c
+@@ -193,11 +193,12 @@ void cobalt_pcie_status_show(struct cobalt *cobalt)
+ 		return;
+ 
+ 	/* Device */
+-	pcie_capability_read_dword(pci_dev, PCI_EXP_DEVCAP, &capa);
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_DEVCTL, &ctrl);
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_DEVSTA, &stat);
+ 	cobalt_info("PCIe device capability 0x%08x: Max payload %d\n",
+-		    capa, get_payload_size(capa & PCI_EXP_DEVCAP_PAYLOAD));
++		    pci_dev->pcie_devcap,
++		    get_payload_size(pci_dev->pcie_devcap &
++				     PCI_EXP_DEVCAP_PAYLOAD));
+ 	cobalt_info("PCIe device control 0x%04x: Max payload %d. Max read request %d\n",
+ 		    ctrl,
+ 		    get_payload_size((ctrl & PCI_EXP_DEVCTL_PAYLOAD) >> 5),
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d14c573..8494e4f 100644
+index aacf575..dc3bfb2 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -6568,6 +6568,59 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+@@ -4630,13 +4630,10 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+  */
+ bool pcie_has_flr(struct pci_dev *dev)
+ {
+-	u32 cap;
+-
+ 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+ 		return false;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	return cap & PCI_EXP_DEVCAP_FLR;
++	return dev->pcie_devcap & PCI_EXP_DEVCAP_FLR;
  }
- #endif
+ EXPORT_SYMBOL_GPL(pcie_has_flr);
  
-+static const char *disable_10bit_tag_param;
-+
-+void pci_disable_10bit_tag(struct pci_dev *dev)
-+{
-+	int ret = 0;
-+	const char *p;
-+#ifdef CONFIG_PCI_IOV
-+	struct pci_sriov *iov;
-+#endif
-+
-+	if (!disable_10bit_tag_param)
-+		return;
-+
-+	p = disable_10bit_tag_param;
-+	while (*p) {
-+		ret = pci_dev_str_match(dev, p, &p);
-+		if (ret < 0) {
-+			pr_info_once("PCI: Can't parse disable_10bit_tag parameter: %s\n",
-+				     disable_10bit_tag_param);
-+
-+			break;
-+		} else if (ret == 1) {
-+			/* Found a match */
-+			break;
-+		}
-+
-+		if (*p != ';' && *p != ',') {
-+			/* End of param or invalid format */
-+			break;
-+		}
-+		p++;
-+	}
-+
-+	if (ret != 1)
-+		return;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (dev->is_virtfn) {
-+		iov = dev->physfn->sriov;
-+		iov->ctrl &= ~PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN;
-+		pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL,
-+				      iov->ctrl);
-+		pci_info(dev, "disabled PF SRIOV 10-Bit Tag Requester\n");
-+		return;
-+#endif
-+	}
-+
-+	pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+				   PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+
-+	pci_info(dev, "disabled 10-Bit Tag Requester\n");
-+}
-+
- /**
-  * pci_ext_cfg_avail - can we access extended PCI config space?
-  *
-@@ -6643,6 +6696,8 @@ static int __init pci_setup(char *str)
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
- 				disable_acs_redir_param = str + 18;
-+			} else if (!strncmp(str, "disable_10bit_tag=", 18)) {
-+				disable_10bit_tag_param = str + 18;
- 			} else {
- 				pr_err("PCI: Unknown option `%s'\n", str);
- 			}
-@@ -6667,6 +6722,7 @@ static int __init pci_realloc_setup_params(void)
- 	resource_alignment_param = kstrdup(resource_alignment_param,
- 					   GFP_KERNEL);
- 	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
-+	disable_10bit_tag_param = kstrdup(disable_10bit_tag_param, GFP_KERNEL);
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 013a47f..db944f6 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -660,7 +660,7 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
  
- 	return 0;
- }
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 93dcdd4..87c8187 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -16,6 +16,7 @@ extern bool pci_early_dump;
+ 	/* Get and check endpoint acceptable latencies */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
+-		u32 reg32, encoding;
++		u32 encoding;
+ 		struct aspm_latency *acceptable =
+ 			&link->acceptable[PCI_FUNC(child->devfn)];
  
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
- bool pcie_cap_has_rtctl(const struct pci_dev *dev);
-+void pci_disable_10bit_tag(struct pci_dev *dev);
+@@ -668,12 +668,11 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 		    pci_pcie_type(child) != PCI_EXP_TYPE_LEG_END)
+ 			continue;
  
- /* Functions internal to the PCI core code */
+-		pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
+ 		/* Calculate endpoint L0s acceptable latency */
+-		encoding = (reg32 & PCI_EXP_DEVCAP_L0S) >> 6;
++		encoding = (child->pcie_devcap & PCI_EXP_DEVCAP_L0S) >> 6;
+ 		acceptable->l0s = calc_l0s_acceptable(encoding);
+ 		/* Calculate endpoint L1 acceptable latency */
+-		encoding = (reg32 & PCI_EXP_DEVCAP_L1) >> 9;
++		encoding = (child->pcie_devcap & PCI_EXP_DEVCAP_L1) >> 9;
+ 		acceptable->l1 = calc_l1_acceptable(encoding);
  
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 2382cd2..747728e 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -125,15 +125,15 @@ static void pci_configure_rp_10bit_tag(struct pci_dev *dev)
- 	bool support = true;
- 
- 	if (dev->subordinate == NULL)
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	/* If no devices under the root port, no need to enable 10-Bit Tag. */
- 	if (list_empty(&dev->subordinate->devices))
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	pci_10bit_tag_comp_support(dev, &support);
- 	if (!support)
--		return;
-+		goto disable_10bit_tag_req;
+ 		pcie_aspm_check_latency(child);
+@@ -808,7 +807,6 @@ static void free_link_state(struct pcie_link_state *link)
+ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ {
+ 	struct pci_dev *child;
+-	u32 reg32;
  
  	/*
- 	 * PCIe spec 5.0r1.0 section 2.2.6.2 implementation note.
-@@ -146,14 +146,17 @@ static void pci_configure_rp_10bit_tag(struct pci_dev *dev)
- 	 */
- 	pci_walk_bus(dev->subordinate, pci_10bit_tag_comp_support, &support);
- 	if (!support)
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ))
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
- 				 PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+
-+disable_10bit_tag_req:
-+	pci_disable_10bit_tag(dev);
- }
- 
- /*
+ 	 * Some functions in a slot might not all be PCIe functions,
+@@ -831,8 +829,7 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+ 		 * RBER bit to determine if a function is 1.1 version device
+ 		 */
+-		pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
+-		if (!(reg32 & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
++		if (!(child->pcie_devcap & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
+ 			pci_info(child, "disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'\n");
+ 			return -EINVAL;
+ 		}
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3da7baa..0b7b053 100644
+index 79177ac..cc700f6 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -2034,11 +2034,11 @@ static void pci_configure_10bit_tags(struct pci_dev *dev)
- 	struct pci_dev *bridge;
+@@ -1498,8 +1498,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	pdev->pcie_cap = pos;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 	pdev->pcie_flags_reg = reg16;
+-	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+-	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++	pci_read_config_dword(pdev, pos + PCI_EXP_DEVCAP, &pdev->pcie_devcap);
++	pdev->pcie_mpss = pdev->pcie_devcap & PCI_EXP_DEVCAP_PAYLOAD;
  
- 	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP))
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
- 		dev->ext_10bit_tag = 1;
--		return;
-+		goto disable_10bit_tag_req;
- 	}
- 
- 	bridge = pci_upstream_bridge(dev);
-@@ -2050,7 +2050,7 @@ static void pci_configure_10bit_tags(struct pci_dev *dev)
- 	 * for VF.
- 	 */
- 	if (dev->is_virtfn)
--		return;
-+		goto disable_10bit_tag_req;
- 
- 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT &&
- 	    dev->ext_10bit_tag == 1 &&
-@@ -2059,6 +2059,9 @@ static void pci_configure_10bit_tags(struct pci_dev *dev)
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
- 					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
- 	}
-+
-+disable_10bit_tag_req:
-+	 pci_disable_10bit_tag(dev);
- }
- 
+ 	parent = pci_upstream_bridge(pdev);
+ 	if (!parent)
+@@ -2031,18 +2031,13 @@ static void pci_configure_mps(struct pci_dev *dev)
  int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+ {
+ 	struct pci_host_bridge *host;
+-	u32 cap;
+ 	u16 ctl;
+ 	int ret;
+ 
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
+ 
+-	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	if (ret)
+-		return 0;
+-
+-	if (!(cap & PCI_EXP_DEVCAP_EXT_TAG))
++	if (!(dev->pcie_devcap & PCI_EXP_DEVCAP_EXT_TAG))
+ 		return 0;
+ 
+ 	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6d74386..2b405c5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5173,8 +5173,7 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+ 		pdev->pcie_cap = pos;
+ 		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 		pdev->pcie_flags_reg = reg16;
+-		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+-		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++		pdev->pcie_mpss = pdev->pcie_devcap & PCI_EXP_DEVCAP_PAYLOAD;
+ 
+ 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
+ 		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 540b377..aee7c85 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -340,6 +340,7 @@ struct pci_dev {
+ 	u8		rom_base_reg;	/* Config register controlling ROM */
+ 	u8		pin;		/* Interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* Cached PCIe Capabilities Register */
++	u32		pcie_devcap;	/* Cached Device Capabilities Register */
+ 	unsigned long	*dma_alias_mask;/* Mask of enabled devfn aliases */
+ 
+ 	struct pci_driver *driver;	/* Driver bound to this device */
 -- 
 2.7.4
 
