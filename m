@@ -2,143 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 259AEC4338F
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 09:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1E06C4338F
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0850160F12
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 09:53:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B709360725
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231335AbhGWJNP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Jul 2021 05:13:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36570 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231273AbhGWJNP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Jul 2021 05:13:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D005D60F02
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jul 2021 09:53:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627034028;
-        bh=0CQEAyffV8TwIx3za1CswnRfjAeEQH1GWzJ7vfDFpu4=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=sVWY/b0+AVaf0XylPpJk0zKPl+ScICOtPDCxLcQZKyfi9kMV7b0VE1AJp5AKUXz6T
-         u+N1/UAeJpecRH2ij17dqxL19WQDV+kdQdZ/Ys8rrkLpoXNMh6cAX9Y4RsiWgzhVSU
-         ZODbVoMhdcEjDD3HEsQ9SZjlyQRhZQ/HGvmkN+uJ8lbEyKHru0sqQqW8dAsEFr/cDb
-         EOEuGbdTnXmtK2XrLgRzp7jWSvchBjkyX+MeZ2TecATQJ7bJ+ftUMXx/QokMhc7VVC
-         PWY7mS3M2vkg2V7SrmfVj0SGyuDyOkXCKzrA5NTB3y53RIaXgF8ExYHspyqvbZzUSn
-         +dsNAGeJ8y3ow==
-Received: by mail-io1-f49.google.com with SMTP id y9so1868683iox.2
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jul 2021 02:53:48 -0700 (PDT)
-X-Gm-Message-State: AOAM5311W7htioQM8v4AXY8CVRIvs9oQ5omDlpUJGHpPKp2sv4SRR4lP
-        nf8VcTYwUJ7oW3sTMDWMeJoV/eshGNxqSE6L7EY=
-X-Google-Smtp-Source: ABdhPJxjPas0Yjcc0eSW6elHEn29KIWLjzrPGahEmHkYgplrkWRggpqpnwNzu/7uYWgSBraJUt8ZDZYNHE4kO/pbUe4=
-X-Received: by 2002:a05:6602:2406:: with SMTP id s6mr3296440ioa.159.1627034028187;
- Fri, 23 Jul 2021 02:53:48 -0700 (PDT)
+        id S232622AbhGWK1x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Jul 2021 06:27:53 -0400
+Received: from szxga03-in.huawei.com ([45.249.212.189]:12289 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230135AbhGWK1x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jul 2021 06:27:53 -0400
+Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4GWRJf46nSz7wym;
+        Fri, 23 Jul 2021 19:03:46 +0800 (CST)
+Received: from SZX1000464847.huawei.com (10.21.59.169) by
+ dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Fri, 23 Jul 2021 19:08:24 +0800
+From:   Dongdong Liu <liudongdong3@huawei.com>
+To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
+        <logang@deltatee.com>, <linux-pci@vger.kernel.org>,
+        <rajur@chelsio.com>, <hverkuil-cisco@xs4all.nl>
+CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH V6 3/8] PCI: Add 10-Bit Tag register definitions
+Date:   Fri, 23 Jul 2021 19:06:37 +0800
+Message-ID: <1627038402-114183-4-git-send-email-liudongdong3@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
+References: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-References: <20210722212920.347118-1-helgaas@kernel.org>
-In-Reply-To: <20210722212920.347118-1-helgaas@kernel.org>
-From:   Huacai Chen <chenhuacai@kernel.org>
-Date:   Fri, 23 Jul 2021 17:53:36 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H52feAf0Qf7xHa2uyv1veX+dBgDr3QKXjOZzpd=wcUr3Q@mail.gmail.com>
-Message-ID: <CAAhV-H52feAf0Qf7xHa2uyv1veX+dBgDr3QKXjOZzpd=wcUr3Q@mail.gmail.com>
-Subject: Re: [PATCH v2 0/9] PCI/VGA: Rework default VGA device selection
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Huacai Chen <chenhuacai@loongson.cn>,
-        David Airlie <airlied@linux.ie>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Xuefeng Li <lixuefeng@loongson.cn>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.21.59.169]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggeme758-chm.china.huawei.com (10.3.19.104)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Bjorn,
+Add 10-Bit Tag register definitions for use in subsequen patches.
+See the PCIe 5.0 spec section 7.5.3.15 and 9.3.3.2.
 
-On Fri, Jul 23, 2021 at 5:29 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> This is a little bit of rework and extension of Huacai's nice work at [1].
->
-> It moves the VGA arbiter to the PCI subsystem, fixes a few nits, and breaks
-> a few pieces off Huacai's patch to make the main patch a little smaller.
->
-> That last patch is still not very small, and it needs a commit log, as I
-> mentioned at [2].
->
-> All comments welcome!
->
-> [1] https://lore.kernel.org/dri-devel/20210705100503.1120643-1-chenhuacai@loongson.cn/
-> [2] https://lore.kernel.org/r/20210720221923.GA43331@bjorn-Precision-5520
-Thank you for your splitting. Your two questions are answered in the following.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ include/uapi/linux/pci_regs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-(1) explain why your initcall ordering is unusual.
-The original problem happens on MIPS. vga_arb_device_init() and
-pcibios_init() are both wrapped by subsys_initcall(). The order of
-functions in the same level depends on the Makefile.
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e709ae8..cf1ddb8 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -648,6 +648,8 @@
+ #define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
+ #define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion */
+ #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
++#define  PCI_EXP_DEVCAP2_10BIT_TAG_COMP 0x00010000 /* 10-Bit Tag Completer Supported */
++#define  PCI_EXP_DEVCAP2_10BIT_TAG_REQ  0x00020000 /* 10-Bit Tag Requester Supported */
+ #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+ #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+ #define  PCI_EXP_DEVCAP2_OBFF_WAKE	0x00080000 /* Re-use WAKE# for OBFF */
+@@ -661,6 +663,7 @@
+ #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+ #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+ #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
++#define  PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN 0x1000 /* 10-Bit Tag Requester Enable */
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGA_EN	0x2000	/* Enable OBFF Message type A */
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
+ #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+@@ -931,6 +934,7 @@
+ /* Single Root I/O Virtualization */
+ #define PCI_SRIOV_CAP		0x04	/* SR-IOV Capabilities */
+ #define  PCI_SRIOV_CAP_VFM	0x00000001  /* VF Migration Capable */
++#define  PCI_SRIOV_CAP_VF_10BIT_TAG_REQ	0x00000004 /* VF 10-Bit Tag Requester Supported */
+ #define  PCI_SRIOV_CAP_INTR(x)	((x) >> 21) /* Interrupt Message Number */
+ #define PCI_SRIOV_CTRL		0x08	/* SR-IOV Control */
+ #define  PCI_SRIOV_CTRL_VFE	0x0001	/* VF Enable */
+@@ -938,6 +942,7 @@
+ #define  PCI_SRIOV_CTRL_INTR	0x0004	/* VF Migration Interrupt Enable */
+ #define  PCI_SRIOV_CTRL_MSE	0x0008	/* VF Memory Space Enable */
+ #define  PCI_SRIOV_CTRL_ARI	0x0010	/* ARI Capable Hierarchy */
++#define  PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN 0x0020 /* VF 10-Bit Tag Requester Enable */
+ #define PCI_SRIOV_STATUS	0x0a	/* SR-IOV Status */
+ #define  PCI_SRIOV_STATUS_VFM	0x0001	/* VF Migration Status */
+ #define PCI_SRIOV_INITIAL_VF	0x0c	/* Initial VFs */
+-- 
+2.7.4
 
-TOP level Makefile:
-drivers-y       := drivers/ sound/
-....
-include arch/$(SRCARCH)/Makefile
-
-drivers/Makefile:
-obj-$(CONFIG_ACPI)              += acpi/
-....
-obj-y                           += gpu/
-
-arch/mips/Makefile:
-drivers-$(CONFIG_PCI)           += arch/mips/pci/
-
-This makes pcibios_init() in arch/mips/pci/ placed after
-vga_arb_device_init() in drivers/gpu. ACPI-based systems have no
-problems because acpi_init() in drivers/acpi is placed before
-vga_arb_device_init().
-
- (2) explain the approach, which IIUC is basically to add the
-vga_arb_select_default_device() functionality to
-vga_arbiter_add_pci_device().
-vga_arb_select_default_device() has only one chance to be called, we
-want to make it be called every time a new vga device is added. So
-rename it to vga_arb_update_default_device() and move the callsite to
-vga_arbiter_add_pci_device().
-
-I think you know all the information which you need now. And you can
-reorganize the commit message based on the existing one. As English is
-not my first language, the updated commit message written by me may
-still not be as good as you want.:)
-
-Huacai
-
->
->
-> Bjorn Helgaas (4):
->   PCI/VGA: Move vgaarb to drivers/pci
->   PCI/VGA: Replace full MIT license text with SPDX identifier
->   PCI/VGA: Use unsigned format string to print lock counts
->   PCI/VGA: Remove empty vga_arb_device_card_gone()
->
-> Huacai Chen (5):
->   PCI/VGA: Move vga_arb_integrated_gpu() earlier in file
->   PCI/VGA: Prefer vga_default_device()
->   PCI/VGA: Split out vga_arb_update_default_device()
->   PCI/VGA: Log bridge control messages when adding devices
->   PCI/VGA: Rework default VGA device selection
->
->  drivers/gpu/vga/Kconfig           |  19 ---
->  drivers/gpu/vga/Makefile          |   1 -
->  drivers/pci/Kconfig               |  19 +++
->  drivers/pci/Makefile              |   1 +
->  drivers/{gpu/vga => pci}/vgaarb.c | 269 ++++++++++++------------------
->  5 files changed, 126 insertions(+), 183 deletions(-)
->  rename drivers/{gpu/vga => pci}/vgaarb.c (90%)
->
-> --
-> 2.25.1
->
