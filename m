@@ -7,38 +7,39 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC632C00144
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A01C432BE
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD51D60725
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BF3160EBC
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Jul 2021 11:08:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234103AbhGWK2A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Jul 2021 06:28:00 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:12244 "EHLO
-        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232141AbhGWK1x (ORCPT
+        id S234316AbhGWK2C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Jul 2021 06:28:02 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:15053 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232609AbhGWK1x (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jul 2021 06:27:53 -0400
 Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GWRHH4Wh2z1CMxp;
-        Fri, 23 Jul 2021 19:02:35 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GWRL52RXbzZrYC;
+        Fri, 23 Jul 2021 19:05:01 +0800 (CST)
 Received: from SZX1000464847.huawei.com (10.21.59.169) by
  dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Fri, 23 Jul 2021 19:08:24 +0800
+ 15.1.2176.2; Fri, 23 Jul 2021 19:08:25 +0800
 From:   Dongdong Liu <liudongdong3@huawei.com>
 To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
         <logang@deltatee.com>, <linux-pci@vger.kernel.org>,
         <rajur@chelsio.com>, <hverkuil-cisco@xs4all.nl>
 CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V6 4/8] PCI: Enable 10-Bit tag support for PCIe Endpoint devices
-Date:   Fri, 23 Jul 2021 19:06:38 +0800
-Message-ID: <1627038402-114183-5-git-send-email-liudongdong3@huawei.com>
+Subject: [PATCH V6 8/8]  PCI/P2PDMA: Add a 10-bit tag check in P2PDMA
+Date:   Fri, 23 Jul 2021 19:06:42 +0800
+Message-ID: <1627038402-114183-9-git-send-email-liudongdong3@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
 References: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.21.59.169]
 X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  dggeme758-chm.china.huawei.com (10.3.19.104)
@@ -47,119 +48,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-field size from 8 bits to 10 bits.
-
-PCIe spec 5.0 r1.0 section 2.2.6.2 "Considerations for Implementing
-10-Bit Tag Capabilities" Implementation Note.
-For platforms where the RC supports 10-Bit Tag Completer capability,
-it is highly recommended for platform firmware or operating software
-that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-bit automatically in Endpoints with 10-Bit Tag Requester capability. This
-enables the important class of 10-Bit Tag capable adapters that send
-Memory Read Requests only to host memory.
+Add a 10-Bit Tag check in the P2PDMA code to ensure that a device with
+10-Bit Tag Requester doesn't interact with a device that does not
+support 10-BIT tag Completer. Before that happens, the kernel should
+emit a warning saying to enable a ”pci=disable_10bit_tag=“ kernel
+parameter.
 
 Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/probe.c | 47 ++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |  2 ++
- 2 files changed, 48 insertions(+), 1 deletion(-)
+ drivers/pci/p2pdma.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c83245b..3da7baa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2029,10 +2029,42 @@ static void pci_configure_mps(struct pci_dev *dev)
- 		 p_mps, mps, mpss);
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 50cdde3..bd93840 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -19,6 +19,7 @@
+ #include <linux/random.h>
+ #include <linux/seq_buf.h>
+ #include <linux/xarray.h>
++#include "pci.h"
+ 
+ enum pci_p2pdma_map_type {
+ 	PCI_P2PDMA_MAP_UNKNOWN = 0,
+@@ -541,6 +542,39 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
+ 	return map_type;
  }
  
-+static void pci_configure_10bit_tags(struct pci_dev *dev)
++
++static bool check_10bit_tags_vaild(struct pci_dev *a, struct pci_dev *b,
++				   bool verbose)
 +{
-+	struct pci_dev *bridge;
++	bool req;
++	bool comp;
++	u16 ctl2;
 +
-+	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP))
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
-+		dev->ext_10bit_tag = 1;
-+		return;
++	if (a->is_virtfn) {
++#ifdef CONFIG_PCI_IOV
++		req = !!(a->physfn->sriov->ctrl &
++			 PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN);
++#endif
++	} else {
++		pcie_capability_read_word(a, PCI_EXP_DEVCTL2, &ctl2);
++		req = !!(ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
 +	}
 +
-+	bridge = pci_upstream_bridge(dev);
-+	if (bridge && bridge->ext_10bit_tag)
-+		dev->ext_10bit_tag = 1;
++	comp = !!(b->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP);
++	if (req && (!comp)) {
++		if (verbose) {
++			pci_warn(a, "cannot be used for peer-to-peer DMA as 10-Bit Tag Requester enable is set in device (%s), but peer device (%s) does not support the 10-Bit Tag Completer\n",
++				 pci_name(a), pci_name(b));
 +
-+	/*
-+	 * 10-Bit Tag Requester Enable in Device Control 2 Register is RsvdP
-+	 * for VF.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT &&
-+	    dev->ext_10bit_tag == 1 &&
-+	    (dev->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_REQ)) {
-+		pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
++			pci_warn(a, "to disable 10-Bit Tag Requester for this device, add the kernel parameter: pci=disable_10bit_tag=%s\n",
++				 pci_name(a));
++		}
++		return false;
 +	}
++
++	return true;
 +}
 +
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- {
- 	struct pci_host_bridge *host;
--	u16 ctl;
-+	u16 ctl, ctl2;
- 	int ret;
- 
- 	if (!pci_is_pcie(dev))
-@@ -2045,6 +2077,10 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 	if (ret)
- 		return 0;
- 
-+	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &ctl2);
-+	if (ret)
-+		return 0;
-+
- 	host = pci_find_host_bridge(dev->bus);
- 	if (!host)
- 		return 0;
-@@ -2059,6 +2095,12 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
- 						   PCI_EXP_DEVCTL_EXT_TAG);
+ /**
+  * pci_p2pdma_distance_many - Determine the cumulative distance between
+  *	a p2pdma provider and the clients in use.
+@@ -579,6 +613,10 @@ int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
+ 			return -1;
  		}
-+
-+		if (ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN) {
-+			pci_info(dev, "disabling 10-Bit Tags\n");
-+			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+		}
- 		return 0;
- 	}
  
-@@ -2067,6 +2109,9 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- 	}
++		if (!check_10bit_tags_vaild(pci_client, provider, verbose) ||
++		    !check_10bit_tags_vaild(provider, pci_client, verbose))
++			not_supported = true;
 +
-+	pci_configure_10bit_tags(dev);
-+
- 	return 0;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9aab67f..af6cb53 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -393,6 +393,8 @@ struct pci_dev {
- #endif
- 	unsigned int	eetlp_prefix_path:1;	/* End-to-End TLP Prefix */
- 
-+	unsigned int	ext_10bit_tag:1; /* 10-Bit Tag Completer Supported
-+					    from root to here */
- 	pci_channel_state_t error_state;	/* Current connectivity state */
- 	struct device	dev;			/* Generic device interface */
+ 		map = calc_map_type_and_dist(provider, pci_client, &distance,
+ 					     verbose);
  
 -- 
 2.7.4
