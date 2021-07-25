@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9335EC41537
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AEDAC43216
 	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 04:02:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6695A60F53
+	by mail.kernel.org (Postfix) with ESMTP id 72D8960F44
 	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 04:02:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230217AbhGYDWC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Jul 2021 23:22:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51936 "EHLO
+        id S230264AbhGYDWD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 24 Jul 2021 23:22:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230010AbhGYDV5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Jul 2021 23:21:57 -0400
-Received: from mail-oi1-x230.google.com (mail-oi1-x230.google.com [IPv6:2607:f8b0:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1662C061757
-        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:26 -0700 (PDT)
-Received: by mail-oi1-x230.google.com with SMTP id u10so6868158oiw.4
-        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:26 -0700 (PDT)
+        with ESMTP id S230149AbhGYDV7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Jul 2021 23:21:59 -0400
+Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE961C06175F
+        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:28 -0700 (PDT)
+Received: by mail-ot1-x32b.google.com with SMTP id h63-20020a9d14450000b02904ce97efee36so6410202oth.7
+        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fdmG3WG+Fl0BSnXJiqQEACHTkoffgPGp8XBicBQYpOo=;
-        b=bUyKH/yL3uKMbRoFBycdV+AfDTE8ss1Qs1/Iw/icuLQwu0o4EOMDP7GIRMNwKcr9kW
-         TI689VHRtv20TGBCCfe8QuPkiTDNYfaDpm4xbygf5xNYpF4L01c/QeVtBXhDpqxFeuiz
-         dgvdUIOW6fmhDCjZSPqduzmtRWmExefdakj4p3o0RbSUhQu+mGrk+nggXMFUOeb481cQ
-         JFPJdoh+CivVAFlrOF70psrME2PALWFTsqKG9GxYCzIGecNlisqhJvwRv7bTnnxyPael
-         w+GNjKNDJbfaDWklYcEOAZw5MxZSL1sGyQy8sZgkCeqLL2mU8A1UkbZJWmCzwHMyjVUP
-         3a7g==
+        bh=orrTlR1e5ArvDErw47DwuFZ1ar2lNFZjVJ9JvZPgiW8=;
+        b=kopwAIC3KiN5sXTVUjiHSr0li0+n7LFh+IXMJE69HuHuEUlNZRM6gDyIFhbh7Y1wG1
+         Al4V5iAYMPmr8ocizfYqNh/9C9ylTr2QL0O2mf9Uq/AnwrgRrVCF6Jn5cE2acBw6rt2i
+         hwv94VNhy6HH2IJvPV3a31oztBcj26bnjTx7BIINt8XkXut3I304FlQ1rpXCuWytn2RU
+         +sDLI/CJjZNWZqB3t7U7JtnmU2E5W6qL7LThj45Ne/jlTqTouC6UbixdW0DA2SIJF/Oj
+         Pfo7MP1/fzg3Rgu9tMm2Bc7PzIuzwuEg/OePzj+N/Ep+9wpHnUiZolhYF99syQ+7mHqP
+         TD5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=fdmG3WG+Fl0BSnXJiqQEACHTkoffgPGp8XBicBQYpOo=;
-        b=ZMbgk/wzZm/cz0RYZTXZO5nKaG/s7kpDmjtxznVbNE+w7ZJFE+Cb0DIgzYIVI/jouP
-         c2jQErQ0iQIBvIgJcL+WsHFZyDny1krlFXSrBADvVR3wyLaLeMT5kROmPJw/YSxHr1h/
-         V+SBJUY2V2Pmfn+4LL/IIqKljFO0UP6t1nLCMA+NlkNOouHDa/E3KOyfcr3xrDWrTolt
-         0s4qyYfY9QaJuJEwjxlnG/EuPaT2MyfYkblEhk1c5t/fH3HYwqqpYc1QaWdbKBQTjE+E
-         9VxKqpI5Pp8ZxQr3Fburduk/nxejmWFvDccT2Brbcy1+KnDid/gBSPzpfAC1aQ4u8ZlU
-         2eRQ==
-X-Gm-Message-State: AOAM530x8gguxCLym3GXaWBdfbPQwCLT7tfNM1SgSUMjdWn74ZFg0Gd6
-        SgqrXFAb95wTvuIZotNUYXlYoA==
-X-Google-Smtp-Source: ABdhPJxiSm3YKhhzQd0mf+xM5ydNpnne/06tpn6+NFdCOwlVcrOLgOqNnXz8RgxQYmcA67KpD7pjOQ==
-X-Received: by 2002:aca:4355:: with SMTP id q82mr13228367oia.165.1627185746154;
-        Sat, 24 Jul 2021 21:02:26 -0700 (PDT)
+        bh=orrTlR1e5ArvDErw47DwuFZ1ar2lNFZjVJ9JvZPgiW8=;
+        b=ir5j2wGeXKeZfScRAQUyUwOg+3JWo8KPGpOjlGQr0SS7iUda32+0gNKvmJEKzQ4wWr
+         bwkPgWLWikTHgnksFXIXi743WJnOrVhX8icpVDtWunQRtDFwEiBV56Ap1ozIuVyDKbRJ
+         QZ02Ajj5u6bAladhNspvIZSTk/TznpY4c8M6/97QOuGruuNhPPS7PQIXh8/QEy+V/QPz
+         vsDvVTZCiB+0RhSe1PxkYtuCQOVEl6mZGGsBgTDAm3HRv6nk7knLqyYXAoovAGm0WVku
+         J6H+vCEr1Xqe3oZ0LSZS/4cNtNfSpRs9wXvuMmSfIHepc/mUKYIq3U5Zx+kK4xMhCcbW
+         WzyA==
+X-Gm-Message-State: AOAM531UsgFCoi7PNnRwl+xD/TcqUNe94mA48qmARrw7/uIQGlA4Xzlk
+        biYZIxTGkXx1gNNNutSBqZZhPw==
+X-Google-Smtp-Source: ABdhPJwqjFvCZTbT7aln3g5NxlKjHCP2fTz/s4KxT7O4V4+3AH2dGm+KOGUYA0tuEmp3a+bwQarPOg==
+X-Received: by 2002:a9d:6848:: with SMTP id c8mr7881086oto.364.1627185748341;
+        Sat, 24 Jul 2021 21:02:28 -0700 (PDT)
 Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id q20sm872910otv.50.2021.07.24.21.02.25
+        by smtp.gmail.com with ESMTPSA id q20sm872910otv.50.2021.07.24.21.02.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Jul 2021 21:02:25 -0700 (PDT)
+        Sat, 24 Jul 2021 21:02:27 -0700 (PDT)
 From:   Bjorn Andersson <bjorn.andersson@linaro.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -63,9 +63,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: qcom: Introduce enable/disable resource ops
-Date:   Sat, 24 Jul 2021 21:00:36 -0700
-Message-Id: <20210725040038.3966348-2-bjorn.andersson@linaro.org>
+Subject: [PATCH 3/3] PCI: qcom: Add sc8180x compatible
+Date:   Sat, 24 Jul 2021 21:00:38 -0700
+Message-Id: <20210725040038.3966348-4-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210725040038.3966348-1-bjorn.andersson@linaro.org>
 References: <20210725040038.3966348-1-bjorn.andersson@linaro.org>
@@ -75,126 +75,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The current model of doing resource enablement and controller
-initialization in a single "init" function invoked after
-dw_pcie_host_init() is invoked might result in clocks not being enabled
-at the time the "msi" interrupt fires.
-
-One such case happens reliably on the SC8180x (8cx) Snapdragon laptops,
-where it's seems like the bootloader touches PCIe and leaves things in a
-state that the "msi" interrupt will fire before we have a change to
-enable the clocks, resulting in an access of unclocked hardware.
-
-Introduce a two new callbacks, allowing the individual resource handling
-functions to be split between enable/init and deinit/disable.
-
-Helper functions for enable, disable and deinit are introduced to handle
-the fact that these functions may now be left without implementation.
-init is given a wrapper for symmetry.
+The SC8180x platform comes with 4 PCIe controllers, typically used for
+things such as NVME storage or connecting a SDX55 5G modem. Add a
+compatible for this, that just reuses the 1.9.0 ops.
 
 Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 42 +++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 4 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 5 +++--
+ drivers/pci/controller/dwc/pcie-qcom.c              | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 3f646875f8c2..a0ae024c2d0c 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -12,6 +12,7 @@
+ 			- "qcom,pcie-ipq4019" for ipq4019
+ 			- "qcom,pcie-ipq8074" for ipq8074
+ 			- "qcom,pcie-qcs404" for qcs404
++			- "qcom,pcie-sc8180x" for sc8180x
+ 			- "qcom,pcie-sdm845" for sdm845
+ 			- "qcom,pcie-sm8250" for sm8250
+ 			- "qcom,pcie-ipq6018" for ipq6018
+@@ -156,7 +157,7 @@
+ 			- "pipe"	PIPE clock
+ 
+ - clock-names:
+-	Usage: required for sm8250
++	Usage: required for sc8180x and sm8250
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+ 			- "aux"		Auxiliary clock
+@@ -245,7 +246,7 @@
+ 			- "ahb"			AHB reset
+ 
+ - reset-names:
+-	Usage: required for sdm845 and sm8250
++	Usage: required for sc8180x, sdm845 and sm8250
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+ 			- "pci"			PCIe core reset
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8a7a300163e5..8a64a126de2b 100644
+index 8adcbb718832..3906e975d6db 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -181,9 +181,11 @@ struct qcom_pcie;
- 
- struct qcom_pcie_ops {
- 	int (*get_resources)(struct qcom_pcie *pcie);
-+	int (*enable_resources)(struct qcom_pcie *pcie);
- 	int (*init)(struct qcom_pcie *pcie);
- 	int (*post_init)(struct qcom_pcie *pcie);
- 	void (*deinit)(struct qcom_pcie *pcie);
-+	void (*disable_resources)(struct qcom_pcie *pcie);
- 	void (*post_deinit)(struct qcom_pcie *pcie);
- 	void (*ltssm_enable)(struct qcom_pcie *pcie);
- 	int (*config_sid)(struct qcom_pcie *pcie);
-@@ -1345,6 +1347,31 @@ static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
- 	return 0;
- }
- 
-+static int qcom_pcie_enable_resources(struct qcom_pcie *pcie)
-+{
-+	if (pcie->ops->enable_resources)
-+		return pcie->ops->enable_resources(pcie);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_init(struct qcom_pcie *pcie)
-+{
-+	return pcie->ops->init(pcie);
-+}
-+
-+static void qcom_pcie_deinit(struct qcom_pcie *pcie)
-+{
-+	if (pcie->ops->deinit)
-+		pcie->ops->deinit(pcie);
-+}
-+
-+static void qcom_pcie_disable_resources(struct qcom_pcie *pcie)
-+{
-+	if (pcie->ops->disable_resources)
-+		pcie->ops->disable_resources(pcie);
-+}
-+
- static int qcom_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -1353,7 +1380,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 
- 	qcom_ep_reset_assert(pcie);
- 
--	ret = pcie->ops->init(pcie);
-+	ret = qcom_pcie_init(pcie);
- 	if (ret)
- 		return ret;
- 
-@@ -1384,7 +1411,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- err_disable_phy:
- 	phy_power_off(pcie->phy);
- err_deinit:
--	pcie->ops->deinit(pcie);
-+	qcom_pcie_deinit(pcie);
- 
- 	return ret;
- }
-@@ -1520,10 +1547,14 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	pp->ops = &qcom_pcie_dw_ops;
- 
-+	ret = qcom_pcie_enable_resources(pcie);
-+	if (ret)
-+		goto err_pm_runtime_put;
-+
- 	ret = phy_init(pcie->phy);
- 	if (ret) {
- 		pm_runtime_disable(&pdev->dev);
--		goto err_pm_runtime_put;
-+		goto err_disable_resources;
- 	}
- 
- 	platform_set_drvdata(pdev, pcie);
-@@ -1532,11 +1563,14 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret) {
- 		dev_err(dev, "cannot initialize host\n");
- 		pm_runtime_disable(&pdev->dev);
--		goto err_pm_runtime_put;
-+		goto err_disable_resources;
- 	}
- 
- 	return 0;
- 
-+err_disable_resources:
-+	qcom_pcie_disable_resources(pcie);
-+
- err_pm_runtime_put:
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
+@@ -1597,6 +1597,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &ops_2_4_0 },
+ 	{ .compatible = "qcom,pcie-sdm845", .data = &ops_2_7_0 },
++	{ .compatible = "qcom,pcie-sc8180x", .data = &ops_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sm8250", .data = &ops_1_9_0 },
+ 	{ }
+ };
 -- 
 2.29.2
 
