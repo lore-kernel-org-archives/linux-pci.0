@@ -2,170 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC46AC19F32
-	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 04:02:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16D57C4320A
+	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 06:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D42260F42
-	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 04:02:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAE2160F38
+	for <linux-pci@archiver.kernel.org>; Sun, 25 Jul 2021 06:39:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230256AbhGYDWD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Jul 2021 23:22:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51956 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230119AbhGYDV7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Jul 2021 23:21:59 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E03DC061796
-        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:28 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id x15so6837520oic.9
-        for <linux-pci@vger.kernel.org>; Sat, 24 Jul 2021 21:02:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=fJd/jugeN2YjgUvOBixRk7jqpX0of5iUQEXFzXCzPhs=;
-        b=B4QCSkS/3XujHlHjUdtVPxFCSmVQO8G5YjMdMPuRNTnWiMywbaU3uKskrYy2ZZrFsR
-         4VLbUak5CnlEiexnGvgxfBvfM/aZ4fFAFaIGIHRfWtvLkG8iaigdThd+pl8TJY9EWsdI
-         IaUt8tn6TapTa/CIs1Z/nJqdCl6HT0TKe5rfQBM1Fj4wF/CeDLeZIaIr+eYU/tJ2/PLV
-         BkaBPO5w5AbtZrjw/1xF62BCoc2oVwJsvAMXA259XrPkQssO9f5x3kztQ9xgI/F4/yRq
-         7Ugu9Vj7LBujNombnQN710uRx7It5DQcXy14705lK2gpLzn7gLyGvi8aWcF1KiozGhPI
-         HqpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=fJd/jugeN2YjgUvOBixRk7jqpX0of5iUQEXFzXCzPhs=;
-        b=Sc6pkQXTnt8Dzh/pdmuBil/zfIBNKgl0afP/ROLEXaisQW8kCE8/7Y7HcauEVbrz9Q
-         3NoUO9xTyPrReJH6iUXl7IVvWzJBfgOhrFS9BcR4byg5BbzpNK3wgE0oLRkt43NrGYzm
-         7AsSyEJy1rgZfmcqN7sheohmyVE3VZBmmD+dAeXuWzs7YDfbLY6sBXxGnCGCIMMplEzf
-         EYYV/ovQuChJPZ1oefpscY5F3gAe1C9W6qRszk1pO8OkjS+PM0+XC6J+hFirgaLHIeAU
-         RRDSo9lpQMN3MXxOKbWXYiXjvv01NN1yXFL5Fs+TH4zQdyg18N9dD5bnuWCAsvz3RB5i
-         7C0w==
-X-Gm-Message-State: AOAM531rTXR3OxP29mfRs8epCBFEHtlBcAs/TJtbLS4vpvsoJZBpx+Tv
-        veDNvOqV7fRs+jOM+l4NbFH4mkl3Wybo6Q==
-X-Google-Smtp-Source: ABdhPJyJ5mXGrUKX4FgCbfR/6UxKLXQZuB9R36iswQ9T71dP85NJ4RP/gPM9CokS7jOKNtPPD08a/w==
-X-Received: by 2002:aca:5a04:: with SMTP id o4mr7357553oib.33.1627185747406;
-        Sat, 24 Jul 2021 21:02:27 -0700 (PDT)
-Received: from localhost.localdomain (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id q20sm872910otv.50.2021.07.24.21.02.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Jul 2021 21:02:26 -0700 (PDT)
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] PCI: qcom: Split init and enable for 1.9.0 and 2.7.0
-Date:   Sat, 24 Jul 2021 21:00:37 -0700
-Message-Id: <20210725040038.3966348-3-bjorn.andersson@linaro.org>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210725040038.3966348-1-bjorn.andersson@linaro.org>
-References: <20210725040038.3966348-1-bjorn.andersson@linaro.org>
+        id S230203AbhGYF71 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 25 Jul 2021 01:59:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44870 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229460AbhGYF70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 25 Jul 2021 01:59:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0338860F26;
+        Sun, 25 Jul 2021 06:39:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627195197;
+        bh=N4Dbqhu4Ia9k/4TthHh5Es4Nq6D+VIxU8smJ2eoEAUM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=l3Ex1puXfIt1tSo/Q6IG0C9csxgo3ON2RdU7kcTcXELD07qSk96MIDB86afAMMjMR
+         6j2qUDX0KlMTBdKbov2v0yT4/+F5STT4mqeJA7We2+ZgD7I7pGc17kflWdjGTQNaEj
+         Tw2DnD0C8D+I4+KjdsUvRtpsavxZKWRoUsU/lWyLXISIHQKAZnmfEgFbY4GnFbqblm
+         jmr3wrZmLBhJR9HrkiGLeXsnAvOGPnI3RL9OeYZQAaZwOa7iLjcStk3sKlD4Mpd3k6
+         ZDstlTZkWMHAoDh824DpMl6/l7y06AHbq7thtpShFkTzvhmz7bMMsxWL7QUGrTCK+2
+         hu/wr8h23Koew==
+Date:   Sun, 25 Jul 2021 09:39:53 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org,
+        hch@infradead.org, kw@linux.com, linux-pci@vger.kernel.org,
+        rajur@chelsio.com, hverkuil-cisco@xs4all.nl,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH V6 7/8] PCI: Add "pci=disable_10bit_tag=" parameter for
+ peer-to-peer support
+Message-ID: <YP0HOf7kE1aOkqjV@unreal>
+References: <1627038402-114183-1-git-send-email-liudongdong3@huawei.com>
+ <1627038402-114183-8-git-send-email-liudongdong3@huawei.com>
+ <YPqo6M0AKWLupvNU@unreal>
+ <a8a8ffee-67e8-c899-3d04-1e28fb72560a@deltatee.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a8a8ffee-67e8-c899-3d04-1e28fb72560a@deltatee.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On the sc8180x platform the "msi" interrupt often fires before init has
-a chance to enable the clocks that are necessary for the interrupt
-handler to access the hardware.
+On Fri, Jul 23, 2021 at 10:20:50AM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> 
+> On 2021-07-23 5:32 a.m., Leon Romanovsky wrote:
+> > On Fri, Jul 23, 2021 at 07:06:41PM +0800, Dongdong Liu wrote:
+> >> PCIe spec 5.0 r1.0 section 2.2.6.2 says that if an Endpoint supports
+> >> sending Requests to other Endpoints (as opposed to host memory), the
+> >> Endpoint must not send 10-Bit Tag Requests to another given Endpoint
+> >> unless an implementation-specific mechanism determines that the Endpoint
+> >> supports 10-Bit Tag Completer capability. Add "pci=disable_10bit_tag="
+> >> parameter to disable 10-Bit Tag Requester if the peer device does not
+> >> support the 10-Bit Tag Completer. This will make P2P traffic safe.
+> >>
+> >> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> >> ---
+> >>  Documentation/admin-guide/kernel-parameters.txt |  7 ++++
+> >>  drivers/pci/pci.c                               | 56 +++++++++++++++++++++++++
+> >>  drivers/pci/pci.h                               |  1 +
+> >>  drivers/pci/pcie/portdrv_pci.c                  | 13 +++---
+> >>  drivers/pci/probe.c                             |  9 ++--
+> >>  5 files changed, 78 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> >> index bdb2200..c2c4585 100644
+> >> --- a/Documentation/admin-guide/kernel-parameters.txt
+> >> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> >> @@ -4019,6 +4019,13 @@
+> >>  				bridges without forcing it upstream. Note:
+> >>  				this removes isolation between devices and
+> >>  				may put more devices in an IOMMU group.
+> >> +		disable_10bit_tag=<pci_dev>[; ...]
+> >> +				  Specify one or more PCI devices (in the format
+> >> +				  specified above) separated by semicolons.
+> >> +				  Disable 10-Bit Tag Requester if the peer
+> >> +				  device does not support the 10-Bit Tag
+> >> +				  Completer.This will make P2P traffic safe.
+> > 
+> > I can't imagine more awkward user experience than such kernel parameter.
+> > 
+> > As a user, I will need to boot the system, hope for the best that system
+> > works, write down all PCI device numbers, guess which one doesn't work
+> > properly, update grub with new command line argument and reboot the
+> > system. Any HW change and this dance should be repeated.
+> 
+> There are already two such PCI parameters with this pattern and they are
+> not that awkward. pci_dev may be specified with either vendor/device IDS
+> or with a path of BDFs (which protects against renumbering).
 
-Split out the resource enablement and disablement into the newly
-introduce enable/disable resource operations, to ensure that the
-necessary resources are enabled when needed.
+Unfortunately, in the real world, BDF is not so stable. It changes with
+addition of new hardware, BIOS upgrades and even broken servers.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 31 +++++++++++++++++---------
- 1 file changed, 20 insertions(+), 11 deletions(-)
+Vendor/device IDs doesn't work if you have multiple devices of same
+vendor in the system.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8a64a126de2b..8adcbb718832 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1173,12 +1173,11 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	return PTR_ERR_OR_ZERO(res->pipe_clk);
- }
- 
--static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-+static int qcom_pcie_enable_2_7_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
--	u32 val;
- 	int ret;
- 
- 	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-@@ -1211,6 +1210,20 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 		goto err_disable_clocks;
- 	}
- 
-+	return 0;
-+
-+err_disable_clocks:
-+	clk_bulk_disable_unprepare(res->num_clks, res->clks);
-+err_disable_regulators:
-+	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-+{
-+	u32 val;
-+
- 	/* configure PCIe to RC mode */
- 	writel(DEVICE_TYPE_RC, pcie->parf + PCIE20_PARF_DEVICE_TYPE);
- 
-@@ -1238,15 +1251,9 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 	}
- 
- 	return 0;
--err_disable_clocks:
--	clk_bulk_disable_unprepare(res->num_clks, res->clks);
--err_disable_regulators:
--	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
--
--	return ret;
- }
- 
--static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
-+static void qcom_pcie_disable_2_7_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
- 
-@@ -1465,8 +1472,9 @@ static const struct qcom_pcie_ops ops_2_3_3 = {
- /* Qcom IP rev.: 2.7.0	Synopsys IP rev.: 4.30a */
- static const struct qcom_pcie_ops ops_2_7_0 = {
- 	.get_resources = qcom_pcie_get_resources_2_7_0,
-+	.enable_resources = qcom_pcie_enable_2_7_0,
- 	.init = qcom_pcie_init_2_7_0,
--	.deinit = qcom_pcie_deinit_2_7_0,
-+	.disable_resources = qcom_pcie_disable_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.post_init = qcom_pcie_post_init_2_7_0,
- 	.post_deinit = qcom_pcie_post_deinit_2_7_0,
-@@ -1475,8 +1483,9 @@ static const struct qcom_pcie_ops ops_2_7_0 = {
- /* Qcom IP rev.: 1.9.0 */
- static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.get_resources = qcom_pcie_get_resources_2_7_0,
-+	.enable_resources = qcom_pcie_enable_2_7_0,
- 	.init = qcom_pcie_init_2_7_0,
--	.deinit = qcom_pcie_deinit_2_7_0,
-+	.disable_resources = qcom_pcie_disable_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.post_init = qcom_pcie_post_init_2_7_0,
- 	.post_deinit = qcom_pcie_post_deinit_2_7_0,
--- 
-2.29.2
+> 
+> This flag is only useful in P2PDMA traffic, and if the user attempts
+> such a transfer, it prints a warning (see the next patch) with the exact
+> parameter that needs to be added to the command line.
 
+Dongdong citied PCI spec and it was very clear - don't enable this
+feature unless you clearly know that it is safe to enable. This is
+completely opposite to the proposal here - always enable and disable
+if something is printed to the dmesg.
+
+> 
+> This has worked well for disable_acs_redir and was used for
+> resource_alignment before that for quite some time. So save a better
+> suggestion I think this is more than acceptable.
+
+I don't know about other parameters and their history, but we are not in
+90s anymore and addition of modules parameters (for the PCI it is kernel
+cmdline arguments) are better to be changed to some configuration tool/sysfs.
+
+Even FW upgrade with such kernel parameter can be problematic.
+
+Thanks
+
+> 
+> Logan
