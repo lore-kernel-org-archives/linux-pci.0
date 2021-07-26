@@ -2,168 +2,259 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-23.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E033FC432BE
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Jul 2021 08:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5C72C4320A
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Jul 2021 08:32:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4E1A60F57
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Jul 2021 08:00:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2EF860F70
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Jul 2021 08:32:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232812AbhGZHTy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Jul 2021 03:19:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34686 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232684AbhGZHTy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 26 Jul 2021 03:19:54 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 890BF60F0F;
-        Mon, 26 Jul 2021 08:00:23 +0000 (UTC)
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <maz@kernel.org>)
-        id 1m7vXB-000ySI-KO; Mon, 26 Jul 2021 09:00:21 +0100
+        id S231967AbhGZHwL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Jul 2021 03:52:11 -0400
+Received: from lb2-smtp-cloud9.xs4all.net ([194.109.24.26]:46469 "EHLO
+        lb2-smtp-cloud9.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231728AbhGZHwL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jul 2021 03:52:11 -0400
+Received: from copland.sibelius.xs4all.nl ([83.163.83.176])
+        by smtp-cloud9.xs4all.net with ESMTP
+        id 7w2DmOzH54Jsb7w2QmW9Nr; Mon, 26 Jul 2021 10:32:38 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xs4all.nl; s=s2;
+        t=1627288358; bh=GWt5LuWPf3oek+gIp/5dyhcc4QQE8RQI7HAJudeIgsw=;
+        h=From:To:Subject:Date:Message-Id:MIME-Version:From:Subject;
+        b=LOumNdCm5LdudnnCecwSz33JKKX1SuZ6ewF7zSDOR7+TzT/8PXSr+wCZlInAYgNwi
+         mE7owpgG17hPX3tnU7n6Exkn+LAHtGnQBOVyTMfwGNfCgcCTuezsgOridF3LDE+9R/
+         Kp/8AyUoBUFWmZ5gVTgqCr//tS+GM4CZCIlHb10aw8U9+XEWLCVGe9r+OWUzGcghr2
+         FKleytXkh8OoBWs2+WYoylICTQwFncFquLX7ENMMA5DhJHwk55tYFHmwEeD2LbIvnH
+         L4FIdfK+/35jYiBNpbWHnY7GnJ2PoeU8lgASLjBy1fCZxNACnjsigZG7v2ciT77ZeZ
+         RBIcoCp91fdqA==
+From:   Mark Kettenis <mark.kettenis@xs4all.nl>
+To:     devicetree@vger.kernel.org
+Cc:     maz@kernel.org, robin.murphy@arm.com, sven@svenpeter.dev,
+        Mark Kettenis <kettenis@openbsd.org>,
+        Hector Martin <marcan@marcan.st>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/2] dt-bindings: pci: Add DT bindings for apple,pcie
+Date:   Mon, 26 Jul 2021 10:32:00 +0200
+Message-Id: <20210726083204.93196-2-mark.kettenis@xs4all.nl>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210726083204.93196-1-mark.kettenis@xs4all.nl>
+References: <20210726083204.93196-1-mark.kettenis@xs4all.nl>
 MIME-Version: 1.0
-Date:   Mon, 26 Jul 2021 09:00:21 +0100
-From:   Marc Zyngier <maz@kernel.org>
-To:     "Thokala, Srikanth" <srikanth.thokala@intel.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, robh+dt@kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
-        "Raja Subramanian, Lakshmi Bai" 
-        <lakshmi.bai.raja.subramanian@intel.com>,
-        "Sangannavar, Mallikarjunappa" 
-        <mallikarjunappa.sangannavar@intel.com>, kw@linux.com
-Subject: Re: [PATCH v10 2/2] PCI: keembay: Add support for Intel Keem Bay
-In-Reply-To: <PH0PR11MB559558D60263F29C168E6C5185069@PH0PR11MB5595.namprd11.prod.outlook.com>
-References: <20210607154044.26074-1-srikanth.thokala@intel.com>
- <20210607154044.26074-3-srikanth.thokala@intel.com>
- <20210621162506.GA31511@lpieralisi>
- <PH0PR11MB559558D60263F29C168E6C5185069@PH0PR11MB5595.namprd11.prod.outlook.com>
-User-Agent: Roundcube Webmail/1.4.11
-Message-ID: <2e4554241c532f03cce30beaf7b9921f@kernel.org>
-X-Sender: maz@kernel.org
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: srikanth.thokala@intel.com, lorenzo.pieralisi@arm.com, robh+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, andriy.shevchenko@linux.intel.com, mgross@linux.intel.com, lakshmi.bai.raja.subramanian@intel.com, mallikarjunappa.sangannavar@intel.com, kw@linux.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+Content-Transfer-Encoding: 8bit
+X-CMAE-Envelope: MS4xfP11OTtA1mcDlQcRvuB1CqGUBdkCQoJMby5ObOd4hsvrK9swzvorSiJRQLGZQiTkvCIUDx8iIj1Flzkh9+sPsNN6Hm48I2rjidwq3IcGbXWRv9OG7ePg
+ kEqnUYJXlc471PE8nipHXO/rQ7CBAwPhDaJrWG8sLd2kTT1XMBvZ5b0MFIALxoGsAU7YUoF1lIBd99CTwNSufq++OXrWz9Y0xQ4KDPNUHCwDS5U3ljzb4o3M
+ Fy+7dYmawgXiOkZwWO3wYnhgXlZtbhE6iZ0mCFxlBVE221gBQe+2IeP/GyfqKLUEHUHe0ysdxg1w/OO/Kf6+EGN5MuRWupEyTlvA5iXPQBJOJomiyALraQUm
+ /+2DCYN1yLuuj4sbr/ZDBnObBoGnPzY/Sl5oaehoY+Iaew6xirLJAlplHcbvfz8Zjn9ctfAK9vxj2u2Vw9qepTunPgaHFdxSkjIN/YO65//lqbH8fOgEu1G5
+ wGw/E4oGLJr1rmpGh7t8IXFk6xZNP5iBdaGCj5iIsey8AaFr2vSrrVM4/RQ4UbBvNQ4r6Hqo4kCPR7ZsPS5gsEkwLHBtZ4KpgJ8/hQ==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021-06-25 04:23, Thokala, Srikanth wrote:
-> Hi Lorenzo,
-> 
->> -----Original Message-----
->> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Sent: Monday, June 21, 2021 10:23 PM
->> To: Thokala, Srikanth <srikanth.thokala@intel.com>; maz@kernel.org
->> Cc: robh+dt@kernel.org; linux-pci@vger.kernel.org;
->> devicetree@vger.kernel.org; andriy.shevchenko@linux.intel.com;
->> mgross@linux.intel.com; Raja Subramanian, Lakshmi Bai
->> <lakshmi.bai.raja.subramanian@intel.com>; Sangannavar, Mallikarjunappa
->> <mallikarjunappa.sangannavar@intel.com>; kw@linux.com
->> Subject: Re: [PATCH v10 2/2] PCI: keembay: Add support for Intel Keem 
->> Bay
->> 
->> [+Marc]
->> 
->> On Mon, Jun 07, 2021 at 09:10:44PM +0530, srikanth.thokala@intel.com
->> wrote:
->> [...]
->> 
->> > +static void keembay_pcie_msi_irq_handler(struct irq_desc *desc)
->> > +{
->> > +	struct keembay_pcie *pcie = irq_desc_get_handler_data(desc);
->> > +	struct irq_chip *chip = irq_desc_get_chip(desc);
->> > +	u32 val, mask, status;
->> > +	struct pcie_port *pp;
->> > +
->> > +	chained_irq_enter(chip, desc);
->> > +
->> > +	pp = &pcie->pci.pp;
->> > +	val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
->> > +	mask = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
->> > +
->> > +	status = val & mask;
->> > +
->> > +	if (status & MSI_CTRL_INT) {
->> > +		dw_handle_msi_irq(pp);
->> > +		writel(status, pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
->> > +	}
->> > +
->> > +	chained_irq_exit(chip, desc);
->> > +}
->> > +
->> > +static int keembay_pcie_setup_msi_irq(struct keembay_pcie *pcie)
->> > +{
->> > +	struct dw_pcie *pci = &pcie->pci;
->> > +	struct device *dev = pci->dev;
->> > +	struct platform_device *pdev = to_platform_device(dev);
->> > +	int irq;
->> > +
->> > +	irq = platform_get_irq_byname(pdev, "pcie");
->> > +	if (irq < 0)
->> > +		return irq;
->> > +
->> > +	irq_set_chained_handler_and_data(irq, keembay_pcie_msi_irq_handler,
->> > +					 pcie);
->> > +
->> 
->> Ok this is yet another DWC MSI incantation and given that Marc worked
->> hard consolidating them let's have a look before we merge it.
->> 
->> IIUC - this IP relies on the DWC logic to handle MSIs + custom
->> registers to detect a pending MSI IRQ because the logic in
->> dw_chained_msi_irq() is *not* enough so you have to register
->> a driver specific chained handler. This looks similar to the dra7xx
->> driver MSI handling but I am not entirely convinced it is needed.
->> 
->> I assume this code in keembay_pcie_msi_irq_handler() is required
->> owing to additional IP logic on top of the standard DWC IP, in
->> particular the PCIE_REGS_INTERRUPT_STATUS write to "clear" the
->> IRQ.
->> 
->> We need more insights before merging it so please provide them.
->> 
->> pp = &pcie->pci.pp;
->> val = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
->> mask = readl(pcie->apb_base + PCIE_REGS_INTERRUPT_ENABLE);
->> 
->> status = val & mask;
->> 
->> if (status & MSI_CTRL_INT) {
->> 	dw_handle_msi_irq(pp);
->> 	writel(status, pcie->apb_base + PCIE_REGS_INTERRUPT_STATUS);
->> }
-> 
-> Yes, your understanding is correct.
-> 
-> Additional registers PCIE_REGS_INTERRUPT_ENABLE/_STATUS are provided
-> by IP to control the interrupts.
-> 
-> To receive MSI interrupts, SW must enable bit '8' of _ENABLE register.
-> And once a MSI is raised by the End point, bit '8' of _STATUS register
-> will be set and it needs to be cleared after servicing the interrupt.
+From: Mark Kettenis <kettenis@openbsd.org>
 
-What isn't clear here is whether the other bits that are written back
-are significant and have a side effect. If only bit 8 is required,
-shouldn't you *only* write this bit back?
+The Apple PCIe host controller is a PCIe host controller with
+multiple root ports present in Apple ARM SoC platforms, including
+various iPhone and iPad devices and the "Apple Silicon" Macs.
 
-Only you can know the answer to this, but it would be good if you
-could actually document this deviation from the already wonky
-DWC infrastructure.
+Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+---
+ .../devicetree/bindings/pci/apple,pcie.yaml   | 166 ++++++++++++++++++
+ MAINTAINERS                                   |   1 +
+ 2 files changed, 167 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/apple,pcie.yaml
 
-Thanks,
-
-         M.
+diff --git a/Documentation/devicetree/bindings/pci/apple,pcie.yaml b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
+new file mode 100644
+index 000000000000..bfcbdee79c64
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
+@@ -0,0 +1,166 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/apple,pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Apple PCIe host controller
++
++maintainers:
++  - Mark Kettenis <kettenis@openbsd.org>
++
++description: |
++  The Apple PCIe host controller is a PCIe host controller with
++  multiple root ports present in Apple ARM SoC platforms, including
++  various iPhone and iPad devices and the "Apple Silicon" Macs.
++  The controller incorporates Synopsys DesigWare PCIe logic to
++  implements its root ports.  But the ATU found on most DesignWare
++  PCIe host bridges is absent.
++  All root ports share a single ECAM space, but separate GPIOs are
++  used to take the PCI devices on those ports out of reset.  Therefore
++  the standard "reset-gpio" and "max-link-speed" properties appear on
++  the child nodes that represent the PCI bridges that correspond to
++  the individual root ports.
++  MSIs are handled by the PCIe controller and translated into regular
++  interrupts.  A range of 32 MSIs is provided.  These 32 MSIs can be
++  distributed over the root ports as the OS sees fit by programming
++  the PCIe controller's port registers.
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: apple,t8103-pcie
++      - const: apple,pcie
++
++  reg:
++    minItems: 3
++    maxItems: 5
++
++  reg-names:
++    minItems: 3
++    maxItems: 5
++    items:
++      - const: config
++      - const: rc
++      - const: port0
++      - const: port1
++      - const: port2
++
++  ranges:
++    minItems: 2
++    maxItems: 2
++
++  interrupts:
++    description:
++      Interrupt specifiers, one for each root port.
++    minItems: 1
++    maxItems: 3
++
++  msi-controller: true
++  msi-parent: true
++
++  msi-ranges:
++    description:
++      A list of pairs <intid span>, where "intid" is the first
++      interrupt number that can be used as an MSI, and "span" the size
++      of that range.
++    $ref: /schemas/types.yaml#/definitions/uint32-matrix
++    items:
++      minItems: 2
++      maxItems: 2
++
++  iommu-map: true
++  iommu-map-mask: true
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - bus-range
++  - interrupts
++  - msi-controller
++  - msi-parent
++  - msi-ranges
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/apple-aic.h>
++
++    soc {
++      #address-cells = <2>;
++      #size-cells = <2>;
++
++      pcie0: pcie@690000000 {
++        compatible = "apple,t8103-pcie", "apple,pcie";
++        device_type = "pci";
++
++        reg = <0x6 0x90000000 0x0 0x1000000>,
++              <0x6 0x80000000 0x0 0x4000>,
++              <0x6 0x81000000 0x0 0x8000>,
++              <0x6 0x82000000 0x0 0x8000>,
++              <0x6 0x83000000 0x0 0x8000>;
++        reg-names = "config", "rc", "port0", "port1", "port2";
++
++        interrupt-parent = <&aic>;
++        interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
++                     <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
++                     <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>;
++
++        msi-controller;
++        msi-parent = <&pcie0>;
++        msi-ranges = <704 32>;
++
++        iommu-map = <0x100 &dart0 1 1>,
++                    <0x200 &dart1 1 1>,
++                    <0x300 &dart2 1 1>;
++        iommu-map-mask = <0xff00>;
++
++        bus-range = <0 3>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
++                 <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
++
++        clocks = <&pcie_core_clk>, <&pcie_aux_clk>, <&pcie_ref_clk>;
++        pinctrl-0 = <&pcie_pins>;
++        pinctrl-names = "default";
++
++        pci@0,0 {
++          device_type = "pci";
++          reg = <0x0 0x0 0x0 0x0 0x0>;
++          reset-gpios = <&pinctrl_ap 152 0>;
++          max-link-speed = <2>;
++
++          #address-cells = <3>;
++          #size-cells = <2>;
++          ranges;
++        };
++
++        pci@1,0 {
++          device_type = "pci";
++          reg = <0x800 0x0 0x0 0x0 0x0>;
++          reset-gpios = <&pinctrl_ap 153 0>;
++          max-link-speed = <2>;
++
++          #address-cells = <3>;
++          #size-cells = <2>;
++          ranges;
++        };
++
++        pci@2,0 {
++          device_type = "pci";
++          reg = <0x1000 0x0 0x0 0x0 0x0>;
++          reset-gpios = <&pinctrl_ap 33 0>;
++          max-link-speed = <1>;
++
++          #address-cells = <3>;
++          #size-cells = <2>;
++          ranges;
++        };
++      };
++    };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 19135a9d778e..f4aa40d3166e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1694,6 +1694,7 @@ C:	irc://chat.freenode.net/asahi-dev
+ T:	git https://github.com/AsahiLinux/linux.git
+ F:	Documentation/devicetree/bindings/arm/apple.yaml
+ F:	Documentation/devicetree/bindings/interrupt-controller/apple,aic.yaml
++F:	Documentation/devicetree/bindings/pci/apple,pcie.yaml
+ F:	Documentation/devicetree/bindings/pinctrl/apple,pinctrl.yaml
+ F:	arch/arm64/boot/dts/apple/
+ F:	drivers/irqchip/irq-apple-aic.c
 -- 
-Jazz is not dead. It just smells funny...
+2.32.0
+
