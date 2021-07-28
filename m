@@ -2,123 +2,182 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D0EC4338F
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Jul 2021 23:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F2D9C4338F
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Jul 2021 01:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B8B960F9C
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Jul 2021 23:50:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5157660F91
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Jul 2021 01:19:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232778AbhG0Xu3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Jul 2021 19:50:29 -0400
-Received: from mail-mw2nam10on2086.outbound.protection.outlook.com ([40.107.94.86]:7520
-        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        id S233089AbhG1BTE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Jul 2021 21:19:04 -0400
+Received: from mail-bn8nam12on2084.outbound.protection.outlook.com ([40.107.237.84]:31244
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232766AbhG0Xu2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jul 2021 19:50:28 -0400
+        id S233008AbhG1BTB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jul 2021 21:19:01 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PGr9eHkKrIvhn4efIYrkZPaUWB9okzr4+PfvmX4/WVXslqdS41dTzNKCUy2i423KKY4KjhEQ3ao1HVI/p66oNbwpwCGgWfkBcCaqS9utxxipdd0bnkS5nSAdMMhN17zW/GJ0OjwkV7h6Bq3j9tYVgkMmTCbTfpu7xy7qvtbROv0ApRQxzd6Wtqai4zOJbbA6vjNUlFSGVtY/b+uMiWpz+Xwcr+tO54LPzrz3dQWaVIkG85J/U1gfMbNg/aQyCiFaQ7SDg2gfjlfaQ7fhXHOndG/OEVwOR/hDp5DL4UenK6QhaKAPdoyp/xJDPFTdTlQInYVJt79HSkDczbQNT2H9xw==
+ b=iVQOpanIkproldAdP5m2fbOWezY8RvJ5Dht8YlTShSLyfMiMZNAuMpql2TY5ITpZ2BJM+YQahAGy21kvKC/bsbvbKc5E6x6reXBV/2r4NR9YZV5GVKnfo8A+9gH8HdZCa+7kTsNYs9OmIZXIIu2M8c8f35c4JaUB8EsmQS3320tD9Rw12fSrug+OE++X9sjKXdkW6XJXndCnUAHWMOaIiNRashWgYrsakuD92Fpc7DrfnBFRnlJTu20ACjvgugiCylZNf4ipiEYBfmo269WpRegnE61TO4kkgKbysiNQn62G/9sfeE5hRWaeyDEC18/EdOYzspHmduh+BwXiO8DVFg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EsVNCh+BHprDQTy1iF7feN3JxIfcFZ8+LLZ+P/ZO+no=;
- b=G3EzZoY+mSOk3sK7LWpH+SE5Rq/NrPM+tdDv8NuWCuYEE7m5ptpaGK7vQ+fW5Ic/QJgmAsRqQ3uE+sQbSQ6tbiCvvVURBNYAe6gMDO6B9xOkMJS5x+/zBW4L36FlIdKMz48lou5j4PbxWfpz66fVQhfCr/r+8zyBcolmOVn7k6DTd7yoVsi+/VJl7M/inwq3VC9N5VuhM5Wzxxi3TokkitcYqAkkiESxIHzMHev6Pv5sGozLQgJAPxBuoLdfwNBnRM+uJ8Uhwsk9+K+spynItbrNW2Oge31ZuHsiopsmnbSooV1W3j8XLA3TvvXOGCt03YFdHg/QNxgp3KTbLO8cfg==
+ bh=gTG+NllRELnXtgCQE2P3m5lcbEde1Xuo4zwiFYD0ZAo=;
+ b=QUA0qa3oB+3XGyZQUIflRYZ64SxpH8ePgRrfhGzs31kQk6SB2WRGE0xbX3Z+EKUI0pcZS/vGRbhcSFlFdF5A2UWDJt+pnWMfmBGx7ax8SVFaL2GelxmWTzjbn2cakGfZpQzBOilYdeqnF7eI6t94btt443qQcrRzhFK3HKXdBLXvOQwfUujpOcQKLcJMLSkKRO9BVtVAt/K5D30/7yGFsu1YrJfXfZwmd45xuahTpnzFo8r6judlsfAB2jBBZdTIhMJL81hXWxa8qPdfg8hMNSczCsvZdOqHdlnpCtVVFQ0gNPg+CAkzjrHoAtb6N3SkWfRA9xR3Toi8BttIBhkBHQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=redhat.com smtp.mailfrom=nvidia.com;
+ 216.228.112.34) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EsVNCh+BHprDQTy1iF7feN3JxIfcFZ8+LLZ+P/ZO+no=;
- b=U9PJysEErZ07eY6CXNULhmgDg34V2Z21/hyZqznnOcnDUvIHOA3SLXEB1rqbn1bk9PNGUZsEPXq3aFCphV8HMmaUcMb0rwk/6wFr8x4CxpLX1VcV+k8VUxPIc3OL0OwQyWPxz666c8K59dyxU6o7/JZ33PNUcQeFjxzOgT4+01gi7hxyZK2mwpXo3W7Zt6RpIyWYTp+jFEBrQemM89Zrbxom0UqDQwFIEm8BcmrJvdkeS7bdVsZK50vyvZXOsPJauCLtWjD4DaQ9PesjLd3kVl7Tl0p2awzJDfXlme20nWst/JLNxBs0p5/FCWY1WAplfrdbWFNEUPkbi19qj0KpTw==
-Received: from BN6PR17CA0012.namprd17.prod.outlook.com (2603:10b6:404:65::22)
- by DM6PR12MB4219.namprd12.prod.outlook.com (2603:10b6:5:217::14) with
+ bh=gTG+NllRELnXtgCQE2P3m5lcbEde1Xuo4zwiFYD0ZAo=;
+ b=pjMD5iG47nDg9xIeWmTh383JNNRbri7fApKn7UUltAEoBwDNK4XEO5tJiPhSvhylq6sst4PBFWZ/n5quMT0xoQ/CdPx1JP7NNBQs+cqhvNda/jS9ARLyl49hC0M7OxDqCZ4VrBHHCmX0/QYX8kb9zofgzKfe/yFT4ZWkof+shi7JzRPkmVa8RwbGmOjMfnIGMGOslO+pzDITKSQix9MR5fD+AoiLljrQBvG5M922QqEdLwg87vYMMXo5hou5yK3lOUGXEHVa6+Pb5RjX809TrAtXqbfZtmBSJwAHPkpdsemDb3cqCxtstPBYSfxRBI9vJn+q+D8RNFwnuKu8u2fvvA==
+Received: from BN9PR03CA0173.namprd03.prod.outlook.com (2603:10b6:408:f4::28)
+ by MN2PR12MB4317.namprd12.prod.outlook.com (2603:10b6:208:1d0::16) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.28; Tue, 27 Jul
- 2021 23:50:26 +0000
-Received: from BN8NAM11FT012.eop-nam11.prod.protection.outlook.com
- (2603:10b6:404:65:cafe::8e) by BN6PR17CA0012.outlook.office365.com
- (2603:10b6:404:65::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18 via Frontend
- Transport; Tue, 27 Jul 2021 23:50:26 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18; Wed, 28 Jul
+ 2021 01:18:58 +0000
+Received: from BN8NAM11FT033.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:f4:cafe::22) by BN9PR03CA0173.outlook.office365.com
+ (2603:10b6:408:f4::28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.26 via Frontend
+ Transport; Wed, 28 Jul 2021 01:18:58 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=pass action=none header.from=nvidia.com;
+ smtp.mailfrom=nvidia.com; google.com; dkim=none (message not signed)
+ header.d=none;google.com; dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.112.34 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.112.34; helo=mail.nvidia.com;
 Received: from mail.nvidia.com (216.228.112.34) by
- BN8NAM11FT012.mail.protection.outlook.com (10.13.177.55) with Microsoft SMTP
+ BN8NAM11FT033.mail.protection.outlook.com (10.13.177.149) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4352.24 via Frontend Transport; Tue, 27 Jul 2021 23:50:26 +0000
-Received: from [10.20.23.47] (172.20.187.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 27 Jul
- 2021 23:50:24 +0000
-Subject: Re: [PATCH v10 6/8] PCI: Setup ACPI fwnode early and at the same time
- with OF
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Amey Narkhede <ameynarkhede03@gmail.com>
-CC:     Bjorn Helgaas <bhelgaas@google.com>, <alex.williamson@redhat.com>,
-        Raphael Norwitz <raphael.norwitz@nutanix.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kw@linux.com>, Sinan Kaya <okaya@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-References: <20210727233025.GA756574@bjorn-Precision-5520>
-From:   Shanker R Donthineni <sdonthineni@nvidia.com>
-Message-ID: <64d72141-4f7c-c513-fc61-ff3e5a208933@nvidia.com>
-Date:   Tue, 27 Jul 2021 18:50:22 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+ 15.20.4373.18 via Frontend Transport; Wed, 28 Jul 2021 01:18:58 +0000
+Received: from [10.40.204.204] (172.20.187.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 28 Jul
+ 2021 01:18:54 +0000
+Subject: Re: Query on ASPM driver design
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <hemantk@codeaurora.org>, <bhelgaas@google.com>,
+        <manivannan.sadhasivam@linaro.org>, <bjorn.andersson@linaro.org>,
+        <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>
+References: <20210727151816.GA714116@bjorn-Precision-5520>
+From:   Om Prakash Singh <omp@nvidia.com>
+Message-ID: <3bfac041-9559-40a2-fc97-1dbe9c5295b1@nvidia.com>
+Date:   Wed, 28 Jul 2021 06:48:50 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210727233025.GA756574@bjorn-Precision-5520>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20210727151816.GA714116@bjorn-Precision-5520>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [172.20.187.5]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+X-ClientProxiedBy: HQMAIL111.nvidia.com (172.20.187.18) To
  HQMAIL107.nvidia.com (172.20.187.13)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ce0d96fe-78b5-4e63-b2a2-08d951594ee4
-X-MS-TrafficTypeDiagnostic: DM6PR12MB4219:
-X-Microsoft-Antispam-PRVS: <DM6PR12MB421994981EDF17251B90C9D5C7E99@DM6PR12MB4219.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Office365-Filtering-Correlation-Id: 1e261643-a7af-4157-ab07-08d95165acfd
+X-MS-TrafficTypeDiagnostic: MN2PR12MB4317:
+X-Microsoft-Antispam-PRVS: <MN2PR12MB4317AA7D898CE818A673396DDAEA9@MN2PR12MB4317.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: kSIN0popyFKU1Sc56yaqKOCRXuHDLgTuX2UWWuN1AnI/B3Gqw6y0gpywsaxIT9A/bKnrz832oGmslIxjQiJWm/6nPCkepbCvfDtDNmxMYCwKCk6HfBWFZ0zQTkPlxdD3WPfj6BXRqrAtxWAS1Xj2vwrme07fSGZq6E2NkxAhwZkBM41v2wTZMLHqwx4M1ohfX2j7nBX4ib7HyZAwSp9bVAIgCPytDmvZILPjy2pUXDS8U49/p5+9TRKV7TafHHgCZBBBrSiBid8wfgDx+I1fERdSDgvZqvujIYkBtNL8JqXwbXWUtAtRWY6NXzdgugDHV/g6VAstKS7QvW5wINB0aD3OJPv9S7EEyR+sXuN41nfglKmJNf8HQeMIEs4RspmdMQ7SRls7NBYu1ZcN54qQpF6gQc72VzPUSXn39HTimOuFUkNKdZzjhgvKM/by1OLnZreJIpBWlEP+s0uLizpgLnOiPpZF4JRsODWyD3xf7arZVtVI3BjglRbz+orn0zU13rPZsw75ZxP+bU3bVRP774OwbScNkQBlUJCnT7CiwOmCZD+L2ddE0Kvj2PLl8/1EoZLoSHOufx2h+trwwj0+t1t2sIGAEOACa6YNjCvngC1hCvTUfRn/70gUnwjWXc4mb5fHf/pNJpo45xSfCAQQwxtDWIE4g5mXpfDLOq+9pDBW1b7FBELcqucXJRPecat0Z/coJXrHttnrn3ood0it1Xf0owSKnvqfWcrBrZVQL6U=
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(346002)(136003)(376002)(39860400002)(36840700001)(46966006)(2616005)(110136005)(16576012)(7416002)(478600001)(86362001)(4744005)(70206006)(356005)(47076005)(16526019)(336012)(82740400003)(2906002)(426003)(186003)(54906003)(26005)(36906005)(5660300002)(36860700001)(316002)(31696002)(8676002)(7636003)(31686004)(70586007)(8936002)(82310400003)(4326008)(36756003)(53546011)(43740500002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: N5muc5ovyTNBXrpY3SeLhXNAOPka0WSaioW0uUgvupus0eLp+AAHZ4AOIQvdGnlah0eTiqiFj5cBwWHJAiaPpiSoe2kJmlBsHmgm15WtV9onB0IZO277coi+QnCB6BN1ZNNOM2HJt4jNCgLU6BzCM1Vk/viW97s2XGdJ3jDqdTzHssbz43sXGdcRFIlu+3F7kcT8fFzeFFttwwwYPPkTVLpjoyMO67pXAUlu9MM7R/HWLG1utw0MgyBrTNt8X8XPnCmy3u3P4Zy+Ccjet7CvE0ia3ZacCnkksu4GXl6yvq9j1XQxvt5MEa4NsMpjld3zYKOgYTCkqYCTZI2qDjmoZEeC0AHE+SednsYQ1c9moXKznEds84TAEzQnA9avDijEMp7tAQ6bZcudCbhvu49bQB950f3OkyWfAjjIwikbe8Y8Tlb5WS6fLyF0EFdzPixRMQ77Ahsi/XASWjvnKow7X/BJwt3xZefmswlOortppg91lcAbcFkdq6s9NT4Rt6dLytd3uRlsqhBtGn7bThdgN9Cpva3Sz/wYSHKE23eGZ9pX3y9dfuFvIdMNGqYOVFoNUkq4E32+E8vBIEvMf/nsHW5KOHRwggyrtOZDMuZhKSAIAnbyj9RIDbli8umEwKKPbPggu++0XgVfbg1VDCwR+Hb9aVA59raiwsA0ymHyq06k1K/5wqTMG8+Bz6vLaMhT04emeSEhxj6zqJeD5rSRhFwCnDB/UAt2/vYlzSUx1mk=
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(376002)(346002)(39860400002)(136003)(36840700001)(46966006)(36756003)(53546011)(83380400001)(478600001)(336012)(356005)(70586007)(36860700001)(54906003)(26005)(186003)(16526019)(31696002)(2616005)(70206006)(426003)(5660300002)(107886003)(16576012)(4326008)(86362001)(36906005)(316002)(2906002)(47076005)(31686004)(6916009)(8676002)(8936002)(6666004)(7636003)(82740400003)(82310400003)(43740500002);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Jul 2021 23:50:26.5536
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2021 01:18:58.3089
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce0d96fe-78b5-4e63-b2a2-08d951594ee4
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e261643-a7af-4157-ab07-08d95165acfd
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT012.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT033.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4219
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4317
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn
 
-On 7/27/21 6:30 PM, Bjorn Helgaas wrote:
->> From: Shanker Donthineni <sdonthineni@nvidia.com>
+
+On 7/27/2021 8:48 PM, Bjorn Helgaas wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Tue, Jul 27, 2021 at 07:51:37AM +0530, Om Prakash Singh wrote:
+>> Hi Bjorn,
+>> I think it makes sense to have the scope of keeping default ASPM
+>> policy disable and API pci_enable_link_state() to selectively enable
+>> by EP Driver.
 >>
->> The pci_dev objects are created through two mechanisms 1) during PCI
->> bus scan and 2) from I/O Virtualization. The fwnode in pci_dev object
->> is being set at different places depends on the type of firmware used,
->> device creation mechanism, and acpi_pci_bridge_d3() WAR.
-> WAR?
->
-Thanks for catching a mistake, will remove it in the next patch.
+>> sysfs interface for ASPM also does not allow enabling ASPM for a
+>> device if the default policy (policy_to_aspm_state()) does not allow
+>> it.
+> 
+> The ASPM policy implementation may require changes.  I think the
+> current setup where a policy is compiled into the kernel via Kconfig
+> options is seriously flawed.
+> 
+> We need a fail-safe kernel parameter, i.e., "pcie_aspm=off", for cases
+> where devices don't work at all with ASPM.  We need quirks to work
+> around devices known to be broken, e.g., those that advertise ASPM
+> support that doesn't actually work, or those that advertise incorrect
+> exit latencies.  I think most other configuration should be done via
+> sysfs.
+> 
+>> Consider a situation, for a platform one wants to utilize ASPM
+>> capability of an onboard PCIe device because it is well evaluated,
+>> at the same time they want to keep ASPM disabled for other PCIe
+>> devices that can be connected on open PCIe slot to avoid possible
+>> performance issue.
+>>
+>> I see ASPM is broken on many devices, though the device shows ASPM
+>> capabilities but has performance issues when it is enabled.
+> 
+> I'll wait to see your proposal and use case before commenting on this.
 
--Shanker
+few suggestions:
+
+1. We can have a device-tree property to disable ASPM capabilities of a 
+Root port. Corresponding to my example, the device-tree can use be use 
+to enable ASPM capabilities of Root ports that have known/good/onboard 
+PCIe device, and keep ASPM disabled for opens slots
+
+2. sysfs should allow overriding default ASPM policy.
+    With below change system can boot with default policy ASPM disabled 
+(performance). But sysfs will still allow to enable ASPM capability of 
+selective device
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a08e7d6..268c2c5 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1278,7 +1278,7 @@
+  		link->aspm_disable |= state;
+  	}
+
+-	pcie_config_aspm_link(link, policy_to_aspm_state(link));
++	pcie_config_aspm_link(link, state);
+
+  	mutex_unlock(&aspm_lock);
+  	up_read(&pci_bus_sem);
+
+
+3. Add API pci_enable_link_state()
+    This will give control to driver to change ASPM at runtime depending 
+on user selected performance mode. For example Android has different 
+performance modes for Wifi chip, for sleep and active state. We are 
+using similar API to overcome some performance issue related to wifi on 
+our internal platform.
+
+
+
+
+> 
+> Bjorn
+> 
