@@ -2,108 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C4E5C4338F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 14:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 125BAC4320A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 14:49:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0657C60FE7
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 14:40:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBA5B60EFD
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 14:49:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237531AbhG2OkC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Jul 2021 10:40:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35818 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237463AbhG2OkA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jul 2021 10:40:00 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B71E5C061765
-        for <linux-pci@vger.kernel.org>; Thu, 29 Jul 2021 07:39:57 -0700 (PDT)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=[IPv6:::1])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <a.fatoum@pengutronix.de>)
-        id 1m97CR-0000QI-G5; Thu, 29 Jul 2021 16:39:51 +0200
-Subject: Re: [PATCH 0/6] Add IMX8M Mini PCI support
-To:     Tim Harvey <tharvey@gateworks.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20210723204958.7186-1-tharvey@gateworks.com>
-From:   Ahmad Fatoum <a.fatoum@pengutronix.de>
-Message-ID: <36070609-9f1f-00c8-ccf5-8ed7877b29da@pengutronix.de>
-Date:   Thu, 29 Jul 2021 16:39:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S236309AbhG2Otr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Jul 2021 10:49:47 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:55988 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229864AbhG2Otq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jul 2021 10:49:46 -0400
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 3.0.0)
+ id 10ccb49542306252; Thu, 29 Jul 2021 16:49:41 +0200
+Received: from kreacher.localnet (89-64-80-223.dynamic.chello.pl [89.64.80.223])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 868CF669F44;
+        Thu, 29 Jul 2021 16:49:40 +0200 (CEST)
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Linux PCI <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Utkarsh H Patel <utkarsh.h.patel@intel.com>,
+        Koba Ko <koba.ko@canonical.com>
+Subject: [PATCH v1 2/2] PCI: PM: Enable PME if it can be signaled from D3cold
+Date:   Thu, 29 Jul 2021 16:49:10 +0200
+Message-ID: <1791325.tdWV9SEqCh@kreacher>
+In-Reply-To: <4668274.31r3eYUQgx@kreacher>
+References: <4668274.31r3eYUQgx@kreacher>
 MIME-Version: 1.0
-In-Reply-To: <20210723204958.7186-1-tharvey@gateworks.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: a.fatoum@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 89.64.80.223
+X-CLIENT-HOSTNAME: 89-64-80-223.dynamic.chello.pl
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrheefgdeflecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepteeggfelteegudehueegieekveduleeuledvueefjeefffegfeejudfgteefhefhnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepkeelrdeigedrkedtrddvvdefnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepkeelrdeigedrkedtrddvvdefpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdho
+ rhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepkhgrihdrhhgvnhhgrdhfvghnghestggrnhhonhhitggrlhdrtghomhdprhgtphhtthhopehuthhkrghrshhhrdhhrdhprghtvghlsehinhhtvghlrdgtohhmpdhrtghpthhtohepkhhosggrrdhkohestggrnhhonhhitggrlhdrtghomh
+X-DCC--Metrics: v370.home.net.pl 1024; Body=9 Fuz1=9 Fuz2=9
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Tim,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On 23.07.21 22:49, Tim Harvey wrote:
-> The IMX8M Mini PCI controller shares much in common with the existing
-> SoC's supported by the pci-imx6 driver.
-> 
-> This series adds support for it. Driver changes came from the NXP
-> downstream vendor kernel [1]
-> 
-> This series depends on Lucas Stach's i.MX8MM GPC improvements and
-> BLK_CTRL driver and is based on top of his v2 submission [2]
+PME signaling is only enabled by __pci_enable_wake() if the target
+device can signal PME from the given target power state (to avoid
+pointless reconfiguration of the device), but if the hierarchy above
+the device goes into D3cold, the device itself will end up in D3cold
+too, so if it can signal PME from D3cold, it should be enabled to
+do so in __pci_enable_wake().
 
-Are you aware of Lucas' patch series and Rob's remarks there?
-https://lore.kernel.org/linux-pci/20210510141509.929120-7-l.stach@pengutronix.de/
+[Note that if the device does not end up in D3cold and it cannot
+ signal PME from the original target power state, it will not signal
+ PME, so in that case the behavior does not change.]
 
-Cheers,
-Ahmad
+Link: https://lore.kernel.org/linux-pm/3149540.aeNJFYEL58@kreacher/
+Fixes: 5bcc2fb4e815 ("PCI PM: Simplify PCI wake-up code")
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reported-by: Utkarsh H Patel <utkarsh.h.patel@intel.com>
+Reported-by: Koba Ko <koba.ko@canonical.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-> 
-> The final patch adds PCIe support to the
-> Tim
-> [1] https://source.codeaurora.org/external/imx/linux-imx/
-> [2]
-> https://patchwork.kernel.org/project/linux-arm-kernel/list/?series=519251
-> 
-> Tim Harvey (6):
->   dt-bindings: imx6q-pcie: add compatible for IMX8MM support
->   dt-bindings: reset: imx8mq: add pcie reset
->   PCI: imx6: add IMX8MM support
->   reset: imx7: add resets for PCIe
->   arm64: dts: imx8mm: add PCIe support
->   arm64: dts: imx8mm: add gpc iomux compatible
-> 
->  .../bindings/pci/fsl,imx6q-pcie.txt           |   4 +-
->  arch/arm64/boot/dts/freescale/imx8mm.dtsi     |  38 ++++++-
->  drivers/pci/controller/dwc/pci-imx6.c         | 103 +++++++++++++++++-
->  drivers/reset/reset-imx7.c                    |   3 +
->  include/dt-bindings/reset/imx8mq-reset.h      |   3 +-
->  5 files changed, 147 insertions(+), 4 deletions(-)
-> 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -2491,7 +2491,14 @@ static int __pci_enable_wake(struct pci_
+ 	if (enable) {
+ 		int error;
+ 
+-		if (pci_pme_capable(dev, state))
++		/*
++		 * Enable PME signaling if the device can signal PME from
++		 * D3cold regardless of whether or not it can signal PME from
++		 * the current target state, because that will allow it to
++		 * signal PME when the hierarchy above it goes into D3cold and
++		 * the device itself ends up in D3cold as a result of that.
++		 */
++		if (pci_pme_capable(dev, state) || pci_pme_capable(dev, PCI_D3cold))
+ 			pci_pme_active(dev, true);
+ 		else
+ 			ret = 1;
 
 
--- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+
