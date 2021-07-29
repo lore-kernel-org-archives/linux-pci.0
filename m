@@ -2,43 +2,45 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD56C4338F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8FCEC4320A
 	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 18:42:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E862C60249
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 18:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A476760249
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 18:42:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229672AbhG2Smo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Jul 2021 14:42:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47210 "EHLO mail.kernel.org"
+        id S230376AbhG2Smp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Jul 2021 14:42:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47248 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229614AbhG2Smn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jul 2021 14:42:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 89D7A60F4B;
-        Thu, 29 Jul 2021 18:42:39 +0000 (UTC)
+        id S229614AbhG2Smo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jul 2021 14:42:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2FE2D60F5C;
+        Thu, 29 Jul 2021 18:42:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627584159;
-        bh=giqfi5RjpNKGDI8AfANrtGogs1pVhcNtZoy1PqvKgjM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Fr9FCbK5m5Va72ZW++cWDIFuzm7ob4RGVfkRmjQluoaRKs9bEBlafza6ZW97qw/UB
-         wb/k5ak+YpspMmn26WKfqMpAW7EIJrNvy5bkjBR486Mszj0D2ir56R1kD+2GokYp0Y
-         i+VdSpeT/MgGbTW244Ei3Sk/k6Edm0ROF+3xATkrHOndnxZlHGcMwgYPhjNvu6TEng
-         cv7ciBNWUBLC4detFmrgT8oEC4hZZDvdXd8qNkolMOS9URBYupU8sbL2TFnJd3jPmr
-         2OyaiEIPaKeZuSYloPpWGd+rBHsrm6hie8Bgyh4hM2gY3wM+0uR5MAwARjEZcMOZDA
-         vE3jzuXf1FDSA==
+        s=k20201202; t=1627584161;
+        bh=mNHkWhp2gqaE2pFLRywdLRuMHd0sK+JVy4ynGKzSyeA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=U1WnQiq9AO8fA67p7v75JsVJH3Qm1q6C9/97s5CmDlePo0GMk+lTqir162qjn+6Zv
+         E/NvfbaJvYEgs1kOQsP69QHRJml+JViMh4EoxfBW2CIY4tRo1zg6oHa2KABBhMmxQL
+         /XU+JAVkCeUqqQveTZdpu4b4256asWoXbjCi0M5qsrRGBjNetYJLL52iQYFiczQgNY
+         wmQ25/QfV8nRjC19+39HO9nqmhA/K2Otq+1vw2v0xSSNFo/Nys1bzaev/VRlgSqh7A
+         pwF6TnwKVUIDwaHEdYI9vWCE8vAGjfLzYhfcA1ozeI1vA1NuIJrMvHk0ILjt43Hwcg
+         8iKCeX785duMQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Heiner Kallweit <hkallweit1@gmail.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 0/6] PCI/VPD: pci_vpd_size() cleanups
-Date:   Thu, 29 Jul 2021 13:42:28 -0500
-Message-Id: <20210729184234.976924-1-helgaas@kernel.org>
+Subject: [PATCH v2 1/6] PCI/VPD: Correct diagnostic for VPD read failure
+Date:   Thu, 29 Jul 2021 13:42:29 -0500
+Message-Id: <20210729184234.976924-2-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210729184234.976924-1-helgaas@kernel.org>
+References: <20210729184234.976924-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -47,34 +49,30 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-The basic idea is to validate VPD resource *size* without validating the
-actual content, since the kernel really doesn't care about the content.
+Previously, when a VPD read failed, we warned about an "invalid large
+VPD tag".  Warn about the VPD read failure instead.
 
-Thanks very much for the feedback on v1, and I'd be glad for any additional
-feedback.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/pci/vpd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Follow-up to:
-https://lore.kernel.org/r/20210715215959.2014576-1-helgaas@kernel.org
-
-Changes since v1:
-  - Incorporate Heiner's patch to reject VPD if first byte is 0x00 or 0xff
-    (https://lore.kernel.org/r/8de8c906-9284-93b9-bb44-4ffdc3470740@gmail.com/)
-  - Update size checks to reject resources that would extend past the
-    maximum VPD size
-
-Bjorn Helgaas (5):
-  PCI/VPD: Correct diagnostic for VPD read failure
-  PCI/VPD: Check Resource Item Names against those valid for type
-  PCI/VPD: Reject resource tags with invalid size
-  PCI/VPD: Don't check Large Resource Item Names for validity
-  PCI/VPD: Allow access to valid parts of VPD if some is invalid
-
-Heiner Kallweit (1):
-  PCI/VPD: Treat initial 0xff as missing EEPROM
-
- drivers/pci/vpd.c | 55 +++++++++++++++++++++--------------------------
- 1 file changed, 25 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 26bf7c877de5..7bfb8fc4251b 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -92,8 +92,8 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ 			    (tag == PCI_VPD_LTIN_RW_DATA)) {
+ 				if (pci_read_vpd(dev, off+1, 2,
+ 						 &header[1]) != 2) {
+-					pci_warn(dev, "invalid large VPD tag %02x size at offset %zu",
+-						 tag, off + 1);
++					pci_warn(dev, "failed VPD read at offset %zu",
++						 off + 1);
+ 					return 0;
+ 				}
+ 				off += PCI_VPD_LRDT_TAG_SIZE +
 -- 
 2.25.1
 
