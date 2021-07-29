@@ -2,117 +2,209 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 738A9C4338F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 21:41:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268BEC432BE
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE126044F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 21:41:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09DD160FD7
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233712AbhG2VlM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Jul 2021 17:41:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34560 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229852AbhG2VlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jul 2021 17:41:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6D2AE600D1;
-        Thu, 29 Jul 2021 21:41:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627594868;
-        bh=5HgGoPKa5E4g5DioG30ai6sH1ivRnZkWUP6NwynQikw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=E6hk43nCaRtx9MnET9bCvyaYL2bkRpSjdrRid02W5W5wC2p7JRXTRJ5FYsKdLJX5I
-         AS7AuL0rzT8FZkv/NRknE9s6gHl3W18hanklw3OMKti+5hxKNsWLFJhsQIVxkHjFcs
-         fj4WurokjMUzja7siMMJgb4PGDCcrEilmup1fR3nlb+1VC+NJ0lH4tujLvpUQ9Xfcm
-         TE9nGuGY7aHWQz/oNqgY+NToEHgofQC6P2/tYCS1dwh1feYRUl9N1l4et//HL2YPu2
-         6FmZZcXTbhrx5uoaaQOsmI5HhEYSY3XsEYT9YBjPBZTuGwuNFJ0FijqD0PDKCc7fW9
-         SL46qx6CqL3xQ==
-Date:   Thu, 29 Jul 2021 16:41:06 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Wasim Khan <wasim.khan@oss.nxp.com>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, V.Sethi@nxp.com,
-        Wasim Khan <wasim.khan@nxp.com>
-Subject: Re: [PATCH] PCI: Add ACS quirk for NXP LX2160A and LX2162A
-Message-ID: <20210729214106.GA994382@bjorn-Precision-5520>
+        id S229862AbhG2WZr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Jul 2021 18:25:47 -0400
+Received: from mail-il1-f169.google.com ([209.85.166.169]:43547 "EHLO
+        mail-il1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229510AbhG2WZq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jul 2021 18:25:46 -0400
+Received: by mail-il1-f169.google.com with SMTP id x7so4118132ilh.10;
+        Thu, 29 Jul 2021 15:25:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=/aC99Iu0Lbk5aCpNG1EP7BkY/PlQCFTDv6tZFmoT4to=;
+        b=taflZroEbgqdCNt6u3acyu6z47k5u6MWJYOlmOxrbIly3JtJy3g5UUlHpiqJLl6W53
+         bh8yYTLGg9Hncb3ny5Fko1jbLLv7z23q8AGtOI+K+cXdJ/UHOAkFUduVwTwu/ct2Vjy/
+         8hhhPM7kT6faRNq3v8iARpZwkuyLgtWafFC+oD/J8032kqx5aYKcuBCoxjuz7Qh3M7AN
+         i6j2wOs58vzeRXTLJO638xHgL0qhiyYuhD/KjURsXtaLetFFlFhTXLyV9g2U8EiML8BT
+         +X6XG3Sv4iQat/LhcKG9MZz4ufEv9DYxGdHQqM5JZsYHzQVu4ESxlDUx7fo3hgurgtYg
+         HgSQ==
+X-Gm-Message-State: AOAM532vPdinbhOGTjujgquReyVMYDupPvy2RnU9bdKcC/zbpOGtjiOH
+        t91D46zS+Y6w0GVdnXRSyw==
+X-Google-Smtp-Source: ABdhPJygF+DGb0ov5OEhfhmd/o0r6FJ5+aiZ3DxlC6htdV2NzPesAASgz05K1tfkyG0Y7Y+lZrWTiw==
+X-Received: by 2002:a05:6e02:190e:: with SMTP id w14mr5049395ilu.61.1627597542869;
+        Thu, 29 Jul 2021 15:25:42 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.248])
+        by smtp.gmail.com with ESMTPSA id h24sm3240751ioj.32.2021.07.29.15.25.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Jul 2021 15:25:42 -0700 (PDT)
+Received: (nullmailer pid 1013223 invoked by uid 1000);
+        Thu, 29 Jul 2021 22:25:40 -0000
+Date:   Thu, 29 Jul 2021 16:25:40 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: qcom: Introduce enable/disable resource ops
+Message-ID: <YQMq5OsmskE64w0i@robh.at.kernel.org>
+References: <20210725040038.3966348-1-bjorn.andersson@linaro.org>
+ <20210725040038.3966348-2-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210729121747.1823086-1-wasim.khan@oss.nxp.com>
+In-Reply-To: <20210725040038.3966348-2-bjorn.andersson@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 29, 2021 at 02:17:47PM +0200, Wasim Khan wrote:
-> From: Wasim Khan <wasim.khan@nxp.com>
-> 
-> Root Ports in NXP LX2160A and LX2162A where each Root Port
-> is a Root Complex with unique segment numbers do provide
-> isolation features to disable peer transactions and
-> validate bus numbers in requests, but do not provide an
-> actual PCIe ACS capability.
-> 
-> Add ACS quirk for NXP LX2160A and LX2162A
-> 
-> Signed-off-by: Wasim Khan <wasim.khan@nxp.com>
+On Sat, Jul 24, 2021 at 09:00:36PM -0700, Bjorn Andersson wrote:
+> The current model of doing resource enablement and controller
+> initialization in a single "init" function invoked after
+> dw_pcie_host_init() is invoked might result in clocks not being enabled
+> at the time the "msi" interrupt fires.
 
-Applied to pci/virtualization for v5.15, thanks!
+This seems like working around DWC ops...
 
+> One such case happens reliably on the SC8180x (8cx) Snapdragon laptops,
+> where it's seems like the bootloader touches PCIe and leaves things in a
+> state that the "msi" interrupt will fire before we have a change to
+
+s/change/chance/
+
+> enable the clocks, resulting in an access of unclocked hardware.
+
+How does the MSI fire without the clocks or a link? Can't you quiesce 
+things?
+
+> Introduce a two new callbacks, allowing the individual resource handling
+> functions to be split between enable/init and deinit/disable.
+> 
+> Helper functions for enable, disable and deinit are introduced to handle
+> the fact that these functions may now be left without implementation.
+> init is given a wrapper for symmetry.
+
+I think you can simply flip the order the MSI init and host_init() in 
+dw_pcie_host_init().
+
+In general, I want to move some of the resource setup (clks, phys, 
+perst#, etc.) into the DWC core and make the DWC ops more specific in 
+what they do and touch. That should simplify at least the simple cases. 
+For Qcom, maybe some of the ops can be moved to new DWC ops.
+
+Rob
+
+
+> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 > ---
->  drivers/pci/quirks.c    | 16 ++++++++++++++++
->  include/linux/pci_ids.h |  1 +
->  2 files changed, 17 insertions(+)
+>  drivers/pci/controller/dwc/pcie-qcom.c | 42 +++++++++++++++++++++++---
+>  1 file changed, 38 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 653660e3ba9e..24343a76c034 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4527,6 +4527,18 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
->  		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 8a7a300163e5..8a64a126de2b 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -181,9 +181,11 @@ struct qcom_pcie;
+>  
+>  struct qcom_pcie_ops {
+>  	int (*get_resources)(struct qcom_pcie *pcie);
+> +	int (*enable_resources)(struct qcom_pcie *pcie);
+>  	int (*init)(struct qcom_pcie *pcie);
+>  	int (*post_init)(struct qcom_pcie *pcie);
+>  	void (*deinit)(struct qcom_pcie *pcie);
+> +	void (*disable_resources)(struct qcom_pcie *pcie);
+>  	void (*post_deinit)(struct qcom_pcie *pcie);
+>  	void (*ltssm_enable)(struct qcom_pcie *pcie);
+>  	int (*config_sid)(struct qcom_pcie *pcie);
+> @@ -1345,6 +1347,31 @@ static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
+>  	return 0;
 >  }
 >  
-> +/*
-> + * These NXP Root Ports with each Root Port is a Root Complex
-> + * with unique segment numbers do provide isolation features
-> + * to disable peer transactions and validate bus numbers in
-> + * requests, but do not provide an actual PCIe ACS capability.
-> + */
-> +static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u16 acs_flags)
+> +static int qcom_pcie_enable_resources(struct qcom_pcie *pcie)
 > +{
-> +	return pci_acs_ctrl_enabled(acs_flags,
-> +		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+> +	if (pcie->ops->enable_resources)
+> +		return pcie->ops->enable_resources(pcie);
+> +
+> +	return 0;
 > +}
 > +
->  static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
+> +static int qcom_pcie_init(struct qcom_pcie *pcie)
+> +{
+> +	return pcie->ops->init(pcie);
+> +}
+> +
+> +static void qcom_pcie_deinit(struct qcom_pcie *pcie)
+> +{
+> +	if (pcie->ops->deinit)
+> +		pcie->ops->deinit(pcie);
+> +}
+> +
+> +static void qcom_pcie_disable_resources(struct qcom_pcie *pcie)
+> +{
+> +	if (pcie->ops->disable_resources)
+> +		pcie->ops->disable_resources(pcie);
+> +}
+> +
+>  static int qcom_pcie_host_init(struct pcie_port *pp)
 >  {
->  	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-> @@ -4771,6 +4783,10 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_ZHAOXIN, 0x3038, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_ZHAOXIN, 0x3104, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_ZHAOXIN, 0x9083, pci_quirk_mf_endpoint_acs },
-> +	/* NXP root ports */
-> +	{ PCI_VENDOR_ID_NXP, 0x8d80, pci_quirk_nxp_rp_acs },
-> +	{ PCI_VENDOR_ID_NXP, 0x8d88, pci_quirk_nxp_rp_acs },
-> +	{ PCI_VENDOR_ID_NXP, 0x8d89, pci_quirk_nxp_rp_acs },
->  	/* Zhaoxin Root/Downstream Ports */
->  	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
->  	{ 0 }
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index d8156a5dbee8..9eabf77d043a 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2537,6 +2537,7 @@
->  #define PCI_DEVICE_ID_MPC8641		0x7010
->  #define PCI_DEVICE_ID_MPC8641D		0x7011
->  #define PCI_DEVICE_ID_MPC8610		0x7018
-> +#define PCI_VENDOR_ID_NXP		0x1957
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> @@ -1353,7 +1380,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
 >  
->  #define PCI_VENDOR_ID_PASEMI		0x1959
+>  	qcom_ep_reset_assert(pcie);
 >  
+> -	ret = pcie->ops->init(pcie);
+> +	ret = qcom_pcie_init(pcie);
+>  	if (ret)
+>  		return ret;
+>  
+> @@ -1384,7 +1411,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+>  err_disable_phy:
+>  	phy_power_off(pcie->phy);
+>  err_deinit:
+> -	pcie->ops->deinit(pcie);
+> +	qcom_pcie_deinit(pcie);
+>  
+>  	return ret;
+>  }
+> @@ -1520,10 +1547,14 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  
+>  	pp->ops = &qcom_pcie_dw_ops;
+>  
+> +	ret = qcom_pcie_enable_resources(pcie);
+> +	if (ret)
+> +		goto err_pm_runtime_put;
+> +
+>  	ret = phy_init(pcie->phy);
+>  	if (ret) {
+>  		pm_runtime_disable(&pdev->dev);
+> -		goto err_pm_runtime_put;
+> +		goto err_disable_resources;
+>  	}
+>  
+>  	platform_set_drvdata(pdev, pcie);
+> @@ -1532,11 +1563,14 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	if (ret) {
+>  		dev_err(dev, "cannot initialize host\n");
+>  		pm_runtime_disable(&pdev->dev);
+> -		goto err_pm_runtime_put;
+> +		goto err_disable_resources;
+>  	}
+>  
+>  	return 0;
+>  
+> +err_disable_resources:
+> +	qcom_pcie_disable_resources(pcie);
+> +
+>  err_pm_runtime_put:
+>  	pm_runtime_put(dev);
+>  	pm_runtime_disable(dev);
 > -- 
-> 2.25.1
+> 2.29.2
+> 
 > 
