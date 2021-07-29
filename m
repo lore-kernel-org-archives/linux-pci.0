@@ -2,151 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0AFFC4338F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:29:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 960E0C43214
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA83F60F46
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:29:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7375160F4B
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 22:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232725AbhG2W32 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Jul 2021 18:29:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54314 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229944AbhG2W3X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jul 2021 18:29:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1982360720;
-        Thu, 29 Jul 2021 22:29:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627597759;
-        bh=Z5vs1zoSqEBxxqhhSmMqcsfe2C7l5EM32gjPdmoyxEM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ow5YnxaXbEOrfH4JYT2y1RMAesCkN/7tbE/AmLKSds8GczI0Z2cjX8NvoAD0tI9zl
-         5It9feOWMTsxvab3SeVe0xCOyamkWOKwr8fDgv21ShbrHrv/Z8LoEP03gHi2ZdyeSS
-         iiUkZSHEMh/r+ZgR24Bd3OxC4SCNsIH8PfONyr8yPoUM9s6AOm28pumoOJDUkLuBAp
-         8gxh3ZxZ6e8poQNmcPJLRm5B1L6YAuKA821nTVolYIdrBTwNGo8hCT/p6lz4KuN/3i
-         iaFnBo60imEzrzTWVnOj2hkdx/3lV87l+H+Czbg6cuwMyDWojb9mCrlyYJ4FZIgh8Z
-         P/U6AJk1KXKag==
-Date:   Thu, 29 Jul 2021 17:29:17 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Tim Harvey <tharvey@gateworks.com>
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 3/6] PCI: imx6: add IMX8MM support
-Message-ID: <20210729222917.GA998237@bjorn-Precision-5520>
+        id S232948AbhG2Weq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Jul 2021 18:34:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37732 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232559AbhG2Weq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jul 2021 18:34:46 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFA0CC061765;
+        Thu, 29 Jul 2021 15:34:42 -0700 (PDT)
+Message-ID: <20210729215139.889204656@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1627598079;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=L1MWCB/mi8Eqvn+BCAxR2CLfHh9+meprPU/a+pwdFJI=;
+        b=n9wU0n0IwY73C4bhFxrVJ+fQ9oHD8p/CqgAYBIjFv0vifHSlsriOBNs5wFlVahFsdeOygT
+        XsmF+axvuuLpw4Rjb5vhvVGwdUofAQPrlCasuhQv+srhgT/T+HMXwBnrzlq1RkyJ+gRLBi
+        Nv05CLGIgBA/ujcpaQWqpMiqcAFHDNvyPavcNymfntrqRV8gtV5u8SB/AM2YJ2T6lc1riH
+        /E/rVGc94gDsYLGqj7QrvnO4FpmNS2HXLwYCYgiUmx1Xf3avmLkEHVbM+pkIzeXekKPMO+
+        mjwbWkDU14dO7AELrDQq4RjPk+8YnWrJPaQ559fyslBi1QNHQXEs1qgZPDPjzQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1627598079;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=L1MWCB/mi8Eqvn+BCAxR2CLfHh9+meprPU/a+pwdFJI=;
+        b=VvDQJ9HSE98noTCMfJQ8qDwLaEYDJxTcUgeWpgg4nxyMomFzjmRbYrQerGxKtrhW8N01u6
+        MdwcyOuIrbhHOnDg==
+Date:   Thu, 29 Jul 2021 23:51:39 +0200
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Kevin Tian <kevin.tian@intel.com>,
+        Marc Zyngier <maz@kernel.org>, Ingo Molnar <mingo@kernel.org>,
+        x86@kernel.org, linux-s390@vger.kernel.org,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: [patch V2 00/19] PCI/MSI, x86: Cure a couple of inconsistencies
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210723204958.7186-4-tharvey@gateworks.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Capitalize first letter of subject to match history:
-
-  PCI: imx6: Add IMX8MM support
-
-On Fri, Jul 23, 2021 at 01:49:55PM -0700, Tim Harvey wrote:
-> Add IMX8MM support to the existing driver which shares most
-> functionality with the IMX8MM.
-> 
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 103 +++++++++++++++++++++++++-
->  1 file changed, 102 insertions(+), 1 deletion(-)
-
-> +	case IMX8MM:
-> +		offset = imx6_pcie_grp_offset(imx6_pcie);
-> +
-> +		dev_info(imx6_pcie->pci->dev, "%s REF_CLK is used!.\n",
-> +				imx6_pcie->ext_osc ? "EXT" : "PLL");
-> +		if (imx6_pcie->ext_osc) {
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MQ_GPR_PCIE_REF_USE_PAD, 0);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_AUX_EN,
-> +					IMX8MM_GPR_PCIE_AUX_EN);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_POWER_OFF, 0);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_SSC_EN, 0);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL,
-> +					IMX8MM_GPR_PCIE_REF_CLK_EXT);
-> +			udelay(100);
-> +			/* Do the PHY common block reset */
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_CMN_RST,
-> +					IMX8MM_GPR_PCIE_CMN_RST);
-> +			udelay(200);
-> +		} else {
-> +			/* Configure the internal PLL as REF clock */
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MQ_GPR_PCIE_REF_USE_PAD, 0);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_AUX_EN,
-> +					IMX8MM_GPR_PCIE_AUX_EN);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_POWER_OFF, 0);
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_SSC_EN, 0);
-
-Seems like all the above is common to both cases?  If so, it's a shame
-to repeat it because it makes it hard to see what's different.
-
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_REF_CLK_SEL,
-> +					IMX8MM_GPR_PCIE_REF_CLK_PLL);
-> +			udelay(100);
-> +			/* Configure the PHY */
-> +			writel(PCIE_PHY_CMN_REG62_PLL_CLK_OUT,
-> +					imx6_pcie->phy_base + PCIE_PHY_CMN_REG62);
-> +			writel(PCIE_PHY_CMN_REG64_AUX_RX_TX_TERM,
-> +					imx6_pcie->phy_base + PCIE_PHY_CMN_REG64);
-> +			/* Do the PHY common block reset */
-> +			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> +					IMX8MM_GPR_PCIE_CMN_RST,
-> +					IMX8MM_GPR_PCIE_CMN_RST);
-> +			udelay(200);
-> +		}
-> +		/*
-
-> +		 * In order to pass the compliance tests.
-> +		 * Configure the TRSV regiser of iMX8MM PCIe PHY.
-
-The "In order to ..." line isn't quite a sentence.  Maybe it should be
-joined with the second line?
-
-s/regiser/register/ ?
-
-> +		 */
-> +		writel(PCIE_PHY_TRSV_REG5_GEN1_DEEMP,
-> +				imx6_pcie->phy_base + PCIE_PHY_TRSV_REG5);
-
-> +	/* check for EXT osc */
-
-Since you have a comment here, it would be useful to spell out "osc"
-for newbies like me.  I assume it's short for "oscillator"?
-
-> +	imx6_pcie->ext_osc = of_property_read_bool(node, "fsl,ext-osc");
+QSByZWNlbnQgZGlzY3Vzc2lvbiBhYm91dCB0aGUgUENJL01TSSBtYW5hZ2VtZW50IGZvciB2aXJ0
+aW8gdW5lYXJ0aGVkIGEKdmlvbGF0aW9uIG9mIHRoZSBNU0ktWCBzcGVjaWZpY2F0aW9uIHZzLiB3
+cml0aW5nIHRoZSBNU0ktWCBtZXNzYWdlOiB1bmRlcgpjZXJ0YWluIGNpcmN1bXN0YW5jZXMgdGhl
+IGVudHJ5IGlzIHdyaXR0ZW4gd2l0aG91dCBiZWluZyBtYXNrZWQuCgpXaGlsZSBsb29raW5nIGF0
+IHRoYXQgYW5kIHRoZSByZWxhdGVkIHZpb2xhdGlvbiBvZiB0aGUgeDg2IG5vbi1yZW1hcHBlZApp
+bnRlcnJ1cHQgYWZmaW5pdHkgbWVjaGFuaXNtIGEgZmV3IG90aGVyIGlzc3VlcyB3ZXJlIGRpc2Nv
+dmVyZWQgYnkKaW5zcGVjdGlvbi4KClRoZSBmb2xsb3dpbmcgc2VyaWVzIGFkZHJlc3NlcyB0aGVz
+ZS4KCk5vdGUgdGhpcyBkb2VzIG5vdCBmaXggdGhlIHZpcnRpbyBpc3N1ZSwgYnV0IHdoaWxlIHN0
+YXJpbmcgYXQgdGhlIGFib3ZlCnByb2JsZW1zIEkgY2FtZSB1cCB3aXRoIGEgcGxhbiB0byBhZGRy
+ZXNzIHRoaXMuIEknbSBzdGlsbCB0cnlpbmcgdG8KY29udmluY2UgbXlzZWxmIHRoYXQgSSBjYW4g
+Z2V0IGF3YXkgd2l0aG91dCBzcHJpbmtsaW5nIGxvY2tpbmcgYWxsIG92ZXIgdGhlCnBsYWNlLCBz
+byBkb24ndCBob2xkIHlvdXIgYnJlYXRoIHRoYXQgdGhpcyB3aWxsIG1hdGVyaWFsaXplIHRvbW9y
+cm93LgoKVGhlIHNlcmllcyBpcyBhbHNvIGF2YWlsYWJsZSBmcm9tIGdpdDoKCiAgICBnaXQ6Ly9n
+aXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvdGdseC9kZXZlbC5naXQgaXJx
+L21zaQoKVjEgY2FuIGJlIGZvdW5kIGhlcmU6CgogICBodHRwczovL2xvcmUua2VybmVsLm9yZy9y
+LzIwMjEwNzIxMTkxMTI2LjI3NDk0NjI4MEBsaW51dHJvbml4LmRlCgpDaGFuZ2VzIHZzLiBWMToK
+CiAgLSBJZGVudGlmaWVkIGFuZCBhZGRyZXNzZWQgbW9yZSBpbmNvbnNpc3RlbmNpZXMsIGVzcGVj
+aWFsbHkgdGhlIGxhY2sgb2YKICAgIHNlcmlhbGl6YXRpb24gZm9yIG11bHRpLU1TSSBtYXNraW5n
+CiAgICAKICAtIFJlbW92ZWQgdGhlIGV4dHJhIHZlY3RvciBtYXNraW5nIGluIFMzOTAgCgogIC0g
+QWRkcmVzc2VkIHJldmlldyBjb21tZW50cyBhbmQgcGlja2VkIHVwIHRhZ3Mgd2hlcmUgYXBwbGlj
+YWJsZQoKICAtIENsZWFuIHVwIG9mIHRoZSBuYW1pbmcgb2YgbXNpX2Rlc2M6Om1hc2tlZCBhcyBk
+aXNjdXNzZWQgaW4gdGhlIFYxCiAgICB0aHJlYWQKCiAgLSBDb25zb2xpZGF0aW9uIG9mIHRoZSBt
+YXNrL3VubWFzayBmdW5jdGlvbnMKClRoYW5rcywKCgl0Z2x4Ci0tLQogYXJjaC9zMzkwL3BjaS9w
+Y2lfaXJxLmMgICAgICAgIHwgICAgNCAKIGFyY2gveDg2L2tlcm5lbC9hcGljL2lvX2FwaWMuYyB8
+ICAgIDYgCiBhcmNoL3g4Ni9rZXJuZWwvYXBpYy9tc2kuYyAgICAgfCAgIDExICsKIGFyY2gveDg2
+L2tlcm5lbC9ocGV0LmMgICAgICAgICB8ICAgIDIgCiBkcml2ZXJzL2Jhc2UvY29yZS5jICAgICAg
+ICAgICAgfCAgICAxIAogZHJpdmVycy9wY2kvbXNpLmMgICAgICAgICAgICAgIHwgIDI3NCArKysr
+KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLQogaW5jbHVkZS9saW51eC9kZXZp
+Y2UuaCAgICAgICAgIHwgICAgMSAKIGluY2x1ZGUvbGludXgvaXJxLmggICAgICAgICAgICB8ICAg
+IDIgCiBpbmNsdWRlL2xpbnV4L21zaS5oICAgICAgICAgICAgfCAgIDEwIC0KIGtlcm5lbC9pcnEv
+Y2hpcC5jICAgICAgICAgICAgICB8ICAgIDUgCiAxMCBmaWxlcyBjaGFuZ2VkLCAxNzggaW5zZXJ0
+aW9ucygrKSwgMTM4IGRlbGV0aW9ucygtKQoKCg==
