@@ -2,207 +2,249 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A9D8C4338F
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 06:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48353C4320A
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 11:56:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5087B61054
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 06:10:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF2760F38
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Jul 2021 11:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233934AbhG2GKg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Jul 2021 02:10:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55080 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233899AbhG2GKg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jul 2021 02:10:36 -0400
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 887DEC061757
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jul 2021 23:10:32 -0700 (PDT)
-Received: by mail-wr1-x432.google.com with SMTP id z4so5345829wrv.11
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jul 2021 23:10:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:references:from:subject:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=iKbB3e0LdB9sfD9vM8yygIP15t+TG6FplkTkS4EB6jA=;
-        b=Ucjy0HddCmWKDhnmS9ICakKBmnLVnBCQfgbOwIBuBquALyFqL2s+QbtLmYaC27YdSX
-         ppHe6q0zxFw6/6IUyRLtKbxn5ZqDZ5BAbe3XRf4IG0+ILdyBEhPr45I5oPGU8s5p5bm9
-         +gCFaXUKUPNrZtCxPVorcN+RHdhGwFUJKFp/xCGLOietSPWHEh7dwOtIGPvWkqWXlNuZ
-         Z/AnuJbr5NifOSQkRlxhfQ+Tk69w52zUyhqEHFnr/92yfSvQDfW57cFjLy/XZg7EIiFT
-         qu82VC2W087MnPH8yseTxIAryRmZheY91lD11f0MmOVH31vb8NalHJ2ModwZKnrXt3En
-         +RgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:references:from:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=iKbB3e0LdB9sfD9vM8yygIP15t+TG6FplkTkS4EB6jA=;
-        b=FPrNf0UcmonU/8zSovymWJQ0NFE+dvONAQiPDB/Rjxr7SqV5bIR7tQAOuitxktGA/h
-         yWbPQ/208r9BJ+sYvmnLeOq8kCE8GYQVXMFgnB1upbYZaKnAoZY/emF1UZExY5cNpgm8
-         HlB+PUiP1YZZlFZhTqM1QQ6QCKK2W4rQt94eAlkZ3Uxj3vdNoueiajWNxzl6aVC9lA4r
-         KiHikfuEXSVmadu/zPnA0Erx79dS56ORxf5FTlQNJw3ZbdCTgOvnNmq767wVMas+Zwd7
-         qXb9xm/AHK4sYKw+v+zFSZ2A8NH05RyT7yPytG6gOTdB6WJyKPaQiNYPmbHeiBoK3bIK
-         oR2A==
-X-Gm-Message-State: AOAM532q3iQj6hq1wE4LZ8eLGHxZqwaxK/27qLdtOGNwOIUPyMA8KCpI
-        CR+pFgafC8kAxIPNMlnc2a8=
-X-Google-Smtp-Source: ABdhPJyuqmU3/EWGKgV/e3RQHqdW00GNmjGG7usm/Szg5FmlQwE+3RZOx27ANEGjSfxMYU0nT0SC9g==
-X-Received: by 2002:adf:cd86:: with SMTP id q6mr2825042wrj.422.1627539031219;
-        Wed, 28 Jul 2021 23:10:31 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f3a:f500:1c4e:4b69:7ee7:669f? (p200300ea8f3af5001c4e4b697ee7669f.dip0.t-ipconnect.de. [2003:ea:8f3a:f500:1c4e:4b69:7ee7:669f])
-        by smtp.googlemail.com with ESMTPSA id v5sm2116496wrd.74.2021.07.28.23.10.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jul 2021 23:10:30 -0700 (PDT)
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Hannes Reinecke <hare@suse.de>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20210728234245.GA868725@bjorn-Precision-5520>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Re: [PATCH 3/5] PCI/VPD: Consolidate missing EEPROM checks
-Message-ID: <0e9c09b3-c964-2b34-5d67-db013a9258ae@gmail.com>
-Date:   Thu, 29 Jul 2021 08:10:25 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S234999AbhG2L4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Jul 2021 07:56:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46348 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234634AbhG2L4g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jul 2021 07:56:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5E89060F0F;
+        Thu, 29 Jul 2021 11:56:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1627559793;
+        bh=qqbwV7w7L+ks16hOKbqiv7KUvkbAHwA9fpHuhPJC8lY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kJOmzC2mSZtmAJNbhlyXKn4eIyccvsW4MWlf8LFBveXp0gBoZdwIjRg4aCGYtYLJz
+         JlaSXXT5ulzVNKRZJWl9L0Jv9u8isWrSFYd8Q2YTmZaqxsWHEVUri8seYiduMWJC3Z
+         piN/FWtaWha9HxzPOgp+fniw4oOCEhtNEa3aGUQjf6SWlZEPja7k2Pyr2j7j8cQ2cs
+         QdQO5wYsEjv9n7m5EPPenT2fqcb/J7j6cCDkHXrPyThu/R0hnUEXVLHwm5VoEa2jX7
+         bT4jN7cMZpn1Joy6zcXqGwHbC6jAnwWWkoJKlX5kMRozLo42bJDq+DZ7+ZPg8n4ypP
+         hP37ZUbsiWLdQ==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1m94eN-004d1v-9r; Thu, 29 Jul 2021 13:56:31 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 2/5] dt-bindings: PCI: kirin: convert kirin-pcie.txt to yaml
+Date:   Thu, 29 Jul 2021 13:56:25 +0200
+Message-Id: <24846acf0a9bed076de4a94a662dea0cb6c4fc8d.1627559126.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1627559126.git.mchehab+huawei@kernel.org>
+References: <cover.1627559126.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210728234245.GA868725@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 29.07.2021 01:42, Bjorn Helgaas wrote:
-> On Fri, Jul 16, 2021 at 12:16:55AM +0200, Heiner Kallweit wrote:
->> On 15.07.2021 23:59, Bjorn Helgaas wrote:
->>> From: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> A missing VPD EEPROM typically reads as either all 0xff or all zeroes.
->>> Both cases lead to invalid VPD resource items.  A 0xff tag would be a Large
->>> Resource with length 0xffff (65535).  That's invalid because VPD can only
->>> be 32768 bytes, limited by the size of the address register in the VPD
->>> Capability.
->>>
->>> A VPD that reads as all zeroes is also invalid because a 0x00 tag is a
->>> Small Resource with length 0, which would result in an item of length 1.
->>> This isn't explicitly illegal in PCIe r5.0, sec 6.28, but the format is
->>> derived from PNP ISA, which *does* say "a small resource data type may be
->>> 2-8 bytes in size" (Plug and Play ISA v1.0a, sec 6.2.2.
->>>
->>> Check for these invalid tags and return VPD size of zero if we find them.
->>> If they occur at the beginning of VPD, assume it's the result of a missing
->>> EEPROM.
->>>
->>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>> ---
->>>  drivers/pci/vpd.c | 36 +++++++++++++++++++++++++++---------
->>>  1 file changed, 27 insertions(+), 9 deletions(-)
->>>
->>> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
->>> index 9b54dd95e42c..9c2744d79b53 100644
->>> --- a/drivers/pci/vpd.c
->>> +++ b/drivers/pci/vpd.c
->>> @@ -77,11 +77,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
->>>  
->>>  	while (off < old_size && pci_read_vpd(dev, off, 1, header) == 1) {
->>>  		unsigned char tag;
->>> -
->>> -		if (!header[0] && !off) {
->>> -			pci_info(dev, "Invalid VPD tag 00, assume missing optional VPD EPROM\n");
->>> -			return 0;
->>> -		}
->>> +		size_t size;
->>>  
->>>  		if (header[0] & PCI_VPD_LRDT) {
->>>  			/* Large Resource Data Type Tag */
->>> @@ -96,8 +92,16 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
->>>  						 off + 1);
->>>  					return 0;
->>>  				}
->>> -				off += PCI_VPD_LRDT_TAG_SIZE +
->>> -					pci_vpd_lrdt_size(header);
->>> +				size = pci_vpd_lrdt_size(header);
->>> +
->>> +				/*
->>> +				 * Missing EEPROM may read as 0xff.
->>> +				 * Length of 0xffff (65535) cannot be valid
->>> +				 * because VPD can't be that large.
->>> +				 */
->>
->> I'm not fully convinced. Instead of checking for a "no VPD EPROM" read (00/ff)
->> directly, we now do it indirectly based on the internal tag structure.
->> We have pci_vpd_lrdt_size() et al to encapsulate the internal structure.
->> IMO the code is harder to understand now.
-> 
-> I don't quite follow.  Previously we checked for 0x00 data
-> ("if (!header[0] && !off)"), but we didn't check directly for 0xff.
-> 
-> If we read 0xff, we took the PCI_VPD_LRDT case, but it wouldn't match
-> ID_STRING, RO_DATA, or RW_DATA, so we'd fall out and check again
-> against ID_STRING, RO_DATA, and RW_DATA, and take the "invalid
-> %s VPD tag" error path because it doesn't match any.
-> 
-> This results in failure for any large resource except ID_STRING,
-> RO_DATA, and RW_DATA, regardless of the size.
-> 
-> My proposed code catches a different set of invalid things.
-> "size > PCI_VPD_MAX_SIZE" will catch any large resource headers with
-> length 0x8001 through 0xffff.
-> 
-> Possibly it should actually check for "off + size > PCI_VPD_MAX_SIZE"
-> so e.g., it would catch a 0x20 byte resource starting at 0x7ff0.
-> 
+Convert the file into a JSON description at the yaml format.
 
-For handling the 0xff case w/o additional overhead the following is pending:
-https://patchwork.kernel.org/project/linux-pci/patch/8de8c906-9284-93b9-bb44-4ffdc3470740@gmail.com/
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../bindings/pci/hisilicon,kirin-pcie.yaml    | 86 +++++++++++++++++++
+ .../devicetree/bindings/pci/kirin-pcie.txt    | 50 -----------
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |  2 +-
+ MAINTAINERS                                   |  2 +-
+ 4 files changed, 88 insertions(+), 52 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
+ delete mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
 
-As far as I can see the VPD structure hasn't changed since it was
-introduced in PCI 2.2. This was how many years ago?
-Instead of adding code at least my personal objective would be
-to make support for such legacy features as simple and maintainable
-as possible.
-
->>> +				if (size > PCI_VPD_MAX_SIZE)
->>> +					goto error;
->>> +				off += PCI_VPD_LRDT_TAG_SIZE + size;
->>>  			} else {
->>>  				pci_warn(dev, "invalid large VPD tag %02x at offset %zu",
->>>  					 tag, off);
->>> @@ -105,14 +109,28 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
->>>  			}
->>>  		} else {
->>>  			/* Short Resource Data Type Tag */
->>> -			off += PCI_VPD_SRDT_TAG_SIZE +
->>> -				pci_vpd_srdt_size(header);
->>>  			tag = pci_vpd_srdt_tag(header);
->>> +			size = pci_vpd_srdt_size(header);
->>> +
->>> +			/*
->>> +			 * Missing EEPROM may read as 0x00.  A small item
->>> +			 * must be at least 2 bytes.
->>> +			 */
->>> +			if (size == 0)
->>> +				goto error;
->>> +
->>> +			off += PCI_VPD_SRDT_TAG_SIZE + size;
->>>  			if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
->>>  				return off;
->>>  		}
->>>  	}
->>>  	return 0;
->>> +
->>> +error:
->>> +	pci_info(dev, "invalid VPD tag %#04x at offset %zu%s\n",
->>> +		 header[0], off, off == 0 ?
->>> +		 "; assume missing optional EEPROM" : "");
->>> +	return 0;
->>>  }
->>>  
->>>  /*
->>>
->>
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
+new file mode 100644
+index 000000000000..90cab09e8d4b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
+@@ -0,0 +1,86 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/hisilicon,kirin-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: HiSilicon Kirin SoCs PCIe host DT description
++
++maintainers:
++  - Xiaowei Song <songxiaowei@hisilicon.com>
++  - Binghui Wang <wangbinghui@hisilicon.com>
++
++description: |
++  Kirin PCIe host controller is based on the Synopsys DesignWare PCI core.
++  It shares common functions with the PCIe DesignWare core driver and
++  inherits common properties defined in
++  Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml.
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    contains:
++      enum:
++        - hisilicon,kirin960-pcie
++
++  reg:
++    description: |
++      Should contain dbi, apb, config registers location and length.
++      For HiKey960, it should also contain phy.
++    minItems: 3
++    maxItems: 4
++
++  reg-names:
++    minItems: 3
++    maxItems: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/clock/hi3660-clock.h>
++
++    soc {
++      #address-cells = <2>;
++      #size-cells = <2>;
++
++      pcie@f4000000 {
++        compatible = "hisilicon,kirin960-pcie";
++        reg = <0x0 0xf4000000 0x0 0x1000>,
++              <0x0 0xff3fe000 0x0 0x1000>,
++              <0x0 0xf3f20000 0x0 0x40000>,
++              <0x0 0xf5000000 0x0 0x2000>;
++        reg-names = "dbi", "apb", "phy", "config";
++        bus-range = <0x0  0x1>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        device_type = "pci";
++        ranges = <0x02000000 0x0 0x00000000
++                  0x0 0xf6000000
++                  0x0 0x02000000>;
++        num-lanes = <1>;
++        #interrupt-cells = <1>;
++        interrupts = <0 283 4>;
++        interrupt-names = "msi";
++        interrupt-map-mask = <0xf800 0 0 7>;
++        interrupt-map = <0x0 0 0 1 &gic GIC_SPI 282 IRQ_TYPE_LEVEL_HIGH>,
++                        <0x0 0 0 2 &gic GIC_SPI 283 IRQ_TYPE_LEVEL_HIGH>,
++                        <0x0 0 0 3 &gic GIC_SPI 284 IRQ_TYPE_LEVEL_HIGH>,
++                        <0x0 0 0 4 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
++        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++                 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++                 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++                 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++                 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++        clock-names = "pcie_phy_ref", "pcie_aux", "pcie_apb_phy",
++                      "pcie_apb_sys", "pcie_aclk";
++      };
++    };
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+deleted file mode 100644
+index 7adab8999a6a..000000000000
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ /dev/null
+@@ -1,50 +0,0 @@
+-HiSilicon Kirin SoCs PCIe host DT description
+-
+-Kirin PCIe host controller is based on the Synopsys DesignWare PCI core.
+-It shares common functions with the PCIe DesignWare core driver and
+-inherits common properties defined in
+-Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml.
+-
+-Additional properties are described here:
+-
+-Required properties
+-- compatible:
+-	"hisilicon,kirin960-pcie"
+-- reg: Should contain rc_dbi, apb, phy, config registers location and length.
+-- reg-names: Must include the following entries:
+-  "dbi": controller configuration registers;
+-  "apb": apb Ctrl register defined by Kirin;
+-  "phy": apb PHY register defined by Kirin;
+-  "config": PCIe configuration space registers.
+-- reset-gpios: The GPIO to generate PCIe PERST# assert and deassert signal.
+-
+-Optional properties:
+-
+-Example based on kirin960:
+-
+-	pcie@f4000000 {
+-		compatible = "hisilicon,kirin960-pcie";
+-		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+-		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
+-		reg-names = "dbi","apb","phy", "config";
+-		bus-range = <0x0  0x1>;
+-		#address-cells = <3>;
+-		#size-cells = <2>;
+-		device_type = "pci";
+-		ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
+-		num-lanes = <1>;
+-		#interrupt-cells = <1>;
+-		interrupt-map-mask = <0xf800 0 0 7>;
+-		interrupt-map = <0x0 0 0 1 &gic 0 0 0  282 4>,
+-				<0x0 0 0 2 &gic 0 0 0  283 4>,
+-				<0x0 0 0 3 &gic 0 0 0  284 4>,
+-				<0x0 0 0 4 &gic 0 0 0  285 4>;
+-		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+-			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+-			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+-			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+-		clock-names = "pcie_phy_ref", "pcie_aux",
+-			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+-		reset-gpios = <&gpio11 1 0 >;
+-	};
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index a8c1db879fb9..6c7501b8df01 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -34,7 +34,7 @@ properties:
+     minItems: 2
+     maxItems: 5
+     items:
+-      enum: [dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link]
++      enum: [dbi, dbi2, config, atu, apb, app, elbi, mgmt, ctrl, parf, cfg, link, phy]
+ 
+   num-lanes:
+     description: |
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 672299764ec7..3e2d849b4f7d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14413,7 +14413,7 @@ M:	Xiaowei Song <songxiaowei@hisilicon.com>
+ M:	Binghui Wang <wangbinghui@hisilicon.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/kirin-pcie.txt
++F:	Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
+ F:	drivers/pci/controller/dwc/pcie-kirin.c
+ 
+ PCIE DRIVER FOR HISILICON STB
+-- 
+2.31.1
 
