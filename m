@@ -2,139 +2,75 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3654C4320E
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Jul 2021 09:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 447AEC4320E
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Jul 2021 10:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6DD060C3F
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Jul 2021 09:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29B8F60F46
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Jul 2021 10:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238397AbhG3Juk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Jul 2021 05:50:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59776 "EHLO mail.kernel.org"
+        id S238421AbhG3K0n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Jul 2021 06:26:43 -0400
+Received: from mga11.intel.com ([192.55.52.93]:53264 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238323AbhG3Juc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Jul 2021 05:50:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8207B61052;
-        Fri, 30 Jul 2021 09:50:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627638628;
-        bh=HPRTefNmV6AOp/Y+4TXPirb16XdPvxqx2Z57/uQyDKM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MlXlNa2Z6bXAX3OaWNYy3qTrrn/dtoblfyNHwHnctkxKBbm61tmsgRaLEgbj2OXwM
-         cI6fHNtCtFptt/KIDOTC5NI+lHGvv9FpzJWBt+MN9lyXhied/lLW+BFBmyKv0NVHQn
-         GYsd7iCKj1hqtiyo4LRFC2wxhbW3eMYZUHrGKdDkcDAnZ+R+px90L58CUgwdrLFc+B
-         z5x5zHl3kPoaR3zSmjWqFcvTxi7zO/koG18K0lkM+QXM68Bi//lw0JK3dTP99cpIVE
-         K8NB0+MhpwYKOWml+9GEy50OJniXsDSXHw4rCMrJeIjVP9xZNdJObS5pvgtg37hGKA
-         J0ZfZgj7zFEqA==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1m9P9t-006s3o-2k; Fri, 30 Jul 2021 11:50:25 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: [PATCH v8 00/11] Add support for Hikey 970 PCIe
-Date:   Fri, 30 Jul 2021 11:50:03 +0200
-Message-Id: <cover.1627637745.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        id S238274AbhG3K0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 30 Jul 2021 06:26:43 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10060"; a="209959346"
+X-IronPort-AV: E=Sophos;i="5.84,281,1620716400"; 
+   d="scan'208";a="209959346"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2021 03:26:38 -0700
+X-IronPort-AV: E=Sophos;i="5.84,281,1620716400"; 
+   d="scan'208";a="418432773"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2021 03:26:34 -0700
+Received: by lahna (sSMTP sendmail emulation); Fri, 30 Jul 2021 13:26:31 +0300
+Date:   Fri, 30 Jul 2021 13:26:31 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Utkarsh H Patel <utkarsh.h.patel@intel.com>,
+        Koba Ko <koba.ko@canonical.com>
+Subject: Re: [PATCH v1.1 1/2] PCI: PM: Avoid forcing PCI_D0 for wakeup
+ reasons inconsistently
+Message-ID: <YQPT1y2hA+/UPReI@lahna>
+References: <4668274.31r3eYUQgx@kreacher>
+ <2207145.ElGaqSPkdT@kreacher>
+ <2593738.mvXUDI8C0e@kreacher>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2593738.mvXUDI8C0e@kreacher>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On this version, the DT bindings were split on a separate patch series:
-	https://lore.kernel.org/lkml/cover.1627637448.git.mchehab+huawei@kernel.org/
+On Thu, Jul 29, 2021 at 05:54:28PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> It is inconsistent to return PCI_D0 from pci_target_state() instead
+> of the original target state if 'wakeup' is true and the device
+> cannot signal PME from D0.
+> 
+> This only happens when the device cannot signal PME from the original
+> target state and any shallower power states (including D0) and that
+> case is effectively equivalent to the one in which PME singaling is
+> not supported at all.  Since the original target state is returned in
+> the latter case, make the function do that in the former one too.
+> 
+> Link: https://lore.kernel.org/linux-pm/3149540.aeNJFYEL58@kreacher/
+> Fixes: 666ff6f83e1d ("PCI/PM: Avoid using device_may_wakeup() for runtime PM")
+> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-The patches here should apply cleanly on the top of v5.14-rc1.
-
-patch1 contains a PHY for Kirin 970 PCIe.
-
-The remaining patches add support for Kirin 970 at the pcie-kirin driver, and
-add the needed logic to compile it as module and to allow to dynamically
-remove the driver in runtime.
-
-Tested on HiKey970:
-
-  # lspci -D -PP
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-  0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
-  0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-
-Tested on HiKey960:
-
-  # lspci -D 
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
-
----
-
-v8:
-- Changed the drivers to follow the DT schema under discussions with
-  Rob;
-- Added patches to fix powerof logic and to allow unloading the driver.
-
-v7:
-- Moved kirin_pcie_match to be closer to the probe function;
-- Improved patch description for:
-	"PCI: kirin: add support for a PHY layer"
-- Added missing MODULE_*() macros on both PCI and PHY drivers;
-- Fixed a warning at hisilicon,phy-hi3670-pcie.yaml reported by
-  Rob Herring's bot.
-
-v6:
-- Use an alternative approach, in order to keep the Kirin 960 PHY internal to 
-  the driver, in order to not break the DT schema. The PHY-specific code
-  were made self-contained at pcie-kirin, in order to make easier to split
-  it in the future, if needed.
-
-v5:
-- added "static" to hi3670_pcie_get_eyeparam() declaration on patch 6/8
-
-v4:
-
-- dropped the DTS patch, as it depends on a PMIC-related patch series;
-- minor changes at the patch description;
-- HiKey and HiSilicon are now using the preferred CamelCase format.
-
-Mauro Carvalho Chehab (11):
-  phy: HiSilicon: Add driver for Kirin 970 PCIe PHY
-  PCI: kirin: Reorganize the PHY logic inside the driver
-  PCI: kirin: Add support for a PHY layer
-  PCI: kirin: Use regmap for APB registers
-  PCI: kirin: Add support for bridge slot DT schema
-  PCI: kirin: Add Kirin 970 compatible
-  PCI: kirin: Add MODULE_* macros
-  PCI: kirin: Allow building it as a module
-  PCI: kirin: Add power_off support for Kirin 960 PHY
-  PCI: kirin: fix poweroff sequence
-  PCI: kirin: Allow removing the driver
-
- drivers/pci/controller/dwc/Kconfig      |   2 +-
- drivers/pci/controller/dwc/pcie-kirin.c | 647 ++++++++++++++-----
- drivers/phy/hisilicon/Kconfig           |  10 +
- drivers/phy/hisilicon/Makefile          |   1 +
- drivers/phy/hisilicon/phy-hi3670-pcie.c | 799 ++++++++++++++++++++++++
- 5 files changed, 1311 insertions(+), 148 deletions(-)
- create mode 100644 drivers/phy/hisilicon/phy-hi3670-pcie.c
-
--- 
-2.31.1
-
-
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
