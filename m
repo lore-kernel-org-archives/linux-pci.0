@@ -2,100 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F71C4338F
-	for <linux-pci@archiver.kernel.org>; Sun,  1 Aug 2021 16:55:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2BCC4338F
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Aug 2021 17:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3766C60F36
-	for <linux-pci@archiver.kernel.org>; Sun,  1 Aug 2021 16:55:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CB5D60F39
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Aug 2021 17:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbhHAQzT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 1 Aug 2021 12:55:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45136 "EHLO mail.kernel.org"
+        id S229592AbhHARGB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Aug 2021 13:06:01 -0400
+Received: from mga18.intel.com ([134.134.136.126]:26297 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229548AbhHAQzS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 1 Aug 2021 12:55:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BC51B60EE9;
-        Sun,  1 Aug 2021 16:55:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627836910;
-        bh=t0F14vvjAbS4suu+eRLbQ6noEGxXjuGG6u4ukmGqh6E=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jRK5hsfv4Q6r3RUtHh4pyi4copIhvH6jbUo5DSq6T6Ki2cDN6SxK9S/xOYMw5HuM4
-         yXX7ca6ZtTailRC+RpMXG5ZEt8ZahdFo0mKdP3q48ALNXSu3saxQcfEAAJzS8uudaC
-         Zw+3lcnySqlv8h4qRplaYL1EPDPLvpK/deQKfpxjcO5B2zpDo311ATs8cG/hXcinJN
-         dcE4pVsT34V1p7cRi4/U2tMWfbKhuGT/TNtRAtgVeDQpwGAHmZzZikey+ukHskqV2J
-         ND0yrMwcn0S9H1fRddsXUgTIh5vzbDe1YAcgCqrkygDjXh+vGKHdo02c1Oclzy6BJ+
-         1YU0FpdD5eLJw==
-Date:   Sun, 1 Aug 2021 18:55:00 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: Re: [PATCH v8 00/11] Add support for Hikey 970 PCIe
-Message-ID: <20210801185500.7fbb1849@coco.lan>
-In-Reply-To: <cover.1627637745.git.mchehab+huawei@kernel.org>
-References: <cover.1627637745.git.mchehab+huawei@kernel.org>
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.30; x86_64-redhat-linux-gnu)
+        id S229580AbhHARGB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 1 Aug 2021 13:06:01 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10062"; a="200541867"
+X-IronPort-AV: E=Sophos;i="5.84,286,1620716400"; 
+   d="scan'208";a="200541867"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Aug 2021 10:05:52 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,286,1620716400"; 
+   d="scan'208";a="478213629"
+Received: from lkp-server01.sh.intel.com (HELO d053b881505b) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 01 Aug 2021 10:05:49 -0700
+Received: from kbuild by d053b881505b with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mAEuK-000CUb-UD; Sun, 01 Aug 2021 17:05:48 +0000
+Date:   Mon, 2 Aug 2021 01:05:01 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Amey Narkhede <ameynarkhede03@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     kbuild-all@lists.01.org, alex.williamson@redhat.com,
+        Raphael Norwitz <raphael.norwitz@nutanix.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
+        Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Subject: [RFC PATCH] PCI: pcie_has_flr() can be static
+Message-ID: <20210801170501.GA141152@1c36740427e6>
+References: <20210801142518.1224-3-ameynarkhede03@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210801142518.1224-3-ameynarkhede03@gmail.com>
+X-Patchwork-Hint: ignore
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Fri, 30 Jul 2021 11:50:03 +0200
-Mauro Carvalho Chehab <mchehab+huawei@kernel.org> escreveu:
+drivers/pci/pci.c:4636:6: warning: symbol 'pcie_has_flr' was not declared. Should it be static?
 
-> On this version, the DT bindings were split on a separate patch series:
-> 	https://lore.kernel.org/lkml/cover.1627637448.git.mchehab+huawei@kernel.org/
-> 
-> The patches here should apply cleanly on the top of v5.14-rc1.
-> 
-> patch1 contains a PHY for Kirin 970 PCIe.
-> 
-> The remaining patches add support for Kirin 970 at the pcie-kirin driver, and
-> add the needed logic to compile it as module and to allow to dynamically
-> remove the driver in runtime.
-> 
-> Tested on HiKey970:
-> 
->   # lspci -D -PP
->   0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
->   0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
->   0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
->   0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
+---
+ pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-As a reference, this is HiKey970 with both M.2 and mini-PCIe slots with
-devices:
-
-# lspci -D -PP
-0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
-0000:00:00.0/01:00.0/02:05.0/05:00.0 Network controller: Intel Corporation Centrino Advanced-N + WiMAX 6250 [Kilmer Peak] (rev 5e)
-0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-
-Regards,
-Mauro
-
-Thanks,
-Mauro
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 338c98bb60968..dba075bd11114 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4633,7 +4633,7 @@ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+  * Returns true if the device advertises support for PCIe function level
+  * resets.
+  */
+-bool pcie_has_flr(struct pci_dev *dev)
++static bool pcie_has_flr(struct pci_dev *dev)
+ {
+ 	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+ 		return false;
