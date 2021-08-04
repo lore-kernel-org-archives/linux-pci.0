@@ -2,175 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC03C4338F
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 12:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DE1CC43214
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 13:29:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D484560EBC
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 12:59:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02CF660FC4
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 13:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237776AbhHDM7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 08:59:41 -0400
-Received: from mga04.intel.com ([192.55.52.120]:49902 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236777AbhHDM7j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 08:59:39 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10065"; a="212050996"
-X-IronPort-AV: E=Sophos;i="5.84,294,1620716400"; 
-   d="scan'208";a="212050996"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 05:59:25 -0700
-X-IronPort-AV: E=Sophos;i="5.84,294,1620716400"; 
-   d="scan'208";a="511901828"
-Received: from dfuxbrum-mobl.ger.corp.intel.com (HELO [10.251.175.67]) ([10.251.175.67])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 05:59:22 -0700
-Subject: Re: [Intel-wired-lan] [PATCH next-queue v6 4/4] igc: Add support for
- PTP getcrosststamp()
-To:     Vinicius Costa Gomes <vinicius.gomes@intel.com>,
-        intel-wired-lan@lists.osuosl.org
-Cc:     pmenzel@molgen.mpg.de, linux-pci@vger.kernel.org,
-        richardcochran@gmail.com, hch@infradead.org,
-        netdev@vger.kernel.org, bhelgaas@google.com, helgaas@kernel.org
-References: <20210727033657.39885-1-vinicius.gomes@intel.com>
- <20210727033657.39885-5-vinicius.gomes@intel.com>
-From:   "Fuxbrumer, Dvora" <dvorax.fuxbrumer@linux.intel.com>
-Message-ID: <fab9d5fd-d2ea-1e31-3b6f-d26d26244bd7@linux.intel.com>
-Date:   Wed, 4 Aug 2021 15:59:21 +0300
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S238457AbhHDN3n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 09:29:43 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:54586 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238119AbhHDN3n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Aug 2021 09:29:43 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 174DTLIT057562;
+        Wed, 4 Aug 2021 08:29:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1628083761;
+        bh=OEHZU/iiQVxRGWPkSvAFFyNjExjrB5ZtDQI0+s9k8Zk=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=TrKEmq8xcgEV2tO3o0ydo79jpWjyEYdV7fVDliMDIxtZzb21d9j139T/zz4/kJLTl
+         otoIfliqk0Z//znaO1hYLckb7V6iGqm/XYrvMRd+yceoGX8ySg/FS08KnJUG4hTLBA
+         nIzFhc9z6gisr9Ue46BEDbTzTANCh28amYhjOYhE=
+Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 174DTL2k063549
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 4 Aug 2021 08:29:21 -0500
+Received: from DFLE102.ent.ti.com (10.64.6.23) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Wed, 4 Aug
+ 2021 08:29:21 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
+ Frontend Transport; Wed, 4 Aug 2021 08:29:21 -0500
+Received: from a0393678-ssd.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 174DTDpe029237;
+        Wed, 4 Aug 2021 08:29:18 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>
+CC:     Tom Joseph <tjoseph@cadence.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Lokesh Vutla <lokeshvutla@ti.com>
+Subject: [PATCH v2 1/3] dt-bindings: PCI: ti,j721e: Add bindings to specify legacy interrupts
+Date:   Wed, 4 Aug 2021 18:59:10 +0530
+Message-ID: <20210804132912.30685-2-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210804132912.30685-1-kishon@ti.com>
+References: <20210804132912.30685-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20210727033657.39885-5-vinicius.gomes@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 7/27/2021 06:36, Vinicius Costa Gomes wrote:
-> i225 supports PCIe Precision Time Measurement (PTM), allowing us to
-> support the PTP_SYS_OFFSET_PRECISE ioctl() in the driver via the
-> getcrosststamp() function.
-> 
-> The easiest way to expose the PTM registers would be to configure the PTM
-> dialogs to run periodically, but the PTP_SYS_OFFSET_PRECISE ioctl()
-> semantics are more aligned to using a kind of "one-shot" way of retrieving
-> the PTM timestamps. But this causes a bit more code to be written: the
-> trigger registers for the PTM dialogs are not cleared automatically.
-> 
-> i225 can be configured to send "fake" packets with the PTM
-> information, adding support for handling these types of packets is
-> left for the future.
-> 
-> PTM improves the accuracy of time synchronization, for example, using
-> phc2sys, while a simple application is sending packets as fast as
-> possible. First, without .getcrosststamp():
-> 
-> phc2sys[191.382]: enp4s0 sys offset      -959 s2 freq    -454 delay   4492
-> phc2sys[191.482]: enp4s0 sys offset       798 s2 freq   +1015 delay   4069
-> phc2sys[191.583]: enp4s0 sys offset       962 s2 freq   +1418 delay   3849
-> phc2sys[191.683]: enp4s0 sys offset       924 s2 freq   +1669 delay   3753
-> phc2sys[191.783]: enp4s0 sys offset       664 s2 freq   +1686 delay   3349
-> phc2sys[191.883]: enp4s0 sys offset       218 s2 freq   +1439 delay   2585
-> phc2sys[191.983]: enp4s0 sys offset       761 s2 freq   +2048 delay   3750
-> phc2sys[192.083]: enp4s0 sys offset       756 s2 freq   +2271 delay   4061
-> phc2sys[192.183]: enp4s0 sys offset       809 s2 freq   +2551 delay   4384
-> phc2sys[192.283]: enp4s0 sys offset      -108 s2 freq   +1877 delay   2480
-> phc2sys[192.383]: enp4s0 sys offset     -1145 s2 freq    +807 delay   4438
-> phc2sys[192.484]: enp4s0 sys offset       571 s2 freq   +2180 delay   3849
-> phc2sys[192.584]: enp4s0 sys offset       241 s2 freq   +2021 delay   3389
-> phc2sys[192.684]: enp4s0 sys offset       405 s2 freq   +2257 delay   3829
-> phc2sys[192.784]: enp4s0 sys offset        17 s2 freq   +1991 delay   3273
-> phc2sys[192.884]: enp4s0 sys offset       152 s2 freq   +2131 delay   3948
-> phc2sys[192.984]: enp4s0 sys offset      -187 s2 freq   +1837 delay   3162
-> phc2sys[193.084]: enp4s0 sys offset     -1595 s2 freq    +373 delay   4557
-> phc2sys[193.184]: enp4s0 sys offset       107 s2 freq   +1597 delay   3740
-> phc2sys[193.284]: enp4s0 sys offset       199 s2 freq   +1721 delay   4010
-> phc2sys[193.385]: enp4s0 sys offset      -169 s2 freq   +1413 delay   3701
-> phc2sys[193.485]: enp4s0 sys offset       -47 s2 freq   +1484 delay   3581
-> phc2sys[193.585]: enp4s0 sys offset       -65 s2 freq   +1452 delay   3778
-> phc2sys[193.685]: enp4s0 sys offset        95 s2 freq   +1592 delay   3888
-> phc2sys[193.785]: enp4s0 sys offset       206 s2 freq   +1732 delay   4445
-> phc2sys[193.885]: enp4s0 sys offset      -652 s2 freq    +936 delay   2521
-> phc2sys[193.985]: enp4s0 sys offset      -203 s2 freq   +1189 delay   3391
-> phc2sys[194.085]: enp4s0 sys offset      -376 s2 freq    +955 delay   2951
-> phc2sys[194.185]: enp4s0 sys offset      -134 s2 freq   +1084 delay   3330
-> phc2sys[194.285]: enp4s0 sys offset       -22 s2 freq   +1156 delay   3479
-> phc2sys[194.386]: enp4s0 sys offset        32 s2 freq   +1204 delay   3602
-> phc2sys[194.486]: enp4s0 sys offset       122 s2 freq   +1303 delay   3731
-> 
-> Statistics for this run (total of 2179 lines), in nanoseconds:
->    average: -1.12
->    stdev: 634.80
->    max: 1551
->    min: -2215
-> 
-> With .getcrosststamp() via PCIe PTM:
-> 
-> phc2sys[367.859]: enp4s0 sys offset         6 s2 freq   +1727 delay      0
-> phc2sys[367.959]: enp4s0 sys offset        -2 s2 freq   +1721 delay      0
-> phc2sys[368.059]: enp4s0 sys offset         5 s2 freq   +1727 delay      0
-> phc2sys[368.160]: enp4s0 sys offset        -1 s2 freq   +1723 delay      0
-> phc2sys[368.260]: enp4s0 sys offset        -4 s2 freq   +1719 delay      0
-> phc2sys[368.360]: enp4s0 sys offset        -5 s2 freq   +1717 delay      0
-> phc2sys[368.460]: enp4s0 sys offset         1 s2 freq   +1722 delay      0
-> phc2sys[368.560]: enp4s0 sys offset        -3 s2 freq   +1718 delay      0
-> phc2sys[368.660]: enp4s0 sys offset         5 s2 freq   +1725 delay      0
-> phc2sys[368.760]: enp4s0 sys offset        -1 s2 freq   +1721 delay      0
-> phc2sys[368.860]: enp4s0 sys offset         0 s2 freq   +1721 delay      0
-> phc2sys[368.960]: enp4s0 sys offset         0 s2 freq   +1721 delay      0
-> phc2sys[369.061]: enp4s0 sys offset         4 s2 freq   +1725 delay      0
-> phc2sys[369.161]: enp4s0 sys offset         1 s2 freq   +1724 delay      0
-> phc2sys[369.261]: enp4s0 sys offset         4 s2 freq   +1727 delay      0
-> phc2sys[369.361]: enp4s0 sys offset         8 s2 freq   +1732 delay      0
-> phc2sys[369.461]: enp4s0 sys offset         7 s2 freq   +1733 delay      0
-> phc2sys[369.561]: enp4s0 sys offset         4 s2 freq   +1733 delay      0
-> phc2sys[369.661]: enp4s0 sys offset         1 s2 freq   +1731 delay      0
-> phc2sys[369.761]: enp4s0 sys offset         1 s2 freq   +1731 delay      0
-> phc2sys[369.861]: enp4s0 sys offset        -5 s2 freq   +1725 delay      0
-> phc2sys[369.961]: enp4s0 sys offset        -4 s2 freq   +1725 delay      0
-> phc2sys[370.062]: enp4s0 sys offset         2 s2 freq   +1730 delay      0
-> phc2sys[370.162]: enp4s0 sys offset        -7 s2 freq   +1721 delay      0
-> phc2sys[370.262]: enp4s0 sys offset        -3 s2 freq   +1723 delay      0
-> phc2sys[370.362]: enp4s0 sys offset         1 s2 freq   +1726 delay      0
-> phc2sys[370.462]: enp4s0 sys offset        -3 s2 freq   +1723 delay      0
-> phc2sys[370.562]: enp4s0 sys offset        -1 s2 freq   +1724 delay      0
-> phc2sys[370.662]: enp4s0 sys offset        -4 s2 freq   +1720 delay      0
-> phc2sys[370.762]: enp4s0 sys offset        -7 s2 freq   +1716 delay      0
-> phc2sys[370.862]: enp4s0 sys offset        -2 s2 freq   +1719 delay      0
-> 
-> Statistics for this run (total of 2179 lines), in nanoseconds:
->    average: 0.14
->    stdev: 5.03
->    max: 48
->    min: -27
-> 
-> For reference, the statistics for runs without PCIe congestion show
-> that the improvements from enabling PTM are less dramatic. For two
-> runs of 16466 entries:
->    without PTM: avg -0.04 stdev 10.57 max 39 min -42
->    with PTM: avg 0.01 stdev 4.20 max 19 min -16
-> 
-> One possible explanation is that when PTM is not enabled, and there's a lot
-> of traffic in the PCIe fabric, some register reads will take more time
-> than the others because of congestion on the PCIe fabric.
-> 
-> When PTM is enabled, even if the PTM dialogs take more time to
-> complete under heavy traffic, the time measurements do not depend on
-> the time to read the registers.
-> 
-> This was implemented following the i225 EAS version 0.993.
-> 
-> Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
-> ---
->   drivers/net/ethernet/intel/igc/igc.h         |   1 +
->   drivers/net/ethernet/intel/igc/igc_defines.h |  31 ++++
->   drivers/net/ethernet/intel/igc/igc_ptp.c     | 179 +++++++++++++++++++
->   drivers/net/ethernet/intel/igc/igc_regs.h    |  23 +++
->   4 files changed, 234 insertions(+)
-> 
-Tested-by: Dvora Fuxbrumer <dvorax.fuxbrumer@linux.intel.com>
+Add bindings to specify interrupt controller for legacy interrupts.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ .../bindings/pci/ti,j721e-pci-host.yaml           | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index cc900202df29..f461d7b4c0cc 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -74,6 +74,11 @@ properties:
+ 
+   msi-map: true
+ 
++patternProperties:
++  "interrupt-controller":
++    type: object
++    description: interrupt controller to handle legacy interrupts.
++
+ required:
+   - compatible
+   - reg
+@@ -97,6 +102,8 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/soc/ti,sci_pm_domain.h>
+     #include <dt-bindings/gpio/gpio.h>
+ 
+@@ -131,5 +138,13 @@ examples:
+             ranges = <0x01000000 0x0 0x10001000  0x00 0x10001000  0x0 0x0010000>,
+                      <0x02000000 0x0 0x10011000  0x00 0x10011000  0x0 0x7fef000>;
+             dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x10000 0x0>;
++
++
++            pcie0_intc: interrupt-controller {
++                    interrupt-controller;
++                    #interrupt-cells = <1>;
++                    interrupt-parent = <&gic500>;
++                    interrupts = <GIC_SPI 312 IRQ_TYPE_EDGE_RISING>;
++            };
+         };
+     };
+-- 
+2.17.1
+
