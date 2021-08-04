@@ -2,72 +2,81 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2BD3C4338F
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 11:23:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB90AC432BE
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 11:29:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB35761029
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 11:23:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC65261029
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 11:29:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237456AbhHDLXg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 07:23:36 -0400
-Received: from foss.arm.com ([217.140.110.172]:59496 "EHLO foss.arm.com"
+        id S237728AbhHDL3z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 07:29:55 -0400
+Received: from foss.arm.com ([217.140.110.172]:59542 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237437AbhHDLXg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 07:23:36 -0400
+        id S237630AbhHDL3u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 07:29:50 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AADC713D5;
-        Wed,  4 Aug 2021 04:23:23 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4A3F813D5;
+        Wed,  4 Aug 2021 04:29:37 -0700 (PDT)
 Received: from e123427-lin.arm.com (unknown [10.57.38.165])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9F2813F719;
-        Wed,  4 Aug 2021 04:23:21 -0700 (PDT)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7084E3F719;
+        Wed,  4 Aug 2021 04:29:35 -0700 (PDT)
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     thierry.reding@gmail.com, bhelgaas@google.com, vidyas@nvidia.com,
+        kw@linux.com, Om Prakash Singh <omp@nvidia.com>,
+        helgaas@kernel.org, jonathanh@nvidia.com
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        Roman Bacik <roman.bacik@broadcom.com>,
-        Bharat Gooty <bharat.gooty@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Subject: Re: [PATCH 1/2] PCI: of: Don't fail devm_pci_alloc_host_bridge() on missing 'ranges'
-Date:   Wed,  4 Aug 2021 12:23:10 +0100
-Message-Id: <162807604073.10493.5773914111068469846.b4-ty@arm.com>
+        linux-pci@vger.kernel.org, mmaddireddy@nvidia.com,
+        linux-tegra@vger.kernel.org, kthota@nvidia.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V3 0/5] Update pcie-tegra194 driver
+Date:   Wed,  4 Aug 2021 12:29:28 +0100
+Message-Id: <162807654994.14268.4256716042526607815.b4-ty@arm.com>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20210803215656.3803204-1-robh@kernel.org>
-References: <20210803215656.3803204-1-robh@kernel.org>
+In-Reply-To: <20210623100525.19944-1-omp@nvidia.com>
+References: <20210623100525.19944-1-omp@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 3 Aug 2021 15:56:55 -0600, Rob Herring wrote:
-> Commit 669cbc708122 ("PCI: Move DT resource setup into
-> devm_pci_alloc_host_bridge()") made devm_pci_alloc_host_bridge() fail on
-> any DT resource parsing errors, but Broadcom iProc uses
-> devm_pci_alloc_host_bridge() on BCMA bus devices that don't have DT
-> resources. In particular, there is no 'ranges' property. Fix iProc by
-> making 'ranges' optional.
+On Wed, 23 Jun 2021 15:35:20 +0530, Om Prakash Singh wrote:
+> Update pcie-tegra194 driver with bug fixing and cleanup
+> 
+> Changes from V2->V3
+>   Updated subject line from "PCI: tegra:" to  "PCI: tegra194:"
+> 
+> Changes from V1->V2
+>   PCI: tegra: Fix handling BME_CHGED event
+> 	- Update variable naming
+>   PCI: tegra: Fix MSI-X programming
+> 	- No change
+>   PCI: tegra: Disable interrupts before entering L2
+> 	- Rephrase the commit message
+>   PCI: tegra: Don't allow suspend when Tegra PCIe is in EP mode
+> 	- Update return value to -ENOTSUPP.
+>   PCI: tegra: Cleanup unused code
+> 	- No Change
 > 
 > [...]
 
-Applied to pci/iproc, thanks!
+Applied to pci/tegra194, thanks!
 
-[1/2] PCI: of: Don't fail devm_pci_alloc_host_bridge() on missing 'ranges'
-      https://git.kernel.org/lpieralisi/pci/c/d277f6e88c
-[2/2] PCI: iproc: Fix BCMA probe resource handling
-      https://git.kernel.org/lpieralisi/pci/c/aeaea8969b
+[1/5] PCI: tegra194: Fix handling BME_CHGED event
+      https://git.kernel.org/lpieralisi/pci/c/ceb1412c1c
+[2/5] PCI: tegra194: Fix MSI-X programming
+      https://git.kernel.org/lpieralisi/pci/c/43537cf7e3
+[3/5] PCI: tegra194: Disable interrupts before entering L2
+      https://git.kernel.org/lpieralisi/pci/c/834c5cf2b5
+[4/5] PCI: tegra194: Don't allow suspend when Tegra PCIe is in EP mode
+      https://git.kernel.org/lpieralisi/pci/c/de2bbf2b71
+[5/5] PCI: tegra194: Cleanup unused code
+      https://git.kernel.org/lpieralisi/pci/c/f62750e691
 
 Thanks,
 Lorenzo
