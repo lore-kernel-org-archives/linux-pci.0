@@ -2,190 +2,90 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7722CC4338F
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 06:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC39C4338F
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 07:19:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 506F960F35
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 06:49:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C05E60F94
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 07:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235377AbhHDGt2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 02:49:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34086 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235019AbhHDGt1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Aug 2021 02:49:27 -0400
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55DDBC0613D5
-        for <linux-pci@vger.kernel.org>; Tue,  3 Aug 2021 23:49:15 -0700 (PDT)
-Received: by mail-lf1-x136.google.com with SMTP id a26so2670147lfr.11
-        for <linux-pci@vger.kernel.org>; Tue, 03 Aug 2021 23:49:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=3Z//ILyS2rYRU1sMmJBk9JjSZ11RdDixpEfZGLDWmq0=;
-        b=Kihx5BSYw+f362iZ0soVwUhtauSGKXx21eZss30uVGwKuf8rJxhgZzbYhM/57Gtd6Z
-         gmzAjGKJaBmkR6ewnMzCWCHRrUnc1KQAcadmDRw6VpNQSRBRxhWbhrQjMD6syLcRZCDu
-         6OyHyMs7kxlKOQIb05RuBRydvJZECmBRcez84mbT4/FJ6y9mUrcZT2cwMKuzMjwZYKKz
-         vbuFEvTEd2Qk5dEdJEA+oUJ8GMIS6qZ8074pG1A54+bbTheijuaNN+A9h8z2L1PlnxNy
-         X1edVZ21+d3vWt5QgX9vGY5/Qbv6IacTWjKPgmMaql3lenIKgM5HzvtC4+vAwPIvgGjc
-         OOOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3Z//ILyS2rYRU1sMmJBk9JjSZ11RdDixpEfZGLDWmq0=;
-        b=uOMuxlJFWR8KmJaD9YNzVV+TgDGxTl+zbdh3QixmzJ6NwVKcUA7zW4luYeY1/10d54
-         wYDn9ytrkil5j/Cy4UtyRhNjHFCmwJbHd5S1akjSGUxZ2EJoR4ovMl+XQR5hM1VEryMv
-         vpONGs5jWYySsR1tbjGBeVnmPpxivqdUYyWc75nTnYWPPlP3MRAyHQHT2LtK/E3iL5XJ
-         r/ri84uSntE/BPFKr7aAvWOYFkbHJNk5uC8C098XSRLQI/1OHHA8PAAtZbpFaxjp56ui
-         UUii1pmHSEcpPfCvN+Wl3JrLzw58cAmdKbdLZAIWgCWggoQvYKYNWKn0DN4yQYZkeRku
-         wCmQ==
-X-Gm-Message-State: AOAM5329zrCaY9uDBeiVHAKsl3J1EimN/k54pJ3kSqUBcjL59nKOzPPH
-        aJkxtE8ROK+YWre6bC8r55I=
-X-Google-Smtp-Source: ABdhPJwfUAZHh5d7bsE+cvqZGfjG/fgqeXgJyp+cCu0hsY0KCqfmvlznTtf4Y5kxxS8GAOe5mUVHnQ==
-X-Received: by 2002:ac2:41c5:: with SMTP id d5mr19612811lfi.313.1628059753626;
-        Tue, 03 Aug 2021 23:49:13 -0700 (PDT)
-Received: from localhost.localdomain (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.googlemail.com with ESMTPSA id t67sm107622lff.147.2021.08.03.23.49.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Aug 2021 23:49:13 -0700 (PDT)
-Subject: Re: [PATCH 2/2] PCI: iproc: Fix BCMA probe resource handling
-To:     Rob Herring <robh@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Roman Bacik <roman.bacik@broadcom.com>,
-        Bharat Gooty <bharat.gooty@broadcom.com>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
+        id S235699AbhHDHT3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 03:19:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56720 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235773AbhHDHTN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 03:19:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5D50060F94;
+        Wed,  4 Aug 2021 07:19:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628061541;
+        bh=JQBY01HlySg61KGcooyIwhgyIlhQj6EZr5kggVNvmjA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=D1ZzqlffDZu+RJoZwbSkgajx8qG7nRNRIYw+eh7vZYxO6o1bgXe01piAvyTOz1FGH
+         QOUoLrYnFrBOnAEc7hJ298OWK9e+plUAjpdKAAy9dZvPnW5LQgaV28QsBdUyeLygyT
+         HGJW7SVv8qsdGFtIROLu/LEnYmXHVkYWHORzb2FMe5MbKMKbUnbG/uQ3l9mRLFLOU8
+         iZ0qN+Pa7KsEQYb0Hc1TKCRpLWjf++rqjFq17Nl6NIrVOrywavR59YiiK7veOyYOWS
+         VCCEAFrHz0y4ZySLwMC8DnOXEcouWtLW1GpYga9NdRiKRwIKblKTEYdDhQsHibSCXX
+         zVEev/oz9izjg==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1mBBB5-000BlD-5Y; Wed, 04 Aug 2021 09:18:59 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Rob Herring <robh+dt@kernel.org>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
-References: <20210803215656.3803204-1-robh@kernel.org>
- <20210803215656.3803204-2-robh@kernel.org>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <54b40b27-76d6-a6d3-2295-7df699956cf4@gmail.com>
-Date:   Wed, 4 Aug 2021 08:49:10 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>
+Subject: [PATCH v4 1/4] dt-bindings: PCI: kirin: Fix compatible string
+Date:   Wed,  4 Aug 2021 09:18:54 +0200
+Message-Id: <668a85cb5ec5c59b1c96d3e87e6acc773f13f6e3.1628061310.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1628061310.git.mchehab+huawei@kernel.org>
+References: <cover.1628061310.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210803215656.3803204-2-robh@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 03.08.2021 23:56, Rob Herring wrote:
-> In commit 7ef1c871da16 ("PCI: iproc: Use
-> pci_parse_request_of_pci_ranges()"), calling
-> devm_request_pci_bus_resources() was dropped from the common iProc
-> probe code, but is still needed for BCMA bus probing. Without it, there
-> will be lots of warnings like this:
-> 
-> pci 0000:00:00.0: BAR 8: no space for [mem size 0x00c00000]
-> pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x00c00000]
-> 
-> Add back calling devm_request_pci_bus_resources() and adding the
-> resources to pci_host_bridge.windows for BCMA bus probe.
-> 
-> Fixes: 7ef1c871da16 ("PCI: iproc: Use pci_parse_request_of_pci_ranges()")
-> Reported-by: Rafał Miłecki <zajec5@gmail.com>
-> Cc: Srinath Mannam <srinath.mannam@broadcom.com>
-> Cc: Roman Bacik <roman.bacik@broadcom.com>
-> Cc: Bharat Gooty <bharat.gooty@broadcom.com>
-> Cc: Abhishek Shah <abhishek.shah@broadcom.com>
-> Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-> Cc: Ray Jui <ray.jui@broadcom.com>
-> Cc: Florian Fainelli <f.fainelli@gmail.com>
-> Cc: BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-> Cc: Scott Branden <sbranden@broadcom.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: "Krzysztof Wilczyński" <kw@linux.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Rob Herring <robh@kernel.org>
+The pcie-kirin driver doesn't declare a hisilicon,kirin-pcie.
+Also, remove the useless comment after the description, as other
+compat will be supported by the same driver in the future.
 
-It works great again, thank you!
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/kirin-pcie.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Tested-by: Rafał Miłecki <rafal@milecki.pl>
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+index 7db30534498f..7adab8999a6a 100644
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -9,7 +9,7 @@ Additional properties are described here:
+ 
+ Required properties
+ - compatible:
+-	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
++	"hisilicon,kirin960-pcie"
+ - reg: Should contain rc_dbi, apb, phy, config registers location and length.
+ - reg-names: Must include the following entries:
+   "dbi": controller configuration registers;
+@@ -23,7 +23,7 @@ Optional properties:
+ Example based on kirin960:
+ 
+ 	pcie@f4000000 {
+-		compatible = "hisilicon,kirin-pcie";
++		compatible = "hisilicon,kirin960-pcie";
+ 		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+ 		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
+ 		reg-names = "dbi","apb","phy", "config";
+-- 
+2.31.1
 
-[    6.624535] pcie_iproc_bcma bcma0:7: host bridge /axi@18000000/pcie@12000 ranges:
-[    6.632048] pcie_iproc_bcma bcma0:7:   No bus range found for /axi@18000000/pcie@12000, using [bus 00-ff]
-[    6.641661] OF: /axi@18000000/pcie@12000: Missing device_type
-[    6.647432] pcie_iproc_bcma bcma0:7: non-prefetchable memory resource required
-[    6.783993] pcie_iproc_bcma bcma0:7: link: UP
-[    6.788471] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-[    6.794784] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    6.800288] pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
-[    6.807216] pci 0000:00:00.0: [14e4:d612] type 01 class 0x060400
-[    6.813242] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x4 may corrupt adjacent RW1C bits
-[    6.822927] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x4 may corrupt adjacent RW1C bits
-[    6.832620] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x1c may corrupt adjacent RW1C bits
-[    6.842387] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x1c may corrupt adjacent RW1C bits
-[    6.852162] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x3e may corrupt adjacent RW1C bits
-[    6.861951] pci 0000:00:00.0: PME# supported from D0 D3hot D3cold
-[    6.868065] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x4c may corrupt adjacent RW1C bits
-[    6.878472] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x3e may corrupt adjacent RW1C bits
-[    6.888259] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x4 may corrupt adjacent RW1C bits
-[    6.897947] pci_bus 0000:00: 1-byte config write to 0000:00:00.0 offset 0xc may corrupt adjacent RW1C bits
-[    6.907634] PCI: bus0: Fast back to back transfers disabled
-[    6.913224] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[    6.921255] pci_bus 0000:00: 2-byte config write to 0000:00:00.0 offset 0x3e may corrupt adjacent RW1C bits
-[    6.931146] pci 0000:01:00.0: [14e4:4365] type 00 class 0x028000
-[    6.937212] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
-[    6.944032] pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x007fffff 64bit]
-[    6.950839] pci 0000:01:00.0: reg 0x20: [mem 0x00000000-0x000fffff 64bit pref]
-[    6.958167] pci 0000:01:00.0: supports D1 D2
-[    6.963074] PCI: bus1: Fast back to back transfers disabled
-[    6.968693] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[    6.975354] pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x08bfffff]
-[    6.982159] pci 0000:00:00.0: BAR 9: assigned [mem 0x08c00000-0x08cfffff 64bit pref]
-[    6.989931] pci 0000:01:00.0: BAR 2: assigned [mem 0x08000000-0x087fffff 64bit]
-[    6.997275] pci 0000:01:00.0: BAR 4: assigned [mem 0x08c00000-0x08cfffff 64bit pref]
-[    7.005046] pci 0000:01:00.0: BAR 0: assigned [mem 0x08800000-0x08807fff 64bit]
-[    7.012377] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    7.017354] pci 0000:00:00.0:   bridge window [mem 0x08000000-0x08bfffff]
-[    7.024162] pci 0000:00:00.0:   bridge window [mem 0x08c00000-0x08cfffff 64bit pref]
-[    7.032111] pcie_iproc_bcma bcma0:8: host bridge /axi@18000000/pcie@13000 ranges:
-[    7.039647] pcie_iproc_bcma bcma0:8:   No bus range found for /axi@18000000/pcie@13000, using [bus 00-ff]
-[    7.049252] pcie_iproc_bcma bcma0:8: non-prefetchable memory resource required
-[    7.183989] pcie_iproc_bcma bcma0:8: link: UP
-[    7.188463] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
-[    7.194776] pci_bus 0001:00: root bus resource [bus 00-ff]
-[    7.200280] pci_bus 0001:00: root bus resource [mem 0x20000000-0x27ffffff]
-[    7.207206] pci 0001:00:00.0: [14e4:d612] type 01 class 0x060400
-[    7.213267] pci 0001:00:00.0: PME# supported from D0 D3hot D3cold
-[    7.220014] PCI: bus0: Fast back to back transfers disabled
-[    7.225619] pci 0001:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[    7.233772] pci 0001:01:00.0: [14e4:4365] type 00 class 0x028000
-[    7.239834] pci 0001:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
-[    7.246659] pci 0001:01:00.0: reg 0x18: [mem 0x00000000-0x007fffff 64bit]
-[    7.253469] pci 0001:01:00.0: reg 0x20: [mem 0x00000000-0x000fffff 64bit pref]
-[    7.260805] pci 0001:01:00.0: supports D1 D2
-[    7.265717] PCI: bus1: Fast back to back transfers disabled
-[    7.271311] pci_bus 0001:01: busn_res: [bus 01-ff] end is updated to 01
-[    7.277970] pci 0001:00:00.0: BAR 8: assigned [mem 0x20000000-0x20bfffff]
-[    7.284778] pci 0001:00:00.0: BAR 9: assigned [mem 0x20c00000-0x20cfffff 64bit pref]
-[    7.292546] pci 0001:01:00.0: BAR 2: assigned [mem 0x20000000-0x207fffff 64bit]
-[    7.299887] pci 0001:01:00.0: BAR 4: assigned [mem 0x20c00000-0x20cfffff 64bit pref]
-[    7.307670] pci 0001:01:00.0: BAR 0: assigned [mem 0x20800000-0x20807fff 64bit]
-[    7.315016] pci 0001:00:00.0: PCI bridge to [bus 01]
-[    7.319995] pci 0001:00:00.0:   bridge window [mem 0x20000000-0x20bfffff]
-[    7.326807] pci 0001:00:00.0:   bridge window [mem 0x20c00000-0x20cfffff 64bit pref]
-[    7.334761] pcie_iproc_bcma bcma0:9: host bridge /axi@18000000/pcie@14000 ranges:
-[    7.342279] pcie_iproc_bcma bcma0:9:   No bus range found for /axi@18000000/pcie@14000, using [bus 00-ff]
-[    7.351896] pcie_iproc_bcma bcma0:9: non-prefetchable memory resource required
-[    7.483989] pcie_iproc_bcma bcma0:9: PHY or data link is INACTIVE!
-[    7.490184] pcie_iproc_bcma bcma0:9: no PCIe EP device detected
