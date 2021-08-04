@@ -2,199 +2,171 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9295C04FE3
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 13:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C71C4320A
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 14:03:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4FD360F58
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 13:49:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3960A60F14
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 14:03:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238573AbhHDNtt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 09:49:49 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:16043 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238406AbhHDNtb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Aug 2021 09:49:31 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GftKz1gBpzZwdc;
-        Wed,  4 Aug 2021 21:45:43 +0800 (CST)
-Received: from SZX1000464847.huawei.com (10.21.59.169) by
- dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Wed, 4 Aug 2021 21:49:16 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
-        <logang@deltatee.com>, <leon@kernel.org>,
-        <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
-        <hverkuil-cisco@xs4all.nl>
-CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V7 8/9] PCI/IOV: Add 10-Bit Tag sysfs files for VF devices
-Date:   Wed, 4 Aug 2021 21:47:07 +0800
-Message-ID: <1628084828-119542-9-git-send-email-liudongdong3@huawei.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1628084828-119542-1-git-send-email-liudongdong3@huawei.com>
-References: <1628084828-119542-1-git-send-email-liudongdong3@huawei.com>
+        id S238491AbhHDODO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 10:03:14 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:44844 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238513AbhHDODO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Aug 2021 10:03:14 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 174E2oMH093964;
+        Wed, 4 Aug 2021 09:02:50 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1628085770;
+        bh=sMUS15sZoryFM7mBrI98D75T6KWCTkls5l3Y2MZV98k=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=u/njbcLgd+kGIYKB+ct73TobZqhkgR+x45v6RJLvEMnJOUhs6YtD4fWMu2AtBo8Lt
+         FiRu/TiAZIQoJuR7ceTRHUAixAA4dYzlMHk+eSZxw2k+2p/XVzKD/rx4vJPPoWnTZX
+         0CePXUTAg/MhN7Did2dH4HottkAhY1mAdtNpDl8s=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 174E2oOO027011
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 4 Aug 2021 09:02:50 -0500
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Wed, 4 Aug
+ 2021 09:02:49 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
+ Frontend Transport; Wed, 4 Aug 2021 09:02:49 -0500
+Received: from [10.250.233.161] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 174E2iWO099533;
+        Wed, 4 Aug 2021 09:02:45 -0500
+Subject: Re: [PATCH v2 5/6] misc: pci_endpoint_test: Do not request or
+ allocate IRQs in probe
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lokesh Vutla <lokeshvutla@ti.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tom Joseph <tjoseph@cadence.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <nadeem@cadence.com>
+References: <20210803074932.19820-1-kishon@ti.com>
+ <20210803074932.19820-6-kishon@ti.com> <20210803095839.GA11252@lpieralisi>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <02c1ddb7-539e-20a0-1bef-e10e76922a0e@ti.com>
+Date:   Wed, 4 Aug 2021 19:32:44 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.21.59.169]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggeme758-chm.china.huawei.com (10.3.19.104)
-X-CFilter-Loop: Reflected
+In-Reply-To: <20210803095839.GA11252@lpieralisi>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe spec 5.0 r1.0 section 2.2.6.2 says that if an Endpoint supports
-sending Requests to other Endpoints (as opposed to host memory), the
-Endpoint must not send 10-Bit Tag Requests to another given Endpoint
-unless an implementation-specific mechanism determines that the
-Endpoint supports 10-Bit Tag Completer capability.
-Add sriov_vf_10bit_tag file to query the status of VF 10-Bit Tag
-Requester Enable. Add sriov_vf_10bit_tag_ctl file to disable the VF
-10-Bit Tag Requester. The typical use case is for p2pdma when the peer
-device does not support 10-BIT Tag Completer.
+Hi Lorenzo,
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- Documentation/ABI/testing/sysfs-bus-pci | 20 +++++++++++++
- drivers/pci/iov.c                       | 50 +++++++++++++++++++++++++++++++++
- 2 files changed, 70 insertions(+)
+On 03/08/21 3:28 pm, Lorenzo Pieralisi wrote:
+> On Tue, Aug 03, 2021 at 01:19:31PM +0530, Kishon Vijay Abraham I wrote:
+>> Allocation of IRQ vectors and requesting IRQ is done as part of
+>> PCITEST_SET_IRQTYPE. Do not request or allocate IRQs in probe for
+>> AM654 and J721E so that the user space test script has better control
+>> of the devices for which the IRQs are configured. Since certain user
+>> space scripts could rely on allocation of IRQ vectors during probe,
+>> remove allocation of IRQs only for TI's K3 platform.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/misc/pci_endpoint_test.c | 19 +++++++++++++------
+>>  1 file changed, 13 insertions(+), 6 deletions(-)
+> 
+> I don't claim to understand the inner details of the endpoint test
+> device but it looks like this approach should be redesigned.
+> 
+> I don't believe using devices quirks is the best approach to
+> expose/remove a feature to userspace, this can soon become
+> unmaintenable.
+> 
+> Maybe you can elaborate a bit more on what the real issue is please ?
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 0e0c97d..8fdbfae 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -421,3 +421,23 @@ Description:
- 		to disable 10-Bit Tag Requester when the driver does not bind
- 		the deivce. The typical use case is for p2pdma when the peer
- 		device does not support 10-BIT Tag Completer.
-+
-+What:		/sys/bus/pci/devices/.../sriov_vf_10bit_tag
-+Date:		August 2021
-+Contact:	Dongdong Liu <liudongdong3@huawei.com>
-+Description:
-+		This file is associated with a SR-IOV physical function (PF).
-+		It is visible when the device has VF 10-Bit Tag Requester
-+		Supported. It contains the status of VF 10-Bit Tag Requester
-+		Enable. The file is only readable.
-+
-+What:		/sys/bus/pci/devices/.../sriov_vf_10bit_tag_ctl
-+Date:		August 2021
-+Contact:	Dongdong Liu <liudongdong3@huawei.com>
-+Description:
-+		This file is associated with a SR-IOV virtual function (VF).
-+		It is visible when the device has VF 10-Bit Tag Requester
-+		Supported. It only allows to write 0 to disable VF 10-Bit
-+		Tag Requester. The file is only writeable when the vf driver
-+		does not bind to a dirver. The typical use case is for p2pdma
-+		when the peer device does not support 10-BIT Tag Completer.
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 0d0bed1..04c1298 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -220,10 +220,38 @@ static ssize_t sriov_vf_msix_count_store(struct device *dev,
- static DEVICE_ATTR_WO(sriov_vf_msix_count);
- #endif
- 
-+static ssize_t sriov_vf_10bit_tag_ctl_store(struct device *dev,
-+					    struct device_attribute *attr,
-+					    const char *buf, size_t count)
-+{
-+	struct pci_dev *vf_dev = to_pci_dev(dev);
-+	struct pci_dev *pdev = pci_physfn(vf_dev);
-+	struct pci_sriov *iov;
-+	bool enable;
-+
-+	if (kstrtobool(buf, &enable) < 0)
-+		return -EINVAL;
-+
-+	if (enable != false)
-+		return -EINVAL;
-+
-+	if (vf_dev->driver)
-+		return -EBUSY;
-+
-+	iov = pdev->sriov;
-+	iov->ctrl &= ~PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN;
-+	pci_write_config_word(pdev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-+	pci_info(pdev, "disabled SRIOV 10-Bit Tag Requester\n");
-+
-+	return count;
-+}
-+static DEVICE_ATTR_WO(sriov_vf_10bit_tag_ctl);
-+
- static struct attribute *sriov_vf_dev_attrs[] = {
- #ifdef CONFIG_PCI_MSI
- 	&dev_attr_sriov_vf_msix_count.attr,
- #endif
-+	&dev_attr_sriov_vf_10bit_tag_ctl.attr,
- 	NULL,
- };
- 
-@@ -236,6 +264,11 @@ static umode_t sriov_vf_attrs_are_visible(struct kobject *kobj,
- 	if (!pdev->is_virtfn)
- 		return 0;
- 
-+	pdev = pci_physfn(pdev);
-+	if ((a == &dev_attr_sriov_vf_10bit_tag_ctl.attr) &&
-+	     !(pdev->sriov->cap & PCI_SRIOV_CAP_VF_10BIT_TAG_REQ))
-+		return 0;
-+
- 	return a->mode;
- }
- 
-@@ -487,12 +520,23 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
- 	return count;
- }
- 
-+static ssize_t sriov_vf_10bit_tag_show(struct device *dev,
-+				       struct device_attribute *attr,
-+				       char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return sysfs_emit(buf, "%u\n",
-+		!!(pdev->sriov->ctrl & PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN));
-+}
-+
- static DEVICE_ATTR_RO(sriov_totalvfs);
- static DEVICE_ATTR_RW(sriov_numvfs);
- static DEVICE_ATTR_RO(sriov_offset);
- static DEVICE_ATTR_RO(sriov_stride);
- static DEVICE_ATTR_RO(sriov_vf_device);
- static DEVICE_ATTR_RW(sriov_drivers_autoprobe);
-+static DEVICE_ATTR_RO(sriov_vf_10bit_tag);
- 
- static struct attribute *sriov_pf_dev_attrs[] = {
- 	&dev_attr_sriov_totalvfs.attr,
-@@ -501,6 +545,7 @@ static struct attribute *sriov_pf_dev_attrs[] = {
- 	&dev_attr_sriov_stride.attr,
- 	&dev_attr_sriov_vf_device.attr,
- 	&dev_attr_sriov_drivers_autoprobe.attr,
-+	&dev_attr_sriov_vf_10bit_tag.attr,
- #ifdef CONFIG_PCI_MSI
- 	&dev_attr_sriov_vf_total_msix.attr,
- #endif
-@@ -511,10 +556,15 @@ static umode_t sriov_pf_attrs_are_visible(struct kobject *kobj,
- 					  struct attribute *a, int n)
- {
- 	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (!dev_is_pf(dev))
- 		return 0;
- 
-+	if ((a == &dev_attr_sriov_vf_10bit_tag.attr) &&
-+	     !(pdev->sriov->cap & PCI_SRIOV_CAP_VF_10BIT_TAG_REQ))
-+		return 0;
-+
- 	return a->mode;
- }
- 
--- 
-2.7.4
+The actual reason for introducing this patch (affects only AM654 and
+J721E) is due to Errata ID #i2101 GIC: ITS Misbehavior
+(https://www.ti.com/lit/er/sprz455a/sprz455a.pdf). So if more than 5
+devices use GIC ITS simultaneously, GIC fails to raise interrupts.
 
+Though this patch is not an actual workaround for the issue (the
+workaround is in GIC ITS driver provided in the errata document), it
+helps to keep testing PCIe RC/EP using pci-endpoint-test even when
+multiple pci-epf-test endpoint devices are connected (Normal test-setup
+having J721E-J721E back to back connection can support 21 pci-epf-test
+devices). So this patch lets user to individually enable interrupts for
+each of the devices and could disable after the interrupt test.
+
+Since pci_endpoint_test is used only for testing PCIE RC/EP
+communication and pci-endpoint-test has already implemented
+PCITEST_SET_IRQTYPE for the userspace to enable interrupt, tried to not
+enable the interrupts of all the devices by default in the probe (for
+AM654 and J721E where this errata applies).
+
+Thanks,
+Kishon
+
+> 
+> Thanks,
+> Lorenzo
+> 
+>> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+>> index c7ee34013485..9740f2a0e7cd 100644
+>> --- a/drivers/misc/pci_endpoint_test.c
+>> +++ b/drivers/misc/pci_endpoint_test.c
+>> @@ -79,6 +79,9 @@
+>>  #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+>>  #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
+>>  
+>> +#define is_j721e_pci_dev(pdev)         \
+>> +		((pdev)->device == PCI_DEVICE_ID_TI_J721E)
+>> +
+>>  static DEFINE_IDA(pci_endpoint_test_ida);
+>>  
+>>  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+>> @@ -810,9 +813,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+>>  
+>>  	pci_set_master(pdev);
+>>  
+>> -	if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type)) {
+>> -		err = -EINVAL;
+>> -		goto err_disable_irq;
+>> +	if (!(is_am654_pci_dev(pdev) || is_j721e_pci_dev(pdev))) {
+>> +		if (!pci_endpoint_test_alloc_irq_vectors(test, irq_type)) {
+>> +			err = -EINVAL;
+>> +			goto err_disable_irq;
+>> +		}
+>>  	}
+>>  
+>>  	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
+>> @@ -850,9 +855,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+>>  		goto err_ida_remove;
+>>  	}
+>>  
+>> -	if (!pci_endpoint_test_request_irq(test)) {
+>> -		err = -EINVAL;
+>> -		goto err_kfree_test_name;
+>> +	if (!(is_am654_pci_dev(pdev) || is_j721e_pci_dev(pdev))) {
+>> +		if (!pci_endpoint_test_request_irq(test)) {
+>> +			err = -EINVAL;
+>> +			goto err_kfree_test_name;
+>> +		}
+>>  	}
+>>  
+>>  	misc_device = &test->miscdev;
+>> -- 
+>> 2.17.1
+>>
