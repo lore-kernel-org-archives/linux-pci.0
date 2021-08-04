@@ -7,46 +7,51 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FD21C432BE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB6DC4320E
 	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BD546105A
+	by mail.kernel.org (Postfix) with ESMTP id 6FF1461100
 	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231213AbhHDQD0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 12:03:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58912 "EHLO mail.kernel.org"
+        id S231893AbhHDQD1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 12:03:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58914 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229783AbhHDQDX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S229771AbhHDQDX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 4 Aug 2021 12:03:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 73B1061008;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6F11C61037;
         Wed,  4 Aug 2021 16:03:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1628092990;
-        bh=Hy8eNUUARmfSXo114esRtBNHADBjh2HhC5zgYtA2zEg=;
+        bh=TXJ1u7MVWN0FWVTPNy5JjGB30jYHeFOl74oKTqbFZYg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QOQwJFp1+EfjDECMx5h7cUJVQ3oYNeoNXzaBL6OKj6agiAZcqPaovI0yLDzoA+Je4
-         2niXudUvjUbtZf3p+uwEVkg5Jy+F0roYeOwBeyuk9gZp3cHWQCGZNOkFummGAFhbnB
-         DrsP5Ng8dFLR0jbsZOLuvxl96mH9c3SGE049nK9DYRL1NV7AO44hlOmKN2NPQ++H5C
-         M2X15wAVyn2eQKtj93VZTIx9lcKUBURaAQHpxSGCgy+wfQ2909GazY0qYCGAR2bHpy
-         v3cyEz0lhtINqRJXF0WiXxs5N5EH+QhMxgyc/ubeKiqbyyRrINLUDoTMIdL/sK2cRl
-         G0xWUchWYqyDQ==
+        b=PcTRWo/BFHnDstSgp90vPSip/YvXHKAkmF5ZEmjOqXg+hXHeqnHRKFdhor33lX8qo
+         NKwvC97f+pBcltcpDitEAEiyggHsxuGW1PwGeUBW+a6mhr/cS6w7tjw5efsLmsCRp8
+         JAEWGBQ05sktmXjKVcKpGAi3PtiBpZfSezftWPOOXbq4rqidBj/nzq8N2afQ7vjvDr
+         KI7S5MUbi0JKOgZ3GAoPOR0hEU4q8lVuzRLNy7IrZ4iv0tpnfBH3EcaQ1NMZLditds
+         kK2AXROJKqnWHkQa1GRzDvWBZ4kEGNeeMi4UwzD+V1W2j5jjX+sovq1s5Oo8g5ErFa
+         T8UTWvFh/mACg==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mBJMK-000Pzr-OE; Wed, 04 Aug 2021 18:03:08 +0200
+        id 1mBJMK-000Pzn-MU; Wed, 04 Aug 2021 18:03:08 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         "Rob Herring" <robh@kernel.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+        Alex Dewar <alex.dewar90@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        Kevin Hilman <khilman@baylibre.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Wesley Sheng <wesley.sheng@amd.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v9 09/11] PCI: kirin: Add power_off support for Kirin 960 PHY
-Date:   Wed,  4 Aug 2021 18:03:05 +0200
-Message-Id: <3ee32cd118bec7603937c3b9b55f51c424d54ba6.1628092716.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v9 08/11] PCI: kirin: Allow building it as a module
+Date:   Wed,  4 Aug 2021 18:03:04 +0200
+Message-Id: <ccf1c30e2423e752ea89b0e72846e3894274af48.1628092716.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1628092716.git.mchehab+huawei@kernel.org>
 References: <cover.1628092716.git.mchehab+huawei@kernel.org>
@@ -57,68 +62,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to prepare for module unload, add a power_off method
-for HiKey 960.
+There's nothing preventing this driver to be loaded as a
+module. So, change its config from bool to tristate.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-kirin.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index dbd45896920f..b7cc0c6701e4 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -343,6 +343,18 @@ static int hi3660_pcie_phy_init(struct platform_device *pdev,
- 	return hi3660_pcie_phy_get_resource(phy);
- }
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 423d35872ce4..e0091bfae5b5 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -227,7 +227,7 @@ config PCIE_INTEL_GW
  
-+static int hi3660_pcie_phy_power_off(struct kirin_pcie *pcie)
-+{
-+	struct hi3660_pcie_phy *phy = pcie->phy_priv;
-+
-+	/* Drop power supply for Host */
-+	regmap_write(phy->sysctrl, SCTRL_PCIE_CMOS_OFFSET, 0x00);
-+
-+	hi3660_pcie_phy_clk_ctrl(phy, false);
-+
-+	return 0;
-+}
-+
- /*
-  * The non-PHY part starts here
-  */
-@@ -562,7 +574,6 @@ static int kirin_pcie_add_bus(struct pci_bus *bus)
- 	return 0;
- }
- 
--
- static struct pci_ops kirin_pci_ops = {
- 	.read = kirin_pcie_rd_own_conf,
- 	.write = kirin_pcie_wr_own_conf,
-@@ -716,8 +727,12 @@ static int kirin_pcie_power_on(struct platform_device *pdev,
- 
- 	return 0;
- err:
--	if (kirin_pcie->type != PCIE_KIRIN_INTERNAL_PHY)
-+	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
-+		hi3660_pcie_phy_power_off(kirin_pcie);
-+	} else {
-+		phy_power_off(kirin_pcie->phy);
- 		phy_exit(kirin_pcie->phy);
-+	}
- 
- 	return ret;
- }
-@@ -727,7 +742,7 @@ static int __exit kirin_pcie_remove(struct platform_device *pdev)
- 	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
- 
- 	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
--		return 0;
-+		return hi3660_pcie_phy_power_off(kirin_pcie);
- 
- 	phy_power_off(kirin_pcie->phy);
- 	phy_exit(kirin_pcie->phy);
+ config PCIE_KIRIN
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+-	bool "HiSilicon Kirin series SoCs PCIe controllers"
++	tristate "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 	help
 -- 
 2.31.1
 
