@@ -7,51 +7,46 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB6DC4320E
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 397A2C4338F
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FF1461100
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A3C461050
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Aug 2021 16:03:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231893AbhHDQD1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 12:03:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58914 "EHLO mail.kernel.org"
+        id S232114AbhHDQD2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 12:03:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58930 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229771AbhHDQDX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S229822AbhHDQDX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 4 Aug 2021 12:03:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6F11C61037;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8E0BB610FE;
         Wed,  4 Aug 2021 16:03:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1628092990;
-        bh=TXJ1u7MVWN0FWVTPNy5JjGB30jYHeFOl74oKTqbFZYg=;
+        bh=wetJkBodZerJ/NhpLSwniXo9kEVaVggniuUUJmFEsK8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PcTRWo/BFHnDstSgp90vPSip/YvXHKAkmF5ZEmjOqXg+hXHeqnHRKFdhor33lX8qo
-         NKwvC97f+pBcltcpDitEAEiyggHsxuGW1PwGeUBW+a6mhr/cS6w7tjw5efsLmsCRp8
-         JAEWGBQ05sktmXjKVcKpGAi3PtiBpZfSezftWPOOXbq4rqidBj/nzq8N2afQ7vjvDr
-         KI7S5MUbi0JKOgZ3GAoPOR0hEU4q8lVuzRLNy7IrZ4iv0tpnfBH3EcaQ1NMZLditds
-         kK2AXROJKqnWHkQa1GRzDvWBZ4kEGNeeMi4UwzD+V1W2j5jjX+sovq1s5Oo8g5ErFa
-         T8UTWvFh/mACg==
+        b=Ig7FfPss63pFtM09gXJVAKVuhgz4tJ1bF9DMZtlMkeOaJ0+4wqCjJUUGEYrZWpsIW
+         84bbLs4TXHqbqu5/lkTw5fUd27gBrPOd5p91pVb7wdPMX/j2r7RMz+VML1G9jCnK+9
+         CnPHd/Gqyv4k7VO7LZCRMUFXDaNlt0whQLkZnir5PhS/ZNfdNt1GVdZtg2oeXjSpnr
+         1tkgHEfXkC0aQ/CHt/t+WLC1nGWYJOElKGCGNfqmwDHCEaNlC/NAc9qHUubK/T9LTn
+         Nr2gQOoNa8lkVWEK2jUPgT8GtunY6hIfZfnjvrirIhGs6Q07hzYNUr6Bh6iH3HJ0Fv
+         m6jOG+slGULbw==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mBJMK-000Pzn-MU; Wed, 04 Aug 2021 18:03:08 +0200
+        id 1mBJMK-000Q00-RU; Wed, 04 Aug 2021 18:03:08 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         "Rob Herring" <robh@kernel.org>,
-        Alex Dewar <alex.dewar90@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Kevin Hilman <khilman@baylibre.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Wesley Sheng <wesley.sheng@amd.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v9 08/11] PCI: kirin: Allow building it as a module
-Date:   Wed,  4 Aug 2021 18:03:04 +0200
-Message-Id: <ccf1c30e2423e752ea89b0e72846e3894274af48.1628092716.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v9 11/11] PCI: kirin: Allow removing the driver
+Date:   Wed,  4 Aug 2021 18:03:07 +0200
+Message-Id: <fc7d96018557c4287f0be12bec1bb7ef33474221.1628092716.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1628092716.git.mchehab+huawei@kernel.org>
 References: <cover.1628092716.git.mchehab+huawei@kernel.org>
@@ -62,27 +57,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's nothing preventing this driver to be loaded as a
-module. So, change its config from bool to tristate.
+Now that everything is in place at the poweroff sequence,
+this driver can use module_platform_driver(), which allows
+it to be removed.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- drivers/pci/controller/dwc/Kconfig | 2 +-
+ drivers/pci/controller/dwc/pcie-kirin.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 423d35872ce4..e0091bfae5b5 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -227,7 +227,7 @@ config PCIE_INTEL_GW
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 81fcd46d1346..4e6f479d496b 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -830,7 +830,7 @@ static struct platform_driver kirin_pcie_driver = {
+ 		.suppress_bind_attrs	= true,
+ 	},
+ };
+-builtin_platform_driver(kirin_pcie_driver);
++module_platform_driver(kirin_pcie_driver);
  
- config PCIE_KIRIN
- 	depends on OF && (ARM64 || COMPILE_TEST)
--	bool "HiSilicon Kirin series SoCs PCIe controllers"
-+	tristate "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	help
+ MODULE_DEVICE_TABLE(of, kirin_pcie_match);
+ MODULE_DESCRIPTION("PCIe host controller driver for Kirin Phone SoCs");
 -- 
 2.31.1
 
