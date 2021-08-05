@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75352C4320A
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE1CC04FE3
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56EAB61037
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 773DA610A8
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236950AbhHEAxz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 20:53:55 -0400
-Received: from mga02.intel.com ([134.134.136.20]:12131 "EHLO mga02.intel.com"
+        id S236761AbhHEAxy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 20:53:54 -0400
+Received: from mga02.intel.com ([134.134.136.20]:12127 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236865AbhHEAxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 20:53:52 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215445"
+        id S236666AbhHEAxr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 20:53:47 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215437"
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="201215445"
+   d="scan'208";a="201215437"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:38 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:34 -0700
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="437617244"
+   d="scan'208";a="437617221"
 Received: from mjkendri-mobl.amr.corp.intel.com (HELO skuppusw-desk1.amr.corp.intel.com) ([10.254.17.117])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:36 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:31 -0700
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     Thomas Gleixner <tglx@linutronix.de>,
@@ -56,9 +56,9 @@ Cc:     Peter H Anvin <hpa@zytor.com>, Dave Hansen <dave.hansen@intel.com>,
         sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-doc@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH v4 08/15] x86/tdx: Enable shared memory protected guest flags for TDX guest
-Date:   Wed,  4 Aug 2021 17:52:11 -0700
-Message-Id: <20210805005218.2912076-9-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 06/15] x86/kvm: Use bounce buffers for TD guest
+Date:   Wed,  4 Aug 2021 17:52:09 -0700
+Message-Id: <20210805005218.2912076-7-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -68,31 +68,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In TDX guest, since the memory is private to guest, it needs some
-extra configuration before sharing any data with VMM. AMD SEV also
-implements similar features and hence code can be shared. Currently
-memory sharing related code in the kernel is protected by
-PATTR_GUEST_MEM_ENCRYPT and PATTR_GUEST_SHARED_MAPPING_INIT flags.
-So enable them for TDX guest as well.
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
+Intel TDX doesn't allow VMM to directly access guest private
+memory. Any memory that is required for communication with
+VMM must be shared explicitly. The same rule applies for any
+any DMA to and fromTDX guest. All DMA pages had to marked as
+shared pages. A generic way to achieve this without any changes
+to device drivers is to use the SWIOTLB framework.
+
+This method of handling is similar to AMD SEV. So extend this
+support for TDX guest as well. Also since there are some common
+code between AMD SEV and TDX guest in mem_encrypt_init(), move it
+to mem_encrypt_common.c and call AMD specific init function from
+it
+
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Reviewed-by: Andi Kleen <ak@linux.intel.com>
+Reviewed-by: Tony Luck <tony.luck@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- arch/x86/kernel/tdx.c | 2 ++
- 1 file changed, 2 insertions(+)
+Changes since v3:
+ * Rebased on top of Tom Lendacky's protected guest
+   changes (https://lore.kernel.org/patchwork/cover/1468760/)
 
+Changes since v1:
+ * Removed sme_me_mask check for amd_mem_encrypt_init() in mem_encrypt_init().
+
+ arch/x86/include/asm/mem_encrypt_common.h |  2 ++
+ arch/x86/kernel/tdx.c                     |  3 +++
+ arch/x86/mm/mem_encrypt.c                 |  5 +----
+ arch/x86/mm/mem_encrypt_common.c          | 14 ++++++++++++++
+ 4 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/include/asm/mem_encrypt_common.h b/arch/x86/include/asm/mem_encrypt_common.h
+index 697bc40a4e3d..48d98a3d64fd 100644
+--- a/arch/x86/include/asm/mem_encrypt_common.h
++++ b/arch/x86/include/asm/mem_encrypt_common.h
+@@ -8,11 +8,13 @@
+ 
+ #ifdef CONFIG_AMD_MEM_ENCRYPT
+ bool amd_force_dma_unencrypted(struct device *dev);
++void __init amd_mem_encrypt_init(void);
+ #else /* CONFIG_AMD_MEM_ENCRYPT */
+ static inline bool amd_force_dma_unencrypted(struct device *dev)
+ {
+ 	return false;
+ }
++static inline void amd_mem_encrypt_init(void) {}
+ #endif /* CONFIG_AMD_MEM_ENCRYPT */
+ 
+ #endif
 diff --git a/arch/x86/kernel/tdx.c b/arch/x86/kernel/tdx.c
-index 01b758496e84..1cf2443edb90 100644
+index b91740a485d6..01b758496e84 100644
 --- a/arch/x86/kernel/tdx.c
 +++ b/arch/x86/kernel/tdx.c
-@@ -78,6 +78,8 @@ bool tdx_prot_guest_has(unsigned long flag)
- 	switch (flag) {
- 	case PATTR_GUEST_TDX:
- 	case PATTR_GUEST_UNROLL_STRING_IO:
-+	case PATTR_GUEST_MEM_ENCRYPT:
-+	case PATTR_GUEST_SHARED_MAPPING_INIT:
- 		return cpu_feature_enabled(X86_FEATURE_TDX_GUEST);
- 	}
+@@ -13,6 +13,7 @@
+ #include <asm/insn.h>
+ #include <asm/insn-eval.h>
+ #include <linux/sched/signal.h> /* force_sig_fault() */
++#include <linux/swiotlb.h>
  
+ /* TDX Module call Leaf IDs */
+ #define TDINFO				1
+@@ -517,6 +518,8 @@ void __init tdx_early_init(void)
+ 
+ 	legacy_pic = &null_legacy_pic;
+ 
++	swiotlb_force = SWIOTLB_FORCE;
++
+ 	cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "tdg:cpu_hotplug",
+ 			  NULL, tdg_cpu_offline_prepare);
+ 
+diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
+index 1f7a72ce9d66..cab68d8cc5b0 100644
+--- a/arch/x86/mm/mem_encrypt.c
++++ b/arch/x86/mm/mem_encrypt.c
+@@ -491,14 +491,11 @@ static void print_mem_encrypt_feature_info(void)
+ }
+ 
+ /* Architecture __weak replacement functions */
+-void __init mem_encrypt_init(void)
++void __init amd_mem_encrypt_init(void)
+ {
+ 	if (!sme_me_mask)
+ 		return;
+ 
+-	/* Call into SWIOTLB to update the SWIOTLB DMA buffers */
+-	swiotlb_update_mem_attributes();
+-
+ 	/*
+ 	 * With SEV, we need to unroll the rep string I/O instructions,
+ 	 * but SEV-ES supports them through the #VC handler.
+diff --git a/arch/x86/mm/mem_encrypt_common.c b/arch/x86/mm/mem_encrypt_common.c
+index fdaf09b4a658..2ba19476dc26 100644
+--- a/arch/x86/mm/mem_encrypt_common.c
++++ b/arch/x86/mm/mem_encrypt_common.c
+@@ -10,6 +10,7 @@
+ #include <asm/mem_encrypt_common.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/protected_guest.h>
++#include <linux/swiotlb.h>
+ 
+ /* Override for DMA direct allocation check - ARCH_HAS_FORCE_DMA_UNENCRYPTED */
+ bool force_dma_unencrypted(struct device *dev)
+@@ -22,3 +23,16 @@ bool force_dma_unencrypted(struct device *dev)
+ 
+ 	return false;
+ }
++
++/* Architecture __weak replacement functions */
++void __init mem_encrypt_init(void)
++{
++	/*
++	 * For TDX guest or SEV/SME, call into SWIOTLB to update
++	 * the SWIOTLB DMA buffers
++	 */
++	if (sme_me_mask || prot_guest_has(PATTR_GUEST_MEM_ENCRYPT))
++		swiotlb_update_mem_attributes();
++
++	amd_mem_encrypt_init();
++}
 -- 
 2.25.1
 
