@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8487C19F34
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04201C19F3B
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EC0E610A8
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1F64610A8
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236934AbhHEAxy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 20:53:54 -0400
-Received: from mga02.intel.com ([134.134.136.20]:12131 "EHLO mga02.intel.com"
+        id S237144AbhHEAyH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 20:54:07 -0400
+Received: from mga02.intel.com ([134.134.136.20]:12129 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236751AbhHEAxt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 20:53:49 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215440"
+        id S236596AbhHEAxn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 20:53:43 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215429"
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="201215440"
+   d="scan'208";a="201215429"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:36 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:29 -0700
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="437617232"
+   d="scan'208";a="437617203"
 Received: from mjkendri-mobl.amr.corp.intel.com (HELO skuppusw-desk1.amr.corp.intel.com) ([10.254.17.117])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:33 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:27 -0700
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     Thomas Gleixner <tglx@linutronix.de>,
@@ -56,9 +56,9 @@ Cc:     Peter H Anvin <hpa@zytor.com>, Dave Hansen <dave.hansen@intel.com>,
         sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-doc@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH v4 07/15] x86/tdx: ioapic: Add shared bit for IOAPIC base address
-Date:   Wed,  4 Aug 2021 17:52:10 -0700
-Message-Id: <20210805005218.2912076-8-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 04/15] x86/tdx: Add helper to do MapGPA hypercall
+Date:   Wed,  4 Aug 2021 17:52:07 -0700
+Message-Id: <20210805005218.2912076-5-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -68,97 +68,118 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Isaku Yamahata <isaku.yamahata@intel.com>
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-The kernel interacts with each bare-metal IOAPIC with a special
-MMIO page. When running under KVM, the guest's IOAPICs are
-emulated by KVM.
+MapGPA hypercall is used by TDX guests to request VMM convert
+the existing mapping of given GPA address range between
+private/shared.
 
-When running as a TDX guest, the guest needs to mark each IOAPIC
-mapping as "shared" with the host.  This ensures that TDX private
-protections are not applied to the page, which allows the TDX host
-emulation to work.
+tdx_hcall_gpa_intent() is the wrapper used for making MapGPA
+hypercall.
 
-Earlier patches in this series modified ioremap() so that
-ioremap()-created mappings such as virtio will be marked as
-shared. However, the IOAPIC code does not use ioremap() and instead
-uses the fixmap mechanism.
-
-Introduce a special fixmap helper just for the IOAPIC code.  Ensure
-that it marks IOAPIC pages as "shared".  This replaces
-set_fixmap_nocache() with __set_fixmap() since __set_fixmap()
-allows custom 'prot' values.
-
-Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 Reviewed-by: Andi Kleen <ak@linux.intel.com>
 Reviewed-by: Tony Luck <tony.luck@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
 
 Changes since v3:
- * Rebased on top of Tom Lendacky's protected guest
-   changes (https://lore.kernel.org/patchwork/cover/1468760/)
+ * None
 
- arch/x86/kernel/apic/io_apic.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+Changes since v1:
+ * Modified tdx_hcall_gpa_intent() to use _tdx_hypercall() instead of
+   tdx_hypercall().
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index d5c691a3208b..5154efe8c4f7 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -49,6 +49,7 @@
- #include <linux/slab.h>
- #include <linux/memblock.h>
- #include <linux/msi.h>
-+#include <linux/protected_guest.h>
+ arch/x86/include/asm/tdx.h | 18 ++++++++++++++++++
+ arch/x86/kernel/tdx.c      | 25 +++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
+index 1e2a1c6a1898..665c8cf57d5b 100644
+--- a/arch/x86/include/asm/tdx.h
++++ b/arch/x86/include/asm/tdx.h
+@@ -56,6 +56,15 @@ struct ve_info {
+ 	u32 instr_info;
+ };
  
- #include <asm/irqdomain.h>
- #include <asm/io.h>
-@@ -65,6 +66,7 @@
- #include <asm/irq_remapping.h>
- #include <asm/hw_irq.h>
- #include <asm/apic.h>
-+#include <asm/tdx.h>
++/*
++ * Page mapping type enum. This is software construct not
++ * part of any hardware or VMM ABI.
++ */
++enum tdx_map_type {
++	TDX_MAP_PRIVATE,
++	TDX_MAP_SHARED,
++};
++
+ #ifdef CONFIG_INTEL_TDX_GUEST
  
- #define	for_each_ioapic(idx)		\
- 	for ((idx) = 0; (idx) < nr_ioapics; (idx)++)
-@@ -2675,6 +2677,18 @@ static struct resource * __init ioapic_setup_resources(void)
- 	return res;
- }
+ void __init tdx_early_init(void);
+@@ -79,6 +88,9 @@ bool tdg_early_handle_ve(struct pt_regs *regs);
  
-+static void io_apic_set_fixmap_nocache(enum fixed_addresses idx,
-+				       phys_addr_t phys)
+ extern phys_addr_t tdg_shared_mask(void);
+ 
++extern int tdx_hcall_gpa_intent(phys_addr_t gpa, int numpages,
++				enum tdx_map_type map_type);
++
+ /*
+  * To support I/O port access in decompressor or early kernel init
+  * code, since #VE exception handler cannot be used, use paravirt
+@@ -149,6 +161,12 @@ static inline bool tdg_early_handle_ve(struct pt_regs *regs) { return false; }
+ 
+ static inline phys_addr_t tdg_shared_mask(void) { return 0; }
+ 
++static inline int tdx_hcall_gpa_intent(phys_addr_t gpa, int numpages,
++				       enum tdx_map_type map_type)
 +{
-+	pgprot_t flags = FIXMAP_PAGE_NOCACHE;
-+
-+	/* Set TDX guest shared bit in pgprot flags */
-+	if (prot_guest_has(PATTR_GUEST_SHARED_MAPPING_INIT))
-+		flags = pgprot_protected_guest(flags);
-+
-+	__set_fixmap(idx, phys, flags);
++	return -ENODEV;
 +}
 +
- void __init io_apic_init_mappings(void)
- {
- 	unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
-@@ -2707,7 +2721,7 @@ void __init io_apic_init_mappings(void)
- 				      __func__, PAGE_SIZE, PAGE_SIZE);
- 			ioapic_phys = __pa(ioapic_phys);
- 		}
--		set_fixmap_nocache(idx, ioapic_phys);
-+		io_apic_set_fixmap_nocache(idx, ioapic_phys);
- 		apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
- 			__fix_to_virt(idx) + (ioapic_phys & ~PAGE_MASK),
- 			ioapic_phys);
-@@ -2836,7 +2850,7 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
- 	ioapics[idx].mp_config.apicaddr = address;
+ #endif /* CONFIG_INTEL_TDX_GUEST */
  
--	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
-+	io_apic_set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
- 	if (bad_ioapic_register(idx)) {
- 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
- 		return -ENODEV;
+ #ifdef CONFIG_INTEL_TDX_GUEST_KVM
+diff --git a/arch/x86/kernel/tdx.c b/arch/x86/kernel/tdx.c
+index d316fe33f52f..ccbad600a422 100644
+--- a/arch/x86/kernel/tdx.c
++++ b/arch/x86/kernel/tdx.c
+@@ -18,6 +18,9 @@
+ #define TDINFO				1
+ #define TDGETVEINFO			3
+ 
++/* TDX hypercall Leaf IDs */
++#define TDVMCALL_MAP_GPA		0x10001
++
+ #define VE_IS_IO_OUT(exit_qual)		(((exit_qual) & 8) ? 0 : 1)
+ #define VE_GET_IO_SIZE(exit_qual)	(((exit_qual) & 7) + 1)
+ #define VE_GET_PORT_NUM(exit_qual)	((exit_qual) >> 16)
+@@ -97,6 +100,28 @@ static void tdg_get_info(void)
+ 	physical_mask &= ~tdg_shared_mask();
+ }
+ 
++/*
++ * Inform the VMM of the guest's intent for this physical page:
++ * shared with the VMM or private to the guest.  The VMM is
++ * expected to change its mapping of the page in response.
++ *
++ * Note: shared->private conversions require further guest
++ * action to accept the page.
++ */
++int tdx_hcall_gpa_intent(phys_addr_t gpa, int numpages,
++			 enum tdx_map_type map_type)
++{
++	u64 ret;
++
++	if (map_type == TDX_MAP_SHARED)
++		gpa |= tdg_shared_mask();
++
++	ret = _tdx_hypercall(TDVMCALL_MAP_GPA, gpa, PAGE_SIZE * numpages, 0, 0,
++			     NULL);
++
++	return ret ? -EIO : 0;
++}
++
+ static __cpuidle void tdg_halt(void)
+ {
+ 	u64 ret;
 -- 
 2.25.1
 
