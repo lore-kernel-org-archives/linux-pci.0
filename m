@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9E5C19F34
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75352C4320A
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2CC161102
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56EAB61037
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236613AbhHEAxo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 20:53:44 -0400
-Received: from mga02.intel.com ([134.134.136.20]:12125 "EHLO mga02.intel.com"
+        id S236950AbhHEAxz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 20:53:55 -0400
+Received: from mga02.intel.com ([134.134.136.20]:12131 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234968AbhHEAxi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 20:53:38 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215423"
+        id S236865AbhHEAxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 20:53:52 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215445"
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="201215423"
+   d="scan'208";a="201215445"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:25 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:38 -0700
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="437617186"
+   d="scan'208";a="437617244"
 Received: from mjkendri-mobl.amr.corp.intel.com (HELO skuppusw-desk1.amr.corp.intel.com) ([10.254.17.117])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:22 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:36 -0700
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     Thomas Gleixner <tglx@linutronix.de>,
@@ -56,9 +56,9 @@ Cc:     Peter H Anvin <hpa@zytor.com>, Dave Hansen <dave.hansen@intel.com>,
         sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-doc@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH v4 02/15] x86/tdx: Exclude Shared bit from physical_mask
-Date:   Wed,  4 Aug 2021 17:52:05 -0700
-Message-Id: <20210805005218.2912076-3-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 08/15] x86/tdx: Enable shared memory protected guest flags for TDX guest
+Date:   Wed,  4 Aug 2021 17:52:11 -0700
+Message-Id: <20210805005218.2912076-9-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -68,106 +68,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+In TDX guest, since the memory is private to guest, it needs some
+extra configuration before sharing any data with VMM. AMD SEV also
+implements similar features and hence code can be shared. Currently
+memory sharing related code in the kernel is protected by
+PATTR_GUEST_MEM_ENCRYPT and PATTR_GUEST_SHARED_MAPPING_INIT flags.
+So enable them for TDX guest as well.
 
-Just like MKTME, TDX reassigns bits of the physical address for
-metadata.  MKTME used several bits for an encryption KeyID. TDX
-uses a single bit in guests to communicate whether a physical page
-should be protected by TDX as private memory (bit set to 0) or
-unprotected and shared with the VMM (bit set to 1).
-
-Add a helper, tdg_shared_mask() to generate the mask.  The processor
-enumerates its physical address width to include the shared bit, which
-means it gets included in __PHYSICAL_MASK by default.
-
-Remove the shared mask from 'physical_mask' since any bits in
-tdg_shared_mask() are not used for physical addresses in page table
-entries.
-
-Also, note that shared mapping configuration cannot be clubbed between
-AMD SME and Intel TDX Guest platforms in common function. SME has
-to do it very early in __startup_64() as it sets the bit on all
-memory, except what is used for communication. TDX can postpone it,
-as it don't need any shared mapping in very early boot.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Reviewed-by: Andi Kleen <ak@linux.intel.com>
-Reviewed-by: Tony Luck <tony.luck@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
+ arch/x86/kernel/tdx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Changes since v3:
- * None
-
-Changes since v1:
- * Fixed format issues in commit log.
-
- arch/x86/Kconfig           | 1 +
- arch/x86/include/asm/tdx.h | 4 ++++
- arch/x86/kernel/tdx.c      | 9 +++++++++
- 3 files changed, 14 insertions(+)
-
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index d66a8a2f3c97..8eada36694b6 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -872,6 +872,7 @@ config INTEL_TDX_GUEST
- 	select X86_X2APIC
- 	select SECURITY_LOCKDOWN_LSM
- 	select ARCH_HAS_PROTECTED_GUEST
-+	select X86_MEM_ENCRYPT_COMMON
- 	help
- 	  Provide support for running in a trusted domain on Intel processors
- 	  equipped with Trusted Domain eXtensions. TDX is a new Intel
-diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
-index 72154d3f63c2..1e2a1c6a1898 100644
---- a/arch/x86/include/asm/tdx.h
-+++ b/arch/x86/include/asm/tdx.h
-@@ -77,6 +77,8 @@ int tdg_handle_virtualization_exception(struct pt_regs *regs,
- 
- bool tdg_early_handle_ve(struct pt_regs *regs);
- 
-+extern phys_addr_t tdg_shared_mask(void);
-+
- /*
-  * To support I/O port access in decompressor or early kernel init
-  * code, since #VE exception handler cannot be used, use paravirt
-@@ -145,6 +147,8 @@ static inline bool tdx_prot_guest_has(unsigned long flag) { return false; }
- 
- static inline bool tdg_early_handle_ve(struct pt_regs *regs) { return false; }
- 
-+static inline phys_addr_t tdg_shared_mask(void) { return 0; }
-+
- #endif /* CONFIG_INTEL_TDX_GUEST */
- 
- #ifdef CONFIG_INTEL_TDX_GUEST_KVM
 diff --git a/arch/x86/kernel/tdx.c b/arch/x86/kernel/tdx.c
-index 0c24439774b4..d316fe33f52f 100644
+index 01b758496e84..1cf2443edb90 100644
 --- a/arch/x86/kernel/tdx.c
 +++ b/arch/x86/kernel/tdx.c
-@@ -75,6 +75,12 @@ bool tdx_prot_guest_has(unsigned long flag)
- }
- EXPORT_SYMBOL_GPL(tdx_prot_guest_has);
+@@ -78,6 +78,8 @@ bool tdx_prot_guest_has(unsigned long flag)
+ 	switch (flag) {
+ 	case PATTR_GUEST_TDX:
+ 	case PATTR_GUEST_UNROLL_STRING_IO:
++	case PATTR_GUEST_MEM_ENCRYPT:
++	case PATTR_GUEST_SHARED_MAPPING_INIT:
+ 		return cpu_feature_enabled(X86_FEATURE_TDX_GUEST);
+ 	}
  
-+/* The highest bit of a guest physical address is the "sharing" bit */
-+phys_addr_t tdg_shared_mask(void)
-+{
-+	return 1ULL << (td_info.gpa_width - 1);
-+}
-+
- static void tdg_get_info(void)
- {
- 	u64 ret;
-@@ -86,6 +92,9 @@ static void tdg_get_info(void)
- 
- 	td_info.gpa_width = out.rcx & GENMASK(5, 0);
- 	td_info.attributes = out.rdx;
-+
-+	/* Exclude Shared bit from the __PHYSICAL_MASK */
-+	physical_mask &= ~tdg_shared_mask();
- }
- 
- static __cpuidle void tdg_halt(void)
 -- 
 2.25.1
 
