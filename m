@@ -2,84 +2,175 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
+	DATE_IN_FUTURE_06_12,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F881C4338F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 13:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A12C432BE
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 13:15:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1ABF06113C
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 13:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 249616113B
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 13:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241649AbhHENPH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Aug 2021 09:15:07 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:7794 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241638AbhHENPG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Aug 2021 09:15:06 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GgTbl2KdxzYlJg;
-        Thu,  5 Aug 2021 21:14:43 +0800 (CST)
-Received: from [10.67.103.235] (10.67.103.235) by
- dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Thu, 5 Aug 2021 21:14:50 +0800
-Subject: Re: [PATCH V7 7/9] PCI/sysfs: Add a 10-Bit Tag sysfs file
-To:     Logan Gunthorpe <logang@deltatee.com>, <helgaas@kernel.org>,
-        <hch@infradead.org>, <kw@linux.com>, <leon@kernel.org>,
-        <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
-        <hverkuil-cisco@xs4all.nl>
-References: <1628084828-119542-1-git-send-email-liudongdong3@huawei.com>
- <1628084828-119542-8-git-send-email-liudongdong3@huawei.com>
- <75243571-3213-6ae2-040f-ae1b1f799e42@deltatee.com>
-CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-From:   Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <8758a42b-233b-eb73-dce4-493e0ce8eed5@huawei.com>
-Date:   Thu, 5 Aug 2021 21:14:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+        id S241661AbhHENP7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Aug 2021 09:15:59 -0400
+Received: from mga04.intel.com ([192.55.52.120]:52221 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S241669AbhHENP6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Aug 2021 09:15:58 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="212290986"
+X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
+   d="scan'208";a="212290986"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Aug 2021 06:15:42 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
+   d="scan'208";a="467504173"
+Received: from intel-z390-ud.iind.intel.com ([10.106.46.146])
+  by orsmga008.jf.intel.com with ESMTP; 05 Aug 2021 06:15:38 -0700
+From:   srikanth.thokala@intel.com
+To:     robh+dt@kernel.org, lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        andriy.shevchenko@linux.intel.com, mgross@linux.intel.com,
+        lakshmi.bai.raja.subramanian@intel.com,
+        mallikarjunappa.sangannavar@intel.com, kw@linux.com,
+        maz@kernel.org, srikanth.thokala@intel.com
+Subject: [PATCH v11 0/2] PCI: keembay: Add support for Intel Keem Bay
+Date:   Fri,  6 Aug 2021 02:40:08 +0530
+Message-Id: <20210805211010.29484-1-srikanth.thokala@intel.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <75243571-3213-6ae2-040f-ae1b1f799e42@deltatee.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.103.235]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggeme758-chm.china.huawei.com (10.3.19.104)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021/8/4 23:51, Logan Gunthorpe wrote:
->
->
->
-> On 2021-08-04 7:47 a.m., Dongdong Liu wrote:
->> PCIe spec 5.0 r1.0 section 2.2.6.2 says that if an Endpoint supports
->> sending Requests to other Endpoints (as opposed to host memory), the
->> Endpoint must not send 10-Bit Tag Requests to another given Endpoint
->> unless an implementation-specific mechanism determines that the Endpoint
->> supports 10-Bit Tag Completer capability. Add a 10bit_tag sysfs file,
->> write 0 to disable 10-Bit Tag Requester when the driver does not bind
->> the device if the peer device does not support the 10-Bit Tag Completer.
->> This will make P2P traffic safe. the 10bit_tag file content indicate
->> current 10-Bit Tag Requester Enable status.
->
-> Can we not have both the sysfs file and the command line parameter? If
-> the user wants to disable it always for a specific device this sysfs
-> parameter is fairly awkward. A script at boot to unbind the driver, set
-> the sysfs file and rebind the driver is not trivial and the command line
-> parameter offers additional options for users.
-Does the command line parameter as "[PATCH V6 7/8] PCI: Add 
-"pci=disable_10bit_tag=" parameter for peer-to-peer support" does?
+From: Srikanth Thokala <srikanth.thokala@intel.com>
 
-Do we also need such command line if we already had sysfs file?
-I think we may not need.
+Hi,
 
-Thanks,
-Dongdong
->
-> Logan
-> .
->
+The first patch is to document DT bindings for Keem Bay PCIe controller
+for both Root Complex and Endpoint modes.
+
+The second patch is the driver file, a glue driver. Keem Bay PCIe
+controller is based on DesignWare PCIe IP.
+
+The patch was tested with Keem Bay evaluation module board, with B0
+stepping.
+
+Kindly review.
+
+Thanks!
+Srikanth
+
+Changes since v10:
+- Added a comment to describe the deviation from standard DWC framework
+  in handling MSI IRQ.
+- Add 'Reviewed-by: Rob Herring <robh@kernel.org>', thanks to Rob.
+- Rebased to v5.14-rc4.
+
+Changes since v9:
+- Add 'Reviewed-by: Krzysztof Wilczyński <kw@linux.com>', thanks to Krzysztof.
+- Rebased to v5.13-rc5.
+
+Changes since v8:
+- Use chained IRQ to handle MSIs, as suggested by Lorenzo Pieralisi.
+- Rename *_setup_irq() to *_setup_msi_irq() to be more meaningful.
+- Move *_setup_msi_irq() call to *_add_pcie_port() to make it invoke
+  only when controller is in Root Complex mode. In Endpoint mode,
+  IRQ will be setup by the respective driver which will be based on
+  PCIe End Point Framework.
+
+Changes since v7:
+- Rename keembay_pcie_ltssm_enable() to align to its functionality.
+- Fix other minor comments from "Krzysztof Wilczyński <kw@linux.com>"
+
+Changes since v6:
+- Arrange SoB in chronological order.
+- Alphabetized and modified status of entry in MAINTAINERS.
+- Added a comment to specify the PCIe spec section about the delay.
+
+Changes since v5:
+- Rebased to v5.11-rc4.
+- Updated maintainers to add myself in DT binding documents.
+- Fix checkpatch issues.
+
+Changes since v4:
+- Rebased to v5.11-rc1 and retest.
+
+Changes since v3:
+- Add Reviewed-by: Rob Herring <robh@kernel.org> tag in dt-bindings
+  patch.
+- Remove the keembay_pcie_{readl,writel} wrappers. And replace them with
+  readl() and writel().
+- Remove the dead code related to unused irqs.
+- Remove unused definition for unused irqs.
+- In keembay_pcie_ep_init(), initialize enabled interrupts to known state.
+- Rebased to next-20201215.
+
+Changes since v2:
+- In keembay_pcie_probe(), use return keembay_pcie_add_pcie_port(pcie,
+  pdev); statement and remove return 0; at the end of the function.
+
+Changes since v1:
+- In dt-bindings patch.
+  - Fixed indent warning for compatible property.
+  - Rename interrupt-names to pcie, pcie_ev, pcie_err and
+    pcie_mem_access, similar to the name used in datasheet.
+  - Remove device_type, #address-cells and #size-cells property.
+  - Remove num-viewport, num-ib-windows and num-ob-windows property.
+  - Replace additionalProperties with unevaluatedProperties, for RC
+    only.
+  - Add dbi2 and atu property.
+  - Remove description for regs and interrupts property.
+  - Change enum value for num-lanes to 1 and 2 only.
+- In driver patch.
+  - In Kconfig file, remove dependency on ARM64.
+  - Add new define, PCIE_REGS_PCIE_SII_LINK_UP.
+  - Remove PCIE_DBI2_MASK.
+  - In struct keembay_pcie, declare pci member as struct, not pointer.
+    And remove irq number members.
+  - Rename and rework keembay_pcie_establish_link(), to
+    keembay_pcie_start_link().
+  - Remove unneeded BAR disable steps.
+  - Remove unused interrupt handlers; keembay_pcie_ev_irq_handler(),
+    keembay_pcie_err_irq_handler().
+  - Remove keembay_pcie_enable_interrupts().
+  - Rework keembay_pcie_setup_irq() and call it from
+    keembay_pcie_probe().
+  - Remove keembay_pcie_host_init() and make keembay_pcie_host_ops
+    empty.
+  - Keep and rework keembay_pcie_add_pcie_port() a little.
+  - Remove keembay_pcie_add_pcie_ep() and call dw_pcie_ep_init() from
+    keembay_pcie_probe().
+  - In keembay_pcie_probe(), remove dbi setup as it will be handled in
+    dwc common code.
+  - In keembay_pcie_link_up(), use return (val &
+    PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP.
+  - In keembay_pcie_ep_raise_irq(), rework error message for
+    PCI_EPC_IRQ_LEGACY and default cases.
+- Rebased to next-20201124, that has dwc pci refactoring,
+  https://lore.kernel.org/linux-pci/20201105211159.1814485-1-robh@kernel.org/.
+
+Srikanth Thokala (2):
+  dt-bindings: PCI: Add Intel Keem Bay PCIe controller
+  PCI: keembay: Add support for Intel Keem Bay
+
+ .../bindings/pci/intel,keembay-pcie-ep.yaml   |  69 +++
+ .../bindings/pci/intel,keembay-pcie.yaml      |  97 ++++
+ MAINTAINERS                                   |   7 +
+ drivers/pci/controller/dwc/Kconfig            |  28 ++
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-keembay.c     | 460 ++++++++++++++++++
+ 6 files changed, 662 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/intel,keembay-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-keembay.c
+
+
+base-commit: c500bee1c5b2f1d59b1081ac879d73268ab0ff17
+-- 
+2.17.1
+
