@@ -2,119 +2,72 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE3E3C4320A
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 19:54:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63139C4320A
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 21:12:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B039F60720
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 19:54:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A0306113C
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 21:12:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239551AbhHETyY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Aug 2021 15:54:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46490 "EHLO mail.kernel.org"
+        id S241801AbhHEVMV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Aug 2021 17:12:21 -0400
+Received: from foss.arm.com ([217.140.110.172]:52374 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239656AbhHETyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Aug 2021 15:54:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D4E02603E7;
-        Thu,  5 Aug 2021 19:54:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628193249;
-        bh=bKnmm79yvPru1/OpyG8CrtepkEsoiHjQUkuE4D3wOMU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=HlI3SVMSBGa2u0UIB2qT9FQUofJBkZT7IigHbUfR6kr2pSpIKqCmSFmhZGkjXMz9E
-         tseUlSWv0lPimxcxuuiJUeWR5Iz3ZSI/K/L9lzdt+43Gn5oRjHQUgAsyfPDvjL0zBl
-         JZlVyTzfD9JVPX0joXL1UsswqKiNBRmr23YJdfvAZy05CEiizvPYmnjUpkPJ2zYEk+
-         WyVvjQiMZthvh8qeBoR7lK3zJbHS8nbZkVnlgvT1teY4AFiLRwwo8QcoR0n86ZvDLf
-         VP9dan2IXIBwYZNOypyKv8Lms/uwmiZ9aeSaebvATtYq+lzQkUAeKE0Kj508VAVpx0
-         e69bd2vGp0W1w==
-Date:   Thu, 5 Aug 2021 14:54:07 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     hch@infradead.org, kw@linux.com, logang@deltatee.com,
-        leon@kernel.org, linux-pci@vger.kernel.org, rajur@chelsio.com,
-        hverkuil-cisco@xs4all.nl, linux-media@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH V7 4/9] PCI: Enable 10-Bit Tag support for PCIe Endpoint
- devices
-Message-ID: <20210805195407.GA1763784@bjorn-Precision-5520>
+        id S231587AbhHEVMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Aug 2021 17:12:20 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9BEE31042;
+        Thu,  5 Aug 2021 14:12:05 -0700 (PDT)
+Received: from u200856.usa.arm.com (unknown [172.31.20.19])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0BB833F719;
+        Thu,  5 Aug 2021 14:12:05 -0700 (PDT)
+From:   Jeremy Linton <jeremy.linton@arm.com>
+To:     linux-pci@vger.kernel.org
+Cc:     lorenzo.pieralisi@arm.com, nsaenz@kernel.org, bhelgaas@google.com,
+        rjw@rjwysocki.net, lenb@kernel.org, robh@kernel.org, kw@linux.com,
+        f.fainelli@gmail.com, bcm-kernel-feedback-list@broadcom.com,
+        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rpi-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Jeremy Linton <jeremy.linton@arm.com>
+Subject: [PATCH 0/3] CM4 ACPI PCIe quirk
+Date:   Thu,  5 Aug 2021 16:11:57 -0500
+Message-Id: <20210805211200.491275-1-jeremy.linton@arm.com>
+X-Mailer: git-send-email 2.26.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7d84ede9-8983-50f0-8387-3d4c6db1b042@huawei.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 05, 2021 at 03:47:31PM +0800, Dongdong Liu wrote:
-> Hi Bjorn
-> 
-> Many thanks for your review.
-> On 2021/8/5 7:17, Bjorn Helgaas wrote:
-> > On Wed, Aug 04, 2021 at 09:47:03PM +0800, Dongdong Liu wrote:
-> > > 10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-> > > field size from 8 bits to 10 bits.
-> > > 
-> > > PCIe spec 5.0 r1.0 section 2.2.6.2 "Considerations for Implementing
-> > > 10-Bit Tag Capabilities" Implementation Note.
-> > > For platforms where the RC supports 10-Bit Tag Completer capability,
-> > > it is highly recommended for platform firmware or operating software
-> > > that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-> > > bit automatically in Endpoints with 10-Bit Tag Requester capability. This
-> > > enables the important class of 10-Bit Tag capable adapters that send
-> > > Memory Read Requests only to host memory.
-> > 
-> > Quoted material should be set off with a blank line before it and
-> > indented by two spaces so it's clear exactly what comes from the spec
-> > and what you've added.  For example, see
-> > https://git.kernel.org/linus/ec411e02b7a2
-> Good point, will fix.
-> > 
-> > We need to say why we assume it's safe to enable 10-bit tags for all
-> > devices below a Root Port that supports them.  I think this has to do
-> > with switches being required to forward 10-bit tags correctly even if
-> > they were designed before 10-bit tags were added to the spec.
-> 
-> PCIe spec 5.0 r1.0 section 2.2.6.2 "Considerations for Implementing
-> 10-Bit Tag Capabilities" Implementation Note:
-> 
->   Switches that lack 10-Bit Tag Completer capability are still able to
->   forward NPRs and Completions carrying 10-Bit Tags correctly, since the
->   two new Tag bits are in TLP Header bits that were formerly Reserved,
->   and Switches are required to forward Reserved TLP Header bits without
->   modification. However, if such a Switch detects an error with an NPR
->   carrying a 10-Bit Tag, and that Switch handles the error by acting as
->   the Completer for the NPR, the resulting Completion will have an
->   invalid 10-Bit Tag. Thus, it is strongly recommended that Switches
->   between any components using 10-Bit Tags support 10-Bit Tag Completer
->   capability.  Note that Switches supporting 16.0 GT/s data rates or
->   greater must support 10-Bit Tag Completer capability.
-> 
-> This patch also consider to enable 10-Bit Tag for EP device need RP
-> and Switch device support 10-Bit Tag Completer capability.
-> > 
-> > And it should call out any cases where it is *not* safe, e.g., if P2P
-> > traffic is an issue.
-> Yes, indeed.
-> > 
-> > If there are cases where we don't want to enable 10-bit tags, whether
-> > it's to enable P2P traffic or merely to work around device defects,
-> > that ability needs to be here from the beginning.  If somebody needs
-> > to bisect with 10-bit tags disabled, we don't want a bisection hole
-> > between this commit and the commit that adds the control.
-> We provide sysfs file to disable 10-bit tag for P2P traffic when needed.
-> The details see PATCH 7/8/9.
+The PFTF CM4 is an ACPI platform that is following the PCIe SMCCC
+standard because its PCIe config space isn't ECAM compliant and is
+split into two parts. One part for the root port registers and a
+moveable window which points at a given device's 4K config space.
+Thus it doesn't have a MCFG (and really any MCFG provided would be
+nonsense anyway). As linux doesn't support the PCIe SMCCC standard
+we key off a linux specific host bridge _DSD to add custom ECAM
+ops and cfgres. The cfg op selects between those two regions, as
+well as disallowing problematic accesses, particularly if the link
+is down because there isn't an attached device.
 
-A mechanism for avoiding problems needs to be present from the very
-beginning so there's no bisection hole.  It should not be added by a
-future patch.
+Jeremy Linton (3):
+  PCI: brcmstb: Break register definitions into separate header
+  PCI: brcmstb: Add ACPI config space quirk
+  PCI/ACPI: Add new quirk detection, enable bcm2711
 
-The sysfs file is a start, but if we run into an issue, it could mean
-that we can't boot and run long enough to use sysfs to disable 10-bit
-tags.  So I think we might need a kernel parameter that disables it
-(and possibly other things like MPS optimization).
+ drivers/acpi/pci_mcfg.c                    |  14 ++
+ drivers/pci/controller/Makefile            |   1 +
+ drivers/pci/controller/pcie-brcmstb-acpi.c |  77 +++++++++
+ drivers/pci/controller/pcie-brcmstb.c      | 179 +-------------------
+ drivers/pci/controller/pcie-brcmstb.h      | 182 +++++++++++++++++++++
+ include/linux/pci-ecam.h                   |   1 +
+ 6 files changed, 276 insertions(+), 178 deletions(-)
+ create mode 100644 drivers/pci/controller/pcie-brcmstb-acpi.c
+ create mode 100644 drivers/pci/controller/pcie-brcmstb.h
 
-> Current we do not know the 10-bit tag defective devices, current may no
-> need do as 8-bit tag does in quirk_no_ext_tags().
+-- 
+2.31.1
+
