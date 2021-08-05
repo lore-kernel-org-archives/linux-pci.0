@@ -2,60 +2,60 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CEFAC4338F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 16:30:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E8D8C432BE
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 16:30:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CD8B60243
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 16:30:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F311861050
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 16:30:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233551AbhHEQbG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Aug 2021 12:31:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42250 "EHLO
+        id S233127AbhHEQbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Aug 2021 12:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233482AbhHEQaS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Aug 2021 12:30:18 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DA93C06179E;
-        Thu,  5 Aug 2021 09:30:03 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id s22-20020a17090a1c16b0290177caeba067so16181465pjs.0;
-        Thu, 05 Aug 2021 09:30:03 -0700 (PDT)
+        with ESMTP id S233053AbhHEQaO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Aug 2021 12:30:14 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBCBDC06179A;
+        Thu,  5 Aug 2021 09:29:59 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id j1so10144117pjv.3;
+        Thu, 05 Aug 2021 09:29:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=r29+sUujdKPey6oLGLCs3NweFY8aTssXwj399PyY5uY=;
-        b=UmDlMlASDluPg4GT1xMtLmd7+XasBOU6W1/FMF/H/4Pjznf/mFLLchzWjtcIoFyEAa
-         gm+t2WZSnNt5WqbRzelv+hgfkTDMZQ82HEmG1Wafv5Qu7rWWXfFCd+7cV5ujbInsNYS+
-         qcDzVMDtQTP4ClbCwGr+PJ8FjWA4ZZjqW44SO2tYFYhQolzyNgSSntzV+Bf8ZtEfuINq
-         +2Jy79VATtvwxDuaolVyknGP1EYz6u2tBd6NubK3A/yx7mXkVaW2V52uYL5Ia9AU76X5
-         qfIrZitjn99tfuaT9gmmzqNpyIpREA7++bu+P2VQPhZLTe1vDY9/YE1HVqrWdGdoQ2sd
-         5e7A==
+        bh=FdmxS97wTwZYrZefvhIzjx0kSlZLxSWqP1+jzXnYcUw=;
+        b=AH61w1zThHfVGVSNGfFP4TqcnoxjzIoUNha+LlsotBEh/qKrNFHxNu9gH6/a++x3N0
+         KYYByi15r/HZ7+1KBL5MHEWSzzcgxllUZOvYlp43QMTn8pNna+3VEVsO9qS7/1C9rS/p
+         C4DcahwrvPK0Oclh9MTRbsAliTsr5wOlyjKyAuDjWnrrmHKO1NNsi9luPI7d2sUHeBrS
+         92GB+JKMnuQWFuUPMtuM6mbB03mKO9MSwIs0X4FBGaR46m8Ymw4GAzHwNAn+GXjhbJze
+         kD4SHZB8fB+OTW8rUR1Xu26uYvsytJTjL/0eURJKp0svf6JXXKNI3n8ISr9i4mDOhISE
+         pYpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=r29+sUujdKPey6oLGLCs3NweFY8aTssXwj399PyY5uY=;
-        b=uG1SUGNeEBa4xp8mdqZk3euxcs7zFlV8ovInE5fztgG2J03AA9JdjUwHyt74n10MrA
-         8TPxMBZoxB56UvamrcYWgiWN22gCXZpzNC3RWPhcWo/EkzOW1SmcYD0JeET2a87SzZ2w
-         3aeNaNlxnpzkKsVZOpp1v+lQl2cz3vIA2Z3y9dkW85nvorJqragiPrHCXYHcGHh0CROm
-         c/3HS/mMs4eJrOGZjrHha1bkHUC+4Ln03jFbdhDhetV5XdsbpMqkqBn8cVXLu0ol47em
-         rXK82tQB8I3ThfNCaBH+VykaI7YLliZGpjIqZaN32DFTvzgWzrZusOy4pAlmGnDsWHRj
-         p3gw==
-X-Gm-Message-State: AOAM532t2jlc00OjyQZu1cWxwh6FLc7e4ur+D8plonszfv+KfeEM0ZZt
-        PgVrAnTF8ABSvwwsJ2FSVKo=
-X-Google-Smtp-Source: ABdhPJwPlXuHygx/9byU2NZWKAovPw3TJ66MQqvRW/XjQB4GvQkL72zfUC/1gbsHkGWNyAZIq/POlQ==
-X-Received: by 2002:a62:1a4c:0:b029:3b8:3265:5f92 with SMTP id a73-20020a621a4c0000b02903b832655f92mr341944pfa.4.1628181002777;
-        Thu, 05 Aug 2021 09:30:02 -0700 (PDT)
+        bh=FdmxS97wTwZYrZefvhIzjx0kSlZLxSWqP1+jzXnYcUw=;
+        b=kmlYP0dZOIUDjZXVA5cvxLcvJjE3O3OGz8MGgWfbd7fm6pX55l/WuJhwe2b0yIOTF/
+         vOkVOZ+mzzSylK+DkRasuuUlfRv3BSaham6zgEYycbijjo5ErZAhynJZU6yu4fTMjFkd
+         y/8/rGsTZwe6E/s4Ty5shX4BXi2FHsTh4r4LdLszUjCOd1hpksenrLIjs6LsgiamWuT1
+         gfl+ZwbZ615pEsux9beVx4cv5fWB91RMz4dUJetgvLKTQgWz8C9RGmms+5JJRF/kWXSP
+         XZ1UGlDiCegAM8+YJNTL1JyPlME5sj+iv9lP1z2bl/P6JjL+RMyTrq7FcOi4VaOk1g40
+         orfQ==
+X-Gm-Message-State: AOAM532LDClAAkSq2zMXTav3VBWVtQC4dUJhLyCw7EANoV0o4S03RmNV
+        WTi1qBOXcIwXme86uJJSzEI=
+X-Google-Smtp-Source: ABdhPJwTI/HPGYjSd8MEasKJbD3xkZSxogpfjyeBu4quQ7LWqdha0F6KSrPQY9uaJglWYk6EI7i1Ow==
+X-Received: by 2002:a17:90a:5889:: with SMTP id j9mr15920482pji.117.1628180999132;
+        Thu, 05 Aug 2021 09:29:59 -0700 (PDT)
 Received: from localhost.localdomain ([139.5.31.161])
-        by smtp.googlemail.com with ESMTPSA id nr6sm62551pjb.39.2021.08.05.09.29.59
+        by smtp.googlemail.com with ESMTPSA id nr6sm62551pjb.39.2021.08.05.09.29.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 09:30:02 -0700 (PDT)
+        Thu, 05 Aug 2021 09:29:58 -0700 (PDT)
 From:   Amey Narkhede <ameynarkhede03@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     alex.williamson@redhat.com,
@@ -64,9 +64,9 @@ Cc:     alex.williamson@redhat.com,
         kw@linux.com, Shanker Donthineni <sdonthineni@nvidia.com>,
         Sinan Kaya <okaya@kernel.org>, Len Brown <lenb@kernel.org>,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH v15 7/9] PCI: Setup ACPI fwnode early and at the same time with OF
-Date:   Thu,  5 Aug 2021 21:59:15 +0530
-Message-Id: <20210805162917.3989-8-ameynarkhede03@gmail.com>
+Subject: [PATCH v15 6/9] PCI: Define a function to set ACPI_COMPANION in pci_dev
+Date:   Thu,  5 Aug 2021 21:59:14 +0530
+Message-Id: <20210805162917.3989-7-ameynarkhede03@gmail.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210805162917.3989-1-ameynarkhede03@gmail.com>
 References: <20210805162917.3989-1-ameynarkhede03@gmail.com>
@@ -78,77 +78,63 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Shanker Donthineni <sdonthineni@nvidia.com>
 
-The pci_dev objects are created through two mechanisms 1) during PCI
-bus scan and 2) from I/O Virtualization. The fwnode in pci_dev object
-is being set at different places depends on the type of firmware used,
-device creation mechanism, and acpi_pci_bridge_d3().
+Move the existing code logic from acpi_pci_bridge_d3() to a separate
+function pci_set_acpi_fwnode() to set the ACPI fwnode.
 
-The software features which have a dependency on ACPI fwnode properties
-and need to be handled before device_add() will not work. One use case,
-the software has to check the existence of _RST method to support ACPI
-based reset method.
-
-This patch does the two changes in order to provide fwnode consistently.
- - Set ACPI and OF fwnodes from pci_setup_device().
- - Remove pci_set_acpi_fwnode() in acpi_pci_bridge_d3().
-
-After this patch, ACPI/OF firmware properties are visible at the same
-time during the early stage of pci_dev setup. And also call sites should
-be able to use firmware agnostic functions device_property_xxx() for the
-early PCI quirks in the future.
+No functional change with this patch.
 
 Signed-off-by: Shanker Donthineni <sdonthineni@nvidia.com>
 Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/pci-acpi.c | 1 -
- drivers/pci/probe.c    | 7 ++++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/pci-acpi.c | 12 ++++++++----
+ drivers/pci/pci.h      |  2 ++
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index eaddbf701759..dae021322b3f 100644
+index 36bc23e21759..eaddbf701759 100644
 --- a/drivers/pci/pci-acpi.c
 +++ b/drivers/pci/pci-acpi.c
-@@ -952,7 +952,6 @@ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
+@@ -934,6 +934,13 @@ static pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
+ 
+ static struct acpi_device *acpi_pci_find_companion(struct device *dev);
+ 
++void pci_set_acpi_fwnode(struct pci_dev *dev)
++{
++	if (!ACPI_COMPANION(&dev->dev) && !pci_dev_is_added(dev))
++		ACPI_COMPANION_SET(&dev->dev,
++				   acpi_pci_find_companion(&dev->dev));
++}
++
+ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
+ {
+ 	const struct fwnode_handle *fwnode;
+@@ -945,11 +952,8 @@ static bool acpi_pci_bridge_d3(struct pci_dev *dev)
  		return false;
  
  	/* Assume D3 support if the bridge is power-manageable by ACPI. */
--	pci_set_acpi_fwnode(dev);
++	pci_set_acpi_fwnode(dev);
  	adev = ACPI_COMPANION(&dev->dev);
+-	if (!adev && !pci_dev_is_added(dev)) {
+-		adev = acpi_pci_find_companion(&dev->dev);
+-		ACPI_COMPANION_SET(&dev->dev, adev);
+-	}
  
  	if (adev && acpi_device_power_manageable(adev))
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 379e85037d9b..15a6975d3757 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1789,6 +1789,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->error_state = pci_channel_io_normal;
- 	set_pcie_port_type(dev);
- 
-+	pci_set_of_node(dev);
-+	pci_set_acpi_fwnode(dev);
-+
- 	pci_dev_assign_slot(dev);
- 
- 	/*
-@@ -1924,6 +1927,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	default:				    /* unknown header */
- 		pci_err(dev, "unknown header type %02x, ignoring device\n",
- 			dev->hdr_type);
-+		pci_release_of_node(dev);
- 		return -EIO;
- 
- 	bad:
-@@ -2351,10 +2355,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	dev->vendor = l & 0xffff;
- 	dev->device = (l >> 16) & 0xffff;
- 
--	pci_set_of_node(dev);
--
- 	if (pci_setup_device(dev)) {
--		pci_release_of_node(dev);
- 		pci_bus_put(dev->bus);
- 		kfree(dev);
- 		return NULL;
+ 		return true;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 31458d48eda7..8ef379b6cfad 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -703,7 +703,9 @@ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL
+ #ifdef CONFIG_ACPI
+ int pci_acpi_program_hp_params(struct pci_dev *dev);
+ extern const struct attribute_group pci_dev_acpi_attr_group;
++void pci_set_acpi_fwnode(struct pci_dev *dev);
+ #else
++static inline void pci_set_acpi_fwnode(struct pci_dev *dev) {}
+ static inline int pci_acpi_program_hp_params(struct pci_dev *dev)
+ {
+ 	return -ENODEV;
 -- 
 2.32.0
 
