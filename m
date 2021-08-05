@@ -4,30 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC311C43214
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8487C19F34
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CB1061037
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EC0E610A8
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Aug 2021 00:53:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236878AbhHEAxw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Aug 2021 20:53:52 -0400
-Received: from mga02.intel.com ([134.134.136.20]:12127 "EHLO mga02.intel.com"
+        id S236934AbhHEAxy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Aug 2021 20:53:54 -0400
+Received: from mga02.intel.com ([134.134.136.20]:12131 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235659AbhHEAxl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Aug 2021 20:53:41 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215425"
+        id S236751AbhHEAxt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Aug 2021 20:53:49 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10066"; a="201215440"
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="201215425"
+   d="scan'208";a="201215440"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:27 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:36 -0700
 X-IronPort-AV: E=Sophos;i="5.84,296,1620716400"; 
-   d="scan'208";a="437617195"
+   d="scan'208";a="437617232"
 Received: from mjkendri-mobl.amr.corp.intel.com (HELO skuppusw-desk1.amr.corp.intel.com) ([10.254.17.117])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:24 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 17:53:33 -0700
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     Thomas Gleixner <tglx@linutronix.de>,
@@ -56,9 +56,9 @@ Cc:     Peter H Anvin <hpa@zytor.com>, Dave Hansen <dave.hansen@intel.com>,
         sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-doc@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH v4 03/15] x86/tdx: Make pages shared in ioremap()
-Date:   Wed,  4 Aug 2021 17:52:06 -0700
-Message-Id: <20210805005218.2912076-4-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 07/15] x86/tdx: ioapic: Add shared bit for IOAPIC base address
+Date:   Wed,  4 Aug 2021 17:52:10 -0700
+Message-Id: <20210805005218.2912076-8-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -68,18 +68,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+From: Isaku Yamahata <isaku.yamahata@intel.com>
 
-All ioremap()ed pages that are not backed by normal memory (NONE or
-RESERVED) have to be mapped as shared.
+The kernel interacts with each bare-metal IOAPIC with a special
+MMIO page. When running under KVM, the guest's IOAPICs are
+emulated by KVM.
 
-Reuse the infrastructure from AMD SEV code.
+When running as a TDX guest, the guest needs to mark each IOAPIC
+mapping as "shared" with the host.  This ensures that TDX private
+protections are not applied to the page, which allows the TDX host
+emulation to work.
 
-Note that DMA code doesn't use ioremap() to convert memory to shared as
-DMA buffers backed by normal memory. DMA code make buffer shared with
-set_memory_decrypted().
+Earlier patches in this series modified ioremap() so that
+ioremap()-created mappings such as virtio will be marked as
+shared. However, the IOAPIC code does not use ioremap() and instead
+uses the fixmap mechanism.
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Introduce a special fixmap helper just for the IOAPIC code.  Ensure
+that it marks IOAPIC pages as "shared".  This replaces
+set_fixmap_nocache() with __set_fixmap() since __set_fixmap()
+allows custom 'prot' values.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
 Reviewed-by: Andi Kleen <ak@linux.intel.com>
 Reviewed-by: Tony Luck <tony.luck@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -89,81 +99,66 @@ Changes since v3:
  * Rebased on top of Tom Lendacky's protected guest
    changes (https://lore.kernel.org/patchwork/cover/1468760/)
 
-Changes since v1:
- * Fixed format issues in commit log.
+ arch/x86/kernel/apic/io_apic.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
- arch/x86/include/asm/pgtable.h  | 4 ++++
- arch/x86/mm/ioremap.c           | 8 ++++++--
- include/linux/protected_guest.h | 1 +
- 3 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/include/asm/pgtable.h b/arch/x86/include/asm/pgtable.h
-index 448cd01eb3ec..2d4d518651d2 100644
---- a/arch/x86/include/asm/pgtable.h
-+++ b/arch/x86/include/asm/pgtable.h
-@@ -21,6 +21,10 @@
- #define pgprot_encrypted(prot)	__pgprot(__sme_set(pgprot_val(prot)))
- #define pgprot_decrypted(prot)	__pgprot(__sme_clr(pgprot_val(prot)))
- 
-+/* Make the page accesable by VMM for protected guests */
-+#define pgprot_protected_guest(prot) __pgprot(pgprot_val(prot) |	\
-+					      tdg_shared_mask())
-+
- #ifndef __ASSEMBLY__
- #include <asm/x86_init.h>
- #include <asm/pkru.h>
-diff --git a/arch/x86/mm/ioremap.c b/arch/x86/mm/ioremap.c
-index 60ade7dd71bd..69a60f240124 100644
---- a/arch/x86/mm/ioremap.c
-+++ b/arch/x86/mm/ioremap.c
-@@ -17,6 +17,7 @@
- #include <linux/mem_encrypt.h>
- #include <linux/efi.h>
- #include <linux/pgtable.h>
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d5c691a3208b..5154efe8c4f7 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -49,6 +49,7 @@
+ #include <linux/slab.h>
+ #include <linux/memblock.h>
+ #include <linux/msi.h>
 +#include <linux/protected_guest.h>
  
- #include <asm/set_memory.h>
- #include <asm/e820/api.h>
-@@ -26,6 +27,7 @@
- #include <asm/pgalloc.h>
- #include <asm/memtype.h>
- #include <asm/setup.h>
+ #include <asm/irqdomain.h>
+ #include <asm/io.h>
+@@ -65,6 +66,7 @@
+ #include <asm/irq_remapping.h>
+ #include <asm/hw_irq.h>
+ #include <asm/apic.h>
 +#include <asm/tdx.h>
  
- #include "physaddr.h"
- 
-@@ -87,8 +89,8 @@ static unsigned int __ioremap_check_ram(struct resource *res)
+ #define	for_each_ioapic(idx)		\
+ 	for ((idx) = 0; (idx) < nr_ioapics; (idx)++)
+@@ -2675,6 +2677,18 @@ static struct resource * __init ioapic_setup_resources(void)
+ 	return res;
  }
  
- /*
-- * In a SEV guest, NONE and RESERVED should not be mapped encrypted because
-- * there the whole memory is already encrypted.
-+ * In a SEV or TDX guest, NONE and RESERVED should not be mapped encrypted (or
-+ * private in TDX case) because there the whole memory is already encrypted.
-  */
- static unsigned int __ioremap_check_encrypted(struct resource *res)
++static void io_apic_set_fixmap_nocache(enum fixed_addresses idx,
++				       phys_addr_t phys)
++{
++	pgprot_t flags = FIXMAP_PAGE_NOCACHE;
++
++	/* Set TDX guest shared bit in pgprot flags */
++	if (prot_guest_has(PATTR_GUEST_SHARED_MAPPING_INIT))
++		flags = pgprot_protected_guest(flags);
++
++	__set_fixmap(idx, phys, flags);
++}
++
+ void __init io_apic_init_mappings(void)
  {
-@@ -246,6 +248,8 @@ __ioremap_caller(resource_size_t phys_addr, unsigned long size,
- 	prot = PAGE_KERNEL_IO;
- 	if ((io_desc.flags & IORES_MAP_ENCRYPTED) || encrypted)
- 		prot = pgprot_encrypted(prot);
-+	else if (prot_guest_has(PATTR_GUEST_SHARED_MAPPING_INIT))
-+		prot = pgprot_protected_guest(prot);
+ 	unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
+@@ -2707,7 +2721,7 @@ void __init io_apic_init_mappings(void)
+ 				      __func__, PAGE_SIZE, PAGE_SIZE);
+ 			ioapic_phys = __pa(ioapic_phys);
+ 		}
+-		set_fixmap_nocache(idx, ioapic_phys);
++		io_apic_set_fixmap_nocache(idx, ioapic_phys);
+ 		apic_printk(APIC_VERBOSE, "mapped IOAPIC to %08lx (%08lx)\n",
+ 			__fix_to_virt(idx) + (ioapic_phys & ~PAGE_MASK),
+ 			ioapic_phys);
+@@ -2836,7 +2850,7 @@ int mp_register_ioapic(int id, u32 address, u32 gsi_base,
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+ 	ioapics[idx].mp_config.apicaddr = address;
  
- 	switch (pcm) {
- 	case _PAGE_CACHE_MODE_UC:
-diff --git a/include/linux/protected_guest.h b/include/linux/protected_guest.h
-index 1a350c3fcfe2..14255f801100 100644
---- a/include/linux/protected_guest.h
-+++ b/include/linux/protected_guest.h
-@@ -17,6 +17,7 @@
- #define PATTR_GUEST_MEM_ENCRYPT		2	/* Guest encrypted memory */
- #define PATTR_GUEST_PROT_STATE		3	/* Guest encrypted state */
- #define PATTR_GUEST_UNROLL_STRING_IO	4	/* Unrolled string IO */
-+#define PATTR_GUEST_SHARED_MAPPING_INIT	5	/* Late shared mapping init*/
- 
- /* 0x800 - 0x8ff reserved for AMD */
- #define PATTR_SME			0x800
+-	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
++	io_apic_set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+ 	if (bad_ioapic_register(idx)) {
+ 		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+ 		return -ENODEV;
 -- 
 2.25.1
 
