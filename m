@@ -2,199 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A78DC4338F
-	for <linux-pci@archiver.kernel.org>; Sat,  7 Aug 2021 07:11:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 717C5C432BE
+	for <linux-pci@archiver.kernel.org>; Sat,  7 Aug 2021 07:24:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D01E60E53
-	for <linux-pci@archiver.kernel.org>; Sat,  7 Aug 2021 07:11:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F790610E7
+	for <linux-pci@archiver.kernel.org>; Sat,  7 Aug 2021 07:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231366AbhHGHL6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 7 Aug 2021 03:11:58 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:7805 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231326AbhHGHLz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 7 Aug 2021 03:11:55 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GhYRd1sF5zYdSk;
-        Sat,  7 Aug 2021 15:11:25 +0800 (CST)
-Received: from [10.67.103.235] (10.67.103.235) by
- dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Sat, 7 Aug 2021 15:11:34 +0800
-Subject: Re: [PATCH V7 9/9] PCI/P2PDMA: Add a 10-Bit Tag check in P2PDMA
-To:     Bjorn Helgaas <helgaas@kernel.org>
-References: <20210805181233.GA1765293@bjorn-Precision-5520>
-CC:     <hch@infradead.org>, <kw@linux.com>, <logang@deltatee.com>,
-        <leon@kernel.org>, <linux-pci@vger.kernel.org>,
-        <rajur@chelsio.com>, <hverkuil-cisco@xs4all.nl>,
-        <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-From:   Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <11f98331-cc39-ee37-85f7-185fdd1ccea5@huawei.com>
-Date:   Sat, 7 Aug 2021 15:11:34 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+        id S231467AbhHGHYg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 7 Aug 2021 03:24:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56754 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231440AbhHGHYg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 7 Aug 2021 03:24:36 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35BD6C0613D3;
+        Sat,  7 Aug 2021 00:24:14 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id c16so13966164wrp.13;
+        Sat, 07 Aug 2021 00:24:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=kOfa29VAz1NlQekE8P7/3E01ehCcTCDdZpc8rzXu9+8=;
+        b=TGhhO0/U6iy8CTCCnuKpidFV3bVAKGjyFHC08l2wtYLPab/r+yk5oD6fGhXCHbLxd2
+         K2mn2qSorYg4FB7W+sJa00dDlVJOmNvoXX2o9BtaigdrFSWBPnInrQEPNkC9CWXmxyf5
+         eXNYN2U3yR/rtSJwa4swc8BmqYcThmrXA0xaw60tFy3Gm4dqy4Y7nZe7mqLwTowW/ieB
+         DDSQwdVNPQvRSMZPIwKUd+Fh4uz+GnBK279vVNfniD6CpE7jBghKmazPZyUtH2nBckTr
+         nHoRNxAXvDt6Co/QwN8BChk/ahEMkys+pzqjE0KNphbfblh/lqUDOUocZ3MSd+10wcqr
+         VsRA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=kOfa29VAz1NlQekE8P7/3E01ehCcTCDdZpc8rzXu9+8=;
+        b=bJ/9TaA5+Pule6+C0jIGdp9vYufaBqbPAbudFciD3m1dEbwdXJ+EFBrQ+r7lI4yQhG
+         UFwHUmOESaDQit85sRYgDdu68Z8+u9Knwpwks/rYY0cZT8ynr/3vrFMEG2R5es9Ot86c
+         VqKmT7P6rT90uA+3QB5/7FA3x2Kf4W76kTwvdFHyj/KOG2iSVNd8CBi9jQOzc8fIqVz/
+         PBfxkDz/+me/nAvmJaOEzD8JyKEnSALBwldsmnz0rA/XrqKEzPGYoHWhhur+9ut5yG2k
+         9PzWj8wNzsYf30HFsrQ7hqlh1NtcR4pBn60KhjoQi6tYkIS7UJC6JSf/1Sg8C2eWNgev
+         MY7g==
+X-Gm-Message-State: AOAM5308s4uUa/lP+6h5vf9aP5wVxCdfyw5pLyz8XDCc2xCc3JOJb5AB
+        xcBObRNiT45WYx9etbbvhPE=
+X-Google-Smtp-Source: ABdhPJysQAP0lK1qriodegnx5Hj0BurpjgKvd5yHBxHmXA0OugHLV7iTq7mxtI17CdFLqvJKir5NSw==
+X-Received: by 2002:adf:f383:: with SMTP id m3mr14107000wro.81.1628321052848;
+        Sat, 07 Aug 2021 00:24:12 -0700 (PDT)
+Received: from localhost.localdomain (10.red-83-57-27.dynamicip.rima-tde.net. [83.57.27.10])
+        by smtp.gmail.com with ESMTPSA id g5sm13915017wmh.31.2021.08.07.00.24.11
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 07 Aug 2021 00:24:12 -0700 (PDT)
+From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
+To:     tsbogend@alpha.franken.de
+Cc:     bhelgaas@google.com, matthias.bgg@gmail.com,
+        gregkh@linuxfoundation.org, linux-mips@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-staging@lists.linux.dev,
+        neil@brown.name, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] MIPS: ralink: don't define PC_IOBASE but increase IO_SPACE_LIMIT
+Date:   Sat,  7 Aug 2021 09:24:07 +0200
+Message-Id: <20210807072409.9018-2-sergio.paracuellos@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210807072409.9018-1-sergio.paracuellos@gmail.com>
+References: <20210807072409.9018-1-sergio.paracuellos@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20210805181233.GA1765293@bjorn-Precision-5520>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.103.235]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggeme758-chm.china.huawei.com (10.3.19.104)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Defining PCI_IOBASE results in pci resource handling working but the
+addresses generated for IO accesses are wrong since the ioremap in the pci
+core function 'pci_parse_request_of_pci_ranges' tries to remap to a fixed
+virtual address (PC_IOBASE) which can't work for KSEG1 addresses. To get
+it working this way, we would need to put PCI_IOBASE somewhere into KSEG2
+which will result in creating TLB entries for IO addresses, which most of
+the time isn't needed on MIPS because of access via KSEG1. So avoid to
+define PCI_IOBASE and increase IO_SPACE_LIMIT resource for ralink MIPS
+platform instead, to get valid IO addresses for resources from pci core
+'pci_address_to_pio' function.
 
-On 2021/8/6 2:12, Bjorn Helgaas wrote:
-> On Wed, Aug 04, 2021 at 09:47:08PM +0800, Dongdong Liu wrote:
->> Add a 10-Bit Tag check in the P2PDMA code to ensure that a device with
->> 10-Bit Tag Requester doesn't interact with a device that does not
->> support 10-BIT Tag Completer. Before that happens, the kernel should
->> emit a warning. "echo 0 > /sys/bus/pci/devices/.../10bit_tag" to
->> disable 10-BIT Tag Requester for PF device.
->> "echo 0 > /sys/bus/pci/devices/.../sriov_vf_10bit_tag_ctl" to disable
->> 10-BIT Tag Requester for VF device.
->
-> s/10-BIT/10-Bit/ several times.
-Will fix.
->
-> Add blank lines between paragraphs.
-Will fix.
->
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> ---
->>  drivers/pci/p2pdma.c | 40 ++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 40 insertions(+)
->>
->> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
->> index 50cdde3..948f2be 100644
->> --- a/drivers/pci/p2pdma.c
->> +++ b/drivers/pci/p2pdma.c
->> @@ -19,6 +19,7 @@
->>  #include <linux/random.h>
->>  #include <linux/seq_buf.h>
->>  #include <linux/xarray.h>
->> +#include "pci.h"
->>
->>  enum pci_p2pdma_map_type {
->>  	PCI_P2PDMA_MAP_UNKNOWN = 0,
->> @@ -410,6 +411,41 @@ static unsigned long map_types_idx(struct pci_dev *client)
->>  		(client->bus->number << 8) | client->devfn;
->>  }
->>
->> +static bool check_10bit_tags_vaild(struct pci_dev *a, struct pci_dev *b,
->
-> s/vaild/valid/
->
-> Or maybe s/valid/safe/ or s/valid/supported/, since "valid" isn't
-> quite the right word here.  We want to know whether the source is
-> enabled to generate 10-bit tags, and if so, whether the destination
-> can handle them.
->
-> "if (check_10bit_tags_valid())" does not make sense because
-> "check_10bit_tags_valid()" is not a question with a yes/no answer.
->
-> "10bit_tags_valid()" *might* be, because "if (10bit_tags_valid())"
-> makes sense.  But I don't think you can start with a digit.
->
-> Or maybe you want to invert the sense, e.g.,
-> "10bit_tags_unsupported()", since that avoids negation at the caller:
->
->   if (10bit_tags_unsupported(a, b) ||
->       10bit_tags_unsupported(b, a))
->         map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
-Good suggestion. add a pci_ prefix.
+Fixes: 222b27713d7f ("MIPS: ralink: Define PCI_IOBASE)
+Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+---
+ arch/mips/include/asm/mach-ralink/spaces.h | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-if (pci_10bit_tags_unsupported(a, b) ||
-     pci_10bit_tags_unsupported(b, a))
-	map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
+diff --git a/arch/mips/include/asm/mach-ralink/spaces.h b/arch/mips/include/asm/mach-ralink/spaces.h
+index 87d085c9ad61..31a3525213cf 100644
+--- a/arch/mips/include/asm/mach-ralink/spaces.h
++++ b/arch/mips/include/asm/mach-ralink/spaces.h
+@@ -2,9 +2,7 @@
+ #ifndef __ASM_MACH_RALINK_SPACES_H_
+ #define __ASM_MACH_RALINK_SPACES_H_
+ 
+-#define PCI_IOBASE	_AC(0xa0000000, UL)
+-#define PCI_IOSIZE	SZ_16M
+-#define IO_SPACE_LIMIT	(PCI_IOSIZE - 1)
++#define IO_SPACE_LIMIT	0x1fffffff
+ 
+ #include <asm/mach-generic/spaces.h>
+ #endif
+-- 
+2.25.1
 
-> Doesn't this patch need to be at the very beginning, before you start
-> enabling 10-bit tags?  Otherwise there's a hole in the middle where we
-> enable them and P2P DMA might break.
-Yes, will do.
->
->> +				   bool verbose)
->> +{
->> +	bool req;
->> +	bool comp;
->> +	u16 ctl2;
->> +
->> +	if (a->is_virtfn) {
->> +#ifdef CONFIG_PCI_IOV
->> +		req = !!(a->physfn->sriov->ctrl &
->> +			 PCI_SRIOV_CTRL_VF_10BIT_TAG_REQ_EN);
->> +#endif
->> +	} else {
->> +		pcie_capability_read_word(a, PCI_EXP_DEVCTL2, &ctl2);
->> +		req = !!(ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
->> +	}
->> +
->> +	comp = !!(b->pcie_devcap2 & PCI_EXP_DEVCAP2_10BIT_TAG_COMP);
->> +	if (req && (!comp)) {
->> +		if (verbose) {
->> +			pci_warn(a, "cannot be used for peer-to-peer DMA as 10-Bit Tag Requester enable is set in device (%s), but peer device (%s) does not support the 10-Bit Tag Completer\n",
->> +				 pci_name(a), pci_name(b));
->
-> No point in printing pci_name(a) twice.  pci_warn() prints it already;
-> that should be enough.
-Will fix.
->
-> I think you can simplify this a little, e.g.,
->
->   if (!req)           /* 10-bit tags not enabled on requester */
->     return true;
->
->   if (comp)           /* completer can handle anything */
->     return true;
->
->   /* error case */
->   if (!verbose)
->     return false;
->
->   pci_warn(...);
->   return false;
-
-Good point, this will make code more clean and readable.
-
-Thanks,
-Dongdong
->
->> +			if (a->is_virtfn)
->> +				pci_warn(a, "to disable 10-Bit Tag Requester for this device, echo 0 > /sys/bus/pci/devices/%s/sriov_vf_10bit_tag_ctl\n",
->> +					 pci_name(a));
->> +			else
->> +				pci_warn(a, "to disable 10-Bit Tag Requester for this device, echo 0 > /sys/bus/pci/devices/%s/10bit_tag\n",
->> +					 pci_name(a));
->> +		}
->> +		return false;
->> +	}
->> +
->> +	return true;
->> +}
->> +
->>  /*
->>   * Calculate the P2PDMA mapping type and distance between two PCI devices.
->>   *
->> @@ -532,6 +568,10 @@ calc_map_type_and_dist(struct pci_dev *provider, struct pci_dev *client,
->>  		map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
->>  	}
->>  done:
->> +	if (!check_10bit_tags_vaild(client, provider, verbose) ||
->> +	    !check_10bit_tags_vaild(provider, client, verbose))
->> +		map_type = PCI_P2PDMA_MAP_NOT_SUPPORTED;
->> +
->>  	rcu_read_lock();
->>  	p2pdma = rcu_dereference(provider->p2pdma);
->>  	if (p2pdma)
->> --
->> 2.7.4
->>
-> .
->
