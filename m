@@ -2,124 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE9AC4338F
-	for <linux-pci@archiver.kernel.org>; Sun,  8 Aug 2021 17:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 863F9C4338F
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Aug 2021 04:24:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 614C160F11
-	for <linux-pci@archiver.kernel.org>; Sun,  8 Aug 2021 17:24:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55C0E61040
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Aug 2021 04:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231199AbhHHRYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 8 Aug 2021 13:24:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45868 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231764AbhHHRYW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Aug 2021 13:24:22 -0400
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 311B0C061760
-        for <linux-pci@vger.kernel.org>; Sun,  8 Aug 2021 10:24:02 -0700 (PDT)
-Received: by mail-wm1-x32c.google.com with SMTP id i10-20020a05600c354ab029025a0f317abfso12796041wmq.3
-        for <linux-pci@vger.kernel.org>; Sun, 08 Aug 2021 10:24:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ZrGMfIn9duZHrgPrZQrczeNxCd3FMunAZEVzb7ncRw8=;
-        b=X505X68eKtrt/V1b6m9riXb/Y8VXIMWJLl4HV21l2Bctqm0/2fEm/udq5XLfBt4idf
-         pTyvvXFABpoW7INAlzpYYQAqijO1FL26LI1d1DnJDUtwDJ11MLu8bee01ZfuJiEFcm/m
-         v+7DiR1jIcTk/IIsUS+n1o8JerJziD/TTWNe4ywUwPa2QJIbdZfH0FCeoSFCllVdkHBZ
-         nLYKrAjhgyyCxDyNwXwQcmq/YTUAO/0NJYnfs5Z+WXU7mB/8s0zMV7yDmm4iOcjKKj98
-         b3S6nAAACp9DIy8MaMjiKCqQWBmaDnaONk8pv2onP3ipoKaW02gyAK6uBobBtzltg3D+
-         Vy7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ZrGMfIn9duZHrgPrZQrczeNxCd3FMunAZEVzb7ncRw8=;
-        b=TICkE9l8ntAHvVqmMATtlMdFlGQ7+wBkfScP4JLQkMZNrwqYTejG8XYWupWabQJLvs
-         tL8vKu8Bdk0bwUXHNNI6BL/mL2Mqiy6Kk1E7yITWvg38b4cYIlMi6rIuhEBSIcWmf89I
-         jEp6TN0SYj7uJTJrSFl6F8nlUuePIsy5eVoZ+cl03NSmniiXS9mq14pDnldIBpbEuSXJ
-         ilgG13kmXmNTeRSCabCzk8vceLXzy+6f3Fj0N2dVm12qDpbWoK3CQ5KZXbgY4D67/EOH
-         rm5rnVqPf2hAsQfONwZwRh1Mg+VU2yosSkN2SVtZ7fjETk0ZI6TryH6X0gdJmkkWHmOW
-         IZ9g==
-X-Gm-Message-State: AOAM530mo+WM9o6knGhOXKQPmXLXLyJqWH3HQJwqx9CemLLj/BPm+y7V
-        6mfaYZ5MWO4nqmI7uBbYuCBg2Itm4PY10w==
-X-Google-Smtp-Source: ABdhPJxroo1sm7PMDrM/DUUtIqoOi65iFlLLuzjbQrhJxMPWQbtrBSpbdD3dPqBhIL4JZkKU0te2qg==
-X-Received: by 2002:a05:600c:198f:: with SMTP id t15mr6978828wmq.76.1628443440634;
-        Sun, 08 Aug 2021 10:24:00 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f10:c200:7101:8b48:5eab:cb5f? (p200300ea8f10c20071018b485eabcb5f.dip0.t-ipconnect.de. [2003:ea:8f10:c200:7101:8b48:5eab:cb5f])
-        by smtp.googlemail.com with ESMTPSA id c15sm16977316wrw.93.2021.08.08.10.23.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 08 Aug 2021 10:24:00 -0700 (PDT)
-Subject: [PATCH 6/6] PCI/VPD: Treat invalid VPD like no VPD capability
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1e61d5dc-824c-e855-01eb-6c7f45c55285@gmail.com>
-Message-ID: <6a02b204-4ed2-4553-c3b2-eacf9554fa8d@gmail.com>
-Date:   Sun, 8 Aug 2021 19:23:57 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S230365AbhHIEYr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Aug 2021 00:24:47 -0400
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:45426
+        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229483AbhHIEYq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Aug 2021 00:24:46 -0400
+Received: from HP-EliteBook-840-G7.. (1-171-221-113.dynamic-ip.hinet.net [1.171.221.113])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 10DEE3F044;
+        Mon,  9 Aug 2021 04:24:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1628483065;
+        bh=rNTKmk2f1FxpFVDQvfWr910vGJV6I98CEVlT78OYqBE=;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+         MIME-Version;
+        b=TUHQykpM0pxI6F8Cq4R0iDbUXHb9/c46e6JafcYChga/jtxDXltw+/m/H7l6grPn5
+         xoVetVE+Jq3Z9JcZ+smqUeTj/TgJAvC2uHaLeDqTa7J2UpWCHbPvZxNFIJbhO4W6xF
+         6RWF8IFAyNX0z/WpeuEb1GsqE1M8YJajx+P7OdTPU7B+Jux1Agu3owmL6rP8Optowq
+         0Eo/HWShE3+QFaU1XIJc8YxgsUlcqndKSssbCeyjdUjY0i+MB0kglKV9i50GHU7XRC
+         0/uS19cjV2fzhZcMVVootW/DjcrCk7+YGqTQw87jeoyBg4zXCgt0snSiqCfArVsl/A
+         59FyswxOkgX1Q==
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     bhelgaas@google.com
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Keith Busch <kbusch@kernel.org>,
+        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI/portdrv: Disallow runtime suspend when waekup is required but PME service isn't supported
+Date:   Mon,  9 Aug 2021 12:24:12 +0800
+Message-Id: <20210809042414.107430-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210713075726.1232938-1-kai.heng.feng@canonical.com>
+References: <20210713075726.1232938-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <1e61d5dc-824c-e855-01eb-6c7f45c55285@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Exporting sysfs files that can't be accessed doesn't make much sense.
-Therefore, if either a quirk or the dynamic size calculation result
-in VPD being marked as invalid, treat this like device has no VPD
-capability. One consequence is that vpd sysfs file is not visible.
+Some platforms cannot detect ethernet hotplug once its upstream port is
+runtime suspended because PME isn't enabled in _OSC. The issue can be
+workarounded by "pcie_ports=native".
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+The vendor confirmed that the PME in _OSC is disabled intentionally for
+stability issues on the other OS, so we should also honor the PME
+setting here.
+
+Disallow port runtime suspend when any child device requires wakeup, so
+pci_pme_list_scan() can still read the PME status from the devices
+behind the port.
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=213873
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
- drivers/pci/vpd.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/pci/pcie/portdrv_pci.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 9187ba496..58a3aa6a4 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -125,9 +125,6 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (pos < 0)
- 		return -EINVAL;
- 
--	if (vpd->len == PCI_VPD_SZ_INVALID)
--		return -EIO;
--
- 	if (pos > vpd->len)
- 		return 0;
- 
-@@ -189,9 +186,6 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (pos < 0 || (pos & 3) || (count & 3))
- 		return -EINVAL;
- 
--	if (vpd->len == PCI_VPD_SZ_INVALID)
--		return -EIO;
--
- 	if (end > vpd->len)
- 		return -EINVAL;
- 
-@@ -232,6 +226,9 @@ void pci_vpd_init(struct pci_dev *dev)
- 
- 	if (!dev->vpd.len)
- 		dev->vpd.len = pci_vpd_size(dev);
-+
-+	if (dev->vpd.len == PCI_VPD_SZ_INVALID)
-+		dev->vpd.cap = 0;
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index c7ff1eea225a..e693d243c90d 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -59,14 +59,30 @@ static int pcie_port_runtime_suspend(struct device *dev)
+ 	return pcie_port_device_runtime_suspend(dev);
  }
  
- static ssize_t vpd_read(struct file *filp, struct kobject *kobj,
++static int pcie_port_wakeup_check(struct device *dev, void *data)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pdev)
++		return 0;
++
++	return pdev->wakeup_prepared;
++}
++
+ static int pcie_port_runtime_idle(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pcie_port_find_device(pdev, PCIE_PORT_SERVICE_PME) &&
++	    device_for_each_child(dev, NULL, pcie_port_wakeup_check))
++		return -EBUSY;
++
+ 	/*
+ 	 * Assume the PCI core has set bridge_d3 whenever it thinks the port
+ 	 * should be good to go to D3.  Everything else, including moving
+ 	 * the port to D3, is handled by the PCI core.
+ 	 */
+-	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++	return pdev->bridge_d3 ? 0 : -EBUSY;
+ }
+ 
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
 -- 
-2.32.0
-
+2.31.1
 
