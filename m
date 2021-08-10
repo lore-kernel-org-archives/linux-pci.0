@@ -3,51 +3,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0E3C4338F
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Aug 2021 09:55:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 461C2C43214
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Aug 2021 09:55:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39C9361102
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Aug 2021 09:55:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F675610EA
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Aug 2021 09:55:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238419AbhHJJ4K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Aug 2021 05:56:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42768 "EHLO mail.kernel.org"
+        id S239320AbhHJJ4L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Aug 2021 05:56:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42804 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231129AbhHJJ4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S238400AbhHJJ4J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 10 Aug 2021 05:56:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E1C8D61051;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E7D9361078;
         Tue, 10 Aug 2021 09:55:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628589347;
-        bh=VH6M5ONMhNjC8KCFJtAgz5qPDLoG4uzbjD1lB+ZrYBY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=g6v36BQtc7xYEhygQkqHE0r4cM3bgPIkoRYMgNM3tYTjP5RhfyF4y+SwzQeonrAQE
-         cEnZF4OqMjTAmvvYq+O82jUJ5Z77mrq59AK9ADyTO/6zlN+AIrh5P52VM+ILCCPHI1
-         kljZgs0t5MgzkNY5rm8/c4IFIfEHON5SYgS0VNtA0HHxRktC3/dDT3kx0ula6c5KdZ
-         npNcWNGe3rZSTX8uLYtoZ/Qzif36JNSVBhWg8REqOTjc5sjTb6HrPcgnwOKpTTrMXw
-         Poknlrd8sCSNhecq8DYGDH7VnDRww9XFdZXZyoev0vAulwyPNqls96MpA7vjwEdvKx
-         xAcrEoZ4qEU9g==
+        s=k20201202; t=1628589348;
+        bh=FNhMa3ARnkUqgywjPKmDLcBbdox5t8J3LGZ7Cu8izcc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=aqAmV5T2x8rmna01c+loa1kN4ufHcs42c+6l58cQoxNnaAi7+DrfPWaxHn0I0fjRt
+         zIPZfDUILT7gQE757HJhB9IJhj8bKELMWO/UM+fHnFs22cWJqDwO1Vair5qyj7Le82
+         ACPbcuV0X0MZWxDZzYjl/UQgHnlaq1TRqy5wUq6RKozNRQenS8i/01EYt23X+Rmxtz
+         /hYUXdweYCmPTMtJzOwoFtQS2f/6a14RzUwigUMxgglxCy+Jgwp4xgr8vNjAor4cPz
+         PkecwvlWE6ln3Ubnkp9mXH9FXYSREb26XzGGZ2hZM1fvI8AJVZlykHL5Sb40Hzi0IY
+         ObCZ1aHKMPUZA==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mDOU5-00AcFY-Nm; Tue, 10 Aug 2021 11:55:45 +0200
+        id 1mDOU5-00AcFv-Vo; Tue, 10 Aug 2021 11:55:45 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Binghui Wang <wangbinghui@hisilicon.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: [PATCH v10 00/11] Add support for Hikey 970 PCIe
-Date:   Tue, 10 Aug 2021 11:55:31 +0200
-Message-Id: <cover.1628589155.git.mchehab+huawei@kernel.org>
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v10 06/11] PCI: kirin: Add Kirin 970 compatible
+Date:   Tue, 10 Aug 2021 11:55:37 +0200
+Message-Id: <a3dda9b64292dd6fe0e51e0f9a356077a36ddc8b.1628589155.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1628589155.git.mchehab+huawei@kernel.org>
+References: <cover.1628589155.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
@@ -55,69 +57,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The DT schema used by this series got merged at:
+Now that everything is in place, add a compatible for Kirin 970.
 
-	https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git/log/?h=dt/next
-
-The series should apply cleanly on the top of v5.14-rc1.
-
-patch1 contains a PHY for Kirin 970 PCIe.
-
-The remaining patches add support for Kirin 970 at the pcie-kirin driver, and
-add the needed logic to compile it as module and to allow to dynamically
-remove the driver in runtime.
-
-Tested on HiKey970:
-
-  # lspci -D -PP
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-  0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
-  0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-
-Tested on HiKey960:
-
-  # lspci -D 
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
-
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
+ drivers/pci/controller/dwc/pcie-kirin.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-v10:
-  - patch 1: dropped magic numbers from PHY driver
-  - patch 5: allow pcie child nodes without reset-gpios
-  - remaining patches untouched.
-
-v9:
-  - Did some cleanups at patches 1 and 5
-
-
-Mauro Carvalho Chehab (11):
-  phy: HiSilicon: Add driver for Kirin 970 PCIe PHY
-  PCI: kirin: Reorganize the PHY logic inside the driver
-  PCI: kirin: Add support for a PHY layer
-  PCI: kirin: Use regmap for APB registers
-  PCI: kirin: Add support for bridge slot DT schema
-  PCI: kirin: Add Kirin 970 compatible
-  PCI: kirin: Add MODULE_* macros
-  PCI: kirin: Allow building it as a module
-  PCI: kirin: Add power_off support for Kirin 960 PHY
-  PCI: kirin: fix poweroff sequence
-  PCI: kirin: Allow removing the driver
-
- drivers/pci/controller/dwc/Kconfig      |   2 +-
- drivers/pci/controller/dwc/pcie-kirin.c | 642 ++++++++++++++----
- drivers/phy/hisilicon/Kconfig           |  10 +
- drivers/phy/hisilicon/Makefile          |   1 +
- drivers/phy/hisilicon/phy-hi3670-pcie.c | 857 ++++++++++++++++++++++++
- 5 files changed, 1364 insertions(+), 148 deletions(-)
- create mode 100644 drivers/phy/hisilicon/phy-hi3670-pcie.c
-
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 95962983e6f2..306d440e1b62 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -736,6 +736,10 @@ static const struct of_device_id kirin_pcie_match[] = {
+ 		.compatible = "hisilicon,kirin960-pcie",
+ 		.data = (void *)PCIE_KIRIN_INTERNAL_PHY
+ 	},
++	{
++		.compatible = "hisilicon,kirin970-pcie",
++		.data = (void *)PCIE_KIRIN_EXTERNAL_PHY
++	},
+ 	{},
+ };
+ 
 -- 
 2.31.1
-
 
