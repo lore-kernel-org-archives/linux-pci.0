@@ -2,160 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E75C4320E
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 07:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27507C432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:08:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D0D861008
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 07:55:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08A6C60E52
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:08:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235896AbhHKHzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 03:55:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235687AbhHKHzV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Aug 2021 03:55:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7582F60FC0;
-        Wed, 11 Aug 2021 07:54:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628668498;
-        bh=ii0nBQbue9NAVogxJU47bDMTGMtwHme2vnmmfk4oB34=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GWaiVfd+fgPE+m5hv1I9Y8LWWXHSxiSLhIpkFVHprCLHrzyq8cmC1vWJmYoU4R6fn
-         F7ZW+TlPXBR7SdjJSUVbLeGyOKt4nogGo+vbnSyux/YqhVubCVm67f3dtm7WSXxJlS
-         tp+iGJpNlhqyHvlyE8acuahGBGTHy3+lazgCprbbA07WVSCOxCE9KTc1LhrnV0VFYG
-         ZOtXWAi+HvY3hvSdiZ4gx5cBn2UIWIJJTYQjtmyiHetzHi2n7h5FTkNQqFIs0IyZTD
-         uBxKUvNo9qouOvj9vgAgx7uL1g/RZChiVAJ/dKFz/caaK3hkewhLL+dy0UZrFpQYK0
-         Kwv9elC/IP1Kg==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1mDj4i-00BuOl-BJ; Wed, 11 Aug 2021 09:54:56 +0200
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] dt-bindings: PCI: kirin: fix HiKey970 example
-Date:   Wed, 11 Aug 2021 09:54:53 +0200
-Message-Id: <8d9da3eb674d41fff616f046d7e7a38c94acf101.1628668306.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1628668306.git.mchehab+huawei@kernel.org>
-References: <cover.1628668306.git.mchehab+huawei@kernel.org>
+        id S236170AbhHKIJB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 04:09:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51190 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235849AbhHKIH2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:07:28 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FC7DC061799
+        for <linux-pci@vger.kernel.org>; Wed, 11 Aug 2021 01:06:50 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG9-000161-Uk; Wed, 11 Aug 2021 10:06:45 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG8-0000Ok-K4; Wed, 11 Aug 2021 10:06:44 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG5-0002xQ-I8; Wed, 11 Aug 2021 10:06:41 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, kernel@pengutronix.de,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH v3 5/8] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
+Date:   Wed, 11 Aug 2021 10:06:34 +0200
+Message-Id: <20210811080637.2596434-6-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
+References: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=FydmVf3EHrOfk/Erk3jkwyQcrbBSqB9qg6qvIrOZYWc=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEThPAACgkQwfwUeK3K7An6AQf9HbB AWMOP2HMDlnih7eHXcXdJtSx6gTmG1dHIjZmnFWItgP26RdvnX62x8rIvIYjYw2RmjiqbG7zaeHc5 2uS/EZPYcswtt7b9MHXONx4XxFXjfETgxDVmQTKE94r51OU4oYTRqhEw1bJl2PhMZVWmiYqlPV8ea yEW6fWZEXsZG4OyL19XX0gyKsKpKvV7Cdt69drzVkU3iye/Rrzgu0XBORdQohcSbeSVlNvN1ag/AS /vDB+UoTm463yoTsdfacXoZHbKLtrbt86WMYr0+TBYCM/0hj1UmSCaOX8qIyUR7IWRIIkiFsR3REY +Fkh6XUXXyDGFHkpVI21a/oLbHVWNXw==
 Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The given example doesn't produce all of_nodes at sysfs.
-Update it to reflect what's actually working.
+The only two drivers don't make use of the id parameter, so drop it.
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+This removes a usage of struct pci_dev::driver which is planned to be
+removed as it tracks duplicate data.
+
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- .../bindings/pci/hisilicon,kirin-pcie.yaml    | 64 +++++++++++--------
- 1 file changed, 36 insertions(+), 28 deletions(-)
+ drivers/message/fusion/mptbase.c | 7 ++-----
+ drivers/message/fusion/mptbase.h | 2 +-
+ drivers/message/fusion/mptctl.c  | 4 ++--
+ drivers/message/fusion/mptlan.c  | 2 +-
+ 4 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-index d05deebe9dbb..668a09e27139 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-@@ -97,7 +97,6 @@ examples:
-               <0x0 0xfc180000 0x0 0x1000>,
-               <0x0 0xf5000000 0x0 0x2000>;
-         reg-names = "dbi", "apb", "config";
--        msi-parent = <&its_pcie>;
-         #address-cells = <3>;
-         #size-cells = <2>;
-         device_type = "pci";
-@@ -116,43 +115,52 @@ examples:
-                         <0x0 0 0 4 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
-         reset-gpios = <&gpio7 0 0>;
-         hisilicon,clken-gpios = <&gpio27 3 0>, <&gpio17 0 0>, <&gpio20 6 0>;
--
--        pcie@0 { // Lane 0: PCIe switch: Bus 1, Device 0
--          reg = <0 0 0 0 0>;
-+        pcie@0,0 { // Lane 0: PCIe switch: Bus 1, Device 0
-+          reg = <0x80 0 0 0 0>;
-           compatible = "pciclass,0604";
-           device_type = "pci";
-           #address-cells = <3>;
-           #size-cells = <2>;
-           ranges;
--          pcie@1,0 { // Lane 4: M.2
--            reg = <0x800 0 0 0 0>;
-+          msi-parent = <&its_pcie>;
-+
-+          pcie@0,0 { // Lane 0: upstream
-+            reg = <0 0 0 0 0>;
-             compatible = "pciclass,0604";
-             device_type = "pci";
--            reset-gpios = <&gpio3 1 0>;
--            clkreq-gpios = <&gpio27 3 0 >;
--            #address-cells = <3>;
--            #size-cells = <2>;
--            ranges;
--          };
--          pcie@5,0 { // Lane 5: Mini PCIe
--            reg = <0x2800 0 0 0 0>;
--            compatible = "pciclass,0604";
--            device_type = "pci";
--            reset-gpios = <&gpio27 4 0 >;
--            clkreq-gpios = <&gpio17 0 0 >;
--            #address-cells = <3>;
--            #size-cells = <2>;
--            ranges;
--          };
--          pcie@7,0 { // Lane 6: Ethernet
--            reg = <0x3800 0 0 0 0>;
--            compatible = "pciclass,0604";
--            device_type = "pci";
--            reset-gpios = <&gpio25 2 0 >;
--            clkreq-gpios = <&gpio20 6 0 >;
-             #address-cells = <3>;
-             #size-cells = <2>;
-             ranges;
-+
-+            pcie@1,0 { // Lane 4: M.2
-+              reg = <0x0800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio3 1 0>;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-+
-+            pcie@5,0 { // Lane 5: Mini PCIe
-+              reg = <0x2800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio27 4 0 >;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-+
-+            pcie@7,0 { // Lane 6: Ethernet
-+              reg = <0x03800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio25 2 0 >;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-           };
-         };
-       };
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7f7abc9069f7..b94d5e4fdc23 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -829,7 +829,6 @@ int
+ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ {
+ 	MPT_ADAPTER	*ioc;
+-	const struct pci_device_id *id;
+ 
+ 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
+ 		return -EINVAL;
+@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ 
+ 	/* call per pci device probe entry point */
+ 	list_for_each_entry(ioc, &ioc_list, list) {
+-		id = ioc->pcidev->driver ?
+-		    ioc->pcidev->driver->id_table : NULL;
+ 		if (dd_cbfunc->probe)
+-			dd_cbfunc->probe(ioc->pcidev, id);
++			dd_cbfunc->probe(ioc->pcidev);
+ 	 }
+ 
+ 	return 0;
+@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
+ 		if(MptDeviceDriverHandlers[cb_idx] &&
+ 		  MptDeviceDriverHandlers[cb_idx]->probe) {
+-			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
++			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
+ 		}
+ 	}
+ 
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b9e0376be723..4bd0682c65d3 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -257,7 +257,7 @@ typedef enum {
+ } MPT_DRIVER_CLASS;
+ 
+ struct mpt_pci_driver{
+-	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
++	int  (*probe) (struct pci_dev *dev);
+ 	void (*remove) (struct pci_dev *dev);
+ };
+ 
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 72025996cd70..ae433c150b37 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
+ static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
+ static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
+ 
+-static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
++static int  mptctl_probe(struct pci_dev *);
+ static void mptctl_remove(struct pci_dev *);
+ 
+ #ifdef CONFIG_COMPAT
+@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
+  */
+ 
+ static int
+-mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptctl_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index 3261cac762de..7c1af5e6eb0b 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
+ }
+ 
+ static int
+-mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptlan_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct net_device	*dev;
 -- 
-2.31.1
+2.30.2
 
