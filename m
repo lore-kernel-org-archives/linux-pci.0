@@ -7,187 +7,150 @@ X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D3FC432BE
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56930C432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E9B560E52
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28B7F60FDA
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236183AbhHKIJ3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 04:09:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51396 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236119AbhHKIIU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:08:20 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A85BC0613D5
-        for <linux-pci@vger.kernel.org>; Wed, 11 Aug 2021 01:07:46 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mDjGA-0000yl-5I; Wed, 11 Aug 2021 10:06:46 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mDjG4-0000O2-Lw; Wed, 11 Aug 2021 10:06:40 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mDjG4-0002vI-Id; Wed, 11 Aug 2021 10:06:40 +0200
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>,
-        linux-pci@vger.kernel.org, kernel@pengutronix.de,
-        Alexander Duyck <alexanderduyck@fb.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ido Schimmel <idosch@nvidia.com>,
-        Ingo Molnar <mingo@redhat.com>, Jack Xu <jack.xu@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Jiri Olsa <jolsa@redhat.com>, Jiri Pirko <jiri@nvidia.com>,
-        Juergen Gross <jgross@suse.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Marco Chiappero <marco.chiappero@intel.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Michael Buesch <m@bues.ch>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Namhyung Kim <namhyung@kernel.org>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Taras Chornyi <tchornyi@marvell.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Tomaszx Kowalik <tomaszx.kowalik@intel.com>,
-        Vadym Kochan <vkochan@marvell.com>,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        netdev@vger.kernel.org, oss-drivers@corigine.com,
-        qat-linux@intel.com, x86@kernel.org, xen-devel@lists.xenproject.org
-Subject: [PATCH v3 0/8] PCI: Drop duplicated tracking of a pci_dev's bound driver
-Date:   Wed, 11 Aug 2021 10:06:29 +0200
-Message-Id: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.30.2
+        id S236136AbhHKIjg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 04:39:36 -0400
+Received: from mo-csw1115.securemx.jp ([210.130.202.157]:49262 "EHLO
+        mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236074AbhHKIjf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:39:35 -0400
+Received: by mo-csw.securemx.jp (mx-mo-csw1115) id 17B8ceTn029249; Wed, 11 Aug 2021 17:38:40 +0900
+X-Iguazu-Qid: 2wHI1WtxCCdJWdk7yS
+X-Iguazu-QSIG: v=2; s=0; t=1628671120; q=2wHI1WtxCCdJWdk7yS; m=uhCheTdU5gs+WCRi6kl3yWL7U8eyQmXgnGl4qr7N7go=
+Received: from imx12-a.toshiba.co.jp (imx12-a.toshiba.co.jp [61.202.160.135])
+        by relay.securemx.jp (mx-mr1112) id 17B8ccHa006735
+        (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 11 Aug 2021 17:38:39 +0900
+Received: from enc02.toshiba.co.jp (enc02.toshiba.co.jp [61.202.160.51])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by imx12-a.toshiba.co.jp (Postfix) with ESMTPS id 7DB6D1000E0;
+        Wed, 11 Aug 2021 17:38:38 +0900 (JST)
+Received: from hop101.toshiba.co.jp ([133.199.85.107])
+        by enc02.toshiba.co.jp  with ESMTP id 17B8cbbN018239;
+        Wed, 11 Aug 2021 17:38:38 +0900
+From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        devicetree@vger.kernel.org, punit1.agrawal@toshiba.co.jp,
+        yuji2.ishikawa@toshiba.co.jp, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Subject: [PATCH v6 0/3] Visconti: Add Toshiba Visconti PCIe host controller driver
+Date:   Wed, 11 Aug 2021 17:38:27 +0900
+X-TSB-HOP: ON
+Message-Id: <20210811083830.784065-1-nobuhiro1.iwamatsu@toshiba.co.jp>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Uwe Kleine-König <uwe@kleine-koenig.org>
+Hi,
 
-Hello,
+This series is the PCIe driver for Toshiba's ARM SoC, Visconti[0].
+This provides DT binding documentation, device driver, MAINTAINER files.
 
-Today the following is always true for a struct pci_dev *pdev:
+Best regards,
+  Nobuhiro
 
-	pdev->driver ==
-		pdev->dev.driver ? to_pci_driver(pdev->dev.driver) : NULL
+[0]: https://toshiba.semicon-storage.com/ap-en/semiconductor/product/image-recognition-processors-visconti.html
 
-This series is about getting rid of struct pci_dev::driver. The first
-three patches are unmodified compared to v2 (apart from an added
-Reviewed-by tag) and are just minor cleanups.
+  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
+    v5 -> v6:
+      - No update.
+    v4 -> v5:
+      - No update.
+    v3 -> v4:
+     - Changed the redundant clock name.
+    v2 -> v3:
+      - No update.
+    v1 -> v2:
+      - Remove white space.
+      - Drop num-viewport and bus-range from required.
+      - Drop status line from example.
+      - Drop bus-range from required.
+      - Removed lines defined in pci-bus.yaml from required.
 
-Patch #4 replaces all usages of pci_dev::driver->name by
-dev_driver_string().
+  PCI: visconti: Add Toshiba Visconti PCIe host controller driver
+    v5 -> v6:                                                                                                                                                                                                                                                                                                                         - Remove unnecessary commit log.                                                                                                                                                                                                                                                                                                - Fix split line of visconti_add_pcie_port() 
+    v4 -> v5:
+      - Remove PCIE_BUS_OFFSET
+      - Change link_up confirmation function of visconti_pcie_link_up().
+      - Move setting event mask before dw_pcie_link_up().
+      - Move the contents of visconti_pcie_power_on() to visconti_pcie_host_init().
+      - Remove code for link_gen.
+    v3 -> v4:
+      - Change variable from pci_addr to cpu_addr in visconti_pcie_cpu_addr_fixup().
+      - Change the calculation method of CPU addres from subtraction to mask, and
+        add comment.
+      - Drop dma_set_mask_and_coherent().
+      - Drop set MAX_MSI_IRQS.
+      - Drop dev_dbg for Link speed.
+      - Use use the dev_err_probe() to handle the devm_clk_get() failed.
+      - Changed the redundant clock name.
+    v2 -> v3:
+      - Update subject.
+      - Wrap description in 75 columns.
+      - Change config name to PCIE_VISCONTI_HOST.
+      - Update Kconfig text.
+      - Drop empty lines.
+      - Adjusted to 80 columns.
+      - Drop inline from functions for register access.
+      - Changed function name from visconti_pcie_check_link_status to
+        visconti_pcie_link_up.
+      - Update to using dw_pcie_host_init().
+      - Reorder these in the order of use in visconti_pcie_establish_link().
+      - Rewrite visconti_pcie_host_init() without dw_pcie_setup_rc().
+      - Change function name from  visconti_device_turnon() to
+        visconti_pcie_power_on().
+      - Unify formats such as dev_err().
+      - Drop error label in visconti_add_pcie_port(). 
+    v1 -> v2:
+      - Fix typo in commit message.
+      - Drop "depends on OF && HAS_IOMEM" from Kconfig.
+      - Stop using the pointer of struct dw_pcie.
+      - Use _relaxed variant.
+      - Drop dw_pcie_wait_for_link.
+      - Drop dbi resource processing.
+      - Drop MSI IRQ initialization processing.
+  
+  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
+    v5 -> v6:
+      - No update.
+    v4 -> v5:
+      - No update.
+    v3 -> v4:
+      - No update.
+    v2 -> v3:
+      - No update.
+    v1 -> v2:
+      - No update.
 
-Patch #5 simplifies struct mpt_pci_driver by dropping an unused
-parameter from a function callback. The calculation of this parameter
-made use of struct pci_dev::driver.
+Nobuhiro Iwamatsu (3):
+  dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
+  PCI: visconti: Add Toshiba Visconti PCIe host controller driver
+  MAINTAINERS: Add entries for Toshiba Visconti PCIe controller
 
-Patch #6 simplifies adf_enable_aer() and moves one assignment done in
-that function to the initializer of the respective static data.
+ .../bindings/pci/toshiba,visconti-pcie.yaml   | 110 ++++++
+ MAINTAINERS                                   |   2 +
+ drivers/pci/controller/dwc/Kconfig            |   9 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-visconti.c    | 333 ++++++++++++++++++
+ 5 files changed, 455 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-visconti.c
 
-Patch #7 then modifies all remaining users of struct pci_dev::driver to
-use to_pci_driver(pdev->dev.driver) instead and finally patch #8 gets
-rid of the driver member.
-
-Note this series is only build tested.
-
-Theoretically patches #4 and #7 could be split by subsystem, there are
-no dependencies, but I'd prefer that all patches go in together via the
-pci tree to simplify the procedure. If you don't agree please speak up.
-
-Best regards
-Uwe
-
-Uwe Kleine-König (8):
-  PCI: Simplify pci_device_remove()
-  PCI: Drop useless check from pci_device_probe()
-  xen/pci: Drop some checks that are always true
-  PCI: replace pci_dev::driver usage that gets the driver name
-  scsi: message: fusion: Remove unused parameter of mpt_pci driver's
-    probe()
-  crypto: qat - simplify adf_enable_aer()
-  PCI: Replace pci_dev::driver usage by pci_dev::dev.driver
-  PCI: Drop duplicated tracking of a pci_dev's bound driver
-
- arch/powerpc/include/asm/ppc-pci.h            |  7 ++-
- arch/powerpc/kernel/eeh_driver.c              | 10 +--
- arch/x86/events/intel/uncore.c                |  2 +-
- arch/x86/kernel/probe_roms.c                  |  2 +-
- drivers/bcma/host_pci.c                       |  7 ++-
- drivers/crypto/hisilicon/qm.c                 |  2 +-
- drivers/crypto/qat/qat_4xxx/adf_drv.c         |  7 +--
- drivers/crypto/qat/qat_c3xxx/adf_drv.c        |  7 +--
- drivers/crypto/qat/qat_c62x/adf_drv.c         |  7 +--
- drivers/crypto/qat/qat_common/adf_aer.c       | 10 +--
- .../crypto/qat/qat_common/adf_common_drv.h    |  2 +-
- drivers/crypto/qat/qat_dh895xcc/adf_drv.c     |  7 +--
- drivers/message/fusion/mptbase.c              |  7 +--
- drivers/message/fusion/mptbase.h              |  2 +-
- drivers/message/fusion/mptctl.c               |  4 +-
- drivers/message/fusion/mptlan.c               |  2 +-
- drivers/misc/cxl/guest.c                      | 24 ++++---
- drivers/misc/cxl/pci.c                        | 30 +++++----
- .../ethernet/hisilicon/hns3/hns3_ethtool.c    |  2 +-
- .../ethernet/marvell/prestera/prestera_pci.c  |  2 +-
- drivers/net/ethernet/mellanox/mlxsw/pci.c     |  2 +-
- .../ethernet/netronome/nfp/nfp_net_ethtool.c  |  2 +-
- drivers/pci/iov.c                             | 25 +++++---
- drivers/pci/pci-driver.c                      | 45 ++++++-------
- drivers/pci/pci.c                             |  4 +-
- drivers/pci/pcie/err.c                        | 36 ++++++-----
- drivers/pci/xen-pcifront.c                    | 63 +++++++++----------
- drivers/ssb/pcihost_wrapper.c                 |  8 ++-
- drivers/usb/host/xhci-pci.c                   |  2 +-
- include/linux/pci.h                           |  1 -
- 30 files changed, 164 insertions(+), 167 deletions(-)
-
-base-commit: 2734d6c1b1a089fb593ef6a23d4b70903526fe0c
 -- 
-2.30.2
+2.32.0
 
