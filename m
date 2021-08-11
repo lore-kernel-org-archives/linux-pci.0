@@ -7,48 +7,58 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 847C2C4338F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:08:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65079C432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A2C76104F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:08:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A9C260FC0
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235928AbhHKIJQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 04:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51184 "EHLO
+        id S236318AbhHKIJU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 04:09:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235935AbhHKIHd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:07:33 -0400
+        with ESMTP id S235670AbhHKIH5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:07:57 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 683A3C0613D3
-        for <linux-pci@vger.kernel.org>; Wed, 11 Aug 2021 01:06:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFA3BC06179C
+        for <linux-pci@vger.kernel.org>; Wed, 11 Aug 2021 01:07:04 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mDjG6-0000zg-7t; Wed, 11 Aug 2021 10:06:42 +0200
+        id 1mDjG9-00010f-65; Wed, 11 Aug 2021 10:06:45 +0200
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mDjG4-0000O8-Uw; Wed, 11 Aug 2021 10:06:40 +0200
+        id 1mDjG5-0000OH-Rq; Wed, 11 Aug 2021 10:06:41 +0200
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mDjG4-0002wZ-UG; Wed, 11 Aug 2021 10:06:40 +0200
+        id 1mDjG5-0002xT-Qe; Wed, 11 Aug 2021 10:06:41 +0200
 From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, kernel@pengutronix.de
-Subject: [PATCH v3 2/8] PCI: Drop useless check from pci_device_probe()
-Date:   Wed, 11 Aug 2021 10:06:31 +0200
-Message-Id: <20210811080637.2596434-3-u.kleine-koenig@pengutronix.de>
+        linux-pci@vger.kernel.org, kernel@pengutronix.de,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Tomaszx Kowalik <tomaszx.kowalik@intel.com>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Marco Chiappero <marco.chiappero@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        Jack Xu <jack.xu@intel.com>, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org
+Subject: [PATCH v3 6/8] crypto: qat - simplify adf_enable_aer()
+Date:   Wed, 11 Aug 2021 10:06:35 +0200
+Message-Id: <20210811080637.2596434-7-u.kleine-koenig@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
 References: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=DxD2f+xPNtLjHiGujpupqv/4IuiZwGoM96HIM+GP4wQ=; m=8Ai/yMthXF16CTAuD/pw3nAJZok0QXil2jJFkcBbwys=; p=oAB78UBBdbcpWvK14ZiunzGqiixuYor3x/t79yxAEGI=; g=4751c79fba41d79e9c1c5a83a7197e81fb2ff22e
-X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEThNsACgkQwfwUeK3K7An87Af/Rp0 ORApMpMQnptc4YAUrgOvlPPrhukMa87ZoU84o5dnvNOfAWKiFPDrjKAYNVAgfW7bsHp8jGtrU7Ym0 p/cmzm0eqUCQNKePAYfjf9Mw2u2gSqOOluioCJCZ4GtRx4i+UPPnMQedO0idTqa06iyFETeOrRjTl 2MUiy0U+qFJgRco2hr3UMNZAk5F/1yGcOekrPz6ajYsRI6qyQLuv7O+ZrPtTen6uB0mq1iXwodt0b rOSRnFW4Lr9cL2HQPr1Eefi0v6SmybX2UjLGZHV6LcbDpzjrFMC+F8JDf0spXROjIbFMUTH6RIt1M TlawVSZI2dGaXZ3v564jt3LTJQZe9Dg==
+X-Patch-Hashes: v=1; h=sha256; i=woJ+XG24qLZpRfQYIhuIjBJ10HF9ai4yZDNEgvzBdKs=; m=43Bwh4bgNofseZy3pN98J/xw6T54xBXYb8+EgplqK/c=; p=UpxHY8mwvBtBZg0FRXWD/zvIE1IdindmjThxZNtAGAY=; g=7cffdd55e5e8024bc4d1ee46c6d04a3a018e82b9
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEThPsACgkQwfwUeK3K7AlcFAf/QHf 2EoakEZSSChqiSv1cK3BTib6+DbUTlC5Bfaw7qwp8LmO5pwJIEaJ1eoMRW4lHkyKqZNmBYTrhxwM5 jmDa+eL833kxguwFPAs830uR9G6GnwkhZBVcQpOndX1//fPYTKnR58QQeWOEN161uhF2MdFO2qHL1 XwIafFsyFElRtwjKGVh0PCTP0TQ5QamHlwoDjuFhRuDFMJnJdXfpfa6ivtCS/1mIu3yOyE1huXEkT 21L8ji0bXBIlKl2gye3PGvL29DbeHyEtYVh9wGYAyAhbEevwr3nqbpaRmCi7HM5Kb65/YXUlDEX8k +3K9yY8GL6w84FZTr9EYTskXJrdBY1Q==
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
 X-SA-Exim-Mail-From: ukl@pengutronix.de
@@ -58,27 +68,174 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the device core calls the probe callback for a device the device is
-never bound and so !pci_dev->driver is always true.
+A struct pci_driver is supposed to be constant and assigning .err_handler
+once per bound device isn't really sensible. Also as the function returns
+zero unconditionally let it return no value instead and simplify the
+callers accordingly.
+
+As a side effect this removes one user of struct pci_dev::driver. This
+member is planned to be removed.
 
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- drivers/pci/pci-driver.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/crypto/qat/qat_4xxx/adf_drv.c          |  7 ++-----
+ drivers/crypto/qat/qat_c3xxx/adf_drv.c         |  7 ++-----
+ drivers/crypto/qat/qat_c62x/adf_drv.c          |  7 ++-----
+ drivers/crypto/qat/qat_common/adf_aer.c        | 10 +++-------
+ drivers/crypto/qat/qat_common/adf_common_drv.h |  2 +-
+ drivers/crypto/qat/qat_dh895xcc/adf_drv.c      |  7 ++-----
+ 6 files changed, 12 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 5808fc6f258e..7dff574bb2fa 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -383,7 +383,7 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- 	const struct pci_device_id *id;
- 	int error = 0;
+diff --git a/drivers/crypto/qat/qat_4xxx/adf_drv.c b/drivers/crypto/qat/qat_4xxx/adf_drv.c
+index a8805c815d16..1620281a9ed8 100644
+--- a/drivers/crypto/qat/qat_4xxx/adf_drv.c
++++ b/drivers/crypto/qat/qat_4xxx/adf_drv.c
+@@ -253,11 +253,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
--	if (!pci_dev->driver && drv->probe) {
-+	if (drv->probe) {
- 		error = -ENODEV;
+ 	pci_set_master(pdev);
  
- 		id = pci_match_device(drv, pci_dev);
+-	if (adf_enable_aer(accel_dev)) {
+-		dev_err(&pdev->dev, "Failed to enable aer.\n");
+-		ret = -EFAULT;
+-		goto out_err;
+-	}
++	adf_enable_aer(accel_dev);
+ 
+ 	if (pci_save_state(pdev)) {
+ 		dev_err(&pdev->dev, "Failed to save pci state.\n");
+@@ -310,6 +306,7 @@ static struct pci_driver adf_driver = {
+ 	.probe = adf_probe,
+ 	.remove = adf_remove,
+ 	.sriov_configure = adf_sriov_configure,
++	.err_handler = adf_err_handler,
+ };
+ 
+ module_pci_driver(adf_driver);
+diff --git a/drivers/crypto/qat/qat_c3xxx/adf_drv.c b/drivers/crypto/qat/qat_c3xxx/adf_drv.c
+index 7fb3343ae8b0..ceca372506a0 100644
+--- a/drivers/crypto/qat/qat_c3xxx/adf_drv.c
++++ b/drivers/crypto/qat/qat_c3xxx/adf_drv.c
+@@ -33,6 +33,7 @@ static struct pci_driver adf_driver = {
+ 	.probe = adf_probe,
+ 	.remove = adf_remove,
+ 	.sriov_configure = adf_sriov_configure,
++	.err_handler = adf_err_handler,
+ };
+ 
+ static void adf_cleanup_pci_dev(struct adf_accel_dev *accel_dev)
+@@ -199,11 +200,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 	pci_set_master(pdev);
+ 
+-	if (adf_enable_aer(accel_dev)) {
+-		dev_err(&pdev->dev, "Failed to enable aer\n");
+-		ret = -EFAULT;
+-		goto out_err_free_reg;
+-	}
++	adf_enable_aer(accel_dev);
+ 
+ 	if (pci_save_state(pdev)) {
+ 		dev_err(&pdev->dev, "Failed to save pci state\n");
+diff --git a/drivers/crypto/qat/qat_c62x/adf_drv.c b/drivers/crypto/qat/qat_c62x/adf_drv.c
+index 1f5de442e1e6..9176be253cc0 100644
+--- a/drivers/crypto/qat/qat_c62x/adf_drv.c
++++ b/drivers/crypto/qat/qat_c62x/adf_drv.c
+@@ -33,6 +33,7 @@ static struct pci_driver adf_driver = {
+ 	.probe = adf_probe,
+ 	.remove = adf_remove,
+ 	.sriov_configure = adf_sriov_configure,
++	.err_handler = adf_err_handler,
+ };
+ 
+ static void adf_cleanup_pci_dev(struct adf_accel_dev *accel_dev)
+@@ -199,11 +200,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 	pci_set_master(pdev);
+ 
+-	if (adf_enable_aer(accel_dev)) {
+-		dev_err(&pdev->dev, "Failed to enable aer\n");
+-		ret = -EFAULT;
+-		goto out_err_free_reg;
+-	}
++	adf_enable_aer(accel_dev);
+ 
+ 	if (pci_save_state(pdev)) {
+ 		dev_err(&pdev->dev, "Failed to save pci state\n");
+diff --git a/drivers/crypto/qat/qat_common/adf_aer.c b/drivers/crypto/qat/qat_common/adf_aer.c
+index d2ae293d0df6..9284d09e3af8 100644
+--- a/drivers/crypto/qat/qat_common/adf_aer.c
++++ b/drivers/crypto/qat/qat_common/adf_aer.c
+@@ -166,11 +166,12 @@ static void adf_resume(struct pci_dev *pdev)
+ 	dev_info(&pdev->dev, "Device is up and running\n");
+ }
+ 
+-static const struct pci_error_handlers adf_err_handler = {
++const struct pci_error_handlers adf_err_handler = {
+ 	.error_detected = adf_error_detected,
+ 	.slot_reset = adf_slot_reset,
+ 	.resume = adf_resume,
+ };
++EXPORT_SYMBOL_GPL(adf_err_handler);
+ 
+ /**
+  * adf_enable_aer() - Enable Advance Error Reporting for acceleration device
+@@ -179,17 +180,12 @@ static const struct pci_error_handlers adf_err_handler = {
+  * Function enables PCI Advance Error Reporting for the
+  * QAT acceleration device accel_dev.
+  * To be used by QAT device specific drivers.
+- *
+- * Return: 0 on success, error code otherwise.
+  */
+-int adf_enable_aer(struct adf_accel_dev *accel_dev)
++void adf_enable_aer(struct adf_accel_dev *accel_dev)
+ {
+ 	struct pci_dev *pdev = accel_to_pci_dev(accel_dev);
+-	struct pci_driver *pdrv = pdev->driver;
+ 
+-	pdrv->err_handler = &adf_err_handler;
+ 	pci_enable_pcie_error_reporting(pdev);
+-	return 0;
+ }
+ EXPORT_SYMBOL_GPL(adf_enable_aer);
+ 
+diff --git a/drivers/crypto/qat/qat_common/adf_common_drv.h b/drivers/crypto/qat/qat_common/adf_common_drv.h
+index c61476553728..d25934e97b55 100644
+--- a/drivers/crypto/qat/qat_common/adf_common_drv.h
++++ b/drivers/crypto/qat/qat_common/adf_common_drv.h
+@@ -95,7 +95,7 @@ void adf_ae_fw_release(struct adf_accel_dev *accel_dev);
+ int adf_ae_start(struct adf_accel_dev *accel_dev);
+ int adf_ae_stop(struct adf_accel_dev *accel_dev);
+ 
+-int adf_enable_aer(struct adf_accel_dev *accel_dev);
++void adf_enable_aer(struct adf_accel_dev *accel_dev);
+ void adf_disable_aer(struct adf_accel_dev *accel_dev);
+ void adf_reset_sbr(struct adf_accel_dev *accel_dev);
+ void adf_reset_flr(struct adf_accel_dev *accel_dev);
+diff --git a/drivers/crypto/qat/qat_dh895xcc/adf_drv.c b/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
+index a9ec4357144c..e1254bb83fc3 100644
+--- a/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
++++ b/drivers/crypto/qat/qat_dh895xcc/adf_drv.c
+@@ -33,6 +33,7 @@ static struct pci_driver adf_driver = {
+ 	.probe = adf_probe,
+ 	.remove = adf_remove,
+ 	.sriov_configure = adf_sriov_configure,
++	.err_handler = adf_err_handler,
+ };
+ 
+ static void adf_cleanup_pci_dev(struct adf_accel_dev *accel_dev)
+@@ -199,11 +200,7 @@ static int adf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 	pci_set_master(pdev);
+ 
+-	if (adf_enable_aer(accel_dev)) {
+-		dev_err(&pdev->dev, "Failed to enable aer\n");
+-		ret = -EFAULT;
+-		goto out_err_free_reg;
+-	}
++	adf_enable_aer(accel_dev);
+ 
+ 	if (pci_save_state(pdev)) {
+ 		dev_err(&pdev->dev, "Failed to save pci state\n");
 -- 
 2.30.2
 
