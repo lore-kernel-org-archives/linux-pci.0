@@ -7,106 +7,96 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEB34C4320A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA26C4320A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 860856109F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AECDD610A8
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbhHKMgO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 08:36:14 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:52814 "EHLO
+        id S229904AbhHKMj3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 08:39:29 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:55346 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231251AbhHKMeT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 08:34:19 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 17BCXg0m014858;
-        Wed, 11 Aug 2021 07:33:42 -0500
+        with ESMTP id S231420AbhHKMjY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 08:39:24 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 17BCcpDx018046;
+        Wed, 11 Aug 2021 07:38:51 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1628685222;
-        bh=wQKg58xfu7G4pe7QXg+Kb6DRDN/qD/B/LTJP2320xY0=;
+        s=ti-com-17Q1; t=1628685531;
+        bh=pHvrbMNdD6ZqFqlIVcWlZcPt0n1QzBmXRLI7yry//as=;
         h=From:To:CC:Subject:Date;
-        b=rCIZ45AgmxPbuOQEZp3g69OQ863Jspx+lftVB86ThJci8gP3Fw+kg+B9kq5qJ6wwE
-         8mGkt7HHOCPiJrbzsCkt20Y7mtE9CUJ5jLZOiV/Hvt/d+rrHHNmyVcsZeP6XjbJbZx
-         QxIy81p/mi6/QFzssaF9a8O6Jcq8O7IwdKP48qkg=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 17BCXgaK117023
+        b=iv504BLIU5mYMTDZbZ6J0lilFMqCmft/7aBf8s+xxcKkcyXyGd1jBmRKRb41NbH1i
+         4WNSzusDLeRLMDKvKKCFvEfuutNwN7uAdT85Nah3ehKais/FUBJx5qZPYYlPFj55TO
+         +cf+v4+agb2nL6prbj58o+qGmPDmxCD3hAFLc2U0=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 17BCcpw5018400
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Aug 2021 07:33:42 -0500
-Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 11 Aug 2021 07:38:51 -0500
+Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Wed, 11
- Aug 2021 07:33:42 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
+ Aug 2021 07:38:51 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Wed, 11 Aug 2021 07:33:42 -0500
+ Frontend Transport; Wed, 11 Aug 2021 07:38:51 -0500
 Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 17BCXbiu083813;
-        Wed, 11 Aug 2021 07:33:37 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 17BCckKx053470;
+        Wed, 11 Aug 2021 07:38:47 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+        Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
 CC:     Lokesh Vutla <lokeshvutla@ti.com>, <kishon@ti.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tom Joseph <tjoseph@cadence.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nadeem@cadence.com>
-Subject: [PATCH v3 0/5] PCI: Add support for J7200 and AM64
-Date:   Wed, 11 Aug 2021 18:03:31 +0530
-Message-ID: <20210811123336.31357-1-kishon@ti.com>
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH 0/2] PCI: Add legacy interrupt support in pci-j721e
+Date:   Wed, 11 Aug 2021 18:08:44 +0530
+Message-ID: <20210811123846.31921-1-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds the compatible specific to J7200 and AM64 and
-applies the erratas and configuration specific to them.
+Patch series adds support for legacy interrupt in pci-j721e. There are
+two HW implementations of legacy interrupt controller, one specific to
+J721E and the other for J7200/AM64.
 
-This series also includes Nadeem's patch that adds a quirk in
-Cadence driver which is used by J7200 [1].
+In both these implementations, the legacy interrupt is connect to pulse
+interrupt of GIC and level to pulse is handled by configuring EOI
+register. EOI to convert level to pulse is broken in J721E due to an
+errata but is functional in J7200. Hence legacy interrupt support is not
+added for J721E
 
-The DT binding for both J7200 and AM64 is already merged.
-
-v1 of the patch series can be found at [2]
-v2 of the patch series can be found at [3]
+v1 of the patch series can be found @ [1]
+Patch series is created on top of [2]
 
 Changes from v2:
-1) Drop the patch that does not request or allocate IRQs in probe for
-J721E/AM654
-2) Fix other minor comments given by Lorenzo
+1) Dropped legacy interrupt support for J721e
+2) Enable legacy interrupts registers in .irq_enable callback
 
 Changes from v1:
-1) As suggested by Bjorn, used unsigned int :1, instead of bool for
-structure members
-2) Removed using unnecessary local variables and also fixed some
-code alignment
+1) Only the legacy interrupt specific part is sent as part of this
+series. Rest are split and sent as a separate series [2]
+2) Created irq_chip for legacy interrupt and used it's ops for enabling,
+disabling the interrupts.
 
-[1] -> https://lore.kernel.org/r/20210528155626.21793-1-nadeem@cadence.com
-[2] -> https://lore.kernel.org/r/20210706105035.9915-1-kishon@ti.com
-[3] -> https://lore.kernel.org/r/20210803074932.19820-1-kishon@ti.com
+[1] -> http://lore.kernel.org/r/20210325090936.9306-1-kishon@ti.com
+[2] -> https://lore.kernel.org/linux-omap/20210811123336.31357-1-kishon@ti.com/
 
-Kishon Vijay Abraham I (4):
-  PCI: cadence: Use bitfield for *quirk_retrain_flag* instead of bool
-  PCI: j721e: Add PCIe support for J7200
-  PCI: j721e: Add PCIe support for AM64
-  misc: pci_endpoint_test: Add deviceID for AM64 and J7200
+Kishon Vijay Abraham I (2):
+  dt-bindings: PCI: ti,j721e: Add bindings to specify legacy interrupts
+  PCI: j721e: Add PCI legacy interrupt support for J7200
 
-Nadeem Athani (1):
-  PCI: cadence: Add quirk flag to set minimum delay in LTSSM
-    Detect.Quiet state
-
- drivers/misc/pci_endpoint_test.c              |  8 +++
- drivers/pci/controller/cadence/pci-j721e.c    | 61 +++++++++++++++++--
- .../pci/controller/cadence/pcie-cadence-ep.c  |  4 ++
- .../controller/cadence/pcie-cadence-host.c    |  3 +
- drivers/pci/controller/cadence/pcie-cadence.c | 16 +++++
- drivers/pci/controller/cadence/pcie-cadence.h | 17 +++++-
- 6 files changed, 103 insertions(+), 6 deletions(-)
+ .../bindings/pci/ti,j721e-pci-host.yaml       |  15 +++
+ drivers/pci/controller/cadence/pci-j721e.c    | 119 ++++++++++++++++++
+ 2 files changed, 134 insertions(+)
 
 -- 
 2.17.1
