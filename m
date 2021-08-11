@@ -2,120 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E90BC4338F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC7FC432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 423F860FA0
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC61E6108C
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 12:34:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232083AbhHKM3v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 08:29:51 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:51626 "EHLO
+        id S229875AbhHKMee (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 08:34:34 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:52842 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238574AbhHKM31 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 08:29:27 -0400
+        with ESMTP id S231700AbhHKMeY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 08:34:24 -0400
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 17BCSl05012714;
-        Wed, 11 Aug 2021 07:28:47 -0500
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 17BCXlc2014869;
+        Wed, 11 Aug 2021 07:33:47 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1628684927;
-        bh=uFuvcytRDwdpQU2+G4QmfIFOs6apHaJfshNwqIteEi8=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=D5cMvSwDmQAxT+TBVoD3Vwet+VvAkJjidtJQ3OkLJJ3k5tIgMAkQPFsyI8tE2Uwmi
-         qh8ebxT6wzMF7Ix2RK18SgJZYRiLknLgO80apKvwYU4UdMohtUw9moGe+YnwdHKYEk
-         mhWBfP7IDXyfKjBEDFrMRZch2LZdVuJMnycib/F0=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 17BCSlSF050548
+        s=ti-com-17Q1; t=1628685227;
+        bh=HtVlu5vamZ+/bnr3Oc9P0wb8o/E/T9hmFwSHky9CGS4=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=OaYJVgN0TUxKPFfxwg9TQ234DWxA+rDRo/IDfCSCJSsehniuJKKveqCzUbU6QPuXa
+         MyQQ1zrVHWZzOjsy8YF2TyhLBBk05xLNwimZheSn44yixZwOXXWTaqNsQVFdMfBqK2
+         jLcSaFbadQwy6TfOtgPdH4nQAApLWEqNdMbU4pb8=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 17BCXlHh060003
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Aug 2021 07:28:47 -0500
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 11 Aug 2021 07:33:47 -0500
+Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Wed, 11
- Aug 2021 07:27:03 -0500
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ Aug 2021 07:33:47 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE107.ent.ti.com
+ (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2 via
- Frontend Transport; Wed, 11 Aug 2021 07:27:03 -0500
-Received: from [10.250.233.105] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 17BCQwr7076212;
-        Wed, 11 Aug 2021 07:26:59 -0500
-Subject: Re: [PATCH v2 0/6] PCI: Add support for J7200 and AM64
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lokesh Vutla <lokeshvutla@ti.com>,
+ Frontend Transport; Wed, 11 Aug 2021 07:33:47 -0500
+Received: from a0393678-ssd.dal.design.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 17BCXbiv083813;
+        Wed, 11 Aug 2021 07:33:42 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     Lokesh Vutla <lokeshvutla@ti.com>, <kishon@ti.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Tom Joseph <tjoseph@cadence.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <nadeem@cadence.com>
-References: <20210803074932.19820-1-kishon@ti.com>
- <20210803105252.GD11252@lpieralisi>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ea0c5f77-9034-872b-a25e-d4acc6c0947c@ti.com>
-Date:   Wed, 11 Aug 2021 17:56:57 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+Subject: [PATCH v3 1/5] PCI: cadence: Use bitfield for *quirk_retrain_flag* instead of bool
+Date:   Wed, 11 Aug 2021 18:03:32 +0530
+Message-ID: <20210811123336.31357-2-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210811123336.31357-1-kishon@ti.com>
+References: <20210811123336.31357-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20210803105252.GD11252@lpieralisi>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+No functional change. As we are intending to add additional 1-bit
+members in struct j721e_pcie_data/struct cdns_pcie_rc, use bitfields
+instead of bool since it takes less space. As discussed in [1],
+the preference is to use bitfileds instead of bool inside structures.
 
-On 03/08/21 4:22 pm, Lorenzo Pieralisi wrote:
-> On Tue, Aug 03, 2021 at 01:19:26PM +0530, Kishon Vijay Abraham I wrote:
->> This series adds the compatible specific to J7200 and AM64 and
->> applies the erratas and configuration specific to them.
->>
->> This series also includes Nadeem's patch that adds a quirk in
->> Cadence driver which is used by J7200 [1].
->>
->> The DT binding for both J7200 and AM64 is already merged.
->>
->> v1 of the patch series can be found at [2]
->>
->> Changes from v1:
->> 1) As suggested by Bjorn, used unsigned int :1, instead of bool for
->> structure members
->> 2) Removed using unnecessary local variables and also fixed some
->> code alignment
->>
->> [1] -> https://lore.kernel.org/r/20210528155626.21793-1-nadeem@cadence.com
->> [2] -> https://lore.kernel.org/r/20210706105035.9915-1-kishon@ti.com
->>
->> Kishon Vijay Abraham I (5):
->>   PCI: cadence: Use bitfield for *quirk_retrain_flag* instead of bool
->>   PCI: j721e: Add PCIe support for J7200
->>   PCI: j721e: Add PCIe support for AM64
->>   misc: pci_endpoint_test: Do not request or allocate IRQs in probe
->>   misc: pci_endpoint_test: Add deviceID for AM64 and J7200
->>
->> Nadeem Athani (1):
->>   PCI: cadence: Add quirk flag to set minimum delay in LTSSM
->>     Detect.Quiet state
->>
->>  drivers/misc/pci_endpoint_test.c              | 27 ++++++--
->>  drivers/pci/controller/cadence/pci-j721e.c    | 61 +++++++++++++++++--
->>  .../pci/controller/cadence/pcie-cadence-ep.c  |  4 ++
->>  .../controller/cadence/pcie-cadence-host.c    |  3 +
->>  drivers/pci/controller/cadence/pcie-cadence.c | 17 ++++++
->>  drivers/pci/controller/cadence/pcie-cadence.h | 17 +++++-
->>  6 files changed, 117 insertions(+), 12 deletions(-)
-> 
-> I am not convinced about patch (5) the rest of the series can be
-> merged (even though I assume patch (6) depends on (5)).
+[1] -> https://lore.kernel.org/linux-fsdevel/CA+55aFzKQ6Pj18TB8p4Yr0M4t+S+BsiHH=BJNmn=76-NcjTj-g@mail.gmail.com/
 
-I'll drop patch 5, fix your other comments and send a new revision.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c    | 2 +-
+ drivers/pci/controller/cadence/pcie-cadence.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-Kishon
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 35e61048e133..0c5813b230b4 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -66,7 +66,7 @@ enum j721e_pcie_mode {
+ 
+ struct j721e_pcie_data {
+ 	enum j721e_pcie_mode	mode;
+-	bool quirk_retrain_flag;
++	unsigned int		quirk_retrain_flag:1;
+ };
+ 
+ static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index b72de578b996..6f97fb4e58a6 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -312,7 +312,7 @@ struct cdns_pcie_rc {
+ 	u32			vendor_id;
+ 	u32			device_id;
+ 	bool			avail_ib_bar[CDNS_PCIE_RP_MAX_IB];
+-	bool                    quirk_retrain_flag;
++	unsigned int		quirk_retrain_flag:1;
+ };
+ 
+ /**
+-- 
+2.17.1
+
