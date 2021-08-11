@@ -2,202 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E9F4C4320E
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6BCC4320A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35A7560FDA
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D54F960527
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Aug 2021 08:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236244AbhHKIjk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Aug 2021 04:39:40 -0400
-Received: from mo-csw1115.securemx.jp ([210.130.202.157]:49446 "EHLO
-        mo-csw.securemx.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236205AbhHKIji (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:39:38 -0400
-Received: by mo-csw.securemx.jp (mx-mo-csw1115) id 17B8cehr029256; Wed, 11 Aug 2021 17:38:41 +0900
-X-Iguazu-Qid: 2wHHmJkRojiOO52ijj
-X-Iguazu-QSIG: v=2; s=0; t=1628671120; q=2wHHmJkRojiOO52ijj; m=PZyDe9STpZniEMqElj4KNIixkRGAy4MBe8QNBfGe4jg=
-Received: from imx12-a.toshiba.co.jp (imx12-a.toshiba.co.jp [61.202.160.135])
-        by relay.securemx.jp (mx-mr1112) id 17B8ccBs006745
-        (version=TLSv1.2 cipher=AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 11 Aug 2021 17:38:39 +0900
-Received: from enc02.toshiba.co.jp (enc02.toshiba.co.jp [61.202.160.51])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by imx12-a.toshiba.co.jp (Postfix) with ESMTPS id AB7C81000EA;
-        Wed, 11 Aug 2021 17:38:38 +0900 (JST)
-Received: from hop101.toshiba.co.jp ([133.199.85.107])
-        by enc02.toshiba.co.jp  with ESMTP id 17B8cci7018242;
-        Wed, 11 Aug 2021 17:38:38 +0900
-From:   Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        devicetree@vger.kernel.org, punit1.agrawal@toshiba.co.jp,
-        yuji2.ishikawa@toshiba.co.jp, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Subject: [PATCH v6 1/3] dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller
-Date:   Wed, 11 Aug 2021 17:38:28 +0900
-X-TSB-HOP: ON
-Message-Id: <20210811083830.784065-2-nobuhiro1.iwamatsu@toshiba.co.jp>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210811083830.784065-1-nobuhiro1.iwamatsu@toshiba.co.jp>
-References: <20210811083830.784065-1-nobuhiro1.iwamatsu@toshiba.co.jp>
+        id S236068AbhHKIkT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Aug 2021 04:40:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236012AbhHKIkS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Aug 2021 04:40:18 -0400
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD6EEC061765;
+        Wed, 11 Aug 2021 01:39:54 -0700 (PDT)
+Received: by mail-wm1-x32f.google.com with SMTP id d131-20020a1c1d890000b02902516717f562so1382837wmd.3;
+        Wed, 11 Aug 2021 01:39:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=/cH18u9OhTCq+UpoTOaDG1DbIfkplQjzOdXKSsM62pY=;
+        b=rhcOyetStHFST5GEeY1BJw0x7RWCBh9KJoHPIxjlpISW1LTUNyjLuUyAPLHTj6Xgco
+         mfCVCXvil0lwxvRCLm5akQNAE1L5oq6ORX8ElGjg3o9IboKQhQaoaDFNvX/aEMjTUaeT
+         mbGMuXEzF3j31qdvoqj2HimFUECogfbCXEBLwmayU/t4YKjutfmN+/8nHbmACAwp0h+j
+         ZWPtqo03iknDZHwqSwfu8vDSf/lm4zbqikKpHf8s8wv2Ay2cK49riyP/A9KvIj8wVyYw
+         OPal5vsEZuP/AOn2+7E02in4Fm3lpF6mmb3YJcdYU9OuK7PP8aue4SN8rLSwm/c1CQKE
+         aVCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=/cH18u9OhTCq+UpoTOaDG1DbIfkplQjzOdXKSsM62pY=;
+        b=VxxdS8OrnMfhHQ3DFnahh/HPMAuwG0cDxR2Xq4y0fW0X9KsjEqrJ8Jmw1GW5nKY6Os
+         /bCcEL4P32ngD2jvUU6cFYDMwYn7AVcEDEs55dlhNgH//yVMoDQ3iBT69JwNgFmT5XkU
+         modPYgCchZvIyIuie/ziwnGha6megBH2ryh8y86KHcBIEseWvyiec85RYAO7r0pVzAKJ
+         aOyoPNO6XGyjRfwWmzAd/OTda297Y5qRJpiEklV7Dk825CODAuG3WERGFoQlRmEm9C+o
+         gOeT0jRcDLrm5AHWkAr8yDCWCcSvWa8fMq35CgGSI7f1NehpsAbj33n+ipP/vhtcluGE
+         Ghlg==
+X-Gm-Message-State: AOAM5321y52gNDV9Pfq5hxic+8Bmoi1PAth/JE4rR5TdywEVBMSQycZS
+        Ngvz5G72QoDT/bew+Jz96DfbV1HV5hLs3g==
+X-Google-Smtp-Source: ABdhPJzvXPBtPce351ozTgUTJzAFC8LeON/hShsPJeZMmb9e8OuKPmGCXGsHChYOwT4/VHQjTHse6g==
+X-Received: by 2002:a7b:c5d2:: with SMTP id n18mr8745229wmk.97.1628671193039;
+        Wed, 11 Aug 2021 01:39:53 -0700 (PDT)
+Received: from ?IPv6:2a01:cb05:8192:e700:90a4:fe44:d3d1:f079? (2a01cb058192e70090a4fe44d3d1f079.ipv6.abo.wanadoo.fr. [2a01:cb05:8192:e700:90a4:fe44:d3d1:f079])
+        by smtp.gmail.com with ESMTPSA id h9sm22884485wmb.35.2021.08.11.01.39.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Aug 2021 01:39:52 -0700 (PDT)
+Subject: Re: [PATCH 1/3] PCI: brcmstb: Break register definitions into
+ separate header
+To:     Jeremy Linton <jeremy.linton@arm.com>, linux-pci@vger.kernel.org
+Cc:     lorenzo.pieralisi@arm.com, nsaenz@kernel.org, bhelgaas@google.com,
+        rjw@rjwysocki.net, lenb@kernel.org, robh@kernel.org, kw@linux.com,
+        bcm-kernel-feedback-list@broadcom.com, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rpi-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20210805211200.491275-1-jeremy.linton@arm.com>
+ <20210805211200.491275-2-jeremy.linton@arm.com>
+ <f82761b1-fb7e-08b2-8bc3-c84d258e26d3@gmail.com>
+ <ab2aa9e3-cdc7-1bc7-d493-8f3c991c3285@arm.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <ff7c598a-4c1d-7da0-f40a-f0c435e785d3@gmail.com>
+Date:   Wed, 11 Aug 2021 01:39:52 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
+In-Reply-To: <ab2aa9e3-cdc7-1bc7-d493-8f3c991c3285@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This commit adds the Device Tree binding documentation that allows
-to describe the PCIe controller found in Toshiba Visconti SoCs.
 
-Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
 
-v3 -> v4:
- - Changed the redundant clock name.
+On 8/10/2021 8:10 AM, Jeremy Linton wrote:
+> Hi,
+> 
+> Thanks for taking a look at this!
+> 
+> 
+> On 8/10/21 5:07 AM, Florian Fainelli wrote:
+>>
+>>
+>> On 8/5/2021 2:11 PM, Jeremy Linton wrote:
+>>> We are about to create a standalone ACPI quirk module for the
+>>> bcmstb controller. Lets move the register definitions into a separate
+>>> file so they can be shared between the APCI quirk and the normal
+>>> host bridge driver.
+>>>
+>>> Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+>>> ---
+>>>   drivers/pci/controller/pcie-brcmstb.c | 179 +------------------------
+>>>   drivers/pci/controller/pcie-brcmstb.h | 182 ++++++++++++++++++++++++++
+>>>   2 files changed, 183 insertions(+), 178 deletions(-)
+>>>   create mode 100644 drivers/pci/controller/pcie-brcmstb.h
+>>
+>> You moved more than just register definitions into pcie-brcmstb.h you 
+>> also moved internal structure definitions, enumerations, etc. which 
+>> are not required since pcie-brcmstb-acpi.c does not access the 
+>> brcm_pcie structure but open codes accesses to the MISC_STATUS 
+>> register instead.
+>>
+>> There are no include guards added to this file (it is debatable 
+>> whether we should add them), and it is also not covered by the 
+>> existing BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE MAINTAINERS file 
+>> entry.
+> 
+> Sure, I will reduce the .h to just the register definitions, guard it, 
+> and tweak maintainers to cover pcie-brcmstb*.
+> 
+> 
+>>
+>> Given that there can be new platforms supported by this PCIe 
+>> controller in the future possibly with the same limitations as the 
+>> 2711, but with a seemingly different MISC_STATUS layout, you will have 
+>> to think about a solution that scales, maybe we cross that bridge when 
+>> we get there.
+> 
+> Yes, given I don't know what those changes are I can't predict how they 
+> would have to be handled, or even if the platform would be a target of 
+> the community maintaining the UEFI/ACPI port on the RPi. So punting on 
+> that topic seems a reasonable solution at the moment. Better yet, more 
+> of the linux community will see the advantage of the firmware interface 
+> and this platform can utilize that method.
 
-v2 -> v3:
- - No update.
-
-v1 -> v2:
- - Remove white space.
- - Drop num-viewport and bus-range from required.
- - Drop status line from example.
- - Drop bus-range from required.
- - Removed lines defined in pci-bus.yaml from required.
----
- .../bindings/pci/toshiba,visconti-pcie.yaml   | 110 ++++++++++++++++++
- 1 file changed, 110 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-new file mode 100644
-index 000000000000..60ec424cd07c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-@@ -0,0 +1,110 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/toshiba,visconti-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Toshiba Visconti5 SoC PCIe Host Controller Device Tree Bindings
-+
-+maintainers:
-+  - Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-+
-+description:
-+  Toshiba Visconti5 SoC PCIe host controller is based on the Synopsys DesignWare PCIe IP.
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    const: toshiba,visconti-pcie
-+
-+  reg:
-+    items:
-+      - description: Data Bus Interface (DBI) registers.
-+      - description: PCIe configuration space region.
-+      - description: Visconti specific additional registers.
-+      - description: Visconti specific SMU registers
-+      - description: Visconti specific memory protection unit registers (MPU)
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: config
-+      - const: ulreg
-+      - const: smu
-+      - const: mpu
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  clocks:
-+    items:
-+      - description: PCIe reference clock
-+      - description: PCIe system clock
-+      - description: Auxiliary clock
-+
-+  clock-names:
-+    items:
-+      - const: ref
-+      - const: core
-+      - const: aux
-+
-+  num-lanes:
-+    const: 2
-+
-+required:
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - "#interrupt-cells"
-+  - interrupt-map
-+  - interrupt-map-mask
-+  - num-lanes
-+  - clocks
-+  - clock-names
-+  - max-link-speed
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie: pcie@28400000 {
-+            compatible = "toshiba,visconti-pcie";
-+            reg = <0x0 0x28400000 0x0 0x00400000>,
-+                  <0x0 0x70000000 0x0 0x10000000>,
-+                  <0x0 0x28050000 0x0 0x00010000>,
-+                  <0x0 0x24200000 0x0 0x00002000>,
-+                  <0x0 0x24162000 0x0 0x00001000>;
-+            reg-names  = "dbi", "config", "ulreg", "smu", "mpu";
-+            device_type = "pci";
-+            bus-range = <0x00 0xff>;
-+            num-lanes = <2>;
-+            num-viewport = <8>;
-+
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            #interrupt-cells = <1>;
-+            ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000>,
-+                     <0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
-+            interrupts = <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "intr";
-+            interrupt-map-mask = <0 0 0 7>;
-+            interrupt-map =
-+                <0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+                 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+                 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+                 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-+            clocks = <&extclk100mhz>, <&clk600mhz>, <&clk25mhz>;
-+            clock-names = "ref", "core", "aux";
-+            max-link-speed = <2>;
-+        };
-+    };
-+...
+Ideally newer platforms would support ECAM and would not require a 
+custom quirk if nothing else, we do have discussions about that right 
+now, although it is not clear to me how it will materialize into a 
+product that people can buy.
 -- 
-2.32.0
-
-
+Florian
