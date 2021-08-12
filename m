@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3344C43216
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 07:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B915C4338F
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7F0460FED
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 07:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 417B06108C
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234949AbhHLH40 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Aug 2021 03:56:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59632 "EHLO mail.kernel.org"
+        id S234968AbhHLICw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Aug 2021 04:02:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50964 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234245AbhHLH4X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Aug 2021 03:56:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8BDDF60FC4;
-        Thu, 12 Aug 2021 07:55:58 +0000 (UTC)
+        id S232784AbhHLICv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Aug 2021 04:02:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 79AF561038;
+        Thu, 12 Aug 2021 08:02:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628754958;
-        bh=ii0nBQbue9NAVogxJU47bDMTGMtwHme2vnmmfk4oB34=;
+        s=k20201202; t=1628755345;
+        bh=LKKm93bvLtmQwufCM71y/2Zcq2n0/ZxkrnwxYZPX1WM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rZH0tmH5GxzvIjQDpuckvBU43dj/DjkL2xAFP3Shp3lskxT6DkTBm+L/EPLAnENBZ
-         gHJ9iH43CXzrzmwdo3rsAGdtV4hxDiv8QH15hYMroLWaC+Frd+3V4NiwyyRWV23nOi
-         Om6vJPp/8DUIfVR58Kd8TTaIGYAnCCI8ZLc6tcct0CuVtbM08LdDR7GzjrIPJQZR44
-         jvZffzhx3/3A+ADXtd0ShjpBBzCrfcvJ+BiL6CYHT8Ytdw16MOx8pb4DgSpShaKlig
-         z/dqHqJ9jEKSOndkpYCI2t38dRGy4ff2E18ze8vvXsiPr9eIhXVcB2GVudEHRFqEvK
-         9cXm7qp+ykXwg==
+        b=gty6QDnmqDBTKBjTaIzQ5tw6ytk7C4imI8aVp9MD7bFYYtEJ041Oq0TKPiHzlCKcm
+         Q8Iq5qHnsttV5e/zMWDgxg498t29+WqDN3NiIZ5pYpTMPyfngqJraVHOS/A3H9GCnf
+         UuTyFqlQWmbEOZrQ15h8O656poHSsirBdyNuQeB0y5lEr+K+cTz/ugEqfY9TYOdqlD
+         IqbOyjeU0gZz4Tqn608mawpzyCCyWAlf9iXuwwKeG7lGyV46xnkE45cjjo3S/W9Tva
+         sm9jh5y8ujo7KMrDsqB3S9iMaZLem/dsa9AoFp6Why5NTWoVWiG7WcaX+HghOuVJp/
+         OJof0X5ZuXJtw==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mE5ZE-00DZ41-NH; Thu, 12 Aug 2021 09:55:56 +0200
+        id 1mE5fT-00DZCq-Ks; Thu, 12 Aug 2021 10:02:23 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Rob Herring <robh@kernel.org>
+To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] dt-bindings: PCI: kirin: fix HiKey970 example
-Date:   Thu, 12 Aug 2021 09:55:52 +0200
-Message-Id: <655e21422a14620ae2d55335eb72bcaa66f5384d.1628754620.git.mchehab+huawei@kernel.org>
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v11 03/11] PCI: kirin: Add support for a PHY layer
+Date:   Thu, 12 Aug 2021 10:02:14 +0200
+Message-Id: <292a434bf89f58c9dd759f0a1931083178c516ce.1628755058.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1628754620.git.mchehab+huawei@kernel.org>
-References: <cover.1628754620.git.mchehab+huawei@kernel.org>
+In-Reply-To: <cover.1628755058.git.mchehab+huawei@kernel.org>
+References: <cover.1628755058.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
@@ -57,106 +57,184 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The given example doesn't produce all of_nodes at sysfs.
-Update it to reflect what's actually working.
+The pcie-kirin driver contains both PHY and generic PCI driver
+on it.
+
+The best would be, instead, to support a PCI PHY driver, making
+the driver more generic.
+
+However, it is too late to remove the Kirin 960 PHY, as a change
+like that would make the DT schema incompatible with past versions.
+
+So, add support for an external PHY driver without removing the
+existing Kirin 960 PHY from it.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../bindings/pci/hisilicon,kirin-pcie.yaml    | 64 +++++++++++--------
- 1 file changed, 36 insertions(+), 28 deletions(-)
+ drivers/pci/controller/dwc/pcie-kirin.c | 95 +++++++++++++++++++++----
+ 1 file changed, 80 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-index d05deebe9dbb..668a09e27139 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/hisilicon,kirin-pcie.yaml
-@@ -97,7 +97,6 @@ examples:
-               <0x0 0xfc180000 0x0 0x1000>,
-               <0x0 0xf5000000 0x0 0x2000>;
-         reg-names = "dbi", "apb", "config";
--        msi-parent = <&its_pcie>;
-         #address-cells = <3>;
-         #size-cells = <2>;
-         device_type = "pci";
-@@ -116,43 +115,52 @@ examples:
-                         <0x0 0 0 4 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
-         reset-gpios = <&gpio7 0 0>;
-         hisilicon,clken-gpios = <&gpio27 3 0>, <&gpio17 0 0>, <&gpio20 6 0>;
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index b4063a3434df..31514a5d4bb4 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -8,16 +8,18 @@
+  * Author: Xiaowei Song <songxiaowei@huawei.com>
+  */
+ 
+-#include <linux/compiler.h>
+ #include <linux/clk.h>
++#include <linux/compiler.h>
+ #include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/gpio.h>
+ #include <linux/interrupt.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
++#include <linux/phy/phy.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+@@ -50,11 +52,18 @@
+ #define PCIE_DEBOUNCE_PARAM	0xF0F400
+ #define PCIE_OE_BYPASS		(0x3 << 28)
+ 
++enum pcie_kirin_phy_type {
++	PCIE_KIRIN_INTERNAL_PHY,
++	PCIE_KIRIN_EXTERNAL_PHY
++};
++
+ struct kirin_pcie {
++	enum pcie_kirin_phy_type	type;
++
+ 	struct dw_pcie	*pci;
+ 	struct phy	*phy;
+ 	void __iomem	*apb_base;
+-	void		*phy_priv;	/* Needed for Kirin 960 PHY */
++	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
+ };
+ 
+ /*
+@@ -476,8 +485,63 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
+ 
++static int kirin_pcie_power_on(struct platform_device *pdev,
++			       struct kirin_pcie *kirin_pcie)
++{
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
++		ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
++		if (ret)
++			return ret;
++
++		return hi3660_pcie_phy_power_on(kirin_pcie);
++	}
++
++	kirin_pcie->phy = devm_of_phy_get(dev, dev->of_node, NULL);
++	if (IS_ERR(kirin_pcie->phy))
++		return PTR_ERR(kirin_pcie->phy);
++
++	ret = phy_init(kirin_pcie->phy);
++	if (ret)
++		goto err;
++
++	ret = phy_power_on(kirin_pcie->phy);
++	if (ret)
++		goto err;
++
++	return 0;
++err:
++	phy_exit(kirin_pcie->phy);
++	return ret;
++}
++
++static int __exit kirin_pcie_remove(struct platform_device *pdev)
++{
++	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
++		return 0;
++
++	phy_power_off(kirin_pcie->phy);
++	phy_exit(kirin_pcie->phy);
++
++	return 0;
++}
++
++static const struct of_device_id kirin_pcie_match[] = {
++	{
++		.compatible = "hisilicon,kirin960-pcie",
++		.data = (void *)PCIE_KIRIN_INTERNAL_PHY
++	},
++	{},
++};
++
+ static int kirin_pcie_probe(struct platform_device *pdev)
+ {
++	enum pcie_kirin_phy_type phy_type;
++	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+ 	struct kirin_pcie *kirin_pcie;
+ 	struct dw_pcie *pci;
+@@ -488,6 +552,14 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
++	of_id = of_match_device(kirin_pcie_match, dev);
++	if (!of_id) {
++		dev_err(dev, "OF data missing\n");
++		return -EINVAL;
++	}
++
++	phy_type = (enum pcie_kirin_phy_type)of_id->data;
++
+ 	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
+ 	if (!kirin_pcie)
+ 		return -ENOMEM;
+@@ -500,31 +572,24 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &kirin_dw_pcie_ops;
+ 	pci->pp.ops = &kirin_pcie_host_ops;
+ 	kirin_pcie->pci = pci;
 -
--        pcie@0 { // Lane 0: PCIe switch: Bus 1, Device 0
--          reg = <0 0 0 0 0>;
-+        pcie@0,0 { // Lane 0: PCIe switch: Bus 1, Device 0
-+          reg = <0x80 0 0 0 0>;
-           compatible = "pciclass,0604";
-           device_type = "pci";
-           #address-cells = <3>;
-           #size-cells = <2>;
-           ranges;
--          pcie@1,0 { // Lane 4: M.2
--            reg = <0x800 0 0 0 0>;
-+          msi-parent = <&its_pcie>;
+-	ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
+-	if (ret)
+-		return ret;
++	kirin_pcie->type = phy_type;
+ 
+ 	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = hi3660_pcie_phy_power_on(kirin_pcie);
+-	if (ret)
+-		return ret;
+-
+ 	platform_set_drvdata(pdev, kirin_pcie);
+ 
++	ret = kirin_pcie_power_on(pdev, kirin_pcie);
++	if (ret)
++		return ret;
 +
-+          pcie@0,0 { // Lane 0: upstream
-+            reg = <0 0 0 0 0>;
-             compatible = "pciclass,0604";
-             device_type = "pci";
--            reset-gpios = <&gpio3 1 0>;
--            clkreq-gpios = <&gpio27 3 0 >;
--            #address-cells = <3>;
--            #size-cells = <2>;
--            ranges;
--          };
--          pcie@5,0 { // Lane 5: Mini PCIe
--            reg = <0x2800 0 0 0 0>;
--            compatible = "pciclass,0604";
--            device_type = "pci";
--            reset-gpios = <&gpio27 4 0 >;
--            clkreq-gpios = <&gpio17 0 0 >;
--            #address-cells = <3>;
--            #size-cells = <2>;
--            ranges;
--          };
--          pcie@7,0 { // Lane 6: Ethernet
--            reg = <0x3800 0 0 0 0>;
--            compatible = "pciclass,0604";
--            device_type = "pci";
--            reset-gpios = <&gpio25 2 0 >;
--            clkreq-gpios = <&gpio20 6 0 >;
-             #address-cells = <3>;
-             #size-cells = <2>;
-             ranges;
-+
-+            pcie@1,0 { // Lane 4: M.2
-+              reg = <0x0800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio3 1 0>;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-+
-+            pcie@5,0 { // Lane 5: Mini PCIe
-+              reg = <0x2800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio27 4 0 >;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-+
-+            pcie@7,0 { // Lane 6: Ethernet
-+              reg = <0x03800 0 0 0 0>;
-+              compatible = "pciclass,0604";
-+              device_type = "pci";
-+              reset-gpios = <&gpio25 2 0 >;
-+              #address-cells = <3>;
-+              #size-cells = <2>;
-+              ranges;
-+            };
-           };
-         };
-       };
+ 	return dw_pcie_host_init(&pci->pp);
+ }
+ 
+-static const struct of_device_id kirin_pcie_match[] = {
+-	{ .compatible = "hisilicon,kirin960-pcie" },
+-	{},
+-};
+-
+ static struct platform_driver kirin_pcie_driver = {
+ 	.probe			= kirin_pcie_probe,
++	.remove	        	= __exit_p(kirin_pcie_remove),
+ 	.driver			= {
+ 		.name			= "kirin-pcie",
+ 		.of_match_table		= kirin_pcie_match,
 -- 
 2.31.1
 
