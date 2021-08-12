@@ -7,46 +7,52 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D18F9C4338F
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91321C4338F
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1E3660EB9
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7225661038
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Aug 2021 08:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232784AbhHLIC6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S235028AbhHLIC6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 12 Aug 2021 04:02:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50986 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:51216 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234573AbhHLICv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Aug 2021 04:02:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 821896104F;
+        id S234913AbhHLICw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Aug 2021 04:02:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9237B60EB9;
         Thu, 12 Aug 2021 08:02:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1628755345;
-        bh=66pZf2o/BZ9yYQkTCPHEOmZBX2W7nSIdCxqcbr2roWk=;
+        bh=TXJ1u7MVWN0FWVTPNy5JjGB30jYHeFOl74oKTqbFZYg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E6qEQ8YDkKEntxezDvhSa/u0vAaFFYAT0BFP1hikXCbSFpqGskVhrcYAFu229l+QC
-         QMDEjWL5M4eyyySwldulIzQgRwx+iAgEGNyYLh0LAOWMRCwVjhBLiSK6EsOEg7C180
-         wZIdOxxvYAqZEiqBTXMjjJlTqD1xpggDbcsDmw1fhCYbU9Cy+tzga//dE33CjGPJfq
-         Cu5wEcd5DTGTRt/T3HZBJ9RLE14h26BRzqGqNp3sxZ8cJRwP7otAiwoM2q5LST30HK
-         DMjK2H6qp51lN3HPXm5OIiU8ACframoSB/uJ0v/W/rZK2Tm6OCap+YBDP8MkNp/Lyg
-         EpwUc0zHNm0fg==
+        b=e6m6KEDauzTjrjJBcwbLx2+NxoBSBDlT3gmMX9ngjF31uF4l0pqh7Rqy2GnTbkqbN
+         p0wEaPmcQRwrrA3mVV1YkMyp1b1PU+jkpusAUbUXTi1PlLzJo1qk49jsPmfEKsbo25
+         GrQlPeA7mpLNHjzx708QnjBD4Rp0/zxeJCRYW8in8LxyaOzh8Y20pSJvLikGoRxbJl
+         mnxai4P/sBe/lvtr8x60wdA5kjgG6xMCMMwqVUiFmO/P2X/sQJ5Z3eu6GzHKFkgWgS
+         GGqykSL28ObpwsNK40k8A5bTZiBSLYmSMpi70Cwv3Efkzrj4qwNb5rgx2hoSDUReMG
+         8MsnwMBIWONbA==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mE5fT-00DZCu-MT; Thu, 12 Aug 2021 10:02:23 +0200
+        id 1mE5fT-00DZDB-Sz; Thu, 12 Aug 2021 10:02:23 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Vinod Koul <vkoul@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+        Alex Dewar <alex.dewar90@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
         Rob Herring <robh@kernel.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Wesley Sheng <wesley.sheng@amd.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v11 04/11] PCI: kirin: Use regmap for APB registers
-Date:   Thu, 12 Aug 2021 10:02:15 +0200
-Message-Id: <15bd5aaeac54f0d9b5f7f5865116522013ec5d0d.1628755058.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v11 08/11] PCI: kirin: Allow building it as a module
+Date:   Thu, 12 Aug 2021 10:02:19 +0200
+Message-Id: <52154fd85a6a88f0c98ff1f8ecbdbef247a7f800.1628755058.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1628755058.git.mchehab+huawei@kernel.org>
 References: <cover.1628755058.git.mchehab+huawei@kernel.org>
@@ -57,125 +63,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PHY layer need to access APB registers too, for Kirin 970.
-So, place them into a named regmap.
+There's nothing preventing this driver to be loaded as a
+module. So, change its config from bool to tristate.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-kirin.c | 49 +++++++++++++------------
- 1 file changed, 26 insertions(+), 23 deletions(-)
+ drivers/pci/controller/dwc/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 31514a5d4bb4..0ea92a521e1c 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -61,8 +61,8 @@ struct kirin_pcie {
- 	enum pcie_kirin_phy_type	type;
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 423d35872ce4..e0091bfae5b5 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -227,7 +227,7 @@ config PCIE_INTEL_GW
  
- 	struct dw_pcie	*pci;
-+	struct regmap   *apb;
- 	struct phy	*phy;
--	void __iomem	*apb_base;
- 	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
- };
- 
-@@ -340,25 +340,27 @@ static int hi3660_pcie_phy_init(struct platform_device *pdev,
-  * The non-PHY part starts here
-  */
- 
--/* Registers in PCIeCTRL */
--static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
--					 u32 val, u32 reg)
--{
--	writel(val, kirin_pcie->apb_base + reg);
--}
--
--static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
--{
--	return readl(kirin_pcie->apb_base + reg);
--}
-+static const struct regmap_config pcie_kirin_regmap_conf = {
-+	.name = "kirin_pcie_apb",
-+	.reg_bits = 32,
-+	.val_bits = 32,
-+	.reg_stride = 4,
-+};
- 
- static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 				    struct platform_device *pdev)
- {
--	kirin_pcie->apb_base =
--		devm_platform_ioremap_resource_byname(pdev, "apb");
--	if (IS_ERR(kirin_pcie->apb_base))
--		return PTR_ERR(kirin_pcie->apb_base);
-+	struct device *dev = &pdev->dev;
-+	void __iomem *apb_base;
-+
-+	apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
-+	if (IS_ERR(apb_base))
-+		return PTR_ERR(apb_base);
-+
-+	kirin_pcie->apb = devm_regmap_init_mmio(dev, apb_base,
-+						&pcie_kirin_regmap_conf);
-+	if (IS_ERR(kirin_pcie->apb))
-+		return PTR_ERR(kirin_pcie->apb);
- 
- 	return 0;
- }
-@@ -368,13 +370,13 @@ static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
- {
- 	u32 val;
- 
--	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
-+	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, &val);
- 	if (on)
- 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
- 
--	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
-+	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, val);
- }
- 
- static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
-@@ -382,13 +384,13 @@ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
- {
- 	u32 val;
- 
--	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
-+	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, &val);
- 	if (on)
- 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
- 
--	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
-+	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, val);
- }
- 
- static int kirin_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
-@@ -448,8 +450,9 @@ static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
- static int kirin_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
--	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-+	u32 val;
- 
-+	regmap_read(kirin_pcie->apb, PCIE_APB_PHY_STATUS0, &val);
- 	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
- 		return 1;
- 
-@@ -461,8 +464,8 @@ static int kirin_pcie_start_link(struct dw_pcie *pci)
- 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
- 
- 	/* assert LTSSM enable */
--	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
--			      PCIE_APP_LTSSM_ENABLE);
-+	regmap_write(kirin_pcie->apb, PCIE_APP_LTSSM_ENABLE,
-+		     PCIE_LTSSM_ENABLE_BIT);
- 
- 	return 0;
- }
+ config PCIE_KIRIN
+ 	depends on OF && (ARM64 || COMPILE_TEST)
+-	bool "HiSilicon Kirin series SoCs PCIe controllers"
++	tristate "HiSilicon Kirin series SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 	help
 -- 
 2.31.1
 
