@@ -2,143 +2,207 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53AC1C4338F
-	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB4AC4320A
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 12:33:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E6AF60232
-	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD86B60F4B
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 12:33:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237761AbhHOKhw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Aug 2021 06:37:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45028 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237637AbhHOKhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 15 Aug 2021 06:37:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 150BE610CF;
-        Sun, 15 Aug 2021 10:36:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629023814;
-        bh=9LHHpQCvXqnA3Oe4ulBmqQhmwBb38lyNPdIXfguJNT4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Flv1lqxWJO7vn0x1qSIfn6POYanQ9b1J2uVqjwiVy5kZ+MAaBHk078HZ5ph5nCINM
-         xEAVMCUU6cO8U6IMTtT4a5VtSLssZ5kkx/bCT6I4QcgSjdhmLqmDLyBkcZTiWK8OLY
-         D5gdObT4UVdsZQpzRzsbHkBN8xYD8wYtSuSjOHA20vBNYTZDOecoXTU1lZmRJG5MRF
-         0DWkVpFLTCbqEygxyOvduYRQTiudOBPXGOpBJlKmtx5QrUdtgftNWg1J/KhtF9VgR/
-         PiNSMTNHlnzESvD39pvzzuyX0+bV0s8gZDpWLzqKe546ILaYCBGQ4JvHO35QHKMfig
-         RONFA3FLARaUw==
-Received: by pali.im (Postfix)
-        id 46D752824; Sun, 15 Aug 2021 12:36:52 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
+        id S231809AbhHOMeJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Aug 2021 08:34:09 -0400
+Received: from new1-smtp.messagingengine.com ([66.111.4.221]:33557 "EHLO
+        new1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229603AbhHOMeI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Aug 2021 08:34:08 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailnew.nyi.internal (Postfix) with ESMTP id 4CDC558037E;
+        Sun, 15 Aug 2021 08:33:38 -0400 (EDT)
+Received: from imap21 ([10.202.2.71])
+  by compute1.internal (MEProxy); Sun, 15 Aug 2021 08:33:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=svenpeter.dev;
+         h=mime-version:message-id:in-reply-to:references:date:from:to
+        :cc:subject:content-type; s=fm2; bh=3mHySEgehdbD6Kek++OFQ1ygL9wK
+        YmdzyYhN34LmWzw=; b=L6/VQ2hJtQZapFkUx3t/J5MtLrkxncWRe+4yNA5VCV1t
+        WUtMgaJx+J0VmGmNKo2DSKWtLK4hUcXW6nnFEBLW5SkvOo+9iuA6wzXcLXQr0TAO
+        rodBdySyctqJAcs8vkPhn+Rvcyb8ixjtwReYQZowYOEeX4U8D0G2W8NBkoMElBjV
+        LnSLlZ64Lf5NXC/7WpLwPs/sO/vVq56mPhqpxAFxhnPBPZ8eXHcZuRgLIiuoTI4a
+        ew/t8StDtZ3kVn+6iUKLWYS85ytt6GJ0yYr4DACiwoUUGtJTCSgg9Uyl7u1vM8XO
+        RAFrI+WUWO+i1WEy5SbAmULKXIecCd8Ggx3QwpduSA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=3mHySE
+        gehdbD6Kek++OFQ1ygL9wKYmdzyYhN34LmWzw=; b=YVaqJpaEF/HtRU4Sm9afuI
+        9g6ra1H/BLv0E+HUQthN1XNMJN0K3ysetTO13dVkd7xZVig5rtDUa+QEl0BqQeEl
+        rj08p5fgSHdtB9uP/D/oZTTzcLkShBQG58u8aTZR2+9mSA+/P0fqT03ZSMRyyfn+
+        ukX0aTeIheGkztjDFmduiirAveGzKEjpMjUpnygVVvgUm/UnoQ3HDJ+NUxqsBTUW
+        1aodYsRZiKUG8/z34C2f/G7D+GEwlu15AMNOTFhrs1tV1GKHDNbrq42PS8uTrF4b
+        heVjpAR6/l85kjwH1cCl0Sz/dj0UgZxFQSvoy7Yb9bbA0z1TD5s5fqf0QaxAkaUQ
+        ==
+X-ME-Sender: <xms:oAkZYRN7Q06kwy5x2B28mTRelnmL_oMxtt5FPH07QN29qqyTVAJWgQ>
+    <xme:oAkZYT-VyCouOd6ckxMHFF3wLlmz2FAdir9eq4uXV0UDK-ZEXxrYUKF8a4B0NGdnw
+    dmMWeVPHz3ccdPcoag>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrkeelgdehfecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefofgggkfgjfhffhffvufgtsehttdertderredtnecuhfhrohhmpedfufhvvghn
+    ucfrvghtvghrfdcuoehsvhgvnhesshhvvghnphgvthgvrhdruggvvheqnecuggftrfgrth
+    htvghrnhepgfeigeeiffeuhfettdejgfetjeetfeelfefgfefgvddvtdfghfffudehvdef
+    keffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepsh
+    hvvghnsehsvhgvnhhpvghtvghrrdguvghv
+X-ME-Proxy: <xmx:oAkZYQR-8pymFEOZZZ6-iuy8Bs-K4uhyZEnWQnuMlbdJ9FZ4DGON8g>
+    <xmx:oAkZYdurCpkpXm5BveVu24bhIlKOcCI-xNp3GG0PtqG1OSMb5oXCOg>
+    <xmx:oAkZYZeyGVTEjxAz3-YyDhhj5cfB5XUumOnv8KlwUFLxW0RDTDA6hA>
+    <xmx:ogkZYV55Xg0XCwldIPgFil18_xR8UsivQG3K317gL-tI6u3jcUXUQQ>
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 46AB651C0060; Sun, 15 Aug 2021 08:33:36 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.5.0-alpha0-1082-gccb13bca62-fm-ubox-20210811.001-gccb13bca
+Mime-Version: 1.0
+Message-Id: <8650c850-2642-4582-ae97-a95134bda3e2@www.fastmail.com>
+In-Reply-To: <87a6lj17d1.wl-maz@kernel.org>
+References: <20210815042525.36878-1-alyssa@rosenzweig.io>
+ <20210815042525.36878-3-alyssa@rosenzweig.io> <87a6lj17d1.wl-maz@kernel.org>
+Date:   Sun, 15 Aug 2021 14:33:14 +0200
+From:   "Sven Peter" <sven@svenpeter.dev>
+To:     "Marc Zyngier" <maz@kernel.org>,
+        "Alyssa Rosenzweig" <alyssa@rosenzweig.io>
+Cc:     linux-pci@vger.kernel.org, "Bjorn Helgaas" <bhelgaas@google.com>,
+        "Rob Herring" <robh+dt@kernel.org>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        "Stan Skowronek" <stan@corellium.com>,
+        "Mark Kettenis" <kettenis@openbsd.org>,
+        "Hector Martin" <marcan@marcan.st>, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] PCI: aardvark: Fix masking MSI interrupts
-Date:   Sun, 15 Aug 2021 12:36:23 +0200
-Message-Id: <20210815103624.19528-3-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210815103624.19528-1-pali@kernel.org>
-References: <20210815103624.19528-1-pali@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: Re: [RFC PATCH 2/2] PCI: apple: Add driver for the Apple M1
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Masking of individual MSI interrupts is done via PCIE_MSI_MASK_REG
-register. At the driver probe time mask all MSI interrupts and then let
-kernel IRQ chip code to unmask particular MSI interrupt when needed.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Cc: stable@vger.kernel.org # f21a8b1b6837 ("PCI: aardvark: Move to MSI handling using generic MSI support")
----
- drivers/pci/controller/pci-aardvark.c | 44 ++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index bacfccee44fe..96580e1e4539 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -480,12 +480,10 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
- 	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
- 
--	/* Disable All ISR0/1 Sources */
-+	/* Disable All ISR0/1 and MSI Sources */
- 	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_MASK_REG);
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
--
--	/* Unmask all MSIs */
--	advk_writel(pcie, ~(u32)PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
-+	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
- 
- 	/* Unmask summary MSI interrupt */
- 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-@@ -1026,6 +1024,40 @@ static int advk_msi_set_affinity(struct irq_data *irq_data,
- 	return -EINVAL;
- }
- 
-+static void advk_msi_irq_mask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u32 mask;
-+
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask |= BIT(hwirq);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+}
-+
-+static void advk_msi_irq_unmask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	u32 mask;
-+
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask &= ~BIT(hwirq);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+}
-+
-+static void advk_msi_top_irq_mask(struct irq_data *d)
-+{
-+	pci_msi_mask_irq(d);
-+	irq_chip_mask_parent(d);
-+}
-+
-+static void advk_msi_top_irq_unmask(struct irq_data *d)
-+{
-+	pci_msi_unmask_irq(d);
-+	irq_chip_unmask_parent(d);
-+}
-+
- static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
- 				     unsigned int virq,
- 				     unsigned int nr_irqs, void *args)
-@@ -1119,9 +1151,13 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
- 	bottom_ic->name = "MSI";
- 	bottom_ic->irq_compose_msi_msg = advk_msi_irq_compose_msi_msg;
- 	bottom_ic->irq_set_affinity = advk_msi_set_affinity;
-+	bottom_ic->irq_mask = advk_msi_irq_mask;
-+	bottom_ic->irq_unmask = advk_msi_irq_unmask;
- 
- 	msi_ic = &pcie->msi_irq_chip;
- 	msi_ic->name = "advk-MSI";
-+	msi_ic->irq_mask = advk_msi_top_irq_mask;
-+	msi_ic->irq_unmask = advk_msi_top_irq_unmask;
- 
- 	msi_di = &pcie->msi_domain_info;
- 	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--- 
-2.20.1
+On Sun, Aug 15, 2021, at 09:42, Marc Zyngier wrote:
+> On Sun, 15 Aug 2021 05:25:25 +0100,
+> Alyssa Rosenzweig <alyssa@rosenzweig.io> wrote:
+[...]
+> > +
+> > +static int apple_pcie_setup_port(struct apple_pcie *pcie, unsigned int i)
+> > +{
+> > +	struct fwnode_handle *fwnode = dev_fwnode(pcie->dev);
+> > +	void __iomem *port;
+> > +	struct gpio_desc *reset;
+> > +	uint32_t stat;
+> > +	int ret;
+> > +
+> > +	port = devm_of_iomap(pcie->dev, to_of_node(fwnode), i + 3, NULL);
+> > +
+> > +	if (IS_ERR(port))
+> > +		return -ENODEV;
+> > +
+> > +	reset = devm_gpiod_get_index(pcie->dev, "reset", i, 0);
+> > +	if (IS_ERR(reset))
+> > +		return PTR_ERR(reset);
+> > +
+> > +	gpiod_direction_output(reset, 0);
+> > +
+> > +	rmwl(0, PORT_APPCLK_EN, port + PORT_APPCLK);
+> > +
+> > +	ret = apple_pcie_setup_refclk(pcie->rc, port, i);
+> > +	if (ret < 0)
+> > +		return ret;
+> > +
+> > +	rmwl(0, PORT_PERST_OFF, port + PORT_PERST);
+> > +	gpiod_set_value(reset, 1);
+> > +
+> > +	ret = readl_poll_timeout(port + PORT_STATUS, stat,
+> > +				 stat & PORT_STATUS_READY, 100, 250000);
+> > +	if (ret < 0) {
+> > +		dev_err(pcie->dev, "port %u ready wait timeout\n", i);
+> > +		return ret;
+> > +	}
+> > +
+> > +	rmwl(PORT_REFCLK_CGDIS, 0, port + PORT_REFCLK);
+> > +	rmwl(PORT_APPCLK_CGDIS, 0, port + PORT_APPCLK);
+> > +
+> > +	ret = readl_poll_timeout(port + PORT_LINKSTS, stat,
+> > +				 !(stat & PORT_LINKSTS_BUSY), 100, 250000);
+> > +	if (ret < 0) {
+> > +		dev_err(pcie->dev, "port %u link not busy timeout\n", i);
+> > +		return ret;
+> > +	}
+> > +
+> > +	writel(0xfb512fff, port + PORT_INTMSKSET);
+> 
+> Magic. What is this for?
 
+The magic comes from the original Corellium driver. It first masks everything
+except for the interrupts in the next line, then acks the interrupts it keeps
+enabled and then probably wants to wait for PORT_INT_LINK_UP (or any of the
+other interrupts which seem to indicate various error conditions) to fire but
+instead polls for PORT_LINKSTS_UP.
+
+> 
+> > +
+> > +	writel(PORT_INT_LINK_UP | PORT_INT_LINK_DOWN | PORT_INT_AF_TIMEOUT |
+> > +	       PORT_INT_REQADDR_GT32 | PORT_INT_MSI_ERR |
+> > +	       PORT_INT_MSI_BAD_DATA | PORT_INT_CPL_ABORT |
+> > +	       PORT_INT_CPL_TIMEOUT | (1 << 26), port + PORT_INTSTAT);
+> > +
+> > +	usleep_range(5000, 10000);
+> > +
+> > +	rmwl(0, PORT_LTSSMCTL_START, port + PORT_LTSSMCTL);
+> > +
+> > +	ret = readl_poll_timeout(port + PORT_LINKSTS, stat,
+> > +				 stat & PORT_LINKSTS_UP, 100, 500000);
+> > +	if (ret < 0) {
+> > +		dev_err(pcie->dev, "port %u link up wait timeout\n", i);
+> > +		return ret;
+> > +	}
+> 
+> I have the strong feeling that a lot of things in the above is to get
+> an interrupt when the port reports an event. Why the polling then?
+
+
+I'm pretty sure this is true. The same registers are also used to setup
+and handle legacy interrupts.
+
+My current understanding is that PORT_INTSTAT is used to retrieve the fired
+interrupts and ack them, and PORT_INTMSK are the masked interrupts.
+And then PORT_INTMSKSET and PORT_INTMSKCLR can be used to manipulate
+individual bits of PORT_INTMSK with a single store.
+
+
+
+> 
+> > +
+> > +	writel(DOORBELL_ADDR, port + PORT_MSIADDR);
+> > +	writel(0, port + PORT_MSIBASE);
+> 
+> So here you go, the MSI doorbell *is* configurable. Should it be
+> placed somewhere else? Shouldn't it be configured before the link is
+> up?
+
+Yes, I'm pretty sure it should be configured before triggering PORT_LTSSMCTL_START.
+
+
+> 
+> > +	writel((5 << PORT_MSICFG_L2MSINUM_SHIFT) | PORT_MSICFG_EN,
+> > +	       port + PORT_MSICFG);
+> 
+> Ah, that one actually makes sense (enables 32 MSIs for the port).
+
+Same as above, I think this also should be done before PORT_LTSSMCTL_START.
+
+
+
+
+Best,
+
+
+Sven
