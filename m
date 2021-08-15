@@ -2,196 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A68D3C43214
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:17:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F5EC432BE
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:18:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88940615A3
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:17:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 044C761929
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:18:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232782AbhHPDSP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Aug 2021 23:18:15 -0400
-Received: from [138.197.143.207] ([138.197.143.207]:45266 "EHLO rosenzweig.io"
+        id S232757AbhHPDSf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Aug 2021 23:18:35 -0400
+Received: from [138.197.143.207] ([138.197.143.207]:45272 "EHLO rosenzweig.io"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S232757AbhHPDSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 15 Aug 2021 23:18:13 -0400
+        id S233081AbhHPDSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 15 Aug 2021 23:18:32 -0400
+Date:   Sun, 15 Aug 2021 17:33:48 -0400
 From:   Alyssa Rosenzweig <alyssa@rosenzweig.io>
-To:     linux-pci@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
+To:     Rob Herring <robh+dt@kernel.org>
+Cc:     PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Stan Skowronek <stan@corellium.com>,
         Marc Zyngier <maz@kernel.org>,
         Mark Kettenis <kettenis@openbsd.org>,
         Sven Peter <sven@svenpeter.dev>,
         Hector Martin <marcan@marcan.st>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 6/6] arm64: apple: Add PCIe node
-Date:   Sun, 15 Aug 2021 23:16:21 -0400
-Message-Id: <20210816031621.240268-7-alyssa@rosenzweig.io>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210816031621.240268-1-alyssa@rosenzweig.io>
-References: <20210816031621.240268-1-alyssa@rosenzweig.io>
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH 2/2] PCI: apple: Add driver for the Apple M1
+Message-ID: <YRmIPL3NA4zHkReL@sunset>
+References: <20210815042525.36878-1-alyssa@rosenzweig.io>
+ <20210815042525.36878-3-alyssa@rosenzweig.io>
+ <CAL_JsqJfhQr7fa4dD2cOQmo8bdj2fQ+2Hjrh_4Xie-zbr1g7KQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqJfhQr7fa4dD2cOQmo8bdj2fQ+2Hjrh_4Xie-zbr1g7KQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mark Kettenis <kettenis@openbsd.org>
+Hi Rob,
 
-Add node corresponding to the apcie,t8103 node in the Apple device tree
-for the Mac mini (M1, 2020).
+Thanks for the review.
 
-Clock references are left out at the moment and will be added once the
-appropriate bindings have been settled on.
+> > +#define CORE_RC_PHYIF_CTL              0x00024
+> > +#define   CORE_RC_PHYIF_CTL_RUN                BIT(0)
+> > +#define CORE_RC_PHYIF_STAT             0x00028
+> > +#define   CORE_RC_PHYIF_STAT_REFCLK    BIT(4)
+> > +#define CORE_RC_CTL                    0x00050
+> > +#define   CORE_RC_CTL_RUN              BIT(0)
+> > +#define CORE_RC_STAT                   0x00058
+> > +#define   CORE_RC_STAT_READY           BIT(0)
+> > +#define CORE_FABRIC_STAT               0x04000
+> > +#define   CORE_FABRIC_STAT_MASK                0x001F001F
+> > +#define CORE_PHY_CTL                   0x80000
+> > +#define   CORE_PHY_CTL_CLK0REQ         BIT(0)
+> > +#define   CORE_PHY_CTL_CLK1REQ         BIT(1)
+> > +#define   CORE_PHY_CTL_CLK0ACK         BIT(2)
+> > +#define   CORE_PHY_CTL_CLK1ACK         BIT(3)
+> > +#define   CORE_PHY_CTL_RESET           BIT(7)
+> 
+> I was going to say these should be a phy driver perhaps, but they are
+> unused. So for now, just drop them.
 
-Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
-Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
----
- arch/arm64/boot/dts/apple/t8103.dtsi | 124 +++++++++++++++++++++++++++
- 1 file changed, 124 insertions(+)
+Removed in v2.
 
-diff --git a/arch/arm64/boot/dts/apple/t8103.dtsi b/arch/arm64/boot/dts/apple/t8103.dtsi
-index 342e01c6098e..c0d3b2fb0366 100644
---- a/arch/arm64/boot/dts/apple/t8103.dtsi
-+++ b/arch/arm64/boot/dts/apple/t8103.dtsi
-@@ -214,5 +214,129 @@ pinctrl_aop: pinctrl@24a820000 {
- 				     <AIC_IRQ 273 IRQ_TYPE_LEVEL_HIGH>,
- 				     <AIC_IRQ 274 IRQ_TYPE_LEVEL_HIGH>;
- 		};
-+
-+		pcie0_dart_0: dart@681008000 {
-+			compatible = "apple,t8103-dart";
-+			reg = <0x6 0x81008000 0x0 0x4000>;
-+			#iommu-cells = <1>;
-+			interrupt-parent = <&aic>;
-+			interrupts = <AIC_IRQ 696 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie0_dart_1: dart@682008000 {
-+			compatible = "apple,t8103-dart";
-+			reg = <0x6 0x82008000 0x0 0x4000>;
-+			#iommu-cells = <1>;
-+			interrupt-parent = <&aic>;
-+			interrupts = <AIC_IRQ 699 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie0_dart_2: dart@683008000 {
-+			compatible = "apple,t8103-dart";
-+			reg = <0x6 0x83008000 0x0 0x4000>;
-+			#iommu-cells = <1>;
-+			interrupt-parent = <&aic>;
-+			interrupts = <AIC_IRQ 702 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie0: pcie@690000000 {
-+			compatible = "apple,t8103-pcie", "apple,pcie";
-+			device_type = "pci";
-+
-+			reg = <0x6 0x90000000 0x0 0x1000000>,
-+			      <0x6 0x80000000 0x0 0x100000>,
-+			      <0x6 0x81000000 0x0 0x4000>,
-+			      <0x6 0x82000000 0x0 0x4000>,
-+			      <0x6 0x83000000 0x0 0x4000>;
-+			reg-names = "config", "rc", "port0", "port1", "port2";
-+
-+			interrupt-parent = <&aic>;
-+			interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 704 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 705 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 706 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 707 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 708 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 709 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 710 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 711 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 712 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 713 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 714 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 715 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 716 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 717 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 718 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 719 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 720 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 721 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 722 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 723 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 724 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 725 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 726 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 727 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 728 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 729 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 730 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 731 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 732 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 733 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 734 IRQ_TYPE_LEVEL_HIGH>,
-+				     <AIC_IRQ 735 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			msi-controller;
-+			msi-parent = <&pcie0>;
-+			msi-ranges = <704 32>;
-+
-+			iommu-map = <0x100 &pcie0_dart_0 0 1>,
-+				    <0x200 &pcie0_dart_1 0 1>,
-+				    <0x300 &pcie0_dart_2 0 1>;
-+			iommu-map-mask = <0xff00>;
-+
-+			bus-range = <0 3>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
-+				 <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
-+
-+			pinctrl-0 = <&pcie_pins>;
-+			pinctrl-names = "default";
-+
-+			pci@0,0 {
-+				device_type = "pci";
-+				reg = <0x0 0x0 0x0 0x0 0x0>;
-+				reset-gpios = <&pinctrl_ap 152 0>;
-+				max-link-speed = <2>;
-+
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges;
-+			};
-+
-+			pci@1,0 {
-+				device_type = "pci";
-+				reg = <0x800 0x0 0x0 0x0 0x0>;
-+				reset-gpios = <&pinctrl_ap 153 0>;
-+				max-link-speed = <2>;
-+
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges;
-+			};
-+
-+			pci@2,0 {
-+				device_type = "pci";
-+				reg = <0x1000 0x0 0x0 0x0 0x0>;
-+				reset-gpios = <&pinctrl_ap 33 0>;
-+				max-link-speed = <1>;
-+
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges;
-+			};
-+		};
- 	};
- };
--- 
-2.30.2
+CORE_PHY_CTRL is used in the asahi linux bootloader (m1n1, shared between
+linux+uboot+bsd) to do early pcie bringup. They are indeed not used
+here, nor are they used in the uboot/bsd drivers.
 
+> > +static int apple_pcie_setup_port(struct apple_pcie *pcie, unsigned int i)
+> > +{
+> > +       struct fwnode_handle *fwnode = dev_fwnode(pcie->dev);
+> 
+> Doesn't look like you ever use the fwnode, just get the DT node
+> pointer. Unless this driver is going to use ACPI someday (and ACPI
+> changes how PCI is done), there's no point in using fwnode.
+
+Dropped in v2.
+
+That was a copypaste fail splitting off apple_pcie_setup_port from
+apple_msi_init in an early revision.
+
+> It's preferred to use platform resource api and ioremap over DT functions.
+> ...
+> Use devm_platform_ioremap_resource instead.
+
+Done in v2.
+
+Thanks,
+
+Alyssa
