@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94652C4338F
-	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0D6C4320A
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 762796103D
-	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 310A660232
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Aug 2021 10:37:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237828AbhHOKhg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Aug 2021 06:37:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44940 "EHLO mail.kernel.org"
+        id S237830AbhHOKhj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Aug 2021 06:37:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44982 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237628AbhHOKhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S237633AbhHOKhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Sun, 15 Aug 2021 06:37:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0BF93610C9;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 92DF160232;
         Sun, 15 Aug 2021 10:36:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1629023813;
-        bh=bbXZK0g3pZ6TC4QJ8y6NJ9nDgPzEQHXGdZWtHIWYSIM=;
+        bh=rPiIwRm+CKYXp9gDBxDxt2hBbr7OjSe6cRjprH/7pm0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LcdCaMg6wlfDiUdaXKSZmzSh5IDF6yaACXWv1OdiW7+ceHZnRMrqkaqSxdmE15NYZ
-         7O8VHfk+wx1qaVWwX2YfQR4EXhs8NlFPe96OUZQ6LccNbMKGeSWFl2AZl18nu0Yh1U
-         5HOAFUU3wnqF/ZkLnXB9eKXnupYskhgPobA5RrfgXuvxf4g/IqCAf38XqJhgnqJcnp
-         zhT6mqkILfhSYppPYSvaEXv7YXonSCug/a+/hX1BuQWlNbJYjAJDYpceo+gkR/ZsiI
-         7Biqbl64NziUj9s721apXHjy88Qtdcl/CcPi+l4bOxLkAKb89CPo/A3VYNuWXyZj5j
-         H6guz08aFZ4Rg==
+        b=reyiEFHb2J6TMiFRcNBH7pIrgi3sJxRocTjHBrObZv8g9zv2Iue3KP9n2mVak1j9A
+         3g/L3+eqPUU5T8nk731A5Qw+i7wFyTaW52FoaQS6FudNt7VUDAsZ/SAGyc8d7g2XL/
+         sqMXvJU/t/xi01jULpzggXrRGb9DwhbaBaIlMKLwzS97xI88oMlluprr1IByk4SUi4
+         JQ95HbqFjtVQu14n2l03J3/6f6ag69BSCDvHsylwEsmWA6S5jcMq8gYN0pc2tn713X
+         sINA0zUrTIrfGqWpZrX6Ar0SKEeL7iMRdLWQsIl5p0y1F0ijh9BvV+RTpUSb7QawbW
+         d4MyQM7xD4Rag==
 Received: by pali.im (Postfix)
-        id 2BFC3280D; Sun, 15 Aug 2021 12:36:51 +0200 (CEST)
+        id 555F298C; Sun, 15 Aug 2021 12:36:53 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -42,9 +42,9 @@ Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
         Marc Zyngier <maz@kernel.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: aardvark: Fix reading MSI interrupt number
-Date:   Sun, 15 Aug 2021 12:36:22 +0200
-Message-Id: <20210815103624.19528-2-pali@kernel.org>
+Subject: [PATCH 3/3] PCI: aardvark: Enable MSI-X support
+Date:   Sun, 15 Aug 2021 12:36:24 +0200
+Message-Id: <20210815103624.19528-4-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20210815103624.19528-1-pali@kernel.org>
 References: <20210815103624.19528-1-pali@kernel.org>
@@ -55,55 +55,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Experiments showed that in register PCIE_MSI_PAYLOAD_REG is stored number
-of the last received MSI interrupt and not number of MSI interrupt which
-belongs to msi_idx bit. Therefore this implies that aardvark HW can cache
-only bits [4:0] of received MSI interrupts with effectively means that it
-supports only MSI interrupts with numbers 0-31.
+According to PCI 3.0 specification, sending both MSI and MSI-X interrupts
+is done by DWORD memory write operation to doorbell message address. The
+write operation for MSI has zero upper 16 bits and the MSI interrupt number
+in the lower 16 bits. The write operation for MSI-X contains a 32-bit value
+from MSI-X table.
 
-Do not read PCIE_MSI_PAYLOAD_REG register for determining MSI interrupt
-number. Instead ensure that pci-aardvark.c configures only MSI numbers in
-range 0-31 and then msi_idx contains correct received MSI number.
+As driver supports and assigns only interrupt numbers from range 0..31,
+enable also MSI-X support.
+
+Testing proved that kernel can correctly receive MSI-X interrupts from PCIe
+cards which supports both MSI and MSI-X interrupts.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
+Reviewed-by: Marek Behún <kabel@kernel.org>
 Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-aardvark.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 5e4febdbdd33..bacfccee44fe 100644
+index 96580e1e4539..279b2884c545 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1199,7 +1199,6 @@ static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
- static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- {
- 	u32 msi_val, msi_mask, msi_status, msi_idx;
--	u16 msi_data;
- 	int virq;
+@@ -1161,7 +1161,7 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
  
- 	msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-@@ -1210,17 +1209,13 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- 		if (!(BIT(msi_idx) & msi_status))
- 			continue;
+ 	msi_di = &pcie->msi_domain_info;
+ 	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-		MSI_FLAG_MULTI_PCI_MSI;
++			MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX;
+ 	msi_di->chip = msi_ic;
  
--		/*
--		 * msi_idx contains bits [4:0] of the msi_data and msi_data
--		 * contains 16bit MSI interrupt number from MSI inner domain
--		 */
- 		advk_writel(pcie, BIT(msi_idx), PCIE_MSI_STATUS_REG);
--		msi_data = advk_readl(pcie, PCIE_MSI_PAYLOAD_REG) & PCIE_MSI_DATA_MASK;
--		virq = irq_find_mapping(pcie->msi_inner_domain, msi_data);
-+
-+		virq = irq_find_mapping(pcie->msi_inner_domain, msi_idx);
- 		if (virq)
- 			generic_handle_irq(virq);
- 		else
--			dev_err_ratelimited(&pcie->pdev->dev, "unexpected MSI 0x%04hx\n", msi_data);
-+			dev_err_ratelimited(&pcie->pdev->dev, "unexpected MSI 0x%02x\n", msi_idx);
- 	}
- 
- 	advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
+ 	pcie->msi_inner_domain =
 -- 
 2.20.1
 
