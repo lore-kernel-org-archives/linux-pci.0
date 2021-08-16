@@ -6,99 +6,106 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0E8C4338F
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDE4C4320A
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD660615E3
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:18:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7583461505
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Aug 2021 03:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232549AbhHPDTH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Aug 2021 23:19:07 -0400
-Received: from [138.197.143.207] ([138.197.143.207]:45352 "EHLO rosenzweig.io"
+        id S232167AbhHPDVb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Aug 2021 23:21:31 -0400
+Received: from [138.197.143.207] ([138.197.143.207]:45376 "EHLO rosenzweig.io"
         rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S232421AbhHPDTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 15 Aug 2021 23:19:07 -0400
-Date:   Sun, 15 Aug 2021 21:45:37 -0400
+        id S232779AbhHPDVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 15 Aug 2021 23:21:30 -0400
+Date:   Sun, 15 Aug 2021 23:20:30 -0400
 From:   Alyssa Rosenzweig <alyssa@rosenzweig.io>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Stan Skowronek <stan@corellium.com>,
+        Marc Zyngier <maz@kernel.org>,
         Mark Kettenis <kettenis@openbsd.org>,
         Sven Peter <sven@svenpeter.dev>,
-        Hector Martin <marcan@marcan.st>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        Hector Martin <marcan@marcan.st>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Subject: Re: [RFC PATCH 2/2] PCI: apple: Add driver for the Apple M1
-Message-ID: <YRnDQdKN8bfHdwMS@sunset>
+Message-ID: <YRnZfhBXy/yYFurU@sunset>
 References: <20210815042525.36878-1-alyssa@rosenzweig.io>
  <20210815042525.36878-3-alyssa@rosenzweig.io>
- <87a6lj17d1.wl-maz@kernel.org>
- <877dgn12v4.wl-maz@kernel.org>
+ <CAHp75VeKeGgUgALLztA3Q3jizF2=OkSzU9bzaPmTHO9Pad=QOQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <877dgn12v4.wl-maz@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHp75VeKeGgUgALLztA3Q3jizF2=OkSzU9bzaPmTHO9Pad=QOQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> > > +static int apple_pcie_setup_refclk(void __iomem *rc,
-> > > +				   void __iomem *port,
-> > > +				   unsigned int idx)
-> > > +{
-> > > +	u32 stat;
-> > > +	int res;
-> > > +
-> > > +	res = readl_poll_timeout(rc + CORE_RC_PHYIF_STAT, stat,
-> > > +				 stat & CORE_RC_PHYIF_STAT_REFCLK, 100, 50000);
-> > > +	if (res < 0)
-> > > +		return res;
-> > > +
-> > > +	rmwl(0, CORE_LANE_CTL_CFGACC, rc + CORE_LANE_CTL(idx));
-> > > +	rmwl(0, CORE_LANE_CFG_REFCLK0REQ, rc + CORE_LANE_CFG(idx));
-> > > +
-> > > +	res = readl_poll_timeout(rc + CORE_LANE_CFG(idx), stat,
-> > > +				 stat & CORE_LANE_CFG_REFCLK0ACK, 100, 50000);
-> > > +	if (res < 0)
-> > > +		return res;
-> > > +
-> > > +	rmwl(0, CORE_LANE_CFG_REFCLK1, rc + CORE_LANE_CFG(idx));
-> > > +	res = readl_poll_timeout(rc + CORE_LANE_CFG(idx), stat,
-> > > +				 stat & CORE_LANE_CFG_REFCLK1, 100, 50000);
-> > > +
-> > > +	if (res < 0)
-> > > +		return res;
-> > > +
-> > > +	rmwl(CORE_LANE_CTL_CFGACC, 0, rc + CORE_LANE_CTL(idx));
-> > > +	udelay(1);
-> > > +	rmwl(0, CORE_LANE_CFG_REFCLKEN, rc + CORE_LANE_CFG(idx));
-> > > +
-> > > +	rmwl(0, PORT_REFCLK_EN, port + PORT_REFCLK);
-> > > +
-> > > +	return 0;
-> > > +}
+Hi Andy,
+
+Thanks for the review.
+
+>      +       depends on GPIOLIB
 > 
-> This really wants to be moved to its own clock driver, unless there is
-> a strong guarantee that the clock tree isn't shared with anything
-> else. I expect that parts of that clock tree will need to be
-> refcounted, and that's where having a real clock driver will help.
+>     It doesn’t seem to provide a GPIO. 
+
+I thought that was needed to consume GPIOs, but it looks like other
+PCI drivers don't do it. Removed.
+
+>      +       if (IS_ERR(port))
+>      +               return -ENODEV;
+>      +
+>      +       reset = devm_gpiod_get_index(pcie->dev, "reset", i, 0);
 > 
-> I also have the strong feeling that the clock hierarchy will need to
-> be described in DT one way or another, if only to be able to cope with
-> future revisions of this block.
+>    Use appropriate flag.
+>     
+> 
+>      +       if (IS_ERR(reset))
+>      +               return PTR_ERR(reset);
+>      +
+>      +       gpiod_direction_output(reset, 0);
+> 
+>    Ditto and remove this line.
 
-Could be, but this is the most magical part of the driver (no docs...)
-and that means it's prohibitively difficult to design useful DT
-bindings...
+Fixed in v2, thank you.
 
-For whatever it's worth the Corellium code doesn't expose any DT
-bindings here, so maybe this hasn't changed since older Apple SoCs.
+>      +       usleep_range(5000, 10000);
+> 
+>    Sleep of such length should be explained.
 
-Orthogonal to this magic code, we /do/ need DT bindings for the
-clock/power gates. At the moment, m1n1 enables the PCIe clock and leaves
-it on, so it's not urgent for this series. But in the future when we
-want fine grained power management, we'll need it modeled. Sven has a
-WIP clock gate driver and proposed bindings, which can be added to the
-PCIe DT later nonintrusively. That shouldn't block this series, however.
+Removed in v2.
+
+>      +
+> 
+>    Redundant blank line 
+
+Presumably fixed in v2.
+
+>      +       pcie->bitmap = devm_kcalloc(pcie->dev,
+>      BITS_TO_LONGS(pcie->nvecs),
+>      +                                   sizeof(long), GFP_KERNEL);
+> 
+>    devm_bitmap_zalloc()
+
+Done in v2.
+
+>      +static const struct of_device_id apple_pci_of_match[] = {
+>      +       { .compatible = "apple,pcie", .data = &apple_m1_cfg_ecam_ops },
+> 
+>     
+> 
+>      +       { },
+> 
+>    No comma for termination entry 
+
+Fixed in v2.
+
+BR,
+
+Alyssa
