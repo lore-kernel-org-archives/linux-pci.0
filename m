@@ -2,90 +2,84 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABB6C4320A
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Aug 2021 20:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 082CAC4320A
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Aug 2021 22:42:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55A2661056
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Aug 2021 20:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E652160FE6
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Aug 2021 22:42:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234944AbhHQU2j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Aug 2021 16:28:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54788 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234932AbhHQU2j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Aug 2021 16:28:39 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D5C1C06179A
-        for <linux-pci@vger.kernel.org>; Tue, 17 Aug 2021 13:28:05 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id c24so43720229lfi.11
-        for <linux-pci@vger.kernel.org>; Tue, 17 Aug 2021 13:28:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=To4Gp542jJmSWD7MdZF3sFHEVTOYykMS63VBniHZYPY=;
-        b=bh2mF/LwnSNjB0vFwgLsICNog5EaVsCuDp6N1PNuDbocaQHr2wlqC5Y+ltDOrFGEN5
-         u3Z7m+VT7UC2wOgSmWaW7dX9nP/LvrIWTk/0yppmVDoT5+QOBZiIGsJj2OmuPzoeTei4
-         oILmZeAAMhVG7eW2qWwXU/Hb/OLRew/XWxASU5THx+BrQRMHGD/90BdnmRwSv+pkD9/b
-         Ay/uWSYws4AJWv1n7Bf81YEk50I8wLvI6m8odvtn62SVoJs7HtS3XQYYYf5w6ZCfvLd4
-         ft9Ml5Ku8Tu9BRE4MbLSeaSGUEA+PP/9x9kWK65bzsnuR5HIdKTS7sk8+UX++4Ht5ELK
-         ICiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=To4Gp542jJmSWD7MdZF3sFHEVTOYykMS63VBniHZYPY=;
-        b=jjICzK0U0+dWanFkl8tmCr5CqWrzGffTVw3GtqBFv+YG8Pikup2vfsQTCRl+1Qu0zs
-         7ipO67ofGu/O9VVWxDh+ficQpL5HQycgeAyFnAnix3ByuPL6do/ohdHbDTB4vmQYV8KQ
-         IfVch4Svs7mMdKMV06mTnU9yUIveFGY8YA2UfZcPlkg7hbbkamOEEMBspdL7qJdzpXbx
-         8qel9v1G0F1m9h9OxtKEiPtdpEYSL7v4MnqgyA2zpHgB+FYu8kDtRjV/EMDx2izqnexL
-         aBYxWTMmpyR6s9vkba8TGQdquFC2N1JWUx0FbHDmF1TRU+LjHQq518U1aGrAPiO+gTXm
-         iG0A==
-X-Gm-Message-State: AOAM5310HHLR8/46fHhjkfHXb2OkcJ4n9PXgmKYk+eV8Kk9ImxUDl3Is
-        UkznSrnZtn8/KpZgoqk3bjA3mZwYLrWOTYDbGO1JrA==
-X-Google-Smtp-Source: ABdhPJyzKPGkscEIAtPNNEn9m7AoHY+m4cnw4vyR4NqDDFeYVO4Cju2uRh5QlVuft9THtbNOB39mT+PFjmHgsr2J1VA=
-X-Received: by 2002:a05:6512:3286:: with SMTP id p6mr3626973lfe.649.1629232083711;
- Tue, 17 Aug 2021 13:28:03 -0700 (PDT)
+        id S235835AbhHQWnV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Aug 2021 18:43:21 -0400
+Received: from mga14.intel.com ([192.55.52.115]:15594 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234828AbhHQWnV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Aug 2021 18:43:21 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10079"; a="215940909"
+X-IronPort-AV: E=Sophos;i="5.84,330,1620716400"; 
+   d="scan'208";a="215940909"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2021 15:42:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,330,1620716400"; 
+   d="scan'208";a="573066689"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga004.jf.intel.com with ESMTP; 17 Aug 2021 15:42:46 -0700
+Received: from debox1-desk2.jf.intel.com (debox1-desk2.jf.intel.com [10.54.75.16])
+        by linux.intel.com (Postfix) with ESMTP id 6E6BF580975;
+        Tue, 17 Aug 2021 15:42:46 -0700 (PDT)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     lee.jones@linaro.org, hdegoede@redhat.com, mgross@linux.intel.com,
+        bhelgaas@google.com, srinivas.pandruvada@intel.com,
+        andy.shevchenko@gmail.com
+Cc:     "David E. Box" <david.e.box@linux.intel.com>,
+        linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/5] PCI: Add #defines for accessing PCIE DVSEC fields
+Date:   Tue, 17 Aug 2021 15:40:14 -0700
+Message-Id: <20210817224018.1013192-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210817224018.1013192-1-david.e.box@linux.intel.com>
+References: <20210817224018.1013192-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-References: <20210817174743.541353-1-robh@kernel.org>
-In-Reply-To: <20210817174743.541353-1-robh@kernel.org>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Tue, 17 Aug 2021 22:27:52 +0200
-Message-ID: <CACRpkdaoKyPO1nePBYuvwmqxJFxScVVwKgMfngi5UAyL5KmF5A@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: PCI: faraday,ftpci100: Fix 'contains' schema usage
-To:     Rob Herring <robh@kernel.org>
-Cc:     "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 7:47 PM Rob Herring <robh@kernel.org> wrote:
+Add #defines for accessing Vendor ID, Revision, Length, and ID offsets
+in the Designated Vendor Specific Extended Capability (DVSEC). Defined
+in PCIe r5.0, sec 7.9.6.
 
-> The 'contains' keyword applies to elements within an array, so
-> using 'items' only makes sense if the elements of the array are another
-> array which is not the case for 'compatible' properties.
->
-> Looking at the driver, it seems the intent was the condition should be
-> true when 'faraday,ftpci100' is present, so we can drop
-> 'cortina,gemini-pci'.
->
-> Fixes: 2720b991337d ("dt-bindings: PCI: ftpci100: convert faraday,ftpci100 to YAML")
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+V2:	Unchanged
 
-Yours,
-Linus Walleij
+ include/uapi/linux/pci_regs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e709ae8235e7..57ee51f19283 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1080,7 +1080,11 @@
+ 
+ /* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
+ #define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
++#define  PCI_DVSEC_HEADER1_VID(x)	((x) & 0xffff)
++#define  PCI_DVSEC_HEADER1_REV(x)	(((x) >> 16) & 0xf)
++#define  PCI_DVSEC_HEADER1_LEN(x)	(((x) >> 20) & 0xfff)
+ #define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
++#define  PCI_DVSEC_HEADER2_ID(x)		((x) & 0xffff)
+ 
+ /* Data Link Feature */
+ #define PCI_DLF_CAP		0x04	/* Capabilities Register */
+-- 
+2.25.1
+
