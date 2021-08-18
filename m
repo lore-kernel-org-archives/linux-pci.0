@@ -2,144 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF5DC43216
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 07:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 774B6C432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 08:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F8B46108E
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 07:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6447A61058
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 08:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239257AbhHRHwu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Aug 2021 03:52:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:51074 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239201AbhHRHws (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Aug 2021 03:52:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629273133;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=PsxIbByc4MeeA9mh65w0Ji9CgAEac75Emzhzuys71nU=;
-        b=UB6C7c8pB1Z1oG7KfRm2XRIXS6cFWAL8Q9JZmqY7PTwiUPvAp79jwNl727qE9MbJ1Xy5Bh
-        zO2C5SME/x3WmWxqsd1ttX+j6t3vs6dR8gdDxuxLfoedvbwJVKTiFbABhPLZK6CHlppcpi
-        MlV4sIeenNXtwSjSFIYS+w+xYGiKLKE=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-30-zdQtOQ78MFS8v-PKCby52Q-1; Wed, 18 Aug 2021 03:51:48 -0400
-X-MC-Unique: zdQtOQ78MFS8v-PKCby52Q-1
-Received: by mail-ed1-f70.google.com with SMTP id a23-20020a50ff170000b02903b85a16b672so620940edu.1
-        for <linux-pci@vger.kernel.org>; Wed, 18 Aug 2021 00:51:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=PsxIbByc4MeeA9mh65w0Ji9CgAEac75Emzhzuys71nU=;
-        b=Rf+QRNasTN6wAkGZQOrC4knUqeFRRYwl41tWwCWhW7T+1OXj27H3JTJqn+SfoLBXk7
-         2s02svYkEGsTALLpE7nmuEGJ1bMI6UJblTzjv8k6u7QwpibzH8k39iGbz9AaBs2U5cCY
-         7hrGy1Abw0mZsnLZeXwlOfaxGdWXxT02Ww1dp7Q9+h4nN7ZvoTwFfX0r6Tl3yNWY4GGq
-         z+cRZqELRMZ94V5BNyyWqIaEfcVlKeezqkdJNAxU1amvia+K4rVS3d975TJlUg6jusRz
-         527cku0kz9LEIpekCsVptls1UP2PCQLuvaNw8QLBxXU9Mmb8bI6QbjN56Krd6w7EK7Wa
-         9cCA==
-X-Gm-Message-State: AOAM532pJzyyT2oVMvf2w2YMcailPhKiDRWybYkignxzD6x3o5UWJxlK
-        yXFqQO4JQk08aSe4t1aS1e69PT0I/ykeAU/IiZ29CfvT8SVBgrEx8kCAYDvmsBmX7aGSCwhaK2a
-        /05cPoxIn6j5R2bKA4Uucb2mq+5zlBmiQxFfCZVPKDj8VmMA4ljiL0SQ1u/EYag+IhnBMnhp1
-X-Received: by 2002:a50:d68e:: with SMTP id r14mr8766745edi.136.1629273106615;
-        Wed, 18 Aug 2021 00:51:46 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzq4bdN4/sZhvMzrI99gJ/UuBSRKuLfjrHyCXV6VEehTVciR93QOuMDBXhi00XCU33E70OJwA==
-X-Received: by 2002:a50:d68e:: with SMTP id r14mr8766723edi.136.1629273106446;
-        Wed, 18 Aug 2021 00:51:46 -0700 (PDT)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
-        by smtp.gmail.com with ESMTPSA id be23sm2154520edb.68.2021.08.18.00.51.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Aug 2021 00:51:46 -0700 (PDT)
-Subject: Re: [PATCH v2 0/5] MFD: intel_pmt: Add general DVSEC/VSEC support
-To:     "David E. Box" <david.e.box@linux.intel.com>, lee.jones@linaro.org,
-        mgross@linux.intel.com, bhelgaas@google.com,
-        srinivas.pandruvada@intel.com, andy.shevchenko@gmail.com
-Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <20210817224018.1013192-1-david.e.box@linux.intel.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <21f59d91-c9b9-2a7e-e5d9-a7697979b4bf@redhat.com>
-Date:   Wed, 18 Aug 2021 09:51:45 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S239472AbhHRIhQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Aug 2021 04:37:16 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:13439 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238947AbhHRIhQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Aug 2021 04:37:16 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GqLkZ6bnpzdZgp;
+        Wed, 18 Aug 2021 16:32:54 +0800 (CST)
+Received: from dggema757-chm.china.huawei.com (10.1.198.199) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2176.2; Wed, 18 Aug 2021 16:36:39 +0800
+Received: from localhost.localdomain (10.67.165.2) by
+ dggema757-chm.china.huawei.com (10.1.198.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Wed, 18 Aug 2021 16:36:39 +0800
+From:   Qi Liu <liuqi115@huawei.com>
+To:     <will@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <zhangshaokun@hisilicon.com>
+Subject: [PATCH v9 0/2] drivers/perf: hisi: Add support for PCIe PMU
+Date:   Wed, 18 Aug 2021 13:12:44 +0800
+Message-ID: <20210818051246.29545-1-liuqi115@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20210817224018.1013192-1-david.e.box@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.67.165.2]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggema757-chm.china.huawei.com (10.1.198.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+This patchset adds support for HiSilicon PCIe Performance Monitoring
+Unit(PMU). It is a PCIe Root Complex integrated End Point(RCiEP) device
+added on Hip09. Each PCIe Core has a PMU RCiEP to monitor multi root
+ports and all Endpoints downstream these root ports.
 
-On 8/18/21 12:40 AM, David E. Box wrote:
-> This patch enables general support for Intel defined PCIe VSEC and DVSEC
-> capabilities in the Intel Platform Monitoring Technology (PMT) driver.
-> Though the driver was written exclusively for PMT capabilities, newer DVSEC
-> and VSEC IDs for other capabilities can exist on the same device requiring
-> that the driver handle them.
-> 
-> This 2nd revision drops the creation of a separate OOBMSM driver. Instead,
-> all cell drivers will have a dependency on CONFIG_MFD_INTEL_PMT, whether or
-> not they are PMT. Changes in this patchset to the current cell drivers
-> located in platform/x86 are based on Hans for-next branch where they have
-> been moved to the intel/pmt subfolder.
-> 
-> David E. Box (5):
->   PCI: Add #defines for accessing PCIE DVSEC fields
->   MFD: intel_pmt: Support non-PMT capabilities
->   MFD: intel_pmt: Add support for PCIe VSEC structures
->   platform/x86: intel_pmt_telemetry: Ignore zero sized entries
+HiSilicon PCIe PMU is supported to collect performance data of PCIe bus,
+such as: bandwidth, latency etc.
 
-Since this patch is pretty much a stand alone patch I've picked
-this one (4/5) up now.
+Example usage of counting PCIe rx memory write latency::
 
-The rest of the patches touch both MFD and pdx86 files, so these
-should be picked up by Lee. But they rely on the patch moving
-the pdx86 pmt code into the drivers/platform/x86/intel/pmt dir
-which is currently only available in my for-next branch.
+  $# perf stat -e hisi_pcie0_core0/rx_mwr_latency/
+  $# perf stat -e hisi_pcie0_core0/rx_mwr_cnt/
+  $# perf stat -g -e hisi_pcie0_core0/rx_mwr_latency/ -e hisi_pcie0_core0/rx_mwr_cnt/
 
-I think it is probably best to wait for 5.15-rc1 and then Lee
-can merge the rest. Here is my ack for Lee picking up
-the pdx86 bits:
+average rx memory write latency can be calculated like this:
+  latency = rx_mwr_latency / rx_mwr_cnt.
 
-Acked-by: Hans de Goede <hdegoede@redhat.com>
+Common PMU events and metrics will be described in JSON file, and will be add
+in userspace perf tool latter.
 
-Lee, alternatively you could also merge commit e184b1e589a7fbb80bfdd0364c11422999a17a26
-from the pdx86 tree, that is only 1 commit ahead of my latest fixes
-pull-req to Linus for 5.14, so in essence that is 5.14-rc? (?=5 I think)
-+ just the commit which you need as base, then you could still merge
-these this cycle. If you wish I can put a signed tag on that
-for you (I will treat it as immutable either way).
+Changes since v8:
+- Remove subevent parameter in attr->config.
+- Check the counter scheduling constraints when accepting an event group.
+- Link: https://lore.kernel.org/linux-arm-kernel/20210728080932.72515-1-liuqi115@huawei.com/
 
-Regards,
+Changes since v7:
+- Drop headerfile cpumask.h and cpuhotplug.h.
+- Rename events in perf list: bw->flux, lat->delay, as driver doesn't
+  process bandwidth and average latency data.
+- Link: https://lore.kernel.org/linux-arm-kernel/1624532384-43002-1-git-send-email-liuqi115@huawei.com/
 
-Hans
+Changes since v6:
+- Move the driver to drivers/perf/hisilicon.
+- Treat content in PMU counter and ext_counter as different PMU events, and
+  export them separately.
+- Address the comments from Will and Krzysztof.
+- Link: https://lore.kernel.org/linux-arm-kernel/1622467951-32114-1-git-send-email-liuqi115@huawei.com/
 
+Changes since v5:
+- Fix some errors when build under ARCH=xtensa.
+- Link: https://lore.kernel.org/linux-arm-kernel/1621946795-14046-1-git-send-email-liuqi115@huawei.com/
 
+Changes since v4:
+- Replace irq_set_affinity_hint() with irq_set_affinity().
+- Link: https://lore.kernel.org/linux-arm-kernel/1621417741-5229-1-git-send-email-liuqi115@huawei.com/
 
+Changes since v3:
+- Fix some warnings when build under 32bits architecture.
+- Address the comments from John.
+- Link: https://lore.kernel.org/linux-arm-kernel/1618490885-44612-1-git-send-email-liuqi115@huawei.com/
 
->   MFD: intel_pmt: Add DG2 support
-> 
->  drivers/mfd/intel_pmt.c                    | 256 +++++++++++++++------
->  drivers/platform/x86/intel/pmt/class.c     |   2 +
->  drivers/platform/x86/intel/pmt/crashlog.c  |   2 +-
->  drivers/platform/x86/intel/pmt/telemetry.c |  10 +-
->  include/uapi/linux/pci_regs.h              |   4 +
->  5 files changed, 197 insertions(+), 77 deletions(-)
-> 
-> 
-> base-commit: ca42c119fc6746e65423257e7eddf5fc9e96edc2
-> 
+Changes since v2:
+- Address the comments from John.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617959157-22956-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v1:
+- Drop the internal Reviewed-by tag.
+- Fix some build warnings when W=1.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617788943-52722-1-git-send-email-liuqi115@huawei.com/
+
+Qi Liu (2):
+  docs: perf: Add description for HiSilicon PCIe PMU driver
+  drivers/perf: hisi: Add driver for HiSilicon PCIe PMU
+
+ .../admin-guide/perf/hisi-pcie-pmu.rst        | 106 ++
+ Documentation/admin-guide/perf/index.rst      |   1 +
+ MAINTAINERS                                   |   2 +
+ drivers/perf/hisilicon/Kconfig                |   9 +
+ drivers/perf/hisilicon/Makefile               |   2 +
+ drivers/perf/hisilicon/hisi_pcie_pmu.c        | 972 ++++++++++++++++++
+ include/linux/cpuhotplug.h                    |   1 +
+ 7 files changed, 1093 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+ create mode 100644 drivers/perf/hisilicon/hisi_pcie_pmu.c
+
+-- 
+2.17.1
 
