@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90F88C4320A
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 13:04:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA636C432BE
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 13:04:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AAC16108F
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 13:04:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D481A6102A
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Aug 2021 13:04:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236825AbhHRNE4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Aug 2021 09:04:56 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:13442 "EHLO
+        id S236975AbhHRNE6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Aug 2021 09:04:58 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:13441 "EHLO
         szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236682AbhHRNEw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Aug 2021 09:04:52 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GqSgJ1l1zzdbY4;
-        Wed, 18 Aug 2021 21:00:28 +0800 (CST)
+        with ESMTP id S236417AbhHRNEv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Aug 2021 09:04:51 -0400
+Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GqSgH2NdLzdZhN;
+        Wed, 18 Aug 2021 21:00:27 +0800 (CST)
 Received: from SZX1000464847.huawei.com (10.21.59.169) by
  dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Wed, 18 Aug 2021 21:04:12 +0800
+ 15.1.2176.2; Wed, 18 Aug 2021 21:04:11 +0800
 From:   Dongdong Liu <liudongdong3@huawei.com>
 To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
         <logang@deltatee.com>, <leon@kernel.org>,
         <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
         <hverkuil-cisco@xs4all.nl>
 CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V8 7/8] PCI: Enable 10-Bit Tag support for PCIe Endpoint device
-Date:   Wed, 18 Aug 2021 21:01:56 +0800
-Message-ID: <1629291717-38564-8-git-send-email-liudongdong3@huawei.com>
+Subject: [PATCH V8 2/8] PCI: Use cached Device Capabilities 2 Register
+Date:   Wed, 18 Aug 2021 21:01:51 +0800
+Message-ID: <1629291717-38564-3-git-send-email-liudongdong3@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1629291717-38564-1-git-send-email-liudongdong3@huawei.com>
 References: <1629291717-38564-1-git-send-email-liudongdong3@huawei.com>
@@ -48,218 +48,139 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-field size from 8 bits to 10 bits.
-
-PCIe spec 5.0 r1.0 section 2.2.6.2 "Considerations for Implementing
-10-Bit Tag Capabilities" Implementation Note:
-
-  For platforms where the RC supports 10-Bit Tag Completer capability,
-  it is highly recommended for platform firmware or operating software
-  that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-  bit automatically in Endpoints with 10-Bit Tag Requester capability.
-  This enables the important class of 10-Bit Tag capable adapters that
-  send Memory Read Requests only to host memory.
-
-It's safe to enable 10-bit tags for all devices below a Root Port that
-supports them. Switches that lack 10-Bit Tag Completer capability are
-still able to forward NPRs and Completions carrying 10-Bit Tags correctly,
-since the two new Tag bits are in TLP Header bits that were formerly
-Reserved.
-
-PCIe spec 5.0 r1.0 section 2.2.6.2 says:
-
-  If an Endpoint supports sending Requests to other Endpoints (as opposed
-  to host memory), the Endpoint must not send 10-Bit Tag Requests to
-  another given Endpoint unless an implementation-specific mechanism
-  determines that the Endpoint supports 10-Bit Tag Completer capability.
-
-It is not safe for P2P traffic if an Endpoint send 10-Bit Tag Requesters
-to another Endpoint that does not support 10-Bit Tag Completer capability,
-so we provide sysfs file to disable 10-Bit Tag Requester. Unbind the
-device driver, set the sysfs file and then rebind the driver.
-
-Add a kernel parameter pcie_tag_peer2peer that disables 10-Bit Tag
-Requester for all PCIe devices. This configuration allows peer-to-peer
-DMA between any pair of devices, possibly at the cost of reduced
-performance.
+It will make sense to store the pcie_devcap2 value in the pci_dev
+structure instead of reading Device Capabilities 2 Register multiple
+times. Get the pcie_devcap2 value set_pcie_port_type(), then use
+cached pcie_devcap2 in the needed place.
 
 Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  5 +++
- drivers/pci/iov.c                               |  3 ++
- drivers/pci/pci-sysfs.c                         |  3 ++
- drivers/pci/pci.c                               |  4 +++
- drivers/pci/pci.h                               |  8 +++++
- drivers/pci/probe.c                             | 46 ++++++++++++++++++++++++-
- 6 files changed, 68 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |  4 +---
+ drivers/pci/pci.c                               |  9 ++++-----
+ drivers/pci/probe.c                             | 10 ++++------
+ include/linux/pci.h                             |  2 ++
+ 4 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index bdb2200..ebcda18 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3948,6 +3948,11 @@
- 				any pair of devices, possibly at the cost of
- 				reduced performance.  This also guarantees
- 				that hot-added devices will work.
-+		pcie_tag_peer2peer	Disable 10-Bit Tag Requester for all
-+				PCIe devices. This configuration allows
-+				peer-to-peer DMA between any pair of devices,
-+				possibly at the cost of reduced performance.
-+
- 		cbiosize=nn[KMG]	The fixed amount of bus space which is
- 				reserved for the CardBus bridge's IO window.
- 				The default value is 256 bytes.
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index bf15b33..757e77d 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -235,6 +235,9 @@ static ssize_t sriov_vf_10bit_tag_ctl_store(struct device *dev,
- 	if (vf_dev->driver)
- 		return -EBUSY;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index dbf9a0e..a8e1e22 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -6304,7 +6304,6 @@ static int cxgb4_iov_configure(struct pci_dev *pdev, int num_vfs)
+ 		struct pci_dev *pbridge;
+ 		struct port_info *pi;
+ 		char name[IFNAMSIZ];
+-		u32 devcap2;
+ 		u16 flags;
  
-+	if (pcie_tag_config == PCIE_TAG_PEER2PEER)
-+		return -EPERM;
-+
- 	if (enable) {
- 		if (!pcie_rp_10bit_tag_cmp_supported(pdev))
- 			return -EPERM;
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 52d0757..5bc1970 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -319,6 +319,9 @@ static ssize_t pci_10bit_tag_store(struct device *dev,
- 	if (pdev->driver)
- 		return -EBUSY;
+ 		/* If we want to instantiate Virtual Functions, then our
+@@ -6314,10 +6313,9 @@ static int cxgb4_iov_configure(struct pci_dev *pdev, int num_vfs)
+ 		 */
+ 		pbridge = pdev->bus->self;
+ 		pcie_capability_read_word(pbridge, PCI_EXP_FLAGS, &flags);
+-		pcie_capability_read_dword(pbridge, PCI_EXP_DEVCAP2, &devcap2);
  
-+	if (pcie_tag_config == PCIE_TAG_PEER2PEER)
-+		return -EPERM;
-+
- 	if (enable) {
- 		if (!pcie_rp_10bit_tag_cmp_supported(pdev))
- 			return -EPERM;
+ 		if ((flags & PCI_EXP_FLAGS_VERS) < 2 ||
+-		    !(devcap2 & PCI_EXP_DEVCAP2_ARI)) {
++		    !(pbridge->pcie_devcap2 & PCI_EXP_DEVCAP2_ARI)) {
+ 			/* Our parent bridge does not support ARI so issue a
+ 			 * warning and skip instantiating the VFs.  They
+ 			 * won't be reachable.
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d14c573..e6c6bce 100644
+index dc3bfb2..d14c573 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -112,6 +112,8 @@ enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_PEER2PEER;
- enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
- #endif
- 
-+enum pcie_tag_config_types pcie_tag_config = PCIE_TAG_DEFAULT;
-+
- /*
-  * The default CLS is used if arch didn't set CLS explicitly and not
-  * all pci devices agree on the same value.  Arch can override either
-@@ -6643,6 +6645,8 @@ static int __init pci_setup(char *str)
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
- 				disable_acs_redir_param = str + 18;
-+			} else if (!strncmp(str, "pcie_tag_peer2peer", 18)) {
-+				pcie_tag_config = PCIE_TAG_PEER2PEER;
- 			} else {
- 				pr_err("PCI: Unknown option `%s'\n", str);
- 			}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index dca5aaf..e9b5875 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -37,6 +37,14 @@ int pci_probe_reset_function(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
- 
-+enum pcie_tag_config_types {
-+	PCIE_TAG_DEFAULT,   /* Enable 10-Bit Tag Requester for devices below
-+			       Root Port that support 10-Bit Tag Completer. */
-+	PCIE_TAG_PEER2PEER  /* Disable 10-Bit Tag Requester for all devices. */
-+};
-+
-+extern enum pcie_tag_config_types pcie_tag_config;
-+
- #define PCI_PM_D2_DELAY         200	/* usec; see PCIe r4.0, sec 5.9.1 */
- #define PCI_PM_D3HOT_WAIT       10	/* msec */
- #define PCI_PM_D3COLD_WAIT      100	/* msec */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index f9bc562..49f16d5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2043,10 +2043,30 @@ bool pcie_rp_10bit_tag_cmp_supported(struct pci_dev *dev)
- 	return true;
- }
- 
-+static void pci_configure_10bit_tags(struct pci_dev *dev)
-+{
-+	/*
-+	 * PCIe 5.0 section 9.3.5.10 10-Bit Tag Requester Enable in Device
-+	 * Control 2 Register is RsvdP for VF.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (!pcie_rp_10bit_tag_cmp_supported(dev))
-+		return;
-+
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-+		return;
-+
-+	pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+}
-+
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+@@ -3700,7 +3700,7 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
  {
- 	struct pci_host_bridge *host;
--	u16 ctl;
-+	u16 ctl, ctl2;
- 	int ret;
+ 	struct pci_bus *bus = dev->bus;
+ 	struct pci_dev *bridge;
+-	u32 cap, ctl2;
++	u32 ctl2;
  
  	if (!pci_is_pcie(dev))
-@@ -2059,6 +2079,10 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 	if (ret)
- 		return 0;
+ 		return -EINVAL;
+@@ -3724,19 +3724,18 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
+ 	while (bus->parent) {
+ 		bridge = bus->self;
  
-+	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &ctl2);
-+	if (ret)
-+		return 0;
-+
- 	host = pci_find_host_bridge(dev->bus);
- 	if (!host)
- 		return 0;
-@@ -2073,6 +2097,12 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
- 						   PCI_EXP_DEVCTL_EXT_TAG);
+-		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+-
+ 		switch (pci_pcie_type(bridge)) {
+ 		/* Ensure switch ports support AtomicOp routing */
+ 		case PCI_EXP_TYPE_UPSTREAM:
+ 		case PCI_EXP_TYPE_DOWNSTREAM:
+-			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
++			if (!(bridge->pcie_devcap2 &
++			      PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+ 				return -EINVAL;
+ 			break;
+ 
+ 		/* Ensure root port supports all the sizes we care about */
+ 		case PCI_EXP_TYPE_ROOT_PORT:
+-			if ((cap & cap_mask) != cap_mask)
++			if ((bridge->pcie_devcap2 & cap_mask) != cap_mask)
+ 				return -EINVAL;
+ 			break;
  		}
-+
-+		if (ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN) {
-+			pci_info(dev, "disabling 10-Bit Tags\n");
-+			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+		}
- 		return 0;
- 	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cc700f6..c83245b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1500,6 +1500,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	pdev->pcie_flags_reg = reg16;
+ 	pci_read_config_dword(pdev, pos + PCI_EXP_DEVCAP, &pdev->pcie_devcap);
+ 	pdev->pcie_mpss = pdev->pcie_devcap & PCI_EXP_DEVCAP_PAYLOAD;
++	pci_read_config_dword(pdev, pos + PCI_EXP_DEVCAP2, &pdev->pcie_devcap2);
  
-@@ -2081,6 +2111,20 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- 	}
-+
-+	if ((pcie_tag_config == PCIE_TAG_PEER2PEER) &&
-+	    (ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN)) {
-+		pci_info(dev, "disabling 10-Bit Tags\n");
-+		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+		return 0;
-+	}
-+
-+	if (pcie_tag_config != PCIE_TAG_DEFAULT)
-+		return 0;
-+
-+	pci_configure_10bit_tags(dev);
-+
- 	return 0;
- }
+ 	parent = pci_upstream_bridge(pdev);
+ 	if (!parent)
+@@ -2116,7 +2117,7 @@ static void pci_configure_ltr(struct pci_dev *dev)
+ #ifdef CONFIG_PCIEASPM
+ 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+ 	struct pci_dev *bridge;
+-	u32 cap, ctl;
++	u32 ctl;
  
+ 	if (!pci_is_pcie(dev))
+ 		return;
+@@ -2124,8 +2125,7 @@ static void pci_configure_ltr(struct pci_dev *dev)
+ 	/* Read L1 PM substate capabilities */
+ 	dev->l1ss = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_L1SS);
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP2_LTR))
++	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_LTR))
+ 		return;
+ 
+ 	pcie_capability_read_dword(dev, PCI_EXP_DEVCTL2, &ctl);
+@@ -2165,13 +2165,11 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+ #ifdef CONFIG_PCI_PASID
+ 	struct pci_dev *bridge;
+ 	int pcie_type;
+-	u32 cap;
+ 
+ 	if (!pci_is_pcie(dev))
+ 		return;
+ 
+-	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP2_EE_PREFIX))
++	if (!(dev->pcie_devcap2 & PCI_EXP_DEVCAP2_EE_PREFIX))
+ 		return;
+ 
+ 	pcie_type = pci_pcie_type(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aee7c85..9aab67f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -341,6 +341,8 @@ struct pci_dev {
+ 	u8		pin;		/* Interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* Cached PCIe Capabilities Register */
+ 	u32		pcie_devcap;	/* Cached Device Capabilities Register */
++	u32		pcie_devcap2;	/* Cached Device Capabilities 2
++					   Register */
+ 	unsigned long	*dma_alias_mask;/* Mask of enabled devfn aliases */
+ 
+ 	struct pci_driver *driver;	/* Driver bound to this device */
 -- 
 2.7.4
 
