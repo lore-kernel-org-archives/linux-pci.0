@@ -2,80 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA41C4320A
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Aug 2021 05:46:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF3B2C4338F
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Aug 2021 05:46:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E670F60FDC
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Aug 2021 05:46:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3C096101A
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Aug 2021 05:46:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230117AbhHSFqq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Aug 2021 01:46:46 -0400
-Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:39414
+        id S230494AbhHSFq4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Aug 2021 01:46:56 -0400
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:39428
         "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229782AbhHSFqp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Aug 2021 01:46:45 -0400
+        by vger.kernel.org with ESMTP id S230274AbhHSFqt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Aug 2021 01:46:49 -0400
 Received: from localhost.localdomain (1-171-223-154.dynamic-ip.hinet.net [1.171.223.154])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 2A1CC40C9D;
-        Thu, 19 Aug 2021 05:45:59 +0000 (UTC)
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id A35A4411C4;
+        Thu, 19 Aug 2021 05:46:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1629351963;
-        bh=0pXSE70avKi/FGQtwaSF/acPtLoT4scgcAlPCGtsPV4=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=bdpGUtCqXdPZmmxFMHMDeEnQhIotVwPu4MT0oIeggRkIuK6NaBf6jzmJV9JbNjwj/
-         vw9LuhTG6ZBNplnAF0vtJQ3S5bjz7oIvkGNpmEQhwLEXK9rzsQ4sA3lCWfM6as9iIn
-         p4eoIyNobB3V9BbHK2jaDFFcQp9YiXfRWui2DPlXk4rAk+A8HeauUFnxH3w3hvqjcg
-         ujMIsr5ObNB2my9CsU0e4T2huF8jgPhHtkq1cYgbfXUOydQllivnFndrqJpyJ+G4EC
-         Y71ULt4fBYP7THVvwzf9CbENTjIReTvWBqx54DZKhazZEpCsu0VWxda/fkUCFbGeFE
-         sGCwwPAvqfi3w==
+        s=20210705; t=1629351972;
+        bh=amXsjTc2Jlr4vNYCJIJwZjbkzL6BAOEgx/TBHMTR6cU=;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+         MIME-Version;
+        b=mu+BQpZyR3+QvkVIR2cDQdg/SvVpzcb8qsEE9hzA7aTxTTsnfkzzm43OG91Ma+YL0
+         +heO9NHlrNFASy3WSyc/lfSHiXFMxB2HjwwbDvCTfyGKSxTfd1WmX0ROFw7VFB1Tvn
+         dXeopEWwfpzfqPEFHOlaOg8nJ1uZ7s8B86FDPUKtYNgwRqn/DvU5K465hsCDjuy0wM
+         8OrEJN9L0L2CLiSzIl0WGMDo/X7gFb+g7PKm9Jepzw+y1JvErSCOhjaNIUP1MdumEQ
+         9rkanQ0Km/a+Px0wSeEfviGC3HTCyBzSijegzyZtxT0g2YFmk48QlBJd9hLKZNzTdL
+         0kfu76tamzPsw==
 From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
 To:     hkallweit1@gmail.com, nic_swsd@realtek.com, bhelgaas@google.com
 Cc:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: [PATCH net-next v3 0/3] r8169: Implement dynamic ASPM mechanism for recent 1.0/2.5Gbps Realtek NICs
-Date:   Thu, 19 Aug 2021 13:45:39 +0800
-Message-Id: <20210819054542.608745-1-kai.heng.feng@canonical.com>
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Subject: [PATCH net-next v3 2/3] PCI/ASPM: Introduce a new helper to report ASPM support status
+Date:   Thu, 19 Aug 2021 13:45:41 +0800
+Message-Id: <20210819054542.608745-3-kai.heng.feng@canonical.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210819054542.608745-1-kai.heng.feng@canonical.com>
+References: <20210819054542.608745-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The latest Realtek vendor driver and its Windows driver implements a
-feature called "dynamic ASPM" which can improve performance on it's
-ethernet NICs.
+Introduce a new helper, pcie_aspm_supported(), to report ASPM support
+status.
 
-Heiner Kallweit pointed out the potential root cause can be that the
-buffer is to small for its ASPM exit latency.
+The user will be introduced by next patch.
 
-So bring the dynamic ASPM to r8169 so we can have both nice performance
-and powersaving at the same time.
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v3:
+ - This is a new patch
 
-v2:
-https://lore.kernel.org/netdev/20210812155341.817031-1-kai.heng.feng@canonical.com/
+ drivers/pci/pcie/aspm.c | 11 +++++++++++
+ include/linux/pci.h     |  2 ++
+ 2 files changed, 13 insertions(+)
 
-v1:
-https://lore.kernel.org/netdev/20210803152823.515849-1-kai.heng.feng@canonical.com/
-
-Kai-Heng Feng (3):
-  r8169: Implement dynamic ASPM mechanism
-  PCI/ASPM: Introduce a new helper to report ASPM support status
-  r8169: Enable ASPM for selected NICs
-
- drivers/net/ethernet/realtek/r8169_main.c | 69 ++++++++++++++++++++---
- drivers/pci/pcie/aspm.c                   | 11 ++++
- include/linux/pci.h                       |  2 +
- 3 files changed, 74 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 013a47f587cea..eeea6a04ab0cf 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1201,6 +1201,17 @@ bool pcie_aspm_enabled(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL_GPL(pcie_aspm_enabled);
+ 
++bool pcie_aspm_supported(struct pci_dev *pdev)
++{
++	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
++
++	if (!link)
++		return false;
++
++	return link->aspm_support;
++}
++EXPORT_SYMBOL_GPL(pcie_aspm_supported);
++
+ static ssize_t aspm_attr_show_common(struct device *dev,
+ 				     struct device_attribute *attr,
+ 				     char *buf, u8 state)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 540b377ca8f61..b7b71982f2405 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1602,6 +1602,7 @@ int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+ void pcie_no_aspm(void);
+ bool pcie_aspm_support_enabled(void);
+ bool pcie_aspm_enabled(struct pci_dev *pdev);
++bool pcie_aspm_supported(struct pci_dev *pdev);
+ #else
+ static inline int pci_disable_link_state(struct pci_dev *pdev, int state)
+ { return 0; }
+@@ -1610,6 +1611,7 @@ static inline int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ static inline void pcie_no_aspm(void) { }
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
++static inline bool pcie_aspm_supported(struct pci_dev *pdev) { return false; }
+ #endif
+ 
+ #ifdef CONFIG_PCIEAER
 -- 
 2.32.0
 
