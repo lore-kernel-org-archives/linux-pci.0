@@ -2,170 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B8AC43214
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Aug 2021 16:41:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF36C4338F
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Aug 2021 16:42:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 800A0613B1
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Aug 2021 16:41:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72BD661371
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Aug 2021 16:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230298AbhHWQls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Aug 2021 12:41:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37358 "EHLO mail.kernel.org"
+        id S229471AbhHWQnZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Aug 2021 12:43:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230281AbhHWQlr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Aug 2021 12:41:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 502D1613E6;
-        Mon, 23 Aug 2021 16:41:04 +0000 (UTC)
+        id S229454AbhHWQnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Aug 2021 12:43:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EBC996124B;
+        Mon, 23 Aug 2021 16:42:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629736864;
-        bh=dWR4jlQ/UFvfKF+DH7OfQ3Tzq7QBMMw9jwa5eR2m/yw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DVuEaKjjwiaY8IQIO9HhckEcFM/XaPdtH15ouR2HfdjA0tTVakL0pf5etfwK0boWE
-         uoALyMIce31Qsn3yNWdqdUmeMMTIy/Hw0ie2LMFypZ+7UyvfOARosdu1zl7oWLiMlq
-         m7TYoqIf1Qu/1AmcVQXpsv0UJVPZKwGlR9dZzW+EadrSJw0WRjJM31Biu9936mzGqU
-         q9kOzftLnKw3XPvIJebpYGR7j08/IvfFOFWjz2iKFFJ82f04VZ7HuLwbAPZ8JjsNDg
-         Wo0ZtHG5A5msHTPPLT9pQU1A6yKIZ4CNllHLxODxcsotwT8VwRoqRI4lSbngW2ZBx1
-         nY18djZKoF4yA==
+        s=k20201202; t=1629736962;
+        bh=Noz1/fUIuPdZh4oSdO5S2IJ/Q2VuZ8ZcDqLTvICeD3w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=k1tzJOhD9ePClgY04kcZfgRYmcalXb+k0IQzI/2RdkLde/OpEJRIgXlOvsIPnw0c9
+         mP1kivM/xGcybZkA/Cv/965c52TmW/EYEaXms7FiagnEqNxBhSysfdteDSgH0PD216
+         BeqiGuf/fgLkE8S0B7JNlggg9aI2er0NSPxVUtQW+Hz6XilNXLOeQYYd89yzS6Q7TE
+         SDy0Y6l1sWSz7MO7oXX4QkRa3NHhRMTVI5iM7oL4oj4kDvrf58JQm3H/zO5ojXqd1Z
+         HyICYYcfaxfewGEAk4GiPNtpm7EkkhP5AyRAUwO9vpqBSsRgAdLL7Z4dLbVxTLloxH
+         trgXpWvN6ApQA==
 Received: by pali.im (Postfix)
-        id 6831F251F; Mon, 23 Aug 2021 18:41:02 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id D8F37FC2; Mon, 23 Aug 2021 18:42:39 +0200 (CEST)
+Date:   Mon, 23 Aug 2021 18:42:39 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        "Marc Zyngier" <maz@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] PCI: aardvark: Fix masking MSI interrupts
-Date:   Mon, 23 Aug 2021 18:40:32 +0200
-Message-Id: <20210823164033.27491-3-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210823164033.27491-1-pali@kernel.org>
-References: <20210815103624.19528-1-pali@kernel.org>
- <20210823164033.27491-1-pali@kernel.org>
+        Rob Herring <robh@kernel.org>,
+        Marek =?utf-8?B?QmVow7pu?= <kabel@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 6/7] PCI: aardvark: Correctly clear and unmask all MSI
+ interrupts
+Message-ID: <20210823164239.beooev5ytrbcsxxr@pali>
+References: <20210625090319.10220-1-pali@kernel.org>
+ <20210625090319.10220-7-pali@kernel.org>
+ <fb3a7ef15397292692b6d5dd0d2e439e@kernel.org>
+ <20210806083522.arnxu7cikgzn73b4@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210806083522.arnxu7cikgzn73b4@pali>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Masking of individual MSI interrupts is done via PCIE_MSI_MASK_REG
-register. At the driver probe time mask all MSI interrupts and then let
-kernel IRQ chip code to unmask particular MSI interrupt when needed.
+On Friday 06 August 2021 10:35:22 Pali Rohár wrote:
+> On Friday 06 August 2021 09:32:24 Marc Zyngier wrote:
+> > On 2021-06-25 10:03, Pali Rohár wrote:
+> > > Define a new macro PCIE_MSI_ALL_MASK and use it for masking, unmasking
+> > > and
+> > > clearing all MSI interrupts.
+> > > 
+> > > Signed-off-by: Pali Rohár <pali@kernel.org>
+> > > Reviewed-by: Marek Behún <kabel@kernel.org>
+> > > Cc: stable@vger.kernel.org
+> > > ---
+> > >  drivers/pci/controller/pci-aardvark.c | 16 ++++++++++------
+> > >  1 file changed, 10 insertions(+), 6 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/pci-aardvark.c
+> > > b/drivers/pci/controller/pci-aardvark.c
+> > > index 0e81d89f307d..7cad6d989f6c 100644
+> > > --- a/drivers/pci/controller/pci-aardvark.c
+> > > +++ b/drivers/pci/controller/pci-aardvark.c
+> > > @@ -117,6 +117,7 @@
+> > >  #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
+> > >  #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
+> > >  #define PCIE_MSI_MASK_REG			(CONTROL_BASE_ADDR + 0x5C)
+> > > +#define     PCIE_MSI_ALL_MASK			GENMASK(31, 0)
+> > >  #define PCIE_MSI_PAYLOAD_REG			(CONTROL_BASE_ADDR + 0x9C)
+> > >  #define     PCIE_MSI_DATA_MASK			GENMASK(15, 0)
+> > > 
+> > > @@ -470,19 +471,22 @@ static void advk_pcie_setup_hw(struct advk_pcie
+> > > *pcie)
+> > >  	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
+> > > 
+> > >  	/* Clear all interrupts */
+> > > +	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_STATUS_REG);
+> > >  	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_REG);
+> > >  	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
+> > >  	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
+> > > 
+> > >  	/* Disable All ISR0/1 Sources */
+> > > -	reg = PCIE_ISR0_ALL_MASK;
+> > > -	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
+> > > -	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
+> > > -
+> > > +	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_MASK_REG);
+> > >  	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
+> > > 
+> > >  	/* Unmask all MSIs */
+> > > -	advk_writel(pcie, 0, PCIE_MSI_MASK_REG);
+> > > +	advk_writel(pcie, ~(u32)PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
+> > > +
+> > > +	/* Unmask summary MSI interrupt */
+> > > +	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+> > > +	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
+> > > +	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
+> > > 
+> > >  	/* Enable summary interrupt for GIC SPI source */
+> > >  	reg = PCIE_IRQ_ALL_MASK & (~PCIE_IRQ_ENABLE_INTS_MASK);
+> > > @@ -1177,7 +1181,7 @@ static void advk_pcie_handle_msi(struct advk_pcie
+> > > *pcie)
+> > > 
+> > >  	msi_mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
+> > >  	msi_val = advk_readl(pcie, PCIE_MSI_STATUS_REG);
+> > > -	msi_status = msi_val & ~msi_mask;
+> > > +	msi_status = msi_val & ((~msi_mask) & PCIE_MSI_ALL_MASK);
+> > > 
+> > >  	for (msi_idx = 0; msi_idx < MSI_IRQ_NUM; msi_idx++) {
+> > >  		if (!(BIT(msi_idx) & msi_status))
+> > 
+> > This still begs the question: why would you ever enable all
+> > MSIs the first place? They should be enabled on request only.
+> 
+> This is going to be fixed in followup patches. Just Lorenzo asked to
+> send smaller patch series, so I have to split that followup fix into
+> the next round.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Cc: stable@vger.kernel.org # f21a8b1b6837 ("PCI: aardvark: Move to MSI handling using generic MSI support")
+Just for reference, patch series which is handling it:
+https://lore.kernel.org/linux-pci/20210815103624.19528-1-pali@kernel.org/t/#u
 
----
-Changes in v2:
-* Guard register updates by raw spin lock
----
- drivers/pci/controller/pci-aardvark.c | 52 ++++++++++++++++++++++++---
- 1 file changed, 48 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 81c4a9ff91a3..0e81d7f37465 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -241,6 +241,7 @@ struct advk_pcie {
- 	struct irq_domain *msi_inner_domain;
- 	struct irq_chip msi_bottom_irq_chip;
- 	struct irq_chip msi_irq_chip;
-+	raw_spinlock_t msi_irq_lock;
- 	struct msi_domain_info msi_domain_info;
- 	DECLARE_BITMAP(msi_used, MSI_IRQ_NUM);
- 	struct mutex msi_used_lock;
-@@ -481,12 +482,10 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
- 	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
- 
--	/* Disable All ISR0/1 Sources */
-+	/* Disable All ISR0/1 and MSI Sources */
- 	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_MASK_REG);
- 	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
--
--	/* Unmask all MSIs */
--	advk_writel(pcie, ~(u32)PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
-+	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
- 
- 	/* Unmask summary MSI interrupt */
- 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-@@ -1051,6 +1050,46 @@ static int advk_msi_set_affinity(struct irq_data *irq_data,
- 	return -EINVAL;
- }
- 
-+static void advk_msi_irq_mask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	unsigned long flags;
-+	u32 mask;
-+
-+	raw_spin_lock_irqsave(&pcie->msi_irq_lock, flags);
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask |= BIT(hwirq);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+	raw_spin_unlock_irqrestore(&pcie->msi_irq_lock, flags);
-+}
-+
-+static void advk_msi_irq_unmask(struct irq_data *d)
-+{
-+	struct advk_pcie *pcie = d->domain->host_data;
-+	irq_hw_number_t hwirq = irqd_to_hwirq(d);
-+	unsigned long flags;
-+	u32 mask;
-+
-+	raw_spin_lock_irqsave(&pcie->msi_irq_lock, flags);
-+	mask = advk_readl(pcie, PCIE_MSI_MASK_REG);
-+	mask &= ~BIT(hwirq);
-+	advk_writel(pcie, mask, PCIE_MSI_MASK_REG);
-+	raw_spin_unlock_irqrestore(&pcie->msi_irq_lock, flags);
-+}
-+
-+static void advk_msi_top_irq_mask(struct irq_data *d)
-+{
-+	pci_msi_mask_irq(d);
-+	irq_chip_mask_parent(d);
-+}
-+
-+static void advk_msi_top_irq_unmask(struct irq_data *d)
-+{
-+	pci_msi_unmask_irq(d);
-+	irq_chip_unmask_parent(d);
-+}
-+
- static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
- 				     unsigned int virq,
- 				     unsigned int nr_irqs, void *args)
-@@ -1143,6 +1182,7 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
- 	struct irq_chip *bottom_ic, *msi_ic;
- 	struct msi_domain_info *msi_di;
- 
-+	raw_spin_lock_init(&pcie->msi_irq_lock);
- 	mutex_init(&pcie->msi_used_lock);
- 
- 	bottom_ic = &pcie->msi_bottom_irq_chip;
-@@ -1150,9 +1190,13 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
- 	bottom_ic->name = "MSI";
- 	bottom_ic->irq_compose_msi_msg = advk_msi_irq_compose_msi_msg;
- 	bottom_ic->irq_set_affinity = advk_msi_set_affinity;
-+	bottom_ic->irq_mask = advk_msi_irq_mask;
-+	bottom_ic->irq_unmask = advk_msi_irq_unmask;
- 
- 	msi_ic = &pcie->msi_irq_chip;
- 	msi_ic->name = "advk-MSI";
-+	msi_ic->irq_mask = advk_msi_top_irq_mask;
-+	msi_ic->irq_unmask = advk_msi_top_irq_unmask;
- 
- 	msi_di = &pcie->msi_domain_info;
- 	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--- 
-2.20.1
-
+> >         M.
+> > -- 
+> > Jazz is not dead. It just smells funny...
