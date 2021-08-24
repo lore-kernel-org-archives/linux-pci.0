@@ -2,27 +2,30 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F5CC43216
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 12:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20DA3C19F31
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 12:21:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E799861265
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 12:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A9226127B
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 12:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237229AbhHXMVs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S237225AbhHXMVs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 24 Aug 2021 08:21:48 -0400
-Received: from 8bytes.org ([81.169.241.247]:40902 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236676AbhHXMVr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Aug 2021 08:21:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237200AbhHXMVr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Aug 2021 08:21:47 -0400
+Received: from theia.8bytes.org (8bytes.org [IPv6:2a01:238:4383:600:38bc:a715:4b6d:a889])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8974DC061764;
+        Tue, 24 Aug 2021 05:21:03 -0700 (PDT)
 Received: from cap.home.8bytes.org (p4ff2b1ea.dip0.t-ipconnect.de [79.242.177.234])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by theia.8bytes.org (Postfix) with ESMTPSA id 73781898;
+        by theia.8bytes.org (Postfix) with ESMTPSA id 0FDF6373;
         Tue, 24 Aug 2021 14:21:00 +0200 (CEST)
 From:   Joerg Roedel <joro@8bytes.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -30,9 +33,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Len Brown <lenb@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
         linux-kernel@vger.kernel.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH v3 3/4] PCI/ACPI: Move _OSC query checks to separate function
-Date:   Tue, 24 Aug 2021 14:20:53 +0200
-Message-Id: <20210824122054.29481-4-joro@8bytes.org>
+Subject: [PATCH v3 2/4] PCI/ACPI: Move supported and control calculations to separaten functions
+Date:   Tue, 24 Aug 2021 14:20:52 +0200
+Message-Id: <20210824122054.29481-3-joro@8bytes.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210824122054.29481-1-joro@8bytes.org>
 References: <20210824122054.29481-1-joro@8bytes.org>
@@ -44,61 +47,133 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Joerg Roedel <jroedel@suse.de>
 
-Move the checks about whether the _OSC controls are requested from the
-firmware to a separate function.
+Move the calculations of supported and controled _OSC features out of
+negotiate_os_control into separate functions.
 
 Signed-off-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/acpi/pci_root.c | 28 +++++++++++++++++++---------
- 1 file changed, 19 insertions(+), 9 deletions(-)
+ drivers/acpi/pci_root.c | 93 ++++++++++++++++++++++++-----------------
+ 1 file changed, 55 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ed4e6b55e9bc..f12e512bcddc 100644
+index 0c3030a58219..ed4e6b55e9bc 100644
 --- a/drivers/acpi/pci_root.c
 +++ b/drivers/acpi/pci_root.c
-@@ -449,6 +449,24 @@ static u32 calculate_control(void)
- 	return control;
+@@ -396,6 +396,59 @@ static acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 r
+ 	return AE_OK;
  }
  
-+static bool os_control_query_checks(struct acpi_pci_root *root, u32 support)
++static u32 calculate_support(void)
 +{
-+	struct acpi_device *device = root->device;
++	u32 support;
 +
-+	if (pcie_ports_disabled) {
-+		dev_info(&device->dev, "PCIe port services disabled; not requesting _OSC control\n");
-+		return false;
-+	}
++	/*
++	 * All supported architectures that use ACPI have support for
++	 * PCI domains, so we indicate this in _OSC support capabilities.
++	 */
++	support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
++	support |= OSC_PCI_HPX_TYPE_3_SUPPORT;
++	if (pci_ext_cfg_avail())
++		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
++	if (pcie_aspm_support_enabled())
++		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
++	if (pci_msi_enabled())
++		support |= OSC_PCI_MSI_SUPPORT;
++	if (IS_ENABLED(CONFIG_PCIE_EDR))
++		support |= OSC_PCI_EDR_SUPPORT;
 +
-+	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
-+		decode_osc_support(root, "not requesting OS control; OS requires",
-+				   ACPI_PCIE_REQ_SUPPORT);
-+		return false;
-+	}
++	return support;
++}
 +
-+	return true;
++static u32 calculate_control(void)
++{
++	u32 control;
++
++	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
++		| OSC_PCI_EXPRESS_PME_CONTROL;
++
++	if (IS_ENABLED(CONFIG_PCIEASPM))
++		control |= OSC_PCI_EXPRESS_LTR_CONTROL;
++
++	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
++		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
++
++	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
++		control |= OSC_PCI_SHPC_NATIVE_HP_CONTROL;
++
++	if (pci_aer_available())
++		control |= OSC_PCI_EXPRESS_AER_CONTROL;
++
++	/*
++	 * Per the Downstream Port Containment Related Enhancements ECN to
++	 * the PCI Firmware Spec, r3.2, sec 4.5.1, table 4-5,
++	 * OSC_PCI_EXPRESS_DPC_CONTROL indicates the OS supports both DPC
++	 * and EDR.
++	 */
++	if (IS_ENABLED(CONFIG_PCIE_DPC) && IS_ENABLED(CONFIG_PCIE_EDR))
++		control |= OSC_PCI_EXPRESS_DPC_CONTROL;
++
++	return control;
 +}
 +
  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
  				 bool is_pcie)
  {
-@@ -485,16 +503,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+@@ -416,20 +469,7 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
  		return;
  	}
  
--	if (pcie_ports_disabled) {
--		dev_info(&device->dev, "PCIe port services disabled; not requesting _OSC control\n");
-+	if (!os_control_query_checks(root, support))
+-	/*
+-	 * All supported architectures that use ACPI have support for
+-	 * PCI domains, so we indicate this in _OSC support capabilities.
+-	 */
+-	support = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+-	support |= OSC_PCI_HPX_TYPE_3_SUPPORT;
+-	if (pci_ext_cfg_avail())
+-		support |= OSC_PCI_EXT_CONFIG_SUPPORT;
+-	if (pcie_aspm_support_enabled())
+-		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+-	if (pci_msi_enabled())
+-		support |= OSC_PCI_MSI_SUPPORT;
+-	if (IS_ENABLED(CONFIG_PCIE_EDR))
+-		support |= OSC_PCI_EDR_SUPPORT;
++	support = calculate_support();
+ 
+ 	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+@@ -456,31 +496,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
  		return;
--	}
+ 	}
+ 
+-	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+-		| OSC_PCI_EXPRESS_PME_CONTROL;
 -
--	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
--		decode_osc_support(root, "not requesting OS control; OS requires",
--				   ACPI_PCIE_REQ_SUPPORT);
--		return;
--	}
+-	if (IS_ENABLED(CONFIG_PCIEASPM))
+-		control |= OSC_PCI_EXPRESS_LTR_CONTROL;
+-
+-	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
+-		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
+-
+-	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+-		control |= OSC_PCI_SHPC_NATIVE_HP_CONTROL;
+-
+-	if (pci_aer_available())
+-		control |= OSC_PCI_EXPRESS_AER_CONTROL;
+-
+-	/*
+-	 * Per the Downstream Port Containment Related Enhancements ECN to
+-	 * the PCI Firmware Spec, r3.2, sec 4.5.1, table 4-5,
+-	 * OSC_PCI_EXPRESS_DPC_CONTROL indicates the OS supports both DPC
+-	 * and EDR.
+-	 */
+-	if (IS_ENABLED(CONFIG_PCIE_DPC) && IS_ENABLED(CONFIG_PCIE_EDR))
+-		control |= OSC_PCI_EXPRESS_DPC_CONTROL;
++	requested = control = calculate_control();
  
- 	requested = control = calculate_control();
- 
+-	requested = control;
+ 	status = acpi_pci_osc_control_set(handle, &control,
+ 					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+ 	if (ACPI_SUCCESS(status)) {
 -- 
 2.32.0
 
