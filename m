@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C86C43216
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 20:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A14CAC4320E
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 20:39:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B1CF61181
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 20:39:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8406E613D3
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Aug 2021 20:39:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235508AbhHXUkC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Aug 2021 16:40:02 -0400
+        id S235300AbhHXUkB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Aug 2021 16:40:01 -0400
 Received: from mga18.intel.com ([134.134.136.126]:49509 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235378AbhHXUkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Aug 2021 16:40:02 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10086"; a="204530933"
+        id S234783AbhHXUkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Aug 2021 16:40:01 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10086"; a="204530931"
 X-IronPort-AV: E=Sophos;i="5.84,348,1620716400"; 
-   d="scan'208";a="204530933"
+   d="scan'208";a="204530931"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
   by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2021 13:39:16 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.84,348,1620716400"; 
-   d="scan'208";a="526819958"
+   d="scan'208";a="526819950"
 Received: from anguy11-desk2.jf.intel.com ([10.166.244.147])
-  by FMSMGA003.fm.intel.com with ESMTP; 24 Aug 2021 13:39:16 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 24 Aug 2021 13:39:15 -0700
 From:   Tony Nguyen <anthony.l.nguyen@intel.com>
 To:     davem@davemloft.net, kuba@kernel.org
 Cc:     Vinicius Costa Gomes <vinicius.gomes@intel.com>,
         netdev@vger.kernel.org, anthony.l.nguyen@intel.com,
         bhelgaas@google.com, linux-pci@vger.kernel.org,
         sasha.neftin@intel.com, vitaly.lifshits@intel.com,
-        richardcochran@gmail.com,
-        Dvora Fuxbrumer <dvorax.fuxbrumer@linux.intel.com>
-Subject: [PATCH net-next 3/4] igc: Enable PCIe PTM
-Date:   Tue, 24 Aug 2021 13:42:47 -0700
-Message-Id: <20210824204248.2957134-4-anthony.l.nguyen@intel.com>
+        richardcochran@gmail.com
+Subject: [PATCH net-next 1/4] Revert "PCI: Make pci_enable_ptm() private"
+Date:   Tue, 24 Aug 2021 13:42:45 -0700
+Message-Id: <20210824204248.2957134-2-anthony.l.nguyen@intel.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210824204248.2957134-1-anthony.l.nguyen@intel.com>
 References: <20210824204248.2957134-1-anthony.l.nguyen@intel.com>
@@ -51,48 +50,55 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Vinicius Costa Gomes <vinicius.gomes@intel.com>
 
-Enables PCIe PTM (Precision Time Measurement) support in the igc
-driver. Notifies the PCI devices that PCIe PTM should be enabled.
+Make pci_enable_ptm() accessible from the drivers.
 
-PCIe PTM is similar protocol to PTP (Precision Time Protocol) running
-in the PCIe fabric, it allows devices to report time measurements from
-their internal clocks and the correlation with the PCIe root clock.
+Exposing this to the driver enables the driver to use the
+'ptm_enabled' field of 'pci_dev' to check if PTM is enabled or not.
 
-The i225 NIC exposes some registers that expose those time
-measurements, those registers will be used, in later patches, to
-implement the PTP_SYS_OFFSET_PRECISE ioctl().
+This reverts commit ac6c26da29c1 ("PCI: Make pci_enable_ptm() private").
 
 Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
-Tested-by: Dvora Fuxbrumer <dvorax.fuxbrumer@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
 ---
- drivers/net/ethernet/intel/igc/igc_main.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/pci.h   | 3 ---
+ include/linux/pci.h | 7 +++++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-index b7aab35c1132..db1c63e8802a 100644
---- a/drivers/net/ethernet/intel/igc/igc_main.c
-+++ b/drivers/net/ethernet/intel/igc/igc_main.c
-@@ -12,6 +12,8 @@
- #include <net/pkt_sched.h>
- #include <linux/bpf_trace.h>
- #include <net/xdp_sock_drv.h>
-+#include <linux/pci.h>
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 93dcdd431072..2f52110cac97 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -597,11 +597,8 @@ static inline void pcie_ecrc_get_policy(char *str) { }
+ 
+ #ifdef CONFIG_PCIE_PTM
+ void pci_ptm_init(struct pci_dev *dev);
+-int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
+ #else
+ static inline void pci_ptm_init(struct pci_dev *dev) { }
+-static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+-{ return -EINVAL; }
+ #endif
+ 
+ struct pci_dev_reset_methods {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 540b377ca8f6..21a9d244e4e4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1620,6 +1620,13 @@ static inline bool pci_aer_available(void) { return false; }
+ 
+ bool pci_ats_disabled(void);
+ 
++#ifdef CONFIG_PCIE_PTM
++int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
++#else
++static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
++{ return -EINVAL; }
++#endif
 +
- #include <net/ipv6.h>
- 
- #include "igc.h"
-@@ -6174,6 +6176,10 @@ static int igc_probe(struct pci_dev *pdev,
- 
- 	pci_enable_pcie_error_reporting(pdev);
- 
-+	err = pci_enable_ptm(pdev, NULL);
-+	if (err < 0)
-+		dev_info(&pdev->dev, "PCIe PTM not supported by PCIe bus/controller\n");
-+
- 	pci_set_master(pdev);
- 
- 	err = -ENOMEM;
+ void pci_cfg_access_lock(struct pci_dev *dev);
+ bool pci_cfg_access_trylock(struct pci_dev *dev);
+ void pci_cfg_access_unlock(struct pci_dev *dev);
 -- 
 2.26.2
 
