@@ -2,354 +2,325 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8D0C4338F
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C4BC4320A
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 11:03:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2C41610E5
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:52:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 716F561212
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 11:03:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239857AbhHYKw4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Aug 2021 06:52:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47006 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232199AbhHYKwz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Aug 2021 06:52:55 -0400
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3575AC061757;
-        Wed, 25 Aug 2021 03:52:10 -0700 (PDT)
-Received: by mail-ej1-x62d.google.com with SMTP id u3so50666271ejz.1;
-        Wed, 25 Aug 2021 03:52:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kQyBKQGa/APr0EuMME7QLvFE7qildNz9bDcqbhQnrAM=;
-        b=Vcp8cDlrNvdd7HoQRTutQQyaKknqMknjAJ5gmAfAGitQigk1WDfw6ACWC8AtHWqInh
-         RNLMnF1F5FmZAvsxYE9/wsfu1jgJaUa41k83BXH8cV3DG85xofTYDCxfolvK09L4UIFe
-         HdoeQqybcX8RD/zlPnOtvgaEw196xunYPtbQhT4XYbbpzccXUpCCaoycLO7yMqgTbKSN
-         Ozt3/d8B0UmnRy2lRIPckbdOSgHLiP6CrlFzcWQIPFCiiIrGn6uIHV+6Rds7qyKzCUaa
-         dkou/+/4BgB387bqffaiJDZvNRyqS+UeK9XfD9WfhXZk6yOOi8ukaJ6tlNmlD3X//byl
-         22+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=kQyBKQGa/APr0EuMME7QLvFE7qildNz9bDcqbhQnrAM=;
-        b=fsIqMu0juj69OHFPcnOKihjmmOIFIGd1470NkU32LVfRTvPnCGTWDbNXpiB9T/6J7b
-         CVG9f16u9vgi046cwbVwIGyREi5swLTAVizc3Gp8LjsiDNlMMh732bvwMEvFsM6R4xIb
-         gsijyuNBNNPW0fOKXShc4vFeqRCTuW696Hc9bbZWdQvr2Rziv7iX36YYvCLfKRRMHqER
-         oBIrlXwRXhtQxArzBiCNPgAceF7yRhglzKwnULXkMaYMv/5avFXFt5on/I65Un6izdf1
-         75/KzedyFCWtshmUVsWrhMnm+CFxYhrpsNpw6YkIFeAo+11o6awas79n7lKoFn1YkjnH
-         wxzg==
-X-Gm-Message-State: AOAM532gkrfbNfxjOe8IuEd7rHklDBQMiyGma+rdMJvtEhCFIswutNUt
-        yN+X155nNRt+3B4CXZSDYAHzqxA5QTMLo/RnHYU=
-X-Google-Smtp-Source: ABdhPJxdoyZ3Rg70ZcbJdp6/1zbF37IOXjbVAe7INY32+WiVgCEM1UM3BUb6xFhvE1CRxfNnzWa77EVpltO+3Qn9KhY=
-X-Received: by 2002:a17:906:994f:: with SMTP id zm15mr5835958ejb.480.1629888728752;
- Wed, 25 Aug 2021 03:52:08 -0700 (PDT)
+        id S239211AbhHYLDz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Aug 2021 07:03:55 -0400
+Received: from mga18.intel.com ([134.134.136.126]:10003 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237584AbhHYLDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Aug 2021 07:03:55 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10086"; a="204633624"
+X-IronPort-AV: E=Sophos;i="5.84,350,1620716400"; 
+   d="scan'208";a="204633624"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2021 04:02:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,350,1620716400"; 
+   d="scan'208";a="527216226"
+Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
+  by FMSMGA003.fm.intel.com with ESMTP; 25 Aug 2021 04:02:50 -0700
+Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2242.10; Wed, 25 Aug 2021 04:02:49 -0700
+Received: from orsmsx602.amr.corp.intel.com (10.22.229.15) by
+ ORSMSX612.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2242.10; Wed, 25 Aug 2021 04:02:49 -0700
+Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
+ orsmsx602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2242.10 via Frontend Transport; Wed, 25 Aug 2021 04:02:49 -0700
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (104.47.57.48) by
+ edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2242.10; Wed, 25 Aug 2021 04:02:49 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HWLZtAUVTa0elNNEhRt3kByjS8tNf8CUwJid/TWS7fLjlQMVm7/Sl5RWKtigZFfVpdQQ1ULHJnX7ORuu2gNZMGcwSR565TTFEYiObiwMZG86Sbw9p5VUN0J9DlumyNKAMyMPDlRmqo5XfWY+VQS4LdtK4xq2fauJ8m1CJNa7QP9Sn7e5kjtcnDI1C0IOWe9Qwpp18Y9O3SNERcApHkaMPNo6EN134tEWweYHWMg8E7ZV2SONIAYbU8SCt0C0MKBKBe6+xP5zvZhqL77FnYHckg3mA+8QIFcu6MMSn36+wRGNI9MFpykZ6iIQRpurt5RQvyKzSYBX/6oN7rTe1iREOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jC2nYMvinnLfurHhxwof0ZTsijUkJzm2ThpGjWsuMas=;
+ b=FV4M+faU9/nP1A8Tmd0fXpqN3z08ZEhnUJqc2u1a545Ahz8fz5ZwKF78ye90OJx2onIXSL5iY2OfEZu/bpJG0S9x766b3kruRRtTAuWy0AA0C3i48VPA3KHgvpU+SrQheMI6+xPbYkQ+4oeR0MDAyFmE9+dDwezV6PLUK6VbdEKtkZZbA4uQGQY9ojnl9+Ft9ORbdCIwPuABbHPLoJtUShpEUfGr96vv8f3eL18+DlaVRnEXgePmBwPOjvbrEdSxGBI0v3GPk4UPyjK8sdppGH7wWekHL/39CfR5Dlo2lnX1yGCIWk71DvnM78YskbAAxroqJWDuiMVm3uBwJ9Qdqw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jC2nYMvinnLfurHhxwof0ZTsijUkJzm2ThpGjWsuMas=;
+ b=DxzgPg+aPXNlcPgvt6YLBQgaSUcVZE1guRp7gD8rsUJrjFQ+Rm5TC92dzuI5mfLTeVeAEZCBH8ebMxj+eDyT1sHGwBdBNOoNp7SuGeTIF3EplLPW/x6h7o9sAMrFf6KitbG0Z7sZLWkNSMIOE7MebWoFRXyjAeY3HsmSAbxFdB0=
+Received: from DM6PR11MB3244.namprd11.prod.outlook.com (2603:10b6:5:8::22) by
+ DM6PR11MB3500.namprd11.prod.outlook.com (2603:10b6:5:6a::19) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4436.22; Wed, 25 Aug 2021 11:02:47 +0000
+Received: from DM6PR11MB3244.namprd11.prod.outlook.com
+ ([fe80::1d2f:8f64:7482:8f16]) by DM6PR11MB3244.namprd11.prod.outlook.com
+ ([fe80::1d2f:8f64:7482:8f16%7]) with mapi id 15.20.4436.024; Wed, 25 Aug 2021
+ 11:02:47 +0000
+From:   "Wang, Wendy" <wendy.wang@intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "Derrick, Jonathan" <jonathan.derrick@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC:     Linux ACPI <linux-acpi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        David Box <david.e.box@linux.intel.com>,
+        "Wang, Wendy" <wendy.wang@intel.com>
+Subject: RE: [PATCH v2] PCI: VMD: ACPI: Make ACPI companion lookup work for
+ VMD bus
+Thread-Topic: [PATCH v2] PCI: VMD: ACPI: Make ACPI companion lookup work for
+ VMD bus
+Thread-Index: AQHXmPaJq7KR97L4LEiDdgStP3NMwauEDgFg
+Date:   Wed, 25 Aug 2021 11:02:47 +0000
+Message-ID: <DM6PR11MB32449145A9E3779A480F01D69FC69@DM6PR11MB3244.namprd11.prod.outlook.com>
+References: <4352365.LvFx2qVVIh@kreacher>
+In-Reply-To: <4352365.LvFx2qVVIh@kreacher>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.5.1.3
+authentication-results: rjwysocki.net; dkim=none (message not signed)
+ header.d=none;rjwysocki.net; dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 8c5ca4ac-4f8c-4a38-ba3d-08d967b7df91
+x-ms-traffictypediagnostic: DM6PR11MB3500:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM6PR11MB35001E227E2E422D5E499F619FC69@DM6PR11MB3500.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: S4bLukAhc/E+YAxkqbS8M01rO04QpFiXwHbKiW2NNSFJSmQA8bi12vI3GpLf7zRYeG0WsfYqmrzOfccsfh2dGmmpsjQy6SGXdr2O1lNR9gk7M5D2XRcWcl5QrgxsZhicnV9O6NqQRCLF86yZIoELFDVi3REfW0xmKVcqCtYN27tX207GAko7+It2pDye5Tg/JyWvz9MY9/I7MMsJeW7W47siyLNVetL4NWGBRyIbjOKF96qgmJBsXpw428h9V9ERoaQTnIJBgodLVtT1RVHJWI93EPs+YHINlW6QEVuLWHd6J4EhL1at49Wpa7IqdqPp5GrGc2sUETy/WIdeFJCg+ElK8uLfRWRD2XIuP0RwImj4WmF5FfNP+BhyL7lfhyskvTHL2VjZU3jZt7GsmXWD3Fq5tM16mfkh1Mln+zZWts2JVBAC33D8/cVxIOsjG+qOuRIGodNfSsZVxrj1ccgmHjJ/hQQ6tKlPGzKhMnA60oJ7tUewsTN2dWynzUO4KdopfUbH2nh4nwQnMv9fR7HTnVVq+wg43QPTGdZyfBqZ3lltUJmRZRlCdLxlttHGJglgnCOL9e7z77MHci9Ok7xGUSjWltOGCpN1uE5ZxxquSlICk/agJJvHgy9wuVCc8UYMqRQddH69oHz0gX5nG+Z6gqK1gvVC6tWqf4G04kQjCrJG7ysKA/Ig0enBvsK9JtdWfJmTFL3NGT5QXlh7OY2BvkYXHBHVZcJzakPgu/R5c+89+eXpBp1mbTHFTNNXMpsROPOzXpHaiBzNRCcFvhiRwEH5I0pQQgbXXt98VRl1pts=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB3244.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(366004)(39860400002)(136003)(376002)(346002)(9686003)(186003)(110136005)(122000001)(76116006)(38070700005)(83380400001)(55016002)(52536014)(38100700002)(66476007)(66946007)(26005)(478600001)(8676002)(66556008)(5660300002)(66446008)(64756008)(54906003)(4326008)(86362001)(53546011)(6506007)(7696005)(2906002)(33656002)(8936002)(71200400001)(316002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?cXZRZSt4TmdjQWRPMUIwRFVEMHh1ZGxtY3U3TGpPSjZxTWI2Q2tGcVNmcEJx?=
+ =?utf-8?B?YVZOUW9OYzJWcU04aENVR3VmeTNVZDBLdjV5Q28xNUhiemg3NWxqcjlFeFM1?=
+ =?utf-8?B?Y1dMTU9TTTdCeDlyVDNZcTZsS1VBTE9tTnpGLzVad1ZCekpvb0FtS0NqeVdn?=
+ =?utf-8?B?ak9ueWhiVjMwSWo4aDViZVVua2FzN3dWRzI2V2pVWml5VWc0WDlrRm9XWDFH?=
+ =?utf-8?B?L3pQWlg1MnhnVHJsTzJSL1Q1MjJCTGdhblZLeDVDVGhTZGZGa3lWODhKRHFG?=
+ =?utf-8?B?MnhkTVpraXYwZ0t3UlBpMEpQOW1GYmwrSlcvelhSWWVabmxvU3l4T01HTWR2?=
+ =?utf-8?B?VmoyKzg4aDhQOVIzK1ZrM0Y3TWwyOExoNVBCam5QQm1DSUowQUV5TGtmdFVK?=
+ =?utf-8?B?Qkh6TkI2VkRZNmY3aTl6K1E3blV0VUo3WE90WDNjd1BwOHZ6UDJCNXJKNG11?=
+ =?utf-8?B?SC96MkY3Ym9JcFlJdURQZTVMaDVLQ2VOV0RoYzVuTGx6b1l0ZHlJQ3UvYzM5?=
+ =?utf-8?B?bU15Zm16T1VVcHFhM3ZuMUVOZWt1dlZWS3FKSWcxZTNLbG0rSUFHU28veHpn?=
+ =?utf-8?B?WGNicCtuSU9jaXdOUXExMXVvRGpyMGk1dC80NCtvUDN4Zlc1SmZ1RVFpQlNE?=
+ =?utf-8?B?ZElpdk5heWxHWGEySDZIZDZ0NWp4YS9ST1lpMHRxdmYxTFpVNFpYMTBHaGQz?=
+ =?utf-8?B?UjhLOEhSeERoS2ZNSWh0TU5nRXFjVGd6TGNidFdoVUkzVDdPOGQxTU44MUpj?=
+ =?utf-8?B?bHZFMzUrMTZGMko5K3p5UU95aVBtZS85WW1tcVFJSFJOd0dpblhGUCtwTW1E?=
+ =?utf-8?B?R0Z2Y1VTQXozRVJ0bDBCWWE2ZEJUSHpzbDJNQ1c3dC9xMklrb3RDbTZDalNw?=
+ =?utf-8?B?TXMzSUsyYUt0UzlFVGpIWjBrcUJwOUxtandHRm11VkVBaGV6Z1FVMjhrNE8y?=
+ =?utf-8?B?cjF5VDRHUDdrYWFxYm5JRXVFcTIxdWZnUG1JMGhJVUN5RDdDcktYZmkrN21o?=
+ =?utf-8?B?SmE1bDBuWFFMaFZpdjJ1UXk4NHg5UzR0UUUzK3FqSmNBajh2ZWVrWDNVMjc1?=
+ =?utf-8?B?bUl4NG43SFFBRFpnWnFmQXVML3RMaGoxRElRYVNFMEtTeTFKVFRVNGMwNXBk?=
+ =?utf-8?B?VDdaWlRKd1h5RmgyWGZac0twNGxVM1Q1eXBHekltV250Wk9LZGhyRExrWUFM?=
+ =?utf-8?B?Y0gvU1ZlQ21HaC8zc3FZU2NSZVY2cFJzMi9xbWI0Vmo5VHREVHJQVXMvd1Jn?=
+ =?utf-8?B?ZmxMY1hUUlJBT2hlYm1LMGlxZjBIRThUa2lYVm01Zy9PZWdiaW1Hbkh4YUE0?=
+ =?utf-8?B?dWJwUnl3TnhmTEhvVDBoNlFMaENBZ3N2d2hpeEM4cUpsYWdTMjAvSmE3TWNk?=
+ =?utf-8?B?aXY2MndYZVdTYWxoZUFSQkNrVGRZVkYyekpkQ2lDbG9GYzRKdURJZ2ZZMTVP?=
+ =?utf-8?B?WmhBK0ZSKzdsMER2RjJxTFUyRkVVeXl4aGplR2ErdmV5UU0xb2lwVTF5ZHk3?=
+ =?utf-8?B?WWtOb09BUWlUVE12OVU2Q1kzTTg5UzlOWDBrVTlGRmQyRm8xbXZQVzFjRERB?=
+ =?utf-8?B?NzBOM2ZKSk8wdGt1b0wrQm1WRnhlQVE1WEtmMFdRQzJhTHkyL3pEZ3lESWVl?=
+ =?utf-8?B?VkZIcUFDV2ZPZVlMbDcrZ0IwK0JwZEtrV0lUdVlTYVpETDJMdzg3cVdkblMy?=
+ =?utf-8?B?c2tGZ3FYTjZwd3RQQmQ0Znp1OXpNaVFvWjBseEtOM1JXQjVlbWVxSFFXOXlK?=
+ =?utf-8?Q?eYGhttZU3rkz+L1dU9jzgGjlXjTkJgb/IqNSvA+?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20210820223744.8439-2-21cnbao@gmail.com> <20210820233328.GA3368938@bjorn-Precision-5520>
- <877dgfqdsg.wl-maz@kernel.org> <CAGsJ_4ykAB4PMtno8Tv4QHH5Mruu5-CjVgbGx1N4gfcg0hYgqg@mail.gmail.com>
- <CAGsJ_4wRdm5ZhchTL4kG+f9-wahJBHUZm0-T3XexbL+Vkshw7w@mail.gmail.com> <87h7fdq0sq.wl-maz@kernel.org>
-In-Reply-To: <87h7fdq0sq.wl-maz@kernel.org>
-From:   Barry Song <21cnbao@gmail.com>
-Date:   Wed, 25 Aug 2021 10:51:56 +1200
-Message-ID: <CAGsJ_4wT9dTBE8rjyoTEhoLpP0mdCqcbcYQiF8JWx+D_73nFcQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI/MSI: Fix the confusing IRQ sysfs ABI for MSI-X
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>, Jonathan.Cameron@huawei.com,
-        bilbao@vt.edu, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        leon@kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Linuxarm <linuxarm@huawei.com>,
-        luzmaximilian@gmail.com, mchehab+huawei@kernel.org,
-        schnelle@linux.ibm.com, Barry Song <song.bao.hua@hisilicon.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB3244.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8c5ca4ac-4f8c-4a38-ba3d-08d967b7df91
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Aug 2021 11:02:47.5602
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 9xu8KJSqEw3a4nLDRlkGqtegXymHpRbS18eo9bfWRrxbaGYWYxx8AYFQBgIwHShaRxHE9/9PNdfxNKbqwvQjQQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB3500
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 25, 2021 at 10:24 PM Marc Zyngier <maz@kernel.org> wrote:
->
-> On Tue, 24 Aug 2021 22:29:59 +0100,
-> Barry Song <21cnbao@gmail.com> wrote:
-> >
-> > On Wed, Aug 25, 2021 at 8:51 AM Barry Song <21cnbao@gmail.com> wrote:
-> > >
-> > > On Sat, Aug 21, 2021 at 10:42 PM Marc Zyngier <maz@kernel.org> wrote:
-> > > >
-> > > > Hi Bjorn,
-> > > >
-> > > > On Sat, 21 Aug 2021 00:33:28 +0100,
-> > > > Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > >
-> > > > > [+cc Thomas, Marc]
-> > > > >
-> > > > > On Sat, Aug 21, 2021 at 10:37:43AM +1200, Barry Song wrote:
-> > > > > > From: Barry Song <song.bao.hua@hisilicon.com>
-> > > > > >
-> > > > > > /sys/bus/pci/devices/.../irq sysfs ABI is very confusing at this
-> > > > > > moment especially for MSI-X cases.
-> > > > >
-> > > > > AFAICT this patch *only* affects MSI-X.  So are you saying the sysfs
-> > > > > ABI is fine for MSI but confusing for MSI-X?
-> > > > >
-> > > > > > While MSI sets IRQ to the first
-> > > > > > number in the vector, MSI-X does nothing for this though it saves
-> > > > > > default_irq in msix_setup_entries(). Weird the saved default_irq
-> > > > > > for MSI-X is never used in pci_msix_shutdown(), which is quite
-> > > > > > different with pci_msi_shutdown(). Thus, this patch moves to show
-> > > > > > the first IRQ number which is from the first msi_entry for MSI-X.
-> > > > > > Hopefully, this can make IRQ ABI more clear and more consistent.
-> > > > > >
-> > > > > > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > > Signed-off-by: Barry Song <song.bao.hua@hisilicon.com>
-> > > > > > ---
-> > > > > >  drivers/pci/msi.c | 6 ++++++
-> > > > > >  1 file changed, 6 insertions(+)
-> > > > > >
-> > > > > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > > > > > index 9232255..6bbf81b 100644
-> > > > > > --- a/drivers/pci/msi.c
-> > > > > > +++ b/drivers/pci/msi.c
-> > > > > > @@ -771,6 +771,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
-> > > > > >     int ret;
-> > > > > >     u16 control;
-> > > > > >     void __iomem *base;
-> > > > > > +   struct msi_desc *desc;
-> > > > > >
-> > > > > >     /* Ensure MSI-X is disabled while it is set up */
-> > > > > >     pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> > > > > > @@ -814,6 +815,10 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
-> > > > > >     pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
-> > > > > >
-> > > > > >     pcibios_free_irq(dev);
-> > > > > > +
-> > > > > > +   desc = first_pci_msi_entry(dev);
-> > > > > > +   dev->irq = desc->irq;
-> > > > >
-> > > > > This change is not primarily about sysfs.  This is about changing
-> > > > > "dev->irq" when MSI-X is enabled, and it's only incidental that sysfs
-> > > > > reflects that.
-> > > > >
-> > > > > So we need to know the effect of changing dev->irq.  Drivers may use
-> > > > > the value of dev->irq, and I'm *guessing* this change shouldn't break
-> > > > > them since we already do this for MSI, but I'd like some more expert
-> > > > > opinion than mine :)
-> > > > >
-> > > > > For MSI we have:
-> > > > >
-> > > > >   msi_capability_init
-> > > > >     msi_setup_entry
-> > > > >       entry = alloc_msi_entry(nvec)
-> > > > >       entry->msi_attrib.default_irq = dev->irq;     /* Save IOAPIC IRQ */
-> > > > >     dev->irq = entry->irq;
-> > > > >
-> > > > >   pci_msi_shutdown
-> > > > >     /* Restore dev->irq to its default pin-assertion IRQ */
-> > > > >     dev->irq = desc->msi_attrib.default_irq;
-> > > > >
-> > > > > and for MSI-X we have:
-> > > > >
-> > > > >   msix_capability_init
-> > > > >     msix_setup_entries
-> > > > >       for (i = 0; i < nvec; i++)
-> > > > >         entry = alloc_msi_entry(1)
-> > > > >       entry->msi_attrib.default_irq = dev->irq;
-> > > > >
-> > > > >   pci_msix_shutdown
-> > > > >     for_each_pci_msi_entry(entry, dev)
-> > > > >       __pci_msix_desc_mask_irq
-> > > > > +   dev->irq = entry->msi_attrib.default_irq;   # added by this patch
-> > > > >
-> > > > >
-> > > > > Things that seem strange to me:
-> > > > >
-> > > > >   - The msi_setup_entry() comment "Save IOAPIC IRQ" seems needlessly
-> > > > >     specific; maybe it should be "INTx IRQ".
-> > > > >
-> > > > >   - The pci_msi_shutdown() comment "Restore ... pin-assertion IRQ"
-> > > > >     should match the msi_setup_entry() one, e.g., maybe it should also
-> > > > >     be "INTx IRQ".  There are no INTx or IOAPIC pins in PCIe.
-> > > > >
-> > > > >   - The only use of .default_irq is to save and restore dev->irq, so
-> > > > >     it looks like a per-device thing, not a per-vector thing.
-> > > > >
-> > > > >     In msi_setup_entry() there's only one msi_entry, so there's only
-> > > > >     one saved .default_irq.
-> > > > >
-> > > > >     In msix_setup_entries(), we get nvecs msi_entry structs, and we
-> > > > >     get a saved .default_irq in each one?
-> > > >
-> > > > That's a key point.
-> > > >
-> > > > Old-school PCI/MSI is represented by a single interrupt, and you
-> > > > *could* somehow make it relatively easy for drivers that only
-> > > > understand INTx to migrate to MSI if you replaced whatever is held in
-> > > > dev->irq (which should only represent the INTx mapping) with the MSI
-> > > > interrupt number. Which I guess is what the MSI code is doing.
-> > > >
-> > > > This is the 21st century, and nobody should ever rely on such horror,
-> > > > but I'm sure we do have such drivers in the tree. Boo.
-> > > >
-> > > > However, this *cannot* hold true for Multi-MSI, nor MSI-X, because
-> > > > there is a plurality of interrupts. Even worse, for MSI-X, there is
-> > > > zero guarantee that the allocated interrupts will be in a contiguous
-> > > > space.
-> > > >
-> > > > Given that, what is dev->irq good for? "Absolutely Nothing! (say it
-> > > > again!)".
-> > > >
-> > > > MSI-X is not something you can "accidentally" use. You have to
-> > > > actively embrace it. In all honesty, this patch tries to move in the
-> > > > wrong direction. If anything, we should kill this hack altogether and
-> > > > fix the (handful of?) drivers that rely on it. That'd actually be a
-> > > > good way to find whether they are still worth keeping in the tree. And
-> > > > if it breaks too many of them, then at least we'll know where we
-> > > > stand.
-> > > >
-> > > > I'd be tempted to leave the below patch simmer in -next for a few
-> > > > weeks and see if how many people shout:
-> > > >
-> > > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > > > index e5e75331b415..2be9a01cbe72 100644
-> > > > --- a/drivers/pci/msi.c
-> > > > +++ b/drivers/pci/msi.c
-> > > > @@ -591,7 +591,6 @@ msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity *affd)
-> > > >         entry->msi_attrib.is_virtual    = 0;
-> > > >         entry->msi_attrib.entry_nr      = 0;
-> > > >         entry->msi_attrib.maskbit       = !!(control & PCI_MSI_FLAGS_MASKBIT);
-> > > > -       entry->msi_attrib.default_irq   = dev->irq;     /* Save IOAPIC IRQ */
-> > > >         entry->msi_attrib.multi_cap     = (control & PCI_MSI_FLAGS_QMASK) >> 1;
-> > > >         entry->msi_attrib.multiple      = ilog2(__roundup_pow_of_two(nvec));
-> > > >
-> > > > @@ -682,7 +681,6 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
-> > > >         dev->msi_enabled = 1;
-> > > >
-> > > >         pcibios_free_irq(dev);
-> > > > -       dev->irq = entry->irq;
-> > > >         return 0;
-> > > >  }
-> > > >
-> > > > @@ -742,7 +740,6 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
-> > > >                 entry->msi_attrib.is_virtual =
-> > > >                         entry->msi_attrib.entry_nr >= vec_count;
-> > > >
-> > > > -               entry->msi_attrib.default_irq   = dev->irq;
-> > > >                 entry->mask_base                = base;
-> > > >
-> > > >                 addr = pci_msix_desc_addr(entry);
-> > > > @@ -964,8 +961,6 @@ static void pci_msi_shutdown(struct pci_dev *dev)
-> > > >         mask = msi_mask(desc->msi_attrib.multi_cap);
-> > > >         msi_mask_irq(desc, mask, 0);
-> > > >
-> > > > -       /* Restore dev->irq to its default pin-assertion IRQ */
-> > > > -       dev->irq = desc->msi_attrib.default_irq;
-> > > >         pcibios_alloc_irq(dev);
-> > > >  }
-> > > >
-> > > > diff --git a/include/linux/msi.h b/include/linux/msi.h
-> > > > index e8bdcb83172b..a631664c1c38 100644
-> > > > --- a/include/linux/msi.h
-> > > > +++ b/include/linux/msi.h
-> > > > @@ -114,7 +114,6 @@ struct ti_sci_inta_msi_desc {
-> > > >   * @maskbit:   [PCI MSI/X] Mask-Pending bit supported?
-> > > >   * @is_64:     [PCI MSI/X] Address size: 0=32bit 1=64bit
-> > > >   * @entry_nr:  [PCI MSI/X] Entry which is described by this descriptor
-> > > > - * @default_irq:[PCI MSI/X] The default pre-assigned non-MSI irq
-> > > >   * @mask_pos:  [PCI MSI]   Mask register position
-> > > >   * @mask_base: [PCI MSI-X] Mask register base address
-> > > >   * @platform:  [platform]  Platform device specific msi descriptor data
-> > > > @@ -148,7 +147,6 @@ struct msi_desc {
-> > > >                                 u8      is_64           : 1;
-> > > >                                 u8      is_virtual      : 1;
-> > > >                                 u16     entry_nr;
-> > > > -                               unsigned default_irq;
-> > > >                         } msi_attrib;
-> > > >                         union {
-> > > >                                 u8      mask_pos;
-> > > >
-> > >
-> > > We will also need the below change as  pci_irq_vector() depends on
-> > > dev->irq for the MSI case.
-> > >
-> > > int pci_irq_vector(struct pci_dev *dev, unsigned int nr)
-> > > {
-> > >         if (dev->msix_enabled) {
-> > >                 struct msi_desc *entry;
-> > >                 int i = 0;
-> > >
-> > >                 for_each_pci_msi_entry(entry, dev) {
-> > >                         if (i == nr)
-> > >                                 return entry->irq;
-> > >                         i++;
-> > >                 }
-> > >                 WARN_ON_ONCE(1);
-> > >                 return -EINVAL;
-> > >         }
-> > >
-> > >         if (dev->msi_enabled) {
-> > >                 struct msi_desc *entry = first_pci_msi_entry(dev);
-> > >
-> > >                 if (WARN_ON_ONCE(nr >= entry->nvec_used))
-> > >                         return -EINVAL;
-> > >
-> > > +                return entry->irq + nr;
-> > >         } else {
-> > >                 if (WARN_ON_ONCE(nr > 0))
-> > >                         return -EINVAL;
-> > >         }
-> > >
-> > >
-> > > -        return dev->irq + nr;
-> > > +       return dev->irq;
-> > > }
-> > > EXPORT_SYMBOL(pci_irq_vector);
-> > >
-> >
-> > And here:
-> >
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -401,7 +401,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
-> >         if (!dev->msi_enabled)
-> >                 return;
-> >
-> > -       entry = irq_get_msi_desc(dev->irq);
-> > +       entry = first_pci_msi_entry(dev);
-> >
-> >         pci_intx_for_msi(dev, 0);
-> >         pci_msi_set_enable(dev, 0);
-> >
-> > since drivers/net/ethernet/intel/ice/ice_virtchnl_pf.c is the only
-> > one calling pci_restore_msi_state(), will probably require one test
-> > from the driver maintainers.
->
-> All good catches. This needs tons of testing, and I fully expect
-> regressions (at least drivers falling back to INTx when they were
-> planning to use MSIs).
->
-> I'll try to roll a proper patch once 5.14 is out.
-
-Thanks! Anyway, I've integrated all good suggestions from the
-discussion into v3:
-https://lore.kernel.org/lkml/20210825102636.52757-1-21cnbao@gmail.com/
-So that we can have a new base to start after 5.14 is out.
-
->
-> Thanks,
->
->         M.
->
-> --
-> Without deviation from the norm, progress is not possible.
-
-Thanks
-barry
+SGkgUmFmYWVsLA0KDQpUZXN0ZWQgdGhpcyBQQVRDSCB2MiBhZ2FpbnN0IGludGVsIG5leHQgdjUu
+MTIga2VybmVsIG9uIEFETC1TIE5WTUUgYW5kIFNBVEEgc3RvcmFnZXM6DQoNCmNhdCAvc3lzL2Rl
+dmljZXMvcGNpMDAwMFw6MDAvMDAwMFw6MDBcOjBlLjAvZmlybXdhcmVfbm9kZS9wYXRoDQpcX1NC
+Xy5QQzAwLlZNRDANCg0KMTAwMDA6ZTA6MTcuMCBTQVRBIGNvbnRyb2xsZXI6IEludGVsIENvcnBv
+cmF0aW9uIERldmljZSA3YWUyIChyZXYgMTEpDQoxMDAwMDplMDoxZC4wIFN5c3RlbSBwZXJpcGhl
+cmFsOiBJbnRlbCBDb3Jwb3JhdGlvbiBEZXZpY2UgMDlhYg0KMTAwMDA6ZTA6MWQuNCBQQ0kgYnJp
+ZGdlOiBJbnRlbCBDb3Jwb3JhdGlvbiBEZXZpY2UgN2FiNCAocmV2IDExKQ0KMTAwMDA6ZTE6MDAu
+MCBOb24tVm9sYXRpbGUgbWVtb3J5IGNvbnRyb2xsZXI6IFNhbXN1bmcgRWxlY3Ryb25pY3MgQ28g
+THRkIE5WTWUgU1NEIENvbnRyb2xsZXIgUE05QTEvUE05QTMvOTgwUFJPDQoNClsgNjE5My42NTgw
+NzRdIGFoY2kgMTAwMDA6ZTA6MTcuMDogUENJIFBNOiBTdXNwZW5kIHBvd2VyIHN0YXRlOiBEM2hv
+dA0KWyA2MTkzLjY1ODE1Nl0gbnZtZSAxMDAwMDplMTowMC4wOiBQQ0kgUE06IFN1c3BlbmQgcG93
+ZXIgc3RhdGU6IEQzaG90DQpbIDYxOTMuNzEwODgzXSBwY2llcG9ydCAxMDAwMDplMDoxZC40OiBQ
+Q0kgUE06IFN1c3BlbmQgcG93ZXIgc3RhdGU6IEQzY29sZA0KWyA2MTkzLjczMDMxOF0gdm1kIDAw
+MDA6MDA6MGUuMDogUENJIFBNOiBTdXNwZW5kIHBvd2VyIHN0YXRlOiBEM2hvdA0KDQpjYXQgL3N5
+cy9rZXJuZWwvZGVidWcvcG1jX2NvcmUvc3Vic3RhdGVfcmVzaWRlbmNpZXMNClN1YnN0YXRlICAg
+UmVzaWRlbmN5DQpTMGkyLjAgICAgIDANClMwaTIuMSAgICAgMTM4NjIxMjgNCg0KVGhhbmtzIQ0K
+DQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUmFmYWVsIEouIFd5c29ja2kgPHJq
+d0Byand5c29ja2kubmV0PiANClNlbnQ6IFR1ZXNkYXksIEF1Z3VzdCAyNCwgMjAyMSAxMDo0NCBQ
+TQ0KVG86IExpbnV4IFBDSSA8bGludXgtcGNpQHZnZXIua2VybmVsLm9yZz47IERlcnJpY2ssIEpv
+bmF0aGFuIDxqb25hdGhhbi5kZXJyaWNrQGludGVsLmNvbT47IEJqb3JuIEhlbGdhYXMgPGhlbGdh
+YXNAa2VybmVsLm9yZz4NCkNjOiBXYW5nLCBXZW5keSA8d2VuZHkud2FuZ0BpbnRlbC5jb20+OyBM
+aW51eCBBQ1BJIDxsaW51eC1hY3BpQHZnZXIua2VybmVsLm9yZz47IExLTUwgPGxpbnV4LWtlcm5l
+bEB2Z2VyLmtlcm5lbC5vcmc+OyBNaWthIFdlc3RlcmJlcmcgPG1pa2Eud2VzdGVyYmVyZ0BsaW51
+eC5pbnRlbC5jb20+OyBEYXZpZCBCb3ggPGRhdmlkLmUuYm94QGxpbnV4LmludGVsLmNvbT4NClN1
+YmplY3Q6IFtQQVRDSCB2Ml0gUENJOiBWTUQ6IEFDUEk6IE1ha2UgQUNQSSBjb21wYW5pb24gbG9v
+a3VwIHdvcmsgZm9yIFZNRCBidXMNCg0KRnJvbTogUmFmYWVsIEouIFd5c29ja2kgPHJhZmFlbC5q
+Lnd5c29ja2lAaW50ZWwuY29tPg0KDQpPbiBzb21lIHN5c3RlbXMsIGluIG9yZGVyIHRvIGdldCB0
+byB0aGUgZGVlcGVzdCBsb3ctcG93ZXIgc3RhdGUgb2YgdGhlIHBsYXRmb3JtICh3aGljaCBtYXkg
+YmUgbmVjZXNzYXJ5IHRvIHNhdmUgc2lnbmlmaWNhbnQgZW5vdWdoIGFtb3VudHMgb2YgZW5lcmd5
+IHdoaWxlIHN1c3BlbmRlZCB0byBpZGxlLiBmb3IgZXhhbXBsZSksIGRldmljZXMgb24gdGhlIFBD
+SSBidXMgZXhwb3NlZCBieSB0aGUgVk1EIGRyaXZlciBuZWVkIHRvIGJlIHBvd2VyLW1hbmFnZWQg
+dmlhIEFDUEkuICBIb3dldmVyLCB0aGUgbGF5b3V0IG9mIHRoZSBBQ1BJIG5hbWVzcGFjZSBiZWxv
+dyB0aGUgVk1EIGNvbnRyb2xsZXIgZGV2aWNlIG9iamVjdCBkb2VzIG5vdCByZWZsZWN0IHRoZSBs
+YXlvdXQgb2YgdGhlIFBDSSBidXMgdW5kZXIgdGhlIFZNRCBob3N0IGJyaWRnZSwgc28gaW4gb3Jk
+ZXIgdG8gaWRlbnRpZnkgdGhlIEFDUEkgY29tcGFuaW9uIG9iamVjdHMgZm9yIHRoZSBkZXZpY2Vz
+IG9uIHRoYXQgYnVzLCBpdCBpcyBuZWNlc3NhcnkgdG8gdXNlIGEgc3BlY2lhbCBfQURSIGVuY29k
+aW5nIG9uIHRoZSBBQ1BJIHNpZGUuICBJbiBvdGhlciB3b3JkcywgYWNwaV9wY2lfZmluZF9jb21w
+YW5pb24oKSBkb2VzIG5vdCB3b3JrIGZvciB0aGVzZSBkZXZpY2VzLCBzbyBpdCBuZWVkcyB0byBi
+ZSBhbWVuZGVkIHdpdGggYSBzcGVjaWFsIGxvb2t1cCBsb2dpYyBzcGVjaWZpYyB0byB0aGUgVk1E
+IGJ1cy4NCg0KQWRkcmVzcyB0aGlzIGlzc3VlIGJ5IGFsbG93aW5nIHRoZSBWTUQgZHJpdmVyIHRv
+IHRlbXBvcmFyaWx5IGluc3RhbGwgYW4gQUNQSSBjb21wYW5pb24gbG9va3VwIGhvb2sgY29udGFp
+bmluZyB0aGUgY29kZSBtYXRjaGluZyB0aGUgZGV2aWNlcyBvbiB0aGUgVk1EIFBDSSBidXMgd2l0
+aCB0aGUgY29ycmVzcG9uZGluZyBvYmplY3RzIGluIHRoZSBBQ1BJIG5hbWVzcGFjZS4NCg0KU2ln
+bmVkLW9mZi1ieTogUmFmYWVsIEouIFd5c29ja2kgPHJhZmFlbC5qLnd5c29ja2lAaW50ZWwuY29t
+Pg0KLS0tDQoNCi0+IHYyOg0KICAgKiBVc2UgYSByZWFkLXdyaXRlIHNlbWFwaG9yZSBmb3IgaG9v
+ayBtYW5pcHVsYXRpb24gcHJvdGVjdGlvbiBhbmQNCiAgICAgZ2V0IHJpZCBvZiB0aGUgc3RhdGlj
+IGtleSBwcmVzZW50IGluIHRoZSBwcmV2aW91cyB2ZXJzaW9uLg0KICAgKiBBZGQgYSBidXNuciBj
+aGVjayBpbiB2bWRfYWNwaV9maW5kX2NvbXBhbmlvbigpLg0KDQpXZW5keSwgRGF2aWQsIHBsZWFz
+ZSB0ZXN0IHRoaXMgb25lIQ0KDQotLS0NCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL3ZtZC5jIHwg
+ICA1NSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQogZHJpdmVycy9wY2kvaG9zdC1i
+cmlkZ2UuYyAgICB8ICAgIDEgDQogZHJpdmVycy9wY2kvcGNpLWFjcGkuYyAgICAgICB8ICAgNzQg
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KIGluY2x1ZGUvbGlu
+dXgvcGNpLWFjcGkuaCAgICAgfCAgICAzICsNCiA0IGZpbGVzIGNoYW5nZWQsIDEzMyBpbnNlcnRp
+b25zKCspDQoNCkluZGV4OiBsaW51eC1wbS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL3ZtZC5jDQo9
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09DQotLS0gbGludXgtcG0ub3JpZy9kcml2ZXJzL3BjaS9jb250cm9sbGVyL3ZtZC5j
+DQorKysgbGludXgtcG0vZHJpdmVycy9wY2kvY29udHJvbGxlci92bWQuYw0KQEAgLTExLDYgKzEx
+LDcgQEANCiAjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+DQogI2luY2x1ZGUgPGxpbnV4L21zaS5o
+Pg0KICNpbmNsdWRlIDxsaW51eC9wY2kuaD4NCisjaW5jbHVkZSA8bGludXgvcGNpLWFjcGkuaD4N
+CiAjaW5jbHVkZSA8bGludXgvcGNpLWVjYW0uaD4NCiAjaW5jbHVkZSA8bGludXgvc3JjdS5oPg0K
+ICNpbmNsdWRlIDxsaW51eC9yY3VsaXN0Lmg+DQpAQCAtNDQ3LDYgKzQ0OCw1NiBAQCBzdGF0aWMg
+c3RydWN0IHBjaV9vcHMgdm1kX29wcyA9IHsNCiAJLndyaXRlCQk9IHZtZF9wY2lfd3JpdGUsDQog
+fTsNCiANCisjaWZkZWYgQ09ORklHX0FDUEkNCitzdGF0aWMgc3RydWN0IGFjcGlfZGV2aWNlICp2
+bWRfYWNwaV9maW5kX2NvbXBhbmlvbihzdHJ1Y3QgcGNpX2RldiANCisqcGNpX2Rldikgew0KKwlz
+dHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2U7DQorCXUzMiBidXNuciwgYWRkcjsNCisNCisJ
+aWYgKHBjaV9kZXYtPmJ1cy0+b3BzICE9ICZ2bWRfb3BzKQ0KKwkJcmV0dXJuIE5VTEw7DQorDQor
+CWJyaWRnZSA9IHBjaV9maW5kX2hvc3RfYnJpZGdlKHBjaV9kZXYtPmJ1cyk7DQorCWJ1c25yID0g
+cGNpX2Rldi0+YnVzLT5udW1iZXIgLSBicmlkZ2UtPmJ1cy0+bnVtYmVyOw0KKwkvKg0KKwkgKiBU
+aGUgYWRkcmVzcyBjb21wdXRhdGlvbiBiZWxvdyBpcyBvbmx5IGFwcGxpY2FibGUgdG8gcmVsYXRp
+dmUgYnVzDQorCSAqIG51bWJlcnMgYmVsb3cgMzIuDQorCSAqLw0KKwlpZiAoYnVzbnIgPiAzMSkN
+CisJCXJldHVybiBOVUxMOw0KKw0KKwlhZGRyID0gKGJ1c25yIDw8IDI0KSB8ICgodTMyKXBjaV9k
+ZXYtPmRldmZuIDw8IDE2KSB8IDB4ODAwMEZGRkZVOw0KKw0KKwlkZXZfZGJnKCZwY2lfZGV2LT5k
+ZXYsICJMb29raW5nIGZvciBBQ1BJIGNvbXBhbmlvbiAoYWRkcmVzcyAweCV4KVxuIiwNCisJCWFk
+ZHIpOw0KKw0KKwlyZXR1cm4gYWNwaV9maW5kX2NoaWxkX2RldmljZShBQ1BJX0NPTVBBTklPTihi
+cmlkZ2UtPmRldi5wYXJlbnQpLCBhZGRyLA0KKwkJCQkgICAgICBmYWxzZSk7DQorfQ0KKw0KK3N0
+YXRpYyBib29sIGhvb2tfaW5zdGFsbGVkOw0KKw0KK3N0YXRpYyB2b2lkIHZtZF9hY3BpX2JlZ2lu
+KHZvaWQpDQorew0KKwlpZiAocGNpX2FjcGlfc2V0X2NvbXBhbmlvbl9sb29rdXBfaG9vayh2bWRf
+YWNwaV9maW5kX2NvbXBhbmlvbikpDQorCQlyZXR1cm47DQorDQorCWhvb2tfaW5zdGFsbGVkID0g
+dHJ1ZTsNCit9DQorDQorc3RhdGljIHZvaWQgdm1kX2FjcGlfZW5kKHZvaWQpDQorew0KKwlpZiAo
+IWhvb2tfaW5zdGFsbGVkKQ0KKwkJcmV0dXJuOw0KKw0KKwlwY2lfYWNwaV9jbGVhcl9jb21wYW5p
+b25fbG9va3VwX2hvb2soKTsNCisJaG9va19pbnN0YWxsZWQgPSBmYWxzZTsNCit9DQorI2Vsc2UN
+CitzdGF0aWMgaW5saW5lIHZvaWQgdm1kX2FjcGlfYmVnaW4odm9pZCkgeyB9IHN0YXRpYyBpbmxp
+bmUgdm9pZCANCit2bWRfYWNwaV9lbmQodm9pZCkgeyB9ICNlbmRpZiAvKiBDT05GSUdfQUNQSSAq
+Lw0KKw0KIHN0YXRpYyB2b2lkIHZtZF9hdHRhY2hfcmVzb3VyY2VzKHN0cnVjdCB2bWRfZGV2ICp2
+bWQpICB7DQogCXZtZC0+ZGV2LT5yZXNvdXJjZVtWTURfTUVNQkFSMV0uY2hpbGQgPSAmdm1kLT5y
+ZXNvdXJjZXNbMV07IEBAIC03NDcsNiArNzk4LDggQEAgc3RhdGljIGludCB2bWRfZW5hYmxlX2Rv
+bWFpbihzdHJ1Y3Qgdm1kXw0KIAlpZiAodm1kLT5pcnFfZG9tYWluKQ0KIAkJZGV2X3NldF9tc2lf
+ZG9tYWluKCZ2bWQtPmJ1cy0+ZGV2LCB2bWQtPmlycV9kb21haW4pOw0KIA0KKwl2bWRfYWNwaV9i
+ZWdpbigpOw0KKw0KIAlwY2lfc2Nhbl9jaGlsZF9idXModm1kLT5idXMpOw0KIAlwY2lfYXNzaWdu
+X3VuYXNzaWduZWRfYnVzX3Jlc291cmNlcyh2bWQtPmJ1cyk7DQogDQpAQCAtNzYwLDYgKzgxMyw4
+IEBAIHN0YXRpYyBpbnQgdm1kX2VuYWJsZV9kb21haW4oc3RydWN0IHZtZF8NCiANCiAJcGNpX2J1
+c19hZGRfZGV2aWNlcyh2bWQtPmJ1cyk7DQogDQorCXZtZF9hY3BpX2VuZCgpOw0KKw0KIAlXQVJO
+KHN5c2ZzX2NyZWF0ZV9saW5rKCZ2bWQtPmRldi0+ZGV2LmtvYmosICZ2bWQtPmJ1cy0+ZGV2Lmtv
+YmosDQogCQkJICAgICAgICJkb21haW4iKSwgIkNhbid0IGNyZWF0ZSBzeW1saW5rIHRvIGRvbWFp
+blxuIik7DQogCXJldHVybiAwOw0KSW5kZXg6IGxpbnV4LXBtL2RyaXZlcnMvcGNpL2hvc3QtYnJp
+ZGdlLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0NCi0tLSBsaW51eC1wbS5vcmlnL2RyaXZlcnMvcGNpL2hvc3QtYnJp
+ZGdlLmMNCisrKyBsaW51eC1wbS9kcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jDQpAQCAtMjMsNiAr
+MjMsNyBAQCBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpwY2lfZmluZF9ob3N0X2JyDQogDQogCXJl
+dHVybiB0b19wY2lfaG9zdF9icmlkZ2Uocm9vdF9idXMtPmJyaWRnZSk7DQogfQ0KK0VYUE9SVF9T
+WU1CT0xfR1BMKHBjaV9maW5kX2hvc3RfYnJpZGdlKTsNCiANCiBzdHJ1Y3QgZGV2aWNlICpwY2lf
+Z2V0X2hvc3RfYnJpZGdlX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2KSAgew0KSW5kZXg6IGxp
+bnV4LXBtL2RyaXZlcnMvcGNpL3BjaS1hY3BpLmMNCj09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0tLSBsaW51eC1wbS5v
+cmlnL2RyaXZlcnMvcGNpL3BjaS1hY3BpLmMNCisrKyBsaW51eC1wbS9kcml2ZXJzL3BjaS9wY2kt
+YWNwaS5jDQpAQCAtMTcsNiArMTcsNyBAQA0KICNpbmNsdWRlIDxsaW51eC9wY2ktYWNwaS5oPg0K
+ICNpbmNsdWRlIDxsaW51eC9wbV9ydW50aW1lLmg+DQogI2luY2x1ZGUgPGxpbnV4L3BtX3Fvcy5o
+Pg0KKyNpbmNsdWRlIDxsaW51eC9yd3NlbS5oPg0KICNpbmNsdWRlICJwY2kuaCINCiANCiAvKg0K
+QEAgLTExNTksNiArMTE2MCw2OSBAQCB2b2lkIGFjcGlfcGNpX3JlbW92ZV9idXMoc3RydWN0IHBj
+aV9idXMgIH0NCiANCiAvKiBBQ1BJIGJ1cyB0eXBlICovDQorDQorDQorc3RhdGljIERFQ0xBUkVf
+UldTRU0ocGNpX2FjcGlfY29tcGFuaW9uX2xvb2t1cF9zZW0pOw0KK3N0YXRpYyBzdHJ1Y3QgYWNw
+aV9kZXZpY2UgKigqcGNpX2FjcGlfZmluZF9jb21wYW5pb25faG9vaykoc3RydWN0IA0KK3BjaV9k
+ZXYgKik7DQorDQorLyoqDQorICogcGNpX2FjcGlfc2V0X2NvbXBhbmlvbl9sb29rdXBfaG9vayAt
+IFNldCBBQ1BJIGNvbXBhbmlvbiBsb29rdXAgY2FsbGJhY2suDQorICogQGZ1bmM6IEFDUEkgY29t
+cGFuaW9uIGxvb2t1cCBjYWxsYmFjayBwb2ludGVyIG9yIE5VTEwuDQorICoNCisgKiBTZXQgYSBz
+cGVjaWFsIEFDUEkgY29tcGFuaW9uIGxvb2t1cCBjYWxsYmFjayBmb3IgUENJIGRldmljZXMgd2hv
+c2UgDQorY29tcGFuaW9uDQorICogb2JqZWN0cyBpbiB0aGUgQUNQSSBuYW1lc3BhY2UgaGF2ZSBf
+QURSIHdpdGggbm9uLXN0YW5kYXJkIA0KK2J1cy1kZXZpY2UtZnVuY3Rpb24NCisgKiBlbmNvZGlu
+Z3MuDQorICoNCisgKiBSZXR1cm4gMCBvbiBzdWNjZXNzIG9yIGEgbmVnYXRpdmUgZXJyb3IgY29k
+ZSBvbiBmYWlsdXJlIChpbiB3aGljaCANCitjYXNlIG5vDQorICogY2hhbmdlcyBhcmUgbWFkZSku
+DQorICoNCisgKiBUaGUgY2FsbGVyIGlzIHJlc3BvbnNpYmxlIGZvciB0aGUgYXBwcm9wcmlhdGUg
+b3JkZXJpbmcgb2YgdGhlIA0KK2ludm9jYXRpb25zIG9mDQorICogdGhpcyBmdW5jdGlvbiB3aXRo
+IHJlc3BlY3QgdG8gdGhlIGVudW1lcmF0aW9uIG9mIHRoZSBQQ0kgZGV2aWNlcyANCituZWVkaW5n
+IHRoZQ0KKyAqIGNhbGxiYWNrIGluc3RhbGxlZCBieSBpdC4NCisgKi8NCitpbnQgcGNpX2FjcGlf
+c2V0X2NvbXBhbmlvbl9sb29rdXBfaG9vayhzdHJ1Y3QgYWNwaV9kZXZpY2UgDQorKigqZnVuYyko
+c3RydWN0IHBjaV9kZXYgKikpIHsNCisJaW50IHJldDsNCisNCisJaWYgKCFmdW5jKQ0KKwkJcmV0
+dXJuIC1FSU5WQUw7DQorDQorCWRvd25fd3JpdGUoJnBjaV9hY3BpX2NvbXBhbmlvbl9sb29rdXBf
+c2VtKTsNCisNCisJaWYgKHBjaV9hY3BpX2ZpbmRfY29tcGFuaW9uX2hvb2spIHsNCisJCXJldCA9
+IC1FQlVTWTsNCisJfSBlbHNlIHsNCisJCXBjaV9hY3BpX2ZpbmRfY29tcGFuaW9uX2hvb2sgPSBm
+dW5jOw0KKwkJcmV0ID0gMDsNCisJfQ0KKw0KKwl1cF93cml0ZSgmcGNpX2FjcGlfY29tcGFuaW9u
+X2xvb2t1cF9zZW0pOw0KKw0KKwlyZXR1cm4gcmV0Ow0KK30NCitFWFBPUlRfU1lNQk9MX0dQTChw
+Y2lfYWNwaV9zZXRfY29tcGFuaW9uX2xvb2t1cF9ob29rKTsNCisNCisvKioNCisgKiBwY2lfYWNw
+aV9jbGVhcl9jb21wYW5pb25fbG9va3VwX2hvb2sgLSBDbGVhciBBQ1BJIGNvbXBhbmlvbiBsb29r
+dXAgY2FsbGJhY2suDQorICoNCisgKiBDbGVhciB0aGUgc3BlY2lhbCBBQ1BJIGNvbXBhbmlvbiBs
+b29rdXAgY2FsbGJhY2sgcHJldmlvdXNseSBzZXQgYnkNCisgKiBwY2lfYWNwaV9zZXRfY29tcGFu
+aW9uX2xvb2t1cF9ob29rKCkuICBCbG9jayB1bnRpbCB0aGUgbGFzdCBydW5uaW5nIA0KK2luc3Rh
+bmNlDQorICogb2YgdGhlIGNhbGxiYWNrIHJldHVybnMgYmVmb3JlIGNsZWFyaW5nIGl0Lg0KKyAq
+DQorICogVGhlIGNhbGxlciBpcyByZXNwb25zaWJsZSBmb3IgdGhlIGFwcHJvcHJpYXRlIG9yZGVy
+aW5nIG9mIHRoZSANCitpbnZvY2F0aW9ucyBvZg0KKyAqIHRoaXMgZnVuY3Rpb24gd2l0aCByZXNw
+ZWN0IHRvIHRoZSBlbnVtZXJhdGlvbiBvZiB0aGUgUENJIGRldmljZXMgDQorbmVlZGluZyB0aGUN
+CisgKiBjYWxsYmFjayBjbGVhcmVkIGJ5IGl0Lg0KKyAqLw0KK3ZvaWQgcGNpX2FjcGlfY2xlYXJf
+Y29tcGFuaW9uX2xvb2t1cF9ob29rKHZvaWQpDQorew0KKwlkb3duX3dyaXRlKCZwY2lfYWNwaV9j
+b21wYW5pb25fbG9va3VwX3NlbSk7DQorDQorCXBjaV9hY3BpX2ZpbmRfY29tcGFuaW9uX2hvb2sg
+PSBOVUxMOw0KKw0KKwl1cF93cml0ZSgmcGNpX2FjcGlfY29tcGFuaW9uX2xvb2t1cF9zZW0pOw0K
+K30NCitFWFBPUlRfU1lNQk9MX0dQTChwY2lfYWNwaV9jbGVhcl9jb21wYW5pb25fbG9va3VwX2hv
+b2spOw0KKw0KIHN0YXRpYyBzdHJ1Y3QgYWNwaV9kZXZpY2UgKmFjcGlfcGNpX2ZpbmRfY29tcGFu
+aW9uKHN0cnVjdCBkZXZpY2UgKmRldikgIHsNCiAJc3RydWN0IHBjaV9kZXYgKnBjaV9kZXYgPSB0
+b19wY2lfZGV2KGRldik7IEBAIC0xMTY2LDYgKzEyMzAsMTYgQEAgc3RhdGljIHN0cnVjdCBhY3Bp
+X2RldmljZSAqYWNwaV9wY2lfZmluZA0KIAlib29sIGNoZWNrX2NoaWxkcmVuOw0KIAl1NjQgYWRk
+cjsNCiANCisJZG93bl9yZWFkKCZwY2lfYWNwaV9jb21wYW5pb25fbG9va3VwX3NlbSk7DQorDQor
+CWFkZXYgPSBwY2lfYWNwaV9maW5kX2NvbXBhbmlvbl9ob29rID8NCisJCXBjaV9hY3BpX2ZpbmRf
+Y29tcGFuaW9uX2hvb2socGNpX2RldikgOiBOVUxMOw0KKw0KKwl1cF9yZWFkKCZwY2lfYWNwaV9j
+b21wYW5pb25fbG9va3VwX3NlbSk7DQorDQorCWlmIChhZGV2KQ0KKwkJcmV0dXJuIGFkZXY7DQor
+DQogCWNoZWNrX2NoaWxkcmVuID0gcGNpX2lzX2JyaWRnZShwY2lfZGV2KTsNCiAJLyogUGxlYXNl
+IHJlZiB0byBBQ1BJIHNwZWMgZm9yIHRoZSBzeW50YXggb2YgX0FEUiAqLw0KIAlhZGRyID0gKFBD
+SV9TTE9UKHBjaV9kZXYtPmRldmZuKSA8PCAxNikgfCBQQ0lfRlVOQyhwY2lfZGV2LT5kZXZmbik7
+DQpJbmRleDogbGludXgtcG0vaW5jbHVkZS9saW51eC9wY2ktYWNwaS5oID09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCi0t
+LSBsaW51eC1wbS5vcmlnL2luY2x1ZGUvbGludXgvcGNpLWFjcGkuaA0KKysrIGxpbnV4LXBtL2lu
+Y2x1ZGUvbGludXgvcGNpLWFjcGkuaA0KQEAgLTEyMiw2ICsxMjIsOSBAQCBzdGF0aWMgaW5saW5l
+IHZvaWQgcGNpX2FjcGlfYWRkX2Vkcl9ub3RpICBzdGF0aWMgaW5saW5lIHZvaWQgcGNpX2FjcGlf
+cmVtb3ZlX2Vkcl9ub3RpZmllcihzdHJ1Y3QgcGNpX2RldiAqcGRldikgeyB9ICAjZW5kaWYgLyog
+Q09ORklHX1BDSUVfRURSICovDQogDQoraW50IHBjaV9hY3BpX3NldF9jb21wYW5pb25fbG9va3Vw
+X2hvb2soc3RydWN0IGFjcGlfZGV2aWNlIA0KKyooKmZ1bmMpKHN0cnVjdCBwY2lfZGV2ICopKTsg
+dm9pZCANCitwY2lfYWNwaV9jbGVhcl9jb21wYW5pb25fbG9va3VwX2hvb2sodm9pZCk7DQorDQog
+I2Vsc2UJLyogQ09ORklHX0FDUEkgKi8NCiBzdGF0aWMgaW5saW5lIHZvaWQgYWNwaV9wY2lfYWRk
+X2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzKSB7IH0gIHN0YXRpYyBpbmxpbmUgdm9pZCBhY3BpX3Bj
+aV9yZW1vdmVfYnVzKHN0cnVjdCBwY2lfYnVzICpidXMpIHsgfQ0KDQoNCg0K
