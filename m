@@ -2,133 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-13.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5835C4320A
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A19BFC41537
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:27:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB48B610C7
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:27:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B396613DA
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Aug 2021 10:27:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240289AbhHYK2X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Aug 2021 06:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41018 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240355AbhHYK2J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Aug 2021 06:28:09 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 499C3C0612A7;
-        Wed, 25 Aug 2021 03:27:12 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id j1so16219021pjv.3;
-        Wed, 25 Aug 2021 03:27:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=/Hqnln3HdL0WChaMVZJV3NfQHnyWbPcdyPecsMvr5Us=;
-        b=fOILSbqp+awgPaL++axkQEnUahaAtyLCDiX4urN0z2R+EBI/Xfjm7BfwaYI8ko/xhc
-         BViZ+JAunCMhIGCV136n0JrrlSuHYIiSPTQRdPOYugQYHmB1mmgyEPTvHlBO2Fy94MnG
-         3LK4urvh6THaKPpoQMPtONHXg5uJu5iCkIDiubmIMLTpIJPtr00iSi4TK1Og4hM+pcZr
-         R1O5UkGKZU9pqlfCJdTP6KrwjZn2yy2dj+1Z67KmUi3k2GdiuiPnugIKp8Ym2NaF85zb
-         LwIXAZ6GNxQM1ePUEhLP5YcV7gmZE2KImrYUwbtt0sjWWTfFyK7M8hpJEABOiFCVAM3H
-         PeIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=/Hqnln3HdL0WChaMVZJV3NfQHnyWbPcdyPecsMvr5Us=;
-        b=mTqpy8L/izcGLgk/5HAfer6lovyfP0ddr58hufLQY7XS0nMlhG3WuzGN51XhTSzANS
-         Vj3iQ6WcGayu/K3ixDyQV7+iaW5TLcnRNalkB+MrjLsiapp74ULu/YIWGFywEzVVXVra
-         Zlqsve5BZTWdAUfd6cffRyMh9FE7VVtdtSFdkdj1zHpuBHI6M03+9AjQv+YXqOfDs2Zi
-         X1YxKfa2s+ouwdEmqPxAcZNfSKJwi8GHNWIwELJUlrLY0J/4Y/ZdpRUJn69fNspUP7S5
-         uu9K4UB8WvkD5gEvhv4/5JRfN3pfW32bsNj3dSNd4RXyQwdykKX6oEYtOS6J93UnNE39
-         haBA==
-X-Gm-Message-State: AOAM5300+svPL4XTNvJBUsiY5bFMLAIbL+JQCH+SSe0uR+sYIwNDwFpZ
-        8dfTf7/1kluM8fqRC+fyqgw=
-X-Google-Smtp-Source: ABdhPJyXguS1J/c/czIWiobBg3C1WJe0NJ4d50A3Pyb+FXU2dT8FSoGhw/YqB+/uPfL+mAMZ9M1OYg==
-X-Received: by 2002:a17:90a:b785:: with SMTP id m5mr9976134pjr.213.1629887231933;
-        Wed, 25 Aug 2021 03:27:11 -0700 (PDT)
-Received: from baohua-VirtualBox.localdomain (203-173-222-16.dialup.ihug.co.nz. [203.173.222.16])
-        by smtp.gmail.com with ESMTPSA id f23sm1786403pfa.94.2021.08.25.03.27.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Aug 2021 03:27:11 -0700 (PDT)
-From:   Barry Song <21cnbao@gmail.com>
-To:     bhelgaas@google.com, maz@kernel.org, tglx@linutronix.de
-Cc:     Jonathan.Cameron@huawei.com, bilbao@vt.edu, corbet@lwn.net,
-        gregkh@linuxfoundation.org, leon@kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linuxarm@huawei.com, luzmaximilian@gmail.com,
-        mchehab+huawei@kernel.org, schnelle@linux.ibm.com,
-        jesse.brandeburg@intel.com, anthony.l.nguyen@intel.com,
-        intel-wired-lan@lists.osuosl.org,
-        Barry Song <song.bao.hua@hisilicon.com>
-Subject: [PATCH v3 2/3] PCI/sysfs: Don't depend on pci_dev.irq for IRQ entry
-Date:   Wed, 25 Aug 2021 18:26:35 +0800
-Message-Id: <20210825102636.52757-3-21cnbao@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210825102636.52757-1-21cnbao@gmail.com>
-References: <20210825102636.52757-1-21cnbao@gmail.com>
+        id S240152AbhHYK2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Aug 2021 06:28:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39992 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S240167AbhHYK2P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Aug 2021 06:28:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 14E3161212;
+        Wed, 25 Aug 2021 10:27:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1629887249;
+        bh=/dGcdnDJQSuikSxYpLybghGo6DeDQ9TcuR3g7ByXcx8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YzQfIITYt+EvmJkw15OcJ5ISgWzmfAAa9l1OY26UMXJYFyuibz1c+h+8Mk1FZCuHQ
+         kAJTQSl0ONbTNT/9lrv6hzN6QhLVWUwE815h7VOrCdY8YvCWgS3u1bctTLujiM8iyu
+         M2sRBLq78Vru85NB9m3LEF3gSubrENg5UHN8Qhq244f/WJpBeL5APGDRjTizsqga+P
+         R+am+zkLRFhNBWRZjsjF1VkOahqzMZZHXYrgTUgbynHQ0MUTdn3jtNfP6dJ5fNKPOR
+         2OS8+sxjO8jOeELe4bpM0maGGU4KaC22/bulQY5Ka345TX0/+psJIL/4XIVTsRsbp1
+         lpZrdGca7ZZAQ==
+Date:   Wed, 25 Aug 2021 11:27:01 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Vinod Koul <vkoul@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Vignesh R <vigneshr@ti.com>, Marc Zyngier <maz@kernel.org>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        dmaengine@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-media@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-serial@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-spi@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Use 'enum' instead of 'oneOf' plus 'const'
+ entries
+Message-ID: <20210825102701.GB5186@sirena.org.uk>
+References: <20210824202014.978922-1-robh@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="7ZAtKRhVyVSsbBD2"
+Content-Disposition: inline
+In-Reply-To: <20210824202014.978922-1-robh@kernel.org>
+X-Cookie: MY income is ALL disposable!
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Barry Song <song.bao.hua@hisilicon.com>
 
-Explicitly use IRQ number from MSI list for IRQ sysfs entry. Then sysfs
-will decouple with the odd implementation depending on pci_dev.irq.
+--7ZAtKRhVyVSsbBD2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Barry Song <song.bao.hua@hisilicon.com>
----
- drivers/pci/pci-sysfs.c | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+On Tue, Aug 24, 2021 at 03:20:14PM -0500, Rob Herring wrote:
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7bbf2673..f5a06b9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -26,6 +26,7 @@
- #include <linux/slab.h>
- #include <linux/vgaarb.h>
- #include <linux/pm_runtime.h>
-+#include <linux/msi.h>
- #include <linux/of.h>
- #include "pci.h"
- 
-@@ -49,7 +50,27 @@ static DEVICE_ATTR_RO(field)
- pci_config_attr(subsystem_device, "0x%04x\n");
- pci_config_attr(revision, "0x%02x\n");
- pci_config_attr(class, "0x%06x\n");
--pci_config_attr(irq, "%u\n");
-+
-+static ssize_t irq_show(struct device *dev,
-+			struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+#ifdef CONFIG_PCI_MSI
-+	/*
-+	 * For MSI, return the 1st IRQ in IRQ vector; for all other cases
-+	 * including MSI-X, return legacy INTx
-+	 */
-+	if (pdev->msi_enabled) {
-+		struct msi_desc *desc = first_pci_msi_entry(pdev);
-+
-+		return sysfs_emit(buf, "%u\n", desc->irq);
-+	}
-+#endif
-+
-+	return sysfs_emit(buf, "%u\n", pdev->irq);
-+}
-+static DEVICE_ATTR_RO(irq);
- 
- static ssize_t broken_parity_status_show(struct device *dev,
- 					 struct device_attribute *attr,
--- 
-1.8.3.1
+> 'enum' is equivalent to 'oneOf' with a list of 'const' entries, but 'enum'
+> is more concise and yields better error messages.
 
+Acked-by: Mark Brown <broonie@kernel.org>
+
+--7ZAtKRhVyVSsbBD2
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmEmGvUACgkQJNaLcl1U
+h9AfCwf/TPAwmd3i8vLyV5kU4MWAOn8zovhbZ+gXG2hJek5nLRjdW7eTl2yXz1gx
+xdOp2MMA5ldnXUjncRKHMJYykdL7ZtEsOUWT44WgHT0h1WEQzTHSnoVgkt/DDbsP
+tuovH5NV986VPCJXIC+mBkt5a4MPzdD1nYVmPss+8R+HXfTRZauTlZefXvwCzNDT
+Md/IxPvIbcqw5Ks12P4kdojbEGB92MONTO3vRYkzCeY1toRL9fOY3DJE30Kd6o3+
+hzCYzeRkTgoibpK8oG+ZqMOJ38/shj8Wiyfovdhd7LOj9orgkbGdGRi10R1997IR
+tDWFSsOVWZ8p+r2ZuI06T7GlVjygag==
+=GpUP
+-----END PGP SIGNATURE-----
+
+--7ZAtKRhVyVSsbBD2--
