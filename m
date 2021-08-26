@@ -8,62 +8,66 @@ X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6F4C432BE
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Aug 2021 18:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A906C4320E
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Aug 2021 18:58:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76F0A61052
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Aug 2021 18:58:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4001561040
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Aug 2021 18:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243300AbhHZS7U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Aug 2021 14:59:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37790 "EHLO
+        id S243340AbhHZS7X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Aug 2021 14:59:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243409AbhHZS7Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Aug 2021 14:59:16 -0400
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B068DC061757
-        for <linux-pci@vger.kernel.org>; Thu, 26 Aug 2021 11:58:28 -0700 (PDT)
-Received: by mail-wm1-x32b.google.com with SMTP id l7-20020a1c2507000000b002e6be5d86b3so2820299wml.3
-        for <linux-pci@vger.kernel.org>; Thu, 26 Aug 2021 11:58:28 -0700 (PDT)
+        with ESMTP id S243488AbhHZS7X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Aug 2021 14:59:23 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4684FC0613CF;
+        Thu, 26 Aug 2021 11:58:35 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id g138so2405674wmg.4;
+        Thu, 26 Aug 2021 11:58:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=yaTVSk0QhQ6Q3ONwqkunR+ld3cwrqWOmizyChyPBFII=;
-        b=tsPjGzAFLWYbqWizpcH1yoD5Dpefts9e9RGZTGryEiRHVyy2k9NRomV098jjPgtfSR
-         vWWEGIx9plSpLk1DhBsd1DiO+ZMoNcr1LFqV7VcdM/aBKWIXbKeF71gyFnib4eewTV6A
-         gXp2d0tFJohtvNZBSQX2dgJkzIHfxw01cMKp34B0mbNSSOrOnmmubg5newyIWSjxux+Y
-         jRstsWSCGjn2ABmKNOeCmMXTevO08Sdhb/A3wa6CENu0y1veMNUqPfpa3SSbqt1CIdMs
-         LXacSM2fK9lNvQRfxB//NcR/gRDDn6+s1gSdJ3s8oQso92zHFknpxoZDc7IavfUNvI3R
-         rckA==
+        bh=A+DG0W5+2eklf4TtXNvnExlRa/zaKSRLzk5O/0U5K0w=;
+        b=NhIehY5x0I1crqrN8X/OvkFkmhiGAEGNPVzzb1TTCJsZpj/NCdbuz4dtjGwo7BFF0U
+         01ogskY0N4lf5MraG/rPsWF6o81Iujt9KOiYkFTVFlgTnp9ifMUa1hA4/c88NxwLfmn/
+         W2bW7L6xgV9ojPXzbLvHSXEXZU/pPJrAtQmpU41pYRauvIQWxmyzM1rYHqWNUKLnA6fp
+         0oXHCMjL9bpWEujJ1R0fiv/ZI97YtJw5xPZ/gkLrL+HWmdJzJ7iLJWBSX7vxkbY/0cjP
+         UPrmiktgPwz4/ZXRsje/jcCAs/NmXNMfYQ0O/9jZ53ASQZMcHSvq9i3ZjeznqdexJEkx
+         2nsg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=yaTVSk0QhQ6Q3ONwqkunR+ld3cwrqWOmizyChyPBFII=;
-        b=QL/8fDX++OGLS/npsTRW8ulu/gqw6ITEULMdjUpxicnFrMuCm1l6nuToWj7miVasxt
-         a95J5RG9dlMZ1WJP9vIIrsxX1so1/wdQ+NxrW8KKmfdMdrOHTcikKIFuW3UvLRwP1cVD
-         iJGWFPKHsg+/czpbM3GXGET4YodulYUJFWega3zBou/qExM0/daItjX4NLxn71syQfH5
-         LlJRVKN2LXXE4E8VdJRjVos9D9J7w6z7yPjpCNT7WpKvjdmgpWCh8v0T+tfhg8/usQ2S
-         qxzD1DVFeGRDzfMdTbzugp4O2v1ucUKTEzcLGBxMcQN6VEjE5Z8hrMTeBiRUkKsJoPX4
-         8B3w==
-X-Gm-Message-State: AOAM530ikwIxyEQiGg4c1fSMvfUmleMq2nRBZi815gfSIdofCAXIQahg
-        DQRlnqEWOR5QDCRX03rRtANpWyZc2iqQGA==
-X-Google-Smtp-Source: ABdhPJy5SATVXejtebcdAHyUIxrVx+lZhEgH1TUTSkdIPPrq2xzFuUIkzbmUAEOctC/EelRcZs920g==
-X-Received: by 2002:a1c:491:: with SMTP id 139mr6366079wme.137.1630004307056;
-        Thu, 26 Aug 2021 11:58:27 -0700 (PDT)
+        bh=A+DG0W5+2eklf4TtXNvnExlRa/zaKSRLzk5O/0U5K0w=;
+        b=ntxjUS//jsX2GlJA6Y/T3yZfcTgxULDV6kcG2n13OzpiuBckcKV9NT1+AmntroV0Uo
+         74w2vuZEesYXP8tCoPsZfYhn1Ae6aC8nLaJoY97J3MamrHbsZ1A4cr3IMEvtlNVW5ubh
+         UF7yiFIoT1cOkHkU1pxcJVXnK2/6gEYVg92MJNj654nOK6y8KZLbFo8mnspdzkIwdoM0
+         8YGX5pxiZ+ueodVTjKAMpELL8k9At4/sOwdgvlps336AVdUyUO4rWU9nND1KtXuPRnAd
+         QYJ04DQ2VBisI2J6XoYc6hUi0Q8EZeiORE4m7doSOvqHNAlyxy2qTtKnfQf1vGzHHIdU
+         VgVw==
+X-Gm-Message-State: AOAM5338H4q/hMfsGR9YaxbIpBc4/v+ZOR1Oy1oGMbO1BYtHbztyzBhA
+        2+e+IFg1kkJ5awtzbk1YqmVHoLx9Y3HeNQ==
+X-Google-Smtp-Source: ABdhPJyzhanBtGemLIKksbfa5mBbVLTxY1yOPby8E/bgSyo4RyYV8xu0zGQ5ruG7kD9PVI7DLA6+Jw==
+X-Received: by 2002:a7b:c927:: with SMTP id h7mr5124646wml.154.1630004313599;
+        Thu, 26 Aug 2021 11:58:33 -0700 (PDT)
 Received: from ?IPv6:2003:ea:8f08:4500:b5d8:a3dc:f88f:cae2? (p200300ea8f084500b5d8a3dcf88fcae2.dip0.t-ipconnect.de. [2003:ea:8f08:4500:b5d8:a3dc:f88f:cae2])
-        by smtp.googlemail.com with ESMTPSA id n4sm3773167wri.78.2021.08.26.11.58.24
+        by smtp.googlemail.com with ESMTPSA id b15sm4506476wru.1.2021.08.26.11.58.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Aug 2021 11:58:26 -0700 (PDT)
-Subject: [PATCH 3/7] PCI/VPD: Include post-processing in pci_vpd_find_tag()
+        Thu, 26 Aug 2021 11:58:33 -0700 (PDT)
+Subject: [PATCH 5/7] cxgb4: Use pci_vpd_find_id_string() to find VPD id string
 From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To:     Raju Rangoju <rajur@chelsio.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        David Miller <davem@davemloft.net>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 References: <5fa6578d-1515-20d3-be5f-9e7dc7db4424@gmail.com>
-Message-ID: <fb15393f-d3b2-e140-2643-570d3abd7382@gmail.com>
-Date:   Thu, 26 Aug 2021 20:55:07 +0200
+Message-ID: <19ea2e9b-6e94-288a-6612-88db01b1b417@gmail.com>
+Date:   Thu, 26 Aug 2021 20:56:22 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
 MIME-Version: 1.0
@@ -75,66 +79,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move pci_vpd_find_tag() post-processing from pci_vpd_find_ro_info_keyword()
-to pci_vpd_find_tag(). This simplifies function pci_vpd_find_id_string()
-that will be added in a subsequent patch.
+Use new VPD API function pci_vpd_find_id_string() for finding the VPD
+id string. This simplifies the code and avoids using VPD low-level
+function pci_vpd_lrdt_size().
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/pci/vpd.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 0e7a5e8a8..b7bf014cc 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -296,16 +296,25 @@ void *pci_vpd_alloc(struct pci_dev *dev, unsigned int *size)
- }
- EXPORT_SYMBOL_GPL(pci_vpd_alloc);
- 
--static int pci_vpd_find_tag(const u8 *buf, unsigned int len, u8 rdt)
-+static int pci_vpd_find_tag(const u8 *buf, unsigned int len, u8 rdt, unsigned int *size)
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index 5e8ac42ac..64144b617 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -2744,7 +2744,7 @@ int t4_seeprom_wp(struct adapter *adapter, bool enable)
+ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
  {
- 	int i = 0;
+ 	unsigned int id_len, pn_len, sn_len, na_len;
+-	int sn, pn, na, addr, ret = 0;
++	int id, sn, pn, na, addr, ret = 0;
+ 	u8 *vpd, base_val = 0;
  
- 	/* look for LRDT tags only, end tag is the only SRDT tag */
- 	while (i + PCI_VPD_LRDT_TAG_SIZE <= len && buf[i] & PCI_VPD_LRDT) {
--		if (buf[i] == rdt)
-+		unsigned int lrdt_len = pci_vpd_lrdt_size(buf + i);
-+		u8 tag = buf[i];
-+
-+		i += PCI_VPD_LRDT_TAG_SIZE;
-+		if (tag == rdt) {
-+			if (i + lrdt_len > len)
-+				lrdt_len = len - i;
-+			if (size)
-+				*size = lrdt_len;
- 			return i;
-+		}
+ 	vpd = vmalloc(VPD_LEN);
+@@ -2764,13 +2764,10 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
+ 	if (ret < 0)
+ 		goto out;
  
--		i += PCI_VPD_LRDT_TAG_SIZE + pci_vpd_lrdt_size(buf + i);
-+		i += lrdt_len;
- 	}
- 
- 	return -ENOENT;
-@@ -384,16 +393,10 @@ int pci_vpd_find_ro_info_keyword(const void *buf, unsigned int len,
- 	int ro_start, infokw_start;
- 	unsigned int ro_len, infokw_size;
- 
--	ro_start = pci_vpd_find_tag(buf, len, PCI_VPD_LRDT_RO_DATA);
-+	ro_start = pci_vpd_find_tag(buf, len, PCI_VPD_LRDT_RO_DATA, &ro_len);
- 	if (ro_start < 0)
- 		return ro_start;
- 
--	ro_len = pci_vpd_lrdt_size(buf + ro_start);
--	ro_start += PCI_VPD_LRDT_TAG_SIZE;
+-	if (vpd[0] != PCI_VPD_LRDT_ID_STRING) {
+-		dev_err(adapter->pdev_dev, "missing VPD ID string\n");
+-		ret = -EINVAL;
++	ret = pci_vpd_find_id_string(vpd, VPD_LEN, &id_len);
++	if (ret < 0)
+ 		goto out;
+-	}
 -
--	if (ro_start + ro_len > len)
--		ro_len = len - ro_start;
--
- 	infokw_start = pci_vpd_find_info_keyword(buf, ro_start, ro_len, kw);
- 	if (infokw_start < 0)
- 		return infokw_start;
+-	id_len = pci_vpd_lrdt_size(vpd);
++	id = ret;
+ 
+ 	ret = pci_vpd_check_csum(vpd, VPD_LEN);
+ 	if (ret) {
+@@ -2796,7 +2793,7 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
+ 		goto out;
+ 	na = ret;
+ 
+-	memcpy(p->id, vpd + PCI_VPD_LRDT_TAG_SIZE, min_t(int, id_len, ID_LEN));
++	memcpy(p->id, vpd + id, min_t(int, id_len, ID_LEN));
+ 	strim(p->id);
+ 	memcpy(p->sn, vpd + sn, min_t(int, sn_len, SERNUM_LEN));
+ 	strim(p->sn);
 -- 
 2.33.0
 
