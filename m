@@ -2,123 +2,60 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7849BC4320E
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Aug 2021 20:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA4FC4320E
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Aug 2021 20:36:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6317660F92
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Aug 2021 20:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD67461004
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Aug 2021 20:36:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230476AbhH0UUX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Aug 2021 16:20:23 -0400
-Received: from mail.skyhub.de ([5.9.137.197]:35228 "EHLO mail.skyhub.de"
+        id S231533AbhH0UhP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Aug 2021 16:37:15 -0400
+Received: from rosenzweig.io ([138.197.143.207]:43708 "EHLO rosenzweig.io"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229591AbhH0UUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Aug 2021 16:20:22 -0400
-Received: from zn.tnic (p200300ec2f1117002bace1eb09205059.dip0.t-ipconnect.de [IPv6:2003:ec:2f11:1700:2bac:e1eb:920:5059])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 6167E1EC0537;
-        Fri, 27 Aug 2021 22:19:27 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1630095567;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=8aXcMzbdacH3FMLx51gs5poye2a2e6/NSjRioCCSOi0=;
-        b=eDIOLsQD2VAyU8EDgvKUEgt2BAJIn7cUUHNpFYHiyQIRFvLpi9sMvHZoP+TvXh9mzZWz/a
-        PQUTAh1Bo0YOD2+lorWeiGMw9XnLs6PW/dNfy3EbGhU9NEtN5LiwDADAihyFTwcf4vHmfs
-        hcbK1xo9UbGs9czeoUCMUni1jJygtsw=
-Date:   Fri, 27 Aug 2021 22:20:09 +0200
-From:   Borislav Petkov <bp@alien8.de>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Clemens Ladisch <clemens@ladisch.de>, linux-hwmon@vger.kernel.org,
-        Gabriel Craciunescu <nix.or.die@googlemail.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Wei Huang <wei.huang2@amd.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Jean Delvare <jdelvare@suse.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yazen Ghannam <yazen.ghannam@amd.com>,
-        David Bartley <andareed@gmail.com>,
-        "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" 
-        <linux-kernel@vger.kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/3] hwmon: (k10temp): Add support for yellow carp
-Message-ID: <YSlI+Us347E6LQx2@zn.tnic>
-References: <20210827201527.24454-1-mario.limonciello@amd.com>
- <20210827201527.24454-3-mario.limonciello@amd.com>
+        id S231317AbhH0UhP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Aug 2021 16:37:15 -0400
+Date:   Fri, 27 Aug 2021 16:09:13 -0400
+From:   Alyssa Rosenzweig <alyssa@rosenzweig.io>
+To:     Mark Kettenis <mark.kettenis@xs4all.nl>
+Cc:     devicetree@vger.kernel.org, kettenis@openbsd.org,
+        tglx@linutronix.de, maz@kernel.org, robh+dt@kernel.org,
+        marcan@marcan.st, bhelgaas@google.com, nsaenz@kernel.org,
+        jim2101024@gmail.com, f.fainelli@gmail.com,
+        bcm-kernel-feedback-list@broadcom.com,
+        daire.mcnamara@microchip.com, nsaenzjulienne@suse.de,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
+Subject: Re: [PATCH v4 4/4] arm64: apple: Add PCIe node
+Message-ID: <YSlGaVSaqphqXbBr@sunset>
+References: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
+ <20210827171534.62380-5-mark.kettenis@xs4all.nl>
+ <YSkoHw3dZrW5Qnjf@rosenzweig.io>
+ <56142087154d4d9e@bloch.sibelius.xs4all.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210827201527.24454-3-mario.limonciello@amd.com>
+In-Reply-To: <56142087154d4d9e@bloch.sibelius.xs4all.nl>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 27, 2021 at 03:15:26PM -0500, Mario Limonciello wrote:
-> Yellow carp matches same behavior as green sardine and other Zen3
-> products, but have different CCD offsets.
+> > > Clock references and DART (IOMMU) references are left out at the
+> > > moment and will be added once the appropriate bindings have been
+> > > settled upon.
+> > > 
+> > 
+> > DART is in mainline .... is there a PCIe specific issue?
 > 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
->  arch/x86/kernel/amd_nb.c | 5 +++++
->  drivers/hwmon/k10temp.c  | 5 +++++
->  include/linux/pci_ids.h  | 1 +
->  3 files changed, 11 insertions(+)
-> 
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index 23dda362dc0f..c92c9c774c0e 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -25,6 +25,8 @@
->  #define PCI_DEVICE_ID_AMD_17H_M60H_DF_F4 0x144c
->  #define PCI_DEVICE_ID_AMD_17H_M70H_DF_F4 0x1444
->  #define PCI_DEVICE_ID_AMD_19H_DF_F4	0x1654
-> +#define PCI_DEVICE_ID_AMD_19H_M40H_ROOT	0x14b5
-> +#define PCI_DEVICE_ID_AMD_19H_M40H_DF_F4 0x167d
->  #define PCI_DEVICE_ID_AMD_19H_M50H_DF_F4 0x166e
->  
->  /* Protect the PCI config register pairs used for SMN and DF indirect access. */
-> @@ -37,6 +39,7 @@ static const struct pci_device_id amd_root_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M10H_ROOT) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M30H_ROOT) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M60H_ROOT) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M40H_ROOT) },
->  	{}
->  };
->  
-> @@ -58,6 +61,7 @@ static const struct pci_device_id amd_nb_misc_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CNB17H_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M70H_DF_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_DF_F3) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M40H_DF_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M50H_DF_F3) },
->  	{}
->  };
-> @@ -74,6 +78,7 @@ static const struct pci_device_id amd_nb_link_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M60H_DF_F4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_17H_M70H_DF_F4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_DF_F4) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M40H_DF_F4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M50H_DF_F4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CNB17H_F4) },
->  	{}
+> True.  I don't expect 4/4 to be merged as part of this series though
+> as it will need to go through marcan's tree.  It is mostly there to
+> show what the device tree will look like.
 
-The x86 bits:
-
-Acked-by: Borislav Petkov <bp@suse.de>
-
-Thx.
-
--- 
-Regards/Gruss,
-    Boris.
-
-https://people.kernel.org/tglx/notes-about-netiquette
+Fair enough. When it does get merged it'll need the updates from my my
+PCIe series (v2). It looks like the only change needed for the commit
+proposed there is updating the msi-ranges format. Hopefully the solution
+proposed here is acceptable to both robh and maz so we can move forward
+with this :-)
