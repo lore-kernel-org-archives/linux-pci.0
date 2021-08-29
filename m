@@ -2,237 +2,163 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83FF0C432BE
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Aug 2021 21:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25168C43216
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Aug 2021 22:26:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D2E960F4C
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Aug 2021 21:06:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07CED60524
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Aug 2021 22:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233841AbhH2VHD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Aug 2021 17:07:03 -0400
-Received: from mga06.intel.com ([134.134.136.31]:34658 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232450AbhH2VG7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Aug 2021 17:06:59 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10091"; a="279191767"
-X-IronPort-AV: E=Sophos;i="5.84,362,1620716400"; 
-   d="scan'208";a="279191767"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Aug 2021 14:06:07 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,362,1620716400"; 
-   d="scan'208";a="518521357"
-Received: from lkp-server01.sh.intel.com (HELO 4fbc2b3ce5aa) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 29 Aug 2021 14:06:05 -0700
-Received: from kbuild by 4fbc2b3ce5aa with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mKS0D-0004aD-8W; Sun, 29 Aug 2021 21:06:05 +0000
-Date:   Mon, 30 Aug 2021 05:05:51 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:pci/reset] BUILD SUCCESS
- 9bdc81ce440ec6ea899b236879aee470ec388020
-Message-ID: <612bf6af.jSFFMyQJWhMXoHBs%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S235598AbhH2W1Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Aug 2021 18:27:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:45318 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235688AbhH2W1X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Aug 2021 18:27:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1630275990;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=w+MBpgO+PBJKHqx0Y7eErLZSvPvNS8U9WRpzvSbhkVw=;
+        b=gAmBZHwpZem49MSfu5U/CZ/a5gr5V2xPAiE8x7s7qTrcmyfHUZMhvXgnbBO48QN3T2mExC
+        dO1u1BknmTb7tV0FmR+iQOV+BEZ7G638rsmFUPAERL53ZoCG+bUOEYbJE+c6RSOTkl8b/o
+        ajJCJ6lUbgZfEZWmQfT67AkAmqdybSI=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-400-DIbUUpx1PLWZsHH5gV79Cw-1; Sun, 29 Aug 2021 18:26:29 -0400
+X-MC-Unique: DIbUUpx1PLWZsHH5gV79Cw-1
+Received: by mail-wm1-f72.google.com with SMTP id c2-20020a7bc8420000b0290238db573ab7so9207914wml.5
+        for <linux-pci@vger.kernel.org>; Sun, 29 Aug 2021 15:26:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=w+MBpgO+PBJKHqx0Y7eErLZSvPvNS8U9WRpzvSbhkVw=;
+        b=g0lbxyuIl3NPSLn+xTiYT2tJ/5jUMXS94CrGKeJusj1DAyjnuwxtb88KwCHdfUpMai
+         eK3GZsKgprCOxphD3fnlZkTneXT7+czM/bgucwRtEtlx5bS7sI0qO4FLwGHBbmOPkttf
+         LPJC5oqMl5g0b/EeF34CRq4PTERlIJZLsowMl8lBvRo08FQyAl/tTxUdfaAP485zUDML
+         TfTeVtENV5zmg/sxhgQbV/rHliDDm38T1uD1F2yNJgC037GITpHp0Iomyf4AxTo2iwgh
+         56FbEyQH92KafhwdR52OQj0tgyjJoX8VWXIqYZBxP7J1LP8EpAszxdpn0kleJyjAWgzH
+         s95Q==
+X-Gm-Message-State: AOAM530KVwBqc2JWZH3Bolugc2yinncJOwaeoxXXS5VeyyBrAR2Q95Z4
+        0h9Yb656JULcStU4einkU+Y24UcyDKdxWgxOStHTpTLmEom6UBxivfpjEhqnM6Ro/UrxnDAIJDa
+        FpkEXr4e8sxxltxiu3ma3
+X-Received: by 2002:adf:d191:: with SMTP id v17mr9646951wrc.345.1630275987855;
+        Sun, 29 Aug 2021 15:26:27 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwrWdV4UWjmsxWXnznxAyF40RS7x+qTXWNuG7vw+rYxDj6nRO9NmovukIvxjT80bQD6fn6smQ==
+X-Received: by 2002:adf:d191:: with SMTP id v17mr9646917wrc.345.1630275987667;
+        Sun, 29 Aug 2021 15:26:27 -0700 (PDT)
+Received: from redhat.com ([2.55.28.138])
+        by smtp.gmail.com with ESMTPSA id c190sm12208101wma.21.2021.08.29.15.26.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 29 Aug 2021 15:26:26 -0700 (PDT)
+Date:   Sun, 29 Aug 2021 18:26:20 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Andi Kleen <ak@linux.intel.com>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        "Kuppuswamy, Sathyanarayanan" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        James E J Bottomley <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Peter H Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Kirill Shutemov <kirill.shutemov@linux.intel.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
+        X86 ML <x86@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-alpha@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v4 11/15] pci: Add pci_iomap_shared{,_range}
+Message-ID: <20210829181635-mutt-send-email-mst@kernel.org>
+References: <20210805005218.2912076-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20210805005218.2912076-12-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20210823195409-mutt-send-email-mst@kernel.org>
+ <26a3cce5-ddf7-cbe6-a41e-58a2aea48f78@linux.intel.com>
+ <CAPcyv4iJVQKJ3bVwZhD08c8GNEP0jW2gx=H504NXcYK5o2t01A@mail.gmail.com>
+ <d992b5af-8d57-6aa6-bd49-8e2b8d832b19@linux.intel.com>
+ <20210824053830-mutt-send-email-mst@kernel.org>
+ <d21a2a2d-4670-ba85-ce9a-fc8ea80ef1be@linux.intel.com>
+ <20210829112105-mutt-send-email-mst@kernel.org>
+ <09b340dd-c8a8-689c-4dad-4fe0e36d39ae@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <09b340dd-c8a8-689c-4dad-4fe0e36d39ae@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/reset
-branch HEAD: 9bdc81ce440ec6ea899b236879aee470ec388020  PCI: Change the type of probe argument in reset functions
+On Sun, Aug 29, 2021 at 09:17:53AM -0700, Andi Kleen wrote:
+> Also I changing this single call really that bad? It's not that we changing
+> anything drastic here, just give the low level subsystem a better hint about
+> the intention. If you don't like the function name, could make it an
+> argument instead?
 
-elapsed time: 13230m
+My point however is that the API should say that the
+driver has been audited, not that the mapping has been
+done in some special way. For example the mapping can be
+in some kind of wrapper, not directly in the driver.
+However you want the driver validated, not the wrapper.
 
-configs tested: 172
-configs skipped: 3
+Here's an idea:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20210826
-powerpc              randconfig-c003-20210826
-arm                         cm_x300_defconfig
-alpha                            alldefconfig
-m68k                         apollo_defconfig
-powerpc                      pmac32_defconfig
-powerpc                   bluestone_defconfig
-arm                         lpc18xx_defconfig
-arm                       multi_v4t_defconfig
-s390                                defconfig
-mips                        bcm63xx_defconfig
-arc                                 defconfig
-arm                        clps711x_defconfig
-mips                         tb0219_defconfig
-powerpc                 mpc8540_ads_defconfig
-arm                         palmz72_defconfig
-sh                             shx3_defconfig
-powerpc                 mpc85xx_cds_defconfig
-powerpc                      chrp32_defconfig
-arm                          moxart_defconfig
-ia64                         bigsur_defconfig
-mips                      maltasmvp_defconfig
-xtensa                  nommu_kc705_defconfig
-riscv                            alldefconfig
-powerpc                     asp8347_defconfig
-arc                     nsimosci_hs_defconfig
-m68k                        mvme16x_defconfig
-arm                            xcep_defconfig
-sh                           se7780_defconfig
-arm                          imote2_defconfig
-powerpc                     tqm8541_defconfig
-arm                           h3600_defconfig
-parisc                generic-64bit_defconfig
-riscv                    nommu_virt_defconfig
-arm                       imx_v4_v5_defconfig
-mips                         bigsur_defconfig
-x86_64                           alldefconfig
-arm                          exynos_defconfig
-powerpc                      pasemi_defconfig
-mips                           ip32_defconfig
-arm                           tegra_defconfig
-openrisc                 simple_smp_defconfig
-powerpc                        icon_defconfig
-m68k                          multi_defconfig
-arc                        vdk_hs38_defconfig
-powerpc                 mpc8313_rdb_defconfig
-mips                          rb532_defconfig
-ia64                      gensparse_defconfig
-mips                         cobalt_defconfig
-powerpc                    amigaone_defconfig
-arc                         haps_hs_defconfig
-arm                       aspeed_g5_defconfig
-arm                         s5pv210_defconfig
-powerpc                  mpc866_ads_defconfig
-powerpc                 mpc8272_ads_defconfig
-arc                      axs103_smp_defconfig
-sh                ecovec24-romimage_defconfig
-arm                          badge4_defconfig
-sh                     sh7710voipgw_defconfig
-powerpc                     akebono_defconfig
-sh                          rsk7203_defconfig
-sh                               alldefconfig
-sh                               j2_defconfig
-s390                          debug_defconfig
-powerpc                 linkstation_defconfig
-mips                  decstation_64_defconfig
-microblaze                      mmu_defconfig
-x86_64                            allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-nios2                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a006-20210822
-i386                 randconfig-a001-20210822
-i386                 randconfig-a002-20210822
-i386                 randconfig-a005-20210822
-i386                 randconfig-a003-20210822
-i386                 randconfig-a004-20210822
-x86_64               randconfig-a014-20210821
-x86_64               randconfig-a016-20210821
-x86_64               randconfig-a015-20210821
-x86_64               randconfig-a013-20210821
-x86_64               randconfig-a012-20210821
-x86_64               randconfig-a011-20210821
-i386                 randconfig-a011-20210821
-i386                 randconfig-a016-20210821
-i386                 randconfig-a012-20210821
-i386                 randconfig-a014-20210821
-i386                 randconfig-a013-20210821
-i386                 randconfig-a015-20210821
-arc                  randconfig-r043-20210821
-riscv                randconfig-r042-20210821
-s390                 randconfig-r044-20210821
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
 
-clang tested configs:
-i386                 randconfig-c001-20210822
-s390                 randconfig-c005-20210822
-arm                  randconfig-c002-20210822
-riscv                randconfig-c006-20210822
-powerpc              randconfig-c003-20210822
-x86_64               randconfig-c007-20210822
-mips                 randconfig-c004-20210822
-s390                 randconfig-c005-20210821
-i386                 randconfig-c001-20210821
-arm                  randconfig-c002-20210821
-riscv                randconfig-c006-20210821
-powerpc              randconfig-c003-20210821
-x86_64               randconfig-c007-20210821
-x86_64               randconfig-a005-20210821
-x86_64               randconfig-a001-20210821
-x86_64               randconfig-a006-20210821
-x86_64               randconfig-a003-20210821
-x86_64               randconfig-a004-20210821
-x86_64               randconfig-a002-20210821
-i386                 randconfig-a006-20210821
-i386                 randconfig-a001-20210821
-i386                 randconfig-a002-20210821
-i386                 randconfig-a005-20210821
-i386                 randconfig-a004-20210821
-i386                 randconfig-a003-20210821
-i386                 randconfig-a011-20210822
-i386                 randconfig-a016-20210822
-i386                 randconfig-a012-20210822
-i386                 randconfig-a014-20210822
-i386                 randconfig-a013-20210822
-i386                 randconfig-a015-20210822
-hexagon              randconfig-r041-20210822
-hexagon              randconfig-r045-20210822
-riscv                randconfig-r042-20210822
-s390                 randconfig-r044-20210822
+diff --git a/include/linux/audited.h b/include/linux/audited.h
+new file mode 100644
+index 000000000000..e23fd6ad50db
+--- /dev/null
++++ b/include/linux/audited.h
+@@ -0,0 +1,3 @@
++#ifndef AUDITED_MODULE
++#define AUDITED_MODULE
++#endif
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Now any audited driver must do
+#include <linux/audited.h>
+first of all.
+Implementation-wise it can do any number of things,
+e.g. if you like then sure you can do:
+
+#ifdef AUDITED_MODULE
+#define pci_ioremap pci_ioremap_shared
+#else
+#define pci_ioremap pci_ioremap
+#endif
+
+but you can also thinkably do something like (won't work,
+but just to give you the idea):
+
+#ifdef AUDITED_MODULE
+#define __init __init
+#else
+#define __init
+#endif
+
+or any number of hacks like this.
+
+
+-- 
+MST
+
