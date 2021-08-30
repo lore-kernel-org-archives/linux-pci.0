@@ -2,272 +2,257 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CEEBC4320A
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A3FC432BE
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:14:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CEEA60FF2
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:09:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37BD60ED4
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:14:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238432AbhH3SKg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 14:10:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37370 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238150AbhH3SKf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Aug 2021 14:10:35 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9080660F92;
-        Mon, 30 Aug 2021 18:09:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630346981;
-        bh=rDSGvuqVmtXFi7lKhzBU2WdstwpoxEJzkSUzSJNHfek=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=oI+Y/+o8rEOW0VkHvEjnrKdjqyw43DrcKiC3ntX3slLm78rQZnBGsc3mVGjFs/Wvv
-         +Hev1Ynz8/GOLHoiVfbMo8V3HwRnatPqbWpxaq0Qa3szfG1o8tha3Lp/VfndJN/upt
-         /504wegVRz+/14EuQFXKjNQQF316isZ7PbSMRKlhiGWdGSgqfNvQqwXMTXvUvXaxuw
-         jzyMqRbA4Rfe8fWpCoGVjYORZixtckj+/xBIHIwllc9bf0mVTT9zt/QbmvZLP8906q
-         91/m3ted6WY8ID6z01byvBszYhvpl+i6B6j4/HmG1jVj7+cuS+C9hMREA87kKTkm2/
-         kmJSlVy66+F3Q==
-Date:   Mon, 30 Aug 2021 13:09:40 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     hkallweit1@gmail.com, nic_swsd@realtek.com, bhelgaas@google.com,
-        davem@davemloft.net, kuba@kernel.org, anthony.wong@canonical.com,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC] [PATCH net-next v4] [PATCH 2/2] r8169: Implement dynamic
- ASPM mechanism
-Message-ID: <20210830180940.GA4209@bjorn-Precision-5520>
+        id S238463AbhH3SP2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 14:15:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45510 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238150AbhH3SP2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 14:15:28 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A8EAC061575;
+        Mon, 30 Aug 2021 11:14:34 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id q3so22930993edt.5;
+        Mon, 30 Aug 2021 11:14:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=0j4HbXVAukqCvkqeiElajeZaQqhOfru+oix0tV+lQrI=;
+        b=QVUhEAZZ9HU15JpJ9CRyLHMIFOZ1jMD+Io0SA44k9zuJteTpy6xjFzlUQZVkkcSkAV
+         8THSnA5pErW9mh5pJyM+NbnYl7Pw651j82Rv9+L74mEpHDw71DdAC/F+7u9mhJOrEAVp
+         NajR+KTLYwgtN7wVhlmT8ko8uVqjccOkx8ogYtd9m7TZ809y5yL0WesSsInyR/yAeK28
+         eFRizHIseQzk1IK58Vs/HoFFHx2poJxRlKEsEqdJ+jKqtlRr8DK+2Oj+3H+0OX4mePK4
+         OB98P/mpsDnjicliInySQwE++/oZtWD2CEUUEBNwurI4C5HEa27VWGOOCPKWnWRtwBK4
+         4LaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=0j4HbXVAukqCvkqeiElajeZaQqhOfru+oix0tV+lQrI=;
+        b=KnIuTWBGZj2wUF0w6NNUjifJIpR1tWCa2QzRWG2/XsAGlu/4gfNtkz6dIMf4X2YI3C
+         +TFWClusR0BNbYTvhXZCGp3qKsoAKo6menxygUPYYyFSvL/VbV7ti5TbYRW5G3ZkW8op
+         uUIrrkl5eV4YXUrNuJbsKkB0tm3Iu1HYJN2R6t/b1i0CYSQ0pCBe55syIRXtv9TcfEyV
+         tS0GKi896FLMF3bw2+hz/eBDoVTuonHgsiBZnd7jyjlnJR+q6sOeFtHIzOVBc+DO3bkN
+         UNOvkS/8IhgCil9/cNpJgUlgg20Pq/IgHMxVdeWfQXALc3OcrdqJMWgugzlqJ+2foOTu
+         04jQ==
+X-Gm-Message-State: AOAM531GupWIqGOYVIAinp3jdRN8YR1L6xboueQlpzgZJ9aRPC3tyGLW
+        GoeGgAUN8fzhZs8zCdTHEkc=
+X-Google-Smtp-Source: ABdhPJw4A9PXJGNP++AeWzylFWjXO6a0PeDAh3ff0+0VYFa/9G5+yu5ZZ7PL5Fqs++aDAAtRkCC1sQ==
+X-Received: by 2002:a05:6402:5108:: with SMTP id m8mr25755510edd.367.1630347272917;
+        Mon, 30 Aug 2021 11:14:32 -0700 (PDT)
+Received: from localhost (host-79-37-188-60.retail.telecomitalia.it. [79.37.188.60])
+        by smtp.gmail.com with ESMTPSA id i6sm6987518ejr.68.2021.08.30.11.14.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Aug 2021 11:14:32 -0700 (PDT)
+Date:   Mon, 30 Aug 2021 22:14:26 +0200
+From:   Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <lonyelon@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, bhelgaas@google.com,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <sergio@lony.xyz>
+Subject: Re: [PATCH v2] xen/pcifront: Removed unnecessary __ref annotation
+Message-ID: <20210830201426.g2vaxh6chqnprual@archlap>
+References: <20210830175305.13370-1-sergio@lony.xyz>
+ <20210830162922.GA4188989@bjorn-Precision-5520>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210827171452.217123-3-kai.heng.feng@canonical.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210830162922.GA4188989@bjorn-Precision-5520>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Aug 28, 2021 at 01:14:52AM +0800, Kai-Heng Feng wrote:
-> r8169 NICs on some platforms have abysmal speed when ASPM is enabled.
-> Same issue can be observed with older vendor drivers.
+Thanks again for you answers!
+I am lerning a lot from your replys and I really appreciate it. Should I
+make a v3 patch and split that one into 2 different patches or would it
+be confusing?
+
+I don't want to take more of your time with poor patches so I don't know
+if I should resend this one.
+
+Thanks again,
+Sergio M. Iglesias.
+
+On 21/08/30 11:29, Bjorn Helgaas wrote:
+> On Mon, Aug 30, 2021 at 07:53:05PM +0200, Sergio Miguéns Iglesias wrote:
+> > An unnecessary "__ref" annotation was removed from the
+> > "drivers/pci/xen_pcifront.c" file. The function where the annotation
+> > was used was "pcifront_backend_changed()", which does not call any
+> > functions annotated as "__*init" nor "__*exit". This makes "__ref"
+> > unnecessary since this annotation is used to make the compiler ignore
+> > section miss-matches when they are not happening here in the first
+> > place.
+> > 
+> > In addition to the aforementioned change, some code style issues were
+> > fixed in the same file.
 > 
-> The issue is however solved by the latest vendor driver. There's a new
-> mechanism, which disables r8169's internal ASPM when the NIC traffic has
-> more than 10 packets, and vice versa. The possible reason for this is
-> likely because the buffer on the chip is too small for its ASPM exit
-> latency.
-
-This sounds like good speculation, but of course, it would be better
-to have the supporting data.
-
-You say above that this problem affects r8169 on "some platforms."  I
-infer that ASPM works fine on other platforms.  It would be extremely
-interesting to have some data on both classes, e.g., "lspci -vv"
-output for the entire system.
-
-If r8169 ASPM works well on some systems, we *should* be able to make
-it work well on *all* systems, because the device can't tell what
-system it's in.  All the device can see are the latencies for entry
-and exit for link states.
-
-IIUC this patch makes the driver wake up every 1000ms.  If the NIC has
-sent or received more than 10 packets in the last 1000ms, it disables
-ASPM; otherwise it enables ASPM.
-
-I asked these same questions earlier, but nothing changed, so I won't
-raise them again if you don't think they're pertinent.  Some patch
-splitting comments below.
-
-> Realtek confirmed that all their PCIe LAN NICs, r8106, r8168 and r8125
-> use dynamic ASPM under Windows. So implement the same mechanism here to
-> resolve the issue.
+> One of the Xen folks may apply this, and they may not be as nit-picky
+> as I am :)
 > 
-> Because ASPM control may not be granted by BIOS while ASPM is enabled,
-> remove aspm_manageable and use pcie_aspm_capable() instead. If BIOS
-> enables ASPM for the device, we want to enable dynamic ASPM on it.
+> If I were to apply this, I would suggest:
 > 
-> In addition, since PCIe ASPM can be switched via sysfs, enable/disable
-> dynamic ASPM accordingly by checking pcie_aspm_enabled().
+>   - Write subject line and commit message in imperative mood.  This is
+>     a really good guide to this and other commit message this:
+>     https://chris.beams.io/posts/git-commit/
 > 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
-> v4:
->  - Squash two patches
->  - Remove aspm_manageable and use pcie_aspm_capable()
->    pcie_aspm_enabled() accordingly
+>     For example, in the subject, say "Remove" (not "Removed").  Same
+>     in the body.  In the body, I would mention the function but not
+>     the filename since that's obvious from the diff.
 > 
-> v3:
->  - Use msecs_to_jiffies() for delay time
->  - Use atomic_t instead of mutex for bh
->  - Mention the buffer size and ASPM exit latency in commit message
+>   - Split the __ref change into a separate patch from the style
+>     changes.  The __ref removal should come first and be the absolute
+>     minimal patch.  That makes it much easier to review, backport, and
+>     revert if necessary.  And, if the maintainer isn't wild about
+>     style patches, it's trivial to just ignore that patch.
 > 
-> v2: 
->  - Use delayed_work instead of timer_list to avoid interrupt context
->  - Use mutex to serialize packet counter read/write
->  - Wording change
->  drivers/net/ethernet/realtek/r8169_main.c | 77 ++++++++++++++++++++---
->  1 file changed, 69 insertions(+), 8 deletions(-)
+>     Commit logs that say "Also, ..." or "In addition, ..." are always
+>     red flags to me because they usually indicate the patch could be
+>     split into two or more simpler patches.
 > 
-> diff --git a/drivers/net/ethernet/realtek/r8169_main.c b/drivers/net/ethernet/realtek/r8169_main.c
-> index 46a6ff9a782d7..97dba8f437b78 100644
-> --- a/drivers/net/ethernet/realtek/r8169_main.c
-> +++ b/drivers/net/ethernet/realtek/r8169_main.c
-> @@ -623,7 +623,10 @@ struct rtl8169_private {
->  	} wk;
->  
->  	unsigned supports_gmii:1;
-> -	unsigned aspm_manageable:1;
-> +	unsigned rtl_aspm_enabled:1;
-> +	struct delayed_work aspm_toggle;
-> +	atomic_t aspm_packet_count;
-> +
->  	dma_addr_t counters_phys_addr;
->  	struct rtl8169_counters *counters;
->  	struct rtl8169_tc_offsets tc_offset;
-> @@ -698,6 +701,20 @@ static bool rtl_is_8168evl_up(struct rtl8169_private *tp)
->  	       tp->mac_version <= RTL_GIGA_MAC_VER_53;
->  }
->  
-> +static int rtl_supports_aspm(struct rtl8169_private *tp)
-> +{
-> +	switch (tp->mac_version) {
-> +	case RTL_GIGA_MAC_VER_02 ... RTL_GIGA_MAC_VER_31:
-> +	case RTL_GIGA_MAC_VER_37:
-> +	case RTL_GIGA_MAC_VER_39:
-> +	case RTL_GIGA_MAC_VER_43:
-> +	case RTL_GIGA_MAC_VER_47:
-> +		return 0;
-> +	default:
-> +		return 1;
-> +	}
-
-This part looks like it should be a separate patch.  I would think
-rtl_init_one() could call this once and set a bit in rtl8169_private.
-Then rtl_hw_aspm_clkreq_enable() could just return without doing
-anything if the bit is not set.
-
-> +}
-> +
->  static bool rtl_supports_eee(struct rtl8169_private *tp)
->  {
->  	return tp->mac_version >= RTL_GIGA_MAC_VER_34 &&
-> @@ -2699,8 +2716,15 @@ static void rtl_enable_exit_l1(struct rtl8169_private *tp)
->  
->  static void rtl_hw_aspm_clkreq_enable(struct rtl8169_private *tp, bool enable)
->  {
-> +	struct pci_dev *pdev = tp->pci_dev;
-> +
-> +	if (!pcie_aspm_enabled(pdev) && enable)
-> +		return;
-> +
-> +	tp->rtl_aspm_enabled = enable;
-> +
->  	/* Don't enable ASPM in the chip if OS can't control ASPM */
-> -	if (enable && tp->aspm_manageable) {
-> +	if (enable) {
-
-This part also looks like it should be a separate patch, since it is
-strictly concerned with whether the OS can control ASPM and doesn't
-seem related to dynamic ASPM.
-
->  		RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
->  		RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
->  	} else {
-> @@ -4440,6 +4464,7 @@ static void rtl_tx(struct net_device *dev, struct rtl8169_private *tp,
->  
->  	dirty_tx = tp->dirty_tx;
->  
-> +	atomic_add(tp->cur_tx - dirty_tx, &tp->aspm_packet_count);
->  	while (READ_ONCE(tp->cur_tx) != dirty_tx) {
->  		unsigned int entry = dirty_tx % NUM_TX_DESC;
->  		u32 status;
-> @@ -4584,6 +4609,8 @@ static int rtl_rx(struct net_device *dev, struct rtl8169_private *tp, int budget
->  		rtl8169_mark_to_asic(desc);
->  	}
->  
-> +	atomic_add(count, &tp->aspm_packet_count);
-> +
->  	return count;
->  }
->  
-> @@ -4691,8 +4718,39 @@ static int r8169_phy_connect(struct rtl8169_private *tp)
->  	return 0;
->  }
->  
-> +#define ASPM_PACKET_THRESHOLD 10
-> +#define ASPM_TOGGLE_INTERVAL 1000
-> +
-> +static void rtl8169_aspm_toggle(struct work_struct *work)
-> +{
-> +	struct rtl8169_private *tp = container_of(work, struct rtl8169_private,
-> +						  aspm_toggle.work);
-> +	int packet_count;
-> +	bool enable;
-> +
-> +	packet_count = atomic_xchg(&tp->aspm_packet_count, 0);
-> +
-> +	if (pcie_aspm_enabled(tp->pci_dev)) {
-> +		enable = packet_count <= ASPM_PACKET_THRESHOLD;
-> +
-> +		if (tp->rtl_aspm_enabled != enable) {
-> +			rtl_unlock_config_regs(tp);
-> +			rtl_hw_aspm_clkreq_enable(tp, enable);
-> +			rtl_lock_config_regs(tp);
-> +		}
-> +	} else if (tp->rtl_aspm_enabled) {
-> +		rtl_unlock_config_regs(tp);
-> +		rtl_hw_aspm_clkreq_enable(tp, false);
-> +		rtl_lock_config_regs(tp);
-> +	}
-> +
-> +	schedule_delayed_work(&tp->aspm_toggle, msecs_to_jiffies(ASPM_TOGGLE_INTERVAL));
-> +}
-> +
->  static void rtl8169_down(struct rtl8169_private *tp)
->  {
-> +	cancel_delayed_work_sync(&tp->aspm_toggle);
-> +
->  	/* Clear all task flags */
->  	bitmap_zero(tp->wk.flags, RTL_FLAG_MAX);
->  
-> @@ -4719,6 +4777,11 @@ static void rtl8169_up(struct rtl8169_private *tp)
->  	rtl_reset_work(tp);
->  
->  	phy_start(tp->phydev);
-> +
-> +	/* pcie_aspm_capable may change after system resume */
-> +	if (pcie_aspm_support_enabled() && pcie_aspm_capable(tp->pci_dev) &&
-> +	    rtl_supports_aspm(tp))
-> +		schedule_delayed_work(&tp->aspm_toggle, 0);
->  }
->  
->  static int rtl8169_close(struct net_device *dev)
-> @@ -5306,12 +5369,6 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (rc)
->  		return rc;
->  
-> -	/* Disable ASPM L1 as that cause random device stop working
-> -	 * problems as well as full system hangs for some PCIe devices users.
-> -	 */
-> -	rc = pci_disable_link_state(pdev, PCIE_LINK_STATE_L1);
-> -	tp->aspm_manageable = !rc;
-> -
->  	/* enable device (incl. PCI PM wakeup and hotplug setup) */
->  	rc = pcim_enable_device(pdev);
->  	if (rc < 0) {
-> @@ -5378,6 +5435,10 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  
->  	INIT_WORK(&tp->wk.work, rtl_task);
->  
-> +	INIT_DELAYED_WORK(&tp->aspm_toggle, rtl8169_aspm_toggle);
-> +
-> +	atomic_set(&tp->aspm_packet_count, 0);
-> +
->  	rtl_init_mac_address(tp);
->  
->  	dev->ethtool_ops = &rtl8169_ethtool_ops;
-> -- 
-> 2.32.0
+>   - When reviewing changes like this, I assume __ref was added in the
+>     first place for some good reason, so I want to know why, and I
+>     want to know when that reason changed.  So I would look for the
+>     commit that *introduced* __ref and for the commit that removed the
+>     need for it.  It would save me time if the log said something
+>     like:
 > 
+>       956a9202cd12 ("xen-pcifront: Xen PCI frontend driver.") added
+>       __initrefok because pcifront_backend_changed() called
+>       pcifront_try_connect() and pcifront_attach_devices(), which were
+>       both __devinit.
+> 
+>       The __devinit annotations were removed by 15856ad50bf5 ("PCI:
+>       Remove __dev* markings"), which made __initrefok unnecessary.
+> 
+>       Finally, bd721ea73e1f ("treewide: replace obsolete _refok by
+>       __ref") replaced __initrefok with __ref.
+> 
+>     That might be too much for a commit log, but it shows that you've
+>     done your homework and makes it easier to review (and helps people
+>     make similar fixes elsewhere).  If it *is* too much, it's trivial
+>     for a maintainer to cut it out.
+> 
+> More notes about my idiosyncracies:
+> https://lore.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
+> 
+> > Signed-off-by: Sergio Miguéns Iglesias <sergio@lony.xyz>
+> > ---
+> >  drivers/pci/xen-pcifront.c | 30 +++++++++++++++++++-----------
+> >  1 file changed, 19 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> > index b7a8f3a1921f..427041c1e408 100644
+> > --- a/drivers/pci/xen-pcifront.c
+> > +++ b/drivers/pci/xen-pcifront.c
+> > @@ -115,7 +115,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >  	struct xen_pci_op *active_op = &pdev->sh_info->op;
+> >  	unsigned long irq_flags;
+> >  	evtchn_port_t port = pdev->evtchn;
+> > -	unsigned irq = pdev->irq;
+> > +	unsigned int irq = pdev->irq;
+> >  	s64 ns, ns_timeout;
+> >  
+> >  	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+> > @@ -153,10 +153,10 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >  	}
+> >  
+> >  	/*
+> > -	* We might lose backend service request since we
+> > -	* reuse same evtchn with pci_conf backend response. So re-schedule
+> > -	* aer pcifront service.
+> > -	*/
+> > +	 * We might lose backend service request since we
+> > +	 * reuse same evtchn with pci_conf backend response. So re-schedule
+> > +	 * aer pcifront service.
+> > +	 */
+> >  	if (test_bit(_XEN_PCIB_active,
+> >  			(unsigned long *)&pdev->sh_info->flags)) {
+> >  		dev_err(&pdev->xdev->dev,
+> > @@ -414,7 +414,8 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
+> >  	struct pci_dev *d;
+> >  	unsigned int devfn;
+> >  
+> > -	/* Scan the bus for functions and add.
+> > +	/*
+> > +	 * Scan the bus for functions and add.
+> >  	 * We omit handling of PCI bridge attachment because pciback prevents
+> >  	 * bridges from being exported.
+> >  	 */
+> > @@ -492,8 +493,10 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+> >  
+> >  	list_add(&bus_entry->list, &pdev->root_buses);
+> >  
+> > -	/* pci_scan_root_bus skips devices which do not have a
+> > -	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+> > +	/*
+> > +	 * pci_scan_root_bus skips devices which do not have a
+> > +	 * devfn==0. The pcifront_scan_bus enumerates all devfn.
+> > +	 */
+> >  	err = pcifront_scan_bus(pdev, domain, bus, b);
+> >  
+> >  	/* Claim resources before going "live" with our devices */
+> > @@ -651,8 +654,10 @@ static void pcifront_do_aer(struct work_struct *data)
+> >  	pci_channel_state_t state =
+> >  		(pci_channel_state_t)pdev->sh_info->aer_op.err;
+> >  
+> > -	/*If a pci_conf op is in progress,
+> > -		we have to wait until it is done before service aer op*/
+> > +	/*
+> > +	 * If a pci_conf op is in progress, we have to wait until it is done
+> > +	 * before service aer op
+> > +	 */
+> >  	dev_dbg(&pdev->xdev->dev,
+> >  		"pcifront service aer bus %x devfn %x\n",
+> >  		pdev->sh_info->aer_op.bus, pdev->sh_info->aer_op.devfn);
+> > @@ -676,6 +681,7 @@ static void pcifront_do_aer(struct work_struct *data)
+> >  static irqreturn_t pcifront_handler_aer(int irq, void *dev)
+> >  {
+> >  	struct pcifront_device *pdev = dev;
+> > +
+> >  	schedule_pcifront_aer_op(pdev);
+> >  	return IRQ_HANDLED;
+> >  }
+> > @@ -1027,6 +1033,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+> >  	/* Find devices being detached and remove them. */
+> >  	for (i = 0; i < num_devs; i++) {
+> >  		int l, state;
+> > +
+> >  		l = snprintf(str, sizeof(str), "state-%d", i);
+> >  		if (unlikely(l >= (sizeof(str) - 1))) {
+> >  			err = -ENOMEM;
+> > @@ -1078,7 +1085,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+> >  	return err;
+> >  }
+> >  
+> > -static void __ref pcifront_backend_changed(struct xenbus_device *xdev,
+> > +static void pcifront_backend_changed(struct xenbus_device *xdev,
+> >  						  enum xenbus_state be_state)
+> >  {
+> >  	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
+> > @@ -1137,6 +1144,7 @@ static int pcifront_xenbus_probe(struct xenbus_device *xdev,
+> >  static int pcifront_xenbus_remove(struct xenbus_device *xdev)
+> >  {
+> >  	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
+> > +
+> >  	if (pdev)
+> >  		free_pdev(pdev);
+> >  
+> > -- 
+> > 2.33.0
+> > 
