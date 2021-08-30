@@ -7,28 +7,28 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2911C25AE9
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B670BC43216
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9ABFC60FF2
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13906101C
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234735AbhH3I0F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 04:26:05 -0400
-Received: from guitar.tcltek.co.il ([192.115.133.116]:50734 "EHLO
+        id S234529AbhH3I0J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 04:26:09 -0400
+Received: from guitar.tcltek.co.il ([192.115.133.116]:50742 "EHLO
         mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234341AbhH3I0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Aug 2021 04:26:04 -0400
+        id S234861AbhH3I0J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Aug 2021 04:26:09 -0400
 Received: from tarshish.tkos.co.il (unknown [10.0.8.2])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx.tkos.co.il (Postfix) with ESMTPS id C1B39440B32;
-        Mon, 30 Aug 2021 11:24:52 +0300 (IDT)
+        by mx.tkos.co.il (Postfix) with ESMTPS id 14E3F440CD0;
+        Mon, 30 Aug 2021 11:24:54 +0300 (IDT)
 From:   Baruch Siach <baruch@tkos.co.il>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Baruch Siach <baruch@tkos.co.il>, Rob Herring <robh@kernel.org>,
-        Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>,
+Cc:     Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>,
+        Baruch Siach <baruch@tkos.co.il>,
         Kathiravan T <kathirav@codeaurora.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -40,9 +40,9 @@ Cc:     Baruch Siach <baruch@tkos.co.il>, Rob Herring <robh@kernel.org>,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-arm-msm@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org
-Subject: [PATCH v3 1/3] PCI: dwc: tegra: move GEN3_RELATED DBI register to common header
-Date:   Mon, 30 Aug 2021 11:24:50 +0300
-Message-Id: <fe8d5cb8785e144e0b69c1f3adf17f3b89979ea9.1630311481.git.baruch@tkos.co.il>
+Subject: [PATCH v3 3/3] arm64: dts: ipq6018: Add pcie support
+Date:   Mon, 30 Aug 2021 11:24:52 +0300
+Message-Id: <0a6bfc7e9a94eb5c032a019299c9b2477d4d8c1d.1630311481.git.baruch@tkos.co.il>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <cover.1630311481.git.baruch@tkos.co.il>
 References: <cover.1630311481.git.baruch@tkos.co.il>
@@ -52,49 +52,136 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-These are common dwc macros that will be used for other platforms.
+From: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+ipq6018 has 1 pcie gen3 port. This patch adds the support for the same.
+
+The GICv2m reg property value is a guess based on similar SoCs
+description in downstream Codeaurora kernel. It appears to work.
+
+Signed-off-by: Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>
+[baruch: adjust #address-cells/#size-cells; drop unsupported property;
+ increase parf registers size; add 'max-link-speed']
 Signed-off-by: Baruch Siach <baruch@tkos.co.il>
 ---
- drivers/pci/controller/dwc/pcie-designware.h | 6 ++++++
- drivers/pci/controller/dwc/pcie-tegra194.c   | 6 ------
- 2 files changed, 6 insertions(+), 6 deletions(-)
+v3: add 'max-link-speed'
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 7d6e9b7576be..ea87809ee298 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -74,6 +74,12 @@
- #define PCIE_MSI_INTR0_MASK		0x82C
- #define PCIE_MSI_INTR0_STATUS		0x830
+v2: remove 'msi-parent'; doesn't really work
+---
+ arch/arm64/boot/dts/qcom/ipq6018.dtsi | 100 ++++++++++++++++++++++++++
+ 1 file changed, 100 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/ipq6018.dtsi b/arch/arm64/boot/dts/qcom/ipq6018.dtsi
+index ab701da582e5..aaab8d2ee189 100644
+--- a/arch/arm64/boot/dts/qcom/ipq6018.dtsi
++++ b/arch/arm64/boot/dts/qcom/ipq6018.dtsi
+@@ -384,6 +384,106 @@ intc: interrupt-controller@b000000 {
+ 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
  
-+#define GEN3_RELATED_OFF			0x890
-+#define GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL	BIT(0)
-+#define GEN3_RELATED_OFF_GEN3_EQ_DISABLE	BIT(16)
-+#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
-+#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
++		pcie_phy: phy@84000 {
++			compatible = "qcom,ipq6018-qmp-pcie-phy";
++			reg = <0x0 0x84000 0x0 0x1bc>; /* Serdes PLL */
++			status = "disabled";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			ranges;
 +
- #define PCIE_PORT_MULTI_LANE_CTRL	0x8C0
- #define PORT_MLTI_UPCFG_SUPPORT		BIT(7)
- 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 3ec7b29d5dc7..b8be00a6406f 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -193,12 +193,6 @@
- #define GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC_MASK	GENMASK(23, 8)
- #define GEN3_EQ_CONTROL_OFF_FB_MODE_MASK	GENMASK(3, 0)
- 
--#define GEN3_RELATED_OFF			0x890
--#define GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL	BIT(0)
--#define GEN3_RELATED_OFF_GEN3_EQ_DISABLE	BIT(16)
--#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
--#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
--
- #define PORT_LOGIC_AMBA_ERROR_RESPONSE_DEFAULT	0x8D0
- #define AMBA_ERROR_RESPONSE_CRS_SHIFT		3
- #define AMBA_ERROR_RESPONSE_CRS_MASK		GENMASK(1, 0)
++			clocks = <&gcc GCC_PCIE0_AUX_CLK>,
++				<&gcc GCC_PCIE0_AHB_CLK>;
++			clock-names = "aux", "cfg_ahb";
++
++			resets = <&gcc GCC_PCIE0_PHY_BCR>,
++				<&gcc GCC_PCIE0PHY_PHY_BCR>;
++			reset-names = "phy",
++				      "common";
++
++			pcie_phy0: lane@84200 {
++				reg = <0x0 0x84200 0x0 0x16c>, /* Serdes Tx */
++				      <0x0 0x84400 0x0 0x200>, /* Serdes Rx */
++				      <0x0 0x84800 0x0 0x4f4>; /* PCS: Lane0, COM, PCIE */
++				#phy-cells = <0>;
++
++				clocks = <&gcc GCC_PCIE0_PIPE_CLK>;
++				clock-names = "pipe0";
++				clock-output-names = "gcc_pcie0_pipe_clk_src";
++				#clock-cells = <0>;
++			};
++		};
++
++		pcie0: pci@20000000 {
++			compatible = "qcom,pcie-ipq6018";
++			reg = <0x0 0x20000000 0x0 0xf1d>,
++			      <0x0 0x20000f20 0x0 0xa8>,
++			      <0x0 0x20001000 0x0 0x1000>,
++			      <0x0 0x80000 0x0 0x4000>,
++			      <0x0 0x20100000 0x0 0x1000>;
++			reg-names = "dbi", "elbi", "atu", "parf", "config";
++
++			device_type = "pci";
++			linux,pci-domain = <0>;
++			bus-range = <0x00 0xff>;
++			num-lanes = <1>;
++			max-link-speed = <3>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			phys = <&pcie_phy0>;
++			phy-names = "pciephy";
++
++			ranges = <0x81000000 0 0x20200000 0 0x20200000
++				  0 0x10000>, /* downstream I/O */
++				 <0x82000000 0 0x20220000 0 0x20220000
++				  0 0xfde0000>; /* non-prefetchable memory */
++
++			interrupts = <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc 0 75
++					 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++					<0 0 0 2 &intc 0 78
++					 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++					<0 0 0 3 &intc 0 79
++					 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++					<0 0 0 4 &intc 0 83
++					 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++			clocks = <&gcc GCC_SYS_NOC_PCIE0_AXI_CLK>,
++				 <&gcc GCC_PCIE0_AXI_M_CLK>,
++				 <&gcc GCC_PCIE0_AXI_S_CLK>,
++				 <&gcc GCC_PCIE0_AXI_S_BRIDGE_CLK>,
++				 <&gcc PCIE0_RCHNG_CLK>;
++			clock-names = "iface",
++				      "axi_m",
++				      "axi_s",
++				      "axi_bridge",
++				      "rchng";
++
++			resets = <&gcc GCC_PCIE0_PIPE_ARES>,
++				 <&gcc GCC_PCIE0_SLEEP_ARES>,
++				 <&gcc GCC_PCIE0_CORE_STICKY_ARES>,
++				 <&gcc GCC_PCIE0_AXI_MASTER_ARES>,
++				 <&gcc GCC_PCIE0_AXI_SLAVE_ARES>,
++				 <&gcc GCC_PCIE0_AHB_ARES>,
++				 <&gcc GCC_PCIE0_AXI_MASTER_STICKY_ARES>,
++				 <&gcc GCC_PCIE0_AXI_SLAVE_STICKY_ARES>;
++			reset-names = "pipe",
++				      "sleep",
++				      "sticky",
++				      "axi_m",
++				      "axi_s",
++				      "ahb",
++				      "axi_m_sticky",
++				      "axi_s_sticky";
++
++			status = "disabled";
++		};
++
+ 		watchdog@b017000 {
+ 			compatible = "qcom,kpss-wdt";
+ 			interrupts = <GIC_SPI 3 IRQ_TYPE_EDGE_RISING>;
 -- 
 2.33.0
 
