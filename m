@@ -2,254 +2,163 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_RED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF4BC432BE
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4252AC4320A
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:35:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B85C60243
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:21:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24DCA60F42
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 18:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235482AbhH3SWg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 14:22:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47140 "EHLO
+        id S234040AbhH3SgL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 14:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229839AbhH3SWf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 14:22:35 -0400
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67B82C061575;
-        Mon, 30 Aug 2021 11:21:41 -0700 (PDT)
-Received: by mail-ej1-x62e.google.com with SMTP id u14so32975820ejf.13;
-        Mon, 30 Aug 2021 11:21:41 -0700 (PDT)
+        with ESMTP id S233576AbhH3SgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 14:36:10 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEDC8C06175F
+        for <linux-pci@vger.kernel.org>; Mon, 30 Aug 2021 11:35:16 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id d3-20020a17090ae28300b0019629c96f25so598152pjz.2
+        for <linux-pci@vger.kernel.org>; Mon, 30 Aug 2021 11:35:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=linaro.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=wzZpQf8XnnBwyx6FVtKgKg1R+YJbNENRicsfxpeSOjg=;
-        b=s0Podc1xJLmrSH7zzIutVt5Z4MUPpsmSN4KM21NQzv/por9GG7uDnBp0vDYN5IDFr0
-         tGTK1FSLOK4m/ryvX546QsgOlZ7PZ1Wm5LKvCI98ewfFjrk3c5joi1W4Iukhr4nyXmfB
-         aDxqnYVraFAbjw7eVUkM6AboZGuzWJN7Yfx3VD/MaaxgfYke7TRn5UrRe27bjFIYO+cA
-         KI9MWtq7qXpJ8nA0epWWhMTwJDokyP8S+6jxa7mNRuJQ1oFy3JCgOYg0cbICb/E4wePb
-         8kVBBqXM+2+4hrhiSHrn/wkUDQBY7xnGJCWy8P8Z7x9ogXaSRzdCFT79F4EyknRaNWS3
-         x1Ww==
+         :content-disposition:in-reply-to;
+        bh=4lObGbOH7wYXLZts3Wjag1RVJ/fSvvfuumDMeXOvamY=;
+        b=Q7lSvLugEcsO6jz/dsvEvqZfD5CfuPaFmPsqDAtVPqSs20Jd/6dgCj3+ylqcIr1EnF
+         jwLepnTsPsP/+QPpe0p2M4mjvLGTJj0BWKxHTP9O7z1aO2tFiTY3aHcZlUOb+a6XlQXM
+         ATUXIgkDyHiUBCYrZWUoo8y35gJiW/5N5IyhGJ73fequBefUKl85zNfhuYdjRjOwkFFO
+         DMcbXDNdSqX8SPThW2njxQagVjwPbOA5wHbxiKMLnrCe3jWHierYYo0BcKop19CuPfp+
+         rkjM8Q2Fg/hZzBzo1IglI+E+uAlQI1OjhJFzgdnkDt7bDMl3n3HYnvg6BBlII8/6fxOb
+         eN4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=wzZpQf8XnnBwyx6FVtKgKg1R+YJbNENRicsfxpeSOjg=;
-        b=Fcc91aBywAQxTjpDRJNAQTcbsT0E1+IR6jB9iDUmOmr3KHfejqx3nyXvNBJ8MluP8I
-         RYracJk95kppwh9+mRaLUtQjpXJmcc/z6hIC0PpKSkez7kmBNEs/gbKumDmQslzlpaGa
-         I2JzapPOu8aE4t6b8rTMTGp3WqW1AhKpfcOa03giZ33/3mLmJaXdu+aQ9obdIaImxGkz
-         a02gKJoWa9oBIqGnXRfnyeID3PYHIe5oVP0tockdz7RajWUEWUG82G1l7Vek9ry3SKcI
-         WnaQA0+QDhTmax76SX/h4zQazYm/KnE/tIA9FnquJEFeSwnnLdD/uog+sxoi9Wh9b8vX
-         3Wsw==
-X-Gm-Message-State: AOAM533J0evdb+4WDmHZuTyLn8M9wSYIVkgEJmdz88b5+s5U9OQJJz8u
-        W0eqDW7lmERB1U4fGNtEnMk=
-X-Google-Smtp-Source: ABdhPJyG0uLXjFltYZO0gomkV8AheRsZ9MRvMqjAOQIY90291rqGI8ghqsFOaePEiEUGvpiN1Y9nyQ==
-X-Received: by 2002:a17:906:3947:: with SMTP id g7mr27480038eje.87.1630347699997;
-        Mon, 30 Aug 2021 11:21:39 -0700 (PDT)
-Received: from localhost (host-79-37-188-60.retail.telecomitalia.it. [79.37.188.60])
-        by smtp.gmail.com with ESMTPSA id h30sm8121250edz.40.2021.08.30.11.21.39
+         :mime-version:content-disposition:in-reply-to;
+        bh=4lObGbOH7wYXLZts3Wjag1RVJ/fSvvfuumDMeXOvamY=;
+        b=UIDm3Wyh7O32tmdew+s+h+dle85pvCS1e48tRJa4dZj8g5bj2uyYB2ZoTlb6ka3J26
+         hwQVXfv4dEW5i43VXweUQpok9hi0M/ATAXRALO8821QgGECwTDBsQxCteuvt7r6FKLs2
+         E4FepGmvDvdG0XyN1z9v9T2wA583hXu7To3qT9yi1P2+zjgOIooucjg3L0Kll5oWg2I4
+         A39VkajNrMORBV2THjJQ2SXYQ9U+1qoI2LCjIxQuf+13G/rTbhINtZKAo1hpvHuVWjSU
+         mnWBBtC3pfYlmbF0SHokm+72SLWIWWEGnFQYu8gnay7jKuA0vWXI4NiehuBjbV5sQFcK
+         Tkqw==
+X-Gm-Message-State: AOAM533u5NLfiY6Jh9EPzOjfS0HtdFYgWOf+sVzecysRoEgPowM5JP08
+        T0AWeqB4Gtp5C+HWCST5NbPL
+X-Google-Smtp-Source: ABdhPJymp1hhLxI4Bg+PenRAv5ZqZvFwlomKc4Z90s9V466OSSk/8nDL72VECdaY3v0GglRuL8taGg==
+X-Received: by 2002:a17:90a:940e:: with SMTP id r14mr497274pjo.208.1630348516218;
+        Mon, 30 Aug 2021 11:35:16 -0700 (PDT)
+Received: from thinkpad ([2409:4072:6e8f:10da:9c90:a2f4:77aa:6f51])
+        by smtp.gmail.com with ESMTPSA id n14sm208169pjm.5.2021.08.30.11.35.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Aug 2021 11:21:39 -0700 (PDT)
-Date:   Mon, 30 Aug 2021 22:21:33 +0200
-From:   Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <lonyelon@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, bhelgaas@google.com,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <sergio@lony.xyz>
-Subject: Re: [PATCH v2] xen/pcifront: Removed unnecessary __ref annotation
-Message-ID: <20210830202133.q6j2he5kijf2tgpy@archlap>
-References: <20210830175305.13370-1-sergio@lony.xyz>
- <20210830162922.GA4188989@bjorn-Precision-5520>
+        Mon, 30 Aug 2021 11:35:15 -0700 (PDT)
+Date:   Tue, 31 Aug 2021 00:05:08 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     kishon@ti.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        robh@kernel.org
+Cc:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        hemantk@codeaurora.org, smohanad@codeaurora.org,
+        bjorn.andersson@linaro.org, sallenki@codeaurora.org,
+        skananth@codeaurora.org, vpernami@codeaurora.org,
+        vbadigan@codeaurora.org
+Subject: Re: [PATCH v7 0/3] Add Qualcomm PCIe Endpoint driver support
+Message-ID: <20210830183508.GA50238@thinkpad>
+References: <20210722121242.47838-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210830162922.GA4188989@bjorn-Precision-5520>
+In-Reply-To: <20210722121242.47838-1-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Never mind, it got accepted anyways, but I will 100% fix my commit
-messages for my future patches.
+Hi,
 
-I really appreciate your suggestions and the time you have put into
-writing them. I will improve in my next commits :)
+On Thu, Jul 22, 2021 at 05:42:39PM +0530, Manivannan Sadhasivam wrote:
+> Hello,
+> 
+> This series adds support for Qualcomm PCIe Endpoint controller found
+> in platforms like SDX55. The Endpoint controller is based on the designware
+> core with additional Qualcomm wrappers around the core.
+> 
+> The driver is added separately unlike other Designware based drivers that
+> combine RC and EP in a single driver. This is done to avoid complexity and
+> to maintain this driver autonomously.
+> 
+> The driver has been validated with an out of tree MHI function driver on
+> SDX55 based Telit FN980 EVB connected to x86 host machine over PCIe.
+> 
 
-Sergio M. Iglesias.
+Any chance this driver could make v5.15?
 
-On 21/08/30 11:29, Bjorn Helgaas wrote:
-> On Mon, Aug 30, 2021 at 07:53:05PM +0200, Sergio Miguéns Iglesias wrote:
-> > An unnecessary "__ref" annotation was removed from the
-> > "drivers/pci/xen_pcifront.c" file. The function where the annotation
-> > was used was "pcifront_backend_changed()", which does not call any
-> > functions annotated as "__*init" nor "__*exit". This makes "__ref"
-> > unnecessary since this annotation is used to make the compiler ignore
-> > section miss-matches when they are not happening here in the first
-> > place.
-> > 
-> > In addition to the aforementioned change, some code style issues were
-> > fixed in the same file.
+Thanks,
+Mani
+
+> Thanks,
+> Mani
 > 
-> One of the Xen folks may apply this, and they may not be as nit-picky
-> as I am :)
+> Changes in v7:
 > 
-> If I were to apply this, I would suggest:
+> * Used existing naming convention for callback functions
+> * Used active low state for PERST# gpio
 > 
->   - Write subject line and commit message in imperative mood.  This is
->     a really good guide to this and other commit message this:
->     https://chris.beams.io/posts/git-commit/
+> Changes in v6:
 > 
->     For example, in the subject, say "Remove" (not "Removed").  Same
->     in the body.  In the body, I would mention the function but not
->     the filename since that's obvious from the diff.
+> * Removed status property in DT and added reviewed tag from Rob
+> * Switched to _relaxed variants as suggested by Rob
 > 
->   - Split the __ref change into a separate patch from the style
->     changes.  The __ref removal should come first and be the absolute
->     minimal patch.  That makes it much easier to review, backport, and
->     revert if necessary.  And, if the maintainer isn't wild about
->     style patches, it's trivial to just ignore that patch.
+> Changes in v5:
 > 
->     Commit logs that say "Also, ..." or "In addition, ..." are always
->     red flags to me because they usually indicate the patch could be
->     split into two or more simpler patches.
+> * Removed the DBI register settings that are not needed
+> * Used the standard definitions available in pci_regs.h
+> * Added defines for all the register fields
+> * Removed the left over code from previous iteration
 > 
->   - When reviewing changes like this, I assume __ref was added in the
->     first place for some good reason, so I want to know why, and I
->     want to know when that reason changed.  So I would look for the
->     commit that *introduced* __ref and for the commit that removed the
->     need for it.  It would save me time if the log said something
->     like:
+> Changes in v4:
 > 
->       956a9202cd12 ("xen-pcifront: Xen PCI frontend driver.") added
->       __initrefok because pcifront_backend_changed() called
->       pcifront_try_connect() and pcifront_attach_devices(), which were
->       both __devinit.
+> * Removed the active_config settings needed for IPA integration
+> * Switched to writel for couple of relaxed versions that sneaked in
 > 
->       The __devinit annotations were removed by 15856ad50bf5 ("PCI:
->       Remove __dev* markings"), which made __initrefok unnecessary.
+> Changes in v3:
 > 
->       Finally, bd721ea73e1f ("treewide: replace obsolete _refok by
->       __ref") replaced __initrefok with __ref.
+> * Lot of minor cleanups to the driver patch based on review from Bjorn and Stan.
+> * Noticeable changes are:
+>   - Got rid of _relaxed calls and used readl/writel
+>   - Got rid of separate TCSR memory region and used syscon for getting the
+>     register offsets for Perst registers
+>   - Changed the wake gpio handling logic
+>   - Added remove() callback and removed "suppress_bind_attrs"
+>   - stop_link() callback now just disables PERST IRQ
+> * Added MMIO region and doorbell interrupt to the binding
+> * Added logic to write MMIO physicall address to MHI base address as it is
+>   for the function driver to work
 > 
->     That might be too much for a commit log, but it shows that you've
->     done your homework and makes it easier to review (and helps people
->     make similar fixes elsewhere).  If it *is* too much, it's trivial
->     for a maintainer to cut it out.
+> Changes in v2:
 > 
-> More notes about my idiosyncracies:
-> https://lore.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
+> * Addressed the comments from Rob on bindings patch
+> * Modified the driver as per binding change
+> * Fixed the warnings reported by Kbuild bot
+> * Removed the PERST# "enable_irq" call from probe()
 > 
-> > Signed-off-by: Sergio Miguéns Iglesias <sergio@lony.xyz>
-> > ---
-> >  drivers/pci/xen-pcifront.c | 30 +++++++++++++++++++-----------
-> >  1 file changed, 19 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> > index b7a8f3a1921f..427041c1e408 100644
-> > --- a/drivers/pci/xen-pcifront.c
-> > +++ b/drivers/pci/xen-pcifront.c
-> > @@ -115,7 +115,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
-> >  	struct xen_pci_op *active_op = &pdev->sh_info->op;
-> >  	unsigned long irq_flags;
-> >  	evtchn_port_t port = pdev->evtchn;
-> > -	unsigned irq = pdev->irq;
-> > +	unsigned int irq = pdev->irq;
-> >  	s64 ns, ns_timeout;
-> >  
-> >  	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
-> > @@ -153,10 +153,10 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
-> >  	}
-> >  
-> >  	/*
-> > -	* We might lose backend service request since we
-> > -	* reuse same evtchn with pci_conf backend response. So re-schedule
-> > -	* aer pcifront service.
-> > -	*/
-> > +	 * We might lose backend service request since we
-> > +	 * reuse same evtchn with pci_conf backend response. So re-schedule
-> > +	 * aer pcifront service.
-> > +	 */
-> >  	if (test_bit(_XEN_PCIB_active,
-> >  			(unsigned long *)&pdev->sh_info->flags)) {
-> >  		dev_err(&pdev->xdev->dev,
-> > @@ -414,7 +414,8 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
-> >  	struct pci_dev *d;
-> >  	unsigned int devfn;
-> >  
-> > -	/* Scan the bus for functions and add.
-> > +	/*
-> > +	 * Scan the bus for functions and add.
-> >  	 * We omit handling of PCI bridge attachment because pciback prevents
-> >  	 * bridges from being exported.
-> >  	 */
-> > @@ -492,8 +493,10 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
-> >  
-> >  	list_add(&bus_entry->list, &pdev->root_buses);
-> >  
-> > -	/* pci_scan_root_bus skips devices which do not have a
-> > -	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
-> > +	/*
-> > +	 * pci_scan_root_bus skips devices which do not have a
-> > +	 * devfn==0. The pcifront_scan_bus enumerates all devfn.
-> > +	 */
-> >  	err = pcifront_scan_bus(pdev, domain, bus, b);
-> >  
-> >  	/* Claim resources before going "live" with our devices */
-> > @@ -651,8 +654,10 @@ static void pcifront_do_aer(struct work_struct *data)
-> >  	pci_channel_state_t state =
-> >  		(pci_channel_state_t)pdev->sh_info->aer_op.err;
-> >  
-> > -	/*If a pci_conf op is in progress,
-> > -		we have to wait until it is done before service aer op*/
-> > +	/*
-> > +	 * If a pci_conf op is in progress, we have to wait until it is done
-> > +	 * before service aer op
-> > +	 */
-> >  	dev_dbg(&pdev->xdev->dev,
-> >  		"pcifront service aer bus %x devfn %x\n",
-> >  		pdev->sh_info->aer_op.bus, pdev->sh_info->aer_op.devfn);
-> > @@ -676,6 +681,7 @@ static void pcifront_do_aer(struct work_struct *data)
-> >  static irqreturn_t pcifront_handler_aer(int irq, void *dev)
-> >  {
-> >  	struct pcifront_device *pdev = dev;
-> > +
-> >  	schedule_pcifront_aer_op(pdev);
-> >  	return IRQ_HANDLED;
-> >  }
-> > @@ -1027,6 +1033,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
-> >  	/* Find devices being detached and remove them. */
-> >  	for (i = 0; i < num_devs; i++) {
-> >  		int l, state;
-> > +
-> >  		l = snprintf(str, sizeof(str), "state-%d", i);
-> >  		if (unlikely(l >= (sizeof(str) - 1))) {
-> >  			err = -ENOMEM;
-> > @@ -1078,7 +1085,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
-> >  	return err;
-> >  }
-> >  
-> > -static void __ref pcifront_backend_changed(struct xenbus_device *xdev,
-> > +static void pcifront_backend_changed(struct xenbus_device *xdev,
-> >  						  enum xenbus_state be_state)
-> >  {
-> >  	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
-> > @@ -1137,6 +1144,7 @@ static int pcifront_xenbus_probe(struct xenbus_device *xdev,
-> >  static int pcifront_xenbus_remove(struct xenbus_device *xdev)
-> >  {
-> >  	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
-> > +
-> >  	if (pdev)
-> >  		free_pdev(pdev);
-> >  
-> > -- 
-> > 2.33.0
-> > 
+> Manivannan Sadhasivam (3):
+>   dt-bindings: pci: Add devicetree binding for Qualcomm PCIe EP
+>     controller
+>   PCI: qcom-ep: Add Qualcomm PCIe Endpoint controller driver
+>   MAINTAINERS: Add entry for Qualcomm PCIe Endpoint driver and binding
+> 
+>  .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 158 ++++
+>  MAINTAINERS                                   |  10 +-
+>  drivers/pci/controller/dwc/Kconfig            |  10 +
+>  drivers/pci/controller/dwc/Makefile           |   1 +
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     | 710 ++++++++++++++++++
+>  5 files changed, 888 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+>  create mode 100644 drivers/pci/controller/dwc/pcie-qcom-ep.c
+> 
+> -- 
+> 2.25.1
+> 
