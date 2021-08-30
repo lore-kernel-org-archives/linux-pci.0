@@ -2,160 +2,191 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19161C4320E
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98515C432BE
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:50:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F164460F45
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:41:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F9A061058
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:50:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237608AbhH3PmH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 11:42:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47508 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237187AbhH3PmH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 11:42:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1630338073;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=gPbQCANsnrrCdrVSn7eLIOlLURUqitfm5ZSQa5OvEPY=;
-        b=hwkGAMvltCShRNFr/8eg5GqBGI5iYBOKyH9wxL/M4pTQylnRc6ndwD2LRHBRdjuc5m8pUA
-        Y7OOQ64+D8zFCKNZyYvE1mI2VaZaMiSTOBWfnCKOQQpLQOpsXM9oq4rl5UazZ9M9F4qd0Y
-        s669b0bFG+7PI18p63a4aEKJp2JRFbU=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-405-weu_iOGQNyWjm0ddNgmw6A-1; Mon, 30 Aug 2021 11:41:11 -0400
-X-MC-Unique: weu_iOGQNyWjm0ddNgmw6A-1
-Received: by mail-lj1-f197.google.com with SMTP id x10-20020a05651c024a00b001cf8e423d60so6776502ljn.12
-        for <linux-pci@vger.kernel.org>; Mon, 30 Aug 2021 08:41:10 -0700 (PDT)
+        id S237665AbhH3PvZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 11:51:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39668 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231725AbhH3PvX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 11:51:23 -0400
+Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 315CBC061575;
+        Mon, 30 Aug 2021 08:50:29 -0700 (PDT)
+Received: by mail-ej1-x630.google.com with SMTP id e21so32062510ejz.12;
+        Mon, 30 Aug 2021 08:50:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=ZdQ2NYONUh/Mlj0X5zIsPhWrX6XBgDUXmU/jErZJywo=;
+        b=FJ6u+7ZmqzdbI/gyHRn72MAMt7fXnzhi32/cwtuYJ4y45E80lvafD0QAHLIWsE0AsB
+         vbH3nG8xMYE3rYDcNcCqI/ARxt5efWvfhJhhRwgvURvvHv1qsuPJ86PBf2NuyFWAFPSG
+         aXfpF64sSzKew+B8jhZiS5GgR3a3mGdBsr5DREG+exF17jVqcBTNX1zw8LRm/1/26Mne
+         xaFEPQQZUhlwkOGIxxVkLom0q/20yKjrqh08dZ+Qq2vwbh6B1HAclNGTBg07GsOLtu4e
+         okSSK4+c2tB3RQHMAiIVfLk8jYNYEAtNDWfkeUbRvE3OBn3RksYk5bPzVaDPdBWHScE9
+         Ixzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gPbQCANsnrrCdrVSn7eLIOlLURUqitfm5ZSQa5OvEPY=;
-        b=jrKjs0C450TGjmQ3xA7Q0uyliRRB1GOErfw30fg5pTT794IiZDK5EqkmixQVSLek/P
-         E02FumaYlnJkdb0SxVOwvvcBOHzPAY3g6UcvmlisWeMFc7kMlINReA8tqlc/kJ76+W+s
-         KV77tZ7y/kJ2CycqXYIWs5WFnVK+3Z3urCvSHyuNJ45I+ZofhVhtkYDM21wb7mtvTYxs
-         BDQljWknGvlTB4r1fDFNk1lgSH2g4Hv3iyLFpn0hJoDnSij797Twd9/lXYZ6fGuetj0t
-         3kxRGtaTJU2SUnbHcYDNFqojacgiFapGTH1a5zAPCIwsTV+hV2hLoWA8y3M6OlKiXWNE
-         1BjA==
-X-Gm-Message-State: AOAM532oHz3qP6joyeuQ8RNdWEhZIObLBaCGbym+JkOnVr/1IGoaTSHr
-        Q1qJNeHMvnlk7ZJjPJ6loLMv1OKLbiLJYtHd8+PvobJoTT+NUAij3tMeRm7aF6ibyZg/C+d3G9b
-        NeoeW9jl5LHcpeH1YIR05fXeTNLIwE2MXf2TM
-X-Received: by 2002:a05:6512:31d1:: with SMTP id j17mr12619163lfe.252.1630338069516;
-        Mon, 30 Aug 2021 08:41:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyOA7eSQoAskt96OZEYv/uwT6xUpzuLtn/b7kPoWDczLLZXX82Grt6CyXuqBmavCZC7GNFgyKU16h8yzDCOqhU=
-X-Received: by 2002:a05:6512:31d1:: with SMTP id j17mr12619127lfe.252.1630338069329;
- Mon, 30 Aug 2021 08:41:09 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=ZdQ2NYONUh/Mlj0X5zIsPhWrX6XBgDUXmU/jErZJywo=;
+        b=apKP7CHy8BM6XHMtBx1rEjm2tZdkM8hPQbF0dHGvz0zYv4e/FoFGUq8nka8qRqprsM
+         ZzVxUBxyuDdH5QIUOnOhdSOr8JYVXv23BvlWZ2kaniie+O80FYFD/F6gInC4zcQ2Rxqm
+         BAUDdQByKXbGS2hnbGTWI1VPP5qiZ7Rtu7a+R+OhveRwNDHSa9lOe30GMLZN5G+GTk5B
+         VSgdZDavFnBR3/p3ekOHmqlQc5BGfG1VFBRsCx3XLxk8roxojupoyxr0Y7rFa/J8QViQ
+         GhtkdPIf3DWmSsuva3gI6AkmdDsX8LGjoDncbh8uElDx6IH0BBzm3eCwncaOxJfcOiL8
+         nrFA==
+X-Gm-Message-State: AOAM530dwTiprYvF22x4m7ZbTJgpKasbMNgJ4IFpRZ9Z7Z1S0nimGw7w
+        lP4VcYABefBL11EHG9u0U4M=
+X-Google-Smtp-Source: ABdhPJxzjhjWEcACIkXAOsASCgygWfARaMnw76vGOM8bIFhahPxmhp1H0I810MbvFr0ZdMuQBSl7Mg==
+X-Received: by 2002:a17:907:2677:: with SMTP id ci23mr25654080ejc.429.1630338627699;
+        Mon, 30 Aug 2021 08:50:27 -0700 (PDT)
+Received: from localhost (host-79-37-188-60.retail.telecomitalia.it. [79.37.188.60])
+        by smtp.gmail.com with ESMTPSA id n18sm6773671ejg.36.2021.08.30.08.50.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Aug 2021 08:50:27 -0700 (PDT)
+Date:   Mon, 30 Aug 2021 19:50:20 +0200
+From:   Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <lonyelon@gmail.com>
+To:     Juergen Gross <jgross@suse.com>
+Cc:     konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        sstabellini@kernel.org, bhelgaas@google.com,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergio =?utf-8?Q?Migu=C3=A9ns?= Iglesias <sergio@lony.xyz>
+Subject: Re: [PATCH] xen/pcifront: Removed unnecessary __ref annotation
+Message-ID: <20210830175020.jymnt6uwhgmjlwyz@archlap>
+References: <20210829221415.647744-1-sergio@lony.xyz>
+ <2df006a3-d232-c356-3402-888739835967@suse.com>
 MIME-Version: 1.0
-References: <20210720232624.1493424-1-nitesh@redhat.com> <CAFki+LkNzk0ajUeuBnJZ6mp1kxB0+zZf60tw1Vfq+nPy-bvftQ@mail.gmail.com>
- <CAFki+LkyTNeorQ5e_6_Ud==X7dt27G38ZjhEewuhqGLfanjw_A@mail.gmail.com> <CAFki+Lmbw=02iaYKs_a0jR1KWLisXQa1B-s0hc-Ej-8F8ryWDQ@mail.gmail.com>
-In-Reply-To: <CAFki+Lmbw=02iaYKs_a0jR1KWLisXQa1B-s0hc-Ej-8F8ryWDQ@mail.gmail.com>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 30 Aug 2021 11:40:57 -0400
-Message-ID: <CAFki+LmcagVgj+rNJqAw-LwM=rZFq_AB5QwL5itXvm-bHU8QoA@mail.gmail.com>
-Subject: Re: [PATCH v5 00/14] genirq: Cleanup the abuse of irq_set_affinity_hint()
-To:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        davem@davemloft.net, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        huangguangbin2@huawei.com, huangdaode@huawei.com,
-        luobin9@huawei.com
-Cc:     linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        akpm@linuxfoundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, james.smart@broadcom.com,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Ken Cox <jkc@redhat.com>, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>,
-        Leon Romanovsky <leonro@nvidia.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        bjorn.andersson@linaro.org, chunkuang.hu@kernel.org,
-        yongqiang.niu@mediatek.com, baolin.wang7@gmail.com,
-        Petr Oros <poros@redhat.com>, Ming Lei <minlei@redhat.com>,
-        Ewan Milne <emilne@redhat.com>, jejb@linux.ibm.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        kabel@kernel.org, Viresh Kumar <viresh.kumar@linaro.org>,
-        Jakub Kicinski <kuba@kernel.org>, kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com,
-        Thomas Gleixner <tglx@linutronix.de>, ley.foon.tan@intel.com,
-        jbrunet@baylibre.com, johannes@sipsolutions.net,
-        snelson@pensando.io, lewis.hanly@microchip.com, benve@cisco.com,
-        _govind@gmx.com, jassisinghbrar@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2df006a3-d232-c356-3402-888739835967@suse.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 11:38 AM Nitesh Lal <nilal@redhat.com> wrote:
->
-> On Mon, Aug 16, 2021 at 11:50 AM Nitesh Lal <nilal@redhat.com> wrote:
-> >
-> > On Mon, Aug 2, 2021 at 11:26 AM Nitesh Lal <nilal@redhat.com> wrote:
-> > >
-> > > On Tue, Jul 20, 2021 at 7:26 PM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
-> > > >
-> > > > The drivers currently rely on irq_set_affinity_hint() to either set the
-> > > > affinity_hint that is consumed by the userspace and/or to enforce a custom
-> > > > affinity.
-> > > >
-> >
->
-> [...]
->
-> >
-> > Any comments on the following patches:
-> >
-> >   enic: Use irq_update_affinity_hint
-> >   be2net: Use irq_update_affinity_hint
-> >   mailbox: Use irq_update_affinity_hint
-> >   hinic: Use irq_set_affinity_and_hint
-> >
-> > or any other patches?
-> > Any help in testing will also be very useful.
-> >
->
-> Gentle ping.
-> Any comments on the following patches:
->
->   be2net: Use irq_update_affinity_hint
->   hinic: Use irq_set_affinity_and_hint
->
-> or any other patches?
+Thanks a lot for your reply! I am sending a v2 patch to fix all the
+issues.
+
+Sergio M. Iglesias.
+
+On 21/08/30 06:55, Juergen Gross wrote:
+> On 30.08.21 00:14, Sergio Miguéns Iglesias wrote:
+> > An unnecessary "__ref" annotation was removed from the
+> > "drivers/pci/xen_pcifront.c" file. The function where the annotation
+> > was used was "pcifront_backend_changed()", which does not call any
+> > functions annotated as "__*init" nor "__*exit". This makes "__ref"
+> > unnecessary since this annotation is used to make the compiler ignore
+> > section miss-matches when they are not happening here in the first
+> > place.
+> > 
+> > In addition to the aforementioned change, some code style issues were
+> > fixed in the same file.
+> > 
+> > Signed-off-by: Sergio Miguéns Iglesias <sergio@lony.xyz>
+> > ---
+> >   drivers/pci/xen-pcifront.c | 24 ++++++++++++++----------
+> >   1 file changed, 14 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> > index b7a8f3a1921f..f06661704f3a 100644
+> > --- a/drivers/pci/xen-pcifront.c
+> > +++ b/drivers/pci/xen-pcifront.c
+> > @@ -115,7 +115,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >   	struct xen_pci_op *active_op = &pdev->sh_info->op;
+> >   	unsigned long irq_flags;
+> >   	evtchn_port_t port = pdev->evtchn;
+> > -	unsigned irq = pdev->irq;
+> > +	unsigned int irq = pdev->irq;
+> >   	s64 ns, ns_timeout;
+> >   	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+> > @@ -152,11 +152,10 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >   		}
+> >   	}
+> > -	/*
+> > -	* We might lose backend service request since we
+> > -	* reuse same evtchn with pci_conf backend response. So re-schedule
+> > -	* aer pcifront service.
+> > -	*/
+> > +	/* We might lose backend service request since we
+> 
+> This is no net or drivers/net file, so please keep the initial "/*"
+> line and fixup the other multi-line comments accordingly.
+> 
+> > +	 * reuse same evtchn with pci_conf backend response. So re-schedule
+> > +	 * aer pcifront service.
+> > +	 */
+> >   	if (test_bit(_XEN_PCIB_active,
+> >   			(unsigned long *)&pdev->sh_info->flags)) {
+> >   		dev_err(&pdev->xdev->dev,
+> > @@ -493,7 +492,8 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+> >   	list_add(&bus_entry->list, &pdev->root_buses);
+> >   	/* pci_scan_root_bus skips devices which do not have a
+> > -	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+> > +	 * devfn==0. The pcifront_scan_bus enumerates all devfn.
+> > +	 */
+> >   	err = pcifront_scan_bus(pdev, domain, bus, b);
+> >   	/* Claim resources before going "live" with our devices */
+> > @@ -651,8 +651,9 @@ static void pcifront_do_aer(struct work_struct *data)
+> >   	pci_channel_state_t state =
+> >   		(pci_channel_state_t)pdev->sh_info->aer_op.err;
+> > -	/*If a pci_conf op is in progress,
+> > -		we have to wait until it is done before service aer op*/
+> > +	/* If a pci_conf op is in progress, we have to wait until it is done
+> > +	 * before service aer op
+> > +	 */
+> >   	dev_dbg(&pdev->xdev->dev,
+> >   		"pcifront service aer bus %x devfn %x\n",
+> >   		pdev->sh_info->aer_op.bus, pdev->sh_info->aer_op.devfn);
+> > @@ -676,6 +677,7 @@ static void pcifront_do_aer(struct work_struct *data)
+> >   static irqreturn_t pcifront_handler_aer(int irq, void *dev)
+> >   {
+> >   	struct pcifront_device *pdev = dev;
+> > +
+> >   	schedule_pcifront_aer_op(pdev);
+> >   	return IRQ_HANDLED;
+> >   }
+> > @@ -1027,6 +1029,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+> >   	/* Find devices being detached and remove them. */
+> >   	for (i = 0; i < num_devs; i++) {
+> >   		int l, state;
+> > +
+> >   		l = snprintf(str, sizeof(str), "state-%d", i);
+> >   		if (unlikely(l >= (sizeof(str) - 1))) {
+> >   			err = -ENOMEM;
+> > @@ -1078,7 +1081,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+> >   	return err;
+> >   }
+> > -static void __ref pcifront_backend_changed(struct xenbus_device *xdev,
+> > +static void pcifront_backend_changed(struct xenbus_device *xdev,
+> >   						  enum xenbus_state be_state)
+> >   {
+> >   	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
+> > @@ -1137,6 +1140,7 @@ static int pcifront_xenbus_probe(struct xenbus_device *xdev,
+> >   static int pcifront_xenbus_remove(struct xenbus_device *xdev)
+> >   {
+> >   	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
+> > +
+> >   	if (pdev)
+> >   		free_pdev(pdev);
+> > 
+> 
+> Juergen
 
 
-Also, I have been trying to reach Bin Luo who maintains the hinic driver
-but it seems his email ID has changed so if someone else can help in
-reviewing/testing the hinic patch, it would be really helpful.
 
--- 
-Thanks
-Nitesh
+
 
