@@ -2,192 +2,163 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43A9CC432BE
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21D31C432BE
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28C4760F56
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:53:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AA0660F5E
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237691AbhH3Py0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 11:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40434 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237696AbhH3PyY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Aug 2021 11:54:24 -0400
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC68AC061575;
-        Mon, 30 Aug 2021 08:53:30 -0700 (PDT)
-Received: by mail-ej1-x62d.google.com with SMTP id me10so32129808ejb.11;
-        Mon, 30 Aug 2021 08:53:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=LZTTwFJF+zvGHdyibVGAvdJNHkDefebmF2ya6xkkbwE=;
-        b=OrrCxmJej7+ig4i1srOE7VMVkeDpS9cakUwSxm2PgKW0SKIhtk9YTr8Kjvt8STi+mf
-         x9o/QFBriMovGg3TMJpTwWYB9dEC9pDYyILpbrlSivt5HNxVeG0NihF+uux9vNUA6CcC
-         QZ0S4+/ZA9UjECBx3ztjhnTbWnpaTEExsr2R0oqiKJ7lW77S5S6su5QEzC1c+cR0E3pW
-         gQ5y8RGdXc+Sgzzk1AJPm/5exbEEXvqBYjTTowg74polMwbz22etysgrPnX06h8reEUu
-         tKM4hC7j0jxHaa44aS/cOeeKczpkmIbyvN1+SWJRwRjihDnaRjnFaXs23sL2LonBsG4T
-         8zyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=LZTTwFJF+zvGHdyibVGAvdJNHkDefebmF2ya6xkkbwE=;
-        b=LpAXTfQqJ3J3BEPgpgbgEtvpMQdnbU3Dg/t1iXEenJelBZ5u6oJ8mldKrGfYCAR54E
-         8zZ3SzH6fsG7Jas8Q45pgLJLvE7i3wRJ4/WWGjo8JrBy1nHmAA59hX0gvUAmuHvtFioj
-         e4omvRT9N8M/K0Mg9UaKeEsJ7eMvGnK4rJjyQXQIroltl7XiPrX5n3bFaWiXVQtQNhUX
-         6P75s/EbiU/dEkxjqzMU/xwXayhib9wcK9SGF6Vk2xwrWB3oI71/hrHahZ64jgotUF6J
-         /QSvitlEM2BYA6zIqZLZQY/A7XpR3rHP1EiIGTcRImpO8BadjLMotCjbNqts61AZadM3
-         MNgw==
-X-Gm-Message-State: AOAM533on0xk661GXe/7N7S8SoKqxweUQf7DjfCyICykvX6E8aBvye0u
-        X7c6VTSR19iBI//vFXVXA+U=
-X-Google-Smtp-Source: ABdhPJybPVfFJ0VfPXkN/ghxef8t28WfmUnSzRrbQ4yuUnvBgvPKJyy8F7HZBA+jg9ihxbpVb2YQCw==
-X-Received: by 2002:a17:906:a044:: with SMTP id bg4mr25947563ejb.312.1630338809554;
-        Mon, 30 Aug 2021 08:53:29 -0700 (PDT)
-Received: from localhost.localdomain (host-79-37-188-60.retail.telecomitalia.it. [79.37.188.60])
-        by smtp.gmail.com with ESMTPSA id o26sm6982569eje.24.2021.08.30.08.53.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Aug 2021 08:53:29 -0700 (PDT)
-From:   "=?UTF-8?q?Sergio=20Migu=C3=A9ns=20Iglesias?=" <lonyelon@gmail.com>
-X-Google-Original-From: =?UTF-8?q?Sergio=20Migu=C3=A9ns=20Iglesias?= <sergio@lony.xyz>
-To:     konrad.wilk@oracle.com
-Cc:     boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, bhelgaas@google.com,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Sergio=20Migu=C3=A9ns=20Iglesias?= <sergio@lony.xyz>
-Subject: [PATCH v2] xen/pcifront: Removed unnecessary __ref annotation
-Date:   Mon, 30 Aug 2021 19:53:05 +0200
-Message-Id: <20210830175305.13370-1-sergio@lony.xyz>
-X-Mailer: git-send-email 2.33.0
+        id S237690AbhH3P5b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 11:57:31 -0400
+Received: from mga12.intel.com ([192.55.52.136]:49629 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237646AbhH3P5b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Aug 2021 11:57:31 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10092"; a="197863102"
+X-IronPort-AV: E=Sophos;i="5.84,363,1620716400"; 
+   d="scan'208";a="197863102"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2021 08:56:37 -0700
+X-IronPort-AV: E=Sophos;i="5.84,363,1620716400"; 
+   d="scan'208";a="530480613"
+Received: from wps-jon.lm.intel.com (HELO localhost.localdomain) ([10.232.117.157])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2021 08:56:37 -0700
+From:   Jon Derrick <jonathan.derrick@linux.dev>
+To:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Ashok Raj <ashok.raj@intel.com>, Lukas Wunner <lukas@wunner.de>,
+        jonathan.derrick@linux.dev,
+        James Puthukattukaran <james.puthukattukaran@oracle.com>,
+        Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v3] PCI: pciehp: Add quirk to handle spurious DLLSC on a x4x4 SSD
+Date:   Mon, 30 Aug 2021 09:56:28 -0600
+Message-Id: <20210830155628.130054-1-jonathan.derrick@linux.dev>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-An unnecessary "__ref" annotation was removed from the
-"drivers/pci/xen_pcifront.c" file. The function where the annotation
-was used was "pcifront_backend_changed()", which does not call any
-functions annotated as "__*init" nor "__*exit". This makes "__ref"
-unnecessary since this annotation is used to make the compiler ignore
-section miss-matches when they are not happening here in the first
-place.
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 
-In addition to the aforementioned change, some code style issues were
-fixed in the same file.
+When an Intel P5608 SSD is bifurcated into x4x4 mode, and the upstream
+ports both support hotplugging on each respective x4 device, a slot
+management system for the SSD requires both x4 slots to have power
+removed via sysfs (echo 0 > slot/N/power), from the OS before it can
+safely turn-off physical power for the whole x8 device. The implications
+are that slot status will display powered off and link inactive statuses
+for the x4 devices where the devices are actually powered until both
+ports have powered off.
 
-Signed-off-by: Sergio Miguéns Iglesias <sergio@lony.xyz>
+The issue with the SSD manifests when power is removed from the
+first-half and then the second-half. During the first-half removal, slot
+status shows the slot as powered-down and link-inactive, while internal
+power and link remain active while waiting for the second-half to have
+power removed. When power is then removed from the second-half, the
+first-half starts shutdown sequence and will trigger a DLLSC event. This
+is misinterpreted as an enabling event and causes the first-half to be
+re-enabled.
+
+The spurious enable can be resolved by ignoring link status change
+events when no link is active when in the off state. This patch adds a
+quirk for specific P5608 SSDs which have been tested for compatibility.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
 ---
- drivers/pci/xen-pcifront.c | 30 +++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+v2->v3: Clarified commit message and comment block
+	Added second supported subdevice ID
+	Added hotplug ifdef blocks
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index b7a8f3a1921f..427041c1e408 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -115,7 +115,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
- 	struct xen_pci_op *active_op = &pdev->sh_info->op;
- 	unsigned long irq_flags;
- 	evtchn_port_t port = pdev->evtchn;
--	unsigned irq = pdev->irq;
-+	unsigned int irq = pdev->irq;
- 	s64 ns, ns_timeout;
- 
- 	spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
-@@ -153,10 +153,10 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
- 	}
+ drivers/pci/hotplug/pciehp_ctrl.c |  7 +++++++
+ drivers/pci/quirks.c              | 34 +++++++++++++++++++++++++++++++
+ include/linux/pci.h               |  1 +
+ 3 files changed, 42 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 529c34808440..db41f78bfac8 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -225,6 +225,7 @@ void pciehp_handle_disable_request(struct controller *ctrl)
+ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ {
+ 	int present, link_active;
++	struct pci_dev *pdev = ctrl->pcie->port;
  
  	/*
--	* We might lose backend service request since we
--	* reuse same evtchn with pci_conf backend response. So re-schedule
--	* aer pcifront service.
--	*/
-+	 * We might lose backend service request since we
-+	 * reuse same evtchn with pci_conf backend response. So re-schedule
-+	 * aer pcifront service.
-+	 */
- 	if (test_bit(_XEN_PCIB_active,
- 			(unsigned long *)&pdev->sh_info->flags)) {
- 		dev_err(&pdev->xdev->dev,
-@@ -414,7 +414,8 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
- 	struct pci_dev *d;
- 	unsigned int devfn;
- 
--	/* Scan the bus for functions and add.
-+	/*
-+	 * Scan the bus for functions and add.
- 	 * We omit handling of PCI bridge attachment because pciback prevents
- 	 * bridges from being exported.
- 	 */
-@@ -492,8 +493,10 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 
- 	list_add(&bus_entry->list, &pdev->root_buses);
- 
--	/* pci_scan_root_bus skips devices which do not have a
--	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
-+	/*
-+	 * pci_scan_root_bus skips devices which do not have a
-+	 * devfn==0. The pcifront_scan_bus enumerates all devfn.
-+	 */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
- 	/* Claim resources before going "live" with our devices */
-@@ -651,8 +654,10 @@ static void pcifront_do_aer(struct work_struct *data)
- 	pci_channel_state_t state =
- 		(pci_channel_state_t)pdev->sh_info->aer_op.err;
- 
--	/*If a pci_conf op is in progress,
--		we have to wait until it is done before service aer op*/
-+	/*
-+	 * If a pci_conf op is in progress, we have to wait until it is done
-+	 * before service aer op
-+	 */
- 	dev_dbg(&pdev->xdev->dev,
- 		"pcifront service aer bus %x devfn %x\n",
- 		pdev->sh_info->aer_op.bus, pdev->sh_info->aer_op.devfn);
-@@ -676,6 +681,7 @@ static void pcifront_do_aer(struct work_struct *data)
- static irqreturn_t pcifront_handler_aer(int irq, void *dev)
- {
- 	struct pcifront_device *pdev = dev;
+ 	 * If the slot is on and presence or link has changed, turn it off.
+@@ -265,6 +266,12 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 		cancel_delayed_work(&ctrl->button_work);
+ 		fallthrough;
+ 	case OFF_STATE:
++		if (pdev->shared_pcc_and_link_slot &&
++		    (events & PCI_EXP_SLTSTA_DLLSC) && !link_active) {
++			mutex_unlock(&ctrl->state_lock);
++			break;
++		}
 +
- 	schedule_pcifront_aer_op(pdev);
- 	return IRQ_HANDLED;
+ 		ctrl->state = POWERON_STATE;
+ 		mutex_unlock(&ctrl->state_lock);
+ 		if (present)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 10122e3318cf..c6b48ddc5c3d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5750,3 +5750,37 @@ static void apex_pci_fixup_class(struct pci_dev *pdev)
  }
-@@ -1027,6 +1033,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 	/* Find devices being detached and remove them. */
- 	for (i = 0; i < num_devs; i++) {
- 		int l, state;
+ DECLARE_PCI_FIXUP_CLASS_HEADER(0x1ac1, 0x089a,
+ 			       PCI_CLASS_NOT_DEFINED, 8, apex_pci_fixup_class);
 +
- 		l = snprintf(str, sizeof(str), "state-%d", i);
- 		if (unlikely(l >= (sizeof(str) - 1))) {
- 			err = -ENOMEM;
-@@ -1078,7 +1085,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 	return err;
- }
- 
--static void __ref pcifront_backend_changed(struct xenbus_device *xdev,
-+static void pcifront_backend_changed(struct xenbus_device *xdev,
- 						  enum xenbus_state be_state)
- {
- 	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
-@@ -1137,6 +1144,7 @@ static int pcifront_xenbus_probe(struct xenbus_device *xdev,
- static int pcifront_xenbus_remove(struct xenbus_device *xdev)
- {
- 	struct pcifront_device *pdev = dev_get_drvdata(&xdev->dev);
++#ifdef CONFIG_HOTPLUG_PCI_PCIE
++/*
++ * This is an Intel NVMe SSD which sits in a x8 pciehp slot but is bifurcated
++ * as a x4x4 and manifests as two slots with respect to PCIe hot plug register
++ * states. However, the hotplug controller treats these slots as a single x8
++ * slot for link and power. Either one of the two slots can be powered down
++ * separately and the slot status will show negative power and link states, but
++ * internal power and link will be active until the last of the two slots is
++ * powered down. When the last of the two x4 slots is turned off, power and
++ * link will be turned off for the x8 slot by the HP controller. This
++ * configuration causes some interesting behavior in bringup sequence
++ *
++ * When the second slot is powered off to remove the card, this will cause the
++ * link to go down for both x4 slots. So, the x4 that is already powered down
++ * earlier will see a DLLSC event and attempt to bring itself up (card present,
++ * link change event, link state is down). Special handling is required in
++ * pciehp_handle_presence_or_link_change to prevent this unintended bring up
++ */
++static void quirk_shared_pcc_and_link_slot(struct pci_dev *pdev)
++{
++	struct pci_dev *parent = pci_upstream_bridge(pdev);
 +
- 	if (pdev)
- 		free_pdev(pdev);
++	if (parent && pdev->subsystem_vendor == 0x108e) {
++		switch (pdev->subsystem_device) {
++		/* P5608 */
++		case 0x487d:
++		case 0x488d:
++			parent->shared_pcc_and_link_slot = 1;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0b60, quirk_shared_pcc_and_link_slot);
++#endif /* CONFIG_HOTPLUG_PCI_PCIE */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7ed95f11c6bd..bcef73209487 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -463,6 +463,7 @@ struct pci_dev {
  
+ #ifdef CONFIG_HOTPLUG_PCI_PCIE
+ 	unsigned int	broken_cmd_compl:1;	/* No compl for some cmds */
++	unsigned int	shared_pcc_and_link_slot:1;
+ #endif
+ #ifdef CONFIG_PCIE_PTM
+ 	unsigned int	ptm_root:1;
 -- 
-2.33.0
+2.27.0
 
