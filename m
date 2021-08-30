@@ -2,36 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E17C4320E
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:36:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87B21C4320A
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:37:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64D2D60FF2
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:36:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67A4360E90
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 08:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234891AbhH3Ihl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 04:37:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51048 "EHLO mail.kernel.org"
+        id S234995AbhH3IiA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 04:38:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51208 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233318AbhH3Ihl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Aug 2021 04:37:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BDB1460E90;
-        Mon, 30 Aug 2021 08:36:45 +0000 (UTC)
+        id S233318AbhH3IiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Aug 2021 04:38:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E907B60FF2;
+        Mon, 30 Aug 2021 08:37:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630312608;
-        bh=U1Bz+TRPE0qWHJ914Agg77D2LCyxrGJYD98I0IgzduI=;
+        s=k20201202; t=1630312626;
+        bh=hOIIhqobCa1Hd7s4CncUFBVt2Lx0qCzIYHdJXKdIa/A=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ACAJ/8opjlZkYWqPkc/po7IKe6UsMR372P2D3M0nWcSwPziCe9rfvwHFNzmGkBF77
-         AdBnGtgHa3hwiaxGlK/KK6q3dz0IRISJ9AwpWxgij42rEdZ/zS5TEVsPRWC4eHZz6F
-         C5TMhkXbp9q6yLx/NEs0LfsNm/h0K6aGqPmFcM1BTdYDyP0+v1p5a/VCJJw1ngpb21
-         rp2//0piv30bOzwAhhoXQiOEUpSWjgx1m1jp/VrhZeorH9SOMM/rvVJtoFHSpdFPmx
-         vi0VzTg+CE57l/Ls6Gd8yAlNxNq/HlCPAX8mQLhVdFFIREOqUMDG7AWum71adhq0VU
-         D6NlaGykdHhaw==
-Message-ID: <44ad79081412af289c68e74cdecb6a2baa2e873c.camel@kernel.org>
-Subject: Re: [PATCH v3 2/4] PCI: brcmstb: Add ACPI config space quirk
+        b=Yy0cQz9vDY/8cIxc+KkAoeMVY15Of4GaubfG6nXqacNDP+tYLWHcmgxFmaJsWpMsa
+         8JfLW9tutqfKqKsVORMFvXVUyVHAb4QRb9rwzTfTHEiFvWb6A+400RTu7L5pG5CfWi
+         gpcDGZpll8yEnLZ/2tlvD7h0ISGjFVRBBNkqhuHFrgoPV0fQFnZkadAdM8Gk/0+H2/
+         MbzpfVqTEX9zGB0ouF9Pzz5sfrQfziGICdKJltGwbj4KEasEngFD0j04GTGmxGaoPb
+         wxgAq7r6WDjrBP6X/5lqG237HOgZ+HfdyciCmC3VOo+TxREoRDh7Etnd77m8H9QkXQ
+         wTZLsx/JOapQg==
+Message-ID: <752472af4f659990ca46595dcc0a150cdcf71ba9.camel@kernel.org>
+Subject: Re: [PATCH v3 1/4] PCI: brcmstb: Break register definitions into
+ separate header
 From:   nicolas saenz julienne <nsaenz@kernel.org>
 To:     Jeremy Linton <jeremy.linton@arm.com>, linux-pci@vger.kernel.org
 Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com, rjw@rjwysocki.net,
@@ -39,10 +41,10 @@ Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com, rjw@rjwysocki.net,
         f.fainelli@gmail.com, bcm-kernel-feedback-list@broadcom.com,
         linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-rpi-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Date:   Mon, 30 Aug 2021 10:36:43 +0200
-In-Reply-To: <20210826071557.29239-3-jeremy.linton@arm.com>
+Date:   Mon, 30 Aug 2021 10:37:01 +0200
+In-Reply-To: <20210826071557.29239-2-jeremy.linton@arm.com>
 References: <20210826071557.29239-1-jeremy.linton@arm.com>
-         <20210826071557.29239-3-jeremy.linton@arm.com>
+         <20210826071557.29239-2-jeremy.linton@arm.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.40.4 (3.40.4-1.fc34) 
 MIME-Version: 1.0
@@ -51,40 +53,18 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jeremy,
-sorry for the late reply, I've been on vacation.
-
 On Thu, 2021-08-26 at 02:15 -0500, Jeremy Linton wrote:
+> We are about to create a standalone ACPI quirk module for the
+> bcmstb controller. Lets move the register definitions into a separate
+> file so they can be shared between the APCI quirk and the normal
+> host bridge driver.
+> 
+> Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
 
-[...]
-
-> +static void __iomem *brcm_pcie_map_conf2(struct pci_bus *bus,
-> +					unsigned int devfn, int where)
-> +{
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	void __iomem *base = cfg->win;
-> +	int idx;
-> +	u32 up;
-> +
-> +	/* Accesses to the RC go right to the RC registers if slot==0 */
-> +	if (pci_is_root_bus(bus))
-> +		return PCI_SLOT(devfn) ? NULL : base + where;
-> +
-> +	/*
-> +	 * Assure the link is up before sending requests downstream. This is done
-> +	 * to avoid sending transactions to EPs that don't exist. Link flap
-> +	 * conditions/etc make this race more probable. The resulting unrecoverable
-> +	 * SERRORs will result in the machine crashing.
-> +	 */
-> +	up = readl(base + PCIE_MISC_PCIE_STATUS);
-> +	if (!(up & PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE_MASK))
-> +		return NULL;
-> +
-> +	if (!(up & PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP_MASK))
-> +		return NULL;
-
-Couldn't this be integrated in the original brcm_pcie_map_conf()? IIUC there is
-nothing ACPI specific about it. It'd also make for less code duplication.
+Acked-by: Nicolas Saenz Julienne <nsaenz@kernel.org>
 
 Regards,
 Nicolas
