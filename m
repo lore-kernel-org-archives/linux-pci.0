@@ -2,69 +2,187 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5897FC432BE
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 19:18:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE929C4320A
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 20:20:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BF3B60F3A
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 19:18:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F14460F5B
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 20:20:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232181AbhH3TTH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 15:19:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34006 "EHLO mail.kernel.org"
+        id S235071AbhH3UVP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 16:21:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52516 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229950AbhH3TTG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Aug 2021 15:19:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C6C960238;
-        Mon, 30 Aug 2021 19:18:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630351092;
-        bh=IsJ1eyte8pqC29zpTwrvhMUn8oR4aDRp/oA5dY+oUu8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ZOIega9sXyUc6icmBUCBKQUmiGY76J1k5FwUpJ7qL+jkDIJQK7EOxN5Vk3J9v6oP5
-         wz/jCi0AU7ibfsGTGm6wTydszncqEcoxohUn0gawaYxaTYuHOJAvnYafTa5/+J64Q/
-         WySko4GOPnjhWjQPR9yUgpOtG4m+07KcDyxBQBVM2Z/akNPtc82J/F3zCadJCl70DE
-         7JKRrCeT6UkK//jdwTX/a2DcuBd01jK3GO36awGyaPMHzy3hQt7DuItHjRByWtd398
-         i5vxKJK7QZqHhr9De8FatGMFnAAqJODwy2ug3e9qdi57OWZrlymXu+aV1k6Zk01zwd
-         3AF2lKHmRpNIw==
-Date:   Mon, 30 Aug 2021 14:18:10 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sergio =?iso-8859-1?Q?Migu=E9ns?= Iglesias <lonyelon@gmail.com>
-Cc:     konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, bhelgaas@google.com,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergio =?iso-8859-1?Q?Migu=E9ns?= Iglesias <sergio@lony.xyz>
-Subject: Re: [PATCH v2] xen/pcifront: Removed unnecessary __ref annotation
-Message-ID: <20210830191810.GA13209@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210830201426.g2vaxh6chqnprual@archlap>
+        id S232906AbhH3UVO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Aug 2021 16:21:14 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B895760F5C;
+        Mon, 30 Aug 2021 20:20:20 +0000 (UTC)
+Received: from sofa.misterjones.org ([185.219.108.64] helo=wait-a-minute.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <maz@kernel.org>)
+        id 1mKnlS-00852D-9H; Mon, 30 Aug 2021 21:20:18 +0100
+Date:   Mon, 30 Aug 2021 21:20:17 +0100
+Message-ID: <87o89ed6ri.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Rob Herring <robh+dt@kernel.org>
+Cc:     Mark Kettenis <mark.kettenis@xs4all.nl>,
+        devicetree@vger.kernel.org,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Mark Kettenis <kettenis@openbsd.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Hector Martin <marcan@marcan.st>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Saenz Julienne <nsaenzjulienne@suse.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 4/4] arm64: apple: Add PCIe node
+In-Reply-To: <CAL_JsqJC+FxiynFkkcB0amp3s4agsio5ggCrYiPbqoXroAJV4Q@mail.gmail.com>
+References: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
+        <20210827171534.62380-5-mark.kettenis@xs4all.nl>
+        <87pmtvcgec.wl-maz@kernel.org>
+        <CAL_JsqJC+FxiynFkkcB0amp3s4agsio5ggCrYiPbqoXroAJV4Q@mail.gmail.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: robh+dt@kernel.org, mark.kettenis@xs4all.nl, devicetree@vger.kernel.org, alyssa@rosenzweig.io, kettenis@openbsd.org, tglx@linutronix.de, marcan@marcan.st, bhelgaas@google.com, nsaenz@kernel.org, jim2101024@gmail.com, f.fainelli@gmail.com, bcm-kernel-feedback-list@broadcom.com, daire.mcnamara@microchip.com, nsaenzjulienne@suse.de, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 10:14:26PM +0200, Sergio Miguéns Iglesias wrote:
-> Thanks again for you answers!
-> I am lerning a lot from your replys and I really appreciate it. Should I
-> make a v3 patch and split that one into 2 different patches or would it
-> be confusing?
+On Mon, 30 Aug 2021 16:57:59 +0100,
+Rob Herring <robh+dt@kernel.org> wrote:
 > 
-> I don't want to take more of your time with poor patches so I don't know
-> if I should resend this one.
+> On Mon, Aug 30, 2021 at 6:37 AM Marc Zyngier <maz@kernel.org> wrote:
+> >
+> > I have now implemented the MSI change on the Linux driver side, and it
+> > works nicely. So thumbs up from me on this front.
+> >
+> > I am now looking at the interrupts provided by each port:
+> > (1) a bunch of port-private interrupts (link up/down...)
+> > (2) INTx interrupts
+> 
+> So each port has an independent INTx space?
 
-If it's already applied, it doesn't matter for this case.  But in this
-situation I would generally post a v3 incorporating the feedback.  To
-be respectful of reviewers' time, try to avoid posting more than one
-or two revisions per week.  As long as you tag reposts appropriately
-with v2, v3, etc (as you did), there's no confusion.
+Yes.
 
-It's nice if you include a note about what changed between v1 and v2
-in the cover letter or below the "---" line as was done here:
+> Is that even something PCI defines or comprehends?
 
-  https://lore.kernel.org/linux-pci/8f9a13ac-8ab1-15ac-06cb-c131b488a36f@siemens.com/
+Can't see why not. That's no different from having several PCI busses.
+I don't think anything enforces that INTx interrupts have to be
+unique across the system. As long as they are unique across a PCI
+hierarchy, we should be OK.
+
+> 
+> > Given that the programming is per-port, I've implemented this as a
+> > per-port interrupt controller.
+> >
+> > (1) is dead easy to implement, and doesn't require any DT description.
+> > (2) is unfortunately exposing the limits of my DT knowledge, and I'm
+> > not clear how to model it. I came up with the following:
+> >
+> >         port00: pci@0,0 {
+> >                 device_type = "pci";
+> >                 reg = <0x0 0x0 0x0 0x0 0x0>;
+> >                 reset-gpios = <&pinctrl_ap 152 0>;
+> >                 max-link-speed = <2>;
+> >
+> >                 #address-cells = <3>;
+> >                 #size-cells = <2>;
+> >                 ranges;
+> >
+> >                 interrupt-controller;
+> >                 #interrupt-cells = <1>;
+> >                 interrupt-parent = <&port00>;
+> >                 interrupt-map-mask = <0 0 0 7>;
+> >                 interrupt-map = <0 0 0 1 &port00 0>,
+> >                                 <0 0 0 2 &port00 1>,
+> >                                 <0 0 0 3 &port00 2>,
+> >                                 <0 0 0 4 &port00 3>;
+> 
+> IIRC, I don't think the DT IRQ code handles a node having both
+> 'interrupt-controller' and 'interrupt-map' properties.
+
+Indeed, and that actually explains why the damned INTx interrupts
+insist on being 1-based instead of 0-based as the above mapping
+attempts to describe it. Turns out I can rip the interrupt-map out and
+it isn't worse.
+
+> I think that's why some PCI host bridge nodes have child
+> interrupt-controller nodes.  I don't really like that work-around,
+> so if the above can be made to work, I'd be happy to see it. But the
+> DT IRQ code is some ancient code for ancient platforms (PowerMacs
+> being one of them).
+
+That'd probably need some massaging. I'll have a look. I checked that
+if I add something like:
+
+		interrupts-extended = <&port02 2>;
+
+to each port, I get the PME interrupt correctly assigned should I pass
+pcie_pme=nomsi. Given that this IP is pretty limited in terms of MSIs,
+every bit that can free a MSI is welcome.
+
+I guess that it would make sense to expand this support to also match
+for an interrupt-map.
+
+> 
+> >         };
+> >
+> > which vaguely seem to do the right thing for the devices behind root
+> > ports, but doesn't seem to work for INTx generated by the root ports
+> > themselves. Any clue? Alternatively, I could move it to something
+> > global to the whole PCIe controller, but that doesn't seem completely
+> > right.
+
+I've investigated this one further, and it looks like the DT IRQ code
+insists on trying to find the interrupt in the main pcie node instead
+of in the root port itself. But of course it doesn't want to parse an
+interrupt-map at that level either.
+
+I guess that's related to the above.
+
+> >
+> > It also begs the question whether the per-port interrupt to the AIC
+> > should be moved into each root port, should my per-port approach hold
+> > any water.
+> 
+> I tend to think per-port is the right thing to do. However, the child
+> nodes are PCI devices, so that creates some restrictions. Such as the
+> per port registers are in the host address space, not the PCI address
+> space, so we can't move the registers into the child nodes. The
+> interrupts may be okay. Certainly, being an 'interrupt-controller'
+> without having an 'interrupts' property for an non root interrupt
+> controller is odd.
+
+That was my own impression as well.
+
+I guess there is no real canonical way to handle this particular
+system and to fully support it, we'll have to amend the current
+infrastructure. The question is: what is the least ugly way to express
+this that will work reasonably across implementations (OpenBSD, Linux,
+u-boot)?
+
+	M.
+
+-- 
+Without deviation from the norm, progress is not possible.
