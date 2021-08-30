@@ -2,232 +2,129 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D69E3C43216
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD65C432BE
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:59:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7E5160FC3
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:58:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AF4A60F5B
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Aug 2021 15:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237716AbhH3P7P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Aug 2021 11:59:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33672 "EHLO mail.kernel.org"
+        id S237791AbhH3QAm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Aug 2021 12:00:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36576 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237735AbhH3P7H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Aug 2021 11:59:07 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3DCB460FD8;
-        Mon, 30 Aug 2021 15:58:13 +0000 (UTC)
+        id S237857AbhH3QAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Aug 2021 12:00:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3D10A60F56;
+        Mon, 30 Aug 2021 15:59:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630339093;
-        bh=94GQfHWUxtTHx/+l6i92UggNWHytvmlkl4wPKFJaFiE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=cMntF844dTL/rBrW/ozl8hJNGnQz4nclR45Brpr02jajmhmvqC4IN8OgKXFVrm+5i
-         CliEBSD4+ZH97rJ4duZf6NbUTy8eDU15/4ZBNbjc5EjEMG8TP7E7e8uQEI3kkRneIW
-         s23es8i1wM3B2UefnCRh7Axf/kEIv95kqQNaRxtXza/CwIfRD7t0i9QD04yUMUFjNt
-         VLwg0SKtc8IrlMHp+IfYQtJSp3clNh7eSwYgNUinPvyxgv/9ZlRXNMtFeRvc7gfF0/
-         Cd+QgH70JfVHOup9sHF9+Qj4JoFH1WERT5E/3SbKy11j7hhvSfof9m5S+sy0VFvc8N
-         F1JlcbPHnvjLA==
-Received: by mail-ej1-f46.google.com with SMTP id e21so32110789ejz.12;
-        Mon, 30 Aug 2021 08:58:13 -0700 (PDT)
-X-Gm-Message-State: AOAM533F3ta3mAooAkUXpQ+IQY/dw9t5R/AnK42t1rroEUvUDl7y7f4x
-        +Uz4tKB7WA7giXcxGVJEjm6g1r/WsizXFkHRrQ==
-X-Google-Smtp-Source: ABdhPJxdn0w1vnkBGUjO5dciyQYkquk0ijWzCAVg0wdsn4z3j1+X4UTTETS+FmnItD7/WXsSw60BVGvHjQN32sYA9ac=
-X-Received: by 2002:a17:906:25db:: with SMTP id n27mr25255293ejb.108.1630339091824;
- Mon, 30 Aug 2021 08:58:11 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
- <20210827171534.62380-5-mark.kettenis@xs4all.nl> <87pmtvcgec.wl-maz@kernel.org>
-In-Reply-To: <87pmtvcgec.wl-maz@kernel.org>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Mon, 30 Aug 2021 10:57:59 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqJC+FxiynFkkcB0amp3s4agsio5ggCrYiPbqoXroAJV4Q@mail.gmail.com>
-Message-ID: <CAL_JsqJC+FxiynFkkcB0amp3s4agsio5ggCrYiPbqoXroAJV4Q@mail.gmail.com>
-Subject: Re: [PATCH v4 4/4] arm64: apple: Add PCIe node
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Mark Kettenis <mark.kettenis@xs4all.nl>,
-        devicetree@vger.kernel.org,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Mark Kettenis <kettenis@openbsd.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Hector Martin <marcan@marcan.st>,
+        s=k20201202; t=1630339188;
+        bh=RKKJL2Oa462dloe2S2b4LJnqrOSFWbJ15BpzgjMEaKw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XxR5WdMPVmngFeWeWo2gCYUQI+j4hJZNKUfhSAHJ5qMH+MD8/366tZOqAEVTd73gy
+         aj4IDHh+My+406/Zcu0nw6f2nx3DZJmwEz2dcqTAdsmtOY1Xr3/6LQK1D3+F1HhfKL
+         jzBv/27DFJ1cERXdkJXblORGMAk14ucEywveq7AOvfzBN7uS3U2hBR19MrkCSiJ6xM
+         u4uOrbieaCo+ecNfTo117zz7ii474eYRIC3px17mUrgDdyHIIPxzTI/0xDd+/TjmAA
+         Dlx3KOmpyUM9cURws+wVLTSljB18BoGsXBM1LvlbtUQplrdve3J9fVnHhEg3Oe0uU3
+         5agCrqJHMpXYw==
+Received: by pali.im (Postfix)
+        id C8A537B8; Mon, 30 Aug 2021 17:59:45 +0200 (CEST)
+Date:   Mon, 30 Aug 2021 17:59:45 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Nicolas Saenz Julienne <nsaenz@kernel.org>,
-        Jim Quinlan <jim2101024@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Daire McNamara <daire.mcnamara@microchip.com>,
-        Saenz Julienne <nsaenzjulienne@suse.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Marc Zyngier <maz@kernel.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: uniphier: Fix INTx mask/unmask bit operation
+ and remove ack function
+Message-ID: <20210830155945.yuirq5tsy2migovk@pali>
+References: <1630290158-31264-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1630290158-31264-2-git-send-email-hayashi.kunihiko@socionext.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1630290158-31264-2-git-send-email-hayashi.kunihiko@socionext.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 6:37 AM Marc Zyngier <maz@kernel.org> wrote:
->
-> Hi Mark,
->
-> On Fri, 27 Aug 2021 18:15:29 +0100,
-> Mark Kettenis <mark.kettenis@xs4all.nl> wrote:
-> >
-> > From: Mark Kettenis <kettenis@openbsd.org>
-> >
-> > Add node corresponding to the apcie,t8103 node in the
-> > Apple device tree for the Mac mini (M1, 2020).
-> >
-> > Clock references and DART (IOMMU) references are left out at the
-> > moment and will be added once the appropriate bindings have been
-> > settled upon.
-> >
-> > Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
-> > ---
-> >  arch/arm64/boot/dts/apple/t8103.dtsi | 63 ++++++++++++++++++++++++++++
-> >  1 file changed, 63 insertions(+)
-> >
-> > diff --git a/arch/arm64/boot/dts/apple/t8103.dtsi b/arch/arm64/boot/dts/apple/t8103.dtsi
-> > index 503a76fc30e6..6e4677bdef44 100644
-> > --- a/arch/arm64/boot/dts/apple/t8103.dtsi
-> > +++ b/arch/arm64/boot/dts/apple/t8103.dtsi
-> > @@ -214,5 +214,68 @@ pinctrl_smc: pinctrl@23e820000 {
-> >                                    <AIC_IRQ 396 IRQ_TYPE_LEVEL_HIGH>,
-> >                                    <AIC_IRQ 397 IRQ_TYPE_LEVEL_HIGH>;
-> >               };
-> > +
-> > +             pcie0: pcie@690000000 {
-> > +                     compatible = "apple,t8103-pcie", "apple,pcie";
-> > +                     device_type = "pci";
-> > +
-> > +                     reg = <0x6 0x90000000 0x0 0x1000000>,
-> > +                           <0x6 0x80000000 0x0 0x4000>,
-> > +                           <0x6 0x81000000 0x0 0x8000>,
-> > +                           <0x6 0x82000000 0x0 0x8000>,
-> > +                           <0x6 0x83000000 0x0 0x8000>;
-> > +                     reg-names = "config", "rc", "port0", "port1", "port2";
-> > +
-> > +                     interrupt-parent = <&aic>;
-> > +                     interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
-> > +                                  <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
-> > +                                  <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>;
-> > +
-> > +                     msi-controller;
-> > +                     msi-parent = <&pcie0>;
-> > +                     msi-ranges = <&aic AIC_IRQ 704 IRQ_TYPE_EDGE_RISING 32>;
-> > +
-> > +                     bus-range = <0 3>;
-> > +                     #address-cells = <3>;
-> > +                     #size-cells = <2>;
-> > +                     ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
-> > +                              <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
-> > +
-> > +                     pinctrl-0 = <&pcie_pins>;
-> > +                     pinctrl-names = "default";
-> > +
-> > +                     pci@0,0 {
-> > +                             device_type = "pci";
-> > +                             reg = <0x0 0x0 0x0 0x0 0x0>;
-> > +                             reset-gpios = <&pinctrl_ap 152 0>;
-> > +                             max-link-speed = <2>;
-> > +
-> > +                             #address-cells = <3>;
-> > +                             #size-cells = <2>;
-> > +                             ranges;
-> > +                     };
-> > +
-> > +                     pci@1,0 {
-> > +                             device_type = "pci";
-> > +                             reg = <0x800 0x0 0x0 0x0 0x0>;
-> > +                             reset-gpios = <&pinctrl_ap 153 0>;
-> > +                             max-link-speed = <2>;
-> > +
-> > +                             #address-cells = <3>;
-> > +                             #size-cells = <2>;
-> > +                             ranges;
-> > +                     };
-> > +
-> > +                     pci@2,0 {
-> > +                             device_type = "pci";
-> > +                             reg = <0x1000 0x0 0x0 0x0 0x0>;
-> > +                             reset-gpios = <&pinctrl_ap 33 0>;
-> > +                             max-link-speed = <1>;
-> > +
-> > +                             #address-cells = <3>;
-> > +                             #size-cells = <2>;
-> > +                             ranges;
-> > +                     };
-> > +             };
-> >       };
-> >  };
->
-> I have now implemented the MSI change on the Linux driver side, and it
-> works nicely. So thumbs up from me on this front.
->
-> I am now looking at the interrupts provided by each port:
-> (1) a bunch of port-private interrupts (link up/down...)
-> (2) INTx interrupts
+On Monday 30 August 2021 11:22:37 Kunihiko Hayashi wrote:
+> INTX mask and unmask fields in PCL_RCV_INTX register should only be
+> set/reset for each bit. Clearing by PCL_RCV_INTX_ALL_MASK should be
+> removed.
+> 
+> INTX status fields in PCL_RCV_INTX register only indicates each INTX
+> interrupt status, so the handler can't clear by writing 1 to the field.
+> The status is expected to be cleared by the interrupt origin.
+> The ack function has no meaning, so should remove it.
+> 
+> Fixes: 7e6d5cd88a6f ("PCI: uniphier: Add UniPhier PCIe host controller support")
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 
-So each port has an independent INTx space? Is that even something PCI
-defines or comprehends?
+Acked-by: Pali Rohár <pali@kernel.org>
 
-> Given that the programming is per-port, I've implemented this as a
-> per-port interrupt controller.
->
-> (1) is dead easy to implement, and doesn't require any DT description.
-> (2) is unfortunately exposing the limits of my DT knowledge, and I'm
-> not clear how to model it. I came up with the following:
->
->         port00: pci@0,0 {
->                 device_type = "pci";
->                 reg = <0x0 0x0 0x0 0x0 0x0>;
->                 reset-gpios = <&pinctrl_ap 152 0>;
->                 max-link-speed = <2>;
->
->                 #address-cells = <3>;
->                 #size-cells = <2>;
->                 ranges;
->
->                 interrupt-controller;
->                 #interrupt-cells = <1>;
->                 interrupt-parent = <&port00>;
->                 interrupt-map-mask = <0 0 0 7>;
->                 interrupt-map = <0 0 0 1 &port00 0>,
->                                 <0 0 0 2 &port00 1>,
->                                 <0 0 0 3 &port00 2>,
->                                 <0 0 0 4 &port00 3>;
-
-IIRC, I don't think the DT IRQ code handles a node having both
-'interrupt-controller' and 'interrupt-map' properties. I think that's
-why some PCI host bridge nodes have child interrupt-controller nodes.
-I don't really like that work-around, so if the above can be made to
-work, I'd be happy to see it. But the DT IRQ code is some ancient code
-for ancient platforms (PowerMacs being one of them).
-
->         };
->
-> which vaguely seem to do the right thing for the devices behind root
-> ports, but doesn't seem to work for INTx generated by the root ports
-> themselves. Any clue? Alternatively, I could move it to something
-> global to the whole PCIe controller, but that doesn't seem completely
-> right.
->
-> It also begs the question whether the per-port interrupt to the AIC
-> should be moved into each root port, should my per-port approach hold
-> any water.
-
-I tend to think per-port is the right thing to do. However, the child
-nodes are PCI devices, so that creates some restrictions. Such as the
-per port registers are in the host address space, not the PCI address
-space, so we can't move the registers into the child nodes. The
-interrupts may be okay. Certainly, being an 'interrupt-controller'
-without having an 'interrupts' property for an non root interrupt
-controller is odd.
-
-Rob
+> ---
+>  drivers/pci/controller/dwc/pcie-uniphier.c | 16 ----------------
+>  1 file changed, 16 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
+> index ebe43e9..26f630c 100644
+> --- a/drivers/pci/controller/dwc/pcie-uniphier.c
+> +++ b/drivers/pci/controller/dwc/pcie-uniphier.c
+> @@ -181,19 +181,6 @@ static void uniphier_pcie_irq_enable(struct uniphier_pcie_priv *priv)
+>  	writel(PCL_RCV_INTX_ALL_ENABLE, priv->base + PCL_RCV_INTX);
+>  }
+>  
+> -static void uniphier_pcie_irq_ack(struct irq_data *d)
+> -{
+> -	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+> -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> -	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
+> -	u32 val;
+> -
+> -	val = readl(priv->base + PCL_RCV_INTX);
+> -	val &= ~PCL_RCV_INTX_ALL_STATUS;
+> -	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_STATUS_SHIFT);
+> -	writel(val, priv->base + PCL_RCV_INTX);
+> -}
+> -
+>  static void uniphier_pcie_irq_mask(struct irq_data *d)
+>  {
+>  	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+> @@ -202,7 +189,6 @@ static void uniphier_pcie_irq_mask(struct irq_data *d)
+>  	u32 val;
+>  
+>  	val = readl(priv->base + PCL_RCV_INTX);
+> -	val &= ~PCL_RCV_INTX_ALL_MASK;
+>  	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_MASK_SHIFT);
+>  	writel(val, priv->base + PCL_RCV_INTX);
+>  }
+> @@ -215,14 +201,12 @@ static void uniphier_pcie_irq_unmask(struct irq_data *d)
+>  	u32 val;
+>  
+>  	val = readl(priv->base + PCL_RCV_INTX);
+> -	val &= ~PCL_RCV_INTX_ALL_MASK;
+>  	val &= ~BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_MASK_SHIFT);
+>  	writel(val, priv->base + PCL_RCV_INTX);
+>  }
+>  
+>  static struct irq_chip uniphier_pcie_irq_chip = {
+>  	.name = "PCI",
+> -	.irq_ack = uniphier_pcie_irq_ack,
+>  	.irq_mask = uniphier_pcie_irq_mask,
+>  	.irq_unmask = uniphier_pcie_irq_unmask,
+>  };
+> -- 
+> 2.7.4
+> 
