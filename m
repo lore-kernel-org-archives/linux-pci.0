@@ -2,101 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0604BC432BE
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 17:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E02C0C4320A
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 18:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2AEA61058
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 17:08:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD76F60234
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 18:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235197AbhIARJP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Sep 2021 13:09:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38530 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232491AbhIARJP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Sep 2021 13:09:15 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10E4FC061575;
-        Wed,  1 Sep 2021 10:08:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=/eEATaSgxKUQuEI/VyWcCLd2zs8bwbYE3icsNkYYsmw=;
-        t=1630516098; x=1631725698; b=RtAtVXaduob7xiT7IHVqDf4yVm7hZDPfHF61IRzyCKEwmJX
-        mSK8vDdF7RHjaN0vmn/QjTZnro8PJfs3ruUBvowAJZ5Vo4AC4CQWoITgxNG1Gu45dSv5x1n/B6s5b
-        wnEa1PGC2XikPYykvpU1K79Z0UAeRNA5BIM8KuTxP8mgPn5YOar0Q+3bNG62yZOMF8uFvNSxL2Qe6
-        xTgYsnDsI9IKwEMoasdU1/l6SxvAdyZ5oh3Xckr9PXuhDvUEDt+WcjfHU9HkcluFjti2Q/C8sZokH
-        QRKOw4aWovo4GQmc1HNP3Y/LaU3OOtWD4jJsv2QpmrDMOjgLA01Bj0Fq/lv/0blA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1mLTiS-001Fyv-Ur; Wed, 01 Sep 2021 19:08:01 +0200
-Message-ID: <f293c619399ba8bd60240879a20ee34db1248255.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/2] mwifiex: Use non-posted PCI register writes
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Heiner Kallweit <hkallweit1@gmail.com>,
-        Pali =?ISO-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Jonas =?ISO-8859-1?Q?Dre=DFler?= <verdre@v0yd.nl>
-Cc:     Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed, 01 Sep 2021 19:07:58 +0200
-In-Reply-To: <985049b8-bad7-6f18-c94f-368059dd6f95@gmail.com>
-References: <20210830123704.221494-1-verdre@v0yd.nl>
-         <20210830123704.221494-2-verdre@v0yd.nl>
-         <CAHp75VeAKs=nFw4E20etKc3C_Cszyz9AqN=mLsum7F-BdVK5Rg@mail.gmail.com>
-         <7e38931e-2f1c-066e-088e-b27b56c1245c@v0yd.nl>
-         <20210901155110.xgje2qrtq65loawh@pali>
-         <985049b8-bad7-6f18-c94f-368059dd6f95@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.38.4 (3.38.4-1.fc33) 
+        id S244718AbhIAS4I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Sep 2021 14:56:08 -0400
+Received: from mail-oi1-f173.google.com ([209.85.167.173]:36550 "EHLO
+        mail-oi1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347184AbhIASyg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Sep 2021 14:54:36 -0400
+Received: by mail-oi1-f173.google.com with SMTP id s20so615461oiw.3;
+        Wed, 01 Sep 2021 11:53:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FQvE5qqZIT/3rySEUdT9VMQxZS5n7lBZyNfmVX8wxEM=;
+        b=PtYZ8+al/ZBJu/nXROEmwZwuLHdTU9D2gbFvxEq/1tHClDp1P7fSWCyMhxXf6btOlP
+         TXUMiSDJdGb1S/39cU9o6ejA8pqH+I9hG6P4wNM6IWLdnJL6nO4+Tj4I1f5wVJkuY2er
+         qHNXRGLpus6hUm+lP4xtRSvlH85EF/yAdRP5fSHxYNSB9j7bLGDuFNmdGL/qMbO43o/V
+         06qF0NUUGgIAdWzu6v2n8UUBc15vgWxdHb0XVjCz0G/uKBwOrnFzWmrqpTEXu7LgCGGu
+         i9z1+7SDQDgzHHD+i7OVY2eyhF+7poMXlfwEdQNRBxBdOh7T1FC2g3H9DTzA5Zj+PDLz
+         s3FA==
+X-Gm-Message-State: AOAM531dC+V1QYx4jetfQQvUIBoDuGa7zh20SbReTkEPV/J3srpfNefZ
+        kbvKJyAU5FAHiL3Zzv/Zs8WdNz+ygL/j/59ZJQZLP1XT
+X-Google-Smtp-Source: ABdhPJxw0UlgCiTAcLGipUkztf2JN2g4Gi7lcZcN8VThhrAl16F7OOiBE3tHOovk2C6OzqiGAtOUPHry+x5ARbXpgrk=
+X-Received: by 2002:aca:afcd:: with SMTP id y196mr776417oie.71.1630522417861;
+ Wed, 01 Sep 2021 11:53:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-malware-bazaar: not-scanned
+References: <20210824122054.29481-1-joro@8bytes.org> <20210824122054.29481-2-joro@8bytes.org>
+In-Reply-To: <20210824122054.29481-2-joro@8bytes.org>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 1 Sep 2021 20:53:26 +0200
+Message-ID: <CAJZ5v0iVKbL-4LngH7MeSZ69qArLC0488UR+kSnsPTsBD8qZnQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/4] PCI/ACPI: Remove OSC_PCI_SUPPORT_MASKS and OSC_PCI_CONTROL_MASKS
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Joerg Roedel <jroedel@suse.de>,
+        Bjorn Helgaas <helgass@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2021-09-01 at 18:51 +0200, Heiner Kallweit wrote:
-> On 01.09.2021 17:51, Pali Rohár wrote:
-> > On Wednesday 01 September 2021 16:01:54 Jonas Dreßler wrote:
-> > > On 8/30/21 2:49 PM, Andy Shevchenko wrote:
-> > > > On Mon, Aug 30, 2021 at 3:38 PM Jonas Dreßler <verdre@v0yd.nl> wrote:
-> > > > > 
-> > > > > On the 88W8897 card it's very important the TX ring write pointer is
-> > > > > updated correctly to its new value before setting the TX ready
-> > > > > interrupt, otherwise the firmware appears to crash (probably because
-> > > > > it's trying to DMA-read from the wrong place).
-> > > > > 
-> 
-> This sounds somehow like the typical case where you write DMA descriptors
-> and then ring the doorbell. This normally requires a dma_wmb().
-> Maybe something like that is missing here?
+On Tue, Aug 24, 2021 at 2:21 PM Joerg Roedel <joro@8bytes.org> wrote:
+>
+> From: Joerg Roedel <jroedel@suse.de>
+>
+> These masks are only used internally in the PCI Host Bridge _OSC
+> negotiation code, which already makes sure nothing outside of these
+> masks is set. Remove the masks and simplify the code.
+>
+> Suggested-by: Bjorn Helgaas <helgass@kernel.org>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
 
-But it looks like this "TX ring write pointer" is actually the register?
+Reviewed-by: Rafael J. Wysocki <rafael@kernel.org>
 
-However, I would agree that doing it in mwifiex_write_reg() is possibly
-too big a hammer - could be done only for reg->tx_wrptr, not all the
-registers?
-
-Actually, can two writes actually cross on PCI?
-
-johannes
-
+> ---
+>  drivers/acpi/pci_root.c | 9 +++------
+>  include/linux/acpi.h    | 2 --
+>  2 files changed, 3 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d7deedf3548e..0c3030a58219 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -199,18 +199,15 @@ static acpi_status acpi_pci_query_osc(struct acpi_pci_root *root,
+>         acpi_status status;
+>         u32 result, capbuf[3];
+>
+> -       support &= OSC_PCI_SUPPORT_MASKS;
+>         support |= root->osc_support_set;
+>
+>         capbuf[OSC_QUERY_DWORD] = OSC_QUERY_ENABLE;
+>         capbuf[OSC_SUPPORT_DWORD] = support;
+> -       if (control) {
+> -               *control &= OSC_PCI_CONTROL_MASKS;
+> +       if (control)
+>                 capbuf[OSC_CONTROL_DWORD] = *control | root->osc_control_set;
+> -       } else {
+> +       else
+>                 /* Run _OSC query only with existing controls. */
+>                 capbuf[OSC_CONTROL_DWORD] = root->osc_control_set;
+> -       }
+>
+>         status = acpi_pci_run_osc(root->device->handle, capbuf, &result);
+>         if (ACPI_SUCCESS(status)) {
+> @@ -357,7 +354,7 @@ static acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 r
+>         if (!mask)
+>                 return AE_BAD_PARAMETER;
+>
+> -       ctrl = *mask & OSC_PCI_CONTROL_MASKS;
+> +       ctrl = *mask;
+>         if ((ctrl & req) != req)
+>                 return AE_TYPE;
+>
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 72e4f7fd268c..c6dba5f21384 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -577,7 +577,6 @@ extern u32 osc_sb_native_usb4_control;
+>  #define OSC_PCI_MSI_SUPPORT                    0x00000010
+>  #define OSC_PCI_EDR_SUPPORT                    0x00000080
+>  #define OSC_PCI_HPX_TYPE_3_SUPPORT             0x00000100
+> -#define OSC_PCI_SUPPORT_MASKS                  0x0000019f
+>
+>  /* PCI Host Bridge _OSC: Capabilities DWORD 3: Control Field */
+>  #define OSC_PCI_EXPRESS_NATIVE_HP_CONTROL      0x00000001
+> @@ -587,7 +586,6 @@ extern u32 osc_sb_native_usb4_control;
+>  #define OSC_PCI_EXPRESS_CAPABILITY_CONTROL     0x00000010
+>  #define OSC_PCI_EXPRESS_LTR_CONTROL            0x00000020
+>  #define OSC_PCI_EXPRESS_DPC_CONTROL            0x00000080
+> -#define OSC_PCI_CONTROL_MASKS                  0x000000bf
+>
+>  #define ACPI_GSB_ACCESS_ATTRIB_QUICK           0x00000002
+>  #define ACPI_GSB_ACCESS_ATTRIB_SEND_RCV         0x00000004
+> --
+> 2.32.0
+>
