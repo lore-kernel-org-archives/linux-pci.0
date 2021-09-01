@@ -2,272 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA80C432BE
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 11:29:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A18C4320E
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 13:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2E5561053
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 11:29:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CF4E6101B
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Sep 2021 13:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241703AbhIALaV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Sep 2021 07:30:21 -0400
-Received: from sibelius.xs4all.nl ([83.163.83.176]:63913 "EHLO
-        sibelius.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238424AbhIALaV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Sep 2021 07:30:21 -0400
-Received: from localhost (bloch.sibelius.xs4all.nl [local])
-        by bloch.sibelius.xs4all.nl (OpenSMTPD) with ESMTPA id ddf5f73a;
-        Wed, 1 Sep 2021 13:29:22 +0200 (CEST)
-Date:   Wed, 1 Sep 2021 13:29:22 +0200 (CEST)
-From:   Mark Kettenis <mark.kettenis@xs4all.nl>
-To:     Rob Herring <robh@kernel.org>
-Cc:     devicetree@vger.kernel.org, alyssa@rosenzweig.io,
-        kettenis@openbsd.org, tglx@linutronix.de, maz@kernel.org,
-        marcan@marcan.st, bhelgaas@google.com, jim2101024@gmail.com,
-        nsaenz@kernel.org, f.fainelli@gmail.com,
-        bcm-kernel-feedback-list@broadcom.com,
-        daire.mcnamara@microchip.com, nsaenzjulienne@suse.de,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
-In-Reply-To: <YS6dWI4wwg7XkuNA@robh.at.kernel.org> (message from Rob Herring
-        on Tue, 31 Aug 2021 16:21:28 -0500)
-Subject: Re: [PATCH v4 3/4] dt-bindings: pci: Add DT bindings for apple,pcie
-References: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
- <20210827171534.62380-4-mark.kettenis@xs4all.nl> <YS6dWI4wwg7XkuNA@robh.at.kernel.org>
-Message-ID: <561431b178447575@bloch.sibelius.xs4all.nl>
+        id S1343718AbhIANC7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Sep 2021 09:02:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36290 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347203AbhIANBT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Sep 2021 09:01:19 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B4B9C014DCD
+        for <linux-pci@vger.kernel.org>; Wed,  1 Sep 2021 05:41:54 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id x16so1434144pll.2
+        for <linux-pci@vger.kernel.org>; Wed, 01 Sep 2021 05:41:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=IhNTlkGHdrjxCeYNOPElSJ3gqKI6hv7bM76gTgtFoCs=;
+        b=DSpR7dGFMQff9Dfh/sqPdzhuU7c7MPCQSw2LgS30p9RThKLbe2707xOxPOMzeMwGWN
+         EIlQVHmVDPsyOaa7IRz54vknDC2dpF/LDLme0Pe5nsx8Xq1G2KNeeuLwwgrsjY+SM2hK
+         IpA+3kGethmMYlFeesu4EzZY9nARzGMt+IOm1k2NXWLrUCd5beDyXQP0L7DlTUWrzkHF
+         WwOyKozZodHu0dBaVeHodYuRxPPUavyvJkJeg+C8tNYR/RtWHTxjotIj+qHZ96JUSekm
+         vJxqAV8acpJX9VSZffQd5tahE9MBu8c9aFv40vjOhdtySJq5sg1wVti8FrPnD+2Ylt9u
+         y+IQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=IhNTlkGHdrjxCeYNOPElSJ3gqKI6hv7bM76gTgtFoCs=;
+        b=Z58JHHaekh5oNh0CV2dTH/lr6Sfm6PezoTA71luOv4MdZ1iwYT8vmzi/EW7KFpuK9v
+         GZgD99UUboj/NSgw5142xwsWjHJFFEt9AdyfzvJiwctjIx6FOHEVzIbzOr1w8u5zqCfK
+         vO9ux2QMFo+dH/fkF0qsRXNaqG+OVi5qlAy1m9DkbTQNqpydzUxb/g1zJb26sINKGUYn
+         m9vCR7AUNyXBhmzMV2h3HXUU6ytvWV9bI2VwTliImKZX8VH1ZoevqK1dAfiTp3ZdZQz8
+         68XdXKfUvQqFNMp36PyA22vxJ9GMeJ1UXzyLOi3qlMiB95UirFOV5rxr6Ii+ipXMfPqM
+         wpfA==
+X-Gm-Message-State: AOAM530tbV1PJwg/iUVKxRRCpgVndJpwyJdkS5+YyIE6HqStclt+/Wc8
+        oOud8DXiNJW50lMte6ksOPn4JAtkQSTfFQ==
+X-Google-Smtp-Source: ABdhPJwL42Bjxa3WEBckNPTM9XJJ5BYHMm/Tca4KPAevtlU7F+QwRHMOEbNFJQeDrYGIlizmB3HT7w==
+X-Received: by 2002:a17:90a:4306:: with SMTP id q6mr11417521pjg.202.1630500113465;
+        Wed, 01 Sep 2021 05:41:53 -0700 (PDT)
+Received: from AHUANG12-1LT7M0.lenovo.com (1-174-53-39.dynamic-ip.hinet.net. [1.174.53.39])
+        by smtp.gmail.com with ESMTPSA id u24sm22613783pfm.27.2021.09.01.05.41.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Sep 2021 05:41:53 -0700 (PDT)
+From:   Adrian Huang <adrianhuang0701@gmail.com>
+To:     linux-pci@vger.kernel.org
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>, kw@linux.com,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Adrian Huang <adrianhuang0701@gmail.com>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        Adrian Huang <ahuang12@lenovo.com>
+Subject: [PATCH 1/1] PCI: vmd: Do not disable MSI-X remapping if interrupt remapping is enabled by IOMMU
+Date:   Wed,  1 Sep 2021 20:40:47 +0800
+Message-Id: <20210901124047.1615-1-adrianhuang0701@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> Date: Tue, 31 Aug 2021 16:21:28 -0500
-> From: Rob Herring <robh@kernel.org>
-> 
-> On Fri, Aug 27, 2021 at 07:15:28PM +0200, Mark Kettenis wrote:
-> > From: Mark Kettenis <kettenis@openbsd.org>
-> > 
-> > The Apple PCIe host controller is a PCIe host controller with
-> > multiple root ports present in Apple ARM SoC platforms, including
-> > various iPhone and iPad devices and the "Apple Silicon" Macs.
-> > 
-> > Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
-> > ---
-> >  .../devicetree/bindings/pci/apple,pcie.yaml   | 165 ++++++++++++++++++
-> >  MAINTAINERS                                   |   1 +
-> >  2 files changed, 166 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/apple,pcie.yaml b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> > new file mode 100644
-> > index 000000000000..97a126db935a
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> > @@ -0,0 +1,165 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/pci/apple,pcie.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Apple PCIe host controller
-> > +
-> > +maintainers:
-> > +  - Mark Kettenis <kettenis@openbsd.org>
-> > +
-> > +description: |
-> > +  The Apple PCIe host controller is a PCIe host controller with
-> > +  multiple root ports present in Apple ARM SoC platforms, including
-> > +  various iPhone and iPad devices and the "Apple Silicon" Macs.
-> > +  The controller incorporates Synopsys DesigWare PCIe logic to
-> > +  implements its root ports.  But the ATU found on most DesignWare
-> > +  PCIe host bridges is absent.
-> > +
-> > +  All root ports share a single ECAM space, but separate GPIOs are
-> > +  used to take the PCI devices on those ports out of reset.  Therefore
-> > +  the standard "reset-gpios" and "max-link-speed" properties appear on
-> > +  the child nodes that represent the PCI bridges that correspond to
-> > +  the individual root ports.
-> > +
-> > +  MSIs are handled by the PCIe controller and translated into regular
-> > +  interrupts.  A range of 32 MSIs is provided.  These 32 MSIs can be
-> > +  distributed over the root ports as the OS sees fit by programming
-> > +  the PCIe controller's port registers.
-> > +
-> > +allOf:
-> > +  - $ref: /schemas/pci/pci-bus.yaml#
-> > +  - $ref: ../interrupt-controller/msi-controller.yaml#
-> > +
-> > +properties:
-> > +  compatible:
-> > +    items:
-> > +      - const: apple,t8103-pcie
-> > +      - const: apple,pcie
-> > +
-> > +  reg:
-> > +    minItems: 3
-> > +    maxItems: 5
-> > +
-> > +  reg-names:
-> > +    minItems: 3
-> > +    maxItems: 5
-> > +    items:
-> > +      - const: config
-> > +      - const: rc
-> > +      - const: port0
-> > +      - const: port1
-> > +      - const: port2
-> > +
-> > +  ranges:
-> > +    minItems: 2
-> > +    maxItems: 2
-> > +
-> > +  interrupts:
-> > +    description:
-> > +      Interrupt specifiers, one for each root port.
-> > +    minItems: 1
-> > +    maxItems: 3
-> > +
-> > +  msi-parent: true
-> 
-> I still think this should be dropped as it is meaningless with 
-> 'msi-controller' present.
+From: Adrian Huang <ahuang12@lenovo.com>
 
-Hmm.  As far as I can tell all current arm64 device trees that
-describe hardware with an MSI controller integrated on the PCI host
-bridge have both the 'msi-controller' and 'msi-parent' properties.
-See arch/arm64/boot/dts/marvell/aramada-37xx.dtsi and
-arch/arm64/boot/dts/xilinx/zynqmp.dtsi.
+When enabling VMD in BIOS setup (Ice Lake Processor: Whitley platform),
+the host OS cannot boot successfully with the following error message:
 
-The current OpenBSD code will fail to map the MSIs if 'msi-parent'
-isn't there, although Linux seems to fall back on an MSI domain that's
-directly attached to the host bridge if the 'msi-parent' property is
-missing.  I think it makes sense to be explicit here, but if both you
-and Marc think it shouldn't be there, I probably can change the
-OpenBSD to do a similar fallback.
+  nvme nvme0: I/O 12 QID 0 timeout, completion polled
+  nvme nvme0: Shutdown timeout set to 6 seconds
+  DMAR: DRHD: handling fault status reg 2
+  DMAR: [INTR-REMAP] Request device [0x00:0x00.5] fault index 0xa00 [fault reason 0x25] Blocked a compatibility format interrupt request
 
-> > +
-> > +#  msi-ranges:
-> > +#    description:
-> > +#      A list of pairs <intid span>, where "intid" is the first
-> > +#      interrupt number that can be used as an MSI, and "span" the size
-> > +#      of that range.
-> > +#    $ref: /schemas/types.yaml#/definitions/phandle-array
-> 
-> Here, you'll want just 'maxItems: 1' as there's only 1 entry.
+The request device is the VMD controller:
+  # lspci -s 0000:00.5 -nn
+  0000:00:00.5 RAID bus controller [0104]: Intel Corporation Volume
+  Management Device NVMe RAID Controller [8086:28c0] (rev 04)
 
-Right.  As far as I can tell the Apple hardware only supports a single
-range.
+`git bisect` points to this offending commit ee81ee84f873 ("PCI:
+vmd: Disable MSI-X remapping when possible"), which disables VMD MSI
+remapping. The IOMMU hardware blocks the compatibility format
+interrupt request because Interrupt Remapping Enable Status (IRES) and
+Extended Interrupt Mode Enable (EIME) are enabled. Please refer to
+section "5.1.4 Interrupt-Remapping Hardware Operation" in Intel VT-d
+spec.
 
-> > +
-> > +  iommu-map: true
-> > +  iommu-map-mask: true
-> > +
-> > +required:
-> > +  - compatible
-> > +  - reg
-> > +  - reg-names
-> > +  - bus-range
-> > +  - interrupts
-> > +  - msi-controller
-> > +  - msi-parent
-> > +  - msi-ranges
-> > +
-> > +unevaluatedProperties: false
-> > +
-> > +examples:
-> > +  - |
-> > +    #include <dt-bindings/interrupt-controller/apple-aic.h>
-> > +
-> > +    soc {
-> > +      #address-cells = <2>;
-> > +      #size-cells = <2>;
-> > +
-> > +      pcie0: pcie@690000000 {
-> > +        compatible = "apple,t8103-pcie", "apple,pcie";
-> > +        device_type = "pci";
-> > +
-> > +        reg = <0x6 0x90000000 0x0 0x1000000>,
-> > +              <0x6 0x80000000 0x0 0x4000>,
-> > +              <0x6 0x81000000 0x0 0x8000>,
-> > +              <0x6 0x82000000 0x0 0x8000>,
-> > +              <0x6 0x83000000 0x0 0x8000>;
-> > +        reg-names = "config", "rc", "port0", "port1", "port2";
-> > +
-> > +        interrupt-parent = <&aic>;
-> > +        interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
-> > +                     <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
-> > +                     <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>;
-> > +
-> > +        msi-controller;
-> > +        msi-parent = <&pcie0>;
-> > +        msi-ranges = <&aic AIC_IRQ 704 IRQ_TYPE_EDGE_RISING 32>;
-> > +
-> > +        iommu-map = <0x100 &dart0 1 1>,
-> > +                    <0x200 &dart1 1 1>,
-> > +                    <0x300 &dart2 1 1>;
-> > +        iommu-map-mask = <0xff00>;
-> > +
-> > +        bus-range = <0 3>;
-> > +        #address-cells = <3>;
-> > +        #size-cells = <2>;
-> > +        ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
-> > +                 <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
-> > +
-> > +        clocks = <&pcie_core_clk>, <&pcie_aux_clk>, <&pcie_ref_clk>;
-> > +        pinctrl-0 = <&pcie_pins>;
-> > +        pinctrl-names = "default";
-> > +
-> > +        pci@0,0 {
-> > +          device_type = "pci";
-> > +          reg = <0x0 0x0 0x0 0x0 0x0>;
-> > +          reset-gpios = <&pinctrl_ap 152 0>;
-> > +          max-link-speed = <2>;
-> > +
-> > +          #address-cells = <3>;
-> > +          #size-cells = <2>;
-> > +          ranges;
-> > +        };
-> > +
-> > +        pci@1,0 {
-> > +          device_type = "pci";
-> > +          reg = <0x800 0x0 0x0 0x0 0x0>;
-> > +          reset-gpios = <&pinctrl_ap 153 0>;
-> > +          max-link-speed = <2>;
-> > +
-> > +          #address-cells = <3>;
-> > +          #size-cells = <2>;
-> > +          ranges;
-> > +        };
-> > +
-> > +        pci@2,0 {
-> > +          device_type = "pci";
-> > +          reg = <0x1000 0x0 0x0 0x0 0x0>;
-> > +          reset-gpios = <&pinctrl_ap 33 0>;
-> > +          max-link-speed = <1>;
-> > +
-> > +          #address-cells = <3>;
-> > +          #size-cells = <2>;
-> > +          ranges;
-> > +        };
-> > +      };
-> > +    };
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index c6b8a720c0bc..30bea4042e7e 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -1694,6 +1694,7 @@ C:	irc://chat.freenode.net/asahi-dev
-> >  T:	git https://github.com/AsahiLinux/linux.git
-> >  F:	Documentation/devicetree/bindings/arm/apple.yaml
-> >  F:	Documentation/devicetree/bindings/interrupt-controller/apple,aic.yaml
-> > +F:	Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> >  F:	Documentation/devicetree/bindings/pinctrl/apple,pinctrl.yaml
-> >  F:	arch/arm64/boot/dts/apple/
-> >  F:	drivers/irqchip/irq-apple-aic.c
-> > -- 
-> > 2.32.0
-> > 
-> > 
-> 
+To fix the issue, VMD driver still enables the interrupt remapping
+irrespective of VMD_FEAT_CAN_BYPASS_MSI_REMAP if the IOMMU subsystem
+enables the interrupt remapping.
+
+Test configuration is shown as follows:
+  * Two VMD controllers
+    1. 8086:28c0 (Whitley's VMD)
+    2. 8086:201d (Purley's VMD: The issue does not appear in this
+       controller. Just make sure if any side effect occurs.)
+  * w/wo intremap=off
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=214219
+Cc: Jon Derrick <jonathan.derrick@intel.com>
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>
+Cc: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Adrian Huang <ahuang12@lenovo.com>
+---
+ drivers/pci/controller/vmd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index e3fcdfec58b3..db72932d049f 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -6,6 +6,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/interrupt.h>
++#include <linux/iommu.h>
+ #include <linux/irq.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -710,7 +711,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	 * acceptable because the guest is usually CPU-limited and MSI
+ 	 * remapping doesn't become a performance bottleneck.
+ 	 */
+-	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
++	if (iommu_capable(vmd->dev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
++	    !(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+ 	    offset[0] || offset[1]) {
+ 		ret = vmd_alloc_irqs(vmd);
+ 		if (ret)
+-- 
+2.27.0
+
