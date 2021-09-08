@@ -2,64 +2,72 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2EDC433F5
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Sep 2021 02:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22684C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Sep 2021 02:26:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 943446108D
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Sep 2021 02:25:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 068DD6101C
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Sep 2021 02:26:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347136AbhIHC0j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Sep 2021 22:26:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35310 "EHLO mail.kernel.org"
+        id S1347460AbhIHC1f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Sep 2021 22:27:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35908 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345608AbhIHC0j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Sep 2021 22:26:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 0F2686103D;
-        Wed,  8 Sep 2021 02:25:32 +0000 (UTC)
+        id S1347291AbhIHC1c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Sep 2021 22:27:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F38B6115A;
+        Wed,  8 Sep 2021 02:26:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631067932;
-        bh=x5eJIw8d5pU1nHyQe8PRTorbBS4Wew8tnK31KU472kQ=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=gUE3MEJnzsrsNpGbcdtofcsfglwV4S9G93oJgzfuIHA4lqBpn/qJgPQ2LD0dlLz5O
-         46KuFpraEzZFvBZu2elSRIRYKNiYOoSq0wNC96AB7SN0WdNe2zJbpOtyOVf9nixYxt
-         i1wW6CTsLWr/hY8U+l6bt46Bg5RUyts+YBtInYyyzqpm2qzrtrEQgoivKmE82ZyoiQ
-         Gp3eiesrDA7SOGPalieIb2XcZOuSwiBbChLrAOgkFOBPMRHUZECTQgFnGq5V/atl3B
-         ob14vtN1xYxcE+cNvwU3ZX1uJc/rRX2ZXXFybFvvkF63Jr/ghIgkkcitPFC31qvtMe
-         6zCBaPmCXaB1w==
-Subject: Re: [GIT PULL] PCI changes for v5.15
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20210907213943.GA822380@bjorn-Precision-5520>
-References: <20210907213943.GA822380@bjorn-Precision-5520>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20210907213943.GA822380@bjorn-Precision-5520>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.15-changes
-X-PR-Tracked-Commit-Id: 742a4c49a82a8fe1369e4ec2af4a9bf69123cb88
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ac08b1c68d1b1ed3cebb218fc3ea2c07484eb07d
-Message-Id: <163106793192.22425.9151403771501141128.pr-tracker-bot@kernel.org>
-Date:   Wed, 08 Sep 2021 02:25:31 +0000
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        s=k20201202; t=1631067982;
+        bh=HYnHLjCiZ43UklggCXk+gEJ/KTCGLWfLyN/w5Nooqo8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=meJEv9TqnXEwjW9millMRGi8PpRu+yp0axW9Nlxys7xwmdqc0+9d+j9B+fQk5nysT
+         lO89499TloTTBTPwaqlLJAp8wwIb1sauJlFW6Vdi4inK1xz7IAYYTd3BFzWgJbQhcH
+         RqYgAyTmxSafTvb/KHU7aXiDp0w8K3GKkp9u08C9+5XmahgsGErmqduIZO656RF1Fs
+         FDiPYqcoQ/4VEf16KtON7RDPrFYobFS7iKO9kw7vNuwJzxcQWo5JgRgD+H59ZkR/mp
+         36+LW7CnXJq/qNpPjX6xI/wW+ziZOW07UaQEgEz0tCyDSxfUY96ZlCKR2rTGgw4+RL
+         HJOgVz209Q3qw==
+Date:   Tue, 7 Sep 2021 21:26:20 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     David Miller <davem@davemloft.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [GIT PULL] PCI changes for v5.15
+Message-ID: <20210908022620.GA845134@bjorn-Precision-5520>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wiCgh_V-g74LE4pQKqakbiK+CM5opVtH1t2+Y3R=uH9EA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pull request you sent on Tue, 7 Sep 2021 16:39:43 -0500:
+On Tue, Sep 07, 2021 at 07:08:42PM -0700, Linus Torvalds wrote:
+> On Tue, Sep 7, 2021 at 2:39 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> >   drivers/net/ethernet/broadcom/bnxt/bnxt.c
+> >   drivers/net/ethernet/broadcom/bnx2.c
+> >     Fallout from the VPD changes below.  These include both PCI core and
+> >     driver changes, and the driver changes got merged via the net tree and
+> >     then reverted so everything would be merged via the PCI tree.
+> 
+> Christ.
+> 
+> So the revert from the networking tree has basically _zero_ useful
+> information. It just says "revert".
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.15-changes
+Sorry about that.  I intended to push my test merge in case you wanted
+to see my resolution, but I forgot.  I just pushed it ("v5.15-merge"),
+but I'm guessing you've already come up with the same resolution.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ac08b1c68d1b1ed3cebb218fc3ea2c07484eb07d
+I was a little mystified about why there was a conflict at all, since
+I expected those patches to apply cleanly on top of the revert, and I
+should have investigated that more instead of just chalking it up to
+my lack of git-fu.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Bjorn
