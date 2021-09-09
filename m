@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59202C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Sep 2021 13:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2531FC433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Sep 2021 13:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 443CF611C5
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Sep 2021 13:11:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F586611F0
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Sep 2021 13:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351241AbhIINME (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Sep 2021 09:12:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43558 "EHLO mail.kernel.org"
+        id S1347869AbhIINXO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Sep 2021 09:23:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56232 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1357131AbhIIM7j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:59:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E41E063270;
-        Thu,  9 Sep 2021 11:59:03 +0000 (UTC)
+        id S1358452AbhIINLR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Sep 2021 09:11:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E35C8632C7;
+        Thu,  9 Sep 2021 12:01:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188744;
-        bh=9ltp730vYWmSMGHKY4vhC+wk7KxXAoiZxzTw7xhg6fk=;
+        s=k20201202; t=1631188879;
+        bh=nxEmhqXwkoygVpRjcjGTICkGMqDm8J3DhCUAHUyjG8o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FppZPamUPu5mbwCXhMmLbIVT0OMwFsNWfR11vBWVxQTNHOBjnNlOAnny6P5A81Fb0
-         X5U5+7In2e1gOIdhzP8naQwGmWANtcAeLUMasfl9Vz1sKJwvAw4FqTdRaQctg7PaZS
-         EpTNHuP9pFpoceuOkl1P9ASuKFzWW14Wqn7cz/GUN0PqGsLsEL1ROY3HqJxlHEWRs+
-         bsHrY6g6EeESP5ser9shIuHf1EcX3Mt6YUtHnTnJRGJYhPzBgYiiAkfWPiS8Sh0LlG
-         ykw+mrThFxOjhBzMSFXHimH6LIstrkFkOwSEZuKlBKQqeKyhwDZ3BysL84TNwfNvsV
-         LwnCBFhMSfMkA==
+        b=tCDmnON1cSVDEAJ5cC1q/iiWYo9D45njOiaxUmb3yB3FmsAY53n8mCMQDipArJRPG
+         jIpc9RLPD0drH4jWfEJVzbBNuw2W3BwE5gW64GaBCiPdSiS0dh4OKXa/6GJVbzA1cP
+         DeJ6WXqnC5z+r+LoeMBIRRJD9PT6nguRLaeU5m1CRiuhv4EoiWejqqoOeyp3jXuWQI
+         zYoQgpJFaAwXAejvYWj1dikiUlxmfE0bWkspPcepzfQq+Mpts/Zgvui/2rB1J2IO+g
+         O+2rrqqye6y9G2gzN88HsuWHp0VsqTk3fv8YEEq0abZ+UxyRnBdD/CYlB40zfFNs4E
+         VHsmn2CWIj1Jw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         Maximilian Luz <luzmaximilian@gmail.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 03/59] PCI: Use pci_update_current_state() in pci_enable_device_flags()
-Date:   Thu,  9 Sep 2021 07:58:04 -0400
-Message-Id: <20210909115900.149795-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 02/35] PCI: Use pci_update_current_state() in pci_enable_device_flags()
+Date:   Thu,  9 Sep 2021 08:00:43 -0400
+Message-Id: <20210909120116.150912-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909115900.149795-1-sashal@kernel.org>
-References: <20210909115900.149795-1-sashal@kernel.org>
+In-Reply-To: <20210909120116.150912-1-sashal@kernel.org>
+References: <20210909120116.150912-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c847b5554db6..893e1e8e5bd1 100644
+index b7f65fc54dc2..642694e31cb6 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -1384,11 +1384,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+@@ -1334,11 +1334,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
  	 * so that things like MSI message writing will behave as expected
  	 * (e.g. if the device really is in D0 at enable time).
  	 */
