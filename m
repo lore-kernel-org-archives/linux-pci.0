@@ -2,127 +2,177 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB70C433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 14:20:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73258C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 16:12:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6F596108B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 14:20:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B58661242
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 16:12:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234063AbhIJOVH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Sep 2021 10:21:07 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:25004 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233702AbhIJOVG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Sep 2021 10:21:06 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 18AE5ji5039716;
-        Fri, 10 Sep 2021 10:19:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : content-transfer-encoding : mime-version; s=pp1;
- bh=PfIERT94r8KWB7wKTizxKr3P2nXViGr51CxIZH0y6sM=;
- b=pTcvMsCW47ShOucmyi/PUqr1v1syhRuYjKO5KbyDQrNaPLva7MLOK50dtJS7RIoVmFZm
- hN1hcwpHuUbOXEU0F5a32Cll6jsZjmRhzEhD/6dBhklfQLH2d8iG7uaeLaZEl6i+S2W9
- ajbqhDUxBXf46+HwVntkS070O7DaVQ38jBzT2SCIb9TJAi9wxUQUegDC6chMvt6cbMIM
- nJk4Jfqw31+NP4lR7SNGZ/Qmbet9HthkjvMLY1vcVsC37Uoo+rnlUv8CP3Eukxxc48nY
- 0bDnSlNn1GDBciBN3kpvfTuDC9lc0G1dmG3TrMBzseNnsQsufuJ78I5/kRJTAzxiSqiC cQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3b03w6f6m2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Sep 2021 10:19:46 -0400
-Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 18AEHO9w095809;
-        Fri, 10 Sep 2021 10:19:46 -0400
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3b03w6f6kd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Sep 2021 10:19:46 -0400
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18AEHSdf023042;
-        Fri, 10 Sep 2021 14:19:43 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma06fra.de.ibm.com with ESMTP id 3axcnqh3xr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Sep 2021 14:19:43 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18AEJeaW19399044
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Sep 2021 14:19:40 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A35A042045;
-        Fri, 10 Sep 2021 14:19:40 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 44D6942042;
-        Fri, 10 Sep 2021 14:19:40 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 10 Sep 2021 14:19:40 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        "Oliver O'Halloran" <oohall@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-arch@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 0/1] Arch use of pci_dev_is_added()
-Date:   Fri, 10 Sep 2021 16:19:39 +0200
-Message-Id: <20210910141940.2598035-1-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.25.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: by-YoMG8o-pqUpc-DA3c6dWzN51QqSPj
-X-Proofpoint-ORIG-GUID: fjJriTmyYKZbUNw-sVUpT5p2YdvAISYe
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S231142AbhIJQOH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Sep 2021 12:14:07 -0400
+Received: from mail-wm1-f47.google.com ([209.85.128.47]:50703 "EHLO
+        mail-wm1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233352AbhIJQN3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Sep 2021 12:13:29 -0400
+Received: by mail-wm1-f47.google.com with SMTP id m2so1612436wmm.0
+        for <linux-pci@vger.kernel.org>; Fri, 10 Sep 2021 09:12:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=l1lu1w8OFikc7s5G+s5eBhCJefd8/Nk2KFr2XWwwe3c=;
+        b=OhFs38dCsZmA8Ngj2IhZl2pkUZaTjJKizpsj+eex46KsmtZc65ngMAGNYuHMrfhevq
+         TMv0qtmP9wH/yEavDif3YWH3xiqFY3h4iWBNZ96i69kuk/kqohsMy5lgWl7blw9pUv0h
+         uT1cf5a1h53D2hwXBMcj9zYkF1mStaQsnO0M/Q6oTkHuqtUfL2zX8tWByT7L2+LZNBiQ
+         GrnSFP76Q2ViMuaz1W0xGxedkzipYvpnMm7f0IRj4VLI6lOad856DHXPgym+FROuokT9
+         oOxEWEKnR1Mr4Bx3hlULnHPLXLClYGew0btIpLGC8J51DqOHs6GYfqUNWk6rtWjtAF00
+         /D9Q==
+X-Gm-Message-State: AOAM533IOfpvXZ93hu8hk5JWzdJbOyj6y6NCE4lg8jopbBC+eUQhWeUh
+        n66eWJW42zC/kQ2NyZLnq8Y=
+X-Google-Smtp-Source: ABdhPJwqsMi1C/UTrXUI2F+2sISfGJMqsnL28oXN3shQMkv7BpGoZRfgcEMNk9E6xqCREUo4nVBJPA==
+X-Received: by 2002:a7b:c097:: with SMTP id r23mr9028876wmh.114.1631290337237;
+        Fri, 10 Sep 2021 09:12:17 -0700 (PDT)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id z19sm5306658wma.0.2021.09.10.09.12.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Sep 2021 09:12:16 -0700 (PDT)
+Date:   Fri, 10 Sep 2021 18:12:15 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI/sysfs: Add pci_dev_resource_attr_is_visible()
+ helper
+Message-ID: <20210910161215.GA1310191@rocinante>
+References: <YSjWWWVC6ImWA5Qe@kroah.com>
+ <20210827222331.GA3896976@bjorn-Precision-5520>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
- definitions=2021-09-10_04:2021-09-09,2021-09-10 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- malwarescore=0 priorityscore=1501 spamscore=0 phishscore=0 suspectscore=0
- lowpriorityscore=0 bulkscore=0 mlxlogscore=810 adultscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109030001
- definitions=main-2109100081
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20210827222331.GA3896976@bjorn-Precision-5520>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn, Hi Michael,
+Hello Bjorn and Greg,
 
-In my proposal to make pci_dev_is_added() more regularly usable by arch code
-you mentioned[0] that you believe the uses in arch/powerpc are not necessary
-anymore. From code reading I agree and so does Oliver O'Halloran[1].
+Thank you both for adding more details here!
 
-So as promised here is a patch removing them. I only compile tested this as
-I don't have access to a powerpc system.
+[...]
+> > > > +	if (write_combine) {
+> > > > +		if (arch_can_pci_mmap_wc() && (flags &
+> > > > +		    (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
+> > > > +			(IORESOURCE_MEM | IORESOURCE_PREFETCH))
+> > > > +			attr->mmap = pci_mmap_resource_wc;
+> > > 
+> > > Is it legal to update attr here in an .is_visible() method?  Is attr
+> > > the single static struct bin_attribute here, or is it a per-device
+> > > copy?
+> > 
+> > It is whatever was registered with sysfs, that was up to the caller.
+> > 
+> > > I'm assuming the static bin_attribute is a template and when we add a
+> > > device that uses it, we alloc a new copy so each device has its own
+> > > size, mapping function, etc.
+> > 
+> > Not that I recall, I think it's just a pointer to the structure that the
+> > driver passed to the sysfs code.
+> > 
+> > > If that's the case, we only want to update the *copy*, not the
+> > > template.  I don't see an alloc before the call in create_files(),
+> > > so I'm worried that this .is_visible() method might get the template,
+> > > in which case we'd be updating ->mmap for *all* devices.
+> > 
+> > Yes, I think that is what you are doing here.
+> > 
+> > Generally, don't mess with attribute values in the is_visible callback
+> > if at all possible, as that's not what the callback is for.
+> 
+> Unfortunately I can't find any documentation about what the
+> .is_visible() callback is for and what the restrictions on it are.
+> 
+> I *did* figure out that bin_attribute.size is updated by some
+> .is_bin_visible() callbacks, e.g., pci_dev_config_attr_is_visible()
+> and pci_dev_rom_attr_is_visible().  These are static attributes, so
+> there's a single copy per system, but that size gets copied to the
+> inode eventually, so it ends up being per-sysfs file.
+> 
+> This is all done inside device_add(), which means there should be some
+> mutex so the .is_bin_visible() "size" updates to that single static
+> attribute inside concurrent device_add() calls don't stomp on each
+> other.
+> 
+> I could have missed it, but I don't see that mutex, which makes me
+> suspect we rely on the bus driver to serialize device_add() calls.
+> 
+> Maybe there's nothing to be done here, except that we need to do some
+> more work to figure out how to fix the "sysfs_initialized" ugliness in
+> pci_sysfs_init().
+> 
+> Here are the details of the single static attribute and the
+> device_add() path I mentioned above:
+> 
+>   pci_dev_config_attr_is_visible(..., struct bin_attribute *a, ...)
+>   {
+>     a->size = PCI_CFG_SPACE_SIZE;    # <-- set size in global attr
+>     ...
+>   }
+> 
+>   static struct bin_attribute *pci_dev_config_attrs[] = {
+>     &bin_attr_config, NULL,
+>   };
+>   static const struct attribute_group pci_dev_config_attr_group = {
+>     .bin_attrs = pci_dev_config_attrs,
+>     .is_bin_visible = pci_dev_config_attr_is_visible,
+>   };
+> 
+>   pci_device_add
+>     device_add
+>       device_add_attrs
+>         device_add_groups
+>           sysfs_create_groups
+>             internal_create_groups
+>               internal_create_group
+>                 create_files
+>                   grp->is_bin_visible()
+>                   sysfs_add_file_mode_ns
+>                     size = battr->size      # <-- copy size from attr
+>                     __kernfs_create_file(..., size, ...)
+>                       kernfs_new_node
+>                         __kernfs_new_node
 
-I've also looked a bit more into our use in s390 and as dicussed previously
-I don't think we can cleanly get rid of the existing one in
-arch/s390/pci_sysfs.c:recover_store() because we need to distinguish an already
-removed pdev just by looking at the pdev itself.
+To add more to what Bjorn is talking about here, primarily for posterity as
+perhaps someone else might stumble into the same thing we did, a few log
+lines illustrating the attribute reuse:
 
-As for new uses I think in the upcoming automatic recovery code we can rely on
-the fact that a removed device has pdev->driver == NULL and don't need
-pci_dev_is_added() but it would make things clearer. I also noticed that before
-commit 44bda4b7d26e9 ("PCI: Fix is_added/is_busmaster race condition") there
-was simply a pdev->is_added flag that was cleanly accessible by arch code. So
-I wanted to ask for your advice.
+   1 pci 0000:00:00.0: [8086:29c0] type 00 class 0x060000
+   2 pci 0000:00:01.0: [8086:10d3] type 00 class 0x020000
+   3 pci 0000:00:01.0: reg 0x10: [mem 0xfeb80000-0xfeb9ffff]
+   4 pci 0000:00:01.0: reg 0x14: [mem 0xfeba0000-0xfebbffff]
+   5 pci 0000:00:01.0: reg 0x18: [io  0xc040-0xc05f]
+   6 pci 0000:00:01.0: reg 0x1c: [mem 0xfebc0000-0xfebc3fff]
+   7 pci 0000:00:01.0: reg 0x30: [mem 0xfeb00000-0xfeb7ffff pref]
+   8 pdev @ ffff8880032fd800, bar 0 131072 @ ffff8880032fdb98 [mem 0xfeb80000-0xfeb9ffff], kobject @ ffff8880032fd8c0, attr resource0 @ ffffffff825b2ee0
+   9 pdev @ ffff8880032fd800, bar 1 131072 @ ffff8880032fdbd8 [mem 0xfeba0000-0xfebbffff], kobject @ ffff8880032fd8c0, attr resource1 @ ffffffff825b2e20
+  10 pdev @ ffff8880032fd800, bar 2 32 @ ffff8880032fdc18 [io  0xc040-0xc05f], kobject @ ffff8880032fd8c0, attr resource2 @ ffffffff825b2d60
+  11 pdev @ ffff8880032fd800, bar 3 16384 @ ffff8880032fdc58 [mem 0xfebc0000-0xfebc3fff], kobject @ ffff8880032fd8c0, attr resource3 @ ffffffff825b2ca0
+  12 pci 0000:00:1f.0: [8086:2918] type 00 class 0x060100
+  13 pci 0000:00:1f.0: quirk: [io  0x0600-0x067f] claimed by ICH6 ACPI/GPIO/TCO
+  14 pci 0000:00:1f.2: [8086:2922] type 00 class 0x010601
+  15 pci 0000:00:1f.2: reg 0x20: [io  0xc060-0xc07f]
+  16 pci 0000:00:1f.2: reg 0x24: [mem 0xfebc4000-0xfebc4fff]
+  17 pdev @ ffff8880032fe800, bar 4 32 @ ffff8880032fec98 [io  0xc060-0xc07f], kobject @ ffff8880032fe8c0, attr resource4 @ ffffffff825b2be0
+  18 pdev @ ffff8880032fe800, bar 5 4096 @ ffff8880032fecd8 [mem 0xfebc4000-0xfebc4fff], kobject @ ffff8880032fe8c0, attr resource5 @ ffffffff825b2b20
+  19 pci 0000:00:1f.3: [8086:2930] type 00 class 0x0c0500
+  20 pci 0000:00:1f.3: reg 0x20: [io  0x0700-0x073f]
+  21 pdev @ ffff8880032ff000, bar 4 64 @ ffff8880032ff498 [io  0x0700-0x073f], kobject @ ffff8880032ff0c0, attr resource4 @ ffffffff825b2be0
 
-Thanks,
-Niklas
+A close look at lines #17 and #21 tells us that .is_bin_visible() is being
+called on the static bin_attribute (those are 00:1f.2 BAR 4 and 00:1f.3 BAR 4)
+and it would get a pointer to the same bin_attribute.
 
-[0] https://lore.kernel.org/lkml/20210825190444.GA3593752@bjorn-Precision-5520/
-[1] https://lore.kernel.org/lkml/CAOSf1CFyuf9FaeSNparj+7W0mKTPvtcM8vxjHDSFsNDC6k_7xQ@mail.gmail.com/
-
-Niklas Schnelle (1):
-  powerpc: Drop superfluous pci_dev_is_added() calls
-
- arch/powerpc/platforms/powernv/pci-sriov.c | 6 ------
- arch/powerpc/platforms/pseries/setup.c     | 3 +--
- 2 files changed, 1 insertion(+), 8 deletions(-)
-
--- 
-2.25.1
-
+	Krzysztof
