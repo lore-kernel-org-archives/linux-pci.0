@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6EBC4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 20:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 194A4C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 20:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DADDD60E0B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 20:26:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F38DE60E76
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Sep 2021 20:26:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233635AbhIJU1o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Sep 2021 16:27:44 -0400
-Received: from mail-lj1-f169.google.com ([209.85.208.169]:33349 "EHLO
-        mail-lj1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233715AbhIJU1l (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Sep 2021 16:27:41 -0400
-Received: by mail-lj1-f169.google.com with SMTP id s12so5189731ljg.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Sep 2021 13:26:29 -0700 (PDT)
+        id S233742AbhIJU1p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Sep 2021 16:27:45 -0400
+Received: from mail-lj1-f170.google.com ([209.85.208.170]:44964 "EHLO
+        mail-lj1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233767AbhIJU1o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Sep 2021 16:27:44 -0400
+Received: by mail-lj1-f170.google.com with SMTP id s3so5088390ljp.11
+        for <linux-pci@vger.kernel.org>; Fri, 10 Sep 2021 13:26:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=uqfQt5c1SW21pKtEyRPySF5oZi27MiZQXZzAu2FFZCs=;
-        b=xf+GSJ+U+cJsVHC77uoxMRPbt3m7F3hSN6i3zGJ64sa7gFTUWOCaMucdHiB0aSf8Tx
-         7ovu/dC4YbIoh0Turx9zqCmoQDJdUbCogHLmtZRJRrr/3BvaU8yOMmudoUW5XAh5y2yT
-         C3Lyx1ezAlOhHZLQbBeGuPkTU9DFOpfC/9O49B6K1s37zO9EddoE5lL9mqUjSt8T6CSJ
-         aRzJulg/uoZOMrMw6j3rqCZrsF6GoGDoZzOBEPHTBPjrj+kb79sqxZXz9SiqzV2Wp2q0
-         NzqM+iQ6YCNKW/hLbS1+voVzeFj8h1P7sL9ZNHFD4NA6CnRCtTvpF0FSvFyfMJp2m37a
-         nhcg==
-X-Gm-Message-State: AOAM532AE2ofiJ1lHIQQ76WZY5FOtaRU7z9GzfLXxc7KZ4K2sAPuJ5QQ
-        wey/7NjkHaOb+O/Xj8TJ0ZQ=
-X-Google-Smtp-Source: ABdhPJyHb9iCBzQqvKdtEMAbq6f5qnyv+c6gxyOPfoA9wMsYxylQ9/BVkcdEgT1Gw/hYO4dd/R2LXw==
-X-Received: by 2002:a2e:6c05:: with SMTP id h5mr5771787ljc.42.1631305588678;
-        Fri, 10 Sep 2021 13:26:28 -0700 (PDT)
+        bh=4ZuH0jzBV51o66YWzpZ25xw+RCnaMfe3266VXxf4r4w=;
+        b=ZRs+rgqBMsVB6eJCgFhqgoDeBthnH0I7I6z/ZjyxU1zzeO9kiKnD8G4GdTvixSOMdb
+         II6ndVxjUXpGH57jXK1x9aYj1xnFoBrtNBQo9cAZ9b4X+igHxcY4Nlo5jyY/fHEOPWpn
+         6UjrL1kabxMrv763Z+gNBqeRhbg0pwLrb7GrzJ0BtRr493JiMHLPhHUUxKA/IgiYEBcK
+         Ky/iEwTrhEoHfJJAnsQmMvMqCH5p/t4Zje+9gIuLLu0Fj5QTaL6tcAHr6Up2X453S7+g
+         mx1TXylcHoFRq0GbXmZ1aAm79posNA51xwePy+Q2pIHJUNaN2wn949fNykQhfp+2Uzpq
+         GnNQ==
+X-Gm-Message-State: AOAM53375Zb3PghAb08d8d3yyBQMHWeTLk4tBnxnlX1MgksYeafmhHEi
+        LHehg4Vy/V1kKMsuzIODpEHCJmP5Mk0=
+X-Google-Smtp-Source: ABdhPJyJ5nQ0M2joP/C5/jOXMjoCLgrgemyY8etqh7DkT9YVvc48+FNnDrdXGPlVtFUajovrqxyJWg==
+X-Received: by 2002:a05:651c:310:: with SMTP id a16mr5596080ljp.492.1631305591818;
+        Fri, 10 Sep 2021 13:26:31 -0700 (PDT)
 Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id a22sm657667lfb.17.2021.09.10.13.26.27
+        by smtp.gmail.com with ESMTPSA id a22sm657667lfb.17.2021.09.10.13.26.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Sep 2021 13:26:28 -0700 (PDT)
+        Fri, 10 Sep 2021 13:26:31 -0700 (PDT)
 From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -48,9 +48,9 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Oliver O'Halloran" <oohall@gmail.com>,
         =?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v2 3/7] PCI/sysfs: Only allow IORESOURCE_IO in pci_resource_io()
-Date:   Fri, 10 Sep 2021 20:26:19 +0000
-Message-Id: <20210910202623.2293708-4-kw@linux.com>
+Subject: [PATCH v2 6/7] PCI/sysfs: Rename pci_read_resource_io() and pci_write_resource_io()
+Date:   Fri, 10 Sep 2021 20:26:22 +0000
+Message-Id: <20210910202623.2293708-7-kw@linux.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210910202623.2293708-1-kw@linux.com>
 References: <20210910202623.2293708-1-kw@linux.com>
@@ -61,37 +61,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently, when the sysfs attributes for PCI resources are added
-dynamically, the read() and write() callbacks will only ever be set when
-the underlying resource (a given BAR) has the IORESOURCE_IO flag set,
-otherwise the callbacks will be NULL and any attempt to read from such
-sysfs attribute will inherently fail.
+The pci_read_resource_io() and pci_write_resource_io() functions are
+used for the corresponding read() and write() callbacks when declaring
+and defining a static sysfs object for a given PCI resource.
 
-After the conversion to the static sysfs objects, the read() and write()
-callbacks will be always set for a given binary attribute (a particular
-sysfs object). Thus, a check is added to the pci_resource_io() function
-to ensure that a read against the underlying resource is supported and
-that the IORESOURCE_IO flag is set.
+Currently, only reading and writing against an I/O BARs is supported,
+but we might change this in the future to also include memory-mapped
+resources.
+
+Thus, rename to read() and write() callbacks to be more generic and drop
+the I/O BARs-specific suffix from them.
 
 Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 ---
- drivers/pci/pci-sysfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/pci-sysfs.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index ccdd1e34aeee..e151d635fe04 100644
+index 084c386c94c4..17535f4028af 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -1084,6 +1084,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
- 	int bar = (unsigned long)attr->private;
- 	unsigned long port = off;
+@@ -1122,16 +1122,16 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 	return -EINVAL;
+ }
  
-+	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_IO))
-+		return -EIO;
-+
- 	port += pci_resource_start(pdev, bar);
+-static ssize_t pci_read_resource_io(struct file *filp, struct kobject *kobj,
+-				    struct bin_attribute *attr, char *buf,
+-				    loff_t off, size_t count)
++static ssize_t pci_read_resource(struct file *filp, struct kobject *kobj,
++				 struct bin_attribute *attr, char *buf,
++				 loff_t off, size_t count)
+ {
+ 	return pci_resource_io(filp, kobj, attr, buf, off, count, false);
+ }
  
- 	if (port > pci_resource_end(pdev, bar))
+-static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+-				     struct bin_attribute *attr, char *buf,
+-				     loff_t off, size_t count)
++static ssize_t pci_write_resource(struct file *filp, struct kobject *kobj,
++				  struct bin_attribute *attr, char *buf,
++				  loff_t off, size_t count)
+ {
+ 	int ret;
+ 
+@@ -1168,8 +1168,8 @@ static umode_t pci_dev_resource_attr_is_visible(struct kobject *kobj,
+ #define pci_dev_bin_attribute(_name, _mmap, _bar)		\
+ struct bin_attribute pci_dev_##_name##_attr = {			\
+ 	.attr = { .name = __stringify(_name), .mode = 0600 },	\
+-	.read = pci_read_resource_io,				\
+-	.write = pci_write_resource_io,				\
++	.read = pci_read_resource,				\
++	.write = pci_write_resource,				\
+ 	.mmap = _mmap,						\
+ 	.private = (void *)(unsigned long)_bar,			\
+ 	.f_mapping = iomem_get_mapping,				\
 -- 
 2.33.0
 
