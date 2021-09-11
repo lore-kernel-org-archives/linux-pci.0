@@ -4,41 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C182C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D440C433EF
 	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 541B461263
+	by mail.kernel.org (Postfix) with ESMTP id 45CAE61251
 	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236695AbhIKNO3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:14:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37788 "EHLO mail.kernel.org"
+        id S236679AbhIKNO1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:14:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37472 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236266AbhIKNNg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:13:36 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B3EDB6108B;
-        Sat, 11 Sep 2021 13:12:23 +0000 (UTC)
+        id S236095AbhIKNN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:13:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C114561209;
+        Sat, 11 Sep 2021 13:12:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631365944;
-        bh=MznIBEeT4uqOL6YVdEqOi56t+PHKc+D+hfPTw/tzeNA=;
+        s=k20201202; t=1631365933;
+        bh=KfGxBqgb3mnKJOc11Ogxd2i4fFLWa3cqb+xQVzKN5Vo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NEGGEkg9qGP6emT6Ge73TDTO93/R9Eh6QDvtLCtYdpuaFrubSBmh3Ctrap4o+8i2h
-         Gt5js7y3RNCZi/Ap9alOEcMSJm9r2aAaLAWL8vAx0V3QGLOkRFbFUhl/L282MSCjkV
-         xvH3g1MU5Dose88wkSSqZYoQ3hvFyAEv7WJuta5txk9ME7c03I8rrqn9X33/AV2TQ2
-         VSH8c7Erz79kCNh5dLzfn92tM1kBueQbCqxRl299XOGt7eBZG+TD29v+hXv7OiBZo/
-         v2xj3AuVgCaeVM6WDCnMTm/BsxHJZQcdt8oELjUbJBlWU1FKaHidk48cmEa95lR59D
-         ESXvjMbDKCmeA==
+        b=SDbS2xwQaLBfYxXtvYhdF9UbtYYx84pbYgK3zFUvbT5FXCD66YQZAUHL34xSE9nAq
+         A8Jcp1H/cUBP7lzhYC/Ly3KFmKE0F26uAbnH/Grya6m7gibiHHxxMEwrcdSpB/dStY
+         gTdh19CoLeDjk2E/MktT4F8jL/jilLde4WzHkGcsx/gn/n95YQhL3GaCYBFlo/xvjY
+         CmxGzN0xVgH45DEdOsolr7YpSxJ9t3akk/m7fR47f6XJA2x2BZFeUZsHn9uZMGyRTL
+         6vLArODwKwU8JDXC0bfYrXPh4VVi/OIusqTGngp7EtMu25dlhatQ2WzxdpxySr34Vm
+         krPD7QYKiVe3w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Vishal Aslot <os.vaslot@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 26/32] PCI: ibmphp: Fix double unmap of io_mem
-Date:   Sat, 11 Sep 2021 09:11:43 -0400
-Message-Id: <20210911131149.284397-26-sashal@kernel.org>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.14 17/32] PCI: j721e: Add PCIe support for J7200
+Date:   Sat, 11 Sep 2021 09:11:34 -0400
+Message-Id: <20210911131149.284397-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210911131149.284397-1-sashal@kernel.org>
 References: <20210911131149.284397-1-sashal@kernel.org>
@@ -50,62 +51,148 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vishal Aslot <os.vaslot@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-[ Upstream commit faa2e05ad0dccf37f995bcfbb8d1980d66c02c11 ]
+[ Upstream commit f1de58802f0fff364cf49f5e47d1be744baa434f ]
 
-ebda_rsrc_controller() calls iounmap(io_mem) on the error path. Its caller,
-ibmphp_access_ebda(), also calls iounmap(io_mem) on good and error paths.
+J7200 has the same PCIe IP as in J721E with minor changes in the
+wrapper. J7200 allows byte access of bridge configuration space
+registers and the register field for LINK_DOWN interrupt is different.
+J7200 also requires "quirk_detect_quiet_flag" to be set. Configure these
+changes as part of driver data applicable only to J7200.
 
-Remove the iounmap(io_mem) invocation from ebda_rsrc_controller().
-
-[bhelgaas: remove item from TODO]
-Link: https://lore.kernel.org/r/20210818165751.591185-1-os.vaslot@gmail.com
-Signed-off-by: Vishal Aslot <os.vaslot@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20210811123336.31357-4-kishon@ti.com
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/TODO          | 3 ---
- drivers/pci/hotplug/ibmphp_ebda.c | 5 +----
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ drivers/pci/controller/cadence/pci-j721e.c | 40 +++++++++++++++++++---
+ 1 file changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
-index a32070be5adf..cc6194aa24c1 100644
---- a/drivers/pci/hotplug/TODO
-+++ b/drivers/pci/hotplug/TODO
-@@ -40,9 +40,6 @@ ibmphp:
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 0c5813b230b4..10b13b728284 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -27,6 +27,7 @@
+ #define STATUS_REG_SYS_2	0x508
+ #define STATUS_CLR_REG_SYS_2	0x708
+ #define LINK_DOWN		BIT(1)
++#define J7200_LINK_DOWN		BIT(10)
  
- * The return value of pci_hp_register() is not checked.
+ #define J721E_PCIE_USER_CMD_STATUS	0x4
+ #define LINK_TRAINING_ENABLE		BIT(0)
+@@ -57,6 +58,7 @@ struct j721e_pcie {
+ 	struct cdns_pcie	*cdns_pcie;
+ 	void __iomem		*user_cfg_base;
+ 	void __iomem		*intd_cfg_base;
++	u32			linkdown_irq_regfield;
+ };
  
--* iounmap(io_mem) is called in the error path of ebda_rsrc_controller()
--  and once more in the error path of its caller ibmphp_access_ebda().
--
- * The various slot data structures are difficult to follow and need to be
-   simplified.  A lot of functions are too large and too complex, they need
-   to be broken up into smaller, manageable pieces.  Negative examples are
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 11a2661dc062..7fb75401ad8a 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -714,8 +714,7 @@ static int __init ebda_rsrc_controller(void)
- 		/* init hpc structure */
- 		hpc_ptr = alloc_ebda_hpc(slot_num, bus_num);
- 		if (!hpc_ptr) {
--			rc = -ENOMEM;
--			goto error_no_hpc;
-+			return -ENOMEM;
- 		}
- 		hpc_ptr->ctlr_id = ctlr_id;
- 		hpc_ptr->ctlr_relative_id = ctlr;
-@@ -910,8 +909,6 @@ static int __init ebda_rsrc_controller(void)
- 	kfree(tmp_slot);
- error_no_slot:
- 	free_ebda_hpc(hpc_ptr);
--error_no_hpc:
--	iounmap(io_mem);
- 	return rc;
+ enum j721e_pcie_mode {
+@@ -67,6 +69,9 @@ enum j721e_pcie_mode {
+ struct j721e_pcie_data {
+ 	enum j721e_pcie_mode	mode;
+ 	unsigned int		quirk_retrain_flag:1;
++	unsigned int		quirk_detect_quiet_flag:1;
++	u32			linkdown_irq_regfield;
++	unsigned int		byte_access_allowed:1;
+ };
+ 
+ static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
+@@ -98,12 +103,12 @@ static irqreturn_t j721e_pcie_link_irq_handler(int irq, void *priv)
+ 	u32 reg;
+ 
+ 	reg = j721e_pcie_intd_readl(pcie, STATUS_REG_SYS_2);
+-	if (!(reg & LINK_DOWN))
++	if (!(reg & pcie->linkdown_irq_regfield))
+ 		return IRQ_NONE;
+ 
+ 	dev_err(dev, "LINK DOWN!\n");
+ 
+-	j721e_pcie_intd_writel(pcie, STATUS_CLR_REG_SYS_2, LINK_DOWN);
++	j721e_pcie_intd_writel(pcie, STATUS_CLR_REG_SYS_2, pcie->linkdown_irq_regfield);
+ 	return IRQ_HANDLED;
  }
  
+@@ -112,7 +117,7 @@ static void j721e_pcie_config_link_irq(struct j721e_pcie *pcie)
+ 	u32 reg;
+ 
+ 	reg = j721e_pcie_intd_readl(pcie, ENABLE_REG_SYS_2);
+-	reg |= LINK_DOWN;
++	reg |= pcie->linkdown_irq_regfield;
+ 	j721e_pcie_intd_writel(pcie, ENABLE_REG_SYS_2, reg);
+ }
+ 
+@@ -284,10 +289,25 @@ static struct pci_ops cdns_ti_pcie_host_ops = {
+ static const struct j721e_pcie_data j721e_pcie_rc_data = {
+ 	.mode = PCI_MODE_RC,
+ 	.quirk_retrain_flag = true,
++	.byte_access_allowed = false,
++	.linkdown_irq_regfield = LINK_DOWN,
+ };
+ 
+ static const struct j721e_pcie_data j721e_pcie_ep_data = {
+ 	.mode = PCI_MODE_EP,
++	.linkdown_irq_regfield = LINK_DOWN,
++};
++
++static const struct j721e_pcie_data j7200_pcie_rc_data = {
++	.mode = PCI_MODE_RC,
++	.quirk_detect_quiet_flag = true,
++	.linkdown_irq_regfield = J7200_LINK_DOWN,
++	.byte_access_allowed = true,
++};
++
++static const struct j721e_pcie_data j7200_pcie_ep_data = {
++	.mode = PCI_MODE_EP,
++	.quirk_detect_quiet_flag = true,
+ };
+ 
+ static const struct of_device_id of_j721e_pcie_match[] = {
+@@ -299,6 +319,14 @@ static const struct of_device_id of_j721e_pcie_match[] = {
+ 		.compatible = "ti,j721e-pcie-ep",
+ 		.data = &j721e_pcie_ep_data,
+ 	},
++	{
++		.compatible = "ti,j7200-pcie-host",
++		.data = &j7200_pcie_rc_data,
++	},
++	{
++		.compatible = "ti,j7200-pcie-ep",
++		.data = &j7200_pcie_ep_data,
++	},
+ 	{},
+ };
+ 
+@@ -332,6 +360,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie->dev = dev;
+ 	pcie->mode = mode;
++	pcie->linkdown_irq_regfield = data->linkdown_irq_regfield;
+ 
+ 	base = devm_platform_ioremap_resource_byname(pdev, "intd_cfg");
+ 	if (IS_ERR(base))
+@@ -391,9 +420,11 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			goto err_get_sync;
+ 		}
+ 
+-		bridge->ops = &cdns_ti_pcie_host_ops;
++		if (!data->byte_access_allowed)
++			bridge->ops = &cdns_ti_pcie_host_ops;
+ 		rc = pci_host_bridge_priv(bridge);
+ 		rc->quirk_retrain_flag = data->quirk_retrain_flag;
++		rc->quirk_detect_quiet_flag = data->quirk_detect_quiet_flag;
+ 
+ 		cdns_pcie = &rc->pcie;
+ 		cdns_pcie->dev = dev;
+@@ -459,6 +490,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			ret = -ENOMEM;
+ 			goto err_get_sync;
+ 		}
++		ep->quirk_detect_quiet_flag = data->quirk_detect_quiet_flag;
+ 
+ 		cdns_pcie = &ep->pcie;
+ 		cdns_pcie->dev = dev;
 -- 
 2.30.2
 
