@@ -5,43 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8BD8C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77748C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B08F461152
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E590611C3
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236040AbhIKNSN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:18:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39276 "EHLO mail.kernel.org"
+        id S236691AbhIKNSn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:18:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40666 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236135AbhIKNPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:15:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D47D961261;
-        Sat, 11 Sep 2021 13:13:19 +0000 (UTC)
+        id S236297AbhIKNQr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:16:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A1D2161264;
+        Sat, 11 Sep 2021 13:13:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631366000;
-        bh=tSld2HOwibPSCdTrA5wJUDFuSG0AdJmTLSluveSg8WU=;
+        s=k20201202; t=1631366007;
+        bh=3yos3JvVPLcMvFsxovYx1mLu68HlfZthsxXRfdeKGhs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bW8yLhPiglpg40E61Y9FAdvYTH2s3LSuYmQLIfKuKO3A1v0wzjeQaoV7ZFiO+KQuV
-         nSE9tUNNyTvn1clIUC4DtlfQx65V7VCVEkVaTAru/TaT95G1A0+x6w5WRMdU2XW61S
-         6iAwRS6Ano/N+BPYT0qROBFS3Nj2CNb9yH/eVkLtQU2aZgO9xoswOhh0MAnKWLtQj9
-         IiO0aNmT0JJgb3jmYx2jpgDbugRvKYGFnbE1JVfXboq47DnnaVrhXwyZD7c+b3bewX
-         RNqmwhbAgUkYjhLHfVeMNp182RSysFXSeQJNj4xpKAiVMxoVyca31eNMH2FZleBydO
-         k/sA8g4UhLkpA==
+        b=PXCwbUvFC9hHvoNJG1/28GTSaN36eNsQlQF7GQjOAjxGi0wdvTln5sJO+bidZUv/N
+         QZYt5nowPZjFthvnK95LkDl5zY+yGra32HJFy40EO2ACEq0VHlWZlbqdsRkcFvhVMr
+         bn4xRCwCSt4bAPh9s6BvhhddprDmXJBHJnLKuGmsoEh0Tkg3niahmcev8TiZKF9S74
+         U7NkCskhRjV7BZoRDzgM/QRKlN9rO0Jw/xzxOl829lyXPTdBc6whQDhdtRABNP74lm
+         PpN9DiYVUvsLqQPLAzM08j/7CJO0M8ldyxEinYxqy4Bh+/0XAPYIVF3dB4oFV4CCFY
+         7wFszID15/bzg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Om Prakash Singh <omp@nvidia.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 06/25] PCI: tegra194: Fix MSI-X programming
-Date:   Sat, 11 Sep 2021 09:12:53 -0400
-Message-Id: <20210911131312.285225-6-sashal@kernel.org>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sasha Levin <sashal@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.10 11/25] PCI: cadence: Use bitfield for *quirk_retrain_flag* instead of bool
+Date:   Sat, 11 Sep 2021 09:12:58 -0400
+Message-Id: <20210911131312.285225-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210911131312.285225-1-sashal@kernel.org>
 References: <20210911131312.285225-1-sashal@kernel.org>
@@ -53,37 +52,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Om Prakash Singh <omp@nvidia.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-[ Upstream commit 43537cf7e351264a1f05ed42ad402942bfc9140e ]
+[ Upstream commit f4455748b2126a9ba2bcc9cfb2fbcaa08de29bb2 ]
 
-Lower order MSI-X address is programmed in MSIX_ADDR_MATCH_HIGH_OFF
-DBI register instead of higher order address. This patch fixes this
-programming mistake.
+No functional change. As we are intending to add additional 1-bit
+members in struct j721e_pcie_data/struct cdns_pcie_rc, use bitfields
+instead of bool since it takes less space. As discussed in [1],
+the preference is to use bitfileds instead of bool inside structures.
 
-Link: https://lore.kernel.org/r/20210623100525.19944-3-omp@nvidia.com
-Signed-off-by: Om Prakash Singh <omp@nvidia.com>
+[1] -> https://lore.kernel.org/linux-fsdevel/CA+55aFzKQ6Pj18TB8p4Yr0M4t+S+BsiHH=BJNmn=76-NcjTj-g@mail.gmail.com/
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20210811123336.31357-2-kishon@ti.com
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Vidya Sagar <vidyas@nvidia.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-tegra194.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/cadence/pci-j721e.c    | 2 +-
+ drivers/pci/controller/cadence/pcie-cadence.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index c2827a8d208f..a5b677ec0769 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1778,7 +1778,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
- 	val = (ep->msi_mem_phys & MSIX_ADDR_MATCH_LOW_OFF_MASK);
- 	val |= MSIX_ADDR_MATCH_LOW_OFF_EN;
- 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_LOW_OFF, val);
--	val = (lower_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
-+	val = (upper_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
- 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_HIGH_OFF, val);
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index d34ca0fda0f6..973b309ac9ba 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -63,7 +63,7 @@ enum j721e_pcie_mode {
  
- 	ret = dw_pcie_ep_init_complete(ep);
+ struct j721e_pcie_data {
+ 	enum j721e_pcie_mode	mode;
+-	bool quirk_retrain_flag;
++	unsigned int		quirk_retrain_flag:1;
+ };
+ 
+ static inline u32 j721e_pcie_user_readl(struct j721e_pcie *pcie, u32 offset)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 6705a5fedfbb..60981877f65b 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -299,7 +299,7 @@ struct cdns_pcie_rc {
+ 	u32			vendor_id;
+ 	u32			device_id;
+ 	bool			avail_ib_bar[CDNS_PCIE_RP_MAX_IB];
+-	bool                    quirk_retrain_flag;
++	unsigned int		quirk_retrain_flag:1;
+ };
+ 
+ /**
 -- 
 2.30.2
 
