@@ -2,44 +2,46 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FFAC433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8BD8C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 812D061152
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B08F461152
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236965AbhIKNRn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:17:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38090 "EHLO mail.kernel.org"
+        id S236040AbhIKNSN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:18:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39276 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237022AbhIKNPi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:15:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2211C6124F;
-        Sat, 11 Sep 2021 13:13:16 +0000 (UTC)
+        id S236135AbhIKNPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:15:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D47D961261;
+        Sat, 11 Sep 2021 13:13:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631365996;
-        bh=YNKWECYu7J0NJHenU7lmjggMHsgJyA5aUWDycNZVmOU=;
+        s=k20201202; t=1631366000;
+        bh=tSld2HOwibPSCdTrA5wJUDFuSG0AdJmTLSluveSg8WU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IN6vj2Unv6nS0KS+qaYoBJ+t7PXFQO2DZyv5Ku37hC/aB5m0cAxP5dEiOIJ9OqjD4
-         Nb6iqT3/jvmeZa2RuuR+L4cX2LxWHJRIL7qWyk6jfGzOukXtDrIuvvlsyU3e6PFBWK
-         Yd2rkgecjzVhK/OeodkVc/7EDwXp/O6+BZfvqGjZRJHZ4p89z16uRV9iAIW41rbonF
-         6Q5rYCrq9AERqX2u1muNRgVlVnqp2mem2GufZMZB7cW8OPcIhNth4y6ioNB2dchzNj
-         jbDyBVic+lamSDQ4VUn3UyMCiZ1h6qSXrnsX1NzHaSxvBxL+FW7l328n/ZlqsWInJj
-         Oa1ortQDFuqow==
+        b=bW8yLhPiglpg40E61Y9FAdvYTH2s3LSuYmQLIfKuKO3A1v0wzjeQaoV7ZFiO+KQuV
+         nSE9tUNNyTvn1clIUC4DtlfQx65V7VCVEkVaTAru/TaT95G1A0+x6w5WRMdU2XW61S
+         6iAwRS6Ano/N+BPYT0qROBFS3Nj2CNb9yH/eVkLtQU2aZgO9xoswOhh0MAnKWLtQj9
+         IiO0aNmT0JJgb3jmYx2jpgDbugRvKYGFnbE1JVfXboq47DnnaVrhXwyZD7c+b3bewX
+         RNqmwhbAgUkYjhLHfVeMNp182RSysFXSeQJNj4xpKAiVMxoVyca31eNMH2FZleBydO
+         k/sA8g4UhLkpA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wasim Khan <wasim.khan@nxp.com>,
+Cc:     Om Prakash Singh <omp@nvidia.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 03/25] PCI: Add ACS quirks for NXP LX2xx0 and LX2xx2 platforms
-Date:   Sat, 11 Sep 2021 09:12:50 -0400
-Message-Id: <20210911131312.285225-3-sashal@kernel.org>
+        Vidya Sagar <vidyas@nvidia.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 06/25] PCI: tegra194: Fix MSI-X programming
+Date:   Sat, 11 Sep 2021 09:12:53 -0400
+Message-Id: <20210911131312.285225-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210911131312.285225-1-sashal@kernel.org>
 References: <20210911131312.285225-1-sashal@kernel.org>
@@ -51,146 +53,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Wasim Khan <wasim.khan@nxp.com>
+From: Om Prakash Singh <omp@nvidia.com>
 
-[ Upstream commit d08c8b855140e9f5240b3ffd1b8b9d435675e281 ]
+[ Upstream commit 43537cf7e351264a1f05ed42ad402942bfc9140e ]
 
-Root Ports in NXP LX2xx0 and LX2xx2, where each Root Port is a Root Complex
-with unique segment numbers, do provide isolation features to disable peer
-transactions and validate bus numbers in requests, but do not provide an
-actual PCIe ACS capability.
+Lower order MSI-X address is programmed in MSIX_ADDR_MATCH_HIGH_OFF
+DBI register instead of higher order address. This patch fixes this
+programming mistake.
 
-Add ACS quirks for NXP LX2xx0 A/C/E/N and LX2xx2 A/C/E/N platforms.
-
-  LX2xx0A : without security features + CAN-FD
-    LX2160A (0x8d81) - 16 cores
-    LX2120A (0x8da1) - 12 cores
-    LX2080A (0x8d83) -  8 cores
-
-  LX2xx0C : security features + CAN-FD
-    LX2160C (0x8d80) - 16 cores
-    LX2120C (0x8da0) - 12 cores
-    LX2080C (0x8d82) -  8 cores
-
-  LX2xx0E : security features + CAN
-    LX2160E (0x8d90) - 16 cores
-    LX2120E (0x8db0) - 12 cores
-    LX2080E (0x8d92) -  8 cores
-
-  LX2xx0N : without security features + CAN
-    LX2160N (0x8d91) - 16 cores
-    LX2120N (0x8db1) - 12 cores
-    LX2080N (0x8d93) -  8 cores
-
-  LX2xx2A : without security features + CAN-FD
-    LX2162A (0x8d89) - 16 cores
-    LX2122A (0x8da9) - 12 cores
-    LX2082A (0x8d8b) -  8 cores
-
-  LX2xx2C : security features + CAN-FD
-    LX2162C (0x8d88) - 16 cores
-    LX2122C (0x8da8) - 12 cores
-    LX2082C (0x8d8a) -  8 cores
-
-  LX2xx2E : security features + CAN
-    LX2162E (0x8d98) - 16 cores
-    LX2122E (0x8db8) - 12 cores
-    LX2082E (0x8d9a) -  8 cores
-
-  LX2xx2N : without security features + CAN
-    LX2162N (0x8d99) - 16 cores
-    LX2122N (0x8db9) - 12 cores
-    LX2082N (0x8d9b) -  8 cores
-
-[bhelgaas: put PCI_VENDOR_ID_NXP definition next to PCI_VENDOR_ID_FREESCALE
-as a clue that they share the same Device ID namespace]
-Link: https://lore.kernel.org/r/20210729121747.1823086-1-wasim.khan@oss.nxp.com
-Link: https://lore.kernel.org/r/20210803180021.3252886-1-wasim.khan@oss.nxp.com
-Signed-off-by: Wasim Khan <wasim.khan@nxp.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20210623100525.19944-3-omp@nvidia.com
+Signed-off-by: Om Prakash Singh <omp@nvidia.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Vidya Sagar <vidyas@nvidia.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c    | 45 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h |  3 ++-
- 2 files changed, 47 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index cd2401d4764f..8af2b6e645dd 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4625,6 +4625,18 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
- 		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
- }
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index c2827a8d208f..a5b677ec0769 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1778,7 +1778,7 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 	val = (ep->msi_mem_phys & MSIX_ADDR_MATCH_LOW_OFF_MASK);
+ 	val |= MSIX_ADDR_MATCH_LOW_OFF_EN;
+ 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_LOW_OFF, val);
+-	val = (lower_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
++	val = (upper_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
+ 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_HIGH_OFF, val);
  
-+/*
-+ * Each of these NXP Root Ports is in a Root Complex with a unique segment
-+ * number and does provide isolation features to disable peer transactions
-+ * and validate bus numbers in requests, but does not provide an ACS
-+ * capability.
-+ */
-+static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	return pci_acs_ctrl_enabled(acs_flags,
-+		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
-+}
-+
- static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-@@ -4871,6 +4883,39 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3038, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3104, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_ZHAOXIN, 0x9083, pci_quirk_mf_endpoint_acs },
-+	/* NXP root ports, xx=16, 12, or 08 cores */
-+	/* LX2xx0A : without security features + CAN-FD */
-+	{ PCI_VENDOR_ID_NXP, 0x8d81, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8da1, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d83, pci_quirk_nxp_rp_acs },
-+	/* LX2xx0C : security features + CAN-FD */
-+	{ PCI_VENDOR_ID_NXP, 0x8d80, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8da0, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d82, pci_quirk_nxp_rp_acs },
-+	/* LX2xx0E : security features + CAN */
-+	{ PCI_VENDOR_ID_NXP, 0x8d90, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8db0, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d92, pci_quirk_nxp_rp_acs },
-+	/* LX2xx0N : without security features + CAN */
-+	{ PCI_VENDOR_ID_NXP, 0x8d91, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8db1, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d93, pci_quirk_nxp_rp_acs },
-+	/* LX2xx2A : without security features + CAN-FD */
-+	{ PCI_VENDOR_ID_NXP, 0x8d89, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8da9, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d8b, pci_quirk_nxp_rp_acs },
-+	/* LX2xx2C : security features + CAN-FD */
-+	{ PCI_VENDOR_ID_NXP, 0x8d88, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8da8, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d8a, pci_quirk_nxp_rp_acs },
-+	/* LX2xx2E : security features + CAN */
-+	{ PCI_VENDOR_ID_NXP, 0x8d98, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8db8, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d9a, pci_quirk_nxp_rp_acs },
-+	/* LX2xx2N : without security features + CAN */
-+	{ PCI_VENDOR_ID_NXP, 0x8d99, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8db9, pci_quirk_nxp_rp_acs },
-+	{ PCI_VENDOR_ID_NXP, 0x8d9b, pci_quirk_nxp_rp_acs },
- 	/* Zhaoxin Root/Downstream Ports */
- 	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
- 	{ 0 }
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1ab1e24bcbce..635a9243cce0 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2476,7 +2476,8 @@
- #define PCI_VENDOR_ID_TDI               0x192E
- #define PCI_DEVICE_ID_TDI_EHCI          0x0101
- 
--#define PCI_VENDOR_ID_FREESCALE		0x1957
-+#define PCI_VENDOR_ID_FREESCALE		0x1957	/* duplicate: NXP */
-+#define PCI_VENDOR_ID_NXP		0x1957	/* duplicate: FREESCALE */
- #define PCI_DEVICE_ID_MPC8308		0xc006
- #define PCI_DEVICE_ID_MPC8315E		0x00b4
- #define PCI_DEVICE_ID_MPC8315		0x00b5
+ 	ret = dw_pcie_ep_init_complete(ep);
 -- 
 2.30.2
 
