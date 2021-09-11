@@ -2,94 +2,102 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE97FC433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 09:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80571C433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 10:13:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90056611C0
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 09:37:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C9C0611F2
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 10:13:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235577AbhIKJjB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 05:39:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45542 "EHLO mail.kernel.org"
+        id S235513AbhIKKPI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 06:15:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48824 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235485AbhIKJjA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 05:39:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EB3A5610F8;
-        Sat, 11 Sep 2021 09:37:45 +0000 (UTC)
-From:   Huacai Chen <chenhuacai@loongson.cn>
-To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Huacai Chen <chenhuacai@gmail.com>
-Subject: [PATCH V5 11/11] PCI/VGA: Replace full MIT license text with SPDX identifier
-Date:   Sat, 11 Sep 2021 17:30:56 +0800
-Message-Id: <20210911093056.1555274-12-chenhuacai@loongson.cn>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210911093056.1555274-1-chenhuacai@loongson.cn>
-References: <20210911093056.1555274-1-chenhuacai@loongson.cn>
+        id S235443AbhIKKPI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 06:15:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2F29A60F43;
+        Sat, 11 Sep 2021 10:13:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1631355236;
+        bh=lSHSgBwx6gMurY95a9FVLbeSHUtaSl0ni5yzqPG/SAc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=R9h7m91vmMmsY+nTu5NFZMpPV+3IHglqDli4uvl1uQmewAgzcLU76GDTow+EKLlW7
+         A41u7HiLXbTLa5ll6zF6skYw6VnwP+NEWrTsoMrgsTei11WZv5DYRt2YX5DooFA+Hd
+         D52mPe4N5KqLDQdW/6rZb/LG3piKnCbhP/JqoF80=
+Date:   Sat, 11 Sep 2021 12:13:33 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI/sysfs: Add pci_dev_resource_attr_is_visible()
+ helper
+Message-ID: <YTyBTZ/IyNU5Layt@kroah.com>
+References: <YSjWWWVC6ImWA5Qe@kroah.com>
+ <20210827222331.GA3896976@bjorn-Precision-5520>
+ <YTtm4e9a/gS5Swga@kroah.com>
+ <20210910172101.GA1314672@rocinante>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210910172101.GA1314672@rocinante>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, Sep 10, 2021 at 07:21:01PM +0200, Krzysztof Wilczyński wrote:
+> Hi Greg,
+> 
+> [...]
+> > >   pci_dev_config_attr_is_visible(..., struct bin_attribute *a, ...)
+> > >   {
+> > >     a->size = PCI_CFG_SPACE_SIZE;    # <-- set size in global attr
+> > >     ...
+> > >   }
+> > > 
+> > >   static struct bin_attribute *pci_dev_config_attrs[] = {
+> > >     &bin_attr_config, NULL,
+> > >   };
+> > >   static const struct attribute_group pci_dev_config_attr_group = {
+> > >     .bin_attrs = pci_dev_config_attrs,
+> > >     .is_bin_visible = pci_dev_config_attr_is_visible,
+> > >   };
+> > > 
+> > >   pci_device_add
+> > >     device_add
+> > >       device_add_attrs
+> > >         device_add_groups
+> > >           sysfs_create_groups
+> > >             internal_create_groups
+> > >               internal_create_group
+> > >                 create_files
+> > >                   grp->is_bin_visible()
+> > >                   sysfs_add_file_mode_ns
+> > >                     size = battr->size      # <-- copy size from attr
+> > >                     __kernfs_create_file(..., size, ...)
+> > >                       kernfs_new_node
+> > >                         __kernfs_new_node
+> > > 
+> > 
+> > You can create a dynamic attribute and register that.  I think some
+> > drivers/busses do that today to handle this type of thing.
+> 
+> Some static attributes users don't set size today or simply set it to 0, so
+> then we report 0 bytes in userspace for each such attribute via the backing
+> i-node.
+> 
+> Would you be open to the idea of adding a .size() callback so that static
+> attributes users could set size using more proper channels, or do you think
+> leaving it being set to 0 is fine?
 
-Per Documentation/process/license-rules.rst, the SPDX MIT identifier is
-equivalent to including the entire MIT license text from
-LICENSES/preferred/MIT.
+I think leaving it at 0 is fine, are userspace tools really needing to
+know the size ahead of time for sysfs files?  What would changing this
+help out with?
 
-Replace the MIT license text with the equivalent SPDX identifier.
+thanks,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/vgaarb.c | 23 +----------------------
- 1 file changed, 1 insertion(+), 22 deletions(-)
-
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index f9581775939b..54d0b451b335 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -1,32 +1,11 @@
-+// SPDX-License-Identifier: MIT
- /*
-  * vgaarb.c: Implements the VGA arbitration. For details refer to
-  * Documentation/gpu/vgaarbiter.rst
-  *
-- *
-  * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
-  * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
-  * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
-- *
-- * Permission is hereby granted, free of charge, to any person obtaining a
-- * copy of this software and associated documentation files (the "Software"),
-- * to deal in the Software without restriction, including without limitation
-- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
-- * and/or sell copies of the Software, and to permit persons to whom the
-- * Software is furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice (including the next
-- * paragraph) shall be included in all copies or substantial portions of the
-- * Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS
-- * IN THE SOFTWARE.
-- *
-  */
- 
- #define pr_fmt(fmt) "vgaarb: " fmt
--- 
-2.27.0
-
+greg k-h
