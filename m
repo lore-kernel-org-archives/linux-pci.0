@@ -4,44 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA19C4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCC4C4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86E206137C
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:15:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA643611CC
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237183AbhIKNRJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:17:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41214 "EHLO mail.kernel.org"
+        id S236123AbhIKNRn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:17:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38202 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236858AbhIKNPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:15:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9DAA461216;
-        Sat, 11 Sep 2021 13:13:05 +0000 (UTC)
+        id S236536AbhIKNPn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:15:43 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7EACE61260;
+        Sat, 11 Sep 2021 13:13:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631365986;
-        bh=MznIBEeT4uqOL6YVdEqOi56t+PHKc+D+hfPTw/tzeNA=;
+        s=k20201202; t=1631365999;
+        bh=O12ORUh350U1nDoSDlnv7lBP/4Stol3K7FbNOpeVNss=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GbKUGI4vZqWdhJ0WZxPNhMGoXRnCvbsLL4HK4W+aA3zrcf6FPhVChdlLdlTlihJ8A
-         3LD6/SbI8+TrHvf8O0kMRs8yVPCPt9/BMbMGbY0u7aJuAGzsnQpPp69JT1ZhOzbHmU
-         7FFifNiFzrTVroWxAjnlQqS6XApeoClYn4xPNNczs97KkAdk+LLj0w/wzRA0MwZUZn
-         l6y/ylTgCoGzDzDL7eJGHVZBJe/N2BSAI9WjdqKFDUEw3v693TXOLl76Q0i9ejCdmc
-         HE5YcHbSmL4eVXn/ocCr5KahIXIZ7K8TzfelbE3KF8itm6r7Q5qOwmIdQRb0/baNeg
-         QDFUXTuwT39Zg==
+        b=CLdDHVRwKubj9ywdAhguB8pUang05w6SSt6OXKK4KyDjGB6XbG5C8lFG7bsviCdYA
+         VavJyfGWdUVlj3xamyLM42OGqMp1y4WpKOE5SCVTCXv+gPLp9DJId4fafAD7cCunEr
+         mKT66G6IbuCy6e1kFDC7j9AJF5zX6NWH+4mflQRPm9TeHQODJqp2wX7Z/tyVA+yyB+
+         mrOv06hqEC/mRVRUu8pjWMlb8+qhkEoQcicnyKLzWqzuVnacQoVJ69xlQO91/asOwi
+         ied6tatxmBwCpHgcF6FYKDjg1v2dNhhEKHM6x4UYX4kvDrVBdvsI00+0qaSkAoBuK2
+         95dtJlp8H0SmA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Vishal Aslot <os.vaslot@gmail.com>,
+Cc:     Om Prakash Singh <omp@nvidia.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 25/29] PCI: ibmphp: Fix double unmap of io_mem
-Date:   Sat, 11 Sep 2021 09:12:29 -0400
-Message-Id: <20210911131233.284800-25-sashal@kernel.org>
+        Vidya Sagar <vidyas@nvidia.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 05/25] PCI: tegra194: Fix handling BME_CHGED event
+Date:   Sat, 11 Sep 2021 09:12:52 -0400
+Message-Id: <20210911131312.285225-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210911131233.284800-1-sashal@kernel.org>
-References: <20210911131233.284800-1-sashal@kernel.org>
+In-Reply-To: <20210911131312.285225-1-sashal@kernel.org>
+References: <20210911131312.285225-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,62 +53,84 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vishal Aslot <os.vaslot@gmail.com>
+From: Om Prakash Singh <omp@nvidia.com>
 
-[ Upstream commit faa2e05ad0dccf37f995bcfbb8d1980d66c02c11 ]
+[ Upstream commit ceb1412c1c8ca5b28c4252bdb15f2f1f17b4a1b0 ]
 
-ebda_rsrc_controller() calls iounmap(io_mem) on the error path. Its caller,
-ibmphp_access_ebda(), also calls iounmap(io_mem) on good and error paths.
+In tegra_pcie_ep_hard_irq(), APPL_INTR_STATUS_L0 is stored in val and again
+APPL_INTR_STATUS_L1_0_0 is also stored in val. So when execution reaches
+"if (val & APPL_INTR_STATUS_L0_PCI_CMD_EN_INT)", val is not correct.
 
-Remove the iounmap(io_mem) invocation from ebda_rsrc_controller().
-
-[bhelgaas: remove item from TODO]
-Link: https://lore.kernel.org/r/20210818165751.591185-1-os.vaslot@gmail.com
-Signed-off-by: Vishal Aslot <os.vaslot@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/r/20210623100525.19944-2-omp@nvidia.com
+Signed-off-by: Om Prakash Singh <omp@nvidia.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Vidya Sagar <vidyas@nvidia.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/TODO          | 3 ---
- drivers/pci/hotplug/ibmphp_ebda.c | 5 +----
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 30 +++++++++++-----------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
-index a32070be5adf..cc6194aa24c1 100644
---- a/drivers/pci/hotplug/TODO
-+++ b/drivers/pci/hotplug/TODO
-@@ -40,9 +40,6 @@ ibmphp:
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 506f6a294eac..c2827a8d208f 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -515,19 +515,19 @@ static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
+ 	struct tegra_pcie_dw *pcie = arg;
+ 	struct dw_pcie_ep *ep = &pcie->pci.ep;
+ 	int spurious = 1;
+-	u32 val, tmp;
++	u32 status_l0, status_l1, link_status;
  
- * The return value of pci_hp_register() is not checked.
+-	val = appl_readl(pcie, APPL_INTR_STATUS_L0);
+-	if (val & APPL_INTR_STATUS_L0_LINK_STATE_INT) {
+-		val = appl_readl(pcie, APPL_INTR_STATUS_L1_0_0);
+-		appl_writel(pcie, val, APPL_INTR_STATUS_L1_0_0);
++	status_l0 = appl_readl(pcie, APPL_INTR_STATUS_L0);
++	if (status_l0 & APPL_INTR_STATUS_L0_LINK_STATE_INT) {
++		status_l1 = appl_readl(pcie, APPL_INTR_STATUS_L1_0_0);
++		appl_writel(pcie, status_l1, APPL_INTR_STATUS_L1_0_0);
  
--* iounmap(io_mem) is called in the error path of ebda_rsrc_controller()
--  and once more in the error path of its caller ibmphp_access_ebda().
--
- * The various slot data structures are difficult to follow and need to be
-   simplified.  A lot of functions are too large and too complex, they need
-   to be broken up into smaller, manageable pieces.  Negative examples are
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 11a2661dc062..7fb75401ad8a 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -714,8 +714,7 @@ static int __init ebda_rsrc_controller(void)
- 		/* init hpc structure */
- 		hpc_ptr = alloc_ebda_hpc(slot_num, bus_num);
- 		if (!hpc_ptr) {
--			rc = -ENOMEM;
--			goto error_no_hpc;
-+			return -ENOMEM;
- 		}
- 		hpc_ptr->ctlr_id = ctlr_id;
- 		hpc_ptr->ctlr_relative_id = ctlr;
-@@ -910,8 +909,6 @@ static int __init ebda_rsrc_controller(void)
- 	kfree(tmp_slot);
- error_no_slot:
- 	free_ebda_hpc(hpc_ptr);
--error_no_hpc:
--	iounmap(io_mem);
- 	return rc;
- }
+-		if (val & APPL_INTR_STATUS_L1_0_0_HOT_RESET_DONE)
++		if (status_l1 & APPL_INTR_STATUS_L1_0_0_HOT_RESET_DONE)
+ 			pex_ep_event_hot_rst_done(pcie);
  
+-		if (val & APPL_INTR_STATUS_L1_0_0_RDLH_LINK_UP_CHGED) {
+-			tmp = appl_readl(pcie, APPL_LINK_STATUS);
+-			if (tmp & APPL_LINK_STATUS_RDLH_LINK_UP) {
++		if (status_l1 & APPL_INTR_STATUS_L1_0_0_RDLH_LINK_UP_CHGED) {
++			link_status = appl_readl(pcie, APPL_LINK_STATUS);
++			if (link_status & APPL_LINK_STATUS_RDLH_LINK_UP) {
+ 				dev_dbg(pcie->dev, "Link is up with Host\n");
+ 				dw_pcie_ep_linkup(ep);
+ 			}
+@@ -536,11 +536,11 @@ static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
+ 		spurious = 0;
+ 	}
+ 
+-	if (val & APPL_INTR_STATUS_L0_PCI_CMD_EN_INT) {
+-		val = appl_readl(pcie, APPL_INTR_STATUS_L1_15);
+-		appl_writel(pcie, val, APPL_INTR_STATUS_L1_15);
++	if (status_l0 & APPL_INTR_STATUS_L0_PCI_CMD_EN_INT) {
++		status_l1 = appl_readl(pcie, APPL_INTR_STATUS_L1_15);
++		appl_writel(pcie, status_l1, APPL_INTR_STATUS_L1_15);
+ 
+-		if (val & APPL_INTR_STATUS_L1_15_CFG_BME_CHGED)
++		if (status_l1 & APPL_INTR_STATUS_L1_15_CFG_BME_CHGED)
+ 			return IRQ_WAKE_THREAD;
+ 
+ 		spurious = 0;
+@@ -548,8 +548,8 @@ static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
+ 
+ 	if (spurious) {
+ 		dev_warn(pcie->dev, "Random interrupt (STATUS = 0x%08X)\n",
+-			 val);
+-		appl_writel(pcie, val, APPL_INTR_STATUS_L0);
++			 status_l0);
++		appl_writel(pcie, status_l0, APPL_INTR_STATUS_L0);
+ 	}
+ 
+ 	return IRQ_HANDLED;
 -- 
 2.30.2
 
