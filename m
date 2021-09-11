@@ -2,45 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F118C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FFAC433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEF8961152
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 812D061152
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236967AbhIKNRo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:17:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38304 "EHLO mail.kernel.org"
+        id S236965AbhIKNRn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:17:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38090 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237056AbhIKNPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:15:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 31BD561268;
-        Sat, 11 Sep 2021 13:13:21 +0000 (UTC)
+        id S237022AbhIKNPi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:15:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2211C6124F;
+        Sat, 11 Sep 2021 13:13:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631366002;
-        bh=KzrJ81mWKnjw/4GM+UnXKoRBrHQtG01lpAJSOH1umeo=;
+        s=k20201202; t=1631365996;
+        bh=YNKWECYu7J0NJHenU7lmjggMHsgJyA5aUWDycNZVmOU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bp9TXSxUIYj+mJfq0XABRZWwS93kksHj/gnekS3MO8UqO2adW6A+SDCRjxzBja8w+
-         bwFFwzfoljNSAZye6DNGEVSB/0cPYADTplkUuKQrq1NAtRlHOCSBZc2OVHw5pOJBXh
-         gfln826h/sI1pWJrsTmYso1l5YhRIxDix0LZptrSDWE2r22odWpLfXaLGcBtbtAwUP
-         2nap/Q2zElS3jBBmXHpdcvK+cd4bsfC98L7E+eoOlVtoOzHP+M1HFm3YuiH3qYGJ36
-         YyUvWDYT9lBzhVddHEiBgHL8x5KRjNBboOSVnNItjvUKOKBeccYR7tCUM4gJCFQ4gi
-         OIpNNH9ZhBH4Q==
+        b=IN6vj2Unv6nS0KS+qaYoBJ+t7PXFQO2DZyv5Ku37hC/aB5m0cAxP5dEiOIJ9OqjD4
+         Nb6iqT3/jvmeZa2RuuR+L4cX2LxWHJRIL7qWyk6jfGzOukXtDrIuvvlsyU3e6PFBWK
+         Yd2rkgecjzVhK/OeodkVc/7EDwXp/O6+BZfvqGjZRJHZ4p89z16uRV9iAIW41rbonF
+         6Q5rYCrq9AERqX2u1muNRgVlVnqp2mem2GufZMZB7cW8OPcIhNth4y6ioNB2dchzNj
+         jbDyBVic+lamSDQ4VUn3UyMCiZ1h6qSXrnsX1NzHaSxvBxL+FW7l328n/ZlqsWInJj
+         Oa1ortQDFuqow==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Sasha Levin <sashal@kernel.org>, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 07/25] PCI: tegra: Fix OF node reference leak
-Date:   Sat, 11 Sep 2021 09:12:54 -0400
-Message-Id: <20210911131312.285225-7-sashal@kernel.org>
+Cc:     Wasim Khan <wasim.khan@nxp.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 03/25] PCI: Add ACS quirks for NXP LX2xx0 and LX2xx2 platforms
+Date:   Sat, 11 Sep 2021 09:12:50 -0400
+Message-Id: <20210911131312.285225-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210911131312.285225-1-sashal@kernel.org>
 References: <20210911131312.285225-1-sashal@kernel.org>
@@ -52,61 +51,146 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Wasim Khan <wasim.khan@nxp.com>
 
-[ Upstream commit eff21f5da308265678e7e59821795e606f3e560f ]
+[ Upstream commit d08c8b855140e9f5240b3ffd1b8b9d435675e281 ]
 
-Commit 9e38e690ace3 ("PCI: tegra: Fix OF node reference leak") has fixed
-some node reference leaks in this function but missed some of them.
+Root Ports in NXP LX2xx0 and LX2xx2, where each Root Port is a Root Complex
+with unique segment numbers, do provide isolation features to disable peer
+transactions and validate bus numbers in requests, but do not provide an
+actual PCIe ACS capability.
 
-In fact, having 'port' referenced in the 'rp' structure is not enough to
-prevent the leak, until 'rp' is actually added in the 'pcie->ports' list.
+Add ACS quirks for NXP LX2xx0 A/C/E/N and LX2xx2 A/C/E/N platforms.
 
-Add the missing 'goto err_node_put' accordingly.
+  LX2xx0A : without security features + CAN-FD
+    LX2160A (0x8d81) - 16 cores
+    LX2120A (0x8da1) - 12 cores
+    LX2080A (0x8d83) -  8 cores
 
-Link: https://lore.kernel.org/r/55b11e9a7fa2987fbc0869d68ae59888954d65e2.1620148539.git.christophe.jaillet@wanadoo.fr
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
+  LX2xx0C : security features + CAN-FD
+    LX2160C (0x8d80) - 16 cores
+    LX2120C (0x8da0) - 12 cores
+    LX2080C (0x8d82) -  8 cores
+
+  LX2xx0E : security features + CAN
+    LX2160E (0x8d90) - 16 cores
+    LX2120E (0x8db0) - 12 cores
+    LX2080E (0x8d92) -  8 cores
+
+  LX2xx0N : without security features + CAN
+    LX2160N (0x8d91) - 16 cores
+    LX2120N (0x8db1) - 12 cores
+    LX2080N (0x8d93) -  8 cores
+
+  LX2xx2A : without security features + CAN-FD
+    LX2162A (0x8d89) - 16 cores
+    LX2122A (0x8da9) - 12 cores
+    LX2082A (0x8d8b) -  8 cores
+
+  LX2xx2C : security features + CAN-FD
+    LX2162C (0x8d88) - 16 cores
+    LX2122C (0x8da8) - 12 cores
+    LX2082C (0x8d8a) -  8 cores
+
+  LX2xx2E : security features + CAN
+    LX2162E (0x8d98) - 16 cores
+    LX2122E (0x8db8) - 12 cores
+    LX2082E (0x8d9a) -  8 cores
+
+  LX2xx2N : without security features + CAN
+    LX2162N (0x8d99) - 16 cores
+    LX2122N (0x8db9) - 12 cores
+    LX2082N (0x8d9b) -  8 cores
+
+[bhelgaas: put PCI_VENDOR_ID_NXP definition next to PCI_VENDOR_ID_FREESCALE
+as a clue that they share the same Device ID namespace]
+Link: https://lore.kernel.org/r/20210729121747.1823086-1-wasim.khan@oss.nxp.com
+Link: https://lore.kernel.org/r/20210803180021.3252886-1-wasim.khan@oss.nxp.com
+Signed-off-by: Wasim Khan <wasim.khan@nxp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-tegra.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/pci/quirks.c    | 45 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h |  3 ++-
+ 2 files changed, 47 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 1a2af963599c..b4eb75f25906 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -2160,13 +2160,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->np = port;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index cd2401d4764f..8af2b6e645dd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4625,6 +4625,18 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+ 		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+ }
  
- 		rp->base = devm_pci_remap_cfg_resource(dev, &rp->regs);
--		if (IS_ERR(rp->base))
--			return PTR_ERR(rp->base);
-+		if (IS_ERR(rp->base)) {
-+			err = PTR_ERR(rp->base);
-+			goto err_node_put;
-+		}
++/*
++ * Each of these NXP Root Ports is in a Root Complex with a unique segment
++ * number and does provide isolation features to disable peer transactions
++ * and validate bus numbers in requests, but does not provide an ACS
++ * capability.
++ */
++static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	return pci_acs_ctrl_enabled(acs_flags,
++		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
++}
++
+ static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+@@ -4871,6 +4883,39 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3038, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3104, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x9083, pci_quirk_mf_endpoint_acs },
++	/* NXP root ports, xx=16, 12, or 08 cores */
++	/* LX2xx0A : without security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d81, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da1, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d83, pci_quirk_nxp_rp_acs },
++	/* LX2xx0C : security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d80, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da0, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d82, pci_quirk_nxp_rp_acs },
++	/* LX2xx0E : security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d90, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db0, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d92, pci_quirk_nxp_rp_acs },
++	/* LX2xx0N : without security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d91, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db1, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d93, pci_quirk_nxp_rp_acs },
++	/* LX2xx2A : without security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d89, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da9, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d8b, pci_quirk_nxp_rp_acs },
++	/* LX2xx2C : security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d88, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da8, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d8a, pci_quirk_nxp_rp_acs },
++	/* LX2xx2E : security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d98, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db8, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d9a, pci_quirk_nxp_rp_acs },
++	/* LX2xx2N : without security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d99, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db9, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d9b, pci_quirk_nxp_rp_acs },
+ 	/* Zhaoxin Root/Downstream Ports */
+ 	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
+ 	{ 0 }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1ab1e24bcbce..635a9243cce0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2476,7 +2476,8 @@
+ #define PCI_VENDOR_ID_TDI               0x192E
+ #define PCI_DEVICE_ID_TDI_EHCI          0x0101
  
- 		label = devm_kasprintf(dev, GFP_KERNEL, "pex-reset-%u", index);
- 		if (!label) {
--			dev_err(dev, "failed to create reset GPIO label\n");
--			return -ENOMEM;
-+			err = -ENOMEM;
-+			goto err_node_put;
- 		}
- 
- 		/*
-@@ -2184,7 +2186,8 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 			} else {
- 				dev_err(dev, "failed to get reset GPIO: %ld\n",
- 					PTR_ERR(rp->reset_gpio));
--				return PTR_ERR(rp->reset_gpio);
-+				err = PTR_ERR(rp->reset_gpio);
-+				goto err_node_put;
- 			}
- 		}
- 
+-#define PCI_VENDOR_ID_FREESCALE		0x1957
++#define PCI_VENDOR_ID_FREESCALE		0x1957	/* duplicate: NXP */
++#define PCI_VENDOR_ID_NXP		0x1957	/* duplicate: FREESCALE */
+ #define PCI_DEVICE_ID_MPC8308		0xc006
+ #define PCI_DEVICE_ID_MPC8315E		0x00b4
+ #define PCI_DEVICE_ID_MPC8315		0x00b5
 -- 
 2.30.2
 
