@@ -2,112 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD79C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 10:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5957CC433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 11:09:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 567A5611CC
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 10:13:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 451D261209
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 11:09:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235473AbhIKKPK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 06:15:10 -0400
-Received: from lpdvacalvio01.broadcom.com ([192.19.166.228]:58492 "EHLO
-        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235443AbhIKKPK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 11 Sep 2021 06:15:10 -0400
-X-Greylist: delayed 573 seconds by postgrey-1.27 at vger.kernel.org; Sat, 11 Sep 2021 06:15:10 EDT
-Received: from dhcp-10-192-206-197.iig.avagotech.net.net (dhcp-10-123-156-118.dhcp.broadcom.net [10.123.156.118])
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id E8AC980D6;
-        Sat, 11 Sep 2021 03:04:21 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com E8AC980D6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1631354664;
-        bh=C//DGv3jc+2arzWZ0l0mbjBrEbpJGqWGmA5Z4sxdPZs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iEIIXXEtLx8kXqZPvipPFKm0YJn2W46E+nP6c/w9pSWR/Pn/+Y7ZT3Y4LP3QdL7T6
-         WXQMOBSIVZi7WQ57F5bYfzgbQa/IcFDSogr+2PWnhDJE+Is34vuBbJX6WI4I5Us+sZ
-         QUrN7YyWDSE4BxhOufbp0o/Byj6wJoqwktY0YzLs=
-From:   Selvin Xavier <selvin.xavier@broadcom.com>
-To:     linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc:     dledford@redhat.com, jgg@nvidia.com, linux-rdma@vger.kernel.org,
-        Felix.Kuehling@amd.com, Shaoyun.Liu@amd.com, Jay.Cornwall@amd.com,
-        andrew.gospodarek@broadcom.com, michael.chan@broadcom.com,
-        Selvin Xavier <selvin.xavier@broadcom.com>
-Subject: [PATCH] PCI: Do not enable pci atomics on VFs
-Date:   Sat, 11 Sep 2021 03:03:05 -0700
-Message-Id: <1631354585-16597-1-git-send-email-selvin.xavier@broadcom.com>
-X-Mailer: git-send-email 2.5.5
+        id S233893AbhIKLK2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 07:10:28 -0400
+Received: from ozlabs.org ([203.11.71.1]:46909 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230249AbhIKLK2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 07:10:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+        s=201909; t=1631358554;
+        bh=wCFs7QKhXMzS395kRZvRG47SpyWfFbs7z3zfl/ErxEA=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=c7NELGpAh1HsCHqwY/uRPbVYXKqVYXvcpRQ7aAvLfrWo90t0t5JU4N5P5r1ljt3gd
+         PVbtiY8u7jdCKuRrfL5DQucozCtmh/F7bFuUTJ+i+bpd7CsdQdknWHzExu+DvVIKtB
+         uwLsrNPAELnlQpfGWJznYWBnjeSFXzWC1Cw3nK24plV5lEcWTFF1f42ZB5iMfSm/pa
+         kKTVmte0UiwKhq93/QjxY9h1DRoEpQGfDYwBWQbUWcvFlw7+FKl3M4FUaSgcoxozKZ
+         jSuPF+4DgNWfuChV3mQU6o/y5ZsSfBK4JQOfYjX0nTy3szz6t9mImirD8OXV4GtB7v
+         xNGxQdtKhjO+w==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4H693t161rz9sW5;
+        Sat, 11 Sep 2021 21:09:13 +1000 (AEST)
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-arch@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 1/1] powerpc: Drop superfluous pci_dev_is_added() calls
+In-Reply-To: <20210910141940.2598035-2-schnelle@linux.ibm.com>
+References: <20210910141940.2598035-1-schnelle@linux.ibm.com>
+ <20210910141940.2598035-2-schnelle@linux.ibm.com>
+Date:   Sat, 11 Sep 2021 21:09:13 +1000
+Message-ID: <87wnnnl67a.fsf@mpe.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Host crashes when pci_enable_atomic_ops_to_root is called for VFs
-with virtual buses. The virtual buses added to SR-IOV has bus->self
-set to  NULL and host crashes due to this.
+Niklas Schnelle <schnelle@linux.ibm.com> writes:
+> On powerpc, pci_dev_is_added() is called as part of SR-IOV fixups
+> that are done under pcibios_add_device() which in turn is only called in
+> pci_device_add() whih is called when a PCI device is scanned.
 
-PID: 4481   TASK: ffff89c6941b0000  CPU: 53  COMMAND: "bash"
- #0 [ffff9a94817136d8] machine_kexec at ffffffffb90601a4
- #1 [ffff9a9481713728] __crash_kexec at ffffffffb9190d5d
- #2 [ffff9a94817137f0] crash_kexec at ffffffffb9191c4d
- #3 [ffff9a9481713808] oops_end at ffffffffb9025cd6
- #4 [ffff9a9481713828] page_fault_oops at ffffffffb906e417
- #5 [ffff9a9481713888] exc_page_fault at ffffffffb9a0ad14
- #6 [ffff9a94817138b0] asm_exc_page_fault at ffffffffb9c00ace
-    [exception RIP: pcie_capability_read_dword+28]
-    RIP: ffffffffb952fd5c  RSP: ffff9a9481713960  RFLAGS: 00010246
-    RAX: 0000000000000001  RBX: ffff89c6b1096000  RCX: 0000000000000000
-    RDX: ffff9a9481713990  RSI: 0000000000000024  RDI: 0000000000000000
-    RBP: 0000000000000080   R8: 0000000000000008   R9: ffff89c64341a2f8
-    R10: 0000000000000002  R11: 0000000000000000  R12: ffff89c648bab000
-    R13: 0000000000000000  R14: 0000000000000000  R15: ffff89c648bab0c8
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
- #7 [ffff9a9481713988] pci_enable_atomic_ops_to_root at ffffffffb95359a6
- #8 [ffff9a94817139c0] bnxt_qplib_determine_atomics at ffffffffc08c1a33 [bnxt_re]
- #9 [ffff9a94817139d0] bnxt_re_dev_init at ffffffffc08ba2d1 [bnxt_re]
-    RIP: 00007f450602f648  RSP: 00007ffe880869e8  RFLAGS: 00000246
-    RAX: ffffffffffffffda  RBX: 0000000000000002  RCX: 00007f450602f648
-    RDX: 0000000000000002  RSI: 0000555c566c4a60  RDI: 0000000000000001
-    RBP: 0000555c566c4a60   R8: 000000000000000a   R9: 00007f45060c2580
-    R10: 000000000000000a  R11: 0000000000000246  R12: 00007f45063026e0
-    R13: 0000000000000002  R14: 00007f45062fd880  R15: 0000000000000002
-    ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b
+Thanks for cleaning this up for us.
 
-AtomicOp Requester Enable bit in the Device Control 2 register
-is reserved for VFs and drivers shouldn't enable it for VFs.
-Adding a check to return EINVAL if pci_enable_atomic_ops_to_root
-is called with VF pci device.
+> Now pci_dev_assign_added() is called in pci_bus_add_device() which is
+> only called after scanning the device. Thus pci_dev_is_added() is always
+> false and can be dropped.
 
-Fixes: 35f5ace5dea4 ("RDMA/bnxt_re: Enable global atomic ops if platform supports")
-Fixes: 430a23689dea ("PCI: Add pci_enable_atomic_ops_to_root()")
-Signed-off-by: Selvin Xavier <selvin.xavier@broadcom.com>
----
- drivers/pci/pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+My only query is whether we can pin down when that changed.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aacf575..d968a36 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3702,6 +3702,14 @@ int pci_enable_atomic_ops_to_root(struct pci_dev *dev, u32 cap_mask)
- 	struct pci_dev *bridge;
- 	u32 cap, ctl2;
- 
-+	/*
-+	 * As per PCIe r5.0, sec 9.3.5.10, the AtomicOp Requester Enable
-+	 * bit in the Device Control 2 register is reserved in VFs and the PF
-+	 * value applies to all associated VFs. Return -EINVAL if called for VFs.
-+	 */
-+	if (dev->is_virtfn)
-+		return -EINVAL;
-+
- 	if (!pci_is_pcie(dev))
- 		return -EINVAL;
- 
--- 
-2.5.5
+Oliver said:
 
+  The use of pci_dev_is_added() in arch/powerpc was because in the past
+  pci_bus_add_device() could be called before pci_device_add(). That was
+  fixed a while ago so It should be safe to remove those calls now.
+
+I trawled back through the history a bit but I can't remember/find which
+commit changed that, Oliver can you remember?
+
+cheers
+
+> diff --git a/arch/powerpc/platforms/powernv/pci-sriov.c b/arch/powerpc/platforms/powernv/pci-sriov.c
+> index 28aac933a439..deddbb233fde 100644
+> --- a/arch/powerpc/platforms/powernv/pci-sriov.c
+> +++ b/arch/powerpc/platforms/powernv/pci-sriov.c
+> @@ -9,9 +9,6 @@
+>  
+>  #include "pci.h"
+>  
+> -/* for pci_dev_is_added() */
+> -#include "../../../../drivers/pci/pci.h"
+> -
+>  /*
+>   * The majority of the complexity in supporting SR-IOV on PowerNV comes from
+>   * the need to put the MMIO space for each VF into a separate PE. Internally
+> @@ -228,9 +225,6 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>  
+>  void pnv_pci_ioda_fixup_iov(struct pci_dev *pdev)
+>  {
+> -	if (WARN_ON(pci_dev_is_added(pdev)))
+> -		return;
+> -
+>  	if (pdev->is_virtfn) {
+>  		struct pnv_ioda_pe *pe = pnv_ioda_get_pe(pdev);
+>  
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index f79126f16258..2188054470c1 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -74,7 +74,6 @@
+>  #include <asm/hvconsole.h>
+>  
+>  #include "pseries.h"
+> -#include "../../../../drivers/pci/pci.h"
+>  
+>  DEFINE_STATIC_KEY_FALSE(shared_processor);
+>  EXPORT_SYMBOL(shared_processor);
+> @@ -750,7 +749,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
+>  	const int *indexes;
+>  	struct device_node *dn = pci_device_to_OF_node(pdev);
+>  
+> -	if (!pdev->is_physfn || pci_dev_is_added(pdev))
+> +	if (!pdev->is_physfn)
+>  		return;
+>  	/*Firmware must support open sriov otherwise dont configure*/
+>  	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
+> -- 
+> 2.25.1
