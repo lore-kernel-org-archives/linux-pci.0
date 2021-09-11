@@ -2,51 +2,47 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31738C43217
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:13:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE11C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:14:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D1ED61279
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:13:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 339A461350
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Sep 2021 13:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236096AbhIKNN0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Sep 2021 09:13:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37206 "EHLO mail.kernel.org"
+        id S236867AbhIKNPN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Sep 2021 09:15:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236001AbhIKNNT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Sep 2021 09:13:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B92A6611BF;
-        Sat, 11 Sep 2021 13:12:05 +0000 (UTC)
+        id S236135AbhIKNOG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 11 Sep 2021 09:14:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DD8696121E;
+        Sat, 11 Sep 2021 13:12:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631365926;
-        bh=2++X2B/yiaUbM2dzTHy03CmMwNl4sfW4HXCcQwfTfNA=;
+        s=k20201202; t=1631365959;
+        bh=hVGvog/8hI1h0NAHMF/JWs+W8KzaP96bzRk/ch84rHw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OA6ektcPGUUkv+NM1PIKorVc1aiOz9N0TDwmmuL2c12D6KthSe3jjYEOCXW9Inu7y
-         99xn1ADCO8BpdEH+BqRcHenZNkNK8I4Q0bNcgRzl9djvtvC9H2ykX4bp6qDWYnkqbD
-         4+/4G2uS2xFMjbOVEZrKE+/8fhsAtHv5CiUPZCat5CgvC1zmEnAhlp72o8LAtgdDFi
-         tkzSncvLFA0qspL19CXlXkOBEJNTGce2MIB5YlnuNyr2mpSRIxyrMjEFisEvW1etxr
-         lL3YsernSSO+Q5e0sbKL4pCSXx/fc2KrRfQ5Y4RuUWl95tLAlV8SUvlNKy8KkcYcRP
-         /nWihtQ4A/hiQ==
+        b=r7GELuCOZ18TcDEEIZf0C8iIjM0miMjcj0NCUUI+g/Da1Qaw/6PJSpygE/O7gi7Kx
+         3WKY8eb5qPMTnYPWLMv2pwc36ZcrA0ZgkKBvOh5Ayat5TqU+5wP4fCnjnv7RGEzPMu
+         EcWg2mL4pLd0kH0aTi5GfT41l5MIGiUp7CIgnhSeHqxz6P1nXAjKcGBGKBKQfgdoTH
+         j3GG0F/WSGViNIcyRYLB7JGQ9xlTrvNc/keJNHgpQIqe/GxslyNMg3Go5JHzTCJAmx
+         Cc1/NV5WbUycy3nYMT3VVRHpSY0nqQTTZiMNrT/u+oZUIfEgV7beuLQW5ti6oj2K8g
+         MNk9UIbRqEcJA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Cc:     Wasim Khan <wasim.khan@nxp.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        linux-renesas-soc@vger.kernel.org, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 12/32] PCI: rcar: Add L1 link state fix into data abort hook
-Date:   Sat, 11 Sep 2021 09:11:29 -0400
-Message-Id: <20210911131149.284397-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 04/29] PCI: Add ACS quirks for NXP LX2xx0 and LX2xx2 platforms
+Date:   Sat, 11 Sep 2021 09:12:08 -0400
+Message-Id: <20210911131233.284800-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210911131149.284397-1-sashal@kernel.org>
-References: <20210911131149.284397-1-sashal@kernel.org>
+In-Reply-To: <20210911131233.284800-1-sashal@kernel.org>
+References: <20210911131233.284800-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,186 +51,146 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: Wasim Khan <wasim.khan@nxp.com>
 
-[ Upstream commit a115b1bd3af0c2963e72f6e47143724c59251be6 ]
+[ Upstream commit d08c8b855140e9f5240b3ffd1b8b9d435675e281 ]
 
-When the link is in L1, hardware should return it to L0
-automatically whenever a transaction targets a component on the
-other end of the link (PCIe r5.0, sec 5.2).
+Root Ports in NXP LX2xx0 and LX2xx2, where each Root Port is a Root Complex
+with unique segment numbers, do provide isolation features to disable peer
+transactions and validate bus numbers in requests, but do not provide an
+actual PCIe ACS capability.
 
-The R-Car PCIe controller doesn't handle this transition correctly.
-If the link is not in L0, an MMIO transaction targeting a downstream
-device fails, and the controller reports an ARM imprecise external
-abort.
+Add ACS quirks for NXP LX2xx0 A/C/E/N and LX2xx2 A/C/E/N platforms.
 
-Work around this by hooking the abort handler so the driver can
-detect this situation and help the hardware complete the link state
-transition.
+  LX2xx0A : without security features + CAN-FD
+    LX2160A (0x8d81) - 16 cores
+    LX2120A (0x8da1) - 12 cores
+    LX2080A (0x8d83) -  8 cores
 
-When the R-Car controller receives a PM_ENTER_L1 DLLP from the
-downstream component, it sets PMEL1RX bit in PMSR register, but then
-the controller enters some sort of in-between state.  A subsequent
-MMIO transaction will fail, resulting in the external abort.  The
-abort handler detects this condition and completes the link state
-transition by setting the L1IATN bit in PMCTLR and waiting for the
-link state transition to complete.
+  LX2xx0C : security features + CAN-FD
+    LX2160C (0x8d80) - 16 cores
+    LX2120C (0x8da0) - 12 cores
+    LX2080C (0x8d82) -  8 cores
 
-Link: https://lore.kernel.org/r/20210815181650.132579-1-marek.vasut@gmail.com
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: linux-renesas-soc@vger.kernel.org
+  LX2xx0E : security features + CAN
+    LX2160E (0x8d90) - 16 cores
+    LX2120E (0x8db0) - 12 cores
+    LX2080E (0x8d92) -  8 cores
+
+  LX2xx0N : without security features + CAN
+    LX2160N (0x8d91) - 16 cores
+    LX2120N (0x8db1) - 12 cores
+    LX2080N (0x8d93) -  8 cores
+
+  LX2xx2A : without security features + CAN-FD
+    LX2162A (0x8d89) - 16 cores
+    LX2122A (0x8da9) - 12 cores
+    LX2082A (0x8d8b) -  8 cores
+
+  LX2xx2C : security features + CAN-FD
+    LX2162C (0x8d88) - 16 cores
+    LX2122C (0x8da8) - 12 cores
+    LX2082C (0x8d8a) -  8 cores
+
+  LX2xx2E : security features + CAN
+    LX2162E (0x8d98) - 16 cores
+    LX2122E (0x8db8) - 12 cores
+    LX2082E (0x8d9a) -  8 cores
+
+  LX2xx2N : without security features + CAN
+    LX2162N (0x8d99) - 16 cores
+    LX2122N (0x8db9) - 12 cores
+    LX2082N (0x8d9b) -  8 cores
+
+[bhelgaas: put PCI_VENDOR_ID_NXP definition next to PCI_VENDOR_ID_FREESCALE
+as a clue that they share the same Device ID namespace]
+Link: https://lore.kernel.org/r/20210729121747.1823086-1-wasim.khan@oss.nxp.com
+Link: https://lore.kernel.org/r/20210803180021.3252886-1-wasim.khan@oss.nxp.com
+Signed-off-by: Wasim Khan <wasim.khan@nxp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-rcar-host.c | 86 +++++++++++++++++++++++++
- drivers/pci/controller/pcie-rcar.h      |  7 ++
- 2 files changed, 93 insertions(+)
+ drivers/pci/quirks.c    | 45 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h |  3 ++-
+ 2 files changed, 47 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index 765cf2b45e24..11fcaa54c169 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -13,12 +13,14 @@
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ab3de1551b50..a59658f1501e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4615,6 +4615,18 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+ 		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+ }
  
- #include <linux/bitops.h>
- #include <linux/clk.h>
-+#include <linux/clk-provider.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/iopoll.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-@@ -41,6 +43,21 @@ struct rcar_msi {
- 	int irq2;
- };
- 
-+#ifdef CONFIG_ARM
 +/*
-+ * Here we keep a static copy of the remapped PCIe controller address.
-+ * This is only used on aarch32 systems, all of which have one single
-+ * PCIe controller, to provide quick access to the PCIe controller in
-+ * the L1 link state fixup function, called from the ARM fault handler.
++ * Each of these NXP Root Ports is in a Root Complex with a unique segment
++ * number and does provide isolation features to disable peer transactions
++ * and validate bus numbers in requests, but does not provide an ACS
++ * capability.
 + */
-+static void __iomem *pcie_base;
-+/*
-+ * Static copy of bus clock pointer, so we can check whether the clock
-+ * is enabled or not.
-+ */
-+static struct clk *pcie_bus_clk;
-+#endif
-+
- /* Structure representing the PCIe interface */
- struct rcar_pcie_host {
- 	struct rcar_pcie	pcie;
-@@ -776,6 +793,12 @@ static int rcar_pcie_get_resources(struct rcar_pcie_host *host)
- 	}
- 	host->msi.irq2 = i;
- 
-+#ifdef CONFIG_ARM
-+	/* Cache static copy for L1 link state fixup hook on aarch32 */
-+	pcie_base = pcie->base;
-+	pcie_bus_clk = host->bus_clk;
-+#endif
-+
- 	return 0;
- 
- err_irq2:
-@@ -1031,4 +1054,67 @@ static struct platform_driver rcar_pcie_driver = {
- 	},
- 	.probe = rcar_pcie_probe,
- };
-+
-+#ifdef CONFIG_ARM
-+static DEFINE_SPINLOCK(pmsr_lock);
-+static int rcar_pcie_aarch32_abort_handler(unsigned long addr,
-+		unsigned int fsr, struct pt_regs *regs)
++static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u16 acs_flags)
 +{
-+	unsigned long flags;
-+	u32 pmsr, val;
-+	int ret = 0;
-+
-+	spin_lock_irqsave(&pmsr_lock, flags);
-+
-+	if (!pcie_base || !__clk_is_enabled(pcie_bus_clk)) {
-+		ret = 1;
-+		goto unlock_exit;
-+	}
-+
-+	pmsr = readl(pcie_base + PMSR);
-+
-+	/*
-+	 * Test if the PCIe controller received PM_ENTER_L1 DLLP and
-+	 * the PCIe controller is not in L1 link state. If true, apply
-+	 * fix, which will put the controller into L1 link state, from
-+	 * which it can return to L0s/L0 on its own.
-+	 */
-+	if ((pmsr & PMEL1RX) && ((pmsr & PMSTATE) != PMSTATE_L1)) {
-+		writel(L1IATN, pcie_base + PMCTLR);
-+		ret = readl_poll_timeout_atomic(pcie_base + PMSR, val,
-+						val & L1FAEG, 10, 1000);
-+		WARN(ret, "Timeout waiting for L1 link state, ret=%d\n", ret);
-+		writel(L1FAEG | PMEL1RX, pcie_base + PMSR);
-+	}
-+
-+unlock_exit:
-+	spin_unlock_irqrestore(&pmsr_lock, flags);
-+	return ret;
++	return pci_acs_ctrl_enabled(acs_flags,
++		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
 +}
 +
-+static const struct of_device_id rcar_pcie_abort_handler_of_match[] __initconst = {
-+	{ .compatible = "renesas,pcie-r8a7779" },
-+	{ .compatible = "renesas,pcie-r8a7790" },
-+	{ .compatible = "renesas,pcie-r8a7791" },
-+	{ .compatible = "renesas,pcie-rcar-gen2" },
-+	{},
-+};
-+
-+static int __init rcar_pcie_init(void)
-+{
-+	if (of_find_matching_node(NULL, rcar_pcie_abort_handler_of_match)) {
-+#ifdef CONFIG_ARM_LPAE
-+		hook_fault_code(17, rcar_pcie_aarch32_abort_handler, SIGBUS, 0,
-+				"asynchronous external abort");
-+#else
-+		hook_fault_code(22, rcar_pcie_aarch32_abort_handler, SIGBUS, 0,
-+				"imprecise external abort");
-+#endif
-+	}
-+
-+	return platform_driver_register(&rcar_pcie_driver);
-+}
-+device_initcall(rcar_pcie_init);
-+#else
- builtin_platform_driver(rcar_pcie_driver);
-+#endif
-diff --git a/drivers/pci/controller/pcie-rcar.h b/drivers/pci/controller/pcie-rcar.h
-index d4c698b5f821..9bb125db85c6 100644
---- a/drivers/pci/controller/pcie-rcar.h
-+++ b/drivers/pci/controller/pcie-rcar.h
-@@ -85,6 +85,13 @@
- #define  LTSMDIS		BIT(31)
- #define  MACCTLR_INIT_VAL	(LTSMDIS | MACCTLR_NFTS_MASK)
- #define PMSR			0x01105c
-+#define  L1FAEG			BIT(31)
-+#define  PMEL1RX		BIT(23)
-+#define  PMSTATE		GENMASK(18, 16)
-+#define  PMSTATE_L1		(3 << 16)
-+#define PMCTLR			0x011060
-+#define  L1IATN			BIT(31)
-+
- #define MACS2R			0x011078
- #define MACCGSPSETR		0x011084
- #define  SPCNGRSN		BIT(31)
+ static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+@@ -4861,6 +4873,39 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3038, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x3104, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x9083, pci_quirk_mf_endpoint_acs },
++	/* NXP root ports, xx=16, 12, or 08 cores */
++	/* LX2xx0A : without security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d81, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da1, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d83, pci_quirk_nxp_rp_acs },
++	/* LX2xx0C : security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d80, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da0, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d82, pci_quirk_nxp_rp_acs },
++	/* LX2xx0E : security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d90, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db0, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d92, pci_quirk_nxp_rp_acs },
++	/* LX2xx0N : without security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d91, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db1, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d93, pci_quirk_nxp_rp_acs },
++	/* LX2xx2A : without security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d89, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da9, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d8b, pci_quirk_nxp_rp_acs },
++	/* LX2xx2C : security features + CAN-FD */
++	{ PCI_VENDOR_ID_NXP, 0x8d88, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8da8, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d8a, pci_quirk_nxp_rp_acs },
++	/* LX2xx2E : security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d98, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db8, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d9a, pci_quirk_nxp_rp_acs },
++	/* LX2xx2N : without security features + CAN */
++	{ PCI_VENDOR_ID_NXP, 0x8d99, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8db9, pci_quirk_nxp_rp_acs },
++	{ PCI_VENDOR_ID_NXP, 0x8d9b, pci_quirk_nxp_rp_acs },
+ 	/* Zhaoxin Root/Downstream Ports */
+ 	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
+ 	{ 0 }
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 4c3fa5293d76..54a30f16c758 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2448,7 +2448,8 @@
+ #define PCI_VENDOR_ID_TDI               0x192E
+ #define PCI_DEVICE_ID_TDI_EHCI          0x0101
+ 
+-#define PCI_VENDOR_ID_FREESCALE		0x1957
++#define PCI_VENDOR_ID_FREESCALE		0x1957	/* duplicate: NXP */
++#define PCI_VENDOR_ID_NXP		0x1957	/* duplicate: FREESCALE */
+ #define PCI_DEVICE_ID_MPC8308		0xc006
+ #define PCI_DEVICE_ID_MPC8315E		0x00b4
+ #define PCI_DEVICE_ID_MPC8315		0x00b5
 -- 
 2.30.2
 
