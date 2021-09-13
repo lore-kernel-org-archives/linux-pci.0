@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C977EC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB81C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7E816023F
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4819608FB
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239812AbhIMS1Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Sep 2021 14:27:24 -0400
+        id S1347104AbhIMS1s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Sep 2021 14:27:48 -0400
 Received: from mail.kernel.org ([198.145.29.99]:59704 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236669AbhIMS1V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Sep 2021 14:27:21 -0400
+        id S239601AbhIMS1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Sep 2021 14:27:23 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CB607610E6;
-        Mon, 13 Sep 2021 18:26:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9B6216108B;
+        Mon, 13 Sep 2021 18:26:07 +0000 (UTC)
 Received: from [198.52.44.129] (helo=wait-a-minute.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <maz@kernel.org>)
-        id 1mPqea-00AYPD-3V; Mon, 13 Sep 2021 19:26:04 +0100
+        id 1mPqeb-00AYPD-Vd; Mon, 13 Sep 2021 19:26:06 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
@@ -41,9 +41,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Sven Peter <sven@svenpeter.dev>,
         Hector Martin <marcan@marcan.st>,
         Robin Murphy <Robin.Murphy@arm.com>, kernel-team@android.com
-Subject: [PATCH v3 03/10] PCI: of: Allow matching of an interrupt-map local to a pci device
-Date:   Mon, 13 Sep 2021 19:25:43 +0100
-Message-Id: <20210913182550.264165-4-maz@kernel.org>
+Subject: [PATCH v3 05/10] PCI: apple: Set up reference clocks when probing
+Date:   Mon, 13 Sep 2021 19:25:45 +0100
+Message-Id: <20210913182550.264165-6-maz@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913182550.264165-1-maz@kernel.org>
 References: <20210913182550.264165-1-maz@kernel.org>
@@ -57,47 +57,83 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Just as we now allow an interrupt map to be parsed when part
-of an interrupt controller, there is no reason to ignore an
-interrupt map that would be part of a pci device node such as
-a root port since we already allow interrupt specifiers.
+From: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 
-This allows the device itself to use the interrupt map for
-for its own purpose.
+Apple's PCIe controller requires clocks to be configured in order to
+bring up the hardware. Add the register pokes required to do so.
 
+Adapted from Corellium's driver via Mark Kettenis's U-Boot patches.
+
+Co-developed-by: Stan Skowronek <stan@corellium.com>
+Signed-off-by: Stan Skowronek <stan@corellium.com>
+Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
+Link: https://lore.kernel.org/r/20210816031621.240268-4-alyssa@rosenzweig.io
 ---
- drivers/pci/of.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-apple.c | 44 +++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index d84381ce82b5..443cebb0622e 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -423,7 +423,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
-  */
- static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
--	struct device_node *dn, *ppnode;
-+	struct device_node *dn, *ppnode = NULL;
- 	struct pci_dev *ppdev;
- 	__be32 laddr[3];
- 	u8 pin;
-@@ -452,8 +452,14 @@ static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *
- 	if (pin == 0)
- 		return -ENODEV;
+diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+index f3c414950a10..dabbfc2e1fb0 100644
+--- a/drivers/pci/controller/pcie-apple.c
++++ b/drivers/pci/controller/pcie-apple.c
+@@ -132,6 +132,46 @@ static inline void rmwl(u32 clr, u32 set, void __iomem *addr)
+ 	writel_relaxed((readl_relaxed(addr) & ~clr) | set, addr);
+ }
  
-+	/* Local interrupt-map in the device node? Use it! */
-+	if (dn && of_get_property(dn, "interrupt-map", NULL)) {
-+		pin = pci_swizzle_interrupt_pin(pdev, pin);
-+		ppnode = dn;
-+	}
++static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
++				   struct apple_pcie_port *port)
++{
++	u32 stat;
++	int res;
 +
- 	/* Now we walk up the PCI tree */
--	for (;;) {
-+	while (!ppnode) {
- 		/* Get the pci_dev of our parent */
- 		ppdev = pdev->bus->self;
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_RC_PHYIF_STAT, stat,
++					 stat & CORE_RC_PHYIF_STAT_REFCLK,
++					 100, 50000);
++	if (res < 0)
++		return res;
++
++	rmwl(0, CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
++	rmwl(0, CORE_LANE_CFG_REFCLK0REQ, pcie->base + CORE_LANE_CFG(port->idx));
++
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
++					 stat, stat & CORE_LANE_CFG_REFCLK0ACK,
++					 100, 50000);
++	if (res < 0)
++		return res;
++
++	rmwl(0, CORE_LANE_CFG_REFCLK1, pcie->base + CORE_LANE_CFG(port->idx));
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
++					 stat, stat & CORE_LANE_CFG_REFCLK1,
++					 100, 50000);
++
++	if (res < 0)
++		return res;
++
++	rmwl(CORE_LANE_CTL_CFGACC, 0, pcie->base + CORE_LANE_CTL(port->idx));
++
++	/* Flush writes before enabling the clocks */
++	dma_wmb();
++
++	rmwl(0, CORE_LANE_CFG_REFCLKEN, pcie->base + CORE_LANE_CFG(port->idx));
++	rmwl(0, PORT_REFCLK_EN, port->base + PORT_REFCLK);
++
++	return 0;
++}
++
+ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 				 struct device_node *np)
+ {
+@@ -165,6 +205,10 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 
+ 	rmwl(0, PORT_APPCLK_EN, port + PORT_APPCLK);
+ 
++	ret = apple_pcie_setup_refclk(pcie, port);
++	if (ret < 0)
++		return ret;
++
+ 	rmwl(0, PORT_PERST_OFF, port->base + PORT_PERST);
+ 	gpiod_set_value(reset, 1);
  
 -- 
 2.30.2
