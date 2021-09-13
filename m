@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B074C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C977EC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2541D60F46
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7E816023F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343777AbhIMS1o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Sep 2021 14:27:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60010 "EHLO mail.kernel.org"
+        id S239812AbhIMS1Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Sep 2021 14:27:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59704 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240010AbhIMS11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Sep 2021 14:27:27 -0400
+        id S236669AbhIMS1V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Sep 2021 14:27:21 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3E9E8610E6;
-        Mon, 13 Sep 2021 18:26:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CB607610E6;
+        Mon, 13 Sep 2021 18:26:05 +0000 (UTC)
 Received: from [198.52.44.129] (helo=wait-a-minute.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <maz@kernel.org>)
-        id 1mPqef-00AYPD-IF; Mon, 13 Sep 2021 19:26:09 +0100
+        id 1mPqea-00AYPD-3V; Mon, 13 Sep 2021 19:26:04 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
@@ -41,9 +41,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Sven Peter <sven@svenpeter.dev>,
         Hector Martin <marcan@marcan.st>,
         Robin Murphy <Robin.Murphy@arm.com>, kernel-team@android.com
-Subject: [PATCH v3 09/10] iommu/dart: Exclude MSI doorbell from PCIe device IOVA range
-Date:   Mon, 13 Sep 2021 19:25:49 +0100
-Message-Id: <20210913182550.264165-10-maz@kernel.org>
+Subject: [PATCH v3 03/10] PCI: of: Allow matching of an interrupt-map local to a pci device
+Date:   Mon, 13 Sep 2021 19:25:43 +0100
+Message-Id: <20210913182550.264165-4-maz@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913182550.264165-1-maz@kernel.org>
 References: <20210913182550.264165-1-maz@kernel.org>
@@ -57,93 +57,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The MSI doorbell on Apple HW can be any address in the low 4GB
-range. However, the MSI write is matched by the PCIe block before
-hitting the iommu. It must thus be excluded from the IOVA range
-that is assigned to any PCIe device.
+Just as we now allow an interrupt map to be parsed when part
+of an interrupt controller, there is no reason to ignore an
+interrupt map that would be part of a pci device node such as
+a root port since we already allow interrupt specifiers.
+
+This allows the device itself to use the interrupt map for
+for its own purpose.
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/iommu/apple-dart.c          | 25 +++++++++++++++++++++++++
- drivers/pci/controller/Kconfig      |  5 +++++
- drivers/pci/controller/pcie-apple.c |  4 +++-
- 3 files changed, 33 insertions(+), 1 deletion(-)
+ drivers/pci/of.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/apple-dart.c b/drivers/iommu/apple-dart.c
-index 559db9259e65..d1456663688e 100644
---- a/drivers/iommu/apple-dart.c
-+++ b/drivers/iommu/apple-dart.c
-@@ -721,6 +721,29 @@ static int apple_dart_def_domain_type(struct device *dev)
- 	return 0;
- }
- 
-+#define DOORBELL_ADDR	(CONFIG_PCIE_APPLE_MSI_DOORBELL_ADDR & PAGE_MASK)
-+
-+static void apple_dart_get_resv_regions(struct device *dev,
-+					struct list_head *head)
-+{
-+#ifdef CONFIG_PCIE_APPLE
-+	if (dev_is_pci(dev)) {
-+		struct iommu_resv_region *region;
-+		int prot = IOMMU_WRITE | IOMMU_NOEXEC | IOMMU_MMIO;
-+
-+		region = iommu_alloc_resv_region(DOORBELL_ADDR,
-+						 PAGE_SIZE, prot,
-+						 IOMMU_RESV_MSI);
-+		if (!region)
-+			return;
-+
-+		list_add_tail(&region->list, head);
-+	}
-+#endif
-+
-+	iommu_dma_get_resv_regions(dev, head);
-+}
-+
- static const struct iommu_ops apple_dart_iommu_ops = {
- 	.domain_alloc = apple_dart_domain_alloc,
- 	.domain_free = apple_dart_domain_free,
-@@ -737,6 +760,8 @@ static const struct iommu_ops apple_dart_iommu_ops = {
- 	.device_group = apple_dart_device_group,
- 	.of_xlate = apple_dart_of_xlate,
- 	.def_domain_type = apple_dart_def_domain_type,
-+	.get_resv_regions = apple_dart_get_resv_regions,
-+	.put_resv_regions = generic_iommu_put_resv_regions,
- 	.pgsize_bitmap = -1UL, /* Restricted during dart probe */
- };
- 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 814833a8120d..b6e7410da254 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -312,6 +312,11 @@ config PCIE_HISI_ERR
- 	  Say Y here if you want error handling support
- 	  for the PCIe controller's errors on HiSilicon HIP SoCs
- 
-+config PCIE_APPLE_MSI_DOORBELL_ADDR
-+	hex
-+	default 0xfffff000
-+	depends on PCIE_APPLE
-+
- config PCIE_APPLE
- 	tristate "Apple PCIe controller"
- 	depends on ARCH_APPLE || COMPILE_TEST
-diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index 1ed7b90f8360..76344223245d 100644
---- a/drivers/pci/controller/pcie-apple.c
-+++ b/drivers/pci/controller/pcie-apple.c
-@@ -120,8 +120,10 @@
-  * The doorbell address is set to 0xfffff000, which by convention
-  * matches what MacOS does, and it is possible to use any other
-  * address (in the bottom 4GB, as the base register is only 32bit).
-+ * However, it has to be excluded from the the IOVA range, and the
-+ * DART driver has to know about it.
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index d84381ce82b5..443cebb0622e 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -423,7 +423,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
   */
--#define DOORBELL_ADDR			0xfffff000
-+#define DOORBELL_ADDR		CONFIG_PCIE_APPLE_MSI_DOORBELL_ADDR
+ static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+-	struct device_node *dn, *ppnode;
++	struct device_node *dn, *ppnode = NULL;
+ 	struct pci_dev *ppdev;
+ 	__be32 laddr[3];
+ 	u8 pin;
+@@ -452,8 +452,14 @@ static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *
+ 	if (pin == 0)
+ 		return -ENODEV;
  
- struct apple_pcie {
- 	struct mutex		lock;
++	/* Local interrupt-map in the device node? Use it! */
++	if (dn && of_get_property(dn, "interrupt-map", NULL)) {
++		pin = pci_swizzle_interrupt_pin(pdev, pin);
++		ppnode = dn;
++	}
++
+ 	/* Now we walk up the PCI tree */
+-	for (;;) {
++	while (!ppnode) {
+ 		/* Get the pci_dev of our parent */
+ 		ppdev = pdev->bus->self;
+ 
 -- 
 2.30.2
 
