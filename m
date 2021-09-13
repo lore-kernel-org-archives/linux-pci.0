@@ -3,31 +3,31 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB81C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F99C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4819608FB
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:26:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0DA560F9F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 18:27:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347104AbhIMS1s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Sep 2021 14:27:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59704 "EHLO mail.kernel.org"
+        id S239952AbhIMS2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Sep 2021 14:28:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239601AbhIMS1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Sep 2021 14:27:23 -0400
+        id S1347266AbhIMS2F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Sep 2021 14:28:05 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9B6216108B;
-        Mon, 13 Sep 2021 18:26:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6DF95608FB;
+        Mon, 13 Sep 2021 18:26:49 +0000 (UTC)
 Received: from [198.52.44.129] (helo=wait-a-minute.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <maz@kernel.org>)
-        id 1mPqeb-00AYPD-Vd; Mon, 13 Sep 2021 19:26:06 +0100
+        id 1mPqeg-00AYPD-Ht; Mon, 13 Sep 2021 19:26:10 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
@@ -41,9 +41,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Sven Peter <sven@svenpeter.dev>,
         Hector Martin <marcan@marcan.st>,
         Robin Murphy <Robin.Murphy@arm.com>, kernel-team@android.com
-Subject: [PATCH v3 05/10] PCI: apple: Set up reference clocks when probing
-Date:   Mon, 13 Sep 2021 19:25:45 +0100
-Message-Id: <20210913182550.264165-6-maz@kernel.org>
+Subject: [PATCH v3 10/10] PCI: apple: Configure RID to SID mapper on device addition
+Date:   Mon, 13 Sep 2021 19:25:50 +0100
+Message-Id: <20210913182550.264165-11-maz@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210913182550.264165-1-maz@kernel.org>
 References: <20210913182550.264165-1-maz@kernel.org>
@@ -57,84 +57,267 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alyssa Rosenzweig <alyssa@rosenzweig.io>
+The Apple PCIe controller doesn't directly feed the endpoint's
+Requester ID to the IOMMU (DART), but instead maps RIDs onto
+Stream IDs (SIDs). The DART and the PCIe controller must thus
+agree on the SIDs that are used for translation (by using
+the 'iommu-map' property).
 
-Apple's PCIe controller requires clocks to be configured in order to
-bring up the hardware. Add the register pokes required to do so.
+For this purpose, parse the 'iommu-map' property each time a
+device gets added, and use the resulting translation to configure
+the PCIe RID-to-SID mapper. Similarily, remove the translation
+if/when the device gets removed.
 
-Adapted from Corellium's driver via Mark Kettenis's U-Boot patches.
+This is all driven from a bus notifier which gets registered at
+probe time. Hopefully this is the only PCI controller driver
+in the whole system.
 
-Co-developed-by: Stan Skowronek <stan@corellium.com>
-Signed-off-by: Stan Skowronek <stan@corellium.com>
-Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
-Link: https://lore.kernel.org/r/20210816031621.240268-4-alyssa@rosenzweig.io
 ---
- drivers/pci/controller/pcie-apple.c | 44 +++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ drivers/pci/controller/pcie-apple.c | 158 +++++++++++++++++++++++++++-
+ 1 file changed, 156 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index f3c414950a10..dabbfc2e1fb0 100644
+index 76344223245d..68d71eabe708 100644
 --- a/drivers/pci/controller/pcie-apple.c
 +++ b/drivers/pci/controller/pcie-apple.c
-@@ -132,6 +132,46 @@ static inline void rmwl(u32 clr, u32 set, void __iomem *addr)
- 	writel_relaxed((readl_relaxed(addr) & ~clr) | set, addr);
+@@ -23,8 +23,10 @@
+ #include <linux/iopoll.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/list.h>
+ #include <linux/module.h>
+ #include <linux/msi.h>
++#include <linux/notifier.h>
+ #include <linux/of_irq.h>
+ #include <linux/pci-ecam.h>
+ 
+@@ -116,6 +118,8 @@
+ #define   PORT_TUNSTAT_PERST_ACK_PEND	BIT(1)
+ #define PORT_PREFMEM_ENABLE		0x00994
+ 
++#define MAX_RID2SID			64
++
+ /*
+  * The doorbell address is set to 0xfffff000, which by convention
+  * matches what MacOS does, and it is possible to use any other
+@@ -131,6 +135,7 @@ struct apple_pcie {
+ 	void __iomem            *base;
+ 	struct irq_domain	*domain;
+ 	unsigned long		*bitmap;
++	struct list_head	ports;
+ 	struct completion	event;
+ 	struct irq_fwspec	fwspec;
+ 	u32			nvecs;
+@@ -141,6 +146,8 @@ struct apple_pcie_port {
+ 	struct device_node	*np;
+ 	void __iomem		*base;
+ 	struct irq_domain	*domain;
++	struct list_head	entry;
++	DECLARE_BITMAP(		sid_map, MAX_RID2SID);
+ 	int			idx;
+ };
+ 
+@@ -488,6 +495,14 @@ static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
+ 	return 0;
  }
  
-+static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
-+				   struct apple_pcie_port *port)
++static void apple_pcie_rid2sid_write(struct apple_pcie_port *port,
++				     int idx, u32 val)
 +{
-+	u32 stat;
-+	int res;
-+
-+	res = readl_relaxed_poll_timeout(pcie->base + CORE_RC_PHYIF_STAT, stat,
-+					 stat & CORE_RC_PHYIF_STAT_REFCLK,
-+					 100, 50000);
-+	if (res < 0)
-+		return res;
-+
-+	rmwl(0, CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
-+	rmwl(0, CORE_LANE_CFG_REFCLK0REQ, pcie->base + CORE_LANE_CFG(port->idx));
-+
-+	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
-+					 stat, stat & CORE_LANE_CFG_REFCLK0ACK,
-+					 100, 50000);
-+	if (res < 0)
-+		return res;
-+
-+	rmwl(0, CORE_LANE_CFG_REFCLK1, pcie->base + CORE_LANE_CFG(port->idx));
-+	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
-+					 stat, stat & CORE_LANE_CFG_REFCLK1,
-+					 100, 50000);
-+
-+	if (res < 0)
-+		return res;
-+
-+	rmwl(CORE_LANE_CTL_CFGACC, 0, pcie->base + CORE_LANE_CTL(port->idx));
-+
-+	/* Flush writes before enabling the clocks */
-+	dma_wmb();
-+
-+	rmwl(0, CORE_LANE_CFG_REFCLKEN, pcie->base + CORE_LANE_CFG(port->idx));
-+	rmwl(0, PORT_REFCLK_EN, port->base + PORT_REFCLK);
-+
-+	return 0;
++	writel_relaxed(val, port->base + PORT_RID2SID(idx));
++	/* Read back to ensure completion of the write */
++	(void)readl_relaxed(port->base + PORT_RID2SID(idx));
 +}
 +
  static int apple_pcie_setup_port(struct apple_pcie *pcie,
  				 struct device_node *np)
  {
-@@ -165,6 +205,10 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+@@ -495,7 +510,7 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 	struct apple_pcie_port *port;
+ 	struct gpio_desc *reset;
+ 	u32 stat, idx;
+-	int ret;
++	int ret, i;
  
- 	rmwl(0, PORT_APPCLK_EN, port + PORT_APPCLK);
+ 	reset = gpiod_get_from_of_node(np, "reset-gpios", 0,
+ 				       GPIOD_OUT_LOW, "#PERST");
+@@ -542,6 +557,11 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 	if (ret)
+ 		return ret;
  
-+	ret = apple_pcie_setup_refclk(pcie, port);
-+	if (ret < 0)
++	/* Reset all RID/SID mappings */
++	for (i = 0; i < MAX_RID2SID; i++)
++		apple_pcie_rid2sid_write(port, i, 0);
++
++	list_add_tail(&port->entry, &pcie->ports);
+ 	init_completion(&pcie->event);
+ 
+ 	ret = apple_pcie_port_register_irqs(port);
+@@ -604,6 +624,122 @@ static int apple_msi_init(struct apple_pcie *pcie)
+ 	return 0;
+ }
+ 
++static struct apple_pcie_port *apple_pcie_get_port(struct pci_dev *pdev)
++{
++	struct pci_config_window *cfg = pdev->sysdata;
++	struct apple_pcie *pcie = cfg->priv;
++	struct pci_dev *port_pdev = pdev;
++	struct apple_pcie_port *port;
++
++	/* Find the root port this device is on */
++	while (!pci_is_root_bus(port_pdev->bus))
++		port_pdev = pci_upstream_bridge(port_pdev);
++
++	/* If finding the port itself, nothing to do */
++	if (pdev == port_pdev)
++		return NULL;
++
++	list_for_each_entry(port, &pcie->ports, entry) {
++		if (port->idx == PCI_SLOT(port_pdev->devfn))
++			return port;
++	}
++
++	return NULL;
++}
++
++static int apple_pcie_add_device(struct pci_dev *pdev)
++{
++	struct apple_pcie_port *port;
++	int sid_idx, err;
++	u32 rid, sid;
++
++	port = apple_pcie_get_port(pdev);
++	if (!port)
++		return 0;
++
++	dev_dbg(&pdev->dev, "added to bus %s, index %d\n",
++		pci_name(pdev->bus->self), port->idx);
++
++	rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
++	err = of_map_id(port->pcie->dev->of_node, rid, "iommu-map",
++			"iommu-map-mask", NULL, &sid);
++	if (err)
++		return err;
++
++	mutex_lock(&port->pcie->lock);
++	sid_idx = bitmap_find_free_region(port->sid_map, MAX_RID2SID, 0);
++	mutex_unlock(&port->pcie->lock);
++
++	if (sid_idx < 0)
++		return -ENOSPC;
++
++	apple_pcie_rid2sid_write(port, sid_idx,
++				 PORT_RID2SID_VALID |
++				 (sid << PORT_RID2SID_SID_SHIFT) | rid);
++
++	dev_dbg(&pdev->dev, "mapping RID%x to SID%x (index %d)\n",
++		rid, sid, sid_idx);
++	return 0;
++}
++
++static void apple_pcie_release_device(struct pci_dev *pdev)
++{
++	struct apple_pcie_port *port;
++	u32 rid;
++	int idx;
++
++	port = apple_pcie_get_port(pdev);
++	if (!port)
++		return;
++
++	rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
++
++	mutex_lock(&port->pcie->lock);
++
++	for_each_set_bit(idx, port->sid_map, MAX_RID2SID) {
++		u32 val;
++
++		val = readl_relaxed(port->base + PORT_RID2SID(idx));
++		if ((val & 0xffff) == rid) {
++			apple_pcie_rid2sid_write(port, idx, 0);
++			bitmap_release_region(port->sid_map, idx, 0);
++			dev_dbg(&pdev->dev, "Released %x (%d)\n", val, idx);
++			break;
++		}
++	}
++
++	mutex_unlock(&port->pcie->lock);
++}
++
++static int apple_pcie_bus_notifier(struct notifier_block *nb,
++				   unsigned long action,
++				   void *data)
++{
++	struct device *dev = data;
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	/*
++	 * This is a bit ugly. We assume that if we get notified for
++	 * any PCI device, we must be in charge for it, and that there
++	 * is no other PCI controller in the whole system. It probably
++	 * holds for now, but for how long?
++	 */
++	switch (action) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		apple_pcie_add_device(pdev);
++		break;
++	case BUS_NOTIFY_DEL_DEVICE:
++		apple_pcie_release_device(pdev);
++		break;
++	}
++
++	return 0;
++}
++
++static struct notifier_block apple_pcie_nb = {
++	.notifier_call = apple_pcie_bus_notifier,
++};
++
+ static int apple_pcie_init(struct pci_config_window *cfg)
+ {
+ 	struct device *dev = cfg->parent;
+@@ -625,6 +761,9 @@ static int apple_pcie_init(struct pci_config_window *cfg)
+ 	if (IS_ERR(pcie->base))
+ 		return -ENODEV;
+ 
++	cfg->priv = pcie;
++	INIT_LIST_HEAD(&pcie->ports);
++
+ 	for_each_child_of_node(dev->of_node, of_port) {
+ 		ret = apple_pcie_setup_port(pcie, of_port);
+ 		if (ret) {
+@@ -636,6 +775,21 @@ static int apple_pcie_init(struct pci_config_window *cfg)
+ 	return apple_msi_init(pcie);
+ }
+ 
++static int apple_pcie_probe(struct platform_device *pdev)
++{
++	int ret;
++
++	ret = bus_register_notifier(&pci_bus_type, &apple_pcie_nb);
++	if (ret)
 +		return ret;
 +
- 	rmwl(0, PORT_PERST_OFF, port->base + PORT_PERST);
- 	gpiod_set_value(reset, 1);
++	ret = pci_host_common_probe(pdev);
++	if (ret)
++		bus_unregister_notifier(&pci_bus_type, &apple_pcie_nb);
++
++	return ret;
++}
++
+ static const struct pci_ecam_ops apple_pcie_cfg_ecam_ops = {
+ 	.init		= apple_pcie_init,
+ 	.pci_ops	= {
+@@ -652,7 +806,7 @@ static const struct of_device_id apple_pcie_of_match[] = {
+ MODULE_DEVICE_TABLE(of, apple_pcie_of_match);
  
+ static struct platform_driver apple_pcie_driver = {
+-	.probe	= pci_host_common_probe,
++	.probe	= apple_pcie_probe,
+ 	.driver	= {
+ 		.name			= "pcie-apple",
+ 		.of_match_table		= apple_pcie_of_match,
 -- 
 2.30.2
 
