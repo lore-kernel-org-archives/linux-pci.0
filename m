@@ -2,98 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 790BCC433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 19:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E219C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 20:06:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C95560F92
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 19:51:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6989060273
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Sep 2021 20:06:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241952AbhIMTxG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Sep 2021 15:53:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36432 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240595AbhIMTxG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Sep 2021 15:53:06 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D3BC061574
-        for <linux-pci@vger.kernel.org>; Mon, 13 Sep 2021 12:51:49 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id x27so23476439lfu.5
-        for <linux-pci@vger.kernel.org>; Mon, 13 Sep 2021 12:51:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kxvUYX6CB3TPUGmS7/jpbE8VMgExYcmzVlWcGHNrPMo=;
-        b=IN/N1k7/0uf237nbjPVVzTVJSgFN3bYd99A9aKFIa+jtt3IMsGJBP6PGYvX1MYdSOD
-         Civ/GgKm3CjDaxnbSQDJxmnw//gK3twKZDeiTEe9al8sr846qp1Sw9kfisxCaORn4y/l
-         BKkBR51JKLXBSO2qGB/Td3zGyCHB78Az8LPRw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=kxvUYX6CB3TPUGmS7/jpbE8VMgExYcmzVlWcGHNrPMo=;
-        b=QHmDjaDGKTLPj1DPCE0TbREjXt2GA4mFr+BLhwRXAyT6L5Z6bXEORhxgzGqlst02wR
-         UJANWSnkz4GARJbXwQjsMNavA8EBUfLRtYKlPQp2MY1NgUVx77E9fgKCIwldACnu9U+6
-         KejwvdRXTd5a+tmHEoyuBr9nNQzdXuoLOOygb7NAHpXHT0ClVaOuWfCf568mGTvExgOx
-         ITjCWsEsomuyAeB2s5aX7fIxXUsSTkR2kV2TR4Us2nCXI8aR0Mms8J09BptbcKFxHc9e
-         Lr1Go+GAnI6E2lALAlRDNtYw9sYMGtsFQEkULZlrcnx43kk0pFrWgZc7piWLH3um/ZjG
-         +O4g==
-X-Gm-Message-State: AOAM530pA2xxujWqWGA46wKOxz22gcQAN11MnqxXhcjyUOTVUUvD8tZU
-        zE/nTZrhwONYUE1YS6zADt/6u3QlXQyqyIZcF0k=
-X-Google-Smtp-Source: ABdhPJxYJNFZn3REemLvEyL9i4h9qqrqUFSXrxi83HSQMjOaXj8qB7snTeO7TffLARPbPgpDYD3MGQ==
-X-Received: by 2002:a05:6512:3f13:: with SMTP id y19mr9783390lfa.211.1631562707600;
-        Mon, 13 Sep 2021 12:51:47 -0700 (PDT)
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com. [209.85.167.47])
-        by smtp.gmail.com with ESMTPSA id a13sm1087679ljn.120.2021.09.13.12.51.46
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Sep 2021 12:51:47 -0700 (PDT)
-Received: by mail-lf1-f47.google.com with SMTP id k13so23479985lfv.2
-        for <linux-pci@vger.kernel.org>; Mon, 13 Sep 2021 12:51:46 -0700 (PDT)
-X-Received: by 2002:a05:6512:3da5:: with SMTP id k37mr10374035lfv.655.1631562706727;
- Mon, 13 Sep 2021 12:51:46 -0700 (PDT)
+        id S1348005AbhIMUH7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Sep 2021 16:07:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55296 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S243686AbhIMUHv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Sep 2021 16:07:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C69B1603E7;
+        Mon, 13 Sep 2021 20:06:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631563594;
+        bh=3yFwcmqPP0hoGNG3nmRXFMkzTerRnRmkpH0gswnmdnE=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=jW8jwgj1Tgrv8xzlVBul8jLuM0pvI1YI7V7Px60Pl0SaQ9zcRwVC7ONy/ysZ6+x90
+         cA1whEa1/KMcW5vbC/l4h2nELNE2RpZWmNKfP1etScZgia0GZZWa27V0VA1sw9hbOI
+         jBrhC2ydhEfmV0IHeBa5ohLZ1s2FfhX8NwIfgva1QkQyd+mC/6rXGFu9FScZhikhGG
+         GlpCW7AobGr+qZvuKHN81B7aO9wyLTIVeBaS0BQ3kTzwvVY5jqwWab/vLWy/GGv9Sh
+         YW8k4evAE2b0z3kqnLVGL3MFHA4vurMav8takMUMNOY+QYKibJo5cx8oH8oP9LSgnS
+         ZUhPELlZS8k/w==
+Received: by mail-ej1-f42.google.com with SMTP id i21so23660566ejd.2;
+        Mon, 13 Sep 2021 13:06:34 -0700 (PDT)
+X-Gm-Message-State: AOAM531p3LrvGMlZrApCh4PozkjDYAqzIBiN8LpDMlPz6pDJyX7m2Xc7
+        O4aXQ9ozm9H45ziSMGANMRFPWTzmnmZHlZCFMQ==
+X-Google-Smtp-Source: ABdhPJwN1MWGWOUgZkZ2lawCSXPX2nYnpWxKXQ3DsIeOIGZXLjOjxOCGLIMWEsevJxO3lFR0y54EVuySX4KmEDmXvkw=
+X-Received: by 2002:a17:906:7250:: with SMTP id n16mr14461348ejk.147.1631563593463;
+ Mon, 13 Sep 2021 13:06:33 -0700 (PDT)
 MIME-Version: 1.0
-References: <CAHk-=wgbygOb3hRV+7YOpVcMPTP2oQ=iw6tf09Ydspg7o7BsWQ@mail.gmail.com>
- <20210913141818.GA27911@codemonkey.org.uk> <ab571d7e-0cf5-ffb3-6bbe-478a4ed749dc@gmail.com>
-In-Reply-To: <ab571d7e-0cf5-ffb3-6bbe-478a4ed749dc@gmail.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 13 Sep 2021 12:51:30 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wgUJe9rsM5kbmq7jLZc2E6N6XhYaeW9-zJgWaDC-wDiuw@mail.gmail.com>
-Message-ID: <CAHk-=wgUJe9rsM5kbmq7jLZc2E6N6XhYaeW9-zJgWaDC-wDiuw@mail.gmail.com>
-Subject: Re: Linux 5.15-rc1
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Dave Jones <davej@codemonkey.org.uk>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+References: <20210913172358.1775381-1-jean-philippe@linaro.org> <20210913192805.GA1347289@bjorn-Precision-5520>
+In-Reply-To: <20210913192805.GA1347289@bjorn-Precision-5520>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 13 Sep 2021 15:06:21 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq++G1JR15RMtDL8rsfB0i=Xu5xbC0LuAm3mGiVnbFwXtg@mail.gmail.com>
+Message-ID: <CAL_Jsq++G1JR15RMtDL8rsfB0i=Xu5xbC0LuAm3mGiVnbFwXtg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ACPI: Don't reset a fwnode set by OF
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+        "open list:ACPI FOR ARM64 (ACPI/arm64)" <linux-acpi@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Shanker Donthineni <sdonthineni@nvidia.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 13, 2021 at 12:00 PM Heiner Kallweit <hkallweit1@gmail.com> wrote:
+On Mon, Sep 13, 2021 at 2:28 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
 >
-> With an older kernel you may experience the stall when accessing the vpd
-> attribute of this device in sysfs.
+> [+cc Rob]
+>
+> On Mon, Sep 13, 2021 at 06:23:59PM +0100, Jean-Philippe Brucker wrote:
+> > Commit 375553a93201 ("PCI: Setup ACPI fwnode early and at the same time
+> > with OF") added a call to pci_set_acpi_fwnode() in pci_setup_device(),
+> > which unconditionally clears any fwnode previously set by
+> > pci_set_of_node().
+> >
+> > pci_set_acpi_fwnode() looks for ACPI_COMPANION(), which only returns the
+> > existing fwnode if it was set by ACPI_COMPANION_SET(). If it was set by
+> > OF instead, ACPI_COMPANION() returns NULL and pci_set_acpi_fwnode()
+> > accidentally clears the fwnode. To fix this, look for any fwnode instead
+> > of just ACPI companions.
+> >
+> > Fixes: 375553a93201 ("PCI: Setup ACPI fwnode early and at the same time with OF")
+> > Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+> > ---
+> > This fixes boot of virtio-iommu under OF on v5.15-rc1
+> > ---
+> >  drivers/pci/pci-acpi.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index a1b1e2a01632..483a9e50f6ca 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -937,7 +937,7 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev);
+> >
+> >  void pci_set_acpi_fwnode(struct pci_dev *dev)
+> >  {
+> > -     if (!ACPI_COMPANION(&dev->dev) && !pci_dev_is_added(dev))
+> > +     if (!dev->dev.fwnode && !pci_dev_is_added(dev))
+>
+> I don't doubt that this is correct, but it seems excessively subtle,
+> like we're violating some layering or something.
 
-Honestly, that old behavior seems to be the *much* better behavior.
+That stems from DT and ACPI node handle handling being asymmetric in
+struct device. DT has its own node pointer plus the fwnode handle
+while ACPI only uses fwnode handle. It's that way because who is going
+to replace all the dev->of_node occurrences? Only ~7500 of them based
+on a quick grep.
 
-A synchronous stall at boot time is truly annoying, and a pain to deal
-with (and debug).
+> Rafael, Rob, is there anything better we can do here?
 
-That pci_vpd_read() function is clearly NOT designed to deal with
-boot-time callers in the first place, so I think that commit is simply
-wrong.
+I don't think so. Using dev_fwnode() would be slightly better than
+direct access.
 
-And yes, I see that "128ms timeout". If it was _one_ timeout, that
-would be one thing,. But it looks like it's repeated over and over.
-
-Not acceptable at boot time. Not at all.
-
-Bjorn. Please revert. Or I can do it.
-
-            Linus
+Rob
