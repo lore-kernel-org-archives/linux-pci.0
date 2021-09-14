@@ -2,221 +2,135 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E58C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Sep 2021 17:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5029DC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Sep 2021 17:54:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BB5E61151
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Sep 2021 17:07:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DBFA610F9
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Sep 2021 17:54:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230063AbhINRJN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Sep 2021 13:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48244 "EHLO
+        id S229854AbhINRzS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Sep 2021 13:55:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230433AbhINRJM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Sep 2021 13:09:12 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B95BC061574;
-        Tue, 14 Sep 2021 10:07:54 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id w29so20617323wra.8;
-        Tue, 14 Sep 2021 10:07:54 -0700 (PDT)
+        with ESMTP id S229785AbhINRzP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Sep 2021 13:55:15 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04AA2C061574
+        for <linux-pci@vger.kernel.org>; Tue, 14 Sep 2021 10:53:58 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id s11so13464815pgr.11
+        for <linux-pci@vger.kernel.org>; Tue, 14 Sep 2021 10:53:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:cc:references:from:subject:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UEz8abuPWgyHSc+A93wlQX9A3Gl7VlEueJS0Qvs3JhU=;
-        b=UTLBfvPvMZ+1dXSf5Y7P3VdtVRAXwLs7UG++gYy18zK3Uxok9w8j5CvTbxdqbGiSnJ
-         mQpzQ5YWS0TQuZrzq+L3BvwX4DduZ2JGlzFqv2w+Z3dCKZ6jZjo3vbruDIwv1NsN3Fp7
-         bnsDhHAkWc7XbgTBIlee24+8cqosxslJOrxfKoYPNMBVdx5haDuoiu32fGwYOGz1YuoN
-         Grm1pplnHyU2ehU+liSPzZ9WFZa5hwrDPM72rKvkURd74Cg5tuww0gW9YFYgqqhuqyR1
-         pQ1eUZHYlHsBEy1rfSuPfKyYKvQAzpApw16FkGujQBgkQ0BLGfY/yW5ERA32OGJpM+te
-         MYdA==
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dYpAQA0tbQZfMcz8zOrS6/NwGbmoaqWAssb2XF6h/jc=;
+        b=iZXBU8Xt9dVleHmWvdHvdeH8deQj+0Ls5rdVLhtdRRgJZBO6hA/yz9Ykl4GGjwNhAm
+         P7JJ4gd6lBVpaew0Hl/YZWyfpmaMRol1s5eN9Y5JwGXIqI0fm2kdlZxtVao6vFCcuiFs
+         hl0UjZ+nRQh+yOiu9mBpqh9Jg+ecoFfDrDFWNyNMtXK7UlSdNZOOQHkmzumNr21ZdZjZ
+         96Bt5NCpFPfEMKqH5imbaxqE4JXx+qWoEPJRUZktvgmM/geTuhqYBIcmbK+QYrDw0n1k
+         Ia0v890i9/KI0/HeiddsIYcDXQzDuwPkc8VLObm+Feve2AJAn3FasiP79kx7O3SuB9zM
+         yiIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:to:cc:references:from:subject:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=UEz8abuPWgyHSc+A93wlQX9A3Gl7VlEueJS0Qvs3JhU=;
-        b=HRlgG2S/GdCUrg3CsdNo845MLri92CRHDjFmaC3FYDruaVvfZKfNvUcIS/tbUiDej5
-         eU+46Vd3ay8b8aIrTnYOiAdTurOhIA9KAC7p0IjGsL9CDhP/JZo6NJM48bWI8aYdm4TG
-         8akjxqa2Ag8RPV+AzVCQiAS5dFzXpwVEeuAfcUDv/5hBeTp+NusmMJGDPPlN3xEoouxd
-         bCaDr0oYrFEPInlkUg++sGG4LZwBAcfVwnrVuDaxm6RK5g/J4Tf1ZX6HcvMvgAfyOAsx
-         IJ/XNTn+nlMdO7rRvSs8i3zaWqaRT7dh3TPC2FloFirRizqZbTRWVqGrn76BOYypTQrK
-         a5MQ==
-X-Gm-Message-State: AOAM530+YTlIV/+BmWA3U5cNCWfrM2b3/sVISZ202R5Imn08pkupbOVH
-        BbEnztcsIs/4mMU0dua1rBv4uqysfEI=
-X-Google-Smtp-Source: ABdhPJzzw234WDCAkyBTw+u+dKm5PzYtjHHsekK3mqvBJ3z3Vs7smt7E2sYvLhZIdg9w5NWAmHiDMA==
-X-Received: by 2002:adf:c542:: with SMTP id s2mr227088wrf.374.1631639271918;
-        Tue, 14 Sep 2021 10:07:51 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f08:4500:c813:4da2:f58a:a1e2? (p200300ea8f084500c8134da2f58aa1e2.dip0.t-ipconnect.de. [2003:ea:8f08:4500:c813:4da2:f58a:a1e2])
-        by smtp.googlemail.com with ESMTPSA id j14sm11004462wrp.21.2021.09.14.10.07.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Sep 2021 10:07:51 -0700 (PDT)
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Dave Jones <davej@codemonkey.org.uk>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20210914112628.GA1412445@bjorn-Precision-5520>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Re: Linux 5.15-rc1
-Message-ID: <54bd54b9-3774-92a5-4193-5ccccd235572@gmail.com>
-Date:   Tue, 14 Sep 2021 19:07:40 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dYpAQA0tbQZfMcz8zOrS6/NwGbmoaqWAssb2XF6h/jc=;
+        b=r0FIn1RHitkiZmldrP/nvr+HUU3hxAvsoKq9iHeSTJMTi0fWBpLyBNCNoyG9mq0Jhl
+         3y3a0LJHUjD5UCyRuV11gF5xxxNYcfmmPj8ns6jKo5flPWjFmdpZWWQlqBO7I7Uv5vxo
+         Vk+vU7kYfuTW7NoDV7wFfyFyVOFtB5JT0X1kHPdH19liWCV5zjOaH3JBux4KMdt5AC2k
+         et2bj3U/Z5aXvDcpHBhvztrAPZyX/4VJR8YoTQ5p7Hnin5Vc71Ybz/I/mFP1H04XV3v0
+         TLZN1QwsmvdzcqAyAeE08vBbfMwDehix3bwDzFW+mC1KG1T7Jbe4uJH8HV8xH3Xwvkoo
+         TVXg==
+X-Gm-Message-State: AOAM532jwdbIhZvhLjrvCpPmxYXdT0jj0jbo+fXUXnxO5nEz7CVeKCpI
+        +WtXHMJmUihaLaA/JN31F0rk+qRcOKnjzMRyjuXckw==
+X-Google-Smtp-Source: ABdhPJyAc15V77dGNJ+6cV02dE4mBOPP1dSbXvWeYFLxZwXk6shY4z/KNp+FBxwXwP+1B+DyHOcOIVdj1m7H/U2sG/8=
+X-Received: by 2002:a63:7013:: with SMTP id l19mr16342904pgc.342.1631642037206;
+ Tue, 14 Sep 2021 10:53:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210914112628.GA1412445@bjorn-Precision-5520>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210913163847.GA1335093@bjorn-Precision-5520> <9cae764f00c5969c364728ed031c29ce49c03480.camel@amazon.de>
+In-Reply-To: <9cae764f00c5969c364728ed031c29ce49c03480.camel@amazon.de>
+From:   Rajat Jain <rajatja@google.com>
+Date:   Tue, 14 Sep 2021 10:53:20 -0700
+Message-ID: <CACK8Z6HcG45DNYQEGxDvZbL8WkF2uVoO5rCTOh1yCjxnxco5ig@mail.gmail.com>
+Subject: Re: [PATCH v4 3/3] PCI: Add CRS handling to pci_dev_wait()
+To:     "Spassov, Stanislav" <stanspas@amazon.de>
+Cc:     "helgaas@kernel.org" <helgaas@kernel.org>,
+        "corbet@lwn.net" <corbet@lwn.net>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "okaya@kernel.org" <Okaya@kernel.org>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        =?UTF-8?B?U2Now7ZuaGVyciwgSmFuIEgu?= <jschoenh@amazon.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 14.09.2021 13:26, Bjorn Helgaas wrote:
-> On Tue, Sep 14, 2021 at 08:21:46AM +0200, Heiner Kallweit wrote:
->> On 14.09.2021 01:46, Bjorn Helgaas wrote:
-> 
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd);
->>>  /*
->>
->> Leaving the quirks in FIXUP_HEADER stage would have the advantage that for
->> blacklisted devices the vpd sysfs attribute isn't visibale. The needed
->> changes to the patch are minimal.
-> 
-> What do you have in mind?  The only thing I can think of would be to
-> add a "pci_dev.no_vpd" bit.  "vpd.cap == 0" means the device has no
-> VPD, and "vpd.len == 0" means we haven't determined the size yet.  All
-> devices start off with vpd.cap == 0 and vpd.len == 0, so a
-> FIXUP_HEADER quirk would have to set a sentinel value or some other
-> bit.
-> 
-> Bjorn
-> 
+On Mon, Sep 13, 2021 at 11:04 AM Spassov, Stanislav <stanspas@amazon.de> wrote:
+>
+> On Mon, 2021-09-13 at 11:38 -0500, Bjorn Helgaas wrote:
+> > On Mon, Sep 13, 2021 at 04:29:51PM +0000, Spassov, Stanislav wrote:
+> > > On Sat, 2021-09-11 at 09:03 -0500, Bjorn Helgaas wrote:
+> > >
+> > > I later understood the specific CPU did have a proprietary register for
+> > > "limiting the number of loops" that the PCIe spec talks about, and indeed
+> > > that register was set to "no limit". Coupled with the stuck device, these
+> > > indefinite retries eventually triggered TOR timeout.
+> >
+> > "No limit" sounds like a pretty bad choice, given that it means the
+> > CPU will essentially hang forever because of a defective I/O device.
+> > There should be a timeout so software can recover (the *device* may
+> > never recover, but that's no reason why the kernel must crash).
+> >
+>
+> Correct. "No limit" is definitely a bad choice for that register,
+> and fixing the value would be preferable to any software solution.
+>
+> Unfortunately, at least in the case I worked on, that register was
+> not accessible by the kernel.
 
-Why not leave vpd.len == PCI_VPD_SZ_INVALID as sentinel?
+I can acknowledge that I have across exactly the same issue (no limit
+on retries, results in CPU hang) on another old Intel root port too in
+the past:
+https://lore.kernel.org/linux-pci/53FFA54D.9000907@gmail.com/
+https://lkml.org/lkml/2014/8/1/186
 
-And one more question: Why do you move the "if (!vpd->cap)" check from
-pci_vpd_read() to pci_read_vpd()? At a first glance I see no benefit.
+and had the same problem (no way to limit the number of retries). I'd
+be interested and will keep a lookout for the next patch Stanislav
+sends out!
 
-Here comes my version. Your changes to pci_vpd_size() I left as-is.
-I tested the positive case and it works as expected.
+Thanks!
 
+Rajat
 
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 25557b272..04b14c488 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -52,7 +52,7 @@ static struct pci_dev *pci_get_func0_dev(struct pci_dev *dev)
-  * pci_vpd_size - determine actual size of Vital Product Data
-  * @dev:	pci device struct
-  */
--static size_t pci_vpd_size(struct pci_dev *dev)
-+static void pci_vpd_size(struct pci_dev *dev)
- {
- 	size_t off = 0, size;
- 	unsigned char tag, header[1+2];	/* 1 byte tag, 2 bytes length */
-@@ -71,7 +71,7 @@ static size_t pci_vpd_size(struct pci_dev *dev)
- 			if (pci_read_vpd(dev, off + 1, 2, &header[1]) != 2) {
- 				pci_warn(dev, "failed VPD read at offset %zu\n",
- 					 off + 1);
--				return off ?: PCI_VPD_SZ_INVALID;
-+				goto finish;
- 			}
- 			size = pci_vpd_lrdt_size(header);
- 			if (off + size > PCI_VPD_MAX_SIZE)
-@@ -87,16 +87,19 @@ static size_t pci_vpd_size(struct pci_dev *dev)
- 
- 			off += PCI_VPD_SRDT_TAG_SIZE + size;
- 			if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
--				return off;
-+				goto finish;
- 		}
- 	}
--	return off;
-+	goto finish;
- 
- error:
- 	pci_info(dev, "invalid VPD tag %#04x (size %zu) at offset %zu%s\n",
- 		 header[0], size, off, off == 0 ?
- 		 "; assume missing optional EEPROM" : "");
--	return off ?: PCI_VPD_SZ_INVALID;
-+finish:
-+	dev->vpd.len = off;
-+	if (off == 0)
-+		dev->vpd.cap = 0;		/* No VPD at all */
- }
- 
- /*
-@@ -145,6 +148,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	loff_t end = pos + count;
- 	u8 *buf = arg;
- 
-+	if (vpd->len == 0 && vpd->cap)
-+		pci_vpd_size(dev);
- 	if (!vpd->cap)
- 		return -ENODEV;
- 
-@@ -206,6 +211,8 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	loff_t end = pos + count;
- 	int ret = 0;
- 
-+	if (vpd->len == 0 && vpd->cap)
-+		pci_vpd_size(dev);
- 	if (!vpd->cap)
- 		return -ENODEV;
- 
-@@ -245,9 +252,6 @@ void pci_vpd_init(struct pci_dev *dev)
- 	dev->vpd.cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	mutex_init(&dev->vpd.lock);
- 
--	if (!dev->vpd.len)
--		dev->vpd.len = pci_vpd_size(dev);
--
- 	if (dev->vpd.len == PCI_VPD_SZ_INVALID)
- 		dev->vpd.cap = 0;
- }
-@@ -294,25 +298,27 @@ const struct attribute_group pci_dev_vpd_attr_group = {
- 
- void *pci_vpd_alloc(struct pci_dev *dev, unsigned int *size)
- {
--	unsigned int len = dev->vpd.len;
-+	struct pci_vpd *vpd = &dev->vpd;
- 	void *buf;
- 	int cnt;
- 
--	if (!dev->vpd.cap)
-+	if (vpd->len == 0 && vpd->cap)
-+		pci_vpd_size(dev);
-+	if (!vpd->cap)
- 		return ERR_PTR(-ENODEV);
- 
--	buf = kmalloc(len, GFP_KERNEL);
-+	buf = kmalloc(vpd->len, GFP_KERNEL);
- 	if (!buf)
- 		return ERR_PTR(-ENOMEM);
- 
--	cnt = pci_read_vpd(dev, 0, len, buf);
--	if (cnt != len) {
-+	cnt = pci_read_vpd(dev, 0, vpd->len, buf);
-+	if (cnt != vpd->len) {
- 		kfree(buf);
- 		return ERR_PTR(-EIO);
- 	}
- 
- 	if (size)
--		*size = len;
-+		*size = vpd->len;
- 
- 	return buf;
- }
--- 
-2.33.0
-
-
-
-
+> Intel exposes many CPU configuration
+> registers in terms of virtual PCI devices residing directly on Root
+> Buses, and the system/platform firmware is able to use vendor-provided
+> means to completely hide some of these pseudo-devices from the OS.
+>
+> Additionally, the way the PCIe spec is phrased, not every Root Complex
+> implementation is required to even have such a limiting register, while
+> all implementations that advertise CRS SV capability are required to
+> behave as prescribed when PCI_VENDOR_ID is read. Hence why I believe
+> this patch is a general robustness improvement, rather than a workaround
+> for a specific device/platform.
+>
+>
+>
+> Amazon Development Center Germany GmbH
+> Krausenstr. 38
+> 10117 Berlin
+> Geschaeftsfuehrung: Christian Schlaeger, Jonathan Weiss
+> Eingetragen am Amtsgericht Charlottenburg unter HRB 149173 B
+> Sitz: Berlin
+> Ust-ID: DE 289 237 879
+>
+>
