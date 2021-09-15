@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1FD0C43217
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAAACC4167E
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9343661185
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F4DA60FC0
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236972AbhIOI44 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S236987AbhIOI44 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 15 Sep 2021 04:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39078 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232888AbhIOI4z (ORCPT
+        with ESMTP id S232971AbhIOI4z (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Sep 2021 04:56:55 -0400
 Received: from mail.kapsi.fi (mail.kapsi.fi [IPv6:2001:67c:1be8::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 852A2C061575;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A72EC061764;
         Wed, 15 Sep 2021 01:55:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kapsi.fi;
-         s=20161220; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20161220; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=GZgd60WrESx2DuwtYGPss1Uw9DuvU+yvrhVYe2f9cRA=; b=sHTDJrIXSoC3UvfuM27ubT+8Hb
-        IeW1e9Fb709cL2+CVWNOaIOrEZasdcRv4a9cBKO062xihPNhCqOiYRAz7lP0zPPkU6SsL4VtiB4hY
-        ZtId0LmB15NOi8h3uOR5dj7MSq2NwMA2NuU5nJTBgSCCPU7qkdmkkXwIqzJeyiD4oZFfzK2a0LF07
-        2rDCtpJE5RsA+kD2jyVDb5fNiARWqlhdZZhB3/AH3rlqcSbcpJYbWjIvJW6J8YDHweJUCkXpHjc20
-        UvXGvnDZV8uI59cAiw+Grw82o4Q+GVJodpTs3cgRzwfUMZ8fth3GKBzN8P/waO1hEh0fe7TvpPvKj
-        zR/ipvOQ==;
+        bh=Bl1kBPvSTdMyBIGlR1G5uo2EOo9625GC4vDayfEE9KM=; b=hbtztxsQO9Vp+SLI1WvHgejddq
+        GZPEZ9BE0Fqt8LZxZZDRu2JxwTWZaz/zdZmVPmaANu4SCkHu0oUykIuIEhj1vS+IJ5Eyq/cRauQu5
+        qHWnNXf5OPsrB8eBERg2rXY2fLxKhT3GE40qOB6Fv9eoF/zP7Gq/AVs4p22yjtBo4vJmUIt+MAnAG
+        00QbaybQDGJ+/YNoVcUcJYYPwKu/ABAfqiuAzwN7dNV7KzWf/4Jd/1K/Ny1Sfh9UCUHMTWjQagssh
+        H8fqtif4OzESQXiDU/tNIF43eD5f6SAYEH3APnEQDaCMlfoNF53pdZst/7nQGacuPIsOdJtKPii5P
+        Km9eNREA==;
 Received: from dsl-hkibng22-54f986-236.dhcp.inet.fi ([84.249.134.236] helo=toshino.localdomain)
         by mail.kapsi.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <mperttunen@nvidia.com>)
-        id 1mQQhR-000101-KT; Wed, 15 Sep 2021 11:55:25 +0300
+        id 1mQQhR-000101-W0; Wed, 15 Sep 2021 11:55:26 +0300
 From:   Mikko Perttunen <mperttunen@nvidia.com>
 To:     rafael@kernel.org, viresh.kumar@linaro.org,
         thierry.reding@gmail.com, jonathanh@nvidia.com,
@@ -48,10 +48,12 @@ To:     rafael@kernel.org, viresh.kumar@linaro.org,
 Cc:     linux-pm@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH 1/5] thermal: tegra-bpmp: Handle errors in BPMP response
-Date:   Wed, 15 Sep 2021 11:55:13 +0300
-Message-Id: <20210915085517.1669675-1-mperttunen@nvidia.com>
+Subject: [PATCH 5/5] PCI: tegra194: Handle errors in BPMP response
+Date:   Wed, 15 Sep 2021 11:55:17 +0300
+Message-Id: <20210915085517.1669675-5-mperttunen@nvidia.com>
 X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20210915085517.1669675-1-mperttunen@nvidia.com>
+References: <20210915085517.1669675-1-mperttunen@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 84.249.134.236
@@ -68,36 +70,27 @@ Add code to do this.
 
 Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 ---
- drivers/thermal/tegra/tegra-bpmp-thermal.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/thermal/tegra/tegra-bpmp-thermal.c b/drivers/thermal/tegra/tegra-bpmp-thermal.c
-index 94f1da1dcd69..5affc3d196be 100644
---- a/drivers/thermal/tegra/tegra-bpmp-thermal.c
-+++ b/drivers/thermal/tegra/tegra-bpmp-thermal.c
-@@ -52,6 +52,8 @@ static int tegra_bpmp_thermal_get_temp(void *data, int *out_temp)
- 	err = tegra_bpmp_transfer(zone->tegra->bpmp, &msg);
- 	if (err)
- 		return err;
-+	if (msg.rx.ret)
-+		return -EINVAL;
- 
- 	*out_temp = reply.get_temp.temp;
- 
-@@ -63,6 +65,7 @@ static int tegra_bpmp_thermal_set_trips(void *data, int low, int high)
- 	struct tegra_bpmp_thermal_zone *zone = data;
- 	struct mrq_thermal_host_to_bpmp_request req;
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 904976913081..08afd2e72ec5 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1162,6 +1162,7 @@ static int tegra_pcie_bpmp_set_ctrl_state(struct tegra_pcie_dw *pcie,
+ 	struct mrq_uphy_response resp;
  	struct tegra_bpmp_message msg;
+ 	struct mrq_uphy_request req;
 +	int err;
  
- 	memset(&req, 0, sizeof(req));
- 	req.type = CMD_THERMAL_SET_TRIP;
-@@ -76,7 +79,13 @@ static int tegra_bpmp_thermal_set_trips(void *data, int low, int high)
- 	msg.tx.data = &req;
- 	msg.tx.size = sizeof(req);
+ 	/* Controller-5 doesn't need to have its state set by BPMP-FW */
+ 	if (pcie->cid == 5)
+@@ -1181,7 +1182,13 @@ static int tegra_pcie_bpmp_set_ctrl_state(struct tegra_pcie_dw *pcie,
+ 	msg.rx.data = &resp;
+ 	msg.rx.size = sizeof(resp);
  
--	return tegra_bpmp_transfer(zone->tegra->bpmp, &msg);
-+	err = tegra_bpmp_transfer(zone->tegra->bpmp, &msg);
+-	return tegra_bpmp_transfer(pcie->bpmp, &msg);
++	err = tegra_bpmp_transfer(pcie->bpmp, &msg);
 +	if (err)
 +		return err;
 +	if (msg.rx.ret)
@@ -106,16 +99,7 @@ index 94f1da1dcd69..5affc3d196be 100644
 +	return 0;
  }
  
- static void tz_device_update_work_fn(struct work_struct *work)
-@@ -140,6 +149,8 @@ static int tegra_bpmp_thermal_get_num_zones(struct tegra_bpmp *bpmp,
- 	err = tegra_bpmp_transfer(bpmp, &msg);
- 	if (err)
- 		return err;
-+	if (msg.rx.ret)
-+		return -EINVAL;
- 
- 	*num_zones = reply.get_num_zones.num;
- 
+ static int tegra_pcie_bpmp_set_pll_state(struct tegra_pcie_dw *pcie,
 -- 
 2.32.0
 
