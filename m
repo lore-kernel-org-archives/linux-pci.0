@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAAACC4167E
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE74C28B5F
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F4DA60FC0
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2145061242
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236987AbhIOI44 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Sep 2021 04:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39080 "EHLO
+        id S237006AbhIOI45 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Sep 2021 04:56:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232971AbhIOI4z (ORCPT
+        with ESMTP id S232890AbhIOI4z (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Sep 2021 04:56:55 -0400
 Received: from mail.kapsi.fi (mail.kapsi.fi [IPv6:2001:67c:1be8::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A72EC061764;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9686CC061767;
         Wed, 15 Sep 2021 01:55:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kapsi.fi;
          s=20161220; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,17 +28,17 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kapsi.fi;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=Bl1kBPvSTdMyBIGlR1G5uo2EOo9625GC4vDayfEE9KM=; b=hbtztxsQO9Vp+SLI1WvHgejddq
-        GZPEZ9BE0Fqt8LZxZZDRu2JxwTWZaz/zdZmVPmaANu4SCkHu0oUykIuIEhj1vS+IJ5Eyq/cRauQu5
-        qHWnNXf5OPsrB8eBERg2rXY2fLxKhT3GE40qOB6Fv9eoF/zP7Gq/AVs4p22yjtBo4vJmUIt+MAnAG
-        00QbaybQDGJ+/YNoVcUcJYYPwKu/ABAfqiuAzwN7dNV7KzWf/4Jd/1K/Ny1Sfh9UCUHMTWjQagssh
-        H8fqtif4OzESQXiDU/tNIF43eD5f6SAYEH3APnEQDaCMlfoNF53pdZst/7nQGacuPIsOdJtKPii5P
-        Km9eNREA==;
+        bh=whKab6yVZsHCNb+jfzC+O9VWLp2UcXan3KaF7i58q9Y=; b=I/nvPsuEBXWBn1/N4zg3fcLznR
+        5s0BeuP8DyHyuLAqjCup6s74vInt/l78C3ya/Tse72eIcbHSh37uF6mury3wsnvClo/Eej9J80PB5
+        y9SU4OiOIu4lzlA0sjeFZ1L0DY5phUBii0HQ8mGOOsOQlFa7VLscRcmAS+XZb51E2KfYUQGNJAY8o
+        7MkPkfZFVG28AmF+bCueSLU3Ua/1t0OLGaHacLxmnSa+05G7fLLe7eQw2RdVWXiREUgTUr6tWij+Z
+        Y0la8lyWNDL0VZaMViXdCaipFgW2aVx9ZVitvVM7VcPGKrVWYDuoVzxZ/JWp66t6RSL07pGYAIdil
+        grWwincw==;
 Received: from dsl-hkibng22-54f986-236.dhcp.inet.fi ([84.249.134.236] helo=toshino.localdomain)
         by mail.kapsi.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <mperttunen@nvidia.com>)
-        id 1mQQhR-000101-W0; Wed, 15 Sep 2021 11:55:26 +0300
+        id 1mQQhR-000101-N9; Wed, 15 Sep 2021 11:55:25 +0300
 From:   Mikko Perttunen <mperttunen@nvidia.com>
 To:     rafael@kernel.org, viresh.kumar@linaro.org,
         thierry.reding@gmail.com, jonathanh@nvidia.com,
@@ -48,9 +48,9 @@ To:     rafael@kernel.org, viresh.kumar@linaro.org,
 Cc:     linux-pm@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH 5/5] PCI: tegra194: Handle errors in BPMP response
-Date:   Wed, 15 Sep 2021 11:55:17 +0300
-Message-Id: <20210915085517.1669675-5-mperttunen@nvidia.com>
+Subject: [PATCH 2/5] reset: tegra-bpmp: Handle errors in BPMP response
+Date:   Wed, 15 Sep 2021 11:55:14 +0300
+Message-Id: <20210915085517.1669675-2-mperttunen@nvidia.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210915085517.1669675-1-mperttunen@nvidia.com>
 References: <20210915085517.1669675-1-mperttunen@nvidia.com>
@@ -70,27 +70,27 @@ Add code to do this.
 
 Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 ---
- drivers/pci/controller/dwc/pcie-tegra194.c | 9 ++++++++-
+ drivers/reset/tegra/reset-bpmp.c | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 904976913081..08afd2e72ec5 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1162,6 +1162,7 @@ static int tegra_pcie_bpmp_set_ctrl_state(struct tegra_pcie_dw *pcie,
- 	struct mrq_uphy_response resp;
+diff --git a/drivers/reset/tegra/reset-bpmp.c b/drivers/reset/tegra/reset-bpmp.c
+index 24d3395964cc..4c5bba52b105 100644
+--- a/drivers/reset/tegra/reset-bpmp.c
++++ b/drivers/reset/tegra/reset-bpmp.c
+@@ -20,6 +20,7 @@ static int tegra_bpmp_reset_common(struct reset_controller_dev *rstc,
+ 	struct tegra_bpmp *bpmp = to_tegra_bpmp(rstc);
+ 	struct mrq_reset_request request;
  	struct tegra_bpmp_message msg;
- 	struct mrq_uphy_request req;
 +	int err;
  
- 	/* Controller-5 doesn't need to have its state set by BPMP-FW */
- 	if (pcie->cid == 5)
-@@ -1181,7 +1182,13 @@ static int tegra_pcie_bpmp_set_ctrl_state(struct tegra_pcie_dw *pcie,
- 	msg.rx.data = &resp;
- 	msg.rx.size = sizeof(resp);
+ 	memset(&request, 0, sizeof(request));
+ 	request.cmd = command;
+@@ -30,7 +31,13 @@ static int tegra_bpmp_reset_common(struct reset_controller_dev *rstc,
+ 	msg.tx.data = &request;
+ 	msg.tx.size = sizeof(request);
  
--	return tegra_bpmp_transfer(pcie->bpmp, &msg);
-+	err = tegra_bpmp_transfer(pcie->bpmp, &msg);
+-	return tegra_bpmp_transfer(bpmp, &msg);
++	err = tegra_bpmp_transfer(bpmp, &msg);
 +	if (err)
 +		return err;
 +	if (msg.rx.ret)
@@ -99,7 +99,7 @@ index 904976913081..08afd2e72ec5 100644
 +	return 0;
  }
  
- static int tegra_pcie_bpmp_set_pll_state(struct tegra_pcie_dw *pcie,
+ static int tegra_bpmp_reset_module(struct reset_controller_dev *rstc,
 -- 
 2.32.0
 
