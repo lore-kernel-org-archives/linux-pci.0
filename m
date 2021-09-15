@@ -2,123 +2,156 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D41FC4727C
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C4C4C4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 10:15:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2E2E61246
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 08:55:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8E8A61262
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Sep 2021 10:15:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbhIOI45 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Sep 2021 04:56:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39082 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232929AbhIOI4z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Sep 2021 04:56:55 -0400
-Received: from mail.kapsi.fi (mail.kapsi.fi [IPv6:2001:67c:1be8::25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90AC1C061766;
-        Wed, 15 Sep 2021 01:55:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=kapsi.fi;
-         s=20161220; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=Nj98s3EHUx3iqSgi/bRE9TqLMNdwT/CPsJyFopIdi7s=; b=eRhSKVaX/dw5hjme5k8oHXopY6
-        46Wy+9J78T8H0iB3hHUiAIHDkfgCWrmfL0Dc5q/OZwwxgczw0y/l9YjFvXcU2az8IvzoUSdJTFC1V
-        GWDzz/ShDiWYfr4us5Xs3sDJGGwWnZouUib9D6+EkbbX8xgA/QC+ckOy+oBzDTTbt4FG885Xw22cm
-        U6JKNSp0vN9W19lBSFOJoqmqn746GbXPdCu+421UwXQitdyby96ueJzp+I9Esz7VHzvIm3LR78u76
-        V2Aw035ozcu6R38Sm8Bqi+eOEEnpH8RjmnzEz0k2cR9F3NSEnBj9CInXt0Sz0Kbm5bhRLa0hQ/Gu8
-        AhE+TB8A==;
-Received: from dsl-hkibng22-54f986-236.dhcp.inet.fi ([84.249.134.236] helo=toshino.localdomain)
-        by mail.kapsi.fi with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <mperttunen@nvidia.com>)
-        id 1mQQhR-000101-SY; Wed, 15 Sep 2021 11:55:25 +0300
-From:   Mikko Perttunen <mperttunen@nvidia.com>
-To:     rafael@kernel.org, viresh.kumar@linaro.org,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        krzysztof.kozlowski@canonical.com, lorenzo.pieralisi@arm.com,
-        robh@kernel.org, kw@linux.com, p.zabel@pengutronix.de,
-        rui.zhang@intel.com, daniel.lezcano@linaro.org, amitk@kernel.org
-Cc:     linux-pm@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH 4/5] cpufreq: tegra186/tegra194: Handle errors in BPMP response
-Date:   Wed, 15 Sep 2021 11:55:16 +0300
-Message-Id: <20210915085517.1669675-4-mperttunen@nvidia.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210915085517.1669675-1-mperttunen@nvidia.com>
-References: <20210915085517.1669675-1-mperttunen@nvidia.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 84.249.134.236
-X-SA-Exim-Mail-From: mperttunen@nvidia.com
-X-SA-Exim-Scanned: No (on mail.kapsi.fi); SAEximRunCond expanded to false
+        id S237347AbhIOKQV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Sep 2021 06:16:21 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34576 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231940AbhIOKQU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Sep 2021 06:16:20 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 18F7Zmpq013104;
+        Wed, 15 Sep 2021 06:14:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : to : cc : date : in-reply-to : references : content-type :
+ mime-version : content-transfer-encoding; s=pp1;
+ bh=1CvBoL4UO9UE0U96hNF1qNekvPhdGJ/IHUjTEpXG+YU=;
+ b=YEfNJhshjitTdfVh2SQ9IRmxiLu+hBc9JZhhRgA/541skcknTB+qjhIvHnJq1g+oUk7w
+ k7PfKp0uAMT0dIneL2+ilosryXmj6pnAAyNFz/tkMKN19IUh2L9PjsXWqGYl4dmTnF16
+ XAh9c0gwMOZOcyw74by1riil5QeOlcjxUznr13KzbG9jVGC8dVjGXJTeCJwBT51p8dvA
+ FcfuITA+g9E2ITDemtBJe/ilVrDofRF2F9hbPSzRBDAdHvN9Zlv4MSO+3Sof6LmgaH8e
+ mkkTvPVQNPci5GKuCcTmziz9O/YybnVcdo2LND9ImzRCZHoXMMoScCP9boR+mo34CKEf tA== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3b3cjtb89d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Sep 2021 06:14:05 -0400
+Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 18F9o6tF016868;
+        Wed, 15 Sep 2021 06:14:04 -0400
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3b3cjtb88r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Sep 2021 06:14:04 -0400
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18FA3PO2017375;
+        Wed, 15 Sep 2021 10:14:02 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 3b0kqjwnas-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Sep 2021 10:14:02 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18FA9Owo58065308
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Sep 2021 10:09:24 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1E3094C050;
+        Wed, 15 Sep 2021 10:13:58 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 357904C046;
+        Wed, 15 Sep 2021 10:13:57 +0000 (GMT)
+Received: from sig-9-145-34-225.uk.ibm.com (unknown [9.145.34.225])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 15 Sep 2021 10:13:57 +0000 (GMT)
+Message-ID: <3cfa5c39151b415000b13f94edbd513940c272c4.camel@linux.ibm.com>
+Subject: Re: [PATCH] pci: Rename pcibios_add_device to match
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     "Oliver O'Halloran" <oohall@gmail.com>,
+        Michal Simek <monstr@monstr.eu>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>
+Cc:     linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Date:   Wed, 15 Sep 2021 12:13:56 +0200
+In-Reply-To: <20210913152709.48013-1-oohall@gmail.com>
+References: <20210913152709.48013-1-oohall@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-16.el8) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: qsgztY6656GojP5eot9j-my1z4nhin5e
+X-Proofpoint-ORIG-GUID: tinSbreoYB0apZL0qAvJHteIZSAXyVt9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
+ definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 impostorscore=0 spamscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 suspectscore=0 priorityscore=1501
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109030001 definitions=main-2109150047
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The return value from tegra_bpmp_transfer indicates the success or
-failure of the IPC transaction with BPMP. If the transaction
-succeeded, we also need to check the actual command's result code.
-Add code to do this.
+On Tue, 2021-09-14 at 01:27 +1000, Oliver O'Halloran wrote:
+> The general convention for pcibios_* hooks is that they're named after
+> the corresponding pci_* function they provide a hook for. The exception
+> is pcibios_add_device() which provides a hook for pci_device_add(). This
+> has been irritating me for years so rename it.
+> 
+> Also, remove the export of the microblaze version. The only caller
+> must be compiled as a built-in so there's no reason for the export.
+> 
+> Signed-off-by: Oliver O'Halloran <oohall@gmail.com>
+> ---
+>  arch/microblaze/pci/pci-common.c           | 3 +--
+>  arch/powerpc/kernel/pci-common.c           | 2 +-
+>  arch/powerpc/platforms/powernv/pci-sriov.c | 2 +-
+>  arch/s390/pci/pci.c                        | 2 +-
+>  arch/sparc/kernel/pci.c                    | 2 +-
+>  arch/x86/pci/common.c                      | 2 +-
+>  drivers/pci/pci.c                          | 4 ++--
+>  drivers/pci/probe.c                        | 4 ++--
+>  include/linux/pci.h                        | 2 +-
+>  9 files changed, 11 insertions(+), 12 deletions(-)
+> 
+> 
+.. snip ..
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index e7e6788d75a8..ded3321b7208 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -561,7 +561,7 @@ static void zpci_cleanup_bus_resources(struct zpci_dev *zdev)
+>  	zdev->has_resources = 0;
+>  }
+>  
+> -int pcibios_add_device(struct pci_dev *pdev)
+> +int pcibios_device_add(struct pci_dev *pdev)
+>  {
+>  	struct zpci_dev *zdev = to_zpci(pdev);
+>  	struct resource *res;
+> 
+.. snip ..
+>
 
-While at it, explicitly handle missing CPU clusters, which can
-occur on floorswept chips. This worked before as well, but
-possibly only by accident.
 
-Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
----
- drivers/cpufreq/tegra186-cpufreq.c | 4 ++++
- drivers/cpufreq/tegra194-cpufreq.c | 8 +++++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+I agree with your assesment this is indeed confusing. Interestingly
+pcibios_release_device() also doesn't follow the convention exactly as
+it is called from pci_release_dev() but at least that isn't very
+confusing.
 
-diff --git a/drivers/cpufreq/tegra186-cpufreq.c b/drivers/cpufreq/tegra186-cpufreq.c
-index 5d1943e787b0..6c88827f4e62 100644
---- a/drivers/cpufreq/tegra186-cpufreq.c
-+++ b/drivers/cpufreq/tegra186-cpufreq.c
-@@ -159,6 +159,10 @@ static struct cpufreq_frequency_table *init_vhint_table(
- 		table = ERR_PTR(err);
- 		goto free;
- 	}
-+	if (msg.rx.ret) {
-+		table = ERR_PTR(-EINVAL);
-+		goto free;
-+	}
- 
- 	for (i = data->vfloor; i <= data->vceil; i++) {
- 		u16 ndiv = data->ndiv[i];
-diff --git a/drivers/cpufreq/tegra194-cpufreq.c b/drivers/cpufreq/tegra194-cpufreq.c
-index a9620e4489ae..ac381db25dbe 100644
---- a/drivers/cpufreq/tegra194-cpufreq.c
-+++ b/drivers/cpufreq/tegra194-cpufreq.c
-@@ -242,7 +242,7 @@ static int tegra194_cpufreq_init(struct cpufreq_policy *policy)
- 
- 	smp_call_function_single(policy->cpu, get_cpu_cluster, &cl, true);
- 
--	if (cl >= data->num_clusters)
-+	if (cl >= data->num_clusters || !data->tables[cl])
- 		return -EINVAL;
- 
- 	/* set same policy for all cpus in a cluster */
-@@ -310,6 +310,12 @@ init_freq_table(struct platform_device *pdev, struct tegra_bpmp *bpmp,
- 	err = tegra_bpmp_transfer(bpmp, &msg);
- 	if (err)
- 		return ERR_PTR(err);
-+	if (msg.rx.ret == -BPMP_EINVAL) {
-+		/* Cluster not available */
-+		return NULL;
-+	}
-+	if (msg.rx.ret)
-+		return ERR_PTR(-EINVAL);
- 
- 	/*
- 	 * Make sure frequency table step is a multiple of mdiv to match
--- 
-2.32.0
+So for the arch/s390/pci bit:
+
+Acked-by: Niklas Schnelle <schnelle@linux.ibm.com>
 
