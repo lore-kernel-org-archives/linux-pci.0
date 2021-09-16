@@ -2,87 +2,121 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-24.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF093C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 13:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A14C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 14:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B46F661242
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 13:18:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAAA361130
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 14:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239975AbhIPNTV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Sep 2021 09:19:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60182 "EHLO mail.kernel.org"
+        id S238066AbhIPOGK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Sep 2021 10:06:10 -0400
+Received: from mga05.intel.com ([192.55.52.43]:14880 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239938AbhIPNTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Sep 2021 09:19:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B26BB6120C;
-        Thu, 16 Sep 2021 13:17:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631798280;
-        bh=a6MhXl5zhS34pRFEuXvcPF9MxQ2ksB0jFmzclEHjvYk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ftRnJWYChLfI/jkFRsCqcZ9FWxFw8mYdSudFKn4lJLGH98MbyWvd7HKUCt1UdlMlb
-         OL/d83COlrdqoU0h0b89bqjZWJlUtGPvRbpjZDlUW0Iy2v+2O16wyaGMqRQdGaqCQ1
-         sZJ588fjmUxiR12a4aFkhs5NCqxLVswIDXNDCMjrJJIjmNukxEC030Txu931TWB4pd
-         zgy+Oq2vcRhyZnvI4xbQG9yO73wIyslXODtQU6DqZHAjLOJbysjMdxPyDjzW3GUnMC
-         b8A4S5S+r+w5Jtdwe3HLduTqLubT/4crSItWxd4plFOU2RqIXJ/veEZ1Vi6M9rBZzE
-         YRo/CVj2ypVxA==
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     x86@kernel.org
-Cc:     jose.souza@intel.com, hpa@zytor.com, bp@alien8.de,
-        mingo@redhat.com, tglx@linutronix.de, kai.heng.feng@canonical.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, rudolph@fb.com,
-        xapienz@fb.com, bmilton@fb.com, Jakub Kicinski <kuba@kernel.org>,
-        stable@vger.kernel.org
-Subject: [PATCH] x86/intel: Disable HPET on another Intel Coffee Lake platform
-Date:   Thu, 16 Sep 2021 06:17:39 -0700
-Message-Id: <20210916131739.1260552-1-kuba@kernel.org>
-X-Mailer: git-send-email 2.31.1
+        id S235536AbhIPOGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Sep 2021 10:06:09 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10109"; a="308113409"
+X-IronPort-AV: E=Sophos;i="5.85,298,1624345200"; 
+   d="scan'208";a="308113409"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Sep 2021 07:04:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,298,1624345200"; 
+   d="scan'208";a="698873740"
+Received: from lkp-server01.sh.intel.com (HELO 285e7b116627) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 16 Sep 2021 07:04:47 -0700
+Received: from kbuild by 285e7b116627 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mQs0N-00016g-45; Thu, 16 Sep 2021 14:04:47 +0000
+Date:   Thu, 16 Sep 2021 22:03:58 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [helgaas-pci:pci/virtualization] BUILD SUCCESS
+ aae89a54f6d2fbe350b3641582ef411a8af71f12
+Message-ID: <61434ece.6bkcb4AALMUhsH7J%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-My Lenovo T490s with i7-8665U had been marking TSC as unstable
-since v5.13, resulting in very sluggish desktop experience...
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/virtualization
+branch HEAD: aae89a54f6d2fbe350b3641582ef411a8af71f12  PCI: Add ACS quirk for Pericom PI7C9X2G switches
 
-I have a 8086:3e34 bridge, also known as "Host bridge: Intel
-Corporation Coffee Lake HOST and DRAM Controller (rev 0c)".
-Add it to the list.
+elapsed time: 1712m
 
-We should perhaps consider applying this quirk more widely.
-The Intel documentation does not list my device [1], but
-linuxhw [2] does, and it seems to list a few more bridges
-we do not currently cover (3e31, 3ecc, 3e35, 3e0f).
+configs tested: 56
+configs skipped: 3
 
-[1] https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/8th-gen-core-family-datasheet-vol-2.pdf
-[2] https://github.com/linuxhw/DevicePopulation/blob/master/README.md
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Cc: stable@vger.kernel.org # v5.13+
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+arc                  randconfig-r043-20210915
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+riscv                randconfig-r042-20210915
+hexagon              randconfig-r045-20210915
+s390                 randconfig-r044-20210915
+hexagon              randconfig-r041-20210915
+
 ---
----
- arch/x86/kernel/early-quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 38837dad46e6..7d2de04f8750 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -716,6 +716,8 @@ static struct chipset early_qrk[] __initdata = {
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_INTEL, 0x3e20,
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
-+	{ PCI_VENDOR_ID_INTEL, 0x3e34,
-+		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_INTEL, 0x3ec4,
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
- 	{ PCI_VENDOR_ID_INTEL, 0x8a12,
--- 
-2.31.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
