@@ -4,23 +4,23 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C0B7C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E117C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:33:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F3FA61261
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:33:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4416F61246
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:33:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235152AbhIPIeT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Sep 2021 04:34:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56024 "EHLO mail.kernel.org"
+        id S235087AbhIPIe5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Sep 2021 04:34:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56298 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235238AbhIPIeM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Sep 2021 04:34:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8610461216;
-        Thu, 16 Sep 2021 08:32:50 +0000 (UTC)
+        id S235069AbhIPIe5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Sep 2021 04:34:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 04CB861242;
+        Thu, 16 Sep 2021 08:33:34 +0000 (UTC)
 From:   Huacai Chen <chenhuacai@loongson.cn>
 To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
         Bjorn Helgaas <bhelgaas@google.com>
@@ -28,9 +28,9 @@ Cc:     linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
         Xuefeng Li <lixuefeng@loongson.cn>,
         Huacai Chen <chenhuacai@gmail.com>,
         Huacai Chen <chenhuacai@loongson.cn>
-Subject: [PATCH V6 04/12] PCI/VGA: Prefer VGA device with legacy I/O enabled
-Date:   Thu, 16 Sep 2021 16:29:33 +0800
-Message-Id: <20210916082941.3421838-5-chenhuacai@loongson.cn>
+Subject: [PATCH V6 05/12] PCI/VGA: Prefer VGA device belongs to integrated GPU
+Date:   Thu, 16 Sep 2021 16:29:34 +0800
+Message-Id: <20210916082941.3421838-6-chenhuacai@loongson.cn>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210916082941.3421838-1-chenhuacai@loongson.cn>
 References: <20210916082941.3421838-1-chenhuacai@loongson.cn>
@@ -40,50 +40,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch is the second step of the rework: A VGA device with legacy
-I/O resources enabled is more preferred than those not enabled.
+This patch is the third step of the rework: A VGA device belongs to
+integrated GPU is more preferred than those not belong to.
 
 Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/gpu/vga/vgaarb.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+ drivers/gpu/vga/vgaarb.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index f8f95244d499..1ffc3decc9cb 100644
+index 1ffc3decc9cb..1daf2a011f83 100644
 --- a/drivers/gpu/vga/vgaarb.c
 +++ b/drivers/gpu/vga/vgaarb.c
-@@ -582,14 +582,27 @@ static bool vga_arb_integrated_gpu(struct device *dev)
- static void vga_arb_update_default_device(struct vga_device *vgadev)
- {
- 	struct pci_dev *pdev = vgadev->pdev;
-+	struct device *dev = &pdev->dev;
-+	struct vga_device *vgadev_default;
- 
- 	/*
- 	 * If we don't have a default VGA device yet, and this device owns
- 	 * the legacy VGA resources, make it the default.
- 	 */
--	if (!vga_default_device() &&
--	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
--		vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
-+	if (!vga_default_device()) {
-+		if ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)
-+			vgaarb_info(dev, "setting as boot VGA device\n");
-+		else
-+			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-+		vga_set_default_device(pdev);
-+	}
-+
-+	vgadev_default = vgadev_find(vga_default);
-+
-+	/* Overridden by a better device */
-+	if (vgadev_default && ((vgadev_default->owns & VGA_RSRC_LEGACY_MASK) == 0)
-+		&& ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
-+		vgaarb_info(dev, "overriding boot VGA device\n");
+@@ -605,6 +605,11 @@ static void vga_arb_update_default_device(struct vga_device *vgadev)
+ 		vgaarb_info(dev, "overriding boot VGA device\n");
  		vga_set_default_device(pdev);
  	}
++
++	if (vga_arb_integrated_gpu(dev) && vgadev->pdev != vga_default_device()) {
++		vgaarb_info(dev, "overriding boot VGA device\n");
++		vga_set_default_device(pdev);
++	}
  }
+ 
+ /*
 -- 
 2.27.0
 
