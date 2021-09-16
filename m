@@ -2,76 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5296C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 17:42:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DF48C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 22:43:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A446D601FC
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 17:42:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24A8A6120F
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 22:43:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344929AbhIPRno (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Sep 2021 13:43:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57088 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1355827AbhIPRmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Sep 2021 13:42:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2C93660EE9;
-        Thu, 16 Sep 2021 17:12:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631812354;
-        bh=rUp0AYw0+aYLGFQ+cIAh74/QQI3oJR2+BzOUg83Fjcw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=jbjB5iNNoTrNjHrEmBNMiKJTorOFLwo4Tp+V/6fNPH/CItGdY01tm+VaXlVFpWAn7
-         lEHo01kntaYxgaHTOibufKp2HncGWyP2zTKjtUcHgI2I+D1WvWapdyLft8JH0v9Iek
-         4UQ05T73q89nEKkA40oFZbqnRmDhHtO1tP5LMR4X5r/rTEOa/mS9c2kLPfL07Vl8nR
-         SjENd4w9VIggalYj3IDojfzpq+VoC35zQ3vBoBELhcKKhpR+9yLognlzC3mUHBNI3F
-         zd5aAuptvfR6oaoObZ2z43rQjmV5L4IrEvA0FiYfeMSfhv246gZm3BJL9pzZKstvkp
-         vlvygPYgXgK4w==
-Date:   Thu, 16 Sep 2021 12:12:32 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     hkallweit1@gmail.com, nic_swsd@realtek.com, bhelgaas@google.com,
-        davem@davemloft.net, kuba@kernel.org, anthony.wong@canonical.com,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC] [PATCH net-next v5 3/3] r8169: Implement dynamic ASPM
- mechanism
-Message-ID: <20210916171232.GA1624808@bjorn-Precision-5520>
+        id S241245AbhIPWpN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Sep 2021 18:45:13 -0400
+Received: from mail-wr1-f50.google.com ([209.85.221.50]:45766 "EHLO
+        mail-wr1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241229AbhIPWpM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Sep 2021 18:45:12 -0400
+Received: by mail-wr1-f50.google.com with SMTP id d21so11891492wra.12;
+        Thu, 16 Sep 2021 15:43:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Emc/waGaqZBzEYTGo5aYk3frZSwuJXjHG2aoRVgz318=;
+        b=3tvYg5A2e9ig0pgkyx3g06lMOnt4OhUVyo7sOeT8Y8LRYhOob5Jg4PKnklqUV18M0a
+         WJLJZ62PPWxBXSx5B+DVt9pGa/CamKdGr4+DUE4H5bisRATGm/NGKlFz+Nz66ROjKnEm
+         2wKBfQWQG972sSLluV0UwgLRujvtxxVr0ptdi0dzZ3j+AbXyYR94TxZ7v9RBb3Wq66zs
+         J0TGncT1XDI/YRTpBqkBbnis+66OzwXjgSi1/fgIBLQss+8YEVtCFcuLPBMDD9b6aJCf
+         UYF9igJ4d4KblDF91owb0NgmqpswpkVGZqqQXiUP+Pb6roll3tfKfRQ7gXHP0FVfbnDw
+         QZ+w==
+X-Gm-Message-State: AOAM532WCImy/m6xJcXbcar1sStGkYsGACCNd9gR7ChZyvUh3LZ78Rsk
+        flfeRbnrRaxqBV++Z4/oo/E=
+X-Google-Smtp-Source: ABdhPJyX4J8jGmgFDVzZVKRsjoLwjGHvn6PMfyvFhuEwzDk/9sVeeST9al0KB3n/P3PMx0kXEREsfQ==
+X-Received: by 2002:adf:a31a:: with SMTP id c26mr8766029wrb.307.1631832230712;
+        Thu, 16 Sep 2021 15:43:50 -0700 (PDT)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id g1sm4799781wrr.2.2021.09.16.15.43.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Sep 2021 15:43:49 -0700 (PDT)
+Date:   Fri, 17 Sep 2021 00:43:48 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: endpoint: Use sysfs_emit() in "show" functions
+Message-ID: <20210916224348.GA1510593@rocinante>
+References: <1630472957-26857-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <b9eb71b0-8328-fb05-3b8c-112cb8dbbda2@socionext.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210916154417.664323-4-kai.heng.feng@canonical.com>
+In-Reply-To: <b9eb71b0-8328-fb05-3b8c-112cb8dbbda2@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 11:44:17PM +0800, Kai-Heng Feng wrote:
-> r8169 NICs on some platforms have abysmal speed when ASPM is enabled.
-> Same issue can be observed with older vendor drivers.
-> 
-> The issue is however solved by the latest vendor driver. There's a new
-> mechanism, which disables r8169's internal ASPM when the NIC traffic has
-> more than 10 packets, and vice versa. 
+Hayashi-san,
 
-Obviously this is a *rate*, not an absolute number.  I think you mean
-something like "10 packets in 1000ms".
+Thank you for sending this as separate patch.
 
-> The possible reason for this is
-> likely because the buffer on the chip is too small for its ASPM exit
-> latency.
-> 
-> Realtek confirmed that all their PCIe LAN NICs, r8106, r8168 and r8125
-> use dynamic ASPM under Windows. So implement the same mechanism here to
-> resolve the issue.
-> 
-> Also introduce a lock to prevent race on accessing config registers.
+> Gentle ping, are there any comments?
 
-Can you please include the bugzilla link where you attached lspci
-data?  I think it's this:
+I am sure Bjorn or Lorenzo will get to this patch soon, it's still marked
+as "New" in patchwork, as per:
+  https://patchwork.kernel.org/project/linux-pci/patch/1630472957-26857-1-git-send-email-hayashi.kunihiko@socionext.com/
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=214307
+My "Reviewed-by" still applies, of course.
 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+[...]
+> > Convert sprintf() in sysfs "show" functions to sysfs_emit() in order to
+> > check for buffer overruns in sysfs outputs.
+
+As Bjorn, or someone else might ask, you could add a short note about this
+being configfs, rather than sysfs, and that sysfs_emit() will still work.
+
+Something as per what I said while commenting on the previous patch:
+  https://lore.kernel.org/all/20210719034313.GA274232@rocinante/
+
+	Krzysztof
