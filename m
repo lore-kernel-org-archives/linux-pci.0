@@ -2,195 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C3F1C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA29C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 09:33:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84A6360F93
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 08:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93F65611C8
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 09:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235315AbhIPIxg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Sep 2021 04:53:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54284 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235316AbhIPIxf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Sep 2021 04:53:35 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3273C0613C1;
-        Thu, 16 Sep 2021 01:52:14 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id g21so13984449edw.4;
-        Thu, 16 Sep 2021 01:52:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=B09QXAmkxO7Uv/3aDjImv67z6YW/x3i4crnjSFm1H6s=;
-        b=c5swjq7Xwr+yxhe5ss211K76aHHiaYPquwXj3jkHmWr+9WzNgb8x9YU8acD61e4Ary
-         JZLgHVwK5BmhgjQCLtSnntS9oeed9rTnFQxMiHu6+HKOfgdqZQXuMLkmd3WvdffZGVD1
-         p5UUEVe4NR6XEBHt6wUMyPLaWk/hM/r8PZxvpFEmR2XQ5O6uWgn8fp40L0Yb9ca/6ZVh
-         gUBn4yo8eUyUr0MSYCky8L7qp9quvzQRQVNcNSHdeQzThNQwC9eJkbAoVCdmx5xSZ/Xb
-         5dKcp0yO71PzfHHIuDWERrBCHwdRQcEnNmiVdQ1B2pf3R7EnRPYaEy73wy/EKvPdD/WP
-         dfXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=B09QXAmkxO7Uv/3aDjImv67z6YW/x3i4crnjSFm1H6s=;
-        b=0+izjrUNnBMgIYiZcmwDI8Y6EDw5iNK49MvOI/FNm4lEYudSXj67UiDVlSTVzyDdNQ
-         1T4nljTMNZaqpHIKzeHO/YLxPCuMDI7Wfb1HoI/b3yBLYwC6gfZN5QtyKaLG60mqEkGo
-         1EMR8wv/xXSuM77II5uDif8tzyu2zN5lctJe/ozXQLSGEguAfnfo3rXxiBp5z3pcKDun
-         rT6ZgLbYddz5uI+fR3irnd6Ak1CuZgIBLg0huUS9YxGMya6ZOjR4M/LSIqSvZ0KlgAVe
-         8G8W5a8PpeWmdxWr93y9WHLW4DzCjJL7+6X0WjWOeBeeijuZ9KpdTmuNqYPbJ4EqO2wl
-         3QXA==
-X-Gm-Message-State: AOAM530GloF0FQEau5rlmeaT/4870zKjGxTmDE3HOr1SNw7eqnc97tRA
-        HTOF0mCtFeWafMKiuGar+iY=
-X-Google-Smtp-Source: ABdhPJyUZbd9L3cVBxoF/4U1cZ7bllNNLA6Lvf2zU+QH/24bUAvgMPaX1O2dwcZCMMYouOFm6hAAag==
-X-Received: by 2002:a17:906:3591:: with SMTP id o17mr5204602ejb.158.1631782333474;
-        Thu, 16 Sep 2021 01:52:13 -0700 (PDT)
-Received: from localhost.localdomain (catv-176-63-0-115.catv.broadband.hu. [176.63.0.115])
-        by smtp.googlemail.com with ESMTPSA id t24sm1112961edr.84.2021.09.16.01.52.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Sep 2021 01:52:13 -0700 (PDT)
-From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org
-Cc:     "Bolarinwa O. Saheed" <refactormyself@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com
-Subject: [RFC PATCH 4/4] PCI/ASPM: Remove unncessary linked list defined within aspm.c
-Date:   Thu, 16 Sep 2021 10:52:06 +0200
-Message-Id: <20210916085206.2268-5-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20210916085206.2268-1-refactormyself@gmail.com>
-References: <20210916085206.2268-1-refactormyself@gmail.com>
+        id S235662AbhIPJfJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Sep 2021 05:35:09 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:13256 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235582AbhIPJfH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Sep 2021 05:35:07 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 18G80eiI015912;
+        Thu, 16 Sep 2021 05:33:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=qsA7PkV5pI59qeVSVGVfVRV97WN1QFXQJwB3Icmh79U=;
+ b=LLrPq+HyvYaSIELJ+eU34NtviaqXZnfP1SxkQth9vg+5a0xQ84RCkJQWl6qGUqqMmeq4
+ 0tGOICigXxYLBIGcUirHAYDyvbAlN2QeMamqaT5Z2ugGLgzI1JstPa3CoGYlSQgR6Bk5
+ GakVH0yYh33b6QIXGJ4NQpbiu+2GWqjDqV1f6uihWPia9o4ie8YtDfR0lQJnv6nvbBpX
+ MUgwDQsq4kiyzcx/C97jDb1h0wYrRs4R0qnYkbXlnXJ9a/JUaQjQBfBjfnAvg0tLX93s
+ iq4KvWeuT0UAYAdjOIFkHGR82NCsYCXST8VK1iZe6jSMf4ai81/VOigl4eeomwmIXWPv /g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3b421g1wgv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 16 Sep 2021 05:33:45 -0400
+Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 18G9H2FC024718;
+        Thu, 16 Sep 2021 05:33:44 -0400
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3b421g1wg5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 16 Sep 2021 05:33:44 -0400
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18G9WVJi003798;
+        Thu, 16 Sep 2021 09:33:42 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma03fra.de.ibm.com with ESMTP id 3b0m39xh7q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 16 Sep 2021 09:33:42 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18G9Xcxb30671202
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Sep 2021 09:33:38 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A57414203F;
+        Thu, 16 Sep 2021 09:33:38 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 4DEBA4204D;
+        Thu, 16 Sep 2021 09:33:38 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 16 Sep 2021 09:33:38 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Linas Vepstas <linasvepstas@gmail.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org, Matthew Rosato <mjrosato@linux.ibm.com>,
+        Pierre Morel <pmorel@linux.ibm.com>
+Subject: [PATCH v2 3/4] PCI: Export pci_dev_lock()
+Date:   Thu, 16 Sep 2021 11:33:35 +0200
+Message-Id: <20210916093336.2895602-4-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210916093336.2895602-1-schnelle@linux.ibm.com>
+References: <20210916093336.2895602-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: xOIP_jw-lGA-LRg15PsNuYjweBj2FGW0
+X-Proofpoint-ORIG-GUID: x1gHyZUIa9cX9PfQmyT1usMaEnA2vfuY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
+ definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ adultscore=0 mlxlogscore=999 malwarescore=0 bulkscore=0 priorityscore=1501
+ suspectscore=0 clxscore=1015 spamscore=0 phishscore=0 mlxscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109030001 definitions=main-2109160044
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Bolarinwa O. Saheed" <refactormyself@gmail.com>
+Commit e3a9b1212b9d ("PCI: Export pci_dev_trylock() and pci_dev_unlock()")
+already exported pci_dev_trylock()/pci_dev_unlock() however in some
+circumstances such as during error recovery it makes sense to block
+waiting to get full access to the device so also export pci_dev_lock().
 
-aspm.c defines a linked list - `link_list` and stores each of
-its node in struct pcie_link_state.sibling. This linked list
-tracks devices for which the struct pcie_link_state object
-was successfully created. It is used to loop through the list
-for instance to set ASPM policy or update changes. However, it
-is possible to access these devices via existing lists defined
-inside pci.h
-
-This patch:
-- removes link_list and struct pcie_link_state.sibling
-- accesses child devices via struct pci_dev.bust_list
-- accesses all PCI buses via pci_root_buses on struct pci_bus.node
-
-Signed-off-by: Bolarinwa O. Saheed <refactormyself@gmail.com>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/pci/pcie/aspm.c | 40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 516a6f07ac6e..35bc16c00b32 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -48,7 +48,6 @@ struct aspm_latency {
- 
- struct pcie_link_state {
- 	struct pci_dev *pdev;		/* Upstream component of the Link */
--	struct list_head sibling;	/* node in link_list */
- 
- 	/* ASPM state */
- 	u32 aspm_support:7;		/* Supported ASPM state */
-@@ -76,7 +75,6 @@ struct pcie_link_state {
- static int aspm_disabled, aspm_force;
- static bool aspm_support_enabled = true;
- static DEFINE_MUTEX(aspm_lock);
--static LIST_HEAD(link_list);
- 
- #define POLICY_DEFAULT 0	/* BIOS default setting */
- #define POLICY_PERFORMANCE 1	/* high performance */
-@@ -872,10 +870,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	if (!link)
- 		return NULL;
- 
--	INIT_LIST_HEAD(&link->sibling);
- 	link->pdev = pdev;
--
--	list_add(&link->sibling, &link_list);
- 	pdev->link_state = link;
- 	return link;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ce2ab62b64cf..6fe810fdb796 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5059,12 +5059,13 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+ 	return pci_parent_bus_reset(dev, probe);
  }
-@@ -961,21 +956,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- static void pcie_update_aspm_capable(struct pcie_link_state *root)
+ 
+-static void pci_dev_lock(struct pci_dev *dev)
++void pci_dev_lock(struct pci_dev *dev)
  {
- 	struct pci_dev *dev;
-+	struct pci_bus *rootbus = root->pdev->bus;
- 	struct pcie_link_state *link;
- 	BUG_ON(root->pdev->bus->parent->self);
--	list_for_each_entry(link, &link_list, sibling) {
--		dev = pcie_get_root(link->pdev);
--		if (dev->link_state != root)
--			continue;
--
--		link->aspm_capable = link->aspm_support;
-+	list_for_each_entry(dev, &rootbus->devices, bus_list) {
-+		dev->link_state->aspm_capable = link->aspm_support;
- 	}
--	list_for_each_entry(link, &link_list, sibling) {
-+
-+	list_for_each_entry(dev, &rootbus->devices, bus_list) {
- 		struct pci_dev *child;
--		struct pci_bus *linkbus = link->pdev->subordinate;
--		dev = pcie_get_root(link->pdev);
--		if (dev->link_state != root)
--			continue;
-+		struct pci_bus *linkbus = dev->subordinate;
+ 	pci_cfg_access_lock(dev);
+ 	/* block PM suspend, driver probe, etc. */
+ 	device_lock(&dev->dev);
+ }
++EXPORT_SYMBOL_GPL(pci_dev_lock);
  
- 		list_for_each_entry(child, &linkbus->devices, bus_list) {
- 			if ((pci_pcie_type(child) != PCI_EXP_TYPE_ENDPOINT) &&
-@@ -1012,7 +1002,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ /* Return 1 on successful lock, 0 on contention */
+ int pci_dev_trylock(struct pci_dev *dev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cd8aa6fce204..c27c8fd1d30c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1671,6 +1671,7 @@ void pci_cfg_access_lock(struct pci_dev *dev);
+ bool pci_cfg_access_trylock(struct pci_dev *dev);
+ void pci_cfg_access_unlock(struct pci_dev *dev);
  
- 	/* All functions are removed, so just disable ASPM for the link */
- 	pcie_config_aspm_link(link, 0);
--	list_del(&link->sibling);
- 	/* Clock PM is for endpoint device */
- 	free_link_state(link);
++void pci_dev_lock(struct pci_dev *dev);
+ int pci_dev_trylock(struct pci_dev *dev);
+ void pci_dev_unlock(struct pci_dev *dev);
  
-@@ -1152,6 +1141,8 @@ static int pcie_aspm_set_policy(const char *val,
- {
- 	int i;
- 	struct pcie_link_state *link;
-+	struct pci_bus *bus;
-+	struct pci_dev *pdev;
- 
- 	if (aspm_disabled)
- 		return -EPERM;
-@@ -1164,9 +1155,18 @@ static int pcie_aspm_set_policy(const char *val,
- 	down_read(&pci_bus_sem);
- 	mutex_lock(&aspm_lock);
- 	aspm_policy = i;
--	list_for_each_entry(link, &link_list, sibling) {
--		pcie_config_aspm_link(link, policy_to_aspm_state(link));
--		pcie_set_clkpm(link, policy_to_clkpm_state(link));
-+	list_for_each_entry(bus, &pci_root_buses, node) {
-+		list_for_each_entry(pdev, &bus->devices, bus_list) {
-+			if (!pci_is_pcie(pdev))
-+				break;
-+
-+			link = pdev->link_state;
-+			if (!link)
-+				continue;
-+
-+			pcie_config_aspm_link(link, policy_to_aspm_state(link));
-+			pcie_set_clkpm(link, policy_to_clkpm_state(link));
-+		}
- 	}
- 	mutex_unlock(&aspm_lock);
- 	up_read(&pci_bus_sem);
 -- 
-2.20.1
+2.25.1
 
