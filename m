@@ -2,131 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A813C43217
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 23:41:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE503C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Sep 2021 01:37:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0794361212
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Sep 2021 23:41:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A292560F4A
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Sep 2021 01:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242044AbhIPXnI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Sep 2021 19:43:08 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:40690 "EHLO
-        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241640AbhIPXmg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Sep 2021 19:42:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Cc:To:From:content-disposition;
-        bh=xu7RSYLSljbvAHrIsQ+0jbijIDTDseCYnM10p+UoCDw=; b=Vmzky1ijjHNHMVGmCDNrU5JhF2
-        /be1hUwF7caE/oOmUlrxvGVdNZ7rrRKaVZd821he9A3A4kyJ4YJGZsunxw0r7wk5VPlMS1CchrkLi
-        h3ARtjuy/fCQxmYASGb+5ZfMOVD5ycXWPh2rfP1a0+DNSvoiIK2X/MpUNxU/0cM7UFyYevm8+Tbth
-        AcyjO8qf8h4MZgxEPADtIiukv1P9KC8lm9oj4/DM+d5TX4BtkH7uULL1zoP0oFo4fxFGLf7usM+5b
-        NbofpLayZLfwPJWD5lUyag+Ym7LQtSlXr3LpcXJ4T7fHNXdOT0ol5E8eN+P+DZ5R/J7zbYn2ORZH5
-        TyXvjsyQ==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1mR10E-0008I1-4I; Thu, 16 Sep 2021 17:41:14 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1mR105-000VrO-5X; Thu, 16 Sep 2021 17:41:05 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, iommu@lists.linux-foundation.org
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Jakowski Andrzej <andrzej.jakowski@intel.com>,
-        Minturn Dave B <dave.b.minturn@intel.com>,
-        Jason Ekstrand <jason@jlekstrand.net>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Xiong Jianxin <jianxin.xiong@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Martin Oliveira <martin.oliveira@eideticom.com>,
-        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 16 Sep 2021 17:40:51 -0600
-Message-Id: <20210916234100.122368-12-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210916234100.122368-1-logang@deltatee.com>
-References: <20210916234100.122368-1-logang@deltatee.com>
+        id S242408AbhIQBiV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Sep 2021 21:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58518 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236351AbhIQBiV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Sep 2021 21:38:21 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44188C061574;
+        Thu, 16 Sep 2021 18:37:00 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id n13-20020a17090a4e0d00b0017946980d8dso8851023pjh.5;
+        Thu, 16 Sep 2021 18:37:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ZJv0T0RMe21MF4kWcF0/B2W1/ozbKhtMFKhIRKl9ZMo=;
+        b=N/ot3EgDydF6p6/5n5AZkrhZktc26nOO0YKnIe1UIs+06S+gWNs69fqS1lOWK03WG9
+         ODaroI/6MJP8sjdjuAlPvMJQ5njetx+D+SmIrnNLBet/U1W1Arx2bdJLpsikWx+R5UUi
+         NRsNQ+RyEAUAEzkMdXIGsw6wh9BCrM5aT4ufsgh+IxvPbrKPf3MDofL7DFPqHyKImpVM
+         Yj3oRuA5WPxikyrBVxlcNj0R9y0fJrPNiRNyk2Jz31kptqtcItBybh6AWZUEe0KyL7sp
+         KeBIWUql0iJmpTznEp0QxYimonoNhHQHZoAHz4Wd25EPuOI4l9VggeIZeQgbM7blIfAY
+         D3gA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ZJv0T0RMe21MF4kWcF0/B2W1/ozbKhtMFKhIRKl9ZMo=;
+        b=KySWsRyLUDAVjYOnK7ftRL3g66URTrVPeU3FOTCc8JGZmOLcfRdOq2PpmlDe4llBVm
+         +SA0H4087bHudO7Je9e29tAgknsp9M4LFm1Bjv3wxPmgmokMd+TItLbQs/2VFc1Z1/nm
+         EUl0ZdM7At0R3nkQp0M5SzAoAGrlDGUbsqxpWVGx2uZld1BtaUhHU9OgdmZ/aWzelHmX
+         Wt2Uvf1ChviOZwOkOoZ91aq+ks0gfLRQ0t3TYYkwf5yKo2Hm8EnkA7FqbhizHzuZCbiQ
+         PyznU8IFgFkZFE4YrsJq4sBZyVkRoj6H13CTsl/Q+OYvaVtYFHuDskm+Gj4u+yN+2Ihz
+         Ga0w==
+X-Gm-Message-State: AOAM530XhQSSFyJ0+GlRoE9lH3z9zKAh4sdOonnr3Lt9aDhZNRYl0WV7
+        ChHZBVtj5f30t9orZZADTLNw35Uozhk=
+X-Google-Smtp-Source: ABdhPJwgmYnSHaM1HyOi/D04wtFhz3epJkyk/Oamgu87tZU4ZDV1ogTNRla9ogCm+ib0JPdBdRZ1jQ==
+X-Received: by 2002:a17:90b:224b:: with SMTP id hk11mr17871337pjb.231.1631842619577;
+        Thu, 16 Sep 2021 18:36:59 -0700 (PDT)
+Received: from [192.168.255.10] ([203.205.141.115])
+        by smtp.gmail.com with ESMTPSA id 132sm4176111pfy.190.2021.09.16.18.36.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 16 Sep 2021 18:36:59 -0700 (PDT)
+Subject: Re: [PATCH v3] PCI: vmd: Assign a number to each VMD controller
+To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
+Cc:     jonathan.derrick@intel.com, lorenzo.pieralisi@arm.com,
+        robh@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1631675273-1934-1-git-send-email-brookxu.cn@gmail.com>
+ <20210916225755.GA1511623@rocinante>
+From:   brookxu <brookxu.cn@gmail.com>
+Message-ID: <b87f7a38-d147-3da6-0352-ad2df7a5f55f@gmail.com>
+Date:   Fri, 17 Sep 2021 09:36:08 +0800
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.13.0
 MIME-Version: 1.0
+In-Reply-To: <20210916225755.GA1511623@rocinante>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 11/20] RDMA/core: introduce ib_dma_pci_p2p_dma_supported()
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce the helper function ib_dma_pci_p2p_dma_supported() to check
-if a given ib_device can be used in P2PDMA transfers. This ensures
-the ib_device is not using virt_dma and also that the underlying
-dma_device supports P2PDMA.
 
-Use the new helper in nvme-rdma to replace the existing check for
-ib_uses_virt_dma(). Adding the dma_pci_p2pdma_supported() check allows
-switching away from pci_p2pdma_[un]map_sg().
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/nvme/target/rdma.c |  2 +-
- include/rdma/ib_verbs.h    | 11 +++++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+Krzysztof Wilczyński wrote on 2021/9/17 6:57 上午:
+> Hi Xu,
+> 
+> Thank you for sending the patch over!
+> 
+> A small nitpick below, so feel free to ignore it.
+> 
+> [...] 
+>> @@ -769,28 +773,48 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>>  {
+>>  	unsigned long features = (unsigned long) id->driver_data;
+>>  	struct vmd_dev *vmd;
+>> -	int err;
+>> +	int err = 0;
+>>  
+>> -	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+>> -		return -ENOMEM;
+>> +	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20)) {
+>> +		err = -ENOMEM;
+>> +		goto out;
+>> +	}
+>>  
+>>  	vmd = devm_kzalloc(&dev->dev, sizeof(*vmd), GFP_KERNEL);
+>> -	if (!vmd)
+>> -		return -ENOMEM;
+>> +	if (!vmd) {
+>> +		err = -ENOMEM;
+>> +		goto out;
+>> +	}
+> 
+> I assume that you changed the above to use the newly added "out" label to
+> be consistent given that you also have the other label, but since there is
+> no clean-up to be done here, do we need this additional label?
+> 
+>>  	vmd->dev = dev;
+>> +	vmd->instance = ida_simple_get(&vmd_instance_ida, 0, 0, GFP_KERNEL);
+>> +	if (vmd->instance < 0) {
+>> +		err = vmd->instance;
+>> +		goto out;
+>> +	}
+> 
+> Similarly to here to the above, no clean-up to be done, and you could just
+> return immediately here.
+> 
+> What do you think?
+> 
 
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 891174ccd44b..9ea212c187f2 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -414,7 +414,7 @@ static int nvmet_rdma_alloc_rsp(struct nvmet_rdma_device *ndev,
- 	if (ib_dma_mapping_error(ndev->device, r->send_sge.addr))
- 		goto out_free_rsp;
- 
--	if (!ib_uses_virt_dma(ndev->device))
-+	if (ib_dma_pci_p2p_dma_supported(ndev->device))
- 		r->req.p2p_client = &ndev->device->dev;
- 	r->send_sge.length = sizeof(*r->req.cqe);
- 	r->send_sge.lkey = ndev->pd->local_dma_lkey;
-diff --git a/include/rdma/ib_verbs.h b/include/rdma/ib_verbs.h
-index 4b50d9a3018a..2b71c9ca2186 100644
---- a/include/rdma/ib_verbs.h
-+++ b/include/rdma/ib_verbs.h
-@@ -3986,6 +3986,17 @@ static inline bool ib_uses_virt_dma(struct ib_device *dev)
- 	return IS_ENABLED(CONFIG_INFINIBAND_VIRT_DMA) && !dev->dma_device;
- }
- 
-+/*
-+ * Check if a IB device's underlying DMA mapping supports P2PDMA transfers.
-+ */
-+static inline bool ib_dma_pci_p2p_dma_supported(struct ib_device *dev)
-+{
-+	if (ib_uses_virt_dma(dev))
-+		return false;
-+
-+	return dma_pci_p2pdma_supported(dev->dma_device);
-+}
-+
- /**
-  * ib_dma_mapping_error - check a DMA addr for error
-  * @dev: The device for which the dma_addr was created
--- 
-2.30.2
+Thanks, I think we can do this.
 
+> Also, I think we might have lost a "Reviewed-by" from Jon Derrick somewhere
+> along the way.  Given that you only updated the commit log and the subject
+> like, it probably still applies (unless Jon would like to give his seal of
+> approval again).
+> 
+
+Thanks, my mistake here.
+
+> 	Krzysztof
+> 
