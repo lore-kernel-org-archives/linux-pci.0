@@ -2,147 +2,132 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC188C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 00:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA13C4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 07:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B613B61164
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 00:23:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91F94610C7
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 07:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229505AbhIRAYh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:24:37 -0400
-Received: from mx.socionext.com ([202.248.49.38]:14927 "EHLO mx.socionext.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242364AbhIRAYh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Sep 2021 20:24:37 -0400
-Received: from unknown (HELO iyokan2-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 18 Sep 2021 09:23:13 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by iyokan2-ex.css.socionext.com (Postfix) with ESMTP id ACA472059036;
-        Sat, 18 Sep 2021 09:23:13 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Sat, 18 Sep 2021 09:23:13 +0900
-Received: from plum.e01.socionext.com (unknown [10.212.243.119])
-        by kinkan2.css.socionext.com (Postfix) with ESMTP id 1C804AB192;
-        Sat, 18 Sep 2021 09:23:13 +0900 (JST)
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Marc Zyngier <maz@kernel.org>
-Cc:     Masami Hiramatsu <mhiramat@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v3] PCI: uniphier: Serialize INTx masking/unmasking and fix the bit operation
-Date:   Sat, 18 Sep 2021 09:22:59 +0900
-Message-Id: <1631924579-24567-1-git-send-email-hayashi.kunihiko@socionext.com>
-X-Mailer: git-send-email 2.7.4
+        id S241904AbhIRHia (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Sep 2021 03:38:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39252 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231351AbhIRHi2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 03:38:28 -0400
+Received: from mail-ua1-x931.google.com (mail-ua1-x931.google.com [IPv6:2607:f8b0:4864:20::931])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20894C061574;
+        Sat, 18 Sep 2021 00:37:05 -0700 (PDT)
+Received: by mail-ua1-x931.google.com with SMTP id v9so7572570uak.1;
+        Sat, 18 Sep 2021 00:37:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=DzhfRJtsewrJy9gvg3PVALM7qiexBjbh/6ESbF9yAmQ=;
+        b=i1MTcAD9UnYWPlpu2z9dz7O9pjlQi/vuAb8G6J7B83k+RiE8sojZ6LvZ09CgoUK9n4
+         LczbRL08HgiCe6YvEYzMEkXDh1Q0J6Jk4GWLqVgxj1Zsl2mmDINOHcH8tljgjekYyuja
+         wbCP62A2N6pG33G7GTvW5WMKXBJcNSykuLc68szTgl3hBj0vHo3E9/Zrank8lIIdBfjG
+         oq7az9SaGonnHEdklABpvcpHh9cJebxCySh26hjrimvfq6LvmneliPGe0KzLyvCsp6eT
+         j/JPRVOpE7YO6zUAsiaElas3DlU350eVSGokG8rpu5d8vz5qH8YDH2eKKlIpOecW7U60
+         H3/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=DzhfRJtsewrJy9gvg3PVALM7qiexBjbh/6ESbF9yAmQ=;
+        b=UaFj+DX7cbkzfu3IVa6RUpB2tvWMzJTrkTAmI+nZ8Wg6zPISx/+jDXpZf6gHfEZhEy
+         +Fdl/TtptrfqdAHQ+q8dtog9n22yzOLutBpADpWwU1ZuaVmlAzRvUcjbrCwVl63892AX
+         B4VpZ6aBTVvkkpDDRy87U5zAIw3dn83A23PUvSCteT3Fvx/VvwPdjqkt008VD/XKJxsI
+         pEVXhqB02VmHC5eKcoVEmuVN1RrI2y+iemTWdFVGG/UT74ju36SRvzXVSs6mpsU+Un4U
+         IZxHHugNSK6xMlldo7xJS99Nn/nTHRNe5lQrokhyMz/4Pa2yPqTcRtyp+eDVeucmAIZl
+         s5Ew==
+X-Gm-Message-State: AOAM531zpCIcGDoGMcljRfa5sNikGEf2Ca3sOomKnEFz8v+evbEOn+41
+        ZaW3deQSf12M64HhZI1nk73pupKF715JcxQqHjs=
+X-Google-Smtp-Source: ABdhPJwi5zes5aLNI68EPqG8s32AnHOL7SpWjSiidkZRKZ44MpDEG9d4/Z3v+a0xOXreS8EF7zbs/z9Lh4RJ9M+id+w=
+X-Received: by 2002:ab0:31c1:: with SMTP id e1mr7426551uan.132.1631950623485;
+ Sat, 18 Sep 2021 00:37:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20210917035736.3934017-1-chenhuacai@loongson.cn>
+ <20210917035736.3934017-19-chenhuacai@loongson.cn> <CAK8P3a26CGyiZ9y7KxHGu6eHXZJ08X4mospr+3CL8g_qi=ACpg@mail.gmail.com>
+In-Reply-To: <CAK8P3a26CGyiZ9y7KxHGu6eHXZJ08X4mospr+3CL8g_qi=ACpg@mail.gmail.com>
+From:   Huacai Chen <chenhuacai@gmail.com>
+Date:   Sat, 18 Sep 2021 15:36:52 +0800
+Message-ID: <CAAhV-H5=Ut+rymv1RH+1GVS2oVZogtuwY_Sk-dDosJh6=USr0Q@mail.gmail.com>
+Subject: Re: [PATCH V3 18/22] LoongArch: Add PCI controller support
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Huacai Chen <chenhuacai@loongson.cn>,
+        Andy Lutomirski <luto@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Airlie <airlied@linux.ie>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Jianmin Lv <lvjianmin@loongson.cn>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Will Deacon <will@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The condition register PCI_RCV_INTX is used in irq_mask() and irq_unmask()
-callbacks. Accesses to register can occur at the same time without a lock.
-Add a lock into each callback to prevent the issue.
+Hi, Arnd,
 
-And INTX mask and unmask fields in PCL_RCV_INTX register should only be
-set/reset for each bit. Clearing by PCL_RCV_INTX_ALL_MASK should be
-removed.
+On Fri, Sep 17, 2021 at 5:02 PM Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> On Fri, Sep 17, 2021 at 5:57 AM Huacai Chen <chenhuacai@loongson.cn> wrote:
+> >
+> > Loongson64 based systems are PC-like systems which use PCI/PCIe as its
+> > I/O bus, This patch adds the PCI host controller support for LoongArch.
+> >
+> > Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
+> > Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+>
+> As discussed before, I think the PCI support should not be part of the
+> architecture code or this patch series. The headers are ok, but the pci.c
+> and acpi.c files have nothing loongarch specific in them, and you clearly
+> just copied most of this from arm64 or x86.
+In V2 part of the PCI code (pci-loongson.c) has moved to
+drivers/pci/controllers. For pci.c and acpi.c, I agree that "the thing
+should be like that", but have some different ideas about "the way to
+arrive at that". In my opinion, we can let this series be merged at
+first, and then do another series to "restructure the files and move
+common parts to the drivers directory". That way looks more natural to
+me (doing the other series at first may block the whole thing).
 
-INTX status fields in PCL_RCV_INTX register only indicates each INTX
-interrupt status, so the handler can't clear by writing 1 to the field.
-The status is expected to be cleared by the interrupt origin.
-The ack function has no meaning, so should remove it.
-
-Fixes: 7e6d5cd88a6f ("PCI: uniphier: Add UniPhier PCIe host controller support")
-Suggested-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Acked-by: Pali Rohár <pali@kernel.org>
-Acked-by: Marc Zyngier <maz@kernel.org>
----
-Changes in v3:
-- Squash two fix patches into one
-- Add Acked-by: line
-
-Changes in v2:
-- Add Acked-by: line to the first patch
-- Add a fix patch for bit operation
-
----
- drivers/pci/controller/dwc/pcie-uniphier.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-uniphier.c b/drivers/pci/controller/dwc/pcie-uniphier.c
-index d95df02..d35501b 100644
---- a/drivers/pci/controller/dwc/pcie-uniphier.c
-+++ b/drivers/pci/controller/dwc/pcie-uniphier.c
-@@ -194,30 +194,21 @@ static void uniphier_pcie_irq_enable(struct uniphier_pcie_priv *priv)
- 	writel(PCL_RCV_INTX_ALL_ENABLE, priv->base + PCL_RCV_INTX);
- }
- 
--static void uniphier_pcie_irq_ack(struct irq_data *d)
--{
--	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
--	u32 val;
--
--	val = readl(priv->base + PCL_RCV_INTX);
--	val &= ~PCL_RCV_INTX_ALL_STATUS;
--	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_STATUS_SHIFT);
--	writel(val, priv->base + PCL_RCV_INTX);
--}
--
- static void uniphier_pcie_irq_mask(struct irq_data *d)
- {
- 	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
-+	unsigned long flags;
- 	u32 val;
- 
-+	raw_spin_lock_irqsave(&pp->lock, flags);
-+
- 	val = readl(priv->base + PCL_RCV_INTX);
--	val &= ~PCL_RCV_INTX_ALL_MASK;
- 	val |= BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_MASK_SHIFT);
- 	writel(val, priv->base + PCL_RCV_INTX);
-+
-+	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
- 
- static void uniphier_pcie_irq_unmask(struct irq_data *d)
-@@ -225,17 +216,20 @@ static void uniphier_pcie_irq_unmask(struct irq_data *d)
- 	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct uniphier_pcie_priv *priv = to_uniphier_pcie(pci);
-+	unsigned long flags;
- 	u32 val;
- 
-+	raw_spin_lock_irqsave(&pp->lock, flags);
-+
- 	val = readl(priv->base + PCL_RCV_INTX);
--	val &= ~PCL_RCV_INTX_ALL_MASK;
- 	val &= ~BIT(irqd_to_hwirq(d) + PCL_RCV_INTX_MASK_SHIFT);
- 	writel(val, priv->base + PCL_RCV_INTX);
-+
-+	raw_spin_unlock_irqrestore(&pp->lock, flags);
- }
- 
- static struct irq_chip uniphier_pcie_irq_chip = {
- 	.name = "PCI",
--	.irq_ack = uniphier_pcie_irq_ack,
- 	.irq_mask = uniphier_pcie_irq_mask,
- 	.irq_unmask = uniphier_pcie_irq_unmask,
- };
--- 
-2.7.4
-
+>
+> What I would suggest you do instead is:
+>
+> - start a separate patch series, addressed to the ACPI, PCI host driver
+>   and ARM64 maintainers.
+>
+> - Move all the bits you need from arch/{arm64,ia64,x86} into
+>   drivers/acpi/pci/pci_root.c, duplicating them with #if/#elif/#else
+>   where they are too different, making the #else path the
+>   default that can be shared with loongarch.
+>
+> - Move the bits from pci_root_info/acpi_pci_root_info that are
+>   always needed into struct pci_host_bridge, with an
+>   #ifdef CONFIG_ACPI where appropriate.
+>
+> - Simplify as much as you can easily do.
+>
+>         Arnd
