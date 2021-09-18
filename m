@@ -2,71 +2,119 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08430C4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29E0EC433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:28:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF64B6128A
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:02:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00AF161359
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237253AbhIRNEF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Sep 2021 09:04:05 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:62332 "EHLO
+        id S237212AbhIRN3u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Sep 2021 09:29:50 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:55028 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237181AbhIRNED (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 09:04:03 -0400
+        with ESMTP id S237235AbhIRN3u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 09:29:50 -0400
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 3.0.0)
- id 48d4320e991614c8; Sat, 18 Sep 2021 15:02:39 +0200
+ id 5f1cbb66e24808ce; Sat, 18 Sep 2021 15:28:25 +0200
 Received: from kreacher.localnet (89-77-51-84.dynamic.chello.pl [89.77.51.84])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 5236266A568;
-        Sat, 18 Sep 2021 15:02:38 +0200 (CEST)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 2442D66A51F;
+        Sat, 18 Sep 2021 15:28:24 +0200 (CEST)
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux ACPI <linux-acpi@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 0/3] PCI: ACPI: glue: Get rid of acpi_pci_bus and rearrange code
-Date:   Sat, 18 Sep 2021 14:51:24 +0200
-Message-ID: <1794818.tdWV9SEqCh@kreacher>
+        x86 Maintainers <x86@kernel.org>
+Subject: [PATCH v1 5/5] PCI: PM: ACPI: Drop unnecessary acpi_pci_power_manageable() calls
+Date:   Sat, 18 Sep 2021 15:27:37 +0200
+Message-ID: <1769617.atdPhlSkOF@kreacher>
+In-Reply-To: <8003272.NyiUUSuA9g@kreacher>
+References: <8003272.NyiUUSuA9g@kreacher>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 89.77.51.84
 X-CLIENT-HOSTNAME: 89-77-51-84.dynamic.chello.pl
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrudehkedgheejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpefhgedtffejheekgeeljeevvedtuefgffeiieejuddutdekgfejvdehueejjeetvdenucfkphepkeelrdejjedrhedurdekgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeekledrjeejrdehuddrkeegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhig
- rdhinhhtvghlrdgtohhmpdhrtghpthhtoheprghnughrihihrdhshhgvvhgthhgvnhhkoheslhhinhhugidrihhnthgvlhdrtghomh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
+X-VADE-SPAMSTATE: spam:low
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrudehkedgiedvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenogfuphgrmhfkphculdeftddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepkeelrdejjedrhedurdekgeenucfuphgrmhfkphepkeelrdejjedrhedurdekgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeekledrjeejrdehuddrkeegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghr
+ nhgvlhdrohhrghdprhgtphhtthhopegrnhgurhhihidrshhhvghvtghhvghnkhhosehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopeigkeeisehkvghrnhgvlhdrohhrgh
+X-DCC--Metrics: v370.home.net.pl 1024; Body=7 Fuz1=7 Fuz2=7
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-After commit 375553a93201 ("PCI: Setup ACPI fwnode early and at the same time
-with OF"), PCI only uses acpi_pci_bus for running the ->setup() and ->cleanup()
-callbacks from there, but the functions pointed to by them can be invoked
-directly from the ACPI "glue" code if the device being processed is a PCI one,
-so patch [1/3] drops acpi_pci_bus and rearranges the code to call the PCI
-"setup" and "cleanup" routines directly.
+Simplify acpi_pci_power_manageable() and drop two invocations of it
+that are not necessary, because the functions called when it returns
+'true' do the requisite "power manageable" checks themselves.
 
-After that, the ->cleanup callback in struct acpi_bus_type has no users, so
-patch [2/3] gets rid of it.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c |    4 +---
+ drivers/pci/pci.c      |   16 +++++-----------
+ 2 files changed, 6 insertions(+), 14 deletions(-)
 
-Finally, patch [3/3] rearranges acpi_device_notify() to avoid looking up
-the "ACPI bus type" of the device in bus_type_list if its ACPI companion has
-been set upfront.
-
-Thanks!
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1128,9 +1128,7 @@ void pci_update_current_state(struct pci
+  */
+ void pci_refresh_power_state(struct pci_dev *dev)
+ {
+-	if (acpi_pci_power_manageable(dev))
+-		acpi_pci_refresh_power_state(dev);
+-
++	acpi_pci_refresh_power_state(dev);
+ 	pci_update_current_state(dev, dev->current_state);
+ }
+ 
+@@ -1143,14 +1141,10 @@ int pci_platform_power_transition(struct
+ {
+ 	int error;
+ 
+-	if (acpi_pci_power_manageable(dev)) {
+-		error = acpi_pci_set_power_state(dev, state);
+-		if (!error)
+-			pci_update_current_state(dev, state);
+-	} else
+-		error = -ENODEV;
+-
+-	if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
++	error = acpi_pci_set_power_state(dev, state);
++	if (!error)
++		pci_update_current_state(dev, state);
++	else if (!dev->pm_cap) /* Fall back to PCI_D0 */
+ 		dev->current_state = PCI_D0;
+ 
+ 	return error;
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -969,9 +969,7 @@ bool acpi_pci_power_manageable(struct pc
+ {
+ 	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+ 
+-	if (!adev)
+-		return false;
+-	return acpi_device_power_manageable(adev);
++	return adev && acpi_device_power_manageable(adev);
+ }
+ 
+ bool acpi_pci_bridge_d3(struct pci_dev *dev)
 
 
 
