@@ -2,74 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDC2C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:31:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46482C433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 20:18:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB0CB60F5B
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 13:31:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A69361076
+	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 20:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239193AbhIRNdT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Sep 2021 09:33:19 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:48762 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239009AbhIRNdR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 09:33:17 -0400
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 3.0.0)
- id fac171cdf082cbb6; Sat, 18 Sep 2021 15:31:52 +0200
-Received: from kreacher.localnet (89-77-51-84.dynamic.chello.pl [89.77.51.84])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 690F666A569;
-        Sat, 18 Sep 2021 15:31:49 +0200 (CEST)
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        x86 Maintainers <x86@kernel.org>
-Subject: [PATCH v1 0/5] PCI: ACPI: Get rid of struct pci_platform_pm_ops and clean up code
-Date:   Sat, 18 Sep 2021 15:31:48 +0200
-Message-ID: <2341482.jE0xQCEvom@kreacher>
+        id S232733AbhIRUTa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Sep 2021 16:19:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35410 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229793AbhIRUT3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 16:19:29 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA8CEC061574;
+        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id lb1-20020a17090b4a4100b001993f863df2so9832432pjb.5;
+        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
+        bh=Rz+Q9TyMwNKKp3Zp/SmxkDCYSutReaKArS9DPZj1vGU=;
+        b=Vyqf0lTIGrmhvmmZbrcMnYNEUwfBUKo4E2Ov3rvEGvdmi1SIrO0nJJrSOzROA68kwH
+         BO8d+xe+rBxBX1PfC68J4fL+6Y9NQvh9ibo9dRpcw8wmygRB4SmO1r/GI+RMfOKKJjZV
+         xYCtLqT/SUI56+T9T1WO1doYn6BZ1l4b+GJ/vMAjSE9dSqxaEm2sKmFD8ABhAgVEKE+W
+         ZWMk+nSpBjsbLa+gX+4bxc3d7wqep5MRmmHlxtkv+u+8jdSoIwVLGo/HWv5Jw+NfJVAK
+         HbtGMbCv0odqj8Zi24s5AEMyXJcY0xqizA8wcXSX1QZJHTrS8RZUXxPS9EjwgcPZk2Yw
+         /Cgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=Rz+Q9TyMwNKKp3Zp/SmxkDCYSutReaKArS9DPZj1vGU=;
+        b=0lmkRJuWOVX+MCv+FcXknOj/OKZdnimg0n48ix1eUis9onNzIGHPdY9MFULKSgWXhd
+         jAveJTZXugnmgOWzm6TO0+ENRISv9xh3gFiad6osgmCJZD9WwCerLqDkqy4WsVvQkC6l
+         PbvcoFdomWV+2uYx0elRI5ncG27kGgaNSPAjJ8iFHik8uztl9pZxJhmSlB5S1c3tnKUp
+         hLN7iWhrhUJSiUSmC01+KSiLJ/cB8Eg/VIbpCR6qjQbbm9V+kEaXnthSO4yOSu0tUreK
+         y8KUw167QhL6gvOGiXaM8kigGhwi4O5/QmJLvfrj/P2nOrwTMfwum3D+CQ2iangqomx9
+         2KLg==
+X-Gm-Message-State: AOAM532BkPlBOyqecoVevWCdENZYAh/F5lXjkJqAH7venA9bS4qOBNsw
+        YinI65OrtZgRvQ3yxJeI5bp9MlFftL8=
+X-Google-Smtp-Source: ABdhPJzSq2utTH0VPA7Dkd+SyWYQFPaB8HjoaVstGsD0PWEELSZCeHQHDlSQBMDOwX83XtxK05I2Fw==
+X-Received: by 2002:a17:90a:b288:: with SMTP id c8mr4690410pjr.67.1631996285001;
+        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
+Received: from pranay-desktop (2603-8001-9300-332c-0000-0000-0000-092b.res6.spectrum.com. [2603:8001:9300:332c::92b])
+        by smtp.gmail.com with ESMTPSA id qe17sm8973154pjb.39.2021.09.18.13.18.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Sep 2021 13:18:04 -0700 (PDT)
+Date:   Sat, 18 Sep 2021 13:18:02 -0700
+From:   Pranay Sanghai <pranaysanghai@gmail.com>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/pci/setup-irq.c: Fix up comments.
+Message-ID: <YUZJenW2UCA4Qu0O@pranay-desktop>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 89.77.51.84
-X-CLIENT-HOSTNAME: 89-77-51-84.dynamic.chello.pl
-X-VADE-SPAMSTATE: spam:low
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrudehkedgieefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenogfuphgrmhfkphculdeftddtmdenucfjughrpefhvffufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpefhgedtffejheekgeeljeevvedtuefgffeiieejuddutdekgfejvdehueejjeetvdenucfkphepkeelrdejjedrhedurdekgeenucfuphgrmhfkphepkeelrdejjedrhedurdekgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeekledrjeejrdehuddrkeegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgv
- lhdrohhrghdprhgtphhtthhopegrnhgurhhihidrshhhvghvtghhvghnkhhosehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopeigkeeisehkvghrnhgvlhdrohhrgh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=56 Fuz1=56 Fuz2=56
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+Make comments follow multi-line comment conventions. No functional change intended.
 
-As explained in the changelog of patch [2/5], using struct pci_platform_pm_ops
-for ACPI is not particularly beneficial, so it is better to get rid of it and
-call the functions pointed to by it directly from the PCI core.
+Signed-off-by: Pranay Sanghai <pranaysanghai@gmail.com>
 
-However, struct pci_platform_pm_ops is also used by the Intel MID support code
-that basically is regarded as dead which is why the majority of it has been
-dropped already as of commit 4590d98f5a4f ("sfi: Remove framework for deprecated
-firmware").  Since it doesn't make much sense to update that code, patch [1/5]
-drops the PCI part of it along with some arch pieces that are only needed for
-the PCI stuff.
+---
+ drivers/pci/setup-irq.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-The main modification is made by patch [2/5] (see the changelog thereof for
-details).
-
-The rest is just cleanups and some code consolidation on top of that.
-
-Thanks!
-
-
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 7129494754dd..ed628771250b 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -28,12 +28,13 @@ void pci_assign_irq(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	/* If this device is not on the primary bus, we need to figure out
+-	   which interrupt pin it will come in on.   We know which slot it
+-	   will come in on 'cos that slot is where the bridge is.   Each
+-	   time the interrupt line passes through a PCI-PCI bridge we must
+-	   apply the swizzle function.  */
+-
++	/*
++	 * If this device is not on the primary bus, we need to figure out
++	 * which interrupt pin it will come in on. We know which slot it
++	 * will come in on 'cos that slot is where the bridge is. Each
++	 * time the interrupt line passes through a PCI-PCI bridge we must
++	 * apply the swizzle function.
++	 */
+ 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+ 	/* Cope with illegal. */
+ 	if (pin > 4)
+@@ -56,7 +57,9 @@ void pci_assign_irq(struct pci_dev *dev)
+ 
+ 	pci_dbg(dev, "assign IRQ: got %d\n", dev->irq);
+ 
+-	/* Always tell the device, so the driver knows what is
+-	   the real IRQ to use; the device does not use it. */
++	/*
++	 * Always tell the device, so the driver knows what is
++	 * the real IRQ to use; the device does not use it.
++	 */
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+-- 
+2.33.0
 
