@@ -2,116 +2,195 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46482C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 20:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9B0BC433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Sep 2021 00:14:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A69361076
-	for <linux-pci@archiver.kernel.org>; Sat, 18 Sep 2021 20:18:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7CEF610CF
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Sep 2021 00:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232733AbhIRUTa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 18 Sep 2021 16:19:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35410 "EHLO
+        id S240784AbhISAQV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 18 Sep 2021 20:16:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229793AbhIRUT3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 16:19:29 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA8CEC061574;
-        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id lb1-20020a17090b4a4100b001993f863df2so9832432pjb.5;
-        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=Rz+Q9TyMwNKKp3Zp/SmxkDCYSutReaKArS9DPZj1vGU=;
-        b=Vyqf0lTIGrmhvmmZbrcMnYNEUwfBUKo4E2Ov3rvEGvdmi1SIrO0nJJrSOzROA68kwH
-         BO8d+xe+rBxBX1PfC68J4fL+6Y9NQvh9ibo9dRpcw8wmygRB4SmO1r/GI+RMfOKKJjZV
-         xYCtLqT/SUI56+T9T1WO1doYn6BZ1l4b+GJ/vMAjSE9dSqxaEm2sKmFD8ABhAgVEKE+W
-         ZWMk+nSpBjsbLa+gX+4bxc3d7wqep5MRmmHlxtkv+u+8jdSoIwVLGo/HWv5Jw+NfJVAK
-         HbtGMbCv0odqj8Zi24s5AEMyXJcY0xqizA8wcXSX1QZJHTrS8RZUXxPS9EjwgcPZk2Yw
-         /Cgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=Rz+Q9TyMwNKKp3Zp/SmxkDCYSutReaKArS9DPZj1vGU=;
-        b=0lmkRJuWOVX+MCv+FcXknOj/OKZdnimg0n48ix1eUis9onNzIGHPdY9MFULKSgWXhd
-         jAveJTZXugnmgOWzm6TO0+ENRISv9xh3gFiad6osgmCJZD9WwCerLqDkqy4WsVvQkC6l
-         PbvcoFdomWV+2uYx0elRI5ncG27kGgaNSPAjJ8iFHik8uztl9pZxJhmSlB5S1c3tnKUp
-         hLN7iWhrhUJSiUSmC01+KSiLJ/cB8Eg/VIbpCR6qjQbbm9V+kEaXnthSO4yOSu0tUreK
-         y8KUw167QhL6gvOGiXaM8kigGhwi4O5/QmJLvfrj/P2nOrwTMfwum3D+CQ2iangqomx9
-         2KLg==
-X-Gm-Message-State: AOAM532BkPlBOyqecoVevWCdENZYAh/F5lXjkJqAH7venA9bS4qOBNsw
-        YinI65OrtZgRvQ3yxJeI5bp9MlFftL8=
-X-Google-Smtp-Source: ABdhPJzSq2utTH0VPA7Dkd+SyWYQFPaB8HjoaVstGsD0PWEELSZCeHQHDlSQBMDOwX83XtxK05I2Fw==
-X-Received: by 2002:a17:90a:b288:: with SMTP id c8mr4690410pjr.67.1631996285001;
-        Sat, 18 Sep 2021 13:18:05 -0700 (PDT)
-Received: from pranay-desktop (2603-8001-9300-332c-0000-0000-0000-092b.res6.spectrum.com. [2603:8001:9300:332c::92b])
-        by smtp.gmail.com with ESMTPSA id qe17sm8973154pjb.39.2021.09.18.13.18.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Sep 2021 13:18:04 -0700 (PDT)
-Date:   Sat, 18 Sep 2021 13:18:02 -0700
-From:   Pranay Sanghai <pranaysanghai@gmail.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/pci/setup-irq.c: Fix up comments.
-Message-ID: <YUZJenW2UCA4Qu0O@pranay-desktop>
+        with ESMTP id S239491AbhISAQU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Sep 2021 20:16:20 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46648C061574;
+        Sat, 18 Sep 2021 17:14:56 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1632010491;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=agX9fVOcY0lG1flSHKbwyj/DdeEVh6/WedQOjxUd1Ck=;
+        b=VCuRJgyqXh+zScHFAb7YBIbcEBrWLNk4crQhUjRy8gIxtRho2wEv4FmVHh02ZrdegVG66T
+        cjssrwCvQMLFv6GAEXdlpv9YLu7zOoKMlsw6mMF6JyMhorXrNGwNfsp3kmqPrz2rODZosI
+        pP4H1GIajNfhwxvYDJXBoYycSS0XDDUIOkcxY26HuX3O0+AQjxgoBSWT6+4aPKEnrVqQ/+
+        3Mlgv/8jnPpeXHYmSKwMuwtQGBtgJMSAG3NlKVykjTNoQABjPl8YHxt08f0jZ3qyz0WlNI
+        qdLkM120eIZ4jP+6+JPZKfP+GAgB5AhnlxflVtVRkaJl4SrvGjLk4ixGKG4aIA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1632010491;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=agX9fVOcY0lG1flSHKbwyj/DdeEVh6/WedQOjxUd1Ck=;
+        b=gTr9cY6KWw0VQsnHU1YUE/U5q/bWlkdmWL4HIp2GwrhsyDBMdQLHkoA7JyfBchRWaf0Rzp
+        rcJBRjEDa84M6/Cw==
+To:     Peter Zijlstra <peterz@infradead.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jakub Kicinski <kuba@kernel.org>, x86@kernel.org,
+        jose.souza@intel.com, hpa@zytor.com, bp@alien8.de,
+        mingo@redhat.com, kai.heng.feng@canonical.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, rudolph@fb.com, xapienz@fb.com,
+        bmilton@fb.com, stable@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Arjan van de Ven <arjan@linux.intel.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>
+Subject: Re: [PATCH] x86/intel: Disable HPET on another Intel Coffee Lake
+ platform
+In-Reply-To: <YURhL33YyXRMkdC6@hirez.programming.kicks-ass.net>
+References: <20210916131739.1260552-1-kuba@kernel.org>
+ <20210916150707.GA1611532@bjorn-Precision-5520>
+ <YURb1bzc3L4gNI9Q@hirez.programming.kicks-ass.net>
+ <YURhL33YyXRMkdC6@hirez.programming.kicks-ass.net>
+Date:   Sun, 19 Sep 2021 02:14:50 +0200
+Message-ID: <87v92x775x.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make comments follow multi-line comment conventions. No functional change intended.
+On Fri, Sep 17 2021 at 11:34, Peter Zijlstra wrote:
+> On Fri, Sep 17, 2021 at 11:11:49AM +0200, Peter Zijlstra wrote:
+>> On Thu, Sep 16, 2021 at 10:07:07AM -0500, Bjorn Helgaas wrote:
+>> > This seems to be an ongoing issue, not just a point defect in a single
+>> > product, and I really hate the onesy-twosy nature of this.  Is there
+>> > really no way to detect this issue automatically or fix whatever Linux
+>> > bug makes us trip over this?  I am no clock expert, so I have
+>> > absolutely no idea whether this is possible.
 
-Signed-off-by: Pranay Sanghai <pranaysanghai@gmail.com>
+Right, we need to have all these quirks because we can't define a
+generation cutoff based on family/model because X86 model is simply a
+random number. There might be some scheme behind it, but it's neither
+obvious nor documented.
 
----
- drivers/pci/setup-irq.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+But the HPET on the affected machines goes south when the system enters
+PC10. So the right thing to do is to check whether PC10 is supported and
+force disable HPET if that's the case. That disablement is required
+independent of the clocksource watchdog problem because HPET is exposed
+in other ways as well.
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 7129494754dd..ed628771250b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -28,12 +28,13 @@ void pci_assign_irq(struct pci_dev *dev)
- 		return;
- 	}
- 
--	/* If this device is not on the primary bus, we need to figure out
--	   which interrupt pin it will come in on.   We know which slot it
--	   will come in on 'cos that slot is where the bridge is.   Each
--	   time the interrupt line passes through a PCI-PCI bridge we must
--	   apply the swizzle function.  */
--
-+	/*
-+	 * If this device is not on the primary bus, we need to figure out
-+	 * which interrupt pin it will come in on. We know which slot it
-+	 * will come in on 'cos that slot is where the bridge is. Each
-+	 * time the interrupt line passes through a PCI-PCI bridge we must
-+	 * apply the swizzle function.
-+	 */
- 	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
- 	/* Cope with illegal. */
- 	if (pin > 4)
-@@ -56,7 +57,9 @@ void pci_assign_irq(struct pci_dev *dev)
- 
- 	pci_dbg(dev, "assign IRQ: got %d\n", dev->irq);
- 
--	/* Always tell the device, so the driver knows what is
--	   the real IRQ to use; the device does not use it. */
-+	/*
-+	 * Always tell the device, so the driver knows what is
-+	 * the real IRQ to use; the device does not use it.
-+	 */
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
--- 
-2.33.0
+Questions for Rafael:
 
+What's the proper way to figure out whether PC10 is supported? I got
+lost in the maze of intel_idle and ACPI muck and several other places
+which check that. Just grep for CPUID_MWAIT_LEAF and see how consistent
+all of that is.
+
+Why the heck can't we have _ONE_ authoritive implementation of that?
+Just because, right?
+
+Of course all of this is well documented as usual....
+
+>> X86 is gifted with the grant total of _0_ reliable clocks. Given no
+>> accurate time, it is impossible to tell which one of them is broken
+>> worst. Although I suppose we could attempt to synchronize against the
+>> PMU or MPERF..
+>> 
+>> We could possibly disable the tsc watchdog for
+>> X86_FEATURE_TSC_KNOWN_FREQ && X86_FEATURE_TSC_ADJUST I suppose.
+>> 
+>> And then have people with 'creative' BIOS get to keep the pieces.
+>
+> Alternatively, we can change what the TSC watchdog does for
+> X86_FEATURE_TSC_ADJUST machines. Instead of checking time against HPET
+> it can check if TSC_ADJUST changes. That should make it more resillient
+> vs HPET time itself being off.
+
+I tried that and I hated the mess it created. Abusing the clocksource
+watchdog machinery for that is a nightmare. Don't even think about it.
+
+When TSC_ADJUST is available then we check the MSR when a CPU goes idle,
+but not more often than once per second. My concern is that we can't
+check TSC_ADJUST for modifications on fully loaded CPUs, but why do I
+still care?
+
+The requirements for ditching the watchdog should be:
+
+    X86_FEATURE_TSC_KNOWN_FREQ &&
+    X86_FEATURE_TSC_ADJUST &&
+    X86_FEATURE_NONSTOP_TSC &&
+    X86_FEATURE_ARAT
+
+But expecting X86_FEATURE_TSC_KNOWN_FREQ to be set on these HPET
+trainwreck equipped machines is wishful thinking:
+
+# cpuid -1 -l 0x15
+CPU:
+   Time Stamp Counter/Core Crystal Clock Information (0x15):
+      TSC/clock ratio = 176/2
+      nominal core crystal clock = 0 Hz
+
+We calculate that missing frequency then from leaf 0x16:
+
+# cpuid -1 -l 0x16
+CPU:
+   Processor Frequency Information (0x16):
+      Core Base Frequency (MHz) = 0x834 (2100)
+      Core Maximum Frequency (MHz) = 0x1068 (4200)
+      Bus (Reference) Frequency (MHz) = 0x64 (100)
+
+But we don't set the TSC_KNOWN_FREQ feature bit in the case that crystal
+clock is 0 and we need to use leaf 16. Which is entirely correct because
+the Core Base Frequency CPUID info is a joke:
+
+[    3.045828] tsc: Refined TSC clocksource calibration: 2111.993 MHz
+
+The refined calibration is pretty accurate according to NTP and if you
+take the CPUID 15/16 numbers into account even obvious with pure math:
+
+  TSC/clock ratio = 176/2
+  Core Base Frequency (MHz) = 0x834 (2100)
+
+  2100 / (176 / 2) = 23.8636 (MHz)
+
+which would be a very unusual crystal frequency. The refined calibration
+makes a lot more sense:
+
+  2112 / (176 / 2) = 24 (MHz)
+
+which is one of the very well known crystal frequencies of these
+machines.
+
+It's 2021 now and we are still not able to get reasonable information
+from hardware/firmware about this?
+
+Can the hardware and firmware people finaly get their act together?
+
+Here is the simple list of things we are asking for:
+
+ - Reliable TSC which cannot be tinkered with even by "value add" BIOSes
+
+ - Reliable information from hardware/firmware about the TSC frequency
+
+ - Hardware enforced (or firmware assisted) guarantees of TSC being
+   synchronized accross sockets
+
+We are asking for that for more than _twenty_ years now. All what we get
+are useless new features and as demonstrated in the case at hand new
+types of wreckage instead of a proper solution to the underlying
+problems.
+
+I'm personally dealing with the x86 timer hardware trainwrecks for more
+than 20 years now. TBH, I'm tired of this idiocy and very close to the
+point where I stop caring.
+
+Thanks,
+
+        tglx
