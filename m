@@ -2,94 +2,178 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF1AEC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 12:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A2A7C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 14:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AB776109D
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 12:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85895610A0
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 14:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237524AbhITMOA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Sep 2021 08:14:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44138 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237519AbhITMN7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Sep 2021 08:13:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8B58D61040;
-        Mon, 20 Sep 2021 12:12:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632139952;
-        bh=92Zco9rXt6W+e6PF3VjFECoFUbUIIIKca4hGES5Ml+o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kSOSfcoJpTxGrpygYlvVlVB4djdfH7aRb6HHRyy9jIQaRSBF0C17nydFMyr0CbbKE
-         vxcMLftmwR93lOfPaGj/V6LDMZZ6ow4WLsxyLmN3RJvgXcOKUpK25sqR0alChon3PO
-         92ZU9DVll/y0bZeBy9mLeYOFYmEuFAx+ti/w2veFBrp4YX3P8r9EvJSfrG+iD6L01r
-         Ty/+gnc5ge1dhzCAKJXzgoe0WGJqcwK7IVW48LDE1EvOR9uc+C77W8mQfIjJr2mRsF
-         r50x5Mwzid6J8CUWPWba8amSTEtbHpVAAj4L5PaIGS08r/xFEfAvO0+91AdI9PG2q8
-         LsNCv1EWgEvEQ==
-Date:   Mon, 20 Sep 2021 08:12:31 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S240396AbhITOag (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Sep 2021 10:30:36 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:38382 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240519AbhITOac (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Sep 2021 10:30:32 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 18KESvRG016337;
+        Mon, 20 Sep 2021 09:28:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1632148137;
+        bh=Vta78zZRN1mhR3UclwkU5X9WZhDshhwfjWTJTA2d/m0=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=jYGc5cs1eQbDzh+AipAxG5PGqEokEjf69kU9A2sAxAa8vPt7VRC+eer2vkqSdybpv
+         YpuAdvHP7gohg68OJvck30gQvaL+S0RwlaWxDFtbWDb6yGHjKQsr6/pFAodfpAAOcX
+         u4V2JYDUYCFcrELB2XDGE8OvWvfAvsM6n7xGnIac=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 18KESvAM043824
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 20 Sep 2021 09:28:57 -0500
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Mon, 20
+ Sep 2021 09:28:56 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14 via
+ Frontend Transport; Mon, 20 Sep 2021 09:28:56 -0500
+Received: from [10.250.232.122] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 18KESrjl092540;
+        Mon, 20 Sep 2021 09:28:54 -0500
+Subject: Re: [PATCH 1/3] PCI: Add support in pci_walk_bus() to invoke callback
+ matching RID
+To:     Marc Zyngier <maz@kernel.org>
+CC:     Thomas Gleixner <tglx@linutronix.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 5.14 12/32] PCI: rcar: Add L1 link state fix into
- data abort hook
-Message-ID: <YUh6r6SOu7AH6P3f@sashalap>
-References: <20210911131149.284397-1-sashal@kernel.org>
- <20210911131149.284397-12-sashal@kernel.org>
- <6cbfadee-0d74-fa4c-9ef3-a1bce55632bb@gmail.com>
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <lokeshvutla@ti.com>
+References: <20210920064133.14115-1-kishon@ti.com>
+ <20210920064133.14115-2-kishon@ti.com> <8735pzwrq0.wl-maz@kernel.org>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <49b2ba0c-c69d-266c-5db6-549fab031ffd@ti.com>
+Date:   Mon, 20 Sep 2021 19:58:52 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <6cbfadee-0d74-fa4c-9ef3-a1bce55632bb@gmail.com>
+In-Reply-To: <8735pzwrq0.wl-maz@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Sep 11, 2021 at 06:05:37PM +0200, Marek Vasut wrote:
->On 9/11/21 3:11 PM, Sasha Levin wrote:
->>From: Marek Vasut <marek.vasut+renesas@gmail.com>
->>
->>[ Upstream commit a115b1bd3af0c2963e72f6e47143724c59251be6 ]
->>
->>When the link is in L1, hardware should return it to L0
->>automatically whenever a transaction targets a component on the
->>other end of the link (PCIe r5.0, sec 5.2).
->>
->>The R-Car PCIe controller doesn't handle this transition correctly.
->>If the link is not in L0, an MMIO transaction targeting a downstream
->>device fails, and the controller reports an ARM imprecise external
->>abort.
->>
->>Work around this by hooking the abort handler so the driver can
->>detect this situation and help the hardware complete the link state
->>transition.
->>
->>When the R-Car controller receives a PM_ENTER_L1 DLLP from the
->>downstream component, it sets PMEL1RX bit in PMSR register, but then
->>the controller enters some sort of in-between state.  A subsequent
->>MMIO transaction will fail, resulting in the external abort.  The
->>abort handler detects this condition and completes the link state
->>transition by setting the L1IATN bit in PMCTLR and waiting for the
->>link state transition to complete.
->
->You will also need the following patch, otherwise the build will fail 
->on configurations without COMMON_CLK (none where this driver is used, 
->but happened on one of the build bots). I'm waiting for PCIe 
->maintainers to pick it up:
->https://patchwork.kernel.org/project/linux-pci/patch/20210907144512.5238-1-marek.vasut@gmail.com/
+Hi Marc,
 
-I see that it's not upstream yet, so I'll drop this patch for now.
+On 20/09/21 2:26 pm, Marc Zyngier wrote:
+> On Mon, 20 Sep 2021 07:41:31 +0100,
+> Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>
+>> Add two arguments to pci_walk_bus() [requestorID and mask], and add
+>> support in pci_walk_bus() to invoke the *callback* only for devices
+>> whose RequestorID after applying *mask* matches with *requestorID*
+>> passed as argument.
+>>
+>> This is done in preparation for calculating the total number of
+>> interrupt vectors that has to be supported by a specific GIC ITS device ID,
+>> specifically when "msi-map-mask" is populated in device tree.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/bus.c   | 13 +++++++++----
+>>  include/linux/pci.h |  7 +++++--
+>>  2 files changed, 14 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index 3cef835b375f..e381e639ceaa 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -358,10 +358,12 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>>  }
+>>  EXPORT_SYMBOL(pci_bus_add_devices);
+>>  
+>> -/** pci_walk_bus - walk devices on/under bus, calling callback.
+>> +/** __pci_walk_bus - walk devices on/under bus matching requestor ID, calling callback.
+>>   *  @top      bus whose devices should be walked
+>>   *  @cb       callback to be called for each device found
+>>   *  @userdata arbitrary pointer to be passed to callback.
+>> + *  @rid      Requestor ID that has to be matched for the callback to be invoked
+>> + *  @mask     Mask that has to be applied to pci_dev_id(), before compating it with @rid
+>>   *
+>>   *  Walk the given bus, including any bridged devices
+>>   *  on buses under this bus.  Call the provided callback
+>> @@ -371,8 +373,8 @@ EXPORT_SYMBOL(pci_bus_add_devices);
+>>   *  other than 0, we break out.
+>>   *
+>>   */
+>> -void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>> -		  void *userdata)
+>> +void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>> +		    void *userdata, u32 rid, u32 mask)
+>>  {
+>>  	struct pci_dev *dev;
+>>  	struct pci_bus *bus;
+>> @@ -399,13 +401,16 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>>  		} else
+>>  			next = dev->bus_list.next;
+>>  
+>> +		if (mask != 0xffff && ((pci_dev_id(dev) & mask) != rid))
+> 
+> Why the check for the mask? I also wonder whether the mask should apply
+> to the rid as well:
 
--- 
+If the mask is set for all 16bits, then there is not going to be two PCIe
+devices which gets the same ITS device ID right? So no need for calculating
+total number of vectors?
+> 
+> 		if ((pci_dev_id(dev) & mask) != (rid & mask))
+> 
+>> +			continue;
+>> +
+>>  		retval = cb(dev, userdata);
+>>  		if (retval)
+>>  			break;
+>>  	}
+>>  	up_read(&pci_bus_sem);
+>>  }
+>> -EXPORT_SYMBOL_GPL(pci_walk_bus);
+>> +EXPORT_SYMBOL_GPL(__pci_walk_bus);
+>>  
+>>  struct pci_bus *pci_bus_get(struct pci_bus *bus)
+>>  {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index cd8aa6fce204..8500fec56e50 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1473,14 +1473,17 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>>  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>>  		    int pass);
+>>  
+>> -void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>> -		  void *userdata);
+>> +void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>> +		    void *userdata, u32 rid, u32 mask);
+>>  int pci_cfg_space_size(struct pci_dev *dev);
+>>  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>>  void pci_setup_bridge(struct pci_bus *bus);
+>>  resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+>>  					 unsigned long type);
+>>  
+>> +#define pci_walk_bus(top, cb, userdata) \
+>> +	 __pci_walk_bus((top), (cb), (userdata), 0x0, 0xffff)
+> 
+> Please keep this close to the helper it replaces. I also really
+> dislike the use of this raw 0xffff. Don't we already have a named
+> constant that represents the mask for a RID?
+
+I didn't find one on quick look but let me check.
+
 Thanks,
-Sasha
+Kishon
