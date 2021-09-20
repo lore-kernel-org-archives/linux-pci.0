@@ -2,144 +2,84 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2BF4C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 20:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6A6C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 22:13:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1581611C2
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 20:37:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C949760EE7
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 22:13:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230474AbhITUjF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Sep 2021 16:39:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52408 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229697AbhITUhF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Sep 2021 16:37:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 22A1E604DC;
-        Mon, 20 Sep 2021 20:35:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632170138;
-        bh=voQEBfP9XzUDzXjG0DL0BLZOIItOzN1mK1/I5iKEvUE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=CavUB91uBNFDnMchx2C9ZotlZ2lp7cLpSEIrhMu8L5ixnwF1So13GBAG2Nh+Q5hbm
-         nXyvIb0HsQqjaLzgzCJwLzGBRa8jHrYs7i1JKhHraTi5sLA5fzrgB+ZZ5PaZvExidK
-         Dlab+C+lHdvYWm/UxZcjrP1ZCoA+cg/eB3DYLPv9RkaHlbBR0gdxan5awocdBsrhQ2
-         wcmiy6UAl8B8IwNhLuZu+CAIZonGpmKxMUIHoIdewx5w9qWgYlYW1xNrKpDL5XAU5l
-         fgqo37Am9WDcRCwVm6ujaOoZXvkuRsmRDGscGvldKxM523PV138P8D8eFnygxyGtAp
-         yuLscK4aXPOhQ==
-Date:   Mon, 20 Sep 2021 15:35:36 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jan Kiszka <jan.kiszka@siemens.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI/portdrv: Do not setup up IRQs if there are no
- users
-Message-ID: <20210920203536.GA37479@bhelgaas>
+        id S230182AbhITWPC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Sep 2021 18:15:02 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:29340 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232018AbhITWNA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Sep 2021 18:13:00 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1632175893; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Date: Message-ID: Subject: From: Cc: To: Sender;
+ bh=vONWPXkx6SD8VsjCp021j3U3grcczOLeZXYZcHjEzN4=; b=jdZQZxWkGLFMVYsbYbEEii3aHigQzbbgeqJkOcplfCAURGwm5xGy3DrxtE2MgPwvUzFeCbTs
+ JxtMYYGaGCek3jedKXTWCd4Jfgd3LVd+453nFVGORQss89z2PUgGd//BdnHLQpDgd287O92B
+ Jnk96+1/C1VBEYNBf5HKePNzz64=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n03.prod.us-west-2.postgun.com with SMTP id
+ 61490714b585cc7d24748e13 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Sep 2021 22:11:32
+ GMT
+Sender: hemantk=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DA83DC4360D; Mon, 20 Sep 2021 22:11:31 +0000 (UTC)
+Received: from [192.168.1.9] (cpe-76-176-73-171.san.res.rr.com [76.176.73.171])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: hemantk)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 19EB7C4338F;
+        Mon, 20 Sep 2021 22:11:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 19EB7C4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+To:     helgaas@kernel.org
+Cc:     linux-pci@vger.kernel.org, manivannan.sadhasivam@linaro.org
+From:   Hemant Kumar <hemantk@codeaurora.org>
+Subject: Revert "PCI/ASPM: Save/restore L1SS Capability for suspend/resume"
+Message-ID: <06838361-0d2c-4a18-da04-6fb586ecd730@codeaurora.org>
+Date:   Mon, 20 Sep 2021 15:11:30 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8f9a13ac-8ab1-15ac-06cb-c131b488a36f@siemens.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 10:08:10AM +0200, Jan Kiszka wrote:
-> From: Jan Kiszka <jan.kiszka@siemens.com>
-> 
-> Avoid registering service IRQs if there is no service that offers them
-> or no driver to register a handler against them. This saves IRQ vectors
-> when they are limited (e.g. on x86) and also avoids that spurious events
-> could hit a missing handler. Such spurious events need to be generated
-> by the Jailhouse hypervisor for active MSI vectors when enabling or
-> disabling itself.
-> 
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Hi Bjorn,
 
-Applied to pci/portdrv for v5.16, thanks!
+Is there any plan to revisit the fix to allow L1SS CTRL1 and CTRL2 save 
+and restore to work with suspend and resume.
 
-> ---
-> 
-> Changes in v2:
->  - move initialization of irqs to address test bot finding
-> 
->  drivers/pci/pcie/portdrv_core.c | 47 +++++++++++++++++++++------------
->  1 file changed, 30 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index e1fed6649c41..0e2556269429 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -166,9 +166,6 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  {
->  	int ret, i;
->  
-> -	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> -		irqs[i] = -1;
-> -
->  	/*
->  	 * If we support PME but can't use MSI/MSI-X for it, we have to
->  	 * fall back to INTx or other interrupts, e.g., a system shared
-> @@ -312,8 +309,10 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->   */
->  int pcie_port_device_register(struct pci_dev *dev)
->  {
-> -	int status, capabilities, i, nr_service;
-> -	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
-> +	int status, capabilities, irq_services, i, nr_service;
-> +	int irqs[PCIE_PORT_DEVICE_MAXSERVICES] = {
-> +		[0 ... PCIE_PORT_DEVICE_MAXSERVICES-1] = -1
-> +	};
->  
->  	/* Enable PCI Express port device */
->  	status = pci_enable_device(dev);
-> @@ -326,18 +325,32 @@ int pcie_port_device_register(struct pci_dev *dev)
->  		return 0;
->  
->  	pci_set_master(dev);
-> -	/*
-> -	 * Initialize service irqs. Don't use service devices that
-> -	 * require interrupts if there is no way to generate them.
-> -	 * However, some drivers may have a polling mode (e.g. pciehp_poll_mode)
-> -	 * that can be used in the absence of irqs.  Allow them to determine
-> -	 * if that is to be used.
-> -	 */
-> -	status = pcie_init_service_irqs(dev, irqs, capabilities);
-> -	if (status) {
-> -		capabilities &= PCIE_PORT_SERVICE_HP;
-> -		if (!capabilities)
-> -			goto error_disable;
-> +
-> +	irq_services = 0;
-> +	if (IS_ENABLED(CONFIG_PCIE_PME))
-> +		irq_services |= PCIE_PORT_SERVICE_PME;
-> +	if (IS_ENABLED(CONFIG_PCIEAER))
-> +		irq_services |= PCIE_PORT_SERVICE_AER;
-> +	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
-> +		irq_services |= PCIE_PORT_SERVICE_HP;
-> +	if (IS_ENABLED(CONFIG_PCIE_DPC))
-> +		irq_services |= PCIE_PORT_SERVICE_DPC;
-> +	irq_services &= capabilities;
-> +
-> +	if (irq_services) {
-> +		/*
-> +		 * Initialize service irqs. Don't use service devices that
-> +		 * require interrupts if there is no way to generate them.
-> +		 * However, some drivers may have a polling mode (e.g.
-> +		 * pciehp_poll_mode) that can be used in the absence of irqs.
-> +		 * Allow them to determine if that is to be used.
-> +		 */
-> +		status = pcie_init_service_irqs(dev, irqs, irq_services);
-> +		if (status) {
-> +			irq_services &= PCIE_PORT_SERVICE_HP;
-> +			if (!irq_services)
-> +				goto error_disable;
-> +		}
->  	}
->  
->  	/* Allocate child services if any */
-> -- 
-> 2.31.1
+Referring to the lkml discussion 
+https://lore.kernel.org/linux-pci/20201228040513.GA611645@bjorn-Precision-5520/
+
+A patch was shared, described as :-
+"4257f7e008ea restores PCI_L1SS_CTL1, then PCI_L1SS_CTL2.  I think it
+should do those in the reverse order, since the Enable bits are in
+PCI_L1SS_CTL1.  It also restores L1SS state (potentially enabling
+L1.x) before we restore the PCIe Capability (potentially enabling ASPM
+as a whole).  Those probably should also be in the other order."
+
+We are planning to enable aspm driver, but without L1SS control register 
+save and restore, it gets disabled after resume.
+
+Thanks,
+Hemant
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
+Forum, a Linux Foundation Collaborative Project
