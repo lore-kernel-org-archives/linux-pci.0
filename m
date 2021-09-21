@@ -2,298 +2,201 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F54C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A7EDC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:36:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63A6F6128A
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EE4F61100
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:36:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232220AbhIUSG7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Sep 2021 14:06:59 -0400
-Received: from mga09.intel.com ([134.134.136.24]:54116 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232184AbhIUSG6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Sep 2021 14:06:58 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10114"; a="223466538"
-X-IronPort-AV: E=Sophos;i="5.85,311,1624345200"; 
-   d="scan'208";a="223466538"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2021 11:05:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,311,1624345200"; 
-   d="scan'208";a="557043072"
-Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by fmsmga002.fm.intel.com with ESMTP; 21 Sep 2021 11:05:28 -0700
-Received: from orsmsx605.amr.corp.intel.com (10.22.229.18) by
- ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2242.12; Tue, 21 Sep 2021 11:05:28 -0700
-Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
- orsmsx605.amr.corp.intel.com (10.22.229.18) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2242.12 via Frontend Transport; Tue, 21 Sep 2021 11:05:28 -0700
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.174)
- by edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2242.12; Tue, 21 Sep 2021 11:05:28 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mhpDOOLUXEffkxPOv0ik0EBObbjXNEuR3Kpdp332J3dPydn6XhmlrAVsxP+5h/B4nmHmym9pMYszmCWn/wx7IoOanIA769Ejzrh7ka9zJtOeUE2JOD+PQxSErV9iSivkpuRq8AMzbrMXdx0riBs9GnGm8+P5flODNfSoxYk57PaPnm6chuYW0bwuYTavelXW4/7NnpVBSMJzQXbHPJpN6RKDplxHCNiJF5fPC3yQJbDAnbzn8xycF0WNJ0jzXcJK51Hyk7SEhm/J1a3lv4Z9zXB/SfyE7EVxON7vtEPxOzw/YM0UEjSUjoeQVnyEQAcd0ctH1gsWS9lcXln+uDSveg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=jpG7Tcl/3duURSyetoQBGfjgJkrP3C+fZfQ4zhKT6p8=;
- b=Efc0p5m5NagY4ADoJ7Oqel4mtq15/ihEASPvuxqdKJ4pP16Xx9+avPaymChaZbM9v9mMAt6oB6alXYqEhWXPSf4T3eAUTa95goKghxjiYSMfzHcG7nCBYAvkngSP99TaKwE5O2vi/9wKIRUD1pMyJwyxve9inZWtqg0olHg3njK5fzejXK63OliZuKOV21yPbTwls0FDR/tcT4J0Bkb8Oikqi9kkM/4s9/h1QNqR46kAzPhXCBf6XOZGDG4wIiR5UxUfzbjXOPA23U1m6r3FCRaF/bLwrp8JatYkmMqpDg4aiU6qhBJRuVqgGBXmq8RNVj5XVRz9RV/5KNuNIc+tEA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jpG7Tcl/3duURSyetoQBGfjgJkrP3C+fZfQ4zhKT6p8=;
- b=BQ0HtohujLmb/BSe59NeAUGLlabw5ru34Ehk4wQCcZzMG5yuoRHX3z4ppISp1Vi49uDrtBUVwwQg2QM+OczXYmTv2GSbQlPL4kgwmYHaxO5IUBrLvxY6+2Fex5o8l5nWK3f5kixg/l1SEpfW5oJDiON5dUWPRSNZ/Vfca1kfGxQ=
-Authentication-Results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=intel.com;
-Received: from DM4PR11MB5326.namprd11.prod.outlook.com (2603:10b6:5:391::8) by
- DM6PR11MB2938.namprd11.prod.outlook.com (2603:10b6:5:64::11) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4523.18; Tue, 21 Sep 2021 18:05:26 +0000
-Received: from DM4PR11MB5326.namprd11.prod.outlook.com
- ([fe80::c61:d5d8:c71e:66da]) by DM4PR11MB5326.namprd11.prod.outlook.com
- ([fe80::c61:d5d8:c71e:66da%9]) with mapi id 15.20.4544.013; Tue, 21 Sep 2021
- 18:05:26 +0000
-Subject: Re: [PATCH] x86/intel: Disable HPET on another Intel Coffee Lake
- platform
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     Jakub Kicinski <kuba@kernel.org>, <x86@kernel.org>,
-        <jose.souza@intel.com>, <hpa@zytor.com>, <bp@alien8.de>,
-        <mingo@redhat.com>, <kai.heng.feng@canonical.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <rudolph@fb.com>, <xapienz@fb.com>, <bmilton@fb.com>,
-        <stable@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        "rafael@kernel.org" <rafael@kernel.org>
-References: <20210916131739.1260552-1-kuba@kernel.org>
- <20210916150707.GA1611532@bjorn-Precision-5520>
- <YURb1bzc3L4gNI9Q@hirez.programming.kicks-ass.net>
- <YURhL33YyXRMkdC6@hirez.programming.kicks-ass.net> <87v92x775x.ffs@tglx>
-From:   "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Organization: Intel Technology Poland Sp. z o. o., KRS 101882, ul. Slowackiego
- 173, 80-298 Gdansk
-Message-ID: <82c1b753-586d-dadf-54de-6509e70a00ea@intel.com>
-Date:   Tue, 21 Sep 2021 20:05:19 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.14.0
-In-Reply-To: <87v92x775x.ffs@tglx>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-ClientProxiedBy: AS8PR04CA0072.eurprd04.prod.outlook.com
- (2603:10a6:20b:313::17) To DM4PR11MB5326.namprd11.prod.outlook.com
- (2603:10b6:5:391::8)
+        id S233145AbhIUShu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Sep 2021 14:37:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37818 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232890AbhIUSht (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Sep 2021 14:37:49 -0400
+Received: from mail-ua1-x935.google.com (mail-ua1-x935.google.com [IPv6:2607:f8b0:4864:20::935])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E71CC061574;
+        Tue, 21 Sep 2021 11:36:21 -0700 (PDT)
+Received: by mail-ua1-x935.google.com with SMTP id p9so41652uak.4;
+        Tue, 21 Sep 2021 11:36:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=9rQM8rFOt2w9g1uwaNXKi/W0WBTPzmqUSP6L93KiS60=;
+        b=JKWfOwo0qRe2M5/nP75Fh8fugq/Ab9wJ1ekK/RVqZLuilnLgppHTT0GfCiF55qvp7W
+         0VuykJs079gw0rPbZD6WnQMcUgB5aSQ5wS4dVvoD8lyfnrSJw9dPoDRNIrpy1daUCxek
+         XGjpZLarSuxjsfWXdvg/D+Kaf6F9QJGZI3TLaQkL9R2nMcgCgL8Zv6pA4pBOkzRi467M
+         UMHJ+nBpazkTOQh0zSA1YQXPXHQJVX0bkSLB4A+Vx7Hu/zlZGoE2ZWIf9sYwfSlPd0eI
+         CcqPXgLD9R5LzNi/2ar5wtRpXUA/DQqUY84I2HhNRYAzoRKL8FK8aLfsJZQ8KeWtfdBC
+         xmtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=9rQM8rFOt2w9g1uwaNXKi/W0WBTPzmqUSP6L93KiS60=;
+        b=YPsnQvtceUJl0glwhuvKUpDH+TEerQ8Bmtn4AfPGxDRJ3vzp+PpoSvej24EueAx4wJ
+         vQzzB41ndSRFfDb5nIII+d5IA0sbgyOWCXSiOihdLnqyZ3RqVi50lPhRSDKZ1eWd1o9R
+         iBiA72lSd+yZofNloaIYndeTcS87Dcqu6b4bZ1H42xJH5FYoWIplLBGNHy0mE1wvJnDH
+         DBA8cgGY2+SJ1EjzAfXauyeCAagsA5vtiZ1DUx5RaAd7q+dPwPcs9jPRwg+VHtZ3bsED
+         G0d2RL0Eo1p0D9m+sX8WWFbg8tTcM4p75cCSQ2tEW4vpgcP674fh3sgd7MmRJxu1JEaa
+         uM1A==
+X-Gm-Message-State: AOAM5320PJWBK8HAjOaF/KbfTa9gOBBZr0yO1nDgRNbkIoXRQyhC5dvF
+        f7kGk8GhtUDzyJJrSx8kLoJOhIE9dyVEtqy3Eqw=
+X-Google-Smtp-Source: ABdhPJzlHF5SaM3EdhYmFitG9fTSjfMb13Rb23ebxONiBmZ6ZlAVTGAUMPEoxpdfFWSWOggbejil47BpAUPwhGWDZ4w=
+X-Received: by 2002:ab0:2a96:: with SMTP id h22mr18213847uar.0.1632249379251;
+ Tue, 21 Sep 2021 11:36:19 -0700 (PDT)
 MIME-Version: 1.0
-Received: from [192.168.100.217] (213.134.187.97) by AS8PR04CA0072.eurprd04.prod.outlook.com (2603:10a6:20b:313::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4523.16 via Frontend Transport; Tue, 21 Sep 2021 18:05:23 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 95968de2-5770-405a-db9a-08d97d2a63d2
-X-MS-TrafficTypeDiagnostic: DM6PR11MB2938:
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR11MB29387A5A1E0AA59DE9DEDB7BCBA19@DM6PR11MB2938.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e0DKTxuE8AWV5HixncYOlxuJhsVynEivYc2YyBjM3GnxuAWirmh2N9aqeE8uKl9JwteREIgbrx8uR3Q6f99Uy+FFNXm1AZyDRs5CCdPcsk6WF9dslW1ylM3j1Kq+jZqph7vd+2yQOPav9yq3oFpaqJxpYkEdaouc/BEwm4WSt1X4nef+7wqdi36mq1fA232pnkYwkJkB72kGJ8CdSpHPmy9YrVNC/IA759wsCw3FrN32lN9bDIhEIALxkmI8+28P/1AKzT1B0OeuP89TMMn7+MaFWSv/Wd7CmwXKFVm476x68DLfqc88KHkuDsgjcO4DOKDtLZQU/yA++VHLlyys6XzeBjewBz+1+h6cekfAUmMfKOSfCdwiaJQPfBq8MIkxlxhmZmh4jbkn5L/oNeHgNEBvXUf2YmB7HAp5CYXG11AywcjK3DxB2t9xK4xkXsIP3OB097/lnVh308XIF1uQmO0+sIz5ggsCWTuYQgMDnvQsJFLJ2jh8o8gEckEt6HuAzbXHPHkMBH0rrQDf723WWvPba/zuY7SwS293ZuWw5y/N6sFAcv6W/hDEtJwzT/MzirvGKJxEYhAAWzeDhauuze7mMIpGPxxYw67y9d83O1loujbxtYZX0krP03EV4EXLX6rtsX8AWcI39zKVoLH/XiWFEEYA3hAPzfaPB/JkjZISXuV0Sy/+s/RaKfYIzwZJW4lUig/IX8vczjUaXgEqO1GsYcNsMFnn6AxOHMH/oiI=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR11MB5326.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(53546011)(66476007)(66946007)(66556008)(6486002)(2616005)(508600001)(186003)(31686004)(956004)(6666004)(36916002)(2906002)(26005)(5660300002)(31696002)(4326008)(316002)(38100700002)(8936002)(54906003)(110136005)(36756003)(83380400001)(8676002)(16576012)(86362001)(7416002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?N1YxUEs5Y0ZFUTRWTUNjQTRwNWdTdi90cmgzVzMyTnFseGppTlpKQUVacjNp?=
- =?utf-8?B?UGdpL2NqUEJ1bUZPZi9EenhiLzhjQzg5Y1FDMnNsbFd1b1ZOQndSNVI0Q0Fw?=
- =?utf-8?B?aFFIN2l6Uk8wQXpTZng0ZWpjZmgwRWFvOERBNTlwSnNmU1Z0QUlGQVk0aU1K?=
- =?utf-8?B?dDVWbW0xWUx0NE9XS3ZKMTROSytTbFcwTm5Ddk90cU42MjRwWkExMTRiV05n?=
- =?utf-8?B?VVFMOWtIeE5kMmNLSE5kbUVIT25IbzZrQVFkbFhCMks2R0NQYmh2QXlKQmpG?=
- =?utf-8?B?V1BSUVk0Q3pTRHBiYk84N3Q4NFRzRUFKK2x3MVpoSjllYVhMQ0FzZU1vbldp?=
- =?utf-8?B?b3FKNXdKVlZWYmYzdElqQWkwcVFIWW5wcEp1cW1OVThwVVZYWGlPSXU5dE5P?=
- =?utf-8?B?NTREUXNlaDE4bmpJMlFRQUErRXZhSkk1TzNUbmpKMDB3MHducWd6ZFJwdVRs?=
- =?utf-8?B?QkJhT2dLUjJMSnI1aGs3Tk51VGU4cEM1NHhtcVBGTmVSd3RLdTlMbFl4QjRi?=
- =?utf-8?B?OWtLcEhWeGNPMDk4KzdaQzJIT0NjbVU4MERsdFhpQ2J2bWxFTEUzd1hwcHBj?=
- =?utf-8?B?OHlyd2dDWEx4S3FzaTM2emJON0VQSE9vb2N1MGhlQjNCdkRqMWs5MVJPS2RL?=
- =?utf-8?B?U1hwYjVsaUN1K3M5S2czQ2RLcVhEYWxJT2duM1laSFNBbGxJb0xGMWUrR2J1?=
- =?utf-8?B?WmM3S1poSlJEeGd5THFnQmpabEVYaHR3S0l6OFkxN0JvQnlOTU1PTXN1UTVn?=
- =?utf-8?B?bkcvZHpJQm12b3VkbmowSDIyTWdHOWR5eWd4UnlWRVQrRm9NMXEzNERXUnk5?=
- =?utf-8?B?V1RJRE5INnAxNjJOUUc4TkxmdE1pVXRmM2hSN2lpT1dZQU4zWmdTVFhuRnNu?=
- =?utf-8?B?ei9CeW1CdytVUzFiQ0gzWGdjTVNIMmRhd1I4b0JoZGEzSW1sWnkxRzZpMzY2?=
- =?utf-8?B?aHc1U21JVGVyNFpoSWtpZitHelNiZTlvWU1PNFNGeW9jWHpERUF1UXBnOEtS?=
- =?utf-8?B?a0JkTW0wYmRJMDNndDRKcm16VXY4Q1k2b0hOMFhNUGxtaUNKTHBWRlJ1NGJl?=
- =?utf-8?B?YkQza291T2xwR3F1RlEzdjRjc3hjb1ZRU0ZHRVJvem10SkF4M0l5ZE1JdE9M?=
- =?utf-8?B?QTR0WS9sbmNaaWRZSEJnUk5qZFdZNnNBVjlySEJNTGp3a0ZRTldhcEtycytK?=
- =?utf-8?B?WEhreFJuSFErdDNtbklWN0huQ3FqeitORDAvb0IvSFVCaU1vK3U5Y05QYUFP?=
- =?utf-8?B?ZE50MDE1ZjJGbWN5YjExcDB3ZUlqTUhOSnFzNDRTM2ZMQ2U0R0NCUGp5QytG?=
- =?utf-8?B?VDIzRnJvV09xQVpOQ25BbmR4TVJ2Z1RVUWdRdDduRGNTYnVlVGtJY1IrdVZN?=
- =?utf-8?B?WHE3ME5YSjBYSCtwNVpFa2Z2TCtiN0JhKys2MmRpWkVyTVFHK2JXVGVrNy9K?=
- =?utf-8?B?OE4yRFlramhXWDFxVUpZRitIWXRJaE9xTjNvdjdRQ2RKTWEyd2FNRkJibjBR?=
- =?utf-8?B?bUMrclBYNnZWVlAvTlNCWSsrVmlSL2lHV1RPWndzdUxxWjRPOTNvN21sbnBT?=
- =?utf-8?B?NUdVelBHejZVMnBEZmlVZm05bWxWSXRVVHJjdS9pcCs1YmszNU1jOFVUTGc5?=
- =?utf-8?B?aUdjR3BYdHZQWW5OWWdlRlFRRWhRUkdMWVdnQnZFYzFpalZIUkFLWDJ5Lzd1?=
- =?utf-8?B?Q1ZwdTlUZVBTaXZ6NU5Nanoxb1dwSWdONlZYdDhjR0ZSZDZCK0JiL3pVZVpQ?=
- =?utf-8?Q?R3sNstekSjglneQAYxWrQHl1fkvRHzTwUgKzP7z?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 95968de2-5770-405a-db9a-08d97d2a63d2
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR11MB5326.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2021 18:05:26.7941
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ajTQdAKkE3n+gYVaS4gT013ZwKnsReKAC8SRLTOxS3QAB60dlDn41292KAYYR4W2hAgHS4maUM2aFauSyHFNca8ORp6PhWZiSO8dWh2XMY0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB2938
-X-OriginatorOrg: intel.com
+References: <20210822161005.22467-3-sergio.paracuellos@gmail.com> <20210921174924.GA104830@bhelgaas>
+In-Reply-To: <20210921174924.GA104830@bhelgaas>
+From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date:   Tue, 21 Sep 2021 20:36:07 +0200
+Message-ID: <CAMhs-H90yvbnPN26C7P_431cYqD4=8yrCUrxUY3L5k1GdsCeiQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] PCI: fix 'pci_remap_iospace' for architectures
+ with PCI_IOBASE not defined
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        "open list:MIPS" <linux-mips@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-staging@lists.linux.dev, NeilBrown <neil@brown.name>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Liviu Dudau <Liviu.Dudau@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 9/19/2021 2:14 AM, Thomas Gleixner wrote:
-> On Fri, Sep 17 2021 at 11:34, Peter Zijlstra wrote:
->> On Fri, Sep 17, 2021 at 11:11:49AM +0200, Peter Zijlstra wrote:
->>> On Thu, Sep 16, 2021 at 10:07:07AM -0500, Bjorn Helgaas wrote:
->>>> This seems to be an ongoing issue, not just a point defect in a single
->>>> product, and I really hate the onesy-twosy nature of this.  Is there
->>>> really no way to detect this issue automatically or fix whatever Linux
->>>> bug makes us trip over this?  I am no clock expert, so I have
->>>> absolutely no idea whether this is possible.
-> Right, we need to have all these quirks because we can't define a
-> generation cutoff based on family/model because X86 model is simply a
-> random number. There might be some scheme behind it, but it's neither
-> obvious nor documented.
->
-> But the HPET on the affected machines goes south when the system enters
-> PC10. So the right thing to do is to check whether PC10 is supported and
-> force disable HPET if that's the case. That disablement is required
-> independent of the clocksource watchdog problem because HPET is exposed
-> in other ways as well.
->
-> Questions for Rafael:
->
-> What's the proper way to figure out whether PC10 is supported?
+Hi Bjorn,
 
-I can't say without research.  I think it'd be sufficient to check if 
-C10 is supported, because asking for it is the only way to get PC10.
+On Tue, Sep 21, 2021 at 7:49 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Liviu, Rob, Catalin, Arnd, since this warning was added by
+> 8b921acfeffd ("PCI: Add pci_remap_iospace() to map bus I/O resources"),
+> https://git.kernel.org/linus/8b921acfeffd]
+>
+> On Sun, Aug 22, 2021 at 06:10:04PM +0200, Sergio Paracuellos wrote:
+> > Request for I/O resources from device tree call 'pci_remap_iospace' from
+> > 'devm_pci_remap_iospace' which is also called from device tree function
+> > 'pci_parse_request_of_pci_ranges'. if PCI_IOBASE is not defined and I/O
+> > resources are requested the following warning appears:
+> >
+> > ------------[ cut here ]------------
+> > WARNING: CPU: 2 PID: 1 at ../drivers/pci/pci.c:4066 pci_remap_iospace+0x3c/0x54
+> > This architecture does not support memory mapped I/O
+> > Modules linked in:
+> > CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.10.1+ #1228
+> > Stack : 00000000 00000000 807fa974 00000000 827ffa80 80066b48 80710000 0000000b
+> >         00000000 00000000 81c59aac 7d06ddec 80850000 00000001 81c59a40 7d06ddec
+> >         00000000 00000000 807c909c 81c598f0 00000001 81c59904 00000000 0000000a
+> >         203a6d6d 80708880 0000000f 70617773 80850000 00000000 00000000 807d0000
+> >         807ffecc 1e160000 00000001 00000200 00000000 8054e920 00000008 815e0008
+> >         ...
+> > Call Trace:
+> > [<80008efc>] show_stack+0x8c/0x130
+> > [<806e1674>] dump_stack+0x9c/0xc8
+> > [<80024a3c>] __warn+0xc0/0xe8
+> > [<80024ad0>] warn_slowpath_fmt+0x6c/0xbc
+> > [<80410ca8>] pci_remap_iospace+0x3c/0x54
+> > [<80410d20>] devm_pci_remap_iospace+0x58/0xa4
+> > [<8042019c>] devm_of_pci_bridge_init+0x4dc/0x55c
+> > [<80408de8>] devm_pci_alloc_host_bridge+0x78/0x88
+> > [<80424e44>] mt7621_pci_probe+0x68/0x9a4
+> > [<80464804>] platform_drv_probe+0x40/0x7c
+> > [<804628bc>] really_probe+0x2fc/0x4e4
+> > [<80463214>] device_driver_attach+0x4c/0x74
+> > [<80463384>] __driver_attach+0x148/0x150
+> > [<8046047c>] bus_for_each_dev+0x6c/0xb0
+> > [<804614dc>] bus_add_driver+0x1b4/0x1fc
+> > [<80463aa0>] driver_register+0xd0/0x110
+> > [<80001714>] do_one_initcall+0x84/0x1c0
+> > [<808e7fd0>] kernel_init_freeable+0x214/0x24c
+> > [<806e4164>] kernel_init+0x14/0x118
+> > [<80003358>] ret_from_kernel_thread+0x14/0x1c
+> >
+> > ---[ end trace 1c9d4412bd51b53c ]---
+> > mt7621-pci 1e140000.pcie: error -19: failed to map resource [io  0x1e160000-0x1e16ffff]
+> >
+> > Since there are architectures (like MIPS ralink) that can request I/O
+> > resources from device tree but have not mapeable I/O space and also PCI_IOBASE
+> > not defined, avoid this warning and just return zero to make the I/O ranges
+> > assignment work.
+> >
+> > Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+> > ---
+> >  drivers/pci/pci.c | 12 ++++++------
+> >  1 file changed, 6 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index aacf575c15cf..10bb2191f376 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -4102,9 +4102,9 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+> >   * @phys_addr: physical address of range to be mapped
+> >   *
+> >   * Remap the memory mapped I/O space described by the @res and the CPU
+> > - * physical address @phys_addr into virtual address space.  Only
+> > - * architectures that have memory mapped IO functions defined (and the
+> > - * PCI_IOBASE value defined) should call this function.
+> > + * physical address @phys_addr into virtual address space. There
+> > + * are architectures that don't define PCI_IOBASE but can have not
+> > + * mapeable IO space. Return zero for those cases.
+> >   */
+> >  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> >  {
+> > @@ -4122,10 +4122,10 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> >  #else
+> >       /*
+> >        * This architecture does not have memory mapped I/O space,
+> > -      * so this function should never be called
+> > +      * but can have not mapeable I/O space, so just return ok
+> > +      * here.
+> >        */
+> > -     WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
+> > -     return -ENODEV;
+> > +     return 0;
+>
+> This doesn't seem right to me.  pci_remap_iospace() remaps
+> memory-mapped I/O space into virtual address space.
+>
+> If the architecture doesn't support that remapping, we shouldn't claim
+> that it succeeded.
+>
+> The analogous path for ACPI is in acpi_pci_root_remap_iospace(), where
+> we only call pci_remap_iospace() if PCI_IOBASE is defined.  Maybe we
+> should use the same approach here, i.e., add the corresonding #ifdef
+> in pci_parse_request_of_pci_ranges()?
 
-However, even if it is supported, the problem is not there until the 
-kernel asks for C10.  So instead, I'd disable the TSC watchdog on the 
-first attempt to ask the processor for C10 from the cpuidle code and I'd 
-do that from the relevant drivers (intel_idle and ACPI idle).
+This approach you are talking here is what I did in v1 of this series
+[0] and you tell me to properly fix that in the 'pci_remap_iospace'.
+Both of these v1 and v2 obviously end up in a working pci system for
+mt7621 ralink.
+Another option I guess would be to mark 'pci_remap_iospace' as weak
+and redefine the symbol for ralink but since it is only for one simple
+return zero maybe it makes no sense at all... Please, tell me the
+correct approach to properly fix this and make things work for this
+platform.
 
-There would be no TSC watchdog for the C10 users, but wouldn't that be a 
-fair game?
+Thanks in advance for your time,
+     Sergio Paracuellos
 
+[0]: https://lore.kernel.org/linux-pci/20210807072409.9018-2-sergio.paracuellos@gmail.com/T/#m73c19c3b72fdf8c63e6d3fe8dc80aeee4e4adcaa
 
-> I got lost in the maze of intel_idle and ACPI muck and several other places
-> which check that. Just grep for CPUID_MWAIT_LEAF and see how consistent
-> all of that is.
 >
-> Why the heck can't we have _ONE_ authoritive implementation of that?
-> Just because, right?
->
-> Of course all of this is well documented as usual....
->
->>> X86 is gifted with the grant total of _0_ reliable clocks. Given no
->>> accurate time, it is impossible to tell which one of them is broken
->>> worst. Although I suppose we could attempt to synchronize against the
->>> PMU or MPERF..
->>>
->>> We could possibly disable the tsc watchdog for
->>> X86_FEATURE_TSC_KNOWN_FREQ && X86_FEATURE_TSC_ADJUST I suppose.
->>>
->>> And then have people with 'creative' BIOS get to keep the pieces.
->> Alternatively, we can change what the TSC watchdog does for
->> X86_FEATURE_TSC_ADJUST machines. Instead of checking time against HPET
->> it can check if TSC_ADJUST changes. That should make it more resillient
->> vs HPET time itself being off.
-> I tried that and I hated the mess it created. Abusing the clocksource
-> watchdog machinery for that is a nightmare. Don't even think about it.
->
-> When TSC_ADJUST is available then we check the MSR when a CPU goes idle,
-> but not more often than once per second. My concern is that we can't
-> check TSC_ADJUST for modifications on fully loaded CPUs, but why do I
-> still care?
->
-> The requirements for ditching the watchdog should be:
->
->      X86_FEATURE_TSC_KNOWN_FREQ &&
->      X86_FEATURE_TSC_ADJUST &&
->      X86_FEATURE_NONSTOP_TSC &&
->      X86_FEATURE_ARAT
->
-> But expecting X86_FEATURE_TSC_KNOWN_FREQ to be set on these HPET
-> trainwreck equipped machines is wishful thinking:
->
-> # cpuid -1 -l 0x15
-> CPU:
->     Time Stamp Counter/Core Crystal Clock Information (0x15):
->        TSC/clock ratio = 176/2
->        nominal core crystal clock = 0 Hz
->
-> We calculate that missing frequency then from leaf 0x16:
->
-> # cpuid -1 -l 0x16
-> CPU:
->     Processor Frequency Information (0x16):
->        Core Base Frequency (MHz) = 0x834 (2100)
->        Core Maximum Frequency (MHz) = 0x1068 (4200)
->        Bus (Reference) Frequency (MHz) = 0x64 (100)
->
-> But we don't set the TSC_KNOWN_FREQ feature bit in the case that crystal
-> clock is 0 and we need to use leaf 16. Which is entirely correct because
-> the Core Base Frequency CPUID info is a joke:
->
-> [    3.045828] tsc: Refined TSC clocksource calibration: 2111.993 MHz
->
-> The refined calibration is pretty accurate according to NTP and if you
-> take the CPUID 15/16 numbers into account even obvious with pure math:
->
->    TSC/clock ratio = 176/2
->    Core Base Frequency (MHz) = 0x834 (2100)
->
->    2100 / (176 / 2) = 23.8636 (MHz)
->
-> which would be a very unusual crystal frequency. The refined calibration
-> makes a lot more sense:
->
->    2112 / (176 / 2) = 24 (MHz)
->
-> which is one of the very well known crystal frequencies of these
-> machines.
->
-> It's 2021 now and we are still not able to get reasonable information
-> from hardware/firmware about this?
->
-> Can the hardware and firmware people finaly get their act together?
->
-> Here is the simple list of things we are asking for:
->
->   - Reliable TSC which cannot be tinkered with even by "value add" BIOSes
->
->   - Reliable information from hardware/firmware about the TSC frequency
->
->   - Hardware enforced (or firmware assisted) guarantees of TSC being
->     synchronized accross sockets
->
-> We are asking for that for more than _twenty_ years now. All what we get
-> are useless new features and as demonstrated in the case at hand new
-> types of wreckage instead of a proper solution to the underlying
-> problems.
->
-> I'm personally dealing with the x86 timer hardware trainwrecks for more
-> than 20 years now. TBH, I'm tired of this idiocy and very close to the
-> point where I stop caring.
->
-> Thanks,
->
->          tglx
-
-
+> >  #endif
+> >  }
+> >  EXPORT_SYMBOL(pci_remap_iospace);
+> > --
+> > 2.25.1
+> >
