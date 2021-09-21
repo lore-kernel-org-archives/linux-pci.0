@@ -2,140 +2,146 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DCD4C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 23:51:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01A76C433FE
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 11:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCEB96124A
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Sep 2021 23:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE99760F50
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 11:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239744AbhITXwx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Sep 2021 19:52:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35128 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239878AbhITXuw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Sep 2021 19:50:52 -0400
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA7A7C0613D5
-        for <linux-pci@vger.kernel.org>; Mon, 20 Sep 2021 10:48:35 -0700 (PDT)
-Received: by mail-oi1-x232.google.com with SMTP id r26so25874847oij.2
-        for <linux-pci@vger.kernel.org>; Mon, 20 Sep 2021 10:48:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=yclSDDK5oTzUs7EESk7d4cCngmAGln2DbKeUzN8pN1Q=;
-        b=gEndKsxfPGxmHP9Pq2PECNpZexrMPtR0GJlrsGS+ytAceIceT6vYuxhmuBvOOexih1
-         CGUPVJfv92scFcNlZ+sfuvW/DIVufbmQyWUutx2eeQoBFyZPqwjtLn14k8Tp36T+FtQ+
-         OZ73BmQmbnaPMSfXRXtlMdLGf+ar1Un3OUdL0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=yclSDDK5oTzUs7EESk7d4cCngmAGln2DbKeUzN8pN1Q=;
-        b=X0TDjgLGPtOoQcwwdYnxxlgrQU7uyIgTLlgOndYxL3x2sHgaBSTMI4Nyl9lXrbO4Lf
-         1K67h5vlMnSlt1TnVrQ1lTfJpqebrRR1aFOTuHOO/iH8fP7aUnmHy/nhjJWgvrYQf++1
-         0HFJUSk4ECmp1bZ5gEi9eq/JVb/ln9DGgunkfFmUxhVxzQ7d8A2C6Ls7GcPxzVvyfjNR
-         NU3fAUdltOaCjTH/IgAZ7PAjW6f5nkI81EFVfA7E9N1NtSK2mpAJxch7uYIiWdQIKNSh
-         /6Err34QM5kk3hD0uYyYgest2z397rCaXPVMhuI3VBioxQJFsITUoLDowSj9uWlpClcX
-         P0Tw==
-X-Gm-Message-State: AOAM531Ol/Mdgz0IiTsbT7Z6eZLty4WC+unAZtncpAtbuqfycrBdNFoE
-        ABrlNg+iEO9oz5BKV8BIt8BR39zkRMK/tA==
-X-Google-Smtp-Source: ABdhPJyEJxjudDOJhajvRh6ynisNmdVbCRCuvllv3HHSKlxbgLHDqJbIYP5Pnu6fgxLBM5M599+qEw==
-X-Received: by 2002:a05:6808:17a4:: with SMTP id bg36mr209332oib.49.1632160114346;
-        Mon, 20 Sep 2021 10:48:34 -0700 (PDT)
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com. [209.85.210.51])
-        by smtp.gmail.com with ESMTPSA id b24sm3378696oic.33.2021.09.20.10.48.32
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 20 Sep 2021 10:48:33 -0700 (PDT)
-Received: by mail-ot1-f51.google.com with SMTP id 77-20020a9d0ed3000000b00546e10e6699so13587894otj.2
-        for <linux-pci@vger.kernel.org>; Mon, 20 Sep 2021 10:48:32 -0700 (PDT)
-X-Received: by 2002:a9d:7483:: with SMTP id t3mr21162684otk.3.1632160112361;
- Mon, 20 Sep 2021 10:48:32 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210830123704.221494-1-verdre@v0yd.nl> <20210830123704.221494-2-verdre@v0yd.nl>
- <CA+ASDXPKZ0i5Bi11Q=qqppY8OCgw=7m0dnPn0s+y+GAvvQodog@mail.gmail.com>
- <CAHp75VdR4VC+Ojy9NjAtewAaPAgowq-3rffrr3uAdOeiN8gN-A@mail.gmail.com>
- <CA+ASDXNGR2=sQ+w1LkMiY_UCfaYgQ5tcu2pbBn46R2asv83sSQ@mail.gmail.com>
- <YS/rn8b0O3FPBbtm@google.com> <0ce93e7c-b041-d322-90cd-40ff5e0e8ef0@v0yd.nl>
-In-Reply-To: <0ce93e7c-b041-d322-90cd-40ff5e0e8ef0@v0yd.nl>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Mon, 20 Sep 2021 10:48:21 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXNMhrxX-nFrr6kBo0a0c-25+Ge2gBP2uTjE8UWJMeQO2A@mail.gmail.com>
-Message-ID: <CA+ASDXNMhrxX-nFrr6kBo0a0c-25+Ge2gBP2uTjE8UWJMeQO2A@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mwifiex: Use non-posted PCI register writes
-To:     =?UTF-8?Q?Jonas_Dre=C3=9Fler?= <verdre@v0yd.nl>
-Cc:     Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        id S232288AbhIULDI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Sep 2021 07:03:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38142 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232214AbhIULDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Sep 2021 07:03:08 -0400
+Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E785960E9C;
+        Tue, 21 Sep 2021 11:01:38 +0000 (UTC)
+Received: from sofa.misterjones.org ([185.219.108.64] helo=why.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <maz@kernel.org>)
+        id 1mSdWq-00C1fJ-Uu; Tue, 21 Sep 2021 12:01:37 +0100
+Date:   Tue, 21 Sep 2021 12:01:36 +0100
+Message-ID: <87ilyuur8v.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Mark Kettenis <mark.kettenis@xs4all.nl>
+Cc:     devicetree@vger.kernel.org, alyssa@rosenzweig.io,
+        Mark Kettenis <kettenis@openbsd.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Hector Martin <marcan@marcan.st>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
+Subject: Re: [PATCH v4 0/4] Apple M1 PCIe DT bindings
+In-Reply-To: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
+References: <20210827171534.62380-1-mark.kettenis@xs4all.nl>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: mark.kettenis@xs4all.nl, devicetree@vger.kernel.org, alyssa@rosenzweig.io, kettenis@openbsd.org, tglx@linutronix.de, robh+dt@kernel.org, marcan@marcan.st, bhelgaas@google.com, f.fainelli@gmail.com, bcm-kernel-feedback-list@broadcom.com, nsaenz@kernel.org, jim2101024@gmail.com, daire.mcnamara@microchip.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Sep 18, 2021 at 12:37 AM Jonas Dre=C3=9Fler <verdre@v0yd.nl> wrote:
-> Thanks for the pointer to that commit Brian, it turns out this is
-> actually the change that causes the "Firmware wakeup failed" issues that
-> I'm trying to fix with the second patch here.
+On Fri, 27 Aug 2021 18:15:25 +0100,
+Mark Kettenis <mark.kettenis@xs4all.nl> wrote:
+> 
+> From: Mark Kettenis <kettenis@openbsd.org>
+> 
+> This small series adds bindings for the PCIe controller found on the
+> Apple M1 SoC.
+> 
+> At this point, the primary consumer for these bindings is U-Boot.
+> With these bindings U-Boot can bring up the links for the root ports
+> of the PCIe root complex.  A simple OS driver can then provide
+> standard ECAM access and manage MSI interrupts to provide access
+> to the built-in Ethernet and XHCI controllers of the Mac mini.
+> 
+> The Apple controller incorporates Synopsys Designware PCIe logic
+> to implement its root port.  But unlike other hardware currently
+> supported by U-Boot and the Linux kernel the Apple hardware
+> integrates multiple root ports.  As such the existing bindings
+> for the DWC PCIe interface can't be used.  There is a single ECAM
+> space for all root space, but separate GPIOs to take the PCI devices
+> on those ports out of reset.  Therefore the standard "reset-gpio" and
+> "max-link-speed" properties appear on the child nodes representing
+> the PCI devices that correspond to the individual root ports.
+> 
+> MSIs are handled by the PCIe controller and translated into "regular
+> interrupts".  A range of 32 MSIs is provided.  These 32 MSIs can be
+> distributed over the root ports as the OS sees fit by programming the
+> PCIe controller port registers.
+> 
+> This now adds an MSI controller binding schema and uses the generic
+> msi-ranges property to specify how the MSIs are mapped to interrupts
+> on the AIC.  I copied some of the description text in the MSI
+> controller binding schema from msi.txt but it may need some further
+> tweaks to make sense.
+> 
+> Patch 2/2 of this series depends on the pinctrl series I sent earlier
+> and will probably go through Hector Martin's Apple M1 SoC tree.
+> 
+> 
+> Changelog:
+> 
+> v4: - Convert MSI controller binding to YAML
+>     - Add generic msi-ranges property to MSI controller binding
+>     - Fix typos/formatting in apple,pcie binding
+>     - Use generic MSI controller binding in apple,pcie
+> 
+> v3: - Remove unneeded include in example
+> 
+> v2: - Adjust name for ECAM in "reg-names"
+>     - Drop "phy" registers
+>     - Expand description
+>     - Add description for "interrupts"
+>     - Fix incorrect minItems for "interrupts"
+>     - Fix incorrect MaxItems for "reg-names"
+>     - Document the use of "msi-controller", "msi-parent", "iommu-map" and
+>       "iommu-map-mask"
+>     - Fix "bus-range" and "iommu-map" properties in the example
+> 
+> Mark Kettenis (4):
+>   dt-bindings: interrupt-controller: Convert MSI controller to
+>     json-schema
+>   dt-bindings: interrupt-controller: msi: Add msi-ranges property
+>   dt-bindings: pci: Add DT bindings for apple,pcie
+>   arm64: apple: Add PCIe node
+> 
+>  .../interrupt-controller/msi-controller.yaml  |  42 +++++
+>  .../devicetree/bindings/pci/apple,pcie.yaml   | 165 ++++++++++++++++++
+>  .../bindings/pci/brcm,stb-pcie.yaml           |   1 +
+>  .../bindings/pci/microchip,pcie-host.yaml     |   1 +
+>  MAINTAINERS                                   |   1 +
+>  arch/arm64/boot/dts/apple/t8103.dtsi          |  63 +++++++
+>  6 files changed, 273 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml
+>  create mode 100644 Documentation/devicetree/bindings/pci/apple,pcie.yaml
 
-Huh. That's interesting, although I guess it makes some sense given
-your theory of "dropped writes". FWIW, this strategy (post a single
-write, then wait for wakeup) is the same used by some other
-chips/drivers too (e.g., ath10k/pci), although in those cases card
-wakeup is much much faster. But if the bus was dropping writes
-somehow, those strategies would fail too.
+With Rob's comments addressed, and the fix on the M1 RC MMIO region,
+for the whole series:
 
-> Also my approach is a lot messier than just reverting
-> 062e008a6e83e7c4da7df0a9c6aefdbc849e2bb3 and also appears to be blocking
-> even longer...
+Acked-by: Marc Zyngier <maz@kernel.org>
 
-For the record, in case you're talking about my data ("blocking even
-longer"): I was only testing patch 1. Patch 2 isn't really relevant to
-my particular systems (Rockchip RK3399 + Marvell 8997/PCIe), because
-(a) I'm pretty sure my system isn't "dropping" any reads or writes
-(b) all my delay is in the read-back; the Rockchip PCIe bus is waiting
-indefinitely for the card to wake up, instead of timing out and
-reporting all-1's like many x86 systems appear to do (I've tested
-this).
+	M.
 
-So, the 6ms delay is entirely sitting in the ioread32(), not a delay loop.
-
-I haven't yet tried your version 2 (which avoids the blocking read to
-wake up; good!), but it sounds like in theory it could solve your
-problem while avoiding 6ms delays for me. I intend to test your v2
-this week.
-
-> Does anyone have an idea what could be the reason for the posted write
-> not going through, or could that also be a potential firmware bug in the
-> chip?
-
-I have no clue about that. That does sound downright horrible, but so
-are many things when dealing with this family of hardware/firmware.
-I'm not sure how to prove out whether this is a host bus problem, or
-an endpoint/firmware problem, other than perhaps trying the same
-module/firmware on another system, if that's possible.
-
-Anyway, to reiterate: I'm not fundamentally opposed to v2 (pending a
-test run here), even if it is a bit ugly and perhaps not 100%
-understood.
-
-Brian
+-- 
+Without deviation from the norm, progress is not possible.
