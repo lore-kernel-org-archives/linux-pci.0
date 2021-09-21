@@ -7,21 +7,22 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AE9C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA8A7C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8367561184
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:42:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F17461100
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Sep 2021 18:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233612AbhIUSne (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Sep 2021 14:43:34 -0400
-Received: from lb2-smtp-cloud7.xs4all.net ([194.109.24.28]:59415 "EHLO
+        id S233639AbhIUSng (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Sep 2021 14:43:36 -0400
+Received: from lb2-smtp-cloud7.xs4all.net ([194.109.24.28]:51397 "EHLO
         lb2-smtp-cloud7.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233522AbhIUSnb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Sep 2021 14:43:31 -0400
+        by vger.kernel.org with ESMTP id S233600AbhIUSng (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Sep 2021 14:43:36 -0400
+X-Greylist: delayed 431 seconds by postgrey-1.27 at vger.kernel.org; Tue, 21 Sep 2021 14:43:14 EDT
 Received: from cust-df1d398c ([IPv6:fc0c:c1f5:9ac0:c45f:1583:5c5b:91fa:2436])
         by smtp-cloud7.xs4all.net with ESMTPA
-        id Skb8mlMr9pQdWSkbPmYt4s; Tue, 21 Sep 2021 20:34:48 +0200
+        id Skb8mlMr9pQdWSkbamYt73; Tue, 21 Sep 2021 20:34:58 +0200
 From:   Mark Kettenis <kettenis@openbsd.org>
 To:     devicetree@vger.kernel.org
 Cc:     maz@kernel.org, robin.murphy@arm.com, sven@svenpeter.dev,
@@ -32,61 +33,118 @@ Cc:     maz@kernel.org, robin.murphy@arm.com, sven@svenpeter.dev,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
         bcm-kernel-feedback-list@broadcom.com,
-        Nicolas Saenz Julienne <nsaenz@kernel.org>,
         Jim Quinlan <jim2101024@gmail.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
         Daire McNamara <daire.mcnamara@microchip.com>,
         Saenz Julienne <nsaenzjulienne@suse.de>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org
-Subject: [PATCH v5 2/4] dt-bindings: interrupt-controller: msi: Add msi-ranges property
-Date:   Tue, 21 Sep 2021 20:34:13 +0200
-Message-Id: <20210921183420.436-3-kettenis@openbsd.org>
+Subject: [PATCH v5 4/4] arm64: apple: Add PCIe node
+Date:   Tue, 21 Sep 2021 20:34:15 +0200
+Message-Id: <20210921183420.436-5-kettenis@openbsd.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210921183420.436-1-kettenis@openbsd.org>
 References: <20210921183420.436-1-kettenis@openbsd.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMAE-Envelope: MS4xfCOvKz2df6lbTQqu+3Bzl6OQqAFL8doZ/jDcyRiIzdBreR3rp4pyYwYhBQrErzWcJET/cD3qEqXLVR35034HdpC4xi9pV8rEqfNTZWExb6eNoLKtc+d/
- oj8X1qAWRjgBaqY/AwP+kjppW2QkzcDbHo8Kua8l5oaNhHOT+R1wzGwDLoVqNOrucIqm1KGlteDGMSMk6W4z2Urt+uAAl+ncwICjOpC8WF70pxD1RHI8WP4M
- a9+The1Ekb4MQ9o120gi79ST5HZoaaSQgrdTGLQWCLpoVkWOs33dgNCwcYILc/VCvc3wQGUCGTJaWns0SPzh6JO4s/a5t6T6wZtLI/vEvQvNiBLsPwZw0L89
- WLMM6elSZzwAQDLWlT/F/JU+0o4O/Hjbn7Bmpds2Rn+8w9rbcdOiwNWRti9YHR/vaRbmPzC9Bg0Hnd1EaYRIrsfuPHp39zaSp4k2oR5O8JF0TjK64KKdNEJT
- Iuy0QV12WA3b1WswR85lfMOY2A//xhZpxGW59WmvBIHUfVLmX7Vql0cax0te4u53wOJqnsbMyIq9kuNDSY7+8QESHfczbzk6v9jzS9VWWgp1sFcKJ1+ZElmb
- 6lpRcckmpKVVYcfIvaDIvIX6xfsqd2jvuV4h+CLBQ/n1COnDtuXgOab6pn2rKkealROD+Y/jWKNJ9CAW36aQVz0apTjasW0RvuO4VxbVh4VsUCa6s/HO1rhm
- KNZBd3dUqedKenX5nwj+kUNUGSi30RKqcuZx71kbJnm7R24iyMFSxqOIl2sZ8HMrgt+VjoUX/tMBwe7XQ8W48jirGpZIiTeWNc8+6vWXRGMwHwX8Q7RC0A0F
- pFNHN+6rjB7GR02TwAl6XrQlQBplfkrTmzv5VLoNiJGqVxFpf+f7aGM7DxXzWw==
+X-CMAE-Envelope: MS4xfHhQZ6AJi25iA7HphsHmJwim8Jvgsd9KkIPWji3RvlBIC8jLZYr7rslO9k7z7tmQrrwWHesyulwaXXRZ6DAF/SK3svoW/pvrIQV/YXd1rGrJxcSDm2M0
+ ZKHfHBR0+WX8j2SjgAf+twYv+Nb+sPTyX0fJsqa6oUJKE605ALB1YTdeCmbUAIk4XVQBMCva7mcAyf4ZgTSLQDmjmxpgC9b1WXqfIb3mYCIIu8o2eNrLhqyu
+ h5hYAaycS/GcuGTqI5YP3dTTkhKdTWNpKcuVKKnMwNfAGhff3cCgYRPUlzvLlj8ys9AG8kjtXFxNmr3cfXRXMur+//WJOLxXwhiE8lLmN4DK3yeMdSudybAT
+ oEO4pV9YQDiZWNjpAb7GexxGH+SRZXvZG8SfX86EDfY5yrbI+D+DhPejf5W/jMZGA2wZVo22m9zO5oKbFjNb68r204es1IzaErqdiM9J5sW8BqUUjrTcZqza
+ hiNHZZdapii+cnn1hlOcJbWK+VMw0E2BkDdedpoZ2bLBS1nHkxz6sAfDHo16Ys5YgTZjWolIZqsXRW4WxiJ8tc+oZ02fzZcxTEDoWDS2GwOG/CzrCKXF3/r8
+ aOHbA+Gt2TjNFJdwDpu4uJJpOMYOL9acSRO9j0mF/xBWPhECREFW6ubbvgi2XGLjNF8NHUdtviQ7Zbk5JfEADiSTdnZfGOp1foON9iOqyYp0TuO1LWvcFq7Z
+ eMxjW2QypkBKzEIhYwXTQLv5SntPN2+SwT0STb+w2c0EdqB6PLFAOLPVnkBRG4khCvzIxOX8XWqJtBnwlQDQIltJ9cJfCxTz4W0nxmym6ru+F/eCK9XSRPPP
+ P+N0uiSFw4nN4Rl7mqe0iHF2OugQSiNyss66Z9UyQ58SaYdevEz6HiD79pKbpQ==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update the MSI controller binding to add an msi-ranges property
-that specifies how MSIs map onto regular interrupts on some other
-interrupt controller.
+Add node corresponding to the apcie,t8103 node in the
+Apple device tree for the Mac mini (M1, 2020).
+
+Power domain references and DART (IOMMU) references are left out
+at the moment and will be added once the appropriate bindings have
+been settled upon.
 
 Acked-by: Marc Zyngier <maz@kernel.org>
 Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
 ---
- .../bindings/interrupt-controller/msi-controller.yaml     | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ arch/arm64/boot/dts/apple/t8103.dtsi | 63 ++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml b/Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml
-index 58d898d5b943..449d6067ec88 100644
---- a/Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml
-+++ b/Documentation/devicetree/bindings/interrupt-controller/msi-controller.yaml
-@@ -32,6 +32,14 @@ properties:
-       Identifies the node as an MSI controller.
-     $ref: /schemas/types.yaml#/definitions/flag
- 
-+  msi-ranges:
-+    description:
-+      A list of <phandle intspec span> tuples, where "phandle" is the
-+      parent interrupt controller, "intspec" is the starting/base
-+      interrupt specifier and "span" is the size of the
-+      range. Multiple ranges can be provided.
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
+diff --git a/arch/arm64/boot/dts/apple/t8103.dtsi b/arch/arm64/boot/dts/apple/t8103.dtsi
+index 503a76fc30e6..10956859b4bb 100644
+--- a/arch/arm64/boot/dts/apple/t8103.dtsi
++++ b/arch/arm64/boot/dts/apple/t8103.dtsi
+@@ -214,5 +214,68 @@ pinctrl_smc: pinctrl@23e820000 {
+ 				     <AIC_IRQ 396 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <AIC_IRQ 397 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
 +
- dependencies:
-   "#msi-cells": [ msi-controller ]
- 
++		pcie0: pcie@690000000 {
++			compatible = "apple,t8103-pcie", "apple,pcie";
++			device_type = "pci";
++
++			reg = <0x6 0x90000000 0x0 0x1000000>,
++			      <0x6 0x80000000 0x0 0x100000>,
++			      <0x6 0x81000000 0x0 0x4000>,
++			      <0x6 0x82000000 0x0 0x4000>,
++			      <0x6 0x83000000 0x0 0x4000>;
++			reg-names = "config", "rc", "port0", "port1", "port2";
++
++			interrupt-parent = <&aic>;
++			interrupts = <AIC_IRQ 695 IRQ_TYPE_LEVEL_HIGH>,
++				     <AIC_IRQ 698 IRQ_TYPE_LEVEL_HIGH>,
++				     <AIC_IRQ 701 IRQ_TYPE_LEVEL_HIGH>;
++
++			msi-controller;
++			msi-parent = <&pcie0>;
++			msi-ranges = <&aic AIC_IRQ 704 IRQ_TYPE_EDGE_RISING 32>;
++
++			bus-range = <0 3>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges = <0x43000000 0x6 0xa0000000 0x6 0xa0000000 0x0 0x20000000>,
++				 <0x02000000 0x0 0xc0000000 0x6 0xc0000000 0x0 0x40000000>;
++
++			pinctrl-0 = <&pcie_pins>;
++			pinctrl-names = "default";
++
++			pci@0,0 {
++				device_type = "pci";
++				reg = <0x0 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 152 0>;
++				max-link-speed = <2>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++
++			pci@1,0 {
++				device_type = "pci";
++				reg = <0x800 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 153 0>;
++				max-link-speed = <2>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++
++			pci@2,0 {
++				device_type = "pci";
++				reg = <0x1000 0x0 0x0 0x0 0x0>;
++				reset-gpios = <&pinctrl_ap 33 0>;
++				max-link-speed = <1>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges;
++			};
++		};
+ 	};
+ };
 -- 
 2.33.0
 
