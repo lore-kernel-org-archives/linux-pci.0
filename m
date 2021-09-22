@@ -2,132 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E9FC433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Sep 2021 10:39:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E22C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Sep 2021 10:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5114261247
-	for <linux-pci@archiver.kernel.org>; Wed, 22 Sep 2021 10:39:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E45B61267
+	for <linux-pci@archiver.kernel.org>; Wed, 22 Sep 2021 10:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234834AbhIVKkb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 22 Sep 2021 06:40:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48514 "EHLO mail.kernel.org"
+        id S234953AbhIVKkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 22 Sep 2021 06:40:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48610 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234734AbhIVKkb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Sep 2021 06:40:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C14CF61215;
-        Wed, 22 Sep 2021 10:39:00 +0000 (UTC)
+        id S234734AbhIVKke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 22 Sep 2021 06:40:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 476D261242;
+        Wed, 22 Sep 2021 10:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632307141;
-        bh=V4GF0nAj0v2eTQCwITPWL26u6zIOuflM776Qsk3ZCGk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ci/ZAlTRBCsUreVxw+bq9fvZPLziyWvfEpX4JTfC/5VxKWMpy6zrAMC7cZ++KZC9u
-         /5UPZ/XxyI2yM3liEvX5Lwdeza1wWahvemoLmEhXMxavOPHwioWsvrO74Bhi1OFzk4
-         aJEl3m4pPBfL0VFsq98XgHAKfl2/EYbATUVKs1hL+kFKkRKKOYddsLT9fHsaM0IK46
-         E4uzFjLAmkiYck4JTtTpIbBdG5nUqclTTcJs3e5FVh1XIfFp4BlQFbWMAmzCh4P2I4
-         41tnuE+3E2MAhAj5oKQtmxCUiC3t7sW7ZhEQ8y/wv3MyBy8EoVO4QTZ1PXimu7Qo8c
-         Ypf6IO2GhJU0Q==
+        s=k20201202; t=1632307145;
+        bh=BcqOr4/BxckdG0JgeNfJQFTFky8MX/TUfOd14KVupMg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=NO7+DDQKkUHe7MiF7RQT1bVBXOL2lYpqKp+0Ducw833CAOcSDD17RVIKO1Xlcmhha
+         qAK7XZgWeoTr0t3Sw0vnaMW+1qy9SG1EalylI50ryXMVFLn48PfrJIzysTvtIXI3Yd
+         edP8Z3l6ZdORIuDJ/c4Ae8J9Bxf7D9w8mZw8Hk3YUteyd76r6z7Q7MIedjHjGI1hZ/
+         KLNrcE8hCecIMtLEQYa5EAnj+NFB0Hl6Z7isQQT+2t6HppHdJmrb34STPrgi7Q2JpH
+         VxId5zhQyJLVystRl10Avj5WSMlmNPPwywY1/Od0m2dasU3bldr3ownauJ4LQyUoor
+         Vn/oZBE7cmBtQ==
 From:   Leon Romanovsky <leon@kernel.org>
-To:     Alex Williamson <alex.williamson@redhat.com>,
+To:     Doug Ledford <dledford@redhat.com>,
         Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Leon Romanovsky <leonro@nvidia.com>,
+Cc:     Yishai Hadas <yishaih@nvidia.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Kirti Wankhede <kwankhede@nvidia.com>, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>,
-        Max Gurtovoy <maxg@nvidia.com>
-Subject: [PATCH mlx5-next 0/7] Add mlx5 live migration driver
-Date:   Wed, 22 Sep 2021 13:38:49 +0300
-Message-Id: <cover.1632305919.git.leonro@nvidia.com>
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        Saeed Mahameed <saeedm@nvidia.com>
+Subject: [PATCH mlx5-next 2/7] vfio: Add an API to check migration state transition validity
+Date:   Wed, 22 Sep 2021 13:38:51 +0300
+Message-Id: <c87f55d6fec77a22b110d3c9611744e6b28bba46.1632305919.git.leonro@nvidia.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1632305919.git.leonro@nvidia.com>
+References: <cover.1632305919.git.leonro@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Leon Romanovsky <leonro@nvidia.com>
+From: Yishai Hadas <yishaih@nvidia.com>
 
-From Yishai:
+Add an API in the core layer to check migration state transition validity
+as part of a migration flow.
 
-This series adds mlx5 live migration driver for VFs that are migrated
-capable.
+The valid transitions follow the expected usage as described in
+uapi/vfio.h and triggered by QEMU.
 
-It uses vfio_pci_core to register to the VFIO subsystem and then
-implements the mlx5 specific logic in the migration area.
+This ensures that all migration implementations follow a consistent
+migration state machine.
 
-The migration implementation follows the definition from uapi/vfio.h and
-uses the mlx5 VF->PF command channel to achieve it.
+Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+Reviewed-by: Kirti Wankhede <kwankhede@nvidia.com>
+Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ drivers/vfio/vfio.c  | 41 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/vfio.h |  1 +
+ 2 files changed, 42 insertions(+)
 
-The series adds an API in the vfio core layer to check migration state
-transition validity as part of a migration flow. This ensures that all
-migration implementations follow a consistent migration state machine.
-
-As part of the migration process the VF doesn't ride on mlx5_core, the
-device is driving *two* different PCI devices, the PF owned by mlx5_core
-and the VF owned by the mlx5 vfio driver.
-
-The mlx5_core of the PF is accessed only during the narrow window of the
-VF's ioctl that requires its services.
-
-The series also exposes from the PCI sub system an API named
-pci_iov_vf_id() to get the index of the VF. The PCI core uses this index
-internally, often called the vf_id, during the setup of the VF, eg
-pci_iov_add_virtfn().
-
-The returned VF index is needed by the mlx5 vfio driver for its internal
-operations to configure/control its VFs as part of the migration
-process.
-
-With the above functionality in place the driver implements the
-suspend/resume flows to work over QEMU.
-
-Thanks
-
------------------------------------------------------
-Alex,
-
-This series touches our ethernet and RDMA drivers, so we will need to
-route the patches through separate shared branch (mlx5-next) in order
-to eliminate the chances of merge conflicts between different subsystems.
-
-Thanks
-
-Jason Gunthorpe (1):
-  PCI/IOV: Provide internal VF index
-
-Yishai Hadas (6):
-  vfio: Add an API to check migration state transition validity
-  vfio/pci_core: Make the region->release() function optional
-  net/mlx5: Introduce migration bits and structures
-  net/mlx5: Expose APIs to get/put the mlx5 core device
-  mlx5_vfio_pci: Expose migration commands over mlx5 device
-  mlx5_vfio_pci: Implement vfio_pci driver for mlx5 devices
-
- .../net/ethernet/mellanox/mlx5/core/main.c    |  43 +
- drivers/pci/iov.c                             |  14 +
- drivers/vfio/pci/Kconfig                      |  11 +
- drivers/vfio/pci/Makefile                     |   3 +
- drivers/vfio/pci/mlx5_vfio_pci.c              | 736 ++++++++++++++++++
- drivers/vfio/pci/mlx5_vfio_pci_cmd.c          | 358 +++++++++
- drivers/vfio/pci/mlx5_vfio_pci_cmd.h          |  43 +
- drivers/vfio/pci/vfio_pci_core.c              |   3 +-
- drivers/vfio/vfio.c                           |  41 +
- include/linux/mlx5/driver.h                   |   3 +
- include/linux/mlx5/mlx5_ifc.h                 | 145 +++-
- include/linux/pci.h                           |   7 +-
- include/linux/vfio.h                          |   1 +
- 13 files changed, 1405 insertions(+), 3 deletions(-)
- create mode 100644 drivers/vfio/pci/mlx5_vfio_pci.c
- create mode 100644 drivers/vfio/pci/mlx5_vfio_pci_cmd.c
- create mode 100644 drivers/vfio/pci/mlx5_vfio_pci_cmd.h
-
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 3c034fe14ccb..c3ca33e513c8 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -1664,6 +1664,47 @@ static int vfio_device_fops_release(struct inode *inode, struct file *filep)
+ 	return 0;
+ }
+ 
++/**
++ * vfio_change_migration_state_allowed - Checks whether a migration state
++ *   transition is valid.
++ * @new_state: The new state to move to.
++ * @old_state: The old state.
++ * Return: true if the transition is valid.
++ */
++bool vfio_change_migration_state_allowed(u32 new_state, u32 old_state)
++{
++	enum { MAX_STATE = VFIO_DEVICE_STATE_RESUMING };
++	static const u8 vfio_from_state_table[MAX_STATE + 1][MAX_STATE + 1] = {
++		[VFIO_DEVICE_STATE_STOP] = {
++			[VFIO_DEVICE_STATE_RUNNING] = 1,
++			[VFIO_DEVICE_STATE_RESUMING] = 1,
++		},
++		[VFIO_DEVICE_STATE_RUNNING] = {
++			[VFIO_DEVICE_STATE_STOP] = 1,
++			[VFIO_DEVICE_STATE_SAVING] = 1,
++			[VFIO_DEVICE_STATE_SAVING | VFIO_DEVICE_STATE_RUNNING] = 1,
++		},
++		[VFIO_DEVICE_STATE_SAVING] = {
++			[VFIO_DEVICE_STATE_STOP] = 1,
++			[VFIO_DEVICE_STATE_RUNNING] = 1,
++		},
++		[VFIO_DEVICE_STATE_SAVING | VFIO_DEVICE_STATE_RUNNING] = {
++			[VFIO_DEVICE_STATE_RUNNING] = 1,
++			[VFIO_DEVICE_STATE_SAVING] = 1,
++		},
++		[VFIO_DEVICE_STATE_RESUMING] = {
++			[VFIO_DEVICE_STATE_RUNNING] = 1,
++			[VFIO_DEVICE_STATE_STOP] = 1,
++		},
++	};
++
++	if (new_state > MAX_STATE || old_state > MAX_STATE)
++		return false;
++
++	return vfio_from_state_table[old_state][new_state];
++}
++EXPORT_SYMBOL_GPL(vfio_change_migration_state_allowed);
++
+ static long vfio_device_fops_unl_ioctl(struct file *filep,
+ 				       unsigned int cmd, unsigned long arg)
+ {
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+index b53a9557884a..e65137a708f1 100644
+--- a/include/linux/vfio.h
++++ b/include/linux/vfio.h
+@@ -83,6 +83,7 @@ extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
+ extern void vfio_device_put(struct vfio_device *device);
+ 
+ int vfio_assign_device_set(struct vfio_device *device, void *set_id);
++bool vfio_change_migration_state_allowed(u32 new_state, u32 old_state);
+ 
+ /* events for the backend driver notify callback */
+ enum vfio_iommu_notify_type {
 -- 
 2.31.1
 
