@@ -2,114 +2,146 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90397C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 20:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F60C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 20:32:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 722C96124D
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 20:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1C2F6124B
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 20:32:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243208AbhIWUYN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Sep 2021 16:24:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60872 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243173AbhIWUYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Sep 2021 16:24:06 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 152C361019;
-        Thu, 23 Sep 2021 20:22:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632428554;
-        bh=k3zPwqpim6rXUSX3FUMtpizfa7s/LUqUrCFSwGLVMl4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jl6LFI7LsmrIxAq+IbA9wLE6geSN0xdYvqr1ECzUp3i/VipRQiqfiG6iy9AnfEh0s
-         x5hjdUPf9VR1aTDUBkA/D3XPMoRvlJTX6DVGx8A7SXVg1a6WXzCzWQCsSnA54IVwWB
-         JR2OWHtAAIXnqkUOHOmDZBEEJBoHqQHiQuubeS7FPy8BL6s1gl8AHkc/3rekzE7sBA
-         8VfIP3T/mMhkSgz6EiySNZTHCgzQ9yv7zo0CiKNgc3P7NYFpPTMwVLmsolCU2325Tc
-         gdaZF7GfIKYvo8+1YarkNKpNyj9JXoIdGEwa3OLXsKi9VSfZnvgZuIkYb+pZZyqUiC
-         8ALyo4H4zrbqQ==
-Received: by pali.im (Postfix)
-        id 971AC7D5; Thu, 23 Sep 2021 22:22:31 +0200 (CEST)
-Date:   Thu, 23 Sep 2021 22:22:31 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc:     Jonas =?utf-8?Q?Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev@vger.kernel.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
+        id S242529AbhIWUeO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Sep 2021 16:34:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47862 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242950AbhIWUeO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Sep 2021 16:34:14 -0400
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4568DC061574;
+        Thu, 23 Sep 2021 13:32:42 -0700 (PDT)
+Received: by mail-ed1-x52a.google.com with SMTP id y89so16786914ede.2;
+        Thu, 23 Sep 2021 13:32:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=6+Gu/iRqyPqcbnYKhgZwOW6+iVLuEgjvKfe8sK2yqJ4=;
+        b=IGPed7unYhr4J6+l9bBHGFs3XhmPB0N2w2JNTrFN8VrOJeavUYgCkbOwOOU4qs6MED
+         g6Q3rwfB9FK/VmHdg/V8f/VO9Lwyppjr2zjbvqNSPAOGYa09zLsHuuEoj8ZnOSuxfDoP
+         CH2an08ZtT7gpdQuQNt8BX854wb2sDjXtM4JmoLLk4NdZCNde2wO0GwIc9mXG03rYCZA
+         dewyBEZX7tGAhd/Jkxv4nZicY+bEZ8PhDtNkz1TTlJxoM6HJTSHqz56JJKkgcobval0w
+         PkdOP+ldEPbFfCToJMqDmN82SxHoxTVgZqRw7XxMzCZEPRXWZ4syul9/fWFeI4udxQ7Z
+         Ls4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6+Gu/iRqyPqcbnYKhgZwOW6+iVLuEgjvKfe8sK2yqJ4=;
+        b=5AVTHhIUyMjxfhB02tMhg7UVUlWTiuVEZ9DAzuSra0r8z8/xD3BrCakfUMp4rBcYen
+         w+ifVWdlVTK4UqC8tpEHdbVub6qyX2bra3hDGmDZJPp4HjAVB9RlsaEcpq0EKQXpxVpW
+         wS9JKPJ16Dhy7fVQKpiKkoq7t6L1cUJFutFGfD/lck4EYHfgwKyvByH+8yn3AqvvfUX/
+         jneWds1lXvOwHUiucD9m+mjQN1+iOrLSPfjXW2vfy9d9M0jdIi9vQQ03Xx/Ia+tq/bH8
+         UMCM0XwTwrUaJKvgN34OxsbN0kbeuKXN4mSuV8KXolTZzAPE56287ZK9/W40Kf+rmKWp
+         zL2g==
+X-Gm-Message-State: AOAM530RgLeGU8eLvpwH7ALLjA0AQU8ou5GfaNYW/FvcR7nnU/6OAVnI
+        lIlCvaluK9avBfFibFEoa0vKKKvP5g8=
+X-Google-Smtp-Source: ABdhPJzEbSkJoi4rqRH0CFl7JJmp+6NbnJGKOhLOcHOXbSP38NZ4QJyIwRvFerAxtL++kL/UgyRcAw==
+X-Received: by 2002:a17:906:1146:: with SMTP id i6mr7416372eja.12.1632429160840;
+        Thu, 23 Sep 2021 13:32:40 -0700 (PDT)
+Received: from ?IPv6:2001:981:6fec:1:2b01:e09b:ffd3:5fee? ([2001:981:6fec:1:2b01:e09b:ffd3:5fee])
+        by smtp.gmail.com with ESMTPSA id x25sm3687473ejy.46.2021.09.23.13.32.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Sep 2021 13:32:40 -0700 (PDT)
+Subject: Re: [PATCH v2 2/7] PCI: ACPI: PM: Do not use pci_platform_pm_ops for
+ ACPI
+From:   Ferry Toth <fntoth@gmail.com>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] mwifiex: Use non-posted PCI register writes
-Message-ID: <20210923202231.t2zjoejpxrbbe5hc@pali>
-References: <20210830123704.221494-2-verdre@v0yd.nl>
- <CA+ASDXPKZ0i5Bi11Q=qqppY8OCgw=7m0dnPn0s+y+GAvvQodog@mail.gmail.com>
- <CAHp75VdR4VC+Ojy9NjAtewAaPAgowq-3rffrr3uAdOeiN8gN-A@mail.gmail.com>
- <CA+ASDXNGR2=sQ+w1LkMiY_UCfaYgQ5tcu2pbBn46R2asv83sSQ@mail.gmail.com>
- <YS/rn8b0O3FPBbtm@google.com>
- <0ce93e7c-b041-d322-90cd-40ff5e0e8ef0@v0yd.nl>
- <CA+ASDXNMhrxX-nFrr6kBo0a0c-25+Ge2gBP2uTjE8UWJMeQO2A@mail.gmail.com>
- <bd64c142-93d0-c348-834c-34ed80c460f9@v0yd.nl>
- <e4cbf804-c374-79a3-53ac-8a0fbd8f75b8@v0yd.nl>
- <CAHp75Vd5iCLELx8s+Zvcj8ufd2bN6CK26soDMkZyC1CwMO2Qeg@mail.gmail.com>
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <1800633.tdWV9SEqCh@kreacher> <8879480.rMLUfLXkoz@kreacher>
+ <069444f7-d623-fae2-5cd0-83cbbc919aff@gmail.com>
+ <CAJZ5v0gpodPPXTagy5gFFf6mp_jCAdc864CE_giaue72ke7UyQ@mail.gmail.com>
+ <ab803fb5-045d-98dd-2754-688a916f8944@gmail.com>
+Message-ID: <d151c91c-cb65-2830-2453-a02057137400@gmail.com>
+Date:   Thu, 23 Sep 2021 22:32:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <ab803fb5-045d-98dd-2754-688a916f8944@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHp75Vd5iCLELx8s+Zvcj8ufd2bN6CK26soDMkZyC1CwMO2Qeg@mail.gmail.com>
-User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thursday 23 September 2021 22:41:30 Andy Shevchenko wrote:
-> On Thu, Sep 23, 2021 at 6:28 PM Jonas Dreßler <verdre@v0yd.nl> wrote:
-> > On 9/22/21 2:50 PM, Jonas Dreßler wrote:
-> 
-> ...
-> 
-> > - Just calling mwifiex_write_reg() once and then blocking until the card
-> > wakes up using my delay-loop doesn't fix the issue, it's actually
-> > writing multiple times that fixes the issue
-> >
-> > These observations sound a lot like writes (and even reads) are actually
-> > being dropped, don't they?
-> 
-> It sounds like you're writing into a not ready (fully powered on) device.
+Hi
 
-This reminds me a discussion with Bjorn about CRS response returned
-after firmware crash / reset when device is not ready yet:
-https://lore.kernel.org/linux-pci/20210922164803.GA203171@bhelgaas/
+Op 23-09-2021 om 15:51 schreef Ferry Toth:
+> Repost (with formatting removed, sorry for the noise)
+> Op 23-09-2021 om 13:30 schreef Rafael J. Wysocki:
+>> On Wed, Sep 22, 2021 at 11:31 PM Ferry Toth<fntoth@gmail.com>  wrote:
+>>> Hi,
+>>> Op 20-09-2021 om 21:17 schreef Rafael J. Wysocki:
+>>>> From: Rafael J. Wysocki<rafael.j.wysocki@intel.com>
+>>>>
+>>>> Using struct pci_platform_pm_ops for ACPI adds unnecessary
+>>>> indirection to the interactions between the PCI core and ACPI PM,
+>>>> which is also subject to retpolines.
+>>>>
+>>>> Moreover, it is not particularly clear from the current code that,
+>>>> as far as PCI PM is concerned, "platform" really means just ACPI
+>>>> except for the special casess when Intel MID PCI PM is used or when
+>>>> ACPI support is disabled (through the kernel config or command line,
+>>>> or because there are no usable ACPI tables on the system).
+>>>>
+>>>> To address the above, rework the PCI PM code to invoke ACPI PM
+>>>> functions directly as needed and drop the acpi_pci_platform_pm
+>>>> object that is not necessary any more.
+>>>>
+>>>> Accordingly, update some of the ACPI PM functions in question to do
+>>>> extra checks in case the ACPI support is disabled (which previously
+>>>> was taken care of by avoiding to set the pci_platform_ops pointer
+>>>> in those cases).
+>>>>
+>>>> Signed-off-by: Rafael J. Wysocki<rafael.j.wysocki@intel.com>
+>>>> ---
+>>>>
+>>>> v1 -> v2:
+>>>>       * Rebase on top of the new [1/7] and move dropping struct
+>>>>         pci_platform_pm_ops to a separate patch.
+>>> I wanted to test this series on 5.15-rc2 but this patch 2/7 doesn't
+>>> apply (after 1/7 applied). Should I apply this on another tree?
+>> This is on top of
+>> https://patchwork.kernel.org/project/linux-acpi/patch/2793105.e9J7NaK4W3@kreacher/ 
+>>
+>> which is not yet in any tree.
+>>
+>> Sorry for the confusion.
+> No problem at all. If I can I will try to report back tonight. Else, 
+> will be delayed 2 due to a short break.
 
-Could not be this similar issue? You could check it via reading
-PCI_VENDOR_ID register from config space. And if it is not valid value
-then card is not really ready yet.
+With those 3 extra patches followed by 7 from this series it builds. But 
+on boot I get:
+dwc3 dwc3.0.auto: this is not a DesignWare USB3 DRD Core
+Then after this it reboots. Nothing in the logs. Nothing else on 
+console, I guess something goes wrong early.
 
-> To check this, try to put a busy loop for reading and check the value
-> till it gets 0.
-> 
-> Something like
-> 
->   unsigned int count = 1000;
-> 
->   do {
->     if (mwifiex_read_reg(...) == 0)
->       break;
->   } while (--count);
-> 
-> 
-> -- 
-> With Best Regards,
-> Andy Shevchenko
+I tried both in host / device mode - no change.
+
+Normally in host mode I have:
+usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, 
+bcdDevice= 5.14
+Only ref to dwc3 is:
+tusb1210 dwc3.0.auto.ulpi: using ACPI for GPIO lookup / using lookup 
+tables for GPIO lookup / No GPIO consumer cs found
