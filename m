@@ -2,157 +2,314 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27067C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 13:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B14C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 14:55:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA9EF60F44
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 13:57:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78282610C9
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 14:55:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241440AbhIWN67 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Sep 2021 09:58:59 -0400
-Received: from mail-dm6nam08on2079.outbound.protection.outlook.com ([40.107.102.79]:43360
-        "EHLO NAM04-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S235976AbhIWN66 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Sep 2021 09:58:58 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ed8fMpEkq6CnGe034dLBhiDiUTz1Yts+g4zQpjob1D2iU44znToKFFkfhXWejHEuhVqupEukeNOX7NlB4VmDw9+6ltlWkyJ5B8tZ8b4EgM7dbSwp1BzfQ+ic+nRVsD22igPxCRh25orKg71rUDtLFfh2IL6dna1mnB3lX5UphTHSNuduZNwPEVyMqwmNvzBktzYBcq9g7JAidUPmrm1aFUSoiUZyHPyxk3Q3e8Iv94YSh7kH/R9mPh6BBvqWDfYDFsTv2LLQitqfKuiBiYHA5u5TR/yTQEaLSW6S/Q4IFS5OeU1qfPXtUtX48BejpRo4edf9knKXmkLSBCZUQrb0kQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=fuRrMtGUpJYB192uQ5rJqL2JRpK1mp70DkeCjo6MwvI=;
- b=N108xyZtB78FzVXQqdnpv9QsFKlwYykm7Q6E6CK3VL0tDfifcINoIyQ4BEmmr/ftVMIn6YlwAOnIDZS1mMfrkjt9NibIST4cxV6ppeCan7uwZ7RAc6mAxjAjI2F2GMQx6aiKzppwrvsnaK8JPZs0MrGFuo9oPOtoxjOoSJyXjdLsJ4oU56dB/A1vyq4dOyjT8m/qTgC6sa3x2ugfXKZOj6HS1b/0z9qT1m+ag1OeMFbfUc0K7HP6pnKR86UBilszDQE+aqbnmlwQrPtLflvbDjPvn1lsJmc0iq+XKIMnk5STCm67/GGPqR2CL4YORRCdDfwrnAC5Qi8ge5H3aAmbmg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.36) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fuRrMtGUpJYB192uQ5rJqL2JRpK1mp70DkeCjo6MwvI=;
- b=szZfX2jf0626s/zX+x2AVhd4d2ff78VJgfB6sYWbjMJma5fuAKxWT+mBL3/EEAa0AgFq4+0TuuGNHT3NoixrNLKaqP/bjcLwewk510q/P5b2DTYvCSUfg/4hTys+CpYX01nwC2hv+BSlGT3rey5yik9Cuzo7h2Tl5Cwm1O1SjnedmjYPSGw0YreJtuH9fQATKh71dHVcHLJBubHouMu7tCS17uyZrKyF9Sk8PCucnGwcf663051NQCWXqw+0G07WGJ2m2J+LFtO//5WDhGh7DBrKOT76S+GhqUX6yRToPWzE2um+vQDTbhVTiU3DUskBkNtMTVgmVEnCuOZmjm1GXw==
-Received: from DM5PR19CA0060.namprd19.prod.outlook.com (2603:10b6:3:116::22)
- by BN6PR12MB1827.namprd12.prod.outlook.com (2603:10b6:404:fd::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4544.13; Thu, 23 Sep
- 2021 13:57:23 +0000
-Received: from DM6NAM11FT041.eop-nam11.prod.protection.outlook.com
- (2603:10b6:3:116:cafe::16) by DM5PR19CA0060.outlook.office365.com
- (2603:10b6:3:116::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4544.13 via Frontend
- Transport; Thu, 23 Sep 2021 13:57:23 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.36)
- smtp.mailfrom=nvidia.com; vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.36 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.36; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.36) by
- DM6NAM11FT041.mail.protection.outlook.com (10.13.172.98) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4544.13 via Frontend Transport; Thu, 23 Sep 2021 13:57:22 +0000
-Received: from DRHQMAIL107.nvidia.com (10.27.9.16) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 23 Sep
- 2021 13:57:22 +0000
-Received: from [172.27.15.96] (172.20.187.5) by DRHQMAIL107.nvidia.com
- (10.27.9.16) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 23 Sep
- 2021 13:57:18 +0000
-Subject: Re: [PATCH mlx5-next 3/7] vfio/pci_core: Make the region->release()
- function optional
-To:     Leon Romanovsky <leon@kernel.org>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-CC:     Yishai Hadas <yishaih@nvidia.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "Kirti Wankhede" <kwankhede@nvidia.com>, <kvm@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-rdma@vger.kernel.org>, <netdev@vger.kernel.org>,
-        Saeed Mahameed <saeedm@nvidia.com>
-References: <cover.1632305919.git.leonro@nvidia.com>
- <a01c7bb01ac4b1930a428fa8a8cae89bb1c4327a.1632305919.git.leonro@nvidia.com>
-From:   Max Gurtovoy <mgurtovoy@nvidia.com>
-Message-ID: <60b22817-442f-c7ac-3dce-8f8a57c12c4b@nvidia.com>
-Date:   Thu, 23 Sep 2021 16:57:16 +0300
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S241783AbhIWO5C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Sep 2021 10:57:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54246 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241735AbhIWO5B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Sep 2021 10:57:01 -0400
+Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7947C061574;
+        Thu, 23 Sep 2021 07:55:29 -0700 (PDT)
+Received: by mail-vs1-xe2d.google.com with SMTP id az15so6803199vsb.8;
+        Thu, 23 Sep 2021 07:55:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bvTv2ajxriCYjP0mYei7lj4bkhbVM0Fvo1NAnUQDicE=;
+        b=nNHY8AxyQGcwCktAMim89qjhecxp6BsaVnOR80AcdZTQO+bORXjNSvYV8K6eWOrtWL
+         CttjnX6k341fXjKejoyK58xjoUgD5fRtdav/nbp+GzmRGimTDCFkTuV2+zizDWuuNHUc
+         q8byLF7fmW0FEn2+gnwfwvX4B/jlDRLKRAxRjKSPbGDSTfsP9Gp3dn895iCBrELyBxtH
+         S9XN1JsuZ29FZrdlxZdbCdoTE148dOnRQksCjv4Ckrxycp0Q6ZLJ0KIYx2IwUh6ZA51Q
+         uDMAZoIWgYkA+Kbbd3lOz/AXMa0BgqgH6MlOoYir/a4nTPg+6yekTueHIThipZrvGLZr
+         l7XA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bvTv2ajxriCYjP0mYei7lj4bkhbVM0Fvo1NAnUQDicE=;
+        b=5vrw6P/Kd2Tp8eyTUFUEoa05/Byth9ucfX8wejXQgYB2wwrybvScf4yYvDfGc8swZg
+         Z4BQVbz9QTgwPNGuF05fdITyLyy+//p8hsVs7HMZdG6207YU/si92Yp/sPIq21xbPg84
+         kfpLJovP/LsHyIKSIaUjBLIUvjWDE9N/573L6dhqNawXfs6Z5FfhJ6J6ebZZnN/dvAiB
+         xN1xVj3FdEa81VE/FZEiMfLH5uQd3yC8dsFSgZpkOcDsfF0gba7w5brbQQ5riRvUlsfI
+         AGZWSDgz1Xi8xMtt+En7uI9IvcGKV8jl3c3OYrMCc2ZB679DZnK3R+JTSFc1P5AgxpjK
+         JjSA==
+X-Gm-Message-State: AOAM532+L18wS0MFQQ8XEw+225ikXIV2v/FroBVXppkZQC9a8kzR7On8
+        upL+aRy73ygIFeKBTp5ZW28/hsp8COmLmO4/k6JTTbvToDY=
+X-Google-Smtp-Source: ABdhPJxw3EKdt9xPpXWJdIzuOCstA5NGxvXgvDrjsD9iZhVAIl0tB8PP+m4ANpB2HbJFkqBDaBekfrNitIsmO6VRqPE=
+X-Received: by 2002:a67:3204:: with SMTP id y4mr4378863vsy.28.1632408928878;
+ Thu, 23 Sep 2021 07:55:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <a01c7bb01ac4b1930a428fa8a8cae89bb1c4327a.1632305919.git.leonro@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [172.20.187.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- DRHQMAIL107.nvidia.com (10.27.9.16)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: aefb4f5c-ff32-4044-3c8d-08d97e9a1171
-X-MS-TrafficTypeDiagnostic: BN6PR12MB1827:
-X-Microsoft-Antispam-PRVS: <BN6PR12MB18272FD4B8118A581D89E8DDDEA39@BN6PR12MB1827.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: qM7GV6SyZiJBzuV+iXIb0HkaXd5weNSUaNsZSptBIHRR8IFqM4780pH7ctpHIUarRL05WHmd/SLQ/pEU+t9ZjNmXUmFVR0qHZb2XMqqNP3VeUe3netUfFePQME6VFzfu4s3A0e9dmIMEegQ+W0b/6ss4vMTNLfX/egxwLFfcdU/o3qoqdZE/zXNBSsJ4vNSc49WAU6o1SeHxvWrx5SnCMzYHUUl4y7oc7HyXTtNzqh7bEEMwjSIurL9veI5OL5C+2/PhfqlnNhjbjb5qHLMjK+C+lHN2SFwy4aCPXS9JMlPCNJRi+7pAWxi7K/gR0niDNM9h0ksnIQ5n4YKqxXhYu0iCxeHJh/oLtrLTfCcx8FGEzjVw/t/2qr6b7/tVosYfC1zbl+BnSSSTLwXMWHUoXCu6KDKu6akgVA8uNTsVOQP9T3ioModwmVngFS+RGVmD7U2Cg+01a+gKQvSta3Or9+k8IcAPLA7px/KSU5+Q7L5t5nZBeAgCQ6hMNi9icE8zyIVHBaEE2bnG1JTMo+Z08jwZcroUvbKfY4RYdVAy567bBrFPqvatQ341mu5+A6uLFG4kwjMWw+Yy+aKwiK00aSetAKHLbTeXU5fuTHa8R12mvBxmD2FlespQYbkOQnlMvRWkpfm+pOBqiN8UHsZlAYJWwyysOGsaZwTG40I6+G97DM70OKqxjc8HlcjTQaODXUjhgnsATbaF/cE3iZZhDWH3BPGTLYCP6ZqtjC0XDwY=
-X-Forefront-Antispam-Report: CIP:216.228.112.36;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid05.nvidia.com;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(508600001)(83380400001)(186003)(53546011)(16526019)(356005)(336012)(36860700001)(82310400003)(26005)(7416002)(4326008)(31696002)(2906002)(31686004)(36906005)(8936002)(70586007)(8676002)(16576012)(316002)(54906003)(86362001)(2616005)(5660300002)(7636003)(70206006)(36756003)(110136005)(6636002)(107886003)(426003)(47076005)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Sep 2021 13:57:22.9574
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: aefb4f5c-ff32-4044-3c8d-08d97e9a1171
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.36];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT041.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR12MB1827
+References: <20210922042041.16326-1-sergio.paracuellos@gmail.com>
+ <CAK8P3a2WPOYS7ra_epyZ_bBBpPK8+AgEynK0pKOUZ6ajubcHew@mail.gmail.com>
+ <CAMhs-H8EyBmahhLsx+a0aoy+znY=PCm4BT97UBg4xcAy3x2oXg@mail.gmail.com>
+ <CAK8P3a0fQZvpNCKF7OUy_krC_YPyigtd5Ak_AMXXpx84HKMswA@mail.gmail.com>
+ <CAMhs-H-OCm1p6mTTV6s=vPx7FV8+1UMzx0X00wvXkW=5OgFQBQ@mail.gmail.com>
+ <CAK8P3a1iN76A5ahTTQ6rCS4LjKHz8grkNGHGehLJnd0xQSnHXA@mail.gmail.com>
+ <CAMhs-H_hZk3hruCaWRjKjUSj6vhVE+JZfk9nT7v1=mcc-H9wnw@mail.gmail.com>
+ <CAK8P3a3C0rG_JWWCU6T4B=+j2-+6S6Gq+aw_9e6XeVun9LoF0w@mail.gmail.com>
+ <CAMhs-H8kH7CMXENqDW_6GLTjeMMyk+ynehMmyBr=kFZPFHpM0A@mail.gmail.com>
+ <CAK8P3a2WmNsV9fhSEjqwHZAGkwGc9HOurhQsza7JOM2Scts2XQ@mail.gmail.com>
+ <CAMhs-H8fRnLavLfdw7jZO0tb8rWqdF81cGHhYT6gGp4UY1gChg@mail.gmail.com> <CAK8P3a2MJO--xmAZ_71h1QQ5_b8WXgyo-=LaT7r7yMMBUHoPfQ@mail.gmail.com>
+In-Reply-To: <CAK8P3a2MJO--xmAZ_71h1QQ5_b8WXgyo-=LaT7r7yMMBUHoPfQ@mail.gmail.com>
+From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date:   Thu, 23 Sep 2021 16:55:17 +0200
+Message-ID: <CAMhs-H_xdkpinyj-Y1u==ievpGWZ2Ze-_U7aCUcfu0=NKBq2xQ@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: of: Avoid pci_remap_iospace() when PCI_IOBASE not defined
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-staging@lists.linux.dev, gregkh <gregkh@linuxfoundation.org>,
+        Liviu Dudau <Liviu.Dudau@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Arnd,
 
-On 9/22/2021 1:38 PM, Leon Romanovsky wrote:
-> From: Yishai Hadas <yishaih@nvidia.com>
+On Thu, Sep 23, 2021 at 3:26 PM Arnd Bergmann <arnd@arndb.de> wrote:
 >
-> Make the region->release() function optional as in some cases there is
-> nothing to do by driver as part of it.
+>  ==On Thu, Sep 23, 2021 at 1:09 PM Sergio Paracuellos
+> <sergio.paracuellos@gmail.com> wrote:
+> > On Thu, Sep 23, 2021 at 11:07 AM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > ()On Thu, Sep 23, 2021 at 8:36 AM Sergio Paracuellos
+> > > <sergio.paracuellos@gmail.com> wrote:
+> > > > On Thu, Sep 23, 2021 at 7:51 AM Arnd Bergmann <arnd@arndb.de> wrote:
+> > > > > > I am not really understanding this yet (I think I need a bit of sleep
+> > > > > > time :)), but I will test this tomorrow and come back to you again
+> > > > > > with results.
+> > > > >
+> > > > > Both would let devices access the registers, but they are different
+> > > > > regarding the bus translations you have to program into the
+> > > > > host bridge, and how to access the hardcoded port numbers.
+> > > >
+> > > > I have tested this and I get initial invalidid BAR value errors on pci
+> > > > bus I/O enumeration an also bad addresses in /proc/ioports in the same
+> > > > way I got defining PCI_IOBASE as _AC(0xa0000000, UL):
+> > > >
+> > > > root@gnubee:~# cat /proc/ioports
+> > > > 00000000-0000ffff : pcie@1e140000
+> > > >   00000000-00000fff : PCI Bus 0000:01
+> > > >     00000000-0000000f : 0000:01:00.0
+> > > >       00000000-0000000f : ahci
+> > > >     00000010-00000017 : 0000:01:00.0
+> > > >       00000010-00000017 : ahci
+> > > >     00000018-0000001f : 0000:01:00.0
+> > > >       00000018-0000001f : ahci
+> > >
+> > > Ok, These look good to me now.
+> >
+> > This is the behaviour we already had with spaces.h [0] without any
+> > other change. See also comments of Thomas [1] about this being wrong
+> > which at the end are the motivation for this patch series.
+> >
+> > > > mt7621-pci 1e140000.pcie:       IO 0x001e160000..0x001e16ffff -> 0x001e160000
+> > > > LOGIC PIO: PIO TO CPUADDR: ADDR: 0x1e160000 -  addr HW_START:
+> > > > 0x1e160000 + RANGE IO: 0x00000000
+> >
+> > Why is my RANGE IO start transformed here to 0x0? Should not be the
+> > one defined in dts 0x001e160000?
+
 >
-> This is needed for coming patch from this series once we add
-> mlx5_vfio_cpi driver to support live migration but we don't need a
+> Can you show the exact property in your device tree? It sounds like the
+> problem is an incorrect entry in the ranges, unless the chip is hardwired
+> to the bus address in an unusual way.
 
-mlx5_vfio_pci *typo
+Here it is:
 
+ranges = <0x02000000 0 0x60000000 0x60000000 0 0x10000000>,  /* pci memory */
+               <0x01000000 0 0x1e160000 0x1e160000 0 0x00010000>;  /*
+io space */
 
-> migration release function.
 >
-> Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> ---
->   drivers/vfio/pci/vfio_pci_core.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
+> > > I think you have to have another #ifdef around the declaration in
+> > > this case, or alternatively move the mips definition back to a .c
+> > > file and leave only the #define
+> >
+> > Ok, so the following changes:
+> >
+> > diff --git a/arch/mips/pci/pci-generic.c b/arch/mips/pci/pci-generic.c
+> > index 95b00017886c..ee0e0951b800 100644
+> > --- a/arch/mips/pci/pci-generic.c
+> > +++ b/arch/mips/pci/pci-generic.c
+> > @@ -46,3 +46,9 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+> >  {
+> >         pci_read_bridge_bases(bus);
+> >  }
+> > +
+> > +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> > +{
+> > +       mips_io_port_base = phys_addr;
+> > +       return 0;
+> > +}
+> ...
+> > These changes got me to the same behaviour that this patch pretends
+> > without the ifdef on this patch. But, this behaviour is wrong
+> > according to your explanations since I got
+> >
+> > OF: IO START returned by pci_address_to_pio: 0x1e160000-0x1e16ffff
+> >
+> > and ioports using this range address and not lower 0x0-0xffff.
+> >
+> > So all of these changes seem to be invalid: this patch and the already
+> > added to staging-tree two ones: [2] and [3], right?
 >
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 68198e0f2a63..3ddc3adb24de 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -341,7 +341,8 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->   	vdev->virq_disabled = false;
->   
->   	for (i = 0; i < vdev->num_regions; i++)
-> -		vdev->region[i].ops->release(vdev, &vdev->region[i]);
-> +		if (vdev->region[i].ops->release)
-> +			vdev->region[i].ops->release(vdev, &vdev->region[i]);
->   
->   	vdev->num_regions = 0;
->   	kfree(vdev->region);
+> Right, there is probably yet another problem. Patch [2] should
+> be harmless here, but patch [3] is wrong as you should not override
+> the length of the I/O port window that is in the DT.
 
-Looks good,
+Understood and makes sense. If I also set the start address for the
+port the length won't be overwritten but I am only setting the end
+limit there since I don't have the io range start address in such
+early probe part of the driver and makes no sense to hardcode it. That
+is the only reason.
 
-Reviewed-by: Max Gurtovoy <mgurtovoy@nvidia.com>
+>
+> > Currently, no. But if they were ideally moved to work in the same way
+> > mt7621 would be the same case. Mt7621 is device tree based PCI host
+> > bridge driver that uses pci core apis but is still mips since it has
+> > to properly set IO coherency units which is a mips thing...
+>
+> I don't know what those IO coherency units are, but I would think that
+> if you have to do some extra things on MIPS but not ARM, then those
+> should be done from the common PCI host bridge code and stubbed out
+> on architectures that don't need them.
 
+Simple definition here [0]. And we must adjust them in the driver here
+[1]. Mips code, yes, but cannot be done in another way. Is related
+with address of the memory resource and must be set up. In any other
+case the pci subsystem won't work. I initially submitted this driver
+from staging to arch/mips but I was told that even though it is mips
+code, as it is device tree based and use common pci core apis, it
+would be better to move it to 'drivers/pci/controller'. But I still
+need the mips specific code for the iocu thing.
+
+>
+> > > I realize this is very confusing, but there are indeed at least three
+> > > address spaces that you must not confuse here:
+> > >
+> > > a) I/O port numbers as programmed into BAR registers and
+> > >     used in PCIe transactions, normally 0 through 0xffff on each
+> > >     bus.
+> > > b) Linux I/O port numbers as seen from user space, in the range
+> > >      from 0 to IO_SPACE_LIMIT, these correspond to the
+> > >      bus addresses from a) if io_offset is zero, but could be
+> > >      different with a non-zero value passed into
+> > >      pci_add_resource_offset() when the region is probed.
+> > >      The offset may be different on each pci host bridge.
+> >
+> > This "offset" is the pci address configured in device tree range,
+> > right? This seems the part is not doing properly in my case since all
+> > of these changes are needed to at the end got BAR's as
+> >
+> > pci 0000:02:00.0: BAR 4: assigned [io  0x1e161000-0x1e16100f]
+> > pci 0000:02:00.0: BAR 0: assigned [io  0x1e161010-0x1e161017]
+> > pci 0000:02:00.0: BAR 2: assigned [io  0x1e161018-0x1e16101f]
+> > pci 0000:02:00.0: BAR 1: assigned [io  0x1e161020-0x1e161023]
+> > pci 0000:02:00.0: BAR 3: assigned [io  0x1e161024-0x1e161027]
+> >
+> > which I understand is correct.
+>
+> The "offset" is between two numbers that can normally both be
+> picked freely, so it could literally be anything, but in the most common
+> and ideal case, it is zero:
+>
+> The Linux port number gets assigned when probing the host bridge,
+> this is purely a software construct and the first bridge should normally
+> get range 0-0xffff, the second bridge gets range 0x10000-0x1ffff
+> etc. The code assigning these numbers is rather confusing, and I
+> can't even find where it is now...
+>
+> The port number on the bus is platform specific. In some cases
+> you can set it through a register in the pci host bridge, in other
+> cases it is fixed to starting at zero. If the address is programmable,
+> it can be either set by the firmware or bootloader and passed down
+> to the kernel through the DT ranges property, or the ranges can
+> contain a suggested value that then has to be programmed by
+> the host bridge driver.
+>
+> If the value is not zero, you should try setting it to zero to get
+> an identity mapping against the Linux port numbers, to minimize
+> the confusion.
+>
+> It is possible that the hardware (or bootloader) designers
+> misunderstood what the window is about, and hardcoded it so
+> that the port number on the bus is the same as the physical
+> address as seen from the CPU. If this is the case and you
+> can't change it to a sane value, you have to put the 1:1
+> translation into the DT and would actually get the strange
+> port numbers 0x1e161000-0x1e16100f from that nonzero offset.
+
+Yes, and that pci_add_resource_offset() is called inside
+devm_of_pci_get_host_bridge_resources() after parsing the ranges and
+storing them as resources.  To calculate that offset passed around,
+subtracts: res->start - range.pci_addr [2], so looking into my ranges
+my offset should be zero. And I have added a trace just to confirm and
+there are zero:
+
+mt7621-pci 1e140000.pcie:      MEM 0x0060000000..0x006fffffff -> 0x0060000000
+OF: IO START returned by pci_address_to_pio: 0x60000000-0x6fffffff
+PCI: OF: OFFSET -> RES START 0x60000000 - PCI ADDRESS 0x60000000 -> 0x0
+mt7621-pci 1e140000.pcie:       IO 0x001e160000..0x001e16ffff -> 0x001e160000
+OF: IO START returned by pci_address_to_pio: 0x1e160000-0x1e16ffff
+PCI: OF: OFFSET -> RES START 0x1e160000 - PCI ADDRESS 0x1e160000 -> 0x0
+
+But if I define PCI_IOBASE I get my I/O range start set to zero but
+also the offset?? Why this substract is not getting '0x1e160000' as
+offset here?
+
+LOGIC PIO: PIO TO CPUADDR: ADDR: 0x1e160000 -  addr HW_START:
+0x1e160000 + RANGE IO: 0x00000000
+OF: IO START returned by pci_address_to_pio: 0x0-0xffff
+PCI: OF: OFFSET -> RES START 0x0 - PCI ADDRESS 0x1e160000 -> 0x0
+
+
+>
+> This means you can only use PCI devices that can be
+> programmed with high port numbers, but not devices with
+> hardcoded legacy ports.
+
+So there is no real sense of having PCI IO working then since this
+such devices is unlikely to exist.
+
+>
+> > > c) MMIO address used to access ports, offset by PCI_IOBASE
+> > >     from the Linux port numbers in b).
+> > >     No other registers should be visible between PCI_IOBASE
+> > >     and PCI_IOBASE+IO_SPACE_LIMIT
+> >
+> > mips_io_port_base + offset, right? KSEG1 addresses for mips by default.
+>
+> no, not the offset. As long as mips_io_port_base==PCI_IOBASE,
+> the accessible ports will be between mips_io_port_base and
+> mips_io_port_base+0xffff.
+
+Understood, thanks.
+
+Best regards,
+    Sergio Paracuellos
+
+>
+>          Arnd
+
+[0]; https://www.linux-mips.org/wiki/IO_Coherence_Unit
+[1]; https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git/tree/drivers/staging/mt7621-pci/pci-mt7621.c?h=staging-testing#n211
+[2]: https://elixir.bootlin.com/linux/latest/source/drivers/pci/of.c#L401
