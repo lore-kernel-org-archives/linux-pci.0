@@ -2,54 +2,54 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE698C4321E
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 21:11:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20920C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 21:11:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB43F60F4C
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 21:11:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D2E561090
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 21:11:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348536AbhIXVNZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Sep 2021 17:13:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46554 "EHLO
+        id S1348510AbhIXVN1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Sep 2021 17:13:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347078AbhIXVNV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Sep 2021 17:13:21 -0400
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4B2DC0614ED;
-        Fri, 24 Sep 2021 14:11:47 -0700 (PDT)
-Received: by mail-wr1-x42a.google.com with SMTP id t8so31254912wrq.4;
-        Fri, 24 Sep 2021 14:11:47 -0700 (PDT)
+        with ESMTP id S1348520AbhIXVNX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Sep 2021 17:13:23 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB992C061760;
+        Fri, 24 Sep 2021 14:11:49 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id d21so31081110wra.12;
+        Fri, 24 Sep 2021 14:11:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=I3qu/bakw/8LhQIXjaOEPV5SVnN+1i5mwJzI+2iO/oc=;
-        b=XfmVM23a3TZXWTkk8M3V4KnzK7ODNPfeDEzYIrtlcC4fAb5l2Kd3kaOYpjqmcy6Y9A
-         h5L295fq+DCQxENcW/PpuACnlSFNi7Y7EvKL35atOfZnC3hMZmWym7Xy5O656ZY2Yr6W
-         n19/dOLk6H4BahbETJSPfTYf/mubMDW6nu/nOVqUMkeH+pP9/T2QWlE0CgTS8E1DG8vZ
-         PydsndU15zlsBcDGmd9m2NeT2mq3VpF+BqoCsdWvPBFE4RsJ1NUr/ScbLUOvLuXcekBA
-         vnF9R9hBxl8lSgXGOLKqSjBz6sKu5nKUlRXcmPAU1zS0juXIUCKiuT11Iyrgzj50JQ4J
-         VTEg==
+        bh=iEHoU21DH841tx0qtRTz5FbDxLZko2mQ4Z33po9e6hg=;
+        b=ajfY7Ymmr+7cnGhJOtrjT2wVcAV/rxDc7B6NaEreAvLHCKzEacArwdGGhIes3F+dnH
+         754KCqC0DrJT4Guxwjfq02g08n5JTWpJhxggEebDGVe4iAJEWjBOKlTrwOnDoES05n1s
+         gi1tikCyks6F3pFbBEIqjzccnHxiruwRzYma9kwvIup0ywxIdtp2quLZwk+LOC4umEOm
+         SymSBx4WkYfbtbEfxyFHPvXb6wbWLlExxXEmIoZcwc8rZqUGz468JTdlL9hBX0JTlrQc
+         4ppqYtW2JKAPOpazd9Zhkcdy946u4ZpSArcYgW/WA42qqI1K3O/QFTayYuSRleMmNGOK
+         reUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=I3qu/bakw/8LhQIXjaOEPV5SVnN+1i5mwJzI+2iO/oc=;
-        b=zy5qut06EH2xPUpiqyCJfC6TzdlcxNDvIWqA5zoKbcabiXC5HWU62dRYAempQtle5n
-         GX+Nu5EMDJV57C5aY0DDu5WS4/pEAj/8hH+j3UisbYwRKssRW3mRWO42jVy7sh4lVWjP
-         V9YmdrvA5hzfFY4Fkb5KGoMnj1yQNNQFloTHzEM0wSKujvteJBnBQ+BkMGQPbJ5gH8IH
-         W2vwXIMANSVNholrQ4QGZzmKPgSoE7CMiqWIBg0Sd5raja/wGqhOjp6uu3GbTuXJYagU
-         I/N90dWHcSckuEL4pLVgcfWJetA5JrpcB1ioTMTddlt0luxQ9Tm2H+BeoygY4Sy/Ka9n
-         SNJA==
-X-Gm-Message-State: AOAM533Ng18St/1EZTHTyTQ6Rud+d6luZn4GxLYDcirn0v1gnmeGbKsf
-        7DkvoZ2xrfZ0CSmhM2u1Yy+HQ25l2Pw=
-X-Google-Smtp-Source: ABdhPJyyg9AbUZb+fEXLr9Lk4DY8+qYFpCQ1iqu6RBGl04PJnjfBWVpkdf90r95BHZlh8KVQMwlk7w==
-X-Received: by 2002:adf:ed92:: with SMTP id c18mr13918812wro.86.1632517906559;
-        Fri, 24 Sep 2021 14:11:46 -0700 (PDT)
+        bh=iEHoU21DH841tx0qtRTz5FbDxLZko2mQ4Z33po9e6hg=;
+        b=wyQ2pw6A2ymruPQNM82snjBLoItxMBoAT2tuPIuo1WA6Hks6k8QzQqHUsVt+pp1os7
+         fKV7eLousH9wHqTzJi618VpcL6YVSLzgBpESNQm1Be6As9L3BcTptrrzVcSlv3P4Buyd
+         T7J08Y+COswCRrzgJ7mp9fkt5SYp9oWGjrb6OVs61gl125ErfvGZlzAvLaskMpF9kGnx
+         vrJlD6fNJ6Z8Wc5HKce8YcMiTz444xqeDq4TP8p5MwyVuiIsqteE5XHpCqt3hg02SQDa
+         bBgpGa1XmE3BGDbFblXecmNTrkMyXAgewTLCxdVkpcw26xFJsHl1aCywAf/+lU6KUT4X
+         PWgg==
+X-Gm-Message-State: AOAM530yMPocuLyX9/kyKA/dYsMuFbC/TcPQtWAAeeCsDMpQm5CUGmB/
+        b1PeLlf0BHKVU9tsa/luajI=
+X-Google-Smtp-Source: ABdhPJxlUEJPYCJsNzawytHIOiH/45imW9bnZmTk3fyUFhDaECmpAeFTIfch/BNrkh6Bn7sAykByHg==
+X-Received: by 2002:adf:a549:: with SMTP id j9mr2799424wrb.353.1632517908646;
+        Fri, 24 Sep 2021 14:11:48 -0700 (PDT)
 Received: from localhost.localdomain (252.red-83-54-181.dynamicip.rima-tde.net. [83.54.181.252])
-        by smtp.gmail.com with ESMTPSA id y64sm10344297wmc.38.2021.09.24.14.11.45
+        by smtp.gmail.com with ESMTPSA id y64sm10344297wmc.38.2021.09.24.14.11.47
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 24 Sep 2021 14:11:46 -0700 (PDT)
+        Fri, 24 Sep 2021 14:11:48 -0700 (PDT)
 From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
 To:     tsbogend@alpha.franken.de
 Cc:     robh@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
@@ -57,9 +57,9 @@ Cc:     robh@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
         gregkh@linuxfoundation.org, linux-mips@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-staging@lists.linux.dev,
         neil@brown.name, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/6] PCI: allow architecture specific implementation of pci_remap_iospace()
-Date:   Fri, 24 Sep 2021 23:11:37 +0200
-Message-Id: <20210924211139.3477-5-sergio.paracuellos@gmail.com>
+Subject: [PATCH 6/6] staging: mt7621-pci: properly adjust base address for the IO window
+Date:   Fri, 24 Sep 2021 23:11:39 +0200
+Message-Id: <20210924211139.3477-7-sergio.paracuellos@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210924211139.3477-1-sergio.paracuellos@gmail.com>
 References: <20210924211139.3477-1-sergio.paracuellos@gmail.com>
@@ -69,38 +69,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_remap_iospace() was originally meant as an architecture specific helper,
-but it moved into generic code after all architectures had the same requirements.
-MIPS has different requirements so it should not be shared. The way for doing
-this will be using a macro 'pci_remap_iospace' defined for those architectures
-that need a special treatement. Hence, put core api function inside preprocesor
-conditional code for 'pci_remap_iospace' definition.
+The value to adjust in the bridge register RALINK_PCI_IOBASE must take into
+account the raw value from DT, not only the translated linux port number.
+As long as io_offset is zero, the two are the same, but if you were to use
+multiple host bridge in the system, or pick a different bus address in DT,
+you can have a nonzero io_offset. At this means to take into account the
+bus address which is used to calculate this offset, substracting it from
+the IO resource start address.
 
 Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
 ---
- drivers/pci/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/mt7621-pci/pci-mt7621.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ce2ab62b64cf..0ec57bb01a88 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4123,6 +4123,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
-  * architectures that have memory mapped IO functions defined (and the
-  * PCI_IOBASE value defined) should call this function.
-  */
-+#ifndef pci_remap_iospace
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- {
- #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-@@ -4146,6 +4147,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- #endif
- }
- EXPORT_SYMBOL(pci_remap_iospace);
-+#endif
+diff --git a/drivers/staging/mt7621-pci/pci-mt7621.c b/drivers/staging/mt7621-pci/pci-mt7621.c
+index 6acfc94a16e7..503cb1fca2e0 100644
+--- a/drivers/staging/mt7621-pci/pci-mt7621.c
++++ b/drivers/staging/mt7621-pci/pci-mt7621.c
+@@ -482,7 +482,7 @@ static int mt7621_pcie_enable_ports(struct pci_host_bridge *host)
  
- /**
-  * pci_unmap_iospace - Unmap the memory mapped I/O space
+ 	/* Setup MEMWIN and IOWIN */
+ 	pcie_write(pcie, 0xffffffff, RALINK_PCI_MEMBASE);
+-	pcie_write(pcie, entry->res->start, RALINK_PCI_IOBASE);
++	pcie_write(pcie, entry->res->start - entry->offset, RALINK_PCI_IOBASE);
+ 
+ 	list_for_each_entry(port, &pcie->ports, list) {
+ 		if (port->enabled) {
 -- 
 2.25.1
 
