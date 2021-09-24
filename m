@@ -2,272 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DATE_IN_FUTURE_06_12,
+	DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38207C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 21:37:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4963AC433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 04:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E40C61242
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Sep 2021 21:37:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22E0A61107
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Sep 2021 04:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243359AbhIWVjB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Sep 2021 17:39:01 -0400
-Received: from mga07.intel.com ([134.134.136.100]:32667 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243363AbhIWVi7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Sep 2021 17:38:59 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10116"; a="287616970"
-X-IronPort-AV: E=Sophos;i="5.85,317,1624345200"; 
-   d="scan'208";a="287616970"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Sep 2021 14:37:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,317,1624345200"; 
-   d="scan'208";a="514273504"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga008.fm.intel.com with ESMTP; 23 Sep 2021 14:37:25 -0700
-Received: from [10.212.150.227] (kliang2-MOBL.ccr.corp.intel.com [10.212.150.227])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by linux.intel.com (Postfix) with ESMTPS id BED9D580AD6;
-        Thu, 23 Sep 2021 14:37:23 -0700 (PDT)
-Subject: Re: [PATCH v2 6/9] PCI: Add pci_find_dvsec_capability to find
- designated VSEC
-To:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org
-Cc:     "David E . Box" <david.e.box@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        iommu@lists.linux-foundation.org
-References: <20210923172647.72738-1-ben.widawsky@intel.com>
- <20210923172647.72738-7-ben.widawsky@intel.com>
-From:   "Liang, Kan" <kan.liang@linux.intel.com>
-Message-ID: <8dbea1cb-acf8-d77e-aafd-537331cf0588@linux.intel.com>
-Date:   Thu, 23 Sep 2021 17:37:22 -0400
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S229678AbhIXERV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Sep 2021 00:17:21 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:3740 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229454AbhIXERV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Sep 2021 00:17:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1632456948; x=1663992948;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ujSYJSJibS7ZEanYJFqh0rqX/WIrmvvKSo6Fvc8sU5s=;
+  b=XsVtegzgDcFFdUHUig6PRS29ML7/L4tsCby7OxZClfPsKb004SMAAc5P
+   OKAGk/OWAxqILicrmadde6NTC7UV5i3BlIsMVkcNr/nlc6jbK8SlU6Xyw
+   bAdv06ugLIi7CCf2dc/28zxExgnFnMxJ6Qe8jrfRR4xlMrMzodkrjwMV/
+   HEs/SazAjuyHKNx5Sa8kQvnHySBv4qrJMvqB76FU38uyLSf4WeietVPZi
+   XMxlUi0PSs8pTz8h5K3FfkZ8sEXCTXaBkR+i7i2Jy9A7uipGY9LBKziYt
+   esOBCvsbxNA1UFpkqyaahP4v8+GDkZcPVGs8Tt5AoEPJDegDfWlpkleZG
+   Q==;
+IronPort-SDR: ssDjp59dke5Or09pxBHKbnZ0yDTP2HtzXLM0YJG/D8Uil/T/jE9s0DD9ph2o+2/nZoKy+PxUj9
+ ad9Zo2E4ot/AFz1/jB1PEzHbOy475ktIoKH9WbkbglRevrtvt44LhFvTYTbO77ciygn7I/k++Z
+ McczPAhvbNFgNqGmHqUXg6bMlRZ1N4qzQto6NfhQBlko5hYnDIOMql7AOTxhA23JAyBWYQILtY
+ 1vXr2XIM6bYDlQc4pO3RWuJ44FJ8l1/cSZjIJ3utLG03upfzUtzqIMdDdTBgAIyN4Lp5Pw4Ebv
+ kPF+k2FtL6knv6tmKKeVfZnq
+X-IronPort-AV: E=Sophos;i="5.85,318,1624345200"; 
+   d="scan'208";a="130437083"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Sep 2021 21:15:47 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.14; Thu, 23 Sep 2021 21:15:47 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Thu, 23 Sep 2021 21:15:46 -0700
+From:   <kelvin.cao@microchip.com>
+To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <kelvin.cao@microchip.com>, <kelvincao@outlook.com>
+Subject: [PATCH 0/5] Switchtec Fixes and Improvements
+Date:   Fri, 24 Sep 2021 11:08:37 +0000
+Message-ID: <20210924110842.6323-1-kelvin.cao@microchip.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20210923172647.72738-7-ben.widawsky@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Kelvin Cao <kelvin.cao@microchip.com>
 
+Hi,
 
-On 9/23/2021 1:26 PM, Ben Widawsky wrote:
-> Add pci_find_dvsec_capability to locate a Designated Vendor-Specific
-> Extended Capability with the specified DVSEC ID.
-> 
-> The Designated Vendor-Specific Extended Capability (DVSEC) allows one or
-> more vendor specific capabilities that aren't tied to the vendor ID of
-> the PCI component.
-> 
-> DVSEC is critical for both the Compute Express Link (CXL) driver as well
-> as the driver for OpenCAPI coherent accelerator (OCXL).
-> 
-> Cc: David E. Box <david.e.box@linux.intel.com>
-> Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: Andrew Donnellan <ajd@linux.ibm.com>
-> Cc: Lu Baolu <baolu.lu@linux.intel.com>
-> Reviewed-by: Frederic Barrat <fbarrat@linux.ibm.com>
-> Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+Please find a bunch of patches for the switchtec driver collected over the
+last few months.
 
-Applied the interface for the perf uncore driver as below. The interface 
-works properly.
+The first 2 patches fix two minor bugs. Patch 3 updates the method of
+getting management VEP instance ID based on a new firmware change. Patch
+4 replaces ENOTSUPP with EOPNOTSUPP to follow the preference of kernel.
+And the last patch adds check of event support to align with new firmware
+implementation.
 
-Tested-by: Kan Liang <kan.liang@linux.intel.com>
-
-
- From ebb69ba386dca91fb372522b13af9feb84adcbc0 Mon Sep 17 00:00:00 2001
-From: Kan Liang <kan.liang@linux.intel.com>
-Date: Thu, 23 Sep 2021 13:59:24 -0700
-Subject: [PATCH] perf/x86/intel/uncore: Use pci core's DVSEC functionality
-
-Apply standard interface pci_find_dvsec_capability for perf uncore
-driver and remove unused macros.
-
-Reduce maintenance burden of DVSEC query implementation.
-
-Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
----
-  arch/x86/events/intel/uncore_discovery.c | 41 
-+++++++++++++++-----------------
-  arch/x86/events/intel/uncore_discovery.h |  6 -----
-  2 files changed, 19 insertions(+), 28 deletions(-)
-
-diff --git a/arch/x86/events/intel/uncore_discovery.c 
-b/arch/x86/events/intel/uncore_discovery.c
-index 3049c64..f8ea092 100644
---- a/arch/x86/events/intel/uncore_discovery.c
-+++ b/arch/x86/events/intel/uncore_discovery.c
-@@ -21,7 +21,7 @@ static bool has_generic_discovery_table(void)
-  		return false;
-
-  	/* A discovery table device has the unique capability ID. */
--	dvsec = pci_find_next_ext_capability(dev, 0, UNCORE_EXT_CAP_ID_DISCOVERY);
-+	dvsec = pci_find_next_ext_capability(dev, 0, PCI_EXT_CAP_ID_DVSEC);
-  	pci_dev_put(dev);
-  	if (dvsec)
-  		return true;
-@@ -260,7 +260,7 @@ static int parse_discovery_table(struct pci_dev 
-*dev, int die,
-
-  bool intel_uncore_has_discovery_tables(void)
-  {
--	u32 device, val, entry_id, bar_offset;
-+	u32 device, val, bar_offset;
-  	int die, dvsec = 0, ret = true;
-  	struct pci_dev *dev = NULL;
-  	bool parsed = false;
-@@ -275,27 +275,24 @@ bool intel_uncore_has_discovery_tables(void)
-  	 * the discovery table devices.
-  	 */
-  	while ((dev = pci_get_device(PCI_VENDOR_ID_INTEL, device, dev)) != 
-NULL) {
--		while ((dvsec = pci_find_next_ext_capability(dev, dvsec, 
-UNCORE_EXT_CAP_ID_DISCOVERY))) {
--			pci_read_config_dword(dev, dvsec + UNCORE_DISCOVERY_DVSEC_OFFSET, &val);
--			entry_id = val & UNCORE_DISCOVERY_DVSEC_ID_MASK;
--			if (entry_id != UNCORE_DISCOVERY_DVSEC_ID_PMON)
--				continue;
--
--			pci_read_config_dword(dev, dvsec + UNCORE_DISCOVERY_DVSEC2_OFFSET, 
-&val);
--
--			if (val & ~UNCORE_DISCOVERY_DVSEC2_BIR_MASK) {
--				ret = false;
--				goto err;
--			}
--			bar_offset = UNCORE_DISCOVERY_BIR_BASE +
--				     (val & UNCORE_DISCOVERY_DVSEC2_BIR_MASK) * 
-UNCORE_DISCOVERY_BIR_STEP;
--
--			die = get_device_die_id(dev);
--			if (die < 0)
--				continue;
--
--			parse_discovery_table(dev, die, bar_offset, &parsed);
-+		dvsec = pci_find_dvsec_capability(dev, PCI_VENDOR_ID_INTEL, 
-UNCORE_DISCOVERY_DVSEC_ID_PMON);
-+		if (!dvsec)
-+			continue;
-+
-+		pci_read_config_dword(dev, dvsec + UNCORE_DISCOVERY_DVSEC2_OFFSET, &val);
-+
-+		if (val & ~UNCORE_DISCOVERY_DVSEC2_BIR_MASK) {
-+			ret = false;
-+			goto err;
-  		}
-+		bar_offset = UNCORE_DISCOVERY_BIR_BASE +
-+			     (val & UNCORE_DISCOVERY_DVSEC2_BIR_MASK) * 
-UNCORE_DISCOVERY_BIR_STEP;
-+
-+		die = get_device_die_id(dev);
-+		if (die < 0)
-+			continue;
-+
-+		parse_discovery_table(dev, die, bar_offset, &parsed);
-  	}
-
-  	/* None of the discovery tables are available */
-diff --git a/arch/x86/events/intel/uncore_discovery.h 
-b/arch/x86/events/intel/uncore_discovery.h
-index 6d735611..84d56e5 100644
---- a/arch/x86/events/intel/uncore_discovery.h
-+++ b/arch/x86/events/intel/uncore_discovery.h
-@@ -2,12 +2,6 @@
-
-  /* Generic device ID of a discovery table device */
-  #define UNCORE_DISCOVERY_TABLE_DEVICE		0x09a7
--/* Capability ID for a discovery table device */
--#define UNCORE_EXT_CAP_ID_DISCOVERY		0x23
--/* First DVSEC offset */
--#define UNCORE_DISCOVERY_DVSEC_OFFSET		0x8
--/* Mask of the supported discovery entry type */
--#define UNCORE_DISCOVERY_DVSEC_ID_MASK		0xffff
-  /* PMON discovery entry type ID */
-  #define UNCORE_DISCOVERY_DVSEC_ID_PMON		0x1
-  /* Second DVSEC offset */
--- 
-2.7.4
+This patchset is based on v5.15-rc2.
 
 Thanks,
-Kan
+Kelvin
 
-> ---
->   drivers/pci/pci.c   | 32 ++++++++++++++++++++++++++++++++
->   include/linux/pci.h |  1 +
->   2 files changed, 33 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ce2ab62b64cf..94ac86ff28b0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -732,6 +732,38 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
->   }
->   EXPORT_SYMBOL_GPL(pci_find_vsec_capability);
->   
-> +/**
-> + * pci_find_dvsec_capability - Find DVSEC for vendor
-> + * @dev: PCI device to query
-> + * @vendor: Vendor ID to match for the DVSEC
-> + * @dvsec: Designated Vendor-specific capability ID
-> + *
-> + * If DVSEC has Vendor ID @vendor and DVSEC ID @dvsec return the capability
-> + * offset in config space; otherwise return 0.
-> + */
-> +u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
-> +{
-> +	int pos;
-> +
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DVSEC);
-> +	if (!pos)
-> +		return 0;
-> +
-> +	while (pos) {
-> +		u16 v, id;
-> +
-> +		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER1, &v);
-> +		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER2, &id);
-> +		if (vendor == v && dvsec == id)
-> +			return pos;
-> +
-> +		pos = pci_find_next_ext_capability(dev, pos, PCI_EXT_CAP_ID_DVSEC);
-> +	}
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
-> +
->   /**
->    * pci_find_parent_resource - return resource region of parent bus of given
->    *			      region
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index cd8aa6fce204..c93ccfa4571b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1130,6 +1130,7 @@ u16 pci_find_ext_capability(struct pci_dev *dev, int cap);
->   u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 pos, int cap);
->   struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
->   u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap);
-> +u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec);
->   
->   u64 pci_get_dsn(struct pci_dev *dev);
->   
-> 
+Kelvin Cao (4):
+  PCI/switchtec: Error out MRPC execution when no GAS access
+  PCI/switchtec: Fix a MRPC error status handling issue
+  PCI/switchtec: Update the way of getting management VEP instance ID
+  PCI/switchtec: Replace ENOTSUPP with EOPNOTSUPP
+
+Logan Gunthorpe (1):
+  PCI/switchtec: Add check of event support
+
+ drivers/pci/switch/switchtec.c | 87 +++++++++++++++++++++++++++-------
+ include/linux/switchtec.h      |  1 +
+ 2 files changed, 71 insertions(+), 17 deletions(-)
+
+-- 
+2.25.1
+
