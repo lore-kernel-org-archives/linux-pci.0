@@ -2,119 +2,142 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F1FC433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 25 Sep 2021 20:32:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 807EEC433EF
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Sep 2021 02:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4313060F4B
-	for <linux-pci@archiver.kernel.org>; Sat, 25 Sep 2021 20:32:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5979B60240
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Sep 2021 02:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbhIYUeT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 25 Sep 2021 16:34:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229999AbhIYUeN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Sep 2021 16:34:13 -0400
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AFD2C061765;
-        Sat, 25 Sep 2021 13:32:33 -0700 (PDT)
-Received: by mail-wr1-x42a.google.com with SMTP id t8so38336962wrq.4;
-        Sat, 25 Sep 2021 13:32:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=yKlbIEgqwR0qKF8U+1Jmv4I3Uips5CrTskAfz926Lgw=;
-        b=X4MuI7BDwuEfS0kx+aSaMc/Oso11hkeMpr296AAfzuYHNay+DEGMlnw58azTBbTdOx
-         D0eIX133N+i//NgM4wovM29cPWfQWSiYXzPfFjo6XLs2GGeESmQRKBl/LQT0AdG6yCvx
-         VuL/ij3eJUsQIRoJqKi9OZaF9RkPfjeWniW38Uypp2ZoVnhYpyEyZTnHZp1MMV28N2jM
-         zqH2Q8Ejfp85vpppMvnQHcv/xuQwuNIAEoI5p8q7YAKCqwAVzgI3Hq4TIzAy/7QdKpkh
-         CoLyJieFkhioAT4oPsFejj5+O2IYoCIKf8IoclO1nL7rFQyUHj/cWQqdSJvvBX//ITnt
-         4hWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=yKlbIEgqwR0qKF8U+1Jmv4I3Uips5CrTskAfz926Lgw=;
-        b=JFCVfCcmv2aa8ZtVyM2T5b6UPwWTUVc/CJl5dsGNhma94XK+8xN2nP3X0Gkk+lcYvM
-         xwk1VZ3qvpSbFwc08stBafbX9ewEHToPjrRiRvP/JVMAXYkSOoxyoA3ftWj1CxNt3gvR
-         tYHlqQ6weDbFOXesf9x0rKbfLRkJ1fO74Ltm4VSTS7gPKdxoueO5HFonOdvqwgl3/zjr
-         Mmmzr5WumdCoC7NBBVJs81mPgNLt72Mxo9iA07CEw10L1ACcOTZZw64ut150Aweo6DeO
-         THjsA/RYK1CadnAVKFpYZRex8wzEyVvUVq3Yh8vxCObUPxCQ15u0DvEawvJKrwipy6fY
-         kNGA==
-X-Gm-Message-State: AOAM5312n/80TFaButF/cLN00MgLrmSl/C2Cx56R0/pqzGx6XMBMjMxc
-        UwCc4uSfQBXDix+zpUCOmUY=
-X-Google-Smtp-Source: ABdhPJyB5EAGRY414d65WgCtR2DA5/RQmVAZJ8drxqTB2g4Nnh94SBqW29tqzshSJ+0sTHFz9SbFdw==
-X-Received: by 2002:adf:9bdb:: with SMTP id e27mr18382224wrc.162.1632601951732;
-        Sat, 25 Sep 2021 13:32:31 -0700 (PDT)
-Received: from localhost.localdomain (252.red-83-54-181.dynamicip.rima-tde.net. [83.54.181.252])
-        by smtp.gmail.com with ESMTPSA id a202sm16703279wmd.15.2021.09.25.13.32.30
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 25 Sep 2021 13:32:31 -0700 (PDT)
-From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
-To:     tsbogend@alpha.franken.de
-Cc:     robh@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
-        Liviu.Dudau@arm.com, bhelgaas@google.com, matthias.bgg@gmail.com,
-        gregkh@linuxfoundation.org, linux-mips@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-staging@lists.linux.dev,
-        neil@brown.name, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 5/6] MIPS: implement architecture-specific 'pci_remap_iospace()'
-Date:   Sat, 25 Sep 2021 22:32:23 +0200
-Message-Id: <20210925203224.10419-6-sergio.paracuellos@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210925203224.10419-1-sergio.paracuellos@gmail.com>
-References: <20210925203224.10419-1-sergio.paracuellos@gmail.com>
+        id S230355AbhIZCmw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 25 Sep 2021 22:42:52 -0400
+Received: from mx24.baidu.com ([111.206.215.185]:50224 "EHLO baidu.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230302AbhIZCmw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 25 Sep 2021 22:42:52 -0400
+Received: from BC-Mail-Ex12.internal.baidu.com (unknown [172.31.51.52])
+        by Forcepoint Email with ESMTPS id BE390249169A788A4135;
+        Sun, 26 Sep 2021 10:41:07 +0800 (CST)
+Received: from BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) by
+ BC-Mail-Ex12.internal.baidu.com (172.31.51.52) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2242.12; Sun, 26 Sep 2021 10:41:07 +0800
+Received: from localhost (172.31.63.8) by BJHW-MAIL-EX27.internal.baidu.com
+ (10.127.64.42) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Sun, 26
+ Sep 2021 10:41:07 +0800
+Date:   Sun, 26 Sep 2021 10:41:06 +0800
+From:   Cai Huoqing <caihuoqing@baidu.com>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+CC:     Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Remove the unused pci wrappers
+Message-ID: <20210926024106.GA88@LAPTOP-UKSR4ENP.internal.baidu.com>
+References: <20210925135255.328-1-caihuoqing@baidu.com>
+ <3bf6cee5-a55b-5a6e-26d5-35002b36a2d2@wanadoo.fr>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <3bf6cee5-a55b-5a6e-26d5-35002b36a2d2@wanadoo.fr>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Originating-IP: [172.31.63.8]
+X-ClientProxiedBy: BJHW-Mail-Ex11.internal.baidu.com (10.127.64.34) To
+ BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To make PCI IO work we need to properly virtually map IO cpu physical address
-and set this virtual address as the address of the first PCI IO port which
-is set using function 'set_io_port_base()'.
+On 25 9月 21 17:14:05, Christophe JAILLET wrote:
+> Le 25/09/2021 à 15:52, Cai Huoqing a écrit :
+> > The wrappers in include/linux/pci-dma-compat.h should go away,
+> > so remove the unused pci wrappers.
+> > Prefer using dma_xxx() instead of the pci wrappers pci_xxx().
+> > 
+> > Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+> > ---
+> >   include/linux/pci-dma-compat.h | 27 ---------------------------
+> >   1 file changed, 27 deletions(-)
+> > 
+> > diff --git a/include/linux/pci-dma-compat.h b/include/linux/pci-dma-compat.h
+> > index 249d4d7fbf18..33b316f38e1d 100644
+> > --- a/include/linux/pci-dma-compat.h
+> > +++ b/include/linux/pci-dma-compat.h
+> > @@ -20,13 +20,6 @@ pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+> >   	return dma_alloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
+> >   }
+> > -static inline void *
+> > -pci_zalloc_consistent(struct pci_dev *hwdev, size_t size,
+> > -		      dma_addr_t *dma_handle)
+> > -{
+> > -	return dma_alloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
+> > -}
+> > -
+> >   static inline void
+> >   pci_free_consistent(struct pci_dev *hwdev, size_t size,
+> >   		    void *vaddr, dma_addr_t dma_handle)
+> > @@ -89,26 +82,6 @@ pci_dma_sync_single_for_device(struct pci_dev *hwdev, dma_addr_t dma_handle,
+> >   	dma_sync_single_for_device(&hwdev->dev, dma_handle, size, (enum dma_data_direction)direction);
+> >   }
+> > -static inline void
+> > -pci_dma_sync_sg_for_cpu(struct pci_dev *hwdev, struct scatterlist *sg,
+> > -		int nelems, int direction)
+> > -{
+> > -	dma_sync_sg_for_cpu(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
+> > -}
+> > -
+> > -static inline void
+> > -pci_dma_sync_sg_for_device(struct pci_dev *hwdev, struct scatterlist *sg,
+> > -		int nelems, int direction)
+> > -{
+> > -	dma_sync_sg_for_device(&hwdev->dev, sg, nelems, (enum dma_data_direction)direction);
+> > -}
+> > -
+> > -static inline int
+> > -pci_dma_mapping_error(struct pci_dev *pdev, dma_addr_t dma_addr)
+> > -{
+> > -	return dma_mapping_error(&pdev->dev, dma_addr);
+> > -}
+> > -
+> >   #ifdef CONFIG_PCI
+> >   static inline int pci_set_dma_mask(struct pci_dev *dev, u64 mask)
+> >   {
+> > 
+> 
+> Hi,
+> 
+> I'm not sure that this step is needed.
+> The whole pci-dma-compat.h is close to be obsolete. So axing just a part of
+> it now is not that really useful.
+Thanks for your feedback.
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
----
- arch/mips/include/asm/pci.h |  2 ++
- arch/mips/pci/pci-generic.c | 14 ++++++++++++++
- 2 files changed, 16 insertions(+)
+If someone reuse these wrappers, that will not be checked by checkpatch.pl.
+And I also will not add check condition to checkpatch.pl, because the wrappers
+in include/linux/pci-dma-compat.h will go away soon.
 
-diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
-index 9ffc8192adae..35270984a5f0 100644
---- a/arch/mips/include/asm/pci.h
-+++ b/arch/mips/include/asm/pci.h
-@@ -20,6 +20,8 @@
- #include <linux/list.h>
- #include <linux/of.h>
- 
-+#define pci_remap_iospace pci_remap_iospace
-+
- #ifdef CONFIG_PCI_DRIVERS_LEGACY
- 
- /*
-diff --git a/arch/mips/pci/pci-generic.c b/arch/mips/pci/pci-generic.c
-index 95b00017886c..18eb8a453a86 100644
---- a/arch/mips/pci/pci-generic.c
-+++ b/arch/mips/pci/pci-generic.c
-@@ -46,3 +46,17 @@ void pcibios_fixup_bus(struct pci_bus *bus)
- {
- 	pci_read_bridge_bases(bus);
- }
-+
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+{
-+	unsigned long vaddr;
-+
-+	if (res->start != 0) {
-+		WARN_ONCE(1, "resource start address is not zero\n");
-+		return -ENODEV;
-+	}
-+
-+	vaddr = (unsigned long)ioremap(phys_addr, resource_size(res));
-+	set_io_port_base(vaddr);
-+	return 0;
-+}
--- 
-2.25.1
+Removing these API helps driver owner to avoid reusing these obsolete wrappers
+without reviwing it manually, only works before pci-dma-compat.h is droped.
 
+Thanks
+Cai
+
+> 
+> After many patches, there is now just a few users of this deprecated API.
+> All steps to finalize the job have already been posted [1] and a plan has
+> been proposed by Arnd Bergmann to have the remaining ones merged in the tree
+> [2]
+it maybe cost serval weeks before all subtrees merge to linux-next.
+> 
+> Some of the message/fusion patches have been re-sent yesterday and today to
+> the scsi maintainer in order to have them merged.
+> 
+> BTW, Cai Huoqing, thanks a lot for taking care and proposing the needed
+> clean-ups in comments and log messages.
+> Looking at it was the next item of my to-do list, but I'm really pleased to
+> get some help here to finalize the job once and for all.
+> 
+> CJ
+> 
+> [1]: https://lore.kernel.org/kernel-janitors/4cb6f731-7f4d-21d0-c88d-37664ea35002@wanadoo.fr/
+> 
+> [2]: https://lore.kernel.org/kernel-janitors/CAK8P3a2CBvw_GP372R+p8f4_pa82sMuQ5iHk4Nb2dJCzm_Fivw@mail.gmail.com/
+> 
