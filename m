@@ -2,162 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 119A5C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Sep 2021 17:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40967C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Sep 2021 17:34:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F193E60E08
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Sep 2021 17:28:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ADBA604D1
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Sep 2021 17:34:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237888AbhI0R3t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Sep 2021 13:29:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41016 "EHLO mail.kernel.org"
+        id S237305AbhI0Rfr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Sep 2021 13:35:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47536 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238019AbhI0R0P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Sep 2021 13:26:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 82FB160E08;
-        Mon, 27 Sep 2021 17:16:35 +0000 (UTC)
+        id S238253AbhI0RcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Sep 2021 13:32:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 62C7A60E08;
+        Mon, 27 Sep 2021 17:30:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632762995;
-        bh=fiFXcjAyr/xbXvMc5MGt+1jLB423H4t84TnDpKWaMik=;
+        s=k20201202; t=1632763821;
+        bh=+XPiy1lkMe54dEZDykhM7x1ydKFAwCm7W2f6EXWbvzM=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=P5L1ZpilVa8FWpVdXv+LcxwmF4pAThXyw9LbPnxzSqk34x5HsQKMngUyiQ6TV/WDw
-         0oL3V+UbXcrKOqk+62vEypWryPX4oSQHXNp/Vd2rgq+YbZTMXTZS8Se9KY2uE/OXEW
-         ACAcBD1Bc5J8lA/55oY/22TRuUTw13vfwd9ZjSw/w/7FsFxWyr26X8kQvwBtqugDZw
-         up79h8bkFPqU234Zjsg9ccWWJ3QlXSJk42E7LErMoQgT39J3jDtB+gxCV5xHMHkUdR
-         Z4/BtEkEVeHXSthBOyKwSYPSxa3SYrh210IZlDnvuw/BjJWSlJKKPeMkJLKjGCI8oW
-         Kc5CurkAwpOdg==
-Date:   Mon, 27 Sep 2021 12:16:34 -0500
+        b=koTlTr/gYSHZQEDGbsyDcJTBZZ2o58S4Cjd/MOT12MOq3U8YzEF35X48CiYRHm4xt
+         smk/UmPVERvwxrIuvBEXfaqKciIC3C8gAb4yYR04Dui2p3/5G4Ivp9iXXMyqe6SwSt
+         Eh4LgZmnUiOLk0V2POGyJ9dFBMUOmV/497ald04OVdq5nylDt8+eRQq6gPZtxur4eZ
+         2Xr5Dww/0qBqqEdH/8meVLYd2zjrBA9+UoY1A6UnN5ue2Yj2InS4lwPdYI/AtPvIMj
+         5zMEpU0AU2pp9TZKW67YNL0l/AoOOciJThq7sDOiMhq0uOrrtZU6c3a9aJhRe9CbfK
+         UJnZGxNAzt/6w==
+Date:   Mon, 27 Sep 2021 12:30:20 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Markus Niebel <Markus.Niebel@ew.tq-group.com>
-Subject: Re: [RFC] PCI: imx6: add support for internal oscillator on i.MX7D
-Message-ID: <20210927171634.GA658570@bhelgaas>
+To:     "David E. Box" <david.e.box@linux.intel.com>
+Cc:     lee.jones@linaro.org, bhelgaas@google.com,
+        andy.shevchenko@gmail.com, mgross@linux.intel.com,
+        srinivas.pandruvada@intel.com, linux-kernel@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/5] PCI: Add #defines for accessing PCIE DVSEC fields
+Message-ID: <20210927173020.GA659547@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <81c77a29362433fc5629ada442f0489046ce1051.1632319151.git.matthias.schiffer@ew.tq-group.com>
+In-Reply-To: <20210922213007.2738388-2-david.e.box@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 10:05:15AM +0200, Matthias Schiffer wrote:
-> Adds support for a DT property fsl,internal-osc to select the internal
-> oscillator for the PCIe PHY.
+If you repost this for any reason, update the subject to:
 
-If you repost this, please update the subject to match the conventions
-(use "git log --oneline drivers/pci/controller/dwc/pci-imx6.c" and
-note capitalization).
+s/PCIE/PCIe/
 
-> Signed-off-by: Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
-> Cc: Markus Niebel <Markus.Niebel@ew.tq-group.com>
+So it matches the commit log and other usage in drivers/pci/
+
+On Wed, Sep 22, 2021 at 02:30:03PM -0700, David E. Box wrote:
+> Add #defines for accessing Vendor ID, Revision, Length, and ID offsets
+> in the Designated Vendor Specific Extended Capability (DVSEC). Defined
+> in PCIe r5.0, sec 7.9.6.
+> 
+> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
 > 
-> Okay, so while this patch is nice and short, I'm note sure if it's a good
-> solution, hence I submit it as an RFC. It is roughly based on code from
-> older linux-imx versions [1] - although it seems this feature was never
-> supported on i.MX7D even by linux-imx (possibly because of compliance
-> issues with the internal clock, however I haven't found a definitive
-> erratum backing this), but only on other SoC like i.MX6QP.
+> v3:	No change
 > 
-> The device tree binding docs of the driver are somewhat lacking, but
-> looking at [1] it seems that an external reference clock takes the place of
-> the "pcie_bus" clock - various pieces of the driver skip enabling/disabling
-> this clock when an external clock is configured.
+>  include/uapi/linux/pci_regs.h | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> From this I've come to the conclusion that the clock settings in
-> imx7d.dtsi do not really make sense: The pcie_bus clock is configured to
-> PLL_ENET_MAIN_100M_CLK, but this seems wrong for both internal and
-> external reference clocks:
-> 
-> - For the internal clock, the correct clock should be PCIE_PHY_ROOT_CLK
->   according to the reference manual
-> - The external clocks, this should refer to an actual external clock, or
->   possibly a fixed-clock node
-> 
-> I would be great if someone with more insight into this could chime in
-> and tell me if my reasoning here is correct or not.
-> 
-> Unfortunately I only have our MBa7x at my disposal for further
-> experimentation. This board does not have an external reference clock for
-> the PCIe PHY, so I cannot test the behaviour for settings that use an
-> external clock. Without this patch (and adding the new flag to the MBa7x
-> DTS), the boot will hang while waiting for the PCIe link to come up.
-> 
-> So, for the actual question (given that my thoughts above make any sense):
-> How do we want to implement this?
-> 
-> 1. A simple boolean flag, like this patch provides
-> 2. Allow Device Trees not to specify a "pcie_bus" clock at all, meaning
->    it should use the internal clock
-> 3. Special handling when the "pcie_bus" clock is configured to
->    PCIE_PHY_ROOT_CLK - is such a thing even possible, or is this
->    breaking the clock driver's abstraction too much?
-> 4. Something more involved, with a proper clock sel as the source for
->    "pcie_bus"
-> 
-> Solution 4. seems difficult to implement nicely, as the PCIe driver
-> also fiddles with IMX7D_GPR12_PCIE_PHY_REFCLK_SEL for power management:
-> the clock selection is switched back to the internal clock in
-> imx6_pcie_clk_disable(), which also disables its source PCIE_PHY_ROOT_CLK,
-> effectively gating the clock.
-> 
-> Regards,
-> Matthias
-> 
-> 
-> [1] https://source.codeaurora.org/external/imx/linux-imx/tree/drivers/pci/host/pci-imx6.c?h=imx_4.1.15_2.0.0_ga
-> 
->  drivers/pci/controller/dwc/pci-imx6.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 80fc98acf097..021499b9ee7c 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -83,6 +83,7 @@ struct imx6_pcie {
->  	struct regulator	*vpcie;
->  	struct regulator	*vph;
->  	void __iomem		*phy_base;
-> +	bool			internal_osc;
-
-Prefer bitfield ("unsigned int internal_osc:1") over bool in structs.
-
->  	/* power domain for pcie */
->  	struct device		*pd_pcie;
-> @@ -637,7 +638,9 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
->  		break;
->  	case IMX7D:
->  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> -				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-> +				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
-> +				   imx6_pcie->internal_osc ?
-> +					IMX7D_GPR12_PCIE_PHY_REFCLK_SEL : 0);
->  		break;
->  	case IMX6SX:
->  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> @@ -1130,6 +1133,9 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  				 &imx6_pcie->tx_swing_low))
->  		imx6_pcie->tx_swing_low = 127;
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index e709ae8235e7..57ee51f19283 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -1080,7 +1080,11 @@
 >  
-> +	if (of_property_read_bool(node, "fsl,internal-osc"))
-> +		imx6_pcie->internal_osc = true;
-> +
->  	/* Limit link speed */
->  	pci->link_gen = 1;
->  	ret = of_property_read_u32(node, "fsl,max-link-speed", &pci->link_gen);
+>  /* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
+>  #define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
+> +#define  PCI_DVSEC_HEADER1_VID(x)	((x) & 0xffff)
+> +#define  PCI_DVSEC_HEADER1_REV(x)	(((x) >> 16) & 0xf)
+> +#define  PCI_DVSEC_HEADER1_LEN(x)	(((x) >> 20) & 0xfff)
+>  #define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
+> +#define  PCI_DVSEC_HEADER2_ID(x)		((x) & 0xffff)
+>  
+>  /* Data Link Feature */
+>  #define PCI_DLF_CAP		0x04	/* Capabilities Register */
 > -- 
-> 2.17.1
+> 2.25.1
 > 
