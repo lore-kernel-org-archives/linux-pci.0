@@ -2,114 +2,179 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F1AC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Sep 2021 05:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B15E8C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Sep 2021 07:34:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98364611F0
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Sep 2021 05:52:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DA8F611EF
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Sep 2021 07:34:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237778AbhI1Fyc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Sep 2021 01:54:32 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38352 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237168AbhI1Fyb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Sep 2021 01:54:31 -0400
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18S2MjX9036435;
-        Tue, 28 Sep 2021 01:52:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=kHULtq2vCMS9C99h1wo9Sj7LNJHpQWEoPhR9H48N/ok=;
- b=TOOXwqC0nCYmRxuVcHw5WtCEjy0er/V96K69puaC5glUNV0KhLprbnZ3T+h0EwkF3jqy
- HNN7vt09FxccRnXX0lzKavj+gopNBoY6nNhZSuUOnJLGEtPQxMWrqTQiFQ90ZTcTQTBM
- XHX8QqziyJBt+MbXMre/b+nw77DR6cxR6t7WSW/+Gtbd4dk38szXtumLkuDnJIw1gX8F
- ARd96+WYn/4/3sxl3Bf4pZSAE+BwtXJi8v7PTfoI/0z8y0eFvBGsp1nw1xI13GaFVcjr
- /Q38xHNo9bcXElFQRPvA+vFI8EN3SfXE0zW6rTcAwzyzaDGLsey4K1ttOzqMpDBQ5wDR yg== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3bagrge8y5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Sep 2021 01:52:46 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18S5Rr5s011914;
-        Tue, 28 Sep 2021 05:52:44 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma03ams.nl.ibm.com with ESMTP id 3b9ud9t53n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Sep 2021 05:52:44 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18S5qfYi45941232
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Sep 2021 05:52:41 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7A5E642049;
-        Tue, 28 Sep 2021 05:52:41 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2944B4204D;
-        Tue, 28 Sep 2021 05:52:41 +0000 (GMT)
-Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 28 Sep 2021 05:52:41 +0000 (GMT)
-Received: from [9.81.209.82] (unknown [9.81.209.82])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id 3FFB06035F;
-        Tue, 28 Sep 2021 15:52:39 +1000 (AEST)
-Subject: Re: [PATCH v2 8/9] ocxl: Use pci core's DVSEC functionality
-To:     Ben Widawsky <ben.widawsky@intel.com>, linux-cxl@vger.kernel.org
-Cc:     linuxppc-dev@lists.ozlabs.org,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "David E. Box" <david.e.box@linux.intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Kan Liang <kan.liang@linux.intel.com>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-References: <20210923172647.72738-1-ben.widawsky@intel.com>
- <20210923172647.72738-9-ben.widawsky@intel.com>
-From:   Andrew Donnellan <ajd@linux.ibm.com>
-Message-ID: <70917485-8f6b-d602-45d6-dc1e873db050@linux.ibm.com>
-Date:   Tue, 28 Sep 2021 15:52:38 +1000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S239336AbhI1HgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Sep 2021 03:36:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55864 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239302AbhI1HgF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Sep 2021 03:36:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3C7CF61139;
+        Tue, 28 Sep 2021 07:34:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632814466;
+        bh=HM2jF1Oiv6j6EtqGQGanbOWpjTPphw0OuWrZCfat04M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ab5uYkekUEQ5vPG/k7uKlmrO6MMelYNG41ZO12XS8id2IlF+NjVi3QOoccRUtwI0E
+         Xn4w3UuQHoooAJkX+5mZ60MAieN4LGzVl8CjV20zVYKZv8/qnCwxK5Pt33lhNYBNip
+         27Xq/YsPsxg0WEErkPWfAuc1FrxYePY6FcAUXRrC4EUcaQTRVCHpVokaEoqGBwsk7G
+         MaGpc5OzYGjFmn04D2zBtMqabGA9plyM+zd0tlHhJw5wesmLta9keyHmb6PyYN2yQN
+         BJ8gFq+yyhIHe3Vy6x5VNRTVYEcFIKl7fIEUwXmkxcC4OCc59AWLCljUgSkkbslXvD
+         ZgbDzLv4yBRkA==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1mV7dA-000RPn-GK; Tue, 28 Sep 2021 09:34:24 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v12 04/11] PCI: kirin: Use regmap for APB registers
+Date:   Tue, 28 Sep 2021 09:34:14 +0200
+Message-Id: <93454e50acaefd98b3d3c76826ac1ac173ab96e7.1632814194.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1632814194.git.mchehab+huawei@kernel.org>
+References: <cover.1632814194.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210923172647.72738-9-ben.widawsky@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: LoGoudR3s7_zyFsgpCAcskiJYmAWByyl
-X-Proofpoint-ORIG-GUID: LoGoudR3s7_zyFsgpCAcskiJYmAWByyl
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
- definitions=2021-09-28_03,2021-09-24_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- impostorscore=0 suspectscore=0 spamscore=0 malwarescore=0
- lowpriorityscore=0 priorityscore=1501 bulkscore=0 phishscore=0 mlxscore=0
- adultscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2109280033
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 24/9/21 3:26 am, Ben Widawsky wrote:
-> Reduce maintenance burden of DVSEC query implementation by using the
-> centralized PCI core implementation.
-> 
-> There are two obvious places to simply drop in the new core
-> implementation. There remains find_dvsec_from_pos() which would benefit
-> from using a core implementation. As that change is less trivial it is
-> reserved for later.
-> 
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: Andrew Donnellan <ajd@linux.ibm.com>
-> Acked-by: Frederic Barrat <fbarrat@linux.ibm.com> (v1)
-> Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+The PHY layer need to access APB registers too, for Kirin 970.
+So, place them into a named regmap.
 
-Looks fine, but we should clean up find_dvsec_from_pos() afterwards.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
 
-Reviewed-by: Andrew Donnellan <ajd@linux.ibm.com>
+To mailbombing on a large number of people, only mailing lists were C/C on the cover.
+See [PATCH v12 00/11] at: https://lore.kernel.org/all/cover.1632814194.git.mchehab+huawei@kernel.org/
 
+ drivers/pci/controller/dwc/pcie-kirin.c | 49 +++++++++++++------------
+ 1 file changed, 26 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 31514a5d4bb4..0ea92a521e1c 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -61,8 +61,8 @@ struct kirin_pcie {
+ 	enum pcie_kirin_phy_type	type;
+ 
+ 	struct dw_pcie	*pci;
++	struct regmap   *apb;
+ 	struct phy	*phy;
+-	void __iomem	*apb_base;
+ 	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
+ };
+ 
+@@ -340,25 +340,27 @@ static int hi3660_pcie_phy_init(struct platform_device *pdev,
+  * The non-PHY part starts here
+  */
+ 
+-/* Registers in PCIeCTRL */
+-static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
+-					 u32 val, u32 reg)
+-{
+-	writel(val, kirin_pcie->apb_base + reg);
+-}
+-
+-static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
+-{
+-	return readl(kirin_pcie->apb_base + reg);
+-}
++static const struct regmap_config pcie_kirin_regmap_conf = {
++	.name = "kirin_pcie_apb",
++	.reg_bits = 32,
++	.val_bits = 32,
++	.reg_stride = 4,
++};
+ 
+ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ 				    struct platform_device *pdev)
+ {
+-	kirin_pcie->apb_base =
+-		devm_platform_ioremap_resource_byname(pdev, "apb");
+-	if (IS_ERR(kirin_pcie->apb_base))
+-		return PTR_ERR(kirin_pcie->apb_base);
++	struct device *dev = &pdev->dev;
++	void __iomem *apb_base;
++
++	apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
++	if (IS_ERR(apb_base))
++		return PTR_ERR(apb_base);
++
++	kirin_pcie->apb = devm_regmap_init_mmio(dev, apb_base,
++						&pcie_kirin_regmap_conf);
++	if (IS_ERR(kirin_pcie->apb))
++		return PTR_ERR(kirin_pcie->apb);
+ 
+ 	return 0;
+ }
+@@ -368,13 +370,13 @@ static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, val);
+ }
+ 
+ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+@@ -382,13 +384,13 @@ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+ {
+ 	u32 val;
+ 
+-	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, &val);
+ 	if (on)
+ 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+ 	else
+ 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+ 
+-	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
++	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, val);
+ }
+ 
+ static int kirin_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
+@@ -448,8 +450,9 @@ static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+ static int kirin_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+-	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++	u32 val;
+ 
++	regmap_read(kirin_pcie->apb, PCIE_APB_PHY_STATUS0, &val);
+ 	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
+ 		return 1;
+ 
+@@ -461,8 +464,8 @@ static int kirin_pcie_start_link(struct dw_pcie *pci)
+ 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+ 
+ 	/* assert LTSSM enable */
+-	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
+-			      PCIE_APP_LTSSM_ENABLE);
++	regmap_write(kirin_pcie->apb, PCIE_APP_LTSSM_ENABLE,
++		     PCIE_LTSSM_ENABLE_BIT);
+ 
+ 	return 0;
+ }
 -- 
-Andrew Donnellan              OzLabs, ADL Canberra
-ajd@linux.ibm.com             IBM Australia Limited
+2.31.1
+
