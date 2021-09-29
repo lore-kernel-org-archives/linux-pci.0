@@ -2,71 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C3EFC433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 08:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F07C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 08:53:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0368661406
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 08:09:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB2B9613C8
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 08:53:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244465AbhI2ILB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Sep 2021 04:11:01 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:47584 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243480AbhI2ILA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Sep 2021 04:11:00 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 08FCF223AA;
-        Wed, 29 Sep 2021 08:09:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1632902959; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HWtEvaqyOuYwDv9KpKmrB4Wov0qbAfje9GDeR1dFe9M=;
-        b=JsLrPsRx+jD2vEG9495pn0WJXeFGCt7kSgjimTB5uSGFNgGrv3EbEsq93c9TVU9JluVQll
-        ozpscKZAOag6vhHPqA8zkQQ+SRFGhOTMBuc+vgi4B7K3IYXc0SKkteqBnKbdNWUg/uOBNM
-        Gvju6lxUhXcJvM7KK8WZzB545WwD1CA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1632902959;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HWtEvaqyOuYwDv9KpKmrB4Wov0qbAfje9GDeR1dFe9M=;
-        b=2rOMNEEw2QXOH1QjyOdAZGF3Y91GfyhyPsn7ANhqtp9dNDl7NQNu44i1pNlZ2baEdACOSS
-        /wvI9CWEtSewjPDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A411513A81;
-        Wed, 29 Sep 2021 08:09:18 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id nbdhJi4fVGGQCgAAMHmgww
-        (envelope-from <jroedel@suse.de>); Wed, 29 Sep 2021 08:09:18 +0000
-Date:   Wed, 29 Sep 2021 10:09:09 +0200
-From:   Joerg Roedel <jroedel@suse.de>
+        id S244897AbhI2IzE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Sep 2021 04:55:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50364 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244862AbhI2IzD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Sep 2021 04:55:03 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A6B1C061753
+        for <linux-pci@vger.kernel.org>; Wed, 29 Sep 2021 01:53:22 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mVVL3-0001ig-Ua; Wed, 29 Sep 2021 10:53:18 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mVVL1-0004fc-Ha; Wed, 29 Sep 2021 10:53:15 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mVVL1-0000Oz-Gm; Wed, 29 Sep 2021 10:53:15 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
 To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] PCI/ACPI: Simplify PCIe _OSC feature negotiation
-Message-ID: <YVQfJa5ZkvD8C3YY@suse.de>
-References: <20210824122054.29481-1-joro@8bytes.org>
- <20210928212119.GA735813@bhelgaas>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org,
+        kernel@pengutronix.de
+Subject: [PATCH v5 01/11] PCI: Simplify pci_device_remove()
+Date:   Wed, 29 Sep 2021 10:52:56 +0200
+Message-Id: <20210929085306.2203850-2-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210929085306.2203850-1-u.kleine-koenig@pengutronix.de>
+References: <20210929085306.2203850-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210928212119.GA735813@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=hj/Mv0oBl1Lf1uSz5IdbQVlj1aJs3W94rdH7QDuEpg8=; m=3MjO1JqLy12b20qOWv/Fp9tjcaX0qdsgbDBjSqzg3lQ=; p=u/IlHXlFxyd9VYnelQTUuUgSTqRFKk2si+oT8j90cMA=; g=17cd0bf2a324e8b42bc1759f29e7dd1d484c24ad
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFUKUYACgkQwfwUeK3K7AmoBQf9HLV Ih+2hsGcP9uy4cGB40EZUo0kdTi1AIWQ1V7EbHsaf9j5xGvlgROGpOUkgkq9bbpPzksJCa8gZ7aGo o4DDwpm9pzujDet1mG6D/96A9+3p9HNT2/PWKsmY/4qXyADmXQ+4vOLXFnSOzkpdR11Lml/nXBkwl te9evN1iTYEiL9NWwj9FBTGp6Ol7UEk4loEMbnGVdPxL1orTauW8f/WZkDiogQxrLiZz4F8YMsqg4 bk6nxquK8KC0PBDqosdVIPLaAda5QJXlrJrJlkNGfRXJrN3FlDqR8y3l3ZI2J6C+HaS3laiTyrcEH MQQZNmapgJu6JE491oN8rLj11hkXMng==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 28, 2021 at 04:21:19PM -0500, Bjorn Helgaas wrote:
-> Applied with Rafael's reviewed-by to pci/acpi for v5.16, thanks!
+When the driver core calls pci_device_remove() there is a driver that bound
+the device and so pci_dev->driver is never NULL.
 
-Thanks Bjorn!
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/pci/pci-driver.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 2761ab86490d..8fb6418c93e8 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -459,16 +459,14 @@ static void pci_device_remove(struct device *dev)
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	struct pci_driver *drv = pci_dev->driver;
+ 
+-	if (drv) {
+-		if (drv->remove) {
+-			pm_runtime_get_sync(dev);
+-			drv->remove(pci_dev);
+-			pm_runtime_put_noidle(dev);
+-		}
+-		pcibios_free_irq(pci_dev);
+-		pci_dev->driver = NULL;
+-		pci_iov_remove(pci_dev);
++	if (drv->remove) {
++		pm_runtime_get_sync(dev);
++		drv->remove(pci_dev);
++		pm_runtime_put_noidle(dev);
+ 	}
++	pcibios_free_irq(pci_dev);
++	pci_dev->driver = NULL;
++	pci_iov_remove(pci_dev);
+ 
+ 	/* Undo the runtime PM settings in local_pci_probe() */
+ 	pm_runtime_put_sync(dev);
+-- 
+2.30.2
+
