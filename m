@@ -2,100 +2,238 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C0DC433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 17:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5EEC433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 18:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37AAB61052
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 17:14:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C9C761506
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 18:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345499AbhI2RQa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Sep 2021 13:16:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345497AbhI2RQ3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Sep 2021 13:16:29 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F4ECC06161C;
-        Wed, 29 Sep 2021 10:14:48 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id bd28so11234796edb.9;
-        Wed, 29 Sep 2021 10:14:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=OQKF+RLkOKzo9hZLWlJSlFW0i6TdEuGYzqVjwQH02LE=;
-        b=eG0HL3t+blVG+2HjIgZmO04iNkhYAM8BXnHAM6Om9vEp012pWtJmYZPsqy5Z+hEQ9G
-         sZP6Cz5xzHbhB2uL8xmzgk82e0hHJysUBWeyf0UWLUHmTvZbJBrQ5BmfDuN0Cl7XSGN1
-         Tns2oU+fzP/r2SiZWC3Eu51wMAYpUxENh4Vxj1Us27aG7BbFSh+TXLtYE4Nf0I1a+CxP
-         HMEhgVr49xOG1pFet4UzHMbdEH+bQntBcmdiRQkXWVLAXJ8zWIuGB85ii5bwVdaBaAIO
-         dzr72iTbqsWRAqZVsypkmAiAgACKt/ukjAYlc9dVJdQeMueyuB8TRm5pmMC3ZIVWMjZ9
-         Sm/Q==
+        id S1345164AbhI2SIm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Sep 2021 14:08:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51241 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244794AbhI2SIm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Sep 2021 14:08:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1632938820;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5fEUwAikCXlY0hPFc3Zca5cd4O3adbLSONrps+zhumI=;
+        b=BJRL6SjOCTRVgliVkMU89HH0FQjkLTfEaec/JDHfaAvchXkqS3R9SyfL0eJeVhF3dJfWtA
+        +nkXp8tPJZ1/4+oLycZ8/yXxhjTMSkKaffJDvR4voq2pgPS7eR/9LppsmhGQ+lyG/b5wAR
+        VnCHp+1eNEVwFei04iqQJj9p3gg5Fzc=
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com
+ [209.85.161.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-223-aJiyUiFpNFeeMq_RJYZxAA-1; Wed, 29 Sep 2021 14:06:58 -0400
+X-MC-Unique: aJiyUiFpNFeeMq_RJYZxAA-1
+Received: by mail-oo1-f71.google.com with SMTP id s189-20020a4a51c6000000b002b587aa90ccso2783839ooa.4
+        for <linux-pci@vger.kernel.org>; Wed, 29 Sep 2021 11:06:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=OQKF+RLkOKzo9hZLWlJSlFW0i6TdEuGYzqVjwQH02LE=;
-        b=3S3JL03lNM90Fmjy2UU76lkU3ForEymKS3MMQAJt3ljcVGBZUGPPK+LabgIgtxYQh5
-         chfGdkzqdVBFzNafqwIgLfcCeYHiTp5q15B+jK+qOAaqG16CHRkp/tN46RA3kMkHNAxv
-         +YKAOTgfkOWcVvXhVgIUM8XZC92GIhdgyX5Omsrgd6YHyh89ioxDC0tmdoaSE2kY/D7j
-         wMUqvbZn6yAj06A0aRH3oFUSkRPyOK+V0Zh/Ri57fyy1UGVvQVDPkzaKAG1CKB2I8w4c
-         V8Aoz81Rau0vA2++B9XGyAlo4NpyQqoZ/AI/5GeNSGLUgtDik461rH6MrFxK7sVw+rn1
-         C+2g==
-X-Gm-Message-State: AOAM531iNZs8yGokVBen8pwWmpZ7nziD1DRcZs6QIfpedpwXDPQfcFhL
-        EoWW48SxcOsiC2E4djQZJKw=
-X-Google-Smtp-Source: ABdhPJyuMSo2XG3S9Q6rcz0SPuJjiu4vfEzdQ0SoiodnSquZ+zn4DQXuVy3riDPoxBDKiT416+vGOw==
-X-Received: by 2002:a17:906:564e:: with SMTP id v14mr1006746ejr.424.1632935687100;
-        Wed, 29 Sep 2021 10:14:47 -0700 (PDT)
-Received: from [192.168.1.97] ([49.236.51.203])
-        by smtp.gmail.com with ESMTPSA id cr9sm266282edb.17.2021.09.29.10.14.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Sep 2021 10:14:46 -0700 (PDT)
-Subject: Re: [PATCH v2 0/7] PCI: ACPI: Get rid of struct pci_platform_pm_ops
- and clean up code
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <20210928232823.GA748352@bhelgaas>
-From:   Ferry Toth <fntoth@gmail.com>
-Message-ID: <f6be0339-5b11-8c3b-ef5c-47e50e878e2d@gmail.com>
-Date:   Wed, 29 Sep 2021 19:14:43 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=5fEUwAikCXlY0hPFc3Zca5cd4O3adbLSONrps+zhumI=;
+        b=xbjwbC9y3deJXGB7s8TneQcC4qiEfyYXF9KPlXrJipu/XU8ZmG0sfQZYZu4ZrKSC9b
+         2NEL/mlJGXNY69OGtnvhxoAJYYaBLhoZ2vJVRgLjrf6/um2x6QNB2UJvne5Bj9sKxR36
+         +tyqWo1Sk/GQfk1yiFkjhPIESAbYKI91sCormu/ioGT1s3QIpQWWNeVhmJO6A3Mvzo1X
+         geuXkNtUPdtz76loAumz9uoIPw1MvTObpekKKEmESaZ6JKEjOGCwAmoBPBbKeGGXcKMN
+         pNL0Rxg1Ifd2xaJX0aF8AiOBth2Mw37RWW76rNdx87ojia+kin0cvW3BfEQ12tkMFZJc
+         i9fA==
+X-Gm-Message-State: AOAM530HhtYM1NPkY5v+3bdUTrPz7rKqy9wRU6VXkg7tZxJdeX0cZTVv
+        12aX3uVupAA0t+PKvbUDbyY8/MkIQS1zpzMNZFR4PH1OUbaKxuPlps7Q21IKtxqCwJhs4jULs47
+        iXO17zAYejxy/yNK0amWg
+X-Received: by 2002:a05:6808:243:: with SMTP id m3mr9254405oie.54.1632938817866;
+        Wed, 29 Sep 2021 11:06:57 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx4GoRfgX2CpzdS8TMOhpWJSHyKfLJHdPDeL1Co6stqHQwtNdJYf2fM7V3Ug9pt3k4WTpNfQA==
+X-Received: by 2002:a05:6808:243:: with SMTP id m3mr9254391oie.54.1632938817587;
+        Wed, 29 Sep 2021 11:06:57 -0700 (PDT)
+Received: from redhat.com ([198.99.80.109])
+        by smtp.gmail.com with ESMTPSA id k1sm97828otr.43.2021.09.29.11.06.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Sep 2021 11:06:57 -0700 (PDT)
+Date:   Wed, 29 Sep 2021 12:06:55 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Leon Romanovsky <leon@kernel.org>,
+        Doug Ledford <dledford@redhat.com>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kirti Wankhede <kwankhede@nvidia.com>, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Cornelia Huck <cohuck@redhat.com>
+Subject: Re: [PATCH mlx5-next 2/7] vfio: Add an API to check migration state
+ transition validity
+Message-ID: <20210929120655.28e0b3a6.alex.williamson@redhat.com>
+In-Reply-To: <20210929161602.GA1805739@nvidia.com>
+References: <cover.1632305919.git.leonro@nvidia.com>
+        <c87f55d6fec77a22b110d3c9611744e6b28bba46.1632305919.git.leonro@nvidia.com>
+        <20210927164648.1e2d49ac.alex.williamson@redhat.com>
+        <20210927231239.GE3544071@ziepe.ca>
+        <20210928131958.61b3abec.alex.williamson@redhat.com>
+        <20210928193550.GR3544071@ziepe.ca>
+        <20210928141844.15cea787.alex.williamson@redhat.com>
+        <20210929161602.GA1805739@nvidia.com>
+X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <20210928232823.GA748352@bhelgaas>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi
+On Wed, 29 Sep 2021 13:16:02 -0300
+Jason Gunthorpe <jgg@nvidia.com> wrote:
 
-Op 29-09-2021 om 01:28 schreef Bjorn Helgaas:
-> [+cc Ferry]
+> On Tue, Sep 28, 2021 at 02:18:44PM -0600, Alex Williamson wrote:
+> > On Tue, 28 Sep 2021 16:35:50 -0300
+> > Jason Gunthorpe <jgg@ziepe.ca> wrote:
+> >   
+> > > On Tue, Sep 28, 2021 at 01:19:58PM -0600, Alex Williamson wrote:
+> > >   
+> > > > In defining the device state, we tried to steer away from defining it
+> > > > in terms of the QEMU migration API, but rather as a set of controls
+> > > > that could be used to support that API to leave us some degree of
+> > > > independence that QEMU implementation might evolve.    
+> > > 
+> > > That is certainly a different perspective, it would have been
+> > > better to not express this idea as a FSM in that case...
+> > > 
+> > > So each state in mlx5vf_pci_set_device_state() should call the correct
+> > > combination of (un)freeze, (un)quiesce and so on so each state
+> > > reflects a defined operation of the device?  
+> > 
+> > I'd expect so, for instance the implementation of entering the _STOP
+> > state presumes a previous state that where the device is apparently
+> > already quiesced.  That doesn't support a direct _RUNNING -> _STOP
+> > transition where I argued in the linked threads that those states
+> > should be reachable from any other state.  Thanks,  
 > 
-> On Mon, Sep 20, 2021 at 08:52:19PM +0200, Rafael J. Wysocki wrote:
->> Hi All,
->>
->> As explained in the changelog of patch [2/7], using struct pci_platform_pm_ops
->> for ACPI is not particularly beneficial, so it is better to get rid of it and
->> call the functions pointed to by it directly from the PCI core.
->>
->> However, struct pci_platform_pm_ops is also used by the Intel MID support code,
->> but it is actually better to call the MID PM function directly from the PCI
->> core either, which is done in patch [1/7].
->>
->> After these changes, patch [3/7] removes struct pci_platform_pm_ops and the
->> rest is just cleanups and some code consolidation on top of that.
+> If we focus on mlx5 there are two device 'flags' to manage:
+>  - Device cannot issue DMAs
+>  - Device internal state cannot change (ie cannot receive DMAs)
 > 
-> I like these a lot.  Not sure exactly where everything is after the
-> conversation with Ferry.  Let me know if I should be doing anything.
+> This is necessary to co-ordinate across multiple devices that might be
+> doing peer to peer DMA between them. The whole multi-device complex
+> should be moved to "cannot issue DMA's" then the whole complex would
+> go to "state cannot change" and be serialized.
+
+Are you anticipating p2p from outside the VM?  The typical scenario
+here would be that p2p occurs only intra-VM, so all the devices would
+stop issuing DMA (modulo trying to quiesce devices simultaneously).
+
+> The expected sequence at the device is thus
 > 
-I will happily retest likely on Sunday after I return from short holiday 
-and report back here.
+> Resuming
+>  full stop -> does not issue DMAs -> full operation
+> Suspend
+>  full operation -> does not issue DMAs -> full stop
+> 
+> Further the device has two actions
+>  - Trigger serializating the device state
+>  - Trigger de-serializing the device state
+> 
+> So, what is the behavior upon each state:
+> 
+>  *  000b => Device Stopped, not saving or resuming
+>      Does not issue DMAs
+>      Internal state cannot change
+> 
+>  *  001b => Device running, which is the default state
+>      Neither flags
+> 
+>  *  010b => Stop the device & save the device state, stop-and-copy state
+>      Does not issue DMAs
+>      Internal state cannot change
+> 
+>  *  011b => Device running and save the device state, pre-copy state
+>      Neither flags
+>      (future, DMA tracking turned on)
+> 
+>  *  100b => Device stopped and the device state is resuming
+>      Does not issue DMAs
+>      Internal state cannot change
+
+cannot change... other that as loaded via migration region.
+
+>      
+>  *  110b => Error state
+>     ???
+> 
+>  *  101b => Invalid state
+>  *  111b => Invalid state
+> 
+>     ???
+> 
+> What should the ??'s be? It looks like mlx5 doesn't use these, so it
+> should just refuse to enter these states in the first place..
+
+_SAVING and _RESUMING are considered mutually exclusive, therefore any
+combination of both of them is invalid.  We've chosen to use the
+combination of 110b as an error state to indicate the device state is
+undefined, but not _RUNNING.  This state is only reachable by an
+internal error of the driver during a state transition.
+
+The expected protocol is that if the user write to the device_state
+register returns an errno, the user reevaluates the device_state to
+determine if the desired transition is unavailable (previous state
+value is returned) or generated a fault (error state value returned).
+Due to the undefined state of the device, the only exit from the error
+state is to re-initialize the device state via a reset.  Therefore a
+successful device reset should always return the device to the 001b
+state.
+
+The 111b state is also considered unreachable through normal means due
+to the _SAVING | _RESUMING conflict, but suggests the device is also
+_RUNNING in this undefined state.  This combination has no currently
+defined use case and should not be reachable.
+
+The 101b state indicates _RUNNING while _RESUMING, which is simply not
+a mode that has been spec'd at this time as it would require some
+mechanism for the device to fault in state on demand.
+ 
+> The two actions:
+>  trigger serializing the device state
+>    Done when asked to go to 010b ?
+
+When the _SAVING bit is set.  The exact mechanics depends on the size
+and volatility of the device state.  A GPU might begin in pre-copy
+(011b) to transmit chunks of framebuffer data, recording hashes of
+blocks read by the user to avoid re-sending them during the
+stop-and-copy (010b) phase.  A device with a small internal state
+representation may choose to forgo providing data in the pre-copy phase
+and entirely serialize internal state at stop-and-copy.
+
+>  trigger de-serializing the device state
+>    Done when transition from 100b -> 000b ?
+
+100b -> 000b is not a required transition, generally this would be 100b
+-> 001b, ie. end state of _RUNNING vs _STOP.
+
+I think the requirement is that de-serialization is complete when the
+_RESUMING bit is cleared.  Whether the driver chooses to de-serialize
+piece-wise as each block of data is written to the device or in bulk
+from a buffer is left to the implementation.  In either case, the
+driver can fail the transition to !_RESUMING if the state is incomplete
+or otherwise corrupt.  It would again be the driver's discretion if
+the device enters the error state or remains in _RESUMING.  If the user
+has no valid state with which to exit the _RESUMING phase, a device
+reset should return the device to _RUNNING with a default initial state.
+
+> There is a missing state "Stop Active Transactions" which would be
+> only "does not issue DMAs". I've seen a proposal to add that.
+
+This would be to get all devices to stop issuing DMA while internal
+state can be modified to avoid the synchronization issue of trying to
+stop devices concurrently?  For PCI devices we obviously have the bus
+master bit to manage that, but I could see how a migration extension
+for such support (perhaps even just wired through to BM for PCI) could
+be useful.  Thanks,
+
+Alex
+
