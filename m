@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9C9C4321E
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 16:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 621B6C4167B
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 16:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8C7961504
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 16:39:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4984561411
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Sep 2021 16:39:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346006AbhI2Qkl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Sep 2021 12:40:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40628 "EHLO mail.kernel.org"
+        id S1346025AbhI2Qkn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Sep 2021 12:40:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345941AbhI2Qkh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Sep 2021 12:40:37 -0400
+        id S1345986AbhI2Qki (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Sep 2021 12:40:38 -0400
 Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1976E61425;
-        Wed, 29 Sep 2021 16:38:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 59B3C614C8;
+        Wed, 29 Sep 2021 16:38:57 +0000 (UTC)
 Received: from sofa.misterjones.org ([185.219.108.64] helo=why.lan)
         by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <maz@kernel.org>)
-        id 1mVcbe-00DmcL-FM; Wed, 29 Sep 2021 17:38:54 +0100
+        id 1mVcbf-00DmcL-KE; Wed, 29 Sep 2021 17:38:55 +0100
 From:   Marc Zyngier <maz@kernel.org>
 To:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
@@ -38,106 +38,102 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Hector Martin <marcan@marcan.st>,
         Robin Murphy <Robin.Murphy@arm.com>,
         Joey Gouly <joey.gouly@arm.com>,
-        Joerg Roedel <joro@8bytes.org>, kernel-team@android.com,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v5 02/14] of/irq: Allow matching of an interrupt-map local to an interrupt controller
-Date:   Wed, 29 Sep 2021 17:38:35 +0100
-Message-Id: <20210929163847.2807812-3-maz@kernel.org>
+        Joerg Roedel <joro@8bytes.org>, kernel-team@android.com
+Subject: [PATCH v5 05/14] PCI: apple: Set up reference clocks when probing
+Date:   Wed, 29 Sep 2021 17:38:38 +0100
+Message-Id: <20210929163847.2807812-6-maz@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210929163847.2807812-1-maz@kernel.org>
 References: <20210929163847.2807812-1-maz@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com, kw@linux.com, alyssa@rosenzweig.io, stan@corellium.com, kettenis@openbsd.org, sven@svenpeter.dev, marcan@marcan.st, Robin.Murphy@arm.com, joey.gouly@arm.com, joro@8bytes.org, kernel-team@android.com, robh@kernel.org
+X-SA-Exim-Rcpt-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, robh+dt@kernel.org, lorenzo.pieralisi@arm.com, kw@linux.com, alyssa@rosenzweig.io, stan@corellium.com, kettenis@openbsd.org, sven@svenpeter.dev, marcan@marcan.st, Robin.Murphy@arm.com, joey.gouly@arm.com, joro@8bytes.org, kernel-team@android.com
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-of_irq_parse_raw() has a baked assumption that if a node has an
-interrupt-controller property, it cannot possibly also have an
-interrupt-map property (the latter being ignored).
+From: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 
-This seems to be an odd behaviour, and there is no reason why
-we should avoid supporting this use case. This is specially
-useful when a PCI root port acts as an interrupt controller for
-PCI endpoints, such as this:
+Apple's PCIe controller requires clocks to be configured in order to
+bring up the hardware. Add the register pokes required to do so.
 
-pcie0: pcie@690000000 {
-	[...]
-	port00: pci@0,0 {
-		device_type = "pci";
-		[...]
-		#address-cells = <3>;
+Adapted from Corellium's driver via Mark Kettenis's U-Boot patches.
 
-		interrupt-controller;
-		#interrupt-cells = <1>;
-
-		interrupt-map-mask = <0 0 0 7>;
-		interrupt-map = <0 0 0 1 &port00 0 0 0 0>,
-				<0 0 0 2 &port00 0 0 0 1>,
-				<0 0 0 3 &port00 0 0 0 2>,
-				<0 0 0 4 &port00 0 0 0 3>;
-	};
-};
-
-Handle it by detecting that we have an interrupt-map early in the
-parsing, and special case the situation where the phandle in the
-interrupt map refers to the current node (which is the interesting
-case here).
-
-Reviewed-by: Rob Herring <robh@kernel.org>
-Tested-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
+Co-developed-by: Stan Skowronek <stan@corellium.com>
+Signed-off-by: Stan Skowronek <stan@corellium.com>
+Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/of/irq.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/pci/controller/pcie-apple.c | 46 +++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 352e14b007e7..32be5a03951f 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -156,10 +156,14 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
+diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+index ba7b2949aaa4..23390e5c54e9 100644
+--- a/drivers/pci/controller/pcie-apple.c
++++ b/drivers/pci/controller/pcie-apple.c
+@@ -132,6 +132,48 @@ static void rmw_set(u32 set, void __iomem *addr)
+ 	writel_relaxed(readl_relaxed(addr) | set, addr);
+ }
  
- 	/* Now start the actual "proper" walk of the interrupt tree */
- 	while (ipar != NULL) {
--		/* Now check if cursor is an interrupt-controller and if it is
--		 * then we are done
-+		/*
-+		 * Now check if cursor is an interrupt-controller and
-+		 * if it is then we are done, unless there is an
-+		 * interrupt-map which takes precedence.
- 		 */
--		if (of_property_read_bool(ipar, "interrupt-controller")) {
-+		imap = of_get_property(ipar, "interrupt-map", &imaplen);
-+		if (imap == NULL &&
-+		    of_property_read_bool(ipar, "interrupt-controller")) {
- 			pr_debug(" -> got it !\n");
- 			return 0;
- 		}
-@@ -173,8 +177,6 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
- 			goto fail;
- 		}
- 
--		/* Now look for an interrupt-map */
--		imap = of_get_property(ipar, "interrupt-map", &imaplen);
- 		/* No interrupt map, check for an interrupt parent */
- 		if (imap == NULL) {
- 			pr_debug(" -> no map, getting parent\n");
-@@ -255,6 +257,11 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
- 		out_irq->args_count = intsize = newintsize;
- 		addrsize = newaddrsize;
- 
-+		if (ipar == newpar) {
-+			pr_debug("%pOF interrupt-map entry to self\n", ipar);
-+			return 0;
-+		}
++static void rmw_clear(u32 clr, void __iomem *addr)
++{
++	writel_relaxed(readl_relaxed(addr) & ~clr, addr);
++}
 +
- 	skiplevel:
- 		/* Iterate again with new parent */
- 		out_irq->np = newpar;
++static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
++				   struct apple_pcie_port *port)
++{
++	u32 stat;
++	int res;
++
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_RC_PHYIF_STAT, stat,
++					 stat & CORE_RC_PHYIF_STAT_REFCLK,
++					 100, 50000);
++	if (res < 0)
++		return res;
++
++	rmw_set(CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
++	rmw_set(CORE_LANE_CFG_REFCLK0REQ, pcie->base + CORE_LANE_CFG(port->idx));
++
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
++					 stat, stat & CORE_LANE_CFG_REFCLK0ACK,
++					 100, 50000);
++	if (res < 0)
++		return res;
++
++	rmw_set(CORE_LANE_CFG_REFCLK1, pcie->base + CORE_LANE_CFG(port->idx));
++	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
++					 stat, stat & CORE_LANE_CFG_REFCLK1,
++					 100, 50000);
++
++	if (res < 0)
++		return res;
++
++	rmw_clear(CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
++
++	rmw_set(CORE_LANE_CFG_REFCLKEN, pcie->base + CORE_LANE_CFG(port->idx));
++	rmw_set(PORT_REFCLK_EN, port->base + PORT_REFCLK);
++
++	return 0;
++}
++
+ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 				 struct device_node *np)
+ {
+@@ -165,6 +207,10 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 
+ 	rmw_set(PORT_APPCLK_EN, port->base + PORT_APPCLK);
+ 
++	ret = apple_pcie_setup_refclk(pcie, port);
++	if (ret < 0)
++		return ret;
++
+ 	rmw_set(PORT_PERST_OFF, port->base + PORT_PERST);
+ 	gpiod_set_value(reset, 1);
+ 
 -- 
 2.30.2
 
