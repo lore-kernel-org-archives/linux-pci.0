@@ -2,132 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54278C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 16:51:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 656BDC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 17:01:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F1CC61261
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 16:51:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4919D61216
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 17:01:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352450AbhI3QxV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Sep 2021 12:53:21 -0400
-Received: from ale.deltatee.com ([204.191.154.188]:44024 "EHLO
-        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352384AbhI3QxT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Sep 2021 12:53:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:MIME-Version:Date:
-        Message-ID:From:References:Cc:To:content-disposition;
-        bh=DY98l6f/p37o1n6z2SAmaZFkiMoprnW0+Juc+mDOhCo=; b=pTfd2cTcyBzH2LpKD5iE+L5qG5
-        1YxVv6haFuR4tVxbCWzg77WlnQgwPvUMZwmaeKZ/dooUcIP5nxEHrl6iUZij4mssaKTc1px7tpQdx
-        UMyTxmWTfEjMtRe2GIkYjVgqlDS1F3IkTZYJ19rOxetGBvpeebtdTkcvo2LLMm8BaIdwZQW6M+yDA
-        xwkZTQaVYuM6i+YEvgQv3b/vT6jMo3j0z9ni8dqNTUIbj+9inuXDYYSM/W4MlssDZdeD33aXoOrpZ
-        tIrW+L7X4llhAn1S/KznAKSdwTbT4O7Y3kK3KgNwTuziND3TP1yUKnxXkkTO5ob60fRu9UHxzZrhf
-        5AMobH0g==;
-Received: from s0106a84e3fe8c3f3.cg.shawcable.net ([24.64.144.200] helo=[192.168.0.10])
-        by ale.deltatee.com with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <logang@deltatee.com>)
-        id 1mVzHI-0004dm-2w; Thu, 30 Sep 2021 10:51:25 -0600
-To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Jakowski Andrzej <andrzej.jakowski@intel.com>,
-        Minturn Dave B <dave.b.minturn@intel.com>,
-        Jason Ekstrand <jason@jlekstrand.net>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Xiong Jianxin <jianxin.xiong@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Martin Oliveira <martin.oliveira@eideticom.com>,
-        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
-References: <20210916234100.122368-1-logang@deltatee.com>
- <20210916234100.122368-10-logang@deltatee.com>
- <c04215bd-442a-6520-4fc7-5035c1310662@nvidia.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <acaa91df-f932-7449-3623-4209c41634d9@deltatee.com>
-Date:   Thu, 30 Sep 2021 10:51:22 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S1352110AbhI3RD3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Sep 2021 13:03:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44232 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344643AbhI3RD3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Sep 2021 13:03:29 -0400
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DA83C06176D
+        for <linux-pci@vger.kernel.org>; Thu, 30 Sep 2021 10:01:46 -0700 (PDT)
+Received: by mail-qt1-x82c.google.com with SMTP id t2so6338179qtx.8
+        for <linux-pci@vger.kernel.org>; Thu, 30 Sep 2021 10:01:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=4vHHMFNBH4hAm5F563BvE8+3o+7NJnRDr/RUjwsUT7o=;
+        b=QGIRkmLfQXIeyUEAHPlvDndXmMMIAMxSXtZXhhRKYvklIE9s9V0mxKkMNZc361fu2+
+         /oV28Ti2mLOszUCQtAVFm+lO7hdx7RISinOyXEgG679jauOsPEZJsDn97BSKI/Y+XZGn
+         nvKzE18TgoAr5yYwzqF0BLBR/d2XlDNYCnfE8BWTl7rPF2hP87rXsdSJGEEz4xNJo7IA
+         XD/7Y7rdo0+4GJu9Kcd/XwUsO2juMuUKx3MqXsyQc6zYkSOTMavlqDYBTbIG5C39TIF8
+         RnCcanamumbSy2k6pKQ2iu96IWFTPNHP8Dtw3MHS8f+D1FklgeJFEug0i3XEm+5ai9kb
+         OSaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=4vHHMFNBH4hAm5F563BvE8+3o+7NJnRDr/RUjwsUT7o=;
+        b=14mbyp4EtrZghudYRJx9nHAfmxUYEFGF1U1wDZrD9dBhNX/hHDnSlZ6aoipgHxNdVw
+         9cRNFDfMlkIl1dVzCsWgTHY4L3jJ5VfKS/5n6v4J9AM4dQigYz77AsQs57epLOiqKJ/m
+         FNBxetdULwQvDZKr4+PuMNy+3G+LjdrMwkXjb2csbk6AOX6QVUk3xy3CrPKKuZHM5ato
+         H8HOOiHxFmuWH4nh1EXiGEq4mqsJ+JbWtt3vUV3vXg04guxaEGb719g/SbC864y+E6jd
+         6UzfcrlXY8/pSoxAMRImtBk+Ssfpsn3o9FC30nbKSTTyTqbtkE//BFjK14UASETuKnnU
+         7fbg==
+X-Gm-Message-State: AOAM531Ms+YkicJX2W938aq7MvkRCcEWhECmGQc87EeTqNYImNFWh+BI
+        WK2xMgF8Bj8rc4iPavMmkXlqTQ==
+X-Google-Smtp-Source: ABdhPJzF+pPtZvhaFL1R8QP7BIsE2HJOfVSnKQcQu0YBk68rNLfkGNJ3nrCGS43Vfn59rLAM1LD5RQ==
+X-Received: by 2002:ac8:4084:: with SMTP id p4mr7765655qtl.306.1633021305549;
+        Thu, 30 Sep 2021 10:01:45 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
+        by smtp.gmail.com with ESMTPSA id l7sm1852806qth.81.2021.09.30.10.01.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Sep 2021 10:01:44 -0700 (PDT)
+Received: from jgg by jggl with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1mVzRH-000I2E-Ia; Thu, 30 Sep 2021 14:01:43 -0300
+Date:   Thu, 30 Sep 2021 14:01:43 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Max Gurtovoy <mgurtovoy@nvidia.com>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        Doug Ledford <dledford@redhat.com>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kirti Wankhede <kwankhede@nvidia.com>, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Cornelia Huck <cohuck@redhat.com>
+Subject: Re: [PATCH mlx5-next 2/7] vfio: Add an API to check migration state
+ transition validity
+Message-ID: <20210930170143.GB69218@ziepe.ca>
+References: <20210929091712.6390141c.alex.williamson@redhat.com>
+ <e1ba006f-f181-0b89-822d-890396e81c7b@nvidia.com>
+ <20210929161433.GA1808627@ziepe.ca>
+ <29835bf4-d094-ae6d-1a32-08e65847b52c@nvidia.com>
+ <20210929232109.GC3544071@ziepe.ca>
+ <d8324d96-c897-b914-16c6-ad0bbb9b13a5@nvidia.com>
+ <20210930144752.GA67618@ziepe.ca>
+ <d5b68bb7-d4d3-e9d8-1834-dba505bb8595@nvidia.com>
+ <20210930162442.GB67618@ziepe.ca>
+ <c7a18080-3ffc-488b-577c-1e3b356bf66e@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <c04215bd-442a-6520-4fc7-5035c1310662@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 24.64.144.200
-X-SA-Exim-Rcpt-To: ckulkarnilinux@gmail.com, martin.oliveira@eideticom.com, robin.murphy@arm.com, ira.weiny@intel.com, helgaas@kernel.org, jianxin.xiong@intel.com, dave.hansen@linux.intel.com, jason@jlekstrand.net, dave.b.minturn@intel.com, andrzej.jakowski@intel.com, daniel.vetter@ffwll.ch, willy@infradead.org, ddutile@redhat.com, jhubbard@nvidia.com, christian.koenig@amd.com, jgg@ziepe.ca, dan.j.williams@intel.com, hch@lst.de, sbates@raithlin.com, iommu@lists.linux-foundation.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, chaitanyak@nvidia.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v3 09/20] nvme-pci: check DMA ops when indicating support
- for PCI P2PDMA
-X-SA-Exim-Version: 4.2.1 (built Wed, 08 May 2019 21:11:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c7a18080-3ffc-488b-577c-1e3b356bf66e@nvidia.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 2021-09-29 11:06 p.m., Chaitanya Kulkarni wrote:
-> Logan,
+On Thu, Sep 30, 2021 at 07:51:22PM +0300, Max Gurtovoy wrote:
 > 
->> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
->> index 7efb31b87f37..916750a54f60 100644
->> --- a/drivers/nvme/host/core.c
->> +++ b/drivers/nvme/host/core.c
->> @@ -3771,7 +3771,8 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
->>                  blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, ns->queue);
->>
->>          blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
->> -       if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
->> +       if (ctrl->ops->supports_pci_p2pdma &&
->> +           ctrl->ops->supports_pci_p2pdma(ctrl))
->>                  blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
->>
->>          ns->ctrl = ctrl;
->> diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
->> index 9871c0c9374c..fb9bfc52a6d7 100644
->> --- a/drivers/nvme/host/nvme.h
->> +++ b/drivers/nvme/host/nvme.h
->> @@ -477,7 +477,6 @@ struct nvme_ctrl_ops {
->>          unsigned int flags;
->>   #define NVME_F_FABRICS                 (1 << 0)
->>   #define NVME_F_METADATA_SUPPORTED      (1 << 1)
->> -#define NVME_F_PCI_P2PDMA              (1 << 2)
->>          int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
->>          int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
->>          int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
->> @@ -485,6 +484,7 @@ struct nvme_ctrl_ops {
->>          void (*submit_async_event)(struct nvme_ctrl *ctrl);
->>          void (*delete_ctrl)(struct nvme_ctrl *ctrl);
->>          int (*get_address)(struct nvme_ctrl *ctrl, char *buf, int size);
->> +       bool (*supports_pci_p2pdma)(struct nvme_ctrl *ctrl);
->>   };
->>
+> On 9/30/2021 7:24 PM, Jason Gunthorpe wrote:
+> > On Thu, Sep 30, 2021 at 06:32:07PM +0300, Max Gurtovoy wrote:
+> > > > Just prior to open device the vfio pci layer will generate a FLR to
+> > > > the function so we expect that post open_device has a fresh from reset
+> > > > fully running device state.
+> > > running also mean that the device doesn't have a clue on its internal state
+> > > ? or running means unfreezed and unquiesced ?
+> > The device just got FLR'd and it should be in a clean state and
+> > operating. Think the VM is booting for the first time.
 > 
-> Is this new ops only needed for the PCIe transport ? or do you have 
-> following patches to use this op for the other transports ?
+> During the resume phase in the dst, the VM is paused and not booting.
+> Migration SW is waiting to get memory and state from SRC. The device will
+> start from the exact point that was in the src.
+> 
+> it's exactly "000b => Device Stopped, not saving or resuming"
 
-No, I don't think this will make sense for transports that are not based
-on PCI devices.
+For this case qmeu should open the VFIO device and immediately issue a
+command to go to resuming. The kernel cannot know at open_device time
+which case userspace is trying to do. Due to backwards compat we
+assume userspace is going to boot a fresh VM.
 
-> If it is only needed for the PCIe then we need to find a way to
-> not add this somehow...
+> Well, this is your design for the driver implementation. Nobody is
+> preventing other drivers to start deserializing device state into the device
+> during RESUMING bit on.
 
-I don't see how we can do that. The core code needs to know whether the
-transport supports this and must have an operation to query it.
+It is a logical model. Devices can stream the migration data directly
+into the internal state if they like. It just creates more conditions
+where they have report an error state.
 
-Logan
+> So if we moved from 100b to 010b somehow, one should deserialized its buffer
+> to the device, and then serialize it to migration region again ?
 
+Yes.
+ 
+> I guess its doable since the device is freeze and quiesced. But moving from
+> 100b to 011b is not possible, right ?
+
+Why not?
+
+100b to 011b is no different than going indirectly 100b -> 001b -> 011b
+
+The time spent in 001b is just negligable.
+
+Jason
