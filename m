@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B41C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 01:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD384C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 01:05:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBEA3615E2
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 01:05:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA8BC615A4
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 01:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347630AbhI3BHV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Sep 2021 21:07:21 -0400
+        id S1347083AbhI3BHT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Sep 2021 21:07:19 -0400
 Received: from mga02.intel.com ([134.134.136.20]:24480 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1347601AbhI3BHT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Sep 2021 21:07:19 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10122"; a="212330117"
+        id S1347505AbhI3BHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Sep 2021 21:07:16 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10122"; a="212330112"
 X-IronPort-AV: E=Sophos;i="5.85,334,1624345200"; 
-   d="scan'208";a="212330117"
+   d="scan'208";a="212330112"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 18:05:37 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 18:05:34 -0700
 X-IronPort-AV: E=Sophos;i="5.85,334,1624345200"; 
-   d="scan'208";a="521027386"
+   d="scan'208";a="521027373"
 Received: from yzhu3-mobl.amr.corp.intel.com (HELO skuppusw-desk1.amr.corp.intel.com) ([10.254.37.25])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 18:05:36 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2021 18:05:33 -0700
 From:   Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -44,9 +44,9 @@ Cc:     x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-usb@vger.kernel.org,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH v2 6/6] PCI: Initialize authorized attribute for confidential guest
-Date:   Wed, 29 Sep 2021 18:05:11 -0700
-Message-Id: <20210930010511.3387967-7-sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v2 4/6] virtio: Initialize authorized attribute for confidential guest
+Date:   Wed, 29 Sep 2021 18:05:09 -0700
+Message-Id: <20210930010511.3387967-5-sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210930010511.3387967-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <20210930010511.3387967-1-sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -57,45 +57,45 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 Confidential guest platforms like TDX have a requirement to allow
-only trusted devices. So initialize the "authorized" attribute
-using cc_guest_dev_authorized().
-
-By default the confidential-guest core arranges for all devices to
-default to unauthorized (via dev_default_authorization) in
-device_initialize(). So, consult a core list of allowed devices to
-override that default.
-
-ARCH code will use its device allow list in cc_guest_dev_authorized()
-to determine the status of the authorized attribute.
+only trusted devices. By default the confidential-guest core will
+arrange for all devices to default to unauthorized (via
+dev_default_authorization) in device_initialize(). Since virtio
+driver is already hardened against the attack from the un-trusted host,
+override the confidential computing default unauthorized state
 
 Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/probe.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/virtio/virtio.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index d9fc02a71baa..aab9d1917d52 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -20,6 +20,8 @@
- #include <linux/irqdomain.h>
- #include <linux/pm_runtime.h>
- #include <linux/bitfield.h>
+diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
+index 588e02fb91d3..377b0ccdc503 100644
+--- a/drivers/virtio/virtio.c
++++ b/drivers/virtio/virtio.c
+@@ -5,6 +5,8 @@
+ #include <linux/module.h>
+ #include <linux/idr.h>
+ #include <linux/of.h>
 +#include <linux/cc_platform.h>
 +#include <linux/device.h>
- #include "pci.h"
+ #include <uapi/linux/virtio_ids.h>
  
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
-@@ -2491,6 +2493,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	pci_configure_device(dev);
+ /* Unique numbering for virtio devices. */
+@@ -390,6 +392,13 @@ int register_virtio_device(struct virtio_device *dev)
+ 	dev->config_enabled = false;
+ 	dev->config_change_pending = false;
  
- 	device_initialize(&dev->dev);
++	/*
++	 * For Confidential guest (like TDX), virtio devices are
++	 * trusted. So set authorized status as true.
++	 */
 +	if (cc_platform_has(CC_ATTR_GUEST_DEVICE_FILTER))
-+		dev->dev.authorized = cc_guest_dev_authorized(&dev->dev);
- 	dev->dev.release = pci_release_dev;
- 
- 	set_dev_node(&dev->dev, pcibus_to_node(bus));
++		dev->dev.authorized = true;
++
+ 	/* We always start by resetting the device, in case a previous
+ 	 * driver messed it up.  This also tests that code path a little. */
+ 	dev->config->reset(dev);
 -- 
 2.25.1
 
