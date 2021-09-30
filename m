@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F25CC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF4D5C433FE
 	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 22:59:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7268961A62
+	by mail.kernel.org (Postfix) with ESMTP id C37D861A62
 	for <linux-pci@archiver.kernel.org>; Thu, 30 Sep 2021 22:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345145AbhI3XBi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Sep 2021 19:01:38 -0400
-Received: from mga09.intel.com ([134.134.136.24]:51267 "EHLO mga09.intel.com"
+        id S230072AbhI3XBj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Sep 2021 19:01:39 -0400
+Received: from mga07.intel.com ([134.134.136.100]:30599 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230072AbhI3XBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S234440AbhI3XBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 30 Sep 2021 19:01:38 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="225345925"
+X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="288960224"
 X-IronPort-AV: E=Sophos;i="5.85,336,1624345200"; 
-   d="scan'208";a="225345925"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 15:59:55 -0700
+   d="scan'208";a="288960224"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 15:59:55 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.85,336,1624345200"; 
-   d="scan'208";a="564504825"
+   d="scan'208";a="480147671"
 Received: from lkp-server01.sh.intel.com (HELO 72c3bd3cf19c) ([10.239.97.150])
-  by fmsmga002.fm.intel.com with ESMTP; 30 Sep 2021 15:59:53 -0700
+  by fmsmga007.fm.intel.com with ESMTP; 30 Sep 2021 15:59:53 -0700
 Received: from kbuild by 72c3bd3cf19c with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1mW51s-0000Wn-Vb; Thu, 30 Sep 2021 22:59:52 +0000
-Date:   Fri, 01 Oct 2021 06:58:58 +0800
+        id 1mW51s-0000Wi-U0; Thu, 30 Sep 2021 22:59:52 +0000
+Date:   Fri, 01 Oct 2021 06:58:54 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/sysfs] BUILD SUCCESS
- e0f7b19223582c302f5736e93927aafde9458d48
-Message-ID: <61564132.IjAWQnmVQPChMX/C%lkp@intel.com>
+Subject: [helgaas-pci:next] BUILD SUCCESS
+ ef4bce990eab7a8425d97c69277f230b50f6f082
+Message-ID: <6156412e.llno+9U+UBpKzQc0%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -42,8 +42,8 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/sysfs
-branch HEAD: e0f7b19223582c302f5736e93927aafde9458d48  PCI: Use kstrtobool() directly, sans strtobool() wrapper
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+branch HEAD: ef4bce990eab7a8425d97c69277f230b50f6f082  Merge branch 'pci/virtualization'
 
 elapsed time: 1096m
 
