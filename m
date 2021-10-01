@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE5FC433F5
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Oct 2021 01:28:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76F4FC4332F
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Oct 2021 01:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6F9361527
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Oct 2021 01:28:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6082E61361
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Oct 2021 01:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351396AbhJABaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1351358AbhJABaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 30 Sep 2021 21:30:04 -0400
-Received: from mga03.intel.com ([134.134.136.65]:32273 "EHLO mga03.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:46919 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351292AbhJABaC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1351272AbhJABaC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 30 Sep 2021 21:30:02 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="225407531"
+X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="310871787"
 X-IronPort-AV: E=Sophos;i="5.85,337,1624345200"; 
-   d="scan'208";a="225407531"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 18:28:17 -0700
+   d="scan'208";a="310871787"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 18:28:17 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.85,337,1624345200"; 
-   d="scan'208";a="457651690"
+   d="scan'208";a="520698089"
 Received: from linux.intel.com ([10.54.29.200])
-  by orsmga002.jf.intel.com with ESMTP; 30 Sep 2021 18:28:17 -0700
+  by fmsmga008.fm.intel.com with ESMTP; 30 Sep 2021 18:28:16 -0700
 Received: from debox1-server.jf.intel.com (debox1-server.jf.intel.com [10.54.39.121])
-        by linux.intel.com (Postfix) with ESMTP id 1C19458067A;
-        Thu, 30 Sep 2021 18:28:17 -0700 (PDT)
+        by linux.intel.com (Postfix) with ESMTP id 741A65808E0;
+        Thu, 30 Sep 2021 18:28:16 -0700 (PDT)
 From:   "David E. Box" <david.e.box@linux.intel.com>
 To:     lee.jones@linaro.org, hdegoede@redhat.com, mgross@linux.intel.com,
         bhelgaas@google.com, gregkh@linuxfoundation.org,
@@ -34,9 +34,9 @@ To:     lee.jones@linaro.org, hdegoede@redhat.com, mgross@linux.intel.com,
 Cc:     "David E. Box" <david.e.box@linux.intel.com>,
         linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
         platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 5/5] platform/x86: Add Intel Software Defined Silicon driver
-Date:   Thu, 30 Sep 2021 18:28:15 -0700
-Message-Id: <20211001012815.1999501-6-david.e.box@linux.intel.com>
+Subject: [PATCH 2/5] platform/x86/intel: Move intel_pmt from MFD to Auxiliary Bus
+Date:   Thu, 30 Sep 2021 18:28:12 -0700
+Message-Id: <20211001012815.1999501-3-david.e.box@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211001012815.1999501-1-david.e.box@linux.intel.com>
 References: <20211001012815.1999501-1-david.e.box@linux.intel.com>
@@ -46,912 +46,1161 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Intel Software Defined Silicon (SDSi) is a post manufacturing mechanism for
-activating additional silicon features. Features are enabled through a
-license activation process.  The SDSi driver provides a per socket, ioctl
-interface for applications to perform 3 main provisioning functions:
+Intel Platform Monitoring Technology (PMT) support is indicated by presence
+of an Intel defined PCIe DVSEC structure with a PMT ID. However DVSEC
+structures may also be used by Intel to indicate support for other
+capabilities unrelated to PMT.  The Out Of Band Management Services Module
+(OOBMSM) is an example of a device that can have both PMT and non-PMT
+capabilities. In order to support these capabilities it is necessary to
+modify the intel_pmt driver to handle the creation of platform devices more
+generically. To that end the following changes are made.
 
-1. Provision an Authentication Key Certificate (AKC), a key written to
-   internal NVRAM that is used to authenticate a capability specific
-   activation payload.
+Convert the driver and child drivers from MFD to the Auxiliary Bus. This
+architecture is more suitable anyway since the driver partitions a
+multifunctional PCIe device. This also moves the driver out of the MFD
+subsystem and into platform/x86/intel.
 
-2. Provision a Capability Activation Payload (CAP), a token authenticated
-   using the AKC and applied to the CPU configuration to activate a new
-   feature.
+Before, devices were named by their capability (e.g. pmt_telemetry).
+Instead, generically name them by their capability ID (e.g.
+intel_extended_cap.2). This allows the IDs to be created automatically,
+minimizing the code needed to support future capabilities. However, to
+ensure that unsupported devices aren't created, use an allow list to
+specify supported capabilities. Along these lines, rename the driver from
+intel_pmt to intel_extended_caps to better reflect the purpose.
 
-3. Read the SDSi State Certificate, containing the CPU configuration
-   state.
-
-The ioctl operations perform function specific mailbox commands that
-forward the requests to SDSi hardware to perform authentication of the
-payloads and enable the silicon configuration (to be made available after
-power cycling).
-
-The SDSi device itself is enumerated as an auxiliary device from the
-intel_extended_caps driver and as such has a build dependency on
-CONFIG_INTEL_EXTENDED_CAPS.
-
-Link: https://github.com/intel/intel-sdsi
 Signed-off-by: David E. Box <david.e.box@linux.intel.com>
 ---
-V1:
-	- Converted to auxiliary bus device driver
-	- Combined and added groups to miscdev per GKH
-	- Added ABI documentation per GKH
-	- Dropped the kref for private structure. Instead manage the reference
-	  count of the miscdev and use an added devm action to free the
-	  structure
 
- .../ABI/testing/sysfs-driver-intel_sdsi       |  28 +
- MAINTAINERS                                   |   6 +
- drivers/platform/x86/intel/Kconfig            |  12 +
- drivers/platform/x86/intel/Makefile           |   2 +
- drivers/platform/x86/intel/extended_caps.c    |   2 +
- drivers/platform/x86/intel/sdsi.c             | 692 ++++++++++++++++++
- include/uapi/linux/sdsi_if.h                  |  47 ++
- 7 files changed, 789 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-driver-intel_sdsi
- create mode 100644 drivers/platform/x86/intel/sdsi.c
- create mode 100644 include/uapi/linux/sdsi_if.h
+V1:	New patch. However incorporates some elements of [1] which was
+	dropped. Namely enumerating features generically and creating an
+	allow list. Also cleans up probe by moving some code to functions
+	and using a bool instead of an int to track whether a device was
+	added.
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-intel_sdsi b/Documentation/ABI/testing/sysfs-driver-intel_sdsi
-new file mode 100644
-index 000000000000..590d2b1eac7d
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-driver-intel_sdsi
-@@ -0,0 +1,28 @@
-+What:		/sys/class/misc/isdsi-<x>
-+Date:		Sep 2021
-+KernelVersion:	5.16
-+Contact:	"David E. Box" <david.e.box@linux.intel.com>
-+Description:
-+		This folder contains files describing information about the
-+		Software Defined Silicon miscdevice for a particular socket.
-+
-+What:		/sys/class/misc/isdsi-<x>/guid
-+Date:		Sep 2021
-+KernelVersion:	5.16
-+Contact:	"David E. Box" <david.e.box@linux.intel.com>
-+Description:
-+		(RO) The GUID for the registers file. The GUID identifies
-+		the register layout of the registers file in this folder.
-+		Information about the register layouts for a particular GUID
-+		is available at http://github.com/intel/intel-sdsi
-+
-+What:		/sys/class/misc/isdsi-<x>/registers
-+Date:		Sep 2021
-+KernelVersion:	5.16
-+Contact:	"David E. Box" <david.e.box@linux.intel.com>
-+Description:
-+		(RO) Contains information needed by applications to provision
-+		a CPU and monitor status intformation. The layout of this file
-+		is determined by the GUID in this folder. Information about the
-+		layout for a particular GUID is available at
-+		http://github.com/intel/intel-sdsi
+[1] https://lore.kernel.org/all/20210922213007.2738388-3-david.e.box@linux.intel.com/
+
+ MAINTAINERS                                |  10 +-
+ drivers/mfd/Kconfig                        |  10 -
+ drivers/mfd/Makefile                       |   1 -
+ drivers/mfd/intel_pmt.c                    | 261 ---------------
+ drivers/platform/x86/intel/Kconfig         |  11 +
+ drivers/platform/x86/intel/Makefile        |   2 +
+ drivers/platform/x86/intel/extended_caps.c | 350 +++++++++++++++++++++
+ drivers/platform/x86/intel/extended_caps.h |  42 +++
+ drivers/platform/x86/intel/pmt/Kconfig     |   4 +-
+ drivers/platform/x86/intel/pmt/class.c     |  18 +-
+ drivers/platform/x86/intel/pmt/class.h     |   5 +-
+ drivers/platform/x86/intel/pmt/crashlog.c  |  43 +--
+ drivers/platform/x86/intel/pmt/telemetry.c |  47 +--
+ 13 files changed, 475 insertions(+), 329 deletions(-)
+ delete mode 100644 drivers/mfd/intel_pmt.c
+ create mode 100644 drivers/platform/x86/intel/extended_caps.c
+ create mode 100644 drivers/platform/x86/intel/extended_caps.h
+
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 4e55a9f33fa3..ddbeade09406 100644
+index ca6d6fde85cf..4e55a9f33fa3 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -9614,6 +9614,12 @@ S:	Maintained
- F:	arch/x86/include/asm/intel_scu_ipc.h
- F:	drivers/platform/x86/intel_scu_*
+@@ -9369,6 +9369,11 @@ S:	Supported
+ F:	drivers/infiniband/hw/irdma/
+ F:	include/uapi/rdma/irdma-abi.h
  
-+INTEL SDSI DRIVER
-+M:	David E. Box <david.e.box@linux.intel.com>
++INTEL EXTENDED CAPABILITIES DRIVER
++M:	"David E. Box" <david.e.box@linux.intel.com>
 +S:	Supported
-+F:	drivers/platform/x86/intel/sdsi.c
-+F:	include/uapi/linux/sdsi_if.h
++F:	drivers/platform/x86/intel/extended_caps.*
 +
- INTEL SKYLAKE INT3472 ACPI DEVICE DRIVER
- M:	Daniel Scally <djrscally@gmail.com>
- S:	Maintained
+ INTEL FRAMEBUFFER DRIVER (excluding 810 and 815)
+ M:	Maik Broemme <mbroemme@libmpq.org>
+ L:	linux-fbdev@vger.kernel.org
+@@ -9578,10 +9583,9 @@ S:	Maintained
+ F:	drivers/mfd/intel_soc_pmic*
+ F:	include/linux/mfd/intel_soc_pmic*
+ 
+-INTEL PMT DRIVER
++INTEL PMT DRIVERS
+ M:	"David E. Box" <david.e.box@linux.intel.com>
+-S:	Maintained
+-F:	drivers/mfd/intel_pmt.c
++S:	Supported
+ F:	drivers/platform/x86/intel/pmt/
+ 
+ INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index ca0edab91aeb..d7648473bbec 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -690,16 +690,6 @@ config MFD_INTEL_PMC_BXT
+ 	  Register and P-unit access. In addition this creates devices
+ 	  for iTCO watchdog and telemetry that are part of the PMC.
+ 
+-config MFD_INTEL_PMT
+-	tristate "Intel Platform Monitoring Technology (PMT) support"
+-	depends on PCI
+-	select MFD_CORE
+-	help
+-	  The Intel Platform Monitoring Technology (PMT) is an interface that
+-	  provides access to hardware monitor registers. This driver supports
+-	  Telemetry, Watcher, and Crashlog PMT capabilities/devices for
+-	  platforms starting from Tiger Lake.
+-
+ config MFD_IPAQ_MICRO
+ 	bool "Atmel Micro ASIC (iPAQ h3100/h3600/h3700) Support"
+ 	depends on SA1100_H3100 || SA1100_H3600
+diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
+index 2ba6646e874c..e0db12a24d1f 100644
+--- a/drivers/mfd/Makefile
++++ b/drivers/mfd/Makefile
+@@ -212,7 +212,6 @@ obj-$(CONFIG_MFD_INTEL_LPSS)	+= intel-lpss.o
+ obj-$(CONFIG_MFD_INTEL_LPSS_PCI)	+= intel-lpss-pci.o
+ obj-$(CONFIG_MFD_INTEL_LPSS_ACPI)	+= intel-lpss-acpi.o
+ obj-$(CONFIG_MFD_INTEL_PMC_BXT)	+= intel_pmc_bxt.o
+-obj-$(CONFIG_MFD_INTEL_PMT)	+= intel_pmt.o
+ obj-$(CONFIG_MFD_PALMAS)	+= palmas.o
+ obj-$(CONFIG_MFD_VIPERBOARD)    += viperboard.o
+ obj-$(CONFIG_MFD_NTXEC)		+= ntxec.o
+diff --git a/drivers/mfd/intel_pmt.c b/drivers/mfd/intel_pmt.c
+deleted file mode 100644
+index dd7eb614c28e..000000000000
+--- a/drivers/mfd/intel_pmt.c
++++ /dev/null
+@@ -1,261 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Intel Platform Monitoring Technology PMT driver
+- *
+- * Copyright (c) 2020, Intel Corporation.
+- * All Rights Reserved.
+- *
+- * Author: David E. Box <david.e.box@linux.intel.com>
+- */
+-
+-#include <linux/bits.h>
+-#include <linux/kernel.h>
+-#include <linux/mfd/core.h>
+-#include <linux/module.h>
+-#include <linux/pci.h>
+-#include <linux/platform_device.h>
+-#include <linux/pm.h>
+-#include <linux/pm_runtime.h>
+-#include <linux/types.h>
+-
+-/* Intel DVSEC capability vendor space offsets */
+-#define INTEL_DVSEC_ENTRIES		0xA
+-#define INTEL_DVSEC_SIZE		0xB
+-#define INTEL_DVSEC_TABLE		0xC
+-#define INTEL_DVSEC_TABLE_BAR(x)	((x) & GENMASK(2, 0))
+-#define INTEL_DVSEC_TABLE_OFFSET(x)	((x) & GENMASK(31, 3))
+-#define INTEL_DVSEC_ENTRY_SIZE		4
+-
+-/* PMT capabilities */
+-#define DVSEC_INTEL_ID_TELEMETRY	2
+-#define DVSEC_INTEL_ID_WATCHER		3
+-#define DVSEC_INTEL_ID_CRASHLOG		4
+-
+-struct intel_dvsec_header {
+-	u16	length;
+-	u16	id;
+-	u8	num_entries;
+-	u8	entry_size;
+-	u8	tbir;
+-	u32	offset;
+-};
+-
+-enum pmt_quirks {
+-	/* Watcher capability not supported */
+-	PMT_QUIRK_NO_WATCHER	= BIT(0),
+-
+-	/* Crashlog capability not supported */
+-	PMT_QUIRK_NO_CRASHLOG	= BIT(1),
+-
+-	/* Use shift instead of mask to read discovery table offset */
+-	PMT_QUIRK_TABLE_SHIFT	= BIT(2),
+-
+-	/* DVSEC not present (provided in driver data) */
+-	PMT_QUIRK_NO_DVSEC	= BIT(3),
+-};
+-
+-struct pmt_platform_info {
+-	unsigned long quirks;
+-	struct intel_dvsec_header **capabilities;
+-};
+-
+-static const struct pmt_platform_info tgl_info = {
+-	.quirks = PMT_QUIRK_NO_WATCHER | PMT_QUIRK_NO_CRASHLOG |
+-		  PMT_QUIRK_TABLE_SHIFT,
+-};
+-
+-/* DG1 Platform with DVSEC quirk*/
+-static struct intel_dvsec_header dg1_telemetry = {
+-	.length = 0x10,
+-	.id = 2,
+-	.num_entries = 1,
+-	.entry_size = 3,
+-	.tbir = 0,
+-	.offset = 0x466000,
+-};
+-
+-static struct intel_dvsec_header *dg1_capabilities[] = {
+-	&dg1_telemetry,
+-	NULL
+-};
+-
+-static const struct pmt_platform_info dg1_info = {
+-	.quirks = PMT_QUIRK_NO_DVSEC,
+-	.capabilities = dg1_capabilities,
+-};
+-
+-static int pmt_add_dev(struct pci_dev *pdev, struct intel_dvsec_header *header,
+-		       unsigned long quirks)
+-{
+-	struct device *dev = &pdev->dev;
+-	struct resource *res, *tmp;
+-	struct mfd_cell *cell;
+-	const char *name;
+-	int count = header->num_entries;
+-	int size = header->entry_size;
+-	int id = header->id;
+-	int i;
+-
+-	switch (id) {
+-	case DVSEC_INTEL_ID_TELEMETRY:
+-		name = "pmt_telemetry";
+-		break;
+-	case DVSEC_INTEL_ID_WATCHER:
+-		if (quirks & PMT_QUIRK_NO_WATCHER) {
+-			dev_info(dev, "Watcher not supported\n");
+-			return -EINVAL;
+-		}
+-		name = "pmt_watcher";
+-		break;
+-	case DVSEC_INTEL_ID_CRASHLOG:
+-		if (quirks & PMT_QUIRK_NO_CRASHLOG) {
+-			dev_info(dev, "Crashlog not supported\n");
+-			return -EINVAL;
+-		}
+-		name = "pmt_crashlog";
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	if (!header->num_entries || !header->entry_size) {
+-		dev_err(dev, "Invalid count or size for %s header\n", name);
+-		return -EINVAL;
+-	}
+-
+-	cell = devm_kzalloc(dev, sizeof(*cell), GFP_KERNEL);
+-	if (!cell)
+-		return -ENOMEM;
+-
+-	res = devm_kcalloc(dev, count, sizeof(*res), GFP_KERNEL);
+-	if (!res)
+-		return -ENOMEM;
+-
+-	if (quirks & PMT_QUIRK_TABLE_SHIFT)
+-		header->offset >>= 3;
+-
+-	/*
+-	 * The PMT DVSEC contains the starting offset and count for a block of
+-	 * discovery tables, each providing access to monitoring facilities for
+-	 * a section of the device. Create a resource list of these tables to
+-	 * provide to the driver.
+-	 */
+-	for (i = 0, tmp = res; i < count; i++, tmp++) {
+-		tmp->start = pdev->resource[header->tbir].start +
+-			     header->offset + i * (size << 2);
+-		tmp->end = tmp->start + (size << 2) - 1;
+-		tmp->flags = IORESOURCE_MEM;
+-	}
+-
+-	cell->resources = res;
+-	cell->num_resources = count;
+-	cell->name = name;
+-
+-	return devm_mfd_add_devices(dev, PLATFORM_DEVID_AUTO, cell, 1, NULL, 0,
+-				    NULL);
+-}
+-
+-static int pmt_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	struct pmt_platform_info *info;
+-	unsigned long quirks = 0;
+-	bool found_devices = false;
+-	int ret, pos = 0;
+-
+-	ret = pcim_enable_device(pdev);
+-	if (ret)
+-		return ret;
+-
+-	info = (struct pmt_platform_info *)id->driver_data;
+-
+-	if (info)
+-		quirks = info->quirks;
+-
+-	if (info && (info->quirks & PMT_QUIRK_NO_DVSEC)) {
+-		struct intel_dvsec_header **header;
+-
+-		header = info->capabilities;
+-		while (*header) {
+-			ret = pmt_add_dev(pdev, *header, quirks);
+-			if (ret)
+-				dev_warn(&pdev->dev,
+-					 "Failed to add device for DVSEC id %d\n",
+-					 (*header)->id);
+-			else
+-				found_devices = true;
+-
+-			++header;
+-		}
+-	} else {
+-		do {
+-			struct intel_dvsec_header header;
+-			u32 table;
+-			u16 vid;
+-
+-			pos = pci_find_next_ext_capability(pdev, pos, PCI_EXT_CAP_ID_DVSEC);
+-			if (!pos)
+-				break;
+-
+-			pci_read_config_word(pdev, pos + PCI_DVSEC_HEADER1, &vid);
+-			if (vid != PCI_VENDOR_ID_INTEL)
+-				continue;
+-
+-			pci_read_config_word(pdev, pos + PCI_DVSEC_HEADER2,
+-					     &header.id);
+-			pci_read_config_byte(pdev, pos + INTEL_DVSEC_ENTRIES,
+-					     &header.num_entries);
+-			pci_read_config_byte(pdev, pos + INTEL_DVSEC_SIZE,
+-					     &header.entry_size);
+-			pci_read_config_dword(pdev, pos + INTEL_DVSEC_TABLE,
+-					      &table);
+-
+-			header.tbir = INTEL_DVSEC_TABLE_BAR(table);
+-			header.offset = INTEL_DVSEC_TABLE_OFFSET(table);
+-
+-			ret = pmt_add_dev(pdev, &header, quirks);
+-			if (ret)
+-				continue;
+-
+-			found_devices = true;
+-		} while (true);
+-	}
+-
+-	if (!found_devices)
+-		return -ENODEV;
+-
+-	pm_runtime_put(&pdev->dev);
+-	pm_runtime_allow(&pdev->dev);
+-
+-	return 0;
+-}
+-
+-static void pmt_pci_remove(struct pci_dev *pdev)
+-{
+-	pm_runtime_forbid(&pdev->dev);
+-	pm_runtime_get_sync(&pdev->dev);
+-}
+-
+-#define PCI_DEVICE_ID_INTEL_PMT_ADL	0x467d
+-#define PCI_DEVICE_ID_INTEL_PMT_DG1	0x490e
+-#define PCI_DEVICE_ID_INTEL_PMT_OOBMSM	0x09a7
+-#define PCI_DEVICE_ID_INTEL_PMT_TGL	0x9a0d
+-static const struct pci_device_id pmt_pci_ids[] = {
+-	{ PCI_DEVICE_DATA(INTEL, PMT_ADL, &tgl_info) },
+-	{ PCI_DEVICE_DATA(INTEL, PMT_DG1, &dg1_info) },
+-	{ PCI_DEVICE_DATA(INTEL, PMT_OOBMSM, NULL) },
+-	{ PCI_DEVICE_DATA(INTEL, PMT_TGL, &tgl_info) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, pmt_pci_ids);
+-
+-static struct pci_driver pmt_pci_driver = {
+-	.name = "intel-pmt",
+-	.id_table = pmt_pci_ids,
+-	.probe = pmt_pci_probe,
+-	.remove = pmt_pci_remove,
+-};
+-module_pci_driver(pmt_pci_driver);
+-
+-MODULE_AUTHOR("David E. Box <david.e.box@linux.intel.com>");
+-MODULE_DESCRIPTION("Intel Platform Monitoring Technology PMT driver");
+-MODULE_LICENSE("GPL v2");
 diff --git a/drivers/platform/x86/intel/Kconfig b/drivers/platform/x86/intel/Kconfig
-index d7492372efc3..8562e9626cff 100644
+index 0b21468e1bd0..d7492372efc3 100644
 --- a/drivers/platform/x86/intel/Kconfig
 +++ b/drivers/platform/x86/intel/Kconfig
-@@ -142,6 +142,18 @@ config INTEL_RST
- 	  firmware will copy the memory contents back to RAM and resume the OS
- 	  as usual.
+@@ -26,6 +26,17 @@ source "drivers/platform/x86/intel/speed_select_if/Kconfig"
+ source "drivers/platform/x86/intel/telemetry/Kconfig"
+ source "drivers/platform/x86/intel/wmi/Kconfig"
  
-+config INTEL_SDSI
-+	tristate "Intel Software Defined Silicon Driver"
-+	depends on INTEL_EXTENDED_CAPS
-+	depends on X86_64
++config INTEL_EXTENDED_CAPS
++	tristate "Intel Extended Capabilities support"
++	depends on PCI
++	select AUXILIARY_BUS
 +	help
-+	  This driver enables access to the Intel Software Defined Silicon
-+	  interface used to provision silicon features with an authentication
-+	  certificate and capability license.
++	  Adds support for feature drivers exposed using Intel PCIe VSEC and
++	  DVSEC.
 +
 +	  To compile this driver as a module, choose M here: the module will
-+	  be called intel_sdsi.
++	  be called intel_extended_caps.
 +
- config INTEL_SMARTCONNECT
- 	tristate "Intel Smart Connect disabling driver"
+ config INTEL_HID_EVENT
+ 	tristate "Intel HID Event"
  	depends on ACPI
 diff --git a/drivers/platform/x86/intel/Makefile b/drivers/platform/x86/intel/Makefile
-index 6f5bee0e1f58..4f34fcf0da7a 100644
+index 8b3a3f7bab49..6f5bee0e1f58 100644
 --- a/drivers/platform/x86/intel/Makefile
 +++ b/drivers/platform/x86/intel/Makefile
-@@ -27,6 +27,8 @@ intel_int0002_vgpio-y			:= int0002_vgpio.o
+@@ -21,6 +21,8 @@ intel-vbtn-y				:= vbtn.o
+ obj-$(CONFIG_INTEL_VBTN)		+= intel-vbtn.o
+ 
+ # Intel miscellaneous drivers
++intel_extended_caps-y			:= extended_caps.o
++obj-$(CONFIG_INTEL_EXTENDED_CAPS)	+= intel_extended_caps.o
+ intel_int0002_vgpio-y			:= int0002_vgpio.o
  obj-$(CONFIG_INTEL_INT0002_VGPIO)	+= intel_int0002_vgpio.o
  intel_oaktrail-y			:= oaktrail.o
- obj-$(CONFIG_INTEL_OAKTRAIL)		+= intel_oaktrail.o
-+intel_sdsi-y				:= sdsi.o
-+obj-$(CONFIG_INTEL_SDSI)		+= intel_sdsi.o
- 
- # Intel PMIC / PMC / P-Unit drivers
- intel_bxtwc_tmu-y			:= bxtwc_tmu.o
 diff --git a/drivers/platform/x86/intel/extended_caps.c b/drivers/platform/x86/intel/extended_caps.c
-index eca47d693b14..b04f7019f744 100644
---- a/drivers/platform/x86/intel/extended_caps.c
-+++ b/drivers/platform/x86/intel/extended_caps.c
-@@ -31,6 +31,7 @@
- #define EXTENDED_CAP_ID_TELEMETRY	2
- #define EXTENDED_CAP_ID_WATCHER		3
- #define EXTENDED_CAP_ID_CRASHLOG	4
-+#define EXTENDED_CAP_ID_SDSI		65
- 
- static DEFINE_IDA(extended_caps_ida);
- 
-@@ -38,6 +39,7 @@ static int extended_caps_allow_list[] = {
- 	EXTENDED_CAP_ID_TELEMETRY,
- 	EXTENDED_CAP_ID_WATCHER,
- 	EXTENDED_CAP_ID_CRASHLOG,
-+	EXTENDED_CAP_ID_SDSI,
- };
- 
- struct extended_caps_platform_info {
-diff --git a/drivers/platform/x86/intel/sdsi.c b/drivers/platform/x86/intel/sdsi.c
 new file mode 100644
-index 000000000000..a1298549e8be
+index 000000000000..03acea20b675
 --- /dev/null
-+++ b/drivers/platform/x86/intel/sdsi.c
-@@ -0,0 +1,692 @@
++++ b/drivers/platform/x86/intel/extended_caps.c
+@@ -0,0 +1,350 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Intel Software Defined Silicon driver
++ * Intel Extended Capabilities auxiliary bus driver
 + *
 + * Copyright (c) 2021, Intel Corporation.
 + * All Rights Reserved.
 + *
-+ * Author: "David E. Box" <david.e.box@linux.intel.com>
++ * Author: David E. Box <david.e.box@linux.intel.com>
 + */
 +
 +#include <linux/auxiliary_bus.h>
 +#include <linux/bits.h>
-+#include <linux/bitfield.h>
-+#include <linux/device.h>
-+#include <linux/iopoll.h>
 +#include <linux/kernel.h>
-+#include <linux/miscdevice.h>
++#include <linux/idr.h>
++#include <linux/mfd/core.h>
 +#include <linux/module.h>
 +#include <linux/pci.h>
-+#include <linux/slab.h>
-+#include <linux/sysfs.h>
 +#include <linux/types.h>
-+#include <linux/uaccess.h>
-+
-+#include <uapi/linux/sdsi_if.h>
 +
 +#include "extended_caps.h"
 +
-+#define ACCESS_TYPE_BARID		2
-+#define ACCESS_TYPE_LOCAL		3
++/* Intel DVSEC capability vendor space offsets */
++#define INTEL_DVSEC_ENTRIES		0xA
++#define INTEL_DVSEC_SIZE		0xB
++#define INTEL_DVSEC_TABLE		0xC
++#define INTEL_DVSEC_TABLE_BAR(x)	((x) & GENMASK(2, 0))
++#define INTEL_DVSEC_TABLE_OFFSET(x)	((x) & GENMASK(31, 3))
++#define INTEL_DVSEC_ENTRY_SIZE		4
 +
-+#define SDSI_MIN_SIZE_DWORDS		276
-+#define SDSI_SIZE_CONTROL		8
-+#define SDSI_SIZE_MAILBOX		1024
-+#define SDSI_SIZE_REGS			72
-+#define SDSI_SIZE_CMD			sizeof(u64)
++/* EXT_CAPS capabilities */
++#define EXTENDED_CAP_ID_TELEMETRY	2
++#define EXTENDED_CAP_ID_WATCHER		3
++#define EXTENDED_CAP_ID_CRASHLOG	4
 +
-+/*
-+ * Write messages are currently up to the size of the mailbox
-+ * while read messages are up to 4 times the size of the
-+ * mailbox, sent in packets
-+ */
-+#define SDSI_SIZE_WRITE_MSG		SDSI_SIZE_MAILBOX
-+#define SDSI_SIZE_READ_MSG		(SDSI_SIZE_MAILBOX * 4)
++static DEFINE_IDA(extended_caps_ida);
 +
-+#define SDSI_ENABLED_FEATURES_OFFSET	16
-+#define SDSI_ENABLED			BIT(3)
-+#define SDSI_SOCKET_ID_OFFSET		64
-+#define SDSI_SOCKET_ID			GENMASK(3, 0)
-+
-+#define SDSI_MBOX_CMD_SUCCESS		0x40
-+#define SDSI_MBOX_CMD_TIMEOUT		0x80
-+
-+#define MBOX_TIMEOUT_US			2000
-+#define MBOX_TIMEOUT_ACQUIRE_US		1000
-+#define MBOX_POLLING_PERIOD_US		100
-+#define MBOX_MAX_PACKETS		4
-+
-+#define MBOX_OWNER_NONE			0x00
-+#define MBOX_OWNER_INBAND		0x01
-+
-+#define CTRL_RUN_BUSY			BIT(0)
-+#define CTRL_READ_WRITE			BIT(1)
-+#define CTRL_SOM			BIT(2)
-+#define CTRL_EOM			BIT(3)
-+#define CTRL_OWNER			GENMASK(5, 4)
-+#define CTRL_COMPLETE			BIT(6)
-+#define CTRL_READY			BIT(7)
-+#define CTRL_STATUS			GENMASK(15, 8)
-+#define CTRL_PACKET_SIZE		GENMASK(31, 16)
-+#define CTRL_MSG_SIZE			GENMASK(63, 48)
-+
-+#define DISC_TABLE_SIZE			12
-+#define DT_ACCESS_TYPE			GENMASK(3, 0)
-+#define DT_SIZE				GENMASK(19, 12)
-+#define DT_TBIR				GENMASK(2, 0)
-+#define DT_OFFSET(v)			((v) & GENMASK(31, 3))
-+
-+enum sdsi_command {
-+	SDSI_CMD_PROVISION_AKC		= 0x04,
-+	SDSI_CMD_PROVISION_CAP		= 0x08,
-+	SDSI_CMD_READ_STATE		= 0x10,
++static int extended_caps_allow_list[] = {
++	EXTENDED_CAP_ID_TELEMETRY,
++	EXTENDED_CAP_ID_WATCHER,
++	EXTENDED_CAP_ID_CRASHLOG,
 +};
 +
-+struct sdsi_mbox_info {
-+	u64	*payload;
-+	u64	*buffer;
-+	int	size;
-+	bool	is_write;
++struct extended_caps_platform_info {
++	struct extended_caps_header **capabilities;
++	unsigned long quirks;
 +};
 +
-+struct disc_table {
-+	u32	access_info;
-+	u32	guid;
-+	u32	offset;
++static const struct extended_caps_platform_info tgl_info = {
++	.quirks = EXT_CAPS_QUIRK_NO_WATCHER | EXT_CAPS_QUIRK_NO_CRASHLOG |
++		  EXT_CAPS_QUIRK_TABLE_SHIFT,
 +};
 +
-+struct sdsi_priv {
-+	struct mutex		mb_lock;
-+	struct mutex		akc_lock;
-+	struct miscdevice	miscdev;
-+	struct file		*akc_owner;
-+	void __iomem		*control_addr;
-+	void __iomem		*mbox_addr;
-+	void __iomem		*regs_addr;
-+	u32			guid;
-+	int			socket_id;
-+	bool			sdsi_enabled;
-+	bool			dev_present;
++/* DG1 Platform with DVSEC quirk*/
++static struct extended_caps_header dg1_telemetry = {
++	.length = 0x10,
++	.id = 2,
++	.num_entries = 1,
++	.entry_size = 3,
++	.tbir = 0,
++	.offset = 0x466000,
 +};
 +
-+static __always_inline void
-+sdsi_qword_memcpy_toio(u64 __iomem *to, const u64 *from, size_t count_bytes)
-+{
-+	size_t count = count_bytes / sizeof(*to);
-+	int i;
-+
-+	for (i = 0; i < count; i++)
-+		writeq(from[i], &to[i]);
-+}
-+
-+static __always_inline void
-+sdsi_qword_memcpy_fromio(u64 *to, const u64 __iomem *from, size_t count_bytes)
-+{
-+	size_t count = count_bytes / sizeof(*to);
-+	int i;
-+
-+	for (i = 0; i < count; i++)
-+		to[i] = readq(&from[i]);
-+}
-+
-+static inline struct sdsi_priv *to_sdsi_priv(struct miscdevice *miscdev)
-+{
-+	return container_of(miscdev, struct sdsi_priv, miscdev);
-+}
-+
-+static inline void sdsi_complete_transaction(struct sdsi_priv *priv)
-+{
-+	u64 control = FIELD_PREP(CTRL_COMPLETE, 1);
-+
-+	lockdep_assert_held(&priv->mb_lock);
-+	writeq(control, priv->control_addr);
-+}
-+
-+static int sdsi_status_to_errno(u32 status)
-+{
-+	switch (status) {
-+	case SDSI_MBOX_CMD_SUCCESS:
-+		return 0;
-+	case SDSI_MBOX_CMD_TIMEOUT:
-+		return -ETIMEDOUT;
-+	default:
-+		return -EIO;
-+	}
-+}
-+
-+static int sdsi_mbox_cmd_read(struct sdsi_priv *priv, struct sdsi_mbox_info *info, int *data_size)
-+{
-+	struct device *dev = priv->miscdev.this_device;
-+	u32 total, loop, eom, status, message_size;
-+	u64 control;
-+	int ret;
-+
-+	lockdep_assert_held(&priv->mb_lock);
-+
-+	/* Format and send the read command */
-+	control = FIELD_PREP(CTRL_EOM, 1) |
-+		  FIELD_PREP(CTRL_SOM, 1) |
-+		  FIELD_PREP(CTRL_RUN_BUSY, 1) |
-+		  FIELD_PREP(CTRL_PACKET_SIZE, info->size);
-+	writeq(control, priv->control_addr);
-+
-+	/* For reads, data sizes that are larger than the mailbox size are read in packets. */
-+	total = 0;
-+	loop = 0;
-+	do {
-+		int offset = SDSI_SIZE_MAILBOX * loop;
-+		void __iomem *addr = priv->mbox_addr + offset;
-+		u64 *buf = info->buffer + (offset / SDSI_SIZE_CMD);
-+		u32 packet_size;
-+
-+		/* Poll on ready bit */
-+		ret = readq_poll_timeout(priv->control_addr, control, control & CTRL_READY,
-+					 MBOX_POLLING_PERIOD_US, MBOX_TIMEOUT_US);
-+		if (ret)
-+			break;
-+
-+		eom = FIELD_GET(CTRL_EOM, control);
-+		status = FIELD_GET(CTRL_STATUS, control);
-+		packet_size = FIELD_GET(CTRL_PACKET_SIZE, control);
-+		message_size = FIELD_GET(CTRL_MSG_SIZE, control);
-+
-+		ret = sdsi_status_to_errno(status);
-+		if (ret)
-+			break;
-+
-+		/* Only the last packet can be less than the mailbox size. */
-+		if (!eom && packet_size != SDSI_SIZE_MAILBOX) {
-+			dev_err(dev, "Invalid packet size\n");
-+			ret = -EPROTO;
-+			break;
-+		}
-+
-+		if (packet_size > SDSI_SIZE_MAILBOX) {
-+			dev_err(dev, "Packet size to large\n");
-+			ret = -EPROTO;
-+			break;
-+		}
-+
-+		sdsi_qword_memcpy_fromio(buf, addr, round_up(packet_size, SDSI_SIZE_CMD));
-+
-+		total += packet_size;
-+
-+		sdsi_complete_transaction(priv);
-+	} while (!eom && ++loop < MBOX_MAX_PACKETS);
-+
-+	if (ret) {
-+		sdsi_complete_transaction(priv);
-+		return ret;
-+	}
-+
-+	if (!eom) {
-+		dev_err(dev, "Exceeded read attempts\n");
-+		return -EPROTO;
-+	}
-+
-+	/* Message size check is only valid for multi-packet transfers */
-+	if (loop && total != message_size)
-+		dev_warn(dev, "Read count %d differs from expected count %d\n",
-+			 total, message_size);
-+
-+	*data_size = total;
-+
-+	return 0;
-+}
-+
-+static int sdsi_mbox_cmd_write(struct sdsi_priv *priv, struct sdsi_mbox_info *info)
-+{
-+	u64 control;
-+	u32 status;
-+	int ret;
-+
-+	lockdep_assert_held(&priv->mb_lock);
-+
-+	/* Write rest of the payload */
-+	sdsi_qword_memcpy_toio(priv->mbox_addr + SDSI_SIZE_CMD, info->payload + 1,
-+			       info->size - SDSI_SIZE_CMD);
-+
-+	/* Format and send the write command */
-+	control = FIELD_PREP(CTRL_EOM, 1) |
-+		  FIELD_PREP(CTRL_SOM, 1) |
-+		  FIELD_PREP(CTRL_RUN_BUSY, 1) |
-+		  FIELD_PREP(CTRL_READ_WRITE, 1) |
-+		  FIELD_PREP(CTRL_PACKET_SIZE, info->size);
-+	writeq(control, priv->control_addr);
-+
-+	/* Poll on run_busy bit */
-+	ret = readq_poll_timeout(priv->control_addr, control, !(control & CTRL_RUN_BUSY),
-+				 MBOX_POLLING_PERIOD_US, MBOX_TIMEOUT_US);
-+
-+	if (ret)
-+		goto release_mbox;
-+
-+	status = FIELD_GET(CTRL_STATUS, control);
-+	ret = sdsi_status_to_errno(status);
-+
-+release_mbox:
-+	sdsi_complete_transaction(priv);
-+
-+	return ret;
-+}
-+
-+static int sdsi_mbox_cmd(struct sdsi_priv *priv, struct sdsi_mbox_info *info, int *data_size)
-+{
-+	u64 control;
-+	int ret = 0;
-+	u32 owner;
-+
-+	lockdep_assert_held(&priv->mb_lock);
-+
-+	/* Check mailbox is available */
-+	control = readq(priv->control_addr);
-+	owner = FIELD_GET(CTRL_OWNER, control);
-+	if (owner != MBOX_OWNER_NONE)
-+		return -EBUSY;
-+
-+	/* Write first qword of payload */
-+	writeq(info->payload[0], priv->mbox_addr);
-+
-+	/* Check for ownership */
-+	ret = readq_poll_timeout(priv->control_addr, control,
-+				 FIELD_GET(CTRL_OWNER, control) & MBOX_OWNER_INBAND,
-+				 MBOX_POLLING_PERIOD_US, MBOX_TIMEOUT_ACQUIRE_US);
-+	if (ret)
-+		return ret;
-+
-+	if (info->is_write)
-+		ret = sdsi_mbox_cmd_write(priv, info);
-+	else
-+		ret = sdsi_mbox_cmd_read(priv, info, data_size);
-+
-+	return ret;
-+}
-+
-+static long sdsi_if_provision(struct sdsi_priv *priv, void __user *argp, enum sdsi_command cmd)
-+{
-+	struct sdsi_mbox_info info;
-+	u32 __user *datap = argp;
-+	u32 data_size;
-+	int ret;
-+
-+	if (get_user(data_size, datap))
-+		return -EFAULT;
-+
-+	if (data_size > (SDSI_SIZE_WRITE_MSG - SDSI_SIZE_CMD))
-+		return -EOVERFLOW;
-+
-+	/* Qword aligned message + command qword */
-+	info.size = round_up(data_size, SDSI_SIZE_CMD) + SDSI_SIZE_CMD;
-+	info.is_write = true;
-+
-+	info.payload = kzalloc(info.size, GFP_KERNEL);
-+	if (!info.payload)
-+		return -ENOMEM;
-+
-+	/* Copy message to payload buffer */
-+	if (copy_from_user(info.payload, argp + sizeof(data_size), data_size)) {
-+		ret = -EFAULT;
-+		goto free_payload;
-+	}
-+
-+	/* Command is last qword of payload buffer */
-+	info.payload[(info.size - SDSI_SIZE_CMD) / SDSI_SIZE_CMD] = cmd;
-+
-+	ret = mutex_lock_interruptible(&priv->mb_lock);
-+	if (ret)
-+		goto free_payload;
-+	ret = sdsi_mbox_cmd(priv, &info, NULL);
-+	mutex_unlock(&priv->mb_lock);
-+
-+free_payload:
-+	kfree(info.payload);
-+
-+	return (ret < 0) ? ret : 0;
-+}
-+
-+static long sdsi_if_read_state_cert(struct sdsi_priv *priv, void __user *argp)
-+{
-+	u64 command = SDSI_CMD_READ_STATE;
-+	struct sdsi_mbox_info info;
-+	u32 __user *datap = argp;
-+	u32 data_size;
-+	int ret;
-+
-+	/* Buffer for return data */
-+	info.buffer = kmalloc(SDSI_SIZE_READ_MSG, GFP_KERNEL);
-+	if (!info.buffer)
-+		return -ENOMEM;
-+
-+	info.payload = &command;
-+	info.size = sizeof(command);
-+	info.is_write = false;
-+
-+	ret = mutex_lock_interruptible(&priv->mb_lock);
-+	if (ret)
-+		goto free_buffer;
-+	ret = sdsi_mbox_cmd(priv, &info, &data_size);
-+	mutex_unlock(&priv->mb_lock);
-+	if (ret < 0)
-+		goto free_buffer;
-+
-+	/* First field is the size of the data */
-+	if (put_user(data_size, datap)) {
-+		ret = -EFAULT;
-+		goto free_buffer;
-+	}
-+
-+	/* Copy the data */
-+	if (copy_to_user(argp + sizeof(data_size), info.buffer, data_size)) {
-+		ret = -EFAULT;
-+		goto free_buffer;
-+	}
-+
-+free_buffer:
-+	kfree(info.buffer);
-+
-+	return (ret < 0) ? ret : 0;
-+}
-+
-+static long sdsi_device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-+{
-+	struct miscdevice *miscdev = file->private_data;
-+	struct sdsi_priv *priv = to_sdsi_priv(miscdev);
-+	void __user *argp = (void __user *)arg;
-+	long ret = -EINVAL;
-+
-+	if (!priv->dev_present)
-+		return -ENODEV;
-+
-+	if (!priv->sdsi_enabled)
-+		return -EPERM;
-+
-+	if (cmd == SDSI_IF_READ_STATE)
-+		return sdsi_if_read_state_cert(priv, argp);
-+
-+	mutex_lock(&priv->akc_lock);
-+	switch (cmd) {
-+	case SDSI_IF_PROVISION_AKC:
-+		/*
-+		 * While writing an authentication certificate disallow other openers
-+		 * from using AKC or CAP.
-+		 */
-+		if (!priv->akc_owner)
-+			priv->akc_owner = file;
-+
-+		if (priv->akc_owner != file) {
-+			ret = -EUSERS;
-+			goto unlock_akc;
-+		}
-+
-+		ret = sdsi_if_provision(priv, argp, SDSI_CMD_PROVISION_AKC);
-+		break;
-+
-+	case SDSI_IF_PROVISION_CAP:
-+		if (priv->akc_owner && priv->akc_owner != file) {
-+			ret = -EUSERS;
-+			goto unlock_akc;
-+		}
-+
-+		ret = sdsi_if_provision(priv, argp, SDSI_CMD_PROVISION_CAP);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
-+unlock_akc:
-+	mutex_unlock(&priv->akc_lock);
-+
-+	return ret;
-+}
-+
-+static ssize_t sdsi_read_registers(struct file *filp, struct kobject *kobj,
-+				   struct bin_attribute *attr, char *buf, loff_t off,
-+				   size_t count)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct miscdevice *miscdev = dev_get_drvdata(dev);
-+	struct sdsi_priv *priv = to_sdsi_priv(miscdev);
-+	void __iomem *addr = priv->regs_addr;
-+
-+	if (!priv->dev_present)
-+		return -ENODEV;
-+
-+	memcpy_fromio(buf, addr + off, count);
-+
-+	return count;
-+}
-+static BIN_ATTR(registers, 0400, sdsi_read_registers, NULL, SDSI_SIZE_REGS);
-+
-+static struct bin_attribute *sdsi_bin_attrs[] = {
-+	&bin_attr_registers,
-+	NULL,
-+};
-+
-+static ssize_t guid_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct miscdevice *miscdev = dev_get_drvdata(dev);
-+	struct sdsi_priv *priv = to_sdsi_priv(miscdev);
-+
-+	return sprintf(buf, "0x%x\n", priv->guid);
-+}
-+static DEVICE_ATTR_RO(guid);
-+
-+static struct attribute *sdsi_attrs[] = {
-+	&dev_attr_guid.attr,
++static struct extended_caps_header *dg1_capabilities[] = {
++	&dg1_telemetry,
 +	NULL
 +};
 +
-+static const struct attribute_group sdsi_group = {
-+	.attrs = sdsi_attrs,
-+	.bin_attrs = sdsi_bin_attrs,
-+};
-+__ATTRIBUTE_GROUPS(sdsi);
-+
-+static int sdsi_device_open(struct inode *inode, struct file *file)
-+{
-+	struct miscdevice *miscdev = file->private_data;
-+
-+	get_device(miscdev->this_device);
-+
-+	return 0;
-+}
-+
-+static int sdsi_device_release(struct inode *inode, struct file *file)
-+{
-+
-+	struct miscdevice *miscdev = file->private_data;
-+	struct sdsi_priv *priv = to_sdsi_priv(miscdev);
-+
-+	if (priv->akc_owner == file)
-+		priv->akc_owner = NULL;
-+
-+	put_device(miscdev->this_device);
-+
-+	return 0;
-+}
-+
-+static const struct file_operations sdsi_char_device_ops = {
-+	.owner = THIS_MODULE,
-+	.open = sdsi_device_open,
-+	.unlocked_ioctl = sdsi_device_ioctl,
-+	.release = sdsi_device_release,
++static const struct extended_caps_platform_info dg1_info = {
++	.capabilities = dg1_capabilities,
++	.quirks = EXT_CAPS_QUIRK_NO_DVSEC,
 +};
 +
-+static int sdsi_create_misc_device(struct sdsi_priv *priv, struct device *parent)
++static bool extended_caps_allowed(u16 id)
 +{
-+	int ret;
++	int i;
 +
-+	priv->miscdev.name = kasprintf(GFP_KERNEL, "isdsi-%d", priv->socket_id);
-+	if (!priv->miscdev.name)
-+		return -ENOMEM;
++	for (i = 0; i < ARRAY_SIZE(extended_caps_allow_list); i++)
++		if (extended_caps_allow_list[i] == id)
++			return true;
 +
-+	priv->miscdev.minor = MISC_DYNAMIC_MINOR;
-+	priv->miscdev.fops = &sdsi_char_device_ops;
-+	priv->miscdev.groups = sdsi_groups;
-+	priv->miscdev.parent = parent;
-+
-+	ret = misc_register(&priv->miscdev);
-+	if (ret)
-+		kfree(priv->miscdev.name);
-+
-+	return ret;
++	return false;
 +}
 +
-+static int sdsi_map_sdsi_registers(struct device *dev, struct disc_table *disc_table,
-+				   struct resource *disc_res, struct pci_dev *pci_dev)
++static bool extended_caps_disabled(u16 id, unsigned long quirks)
 +{
-+	struct sdsi_priv *priv = dev_get_drvdata(dev);
-+	u32 access_type = FIELD_GET(DT_ACCESS_TYPE, disc_table->access_info);
-+	u32 size = FIELD_GET(DT_SIZE, disc_table->access_info);
-+	u32 tbir = FIELD_GET(DT_TBIR, disc_table->offset);
-+	u32 offset = DT_OFFSET(disc_table->offset);
-+	struct resource res = {};
++	switch (id) {
++	case EXTENDED_CAP_ID_WATCHER:
++		return !!(quirks & EXT_CAPS_QUIRK_NO_WATCHER);
 +
-+	/* Starting location of SDSi MMIO region based on access type */
-+	switch (access_type) {
-+	case ACCESS_TYPE_LOCAL:
-+		if (tbir) {
-+			dev_err(dev,
-+				"Unsupported BAR index %d for access type %d\n",
-+				tbir, access_type);
-+			return -EINVAL;
-+		}
-+
-+		/*
-+		 * For access_type LOCAL, the base address is as follows:
-+		 * base address = end of discovery region + base offset + 1
-+		 */
-+		res.start = disc_res->end + offset + 1;
-+		break;
-+
-+	case ACCESS_TYPE_BARID:
-+		res.start = pci_resource_start(pci_dev, tbir) + offset;
-+		break;
++	case EXTENDED_CAP_ID_CRASHLOG:
++		return !!(quirks & EXT_CAPS_QUIRK_NO_CRASHLOG);
 +
 +	default:
-+		dev_err(dev, "Unrecognized access_type %d\n", access_type);
++		return false;
++	}
++}
++
++struct resource *intel_ext_cap_get_resource(struct intel_extended_cap_device *intel_cap_dev,
++					    unsigned int num)
++{
++	u32 i;
++
++	for (i = 0; i < intel_cap_dev->num_resources; i++) {
++		struct resource *r = &intel_cap_dev->resource[i];
++
++		if (num-- == 0)
++			return r;
++	}
++	return NULL;
++}
++EXPORT_SYMBOL_NS(intel_ext_cap_get_resource, INTEL_EXT_CAPS);
++
++static void extended_caps_remove_aux(void *data)
++{
++	auxiliary_device_delete(data);
++	auxiliary_device_uninit(data);
++}
++
++static void extended_caps_dev_release(struct device *dev)
++{
++	struct intel_extended_cap_device *intel_cap_dev =
++			container_of(dev, struct intel_extended_cap_device, aux_dev.dev);
++
++	ida_free(&extended_caps_ida, intel_cap_dev->aux_dev.id);
++	kfree(intel_cap_dev->resource);
++	kfree(intel_cap_dev);
++}
++
++static int extended_caps_add_dev(struct pci_dev *pdev, struct extended_caps_header *header,
++				 unsigned long quirks)
++{
++	struct intel_extended_cap_device *intel_cap_dev;
++	struct auxiliary_device *aux_dev;
++	struct resource *res, *tmp;
++	int count = header->num_entries;
++	int size = header->entry_size;
++	int id = header->id;
++	char id_str[8];
++	int ret, i;
++
++	if (!extended_caps_allowed(id))
++		return -EINVAL;
++
++	if (extended_caps_disabled(id, quirks))
++		return -EINVAL;
++
++	if (!header->num_entries) {
++		dev_err(&pdev->dev, "Invalid 0 entry count for header id %d\n", id);
 +		return -EINVAL;
 +	}
 +
-+	res.end = res.start + size * sizeof(u32) - 1;
-+	res.flags = IORESOURCE_MEM;
++	if (!header->entry_size) {
++		dev_err(&pdev->dev, "Invalid 0 entry size for headerid %d\n", id);
++		return -EINVAL;
++	}
 +
-+	priv->control_addr = devm_ioremap_resource(dev, &res);
-+	if (IS_ERR(priv->control_addr))
-+		return PTR_ERR(priv->control_addr);
-+
-+	priv->mbox_addr = priv->control_addr + SDSI_SIZE_CONTROL;
-+	priv->regs_addr = priv->mbox_addr + SDSI_SIZE_MAILBOX;
-+
-+	priv->socket_id = readl(priv->regs_addr + SDSI_SOCKET_ID_OFFSET) &
-+				SDSI_SOCKET_ID;
-+
-+	priv->sdsi_enabled = !!(readq(priv->regs_addr + SDSI_ENABLED_FEATURES_OFFSET) &
-+				SDSI_ENABLED);
-+	return 0;
-+}
-+
-+static void sdsi_miscdev_remove(void *data)
-+{
-+	struct sdsi_priv *priv = data;
-+
-+	kfree(priv->miscdev.name);
-+	kfree(priv);
-+	priv = NULL;
-+}
-+
-+static int sdsi_probe(struct auxiliary_device *adev, const struct auxiliary_device_id *id)
-+{
-+	struct intel_extended_cap_device *intel_cap_dev =
-+			container_of(adev, struct intel_extended_cap_device, aux_dev);
-+	struct disc_table disc_table;
-+	struct resource *disc_res;
-+	void __iomem *disc_addr;
-+	struct sdsi_priv *priv;
-+	int ret;
-+
-+	/* Get the SDSi discovery table */
-+	disc_res = intel_ext_cap_get_resource(intel_cap_dev, 0);
-+	if (!disc_res)
-+		return -ENODEV;
-+
-+	disc_addr = devm_ioremap_resource(&adev->dev, disc_res);
-+	if (IS_ERR(disc_addr))
-+		return PTR_ERR(disc_addr);
-+
-+	memcpy_fromio(&disc_table, disc_addr, DISC_TABLE_SIZE);
-+
-+	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-+	if (!priv)
++	intel_cap_dev = kzalloc(sizeof(*intel_cap_dev), GFP_KERNEL);
++	if (!intel_cap_dev)
 +		return -ENOMEM;
 +
-+	dev_set_drvdata(&adev->dev, priv);
++	res = kcalloc(count, sizeof(*res), GFP_KERNEL);
++	if (!res) {
++		kfree(intel_cap_dev);
++		return -ENOMEM;
++	}
 +
-+	priv->guid = disc_table.guid;
++	if (quirks & EXT_CAPS_QUIRK_TABLE_SHIFT)
++		header->offset >>= 3;
 +
-+	/* Map the SDSi mailbox registers */
-+	ret = sdsi_map_sdsi_registers(&adev->dev, &disc_table, disc_res, intel_cap_dev->pcidev);
-+	if (ret) {
-+		kfree(priv);
++	/*
++	 * The DVSEC/VSEC contains the starting offset and count for a block of
++	 * discovery tables. Create a resource list of these tables to the
++	 * auxiliary device driver.
++	 */
++	for (i = 0, tmp = res; i < count; i++, tmp++) {
++		tmp->start = pdev->resource[header->tbir].start +
++			     header->offset + i * (size * sizeof(u32));
++		tmp->end = tmp->start + (size * sizeof(u32)) - 1;
++		tmp->flags = IORESOURCE_MEM;
++	}
++
++	intel_cap_dev->header = header;
++	intel_cap_dev->pcidev = pdev;
++	intel_cap_dev->resource = res;
++	intel_cap_dev->num_resources = count;
++	intel_cap_dev->quirks = quirks;
++
++	snprintf(id_str, sizeof(id_str), "%d", id);
++
++	aux_dev = &intel_cap_dev->aux_dev;
++	aux_dev->name = id_str;
++	aux_dev->dev.parent = &pdev->dev;
++	aux_dev->dev.release = extended_caps_dev_release;
++
++	ret = ida_alloc(&extended_caps_ida, GFP_KERNEL);
++	if (ret < 0) {
++		kfree(res);
++		kfree(intel_cap_dev);
++		return ret;
++	}
++	aux_dev->id = ret;
++
++	ret = auxiliary_device_init(aux_dev);
++	if (ret < 0) {
++		ida_free(&extended_caps_ida, aux_dev->id);
++		kfree(res);
++		kfree(intel_cap_dev);
 +		return ret;
 +	}
 +
-+	ret = sdsi_create_misc_device(priv, &adev->dev);
++	ret = auxiliary_device_add(aux_dev);
 +	if (ret) {
-+		kfree(priv);
++		auxiliary_device_uninit(aux_dev);
++		ida_free(&extended_caps_ida, aux_dev->id);
++		kfree(res);
++		kfree(intel_cap_dev);
 +		return ret;
 +	}
 +
-+	ret = devm_add_action_or_reset(priv->miscdev.this_device, sdsi_miscdev_remove, priv);
++	return devm_add_action_or_reset(&pdev->dev, extended_caps_remove_aux, aux_dev);
++}
++
++static bool extended_caps_walk_header(struct pci_dev *pdev, unsigned long quirks,
++				      struct extended_caps_header **header)
++{
++	bool have_devices = false;
++	int ret;
++
++	while (*header) {
++		ret = extended_caps_add_dev(pdev, *header, quirks);
++		if (ret)
++			dev_warn(&pdev->dev,
++				 "Failed to add device for DVSEC id %d\n",
++				 (*header)->id);
++		else
++			have_devices = true;
++
++		++header;
++	}
++
++	return have_devices;
++}
++
++static bool extended_caps_walk_dvsec(struct pci_dev *pdev, unsigned long quirks)
++{
++	bool have_devices = false;
++	int pos = 0;
++
++	do {
++		struct extended_caps_header header;
++		u32 table, hdr;
++		u16 vid;
++		int ret;
++
++		pos = pci_find_next_ext_capability(pdev, pos, PCI_EXT_CAP_ID_DVSEC);
++		if (!pos)
++			break;
++
++		pci_read_config_dword(pdev, pos + PCI_DVSEC_HEADER1, &hdr);
++		vid = PCI_DVSEC_HEADER1_VID(hdr);
++		if (vid != PCI_VENDOR_ID_INTEL)
++			continue;
++
++		/* Support only revision 1 */
++		header.rev = PCI_DVSEC_HEADER1_REV(hdr);
++		if (header.rev != 1) {
++			dev_warn(&pdev->dev, "Unsupported DVSEC revision %d\n",
++				 header.rev);
++			continue;
++		}
++
++		header.length = PCI_DVSEC_HEADER1_LEN(hdr);
++
++		pci_read_config_byte(pdev, pos + INTEL_DVSEC_ENTRIES,
++				     &header.num_entries);
++		pci_read_config_byte(pdev, pos + INTEL_DVSEC_SIZE,
++				     &header.entry_size);
++		pci_read_config_dword(pdev, pos + INTEL_DVSEC_TABLE,
++				      &table);
++
++		header.tbir = INTEL_DVSEC_TABLE_BAR(table);
++		header.offset = INTEL_DVSEC_TABLE_OFFSET(table);
++
++		pci_read_config_dword(pdev, pos + PCI_DVSEC_HEADER2, &hdr);
++		header.id = PCI_DVSEC_HEADER2_ID(hdr);
++
++		ret = extended_caps_add_dev(pdev, &header, quirks);
++		if (ret)
++			continue;
++
++		have_devices = true;
++	} while (true);
++
++	return have_devices;
++}
++
++static int extended_caps_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	struct extended_caps_platform_info *info;
++	bool have_devices = false;
++	unsigned long quirks = 0;
++	int ret;
++
++	ret = pcim_enable_device(pdev);
 +	if (ret)
-+		goto deregister_misc;
++		return ret;
 +
-+	mutex_init(&priv->mb_lock);
-+	mutex_init(&priv->akc_lock);
-+	priv->dev_present = true;
++	info = (struct extended_caps_platform_info *)id->driver_data;
++	if (info)
++		quirks = info->quirks;
++
++	have_devices |= extended_caps_walk_dvsec(pdev, quirks);
++
++	if (info && (info->quirks & EXT_CAPS_QUIRK_NO_DVSEC))
++		have_devices |= extended_caps_walk_header(pdev, quirks, info->capabilities);
++
++	if (!have_devices)
++		return -ENODEV;
 +
 +	return 0;
-+
-+deregister_misc:
-+	misc_deregister(&priv->miscdev);
-+
-+	return ret;
 +}
 +
-+static void sdsi_remove(struct auxiliary_device *adev)
++static void extended_caps_pci_remove(struct pci_dev *pdev)
 +{
-+	struct sdsi_priv *priv = dev_get_drvdata(&adev->dev);
-+
-+	priv->dev_present = false;
-+	misc_deregister(&priv->miscdev);
 +}
 +
-+static const struct auxiliary_device_id sdsi_aux_id_table[] = {
-+	{ .name = "intel_extended_caps.65", },
-+	{},
++#define PCI_DEVICE_ID_INTEL_EXT_CAPS_ADL	0x467d
++#define PCI_DEVICE_ID_INTEL_EXT_CAPS_DG1	0x490e
++#define PCI_DEVICE_ID_INTEL_EXT_CAPS_OOBMSM	0x09a7
++#define PCI_DEVICE_ID_INTEL_EXT_CAPS_TGL	0x9a0d
++static const struct pci_device_id extended_caps_pci_ids[] = {
++	{ PCI_DEVICE_DATA(INTEL, EXT_CAPS_ADL, &tgl_info) },
++	{ PCI_DEVICE_DATA(INTEL, EXT_CAPS_DG1, &dg1_info) },
++	{ PCI_DEVICE_DATA(INTEL, EXT_CAPS_OOBMSM, NULL) },
++	{ PCI_DEVICE_DATA(INTEL, EXT_CAPS_TGL, &tgl_info) },
++	{ }
 +};
-+MODULE_DEVICE_TABLE(auxiliary, sdsi_aux_id_table);
++MODULE_DEVICE_TABLE(pci, extended_caps_pci_ids);
 +
-+static struct auxiliary_driver sdsi_aux_driver = {
-+	.id_table	= sdsi_aux_id_table,
-+	.remove		= sdsi_remove,
-+	.probe		= sdsi_probe,
++static struct pci_driver extended_caps_pci_driver = {
++	.name = "intel_extended_caps",
++	.id_table = extended_caps_pci_ids,
++	.probe = extended_caps_pci_probe,
++	.remove = extended_caps_pci_remove,
 +};
-+
-+static int __init sdsi_aux_init(void)
-+{
-+	return auxiliary_driver_register(&sdsi_aux_driver);
-+}
-+module_init(sdsi_aux_init);
-+
-+static void __exit sdsi_aux_exit(void)
-+{
-+	auxiliary_driver_unregister(&sdsi_aux_driver);
-+}
-+module_exit(sdsi_aux_exit);
++module_pci_driver(extended_caps_pci_driver);
 +
 +MODULE_AUTHOR("David E. Box <david.e.box@linux.intel.com>");
-+MODULE_DESCRIPTION("Intel Software Defined Silicon driver");
++MODULE_DESCRIPTION("Intel Extended Capabilities auxiliary bus driver");
 +MODULE_LICENSE("GPL v2");
-+MODULE_IMPORT_NS(INTEL_EXT_CAPS);
-diff --git a/include/uapi/linux/sdsi_if.h b/include/uapi/linux/sdsi_if.h
+diff --git a/drivers/platform/x86/intel/extended_caps.h b/drivers/platform/x86/intel/extended_caps.h
 new file mode 100644
-index 000000000000..e56fc49fabaf
+index 000000000000..952e7150f308
 --- /dev/null
-+++ b/include/uapi/linux/sdsi_if.h
-@@ -0,0 +1,47 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * Intel Software Defined Silicon: OS to hardware Interface
-+ * Copyright (c) 2021, Intel Corporation.
-+ * All rights reserved.
-+ *
-+ * Author: "David E. Box" <david.e.box@linux.intel.com>
-+ */
++++ b/drivers/platform/x86/intel/extended_caps.h
+@@ -0,0 +1,42 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _EXTENDED_CAPS_H
++#define _EXTENDED_CAPS_H
 +
-+#ifndef __SDSI_IF_H
-+#define __SDSI_IF_H
++#include <linux/auxiliary_bus.h>
 +
-+#include <linux/ioctl.h>
-+#include <linux/types.h>
-+
-+/**
-+ * struct sdsi_if_sdsi_state - Read current SDSi State Certificate
-+ * @size:	size of the certificate
-+ * @data:	SDSi State Certificate
-+ *
-+ * Used to return output of ioctl SDSI_IF_READ_STATE. This command is used to
-+ * read the current CPU configuration state
-+ */
-+struct sdsi_if_sdsi_state {
-+	__u32	size;
-+	__u8	data[4096];
++struct extended_caps_header {
++	u8	rev;
++	u16	length;
++	u16	id;
++	u8	num_entries;
++	u8	entry_size;
++	u8	tbir;
++	u32	offset;
 +};
 +
-+/**
-+ * struct sdsi_if_provision_payload - Provision a certificate or activation payload
-+ * @size:	size of the certificate of activation payload
-+ * @data:	certificate or activation payload
-+ *
-+ * Used with ioctl command SDSI_IF_IOW_PROVISION_AKC and
-+ * SDSI_IF_IOW_PROVISION_CAP to provision a CPU with an Authentication
-+ * Key Certificate or Capability Activation Payload respectively.
-+ */
-+struct sdsi_if_provision_payload {
-+	__u32	size;
-+	__u8	data[4096];
++enum extended_caps_quirks {
++	/* Watcher capability not supported */
++	EXT_CAPS_QUIRK_NO_WATCHER	= BIT(0),
++
++	/* Crashlog capability not supported */
++	EXT_CAPS_QUIRK_NO_CRASHLOG	= BIT(1),
++
++	/* Use shift instead of mask to read discovery table offset */
++	EXT_CAPS_QUIRK_TABLE_SHIFT	= BIT(2),
++
++	/* DVSEC not present (provided in driver data) */
++	EXT_CAPS_QUIRK_NO_DVSEC		= BIT(3),
 +};
 +
-+#define SDSI_IF_MAGIC		0xDF
-+#define SDSI_IF_READ_STATE	_IOR(SDSI_IF_MAGIC, 0, struct sdsi_if_sdsi_state *)
-+#define SDSI_IF_PROVISION_AKC	_IOW(SDSI_IF_MAGIC, 1, struct sdsi_if_provision_payload *)
-+#define SDSI_IF_PROVISION_CAP	_IOW(SDSI_IF_MAGIC, 2, struct sdsi_if_provision_payload *)
++struct intel_extended_cap_device {
++	struct auxiliary_device aux_dev;
++	struct extended_caps_header *header;
++	struct pci_dev *pcidev;
++	struct resource *resource;
++	unsigned long quirks;
++	int num_resources;
++};
++
++struct resource *intel_ext_cap_get_resource(struct intel_extended_cap_device *intel_cap_dev,
++					    unsigned int num);
 +#endif
+diff --git a/drivers/platform/x86/intel/pmt/Kconfig b/drivers/platform/x86/intel/pmt/Kconfig
+index d630f883a717..8eaedd242dba 100644
+--- a/drivers/platform/x86/intel/pmt/Kconfig
++++ b/drivers/platform/x86/intel/pmt/Kconfig
+@@ -17,7 +17,7 @@ config INTEL_PMT_CLASS
+ 
+ config INTEL_PMT_TELEMETRY
+ 	tristate "Intel Platform Monitoring Technology (PMT) Telemetry driver"
+-	depends on MFD_INTEL_PMT
++	depends on INTEL_EXTENDED_CAPS
+ 	select INTEL_PMT_CLASS
+ 	help
+ 	  The Intel Platform Monitory Technology (PMT) Telemetry driver provides
+@@ -29,7 +29,7 @@ config INTEL_PMT_TELEMETRY
+ 
+ config INTEL_PMT_CRASHLOG
+ 	tristate "Intel Platform Monitoring Technology (PMT) Crashlog driver"
+-	depends on MFD_INTEL_PMT
++	depends on INTEL_EXTENDED_CAPS
+ 	select INTEL_PMT_CLASS
+ 	help
+ 	  The Intel Platform Monitoring Technology (PMT) crashlog driver provides
+diff --git a/drivers/platform/x86/intel/pmt/class.c b/drivers/platform/x86/intel/pmt/class.c
+index 659b1073033c..1414170b0aeb 100644
+--- a/drivers/platform/x86/intel/pmt/class.c
++++ b/drivers/platform/x86/intel/pmt/class.c
+@@ -14,6 +14,7 @@
+ #include <linux/pci.h>
+ 
+ #include "class.h"
++#include "../extended_caps.h"
+ 
+ #define PMT_XA_START		0
+ #define PMT_XA_MAX		INT_MAX
+@@ -281,31 +282,31 @@ static int intel_pmt_dev_register(struct intel_pmt_entry *entry,
+ 	return ret;
+ }
+ 
+-int intel_pmt_dev_create(struct intel_pmt_entry *entry,
+-			 struct intel_pmt_namespace *ns,
+-			 struct platform_device *pdev, int idx)
++int intel_pmt_dev_create(struct intel_pmt_entry *entry, struct intel_pmt_namespace *ns,
++			 struct intel_extended_cap_device *intel_cap_dev, int idx)
+ {
++	struct device *dev = &intel_cap_dev->aux_dev.dev;
+ 	struct intel_pmt_header header;
+ 	struct resource	*disc_res;
+ 	int ret = -ENODEV;
+ 
+-	disc_res = platform_get_resource(pdev, IORESOURCE_MEM, idx);
++	disc_res = intel_ext_cap_get_resource(intel_cap_dev, idx);
+ 	if (!disc_res)
+ 		return ret;
+ 
+-	entry->disc_table = devm_platform_ioremap_resource(pdev, idx);
++	entry->disc_table = devm_ioremap_resource(dev, disc_res);
+ 	if (IS_ERR(entry->disc_table))
+ 		return PTR_ERR(entry->disc_table);
+ 
+-	ret = ns->pmt_header_decode(entry, &header, &pdev->dev);
++	ret = ns->pmt_header_decode(entry, &header, dev);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = intel_pmt_populate_entry(entry, &header, &pdev->dev, disc_res);
++	ret = intel_pmt_populate_entry(entry, &header, dev, disc_res);
+ 	if (ret)
+ 		return ret;
+ 
+-	return intel_pmt_dev_register(entry, ns, &pdev->dev);
++	return intel_pmt_dev_register(entry, ns, dev);
+ 
+ }
+ EXPORT_SYMBOL_GPL(intel_pmt_dev_create);
+@@ -342,3 +343,4 @@ module_exit(pmt_class_exit);
+ MODULE_AUTHOR("Alexander Duyck <alexander.h.duyck@linux.intel.com>");
+ MODULE_DESCRIPTION("Intel PMT Class driver");
+ MODULE_LICENSE("GPL v2");
++MODULE_IMPORT_NS(INTEL_EXT_CAPS);
+diff --git a/drivers/platform/x86/intel/pmt/class.h b/drivers/platform/x86/intel/pmt/class.h
+index 1337019c2873..b2a5e459a7ed 100644
+--- a/drivers/platform/x86/intel/pmt/class.h
++++ b/drivers/platform/x86/intel/pmt/class.h
+@@ -2,13 +2,14 @@
+ #ifndef _INTEL_PMT_CLASS_H
+ #define _INTEL_PMT_CLASS_H
+ 
+-#include <linux/platform_device.h>
+ #include <linux/xarray.h>
+ #include <linux/types.h>
+ #include <linux/bits.h>
+ #include <linux/err.h>
+ #include <linux/io.h>
+ 
++#include "../extended_caps.h"
++
+ /* PMT access types */
+ #define ACCESS_BARID		2
+ #define ACCESS_LOCAL		3
+@@ -47,7 +48,7 @@ struct intel_pmt_namespace {
+ bool intel_pmt_is_early_client_hw(struct device *dev);
+ int intel_pmt_dev_create(struct intel_pmt_entry *entry,
+ 			 struct intel_pmt_namespace *ns,
+-			 struct platform_device *pdev, int idx);
++			 struct intel_extended_cap_device *dev, int idx);
+ void intel_pmt_dev_destroy(struct intel_pmt_entry *entry,
+ 			   struct intel_pmt_namespace *ns);
+ #endif
+diff --git a/drivers/platform/x86/intel/pmt/crashlog.c b/drivers/platform/x86/intel/pmt/crashlog.c
+index 1c1021f04d3c..1565f9e9f836 100644
+--- a/drivers/platform/x86/intel/pmt/crashlog.c
++++ b/drivers/platform/x86/intel/pmt/crashlog.c
+@@ -8,6 +8,7 @@
+  * Author: "Alexander Duyck" <alexander.h.duyck@linux.intel.com>
+  */
+ 
++#include <linux/auxiliary_bus.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -15,10 +16,9 @@
+ #include <linux/uaccess.h>
+ #include <linux/overflow.h>
+ 
++#include "../extended_caps.h"
+ #include "class.h"
+ 
+-#define DRV_NAME		"pmt_crashlog"
+-
+ /* Crashlog discovery header types */
+ #define CRASH_TYPE_OOBMSM	1
+ 
+@@ -257,34 +257,35 @@ static struct intel_pmt_namespace pmt_crashlog_ns = {
+ /*
+  * initialization
+  */
+-static int pmt_crashlog_remove(struct platform_device *pdev)
++static void pmt_crashlog_remove(struct auxiliary_device *adev)
+ {
+-	struct pmt_crashlog_priv *priv = platform_get_drvdata(pdev);
++	struct pmt_crashlog_priv *priv = dev_get_drvdata(&adev->dev);
+ 	int i;
+ 
+ 	for (i = 0; i < priv->num_entries; i++)
+ 		intel_pmt_dev_destroy(&priv->entry[i].entry, &pmt_crashlog_ns);
+-
+-	return 0;
+ }
+ 
+-static int pmt_crashlog_probe(struct platform_device *pdev)
++static int pmt_crashlog_probe(struct auxiliary_device *adev,
++			      const struct auxiliary_device_id *id)
+ {
++	struct intel_extended_cap_device *intel_cap_dev =
++			container_of(adev, struct intel_extended_cap_device, aux_dev);
+ 	struct pmt_crashlog_priv *priv;
+ 	size_t size;
+ 	int i, ret;
+ 
+-	size = struct_size(priv, entry, pdev->num_resources);
+-	priv = devm_kzalloc(&pdev->dev, size, GFP_KERNEL);
++	size = struct_size(priv, entry, intel_cap_dev->num_resources);
++	priv = devm_kzalloc(&adev->dev, size, GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+ 
+-	platform_set_drvdata(pdev, priv);
++	dev_set_drvdata(&adev->dev, priv);
+ 
+-	for (i = 0; i < pdev->num_resources; i++) {
++	for (i = 0; i < intel_cap_dev->num_resources; i++) {
+ 		struct intel_pmt_entry *entry = &priv->entry[i].entry;
+ 
+-		ret = intel_pmt_dev_create(entry, &pmt_crashlog_ns, pdev, i);
++		ret = intel_pmt_dev_create(entry, &pmt_crashlog_ns, intel_cap_dev, i);
+ 		if (ret < 0)
+ 			goto abort_probe;
+ 		if (ret)
+@@ -295,26 +296,29 @@ static int pmt_crashlog_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ abort_probe:
+-	pmt_crashlog_remove(pdev);
++	pmt_crashlog_remove(adev);
+ 	return ret;
+ }
+ 
+-static struct platform_driver pmt_crashlog_driver = {
+-	.driver = {
+-		.name   = DRV_NAME,
+-	},
++static const struct auxiliary_device_id pmt_crashlog_aux_id_table[] = {
++	{ .name = "intel_extended_caps.4", },
++	{},
++};
++MODULE_DEVICE_TABLE(auxiliary, pmt_crashlog_aux_id_table);
++
++static struct auxiliary_driver pmt_crashlog_aux_driver = {
+ 	.remove = pmt_crashlog_remove,
+ 	.probe  = pmt_crashlog_probe,
+ };
+ 
+ static int __init pmt_crashlog_init(void)
+ {
+-	return platform_driver_register(&pmt_crashlog_driver);
++	return auxiliary_driver_register(&pmt_crashlog_aux_driver);
+ }
+ 
+ static void __exit pmt_crashlog_exit(void)
+ {
+-	platform_driver_unregister(&pmt_crashlog_driver);
++	auxiliary_driver_unregister(&pmt_crashlog_aux_driver);
+ 	xa_destroy(&crashlog_array);
+ }
+ 
+@@ -323,5 +327,4 @@ module_exit(pmt_crashlog_exit);
+ 
+ MODULE_AUTHOR("Alexander Duyck <alexander.h.duyck@linux.intel.com>");
+ MODULE_DESCRIPTION("Intel PMT Crashlog driver");
+-MODULE_ALIAS("platform:" DRV_NAME);
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/platform/x86/intel/pmt/telemetry.c b/drivers/platform/x86/intel/pmt/telemetry.c
+index 38d52651c572..2f6a10772cbe 100644
+--- a/drivers/platform/x86/intel/pmt/telemetry.c
++++ b/drivers/platform/x86/intel/pmt/telemetry.c
+@@ -8,6 +8,7 @@
+  * Author: "David E. Box" <david.e.box@linux.intel.com>
+  */
+ 
++#include <linux/auxiliary_bus.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -15,10 +16,9 @@
+ #include <linux/uaccess.h>
+ #include <linux/overflow.h>
+ 
++#include "../extended_caps.h"
+ #include "class.h"
+ 
+-#define TELEM_DEV_NAME		"pmt_telemetry"
+-
+ #define TELEM_SIZE_OFFSET	0x0
+ #define TELEM_GUID_OFFSET	0x4
+ #define TELEM_BASE_OFFSET	0x8
+@@ -79,34 +79,34 @@ static struct intel_pmt_namespace pmt_telem_ns = {
+ 	.pmt_header_decode = pmt_telem_header_decode,
+ };
+ 
+-static int pmt_telem_remove(struct platform_device *pdev)
++static void pmt_telem_remove(struct auxiliary_device *adev)
+ {
+-	struct pmt_telem_priv *priv = platform_get_drvdata(pdev);
++	struct pmt_telem_priv *priv = dev_get_drvdata(&adev->dev);
+ 	int i;
+ 
+ 	for (i = 0; i < priv->num_entries; i++)
+ 		intel_pmt_dev_destroy(&priv->entry[i], &pmt_telem_ns);
+-
+-	return 0;
+ }
+ 
+-static int pmt_telem_probe(struct platform_device *pdev)
++static int pmt_telem_probe(struct auxiliary_device *adev, const struct auxiliary_device_id *id)
+ {
++	struct intel_extended_cap_device *intel_cap_dev =
++			container_of(adev, struct intel_extended_cap_device, aux_dev);
+ 	struct pmt_telem_priv *priv;
+ 	size_t size;
+ 	int i, ret;
+ 
+-	size = struct_size(priv, entry, pdev->num_resources);
+-	priv = devm_kzalloc(&pdev->dev, size, GFP_KERNEL);
++	size = struct_size(priv, entry, intel_cap_dev->num_resources);
++	priv = devm_kzalloc(&adev->dev, size, GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+ 
+-	platform_set_drvdata(pdev, priv);
++	dev_set_drvdata(&adev->dev, priv);
+ 
+-	for (i = 0; i < pdev->num_resources; i++) {
++	for (i = 0; i < intel_cap_dev->num_resources; i++) {
+ 		struct intel_pmt_entry *entry = &priv->entry[i];
+ 
+-		ret = intel_pmt_dev_create(entry, &pmt_telem_ns, pdev, i);
++		ret = intel_pmt_dev_create(entry, &pmt_telem_ns, intel_cap_dev, i);
+ 		if (ret < 0)
+ 			goto abort_probe;
+ 		if (ret)
+@@ -117,32 +117,35 @@ static int pmt_telem_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ abort_probe:
+-	pmt_telem_remove(pdev);
++	pmt_telem_remove(adev);
+ 	return ret;
+ }
+ 
+-static struct platform_driver pmt_telem_driver = {
+-	.driver = {
+-		.name   = TELEM_DEV_NAME,
+-	},
+-	.remove = pmt_telem_remove,
+-	.probe  = pmt_telem_probe,
++static const struct auxiliary_device_id pmt_telem_aux_id_table[] = {
++	{ .name = "intel_extended_caps.2", },
++	{},
++};
++MODULE_DEVICE_TABLE(auxiliary, pmt_telem_aux_id_table);
++
++static struct auxiliary_driver pmt_telem_aux_driver = {
++	.id_table	= pmt_telem_aux_id_table,
++	.remove		= pmt_telem_remove,
++	.probe		= pmt_telem_probe,
+ };
+ 
+ static int __init pmt_telem_init(void)
+ {
+-	return platform_driver_register(&pmt_telem_driver);
++	return auxiliary_driver_register(&pmt_telem_aux_driver);
+ }
+ module_init(pmt_telem_init);
+ 
+ static void __exit pmt_telem_exit(void)
+ {
+-	platform_driver_unregister(&pmt_telem_driver);
++	auxiliary_driver_unregister(&pmt_telem_aux_driver);
+ 	xa_destroy(&telem_array);
+ }
+ module_exit(pmt_telem_exit);
+ 
+ MODULE_AUTHOR("David E. Box <david.e.box@linux.intel.com>");
+ MODULE_DESCRIPTION("Intel PMT Telemetry driver");
+-MODULE_ALIAS("platform:" TELEM_DEV_NAME);
+ MODULE_LICENSE("GPL v2");
 -- 
 2.25.1
 
