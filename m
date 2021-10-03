@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46CEFC43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69012C43219
 	for <linux-pci@archiver.kernel.org>; Sun,  3 Oct 2021 16:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16B1D61B00
+	by mail.kernel.org (Postfix) with ESMTP id 4C94061B00
 	for <linux-pci@archiver.kernel.org>; Sun,  3 Oct 2021 16:09:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231171AbhJCQLX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 3 Oct 2021 12:11:23 -0400
-Received: from elvis.franken.de ([193.175.24.41]:57376 "EHLO elvis.franken.de"
+        id S231187AbhJCQLY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 3 Oct 2021 12:11:24 -0400
+Received: from elvis.franken.de ([193.175.24.41]:57378 "EHLO elvis.franken.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230489AbhJCQLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 3 Oct 2021 12:11:22 -0400
+        id S230495AbhJCQLX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 3 Oct 2021 12:11:23 -0400
 Received: from uucp (helo=alpha)
         by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
-        id 1mX43M-0005aq-00; Sun, 03 Oct 2021 18:09:28 +0200
+        id 1mX43M-0005aq-02; Sun, 03 Oct 2021 18:09:28 +0200
 Received: by alpha.franken.de (Postfix, from userid 1000)
-        id 3F223C1D2A; Sun,  3 Oct 2021 18:07:05 +0200 (CEST)
-Date:   Sun, 3 Oct 2021 18:07:05 +0200
+        id 0704DC1D2B; Sun,  3 Oct 2021 18:08:04 +0200 (CEST)
+Date:   Sun, 3 Oct 2021 18:08:03 +0200
 From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 To:     Sergio Paracuellos <sergio.paracuellos@gmail.com>
 Cc:     robh@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
@@ -27,47 +27,67 @@ Cc:     robh@kernel.org, arnd@arndb.de, catalin.marinas@arm.com,
         gregkh@linuxfoundation.org, linux-mips@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-staging@lists.linux.dev,
         neil@brown.name, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] Revert "MIPS: ralink: don't define PC_IOBASE but
- increase IO_SPACE_LIMIT"
-Message-ID: <20211003160705.GA4984@alpha.franken.de>
+Subject: Re: [PATCH v3 5/6] MIPS: implement architecture-specific
+ 'pci_remap_iospace()'
+Message-ID: <20211003160803.GC4984@alpha.franken.de>
 References: <20210925203224.10419-1-sergio.paracuellos@gmail.com>
- <20210925203224.10419-2-sergio.paracuellos@gmail.com>
+ <20210925203224.10419-6-sergio.paracuellos@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210925203224.10419-2-sergio.paracuellos@gmail.com>
+In-Reply-To: <20210925203224.10419-6-sergio.paracuellos@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Sep 25, 2021 at 10:32:19PM +0200, Sergio Paracuellos wrote:
-> This reverts commit 159697474db41732ef3b6c2e8d9395f09d1f659e.
+On Sat, Sep 25, 2021 at 10:32:23PM +0200, Sergio Paracuellos wrote:
+> To make PCI IO work we need to properly virtually map IO cpu physical address
+> and set this virtual address as the address of the first PCI IO port which
+> is set using function 'set_io_port_base()'.
 > 
-> There is no real need to increase IO_SPACE_LIMIT if PCI_IOBASE
-> is properly set to 'mips_io_port_base'. Hence revert this commit
-> first before doing anything else.
-> 
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 > Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
 > ---
->  arch/mips/include/asm/mach-ralink/spaces.h | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  arch/mips/include/asm/pci.h |  2 ++
+>  arch/mips/pci/pci-generic.c | 14 ++++++++++++++
+>  2 files changed, 16 insertions(+)
 > 
-> diff --git a/arch/mips/include/asm/mach-ralink/spaces.h b/arch/mips/include/asm/mach-ralink/spaces.h
-> index 31a3525213cf..87d085c9ad61 100644
-> --- a/arch/mips/include/asm/mach-ralink/spaces.h
-> +++ b/arch/mips/include/asm/mach-ralink/spaces.h
-> @@ -2,7 +2,9 @@
->  #ifndef __ASM_MACH_RALINK_SPACES_H_
->  #define __ASM_MACH_RALINK_SPACES_H_
+> diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+> index 9ffc8192adae..35270984a5f0 100644
+> --- a/arch/mips/include/asm/pci.h
+> +++ b/arch/mips/include/asm/pci.h
+> @@ -20,6 +20,8 @@
+>  #include <linux/list.h>
+>  #include <linux/of.h>
 >  
-> -#define IO_SPACE_LIMIT	0x1fffffff
-> +#define PCI_IOBASE	_AC(0xa0000000, UL)
-> +#define PCI_IOSIZE	SZ_16M
-> +#define IO_SPACE_LIMIT	(PCI_IOSIZE - 1)
+> +#define pci_remap_iospace pci_remap_iospace
+> +
+>  #ifdef CONFIG_PCI_DRIVERS_LEGACY
 >  
->  #include <asm/mach-generic/spaces.h>
->  #endif
+>  /*
+> diff --git a/arch/mips/pci/pci-generic.c b/arch/mips/pci/pci-generic.c
+> index 95b00017886c..18eb8a453a86 100644
+> --- a/arch/mips/pci/pci-generic.c
+> +++ b/arch/mips/pci/pci-generic.c
+> @@ -46,3 +46,17 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+>  {
+>  	pci_read_bridge_bases(bus);
+>  }
+> +
+> +int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> +{
+> +	unsigned long vaddr;
+> +
+> +	if (res->start != 0) {
+> +		WARN_ONCE(1, "resource start address is not zero\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	vaddr = (unsigned long)ioremap(phys_addr, resource_size(res));
+> +	set_io_port_base(vaddr);
+> +	return 0;
+> +}
 
 Acked-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 
