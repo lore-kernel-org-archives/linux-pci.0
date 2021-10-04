@@ -2,105 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9376C433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 05:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBDF1C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 06:37:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3960611C7
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 05:16:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C93F36120F
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 06:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232496AbhJDFSe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Oct 2021 01:18:34 -0400
-Received: from mga17.intel.com ([192.55.52.151]:17601 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232388AbhJDFSd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Oct 2021 01:18:33 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10126"; a="206099171"
-X-IronPort-AV: E=Sophos;i="5.85,344,1624345200"; 
-   d="scan'208";a="206099171"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2021 22:16:45 -0700
-X-IronPort-AV: E=Sophos;i="5.85,344,1624345200"; 
-   d="scan'208";a="566826043"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Oct 2021 22:16:39 -0700
-Received: by lahna (sSMTP sendmail emulation); Mon, 04 Oct 2021 08:16:36 +0300
-Date:   Mon, 4 Oct 2021 08:16:36 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Kuppuswamy, Sathyanarayanan" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Borislav Petkov <bp@alien8.de>, X86 ML <x86@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Jason Wang <jasowang@redhat.com>,
-        Andi Kleen <ak@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v2 4/6] virtio: Initialize authorized attribute for
- confidential guest
-Message-ID: <YVqONA0vhl0/H3QE@lahna>
-References: <CAPcyv4hP6mtzKS-CVb-aKf-kYuiLM771PMxN2zeBEfoj6NbctA@mail.gmail.com>
- <6d1e2701-5095-d110-3b0a-2697abd0c489@linux.intel.com>
- <YVXWaF73gcrlvpnf@kroah.com>
- <1cfdce51-6bb4-f7af-a86b-5854b6737253@linux.intel.com>
- <YVaywQLAboZ6b36V@kroah.com>
- <CAPcyv4gqs=KuGyxFR61QWqF6HKrRg851roCGUqrq585+s2Cm=w@mail.gmail.com>
- <20211001164533.GC505557@rowland.harvard.edu>
- <CAPcyv4i__reKFRP1KjWUov_W5jBQN9_vbUbKRL_V7KMM3oPuuQ@mail.gmail.com>
- <20211001190048.GA512418@rowland.harvard.edu>
- <CAPcyv4hYL51DcBuSuyMRFo5Jcc=zLd=Ugo+H_2saELcZ5AJBeQ@mail.gmail.com>
+        id S232585AbhJDGjH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Oct 2021 02:39:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52966 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232633AbhJDGjG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Oct 2021 02:39:06 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03190C061783
+        for <linux-pci@vger.kernel.org>; Sun,  3 Oct 2021 23:37:17 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id g14so13660566pfm.1
+        for <linux-pci@vger.kernel.org>; Sun, 03 Oct 2021 23:37:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=bo1AfZo2B0G6Qf7w5hIV2g2F/2qOqHeUUj32w/8pRyc=;
+        b=J3FCPjvQ91Zm759hElGSstImuWo8dJLPQDskX+6fCdq3JReSGPzaXKZXpW3MNeqWKX
+         16MDjPnmnbrgXjqL/fV39uX8nNjZ+UTYivCHqN0/2e2fXYC0YLiphn0Mb+eM+nRoWBW0
+         /bUNr/naX+9Fwm2wqSRwg3bppRTkGdPjl534m7oTPeAvljymvWRUKWNDjK0g0ZD9AamN
+         Z0rQ3+Gwahr0TY32w0/VpP3EcpnghufANXZ8IGhyjX4uCskP7buX//DwX8cPD9k8O9Cd
+         9cfsBrPXeGAtXX1m6acV0+nXxcLM5ZRB/vXjfUF0F4sNbxUfJB6Mq+vC54JKfXmGRfbR
+         W93w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=bo1AfZo2B0G6Qf7w5hIV2g2F/2qOqHeUUj32w/8pRyc=;
+        b=WIQnxsskuMFE6wkEHxyUXjteZVYPBFkpAabpLpfGCHlPVAsCmd+sWzBI3wlxIx9sPN
+         4FTWMf+Yz0zu9CeFapsBlSUvmH21r5li7Zym+mxX3togrpfA7UYLH0vlWDcamcZ7zggl
+         2G5neRCnIUZp1W7QxymXxZmEJCv9albH1dxw0qfB/S8pp82DCS2ylz86Q/vIIGsPQ3Xj
+         IE+x4llzGK9iOHFkv1ZcguY08HJHXe6RzhrYz6aKwAp3sytmbmbrsziUPEJv4LGKo8tt
+         MXiDKlUEIsxwVH6LtfY55sCx8llPSfQflpzekYpPVzXS8M/TinOJAzMIZlmha0CkUoJH
+         nC6Q==
+X-Gm-Message-State: AOAM530UeFSFmlwPzU0E195uU23oFjcXnwZ++NEP5ve+RPRyAXufINF3
+        PvhPlkj8/24+glBfWaE5rnm6ng==
+X-Google-Smtp-Source: ABdhPJy2PwdNkXBTM1trCwQuWiBzmQKtgRp85HM5DKtIzNpf5iMj9DZTHKHrtExQWgDfVT9U3l1Dfg==
+X-Received: by 2002:aa7:914d:0:b0:44c:61e3:99b9 with SMTP id 13-20020aa7914d000000b0044c61e399b9mr3417268pfi.65.1633329437232;
+        Sun, 03 Oct 2021 23:37:17 -0700 (PDT)
+Received: from localhost ([122.171.247.18])
+        by smtp.gmail.com with ESMTPSA id n9sm13233203pjk.3.2021.10.03.23.37.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Oct 2021 23:37:16 -0700 (PDT)
+Date:   Mon, 4 Oct 2021 12:07:14 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Mikko Perttunen <mperttunen@nvidia.com>
+Cc:     rafael@kernel.org, thierry.reding@gmail.com, jonathanh@nvidia.com,
+        krzysztof.kozlowski@canonical.com, lorenzo.pieralisi@arm.com,
+        robh@kernel.org, kw@linux.com, p.zabel@pengutronix.de,
+        rui.zhang@intel.com, daniel.lezcano@linaro.org, amitk@kernel.org,
+        linux-pm@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/5] cpufreq: tegra186/tegra194: Handle errors in BPMP
+ response
+Message-ID: <20211004063714.5bux4hwv3lchibnn@vireshk-i7>
+References: <20210915085517.1669675-1-mperttunen@nvidia.com>
+ <20210915085517.1669675-4-mperttunen@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4hYL51DcBuSuyMRFo5Jcc=zLd=Ugo+H_2saELcZ5AJBeQ@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20210915085517.1669675-4-mperttunen@nvidia.com>
+User-Agent: NeoMutt/20180716-391-311a52
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On Fri, Oct 01, 2021 at 12:57:18PM -0700, Dan Williams wrote:
-> > > Ah, so are you saying that it would be sufficient for USB if the
-> > > generic authorized implementation did something like:
-> > >
-> > > dev->authorized = 1;
-> > > device_attach(dev);
-> > >
-> > > ...for the authorize case, and:
-> > >
-> > > dev->authorize = 0;
-> > > device_release_driver(dev);
-> > >
-> > > ...for the deauthorize case?
-> >
-> > Yes, I think so.  But I haven't tried making this change to test and
-> > see what really happens.
+On 15-09-21, 11:55, Mikko Perttunen wrote:
+> The return value from tegra_bpmp_transfer indicates the success or
+> failure of the IPC transaction with BPMP. If the transaction
+> succeeded, we also need to check the actual command's result code.
+> Add code to do this.
 > 
-> Sounds like a useful path for this effort to explore. Especially as
-> Greg seems to want the proposed "has_probe_authorization" flag in the
-> bus_type to disappear and make this all generic. It just seems that
-> Thunderbolt would need deeper surgery to move what it does in the
-> authorization toggle path into the probe and remove paths.
+> While at it, explicitly handle missing CPU clusters, which can
+> occur on floorswept chips. This worked before as well, but
+> possibly only by accident.
 > 
-> Mika, do you see a path for Thunderbolt to align its authorization
-> paths behind bus ->probe() ->remove() events similar to what USB might
-> be able to support for a generic authorization path?
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+> ---
+>  drivers/cpufreq/tegra186-cpufreq.c | 4 ++++
+>  drivers/cpufreq/tegra194-cpufreq.c | 8 +++++++-
+>  2 files changed, 11 insertions(+), 1 deletion(-)
 
-In Thunderbolt "authorization" actually means whether there is a PCIe
-tunnel to the device or not. There is no driver bind/unbind happening
-when authorization toggles (well on Thunderbolt bus, there can be on PCI
-bus after the tunnel is established) so I'm not entirely sure how we
-could use the bus ->probe() or ->remove for that to be honest.
+Should I apply it alone ?
+
+-- 
+viresh
