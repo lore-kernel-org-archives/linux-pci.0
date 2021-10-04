@@ -2,53 +2,54 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F5DC433FE
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 13:35:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 964A6C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 13:36:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6364B611CB
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 13:35:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F4F5611CB
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 13:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238203AbhJDNhc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Oct 2021 09:37:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35640 "EHLO
+        id S237852AbhJDNh5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Oct 2021 09:37:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237966AbhJDNfc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Oct 2021 09:35:32 -0400
+        with ESMTP id S235673AbhJDNf5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Oct 2021 09:35:57 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5891C02B76C
-        for <linux-pci@vger.kernel.org>; Mon,  4 Oct 2021 05:59:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 472B5C02B76D
+        for <linux-pci@vger.kernel.org>; Mon,  4 Oct 2021 05:59:54 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZN-0005K3-Lr; Mon, 04 Oct 2021 14:59:49 +0200
+        id 1mXNZO-0005Kb-Nf; Mon, 04 Oct 2021 14:59:50 +0200
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZN-0000MV-3l; Mon, 04 Oct 2021 14:59:49 +0200
+        id 1mXNZN-0000Mn-KM; Mon, 04 Oct 2021 14:59:49 +0200
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZF-0000ci-Qr; Mon, 04 Oct 2021 14:59:41 +0200
+        id 1mXNZG-0000cx-FR; Mon, 04 Oct 2021 14:59:42 +0200
 From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org, kernel@pengutronix.de,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Russell Currey <ruscur@russell.cc>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v6 05/11] powerpc/eeh: Don't use driver member of struct pci_dev and further cleanups
-Date:   Mon,  4 Oct 2021 14:59:29 +0200
-Message-Id: <20211004125935.2300113-6-u.kleine-koenig@pengutronix.de>
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v6 08/11] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
+Date:   Mon,  4 Oct 2021 14:59:32 +0200
+Message-Id: <20211004125935.2300113-9-u.kleine-koenig@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
 References: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=Zpj0MfNpdqb/t0RctaGob3+oRuWP4Yx6JOoywu4XRsI=; m=qLVHAb7UOiGrqQuPN/p5loiFStoGSa1I5N8zuOAmNU8=; p=0U5IO+Yv/dUfU3ayUE/9KpmDUjFv5zoIY+LRFqJ9Pw0=; g=70976583fe04d220fe4cb7c498cea58f830f1545
-X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFa+pMACgkQwfwUeK3K7An2DQf7BwJ +5mTDkIUqy7dufqTCmfUL/PuOO3mdLaN1UMkgI+kPHMqsXVfWtUV44UIB4C931RElHQkQMHbdzind MaO/mCm0chUWdShL8e7yyolxTjG9jIOFeJ8djp7717jyeRduuYev+tzQHfZtVlzf+gZ0fUhDceib9 zbLjwW63K/k14aNwXGpoaQjI8l98vZkZJdvXd8thLuKZt3md1tCPZmB47YRaA/kALD/jXtqmM2geN dp6ooS4aElGr+AodCUYLzzzx+Agh0Zj5+KJ21gckCg7UtotQIwH78aOEpP/C1QIVQUXpwxBWhNHZm Whg67TxzuSne0ilvaKGdceDZvjcEUhg==
+X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=oP54miBWrkCU6D5dir8+ZifQgR+cn/3uLfRD8ejXKkU=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFa+qIACgkQwfwUeK3K7AlgIQgAkSE 2UVcsvbX+K9t/SIp3vxn8+uHdWW4NOTduI3SOuDeFxA/CtD1BeFDUhquMKungE0lYQNeg0ZW+FXiX D/x8kXK1iK22apWyzZGBJxnVfeujKytUEmZzlPARZr0v737TEvvWJFE9vojHpWFYmsHnw83J+G522 GBtgWRHJ+NcphlXAQj/YOpNqZObuuUFT1uHnYjJMvsk1HxIZmayM6gpz3e8l2xA6XHgNyxqHan0fI 2G14+wH1E0KtcgAqyTKesQ3oZ2UUkFO7p7IPgQrO6wbcOhyEjLVzPZ4Z1PzBdXN7WCTymDQ+CT3nD 79rrvaUTlRqVSuz39kuSjVzh7DntGrw==
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
 X-SA-Exim-Mail-From: ukl@pengutronix.de
@@ -58,55 +59,102 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver member of struct pci_dev is to be removed as it tracks
-information already present by tracking of the driver core. So replace
-pdev->driver->name by dev_driver_string() for the corresponding struct
-device.
+The only two drivers don't make use of the id parameter, so drop it.
 
-Also move the function nearer to its only user and instead of the ?:
-operator use a normal if which is more readable.
+This removes a usage of struct pci_dev::driver which is planned to be
+removed as it tracks duplicate data.
 
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- arch/powerpc/include/asm/ppc-pci.h | 5 -----
- arch/powerpc/kernel/eeh.c          | 8 ++++++++
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/message/fusion/mptbase.c | 7 ++-----
+ drivers/message/fusion/mptbase.h | 2 +-
+ drivers/message/fusion/mptctl.c  | 4 ++--
+ drivers/message/fusion/mptlan.c  | 2 +-
+ 4 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 2b9edbf6e929..f6cf0159024e 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -55,11 +55,6 @@ void eeh_pe_dev_mode_mark(struct eeh_pe *pe, int mode);
- void eeh_sysfs_add_device(struct pci_dev *pdev);
- void eeh_sysfs_remove_device(struct pci_dev *pdev);
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7f7abc9069f7..b94d5e4fdc23 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -829,7 +829,6 @@ int
+ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ {
+ 	MPT_ADAPTER	*ioc;
+-	const struct pci_device_id *id;
  
--static inline const char *eeh_driver_name(struct pci_dev *pdev)
--{
--	return (pdev && pdev->driver) ? pdev->driver->name : "<null>";
--}
--
- #endif /* CONFIG_EEH */
+ 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
+ 		return -EINVAL;
+@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
  
- #define PCI_BUSNO(bdfn) ((bdfn >> 8) & 0xff)
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index e9b597ed423c..4b08881c4a1e 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -399,6 +399,14 @@ static int eeh_phb_check_failure(struct eeh_pe *pe)
- 	return ret;
+ 	/* call per pci device probe entry point */
+ 	list_for_each_entry(ioc, &ioc_list, list) {
+-		id = ioc->pcidev->driver ?
+-		    ioc->pcidev->driver->id_table : NULL;
+ 		if (dd_cbfunc->probe)
+-			dd_cbfunc->probe(ioc->pcidev, id);
++			dd_cbfunc->probe(ioc->pcidev);
+ 	 }
+ 
+ 	return 0;
+@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
+ 		if(MptDeviceDriverHandlers[cb_idx] &&
+ 		  MptDeviceDriverHandlers[cb_idx]->probe) {
+-			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
++			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
+ 		}
+ 	}
+ 
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b9e0376be723..4bd0682c65d3 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -257,7 +257,7 @@ typedef enum {
+ } MPT_DRIVER_CLASS;
+ 
+ struct mpt_pci_driver{
+-	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
++	int  (*probe) (struct pci_dev *dev);
+ 	void (*remove) (struct pci_dev *dev);
+ };
+ 
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 72025996cd70..ae433c150b37 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
+ static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
+ static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
+ 
+-static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
++static int  mptctl_probe(struct pci_dev *);
+ static void mptctl_remove(struct pci_dev *);
+ 
+ #ifdef CONFIG_COMPAT
+@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
+  */
+ 
+ static int
+-mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptctl_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index 3261cac762de..7c1af5e6eb0b 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
  }
  
-+static inline const char *eeh_driver_name(struct pci_dev *pdev)
-+{
-+	if (pdev)
-+		return dev_driver_string(&pdev->dev);
-+
-+	return "<null>";
-+}
-+
- /**
-  * eeh_dev_check_failure - Check if all 1's data is due to EEH slot freeze
-  * @edev: eeh device
+ static int
+-mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptlan_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct net_device	*dev;
 -- 
 2.30.2
 
