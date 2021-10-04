@@ -2,188 +2,132 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 480AAC4167D
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 19:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C037FC433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 19:51:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D10E6137C
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 19:42:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D174610CA
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Oct 2021 19:51:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239092AbhJDToK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Oct 2021 15:44:10 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:52189 "EHLO m43-7.mailgun.net"
+        id S234763AbhJDTxp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Oct 2021 15:53:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46696 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239098AbhJDTn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Oct 2021 15:43:56 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633376527; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=nUZnzRg2yHRLpvdQ2xpiUXiVdScGDYAIfcvCmv66P9c=; b=oW8Bmu9ZbU5siKtsTxrFTEgiAw+KwNJMAukdGaRgZmYtQaABPs8XpJ6rnE/038TSWdRE7n2U
- LV/vmZvDOVZaKfz/V0MfDRL6F/IZglZHLmdT5hkSv/vMTCcB0gld5lQbdffQG0udRzvjvqV3
- tOrGsDOeB3R9MkiTbpl/sl8I9Bw=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 615b590d63b1f186586bf938 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 04 Oct 2021 19:42:05
- GMT
-Sender: pmaliset=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1CD00C4361A; Mon,  4 Oct 2021 19:42:05 +0000 (UTC)
-Received: from pmaliset-linux.qualcomm.com (unknown [202.46.22.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmaliset)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7D84FC4361B;
-        Mon,  4 Oct 2021 19:41:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 7D84FC4361B
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   Prasad Malisetty <pmaliset@codeaurora.org>
-To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
-        robh+dt@kernel.org, swboyd@chromium.org, lorenzo.pieralisi@arm.com,
-        svarbanov@mm-sol.com
-Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dianders@chromium.org, mka@chromium.org, vbadigan@codeaurora.org,
-        sallenki@codeaurora.org, manivannan.sadhasivam@linaro.org,
-        linux-pci@vger.kernel.org,
-        Prasad Malisetty <pmaliset@codeaurora.org>
-Subject: [PATCH v10 4/5] PCI: qcom: Add a flag in match data along with ops
-Date:   Tue,  5 Oct 2021 01:11:27 +0530
-Message-Id: <1633376488-545-5-git-send-email-pmaliset@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1633376488-545-1-git-send-email-pmaliset@codeaurora.org>
-References: <1633376488-545-1-git-send-email-pmaliset@codeaurora.org>
+        id S234691AbhJDTxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Oct 2021 15:53:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 79BF4610A5;
+        Mon,  4 Oct 2021 19:51:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1633377115;
+        bh=ftIISwj5VomvNZxJNk+YRaZbhRwimc0N+dZ0U1M/kNM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=JvNxsoxP0lBgAXvh4kDSdCWDVFWoqH3CZyIVwRdbN7aUKBCGwK7qvedJ1TbprIUUQ
+         9e2LPSbyQhdhMwzdvy58yqhrF29wamamie7tgj+7gVfOGNMZClu+Sv/99vbJDKuEu1
+         kCnTurgGjhCYj4/fl3VdxWRl9gUZmC3TGJj/w1U+C3JzL5Gyadwt/XoJ9L1Iqd9ZEv
+         HTgjjhAaxCbNiD7bpQyiSk/AtOyUOgMvrLPeyHtWlTB8ybVbh/qhvBTCfJRnOv56O7
+         hDD6u3Q6FfDaOBP+lSTJygSjbFTQhKX6reAE/WBze8Py/cG5+fLKY0TRvJmVkrKvyk
+         rKZP2qmbV2ZUw==
+Received: by mail-ed1-f49.google.com with SMTP id b8so34757224edk.2;
+        Mon, 04 Oct 2021 12:51:55 -0700 (PDT)
+X-Gm-Message-State: AOAM533mAr1R6PLSK+klJbK2lH6IHC4oAtROvH9D6g815cN0hi/EgK4b
+        6NUXVxDRntLjUBmlPlZElF0xR/ycz7LT6KZukw==
+X-Google-Smtp-Source: ABdhPJzSaN7S7ALG3yUJraf/vtQi93nFDytVl2mghUeFAx99vVF0KnNziH2QYzN9Y4g3zdY/aY6ClGPdGsHoEzYDI9c=
+X-Received: by 2002:a17:906:7217:: with SMTP id m23mr19125282ejk.466.1633377114021;
+ Mon, 04 Oct 2021 12:51:54 -0700 (PDT)
+MIME-Version: 1.0
+References: <20210929163847.2807812-1-maz@kernel.org> <20211004083845.GA22336@lpieralisi>
+In-Reply-To: <20211004083845.GA22336@lpieralisi>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Mon, 4 Oct 2021 14:51:39 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq+4FF9QYy87aYhJ-AS78qyHp0NkLrL492+WmdyWj-NKaw@mail.gmail.com>
+Message-ID: <CAL_Jsq+4FF9QYy87aYhJ-AS78qyHp0NkLrL492+WmdyWj-NKaw@mail.gmail.com>
+Subject: Re: [PATCH v5 00/14] PCI: Add support for Apple M1
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Marc Zyngier <maz@kernel.org>, devicetree@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Stan Skowronek <stan@corellium.com>,
+        Mark Kettenis <kettenis@openbsd.org>,
+        Sven Peter <sven@svenpeter.dev>,
+        Hector Martin <marcan@marcan.st>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        Joey Gouly <joey.gouly@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Android Kernel Team <kernel-team@android.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pipe_clk_need_muxing flag in match data and configure
-If the platform needs to switch pipe_clk_src.
+On Mon, Oct 4, 2021 at 3:38 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Wed, Sep 29, 2021 at 05:38:33PM +0100, Marc Zyngier wrote:
+> > This is v5 of the series adding PCIe support for the M1 SoC. Not a lot
+> > has changed this time around, and most of what I was saying in [1] is
+> > still valid.
+> >
+> > Very little has changed code wise (a couple of bug fixes). The series
+> > however now carries a bunch of DT updates so that people can actually
+> > make use of PCIe on an M1 box (OK, not quite, you will still need [2],
+> > or whatever version replaces it). The corresponding bindings are
+> > either already merged, or queued for 5.16 (this is the case for the
+> > PCI binding).
+> >
+> > It all should be in a state that makes it mergeable (yeah, I said that
+> > last time... I mean it this time! ;-).
+> >
+> > As always, comments welcome.
+> >
+> >       M.
+> >
+> > [1] https://lore.kernel.org/r/20210922205458.358517-1-maz@kernel.org
+> > [2] https://lore.kernel.org/r/20210921222956.40719-2-joey.gouly@arm.com
+> >
+> > Alyssa Rosenzweig (2):
+> >   PCI: apple: Add initial hardware bring-up
+> >   PCI: apple: Set up reference clocks when probing
+> >
+> > Marc Zyngier (10):
+> >   irqdomain: Make of_phandle_args_to_fwspec generally available
+> >   of/irq: Allow matching of an interrupt-map local to an interrupt
+> >     controller
+> >   PCI: of: Allow matching of an interrupt-map local to a PCI device
+> >   PCI: apple: Add INTx and per-port interrupt support
+> >   PCI: apple: Implement MSI support
+> >   iommu/dart: Exclude MSI doorbell from PCIe device IOVA range
+> >   PCI: apple: Configure RID to SID mapper on device addition
+> >   arm64: dts: apple: t8103: Add PCIe DARTs
+> >   arm64: dts: apple: t8103: Add root port interrupt routing
+> >   arm64: dts: apple: j274: Expose PCI node for the Ethernet MAC address
+> >
+> > Mark Kettenis (2):
+> >   arm64: apple: Add pinctrl nodes
+> >   arm64: apple: Add PCIe node
+> >
+> >  MAINTAINERS                              |   7 +
+> >  arch/arm64/boot/dts/apple/t8103-j274.dts |  23 +
+> >  arch/arm64/boot/dts/apple/t8103.dtsi     | 203 ++++++
+> >  drivers/iommu/apple-dart.c               |  27 +
+> >  drivers/of/irq.c                         |  17 +-
+> >  drivers/pci/controller/Kconfig           |  17 +
+> >  drivers/pci/controller/Makefile          |   1 +
+> >  drivers/pci/controller/pcie-apple.c      | 822 +++++++++++++++++++++++
+> >  drivers/pci/of.c                         |  10 +-
+> >  include/linux/irqdomain.h                |   4 +
+> >  kernel/irq/irqdomain.c                   |   6 +-
+> >  11 files changed, 1127 insertions(+), 10 deletions(-)
+> >  create mode 100644 drivers/pci/controller/pcie-apple.c
+>
+> I have applied (with very minor log changes) patches [1-9] to
+> pci/apple for v5.16, I expect the dts changes to go via the
+> arm-soc tree separately, please let me know if that works for you.
 
-Signed-off-by: Prasad Malisetty <pmaliset@codeaurora.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 69 ++++++++++++++++++++++++++++------
- 1 file changed, 58 insertions(+), 11 deletions(-)
+FYI, I pushed patches 1-3 to kernelCI and didn't see any regressions.
+I am a bit worried about changes to the DT interrupt parsing and
+ancient platforms (such as PowerMacs). Most likely there wouldn't be
+any report until -rc1 or months later on those old systems.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8a7a300..152451b 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -189,6 +189,11 @@ struct qcom_pcie_ops {
- 	int (*config_sid)(struct qcom_pcie *pcie);
- };
- 
-+struct qcom_pcie_cfg {
-+	const struct qcom_pcie_ops *ops;
-+	unsigned int pipe_clk_need_muxing:1;
-+};
-+
- struct qcom_pcie {
- 	struct dw_pcie *pci;
- 	void __iomem *parf;			/* DT parf */
-@@ -197,6 +202,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
-+	unsigned int pipe_clk_need_muxing:1;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1456,6 +1462,39 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.config_sid = qcom_pcie_config_sid_sm8250,
- };
- 
-+static const struct qcom_pcie_cfg apq8084_cfg = {
-+	.ops = &ops_1_0_0,
-+};
-+
-+static const struct qcom_pcie_cfg ipq8064_cfg = {
-+	.ops = &ops_2_1_0,
-+};
-+
-+static const struct qcom_pcie_cfg msm8996_cfg = {
-+	.ops = &ops_2_3_2,
-+};
-+
-+static const struct qcom_pcie_cfg ipq8074_cfg = {
-+	.ops = &ops_2_3_3,
-+};
-+
-+static const struct qcom_pcie_cfg ipq4019_cfg = {
-+	.ops = &ops_2_4_0,
-+};
-+
-+static const struct qcom_pcie_cfg sdm845_cfg = {
-+	.ops = &ops_2_7_0,
-+};
-+
-+static const struct qcom_pcie_cfg sm8250_cfg = {
-+	.ops = &ops_1_9_0,
-+};
-+
-+static const struct qcom_pcie_cfg sc7280_cfg = {
-+	.ops = &ops_1_9_0,
-+	.pipe_clk_need_muxing = true,
-+};
-+
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = qcom_pcie_link_up,
- 	.start_link = qcom_pcie_start_link,
-@@ -1467,6 +1506,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	struct pcie_port *pp;
- 	struct dw_pcie *pci;
- 	struct qcom_pcie *pcie;
-+	const struct qcom_pcie_cfg *pcie_cfg;
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -1488,7 +1528,13 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	pcie->pci = pci;
- 
--	pcie->ops = of_device_get_match_data(dev);
-+	pcie_cfg = of_device_get_match_data(dev);
-+	pcie->ops = pcie_cfg->ops;
-+	if (!pcie->ops) {
-+		dev_err(dev, "Invalid platform data\n");
-+		return -EINVAL;
-+	}
-+	pcie->pipe_clk_need_muxing = pcie_cfg->pipe_clk_need_muxing;
- 
- 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
- 	if (IS_ERR(pcie->reset)) {
-@@ -1545,16 +1591,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- }
- 
- static const struct of_device_id qcom_pcie_match[] = {
--	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
--	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
--	{ .compatible = "qcom,pcie-ipq8074", .data = &ops_2_3_3 },
--	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
--	{ .compatible = "qcom,pcie-qcs404", .data = &ops_2_4_0 },
--	{ .compatible = "qcom,pcie-sdm845", .data = &ops_2_7_0 },
--	{ .compatible = "qcom,pcie-sm8250", .data = &ops_1_9_0 },
-+	{ .compatible = "qcom,pcie-apq8084", .data = &apq8084_cfg },
-+	{ .compatible = "qcom,pcie-ipq8064", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-apq8064", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-msm8996", .data = &msm8996_cfg },
-+	{ .compatible = "qcom,pcie-ipq8074", .data = &ipq8074_cfg },
-+	{ .compatible = "qcom,pcie-ipq4019", .data = &ipq4019_cfg },
-+	{ .compatible = "qcom,pcie-qcs404", .data = &ipq4019_cfg },
-+	{ .compatible = "qcom,pcie-sdm845", .data = &sdm845_cfg },
-+	{ .compatible = "qcom,pcie-sm8250", .data = &sm8250_cfg },
-+	{ .compatible = "qcom,pcie-sc7280", .data = &sc7280_cfg },
- 	{ }
- };
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
-
+Rob
