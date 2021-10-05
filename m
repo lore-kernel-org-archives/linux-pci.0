@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BBFC43219
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CEB6C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADF4261502
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EACA661371
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235175AbhJESpZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Oct 2021 14:45:25 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:60275 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235253AbhJESpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Oct 2021 14:45:24 -0400
+        id S235163AbhJESpX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Oct 2021 14:45:23 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:30648 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235175AbhJESpU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Oct 2021 14:45:20 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633459413; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1633459409; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=pNI+4Rnoy3e8T7runJ4/EvS5qSFB9OIMtAZOpyFhevs=; b=Yiv8r5IbIsEQFWCc++YXr9+5I4hj0GN47iLWlD3vx3g83SK3Nvxu5bXFDW87QwcO45t+b3hN
- zL9pJuNY3m0Ul60PJt80LjTXMlB6500SNPSCPaPnHoEN24dwt7ei/pSBQqZvtqGTDRaZ+kjV
- 7kHgKIaiMBFk5ZQ8gs8yzUfw2UM=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ bh=Off76Tl7aKwB/cmh9OMhTRK+calKzf38CGm5XFwFN6Q=; b=wSCPWbovzZ+4pdwZ7sJmqOu9KmYfqEUcB+eV/DgKHnK+O1jgNGzV5O+A+/lOlxhnVKw0l9qo
+ kUAcM6Y+M1cma8dLfdIInRBCBx/r8TuqvqKlXSvoAm7QZOuNp4qBx3XXqo9TN2l6tzgGRXUH
+ RTxArzhsyX+PxxkNpN1+sj9HXlc=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 615c9cce09ab553889492aad (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 18:43:26
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 615c9cbc7ae92c7fc900b893 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 18:43:08
  GMT
 Sender: pmaliset=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id BA1C7C4361A; Tue,  5 Oct 2021 18:43:25 +0000 (UTC)
+        id 3D813C43619; Tue,  5 Oct 2021 18:43:08 +0000 (UTC)
 Received: from pmaliset-linux.qualcomm.com (unknown [202.46.22.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pmaliset)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 68BECC43618;
-        Tue,  5 Oct 2021 18:43:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 68BECC43618
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6474EC4360D;
+        Tue,  5 Oct 2021 18:43:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6474EC4360D
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Prasad Malisetty <pmaliset@codeaurora.org>
@@ -50,9 +50,9 @@ Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         sallenki@codeaurora.org, manivannan.sadhasivam@linaro.org,
         linux-pci@vger.kernel.org,
         Prasad Malisetty <pmaliset@codeaurora.org>
-Subject: [PATCH v11 4/5] PCI: qcom: Add a flag in match data along with ops
-Date:   Wed,  6 Oct 2021 00:12:38 +0530
-Message-Id: <1633459359-31517-5-git-send-email-pmaliset@codeaurora.org>
+Subject: [PATCH v11 1/5] dt-bindings: pci: qcom: Document PCIe bindings for SC7280
+Date:   Wed,  6 Oct 2021 00:12:35 +0530
+Message-Id: <1633459359-31517-2-git-send-email-pmaliset@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1633459359-31517-1-git-send-email-pmaliset@codeaurora.org>
 References: <1633459359-31517-1-git-send-email-pmaliset@codeaurora.org>
@@ -60,130 +60,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pipe_clk_need_muxing flag in match data and configure
-If the platform needs to switch pipe_clk_src.
+Document the PCIe DT bindings for SC7280 SoC.The PCIe IP is similar
+to the one used on SM8250. Add the compatible for SC7280.
 
 Signed-off-by: Prasad Malisetty <pmaliset@codeaurora.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Stephen Boyd <swboyd@chromium.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 70 ++++++++++++++++++++++++++++------
- 1 file changed, 59 insertions(+), 11 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8a7a300..1d7a9cb 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -189,6 +189,11 @@ struct qcom_pcie_ops {
- 	int (*config_sid)(struct qcom_pcie *pcie);
- };
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 3f64687..ff423cd 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -12,6 +12,7 @@
+ 			- "qcom,pcie-ipq4019" for ipq4019
+ 			- "qcom,pcie-ipq8074" for ipq8074
+ 			- "qcom,pcie-qcs404" for qcs404
++			- "qcom,pcie-sc7280" for sc7280
+ 			- "qcom,pcie-sdm845" for sdm845
+ 			- "qcom,pcie-sm8250" for sm8250
+ 			- "qcom,pcie-ipq6018" for ipq6018
+@@ -144,6 +145,22 @@
+ 			- "slave_bus"	AXI Slave clock
  
-+struct qcom_pcie_cfg {
-+	const struct qcom_pcie_ops *ops;
-+	unsigned int pipe_clk_need_muxing:1;
-+};
+ - clock-names:
++	Usage: required for sc7280
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "aux"         Auxiliary clock
++			- "cfg"         Configuration clock
++			- "bus_master"  Master AXI clock
++			- "bus_slave"   Slave AXI clock
++			- "slave_q2a"   Slave Q2A clock
++			- "tbu"         PCIe TBU clock
++			- "ddrss_sf_tbu" PCIe SF TBU clock
++			- "pipe"        PIPE clock
++			- "pipe_mux"    PIPE MUX
++			- "phy_pipe"    PIPE output clock
++			- "ref"         REFERENCE clock
 +
- struct qcom_pcie {
- 	struct dw_pcie *pci;
- 	void __iomem *parf;			/* DT parf */
-@@ -197,6 +202,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
-+	unsigned int pipe_clk_need_muxing:1;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1456,6 +1462,39 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.config_sid = qcom_pcie_config_sid_sm8250,
- };
- 
-+static const struct qcom_pcie_cfg apq8084_cfg = {
-+	.ops = &ops_1_0_0,
-+};
-+
-+static const struct qcom_pcie_cfg ipq8064_cfg = {
-+	.ops = &ops_2_1_0,
-+};
-+
-+static const struct qcom_pcie_cfg msm8996_cfg = {
-+	.ops = &ops_2_3_2,
-+};
-+
-+static const struct qcom_pcie_cfg ipq8074_cfg = {
-+	.ops = &ops_2_3_3,
-+};
-+
-+static const struct qcom_pcie_cfg ipq4019_cfg = {
-+	.ops = &ops_2_4_0,
-+};
-+
-+static const struct qcom_pcie_cfg sdm845_cfg = {
-+	.ops = &ops_2_7_0,
-+};
-+
-+static const struct qcom_pcie_cfg sm8250_cfg = {
-+	.ops = &ops_1_9_0,
-+};
-+
-+static const struct qcom_pcie_cfg sc7280_cfg = {
-+	.ops = &ops_1_9_0,
-+	.pipe_clk_need_muxing = true,
-+};
-+
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = qcom_pcie_link_up,
- 	.start_link = qcom_pcie_start_link,
-@@ -1467,6 +1506,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	struct pcie_port *pp;
- 	struct dw_pcie *pci;
- 	struct qcom_pcie *pcie;
-+	const struct qcom_pcie_cfg *pcie_cfg;
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -1488,7 +1528,14 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	pcie->pci = pci;
- 
--	pcie->ops = of_device_get_match_data(dev);
-+	pcie_cfg = of_device_get_match_data(dev);
-+	if (!pcie_cfg || !pcie_cfg->ops) {
-+		dev_err(dev, "Invalid platform data\n");
-+		return NULL;
-+	}
-+
-+	pcie->ops = pcie_cfg->ops;
-+	pcie->pipe_clk_need_muxing = pcie_cfg->pipe_clk_need_muxing;
- 
- 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
- 	if (IS_ERR(pcie->reset)) {
-@@ -1545,16 +1592,17 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- }
- 
- static const struct of_device_id qcom_pcie_match[] = {
--	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
--	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
--	{ .compatible = "qcom,pcie-ipq8074", .data = &ops_2_3_3 },
--	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
--	{ .compatible = "qcom,pcie-qcs404", .data = &ops_2_4_0 },
--	{ .compatible = "qcom,pcie-sdm845", .data = &ops_2_7_0 },
--	{ .compatible = "qcom,pcie-sm8250", .data = &ops_1_9_0 },
-+	{ .compatible = "qcom,pcie-apq8084", .data = &apq8084_cfg },
-+	{ .compatible = "qcom,pcie-ipq8064", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-apq8064", .data = &ipq8064_cfg },
-+	{ .compatible = "qcom,pcie-msm8996", .data = &msm8996_cfg },
-+	{ .compatible = "qcom,pcie-ipq8074", .data = &ipq8074_cfg },
-+	{ .compatible = "qcom,pcie-ipq4019", .data = &ipq4019_cfg },
-+	{ .compatible = "qcom,pcie-qcs404", .data = &ipq4019_cfg },
-+	{ .compatible = "qcom,pcie-sdm845", .data = &sdm845_cfg },
-+	{ .compatible = "qcom,pcie-sm8250", .data = &sm8250_cfg },
-+	{ .compatible = "qcom,pcie-sc7280", .data = &sc7280_cfg },
- 	{ }
- };
- 
++- clock-names:
+ 	Usage: required for sdm845
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
