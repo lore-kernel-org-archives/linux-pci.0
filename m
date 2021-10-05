@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F39C433FE
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A1AC433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80AE361381
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CECD36141B
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Oct 2021 18:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235268AbhJESpd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Oct 2021 14:45:33 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:45521 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235282AbhJESpY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Oct 2021 14:45:24 -0400
+        id S235496AbhJESpg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Oct 2021 14:45:36 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:59126 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235421AbhJESpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Oct 2021 14:45:31 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1633459413; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1633459421; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=FGaSvp1mNq/0gc6aV34OXhx8qA07HOyXnWbILJz3ABg=; b=VMEhIvbkkc9swmrTbi9EqjZLZ9+tMoiqIW90lJDCsxrjvKIwhOvWqXihqQVuctqRCi4ZwlVn
- R8rIm48MvQICVsBKrjWZ8uI84diuwUZIeADsXzlCmlCnyNrhGvEGCYvcrR8COkjf7gQfuR65
- RLE275JNS1d+0GRP+RE9PLUzuY4=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ bh=X876Ahdw47GXHYVdK4dXG/Umyyfo1APYAeN0CffMWTg=; b=eV9Sxs6bFUd6XsUP3f5JJj7BUnC1cV19BOHiSPU6yVvjhSF+pgH7Ng582ngga9KTBj8aAlRI
+ Nwa+HAlxlqEbXcHMHY3Nt+x52rZ233kzY15KsIUq0dWDjQ01jzwK7wAAqILaXUlSbeFpu2Wq
+ BO0HFF1OR8xvqfl7s8ipSB1D434=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 615c9cc209ab55388948f07d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 18:43:14
+ smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
+ 615c9cd37ae92c7fc90114fe (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 05 Oct 2021 18:43:31
  GMT
 Sender: pmaliset=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 21EE7C4361B; Tue,  5 Oct 2021 18:43:14 +0000 (UTC)
+        id 2C0CFC4360C; Tue,  5 Oct 2021 18:43:31 +0000 (UTC)
 Received: from pmaliset-linux.qualcomm.com (unknown [202.46.22.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pmaliset)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 11556C43460;
-        Tue,  5 Oct 2021 18:43:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 11556C43460
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2839CC43617;
+        Tue,  5 Oct 2021 18:43:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 2839CC43617
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   Prasad Malisetty <pmaliset@codeaurora.org>
@@ -50,9 +50,9 @@ Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         sallenki@codeaurora.org, manivannan.sadhasivam@linaro.org,
         linux-pci@vger.kernel.org,
         Prasad Malisetty <pmaliset@codeaurora.org>
-Subject: [PATCH v11 2/5] arm64: dts: qcom: sc7280: Add PCIe and PHY related nodes
-Date:   Wed,  6 Oct 2021 00:12:36 +0530
-Message-Id: <1633459359-31517-3-git-send-email-pmaliset@codeaurora.org>
+Subject: [PATCH v11 5/5] PCI: qcom: Switch pcie_1_pipe_clk_src after PHY init in SC7280
+Date:   Wed,  6 Oct 2021 00:12:39 +0530
+Message-Id: <1633459359-31517-6-git-send-email-pmaliset@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1633459359-31517-1-git-send-email-pmaliset@codeaurora.org>
 References: <1633459359-31517-1-git-send-email-pmaliset@codeaurora.org>
@@ -60,149 +60,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe controller and PHY nodes for sc7280 SOC.
+On the SC7280, the clock source for gcc_pcie_1_pipe_clk_src
+must be the TCXO while gdsc is enabled. After PHY init successful
+clock source should switch to pipe clock for gcc_pcie_1_pipe_clk_src.
 
 Signed-off-by: Prasad Malisetty <pmaliset@codeaurora.org>
 Reviewed-by: Stephen Boyd <swboyd@chromium.org>
 ---
- arch/arm64/boot/dts/qcom/sc7280.dtsi | 117 +++++++++++++++++++++++++++++++++++
- 1 file changed, 117 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-index 39635da..72c06c1 100644
---- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-@@ -1563,6 +1563,117 @@
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 1d7a9cb..ded70e6 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -166,6 +166,9 @@ struct qcom_pcie_resources_2_7_0 {
+ 	struct regulator_bulk_data supplies[2];
+ 	struct reset_control *pci_reset;
+ 	struct clk *pipe_clk;
++	struct clk *pipe_clk_src;
++	struct clk *phy_pipe_clk;
++	struct clk *ref_clk_src;
+ };
  
-+		pcie1: pci@1c08000 {
-+			compatible = "qcom,pcie-sc7280";
-+			reg = <0 0x01c08000 0 0x3000>,
-+			      <0 0x40000000 0 0xf1d>,
-+			      <0 0x40000f20 0 0xa8>,
-+			      <0 0x40001000 0 0x1000>,
-+			      <0 0x40100000 0 0x100000>;
-+
-+			reg-names = "parf", "dbi", "elbi", "atu", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <1>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <2>;
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			ranges = <0x01000000 0x0 0x40200000 0x0 0x40200000 0x0 0x100000>,
-+				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-+
-+			interrupts = <GIC_SPI 307 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 434 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &intc 0 435 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &intc 0 438 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &intc 0 439 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
-+				 <&gcc GCC_PCIE_1_PIPE_CLK_SRC>,
-+				 <&pcie1_lane 0>,
-+				 <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_PCIE_1_AUX_CLK>,
-+				 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-+				 <&gcc GCC_PCIE_1_SLV_AXI_CLK>,
-+				 <&gcc GCC_PCIE_1_SLV_Q2A_AXI_CLK>,
-+				 <&gcc GCC_AGGRE_NOC_PCIE_TBU_CLK>,
-+				 <&gcc GCC_DDRSS_PCIE_SF_CLK>;
-+
-+			clock-names = "pipe",
-+				      "pipe_mux",
-+				      "phy_pipe",
-+				      "ref",
-+				      "aux",
-+				      "cfg",
-+				      "bus_master",
-+				      "bus_slave",
-+				      "slave_q2a",
-+				      "tbu",
-+				      "ddrss_sf_tbu";
-+
-+			assigned-clocks = <&gcc GCC_PCIE_1_AUX_CLK>;
-+			assigned-clock-rates = <19200000>;
-+
-+			resets = <&gcc GCC_PCIE_1_BCR>;
-+			reset-names = "pci";
-+
-+			power-domains = <&gcc GCC_PCIE_1_GDSC>;
-+
-+			phys = <&pcie1_lane>;
-+			phy-names = "pciephy";
-+
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&pcie1_clkreq_n>;
-+
-+			iommus = <&apps_smmu 0x1c80 0x1>;
-+
-+			iommu-map = <0x0 &apps_smmu 0x1c80 0x1>,
-+				    <0x100 &apps_smmu 0x1c81 0x1>;
-+
-+			status = "disabled";
-+		};
-+
-+		pcie1_phy: phy@1c0e000 {
-+			compatible = "qcom,sm8250-qmp-gen3x2-pcie-phy";
-+			reg = <0 0x01c0e000 0 0x1c0>;
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			ranges;
-+			clocks = <&gcc GCC_PCIE_1_AUX_CLK>,
-+				 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_CLKREF_EN>,
-+				 <&gcc GCC_PCIE1_PHY_RCHNG_CLK>;
-+			clock-names = "aux", "cfg_ahb", "ref", "refgen";
-+
-+			resets = <&gcc GCC_PCIE_1_PHY_BCR>;
-+			reset-names = "phy";
-+
-+			assigned-clocks = <&gcc GCC_PCIE1_PHY_RCHNG_CLK>;
-+			assigned-clock-rates = <100000000>;
-+
-+			status = "disabled";
-+
-+			pcie1_lane: lanes@1c0e200 {
-+				reg = <0 0x01c0e200 0 0x170>,
-+				      <0 0x01c0e400 0 0x200>,
-+				      <0 0x01c0ea00 0 0x1f0>,
-+				      <0 0x01c0e600 0 0x170>,
-+				      <0 0x01c0e800 0 0x200>,
-+				      <0 0x01c0ee00 0 0xf4>;
-+				clocks = <&gcc GCC_PCIE_1_PIPE_CLK>;
-+				clock-names = "pipe0";
-+
-+				#phy-cells = <0>;
-+				#clock-cells = <1>;
-+				clock-output-names = "pcie_1_pipe_clk";
-+			};
-+		};
-+
- 		ipa: ipa@1e40000 {
- 			compatible = "qcom,sc7280-ipa";
+ union qcom_pcie_resources {
+@@ -1173,6 +1176,20 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
+ 	if (ret < 0)
+ 		return ret;
  
-@@ -2676,6 +2787,12 @@
- 			gpio-ranges = <&tlmm 0 0 175>;
- 			wakeup-parent = <&pdc>;
- 
-+			pcie1_clkreq_n: pcie1-clkreq-n {
-+				pins = "gpio79";
-+				function = "pcie1_clkreqn";
-+				bias-pull-up;
-+			};
++	if (pcie->pipe_clk_need_muxing) {
++		res->pipe_clk_src = devm_clk_get(dev, "pipe_mux");
++		if (IS_ERR(res->pipe_clk_src))
++			return PTR_ERR(res->pipe_clk_src);
 +
- 			qspi_clk: qspi-clk {
- 				pins = "gpio14";
- 				function = "qspi_clk";
++		res->phy_pipe_clk = devm_clk_get(dev, "phy_pipe");
++		if (IS_ERR(res->phy_pipe_clk))
++			return PTR_ERR(res->phy_pipe_clk);
++
++		res->ref_clk_src = devm_clk_get(dev, "ref");
++		if (IS_ERR(res->ref_clk_src))
++			return PTR_ERR(res->ref_clk_src);
++	}
++
+ 	res->pipe_clk = devm_clk_get(dev, "pipe");
+ 	return PTR_ERR_OR_ZERO(res->pipe_clk);
+ }
+@@ -1191,6 +1208,10 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+ 		return ret;
+ 	}
+ 
++	/* Set TCXO as clock source for pcie_pipe_clk_src */
++	if (pcie->pipe_clk_need_muxing)
++		clk_set_parent(res->pipe_clk_src, res->ref_clk_src);
++
+ 	ret = clk_bulk_prepare_enable(res->num_clks, res->clks);
+ 	if (ret < 0)
+ 		goto err_disable_regulators;
+@@ -1262,6 +1283,10 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+ {
+ 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
+ 
++	/* Set pipe clock as clock source for pcie_pipe_clk_src */
++	if (pcie->pipe_clk_need_muxing)
++		clk_set_parent(res->pipe_clk_src, res->phy_pipe_clk);
++
+ 	return clk_prepare_enable(res->pipe_clk);
+ }
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
