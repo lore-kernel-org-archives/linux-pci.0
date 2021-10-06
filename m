@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFD71C433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Oct 2021 11:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F412C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Oct 2021 11:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C642660FDC
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Oct 2021 11:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4057260FDC
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Oct 2021 11:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238170AbhJFL2g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Oct 2021 07:28:36 -0400
+        id S237936AbhJFL2j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Oct 2021 07:28:39 -0400
 Received: from mga12.intel.com ([192.55.52.136]:41644 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237936AbhJFL2f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Oct 2021 07:28:35 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10128"; a="206091102"
+        id S238143AbhJFL2g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Oct 2021 07:28:36 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10128"; a="206091109"
 X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="206091102"
+   d="scan'208";a="206091109"
 Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2021 04:26:38 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2021 04:26:43 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="623860168"
+   d="scan'208";a="623860178"
 Received: from black.fi.intel.com (HELO black.fi.intel.com.) ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 06 Oct 2021 04:26:36 -0700
+  by fmsmga001.fm.intel.com with ESMTP; 06 Oct 2021 04:26:41 -0700
 From:   Heikki Krogerus <heikki.krogerus@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J. Wysocki" <rafael@kernel.org>
@@ -31,48 +31,44 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Zhangfei Gao <zhangfei.gao@linaro.org>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 0/3] device property: Remove device_add_properties()
-Date:   Wed,  6 Oct 2021 14:26:40 +0300
-Message-Id: <20211006112643.77684-1-heikki.krogerus@linux.intel.com>
+Subject: [PATCH v3 2/3] driver core: Don't call device_remove_properties() from device_del()
+Date:   Wed,  6 Oct 2021 14:26:42 +0300
+Message-Id: <20211006112643.77684-3-heikki.krogerus@linux.intel.com>
 X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211006112643.77684-1-heikki.krogerus@linux.intel.com>
+References: <20211006112643.77684-1-heikki.krogerus@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+All the drivers that relied on device_del() to call
+device_remove_properties() have now been converted to either
+use device_create_managed_software_node() instead of
+device_add_properties(), or to register the software node
+completely separately from the device.
 
-In this third version of this series, the second patch is now split in
-two. The device_remove_properties() call is first removed from
-device_del() in its own patch, and the
-device_add/remove_properties() API is removed separately in the last
-patch. I hope the commit messages are clear enough this time.
+This will make it finally possible to share and reuse the
+software nodes that hold the additional device properties.
 
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ drivers/base/core.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-v2 cover letter:
-
-This is the second version where I only modified the commit message of
-the first patch according to comments from Bjorn.
-
-
-Original cover letter:
-
-There is one user left for the API, so converting that to use software
-node API instead, and removing the function.
-
-
-Heikki Krogerus (3):
-  PCI: Convert to device_create_managed_software_node()
-  driver core: Don't call device_remove_properties() from device_del()
-  device property: Remove device_add_properties() API
-
- drivers/base/core.c      |  1 -
- drivers/base/property.c  | 48 ----------------------------------------
- drivers/pci/quirks.c     |  2 +-
- include/linux/property.h |  4 ----
- 4 files changed, 1 insertion(+), 54 deletions(-)
-
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index c4a2c97a21a2b..ea39ffad11179 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3584,7 +3584,6 @@ void device_del(struct device *dev)
+ 	device_pm_remove(dev);
+ 	driver_deferred_probe_del(dev);
+ 	device_platform_notify_remove(dev);
+-	device_remove_properties(dev);
+ 	device_links_purge(dev);
+ 
+ 	if (dev->bus)
 -- 
 2.33.0
 
