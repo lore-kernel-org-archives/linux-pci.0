@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 622DAC433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 16:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CAAC433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 16:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 417ED61248
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 16:03:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FAF760F5B
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 16:03:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242261AbhJGQFE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Oct 2021 12:05:04 -0400
-Received: from marcansoft.com ([212.63.210.85]:56154 "EHLO mail.marcansoft.com"
+        id S242236AbhJGQF0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Oct 2021 12:05:26 -0400
+Received: from marcansoft.com ([212.63.210.85]:56266 "EHLO mail.marcansoft.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233255AbhJGQFE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Oct 2021 12:05:04 -0400
+        id S233486AbhJGQF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Oct 2021 12:05:26 -0400
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: marcan@marcan.st)
-        by mail.marcansoft.com (Postfix) with ESMTPSA id B979A419BC;
-        Thu,  7 Oct 2021 16:03:04 +0000 (UTC)
-Subject: Re: [PATCH v5 13/14] arm64: dts: apple: t8103: Add root port
- interrupt routing
+        by mail.marcansoft.com (Postfix) with ESMTPSA id E0FED419BC;
+        Thu,  7 Oct 2021 16:03:26 +0000 (UTC)
+Subject: Re: [PATCH v5 14/14] arm64: dts: apple: j274: Expose PCI node for the
+ Ethernet MAC address
 To:     Marc Zyngier <maz@kernel.org>, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -37,14 +37,14 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Joey Gouly <joey.gouly@arm.com>,
         Joerg Roedel <joro@8bytes.org>, kernel-team@android.com
 References: <20210929163847.2807812-1-maz@kernel.org>
- <20210929163847.2807812-14-maz@kernel.org>
+ <20210929163847.2807812-15-maz@kernel.org>
 From:   Hector Martin <marcan@marcan.st>
-Message-ID: <5751d4c2-8d65-8286-38f6-1899f7acaf89@marcan.st>
-Date:   Fri, 8 Oct 2021 01:03:02 +0900
+Message-ID: <d49994e1-cd01-f6a4-98bf-941058543a44@marcan.st>
+Date:   Fri, 8 Oct 2021 01:03:24 +0900
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20210929163847.2807812-14-maz@kernel.org>
+In-Reply-To: <20210929163847.2807812-15-maz@kernel.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: es-ES
 Content-Transfer-Encoding: 7bit
@@ -53,14 +53,22 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 On 30/09/2021 01.38, Marc Zyngier wrote:
-> Add the interrupt-map properties that are required for INTx
-> signalling.
+> At the moment, all the Minis running Linux have the same MAC
+> address (00:10:18:00:00:00), which is a bit annoying.
 > 
-> Tested-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
+> Expose the PCI node corresponding to the Ethernet device, and
+> declare a 'local-mac-address' property. The bootloader will update
+> it (m1n1 already has the required feature). And if it doesn't, then
+> the default value is already present in the DT.
+> 
+> This relies on forcing the bus number for each port so that the
+> endpoints connected to them are correctly numbered (and keeps dtc
+> quiet).
+> 
 > Signed-off-by: Marc Zyngier <maz@kernel.org>
 > ---
->   arch/arm64/boot/dts/apple/t8103.dtsi | 33 +++++++++++++++++++++++++---
->   1 file changed, 30 insertions(+), 3 deletions(-)
+>   arch/arm64/boot/dts/apple/t8103-j274.dts | 23 +++++++++++++++++++++++
+>   1 file changed, 23 insertions(+)
 > 
 
 Acked-by: Hector Martin <marcan@marcan.st>
