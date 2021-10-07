@@ -2,74 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5A43C433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 17:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB715C433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 17:49:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DD4F60FE3
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 17:36:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13BA61245
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Oct 2021 17:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243374AbhJGRib (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Oct 2021 13:38:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56058 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243302AbhJGRiO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Oct 2021 13:38:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4A73C610CC;
-        Thu,  7 Oct 2021 17:36:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633628180;
-        bh=QYsjwPvbbfl73CGvowChGsFHixN4dVr1+Zn4DB1gzb4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=guPT9gWtPIOoH3EK9KV/Iw+W1fKFs+RDccZs2/5UY0tkYd2cAeo7tk9ZdouQuKkXZ
-         i1sHWUbKiVeYW0StyzlaCBeN2LKeSyqz+24KB8uTzBGdIb7gssauzKhTASHun9sWLR
-         feZ5EquhWJc0F3Yx6eSTgk7DsiwnAqwudcyarrHaN/p1CPJvr+q/5EUXgiQQhS5J61
-         tbzHvGK7p0mL50qexH38fFwn4xycwEMbCB8vgjZ2OUrdXjFyOV+A7w9bWbm3CaBJve
-         yHW6JFCnV2kNNdyzv+YCqg4UTVV8B6TtTb7WsidWb5v57sUOnIv6DtFFFa1jrU60wv
-         zHM2g9oGHBwmg==
-Date:   Thu, 7 Oct 2021 19:36:16 +0200
-From:   Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     pali@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 00/13] PCI: aardvark controller fixes
-Message-ID: <20211007193616.5adf25f6@thinkpad>
-In-Reply-To: <163361366612.462.10245349222624047259.b4-ty@arm.com>
-References: <20211005180952.6812-1-kabel@kernel.org>
-        <163361366612.462.10245349222624047259.b4-ty@arm.com>
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+        id S243111AbhJGRvF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Oct 2021 13:51:05 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:26087 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243094AbhJGRvE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Oct 2021 13:51:04 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1633628950; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=Off76Tl7aKwB/cmh9OMhTRK+calKzf38CGm5XFwFN6Q=; b=kBIv8yz/G/ODnsLQF02sgekAXNmc/Cs5VTPS1CA48auUbOKRuA4D1Jl5MoodXEnV8HoA5i5g
+ 1FurB6Kj0RtFMEBEf05/rZSScUWjTtASUkxYeDRgYsxoPAiTKeF1+VyKuFswY3VtBKNHzCEb
+ xsROCTX16bpbpoYM/qXg2O2KHT4=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 615f33154ccc4cf2c7d262fe (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 07 Oct 2021 17:49:09
+ GMT
+Sender: pmaliset=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4EB78C4361B; Thu,  7 Oct 2021 17:49:09 +0000 (UTC)
+Received: from pmaliset-linux.qualcomm.com (unknown [202.46.22.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmaliset)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 61D84C43616;
+        Thu,  7 Oct 2021 17:49:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 61D84C43616
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+From:   Prasad Malisetty <pmaliset@codeaurora.org>
+To:     agross@kernel.org, bjorn.andersson@linaro.org, bhelgaas@google.com,
+        robh+dt@kernel.org, swboyd@chromium.org, lorenzo.pieralisi@arm.com,
+        svarbanov@mm-sol.com
+Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dianders@chromium.org, mka@chromium.org, vbadigan@codeaurora.org,
+        sallenki@codeaurora.org, manivannan.sadhasivam@linaro.org,
+        linux-pci@vger.kernel.org,
+        Prasad Malisetty <pmaliset@codeaurora.org>
+Subject: [PATCH v12 1/5] dt-bindings: pci: qcom: Document PCIe bindings for SC7280
+Date:   Thu,  7 Oct 2021 23:18:39 +0530
+Message-Id: <1633628923-25047-2-git-send-email-pmaliset@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1633628923-25047-1-git-send-email-pmaliset@codeaurora.org>
+References: <1633628923-25047-1-git-send-email-pmaliset@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu,  7 Oct 2021 14:38:25 +0100
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+Document the PCIe DT bindings for SC7280 SoC.The PCIe IP is similar
+to the one used on SM8250. Add the compatible for SC7280.
 
-> On Tue, 5 Oct 2021 20:09:39 +0200, Marek Beh=C3=BAn wrote:
-> > as requested I am sending v2 of this series.
-> >=20
-> > Changes since v1:
-> > - updated commit message in patch 6 as suggested by Mark
-> > - updated patch 6 to also drop the early return
-> > - changed the LTSSM definitions to enum in patch 12
-> > - dropped the Fixes tags for those patches where it was inappropriate
-> >=20
-> > [...] =20
->=20
-> I rewrote some logs, dropped some stable tags. This series raised
-> a couple of interesting questions that may be relevant for PCI core
-> as well, it'd be great if those won't be lost but I feel it is time
-> to merge this series to help Marek/Pali cut the patch delta and
-> give this code wider testing.
->=20
-> I have applied it to pci/aardvark, please _do_ have a look and
-> report back any issue with it.
+Signed-off-by: Prasad Malisetty <pmaliset@codeaurora.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Stephen Boyd <swboyd@chromium.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.txt | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-I checked all the commit messages in pci/aardvark.
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 3f64687..ff423cd 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -12,6 +12,7 @@
+ 			- "qcom,pcie-ipq4019" for ipq4019
+ 			- "qcom,pcie-ipq8074" for ipq8074
+ 			- "qcom,pcie-qcs404" for qcs404
++			- "qcom,pcie-sc7280" for sc7280
+ 			- "qcom,pcie-sdm845" for sdm845
+ 			- "qcom,pcie-sm8250" for sm8250
+ 			- "qcom,pcie-ipq6018" for ipq6018
+@@ -144,6 +145,22 @@
+ 			- "slave_bus"	AXI Slave clock
+ 
+ - clock-names:
++	Usage: required for sc7280
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "aux"         Auxiliary clock
++			- "cfg"         Configuration clock
++			- "bus_master"  Master AXI clock
++			- "bus_slave"   Slave AXI clock
++			- "slave_q2a"   Slave Q2A clock
++			- "tbu"         PCIe TBU clock
++			- "ddrss_sf_tbu" PCIe SF TBU clock
++			- "pipe"        PIPE clock
++			- "pipe_mux"    PIPE MUX
++			- "phy_pipe"    PIPE output clock
++			- "ref"         REFERENCE clock
++
++- clock-names:
+ 	Usage: required for sdm845
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
-I also compiled this branch and tested it on my Mox with ath10k card
-and it works correctly, no regressions.
-
-Marek
