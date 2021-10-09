@@ -2,148 +2,284 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD196C4332F
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 14:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0380C433EF
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 16:29:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FDE960F51
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 14:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B1DD60F8F
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 16:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233498AbhJIOYO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 9 Oct 2021 10:24:14 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:55750 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233093AbhJIOYO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Oct 2021 10:24:14 -0400
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 3.0.0)
- id d3d322a473f577f6; Sat, 9 Oct 2021 16:22:16 +0200
-Received: from kreacher.localnet (89-77-51-84.dynamic.chello.pl [89.77.51.84])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 5020B66A6C1;
-        Sat,  9 Oct 2021 16:22:15 +0200 (CEST)
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] ACPI: scan: Release PM resources blocked by unused objects
-Date:   Sat, 09 Oct 2021 16:22:09 +0200
-Message-ID: <5507158.DvuYhMxLoT@kreacher>
+        id S229622AbhJIQbv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 9 Oct 2021 12:31:51 -0400
+Received: from mga02.intel.com ([134.134.136.20]:6134 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229587AbhJIQbv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 9 Oct 2021 12:31:51 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10132"; a="213816106"
+X-IronPort-AV: E=Sophos;i="5.85,360,1624345200"; 
+   d="scan'208";a="213816106"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2021 09:29:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,360,1624345200"; 
+   d="scan'208";a="479319210"
+Received: from lkp-server02.sh.intel.com (HELO 08b2c502c3de) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 09 Oct 2021 09:29:52 -0700
+Received: from kbuild by 08b2c502c3de with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mZFEN-0000O0-QC; Sat, 09 Oct 2021 16:29:51 +0000
+Date:   Sun, 10 Oct 2021 00:29:17 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [helgaas-pci:pci/host/rcar] BUILD SUCCESS
+ 861e133ba268bef4765ea62c9602d4116b9c63ec
+Message-ID: <6161c35d.WrlXG+nwAjvop2B/%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 89.77.51.84
-X-CLIENT-HOSTNAME: 89-77-51-84.dynamic.chello.pl
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvtddrvddtvddgjeegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvvefgteeuteehkeduuedvudetleevffdtffdtjeejueekffetieekgfeigfehudenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeekledrjeejrdehuddrkeegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepkeelrdejjedrhedurdekgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedprhgtphhtthhopehlihhnuhigqdgrtghpihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehmrghrihhordhlihhmohhntghivghllhhosegrmhgurdgtohhmpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthho
- pehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=5 Fuz1=5 Fuz2=5
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host/rcar
+branch HEAD: 861e133ba268bef4765ea62c9602d4116b9c63ec  PCI: rcar-host: Remove unneeded includes
 
-On some systems the ACPI namespace contains device objects that are
-not used in certain configurations of the system.  If they start off
-in the D0 power state configuration, they will stay in it until the
-system reboots, because of the lack of any mechanism possibly causing
-their configuration to change.  If that happens, they may prevent
-some power resources from being turned off or generally they may
-prevent the platform from getting into the deepest low-power states
-thus causing some energy to be wasted.
+elapsed time: 1494m
 
-Address this issue by changing the configuration of unused ACPI
-device objects to the D3cold power state one after carrying out
-the ACPI-based enumeration of devices.
+configs tested: 220
+configs skipped: 5
 
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=214091
-Link: https://lore.kernel.org/linux-acpi/20211007205126.11769-1-mario.limonciello@amd.com/
-Reported-by: Mario Limonciello <mario.limonciello@amd.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allmodconfig
+arm                              allyesconfig
+i386                 randconfig-c001-20211009
+i386                 randconfig-c001-20211008
+powerpc              randconfig-c003-20211009
+sh                           se7206_defconfig
+sh                   sh7724_generic_defconfig
+powerpc                      pasemi_defconfig
+x86_64                              defconfig
+arm                        cerfcube_defconfig
+s390                          debug_defconfig
+parisc                generic-32bit_defconfig
+m68k                       bvme6000_defconfig
+arm                            hisi_defconfig
+nios2                         10m50_defconfig
+mips                       capcella_defconfig
+arm                        trizeps4_defconfig
+powerpc                 mpc85xx_cds_defconfig
+arc                         haps_hs_defconfig
+mips                    maltaup_xpa_defconfig
+mips                          rb532_defconfig
+riscv             nommu_k210_sdcard_defconfig
+xtensa                          iss_defconfig
+arc                     haps_hs_smp_defconfig
+arm                        mvebu_v5_defconfig
+powerpc                       holly_defconfig
+powerpc                    gamecube_defconfig
+mips                       lemote2f_defconfig
+sh                        sh7763rdp_defconfig
+mips                        jmr3927_defconfig
+mips                       rbtx49xx_defconfig
+arm                           h5000_defconfig
+m68k                        m5272c3_defconfig
+arc                              allyesconfig
+mips                        omega2p_defconfig
+sh                        dreamcast_defconfig
+m68k                         amcore_defconfig
+arm                      pxa255-idp_defconfig
+mips                            gpr_defconfig
+mips                           gcw0_defconfig
+s390                                defconfig
+powerpc                     pq2fads_defconfig
+mips                         mpc30x_defconfig
+m68k                          multi_defconfig
+powerpc                    sam440ep_defconfig
+arm                       omap2plus_defconfig
+ia64                                defconfig
+powerpc                     tqm8548_defconfig
+arm                         axm55xx_defconfig
+arm                           stm32_defconfig
+powerpc                     pseries_defconfig
+xtensa                           alldefconfig
+powerpc                     mpc83xx_defconfig
+powerpc                          allyesconfig
+sh                          rsk7264_defconfig
+xtensa                    xip_kc705_defconfig
+nds32                             allnoconfig
+powerpc                 mpc8560_ads_defconfig
+m68k                        stmark2_defconfig
+sh                      rts7751r2d1_defconfig
+m68k                          atari_defconfig
+arm                             mxs_defconfig
+sh                   sh7770_generic_defconfig
+arm                        mvebu_v7_defconfig
+powerpc                  mpc885_ads_defconfig
+arm                       imx_v4_v5_defconfig
+arm                          collie_defconfig
+sh                               allmodconfig
+powerpc                 mpc837x_rdb_defconfig
+powerpc                   currituck_defconfig
+sh                            hp6xx_defconfig
+ia64                             alldefconfig
+arm                         bcm2835_defconfig
+powerpc                 mpc832x_mds_defconfig
+arm                            xcep_defconfig
+mips                           rs90_defconfig
+mips                        bcm63xx_defconfig
+mips                malta_qemu_32r6_defconfig
+powerpc                          g5_defconfig
+arm                        keystone_defconfig
+riscv                               defconfig
+sh                            titan_defconfig
+arm                        vexpress_defconfig
+powerpc                      ppc40x_defconfig
+um                                  defconfig
+mips                           ip22_defconfig
+mips                   sb1250_swarm_defconfig
+mips                         tb0219_defconfig
+arc                            hsdk_defconfig
+sh                        apsh4ad0a_defconfig
+mips                  decstation_64_defconfig
+sh                        sh7785lcr_defconfig
+m68k                         apollo_defconfig
+openrisc                            defconfig
+powerpc                      arches_defconfig
+sh                   secureedge5410_defconfig
+m68k                            mac_defconfig
+xtensa                       common_defconfig
+arm                          gemini_defconfig
+m68k                            q40_defconfig
+csky                                defconfig
+microblaze                      mmu_defconfig
+sh                  sh7785lcr_32bit_defconfig
+m68k                             allyesconfig
+sh                               j2_defconfig
+sh                            shmin_defconfig
+sh                           se7619_defconfig
+sh                           se7721_defconfig
+powerpc                 mpc836x_rdk_defconfig
+xtensa                generic_kc705_defconfig
+mips                         db1xxx_defconfig
+arm                          ep93xx_defconfig
+powerpc                   microwatt_defconfig
+m68k                        m5307c3_defconfig
+arm                   milbeaut_m10v_defconfig
+arm                  colibri_pxa270_defconfig
+arm                            mps2_defconfig
+sh                          lboxre2_defconfig
+mips                           xway_defconfig
+arm                     eseries_pxa_defconfig
+x86_64               randconfig-c001-20211008
+arm                  randconfig-c002-20211008
+x86_64               randconfig-c001-20211009
+arm                  randconfig-c002-20211009
+ia64                             allmodconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+nios2                               defconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+parisc                              defconfig
+parisc                           allyesconfig
+s390                             allyesconfig
+s390                             allmodconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                             allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a001-20211009
+i386                 randconfig-a003-20211009
+i386                 randconfig-a005-20211009
+i386                 randconfig-a004-20211009
+i386                 randconfig-a002-20211009
+i386                 randconfig-a006-20211009
+x86_64               randconfig-a015-20211008
+x86_64               randconfig-a012-20211008
+x86_64               randconfig-a016-20211008
+x86_64               randconfig-a013-20211008
+x86_64               randconfig-a011-20211008
+x86_64               randconfig-a014-20211008
+i386                 randconfig-a013-20211008
+i386                 randconfig-a016-20211008
+i386                 randconfig-a014-20211008
+i386                 randconfig-a011-20211008
+i386                 randconfig-a012-20211008
+i386                 randconfig-a015-20211008
+x86_64               randconfig-a003-20211009
+x86_64               randconfig-a005-20211009
+x86_64               randconfig-a001-20211009
+x86_64               randconfig-a002-20211009
+x86_64               randconfig-a004-20211009
+x86_64               randconfig-a006-20211009
+arc                  randconfig-r043-20211008
+s390                 randconfig-r044-20211008
+riscv                randconfig-r042-20211008
+riscv                            allmodconfig
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                          rv32_defconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-c007-20211009
+i386                 randconfig-c001-20211009
+arm                  randconfig-c002-20211009
+s390                 randconfig-c005-20211009
+powerpc              randconfig-c003-20211009
+riscv                randconfig-c006-20211009
+mips                 randconfig-c004-20211009
+x86_64               randconfig-a003-20211008
+x86_64               randconfig-a005-20211008
+x86_64               randconfig-a001-20211008
+x86_64               randconfig-a002-20211008
+x86_64               randconfig-a004-20211008
+x86_64               randconfig-a006-20211008
+i386                 randconfig-a001-20211008
+i386                 randconfig-a003-20211008
+i386                 randconfig-a005-20211008
+i386                 randconfig-a004-20211008
+i386                 randconfig-a002-20211008
+i386                 randconfig-a006-20211008
+x86_64               randconfig-a015-20211009
+x86_64               randconfig-a012-20211009
+x86_64               randconfig-a016-20211009
+x86_64               randconfig-a013-20211009
+x86_64               randconfig-a011-20211009
+x86_64               randconfig-a014-20211009
+i386                 randconfig-a013-20211009
+i386                 randconfig-a016-20211009
+i386                 randconfig-a014-20211009
+i386                 randconfig-a012-20211009
+i386                 randconfig-a011-20211009
+i386                 randconfig-a015-20211009
+hexagon              randconfig-r045-20211008
+hexagon              randconfig-r041-20211008
+
 ---
-
-Mario,
-
-I've changed acpi_dev_turn_off_if_unused() to check pnp.type.hardware_id
-instead of pnp.type.bus_address, because on some systems there are objects
-with both _ADR and _HID (which is against the spec) and the former is bogus.
-
-Please test this one, even though for PCI devices there should be no difference.
-
-Thanks!
-
----
- drivers/acpi/glue.c     |   25 +++++++++++++++++++++++++
- drivers/acpi/internal.h |    1 +
- drivers/acpi/scan.c     |    6 ++++++
- 3 files changed, 32 insertions(+)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -2559,6 +2559,12 @@ int __init acpi_scan_init(void)
- 		}
- 	}
- 
-+	/*
-+	 * Make sure that power management resources are not blocked by ACPI
-+	 * device objects with no users.
-+	 */
-+	bus_for_each_dev(&acpi_bus_type, NULL, NULL, acpi_dev_turn_off_if_unused);
-+
- 	acpi_turn_off_unused_power_resources();
- 
- 	acpi_scan_initialized = true;
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -350,3 +350,28 @@ void acpi_device_notify_remove(struct de
- 
- 	acpi_unbind_one(dev);
- }
-+
-+int acpi_dev_turn_off_if_unused(struct device *dev, void *not_used)
-+{
-+	struct acpi_device *adev = to_acpi_device(dev);
-+
-+	/*
-+	 * Skip device objects with device IDs, because they may be in use even
-+	 * if they are not companions of any physical device objects.
-+	 */
-+	if (adev->pnp.type.hardware_id)
-+		return 0;
-+
-+	mutex_lock(&adev->physical_node_lock);
-+
-+	/*
-+	 * Device objects without device IDs are not in use if they have no
-+	 * corresponding physical device objects.
-+	 */
-+	if (list_empty(&adev->physical_node_list))
-+		acpi_device_set_power(adev, ACPI_STATE_D3_COLD);
-+
-+	mutex_unlock(&adev->physical_node_lock);
-+
-+	return 0;
-+}
-Index: linux-pm/drivers/acpi/internal.h
-===================================================================
---- linux-pm.orig/drivers/acpi/internal.h
-+++ linux-pm/drivers/acpi/internal.h
-@@ -117,6 +117,7 @@ bool acpi_device_is_battery(struct acpi_
- bool acpi_device_is_first_physical_node(struct acpi_device *adev,
- 					const struct device *dev);
- int acpi_bus_register_early_device(int type);
-+int acpi_dev_turn_off_if_unused(struct device *dev, void *not_used);
- 
- /* --------------------------------------------------------------------------
-                      Device Matching and Notification
-
-
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
