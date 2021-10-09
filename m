@@ -2,259 +2,125 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D6E6C433FE
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 10:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 359A6C433EF
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 11:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1728560F6C
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 10:53:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E9ED60F6B
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Oct 2021 11:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244764AbhJIKzA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 9 Oct 2021 06:55:00 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:28906 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244688AbhJIKyy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Oct 2021 06:54:54 -0400
-Received: from dggeme758-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4HRMH312WKzbn0t;
-        Sat,  9 Oct 2021 18:48:31 +0800 (CST)
-Received: from SZX1000464847.huawei.com (10.21.59.169) by
- dggeme758-chm.china.huawei.com (10.3.19.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Sat, 9 Oct 2021 18:52:55 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-To:     <helgaas@kernel.org>, <hch@infradead.org>, <kw@linux.com>,
-        <logang@deltatee.com>, <leon@kernel.org>,
-        <linux-pci@vger.kernel.org>, <rajur@chelsio.com>,
-        <hverkuil-cisco@xs4all.nl>
-CC:     <linux-media@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH V10 7/8] PCI: Enable 10-Bit Tag support for PCIe Endpoint device
-Date:   Sat, 9 Oct 2021 18:49:37 +0800
-Message-ID: <20211009104938.48225-8-liudongdong3@huawei.com>
-X-Mailer: git-send-email 2.22.0
-In-Reply-To: <20211009104938.48225-1-liudongdong3@huawei.com>
-References: <20211009104938.48225-1-liudongdong3@huawei.com>
+        id S232583AbhJILG0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 9 Oct 2021 07:06:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:48351 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232720AbhJILGY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Oct 2021 07:06:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633777466;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lJ/2iCuZIJi8M6YSq3TSpepZV4prmg5N+D8TG37hfos=;
+        b=AaxYMxWO/BxUn2MZXFoc35vCI1KV/4CUz8y8p85dSztjOa0jHIixCxO6RGnznkOiLHXPN7
+        MG0m5wU+2AxYtXxgK0xS3+g6vwV6+CPFP/huMjMwvP1CzbKNNwHiI33KTu9lMzum0tsYdu
+        aJUfkc2diMHEqi6grWIVPcouKMuHSR0=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-19-7B316H4pNnS9k2hN3Achlw-1; Sat, 09 Oct 2021 07:04:22 -0400
+X-MC-Unique: 7B316H4pNnS9k2hN3Achlw-1
+Received: by mail-ed1-f70.google.com with SMTP id 2-20020a508e02000000b003d871759f5dso11477048edw.10
+        for <linux-pci@vger.kernel.org>; Sat, 09 Oct 2021 04:04:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=lJ/2iCuZIJi8M6YSq3TSpepZV4prmg5N+D8TG37hfos=;
+        b=iegi/HHLV5JPFWmCvde2bNLs24ILc+fjWqYOuiCmaT+6VFy8Ad0Kxn549bVjZfwu5d
+         OteXXQK/AqnjvD9Cv3Nt2SngAmZiZcB7y252P2atRgrqyKUUwjD/5n4Q6yeVnCs7lcgK
+         HqyKcaaex8XgN8euDo9D4QPp+pB+rR2LM2jQJg1iUuGr09szaBiqHHvjrUB2IweqhTJ8
+         sz7EYWDubOIan0wT9rV8TKrKvZjWsffLKcF0oqCkYV+hCyBAP8FKzaPL35zth48Dmtii
+         7n5JOZF0U5DwiVq9x87vmhCWUu5GXVEM95i5TshsXr8rHQfaO7bbUBq0oFnAwfVW74XY
+         rDaQ==
+X-Gm-Message-State: AOAM531OZGDG2D6OPEbK+ksgGKbOH4YKzhEfSCCRsxYoc5OXvnRuORji
+        Ttqh0vBIa9ADH4K2rVTp8h/kOd2/H996zZNvErgqwgxohjtVz2jt3VeB6OxNmrzat2heFOUmIVS
+        vrcgcDt/HFBkr4OFLusA/
+X-Received: by 2002:a17:906:585a:: with SMTP id h26mr10966022ejs.31.1633777461691;
+        Sat, 09 Oct 2021 04:04:21 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwobA8ZxtLfM+i96qTUZJc2D6zqI9p4pA768qS/bvwYQXY5otl6Kxnqg/w4gwu0W8PjfTgg/g==
+X-Received: by 2002:a17:906:585a:: with SMTP id h26mr10965985ejs.31.1633777461334;
+        Sat, 09 Oct 2021 04:04:21 -0700 (PDT)
+Received: from redhat.com ([2.55.132.170])
+        by smtp.gmail.com with ESMTPSA id n22sm831106eja.120.2021.10.09.04.04.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 Oct 2021 04:04:20 -0700 (PDT)
+Date:   Sat, 9 Oct 2021 07:04:10 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        James E J Bottomley <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        David Hildenbrand <david@redhat.com>,
+        Andrea Arcangeli <aarcange@redhat.com>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        Peter H Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Andi Kleen <ak@linux.intel.com>,
+        Kirill Shutemov <kirill.shutemov@linux.intel.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-doc@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v5 16/16] x86/tdx: Add cmdline option to force use of
+ ioremap_host_shared
+Message-ID: <20211009070132-mutt-send-email-mst@kernel.org>
+References: <20211009003711.1390019-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20211009003711.1390019-17-sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.21.59.169]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggeme758-chm.china.huawei.com (10.3.19.104)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211009003711.1390019-17-sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-10-Bit Tag capability, introduced in PCIe-4.0 increases the total Tag
-field size from 8 bits to 10 bits.
+On Fri, Oct 08, 2021 at 05:37:11PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> +	ioremap_force_shared= [X86_64, CCG]
+> +			Force the kernel to use shared memory mappings which do
+> +			not use ioremap_host_shared/pcimap_host_shared to opt-in
+> +			to shared mappings with the host. This feature is mainly
+> +			used by a confidential guest when enabling new drivers
+> +			without proper shared memory related changes. Please note
+> +			that this option might also allow other non explicitly
+> +			enabled drivers to interact with the host in confidential
+> +			guest, which could cause other security risks. This option
+> +			will also cause BIOS data structures to be shared with the
+> +			host, which might open security holes.
+> +
+>  	io7=		[HW] IO7 for Marvel-based Alpha systems
+>  			See comment before marvel_specify_io7 in
+>  			arch/alpha/kernel/core_marvel.c.
 
-PCIe spec 5.0 r1.0 section 2.2.6.2 "Considerations for Implementing
-10-Bit Tag Capabilities" Implementation Note:
+The connection is quite unfortunate IMHO.
+Can't there be an option
+that unbreaks drivers *without* opening up security holes by
+making BIOS shared?
 
-  For platforms where the RC supports 10-Bit Tag Completer capability,
-  it is highly recommended for platform firmware or operating software
-  that configures PCIe hierarchies to Set the 10-Bit Tag Requester Enable
-  bit automatically in Endpoints with 10-Bit Tag Requester capability.
-  This enables the important class of 10-Bit Tag capable adapters that
-  send Memory Read Requests only to host memory.
-
-It's safe to enable 10-bit tags for all devices below a Root Port that
-supports them. Switches that lack 10-Bit Tag Completer capability are
-still able to forward NPRs and Completions carrying 10-Bit Tags correctly,
-since the two new Tag bits are in TLP Header bits that were formerly
-Reserved.
-
-PCIe spec 5.0 r1.0 section 2.2.6.2 says:
-
-  If an Endpoint supports sending Requests to other Endpoints (as opposed
-  to host memory), the Endpoint must not send 10-Bit Tag Requests to
-  another given Endpoint unless an implementation-specific mechanism
-  determines that the Endpoint supports 10-Bit Tag Completer capability.
-
-It is not safe for P2P traffic if an Endpoint send 10-Bit Tag Requesters
-to another Endpoint that does not support 10-Bit Tag Completer capability,
-so we provide sysfs file to disable 10-Bit Tag Requester. Unbind the
-device driver, set the sysfs file and then rebind the driver.
-
-Add a kernel parameter pcie_tag_peer2peer that disables 10-Bit Tag
-Requester for all PCIe devices. This configuration allows peer-to-peer
-DMA between any pair of devices, possibly at the cost of reduced
-performance.
-
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- .../admin-guide/kernel-parameters.txt         |  5 ++
- drivers/pci/iov.c                             |  3 ++
- drivers/pci/pci-sysfs.c                       |  3 ++
- drivers/pci/pci.c                             |  4 ++
- drivers/pci/pci.h                             |  7 +++
- drivers/pci/probe.c                           | 46 ++++++++++++++++++-
- 6 files changed, 67 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 91ba391f9b32..54fddae7b2d9 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3979,6 +3979,11 @@
- 				any pair of devices, possibly at the cost of
- 				reduced performance.  This also guarantees
- 				that hot-added devices will work.
-+		pcie_tag_peer2peer	Disable 10-Bit Tag Requester for all
-+				PCIe devices. This configuration allows
-+				peer-to-peer DMA between any pair of devices,
-+				possibly at the cost of reduced performance.
-+
- 		cbiosize=nn[KMG]	The fixed amount of bus space which is
- 				reserved for the CardBus bridge's IO window.
- 				The default value is 256 bytes.
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 527ef0b745c7..bd600c15258f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -237,6 +237,9 @@ static ssize_t sriov_vf_10bit_tag_ctl_store(struct device *dev,
- 	if (vf_dev->driver)
- 		return -EBUSY;
- 
-+	if (pcie_tag_config == PCIE_TAG_PEER2PEER)
-+		return -EPERM;
-+
- 	if (!pcie_rp_10bit_tag_cmp_supported(pdev))
- 		return -EPERM;
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index f571e4a0eb4c..17aef11454d3 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -322,6 +322,9 @@ static ssize_t pci_10bit_tag_store(struct device *dev,
- 	if (pdev->driver)
- 		return -EBUSY;
- 
-+	if (pcie_tag_config == PCIE_TAG_PEER2PEER)
-+		return -EPERM;
-+
- 	if (!pcie_rp_10bit_tag_cmp_supported(pdev))
- 		return -EPERM;
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 64138a83b0f7..46faf2e8c8ab 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -118,6 +118,8 @@ enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_PEER2PEER;
- enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
- #endif
- 
-+enum pcie_tag_config_types pcie_tag_config = PCIE_TAG_DEFAULT;
-+
- /*
-  * The default CLS is used if arch didn't set CLS explicitly and not
-  * all pci devices agree on the same value.  Arch can override either
-@@ -6795,6 +6797,8 @@ static int __init pci_setup(char *str)
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
- 				disable_acs_redir_param = str + 18;
-+			} else if (!strncmp(str, "pcie_tag_peer2peer", 18)) {
-+				pcie_tag_config = PCIE_TAG_PEER2PEER;
- 			} else {
- 				pr_err("PCI: Unknown option `%s'\n", str);
- 			}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f719a41dfc7f..7846aa7b85dc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -59,6 +59,13 @@ struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
- struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
- 						   u16 cap);
- 
-+enum pcie_tag_config_types {
-+	PCIE_TAG_DEFAULT,   /* Enable 10-Bit Tag Requester for devices below
-+			       Root Port that support 10-Bit Tag Completer. */
-+	PCIE_TAG_PEER2PEER  /* Disable 10-Bit Tag Requester for all devices. */
-+};
-+extern enum pcie_tag_config_types pcie_tag_config;
-+
- #define PCI_PM_D2_DELAY         200	/* usec; see PCIe r4.0, sec 5.9.1 */
- #define PCI_PM_D3HOT_WAIT       10	/* msec */
- #define PCI_PM_D3COLD_WAIT      100	/* msec */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 705dd4e85df5..ab18fac5d54d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2056,10 +2056,30 @@ bool pcie_rp_10bit_tag_cmp_supported(struct pci_dev *dev)
- 	return true;
- }
- 
-+static void pci_configure_10bit_tags(struct pci_dev *dev)
-+{
-+	/*
-+	 * PCIe 5.0 section 9.3.5.10 10-Bit Tag Requester Enable in Device
-+	 * Control 2 Register is RsvdP for VF.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (!pcie_rp_10bit_tag_cmp_supported(dev))
-+		return;
-+
-+	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-+		return;
-+
-+	pci_dbg(dev, "enabling 10-Bit Tag Requester\n");
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+}
-+
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- {
- 	struct pci_host_bridge *host;
--	u16 ctl;
-+	u16 ctl, ctl2;
- 	int ret;
- 
- 	if (!pci_is_pcie(dev))
-@@ -2072,6 +2092,10 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 	if (ret)
- 		return 0;
- 
-+	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &ctl2);
-+	if (ret)
-+		return 0;
-+
- 	host = pci_find_host_bridge(dev->bus);
- 	if (!host)
- 		return 0;
-@@ -2086,6 +2110,12 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
- 						   PCI_EXP_DEVCTL_EXT_TAG);
- 		}
-+
-+		if (ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN) {
-+			pci_info(dev, "disabling 10-Bit Tags\n");
-+			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+		}
- 		return 0;
- 	}
- 
-@@ -2094,6 +2124,20 @@ int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- 	}
-+
-+	if ((pcie_tag_config == PCIE_TAG_PEER2PEER) &&
-+	    (ctl2 & PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN)) {
-+		pci_info(dev, "disabling 10-Bit Tags\n");
-+		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
-+					PCI_EXP_DEVCTL2_10BIT_TAG_REQ_EN);
-+		return 0;
-+	}
-+
-+	if (pcie_tag_config != PCIE_TAG_DEFAULT)
-+		return 0;
-+
-+	pci_configure_10bit_tags(dev);
-+
- 	return 0;
- }
- 
 -- 
-2.22.0
+MST
 
