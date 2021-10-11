@@ -2,66 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4036C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF1C4C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9565660EE5
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9954060F3A
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234313AbhJKSKy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Oct 2021 14:10:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39390 "EHLO
+        id S232019AbhJKSMb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Oct 2021 14:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233422AbhJKSKy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 14:10:54 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3078C061570;
-        Mon, 11 Oct 2021 11:08:53 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id g9so1429914plo.12;
-        Mon, 11 Oct 2021 11:08:53 -0700 (PDT)
+        with ESMTP id S229835AbhJKSMb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 14:12:31 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAAC8C061570;
+        Mon, 11 Oct 2021 11:10:30 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id pf6-20020a17090b1d8600b0019fa884ab85so40234pjb.5;
+        Mon, 11 Oct 2021 11:10:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tHENHhkpkZLornjDw8P+cbQvSFGcu3v2lE8jdyEkvRc=;
-        b=Br70NNJ34I4Yegy0eEKartu/w5zPNCFTVWKFcc+0SH9riN481Yw03dpvxVCyDtFDXl
-         SAGytifw3UMmpq3lnw8ankHQcppUplykvHGQN3JYCCcGRPSFfUvVibqUQWk6LKV4jSAx
-         vwuTdXxOL0wPIJfLv2QZAKykGNtc07syqHF+0tjqKVLvwKPqq21ziVPb/FpNrBNI1gwA
-         kWniU6LOcTTwgTMTNq5y8zxlj65oBXev1Y4/2VArihAVHVhSq82Ax4vyAq0S1YGr0b1t
-         nbpb5I7m3Gm1ep5Ukn4lB4YDMTGjThfuBcygzwFGLdlN0zU2wX+Q7ZyxL3t82eKCMNPD
-         vogg==
+        bh=hOpzKqtZkl4vpPBZR8uQl2s3BPZXOsp3vKlUaVIS/Mo=;
+        b=NCpPkW2tW+1A9ejqPsw/E89AdQ1IG22gXH4d0M9se1jCFdsfpIKYs4e087pVmidl/e
+         q8qXvAKlGq9XLghs8p7T9gx0F4y0R4IX350PxIBQ7mkLYCyILrSZ460YkVB36SdBHikK
+         rw3NuJ9e5U1bRxNP0zCAQawqJ7QisUHe8RacVwL6iHNGGS7S7+Ecra7/vN+xVk3XU0gt
+         dwP8+iyekUEdEAprLEoIHsnCrxeWBakt7ZC1+zNNyHYBfqOizT3BOii/pEbLivYDE0PA
+         etsTVYzI2VFTdzajkhJOd8NRKWRFxzTiyNhBL5CODQz4JBTbgElhcn8JeIQuYbARVDBX
+         6L0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tHENHhkpkZLornjDw8P+cbQvSFGcu3v2lE8jdyEkvRc=;
-        b=xPmd5zzjvqBnNFPaQ3jRZecZCSSCgO9NDCgQXOePzSlgKgbRAtI/vb3penvPku9nYv
-         9JNCCH1fDl0Z4wTh654p7LYMHFvZvaeWC6TClWIRFSPtHVB+buvM5DBUhhhuwQ+YPDbB
-         EZ7p0I6xmFmp/gW0s07iRJ1hkzS1/AszuzytOOLLQ46clozyNb4wxzXQ3DBRYNJrM4F9
-         KsBaW7uKQe9VX6od4H+FJQM6E1ti35/bjXBJbLtbh32B9mXFGDq5S1Oht2Yn6EV/iPLc
-         4ZrfRylwS57rn39+gXGxuW5wsYSlsXPWVIO2Wo8Y2RWJ++D6JfmHRHfsB1tyDMY1jm+v
-         SscQ==
-X-Gm-Message-State: AOAM533JP2SF0TmCoWg0nRfccUetboDeuYancoTpw+npAhYeqF19ob2o
-        509NfxTVnzf/Y0mrew18wLwGhayuQj0do+nr
-X-Google-Smtp-Source: ABdhPJxg6bu3T2mprP33rb4kjg4OQn9iK/yPDYAEI5T0dMHwN1Br2zmBANHMy1ks/11wEZhbExnAkg==
-X-Received: by 2002:a17:90a:9f95:: with SMTP id o21mr515839pjp.21.1633975733419;
-        Mon, 11 Oct 2021 11:08:53 -0700 (PDT)
+        bh=hOpzKqtZkl4vpPBZR8uQl2s3BPZXOsp3vKlUaVIS/Mo=;
+        b=HVBStgdDxQ7Tz2N5/tqAcDi0p5i/HSgjkLemb+4Lt96/GJX6hVPIaWvSfsSwjtM9Nm
+         yRzAWHiTpA2UzKYoTojci7YMNUc6oLAlFOCB42Hrc6Jyct97w/GZIQRJvq8NuuXx7k5n
+         uN58SZmFvUzTEOS3pugZcXpSmhZ/7th5YVgWvBkCbuT74OjFHqSrR+OkuSx4APJFnWwS
+         n6HRBqpe/E14Vqu23407Si53buPLNPYMRUKJ9IYkWZrNDja4z1j3TgHqFtWWBGeSrCpU
+         6+3MkgsH+nQJPqSBxIFX9V7grGqi8hSErRchD9NMeT63UxdDrPd0lM3ktvmiBSHkeHmk
+         X4gA==
+X-Gm-Message-State: AOAM531+mq8l7Im65tNYnP7LwDS9MAqy3a4Yu2Rq2F7pVsIJHxAsh8fX
+        Srvjq4SjKEx4pJe4nzNd2wM=
+X-Google-Smtp-Source: ABdhPJyTTIVV9W/Db1QkVLCqIJwuHX9GWdlAoaPYXja1BJeanTcWGwAAwOoIrYet7aTT3B6sBS+BxQ==
+X-Received: by 2002:a17:90b:4a01:: with SMTP id kk1mr552278pjb.208.1633975830306;
+        Mon, 11 Oct 2021 11:10:30 -0700 (PDT)
 Received: from localhost.localdomain ([2406:7400:63:9f95:848b:7cc8:d852:ad42])
-        by smtp.gmail.com with ESMTPSA id u74sm8480423pfc.87.2021.10.11.11.08.50
+        by smtp.gmail.com with ESMTPSA id j16sm8471216pfr.42.2021.10.11.11.10.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Oct 2021 11:08:53 -0700 (PDT)
+        Mon, 11 Oct 2021 11:10:29 -0700 (PDT)
 From:   Naveen Naidu <naveennaidu479@gmail.com>
 To:     bhelgaas@google.com
 Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Russell Currey <ruscur@russell.cc>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org (open list:PCI ENHANCED ERROR HANDLING
-        (EEH) FOR POWERPC)
-Subject: [PATCH 17/22] PCI/DPC: Use RESPONSE_IS_PCI_ERROR() to check read from hardware
-Date:   Mon, 11 Oct 2021 23:38:27 +0530
-Message-Id: <8de64c63fa1559929c83a94a0da8e8f42f0b5377.1633972263.git.naveennaidu479@gmail.com>
+        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Subject: [PATCH 18/22] PCI/PME: Use RESPONSE_IS_PCI_ERROR() to check read from hardware
+Date:   Mon, 11 Oct 2021 23:40:14 +0530
+Message-Id: <53e9d01d1683ccae66b07a5b7904e2aa124c5aa3.1633972263.git.naveennaidu479@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1633972263.git.naveennaidu479@gmail.com>
 References: <cover.1633972263.git.naveennaidu479@gmail.com>
@@ -85,31 +84,31 @@ Compile tested only.
 
 Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
 ---
- drivers/pci/pcie/dpc.c | 4 ++--
+ drivers/pci/pcie/pme.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index c556e7beafe3..561c44d9429c 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -79,7 +79,7 @@ static bool dpc_completed(struct pci_dev *pdev)
- 	u16 status;
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 1d0dd77fed3a..24588d0b581f 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -224,7 +224,7 @@ static void pcie_pme_work_fn(struct work_struct *work)
+ 			break;
  
- 	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_STATUS, &status);
--	if ((status != 0xffff) && (status & PCI_EXP_DPC_STATUS_TRIGGER))
-+	if ((!RESPONSE_IS_PCI_ERROR(&status)) && (status & PCI_EXP_DPC_STATUS_TRIGGER))
- 		return false;
+ 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+-		if (rtsta == (u32) ~0)
++		if (RESPONSE_IS_PCI_ERROR(&rtsta))
+ 			break;
  
- 	if (test_bit(PCI_DPC_RECOVERING, &pdev->priv_flags))
-@@ -312,7 +312,7 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 		if (rtsta & PCI_EXP_RTSTA_PME) {
+@@ -274,7 +274,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+ 	spin_lock_irqsave(&data->lock, flags);
+ 	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
  
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
- 
--	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || status == (u16)(~0))
-+	if (!(status & PCI_EXP_DPC_STATUS_INTERRUPT) || RESPONSE_IS_PCI_ERROR(&status))
+-	if (rtsta == (u32) ~0 || !(rtsta & PCI_EXP_RTSTA_PME)) {
++	if (RESPONSE_IS_PCI_ERROR(&rtsta) || !(rtsta & PCI_EXP_RTSTA_PME)) {
+ 		spin_unlock_irqrestore(&data->lock, flags);
  		return IRQ_NONE;
- 
- 	pci_write_config_word(pdev, cap + PCI_EXP_DPC_STATUS,
+ 	}
 -- 
 2.25.1
 
