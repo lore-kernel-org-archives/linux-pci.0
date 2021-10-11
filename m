@@ -2,101 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5ABC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 13:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5058C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 13:35:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 432B760F35
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 13:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEADA61056
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 13:35:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235280AbhJKNex (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Oct 2021 09:34:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59038 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235567AbhJKNev (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 09:34:51 -0400
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [IPv6:2001:67c:2050::465:202])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD6E2C061570;
-        Mon, 11 Oct 2021 06:32:51 -0700 (PDT)
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:105:465:1:1:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4HSfqj60cgzQkDy;
-        Mon, 11 Oct 2021 15:32:49 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-From:   =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>
-To:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi017@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     =?UTF-8?q?Jonas=20Dre=C3=9Fler?= <verdre@v0yd.nl>,
-        Tsuchiya Yuto <kitakar@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Brian Norris <briannorris@chromium.org>,
-        David Laight <David.Laight@ACULAB.COM>, stable@vger.kernel.org
-Subject: [PATCH v3 1/2] mwifiex: Read a PCI register after writing the TX ring write pointer
-Date:   Mon, 11 Oct 2021 15:32:23 +0200
-Message-Id: <20211011133224.15561-2-verdre@v0yd.nl>
-In-Reply-To: <20211011133224.15561-1-verdre@v0yd.nl>
-References: <20211011133224.15561-1-verdre@v0yd.nl>
+        id S235814AbhJKNh2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Oct 2021 09:37:28 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3964 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235759AbhJKNh2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 09:37:28 -0400
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HSfpL1VfCz6H7ct;
+        Mon, 11 Oct 2021 21:31:38 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Mon, 11 Oct 2021 15:35:23 +0200
+Received: from localhost (10.52.122.204) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Mon, 11 Oct
+ 2021 14:35:22 +0100
+Date:   Mon, 11 Oct 2021 14:35:04 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     <linux-cxl@vger.kernel.org>, Ben Widawsky <ben.widawsky@intel.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <hch@lst.de>
+Subject: Re: [PATCH v3 09/10] cxl/pci: Use pci core's DVSEC functionality
+Message-ID: <20211011143504.00003b2d@Huawei.com>
+In-Reply-To: <163379788528.692348.11581080806976608802.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <163379783658.692348.16064992154261275220.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <163379788528.692348.11581080806976608802.stgit@dwillia2-desk3.amr.corp.intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 559ED1898
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.52.122.204]
+X-ClientProxiedBy: lhreml723-chm.china.huawei.com (10.201.108.74) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On the 88W8897 PCIe+USB card the firmware randomly crashes after setting
-the TX ring write pointer. The issue is present in the latest firmware
-version 15.68.19.p21 of the PCIe+USB card.
+On Sat, 9 Oct 2021 09:44:45 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-Those firmware crashes can be worked around by reading any PCI register
-of the card after setting that register, so read the PCI_VENDOR_ID
-register here. The reason this works is probably because we keep the bus
-from entering an ASPM state for a bit longer, because that's what causes
-the cards firmware to crash.
+> From: Ben Widawsky <ben.widawsky@intel.com>
+> 
+> Reduce maintenance burden of DVSEC query implementation by using the
+> centralized PCI core implementation.
+> 
+> Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+> [djbw: kill cxl_pci_dvsec()]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-This fixes a bug where during RX/TX traffic and with ASPM L1 substates
-enabled (the specific substates where the issue happens appear to be
-platform dependent), the firmware crashes and eventually a command
-timeout appears in the logs.
+Very pleased to see this being cleaned up.  Thanks,
+fwiw
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=109681
-Cc: stable@vger.kernel.org
-Signed-off-by: Jonas Dreßler <verdre@v0yd.nl>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index c6ccce426b49..641fa539de1f 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1490,6 +1490,14 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 			ret = -1;
- 			goto done_unmap;
- 		}
-+
-+		/* The firmware (latest version 15.68.19.p21) of the 88W8897 PCIe+USB card
-+		 * seems to crash randomly after setting the TX ring write pointer when
-+		 * ASPM powersaving is enabled. A workaround seems to be keeping the bus
-+		 * busy by reading a random register afterwards.
-+		 */
-+		mwifiex_read_reg(adapter, PCI_VENDOR_ID, &rx_val);
-+
- 		if ((mwifiex_pcie_txbd_not_full(card)) &&
- 		    tx_param->next_pkt_len) {
- 			/* have more packets and TxBD still can hold more */
--- 
-2.31.1
+> ---
+>  drivers/cxl/pci.c |   26 ++------------------------
+>  1 file changed, 2 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index b6bc8e5ca028..f2e2a02d1fe6 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -340,29 +340,6 @@ static void cxl_unmap_regblock(struct pci_dev *pdev,
+>  	map->base = NULL;
+>  }
+>  
+> -static int cxl_pci_dvsec(struct pci_dev *pdev, int dvsec)
+> -{
+> -	int pos;
+> -
+> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DVSEC);
+> -	if (!pos)
+> -		return 0;
+> -
+> -	while (pos) {
+> -		u16 vendor, id;
+> -
+> -		pci_read_config_word(pdev, pos + PCI_DVSEC_HEADER1, &vendor);
+> -		pci_read_config_word(pdev, pos + PCI_DVSEC_HEADER2, &id);
+> -		if (vendor == PCI_DVSEC_VENDOR_ID_CXL && dvsec == id)
+> -			return pos;
+> -
+> -		pos = pci_find_next_ext_capability(pdev, pos,
+> -						   PCI_EXT_CAP_ID_DVSEC);
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static int cxl_probe_regs(struct pci_dev *pdev, struct cxl_register_map *map)
+>  {
+>  	struct cxl_component_reg_map *comp_map;
+> @@ -449,7 +426,8 @@ static int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
+>  	u32 regloc_size, regblocks;
+>  	int regloc, i;
+>  
+> -	regloc = cxl_pci_dvsec(pdev, PCI_DVSEC_ID_CXL_REGLOC_DVSEC_ID);
+> +	regloc = pci_find_dvsec_capability(pdev, PCI_DVSEC_VENDOR_ID_CXL,
+> +					   PCI_DVSEC_ID_CXL_REGLOC_DVSEC_ID);
+>  	if (!regloc)
+>  		return -ENXIO;
+>  
+> 
 
