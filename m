@@ -2,175 +2,131 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 970F2C43219
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93BBCC4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 19:09:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 728EB60F35
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78A4560E8B
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 19:09:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230331AbhJKSns (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Oct 2021 14:43:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36592 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229824AbhJKSnr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Oct 2021 14:43:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5A37F60EB1;
-        Mon, 11 Oct 2021 18:41:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633977707;
-        bh=OUpsvaa2Ww8kOdRdhRMnEsW/y3JxO0MjIcQCoVLgCz8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ASGTHeGvamJWUEwSAeRjQDib2OtvfxkhIFCDCwT5tnO2iFyGAoiMCJFQtqRkE0eG8
-         dpmHYWzcNuADcklKZPise08Y0u7QIlVOy2c/3Ri7yj6XIAAlg6OyikBlYNYC5BLyOG
-         PLazxCWmheZqDqaL/TKGcBOlJRA0JWDG8Ujmd2+RMR8O9goVoNsoxV2GZ4q8UgDOHp
-         /lmRda7U4NHhiwMkcChPALtVMFxGTLs+cBOFUhXfQif4KZrEptMlklYraHbIzEhEjT
-         mKey+azEelJu+Dx7KPpl/7vF8QP7MYStdPRDoT9vv1PRuLzKE8O7k0BPO7+P5g6Fgc
-         EnwlapTByzZBw==
-Received: by pali.im (Postfix)
-        id 04A9A7C9; Mon, 11 Oct 2021 20:41:44 +0200 (CEST)
-Date:   Mon, 11 Oct 2021 20:41:44 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Naveen Naidu <naveennaidu479@gmail.com>
-Cc:     bhelgaas@google.com,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        "moderated list:PCI DRIVER FOR AARDVARK (Marvell Armada 3700)" 
-        <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 09/22] PCI: aardvark: Use SET_PCI_ERROR_RESPONSE() when
- device not found
-Message-ID: <20211011184144.qcbmif7hvzozdgzw@pali>
-References: <cover.1633972263.git.naveennaidu479@gmail.com>
- <f423dc9cc90e345680d289d5df7ff469e9b89c60.1633972263.git.naveennaidu479@gmail.com>
- <20211011180850.hgp4ctykvus37fx7@pali>
- <20211011182526.kboaxqofdpd2jjrl@theprophet>
+        id S233481AbhJKTLU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Oct 2021 15:11:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:25447 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233905AbhJKTLT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 15:11:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633979359;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oZEQAOmKk6R+KRX2BzvVHC2H3CodKlCG/yzYUUC2zJA=;
+        b=KwudnqNUzol5PC2894sI4uG23yAdPLAGs9D71BmLU2f1sO67SCq5ezRs0ddtPX9/roDXEF
+        vt9nC3FQ5vwzV7E6nGWRVu2CNYq4TnGDtZMJE4zgfTsYOl7q+k/xB7cgf8kFOLjHHqYvk1
+        g2bK/LrvgBfhbsZqn5BVXa5zWqitjnA=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-41-SzzSeT8uM1WI8NiGUcxKJg-1; Mon, 11 Oct 2021 15:09:18 -0400
+X-MC-Unique: SzzSeT8uM1WI8NiGUcxKJg-1
+Received: by mail-ed1-f69.google.com with SMTP id v2-20020a50f082000000b003db24e28d59so16711276edl.5
+        for <linux-pci@vger.kernel.org>; Mon, 11 Oct 2021 12:09:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=oZEQAOmKk6R+KRX2BzvVHC2H3CodKlCG/yzYUUC2zJA=;
+        b=GyjB8rcQdXyxaX4+oH3k2o60iTBIKbKvuUviEn2LfNF2toXSbZ/qD9iX/1HIvcxWhJ
+         Kgq8kioRco/Xte3lEBlckPVkrcswr8taA8ZuUTkddbTGbTcHxFdb6OLCe/3xEz45lAB9
+         6+UvsiJNFu/rKkrtdsVHDWY1qLDJsGHddqrB6ZPWN+m9QEzrpZc7QS5IhcUIiIjQhCSf
+         MXbJ/91y5G0ZMwoj63dujy2OiN+hmAmsgc+I3xAG6KSRn6htHvMe82Dm93h/JE9cdPv3
+         eH7W+73nqDjNOpepdxkYwRNRSMI+1YA2mECNRh80QEokH7n6RaU5H/ep6tuPSfDBzbYi
+         92RA==
+X-Gm-Message-State: AOAM532rOOLXUwMw5MeiZpE1rNCF5jr+YRsVJ+iXLvztVWP0ZTkmO4Nv
+        X2PldhzQGnMHpaQBi8v8muJr8CSVavIYYeVsF3VLYbwYcUvb8RE7xxhtQyeUL4KMbmDWpvjsVS2
+        +WZkko6svFTZNqwqqr/P3
+X-Received: by 2002:aa7:c38b:: with SMTP id k11mr4113127edq.79.1633979356727;
+        Mon, 11 Oct 2021 12:09:16 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwGboOz6J9azwkeciPdL9sKClCOiUS/XGJc/PjIe5OTL3dASYPSk/hflbIEKyA9zwBTklJK0A==
+X-Received: by 2002:aa7:c38b:: with SMTP id k11mr4113103edq.79.1633979356541;
+        Mon, 11 Oct 2021 12:09:16 -0700 (PDT)
+Received: from redhat.com ([2.55.159.57])
+        by smtp.gmail.com with ESMTPSA id z4sm5250327edd.46.2021.10.11.12.09.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Oct 2021 12:09:15 -0700 (PDT)
+Date:   Mon, 11 Oct 2021 15:09:09 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Andi Kleen <ak@linux.intel.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        James E J Bottomley <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        David Hildenbrand <david@redhat.com>,
+        Andrea Arcangeli <aarcange@redhat.com>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        Peter H Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Kirill Shutemov <kirill.shutemov@linux.intel.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-doc@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v5 12/16] PCI: Add pci_iomap_host_shared(),
+ pci_iomap_host_shared_range()
+Message-ID: <20211011142956-mutt-send-email-mst@kernel.org>
+References: <20211009003711.1390019-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20211009003711.1390019-13-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <YWPunfa+WK86Cgnv@infradead.org>
+ <a070274e-6a3a-fb0a-68ff-d320d0729377@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20211011182526.kboaxqofdpd2jjrl@theprophet>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <a070274e-6a3a-fb0a-68ff-d320d0729377@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Monday 11 October 2021 23:55:35 Naveen Naidu wrote:
-> On 11/10, Pali Rohár wrote:
-> > On Monday 11 October 2021 23:26:33 Naveen Naidu wrote:
-> > > An MMIO read from a PCI device that doesn't exist or doesn't respond
-> > > causes a PCI error.  There's no real data to return to satisfy the
-> > > CPU read, so most hardware fabricates ~0 data.
-> > > 
-> > > Use SET_PCI_ERROR_RESPONSE() to set the error response, when a faulty
-> > > read occurs.
-> > > 
-> > > This helps unify PCI error response checking and make error check
-> > > consistent and easier to find.
-> > > 
-> > > Compile tested only.
-> > > 
-> > > Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
-> > > ---
-> > >  drivers/pci/controller/pci-aardvark.c | 8 ++++----
-> > >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > > index 596ebcfcc82d..dc2f820ef55f 100644
-> > > --- a/drivers/pci/controller/pci-aardvark.c
-> > > +++ b/drivers/pci/controller/pci-aardvark.c
-> > > @@ -894,7 +894,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
-> > >  	int ret;
-> > >  
-> > >  	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
-> > > -		*val = 0xffffffff;
-> > > +		SET_PCI_ERROR_RESPONSE(val);
-> > 
-> > Hello! Now I'm looking at this macro, and should not it depends on
-> > "size" argument? If doing 8-bit or 16-bit read operation then should not
-> > it rather sets only low 8 bits or low 16 bits to ones?
-> >
+On Mon, Oct 11, 2021 at 10:23:00AM -0700, Andi Kleen wrote:
 > 
-> Hello o/, Thank you for the review.
+> On 10/11/2021 12:58 AM, Christoph Hellwig wrote:
+> > Just as last time:  This does not make any sense.  ioremap is shared
+> > by definition.
 > 
-> Yes! you are right that it should indeed depend on the "size" argument.
-> And that is what the SET_PCI_ERROR_RESPONSE macro does. The macro is
-> defined as:
+> It's not necessarily shared with the host for confidential computing: for
+> example BIOS mappings definitely should not be shared, but they're using
+> ioremap today.
+
+That just needs to be fixed.
+
+> But if you have a better term please propose something. I tried to clarify
+> it with "shared_host", but I don't know a better term.
 > 
->   #define PCI_ERROR_RESPONSE           (~0ULL)
->   #define SET_PCI_ERROR_RESPONSE(val)  (*val = ((typeof(*val))PCI_ERROR_RESPONSE))
 > 
-> The macro was part of "Patch 1/22" and is present here [1]. Apologies if
-> I added the receipient incorrectly.
+> -Andi
 > 
-> [1]:
-> https://lore.kernel.org/linux-pci/d8e423386aad3d78bca575a7521b138508638e3b.1633972263.git.naveennaidu479@gmail.com/T/#m37295a0dcfe0d7e0f67efce3633efd7b891949c4
-> 
-> IIUC, the typeof(*val) helps in setting the value according to the size
-> of the argument.
-> 
-> Please let me know if my understanding is wrong.
 
-Hello! I mean "size" function argument which is passed as variable.
 
-Function itself is declared as:
+The reason we have trouble is that it's not clear what does the API mean
+outside the realm of TDX.
+If we really, truly want an API that says "ioremap and it's a hardened
+driver" then I guess ioremap_hardened_driver is what you want.
 
-static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where, int size, u32 *val);
+-- 
+MST
 
-And in "size" argument is stored number of bytes, kind of read operation
-(read byte, read word, read dword). In *val is then stored read value.
-For byte operation, just low 8 bits in *val variable are set.
-
-Because *val is u32 it means that typeof(*val) is always 4 independently
-of the "size" argument.
-
-For example other project U-Boot has also pci-aardvark.c driver and
-U-Boot has for (probably same) purpose pci_get_ff() macro, see:
-https://source.denx.de/u-boot/u-boot/-/blob/v2021.10/drivers/pci/pci-aardvark.c#L367
-
-I'm not saying if current approach to always sets 0xffffffff
-(independently of "size" argument) is correct or not as I do not know
-it too! I'm just giving example that this PCI code has very similar
-implementation of other project (U-Boot) which sets number of ones based
-on the size argument.
-
-So probably something for other people to decide.
-
-Anyway, I very like this your idea to have a macro which purpose is to
-explicitly indicate error during config read operation! And to unify all
-drivers to use same style for signalling config read error.
-
-> > >  		return PCIBIOS_DEVICE_NOT_FOUND;
-> > >  	}
-> > >  
-> > > @@ -920,7 +920,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
-> > >  			*val = CFG_RD_CRS_VAL;
-> > >  			return PCIBIOS_SUCCESSFUL;
-> > >  		}
-> > > -		*val = 0xffffffff;
-> > > +		SET_PCI_ERROR_RESPONSE(val);
-> > >  		return PCIBIOS_SET_FAILED;
-> > >  	}
-> > >  
-> > > @@ -955,14 +955,14 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
-> > >  			*val = CFG_RD_CRS_VAL;
-> > >  			return PCIBIOS_SUCCESSFUL;
-> > >  		}
-> > > -		*val = 0xffffffff;
-> > > +		SET_PCI_ERROR_RESPONSE(val);
-> > >  		return PCIBIOS_SET_FAILED;
-> > >  	}
-> > >  
-> > >  	/* Check PIO status and get the read result */
-> > >  	ret = advk_pcie_check_pio_status(pcie, allow_crs, val);
-> > >  	if (ret < 0) {
-> > > -		*val = 0xffffffff;
-> > > +		SET_PCI_ERROR_RESPONSE(val);
-> > >  		return PCIBIOS_SET_FAILED;
-> > >  	}
-> > >  
-> > > -- 
-> > > 2.25.1
-> > > 
