@@ -2,141 +2,193 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DBBC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 09:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D3D3C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 12:00:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B888960F92
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 09:15:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2108660F38
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 12:00:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235386AbhJKJRe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Oct 2021 05:17:34 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:24238 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234280AbhJKJRc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 05:17:32 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4HSY5b0nVzzQjBR;
-        Mon, 11 Oct 2021 17:14:27 +0800 (CST)
-Received: from kwepemm600001.china.huawei.com (7.193.23.3) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Mon, 11 Oct 2021 17:15:30 +0800
-Received: from [10.174.176.245] (10.174.176.245) by
- kwepemm600001.china.huawei.com (7.193.23.3) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Mon, 11 Oct 2021 17:15:29 +0800
-Subject: Re: [PATCH] PCI/MSI: fix page fault when msi_populate_sysfs() failed
-To:     Barry Song <21cnbao@gmail.com>
-CC:     Bjorn Helgaas <bhelgaas@google.com>, Marc Zyngier <maz@kernel.org>,
-        "Thomas Gleixner" <tglx@linutronix.de>,
-        Barry Song <song.bao.hua@hisilicon.com>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-References: <20211011084049.53643-1-wanghai38@huawei.com>
- <CAGsJ_4yHW5YbmErTdv7Hq3-XOVL_-t5OdDR8WEYGyXyqiQmRxA@mail.gmail.com>
-From:   "wanghai (M)" <wanghai38@huawei.com>
-Message-ID: <9be017de-79a2-9f00-657a-a91da7a7ce1f@huawei.com>
-Date:   Mon, 11 Oct 2021 17:15:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S236286AbhJKMCA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Oct 2021 08:02:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20112 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236164AbhJKMB7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 08:01:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633953599;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hwUIXMwF5ZMBaAs7PCxNKL8UZk5q2glV6KYJyh2b2Q4=;
+        b=UHoecKQBtU8HB/qrflC0kWE5xQ4qvjtoMMKAwqpiRpZkkArrlsFWourdRs4ZurcjQa251M
+        OwLCHICUeO4r/jpYfxd6FeQv/qOoUvaD5jo9VVDwPFQwOdgukAbqHrRqAaTPVaVFKIzHUy
+        E7tDk4gku3xWjp008tSaGa4MIyeopgQ=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-549-nav0FnZTNEO8ETelkjK05Q-1; Mon, 11 Oct 2021 07:59:25 -0400
+X-MC-Unique: nav0FnZTNEO8ETelkjK05Q-1
+Received: by mail-ed1-f69.google.com with SMTP id z23-20020aa7cf97000000b003db7be405e1so4772927edx.13
+        for <linux-pci@vger.kernel.org>; Mon, 11 Oct 2021 04:59:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hwUIXMwF5ZMBaAs7PCxNKL8UZk5q2glV6KYJyh2b2Q4=;
+        b=dwRszIOu2c7BqFRWghOER7pabQZckzHlKeNtpHbUZs3GXgftMidoYVGrphZurgG7rX
+         b1RUhA6WBgDKD4WRs8jMTyz5BpFV0brfsGRspegLcyJyze7uzdA7b5m9DtiMGpFwP5E5
+         kKZ60ukpRCwex6rKj3Co1gC1z4YCaxVM/eeAB757M8l0ruEOXAKAfIMA6IDo6OpCTiyH
+         9NNY7kadhNVuVIpCuedE7Rb/VFW2b3U3Ja9Odb+ESG1BP5mUSBuA6dCKRPVy4cHC/fbo
+         p+mt7ynYa3P7B8bBzCOzhmQnvpwys4UA+DLX8CSQ61l5+MyL47CW/NVOJpaIFLXy/rkR
+         oLlQ==
+X-Gm-Message-State: AOAM533AtWtcrY7GTA6XaiHG2U73VAZVdHIFfl1zJaGSs6tbj6JvVP+Z
+        BWDvS0dTCZCS+sTlLxMzP2BMHdaKhZmqq+926pjsJSMBs3qHQ4DFwmhFTSVsXIw/1LFAekfPazC
+        OrNUo/Mza8vvj1SNj7YK0
+X-Received: by 2002:a05:6402:90c:: with SMTP id g12mr1207556edz.139.1633953564714;
+        Mon, 11 Oct 2021 04:59:24 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxe9IbZEyN/NuCWBVGBR/HLcEv3Q4Zpk3pvSHKKh7mzddFCxZ4eLiFif7F1M5YGcdkOoPRk/g==
+X-Received: by 2002:a05:6402:90c:: with SMTP id g12mr1207493edz.139.1633953564478;
+        Mon, 11 Oct 2021 04:59:24 -0700 (PDT)
+Received: from redhat.com ([2.55.159.57])
+        by smtp.gmail.com with ESMTPSA id lb12sm3498129ejc.28.2021.10.11.04.59.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Oct 2021 04:59:23 -0700 (PDT)
+Date:   Mon, 11 Oct 2021 07:59:17 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Andi Kleen <ak@linux.intel.com>
+Cc:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        James E J Bottomley <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        David Hildenbrand <david@redhat.com>,
+        Andrea Arcangeli <aarcange@redhat.com>,
+        Josh Poimboeuf <jpoimboe@redhat.com>,
+        Peter H Anvin <hpa@zytor.com>,
+        Dave Hansen <dave.hansen@intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Kirill Shutemov <kirill.shutemov@linux.intel.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-doc@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v5 12/16] PCI: Add pci_iomap_host_shared(),
+ pci_iomap_host_shared_range()
+Message-ID: <20211011073614-mutt-send-email-mst@kernel.org>
+References: <20211009003711.1390019-1-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20211009003711.1390019-13-sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20211009053103-mutt-send-email-mst@kernel.org>
+ <cec62ebb-87d7-d725-1096-2c97c5eedbc3@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGsJ_4yHW5YbmErTdv7Hq3-XOVL_-t5OdDR8WEYGyXyqiQmRxA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.176.245]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemm600001.china.huawei.com (7.193.23.3)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cec62ebb-87d7-d725-1096-2c97c5eedbc3@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Sun, Oct 10, 2021 at 03:22:39PM -0700, Andi Kleen wrote:
+> 
+> > To which Andi replied
+> > 	One problem with removing the ioremap opt-in is that
+> > 	it's still possible for drivers to get at devices without going through probe.
+> > 
+> > To which Greg replied:
+> > https://lore.kernel.org/all/YVXBNJ431YIWwZdQ@kroah.com/
+> > 	If there are in-kernel PCI drivers that do not do this, they need to be
+> > 	fixed today.
+> > 
+> > Can you guys resolve the differences here?
+> 
+> 
+> I addressed this in my other mail, but we may need more discussion.
 
-在 2021/10/11 16:52, Barry Song 写道:
-> On Mon, Oct 11, 2021 at 9:24 PM Wang Hai <wanghai38@huawei.com> wrote:
->> I got a page fault report when doing fault injection test:
->>
->> BUG: unable to handle page fault for address: fffffffffffffff4
->> ...
->> RIP: 0010:sysfs_remove_groups+0x25/0x60
->> ...
->> Call Trace:
->>   msi_destroy_sysfs+0x30/0xa0
->>   free_msi_irqs+0x11d/0x1b0
->>   __pci_enable_msix_range+0x67f/0x760
->>   pci_alloc_irq_vectors_affinity+0xe7/0x170
->>   vp_find_vqs_msix+0x129/0x560
->>   vp_find_vqs+0x52/0x230
->>   vp_modern_find_vqs+0x47/0xb0
->>   p9_virtio_probe+0xa1/0x460 [9pnet_virtio]
->>   virtio_dev_probe+0x1ed/0x2e0
->>   really_probe+0x1c7/0x400
->>   __driver_probe_device+0xa4/0x120
->>   driver_probe_device+0x32/0xe0
->>   __driver_attach+0xbf/0x130
->>   bus_for_each_dev+0xbb/0x110
->>   driver_attach+0x27/0x30
->>   bus_add_driver+0x1d9/0x270
->>   driver_register+0xa9/0x180
->>   register_virtio_driver+0x31/0x50
->>   p9_virtio_init+0x3c/0x1000 [9pnet_virtio]
->>   do_one_initcall+0x7b/0x380
->>   do_init_module+0x5f/0x21e
->>   load_module+0x265c/0x2c60
->>   __do_sys_finit_module+0xb0/0xf0
->>   __x64_sys_finit_module+0x1a/0x20
->>   do_syscall_64+0x34/0xb0
->>   entry_SYSCALL_64_after_hwframe+0x44/0xae
->>
->> When populating msi_irqs sysfs failed in msi_capability_init() or
->> msix_capability_init(), dev->msi_irq_groups will point to ERR_PTR(...).
->> This will cause a page fault when destroying the wrong
->> dev->msi_irq_groups in free_msi_irqs().
->>
->> Fix this by setting dev->msi_irq_groups to NULL when msi_populate_sysfs()
->> failed.
->>
->> Fixes: 2f170814bdd2 ("genirq/msi: Move MSI sysfs handling from PCI to MSI core")
->> Reported-by: Hulk Robot <hulkci@huawei.com>
->> Signed-off-by: Wang Hai <wanghai38@huawei.com>
-> Acked-by: Barry Song <song.bao.hua@hisilicon.com>
->
->> ---
->>   drivers/pci/msi.c | 2 ++
->>   1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 0099a00af361..6f75db9f3be7 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -561,6 +561,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
->>          dev->msi_irq_groups = msi_populate_sysfs(&dev->dev);
->>          if (IS_ERR(dev->msi_irq_groups)) {
->>                  ret = PTR_ERR(dev->msi_irq_groups);
->> +               dev->msi_irq_groups = NULL;
->>                  goto err;
->>          }
->>
->> @@ -733,6 +734,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
->>          dev->msi_irq_groups = msi_populate_sysfs(&dev->dev);
->>          if (IS_ERR(dev->msi_irq_groups)) {
->>                  ret = PTR_ERR(dev->msi_irq_groups);
->> +               dev->msi_irq_groups = NULL;
-> Can you define a temp variable and assign it to dev->msi_irq_groups if
-> the temp variable
-> is not PTR_ERR?
-Of course, I will send a v2 patch.
->
->>                  goto out_free;
->>          }
->>
->> --
->> 2.17.1
->>
-> Thanks
-> Barry
-> .
->
+Hopefully Greg will reply to that one.
+
+> 
+> > 
+> > And once they are resolved, mention this in the commit log so
+> > I don't get to re-read the series just to find out nothing
+> > changed in this respect?
+> > 
+> > I frankly do not believe we are anywhere near being able to harden
+> > an arbitrary kernel config against attack.
+> 
+> Why not? Device filter and the opt-ins together are a fairly strong
+> mechanism.
+
+Because it does not end with I/O operations, that's a trivial example.
+module unloading is famous for being racy: I just re-read that part of
+virtio drivers and sure enough we have bugs there, this is after
+they have presumably been audited, so a TDX guest is better off
+just disabling hot-unplug completely, and hotplug isn't far behind.
+Malicious filesystems can exploit many linux systems unless
+you take pains to limit what is mounted and how.
+Networking devices tend to get into the default namespaces and can
+do more or less whatever CAP_NET_ADMIN can.
+Etc.
+I am not saying this makes the effort worthless, I am saying userspace
+better know very well what it's doing, and kernel better be
+configured in a very specific way.
+
+> And it's not that they're a lot of code or super complicated either.
+> 
+> You're essentially objecting to a single line change in your subsystem here.
+
+Well I commented on the API patch, not the virtio patch.
+If it's a way for a driver to say "I am hardened
+and audited" then I guess it should at least say so. It has nothing
+to do with host or sharing, that's an implementation detail,
+and it obscures the actual limitations of the approach,
+in that eventually in an ideal world all drivers would be secure
+and use this API.
+
+Yes, if that's the API that PCI gains then virtio will use it.
+
+
+> > How about creating a defconfig that makes sense for TDX then?
+> 
+> TDX can be used in many different ways, I don't think a defconfig is
+> practical.
+> 
+> In theory you could do some Kconfig dependency (at the pain point of having
+> separate kernel binariees), but why not just do it at run time then if you
+> maintain the list anyways. That's much easier and saner for everyone. In the
+> past we usually always ended up with runtime mechanism for similar things
+> anyways.
+> 
+> Also it turns out that the filter mechanisms are needed for some arch
+> drivers which are not even configurable, so alone it's probably not enough,
+
+
+I guess they aren't really needed though right, or you won't try to
+filter them? So make them configurable?
+
+> 
+> > Anyone deviating from that better know what they are doing,
+> > this API tweaking is just putting policy into the kernel  ...
+> 
+> Hardening drivers is kernel policy. It cannot be done anywhere else.
+> 
+> 
+> -Andi
+
+To clarify, the policy is which drivers to load into the kernel.
+
 -- 
-Wang Hai
+MST
 
