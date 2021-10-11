@@ -2,141 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11DC1C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A910C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E791560F0F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D50CB60EE5
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Oct 2021 18:08:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234182AbhJKSKC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Oct 2021 14:10:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39198 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229565AbhJKSKB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Oct 2021 14:10:01 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EE2FC061570;
-        Mon, 11 Oct 2021 11:08:01 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id 187so15491709pfc.10;
-        Mon, 11 Oct 2021 11:08:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=t0K780od6SkXxyzgD37FaMrqeQX5N/LnzRZ9Hnpevh0=;
-        b=TJ1M8P/6r5Fqqe/25bGrg4b9hoDDWhuY/YdRN8PjBDpPkIOtyW0PIHA5JFWJ4vIDtY
-         SJlieLuEGnChLE5RIhSNwgZJyqnLgGz+O+wLiyek4Sff4bPaRLkgX/rPMD/sCZNEabAS
-         csI5WdTYhJQQg5JcTltQhTNO9+fG1CWz9uAy+7lkugFhKTdE0dkcYbRXkjDKPkim9pfO
-         pjj7qZfodYKgUlivGJQ0lVvXewhjRwe5Z0+PwJ9Wu4QyMOm1Acx6Vh4uoJza5DD7dNw1
-         9+lg+pg/BUbruhm0SpR2lYEDIrmvJp9Zt0Z6Ans7jRQUOvMgiayyRLShirMFHSxBajwA
-         9PDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=t0K780od6SkXxyzgD37FaMrqeQX5N/LnzRZ9Hnpevh0=;
-        b=nX9emTM7Xb7wsdsO4kQiJ2y4h/ZJmY0gWbP1u28uhcfDzc0Kpp+8GsEH+J1AJrRoFj
-         nFxzFadTubIuwr0SkZs5RDTLyboGTUkwsW4XNaJ8b4cF/fjfBMFILMkDekx6jn7fMHwK
-         1nnok0CTFN3XdG2X9UzrBoFztj7ZuEdMEmGJ0E48DuWjYA5JHuEASJTBl5ZWBXzYG4Vf
-         1+PhtLamfQgJj3zTP942KSBdZIjL2AAJ9HnwbLwGA1IhcDbTzXAv+daZFtSNyykVwcAD
-         1yUBCYaHED04Sq0piFbiFk61PpAq+OUZCe/5CXXmfd2zt1kTuuhcbA5CwwOm5X7Q58Kr
-         Tufw==
-X-Gm-Message-State: AOAM532odQfvMylTlrTOrSkLBhMpqC1TOIMYR2Di2G5mz+JUPFa2sVlf
-        dwb5CMIYhUcqACMpD96HsQ8wEtRqKP5QBeMa
-X-Google-Smtp-Source: ABdhPJxN4B0rj03PV6wsTbUoJkrosvN/e2CX7DANFVkINHLQWIOlBYz7a8SZyu1rHhASv5ybm28aHw==
-X-Received: by 2002:a63:84c3:: with SMTP id k186mr83113pgd.462.1633975681030;
-        Mon, 11 Oct 2021 11:08:01 -0700 (PDT)
-Received: from localhost.localdomain ([2406:7400:63:9f95:848b:7cc8:d852:ad42])
-        by smtp.gmail.com with ESMTPSA id 4sm135643pjb.21.2021.10.11.11.07.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Oct 2021 11:08:00 -0700 (PDT)
-From:   Naveen Naidu <naveennaidu479@gmail.com>
-To:     bhelgaas@google.com
-Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
+        id S234136AbhJKSKy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Oct 2021 14:10:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46678 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229565AbhJKSKx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Oct 2021 14:10:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5F72C60EB4;
+        Mon, 11 Oct 2021 18:08:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1633975733;
+        bh=znvt7lXTrjz8Q7uFKJ50VwboQPdEorWs9uuIA7tBazI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CzTduaqzuCsLQPm6VXtRH2KVlfxrgwAeezXN8LIoJto9GnO4HarUxbwIRF+OXLcgG
+         CwjE9u/52RytsnFKZXPva+CQiHJKAq/NFa2ZmAqb/yFosQ/JPVq21eChF9PyUjT+c+
+         JXeH2y/MI9mOL2FudCVWGv25ImJZ9uCWOIBxZTkYR0gb04FM/UPGgaPr1I9bbli7KU
+         QNwiHCeyh2xqZhtEF3dAb6yC1vqU3uVrehkvxsEL/KNcAfrkS5RKkiabqdcMlRVqI7
+         5k6FV2b6Czrb9x0v2JiS1x71z3B1jTS3qqvG6HzllevLVtGJEuQbPnQYLvVV7st0us
+         g4NT/kEUJrdGg==
+Received: by pali.im (Postfix)
+        id 0B6BB7C9; Mon, 11 Oct 2021 20:08:50 +0200 (CEST)
+Date:   Mon, 11 Oct 2021 20:08:50 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Naveen Naidu <naveennaidu479@gmail.com>
+Cc:     bhelgaas@google.com,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Amey Narkhede <ameynarkhede03@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: [PATCH 16/22] PCI: pciehp: Use RESPONSE_IS_PCI_ERROR() to check read from hardware
-Date:   Mon, 11 Oct 2021 23:37:33 +0530
-Message-Id: <36c7c3005c4d86a6884b270807d84433a86c0953.1633972263.git.naveennaidu479@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1633972263.git.naveennaidu479@gmail.com>
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        "moderated list:PCI DRIVER FOR AARDVARK (Marvell Armada 3700)" 
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 09/22] PCI: aardvark: Use SET_PCI_ERROR_RESPONSE() when
+ device not found
+Message-ID: <20211011180850.hgp4ctykvus37fx7@pali>
 References: <cover.1633972263.git.naveennaidu479@gmail.com>
+ <f423dc9cc90e345680d289d5df7ff469e9b89c60.1633972263.git.naveennaidu479@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f423dc9cc90e345680d289d5df7ff469e9b89c60.1633972263.git.naveennaidu479@gmail.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-An MMIO read from a PCI device that doesn't exist or doesn't respond
-causes a PCI error.  There's no real data to return to satisfy the
-CPU read, so most hardware fabricates ~0 data.
+On Monday 11 October 2021 23:26:33 Naveen Naidu wrote:
+> An MMIO read from a PCI device that doesn't exist or doesn't respond
+> causes a PCI error.  There's no real data to return to satisfy the
+> CPU read, so most hardware fabricates ~0 data.
+> 
+> Use SET_PCI_ERROR_RESPONSE() to set the error response, when a faulty
+> read occurs.
+> 
+> This helps unify PCI error response checking and make error check
+> consistent and easier to find.
+> 
+> Compile tested only.
+> 
+> Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 596ebcfcc82d..dc2f820ef55f 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -894,7 +894,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+>  	int ret;
+>  
+>  	if (!advk_pcie_valid_device(pcie, bus, devfn)) {
+> -		*val = 0xffffffff;
+> +		SET_PCI_ERROR_RESPONSE(val);
 
-Use RESPONSE_IS_PCI_ERROR() to check the response we get when we read
-data from hardware.
+Hello! Now I'm looking at this macro, and should not it depends on
+"size" argument? If doing 8-bit or 16-bit read operation then should not
+it rather sets only low 8 bits or low 16 bits to ones?
 
-This helps unify PCI error response checking and make error checks
-consistent and easier to find.
-
-Compile tested only.
-
-Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 3024d7e85e6a..8a2f6bb643b5 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -89,7 +89,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
- 
- 	do {
- 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--		if (slot_status == (u16) ~0) {
-+		if (RESPONSE_IS_PCI_ERROR(&slot_status)) {
- 			ctrl_info(ctrl, "%s: no response from device\n",
- 				  __func__);
- 			return 0;
-@@ -165,7 +165,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
- 	pcie_wait_cmd(ctrl);
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
--	if (slot_ctrl == (u16) ~0) {
-+	if (RESPONSE_IS_PCI_ERROR(&slot_ctrl)) {
- 		ctrl_info(ctrl, "%s: no response from device\n", __func__);
- 		goto out;
- 	}
-@@ -236,7 +236,7 @@ int pciehp_check_link_active(struct controller *ctrl)
- 	int ret;
- 
- 	ret = pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
--	if (ret == PCIBIOS_DEVICE_NOT_FOUND || lnk_status == (u16)~0)
-+	if (ret == PCIBIOS_DEVICE_NOT_FOUND || RESPONSE_IS_PCI_ERROR(&lnk_status))
- 		return -ENODEV;
- 
- 	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-@@ -443,7 +443,7 @@ int pciehp_card_present(struct controller *ctrl)
- 	int ret;
- 
- 	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--	if (ret == PCIBIOS_DEVICE_NOT_FOUND || slot_status == (u16)~0)
-+	if (ret == PCIBIOS_DEVICE_NOT_FOUND || RESPONSE_IS_PCI_ERROR(&slot_status))
- 		return -ENODEV;
- 
- 	return !!(slot_status & PCI_EXP_SLTSTA_PDS);
-@@ -621,7 +621,7 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
- 
- read_status:
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
--	if (status == (u16) ~0) {
-+	if (RESPONSE_IS_PCI_ERROR(&status)) {
- 		ctrl_info(ctrl, "%s: no response from device\n", __func__);
- 		if (parent)
- 			pm_runtime_put(parent);
--- 
-2.25.1
-
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  
+> @@ -920,7 +920,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+>  			*val = CFG_RD_CRS_VAL;
+>  			return PCIBIOS_SUCCESSFUL;
+>  		}
+> -		*val = 0xffffffff;
+> +		SET_PCI_ERROR_RESPONSE(val);
+>  		return PCIBIOS_SET_FAILED;
+>  	}
+>  
+> @@ -955,14 +955,14 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+>  			*val = CFG_RD_CRS_VAL;
+>  			return PCIBIOS_SUCCESSFUL;
+>  		}
+> -		*val = 0xffffffff;
+> +		SET_PCI_ERROR_RESPONSE(val);
+>  		return PCIBIOS_SET_FAILED;
+>  	}
+>  
+>  	/* Check PIO status and get the read result */
+>  	ret = advk_pcie_check_pio_status(pcie, allow_crs, val);
+>  	if (ret < 0) {
+> -		*val = 0xffffffff;
+> +		SET_PCI_ERROR_RESPONSE(val);
+>  		return PCIBIOS_SET_FAILED;
+>  	}
+>  
+> -- 
+> 2.25.1
+> 
