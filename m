@@ -2,166 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61BB2C433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Oct 2021 18:27:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A948C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Oct 2021 18:35:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6E5604E9
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Oct 2021 18:27:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 439DA610A2
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Oct 2021 18:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230301AbhJMS3N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Oct 2021 14:29:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60454 "EHLO mail.kernel.org"
+        id S230313AbhJMShV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Oct 2021 14:37:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35182 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229814AbhJMS3N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Oct 2021 14:29:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 52D6D60C49;
-        Wed, 13 Oct 2021 18:27:09 +0000 (UTC)
+        id S229814AbhJMShV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Oct 2021 14:37:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D17E560F21;
+        Wed, 13 Oct 2021 18:35:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634149629;
-        bh=0KaxqBpPYtBpR05jXKW1Op9xgdPeY4wuR3VX8HO8Yug=;
+        s=k20201202; t=1634150117;
+        bh=9Otllm2GC3gVjaVzNTWWyjCLCOdkUBQMvbyes4AWr7A=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=FIxQNrdc60xMqLc8svzrhC1Ia2JmTjEC2KvqlXNDX1MD77r2c9NY0a2ASgaCstVxW
-         maCg0Pa6KUPMJktX9Kekr5KQuKzXG4dNAKjPgcbUhJf1FEj+RbPqlnqLhmEyOTVChk
-         Fl4wUi2sF2/ncJgl4CQiSCy5aDZXsLudht4eFwTYeHXbqU5lW2LReRjsmNG+o663n6
-         0ZwJDI+J4aGH7XraGw+8ZD/TYGfJbQAJSWAiWSW9pZ4ev1e7wknnhoMbPa4YVtIbHL
-         +hQdIK4jnr+9yIMUdoiJ3T9BgVrnoLfPadWDnK1114lmJND8FpvLLkZkbP4YlaUY7Q
-         JcEnlPhWOMRzw==
-Date:   Wed, 13 Oct 2021 13:27:07 -0500
+        b=TZ1hgMEieNxKVh5cK/xTkyTn161II9RBtSuwzvap2XAIWDC5IRQ+XIIj9OXuRjXU1
+         kOw8PX0y7ksY77hGOZHf4CvA4YMAYkbrw5Bm6fBs6hEJim5geLBFf0HqfiM5XGVC87
+         5gcaLEKynNJ9osbadNfjvDFDOJJWcxxepQY/jKygG7kBFHwdXqaxLdIPL21fmy3ew4
+         WEdeJ+DfeDfyGJSvznhCur9Mlnmhwcvtv8d5PF8oQ+1dW+1ljZlSJDBVQq321AXfVX
+         DRbYBQKSXydmYylkx3ZKuEurnwWnm9bTC8Ghh2DVZkU650OWxEDcoIZlPJVKH8Wtoi
+         M3SeiMcHbty4g==
+Date:   Wed, 13 Oct 2021 13:35:15 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Yishai Hadas <yishaih@nvidia.com>
-Cc:     alex.williamson@redhat.com, bhelgaas@google.com, jgg@nvidia.com,
-        saeedm@nvidia.com, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, kuba@kernel.org, leonro@nvidia.com,
-        kwankhede@nvidia.com, mgurtovoy@nvidia.com, maorg@nvidia.com
-Subject: Re: [PATCH V1 mlx5-next 04/13] PCI/IOV: Allow SRIOV VF drivers to
- reach the drvdata of a PF
-Message-ID: <20211013182707.GA1906754@bhelgaas>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        qizhong.cheng@mediatek.com, Ryan-JH.Yu@mediatek.com,
+        Tzung-Bi Shih <tzungbi@google.com>
+Subject: Re: [PATCH v2] PCI: mediatek-gen3: Disable DVFSRC voltage request
+Message-ID: <20211013183515.GA1907868@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211013094707.163054-5-yishaih@nvidia.com>
+In-Reply-To: <20211013075328.12273-1-jianjun.wang@mediatek.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 12:46:58PM +0300, Yishai Hadas wrote:
-> From: Jason Gunthorpe <jgg@nvidia.com>
+On Wed, Oct 13, 2021 at 03:53:28PM +0800, Jianjun Wang wrote:
+> When the DVFSRC feature is not implemented, the MAC layer will
+> assert a voltage request signal when exit from the L1ss state,
+> but cannot receive the voltage ready signal, which will cause
+> the link to fail to exit the L1ss state correctly.
 > 
-> There are some cases where a SRIOV VF driver will need to reach into and
-> interact with the PF driver. This requires accessing the drvdata of the PF.
-> 
-> Provide a function pci_iov_get_pf_drvdata() to return this PF drvdata in a
-> safe way. Normally accessing a drvdata of a foreign struct device would be
-> done using the device_lock() to protect against device driver
-> probe()/remove() races.
-> 
-> However, due to the design of pci_enable_sriov() this will result in a
-> ABBA deadlock on the device_lock as the PF's device_lock is held during PF
-> sriov_configure() while calling pci_enable_sriov() which in turn holds the
-> VF's device_lock while calling VF probe(), and similarly for remove.
-> 
-> This means the VF driver can never obtain the PF's device_lock.
-> 
-> Instead use the implicit locking created by pci_enable/disable_sriov(). A
-> VF driver can access its PF drvdata only while its own driver is attached,
-> and the PF driver can control access to its own drvdata based on when it
-> calls pci_enable/disable_sriov().
-> 
-> To use this API the PF driver will setup the PF drvdata in the probe()
-> function. pci_enable_sriov() is only called from sriov_configure() which
-> cannot happen until probe() completes, ensuring no VF races with drvdata
-> setup.
-> 
-> For removal, the PF driver must call pci_disable_sriov() in its remove
-> function before destroying any of the drvdata. This ensures that all VF
-> drivers are unbound before returning, fencing concurrent access to the
-> drvdata.
-> 
-> The introduction of a new function to do this access makes clear the
-> special locking scheme and the documents the requirements on the PF/VF
-> drivers using this.
-> 
-> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
-> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
-> Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+> Disable DVFSRC voltage request by default, we need to find
+> a common way to enable it in the future.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Rewrap commit log to fill 75 columns.
 
-Nit: s/SRIOV/SR-IOV/ above so it matches usage in the spec.
+Does "L1ss" above refer to L1.1 and L1.2?  If so, please say that
+explicitly or say something like "L1 PM Substates" (the term used in
+the PCIe spec) so it's clear.
 
-I think it's nice to include the actual interface in the subject when
-practical.
+This seems on the boundary of PCIe-specified things and Mediatek
+implementation details, so I'm not sure what "DVFSRC," "MAC," and
+"voltage request signal" mean.  Since I don't recognize those terms,
+I'm guessing they are Mediatek-specific things.
 
+But if they are things specified by the PCIe spec, please use the
+exact names used in the spec.
+
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> Reviewed-by: Tzung-Bi Shih <tzungbi@google.com>
+> Tested-by: Qizhong Cheng <qizhong.cheng@mediatek.com>
 > ---
->  drivers/pci/iov.c   | 29 +++++++++++++++++++++++++++++
->  include/linux/pci.h |  7 +++++++
->  2 files changed, 36 insertions(+)
+>  drivers/pci/controller/pcie-mediatek-gen3.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index e7751fa3fe0b..ca696730f761 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -47,6 +47,35 @@ int pci_iov_vf_id(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_iov_vf_id);
+> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+> index f3aeb8d4eaca..79fb12fca6a9 100644
+> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+> @@ -79,6 +79,9 @@
+>  #define PCIE_ICMD_PM_REG		0x198
+>  #define PCIE_TURN_OFF_LINK		BIT(4)
 >  
-> +/**
-> + * pci_iov_get_pf_drvdata - Return the drvdata of a PF
-> + * @dev - VF pci_dev
-> + * @pf_driver - Device driver required to own the PF
-> + *
-> + * This must be called from a context that ensures that a VF driver is attached.
-> + * The value returned is invalid once the VF driver completes its remove()
-> + * callback.
-> + *
-> + * Locking is achieved by the driver core. A VF driver cannot be probed until
-> + * pci_enable_sriov() is called and pci_disable_sriov() does not return until
-> + * all VF drivers have completed their remove().
-> + *
-> + * The PF driver must call pci_disable_sriov() before it begins to destroy the
-> + * drvdata.
-> + */
-> +void *pci_iov_get_pf_drvdata(struct pci_dev *dev, struct pci_driver *pf_driver)
-> +{
-> +	struct pci_dev *pf_dev;
+> +#define PCIE_MISC_CTRL_REG		0x348
+> +#define PCIE_DISABLE_DVFSRC_VLT_REQ	BIT(1)
 > +
-> +	if (dev->is_physfn)
-> +		return ERR_PTR(-EINVAL);
-> +	pf_dev = dev->physfn;
-> +	if (pf_dev->driver != pf_driver)
-> +		return ERR_PTR(-EINVAL);
-> +	return pci_get_drvdata(pf_dev);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_iov_get_pf_drvdata);
+>  #define PCIE_TRANS_TABLE_BASE_REG	0x800
+>  #define PCIE_ATR_SRC_ADDR_MSB_OFFSET	0x4
+>  #define PCIE_ATR_TRSL_ADDR_LSB_OFFSET	0x8
+> @@ -297,6 +300,11 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+>  	val &= ~PCIE_INTX_ENABLE;
+>  	writel_relaxed(val, port->base + PCIE_INT_ENABLE_REG);
+>  
+> +	/* Disable DVFSRC voltage request */
+> +	val = readl_relaxed(port->base + PCIE_MISC_CTRL_REG);
+> +	val |= PCIE_DISABLE_DVFSRC_VLT_REQ;
+> +	writel_relaxed(val, port->base + PCIE_MISC_CTRL_REG);
 > +
->  /*
->   * Per SR-IOV spec sec 3.3.10 and 3.3.11, First VF Offset and VF Stride may
->   * change when NumVFs changes.
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2337512e67f0..639a0a239774 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2154,6 +2154,7 @@ void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
->  int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
->  int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
->  int pci_iov_vf_id(struct pci_dev *dev);
-> +void *pci_iov_get_pf_drvdata(struct pci_dev *dev, struct pci_driver *pf_driver);
->  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
->  void pci_disable_sriov(struct pci_dev *dev);
->  
-> @@ -2187,6 +2188,12 @@ static inline int pci_iov_vf_id(struct pci_dev *dev)
->  	return -ENOSYS;
->  }
->  
-> +static inline void *pci_iov_get_pf_drvdata(struct pci_dev *dev,
-> +					   struct pci_driver *pf_driver)
-> +{
-> +	return ERR_PTR(-EINVAL);
-> +}
-> +
->  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  { return -ENODEV; }
->  
+>  	/* Assert all reset signals */
+>  	val = readl_relaxed(port->base + PCIE_RST_CTRL_REG);
+>  	val |= PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB;
 > -- 
-> 2.18.1
+> 2.25.1
 > 
