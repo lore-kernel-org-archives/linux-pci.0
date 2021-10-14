@@ -2,55 +2,55 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E8EC433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B956C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B7E860FDA
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E932660F9E
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230081AbhJNH2d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Oct 2021 03:28:33 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:11623 "EHLO
+        id S230026AbhJNH2g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Oct 2021 03:28:36 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:56343 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230150AbhJNH22 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Oct 2021 03:28:28 -0400
+        with ESMTP id S230189AbhJNH2c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Oct 2021 03:28:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1634196384; x=1665732384;
+  t=1634196388; x=1665732388;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+8mF3sqV2xOWK+dcpeuMZ3yH9s2tu4BY2TtKtFoCb+g=;
-  b=ELiCCUZXiJLP0CpLsYy2QUmagGXmqzadt+7h7pTiRTuuWDxcOGiEMdph
-   P60mDYHrO3tJ06HiBxM5pfxRQIs2wXp5iqseRTPgqr1ZCijzIbjhU81HC
-   5w+O1jfZ1eonK+a0XcUdom7+ttIpPGJc+5TeSkZu/S0MpLk39t80L/bQ3
-   OtNhHZoK4iKG3FTEhKhZ/G5Qw2rOVArMUzkGwf7UsczmIn6NNMXEuLhMR
-   +0DVJ5eaQZIodD5GQMQeLNaHbR0GYZ2ABAPh3USHsaXj4IPuub/8j3lmT
-   r4VfOPj5smyv6qG97i3WoZ11tNbCvp31cqJbgWDQ/yVXJfpjZh7tPJB2l
+  bh=syL4/+YK/aL5HlwXEqODcUbypd3HoBOXAo6KAvaPuXk=;
+  b=AyfhGESGlrX3/kwvR5VImNsv7/kz5nBd9n5JsTsvaWOwDOsEDIocnIQC
+   dkW8rUMLETiO/zbZLhl6wL3kOy+bpD1on9l/IiKp+VutWv5vduOCZb6FM
+   CZicw6WYA5+Ta3BM0LegTP/Gam3pQ8zR+sxkyz6G9fnWfB1eKtLt2f14x
+   CyNu2Cc/B/uA1TryO8wurOR0eEfeM5OHqgzo+D/HazGRjKy56iN64lKix
+   B2uwTE/PNKLvyv+Lg9o1qnR/tnl3drm6cur2YxrjVLnjGYOrYtEl7g7kg
+   PNdi86+Q4LgpDDs2l35i1nna0smKihyT/AS3LpM0+n9ej2j4NSBb6czpG
    A==;
-IronPort-SDR: kxaBU1UUv4IAdGQSxlUc9Xu1UkxyhI95VmExwY5GMdONCPXx1Js/6opcT6u0TBwVYwyx4QOPyo
- 0h12BoYKANAQRHnl12b3vUedWzK2y21dp578wdfb4gRoDpapuTh7vlKBxD9sXrEk2Hq68kwI5c
- trKdQtrV8lJAcwUjOWU6kseIgYs0++NNAdezUoFoRUIfVUNh9y9JPOJwe29HYrlAVjobHYOQo1
- v7lC38kFXvk8sMYqWApHPJe95DTBH00Gj0FtCOxBPawobkgCvzYhnQBO/ie+7hZBiQ3zwltCrt
- 29z375kUJJLJ5Zi4/5BZtXhj
+IronPort-SDR: NeTmjoOYSXppJ4D+QBHugjKfPF4RnOY9jO8C2uGY+Jc+EPl/jdXGtLwLyo1b+cGd9M6rnV73qs
+ +fiP711PqJtIP6cgYpevnwbBHWULtaDT3xvmsEoj2/IYe/JMaSXoYesFVAzM56DdYMrVJ3WEOY
+ LuoTKpD/C1aLZ/u4w0GYa/Cl/o1ljIamj/Z7yXFFOcp5qKJqJXH4HlZhDIXWdWBOTnG1BYbM06
+ rco0579RI28EnIMNpW14kfeSQyU2l8t9hsV3YH0+f4bPm0rnjRvhffr1ArLeQGyH2CkQL1OJRe
+ H6QTi+ZmqlWtizzdKXNhvM5M
 X-IronPort-AV: E=Sophos;i="5.85,371,1624345200"; 
-   d="scan'208";a="132951855"
+   d="scan'208";a="148045675"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Oct 2021 00:26:21 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Oct 2021 00:26:27 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Thu, 14 Oct 2021 00:26:17 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex03.mchp-main.com
- (10.10.85.151) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
- Transport; Thu, 14 Oct 2021 00:26:17 -0700
+ 15.1.2176.14; Thu, 14 Oct 2021 00:26:20 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Thu, 14 Oct 2021 00:26:20 -0700
 From:   <kelvin.cao@microchip.com>
 To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
         <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC:     <kelvin.cao@microchip.com>, <kelvincao@outlook.com>
-Subject: [PATCH v2 2/5] PCI/switchtec: Fix a MRPC error status handling issue
-Date:   Thu, 14 Oct 2021 14:18:56 +0000
-Message-ID: <20211014141859.11444-3-kelvin.cao@microchip.com>
+Subject: [PATCH v2 4/5] PCI/switchtec: Replace ENOTSUPP with EOPNOTSUPP
+Date:   Thu, 14 Oct 2021 14:18:58 +0000
+Message-ID: <20211014141859.11444-5-kelvin.cao@microchip.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211014141859.11444-1-kelvin.cao@microchip.com>
 References: <20211014141859.11444-1-kelvin.cao@microchip.com>
@@ -63,42 +63,63 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kelvin Cao <kelvin.cao@microchip.com>
 
-If an error is encountered when executing a MRPC command, the firmware
-will set the status register to SWITCHTEC_MRPC_STATUS_ERROR and return
-the error code in the return value register.
+ENOTSUPP is not a SUSV4 error code, and the following checkpatch.pl
+warning will be given for new patches which still use ENOTSUPP.
 
-Add handling of SWITCHTEC_MRPC_STATUS_ERROR on status register when
-completing a MRPC command.
+    WARNING: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+
+See the link below for the discussion.
+
+  https://lore.kernel.org/netdev/20200511165319.2251678-1-kuba@kernel.org/
+
+Replace ENOTSUPP with EOPNOTSUPP to align with future patches which will
+be using EOPNOTSUPP.
 
 Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
 ---
- drivers/pci/switch/switchtec.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/switch/switchtec.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index e5bb2ac0e7bb..5c300ff3921d 100644
+index 97a93c9b4629..236cb40cc7c5 100644
 --- a/drivers/pci/switch/switchtec.c
 +++ b/drivers/pci/switch/switchtec.c
-@@ -238,7 +238,8 @@ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
- 	stuser_set_state(stuser, MRPC_DONE);
- 	stuser->return_code = 0;
+@@ -376,7 +376,7 @@ static ssize_t field ## _show(struct device *dev, \
+ 		return io_string_show(buf, &si->gen4.field, \
+ 				      sizeof(si->gen4.field)); \
+ 	else \
+-		return -ENOTSUPP; \
++		return -EOPNOTSUPP; \
+ } \
+ \
+ static DEVICE_ATTR_RO(field)
+@@ -668,7 +668,7 @@ static int ioctl_flash_info(struct switchtec_dev *stdev,
+ 		info.flash_length = ioread32(&fi->gen4.flash_length);
+ 		info.num_partitions = SWITCHTEC_NUM_PARTITIONS_GEN4;
+ 	} else {
+-		return -ENOTSUPP;
++		return -EOPNOTSUPP;
+ 	}
  
--	if (stuser->status != SWITCHTEC_MRPC_STATUS_DONE)
-+	if (stuser->status != SWITCHTEC_MRPC_STATUS_DONE &&
-+	    stuser->status != SWITCHTEC_MRPC_STATUS_ERROR)
- 		goto out;
+ 	if (copy_to_user(uinfo, &info, sizeof(info)))
+@@ -876,7 +876,7 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+ 		if (ret)
+ 			return ret;
+ 	} else {
+-		return -ENOTSUPP;
++		return -EOPNOTSUPP;
+ 	}
  
- 	if (stdev->dma_mrpc)
-@@ -622,7 +623,8 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
- out:
- 	mutex_unlock(&stdev->mrpc_mutex);
+ 	if (copy_to_user(uinfo, &info, sizeof(info)))
+@@ -1611,7 +1611,7 @@ static int switchtec_init_pci(struct switchtec_dev *stdev,
+ 	else if (stdev->gen == SWITCHTEC_GEN4)
+ 		part_id = &stdev->mmio_sys_info->gen4.partition_id;
+ 	else
+-		return -ENOTSUPP;
++		return -EOPNOTSUPP;
  
--	if (stuser->status == SWITCHTEC_MRPC_STATUS_DONE)
-+	if (stuser->status == SWITCHTEC_MRPC_STATUS_DONE ||
-+	    stuser->status == SWITCHTEC_MRPC_STATUS_ERROR)
- 		return size;
- 	else if (stuser->status == SWITCHTEC_MRPC_STATUS_INTERRUPTED)
- 		return -ENXIO;
+ 	stdev->partition = ioread8(part_id);
+ 	stdev->partition_count = ioread8(&stdev->mmio_ntb->partition_count);
 -- 
 2.25.1
 
