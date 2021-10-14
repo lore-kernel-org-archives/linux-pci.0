@@ -2,55 +2,55 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EA6C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F4BC433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60B0E60F9E
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3726B611C1
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Oct 2021 07:26:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230107AbhJNH2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Oct 2021 03:28:30 -0400
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:56343 "EHLO
+        id S230179AbhJNH2c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Oct 2021 03:28:32 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:11631 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230153AbhJNH20 (ORCPT
+        with ESMTP id S230201AbhJNH20 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Oct 2021 03:28:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
   t=1634196382; x=1665732382;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=X1a8UGdzQQhtEDv2nq1V9v/r5V0ijSfYG3NKu7KoekY=;
-  b=rtQayLCK+pS+HEdHwsIh7sZuAz4SVZLPN12MtfdIC+GXFOAJpol47xhp
-   M5M2YTmjRa/xig3Y8ZsWLCNr0UXSBNqzOeARf7hxB6o1lzVW1UAJIEs8o
-   mEpODfihE6fz0oMDSbI+1ay15OtEh6e2JxeIznFmdQP0ShcucQe6xQxOL
-   rGQqJhxiUtHGNXdCaHTUoUoNfUrQ3ZQwXdgtgMkKEOzMTGANpC+TpdOnc
-   kGfvIJsseZtGDIID119Otc3IjX9Ayrp9QbWbE18ZV0/g+r8ACw35kt1tL
-   aJDarUZ6dMwHpCSXDuogvYf3rivUN6yTI8UwPBbmCfyZ8DGyEs8++tdf+
-   g==;
-IronPort-SDR: xEzB5GJX8fP4hivAizfOzAipt5UgqDrV9BmGjtAjCXvW/NXwgtnYMhmHV76q73hgbgOz8Usv0p
- CMwp+abf4u9FXVZ7SYg5A3cEoCTRnBB4xrAQF2AvF28AoPsz41N8H5C/DjExGU9M56X2SqUn8v
- OOpJTRjI2lXD7+7KRCz498LZbkmVVqiwWfLFXvlnOq6HTF8vKhfTXiWmKidko9GJMzN3f0/LlG
- eTt2valLyXxtm1gtOxySnnNmL5LiZvdWTkiPyiVntm4ov/lthmNyd08PSxraaqJFTXZzmcjeuU
- J6W6KdGLmNqsh29JzO4aiFjy
+  bh=UHmw1kryPDsjtcU9cCkAUSQxb8CTwQU7xtusCYKyOf0=;
+  b=wtD7m8fXgUmx8kT6StjcC6/ZgyFDZ3TlaqGE/dFTd9UPdWXIA7KuzCiP
+   GwgL/deuOe0HRAeTv/D5g6QZ/RdvFKeZF+gbQops1RTwOJQ67pyBXFhB9
+   BGFu1YVoezM9n0smase/YVjXQqm7fC9rIMtmeZOfzaE2JB0JDFgd93P19
+   08l98gMnM/KrQ4H79PxaTd91IK5AcgUN0qSmCCxoAzNtoOfPHY88euKBW
+   3/ajScFr/YE1NKgv2huoGhS1Q7wrUocllbsMlOo2aaNtJhPQNNnrUwpPH
+   JJVFDIlV8ltfCrDf1lkiOC0jPSaDu91QHwCXDH4X0tkU0t0VEnszJUJxF
+   w==;
+IronPort-SDR: kUXduQDh71AsmlXSw10ttDqJWkuTj1VxqXStCY8lfNqMPDme6RxmpDiEeEy5r4X17PXZ9BxORh
+ 8dx6w2lFpJw9BSsRC4xvwx3FrKanz4WX0bR9Vu9L2U+LHNSeF8E5U/GYSZoijpbytAHx7Khk/i
+ tGJwoSxRRH3rhvGuRxkXs1Z2sbd7xws8xMCJ570a/xKNel1aMLSYW9YvKY74S69uL9601LNKfs
+ q2/OyFQ7vQXQiOYU5PTd48/NcBEzLsnp2muC8DbE86rja5ZAx72ERvBkbJmxxIi+Rnap5m9mtZ
+ AL2f0bg7uNiZq6baQkIEVY+1
 X-IronPort-AV: E=Sophos;i="5.85,371,1624345200"; 
-   d="scan'208";a="148045650"
+   d="scan'208";a="132951847"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Oct 2021 00:26:21 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Oct 2021 00:26:16 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Thu, 14 Oct 2021 00:26:22 -0700
+ 15.1.2176.14; Thu, 14 Oct 2021 00:26:15 -0700
 Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
  (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
- Transport; Thu, 14 Oct 2021 00:26:21 -0700
+ Transport; Thu, 14 Oct 2021 00:26:15 -0700
 From:   <kelvin.cao@microchip.com>
 To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
         <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC:     <kelvin.cao@microchip.com>, <kelvincao@outlook.com>
-Subject: [PATCH v2 5/5] PCI/switchtec: Add check of event support
-Date:   Thu, 14 Oct 2021 14:18:59 +0000
-Message-ID: <20211014141859.11444-6-kelvin.cao@microchip.com>
+Subject: [PATCH v2 1/5] PCI/switchtec: Error out MRPC execution when MMIO reads fail
+Date:   Thu, 14 Oct 2021 14:18:55 +0000
+Message-ID: <20211014141859.11444-2-kelvin.cao@microchip.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211014141859.11444-1-kelvin.cao@microchip.com>
 References: <20211014141859.11444-1-kelvin.cao@microchip.com>
@@ -61,64 +61,161 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+From: Kelvin Cao <kelvin.cao@microchip.com>
 
-Not all events are supported by every gen/variant of the Switchtec
-firmware. To solve this, since Gen4, a new bit in each event header
-is introduced to indicate if an event is supported by the firmware.
+A firmware hard reset may be initiated by various mechanisms including a
+UART interface, TWI sideband interface from BMC, MRPC command from
+userspace, etc. The switchtec management driver is unaware of these
+resets.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+The reset clears PCI state including the BARs and Memory Space Enable
+bits, so the device no longer responds to the MMIO accesses the driver
+uses to operate it.
+
+MMIO reads to the device will fail with a PCIe error. When the root
+complex handles that error, it typically fabricates ~0 data to complete
+the CPU read.
+
+Check for this sort of error by reading the device ID from MMIO space.
+This ID can never be ~0, so if we see that value, it probably means the
+PCIe Memory Read failed and we should return an error indication to the
+application using the switchtec driver.
+
 Signed-off-by: Kelvin Cao <kelvin.cao@microchip.com>
 ---
- drivers/pci/switch/switchtec.c | 8 +++++++-
- include/linux/switchtec.h      | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/switch/switchtec.c | 67 ++++++++++++++++++++++++++++++----
+ 1 file changed, 60 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 236cb40cc7c5..38c2b036fb8e 100644
+index 0b301f8be9ed..e5bb2ac0e7bb 100644
 --- a/drivers/pci/switch/switchtec.c
 +++ b/drivers/pci/switch/switchtec.c
-@@ -1024,6 +1024,9 @@ static int event_ctl(struct switchtec_dev *stdev,
- 		return PTR_ERR(reg);
+@@ -45,6 +45,7 @@ enum mrpc_state {
+ 	MRPC_QUEUED,
+ 	MRPC_RUNNING,
+ 	MRPC_DONE,
++	MRPC_IO_ERROR,
+ };
  
- 	hdr = ioread32(reg);
-+	if (hdr & SWITCHTEC_EVENT_NOT_SUPP)
-+		return -EOPNOTSUPP;
+ struct switchtec_user {
+@@ -66,6 +67,19 @@ struct switchtec_user {
+ 	int event_cnt;
+ };
+ 
++/*
++ * The MMIO reads to the device_id register should always return the device ID
++ * of the device, otherwise the firmware is probably stuck or unreachable
++ * due to a firmware reset which clears PCI state including the BARs and Memory
++ * Space Enable bits.
++ */
++static int is_firmware_running(struct switchtec_dev *stdev)
++{
++	u32 device = ioread32(&stdev->mmio_sys_info->device_id);
 +
- 	for (i = 0; i < ARRAY_SIZE(ctl->data); i++)
- 		ctl->data[i] = ioread32(&reg[i + 1]);
- 
-@@ -1096,7 +1099,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- 		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
- 			ctl.flags = event_flags;
- 			ret = event_ctl(stdev, &ctl);
--			if (ret < 0)
-+			if (ret < 0 && ret != -EOPNOTSUPP)
- 				return ret;
- 		}
- 	} else {
-@@ -1403,6 +1406,9 @@ static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
- 	hdr_reg = event_regs[eid].map_reg(stdev, off, idx);
- 	hdr = ioread32(hdr_reg);
- 
-+	if (hdr & SWITCHTEC_EVENT_NOT_SUPP)
-+		return 0;
++	return stdev->pdev->device == device;
++}
 +
- 	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
- 		return 0;
+ static struct switchtec_user *stuser_create(struct switchtec_dev *stdev)
+ {
+ 	struct switchtec_user *stuser;
+@@ -113,6 +127,7 @@ static void stuser_set_state(struct switchtec_user *stuser,
+ 		[MRPC_QUEUED] = "QUEUED",
+ 		[MRPC_RUNNING] = "RUNNING",
+ 		[MRPC_DONE] = "DONE",
++		[MRPC_IO_ERROR] = "IO_ERROR",
+ 	};
  
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 082f1d51957a..be24056ac00f 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -19,6 +19,7 @@
- #define SWITCHTEC_EVENT_EN_CLI   BIT(2)
- #define SWITCHTEC_EVENT_EN_IRQ   BIT(3)
- #define SWITCHTEC_EVENT_FATAL    BIT(4)
-+#define SWITCHTEC_EVENT_NOT_SUPP BIT(31)
+ 	stuser->state = state;
+@@ -184,9 +199,26 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+ 	return 0;
+ }
  
- #define SWITCHTEC_DMA_MRPC_EN	BIT(0)
++static void mrpc_cleanup_cmd(struct switchtec_dev *stdev)
++{
++	/* requires the mrpc_mutex to already be held when called */
++
++	struct switchtec_user *stuser = list_entry(stdev->mrpc_queue.next,
++						   struct switchtec_user, list);
++
++	stuser->cmd_done = true;
++	wake_up_interruptible(&stuser->cmd_comp);
++	list_del_init(&stuser->list);
++	stuser_put(stuser);
++	stdev->mrpc_busy = 0;
++
++	mrpc_cmd_submit(stdev);
++}
++
+ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
+ {
+ 	/* requires the mrpc_mutex to already be held when called */
++
+ 	struct switchtec_user *stuser;
  
+ 	if (list_empty(&stdev->mrpc_queue))
+@@ -223,13 +255,7 @@ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
+ 		memcpy_fromio(stuser->data, &stdev->mmio_mrpc->output_data,
+ 			      stuser->read_len);
+ out:
+-	stuser->cmd_done = true;
+-	wake_up_interruptible(&stuser->cmd_comp);
+-	list_del_init(&stuser->list);
+-	stuser_put(stuser);
+-	stdev->mrpc_busy = 0;
+-
+-	mrpc_cmd_submit(stdev);
++	mrpc_cleanup_cmd(stdev);
+ }
+ 
+ static void mrpc_event_work(struct work_struct *work)
+@@ -246,6 +272,23 @@ static void mrpc_event_work(struct work_struct *work)
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ }
+ 
++static void mrpc_error_complete_cmd(struct switchtec_dev *stdev)
++{
++	/* requires the mrpc_mutex to already be held when called */
++
++	struct switchtec_user *stuser;
++
++	if (list_empty(&stdev->mrpc_queue))
++		return;
++
++	stuser = list_entry(stdev->mrpc_queue.next,
++			    struct switchtec_user, list);
++
++	stuser_set_state(stuser, MRPC_IO_ERROR);
++
++	mrpc_cleanup_cmd(stdev);
++}
++
+ static void mrpc_timeout_work(struct work_struct *work)
+ {
+ 	struct switchtec_dev *stdev;
+@@ -257,6 +300,11 @@ static void mrpc_timeout_work(struct work_struct *work)
+ 
+ 	mutex_lock(&stdev->mrpc_mutex);
+ 
++	if (!is_firmware_running(stdev)) {
++		mrpc_error_complete_cmd(stdev);
++		goto out;
++	}
++
+ 	if (stdev->dma_mrpc)
+ 		status = stdev->dma_mrpc->status;
+ 	else
+@@ -544,6 +592,11 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
+ 	if (rc)
+ 		return rc;
+ 
++	if (stuser->state == MRPC_IO_ERROR) {
++		mutex_unlock(&stdev->mrpc_mutex);
++		return -EIO;
++	}
++
+ 	if (stuser->state != MRPC_DONE) {
+ 		mutex_unlock(&stdev->mrpc_mutex);
+ 		return -EBADE;
 -- 
 2.25.1
 
