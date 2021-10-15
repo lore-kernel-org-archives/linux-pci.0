@@ -2,104 +2,64 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93DDCC433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:22:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F7AEC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78FD760EE9
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:22:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C47D61163
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234301AbhJOGY6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Oct 2021 02:24:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38078 "EHLO mail.kernel.org"
+        id S235485AbhJOGcr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Oct 2021 02:32:47 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:37166 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232124AbhJOGY5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Oct 2021 02:24:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BAAC361090;
-        Fri, 15 Oct 2021 06:22:49 +0000 (UTC)
-From:   Huacai Chen <chenhuacai@loongson.cn>
-To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Huacai Chen <chenhuacai@gmail.com>,
-        Huacai Chen <chenhuacai@loongson.cn>
-Subject: [PATCH V7 08/11] PCI/VGA: Remove empty vga_arb_device_card_gone()
-Date:   Fri, 15 Oct 2021 14:15:09 +0800
-Message-Id: <20211015061512.2941859-9-chenhuacai@loongson.cn>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20211015061512.2941859-1-chenhuacai@loongson.cn>
-References: <20211015061512.2941859-1-chenhuacai@loongson.cn>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S231612AbhJOGcq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Oct 2021 02:32:46 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2463F1A15D8;
+        Fri, 15 Oct 2021 08:30:38 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id E162A1A15E5;
+        Fri, 15 Oct 2021 08:30:37 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id AF278183AC94;
+        Fri, 15 Oct 2021 14:30:36 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de
+Subject: [RESEND v2 0/5] PCI: imx6: refine codes and add compliance tests mode support
+Date:   Fri, 15 Oct 2021 14:05:36 +0800
+Message-Id: <1634277941-6672-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+This series patches refine pci-imx6 driver and do the following changes.
+- Encapsulate the clock enable into one standalone function
+- Add the error propagation from host_init
+- Balance the usage of the regulator and clocks when link never came up
+- Add the compliance tests mode support
 
-vga_arb_device_card_gone() has always been empty.  Remove it.
+Main changes from v1 to v2:
+Regarding Lucas' comments.
+  - Move the placement of the new imx6_pcie_clk_enable() to avoid the
+    forward declarition.
+  - Seperate the second patch of v1 patch-set to three patches.
+  - Use the module_param to replace the kernel command line.
+Regarding Bjorn's comments:
+  - Use the cover-letter for a multi-patch series.
+  - Correct the subject line, and refine the commit logs. For example,
+    remove the timestamp of the logs.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
----
- drivers/gpu/vga/vgaarb.c | 16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+drivers/pci/controller/dwc/pci-imx6.c | 166 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--------------------------------------
+1 file changed, 105 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 05174fd7e7ef..7cd989c5d03b 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -122,8 +122,6 @@ static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
- /* this is only used a cookie - it should not be dereferenced */
- static struct pci_dev *vga_default;
- 
--static void vga_arb_device_card_gone(struct pci_dev *pdev);
--
- /* Find somebody in our list */
- static struct vga_device *vgadev_find(struct pci_dev *pdev)
- {
-@@ -825,10 +823,6 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
- 	/* Remove entry from list */
- 	list_del(&vgadev->list);
- 	vga_count--;
--	/* Notify userland driver that the device is gone so it discards
--	 * it's copies of the pci_dev pointer
--	 */
--	vga_arb_device_card_gone(pdev);
- 
- 	/* Wake up all possible waiters */
- 	wake_up_all(&vga_wait_queue);
-@@ -1078,9 +1072,7 @@ static ssize_t vga_arb_read(struct file *file, char __user *buf,
- 	if (lbuf == NULL)
- 		return -ENOMEM;
- 
--	/* Shields against vga_arb_device_card_gone (pci_dev going
--	 * away), and allows access to vga list
--	 */
-+	/* Protects vga_list */
- 	spin_lock_irqsave(&vga_lock, flags);
- 
- 	/* If we are targeting the default, use it */
-@@ -1097,8 +1089,6 @@ static ssize_t vga_arb_read(struct file *file, char __user *buf,
- 		/* Wow, it's not in the list, that shouldn't happen,
- 		 * let's fix us up and return invalid card
- 		 */
--		if (pdev == priv->target)
--			vga_arb_device_card_gone(pdev);
- 		spin_unlock_irqrestore(&vga_lock, flags);
- 		len = sprintf(lbuf, "invalid");
- 		goto done;
-@@ -1442,10 +1432,6 @@ static int vga_arb_release(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
--static void vga_arb_device_card_gone(struct pci_dev *pdev)
--{
--}
--
- /*
-  * callback any registered clients to let them know we have a
-  * change in VGA cards
--- 
-2.27.0
-
+[RESEND v2 1/5] PCI: imx6: Encapsulate the clock enable into one
+[RESEND v2 2/5] PCI: imx6: Add the error propagation from host_init
+[RESEND v2 3/5] PCI: imx6: Fix the regulator dump when link never
+[RESEND v2 4/5] PCI: imx6: Fix the clock reference handling unbalance
+[RESEND v2 5/5] PCI: imx6: Add the compliance tests mode support
