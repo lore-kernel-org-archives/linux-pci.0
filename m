@@ -2,99 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 533C4C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 05:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3B0C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:15:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3170460F41
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 05:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A9C260F59
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:15:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235424AbhJOFxJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Oct 2021 01:53:09 -0400
-Received: from mga12.intel.com ([192.55.52.136]:44416 "EHLO mga12.intel.com"
+        id S232267AbhJOGRq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Oct 2021 02:17:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60496 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229706AbhJOFxI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Oct 2021 01:53:08 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10137"; a="207968503"
-X-IronPort-AV: E=Sophos;i="5.85,374,1624345200"; 
-   d="scan'208";a="207968503"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2021 22:51:02 -0700
-X-IronPort-AV: E=Sophos;i="5.85,374,1624345200"; 
-   d="scan'208";a="481583984"
-Received: from akleen-mobl1.amr.corp.intel.com (HELO [10.209.55.104]) ([10.209.55.104])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2021 22:51:00 -0700
-Message-ID: <c2ce5ad8-4df7-3a37-b235-8762a76b1fd3@linux.intel.com>
-Date:   Thu, 14 Oct 2021 22:50:59 -0700
+        id S230244AbhJOGRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Oct 2021 02:17:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 12C4761090;
+        Fri, 15 Oct 2021 06:15:37 +0000 (UTC)
+From:   Huacai Chen <chenhuacai@loongson.cn>
+To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Huacai Chen <chenhuacai@gmail.com>,
+        Huacai Chen <chenhuacai@loongson.cn>
+Subject: [PATCH V7 00/11] PCI/VGA: Rework default VGA device selection
+Date:   Fri, 15 Oct 2021 14:15:01 +0800
+Message-Id: <20211015061512.2941859-1-chenhuacai@loongson.cn>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH v5 16/16] x86/tdx: Add cmdline option to force use of
- ioremap_host_shared
-Content-Language: en-US
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        James E J Bottomley <James.Bottomley@hansenpartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        "David S . Miller" <davem@davemloft.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        David Hildenbrand <david@redhat.com>,
-        Andrea Arcangeli <aarcange@redhat.com>,
-        Josh Poimboeuf <jpoimboe@redhat.com>,
-        Peter H Anvin <hpa@zytor.com>,
-        Dave Hansen <dave.hansen@intel.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Kirill Shutemov <kirill.shutemov@linux.intel.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Kuppuswamy Sathyanarayanan <knsathya@kernel.org>,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        sparclinux@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-doc@vger.kernel.org,
-        virtualization@lists.linux-foundation.org
-References: <20211009003711.1390019-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20211009003711.1390019-17-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20211009070132-mutt-send-email-mst@kernel.org>
- <8c906de6-5efa-b87a-c800-6f07b98339d0@linux.intel.com>
- <20211011075945-mutt-send-email-mst@kernel.org>
- <9d0ac556-6a06-0f2e-c4ff-0c3ce742a382@linux.intel.com>
- <20211011142330-mutt-send-email-mst@kernel.org>
- <4fe8d60a-2522-f111-995c-dcbefd0d5e31@linux.intel.com>
- <20211012165705-mutt-send-email-mst@kernel.org>
- <c09c961d-f433-4a68-0b38-208ffe8b36c7@linux.intel.com>
- <20211012171846-mutt-send-email-mst@kernel.org>
-From:   Andi Kleen <ak@linux.intel.com>
-In-Reply-To: <20211012171846-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+My original work is at [1].
 
-> I thought you basically create an OperationRegion of SystemMemory type,
-> and off you go. Maybe the OSPM in Linux is clever and protects
-> some memory, I wouldn't know.
+Current default VGA device selection fails in some cases:
 
+  - On BMC system, the AST2500 bridge [1a03:1150] does not implement
+    PCI_BRIDGE_CTL_VGA [1].  This is perfectly legal but means the
+    legacy VGA resources won't reach downstream devices unless they're
+    included in the usual bridge windows.
 
-I investigated this now, and it looks like acpi is using 
-ioremap_cache(). We can hook into that and force non sharing. It's 
-probably safe to assume that this is not used on real IO devices.
+  - vga_arb_select_default_device() will set a device below such a
+    bridge as the default VGA device as long as it has PCI_COMMAND_IO
+    and PCI_COMMAND_MEMORY enabled.
 
-I think there are still some other BIOS mappings that use just plain 
-ioremap() though.
+  - vga_arbiter_add_pci_device() is called for every VGA device,
+    either at boot-time or at hot-add time, and it will also set the
+    device as the default VGA device, but ONLY if all bridges leading
+    to it implement PCI_BRIDGE_CTL_VGA.
 
+  - This difference between vga_arb_select_default_device() and
+    vga_arbiter_add_pci_device() means that a device below an AST2500
+    or similar bridge can only be set as the default if it is
+    enumerated before vga_arb_device_init().
 
--Andi
+  - On ACPI-based systems, PCI devices are enumerated by acpi_init(),
+    which runs before vga_arb_device_init().
+
+  - On non-ACPI systems, like on MIPS system, they are enumerated by
+    pcibios_init(), which typically runs *after*
+    vga_arb_device_init().
+
+So I made vga_arb_update_default_device() to replace the current vga_
+arb_select_default_device(), which will be call from vga_arbiter_add_
+pci_device(), set the default device even if it does not own the VGA
+resources because an upstream bridge doesn't implement PCI_BRIDGE_CTL_
+VGA. And the default VGA device is updated if a better one is found
+(device with legacy resources enabled is better, device owns the
+firmware framebuffer is even better).
+
+Bjorn do some rework and extension in V2. It moves the VGA arbiter to
+the PCI subsystem, fixes a few nits, and breaks a few pieces to make
+the main patch a little smaller.
+
+V3 rewrite the commit log of the last patch (which is also summarized
+by Bjorn).
+
+V4 split the last patch to two steps.
+
+V5 split Patch-9 again and sort the patches.
+
+V6 split Patch-5 again and sort the patches again.
+
+V7 stop moving vgaarb to drivers/pci because it cause new problems.
+
+All comments welcome!
+
+[1] https://lore.kernel.org/dri-devel/20210705100503.1120643-1-chenhuacai@loongson.cn/
+
+Huacai Chen (8):
+  PCI/VGA: Prefer vga_default_device()
+  PCI/VGA: Move vga_arb_integrated_gpu() earlier in file
+  PCI/VGA: Split out vga_arb_update_default_device()
+  PCI/VGA: Prefer VGA device with legacy I/O enabled
+  PCI/VGA: Prefer VGA device belongs to integrated GPU
+  PCI/VGA: Prefer VGA device owns the firmware framebuffer
+  PCI/VGA: Remove vga_arb_select_default_device()
+  PCI/VGA: Log bridge control messages when adding devices
+
+Bjorn Helgaas (3):
+  PCI/VGA: Remove empty vga_arb_device_card_gone()
+  PCI/VGA: Use unsigned format string to print lock counts
+  PCI/VGA: Replace full MIT license text with SPDX identifier
+
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com> 
+---
+ drivers/gpu/vga/Kconfig           |  19 ---
+ drivers/gpu/vga/Makefile          |   1 -
+ drivers/pci/Kconfig               |  19 +++
+ drivers/pci/Makefile              |   1 +
+ 4 files changed, 126 insertions(+), 183 deletions(-)
+--
+2.27.0
 
