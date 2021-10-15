@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCCCC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F9CC43219
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81324610E5
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3472C61208
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Oct 2021 06:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235521AbhJOGct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Oct 2021 02:32:49 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:37216 "EHLO inva020.nxp.com"
+        id S231612AbhJOGcu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Oct 2021 02:32:50 -0400
+Received: from inva021.nxp.com ([92.121.34.21]:50180 "EHLO inva021.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232562AbhJOGcr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Oct 2021 02:32:47 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 858D71A15D7;
-        Fri, 15 Oct 2021 08:30:39 +0200 (CEST)
+        id S235511AbhJOGcs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Oct 2021 02:32:48 -0400
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id F3E512016E9;
+        Fri, 15 Oct 2021 08:30:41 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2360D1A04B9;
-        Fri, 15 Oct 2021 08:30:39 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id C60CF2016DF;
+        Fri, 15 Oct 2021 08:30:41 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 8EA07183ACDC;
-        Fri, 15 Oct 2021 14:30:37 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 8C6B8183ACDC;
+        Fri, 15 Oct 2021 14:30:40 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com,
         lorenzo.pieralisi@arm.com
 Cc:     linux-pci@vger.kernel.org, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         kernel@pengutronix.de, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [RESEND v2 1/5] PCI: imx6: Encapsulate the clock enable into one standalone function
-Date:   Fri, 15 Oct 2021 14:05:37 +0800
-Message-Id: <1634277941-6672-2-git-send-email-hongxing.zhu@nxp.com>
+Subject: [RESEND v2 4/5] PCI: imx6: Fix the clock reference handling unbalance when link never came up
+Date:   Fri, 15 Oct 2021 14:05:40 +0800
+Message-Id: <1634277941-6672-5-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1634277941-6672-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1634277941-6672-1-git-send-email-hongxing.zhu@nxp.com>
@@ -40,126 +40,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No function changes, just encapsulate the i.MX PCIe clocks enable
-operations into one standalone function
+When link never came up, driver probe would be failed with error -110.
+To keep usage counter balance of the clocks, disable the previous
+enabled clocks when link is down.
+Move definitions of the imx6_pcie_clk_disable() function to the proper
+place. Because it wouldn't be used in imx6_pcie_suspend_noirq() only.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 79 ++++++++++++++++-----------
- 1 file changed, 48 insertions(+), 31 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 47 ++++++++++++++-------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 26f49f797b0f..1fa1dba6da81 100644
+index cc837f8bf6d4..d6a5d99ffa52 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -470,38 +470,16 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+@@ -514,6 +514,29 @@ static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
  	return ret;
  }
  
--static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
++static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
++{
++	clk_disable_unprepare(imx6_pcie->pcie);
++	clk_disable_unprepare(imx6_pcie->pcie_phy);
++	clk_disable_unprepare(imx6_pcie->pcie_bus);
++
++	switch (imx6_pcie->drvdata->variant) {
++	case IMX6SX:
++		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
++		break;
++	case IMX7D:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
++		break;
++	case IMX8MQ:
++		clk_disable_unprepare(imx6_pcie->pcie_aux);
++		break;
++	default:
++		break;
++	}
++}
++
+ static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
+ {
+ 	u32 val;
+@@ -853,6 +876,7 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
+ 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0),
+ 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG1));
+ 	imx6_pcie_reset_phy(imx6_pcie);
++	imx6_pcie_clk_disable(imx6_pcie);
+ 	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0)
+ 		regulator_disable(imx6_pcie->vpcie);
+ 	return ret;
+@@ -941,29 +965,6 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
+ 	usleep_range(1000, 10000);
+ }
+ 
+-static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
 -{
--	u32 val;
--	struct device *dev = imx6_pcie->pci->dev;
+-	clk_disable_unprepare(imx6_pcie->pcie);
+-	clk_disable_unprepare(imx6_pcie->pcie_phy);
+-	clk_disable_unprepare(imx6_pcie->pcie_bus);
 -
--	if (regmap_read_poll_timeout(imx6_pcie->iomuxc_gpr,
--				     IOMUXC_GPR22, val,
--				     val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED,
--				     PHY_PLL_LOCK_WAIT_USLEEP_MAX,
--				     PHY_PLL_LOCK_WAIT_TIMEOUT))
--		dev_err(dev, "PCIe PLL lock timeout\n");
+-	switch (imx6_pcie->drvdata->variant) {
+-	case IMX6SX:
+-		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
+-		break;
+-	case IMX7D:
+-		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
+-				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
+-		break;
+-	case IMX8MQ:
+-		clk_disable_unprepare(imx6_pcie->pcie_aux);
+-		break;
+-	default:
+-		break;
+-	}
 -}
 -
--static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
-+static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
+ static int imx6_pcie_suspend_noirq(struct device *dev)
  {
- 	struct dw_pcie *pci = imx6_pcie->pci;
- 	struct device *dev = pci->dev;
- 	int ret;
- 
--	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
--		ret = regulator_enable(imx6_pcie->vpcie);
--		if (ret) {
--			dev_err(dev, "failed to enable vpcie regulator: %d\n",
--				ret);
--			return;
--		}
--	}
--
- 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
- 	if (ret) {
- 		dev_err(dev, "unable to enable pcie_phy clock\n");
--		goto err_pcie_phy;
-+		return ret;
- 	}
- 
- 	ret = clk_prepare_enable(imx6_pcie->pcie_bus);
-@@ -524,6 +502,51 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
-+	return 0;
-+
-+err_ref_clk:
-+	clk_disable_unprepare(imx6_pcie->pcie);
-+err_pcie:
-+	clk_disable_unprepare(imx6_pcie->pcie_bus);
-+err_pcie_bus:
-+	clk_disable_unprepare(imx6_pcie->pcie_phy);
-+
-+	return ret;
-+}
-+
-+static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
-+{
-+	u32 val;
-+	struct device *dev = imx6_pcie->pci->dev;
-+
-+	if (regmap_read_poll_timeout(imx6_pcie->iomuxc_gpr,
-+				     IOMUXC_GPR22, val,
-+				     val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED,
-+				     PHY_PLL_LOCK_WAIT_USLEEP_MAX,
-+				     PHY_PLL_LOCK_WAIT_TIMEOUT))
-+		dev_err(dev, "PCIe PLL lock timeout\n");
-+}
-+
-+static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
-+{
-+	struct dw_pcie *pci = imx6_pcie->pci;
-+	struct device *dev = pci->dev;
-+	int ret;
-+
-+	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
-+		ret = regulator_enable(imx6_pcie->vpcie);
-+		if (ret) {
-+			dev_err(dev, "failed to enable vpcie regulator: %d\n",
-+				ret);
-+			return;
-+		}
-+	}
-+
-+	ret = imx6_pcie_clk_enable(imx6_pcie);
-+	if (ret) {
-+		dev_err(dev, "unable to enable pcie clocks\n");
-+		goto err_clks;
-+	}
- 
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-@@ -578,13 +601,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- 	return;
- 
--err_ref_clk:
--	clk_disable_unprepare(imx6_pcie->pcie);
--err_pcie:
--	clk_disable_unprepare(imx6_pcie->pcie_bus);
--err_pcie_bus:
--	clk_disable_unprepare(imx6_pcie->pcie_phy);
--err_pcie_phy:
-+err_clks:
- 	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
- 		ret = regulator_disable(imx6_pcie->vpcie);
- 		if (ret)
+ 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
 -- 
 2.25.1
 
