@@ -2,260 +2,197 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7ACCC433EF
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Oct 2021 02:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 911F7C433EF
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Oct 2021 13:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1CCE60F25
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Oct 2021 02:42:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6751061039
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Oct 2021 13:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244849AbhJQCol (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Oct 2021 22:44:41 -0400
-Received: from mga06.intel.com ([134.134.136.31]:63294 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231351AbhJQCok (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 16 Oct 2021 22:44:40 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10139"; a="288942927"
-X-IronPort-AV: E=Sophos;i="5.85,379,1624345200"; 
-   d="scan'208";a="288942927"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2021 19:42:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,379,1624345200"; 
-   d="scan'208";a="443003341"
-Received: from lkp-server02.sh.intel.com (HELO 08b2c502c3de) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 16 Oct 2021 19:42:29 -0700
-Received: from kbuild by 08b2c502c3de with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1mbw85-0009tE-0z; Sun, 17 Oct 2021 02:42:29 +0000
-Date:   Sun, 17 Oct 2021 10:41:32 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/hotplug] BUILD SUCCESS
- f9a6c8ad4922bf386c366e5ece453d459e628784
-Message-ID: <616b8d5c.VnJjuSmrdiE1iIUl%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S1343731AbhJQNpi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Oct 2021 09:45:38 -0400
+Received: from mail-dm6nam12on2069.outbound.protection.outlook.com ([40.107.243.69]:55681
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S237604AbhJQNph (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 17 Oct 2021 09:45:37 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oKyjMn/yJYzoeofutWZOiyhYSZeKmC4ZC5UvggRja26HpuMKggAUihlOFjhPTKlIWWANWpFvPgiPdxsN4P9oYe4Bsxiisv/Fs+KxS19Fvg9D5WBPPSf4Pv/Tgw2GvAD+IqgeLexpmewfo5AwwjP6B4txuahl6LPIHQNX7q7tYTYtz/mP+y+3aW/mtCwuwER0+tl64zm/efy5nPqlpUiGndrnaqOKHUd0MwBHkshWJ7rGdfPQwmiJSylp1u3MNhgW0Z8IIRLPZ1sif9y8L6zDC0h1MQMPYUse65MVnGn6DnnIIYIMQaQVH4nMXSucdbE9NJlBEUACVchqshgcPpYb1g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TzMGmPlqgqVkIOv0sWJGJAWcKBy69bzFCnQv5lzMcNk=;
+ b=njN9RFDKafJnaX8mSDomNM5kDn5fwyWGO5gWc8ffNza6eQpE4R2pRoRRBAlck0oYMHQdDdADv/N+cnTFFrIuA+6nd714nIba4u3SYKoFebGnXgpbDgsn8e884fSfn1C7S254OwHavpxEtHJR0k+vLdov2t3owV7qp42+nmjFGEgN1YAgjhws1WXXk5OzJFnv7+P6DwKyPbpxSj9Da7Zjcik55oIzDLi5zJ0qhFcqgLf3LNIJagxm47p1VDGpFekANA39IgA+td5U2mddUz2IcSwmTkxpMrTid3AejEJgi9lClbQkFDH45JTZYNTgfuxDYY/a4JetFuQrYsRnOQ+DSA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.34) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=nvidia.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TzMGmPlqgqVkIOv0sWJGJAWcKBy69bzFCnQv5lzMcNk=;
+ b=ViPPcnqo3950RyR3ACxpKkV9kb+f2y6H+AKk5MnXYJ5Sl78+bSDvdEFiU3wpIb4K0OFpkDtahrCfEf4jwH3HtwrVAJv0Cu99Y5rPJXMQSwWJe9vYl7hbFfN0j52rBG01fMXr3Aeh0/Ql94X0v4wwPzqg8WeFBdNwVo3Z5Bv/nVEmV0e5/Y8WiK4//dp++c+dm6zFCevDSYPE02o6dcvaKIWMyCX3ylw7hkLT9c/JcTfpT3yEqzKxquvaccBtWf89k1eRCaTMBGcT6QMg4IwGLbH+YLWzXcaRACY7E9tPyMR3J8BuxkffQ4XlB8hOeQslxR4gZaL8kbLTguUVZWUTgQ==
+Received: from DM6PR11CA0068.namprd11.prod.outlook.com (2603:10b6:5:14c::45)
+ by CH2PR12MB4922.namprd12.prod.outlook.com (2603:10b6:610:65::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Sun, 17 Oct
+ 2021 13:43:26 +0000
+Received: from DM6NAM11FT027.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:14c:cafe::88) by DM6PR11CA0068.outlook.office365.com
+ (2603:10b6:5:14c::45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.14 via Frontend
+ Transport; Sun, 17 Oct 2021 13:43:26 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
+ smtp.mailfrom=nvidia.com; vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.34; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.34) by
+ DM6NAM11FT027.mail.protection.outlook.com (10.13.172.205) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4608.15 via Frontend Transport; Sun, 17 Oct 2021 13:43:25 +0000
+Received: from [172.27.13.186] (172.20.187.6) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Sun, 17 Oct
+ 2021 13:43:21 +0000
+Subject: Re: [PATCH V1 mlx5-next 04/13] PCI/IOV: Allow SRIOV VF drivers to
+ reach the drvdata of a PF
+To:     Alex Williamson <alex.williamson@redhat.com>, <bhelgaas@google.com>
+CC:     <jgg@nvidia.com>, <saeedm@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <kvm@vger.kernel.org>, <netdev@vger.kernel.org>, <kuba@kernel.org>,
+        <leonro@nvidia.com>, <kwankhede@nvidia.com>,
+        <mgurtovoy@nvidia.com>, <maorg@nvidia.com>
+References: <20211013094707.163054-1-yishaih@nvidia.com>
+ <20211013094707.163054-5-yishaih@nvidia.com>
+ <20211014161150.38e3d8aa.alex.williamson@redhat.com>
+From:   Yishai Hadas <yishaih@nvidia.com>
+Message-ID: <0b3d2152-d925-4bca-bd81-447c186b4b41@nvidia.com>
+Date:   Sun, 17 Oct 2021 16:43:17 +0300
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20211014161150.38e3d8aa.alex.williamson@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [172.20.187.6]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ed102ceb-a940-4cfc-450c-08d991741846
+X-MS-TrafficTypeDiagnostic: CH2PR12MB4922:
+X-Microsoft-Antispam-PRVS: <CH2PR12MB4922DC636C79ABD28A7DEA40C3BB9@CH2PR12MB4922.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: SqCwuz17hUfWfCEybVLApPHpbqTHkupCsftngg/P2f83uOdC+GMl6dL+DGMdbK8Y1kTrVAZAd5hgkhx7b+6pBJiZPtJjW24JG5B6tpjzgaTQt+kwWwp4U4J5vd1AhdYPzYBWgiWn8tRq4UGnrO15hvq0aAox6TA0L9XOxZ3dvi/XRRaaHyxoURxekR7xPIGoiAeEYIaPL72cegiUfDOJFQZG87Oop07hiwzXdM6N4LTFO1ZOuCItEG+x+bSqAdamsZ1IfsBikyIEle/lOapLnTpZa89JkJdxSLL1nSDO8HBJKv4HzKV7pDd37v/n680KlQw6+h2AbmUG6PUhgXHt2MXfTIREU0/G/0rZIY3ul7FoR49sIg6EXTz/OblEoTjB8Cy50/tElptiPO2hf66afD89rov9LT00QqZh2cGq+QJlfbz780KFcjkLuoHHNcIYmSR94wmWMcnAaksNo9aY/L+9wwX0CaitV5LRVer+tkFuDP1Hi32M1TBXDgLK421wBSDwE1EbpxPIxFKjsuzn/BWfNTW4jpPWs+RAAhrgTw4TqXzLCtrPpOOew4UB1YNd1nB4jzUwVt611twm233bzrvlo07tMyPymVYYbVemytn9MFE7wDiMrZj2ksxGVSEJoOq8MfAeAf5ZlbBHZiQf4aMdhNWxjAnNiwuMxO8appJ5E1F5ZycOrxbabJSHVy+Srzo7PLYBYM1EyqUCtoBrzJmtZV1TV27DHcc8Uo4K4Ys=
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(46966006)(36840700001)(2616005)(426003)(16576012)(70206006)(70586007)(86362001)(47076005)(107886003)(36756003)(110136005)(82310400003)(83380400001)(336012)(8676002)(8936002)(508600001)(54906003)(2906002)(356005)(4326008)(5660300002)(7636003)(31686004)(6666004)(186003)(16526019)(36860700001)(26005)(316002)(53546011)(31696002)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Oct 2021 13:43:25.7628
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ed102ceb-a940-4cfc-450c-08d991741846
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT027.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4922
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
-branch HEAD: f9a6c8ad4922bf386c366e5ece453d459e628784  PCI/ERR: Reduce compile time for CONFIG_PCIEAER=n
+On 10/15/2021 1:11 AM, Alex Williamson wrote:
+> On Wed, 13 Oct 2021 12:46:58 +0300
+> Yishai Hadas <yishaih@nvidia.com> wrote:
+>
+>> From: Jason Gunthorpe <jgg@nvidia.com>
+>>
+>> There are some cases where a SRIOV VF driver will need to reach into and
+>> interact with the PF driver. This requires accessing the drvdata of the PF.
+>>
+>> Provide a function pci_iov_get_pf_drvdata() to return this PF drvdata in a
+>> safe way. Normally accessing a drvdata of a foreign struct device would be
+>> done using the device_lock() to protect against device driver
+>> probe()/remove() races.
+>>
+>> However, due to the design of pci_enable_sriov() this will result in a
+>> ABBA deadlock on the device_lock as the PF's device_lock is held during PF
+>> sriov_configure() while calling pci_enable_sriov() which in turn holds the
+>> VF's device_lock while calling VF probe(), and similarly for remove.
+>>
+>> This means the VF driver can never obtain the PF's device_lock.
+>>
+>> Instead use the implicit locking created by pci_enable/disable_sriov(). A
+>> VF driver can access its PF drvdata only while its own driver is attached,
+>> and the PF driver can control access to its own drvdata based on when it
+>> calls pci_enable/disable_sriov().
+>>
+>> To use this API the PF driver will setup the PF drvdata in the probe()
+>> function. pci_enable_sriov() is only called from sriov_configure() which
+>> cannot happen until probe() completes, ensuring no VF races with drvdata
+>> setup.
+>>
+>> For removal, the PF driver must call pci_disable_sriov() in its remove
+>> function before destroying any of the drvdata. This ensures that all VF
+>> drivers are unbound before returning, fencing concurrent access to the
+>> drvdata.
+>>
+>> The introduction of a new function to do this access makes clear the
+>> special locking scheme and the documents the requirements on the PF/VF
+>> drivers using this.
+>>
+>> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+>> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+>> Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+>> ---
+>>   drivers/pci/iov.c   | 29 +++++++++++++++++++++++++++++
+>>   include/linux/pci.h |  7 +++++++
+>>   2 files changed, 36 insertions(+)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index e7751fa3fe0b..ca696730f761 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -47,6 +47,35 @@ int pci_iov_vf_id(struct pci_dev *dev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_iov_vf_id);
+>>   
+>> +/**
+>> + * pci_iov_get_pf_drvdata - Return the drvdata of a PF
+>> + * @dev - VF pci_dev
+>> + * @pf_driver - Device driver required to own the PF
+>> + *
+>> + * This must be called from a context that ensures that a VF driver is attached.
+>> + * The value returned is invalid once the VF driver completes its remove()
+>> + * callback.
+>> + *
+>> + * Locking is achieved by the driver core. A VF driver cannot be probed until
+>> + * pci_enable_sriov() is called and pci_disable_sriov() does not return until
+>> + * all VF drivers have completed their remove().
+>> + *
+>> + * The PF driver must call pci_disable_sriov() before it begins to destroy the
+>> + * drvdata.
+>> + */
+>> +void *pci_iov_get_pf_drvdata(struct pci_dev *dev, struct pci_driver *pf_driver)
+>> +{
+>> +	struct pci_dev *pf_dev;
+>> +
+>> +	if (dev->is_physfn)
+>> +		return ERR_PTR(-EINVAL);
+> I think we're trying to make this only accessible to VFs, so shouldn't
+> we test (!dev->is_virtfn)?  is_physfn will be zero for either a PF with
+> failed SR-IOV configuration or for a non-SR-IOV device afaict.  Thanks,
+>
+> Alex
+>
 
-elapsed time: 723m
+Yes, this should be accessible only for VFs.
 
-configs tested: 197
-configs skipped: 5
+We can go with your suggestion to explicitly check (!dev->is_virtfn) as 
+this seems cleaner and safer as you mentioned.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+We already got ACK on this patch from Bjorn but as your suggestion seems 
+straight forward I may put the Acked-by as part of V2 in any case.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allmodconfig
-arm                              allyesconfig
-i386                 randconfig-c001-20211016
-arm                          moxart_defconfig
-arm                           spitz_defconfig
-powerpc                     skiroot_defconfig
-powerpc                 mpc834x_mds_defconfig
-h8300                       h8s-sim_defconfig
-arc                     haps_hs_smp_defconfig
-powerpc                     tqm5200_defconfig
-sh                             sh03_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                                  defconfig
-riscv                            alldefconfig
-mips                        maltaup_defconfig
-arm                           tegra_defconfig
-arm                          collie_defconfig
-sparc                               defconfig
-powerpc                       ebony_defconfig
-s390                             alldefconfig
-sh                        dreamcast_defconfig
-openrisc                 simple_smp_defconfig
-arc                          axs101_defconfig
-arm                        keystone_defconfig
-xtensa                          iss_defconfig
-powerpc                 canyonlands_defconfig
-sh                           se7721_defconfig
-sh                          landisk_defconfig
-mips                     loongson1b_defconfig
-mips                           xway_defconfig
-ia64                        generic_defconfig
-arm                           h5000_defconfig
-arc                         haps_hs_defconfig
-arm                  colibri_pxa270_defconfig
-sh                        edosk7705_defconfig
-sh                         ap325rxa_defconfig
-sh                           se7751_defconfig
-m68k                        m5272c3_defconfig
-arm                           viper_defconfig
-sparc64                             defconfig
-riscv                             allnoconfig
-mips                            e55_defconfig
-powerpc                     kmeter1_defconfig
-arm                  colibri_pxa300_defconfig
-sh                   sh7724_generic_defconfig
-sh                          rsk7264_defconfig
-mips                      maltasmvp_defconfig
-arm                            zeus_defconfig
-arm                         s5pv210_defconfig
-mips                             allmodconfig
-m68k                                defconfig
-arm                         cm_x300_defconfig
-powerpc                    gamecube_defconfig
-powerpc                 mpc837x_mds_defconfig
-mips                   sb1250_swarm_defconfig
-m68k                          hp300_defconfig
-powerpc                      chrp32_defconfig
-arm                         axm55xx_defconfig
-powerpc                     ep8248e_defconfig
-powerpc                     sequoia_defconfig
-sh                     magicpanelr2_defconfig
-powerpc                 xes_mpc85xx_defconfig
-riscv                               defconfig
-microblaze                      mmu_defconfig
-powerpc                   bluestone_defconfig
-xtensa                    xip_kc705_defconfig
-sh                          kfr2r09_defconfig
-mips                     cu1000-neo_defconfig
-powerpc                     mpc5200_defconfig
-powerpc                      arches_defconfig
-powerpc                  storcenter_defconfig
-arm                        cerfcube_defconfig
-arm                         assabet_defconfig
-sh                 kfr2r09-romimage_defconfig
-powerpc                     asp8347_defconfig
-sparc                       sparc64_defconfig
-mips                     decstation_defconfig
-m68k                       bvme6000_defconfig
-mips                           ip32_defconfig
-mips                            gpr_defconfig
-arm                       imx_v6_v7_defconfig
-powerpc                      bamboo_defconfig
-arm                        vexpress_defconfig
-powerpc                          allmodconfig
-powerpc                        cell_defconfig
-h8300                            allyesconfig
-mips                           gcw0_defconfig
-powerpc                  iss476-smp_defconfig
-powerpc                  mpc866_ads_defconfig
-arc                 nsimosci_hs_smp_defconfig
-sh                          sdk7786_defconfig
-ia64                          tiger_defconfig
-powerpc                 mpc837x_rdb_defconfig
-arm                  randconfig-c002-20211017
-i386                 randconfig-c001-20211017
-x86_64               randconfig-c001-20211017
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-s390                                defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-sparc                            allyesconfig
-i386                                defconfig
-i386                             allyesconfig
-mips                             allyesconfig
-powerpc                          allyesconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a006-20211016
-x86_64               randconfig-a004-20211016
-x86_64               randconfig-a001-20211016
-x86_64               randconfig-a005-20211016
-x86_64               randconfig-a002-20211016
-x86_64               randconfig-a003-20211016
-i386                 randconfig-a003-20211016
-i386                 randconfig-a001-20211016
-i386                 randconfig-a005-20211016
-i386                 randconfig-a004-20211016
-i386                 randconfig-a002-20211016
-i386                 randconfig-a006-20211016
-x86_64               randconfig-a012-20211017
-x86_64               randconfig-a015-20211017
-x86_64               randconfig-a016-20211017
-x86_64               randconfig-a014-20211017
-x86_64               randconfig-a011-20211017
-x86_64               randconfig-a013-20211017
-i386                 randconfig-a016-20211017
-i386                 randconfig-a014-20211017
-i386                 randconfig-a011-20211017
-i386                 randconfig-a015-20211017
-i386                 randconfig-a012-20211017
-i386                 randconfig-a013-20211017
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                            allyesconfig
-riscv                            allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-x86_64                           allyesconfig
-
-clang tested configs:
-mips                 randconfig-c004-20211017
-arm                  randconfig-c002-20211017
-i386                 randconfig-c001-20211017
-s390                 randconfig-c005-20211017
-x86_64               randconfig-c007-20211017
-powerpc              randconfig-c003-20211017
-riscv                randconfig-c006-20211017
-i386                 randconfig-a003-20211017
-i386                 randconfig-a001-20211017
-i386                 randconfig-a005-20211017
-i386                 randconfig-a004-20211017
-i386                 randconfig-a002-20211017
-i386                 randconfig-a006-20211017
-x86_64               randconfig-a006-20211017
-x86_64               randconfig-a004-20211017
-x86_64               randconfig-a001-20211017
-x86_64               randconfig-a005-20211017
-x86_64               randconfig-a002-20211017
-x86_64               randconfig-a003-20211017
-x86_64               randconfig-a012-20211016
-x86_64               randconfig-a015-20211016
-x86_64               randconfig-a016-20211016
-x86_64               randconfig-a014-20211016
-x86_64               randconfig-a011-20211016
-x86_64               randconfig-a013-20211016
-i386                 randconfig-a016-20211016
-i386                 randconfig-a014-20211016
-i386                 randconfig-a011-20211016
-i386                 randconfig-a015-20211016
-i386                 randconfig-a012-20211016
-i386                 randconfig-a013-20211016
-hexagon              randconfig-r041-20211017
-hexagon              randconfig-r045-20211017
-hexagon              randconfig-r041-20211016
-s390                 randconfig-r044-20211016
-riscv                randconfig-r042-20211016
-hexagon              randconfig-r045-20211016
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Yishai
