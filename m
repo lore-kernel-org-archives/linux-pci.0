@@ -2,56 +2,49 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7130C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 361CFC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8705B6127B
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EE9561279
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230407AbhJRHJw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Oct 2021 03:09:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53826 "EHLO mail.kernel.org"
+        id S230405AbhJRHJv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Oct 2021 03:09:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53824 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230380AbhJRHJu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S230369AbhJRHJu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 18 Oct 2021 03:09:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B63F6610A6;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B8DA061278;
         Mon, 18 Oct 2021 07:07:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1634540859;
-        bh=sq8bIQQ/eEGYcPaW/ICYIrClwaQfOiGgNSyoUzf1Fk8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ELkkHS80C+ay2r1JCaiJrqqMvZ3YQnobV80HpIulgVAphj38Py+z5up9vmSv156RR
-         iXwWezGR1jvDiqegxeOxaDsimB8ipeN1CEJC/Ztp1MYYIfkQWFdUkneu8AQ1QAFM/i
-         N0jlDR/muzqZ1AVF/n22zO59zT8rc9e/etkE4BB7lf8HWxLRRAGWDb0YphS9QPUE00
-         oOIBL97t7qu8bImUz0FzN8gVviF5oy2xKpDWdQaoBq6ZGthWzoRJ8coEUinqP/Axs3
-         4ra90NkWO4U4A1JfnfBl3nEBC5xCm4WGQSZUzKxxTiXQ7vnph2Fwn+syJKTr2yxuHk
-         0uu25IO79WDgQ==
+        bh=Zn2KJ11183WXgnWpy6pafA9IQLGjBZgIXFBbWDakuII=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=lc+PjFefCjKafnlciCVj4IK6+EFiXp+vxQBc14LSX4IcUzB2Vu33oG29g2777Bgpa
+         msB7G4k+zBiDW3AQdzWkLrYn0RuV3NtVmyt0UeTXlCQZzfYMJm3FazM5jsRXxpPxho
+         5s9tTD0fMS7e5ol4LSVwo0Jw72ycC4YlXML1B2MqFaS2nKjyuEafKzAoEQDxNiIfsD
+         58Say0oH9KUvZsednvSXxtlX5wqnJLdMoQtJDf1dPCr7UuK5kcYvQq40EAAExw/dUt
+         B4QIW3e2uUMKDSJR+gyGdQFogIC6B29cZqowxQCJjLhfhW18sS4pF0iu/zreV6J1tK
+         Gz0UN/pJU8fFw==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mcMkC-000Icp-Li; Mon, 18 Oct 2021 08:07:36 +0100
+        id 1mcMkC-000IdG-Sh; Mon, 18 Oct 2021 08:07:36 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        "Songxiaowei (Kirin_DRV)" <songxiaowei@hisilicon.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Alex Dewar <alex.dewar90@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Songxiaowei" <songxiaowei@hisilicon.com>,
         Binghui Wang <wangbinghui@hisilicon.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Luca Ceresoli <luca@lucaceresoli.net>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Rob Herring <robh@kernel.org>, Simon Xue <xxm@rock-chips.com>,
-        Srikanth Thokala <srikanth.thokala@intel.com>,
-        Wesley Sheng <wesley.sheng@amd.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v13 00/10] Add support for Hikey 970 PCIe
-Date:   Mon, 18 Oct 2021 08:07:25 +0100
-Message-Id: <cover.1634539769.git.mchehab+huawei@kernel.org>
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v13 09/10] PCI: kirin: fix poweroff sequence
+Date:   Mon, 18 Oct 2021 08:07:34 +0100
+Message-Id: <8116a4ddaaeda8dd056e80fa0ee506c5c6f42ca7.1634539769.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1634539769.git.mchehab+huawei@kernel.org>
+References: <cover.1634539769.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
@@ -59,76 +52,78 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+This driver currently doesn't call dw_pcie_host_deinit()
+at the .remove() callback. This can cause an OOPS if the driver
+is unbound.
 
-That's basically the same patches sent on v12, with the acked-by from
-the driver's maintainer (Xiaowei Song) properly added on each patch
-of the series.
+While here, add a poweroff function, in order to abstract
+between the internal and external PHY logic.
 
-The pcie-kirin PCIe driver contains internally a PHY interface for
-Kirin 960, but it misses support for Kirin 970.
-
-Patch1 contains a PHY for Kirin 970 PCIe.
-
-The remaining patches add support for Kirin 970 at the pcie-kirin driver, and
-add the needed logic to compile it as module and to allow to dynamically
-remove the driver in runtime.
-
-Tested on HiKey970:
-
-  # lspci -D -PP
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-  0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-  0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
-  0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-
-Tested on HiKey960:
-
-  # lspci -D 
-  0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
-
+Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
 
-v13:
-  - Added Xiaowei's ack for the series.
+See [PATCH v13 00/10] at: https://lore.kernel.org/all/cover.1634539769.git.mchehab+huawei@kernel.org/
 
-v12:
-  - Change a comment at patch 1 to not use c99 style.
+ drivers/pci/controller/dwc/pcie-kirin.c | 30 ++++++++++++++++---------
+ 1 file changed, 20 insertions(+), 10 deletions(-)
 
-v11:
-  - patch 5 changed to use the right PCIe topology
-  - all other patches are identical to v10.
-
-v10:
-  - patch 1: dropped magic numbers from PHY driver
-  - patch 5: allow pcie child nodes without reset-gpios
-  - all other patches are identical to v9.
-
-v9:
-  - Did some cleanups at patches 1 and 5
-
-Mauro Carvalho Chehab (10):
-  PCI: kirin: Reorganize the PHY logic inside the driver
-  PCI: kirin: Add support for a PHY layer
-  PCI: kirin: Use regmap for APB registers
-  PCI: kirin: Add support for bridge slot DT schema
-  PCI: kirin: Add Kirin 970 compatible
-  PCI: kirin: Add MODULE_* macros
-  PCI: kirin: Allow building it as a module
-  PCI: kirin: Add power_off support for Kirin 960 PHY
-  PCI: kirin: fix poweroff sequence
-  PCI: kirin: Allow removing the driver
-
- drivers/pci/controller/dwc/Kconfig      |   2 +-
- drivers/pci/controller/dwc/pcie-kirin.c | 644 ++++++++++++++++++------
- 2 files changed, 498 insertions(+), 148 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index b17a194cf78d..ffc63d12f8ed 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -680,6 +680,23 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
+ 
++static int kirin_pcie_power_off(struct kirin_pcie *kirin_pcie)
++{
++	int i;
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
++		return hi3660_pcie_phy_power_off(kirin_pcie);
++
++	for (i = 0; i < kirin_pcie->n_gpio_clkreq; i++) {
++		gpio_direction_output(kirin_pcie->gpio_id_clkreq[i], 1);
++	}
++
++	phy_power_off(kirin_pcie->phy);
++	phy_exit(kirin_pcie->phy);
++
++	return 0;
++}
++
+ static int kirin_pcie_power_on(struct platform_device *pdev,
+ 			       struct kirin_pcie *kirin_pcie)
+ {
+@@ -725,12 +742,7 @@ static int kirin_pcie_power_on(struct platform_device *pdev,
+ 
+ 	return 0;
+ err:
+-	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
+-		hi3660_pcie_phy_power_off(kirin_pcie);
+-	} else {
+-		phy_power_off(kirin_pcie->phy);
+-		phy_exit(kirin_pcie->phy);
+-	}
++	kirin_pcie_power_off(kirin_pcie);
+ 
+ 	return ret;
+ }
+@@ -739,11 +751,9 @@ static int __exit kirin_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
+ 
+-	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
+-		return hi3660_pcie_phy_power_off(kirin_pcie);
++	dw_pcie_host_deinit(&kirin_pcie->pci->pp);
+ 
+-	phy_power_off(kirin_pcie->phy);
+-	phy_exit(kirin_pcie->phy);
++	kirin_pcie_power_off(kirin_pcie);
+ 
+ 	return 0;
+ }
 -- 
 2.31.1
-
 
