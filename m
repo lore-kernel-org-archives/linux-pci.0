@@ -2,179 +2,81 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 088E9C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A36CC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 08:16:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA26660F46
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:08:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1859D61076
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 08:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231210AbhJRHKK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Oct 2021 03:10:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54408 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230512AbhJRHKA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Oct 2021 03:10:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D25B76127B;
-        Mon, 18 Oct 2021 07:07:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634540869;
-        bh=zGEI0Zx6L0bYYAGhSssm/WK8iytxIY9j+nEv6nUnKv0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XLht6ICIjfwY+Ofye/Z2emjn1Ikdskt0Cm00RZzQYrG+vk/Cz2o/I31OgXbvimwXH
-         dNGksep2CDqXMoxPUmACD120/r7guBxD7yxhZofiL5h4qRZFktz31ZM+/7J9Xhmm5p
-         06CjQb2uw32Q4MGXQWGeMPSo+gTnoZtaFCq4R6C2ZFjf3pa8CmJir58d7N4KC91B9d
-         aQ277gGoyrMy0ZBwrqlSmwOhNHr3Y8uRremw5M+yQO5zVCfWEhAYzNJMTl3RvO6UdD
-         ha54wNTbmPrTulI9nTGrjTHn3bfLAWmxNVZoCGULAf4/eFZnrA8xOpDKvBsgGtJ47Z
-         Twuxc/UuxIoBQ==
-Received: by mail.kernel.org with local (Exim 4.94.2)
-        (envelope-from <mchehab@kernel.org>)
-        id 1mcMkC-000Icy-Pk; Mon, 18 Oct 2021 08:07:36 +0100
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        "Songxiaowei" <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v13 03/10] PCI: kirin: Use regmap for APB registers
-Date:   Mon, 18 Oct 2021 08:07:28 +0100
-Message-Id: <9984ac9ffbc77c5a7e9e18caef456e7db1b54a26.1634539769.git.mchehab+huawei@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <cover.1634539769.git.mchehab+huawei@kernel.org>
-References: <cover.1634539769.git.mchehab+huawei@kernel.org>
+        id S231130AbhJRIS4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Oct 2021 04:18:56 -0400
+Received: from mx24.baidu.com ([111.206.215.185]:43294 "EHLO baidu.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230469AbhJRISy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Oct 2021 04:18:54 -0400
+Received: from BC-Mail-Ex11.internal.baidu.com (unknown [172.31.51.51])
+        by Forcepoint Email with ESMTPS id 70BFE1012CB84C20ABCE;
+        Mon, 18 Oct 2021 16:16:36 +0800 (CST)
+Received: from BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) by
+ BC-Mail-Ex11.internal.baidu.com (172.31.51.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2242.12; Mon, 18 Oct 2021 16:16:35 +0800
+Received: from LAPTOP-UKSR4ENP.internal.baidu.com (172.31.63.8) by
+ BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.14; Mon, 18 Oct 2021 16:16:35 +0800
+From:   Cai Huoqing <caihuoqing@baidu.com>
+To:     <caihuoqing@baidu.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: Remove the unused pci wrappers pci_pool_xxx()
+Date:   Mon, 18 Oct 2021 16:16:28 +0800
+Message-ID: <20211018081629.151-1-caihuoqing@baidu.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
+Content-Type: text/plain
+X-Originating-IP: [172.31.63.8]
+X-ClientProxiedBy: BJHW-Mail-Ex01.internal.baidu.com (10.127.64.11) To
+ BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PHY layer need to access APB registers too, for Kirin 970.
-So, place them into a named regmap.
+The wrappers around dma_pool_xxx should go away, so
+remove the unused pci wrappers.
+Prefer using dma_pool_xxx() instead of the pci wrappers
+pci_pool_xxx(), and the use of pci_pool_xxx was already
+removed.
 
-Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
-Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
 ---
+ include/linux/pci.h | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-See [PATCH v13 00/10] at: https://lore.kernel.org/all/cover.1634539769.git.mchehab+huawei@kernel.org/
-
- drivers/pci/controller/dwc/pcie-kirin.c | 49 +++++++++++++------------
- 1 file changed, 26 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 31514a5d4bb4..0ea92a521e1c 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -61,8 +61,8 @@ struct kirin_pcie {
- 	enum pcie_kirin_phy_type	type;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7e0ce3a4d5a1..98fc67ceb582 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1498,19 +1498,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ #define PCI_IRQ_ALL_TYPES \
+ 	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
  
- 	struct dw_pcie	*pci;
-+	struct regmap   *apb;
- 	struct phy	*phy;
--	void __iomem	*apb_base;
- 	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
- };
- 
-@@ -340,25 +340,27 @@ static int hi3660_pcie_phy_init(struct platform_device *pdev,
-  * The non-PHY part starts here
-  */
- 
--/* Registers in PCIeCTRL */
--static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
--					 u32 val, u32 reg)
--{
--	writel(val, kirin_pcie->apb_base + reg);
--}
+-/* kmem_cache style wrapper around pci_alloc_consistent() */
 -
--static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
--{
--	return readl(kirin_pcie->apb_base + reg);
--}
-+static const struct regmap_config pcie_kirin_regmap_conf = {
-+	.name = "kirin_pcie_apb",
-+	.reg_bits = 32,
-+	.val_bits = 32,
-+	.reg_stride = 4,
-+};
- 
- static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- 				    struct platform_device *pdev)
- {
--	kirin_pcie->apb_base =
--		devm_platform_ioremap_resource_byname(pdev, "apb");
--	if (IS_ERR(kirin_pcie->apb_base))
--		return PTR_ERR(kirin_pcie->apb_base);
-+	struct device *dev = &pdev->dev;
-+	void __iomem *apb_base;
-+
-+	apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
-+	if (IS_ERR(apb_base))
-+		return PTR_ERR(apb_base);
-+
-+	kirin_pcie->apb = devm_regmap_init_mmio(dev, apb_base,
-+						&pcie_kirin_regmap_conf);
-+	if (IS_ERR(kirin_pcie->apb))
-+		return PTR_ERR(kirin_pcie->apb);
- 
- 	return 0;
- }
-@@ -368,13 +370,13 @@ static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
- {
- 	u32 val;
- 
--	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
-+	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, &val);
- 	if (on)
- 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
- 
--	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
-+	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL0_ADDR, val);
- }
- 
- static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
-@@ -382,13 +384,13 @@ static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
- {
- 	u32 val;
- 
--	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
-+	regmap_read(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, &val);
- 	if (on)
- 		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
- 	else
- 		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
- 
--	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
-+	regmap_write(kirin_pcie->apb, SOC_PCIECTRL_CTRL1_ADDR, val);
- }
- 
- static int kirin_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
-@@ -448,8 +450,9 @@ static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
- static int kirin_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
--	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-+	u32 val;
- 
-+	regmap_read(kirin_pcie->apb, PCIE_APB_PHY_STATUS0, &val);
- 	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
- 		return 1;
- 
-@@ -461,8 +464,8 @@ static int kirin_pcie_start_link(struct dw_pcie *pci)
- 	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
- 
- 	/* assert LTSSM enable */
--	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
--			      PCIE_APP_LTSSM_ENABLE);
-+	regmap_write(kirin_pcie->apb, PCIE_APP_LTSSM_ENABLE,
-+		     PCIE_LTSSM_ENABLE_BIT);
- 
- 	return 0;
- }
+-#include <linux/dmapool.h>
+-
+-#define	pci_pool dma_pool
+-#define pci_pool_create(name, pdev, size, align, allocation) \
+-		dma_pool_create(name, &pdev->dev, size, align, allocation)
+-#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+-#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
+-#define	pci_pool_zalloc(pool, flags, handle) \
+-		dma_pool_zalloc(pool, flags, handle)
+-#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+-
+ struct msix_entry {
+ 	u32	vector;	/* Kernel uses to write allocated vector */
+ 	u16	entry;	/* Driver uses to specify entry, OS writes */
 -- 
-2.31.1
+2.25.1
 
