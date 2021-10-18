@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D10C4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D6BC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B7FD6134F
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F82A610A3
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Oct 2021 07:07:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230438AbhJRHJy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Oct 2021 03:09:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53890 "EHLO mail.kernel.org"
+        id S230457AbhJRHJ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Oct 2021 03:09:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54138 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230381AbhJRHJv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Oct 2021 03:09:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 447E461351;
-        Mon, 18 Oct 2021 07:07:40 +0000 (UTC)
+        id S230444AbhJRHJz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Oct 2021 03:09:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1B4E86127B;
+        Mon, 18 Oct 2021 07:07:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634540860;
-        bh=L0iRv5p6fqJSnMUzjS0lsR23BZgZxmsnhZeS1R6665I=;
+        s=k20201202; t=1634540864;
+        bh=CEnqQn8efGo2ijFSZVkKGOzeZB2vyldoF2xv2gi1GPs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V3gLpos1VCRIuArM+eD3PW1v7KCw9awypu1QAVxqwmaZL86NmryNCQzukBfXIbtGL
-         b5eTTzwmoId7ruEBZ48lqAhoUHUdnkEJbRUrh5awibnrSQJFd3dW+Fg+jpwSig6Qla
-         8+qce4o5bGAewML7ftqExukquVtefbljYP1R9xuLGHaC+t9TJOI4xVxvZji94v2/wx
-         2jeP00U2Ju8SCNil0g7ujvZ9YGXIjnq0C+JDTqY9yV57nqL08GfEC9Bzp0KVC+Jmh9
-         sDeSFraRx5vlkAnW4Ro6WAB02xGgVHOFO09PXcZmhttBF49VzuPPQFdx7gfdJk7PvX
-         uWCg+lGbqc0wA==
+        b=j0GHCwHy+WkWSabbrQPbOnxr80wyI7y17ipBLPa0hWvVcIJVwM4ddrL/NQoAltEWw
+         crCQGXCIvO/fZ/+WutBXI32PGqOt32G2ofRJjaoT/iOKxzWrt+MX9nCx9sYumJTghG
+         Qy+trJfY/E40xBE3XtnocX+sCJUsBqZF9onnr8VhtLSgWaBW9SnJHbbKl+/ntCHaZS
+         tTB6MwB/w2vOsvrR/DVxVk3j1KV1KF6z6gHFu/AkUN6CDRklYkhSQBNMx5yCgwm4p+
+         kchN05fJfG9wGHjGhrvVMiNcUy7yhsVa2QmxvL5VSjBjw9vA18ntAH/RMeQCVc2xVG
+         pAxmglrchRbmg==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mcMkC-000Icv-PH; Mon, 18 Oct 2021 08:07:36 +0100
+        id 1mcMkC-000IdJ-T8; Mon, 18 Oct 2021 08:07:36 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
@@ -39,9 +39,9 @@ Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v13 02/10] PCI: kirin: Add support for a PHY layer
-Date:   Mon, 18 Oct 2021 08:07:27 +0100
-Message-Id: <a71b60d2c35ba9c2c5398380bc8ad5533e8160f1.1634539769.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v13 10/10] PCI: kirin: Allow removing the driver
+Date:   Mon, 18 Oct 2021 08:07:35 +0100
+Message-Id: <2e4694a405dc49eb0a417005a65886e60adae4fe.1634539769.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634539769.git.mchehab+huawei@kernel.org>
 References: <cover.1634539769.git.mchehab+huawei@kernel.org>
@@ -52,17 +52,9 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pcie-kirin driver contains both PHY and generic PCI driver
-on it.
-
-The best would be, instead, to support a PCI PHY driver, making
-the driver more generic.
-
-However, it is too late to remove the Kirin 960 PHY, as a change
-like that would make the DT schema incompatible with past versions.
-
-So, add support for an external PHY driver without removing the
-existing Kirin 960 PHY from it.
+Now that everything is in place at the poweroff sequence,
+this driver can use module_platform_driver(), which allows
+it to be removed.
 
 Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
@@ -70,170 +62,22 @@ Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 
 See [PATCH v13 00/10] at: https://lore.kernel.org/all/cover.1634539769.git.mchehab+huawei@kernel.org/
 
- drivers/pci/controller/dwc/pcie-kirin.c | 95 +++++++++++++++++++++----
- 1 file changed, 80 insertions(+), 15 deletions(-)
+ drivers/pci/controller/dwc/pcie-kirin.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index b4063a3434df..31514a5d4bb4 100644
+index ffc63d12f8ed..efab2af093b6 100644
 --- a/drivers/pci/controller/dwc/pcie-kirin.c
 +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -8,16 +8,18 @@
-  * Author: Xiaowei Song <songxiaowei@huawei.com>
-  */
- 
--#include <linux/compiler.h>
- #include <linux/clk.h>
-+#include <linux/compiler.h>
- #include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/gpio.h>
- #include <linux/interrupt.h>
- #include <linux/mfd/syscon.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/of_pci.h>
-+#include <linux/phy/phy.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
-@@ -50,11 +52,18 @@
- #define PCIE_DEBOUNCE_PARAM	0xF0F400
- #define PCIE_OE_BYPASS		(0x3 << 28)
- 
-+enum pcie_kirin_phy_type {
-+	PCIE_KIRIN_INTERNAL_PHY,
-+	PCIE_KIRIN_EXTERNAL_PHY
-+};
-+
- struct kirin_pcie {
-+	enum pcie_kirin_phy_type	type;
-+
- 	struct dw_pcie	*pci;
- 	struct phy	*phy;
- 	void __iomem	*apb_base;
--	void		*phy_priv;	/* Needed for Kirin 960 PHY */
-+	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
+@@ -828,7 +828,7 @@ static struct platform_driver kirin_pcie_driver = {
+ 		.suppress_bind_attrs	= true,
+ 	},
  };
+-builtin_platform_driver(kirin_pcie_driver);
++module_platform_driver(kirin_pcie_driver);
  
- /*
-@@ -476,8 +485,63 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
- 	.host_init = kirin_pcie_host_init,
- };
- 
-+static int kirin_pcie_power_on(struct platform_device *pdev,
-+			       struct kirin_pcie *kirin_pcie)
-+{
-+	struct device *dev = &pdev->dev;
-+	int ret;
-+
-+	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
-+		ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
-+		if (ret)
-+			return ret;
-+
-+		return hi3660_pcie_phy_power_on(kirin_pcie);
-+	}
-+
-+	kirin_pcie->phy = devm_of_phy_get(dev, dev->of_node, NULL);
-+	if (IS_ERR(kirin_pcie->phy))
-+		return PTR_ERR(kirin_pcie->phy);
-+
-+	ret = phy_init(kirin_pcie->phy);
-+	if (ret)
-+		goto err;
-+
-+	ret = phy_power_on(kirin_pcie->phy);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+err:
-+	phy_exit(kirin_pcie->phy);
-+	return ret;
-+}
-+
-+static int __exit kirin_pcie_remove(struct platform_device *pdev)
-+{
-+	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
-+
-+	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
-+		return 0;
-+
-+	phy_power_off(kirin_pcie->phy);
-+	phy_exit(kirin_pcie->phy);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id kirin_pcie_match[] = {
-+	{
-+		.compatible = "hisilicon,kirin960-pcie",
-+		.data = (void *)PCIE_KIRIN_INTERNAL_PHY
-+	},
-+	{},
-+};
-+
- static int kirin_pcie_probe(struct platform_device *pdev)
- {
-+	enum pcie_kirin_phy_type phy_type;
-+	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
- 	struct kirin_pcie *kirin_pcie;
- 	struct dw_pcie *pci;
-@@ -488,6 +552,14 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
-+	of_id = of_match_device(kirin_pcie_match, dev);
-+	if (!of_id) {
-+		dev_err(dev, "OF data missing\n");
-+		return -EINVAL;
-+	}
-+
-+	phy_type = (enum pcie_kirin_phy_type)of_id->data;
-+
- 	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
- 	if (!kirin_pcie)
- 		return -ENOMEM;
-@@ -500,31 +572,24 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &kirin_dw_pcie_ops;
- 	pci->pp.ops = &kirin_pcie_host_ops;
- 	kirin_pcie->pci = pci;
--
--	ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
--	if (ret)
--		return ret;
-+	kirin_pcie->type = phy_type;
- 
- 	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
- 	if (ret)
- 		return ret;
- 
--	ret = hi3660_pcie_phy_power_on(kirin_pcie);
--	if (ret)
--		return ret;
--
- 	platform_set_drvdata(pdev, kirin_pcie);
- 
-+	ret = kirin_pcie_power_on(pdev, kirin_pcie);
-+	if (ret)
-+		return ret;
-+
- 	return dw_pcie_host_init(&pci->pp);
- }
- 
--static const struct of_device_id kirin_pcie_match[] = {
--	{ .compatible = "hisilicon,kirin960-pcie" },
--	{},
--};
--
- static struct platform_driver kirin_pcie_driver = {
- 	.probe			= kirin_pcie_probe,
-+	.remove	        	= __exit_p(kirin_pcie_remove),
- 	.driver			= {
- 		.name			= "kirin-pcie",
- 		.of_match_table		= kirin_pcie_match,
+ MODULE_DEVICE_TABLE(of, kirin_pcie_match);
+ MODULE_DESCRIPTION("PCIe host controller driver for Kirin Phone SoCs");
 -- 
 2.31.1
 
