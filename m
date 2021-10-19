@@ -2,194 +2,239 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BFBC433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 04:50:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B59B2C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 06:06:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2954A61359
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 04:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F7461374
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 06:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231950AbhJSEwt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Oct 2021 00:52:49 -0400
-Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:48059 "EHLO
-        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229755AbhJSEws (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Oct 2021 00:52:48 -0400
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04423;MF=xuesong.chen@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0UspWZnf_1634619033;
-Received: from localhost(mailfrom:xuesong.chen@linux.alibaba.com fp:SMTPD_---0UspWZnf_1634619033)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Tue, 19 Oct 2021 12:50:33 +0800
-Date:   Tue, 19 Oct 2021 12:50:33 +0800
-From:   Xuesong Chen <xuesong.chen@linux.alibaba.com>
-To:     catalin.marinas@arm.com, lorenzo.pieralisi@arm.com,
-        james.morse@arm.com, will@kernel.org, rafael@kernel.org,
-        tony.luck@intel.com, bp@alien8.de, mingo@kernel.org,
-        bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        xuesong.chen@linux.alibaba.com
-Subject: [PATCH v3 2/2] ACPI: APEI: Filter the PCI MCFG address with an
- arch-agnostic method
-Message-ID: <YW5OmSBM4mO1lDHs@Dennis-MBP.local>
-Reply-To: Xuesong Chen <xuesong.chen@linux.alibaba.com>
+        id S233989AbhJSGJH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Oct 2021 02:09:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46012 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229527AbhJSGJG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Oct 2021 02:09:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 68662611EF;
+        Tue, 19 Oct 2021 06:06:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634623614;
+        bh=KC6xpqw4gz13ScCLb4JuvbL08ma1IvkEmrgUMn1KrAA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=K8rOsbDs/8uMM/WDiVZyleTQrqgFOtLNxR1ITiJGYEJpz+RsFyOAr0rhHA98B9Ie7
+         o/7gqGZbWOevgxPh7GhgrsX7abF6HTDptP3XGoDBEKZWtK0g9WVGvOZT7bQsg31WKQ
+         SVpEm2dPidK8Lp2nGMKugGCf1zmx2fBfOFiSABb3rERv2MwjVPSqIiohmLhCU/hgoe
+         r85/0EH34cycNtSAizOaPOwvfIxcsgvd5H+O84EWfzvecLHcsEDAYMpszaghMv8n+M
+         VRDT7n9lTtghE+RRsHvsvQgRHdlGprvRr78XpPLotGFjtdj32r+aha9xNQcHPTjhQI
+         tNU8x5SdhYWQQ==
+Received: by mail.kernel.org with local (Exim 4.94.2)
+        (envelope-from <mchehab@kernel.org>)
+        id 1mciGx-001krb-PN; Tue, 19 Oct 2021 07:06:51 +0100
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        "Songxiaowei" <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v14 02/11] PCI: kirin: Add support for a PHY layer
+Date:   Tue, 19 Oct 2021 07:06:39 +0100
+Message-Id: <9addf6f6ece282aa3a6ff862976cc167175474cf.1634622716.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <cover.1634622716.git.mchehab+huawei@kernel.org>
+References: <cover.1634622716.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The commit d91525eb8ee6 ("ACPI, EINJ: Enhance error injection tolerance
-level") fixes the issue that the ACPI/APEI can not access the PCI MCFG
-address on x86 platform, but this issue can also happen on other
-architectures, for instance, we got below error message on arm64 platform:
-...
-APEI: Can not request [mem 0x50100000-0x50100003] for APEI EINJ Trigger registers
-...
+The pcie-kirin driver contains both PHY and generic PCI driver
+on it.
 
-This patch will try to handle this case in a more common way instead of the
-original 'arch' specific solution, which will be beneficial to all the
-APEI-dependent platforms after that.
+The best would be, instead, to support a PCI PHY driver, making
+the driver more generic.
 
-Signed-off-by: Xuesong Chen <xuesong.chen@linux.alibaba.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: James Morse <james.morse@arm.com>
-Cc: Will Deacon <will@kernel.org>
-Cc: Rafael. J. Wysocki <rafael@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
+However, it is too late to remove the Kirin 960 PHY, as a change
+like that would make the DT schema incompatible with past versions.
+
+So, add support for an external PHY driver without removing the
+existing Kirin 960 PHY from it.
+
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- arch/x86/pci/mmconfig-shared.c | 28 --------------------------
- drivers/acpi/apei/apei-base.c  | 45 ++++++++++++++++++++++++++++--------------
- 2 files changed, 30 insertions(+), 43 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 0b961fe6..12f7d96 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -605,32 +605,6 @@ static int __init pci_parse_mcfg(struct acpi_table_header *header)
- 	return 0;
- }
+See [PATCH v14 00/11] at: https://lore.kernel.org/all/cover.1634622716.git.mchehab+huawei@kernel.org/
+
+ drivers/pci/controller/dwc/pcie-kirin.c | 95 +++++++++++++++++++++----
+ 1 file changed, 80 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index b4063a3434df..91a7c096bf8f 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -8,16 +8,18 @@
+  * Author: Xiaowei Song <songxiaowei@huawei.com>
+  */
  
--#ifdef CONFIG_ACPI_APEI
--extern int (*arch_apei_filter_addr)(int (*func)(__u64 start, __u64 size,
--				     void *data), void *data);
--
--static int pci_mmcfg_for_each_region(int (*func)(__u64 start, __u64 size,
--				     void *data), void *data)
--{
--	struct pci_mmcfg_region *cfg;
--	int rc;
--
--	if (list_empty(&pci_mmcfg_list))
--		return 0;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
--		rc = func(cfg->res.start, resource_size(&cfg->res), data);
--		if (rc)
--			return rc;
--	}
--
--	return 0;
--}
--#define set_apei_filter() (arch_apei_filter_addr = pci_mmcfg_for_each_region)
--#else
--#define set_apei_filter()
--#endif
--
- static void __init __pci_mmcfg_init(int early)
- {
- 	pci_mmcfg_reject_broken(early);
-@@ -665,8 +639,6 @@ void __init pci_mmcfg_early_init(void)
- 		else
- 			acpi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
- 		__pci_mmcfg_init(1);
--
--		set_apei_filter();
- 	}
- }
+-#include <linux/compiler.h>
+ #include <linux/clk.h>
++#include <linux/compiler.h>
+ #include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/gpio.h>
+ #include <linux/interrupt.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
++#include <linux/phy/phy.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+@@ -50,11 +52,18 @@
+ #define PCIE_DEBOUNCE_PARAM	0xF0F400
+ #define PCIE_OE_BYPASS		(0x3 << 28)
  
-diff --git a/drivers/acpi/apei/apei-base.c b/drivers/acpi/apei/apei-base.c
-index c7fdb12..daae75a 100644
---- a/drivers/acpi/apei/apei-base.c
-+++ b/drivers/acpi/apei/apei-base.c
-@@ -21,6 +21,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
-+#include <linux/pci.h>
- #include <linux/acpi.h>
- #include <linux/slab.h>
- #include <linux/io.h>
-@@ -448,13 +449,34 @@ static int apei_get_nvs_resources(struct apei_resources *resources)
- 	return acpi_nvs_for_each_region(apei_get_res_callback, resources);
- }
- 
--int (*arch_apei_filter_addr)(int (*func)(__u64 start, __u64 size,
--				     void *data), void *data);
--static int apei_get_arch_resources(struct apei_resources *resources)
-+#ifdef CONFIG_PCI
-+extern struct list_head pci_mmcfg_list;
-+static int apei_filter_mcfg_addr(struct apei_resources *res,
-+			struct apei_resources *mcfg_res)
-+{
-+	int rc = 0;
-+	struct pci_mmcfg_region *cfg;
++enum pcie_kirin_phy_type {
++	PCIE_KIRIN_INTERNAL_PHY,
++	PCIE_KIRIN_EXTERNAL_PHY
++};
 +
-+	if (list_empty(&pci_mmcfg_list))
-+		return 0;
+ struct kirin_pcie {
++	enum pcie_kirin_phy_type	type;
 +
-+	apei_resources_init(mcfg_res);
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-+		rc = apei_res_add(&mcfg_res->iomem, cfg->res.start, resource_size(&cfg->res));
-+		if (rc)
-+			return rc;
-+	}
- 
-+	/* filter the mcfg resource from current APEI's */
-+	return apei_resources_sub(res, mcfg_res);
-+}
-+#else
-+static inline int apei_filter_mcfg_addr(struct apei_resources *res,
-+			struct apei_resources *mcfg_res)
- {
--	return arch_apei_filter_addr(apei_get_res_callback, resources);
-+	return 0;
- }
-+#endif
+ 	struct dw_pcie	*pci;
+ 	struct phy	*phy;
+ 	void __iomem	*apb_base;
+-	void		*phy_priv;	/* Needed for Kirin 960 PHY */
++	void		*phy_priv;	/* only for PCIE_KIRIN_INTERNAL_PHY */
+ };
  
  /*
-  * IO memory/port resource management mechanism is used to check
-@@ -486,15 +508,9 @@ int apei_resources_request(struct apei_resources *resources,
- 	if (rc)
- 		goto nvs_res_fini;
+@@ -476,8 +485,63 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
  
--	if (arch_apei_filter_addr) {
--		apei_resources_init(&arch_res);
--		rc = apei_get_arch_resources(&arch_res);
--		if (rc)
--			goto arch_res_fini;
--		rc = apei_resources_sub(resources, &arch_res);
--		if (rc)
--			goto arch_res_fini;
--	}
-+	rc = apei_filter_mcfg_addr(resources, &arch_res);
-+	if (rc)
-+		goto arch_res_fini;
- 
- 	rc = -EINVAL;
- 	list_for_each_entry(res, &resources->iomem, list) {
-@@ -544,8 +560,7 @@ int apei_resources_request(struct apei_resources *resources,
- 		release_mem_region(res->start, res->end - res->start);
++static int kirin_pcie_power_on(struct platform_device *pdev,
++			       struct kirin_pcie *kirin_pcie)
++{
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
++		ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
++		if (ret)
++			return ret;
++
++		return hi3660_pcie_phy_power_on(kirin_pcie);
++	}
++
++	kirin_pcie->phy = devm_of_phy_get(dev, dev->of_node, NULL);
++	if (IS_ERR(kirin_pcie->phy))
++		return PTR_ERR(kirin_pcie->phy);
++
++	ret = phy_init(kirin_pcie->phy);
++	if (ret)
++		goto err;
++
++	ret = phy_power_on(kirin_pcie->phy);
++	if (ret)
++		goto err;
++
++	return 0;
++err:
++	phy_exit(kirin_pcie->phy);
++	return ret;
++}
++
++static int __exit kirin_pcie_remove(struct platform_device *pdev)
++{
++	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
++		return 0;
++
++	phy_power_off(kirin_pcie->phy);
++	phy_exit(kirin_pcie->phy);
++
++	return 0;
++}
++
++static const struct of_device_id kirin_pcie_match[] = {
++	{
++		.compatible = "hisilicon,kirin960-pcie",
++		.data = (void *)PCIE_KIRIN_INTERNAL_PHY
++	},
++	{},
++};
++
+ static int kirin_pcie_probe(struct platform_device *pdev)
+ {
++	enum pcie_kirin_phy_type phy_type;
++	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+ 	struct kirin_pcie *kirin_pcie;
+ 	struct dw_pcie *pci;
+@@ -488,6 +552,14 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
  	}
- arch_res_fini:
--	if (arch_apei_filter_addr)
--		apei_resources_fini(&arch_res);
-+	apei_resources_fini(&arch_res);
- nvs_res_fini:
- 	apei_resources_fini(&nvs_resources);
- 	return rc;
+ 
++	of_id = of_match_device(kirin_pcie_match, dev);
++	if (!of_id) {
++		dev_err(dev, "OF data missing\n");
++		return -EINVAL;
++	}
++
++	phy_type = (long)of_id->data;
++
+ 	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
+ 	if (!kirin_pcie)
+ 		return -ENOMEM;
+@@ -500,31 +572,24 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &kirin_dw_pcie_ops;
+ 	pci->pp.ops = &kirin_pcie_host_ops;
+ 	kirin_pcie->pci = pci;
+-
+-	ret = hi3660_pcie_phy_init(pdev, kirin_pcie);
+-	if (ret)
+-		return ret;
++	kirin_pcie->type = phy_type;
+ 
+ 	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = hi3660_pcie_phy_power_on(kirin_pcie);
+-	if (ret)
+-		return ret;
+-
+ 	platform_set_drvdata(pdev, kirin_pcie);
+ 
++	ret = kirin_pcie_power_on(pdev, kirin_pcie);
++	if (ret)
++		return ret;
++
+ 	return dw_pcie_host_init(&pci->pp);
+ }
+ 
+-static const struct of_device_id kirin_pcie_match[] = {
+-	{ .compatible = "hisilicon,kirin960-pcie" },
+-	{},
+-};
+-
+ static struct platform_driver kirin_pcie_driver = {
+ 	.probe			= kirin_pcie_probe,
++	.remove	        	= __exit_p(kirin_pcie_remove),
+ 	.driver			= {
+ 		.name			= "kirin-pcie",
+ 		.of_match_table		= kirin_pcie_match,
 -- 
-1.8.3.1
+2.31.1
 
