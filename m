@@ -2,54 +2,47 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C00D2C4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3290C4332F
 	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 06:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEFAB6137D
+	by mail.kernel.org (Postfix) with ESMTP id A20AE61374
 	for <linux-pci@archiver.kernel.org>; Tue, 19 Oct 2021 06:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234164AbhJSGJN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Oct 2021 02:09:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46160 "EHLO mail.kernel.org"
+        id S234181AbhJSGJO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Oct 2021 02:09:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46372 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233986AbhJSGJH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Oct 2021 02:09:07 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0F0CC613A6;
-        Tue, 19 Oct 2021 06:06:55 +0000 (UTC)
+        id S234152AbhJSGJL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Oct 2021 02:09:11 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5539961378;
+        Tue, 19 Oct 2021 06:06:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634623615;
-        bh=hLEq7+OQ/uMwGAS4T3XnUMjJocDtk40l6CypKplJ3JQ=;
+        s=k20201202; t=1634623619;
+        bh=4k+cS1k3jwM4An6DS0zHJtpXKfuGT8tNkqOczOTGpHU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LuRU7PHEhngRy+QXUqk2jEJxwwP+P3ttddQ3/2X5dRUb/eKGSwYaMWvAuOZJ6QIAw
-         ImQ2p1x30sMLhI+QtzpDFYs4woy+Z9Ns9ON+UXJYaoCCnhPjwf9VM8UKpHPDaXPY6g
-         NVies2fVW8XyxefdSoiuQkaHQENozvDXCr6EcwJGmo0LJ3ty6Ic/6lW0ll0pPc2kSu
-         lAo7jdeHS1m9ynAIRuGRFEvQjgJ8fb6D3MqDPHLaH6ALELoKhTg6dWjXO6/3ZPhgr/
-         /J5cj1juXyCttfgNfLDvinZdG/LYfizX6CP+DWYnM4FA4HgZSHLxU6GqabH8IPd2Ci
-         nAaB2KfaWV1vw==
+        b=CdCat87x9o4QknLlPgP68wCjC+Xw4/QSZEhHMeJc1/utYMfRATlwWunzlaEEG+2L1
+         ONxHY1GjFT1ljhpgecMJmfAqXF3whIuT+0BaIgK6+fyH+bJ7V1tp0fyBqwB3wBaXLx
+         BE/dEbT7wJ+RX7JygmefJRAsPXXaVMyIe1BO6f/9WYR3NN3rqrvKCfSB9Yowz7i5/c
+         smsfGODGUBSUs78SDoV3SpJm83xYUCww4Ptaf1RFFjZXAvZMuOo2CShGowMUfSfJ25
+         1V/tIgcd7SP1U6UwkLQ7purc80NbCm9A5WqvP50rLpsIy9CLpLt+HPMc0JlfOCU3pk
+         CZWoavUpvXA2A==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mciGx-001krt-SS; Tue, 19 Oct 2021 07:06:51 +0100
+        id 1mciGx-001krz-TQ; Tue, 19 Oct 2021 07:06:51 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         "Songxiaowei" <songxiaowei@hisilicon.com>,
-        Alex Dewar <alex.dewar90@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Luca Ceresoli <luca@lucaceresoli.net>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Rob Herring <robh@kernel.org>, Simon Xue <xxm@rock-chips.com>,
-        Srikanth Thokala <srikanth.thokala@intel.com>,
-        Wesley Sheng <wesley.sheng@amd.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v14 08/11] PCI: kirin: Allow building it as a module
-Date:   Tue, 19 Oct 2021 07:06:45 +0100
-Message-Id: <33e7df9253c0fc9b0ff0672e1a83062a84b820b5.1634622716.git.mchehab+huawei@kernel.org>
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH v14 10/11] PCI: kirin: fix poweroff sequence
+Date:   Tue, 19 Oct 2021 07:06:47 +0100
+Message-Id: <7deda0cf63e516fe502f0b2a789da2fce285e49a.1634622716.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634622716.git.mchehab+huawei@kernel.org>
 References: <cover.1634622716.git.mchehab+huawei@kernel.org>
@@ -60,31 +53,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There's nothing preventing this driver to be loaded as a
-module. So, change its config from bool to tristate.
+This driver currently doesn't call dw_pcie_host_deinit()
+at the .remove() callback. This can cause an OOPS if the driver
+is unbound.
 
+While here, add a poweroff function, in order to abstract
+between the internal and external PHY logic.
+
+Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+Cc: stable@vger.kernel.org
 Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
 
 See [PATCH v14 00/11] at: https://lore.kernel.org/all/cover.1634622716.git.mchehab+huawei@kernel.org/
 
- drivers/pci/controller/dwc/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-kirin.c | 29 ++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 071a1fb12beb..62ce3abf0f19 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -274,7 +274,7 @@ config PCIE_KEEMBAY_EP
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index 64221a204db2..fea4d717fff3 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -680,6 +680,22 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.host_init = kirin_pcie_host_init,
+ };
  
- config PCIE_KIRIN
- 	depends on OF && (ARM64 || COMPILE_TEST)
--	bool "HiSilicon Kirin series SoCs PCIe controllers"
-+	tristate "HiSilicon Kirin series SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	help
++static int kirin_pcie_power_off(struct kirin_pcie *kirin_pcie)
++{
++	int i;
++
++	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
++		return hi3660_pcie_phy_power_off(kirin_pcie);
++
++	for (i = 0; i < kirin_pcie->n_gpio_clkreq; i++)
++		gpio_direction_output(kirin_pcie->gpio_id_clkreq[i], 1);
++
++	phy_power_off(kirin_pcie->phy);
++	phy_exit(kirin_pcie->phy);
++
++	return 0;
++}
++
+ static int kirin_pcie_power_on(struct platform_device *pdev,
+ 			       struct kirin_pcie *kirin_pcie)
+ {
+@@ -725,12 +741,7 @@ static int kirin_pcie_power_on(struct platform_device *pdev,
+ 
+ 	return 0;
+ err:
+-	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
+-		hi3660_pcie_phy_power_off(kirin_pcie);
+-	} else {
+-		phy_power_off(kirin_pcie->phy);
+-		phy_exit(kirin_pcie->phy);
+-	}
++	kirin_pcie_power_off(kirin_pcie);
+ 
+ 	return ret;
+ }
+@@ -739,11 +750,9 @@ static int __exit kirin_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
+ 
+-	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
+-		return hi3660_pcie_phy_power_off(kirin_pcie);
++	dw_pcie_host_deinit(&kirin_pcie->pci->pp);
+ 
+-	phy_power_off(kirin_pcie->phy);
+-	phy_exit(kirin_pcie->phy);
++	kirin_pcie_power_off(kirin_pcie);
+ 
+ 	return 0;
+ }
 -- 
 2.31.1
 
