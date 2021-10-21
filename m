@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E92C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 10:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D88C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 10:45:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A8666121E
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 10:45:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A2896121F
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 10:45:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230374AbhJUKrw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Oct 2021 06:47:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57800 "EHLO mail.kernel.org"
+        id S230521AbhJUKrx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Oct 2021 06:47:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57858 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230413AbhJUKrt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Oct 2021 06:47:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E16226120C;
+        id S230342AbhJUKru (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Oct 2021 06:47:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id DE55361130;
         Thu, 21 Oct 2021 10:45:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634813133;
-        bh=afPaNM6wvpFiYxWvoOcUCgw1GJtsKqDLOtbDz3hIjU0=;
+        s=k20201202; t=1634813134;
+        bh=8fOSqA2lJW4GkX4/ImU+E4+sVxOHMiRXyyfaCoSKklM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d2LrAqWO46tVm06e0RFWXpP8U+oYLy5hn9KxQtr66RBacog0Fb+zjRV3H2D693DDf
-         zkcFn4fdMBdKUwGGc2HgVjJHoHSdzQKgLwbT3yOxOf8AvGP6WJuizHBSBYtSf6w3Ct
-         DdpPHxLLvhR4vrs5Rl7MGrnMJzqulaZohfhYJ6PG7N4L38lB8Z64GZtmm9PfSdKK+s
-         ifTuG+Eg7lNSkib7E3h50c7GXKSPgdq+aEGnT2tZzCayWqZkCqmu4YtFyiglfYSHUz
-         b6lJwD8YQ+OCsY77BphecOQcnseJQZync0587NlUMv9p7y87ItOKmynqeUjjdjzXz2
-         ToKRB5Ay1q8kQ==
+        b=XqH1qXnu458hBgT0balPv2x0Nsx4vvbjTY/4VKYFs6T+WFQ1WzhtXaMUT5GdqxNr5
+         ZoayGYd4O3uowle7ykrOqxtErS1vsV5V1KRhF2Ka4T3GjBYay9aYLk3VfuMh/ocTYB
+         KHEFtQ1G3OrDqGWC4MhXO8wFcQU3LOUGlt6D2f13KK8rJkZvGFdHQi3W6faDWw6DZJ
+         SISzs79uBA/462BgGwOOov+Er93SDInzz8aVa6ZPThs6cIZRWLsBd8/vhXH3T5zAZ1
+         D/Wn/OWrQ7Tf7rAFc7z7L10ylThxGTdafbwjEZHgakqaN78KoAAROv82C8A2W64ZOu
+         shYIxoLU0wPZA==
 Received: by mail.kernel.org with local (Exim 4.94.2)
         (envelope-from <mchehab@kernel.org>)
-        id 1mdVZj-002z5H-5v; Thu, 21 Oct 2021 11:45:31 +0100
+        id 1mdVZj-002z52-2d; Thu, 21 Oct 2021 11:45:31 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
@@ -39,9 +39,9 @@ Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
         Rob Herring <robh@kernel.org>,
         Xiaowei Song <songxiaowei@hisilicon.com>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v15 10/13] PCI: kirin: Move the power-off code to a common routine
-Date:   Thu, 21 Oct 2021 11:45:17 +0100
-Message-Id: <64f6e8da3e5fff38b6c8fcb208ace46efe6555bb.1634812676.git.mchehab+huawei@kernel.org>
+Subject: [PATCH v15 05/13] PCI: kirin: Give more time for PERST# reset to finish
+Date:   Thu, 21 Oct 2021 11:45:12 +0100
+Message-Id: <1aa50f736464cd6e871d05990684b35faef76767.1634812676.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1634812676.git.mchehab+huawei@kernel.org>
 References: <cover.1634812676.git.mchehab+huawei@kernel.org>
@@ -52,72 +52,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Instead of having two copies of the same logic, place the power-off
-logic on a separate function.
+Before code refactor, the PERST# signals were sent at the
+end of the power_on logic. Then, the PCI core would probe for
+the buses and add them.
 
-No functional changes.
+The new logic changed it to send PERST# signals during
+add_bus operation. That altered the timings.
 
-Acked-by: Xiaowei Song <songxiaowei@hisilicon.com>
+Also, HiKey 970 require a little more waiting time for
+the PCI bridge - which is outside the SoC - to finish
+the PERST# reset, and then initialize the eye diagram.
+
+So, increase the waiting time for the PERST# signals to
+what's required for it to also work with HiKey 970.
+
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
 
 To mailbombing on a large number of people, only mailing lists were C/C on the cover.
 See [PATCH v15 00/13] at: https://lore.kernel.org/all/cover.1634812676.git.mchehab+huawei@kernel.org/
 
- drivers/pci/controller/dwc/pcie-kirin.c | 26 ++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ drivers/pci/controller/dwc/pcie-kirin.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index 64221a204db2..f4ea27b37968 100644
+index de375795a3b8..bc329673632a 100644
 --- a/drivers/pci/controller/dwc/pcie-kirin.c
 +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -680,6 +680,19 @@ static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
- 	.host_init = kirin_pcie_host_init,
- };
+@@ -113,7 +113,7 @@ struct kirin_pcie {
+ #define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
  
-+static int kirin_pcie_power_off(struct kirin_pcie *kirin_pcie)
-+{
-+	int i;
-+
-+	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
-+		return hi3660_pcie_phy_power_off(kirin_pcie);
-+
-+	phy_power_off(kirin_pcie->phy);
-+	phy_exit(kirin_pcie->phy);
-+
-+	return 0;
-+}
-+
- static int kirin_pcie_power_on(struct platform_device *pdev,
- 			       struct kirin_pcie *kirin_pcie)
- {
-@@ -725,12 +738,7 @@ static int kirin_pcie_power_on(struct platform_device *pdev,
- 
- 	return 0;
- err:
--	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY) {
--		hi3660_pcie_phy_power_off(kirin_pcie);
--	} else {
--		phy_power_off(kirin_pcie->phy);
--		phy_exit(kirin_pcie->phy);
--	}
-+	kirin_pcie_power_off(kirin_pcie);
- 
- 	return ret;
- }
-@@ -739,11 +747,7 @@ static int __exit kirin_pcie_remove(struct platform_device *pdev)
- {
- 	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
- 
--	if (kirin_pcie->type == PCIE_KIRIN_INTERNAL_PHY)
--		return hi3660_pcie_phy_power_off(kirin_pcie);
--
--	phy_power_off(kirin_pcie->phy);
--	phy_exit(kirin_pcie->phy);
-+	kirin_pcie_power_off(kirin_pcie);
- 
- 	return 0;
- }
+ /* Time for delay */
+-#define REF_2_PERST_MIN		20000
++#define REF_2_PERST_MIN		21000
+ #define REF_2_PERST_MAX		25000
+ #define PERST_2_ACCESS_MIN	10000
+ #define PERST_2_ACCESS_MAX	12000
 -- 
 2.31.1
 
