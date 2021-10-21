@@ -2,165 +2,159 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C17CC433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 15:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EFE4C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 15:09:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20C4D60F57
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 15:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0061460F57
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Oct 2021 15:09:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231533AbhJUPLi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Oct 2021 11:11:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36884 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230072AbhJUPLi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Oct 2021 11:11:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5E43F60F9F;
-        Thu, 21 Oct 2021 15:09:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634828962;
-        bh=lqxEVvdfZbCu44YT4ZbFv244WhBD1fJuFoS+40FRFXs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=qY0tp96LWzxuDoAYTegy1GQG30HadTMVTNqeu9+iw+52nJvw/C9O+Mfj/iTQG2QQm
-         kT0VSJLUqB88O932PFo+1FOvEuwiY+E8vT40FKCPEKtLdxkJmvLfDnxxcUsbjvxGVf
-         S4n4YKztAWhU5WM0S6xeVBmhYJKfjbIcQcQ6w9SAXnmEUAFZO0j8PqnO809d6Evdr1
-         QeeoWe8vhxGt5ItL5hNRdPfKcvDtXU11RWjLwyFWufB7amQkT/ZQNUseWISB/XsBZj
-         KsPW6UFfZiQuvRPNqqlE3kdvaoRrUomm5kmMO/+/JLue8aqku+GggZaNBXFVbSP8EN
-         I8E+tsqYlMjMg==
-Date:   Thu, 21 Oct 2021 10:09:20 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     bhelgaas@google.com, hkallweit1@gmail.com,
-        anthony.wong@canonical.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: [PATCH v2 3/3] PCI/ASPM: Add LTR sysfs attributes
-Message-ID: <20211021150920.GA2680911@bhelgaas>
+        id S231331AbhJUPMF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Oct 2021 11:12:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48812 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230471AbhJUPME (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Oct 2021 11:12:04 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 878B0C0613B9;
+        Thu, 21 Oct 2021 08:09:48 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id q10-20020a17090a1b0a00b001a076a59640so5972767pjq.0;
+        Thu, 21 Oct 2021 08:09:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=TfHsGP2yi6lWLecTIcZVrIhetTubqUKD7yLErDw3x2w=;
+        b=EUZaSbSsvxfgQPDyiZv6K9FvbiaFo8lnIoEmpC0ubPuoqxNOuIOf4K8ZsIh578ws0Z
+         2EDdrEbYHum8lqROFe1C/onYlVaB50CDb5AwppL0LpxiFNIEWdnc8cQjEFdXeAobfidj
+         x8qfJAw0gdtPVdlvPc21q9Yxry610dr7WFKlVHFUO1eyzNlo/F03H3hyjJckpZwfON5S
+         b21ly6HIsBApY6VwbYgoI1P/Fu0X1AZm7c/Cai3cT3TlLzr9REQ44ISEUK3PawQUbAVm
+         ZC1Qe6WDuHchsm5VVBggdsA8zJ1Xgd6h2KTs8gi19LGsz2M2EyYOMMdey6IAUQiBbt/o
+         +Ubw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=TfHsGP2yi6lWLecTIcZVrIhetTubqUKD7yLErDw3x2w=;
+        b=hMbFAjGWeF5HtbledEOQn4mwZraG0Xq7EPug3qqVmFqva9+xVpfhr92V8sp5Go/A2z
+         7K2Xkf41Vs+TSkjHdxEXOLvE8hjZwn8npusOvhX1xqwAonW7WRPTe9b3gPx6B+9I62nx
+         VffquK5koCdh2V+luLBRZ773jo4pVTQyA40mTewdoLMYx9OZaC75EUfaPM9DRP5k8EOk
+         7xoZA7KEebk4i+8CZ/n0GSFLMT/6/jGZbBwch5WY2NULN8fbU9oLoCfNvjG5flVbvuWO
+         LzxclB3tccZ/bswlwqs39OQ+xje343oWOhhUX3gnZoYELpST+2PiQO9ecHMY2KyhoE3k
+         1RrQ==
+X-Gm-Message-State: AOAM532ez8WxjX+rGe/jMsP55a6mNCPyXRAgkx3aY+n78rIN5G7Ynabl
+        cgXqskLRqVEh+QN3mBXDQmg=
+X-Google-Smtp-Source: ABdhPJxCZzHdSx53dvdDywLg2snzLq3kKzeBkBrose+fBiquWSSELbthuFAJlsRxyfUjW/fn7V8LMg==
+X-Received: by 2002:a17:902:d4d1:b0:13f:af7:9068 with SMTP id o17-20020a170902d4d100b0013f0af79068mr5714981plg.20.1634828988016;
+        Thu, 21 Oct 2021 08:09:48 -0700 (PDT)
+Received: from localhost.localdomain ([2406:7400:63:29a4:d874:a949:6890:f95f])
+        by smtp.gmail.com with ESMTPSA id c9sm5508027pgq.58.2021.10.21.08.09.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Oct 2021 08:09:47 -0700 (PDT)
+From:   Naveen Naidu <naveennaidu479@gmail.com>
+To:     bhelgaas@google.com
+Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-hyperv@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        skhan@linuxfoundation.org, Robert Richter <rric@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM IPROC ARM
+        ARCHITECTURE), Ryder Lee <ryder.lee@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Joyce Ooi <joyce.ooi@intel.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Jonathan Derrick <jonathan.derrick@linux.dev>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Amey Narkhede <ameynarkhede03@gmail.com>,
+        Russell Currey <ruscur@russell.cc>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Sean V Kelley <sean.v.kelley@intel.com>,
+        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
+        Marc Zyngier <maz@kernel.org>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        Toan Le <toan@os.amperecomputing.com>
+Subject: [PATCH v3 02/25] PCI: Set error response in config access defines when ops->read() fails
+Date:   Thu, 21 Oct 2021 20:37:27 +0530
+Message-Id: <56642edd0d6bf8a8e3d20b5fcc088fd6389b827f.1634825082.git.naveennaidu479@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <cover.1634825082.git.naveennaidu479@gmail.com>
+References: <cover.1634825082.git.naveennaidu479@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211021035159.1117456-4-kai.heng.feng@canonical.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 21, 2021 at 11:51:59AM +0800, Kai-Heng Feng wrote:
-> Sometimes BIOS may not be able to program ASPM and LTR settings, for
-> instance, the NVMe devices behind Intel VMD bridges. For this case, both
-> ASPM and LTR have to be enabled to have significant power saving.
-> 
-> Since we still want POLICY_DEFAULT honor the default BIOS ASPM settings,
-> introduce LTR sysfs knobs so users can set max snoop and max nosnoop
-> latency manually or via udev rules.
+Make PCI_OP_READ and PCI_USER_READ_CONFIG set the data value with error
+response (~0), when the PCI device read by a host controller fails.
 
-How is the user supposed to figure out what "max snoop" and "max
-nosnoop" values to program?
+This ensures that the controller drivers no longer need to fabricate
+(~0) value when they detect error. It also  gurantees that the error
+response (~0) is always set when the controller drivers fails to read a
+config register from a device.
 
-If we add this, I'm afraid we'll have people programming random things
-that seem to work but are not actually reliable.
+This makes error response fabrication consistent and helps in removal of
+a lot of repeated code.
 
-> [1] https://github.com/systemd/systemd/pull/17899/
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=209789
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
-> v2:
->  - New patch.
-> 
->  drivers/pci/pcie/aspm.c | 59 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 59 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 1560859ab056..f7dc62936445 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1299,6 +1299,59 @@ static ssize_t clkpm_store(struct device *dev,
->  	return len;
->  }
->  
-> +static ssize_t ltr_attr_show_common(struct device *dev,
-> +			  struct device_attribute *attr, char *buf, u8 state)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	int ltr;
-> +	u16 val;
-> +
-> +	ltr = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
-> +	if (!ltr)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, ltr + state, &val);
-> +
-> +	return sysfs_emit(buf, "0x%0x\n", val);
-> +}
-> +
-> +static ssize_t ltr_attr_store_common(struct device *dev,
-> +			   struct device_attribute *attr,
-> +			   const char *buf, size_t len, u8 state)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	int ltr;
-> +	u16 val;
-> +
-> +	ltr = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
-> +	if (!ltr)
-> +		return -EINVAL;
-> +
-> +	if (kstrtou16(buf, 16, &val) < 0)
-> +		return -EINVAL;
-> +
-> +	/* LatencyScale is not permitted to be 110 or 111 */
-> +	if ((val >> 10) > 5)
-> +		return -EINVAL;
-> +
-> +	pci_write_config_word(pdev, ltr + state, val);
-> +
-> +	return len;
-> +}
-> +
-> +#define LTR_ATTR(_f, _s)						\
-> +static ssize_t _f##_show(struct device *dev,				\
-> +			 struct device_attribute *attr, char *buf)	\
-> +{ return ltr_attr_show_common(dev, attr, buf, PCI_LTR_##_s); }		\
-> +									\
-> +static ssize_t _f##_store(struct device *dev,				\
-> +			  struct device_attribute *attr,		\
-> +			  const char *buf, size_t len)			\
-> +{ return ltr_attr_store_common(dev, attr, buf, len, PCI_LTR_##_s); }
-> +
-> +LTR_ATTR(ltr_max_snoop_lat, MAX_SNOOP_LAT);
-> +LTR_ATTR(ltr_max_nosnoop_lat, MAX_NOSNOOP_LAT);
-> +
->  static DEVICE_ATTR_RW(clkpm);
->  static DEVICE_ATTR_RW(l0s_aspm);
->  static DEVICE_ATTR_RW(l1_aspm);
-> @@ -1306,6 +1359,8 @@ static DEVICE_ATTR_RW(l1_1_aspm);
->  static DEVICE_ATTR_RW(l1_2_aspm);
->  static DEVICE_ATTR_RW(l1_1_pcipm);
->  static DEVICE_ATTR_RW(l1_2_pcipm);
-> +static DEVICE_ATTR_RW(ltr_max_snoop_lat);
-> +static DEVICE_ATTR_RW(ltr_max_nosnoop_lat);
->  
->  static struct attribute *aspm_ctrl_attrs[] = {
->  	&dev_attr_clkpm.attr,
-> @@ -1315,6 +1370,8 @@ static struct attribute *aspm_ctrl_attrs[] = {
->  	&dev_attr_l1_2_aspm.attr,
->  	&dev_attr_l1_1_pcipm.attr,
->  	&dev_attr_l1_2_pcipm.attr,
-> +	&dev_attr_ltr_max_snoop_lat.attr,
-> +	&dev_attr_ltr_max_nosnoop_lat.attr,
->  	NULL
->  };
->  
-> @@ -1338,6 +1395,8 @@ static umode_t aspm_ctrl_attrs_are_visible(struct kobject *kobj,
->  
->  	if (n == 0)
->  		return link->clkpm_capable ? a->mode : 0;
-> +	else if (n == 7 || n == 8)
-> +		return pdev->ltr_path ? a->mode : 0;
->  
->  	return link->aspm_capable & aspm_state_map[n - 1] ? a->mode : 0;
->  }
-> -- 
-> 2.32.0
-> 
+Suggested-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
+---
+ drivers/pci/access.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 46935695cfb9..0f732ba2f71a 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -42,7 +42,10 @@ int noinline pci_bus_read_config_##size \
+ 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+ 	pci_lock_config(flags);						\
+ 	res = bus->ops->read(bus, devfn, pos, len, &data);		\
+-	*value = (type)data;						\
++	if (res)							\
++		SET_PCI_ERROR_RESPONSE(value);				\
++	else								\
++		*value = (type)data;					\
+ 	pci_unlock_config(flags);					\
+ 	return res;							\
+ }
+@@ -228,7 +231,10 @@ int pci_user_read_config_##size						\
+ 	ret = dev->bus->ops->read(dev->bus, dev->devfn,			\
+ 					pos, sizeof(type), &data);	\
+ 	raw_spin_unlock_irq(&pci_lock);				\
+-	*val = (type)data;						\
++	if (ret)							\
++		SET_PCI_ERROR_RESPONSE(val);				\
++	else								\
++		*val = (type)data;					\
+ 	return pcibios_err_to_errno(ret);				\
+ }									\
+ EXPORT_SYMBOL_GPL(pci_user_read_config_##size);
+-- 
+2.25.1
+
