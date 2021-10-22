@@ -2,144 +2,104 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7868C433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Oct 2021 14:07:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C40BC433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Oct 2021 14:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACBB361056
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Oct 2021 14:07:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C9BC610FF
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Oct 2021 14:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232349AbhJVOKE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Oct 2021 10:10:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49342 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233013AbhJVOJr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Oct 2021 10:09:47 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B411C061243;
-        Fri, 22 Oct 2021 07:07:30 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id s136so3427595pgs.4;
-        Fri, 22 Oct 2021 07:07:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+KIUczUS/ZsYc2yKqmHED/7x17icKPInYDTolIdaty0=;
-        b=R5SGZu++CgAI53CDoFpKRRq5pfPpbRWzsDQhASS7V4vht2a8aJA26iGAM6WMSY8/DI
-         iwh/3R/FvCGNziPaSgeMjNtmqoG//S/ugGtHwv7FzwaV+D/6Ts9VQFQ9SMA5cRZPe6A6
-         7bCbyu8IPjO4jLXNpe59zANpZ3tLFdg9fMiVg5ihOdFiexyP78XUVsCEXGblSkPCcLgK
-         8IupRQ+hjlwQKGX2iZaduGm4oFG6mwBl0J6c4U6KoUjhDpo6Oys3yb8U3VhSIpD6M4w4
-         HuNrJg14LPzjgVOWapzHaZbCk0EagD12edxAhjgpGv43/Fl8N1tq0EcBccWfaU35pGGH
-         TIAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=+KIUczUS/ZsYc2yKqmHED/7x17icKPInYDTolIdaty0=;
-        b=8Gr+1KjcYnout5wk1RWkCjeq7dW3xkUlJL+DoQawHdh64iCBwjEY+0ntkdMNY/ZGYE
-         7K+rFKGVT1QX7LkVjJsMnWJ5igpRlOWGeS9j6CE3m13u2+2md2dYWRd1lzChnP5vIOMW
-         KqPct3/vof2qxhfGLm7cHg2+Oa7ncMXHkl9MYjyx+2zTymMDaLjKTVWf4PTlqvGY58uD
-         6itCVzXYiFdlhISq1vLynw4SVmvr+fZ1sdbqt6gpXclBCWXn4BCF12ihZpcP0gt9AIGA
-         WmPottSLkTd97QufVi6DRmyb7VAqgMzM30mP0OiddHjO4jWNOekmMXKWinpDVaT5zvK/
-         3uww==
-X-Gm-Message-State: AOAM530j5bPAkCxwiAjVMx5BRrpXtVZ4eWFuLrZNqYe/SlR+4A66Dm2J
-        tPR9C7+absIR7WqWqwgbgTKUaHOcB7xReg==
-X-Google-Smtp-Source: ABdhPJyEsS1l7Tar/HjbpqhXPB/7RZ8R0mvhJOIAjFQICeySHFB/Iw9Wd2lHo3yMnA7UWO/xk/F2AA==
-X-Received: by 2002:a05:6a00:1309:b0:44d:4d1e:c930 with SMTP id j9-20020a056a00130900b0044d4d1ec930mr12610806pfu.65.1634911649761;
-        Fri, 22 Oct 2021 07:07:29 -0700 (PDT)
-Received: from stbsrv-and-01.and.broadcom.net ([192.19.11.250])
-        by smtp.gmail.com with ESMTPSA id e12sm9482990pfl.67.2021.10.22.07.07.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Oct 2021 07:07:29 -0700 (PDT)
-From:   Jim Quinlan <jim2101024@gmail.com>
-To:     linux-pci@vger.kernel.org,
+        id S233092AbhJVOdy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Oct 2021 10:33:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50612 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232949AbhJVOdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Oct 2021 10:33:53 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5225C61205;
+        Fri, 22 Oct 2021 14:31:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1634913094;
+        bh=cfEFo3LpKlhhVZBcoudy/fAkGQElG4mDWEf7Rjtcs78=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QKOscxQDyqs3oAgcYmyzntTkbSA1XBC7+XDl9Xp6K1aXZdUXl19uqWb9FOir4BgcN
+         wnCQIkcKWHfCzIL2kiMETvLxk57ziylaLk51GtRihGx9YXkoFrPYuYJ06CzSImOUdf
+         9zS9+ezInTPs4+ySDVjgid6DcIyB8uaR266cEY2fcqSmVIslHi0/HrLADndiMzXHXY
+         OU//tLacknV7S5gFXvG6tl1Wa4a9j4b2XHzeiliX6abUaISX1HQrXmBN41E+tFlvgg
+         TDwyUOqEW0IG5DfGxknUBhve8vx8bkjIV0xL+89pkvmZUymEr/pVW3QM74LaEwnDyX
+         LLR4B1/u/oNzA==
+Date:   Fri, 22 Oct 2021 15:31:32 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     Jim Quinlan <jim2101024@gmail.com>
+Cc:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenz@kernel.org>,
-        Rob Herring <robh@kernel.org>, Mark Brown <broonie@kernel.org>,
-        bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-        james.quinlan@broadcom.com
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
+        Florian Fainelli <f.fainelli@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 3/6] PCI: brcmstb: split brcm_pcie_setup() into two funcs
-Date:   Fri, 22 Oct 2021 10:06:56 -0400
-Message-Id: <20211022140714.28767-4-jim2101024@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20211022140714.28767-1-jim2101024@gmail.com>
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 4/6] PCI: brcmstb: Add control of subdevice voltage
+ regulators
+Message-ID: <YXLLRLwMG7nEwQoi@sirena.org.uk>
 References: <20211022140714.28767-1-jim2101024@gmail.com>
+ <20211022140714.28767-5-jim2101024@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="AM0J5V7/rxX+1iNP"
+Content-Disposition: inline
+In-Reply-To: <20211022140714.28767-5-jim2101024@gmail.com>
+X-Cookie: I program, therefore I am.
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We need to split a function in two so that the driver can take advantage of
-the recently added function pci_subdev_prepare() which is a member
-of struct pci_host_bridge.
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- drivers/pci/controller/pcie-brcmstb.c | 30 +++++++++++++++++++--------
- 1 file changed, 21 insertions(+), 9 deletions(-)
+--AM0J5V7/rxX+1iNP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index cc30215f5a43..ba4d6daf312c 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -863,17 +863,10 @@ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
- 
- static int brcm_pcie_setup(struct brcm_pcie *pcie)
- {
--	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
- 	u64 rc_bar2_offset, rc_bar2_size;
- 	void __iomem *base = pcie->base;
--	struct device *dev = pcie->dev;
--	struct resource_entry *entry;
--	bool ssc_good = false;
--	struct resource *res;
--	int num_out_wins = 0;
--	u16 nlw, cls, lnksta;
--	int i, ret, memc;
--	u32 tmp, burst, aspm_support;
-+	int ret, memc;
-+	u32 tmp, burst;
- 
- 	/* Reset the bridge */
- 	pcie->bridge_sw_init_set(pcie, 1);
-@@ -956,6 +949,21 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 
- 	if (pcie->gen)
- 		brcm_pcie_set_gen(pcie, pcie->gen);
-+	return 0;
-+}
-+
-+static int brcm_pcie_linkup(struct brcm_pcie *pcie)
-+{
-+	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
-+	struct device *dev = pcie->dev;
-+	void __iomem *base = pcie->base;
-+	struct resource_entry *entry;
-+	struct resource *res;
-+	int num_out_wins = 0;
-+	u16 nlw, cls, lnksta;
-+	bool ssc_good = false;
-+	u32 aspm_support, tmp;
-+	int ret, i;
- 
- 	/* Unassert the fundamental reset */
- 	pcie->perst_set(pcie, 0);
-@@ -1186,6 +1194,10 @@ static int brcm_pcie_resume(struct device *dev)
- 	if (ret)
- 		goto err_reset;
- 
-+	ret = brcm_pcie_linkup(pcie);
-+	if (ret)
-+		goto err_reset;
-+
- 	if (pcie->msi)
- 		brcm_msi_set_regs(pcie->msi);
- 
--- 
-2.17.1
+On Fri, Oct 22, 2021 at 10:06:57AM -0400, Jim Quinlan wrote:
 
+> +static const char * const supplies[] = {
+> +	"vpcie3v3-supply",
+> +	"vpcie3v3aux-supply",
+> +	"brcm-ep-a-supply",
+> +	"brcm-ep-b-supply",
+> +};
+
+Why are you including "-supply" in the names here?  That will lead to
+a double -supply when we look in the DT which probably isn't what you're
+looking for.
+
+Also are you *sure* that the device has supplies with names like
+"brcm-ep-a"?  That seems rather unidiomatic for electrical engineering,
+the names here are supposed to correspond to the names used in the
+datasheet for the part.
+
+> +	/* This is for Broadcom STB/CM chips only */
+> +	if (pcie->type == BCM2711)
+> +		return 0;
+
+It is a relief that other chips have managed to work out how to avoid
+requiring power.
+
+--AM0J5V7/rxX+1iNP
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmFyy0MACgkQJNaLcl1U
+h9D1hQf+LBOR+YjLJNeGeYxEatscR2LtzZZqMkcZMyqeV6V3e43RxwegQ2ilmKsD
+GX3rKlu/xNSTyzTePj6rppuy0MSeBLyqpTIe86YJVe5U5lSr0bogIW7w1WvVDRpX
+sQjA6GBzZ78kkbOdRjVTLdUDtjNKtTbmPO7dLUIZ52FxcCNsMaT1XJ3VOEaIR59z
+j/lqYxr6Lqx5VSdCTCeLeQLp8CFeZPh4rYXiuaIy2APqw+6Ir9H6DfCMFxh4iCvO
+464NiTAbHaJUHAJ0yysf3sNyArmjiVSOWRefyHOOuNeWEmCJsJyT8CGRrjYoMZTA
+cy1CI5T2C0rY0sY8dQaE1Y30GUQ4NQ==
+=7os3
+-----END PGP SIGNATURE-----
+
+--AM0J5V7/rxX+1iNP--
