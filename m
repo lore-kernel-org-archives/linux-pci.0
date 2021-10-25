@@ -2,140 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CB9C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6427BC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D658D60F4F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41B3B60F22
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234514AbhJYRKw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:10:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48584 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235070AbhJYRIE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Oct 2021 13:08:04 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A7DC0432DB;
-        Mon, 25 Oct 2021 10:01:24 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id t11so8349282plq.11;
-        Mon, 25 Oct 2021 10:01:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8HZsp9BvdntOEBLsd033W6ZW3RXr9hJrrgi/DSIEiZc=;
-        b=B/oKHfT/wUi2uwyEuNgWcKyEN7bNb1zznXch9q1rURws+JRljbJEIPz0+rgscXU0+Y
-         SCs5Z+HviUmO/AG6Z/ANiKZe4sA5pzDCa+CIEjE3N5dq9PnkcFuiSkw3lDaQaV/ep//u
-         ML0AA4vKJiuK7hluPphy+3uxXyhhohyLOWd/UXwTy3rPg2TO7smbF3Fwk9xJQHUp31bm
-         LBfNWATE8ZnQ0WXPUVZXg8XJ+cEYa++C35DWFIZz9KbWcTReIP/lY78+rYfYbXko3beJ
-         y/jCN5CcI/o3LdBpkqsUiU46xGnE0j44QUDcKmtzvDotdBtawKt/3XJNuzWrpRHLrlmY
-         C2gA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8HZsp9BvdntOEBLsd033W6ZW3RXr9hJrrgi/DSIEiZc=;
-        b=LzVIrOiQz7aP54qQ9wP8e29Vd1NsBcrcdIUQIBOO9+bRetqRULVYkAiSWk7ZJ6/m7j
-         QwIFlgjOuDLPXwKn1TzpVEBGGdnJ/vVKHl4+Ao2qyfVIMWdCjp1juuprRBtb+Sikxotn
-         A/iUqPKwdCP+Qyn1UtbUpipmnOhuYACXJpYcejNqriODD8dZvQ5XU6aufqclEmXvfl1J
-         YsddjLYWHmSHJ5XKNCcbueJwMamu1Qjd2cu/aLiRFyZoWTpMtLgnP/llcOHBRlrd72MR
-         HmO+z4TdegwYghOOH0MihZUM/IeuYIrM5hKoWWfTOrNSyypbd6F2nHtpiaiu1RRvFcAG
-         vxkQ==
-X-Gm-Message-State: AOAM532i+I/SpVnpfryuYgvBjU9S7vLOsLcAahDe8iEUTJPj5RcARA5x
-        z8mARF1zG776UgGGA5O62bw=
-X-Google-Smtp-Source: ABdhPJwUXQUjwnugVGLJbHKCyPdLUZ/UBQqXh8Cy82r1VP1k13Hq1CAUhdRWR7+Izqw0iqyEfe89ug==
-X-Received: by 2002:a17:90a:2c9:: with SMTP id d9mr22098933pjd.73.1635181283642;
-        Mon, 25 Oct 2021 10:01:23 -0700 (PDT)
-Received: from localhost.localdomain ([2406:7400:63:df8b:7255:8580:2394:764c])
-        by smtp.gmail.com with ESMTPSA id g18sm5100858pfj.67.2021.10.25.10.01.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Oct 2021 10:01:23 -0700 (PDT)
-From:   Naveen Naidu <naveennaidu479@gmail.com>
-To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com
-Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skhan@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Keith Busch <kbusch@kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v5 0/5] Fix long standing AER Error Handling Issues
-Date:   Mon, 25 Oct 2021 22:30:59 +0530
-Message-Id: <cover.1635179600.git.naveennaidu479@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        id S234690AbhJYRKx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:10:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60538 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235207AbhJYRJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Oct 2021 13:09:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7385960EE3;
+        Mon, 25 Oct 2021 17:06:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635181606;
+        bh=uhJMDAp/6lANSR2wbX+jf2O7qM4e7RYNtaW7xvDtw/4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=uaJRVHXZzko8RT7ie/I6pDSvZITLf0raKfzP1f6fJ0hED+h9PyLG4hIHpRq7eQG9M
+         HTEaNZyJa21bX7pk/2BRj35jfZxMYlq4ahI3zGdUZnpBozvExg5FOiGaGkIjXukt5x
+         ChojxwF8LN8pZ+q6htwYxpvB1H+7d9mZRcTd1OlN7A40s3WkS6sV5NGParlOSQnzfY
+         7M6JJZCP0lugvcvKRNtsc1hV4XVd3BxJ75v59qD6km+4vBnMVxH8bDYKc1TSTub2TX
+         LKKjQkZdyKEhB0LzTaEqQ5t795cADx0QzmrbcsPVaDNBFdEj4BWkQO8pSqhFrcV8vd
+         Nr4RZzXfL1vLQ==
+Date:   Mon, 25 Oct 2021 12:06:45 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc:     linux-pci@vger.kernel.org, Heiner Kallweit <hkallweit1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: Re: PCI/VPD: recursive loop issue with lspci
+Message-ID: <20211025170645.GA10265@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2f7e3770-ab47-42b5-719c-f7c661c07d28@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series aims at fixing some of the AER error handling issues
-we have.
+On Tue, Oct 26, 2021 at 12:51:07AM +0900, Kunihiko Hayashi wrote:
+> Hi all,
+> 
+> I found that "lspci -vv" causes a recursive loop in the linux-next kernel.
+> As a result, the kernel crashed on stack overflow.
+> 
+> This issue was reproduced using Akebi96 board with UniPhier LD20 and DWC3 PCIe
+> controller, and R8169 ethernet card.
+> 
+> # lspci -s 01:00.0 -vv
+> 01:00.0 Class 0200: Device 10ec:8168 (rev 06)
+> [   19.152157] Insufficient stack space to handle exception!
+> ...
+> [   19.152449] Hardware name: Akebi96 (DT)
+> [   19.152455] Call trace:
+> [   19.152458]  dump_backtrace+0x0/0x1b0
+> [   19.152484]  show_stack+0x20/0x30
+> [   19.152503]  dump_stack_lvl+0x68/0x84
+> [   19.152525]  dump_stack+0x18/0x34
+> [   19.152542]  panic+0x154/0x34c
+> [   19.152556]  nmi_panic+0x94/0x98
+> [   19.152577]  panic_bad_stack+0xec/0x100
+> [   19.152590]  handle_bad_stack+0x38/0x68
+> [   19.152606]  __bad_stack+0x8c/0x90
+> [   19.152620]  pci_vpd_read+0xc/0x1f8
+> [   19.152639]  pci_vpd_size+0x58/0x1a0
+> [   19.152651]  pci_vpd_read+0x1a0/0x1f8
+> [   19.152669]  __pci_read_vpd+0x94/0xc0
+> [   19.152681]  pci_vpd_size+0x58/0x1a0
+> [   19.152692]  pci_vpd_read+0x1a0/0x1f8
+> [   19.152710]  __pci_read_vpd+0x94/0xc0
+> [   19.152722]  pci_vpd_size+0x58/0x1a0
+> [   19.152734]  pci_vpd_read+0x1a0/0x1f8
+> [   19.152752]  __pci_read_vpd+0x94/0xc0
+> ...
+> [   19.155039]  pci_vpd_size+0x58/0x1a0
+> [   19.155051]  pci_vpd_read+0x1a0/0x1f8
+> [   19.155069]  __pci_read_vpd+0x94/0xc0
+> [   19.155081]  pci_vpd_size+0x58/0x1a0
+> [   19.155093]  pci_vpd_read+0x1a0/0x1f8
+> [   19.155111]  __pci_read_vpd+0x94/0xc0
+> [   19.155124]  pci_vpd_size+0x58/0x1a0
+> [   19.155136]  pci_vpd_read+0x1a0/0x1f8
+> [   19.155153]  __pci_read_vpd+0x94/0xc0
+> [   19.155166]  vpd_read+0x28/0x38
+> [   19.155177]  sysfs_kf_bin_read+0x74/0x98
+> 
+> In the following commit, initialization of dev->vpd.len has been removed.
+> 
+>     commit 80484b7f8db101119928c73e7ce09ae6be54e45c
+>         PCI/VPD: Use pci_read_vpd_any() in pci_vpd_size()
+> 
+> When calling pci_read_vpd_any(), if dev->vpd.len is zero, pci_vpd_size()
+> will continue to be called recursively.
+> 
+>     pci_vpd_available()			// dev->vpd.len == 0
+>      -> pci_vpd_size()
+>         -> pci_read_vpd_any()
+>            -> __pci_read_vpd()
+>               -> pci_vpd_read()
+>                  -> pci_vpd_available()	// dev->vpd.len == 0
+>                     -> pci_vpd_size()
+>                        ...
+> 
+> This issue didn't occur before applying this commit.
+> Does anyone run into the same issue?
 
-Currently we have the following issues: 
-  
-  1. Confusing message in aer_print_error()
-  2. aer_err_info not being initialized completely in DPC path before 
-     we print the AER logs
-  3. A bug [1] in clearing of AER registers in the native AER path
+Likely this patch:
 
-[1] https://lore.kernel.org/linux-pci/20151229155822.GA17321@localhost/
+  https://lore.kernel.org/r/6211be8a-5d10-8f3a-6d33-af695dc35caf@gmail.com
 
-The patch series fixes the above things.
+which I obviously need to move to the top of my list.  If you can
+confirm that this fixes it, that would be awesome!
 
-PATCH 1: 
-  - Fixes the first issue
-  - This patch is independent of other patches and can be applied
-    seperately
-
-PATCH 2 - 3:
-  - Fixes the second issue
-  - Patch 3 is depended on Patch 2 in the series
-
-PATCH 4
-  - Fixes the bug in clearing of AER registers which leades to
-    AER message spew [1]
-
-PATCH 5:
-  - Adds extra information (devctl register) in AER error logs.
-  - Patch 5 depends on Patch 4 of the series
-
-Thanks,
-Naveen Naidu
-
-Changelog
-=========
-v5:
-    - Edit the commit message of Patch 1 and Patch 5 to include how to
-      test the AER messages using aer-inject.
-    - Edit Patch 3 to initialize info.id depending on the trigger
-      reason.
-    - Drop few patches (v4 4/8, 5/8 7/8) since they were wrong.
-
-v4:
-    - Fix logical error in 6/8, in the previous version of the patch set
-      there was a bug, in how I added the devices to the queue.
-
-v3:
-    - Edit the commit messages to be in imperative style and split the
-      commits to be more atomic.
-
-v2:
-    - Add [PATCH 7] which includes the device control register 
-      information in AER error logs.
-
-Naveen Naidu (5):
-  [PATCH v5 1/5] PCI/AER: Remove ID from aer_agent_string[]
-  [PATCH v5 2/5] PCI: Cleanup struct aer_err_info
-  [PATCH v5 3/5] PCI/DPC: Initialize info.id in dpc_process_error()
-  [PATCH v5 4/5] PCI/AER: Clear error device AER registers in aer_irq()
-  [PATCH v5 5/5] PCI/AER: Include DEVCTL in aer_print_error()
-
- drivers/pci/pci.h      |  23 +++-
- drivers/pci/pcie/aer.c | 269 ++++++++++++++++++++++++++++-------------
- drivers/pci/pcie/dpc.c |  16 ++-
- 3 files changed, 214 insertions(+), 94 deletions(-)
-
--- 
-2.25.1
-
+Bjorn
