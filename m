@@ -2,118 +2,151 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6427BC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70992C4332F
 	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41B3B60F22
+	by mail.kernel.org (Postfix) with ESMTP id 5B43060EE3
 	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234690AbhJYRKx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:10:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60538 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235207AbhJYRJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Oct 2021 13:09:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7385960EE3;
-        Mon, 25 Oct 2021 17:06:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635181606;
-        bh=uhJMDAp/6lANSR2wbX+jf2O7qM4e7RYNtaW7xvDtw/4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=uaJRVHXZzko8RT7ie/I6pDSvZITLf0raKfzP1f6fJ0hED+h9PyLG4hIHpRq7eQG9M
-         HTEaNZyJa21bX7pk/2BRj35jfZxMYlq4ahI3zGdUZnpBozvExg5FOiGaGkIjXukt5x
-         ChojxwF8LN8pZ+q6htwYxpvB1H+7d9mZRcTd1OlN7A40s3WkS6sV5NGParlOSQnzfY
-         7M6JJZCP0lugvcvKRNtsc1hV4XVd3BxJ75v59qD6km+4vBnMVxH8bDYKc1TSTub2TX
-         LKKjQkZdyKEhB0LzTaEqQ5t795cADx0QzmrbcsPVaDNBFdEj4BWkQO8pSqhFrcV8vd
-         Nr4RZzXfL1vLQ==
-Date:   Mon, 25 Oct 2021 12:06:45 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc:     linux-pci@vger.kernel.org, Heiner Kallweit <hkallweit1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: Re: PCI/VPD: recursive loop issue with lspci
-Message-ID: <20211025170645.GA10265@bhelgaas>
+        id S234817AbhJYRKy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:10:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48666 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235248AbhJYRJQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Oct 2021 13:09:16 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68705C0432F0;
+        Mon, 25 Oct 2021 10:01:53 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id e65so11558728pgc.5;
+        Mon, 25 Oct 2021 10:01:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=TzDmm1CSO5ys2u/cUDBI2TYr2rN5kWaOTVprB8Ko1Uk=;
+        b=ZHdhSeGLURPzXaswSnZGMuZ4LcxM/+rFjEy7pPEM4C8GYgNJCYn1yIid35ljsILwQh
+         U67jlu8fWxehMhq7EiQY5KE11JOQg4hoZwWbNbk61OPyY4blm1uk4YXpwJbYlOSQEGVL
+         LyFNcjlOnkQHLDXAwhFbQ5tKmV62LSf0LwtAaIcxKFXkXXKeDJLLBvLoLItgpm/b1lE1
+         nU+jaOi2JRN5m7b2SBmQ1HhRYU4l2RwPPDrsDxaXNfxqkUhoVDn8tN3pMYujXUAbuNuN
+         cBnR7a6eqlbNs8opvXdJoT7Pe5DChrLafLFE2RQwHrcG3/HjMruSaPOds39rtNr5agiu
+         ZeNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=TzDmm1CSO5ys2u/cUDBI2TYr2rN5kWaOTVprB8Ko1Uk=;
+        b=3vUesO9FExqBSuz7WbHTaJwmhE8Pu1F5qk5bxd0A4nkpcE4FCXqkwQy0PNgXwqawaO
+         rnYiHShZezi9/O3+OxGhssP6eWR9SFna6byJ0T6mdWO8lSworktioJNtjpNfj3c3gZZP
+         lqGcJiA53WFvs3CBK9QaOxITtve10dSvmSbu+RLS+VZi6Bu7HtGdNVWfvrbQ9R6z/xU7
+         gd8pRB8KhwMT3eiEeX3QvQsQ5h0q2Imvu9QtFhnpgqm/r3TIomqAkAIH5fafJPIE/+yh
+         r/IdCiBhNaRiksSorCn9eaImAoARO1+rVBMcfxfqPaZH+TKMI1c9V4Slvl2NV5ssXJq1
+         +9dA==
+X-Gm-Message-State: AOAM532VbiOxsYkJILBizayF8OjOi5IKWPjfBe8sZj0d6Kf6+kPAiKHB
+        Mec6q5EhVq8UDeuMQ0l+1Bc=
+X-Google-Smtp-Source: ABdhPJyH7J/iuk4Y6eYOW7ZypxU9kq4dQSkqOm8XsvftCh8hBtHp15bTqEuxROXH/SA1ZGpJoWeNDA==
+X-Received: by 2002:a05:6a00:88e:b0:44c:c40:9279 with SMTP id q14-20020a056a00088e00b0044c0c409279mr19791608pfj.85.1635181312767;
+        Mon, 25 Oct 2021 10:01:52 -0700 (PDT)
+Received: from localhost.localdomain ([2406:7400:63:df8b:7255:8580:2394:764c])
+        by smtp.gmail.com with ESMTPSA id g18sm5100858pfj.67.2021.10.25.10.01.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Oct 2021 10:01:52 -0700 (PDT)
+From:   Naveen Naidu <naveennaidu479@gmail.com>
+To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com
+Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v5 1/5] PCI/AER: Remove ID from aer_agent_string[]
+Date:   Mon, 25 Oct 2021 22:31:00 +0530
+Message-Id: <a205d9c83f89a0942a3302bfa6e300121381aeb8.1635179600.git.naveennaidu479@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <cover.1635179600.git.naveennaidu479@gmail.com>
+References: <cover.1635179600.git.naveennaidu479@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2f7e3770-ab47-42b5-719c-f7c661c07d28@socionext.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 26, 2021 at 12:51:07AM +0900, Kunihiko Hayashi wrote:
-> Hi all,
-> 
-> I found that "lspci -vv" causes a recursive loop in the linux-next kernel.
-> As a result, the kernel crashed on stack overflow.
-> 
-> This issue was reproduced using Akebi96 board with UniPhier LD20 and DWC3 PCIe
-> controller, and R8169 ethernet card.
-> 
-> # lspci -s 01:00.0 -vv
-> 01:00.0 Class 0200: Device 10ec:8168 (rev 06)
-> [   19.152157] Insufficient stack space to handle exception!
-> ...
-> [   19.152449] Hardware name: Akebi96 (DT)
-> [   19.152455] Call trace:
-> [   19.152458]  dump_backtrace+0x0/0x1b0
-> [   19.152484]  show_stack+0x20/0x30
-> [   19.152503]  dump_stack_lvl+0x68/0x84
-> [   19.152525]  dump_stack+0x18/0x34
-> [   19.152542]  panic+0x154/0x34c
-> [   19.152556]  nmi_panic+0x94/0x98
-> [   19.152577]  panic_bad_stack+0xec/0x100
-> [   19.152590]  handle_bad_stack+0x38/0x68
-> [   19.152606]  __bad_stack+0x8c/0x90
-> [   19.152620]  pci_vpd_read+0xc/0x1f8
-> [   19.152639]  pci_vpd_size+0x58/0x1a0
-> [   19.152651]  pci_vpd_read+0x1a0/0x1f8
-> [   19.152669]  __pci_read_vpd+0x94/0xc0
-> [   19.152681]  pci_vpd_size+0x58/0x1a0
-> [   19.152692]  pci_vpd_read+0x1a0/0x1f8
-> [   19.152710]  __pci_read_vpd+0x94/0xc0
-> [   19.152722]  pci_vpd_size+0x58/0x1a0
-> [   19.152734]  pci_vpd_read+0x1a0/0x1f8
-> [   19.152752]  __pci_read_vpd+0x94/0xc0
-> ...
-> [   19.155039]  pci_vpd_size+0x58/0x1a0
-> [   19.155051]  pci_vpd_read+0x1a0/0x1f8
-> [   19.155069]  __pci_read_vpd+0x94/0xc0
-> [   19.155081]  pci_vpd_size+0x58/0x1a0
-> [   19.155093]  pci_vpd_read+0x1a0/0x1f8
-> [   19.155111]  __pci_read_vpd+0x94/0xc0
-> [   19.155124]  pci_vpd_size+0x58/0x1a0
-> [   19.155136]  pci_vpd_read+0x1a0/0x1f8
-> [   19.155153]  __pci_read_vpd+0x94/0xc0
-> [   19.155166]  vpd_read+0x28/0x38
-> [   19.155177]  sysfs_kf_bin_read+0x74/0x98
-> 
-> In the following commit, initialization of dev->vpd.len has been removed.
-> 
->     commit 80484b7f8db101119928c73e7ce09ae6be54e45c
->         PCI/VPD: Use pci_read_vpd_any() in pci_vpd_size()
-> 
-> When calling pci_read_vpd_any(), if dev->vpd.len is zero, pci_vpd_size()
-> will continue to be called recursively.
-> 
->     pci_vpd_available()			// dev->vpd.len == 0
->      -> pci_vpd_size()
->         -> pci_read_vpd_any()
->            -> __pci_read_vpd()
->               -> pci_vpd_read()
->                  -> pci_vpd_available()	// dev->vpd.len == 0
->                     -> pci_vpd_size()
->                        ...
-> 
-> This issue didn't occur before applying this commit.
-> Does anyone run into the same issue?
+Currently, we do not print the "id" field in the AER error logs. Yet the
+aer_agent_string[] has the word "id" in it. The AER error log looks
+like:
 
-Likely this patch:
+  pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver ID)
 
-  https://lore.kernel.org/r/6211be8a-5d10-8f3a-6d33-af695dc35caf@gmail.com
+Without the "id" field in the error log, The aer_agent_string[]
+(eg: "Receiver ID") does not make sense. A user reading the
+aer_agent_string[] in the log, might inadvertently look for an "id"
+field and not finding it might lead to confusion.
 
-which I obviously need to move to the top of my list.  If you can
-confirm that this fixes it, that would be awesome!
+Remove the "ID" from the aer_agent_string[].
 
-Bjorn
+It is easy to reproduce this by using aer-inject:
+
+  $ aer-inject -s 00:03:0 corr-err-file
+
+The content of the corr-err-file file is as below:
+
+  AER
+  COR_STATUS BAD_TLP
+  HEADER_LOG 0 1 2 3
+
+The following are sample dummy errors inject via aer-inject.
+
+Before
+=======
+
+In 010caed4ccb6 ("PCI/AER: Decode Error Source Requester ID"),
+the "id" field was removed from the AER error logs, so currently AER
+logs look like:
+
+  pcieport 0000:00:03.0: AER: Corrected error received: 0000:00:03:0
+  pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver ID) <--- no id field
+  pcieport 0000:00:03.0:   device [1b36:000c] error status/mask=00000040/0000e000
+  pcieport 0000:00:03.0:    [ 6] BadTLP
+
+After
+======
+
+  pcieport 0000:00:03.0: AER: Corrected error received: 0000:00:03.0
+  pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver)
+  pcieport 0000:00:03.0:   device [1b36:000c] error status/mask=00000040/0000e000
+  pcieport 0000:00:03.0:    [ 6] BadTLP
+
+Link: https://lore.kernel.org/linux-pci/20211021170317.GA2700910@bhelgaas/T/#m618bda4e54042d95a1a83fccc01cdb423f7590dc
+Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
+---
+ drivers/pci/pcie/aer.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 9784fdcf3006..241ff361b43c 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -516,10 +516,10 @@ static const char *aer_uncorrectable_error_string[] = {
+ };
+ 
+ static const char *aer_agent_string[] = {
+-	"Receiver ID",
+-	"Requester ID",
+-	"Completer ID",
+-	"Transmitter ID"
++	"Receiver",
++	"Requester",
++	"Completer",
++	"Transmitter"
+ };
+ 
+ #define aer_stats_dev_attr(name, stats_array, strings_array,		\
+@@ -703,7 +703,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	const char *level;
+ 
+ 	if (!info->status) {
+-		pci_err(dev, "PCIe Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent ID)\n",
++		pci_err(dev, "PCIe Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent)\n",
+ 			aer_error_severity_string[info->severity]);
+ 		goto out;
+ 	}
+-- 
+2.25.1
+
