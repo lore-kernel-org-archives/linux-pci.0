@@ -2,66 +2,63 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE1C4C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68978C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A57CB60EE3
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543966103C
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234399AbhJYRK4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:10:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48738 "EHLO
+        id S234083AbhJYRK5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:10:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235428AbhJYRJc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Oct 2021 13:09:32 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A39DC043193;
-        Mon, 25 Oct 2021 10:02:22 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id f5so11525418pgc.12;
-        Mon, 25 Oct 2021 10:02:22 -0700 (PDT)
+        with ESMTP id S235476AbhJYRJi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Oct 2021 13:09:38 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43AEEC04319F;
+        Mon, 25 Oct 2021 10:02:32 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id i5so8365896pla.5;
+        Mon, 25 Oct 2021 10:02:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=IP7bg1XxqK5dXg//yE9NcJiabkbw2qPuKs1z85ZWNME=;
-        b=A406sfTrXh8GMkSFquNuEPUPbjXrxLZbOVCF4bYpKdMv8ShllAqdbJdQb04lVxhhHC
-         NKkoeX83bwle+wOS3SOVstoXdO16KEasww9oDGJfCUsjGE+DjaeiNTYWvT74nieEka1N
-         K9m4PrHtdH1pmfWFdizj9JYhifV5yhsxqg5B2nEfXZTlzb1FIiswefawc0O2iMM8q21n
-         2VdIMqT36zQmkVdUYJLMaFyxVljy8JP/WNfT9KkTRKj1UPdytBECAF68jGLrlBj6FB57
-         L5pp6txUxHnZJtWsBWKRJm57CWn0g/mevx9sY+YHInLJ4anBMRAhda4Zyo/IHjmIQ/dr
-         23eA==
+        bh=cqjk8A2jWPq0oF4j9f9pzp1s4umWD0fjXGGtRVK6pjI=;
+        b=Km6qa7as2zKj4ahv0p9FX7MpcWGD6tjOML1ZhOUQeUR0KuKrOM/Y0B/OyJfcY7k+wV
+         vxBWCUFtyHAC9xpI7R+JpBoHX7mIBWtExK6dpDNOvdxr8x585+K1/QoH1n9W51ljXFIe
+         Ime4psXupDQ8xMItucMuFoc8wY9NLuiKaSBK9NCeCLy4GpEaqcgSw4MigLRUmPBvRKBV
+         zeGByhYX/WSCf8Rw50ZVEGRzOm1ClghUP3ygjo8N7vdrD6cgqrTBfTZqpLCwQ5gg2s9A
+         hpWhkVoMpqIKr+Z8t1u0lgEIc0EPdLIJCebjyg1jYoq/0ks0XSKGoaFxjA2/LD1Bz+gE
+         HU6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=IP7bg1XxqK5dXg//yE9NcJiabkbw2qPuKs1z85ZWNME=;
-        b=JJWs1DU+uYzZlCNxj1CZjg+wJitRlri9adYakJMffMqO/nS8DAg2vA25pjHvKm1jHZ
-         WWyJk0NoYYv9ZhBm+Cky9rB+yGXcPuaZQbjXnIqH8WIk6UwkJLKOS9k3nPJ8dVP9DlmR
-         rjMFYEChGoIJ4U6qlzsn56eyrHHjKUNr5+RN8qeti3KpYZCkHdxL9Gss+0QibVvI5FNz
-         I0Z9vHc47eDDb/nS2b92tkZ29WBhmiLTnb5WgfCCdYzw3XQ9wvvEWJMLPYIb+oNBxrd1
-         v65ZylI7OyeTcBMaouybdxTr/uQJH/qn1NP524kZCZUAoSGu6TDYetmIvLx1ujYsS3HT
-         EOyw==
-X-Gm-Message-State: AOAM532LNORAPrR+Ao0gjeuh1T3mLjnpV5THjDkEZUOLScNBzmjDIMkY
-        NuaCNHqWR8i9Y6DFFigBgSY=
-X-Google-Smtp-Source: ABdhPJwVXGCGM66S42ZGCsnkfum3D4CcEQwiQH5P2pomnEuWRSCqLNJFiZU0F8DC/4n6/2A7JXHjoA==
-X-Received: by 2002:a63:2a88:: with SMTP id q130mr14468449pgq.169.1635181341692;
-        Mon, 25 Oct 2021 10:02:21 -0700 (PDT)
+        bh=cqjk8A2jWPq0oF4j9f9pzp1s4umWD0fjXGGtRVK6pjI=;
+        b=P7yxLr5iTIFcAVeFGYDGuwWDV+ptd7ttWlMsQxZj/y9xPOx2rFyFvhf9+QbuK3Wxnk
+         HZ0sfq1dbbZyq6Gq0DcszAXcMg5B7l5j0kLkdjODl07PSGIUmdWD+OhXwPtm0Fm8ucku
+         AaOYTih6NRtm2O0oXxK7xhsWmPmPAdqKjhXMSFpwyRvI+S9HDvxe9Kwbh5zkDCkvLMUB
+         EgCD+02t1iDytIzyagrkvTi0IkJUUM94QyBX0w0h3rtuR7HbEeoAZzkec0qcX9ggxKb1
+         ZIw8ouEawhI3aBWCsH1MxXzwSayvVnVBUWD3d+9VfgilYkik5gprSNSR+6jqYafqPdui
+         haZg==
+X-Gm-Message-State: AOAM5328CmcaVQSgPSvauFG97pEB898sfrIjoQJrMohqFqEHibSR1qFM
+        oK5PWAaBqmQJ1XZVMIrE/JomnjyGEPa3gg==
+X-Google-Smtp-Source: ABdhPJwvg9sfWgMNprK2Vf152fcQgXoPVYpKGuP89MlymuNgLLjfTAnceEvjffU47QWeOG5XuHfFZw==
+X-Received: by 2002:a17:90b:1bcc:: with SMTP id oa12mr21825917pjb.212.1635181351786;
+        Mon, 25 Oct 2021 10:02:31 -0700 (PDT)
 Received: from localhost.localdomain ([2406:7400:63:df8b:7255:8580:2394:764c])
-        by smtp.gmail.com with ESMTPSA id g18sm5100858pfj.67.2021.10.25.10.02.17
+        by smtp.gmail.com with ESMTPSA id g18sm5100858pfj.67.2021.10.25.10.02.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Oct 2021 10:02:21 -0700 (PDT)
+        Mon, 25 Oct 2021 10:02:31 -0700 (PDT)
 From:   Naveen Naidu <naveennaidu479@gmail.com>
 To:     bhelgaas@google.com, ruscur@russell.cc, oohall@gmail.com
 Cc:     Naveen Naidu <naveennaidu479@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skhan@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Keith Busch <kbusch@kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v5 3/5] PCI/DPC: Initialize info.id in dpc_process_error()
-Date:   Mon, 25 Oct 2021 22:31:02 +0530
-Message-Id: <b486768a365ccef665b52fd9a1a2132006ab0f92.1635179600.git.naveennaidu479@gmail.com>
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v5 5/5] PCI/AER: Include DEVCTL in aer_print_error()
+Date:   Mon, 25 Oct 2021 22:31:04 +0530
+Message-Id: <656b4eab7fae68de86bb0a52568fb93822833828.1635179600.git.naveennaidu479@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1635179600.git.naveennaidu479@gmail.com>
 References: <cover.1635179600.git.naveennaidu479@gmail.com>
@@ -71,60 +68,73 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the dpc_process_error() path, info.id isn't initialized before being
-passed to aer_print_error(). In the corresponding AER path, it is
-initialized in aer_isr_one_error().
+Print the contents of Device Control Register of the device which
+detected the error. This might help in faster error diagnosis.
 
-The error message shown during Coverity Scan is:
+It is easy to test this by using aer-inject:
 
-  Coverity #1461602
-  CID 1461602 (#1 of 1): Uninitialized scalar variable (UNINIT)
-  8. uninit_use_in_call: Using uninitialized value info.id when calling aer_print_error.
+  $ aer-inject -s 00:03:0 corr-err-file
 
-Also Per PCIe r5.0, sec 7.9.15.5, the Source ID is defined only when the
-Trigger Reason indicates ERR_NONFATAL or ERR_FATAL. Initialize the
-"info.id" based on the trigger reason before passing it to
-aer_print_error()
+The content of the corr-err-file is as below:
 
-Fixes: 8aefa9b0d910 ("PCI/DPC: Print AER status in DPC event handling")
+  AER
+  COR_STATUS BAD_TLP
+  HEADER_LOG 0 1 2 3
+
+Sample output from dummy error injected by aer-inject:
+
+  pcieport 0000:00:03.0: AER: Corrected error received: 0000:00:03.0
+  pcieport 0000:00:03.0: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver)
+  pcieport 0000:00:03.0:   device [1b36:000c] error status/mask=00000040/0000e000, devctl=0x000f <-- devctl added to the error log
+  pcieport 0000:00:03.0:    [ 6] BadTLP
+
 Signed-off-by: Naveen Naidu <naveennaidu479@gmail.com>
 ---
- drivers/pci/pcie/dpc.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/aer.c | 10 ++++++++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index c556e7beafe3..6fa1b1eb4671 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -262,16 +262,24 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
- 
- void dpc_process_error(struct pci_dev *pdev)
- {
--	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
-+	u16 cap = pdev->dpc_cap, status, reason, ext_reason;
- 	struct aer_err_info info;
- 
- 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
--	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
-+	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index eb88d8bfeaf7..48ed7f91113b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -437,6 +437,8 @@ struct aer_err_info {
+ 	u32 status;		/* COR/UNCOR Error Status */
+ 	u32 mask;		/* COR/UNCOR Error Mask */
+ 	struct aer_header_log_regs tlp;	/* TLP Header */
 +
++	u16 devctl;
+ };
+ 
+ /* Preliminary AER error information processed from Root port */
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index d3937f5384e4..fdeef9deb016 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -729,8 +729,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 		   aer_error_severity_string[info->severity],
+ 		   aer_error_layer[layer], aer_agent_string[agent]);
+ 
+-	pci_printk(level, dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+-		   dev->vendor, dev->device, info->status, info->mask);
++	pci_printk(level, dev, "  device [%04x:%04x] error status/mask=%08x/%08x, devctl=%#06x\n",
++		   dev->vendor, dev->device, info->status, info->mask, info->devctl);
+ 
+ 	__aer_print_error(dev, info);
+ 
+@@ -1083,6 +1083,12 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (!aer)
+ 		return 0;
+ 
 +	/*
-+	 * Per PCIe r5.0, sec 7.9.15.5, the Source ID is defined only when the
-+	 * Trigger Reason indicates ERR_NONFATAL or ERR_FATAL.
++	 * Cache the value of Device Control Register now, because later the
++	 * device might not be available
 +	 */
-+	if (reason == 1 || reason == 2)
-+		pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &info.id);
-+	else
-+		info.id = 0;
- 
- 	pci_info(pdev, "containment event, status:%#06x source:%#06x\n",
--		 status, source);
-+		 status, info.id);
- 
--	reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN) >> 1;
- 	ext_reason = (status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT) >> 5;
- 	pci_warn(pdev, "%s detected\n",
- 		 (reason == 0) ? "unmasked uncorrectable error" :
++	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &info->devctl);
++
+ 	if (info->severity == AER_CORRECTABLE) {
+ 		pci_read_config_dword(dev, aer + PCI_ERR_COR_STATUS,
+ 			&info->status);
 -- 
 2.25.1
 
