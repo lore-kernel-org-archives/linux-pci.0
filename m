@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDA3C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Oct 2021 17:40:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA4AFC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Oct 2021 17:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A299B60F9D
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Oct 2021 17:40:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97F1D610A0
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Oct 2021 17:57:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236649AbhJZRmi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Oct 2021 13:42:38 -0400
-Received: from mga03.intel.com ([134.134.136.65]:45870 "EHLO mga03.intel.com"
+        id S238010AbhJZSAT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Oct 2021 14:00:19 -0400
+Received: from mga14.intel.com ([192.55.52.115]:39456 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236609AbhJZRmi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Oct 2021 13:42:38 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10149"; a="229919808"
+        id S237991AbhJZSAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Oct 2021 14:00:15 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10149"; a="230247329"
 X-IronPort-AV: E=Sophos;i="5.87,184,1631602800"; 
-   d="scan'208";a="229919808"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2021 10:40:13 -0700
+   d="scan'208";a="230247329"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2021 10:40:08 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,184,1631602800"; 
-   d="scan'208";a="724244760"
+   d="scan'208";a="664642091"
 Received: from lkp-server01.sh.intel.com (HELO 072b454ebba8) ([10.239.97.150])
-  by fmsmga005.fm.intel.com with ESMTP; 26 Oct 2021 10:40:07 -0700
+  by orsmga005.jf.intel.com with ESMTP; 26 Oct 2021 10:40:07 -0700
 Received: from kbuild by 072b454ebba8 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1mfQQg-0000EP-L8; Tue, 26 Oct 2021 17:40:06 +0000
-Date:   Wed, 27 Oct 2021 01:39:25 +0800
+        id 1mfQQg-0000Eh-P2; Tue, 26 Oct 2021 17:40:06 +0000
+Date:   Wed, 27 Oct 2021 01:39:18 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/vpd] BUILD SUCCESS
- 78b5d5c998537a34aec719af0a236119d53db752
-Message-ID: <61783d4d.jO+rDNJtK12JFKTA%lkp@intel.com>
+Subject: [helgaas-pci:next] BUILD SUCCESS
+ 6de1dedb1db18c6ecf892f12b21bfd6805105bce
+Message-ID: <61783d46.0qHWPxiSbgvpFIU7%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -42,10 +42,10 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/vpd
-branch HEAD: 78b5d5c998537a34aec719af0a236119d53db752  cxgb3: Remove seeprom_write and use VPD API
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+branch HEAD: 6de1dedb1db18c6ecf892f12b21bfd6805105bce  Merge branch 'remotes/lorenzo/pci/xgene'
 
-elapsed time: 1031m
+elapsed time: 1032m
 
 configs tested: 52
 configs skipped: 3
@@ -82,30 +82,30 @@ s390                                defconfig
 s390                             allyesconfig
 s390                             allmodconfig
 parisc                           allyesconfig
+i386                             allyesconfig
 sparc                            allyesconfig
 sparc                               defconfig
 i386                                defconfig
 i386                              debian-10.3
-i386                             allyesconfig
 mips                             allyesconfig
 mips                             allmodconfig
 powerpc                          allyesconfig
 powerpc                          allmodconfig
 powerpc                           allnoconfig
 riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
 riscv                    nommu_virt_defconfig
 riscv                             allnoconfig
 riscv                               defconfig
 riscv                          rv32_defconfig
-riscv                            allyesconfig
 riscv                            allmodconfig
 um                           x86_64_defconfig
 um                             i386_defconfig
+x86_64                           allyesconfig
 x86_64                    rhel-8.3-kselftests
 x86_64                              defconfig
 x86_64                               rhel-8.3
 x86_64                                  kexec
-x86_64                           allyesconfig
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
