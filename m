@@ -2,73 +2,93 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1949BC433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 10:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B078C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 10:02:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBE3E610A3
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 10:00:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDAA160FBF
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 10:02:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241488AbhJ0KCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Oct 2021 06:02:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37954 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241340AbhJ0KCC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 06:02:02 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9F96C061235
-        for <linux-pci@vger.kernel.org>; Wed, 27 Oct 2021 02:59:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:Message-ID:References:In-Reply-To:Subject:CC:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=IB3vKlP4on8GCe7l1kqRxw29zumVr5j1/nr3g3ShAqE=; b=TFIclONAtSjKcxHyXMw0hxIXQg
-        i4qFpmRUnP0XhR8jx0r1ZLqVzGWnv9mIVHcPsi9zG9WQ2J/E0svgPJHZ/LvBhs7TAq7J9zJ43i77v
-        LxpF4ceCthZEDDUxkwZeU0LU9nwkCIg7c7VZx7VXJosiC5OXg/yfwCSg/ZRN+kI9OQYOD0QpZo1Li
-        /uafDQmCFr5fdEYZ455y1c71uWucC4UVAeOkl2BanY32VDjOW6CfbndZeTchTqLA3A/QlZV+Ti+j5
-        P2KEFwiccphpVCEFqctNvOIpWJMxcn4NyiHbNyakPWd6p10E2q7SCSUWB1TZs0ea7MUef/E18ySzd
-        JGx5THPg==;
-Received: from [2a01:4c8:1042:994a:f240:791a:356:222b] (helo=[IPv6:::1])
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mffgA-00HYMy-VW; Wed, 27 Oct 2021 09:57:21 +0000
-Date:   Wed, 27 Oct 2021 10:57:04 +0100
-From:   David Woodhouse <dwmw2@infradead.org>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Jason Andryuk <jandryuk@gmail.com>, josef@oderland.se
-CC:     boris.ostrovsky@oracle.com, helgaas@kernel.org, jandryuk@gmail.com,
-        jgross@suse.com, linux-pci@vger.kernel.org, maz@kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH=5D_PCI/MSI=3A_Move_non-mask_?= =?US-ASCII?Q?check_back_into_low_level_accessors?=
-User-Agent: K-9 Mail for Android
-In-Reply-To: <87cznqg5k8.ffs@tglx>
-References: <90277228-cf14-0cfa-c95e-d42e7d533353@oderland.se> <20211025012503.33172-1-jandryuk@gmail.com> <87fssmg8k4.ffs@tglx> <87cznqg5k8.ffs@tglx>
-Message-ID: <0A9FDABA-9067-4811-9B3D-DAFE5589D1A4@infradead.org>
+        id S237195AbhJ0KFM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Oct 2021 06:05:12 -0400
+Received: from mail-ed1-f54.google.com ([209.85.208.54]:34734 "EHLO
+        mail-ed1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241322AbhJ0KCo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 06:02:44 -0400
+Received: by mail-ed1-f54.google.com with SMTP id g10so8421755edj.1;
+        Wed, 27 Oct 2021 03:00:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=EsemFH0tETj3VZTrSmHxIMsN9NPXwXnYtpYm6mXI1Tk=;
+        b=OVrPHfz2U5JUp+QiwRAYIE7397KhB7YycXt+DXvYe4JcjhzXsFHE5CrXDeDHIuuD1M
+         dEIkXjamD6BAgkr9Greu77ateYlJXmZPLyGqYey4pUhZ6oxyqZS455lzsSgVPDu+r9Lt
+         EEDKloMTpBgKGUhCEcuOgsByPOODZ9V4RYYGrgIcHKb/SljzqPRmtEtLQ1Xyg7wX1dBW
+         /mKgxkASIqjR8tzD30QERKId11vrnyQz6OhtJnjQT4JOnrWEEf2ctuGUfP+vzi/akV1H
+         lNMHLkoGh9IgVbL7vKBmFCikA106YeF/RhCfVd7jrU3RxIHxybBFjq/af9RtMzOfRr4A
+         O+bg==
+X-Gm-Message-State: AOAM532uomeSp4FOEndF14s9/JG028M4bvTGvS6Jp6x/idPuBAUxwnzv
+        s/ssHihUzfaa4uIF6CCknnUmM6zLjdiJgw==
+X-Google-Smtp-Source: ABdhPJwWFV7VmfT7RFLcWceqEPwWUqlkhVXAffxqOWvA+FVbvR+fUfPgg8451eo1WEr35K0YegqIOw==
+X-Received: by 2002:a17:906:4f8c:: with SMTP id o12mr37456066eju.115.1635328817804;
+        Wed, 27 Oct 2021 03:00:17 -0700 (PDT)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id r5sm8427743edy.86.2021.10.27.03.00.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Oct 2021 03:00:17 -0700 (PDT)
+Date:   Wed, 27 Oct 2021 12:00:16 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v1 1/1] PCI: brcmstb: Use GENMASK() as __GENMASK() is for
+ internal use only
+Message-ID: <YXkjMO0ULRGqZPbr@rocinante>
+References: <20211027093433.4832-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211027093433.4832-1-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Andy,
 
+> Use GENMASK() as __GENMASK() is for internal use only.
 
-On 27 October 2021 10:50:15 BST, Thomas Gleixner <tglx@linutronix=2Ede> wr=
-ote:
->The recent rework of PCI/MSI[X] masking moved the non-mask checks from th=
-e
->low level accessors into the higher level mask/unmask functions=2E
->
->This missed the fact that these accessors can be invoked from other place=
-s
->as well=2E The missing checks break XEN-PV which sets pci_msi_ignore_mask=
- and
->also violates the virtual MSIX and the msi_attrib=2Emaskbit protections=
-=2E
+To add, for posterity, that using __GENMASK() bypasses the 
+GENMASK_INPUT_CHECK() macro that adds extra validation.
 
-Not just PV=2E It's Xen HVM guests too=2E
+> Fixes: 3baec684a531 ("PCI: brcmstb: Accommodate MSI for older chips")
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> index 1fc7bd49a7ad..51522510c08c 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -619,7 +619,7 @@ static void brcm_msi_remove(struct brcm_pcie *pcie)
+>  
+>  static void brcm_msi_set_regs(struct brcm_msi *msi)
+>  {
+> -	u32 val = __GENMASK(31, msi->legacy_shift);
+> +	u32 val = GENMASK(31, msi->legacy_shift);
 
-I'll also give it a spin on both Xen and not-Xen=2E Thanks=2E
+Thank you!
 
---=20
-Sent from my Android device with K-9 Mail=2E Please excuse my brevity=2E
+Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
+
+	Krzysztof
