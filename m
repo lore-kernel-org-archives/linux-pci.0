@@ -2,200 +2,100 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A21C43219
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 11:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0F2C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 11:32:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 684456109E
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 11:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A3136103C
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 11:32:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241649AbhJ0Lej (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Oct 2021 07:34:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59354 "EHLO
+        id S241653AbhJ0Len (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Oct 2021 07:34:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230336AbhJ0Lej (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 07:34:39 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B07CAC061570;
-        Wed, 27 Oct 2021 04:32:13 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id k7so3525882wrd.13;
-        Wed, 27 Oct 2021 04:32:13 -0700 (PDT)
+        with ESMTP id S241655AbhJ0Lem (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 07:34:42 -0400
+Received: from mail-oi1-x22b.google.com (mail-oi1-x22b.google.com [IPv6:2607:f8b0:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA2AEC061570;
+        Wed, 27 Oct 2021 04:32:17 -0700 (PDT)
+Received: by mail-oi1-x22b.google.com with SMTP id o83so3007774oif.4;
+        Wed, 27 Oct 2021 04:32:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:cc
-         :references:from:subject:in-reply-to:content-transfer-encoding;
-        bh=b5w8sNVzE/FK5ZB6IKmWu1aK27+G2N8Myj4MDbZgpnk=;
-        b=jx9ftMIJZDKbaMzQGiNKRMFqbGbJ05jltJ3aHAzXokNy5dXTI+V4UmfgGeEzMdLw81
-         W0QT+M84Z8b2W2KFobOD9LgWUhvcKdKuGsCSjji1XnzEcsywdsKKHldJrthfMzS8SXr0
-         DnaYRfV/KL/R8Liej3rszA5oS6w8CyvQZ5fyzUn94r9OUut8pw9fTc3j6ma+SHIy4tqh
-         Aw709HK4050jy7J2xeefqJGJwMaFseCVLrTtfvpIJhPTOKxl59KxJlYVw69HSnMm7vww
-         C8lhyIrirvk3zAdiXbZ2PPVuHlEQlyvxqPdGVPmlT+RsoD54izImtf+c3GCbeRXpqKYG
-         pXhg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Ulhn4KODo+M8bQOCOaLaS+XZsUOCyPb8RqRWLn0FhBo=;
+        b=NdNt/0mG63IMHrYdKrGRchjJA3NLl73blNkn2CLJ9iW1ZGGJ4MjZszel2piHsEUbqg
+         fgJkDpG5l92TH9cRhCifTd3dJGqR9XvpH/s3lIz3TJQYunHu+bpJkkR5GyuJd4glmzNB
+         MoeygbQ1FmfFSAd4XsZFnkJEpN7S5ohnzRxB9oy340onnnsQ92ug9E0NfVPwaQJM0p2H
+         fkA00Po14HGp91tFWr71+2Cx+EFhyptZPPomx/++zsiPJDHj0OyNQiAhrUB2d5MZ5Lxs
+         WeuOdKgc5Qki/ja4jIgfWIws7UAV5wdOydVxdhtqR8zZuXLxcC8AsaXp5v7b3N5g/F9w
+         Rxzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:subject:in-reply-to
-         :content-transfer-encoding;
-        bh=b5w8sNVzE/FK5ZB6IKmWu1aK27+G2N8Myj4MDbZgpnk=;
-        b=PLrpJ7Yxtj6YxjJRBERICG9Ewn483JTNl6OP1nO0/OBVnbEtPEqbWMrcGtPU+hvA2f
-         pu90iZIC0XWzo7RJbW0K0lMsLi6P4TxJWYpaGPzgDcfYQ73jNfAxxvmmSrYexNceYIGC
-         Hzxh6ZfMZoytqDLi8LV/jpCqLmYNnLwJ13itf8WysPas2thA6zgj0+UZP18co137F/AB
-         0Dx5Z2m1OIOEqxFFXEfSr2sltUmzqaYpQ7rgsXc9nOJJy4BBZYbaBv4XnUFpLptpdV02
-         TdjnOBUh0IjWm9OEChRDiKKH9GGflDWyzgQzjSOYfc4onxLlxHBlD4HZ7mvbdlIzYXqC
-         l9Vw==
-X-Gm-Message-State: AOAM530b64iLs2b32zh3i3ogYf7MNJ/tGgdNCtr5CCp8ZES3IVkEd0BX
-        uJ8oJX1JffKkMBVw+mj+gRs=
-X-Google-Smtp-Source: ABdhPJxm1wDTYaPYM2bobgSsmTRNasxk/UQor+maJCsOpPNgJTelcItZirdtru790NfV0ivcML6ZCQ==
-X-Received: by 2002:adf:ded2:: with SMTP id i18mr39142207wrn.58.1635334332240;
-        Wed, 27 Oct 2021 04:32:12 -0700 (PDT)
-Received: from ?IPV6:2003:ea:8f1a:f00:34ff:a713:9f3a:a948? (p200300ea8f1a0f0034ffa7139f3aa948.dip0.t-ipconnect.de. [2003:ea:8f1a:f00:34ff:a713:9f3a:a948])
-        by smtp.googlemail.com with ESMTPSA id k8sm3359093wms.41.2021.10.27.04.32.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Oct 2021 04:32:11 -0700 (PDT)
-Message-ID: <84956be9-f9d1-d416-5af9-664d7c4831ce@gmail.com>
-Date:   Wed, 27 Oct 2021 13:32:04 +0200
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Ulhn4KODo+M8bQOCOaLaS+XZsUOCyPb8RqRWLn0FhBo=;
+        b=oNLyE/51ITDO5ZbvQDrwjFXKq1FqbN+HPe1UFYhFMgKaVfzmx6ytrN/8sQ9I5Fq1CT
+         9AHOuklk2LFJabcSSgARp8AaHUWej07ON+6b5e4SK0fVRW85E5vgAq+cuaf7iTarA2+E
+         OHRoWdWgGa7JHB320XhsiY0hGC9XA4I+fW5cYECaSp2dPMbN/oDufjXy9F0wdc2sdkMZ
+         JGtgxV05jDu7VyR4/SoM1B3PwROQPrPuBe46Pi+5Qr27RWkAEDFh1qE5BnXOxm3enOoj
+         fu5c1UU5uAd9Ij0c3s3zkGky8pED0lpfkFrNBL5ytZVIxQNeq/dTWS/KhyVU1C3R+qjc
+         k8Jw==
+X-Gm-Message-State: AOAM533/H6QXA09akBnGNvdEp/JkfwZiZcQQ6YfzrgdZevJCFm/FB047
+        bG3NLV8pnVf7Fpm51yjT2nc=
+X-Google-Smtp-Source: ABdhPJyDtqXolJD9smrK9+TJiNjHaGA863agytaUNdu/NWWpgx1LiqcUGcw3mrk5rjhk7cXU0TEVEg==
+X-Received: by 2002:aca:3343:: with SMTP id z64mr3098600oiz.100.1635334337149;
+        Wed, 27 Oct 2021 04:32:17 -0700 (PDT)
+Received: from localhost.localdomain ([8.26.182.170])
+        by smtp.gmail.com with ESMTPSA id e23sm5430106oih.40.2021.10.27.04.32.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Oct 2021 04:32:16 -0700 (PDT)
+From:   Yanteng Si <siyanteng01@gmail.com>
+X-Google-Original-From: Yanteng Si <siyanteng@loongson.cn>
+To:     sergio.paracuellos@gmail.com
+Cc:     Yanteng Si <siyanteng@loongson.cn>, lorenzo.pieralisi@arm.com,
+        robh@kernel.org, kw@linux.com, bhelgaas@google.com,
+        matthias.bgg@gmail.com, p.zabel@pengutronix.de,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, tsbogend@alpha.franken.de,
+        linux-mips@vger.kernel.org, chenhuacai@kernel.org,
+        sterlingteng@gmail.com
+Subject: [PATCH 1/2] PCI: mt7621: Add MODULE_* macros to MT7621 PCIe host controller driver
+Date:   Wed, 27 Oct 2021 19:31:39 +0800
+Message-Id: <50f5f509c15251fb10b0c87304d272e2c89841f0.1635333327.git.siyanteng@loongson.cn>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <cover.1635333327.git.siyanteng@loongson.cn>
+References: <cover.1635333327.git.siyanteng@loongson.cn>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.1
-Content-Language: en-US
-To:     Jon Hunter <jonathanh@nvidia.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Raju Rangoju <rajur@chelsio.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
-References: <ba0b18a3-64d8-d72f-9e9f-ad3e4d7ae3b8@gmail.com>
- <049fa71c-c7af-9c69-51c0-05c1bc2bf660@gmail.com>
- <88bfd6ed-f5c6-b9f9-c331-643eb0d37289@nvidia.com>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Re: [PATCH 2/5] PCI/VPD: Use pci_read_vpd_any() in pci_vpd_size()
-In-Reply-To: <88bfd6ed-f5c6-b9f9-c331-643eb0d37289@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 27.10.2021 13:01, Jon Hunter wrote:
-> 
-> On 10/09/2021 07:22, Heiner Kallweit wrote:
->> Use new function pci_read_vpd_any() to simplify the code.
->>
->> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
->> ---
->>   drivers/pci/vpd.c | 7 ++-----
->>   1 file changed, 2 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
->> index 286cad2a6..517789205 100644
->> --- a/drivers/pci/vpd.c
->> +++ b/drivers/pci/vpd.c
->> @@ -57,10 +57,7 @@ static size_t pci_vpd_size(struct pci_dev *dev)
->>       size_t off = 0, size;
->>       unsigned char tag, header[1+2];    /* 1 byte tag, 2 bytes length */
->>   -    /* Otherwise the following reads would fail. */
->> -    dev->vpd.len = PCI_VPD_MAX_SIZE;
->> -
->> -    while (pci_read_vpd(dev, off, 1, header) == 1) {
->> +    while (pci_read_vpd_any(dev, off, 1, header) == 1) {
->>           size = 0;
->>             if (off == 0 && (header[0] == 0x00 || header[0] == 0xff))
->> @@ -68,7 +65,7 @@ static size_t pci_vpd_size(struct pci_dev *dev)
->>             if (header[0] & PCI_VPD_LRDT) {
->>               /* Large Resource Data Type Tag */
->> -            if (pci_read_vpd(dev, off + 1, 2, &header[1]) != 2) {
->> +            if (pci_read_vpd_any(dev, off + 1, 2, &header[1]) != 2) {
->>                   pci_warn(dev, "failed VPD read at offset %zu\n",
->>                        off + 1);
->>                   return off ?: PCI_VPD_SZ_INVALID;
->>
-> 
-> 
-> This change is breaking a PCI test that we are running on Tegra124
-> Jetson TK1. The test is parsing the various PCI devices by running
-> 'lspci -vvv' and for one device I am seeing a NULL pointer
-> dereference crash. Reverting this change or just adding the line
-> 'dev->vpd.len = PCI_VPD_MAX_SIZE;' back fixes the problem.
-> 
-> I have taken a quick look but have not found why this is failing
-> so far. Let me know if you have any thoughts.
-> 
+Since commit 2bdd5238e756 ("PCI: mt7621: Add MediaTek MT7621 PCIe host controller driver")
+the MT7621 PCIe host controller driver is built as a module but no MODULE_*() attributes
+were specified, causing a build error due to missing license information.
 
-There's a known issue with this change, the fix has just been applied to
-linux-next. Can you please re-test with linux-next from today?
+ERROR: modpost: missing MODULE_LICENSE() in drivers/pci/controller/pcie-mt7621.o
 
-> Cheers
-> Jon
-> 
+Fix this by adding MODULE attributes to the driver.
 
-Heiner
+Signed-off-by: Yanteng Si <siyanteng@loongson.cn>
+---
+ drivers/pci/controller/pcie-mt7621.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> [   56.577644] 8<--- cut here ---
-> [   56.580714] Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> [   56.588836] pgd = da85f9ea
-> [   56.591545] [00000000] *pgd=00000000
-> [   56.595124] Internal error: Oops: 80000005 [#1] PREEMPT SMP ARM
-> [   56.601029] Modules linked in: nouveau drm_ttm_helper ttm tegra_soctherm
-> [   56.607725] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.15.0-rc2-00004-g7724d929fdde-dirty #5
-> [   56.616231] Hardware name: NVIDIA Tegra SoC (Flattened Device Tree)
-> [   56.622482] PC is at 0x0
-> [   56.625007] LR is at rcu_core+0x368/0xc5c
-> [   56.629011] pc : [<00000000>]    lr : [<c01a3384>]    psr: 60000113
-> [   56.635261] sp : c1201dc8  ip : c35f4b80  fp : c1201df0
-> [   56.640472] r10: ffffe000  r9 : 00000007  r8 : c135d3a0
-> [   56.645683] r7 : 0000000a  r6 : c1204f0c  r5 : 00000008  r4 : 00000000
-> [   56.652193] r3 : c3c33850  r2 : 00000000  r1 : 00000000  r0 : c3c33850
-> [   56.658703] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
-> [   56.665821] Control: 10c5387d  Table: 82e0806a  DAC: 00000051
-> [   56.671551] Register r0 information: slab kmalloc-64 start c3c33840 pointer offset 16 size 64
-> [   56.680066] Register r1 information: NULL pointer
-> [   56.684759] Register r2 information: NULL pointer
-> [   56.689451] Register r3 information: slab kmalloc-64 start c3c33840 pointer offset 16 size 64
-> [   56.697964] Register r4 information: NULL pointer
-> [   56.702655] Register r5 information: non-paged memory
-> [   56.707693] Register r6 information: non-slab/vmalloc memory
-> [   56.713338] Register r7 information: non-paged memory
-> [   56.718375] Register r8 information: non-slab/vmalloc memory
-> [   56.724020] Register r9 information: non-paged memory
-> [   56.729057] Register r10 information: non-paged memory
-> [   56.734183] Register r11 information: non-slab/vmalloc memory
-> [   56.739914] Register r12 information: slab kmalloc-64 start c35f4b80 pointer offset 0 size 64
-> [   56.748428] Process swapper/0 (pid: 0, stack limit = 0x54fa894a)
-> [   56.754419] Stack: (0xc1201dc8 to 0xc1202000)
-> [   56.758762] 1dc0:                   ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.766919] 1de0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.775076] 1e00: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.783232] 1e20: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.791389] 1e40: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.799545] 1e60: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.807701] 1e80: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.815857] 1ea0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.824014] 1ec0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.832170] 1ee0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.840326] 1f00: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.848482] 1f20: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.856639] 1f40: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.864795] 1f60: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.872951] 1f80: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.881108] 1fa0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.889264] 1fc0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.897420] 1fe0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.905580] [<c01a3384>] (rcu_core) from [<c0101358>] (__do_softirq+0x130/0x42c)
-> [   56.912966] [<c0101358>] (__do_softirq) from [<c012bcec>] (irq_exit+0xbc/0x100)
-> [   56.920262] [<c012bcec>] (irq_exit) from [<c0189388>] (handle_domain_irq+0x60/0x78)
-> [   56.927906] [<c0189388>] (handle_domain_irq) from [<c051445c>] (gic_handle_irq+0x7c/0x90)
-> [   56.936071] [<c051445c>] (gic_handle_irq) from [<c0100b7c>] (__irq_svc+0x5c/0x90)
-> [   56.943538] Exception stack(0xc1201ec0 to 0xc1201f08)
-> [   56.948574] 1ec0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.956731] 1ee0: ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
-> [   56.964888] 1f00: ???????? ????????
-> [   56.968364] [<c0100b7c>] (__irq_svc) from [<c0865fb8>] (cpuidle_enter_state+0x258/0x4c0)
-> [   56.976441] [<c0865fb8>] (cpuidle_enter_state) from [<c0866270>] (cpuidle_enter+0x3c/0x54)
-> [   56.984687] [<c0866270>] (cpuidle_enter) from [<c015c568>] (do_idle+0x200/0x27c)
-> [   56.992069] [<c015c568>] (do_idle) from [<c015c93c>] (cpu_startup_entry+0x18/0x1c)
-> [   56.999623] [<c015c93c>] (cpu_startup_entry) from [<c1100fa8>] (start_kernel+0x664/0x6b0)
-> [   57.007786] Code: bad PC value
-> [   57.010968] 8<--- cut here ---
-> 
+diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
+index b60dfb45ef7b..668b737f86fb 100644
+--- a/drivers/pci/controller/pcie-mt7621.c
++++ b/drivers/pci/controller/pcie-mt7621.c
+@@ -598,3 +598,5 @@ static struct platform_driver mt7621_pci_driver = {
+ 	},
+ };
+ builtin_platform_driver(mt7621_pci_driver);
++
++MODULE_LICENSE("GPL v2");
+\ No newline at end of file
+-- 
+2.27.0
 
