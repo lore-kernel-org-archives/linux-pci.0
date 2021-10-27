@@ -2,151 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D74CC433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 07:25:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F10DAC433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 08:10:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55D076109E
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 07:25:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8DFE610A6
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Oct 2021 08:10:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231518AbhJ0H1b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Oct 2021 03:27:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238621AbhJ0H1a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Oct 2021 03:27:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 67D0060F9B;
-        Wed, 27 Oct 2021 07:25:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635319505;
-        bh=taqwB9xndNIP6+ubGThuMvIEjNZA59pVCLQklgOloZA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=TOmdoRE/vgrtnhkY0qmVVNGZyI/6uuY5GDQ558z++JjyvNIRMcbzXiAIY/gLu+YOE
-         xhxky9vzihMGdq6u50krNTsJFOxbYvzLc5O7Oe95y5HV7INJNDnly+FBRqziA471qZ
-         MW6VqOzpbc3Pzl7wx1MhzUq/Plemn9VUWCr7qn/gnyI3qavPhPOWNwPu90/t1rtbZq
-         fV/gFvrReuS2QEVvFd0BUdq8XeH7iKsfU2ykAB6/AV6kDTlbV4TPZp1MoLt7xBmncU
-         +jdud4OoZjb1TFxX8TIYojLX48FLkYDOsspN66AB67GcgPynNy9vRddeerEhzvHL0G
-         u5oVv65XDvOcA==
-Date:   Wed, 27 Oct 2021 08:24:59 +0100
-From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linuxarm@huawei.com, mauro.chehab@huawei.com,
-        Krzysztof =?UTF-8?B?V2ls?= =?UTF-8?B?Y3p5xYRza2k=?= 
-        <kw@linux.com>, Binghui Wang <wangbinghui@hisilicon.com>,
-        Rob Herring <robh@kernel.org>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v15 00/13] Add support for Hikey 970 PCIe
-Message-ID: <20211027082459.61d5b0e5@sal.lan>
-In-Reply-To: <20211026171728.GA20609@lpieralisi>
-References: <cover.1634812676.git.mchehab+huawei@kernel.org>
-        <20211026171728.GA20609@lpieralisi>
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
+        id S240781AbhJ0INL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Oct 2021 04:13:11 -0400
+Received: from out30-57.freemail.mail.aliyun.com ([115.124.30.57]:55690 "EHLO
+        out30-57.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S240780AbhJ0INL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 04:13:11 -0400
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04400;MF=xuesong.chen@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0Uts4e-Z_1635322242;
+Received: from localhost.localdomain(mailfrom:xuesong.chen@linux.alibaba.com fp:SMTPD_---0Uts4e-Z_1635322242)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Wed, 27 Oct 2021 16:10:43 +0800
+From:   Xuesong Chen <xuesong.chen@linux.alibaba.com>
+To:     helgaas@kernel.org
+Cc:     catalin.marinas@arm.com, lorenzo.pieralisi@arm.com,
+        james.morse@arm.com, will@kernel.org, rafael@kernel.org,
+        tony.luck@intel.com, bp@alien8.de, mingo@kernel.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, xuesong.chen@linux.alibaba.com
+Subject: [PATCH v4 0/4] PCI MCFG consolidation and APEI resource filtering
+Date:   Wed, 27 Oct 2021 16:10:35 +0800
+Message-Id: <20211027081035.53370-1-xuesong.chen@linux.alibaba.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <YW5OTMz+x8zrsqkF@Dennis-MBP.local>
+References: <YW5OTMz+x8zrsqkF@Dennis-MBP.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Tue, 26 Oct 2021 18:17:28 +0100
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> escreveu:
+The issue of commit d91525eb8ee6 ("ACPI, EINJ: Enhance error injection tolerance
+level") on x86 is also happened on our own ARM64 platform. We sent a patch[1]
+trying to fix this issue in an arch-specific way as x86 does at first, but
+according to the suggestion from Lorenzo Pieralisi and Catalin Marinas, we can
+consolidate the PCI MCFG part then fix it in a more common way, that's why this
+patch series comes.
 
-> On Thu, Oct 21, 2021 at 11:45:07AM +0100, Mauro Carvalho Chehab wrote:
-> > Hi Lorenzo,
-> > 
-> > I split patch 09/10 from v13 into three patches, in order to have one logical
-> > change per patch, adding a proper descriptio to each of them. The final
-> > code didn change.
-> > 
-> > The pcie-kirin PCIe driver contains internally a PHY interface for
-> > Kirin 960, but it misses support for Kirin 970. A new PHY driver
-> > for it was added at drivers/phy/hisilicon/phy-hi3670-pcie.c
-> > (already merged via PHY tree).
-> > 
-> > Add support for Kirin 970 PHY driver at the pcie-kirin.c.
-> > 
-> > While here, also add the needed logic to compile it as module and
-> > to allow to dynamically remove the driver in runtime.
-> > 
-> > Tested on HiKey970:
-> > 
-> >   # lspci -D -PP
-> >   0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3670 (rev 01)
-> >   0000:00:00.0/01:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:01.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:04.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:05.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:07.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:09.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI Express Gen 2 (5.0 GT/s) Switch (rev ba)
-> >   0000:00:00.0/01:00.0/02:01.0/03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd Device a809
-> >   0000:00:00.0/01:00.0/02:07.0/06:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 07)
-> > 
-> > Tested on HiKey960:
-> > 
-> >   # lspci -D 
-> >   0000:00:00.0 PCI bridge: Huawei Technologies Co., Ltd. Device 3660 (rev 01)
-> > 
-> > ---
-> > 
-> > v15:
-> >   - The power-off fix patch was split into 3, in order to have one logical change
-> >     per patch.
-> >   -  Removed Fixes: tag from the poweroff patch;
-> >   - Adjusted capitalization of two patch summary lines
-> >   - No functional changes. The diff of this series is identical to v14.
-> > 
-> > v14:
-> >   - Split a timeout logic from patch 4, placing it on a separate patch;
-> >   - Added fixes: and cc: tags to the power_off fixup patch;
-> >   - change a typecast from of_data to long, in order to avoid a warning on
-> >     some randconfigs;
-> >   - removed uneeded brackets at the power_off patch;
-> >   - reordered struct device pointers at kirin_pcie_get_resource();
-> >   - added a c/c to kishon at the PHY-related patches.
-> > 
-> > v13:
-> >   - Added Xiaowei's ack for the series.
-> > 
-> > v12:
-> >   - Change a comment at patch 1 to not use c99 style.
-> > 
-> > v11:
-> >   - patch 5 changed to use the right PCIe topology
-> >   - all other patches are identical to v10.
-> > 
-> > v10:
-> >   - patch 1: dropped magic numbers from PHY driver
-> >   - patch 5: allow pcie child nodes without reset-gpios
-> >   - all other patches are identical to v9.
-> > 
-> > v9:
-> >   - Did some cleanups at patches 1 and 5
-> > 
-> > Mauro Carvalho Chehab (13):
-> >   PCI: kirin: Reorganize the PHY logic inside the driver
-> >   PCI: kirin: Add support for a PHY layer
-> >   PCI: kirin: Use regmap for APB registers
-> >   PCI: kirin: Add support for bridge slot DT schema
-> >   PCI: kirin: Give more time for PERST# reset to finish
-> >   PCI: kirin: Add Kirin 970 compatible
-> >   PCI: kirin: Add MODULE_* macros
-> >   PCI: kirin: Allow building it as a module
-> >   PCI: kirin: Add power_off support for Kirin 960 PHY
-> >   PCI: kirin: Move the power-off code to a common routine
-> >   PCI: kirin: Disable clkreq during poweroff sequence
-> >   PCI: kirin: De-init the dwc driver
-> >   PCI: kirin: Allow removing the driver
-> > 
-> >  drivers/pci/controller/dwc/Kconfig      |   2 +-
-> >  drivers/pci/controller/dwc/pcie-kirin.c | 643 ++++++++++++++++++------
-> >  2 files changed, 497 insertions(+), 148 deletions(-)  
-> 
-> Applied to pci/dwc for v5.16, please have a look at the resulting
-> branch and commits. 
+[1] https://marc.info/?l=linux-arm-kernel&m=163108478627166&w=2
 
-Thanks!
+---
+Change from v3 to v4:
+  - Add a new patch (patch #3) to address the quirk ECAM access issue. Because
+    the normal ECAM config space can be accessed in a lockless way, so we don't
+    need the mutual exclusion with the EINJ action. But those quirks maybe break
+    this rule and corrupt the configuration access, reserve its MCFG address
+    regions in this case to avoid that happens. 
+  
+  - Add another patch (patch #4) to log the PCI MCFG entry parse message per
+    the suggestion from Bjorn Helgaas. The output on ARM64 as:
+    ACPI: MCFG entry for domain 0000 [bus 00-0f] at [mem 0x50000000-0x50ffffff] (base 0x50000000)
+  
+  - Commit message updated with more details of patch #2
 
-Everything looks fine to me.
+Change from v2 to v3:
+  - Address the comments of Lorenzo Pieralisi about the CONFIG_PCI
+    dependence issue in APEI module (patch #2)
 
-Best regards,
-Mauro
+Change from v1 to v2:
+  - Fix the "undefined reference to `pci_mmcfg_list'" build error in case
+    of PCI_CONFIG=n, reported by the kernel test robot
+
+Xuesong Chen (4):
+  PCI: MCFG: Consolidate the separate PCI MCFG table entry list
+  ACPI: APEI: Filter the PCI MCFG address with an arch-agnostic method
+  ACPI: APEI: Reserve the MCFG address for quirk ECAM implementation
+  PCI: MCFG: Add the MCFG entry parse log message
+
+ arch/x86/include/asm/pci_x86.h | 17 +----------
+ arch/x86/pci/mmconfig-shared.c | 30 -------------------
+ drivers/acpi/apei/apei-base.c  | 68 ++++++++++++++++++++++++++++++++----------
+ drivers/acpi/pci_mcfg.c        | 46 +++++++++++++++-------------
+ drivers/pci/pci.c              |  2 ++
+ drivers/pci/quirks.c           |  2 ++
+ include/linux/pci.h            | 18 +++++++++++
+ 7 files changed, 101 insertions(+), 82 deletions(-)
+
+-- 
+1.8.3.1
+
