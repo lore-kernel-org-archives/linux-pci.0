@@ -2,137 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAAE1C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 09:59:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFC5C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 11:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90749610F8
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 09:59:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06BD5610CB
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 11:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229833AbhJ1KB7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Oct 2021 06:01:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53692 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229626AbhJ1KB4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Oct 2021 06:01:56 -0400
-Received: from mail-ua1-x929.google.com (mail-ua1-x929.google.com [IPv6:2607:f8b0:4864:20::929])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 768FDC061570;
-        Thu, 28 Oct 2021 02:59:29 -0700 (PDT)
-Received: by mail-ua1-x929.google.com with SMTP id q13so10466161uaq.2;
-        Thu, 28 Oct 2021 02:59:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HGGQ7RqFpKeC9CxBW+k8kpLsGeNQocDgaLhurL7DcEI=;
-        b=WizV7VgtkLy3fe2e0o1pfzbFecHihzXI0Id4xUaMYbtMTOAMqXIFLdyS9M2duUuMz3
-         r4sFwt/CYjnK4bgu+1DyEQBwyR7Q70aPYhsqJjPF996z3shUdkBl967YF0ymWY+a448g
-         RTpxrT300XgMMtmHX6u+JD3WXsmClh4yO8nD24YFkfG5hM9kBja7+RxxEAHj7KT+s3in
-         OYXDsbbCrU723hxPx87IcrPx+np95xU3p5LQWXav9tDIgrBgEPuXZ2+tr8maaJwA2H51
-         q9DJ/uCnkinwqQzQ+hi9u5xE13GOCSClyqmv5hLl+X8gb6qnnZB59b1sNvh6/EGc+1+C
-         oNiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=HGGQ7RqFpKeC9CxBW+k8kpLsGeNQocDgaLhurL7DcEI=;
-        b=OFuMP/0IEBFBNKjsTxECz80gpPGkucrPlVbjxnQXvITrVGboH5ZlZYLeu9y1lAj4Gl
-         x3MEaveCScFzIu9QZNlf7v3SwgZ2Wtz9untYK/rkD/jwOG7geiZNPMFSREgL46hWK9tQ
-         N4mGRuNMIJoHdaia8Wno3Cd53rJ058K7YqqsL7ZzsWOyp0DqqzDt7bjIbVL006dOWaXj
-         u4wEn2u7EWfMHcbPlj/NPtO0YI0m96mjXyjUUeLbWtQuV5uvUqkWnFQWYNEnu2fG6bus
-         Yx7TVonPiSmPCIfnG0qOABaJzP+9qMibkRCwBmoVXNbfcImd37EPwHfrO7VWhKjuQWNA
-         BY1Q==
-X-Gm-Message-State: AOAM531FhFcN0GS1Tgm/ASUMlI4vTuGaEW356E28Tj+mU2+QaZn0SJm+
-        nnmpoC0zpkxa51kRx31oxJaUF4C9e8GE+k94KLCNqIazttg=
-X-Google-Smtp-Source: ABdhPJzrE18emHRymB8uKvYxaQU2LsVWX8ihdn4v4ExoK4X3tzhQ0bdB6x4Z47vqjrm3sGQ67yZI4DOVVN9myD89gWE=
-X-Received: by 2002:ab0:3cab:: with SMTP id a43mr3208667uax.98.1635415168662;
- Thu, 28 Oct 2021 02:59:28 -0700 (PDT)
+        id S230059AbhJ1LLK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Oct 2021 07:11:10 -0400
+Received: from foss.arm.com ([217.140.110.172]:53520 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229868AbhJ1LLK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Oct 2021 07:11:10 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9B5C41063;
+        Thu, 28 Oct 2021 04:08:43 -0700 (PDT)
+Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E97A33F5A1;
+        Thu, 28 Oct 2021 04:08:42 -0700 (PDT)
+Date:   Thu, 28 Oct 2021 12:08:35 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 10/14] PCI: aardvark: Enable MSI-X support
+Message-ID: <20211028110835.GA1846@lpieralisi>
+References: <20211012164145.14126-1-kabel@kernel.org>
+ <20211012164145.14126-11-kabel@kernel.org>
+ <20211027141246.GA27543@lpieralisi>
+ <20211027142307.lrrix5yfvroxl747@pali>
 MIME-Version: 1.0
-References: <cover.1635390750.git.siyanteng@loongson.cn> <112fea0c8c1b65a762ac98412216239160721263.1635390750.git.siyanteng@loongson.cn>
- <CAMhs-H9LUQ6Km=sA992LH=+E0MbGuMf9YhM6w2HoyeqE0QbzJQ@mail.gmail.com>
- <20211028092318.GA6574@alpha.franken.de> <CAMhs-H_m=pz4jU_cY-A6PRjR3OYy2zKH0=HN=vFDF2XOk60xBg@mail.gmail.com>
-In-Reply-To: <CAMhs-H_m=pz4jU_cY-A6PRjR3OYy2zKH0=HN=vFDF2XOk60xBg@mail.gmail.com>
-From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Date:   Thu, 28 Oct 2021 11:59:17 +0200
-Message-ID: <CAMhs-H8HoO7dsfiTFaTRie1-DB-DF5st-gFmS=AF2tfHP_gsVw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] MIPS: cm/cpc: export some missing symbols to be
- able to use them from driver code
-To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc:     Yanteng Si <siyanteng01@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Yanteng Si <siyanteng@loongson.cn>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, kw@linux.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        chenhuacai@kernel.org, sterlingteng@gmail.com,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211027142307.lrrix5yfvroxl747@pali>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 28, 2021 at 11:34 AM Sergio Paracuellos
-<sergio.paracuellos@gmail.com> wrote:
->
-> Hi Thomas,
->
-> On Thu, Oct 28, 2021 at 11:24 AM Thomas Bogendoerfer
-> <tsbogend@alpha.franken.de> wrote:
-> >
-> > On Thu, Oct 28, 2021 at 06:11:18AM +0200, Sergio Paracuellos wrote:
-> > > On Thu, Oct 28, 2021 at 6:05 AM Yanteng Si <siyanteng01@gmail.com> wrote:
-> > > >
-> > > > Since commit 2bdd5238e756 ("PCI: mt7621: Add MediaTek MT7621 PCIe host controller driver")
-> > > > the MT7621 PCIe host controller driver is built as a module but modpost complains once these
-> > > > drivers become modules.
-> > > >
-> > > > ERROR: modpost: "mips_cm_unlock_other" [drivers/pci/controller/pcie-mt7621.ko] undefined!
-> > > > ERROR: modpost: "mips_cpc_base" [drivers/pci/controller/pcie-mt7621.ko] undefined!
-> > > > ERROR: modpost: "mips_cm_lock_other" [drivers/pci/controller/pcie-mt7621.ko] undefined!
-> > > > ERROR: modpost: "mips_cm_is64" [drivers/pci/controller/pcie-mt7621.ko] undefined!
-> > > > ERROR: modpost: "mips_gcr_base" [drivers/pci/controller/pcie-mt7621.ko] undefined!
-> > > >
-> > > > Let's just export them.
-> > > >
-> > > > Signed-off-by: Yanteng Si <siyanteng@loongson.cn>
-> > > > ---
-> > > >  arch/mips/kernel/mips-cm.c  | 5 +++++
-> > > >  arch/mips/kernel/mips-cpc.c | 1 +
-> > > >  2 files changed, 6 insertions(+)
-> > > >
-> > >
-> > > Reviewed-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
-> >
-> > could we instead make the pcie-mt761 driver non modular ? Exporting
-> > all MIPS specific stuff for just making an essential driver modular
-> > doesn't IMHO make much sense.
->
-> The driver is modular because I have been advised other times that new
-> drivers should be able to be compiled as modules and we should avoid
-> using 'bool' in Kconfig for new drivers. That's the only reason. I am
-> also always including as 'y' the driver since for me not having pci in
-> my boards has no sense... I am ok in changing Kconfig to be 'bool'
-> instead of 'tristate', but I don't know what should be the correct
-> thing to do in this case. Thoughts?
+On Wed, Oct 27, 2021 at 04:23:07PM +0200, Pali Rohár wrote:
+> On Wednesday 27 October 2021 15:12:46 Lorenzo Pieralisi wrote:
+> > On Tue, Oct 12, 2021 at 06:41:41PM +0200, Marek Behún wrote:
+> > > From: Pali Rohár <pali@kernel.org>
+> > > 
+> > > According to PCI 3.0 specification, sending both MSI and MSI-X interrupts
+> > > is done by DWORD memory write operation to doorbell message address. The
+> > > write operation for MSI has zero upper 16 bits and the MSI interrupt number
+> > > in the lower 16 bits, while the write operation for MSI-X contains a 32-bit
+> > > value from MSI-X table.
+> > > 
+> > > Since the driver only uses interrupt numbers from range 0..31, the upper
+> > > 16 bits of the DWORD memory write operation to doorbell message address
+> > > are zero even for MSI-X interrupts. Thus we can enable MSI-X interrupts.
+> > 
+> > It is the controller driver that defines the MSI-X data field yes, what
+> > I don't get is why we have to add this comment in the commit log.
+> > 
+> > Basically Aardvark can support MSI-X up to 32 MSI-X vectors and you
+> > are enabling them with this patch.
+> > 
+> > Is there anything *else* I am missing wrt 16-bit/32-bit data fields
+> > that we need to know ?
+> > 
+> > > Testing proves that kernel can correctly receive MSI-X interrupts from
+> > > PCIe cards which supports both MSI and MSI-X interrupts.
+> > 
+> > I don't understand what you want to convey with this commit log.
+> > 
+> > To me, the whole comment does not add anything (if I understood it),
+> > please let me know what you want to express with it.
+> > 
+> > To me this patch enables MSI-X support because the HW can support them,
+> > that's it.
+> 
+> My understanding is that MSI-X by definition uses 32-bit write
+> operations to doorbell address and so, HW needs to support catching of
+> 32-bit write operations.
+> 
+> Aardvark hw seems to support only 16-bit write operation to doorbell
+> address. But our testing proved that hw can catch also lower 16-bits of
+> 32-bit write operation to doorbell address.
+> 
+> So if driver enforces that every 32-bit write operation to doorbell
+> address would have upper 16-bit zeroed then MSI-X should work.
 
-I guess we also want the driver to at least be compile tested in
-'allmodconfig' and other similars...
+That's clearer than the current commit log.
 
->
-> Best regards,
->     Sergio Paracuellos
->
-> >
-> > Thomas.
-> >
-> > --
-> > Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
-> > good idea.                                                [ RFC1925, 2.3 ]
+> In commit message I originally tried to explain it that after applying
+> all previous patches which are fixing MSI and Multi-MSI support (part of
+> them is enforcement to use only MSI numbers 0..31), it makes driver
+> compatible with also MSI-X interrupts.
+> 
+> If you want to rewrite commit message, let us know, there is no problem.
+
+I think we should.
+
+> > > Signed-off-by: Pali Rohár <pali@kernel.org>
+> > > Reviewed-by: Marek Behún <kabel@kernel.org>
+
+By the way, this tag should be removed. Marek signed it off, that
+applies to other patches in this series as well.
+
+Lorenzo
+
+> > > Signed-off-by: Marek Behún <kabel@kernel.org>
+> > > ---
+> > >  drivers/pci/controller/pci-aardvark.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > > index b703b271c6b1..337b61508799 100644
+> > > --- a/drivers/pci/controller/pci-aardvark.c
+> > > +++ b/drivers/pci/controller/pci-aardvark.c
+> > > @@ -1274,7 +1274,7 @@ static int advk_pcie_init_msi_irq_domain(struct advk_pcie *pcie)
+> > >  
+> > >  	msi_di = &pcie->msi_domain_info;
+> > >  	msi_di->flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+> > > -		MSI_FLAG_MULTI_PCI_MSI;
+> > > +			MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX;
+> > >  	msi_di->chip = msi_ic;
+> > >  
+> > >  	pcie->msi_inner_domain =
+> > > -- 
+> > > 2.32.0
+> > > 
