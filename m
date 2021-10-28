@@ -2,183 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF1DC433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 01:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82E81C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 02:16:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B561861186
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 01:58:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61B3660C4B
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Oct 2021 02:16:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbhJ1CBM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Oct 2021 22:01:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60112 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbhJ1CBL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 22:01:11 -0400
-Received: from mail-oi1-x22d.google.com (mail-oi1-x22d.google.com [IPv6:2607:f8b0:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7461EC061570;
-        Wed, 27 Oct 2021 18:58:45 -0700 (PDT)
-Received: by mail-oi1-x22d.google.com with SMTP id g125so6149447oif.9;
-        Wed, 27 Oct 2021 18:58:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=7jA9hLIHv4laXHxexzSur1ceGmoR/SqF1PV4WEQNyWQ=;
-        b=Z54xrm2gRnEUeTcTgy6Nkyf1v5dmkb0fpPRP2+0t1b699lLzBQS98XejaLKV5HKgRm
-         H+f9/M1tAKy2S18OKxIGr2MbpPORPo5JIqUemrOPxZAKC/DcNypewcVe3VA5n9Wwhy7I
-         5rqSsOtVDqFdYsMUpcUfa9XA1Vg1RTSNdqUPAUpaj5l8HCvm23MnLkhV2S32ODoBRXNa
-         uhr3jtIr0ljqaNLH3c3HIZ3qoUfSFO8Ev4AI31BgJcwH6KC8baGgm/0nvd57THdQNwAa
-         RUgvVWzHCVAzbz4tJ2mJD8HoCRSSJL2FjiNuxU9CVbqnWtmrSq3TsrNOAqKI4IYJ+ipf
-         PIbw==
+        id S229705AbhJ1CRd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Oct 2021 22:17:33 -0400
+Received: from mail-il1-f197.google.com ([209.85.166.197]:50939 "EHLO
+        mail-il1-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229658AbhJ1CRc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Oct 2021 22:17:32 -0400
+Received: by mail-il1-f197.google.com with SMTP id o6-20020a92a806000000b002590430fa32so3051528ilh.17
+        for <linux-pci@vger.kernel.org>; Wed, 27 Oct 2021 19:15:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=7jA9hLIHv4laXHxexzSur1ceGmoR/SqF1PV4WEQNyWQ=;
-        b=Pg7F2cFkCIrBbE46iKzNWwUyTs1lO+5N2FuZ6T7dVGMp7EgY/UpTDypAlWnyQqgF7z
-         FWlJifS+cB8/gKsrXS4+BE0dcTCrXz90BYzOxPy7HptPxAq0gq5//16I1u+YGhwUm+05
-         QQS+MEHnEfZU9FBaTeoObDVSlAcwS6yWnt+bDekuRsfbJIFa/dxFRynGpk0I4P19u4KR
-         3tMZIJi1Gvai1nV+43gLKAjcWf0nYQmh7NVNXkm0/W6uSyy0aPi2M/86HfcoTsXfYbFr
-         ddM6itODOuFpLdx9pNBn3dUEdsByeDZvLs5stVhK98Z5Qc8hln+v94ZXUJ57E4PSsSx8
-         bmxw==
-X-Gm-Message-State: AOAM533PZfr6iHAgoXgEcwu4g5mZSx5NRU8OmVpolPiOyD87UooNsmV/
-        CHilTg7TqOr8sJcpa05DvSgWYv9mdIh2azNQ7dg=
-X-Google-Smtp-Source: ABdhPJzc4Eg531WD9FCIFPO/5/Z8QggwFWCwun14/4nZpu/HeSctOteECf6GvkujIih+6j1+vvTExofrv8BRz9dLyzo=
-X-Received: by 2002:a05:6808:f13:: with SMTP id m19mr6332500oiw.37.1635386324816;
- Wed, 27 Oct 2021 18:58:44 -0700 (PDT)
+        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
+         :from:to;
+        bh=6yG8pcJo54/vxDX6p7Xpz0mDhkbXcuuHhQ0tF2/zx5g=;
+        b=qNcReqTpq35T313Mp63ZtkP5ee801kCYLfsm1rRPXBTBpq5W4l5KaT/eKV4uIqgZjA
+         WMFzvws38DdGazUdj0wJiD2OZan4fyCYjhBQOlHY7jNat7wLFlsjn7nIpc8XQRnuigYD
+         02i2espcTZmbLo6s1W0gWpybXED/IxcFPi/5d2TzwNUZP1Wl2vE4V08veut/WUsuph66
+         UWlHMv+r2u+OXJqL5FgGWwWPkygReXDaG3h8UPWDqRE+nKRTXqvJMWhVA4JgXcSaV7NH
+         D9OKz/UCQtzUfuLqGWT93/T5jc80i1Aff4Uz+eSVgLzGYpLKHv07RTprubOVF58L1nN7
+         coCA==
+X-Gm-Message-State: AOAM532Bv73pYTWmmrUN+aa+ehdR8PKmnSrYVKoRzSpa2EpcnX0w+ZsT
+        SwvEWGjLI57ukzhpH17E1Omet4aRZOy4PXMEUsKEQr5WS+aw
+X-Google-Smtp-Source: ABdhPJzcSorb1KARbjJuazLmAfL+5SdTTWdZypcGX+Si7N9T1NNDXJ4DOpUfV3/jg9EUyHmPOXTHGnfR0KVgoFgwpLcLEWUEbWTC
 MIME-Version: 1.0
-References: <cover.1635333327.git.siyanteng@loongson.cn> <abead7ae64e1a0cc96a09647a5facf30d03381aa.1635333327.git.siyanteng@loongson.cn>
- <CAMhs-H8m0Un+njhw0nZKUrxzMxqfpj8YwGb==7GAoV=Kq-ey=w@mail.gmail.com>
-In-Reply-To: <CAMhs-H8m0Un+njhw0nZKUrxzMxqfpj8YwGb==7GAoV=Kq-ey=w@mail.gmail.com>
-From:   yanteng si <siyanteng01@gmail.com>
-Date:   Thu, 28 Oct 2021 09:58:32 +0800
-Message-ID: <CAEensMx+veP1rWUQ0XZkOjveHU9P+2L_RXGBTc_YtOg0YN6-jA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: mt7621: Export mips_cm/cpc/gcr_* to modules
-To:     Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Cc:     Yanteng Si <siyanteng@loongson.cn>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>, kw@linux.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        Huacai Chen <chenhuacai@kernel.org>,
-        sterling <sterlingteng@gmail.com>
+X-Received: by 2002:a05:6e02:1c4d:: with SMTP id d13mr1095444ilg.120.1635387306485;
+ Wed, 27 Oct 2021 19:15:06 -0700 (PDT)
+Date:   Wed, 27 Oct 2021 19:15:06 -0700
+In-Reply-To: <0000000000000f73a805afeb9be8@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000792dda05cf604775@google.com>
+Subject: Re: [syzbot] BUG: spinlock bad magic in synchronize_srcu
+From:   syzbot <syzbot+05017ad275a64a3246f8@syzkaller.appspotmail.com>
+To:     bcm-kernel-feedback-list@broadcom.com, bhelgaas@google.com,
+        bp@alien8.de, dave.hansen@linux.intel.com,
+        devel@driverdev.osuosl.org, f.fainelli@gmail.com,
+        gregkh@linuxfoundation.org, hpa@zytor.com,
+        info@cestasdeplastico.com, jmattson@google.com, joro@8bytes.org,
+        kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        linux-rpi-kernel-owner@lists.infradead.org,
+        linux-rpi-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com,
+        mchehab@kernel.org, mingo@redhat.com, nsaenzjulienne@suse.de,
+        pbonzini@redhat.com, robh@kernel.org,
+        sean.j.christopherson@intel.com, seanjc@google.com,
+        sfr@canb.auug.org.au, syzkaller-bugs@googlegroups.com,
+        tcs_kernel@tencent.com, tglx@linutronix.de, vkuznets@redhat.com,
+        wanpengli@tencent.com, x86@kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Sergio Paracuellos <sergio.paracuellos@gmail.com> =E4=BA=8E2021=E5=B9=B410=
-=E6=9C=8827=E6=97=A5=E5=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=887:45=E5=86=99=E9=
-=81=93=EF=BC=9A
->
-> Hi,
->
-> On Wed, Oct 27, 2021 at 1:32 PM Yanteng Si <siyanteng01@gmail.com> wrote:
-> >
-> > modpost complains once these drivers become modules.
-> >
-> > ERROR: modpost: "mips_cm_unlock_other" [drivers/pci/controller/pcie-mt7=
-621.ko] undefined!
-> > ERROR: modpost: "mips_cpc_base" [drivers/pci/controller/pcie-mt7621.ko]=
- undefined!
-> > ERROR: modpost: "mips_cm_lock_other" [drivers/pci/controller/pcie-mt762=
-1.ko] undefined!
-> > ERROR: modpost: "mips_cm_is64" [drivers/pci/controller/pcie-mt7621.ko] =
-undefined!
-> > ERROR: modpost: "mips_gcr_base" [drivers/pci/controller/pcie-mt7621.ko]=
- undefined!
-> >
-> > Let's just export them.
-> >
-> > Signed-off-by: Yanteng Si <siyanteng@loongson.cn>
-> > ---
-> >  arch/mips/kernel/mips-cm.c  | 5 +++++
-> >  arch/mips/kernel/mips-cpc.c | 1 +
-> >  2 files changed, 6 insertions(+)
->
-> This PATCH has the prefix "PCI: mt7621: " but the changes here are all
-> mips kernel things. So I guess it is better to have "MIPS: cm/cpc:
-> export some missing symbols to be able to use them from driver code"
-OK,Thanks!
-> or something similar. I am not the best with words :).
-Me too. >_<
->
-> >
-> > diff --git a/arch/mips/kernel/mips-cm.c b/arch/mips/kernel/mips-cm.c
-> > index 90f1c3df1f0e..b07f20323132 100644
-> > --- a/arch/mips/kernel/mips-cm.c
-> > +++ b/arch/mips/kernel/mips-cm.c
-> > @@ -12,8 +12,11 @@
-> >  #include <asm/mipsregs.h>
-> >
-> >  void __iomem *mips_gcr_base;
-> > +EXPORT_SYMBOL(mips_gcr_base);
->
-> EXPORT_SYMBOL_GPL?
-OK. Thanks!
->
-> > +
-> >  void __iomem *mips_cm_l2sync_base;
-> >  int mips_cm_is64;
-> > +EXPORT_SYMBOL(mips_cm_is64);
-> >
-> >  static char *cm2_tr[8] =3D {
-> >         "mem",  "gcr",  "gic",  "mmio",
-> > @@ -353,6 +356,7 @@ void mips_cm_lock_other(unsigned int cluster, unsig=
-ned int core,
-> >          */
-> >         mb();
-> >  }
-> > +EXPORT_SYMBOL(mips_cm_lock_other);
->
-> ditto.
-OK. Thanks!
->
-> >
-> >  void mips_cm_unlock_other(void)
-> >  {
-> > @@ -369,6 +373,7 @@ void mips_cm_unlock_other(void)
-> >
-> >         preempt_enable();
-> >  }
-> > +EXPORT_SYMBOL(mips_cm_unlock_other);
->
-> ditto.
-OK. Thanks!
->
-> >
-> >  void mips_cm_error_report(void)
-> >  {
-> > diff --git a/arch/mips/kernel/mips-cpc.c b/arch/mips/kernel/mips-cpc.c
-> > index 8d2535123f11..dfd3d58fd412 100644
-> > --- a/arch/mips/kernel/mips-cpc.c
-> > +++ b/arch/mips/kernel/mips-cpc.c
-> > @@ -13,6 +13,7 @@
-> >  #include <asm/mips-cps.h>
-> >
-> >  void __iomem *mips_cpc_base;
-> > +EXPORT_SYMBOL(mips_cpc_base);
->
-> ditto.
-OK. Thanks!
+syzbot suspects this issue was fixed by commit:
 
-Thanks,
-yanteng
->
-> >
-> >  static DEFINE_PER_CPU_ALIGNED(spinlock_t, cpc_core_lock);
-> >
-> > --
-> > 2.27.0
-> >
->
-> Thanks,
->     Sergio Paracuellos
+commit eb7511bf9182292ef1df1082d23039e856d1ddfb
+Author: Haimin Zhang <tcs_kernel@tencent.com>
+Date:   Fri Sep 3 02:37:06 2021 +0000
+
+    KVM: x86: Handle SRCU initialization failure during page track init
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=143e2b02b00000
+start commit:   78e709522d2c Merge tag 'for_linus' of git://git.kernel.org..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=2150ebd7e72fa695
+dashboard link: https://syzkaller.appspot.com/bug?extid=05017ad275a64a3246f8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10b72895300000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c42853300000
+
+If the result looks correct, please mark the issue as fixed by replying with:
+
+#syz fix: KVM: x86: Handle SRCU initialization failure during page track init
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
