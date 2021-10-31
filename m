@@ -2,98 +2,82 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 754B9C433F5
-	for <linux-pci@archiver.kernel.org>; Sun, 31 Oct 2021 13:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D83D8C433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 31 Oct 2021 15:07:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5273160EBB
-	for <linux-pci@archiver.kernel.org>; Sun, 31 Oct 2021 13:55:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABA9760234
+	for <linux-pci@archiver.kernel.org>; Sun, 31 Oct 2021 15:07:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229792AbhJaN62 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 31 Oct 2021 09:58:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43036 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbhJaN62 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 31 Oct 2021 09:58:28 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D34C2C061570;
-        Sun, 31 Oct 2021 06:55:56 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id g184so14754197pgc.6;
-        Sun, 31 Oct 2021 06:55:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=eApvuA9AcCPcJdYCjnNeqJuvkYqT5k5b2Xfmt74TBmE=;
-        b=A4CapSWi1uQJCLeeBz/QHofmrAcWqPIiKmDvOANu2jrgWEsLrX1qd4tu9EkGWVEXZj
-         L+FYUsuATs5xFYikuc+EkzDPOZioY/BMizOJ593Vhd31dXYfigmWyEY52Anut75vEkn0
-         /g/hHEMrWd7AFj1U+EWm1DDosRQxqRyKw8N8dzzfLCbZaHh9o88RQlF6dJ/V7CM4d9L0
-         31N3/C9nzhCQNkndrmpB8LvAdKDGa7SwKykT0F+fkCM8HD1R8beH9MRGAgckyPbwMQhh
-         dWvVSZCrnRX5DIy0BKrcVdEPcDwDYGvlA9L8mj7sDBBodfV/6qJ7SjTsdAr45I9iKICl
-         5qWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=eApvuA9AcCPcJdYCjnNeqJuvkYqT5k5b2Xfmt74TBmE=;
-        b=078KjjEmn2lGqCOteK2Eh1/APA+coSfHI8B4lgLle7s296RBOsTU1gJhEWmcnYEICM
-         6kFFqlAVIS0zfrWOEgz3EhAAfQ0b/7TPWOCAbtSRBloofCO68nL0blahEIsdOSlIxn6R
-         o1aDDhBkmK9O9YKr7Fv99+f+itmytfwH37PfdWgcRYtggxDmvwj5JU7l79qCrdCQI5nq
-         b46n7qKuoEC6Q5fQ5n0jJhzrCxiBBLLB7CG0RVdwSaeaW+OF82ox9hRG0mWvQbKhsWr0
-         sBKfRFKqkNHh7AMmnBF2p6LgC64iBHUoPhqhdq9vFnVczNgQWwSRRL9L5WCGSP36LWD1
-         +jYQ==
-X-Gm-Message-State: AOAM531EviUjWBAAjw/ziQhBgKg5Ndck4TQh+cWYUHxTqtV3Twyt6xD9
-        baQyi+156RG8uPmjqDB3n00=
-X-Google-Smtp-Source: ABdhPJzCi1LYcBPCxJstfmIBP6NwkGAu/tBs7+vsua6U15aTdfNxeW63gqeWxeq6K9u7BbPUyQYrnw==
-X-Received: by 2002:a63:788d:: with SMTP id t135mr17149832pgc.2.1635688556394;
-        Sun, 31 Oct 2021 06:55:56 -0700 (PDT)
-Received: from pc ([223.197.3.99])
-        by smtp.gmail.com with ESMTPSA id s30sm14284963pfg.17.2021.10.31.06.55.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 31 Oct 2021 06:55:56 -0700 (PDT)
-Date:   Sun, 31 Oct 2021 21:55:48 +0800
-From:   Zhaoyu Liu <zackary.liu.pro@gmail.com>
-To:     alyssa@rosenzweig.io, maz@kernel.org
-Cc:     lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] pci/controller/pcie-apple: remove the indentation beside
- arguments of DECLARE_BITMAP
-Message-ID: <20211031135544.GA1616@pc>
+        id S229754AbhJaPJq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 31 Oct 2021 11:09:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53454 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229685AbhJaPJm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 31 Oct 2021 11:09:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F19A160234;
+        Sun, 31 Oct 2021 15:07:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635692830;
+        bh=ql/X/2+8Hkm6EWf0l7VhroUTIs/nYfkWm+Y9KW/UZ2w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=YRIufha4qnlWgLSEdLDjx7PjLjb+K//idLz9AO2d3aVPFJ7139PZSj+kW512GQgQx
+         vMvpLGojPDeKQcz/cNSYYLQOUMrtDkiOg8djM7F7jBoK8merIwFaiqA2rF2xwKBJ7/
+         L/2hArUysYSGA2DVheQnD6NOEa23iInPiUGTeppEN72SPRyvL8ybhM7UmWWtwTzcnN
+         UNOzIfQmo3kd0C5gmZmj+de5Yvh2eGMJjxrh4xVqWEjTXE7DVNYYmwmEEdytMityMA
+         wDRRdJBILCviuZg/Q7mN33AhQi4KyMaibj392h0HGrUX/wgrUozSHYlS6LxFEFwhpa
+         yI2X/IYoitQcA==
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+To:     devicetree@vger.kernel.org, robh+dt@kernel.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+Subject: [PATCH dt + pci 1/2] dt-bindings: Add 'slot-power-limit-milliwatt' PCIe port property
+Date:   Sun, 31 Oct 2021 16:07:05 +0100
+Message-Id: <20211031150706.27873-1-kabel@kernel.org>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When "make tags", it prompts a warning:
+From: Pali Rohár <pali@kernel.org>
 
-    ctags: Warning: drivers/pci/controller/pcie-apple.c:150:
-    null expansion of name pattern "\1"
+This property specifies slot power limit in mW unit. It is a form-factor
+and board specific value and must be initialized by hardware.
 
-Ctags regular can not be matched due to indentation, so remove it.
-Same fix as in commit 5fdf876d30ce ("KVM: arm: Do not indent
-the arguments of DECLARE_BITMAP")
+Some PCIe controllers delegate this work to software to allow hardware
+flexibility and therefore this property basically specifies what should
+host bridge program into PCIe Slot Capabilities registers.
 
-Signed-off-by: Zhaoyu Liu <zackary.liu.pro@gmail.com>
+The property needs to be specified in mW unit instead of the special format
+defined by Slot Capabilities (which encodes scaling factor or different
+unit). Host drivers should convert the value from mW to needed format.
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pcie-apple.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index b665d29af77a..955134464d84 100644
---- a/drivers/pci/controller/pcie-apple.c
-+++ b/drivers/pci/controller/pcie-apple.c
-@@ -147,7 +147,7 @@ struct apple_pcie_port {
- 	void __iomem		*base;
- 	struct irq_domain	*domain;
- 	struct list_head	entry;
--	DECLARE_BITMAP(		sid_map, MAX_RID2SID);
-+	DECLARE_BITMAP(sid_map, MAX_RID2SID);
- 	int			sid_map_sz;
- 	int			idx;
- };
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index 6a8f2874a24d..7296d599c5ac 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -32,6 +32,12 @@ driver implementation may support the following properties:
+    root port to downstream device and host bridge drivers can do programming
+    which depends on CLKREQ signal existence. For example, programming root port
+    not to advertise ASPM L1 Sub-States support if there is no CLKREQ signal.
++- slot-power-limit-miliwatt:
++   If present, this property specifies slot power limit in milliwatts. Host
++   drivers can parse this property and use it for programming Root Port or host
++   bridge, or for composing and sending PCIe Set_Slot_Power_Limit messages
++   through the Root Port or host bridge when transitioning PCIe link from a
++   non-DL_Up Status to a DL_Up Status.
+ 
+ PCI-PCI Bridge properties
+ -------------------------
 -- 
-2.17.1
+2.32.0
 
