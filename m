@@ -2,98 +2,210 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E80EC433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Nov 2021 14:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A5A0C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Nov 2021 15:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEF1F60EE3
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Nov 2021 14:58:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC2DC610F7
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Nov 2021 15:04:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230517AbhKAPBR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Nov 2021 11:01:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35118 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229826AbhKAPBQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Nov 2021 11:01:16 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D76AC061714
-        for <linux-pci@vger.kernel.org>; Mon,  1 Nov 2021 07:58:43 -0700 (PDT)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=[IPv6:::1])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1mhYle-0005LQ-1T; Mon, 01 Nov 2021 15:58:34 +0100
-Message-ID: <557e68ad15634ddb65c98ebf80cd7ef962ac2608.camel@pengutronix.de>
-Subject: Re: [PATCH v2 RESEND] PCI: imx6: Replace legacy gpio interface for
- gpiod interface
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     =?ISO-8859-1?Q?Ma=EDra?= Canal <maira.canal@usp.br>
-Cc:     hongxing.zhu@nxp.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, shawnguo@kernel.org,
-        s.hauer@pengutronix.de, kernel@pengutronix.de, linux-imx@nxp.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 01 Nov 2021 15:58:31 +0100
-In-Reply-To: <CAH7FV3nyyLndqTdJYN8HDxU4C7pW0-DLu6ZSOLof2=tEEHbHxQ@mail.gmail.com>
-References: <YX/zlRqmxbLRnTqT@fedora>
-         <4f1b60bab451b219c7139e2204eb5b9f462ee4e0.camel@pengutronix.de>
-         <CAH7FV3nyyLndqTdJYN8HDxU4C7pW0-DLu6ZSOLof2=tEEHbHxQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.40.4 (3.40.4-1.fc34) 
+        id S232223AbhKAPHG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Nov 2021 11:07:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38306 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229826AbhKAPHF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Nov 2021 11:07:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4144A610E5;
+        Mon,  1 Nov 2021 15:04:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635779072;
+        bh=srzdJY9DWsUKRRAlTPJse3oqP8KifB/YE/m+79Y120Q=;
+        h=From:To:Cc:Subject:Date:From;
+        b=GbGBjVYfDh1Pco0glqRhlXRHXsV7rrGtNpR0ZwIxjjxIYexkPQaaIlNqQxEh1CQgG
+         W9Eamhl6YArcSag1szCYnSeQmg+NfDHZb5+IuvYxkF2+1f9K0KXalaymH+oxriT8/z
+         tuuflinGydpplfKnO3Xw0JM2Lgll37xS4Fb4krS43L+fk0ykGAfcNJ2j1YFyp3QVoq
+         ZxcntX+zDoT8vFnhk/UOkPnT12fGsl6sPzH+8UFfYQe0nS8rGTTFls2AN6E2Y4BJQW
+         ZgNy3xdpnFkQnf1nbO0x8uagUIDm4iT8WneIR1x5tWcuQcOkLThOF5wM4x4OTEnuBa
+         RVMHU7t3KkUEg==
+Received: by pali.im (Postfix)
+        id DA02C7E4; Mon,  1 Nov 2021 16:04:29 +0100 (CET)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Russell King <linux@armlinux.org.uk>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Jason Gunthorpe <jgg@nvidia.com>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: Marvell: Update PCIe fixup
+Date:   Mon,  1 Nov 2021 16:04:05 +0100
+Message-Id: <20211101150405.14618-1-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Montag, dem 01.11.2021 um 11:44 -0300 schrieb Maíra Canal:
-> ?
-> > >       /* Some boards don't have PCIe reset GPIO. */
-> > > -     if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > > -             gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-> > > +     if (imx6_pcie->reset_gpio) {
-> > > +             gpiod_set_value_cansleep(imx6_pcie->reset_gpio,
-> > >                                       imx6_pcie->gpio_active_high);
-> > >               msleep(100);
-> > > -             gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-> > > +             gpiod_set_value_cansleep(imx6_pcie->reset_gpio,
-> > >                                       !imx6_pcie->gpio_active_high);
-> > 
-> > I don't think this is correct. gpiod_set_value sets the logical line
-> > state, so if the GPIO is specified as active-low in the DT, the real
-> > line state will be negated. The only reason why the reset-gpio-active-
-> > high property even exists is that old DTs might specify the wrong GPIO
-> > polarity in the reset-gpio DT description. I think you need to use to
-> > gpiod_set_raw_value API here to get the expected real line state even
-> > with a broken DT description.
-> > 
-> > Regards,
-> > Lucas
-> > 
-> 
-> I'm a beginner in kernel development, so I'm sorry for the question.
-> If I change gpiod_set_value_cansleep for gpiod_set_raw_value, wouldn't
-> I change the behavior of the driver? I replaced
-> gpio_set_value_cansleep for gpiod_set_value_cansleep because they have
-> the same behavior and I didn't change the logic states. Thank you for
-> the feedback!
+- The code relies on rc_pci_fixup being called, which only happens
+  when CONFIG_PCI_QUIRKS is enabled, so add that to Kconfig. Omitting
+  this causes a booting failure with a non-obvious cause.
+- Update rc_pci_fixup to set the class properly, copying the
+  more modern style from other places
+- Correct the rc_pci_fixup comment
 
-Yes, you need to use the _cansleep variant of the API to keep the
-context information. The point I was trying to make was that you
-probably (please double check, that's just an assumption on my side)
-need to use the _raw variant of the gpiod API to keep the current
-behavior of the driver, as we are setting the physical line state
-purely depending on the reset-gpio-active-high property presence, not
-the logical line state, which would take into account the polarity
-specified in the DT gpio descriptor.
+This patch just re-applies commit 1dc831bf53fd ("ARM: Kirkwood: Update
+PCI-E fixup") for all other Marvell platforms which use same buggy PCIe
+controller.
 
-I guess the right API call here would be
-gpiod_set_raw_value_cansleep().
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Cc: stable@vger.kernel.org
+---
+ arch/arm/Kconfig              |  1 +
+ arch/arm/mach-dove/pcie.c     | 11 ++++++++---
+ arch/arm/mach-mv78xx0/pcie.c  | 11 ++++++++---
+ arch/arm/mach-orion5x/Kconfig |  1 +
+ arch/arm/mach-orion5x/pci.c   | 12 +++++++++---
+ arch/mips/Kconfig             |  1 +
+ arch/mips/pci/fixup-cobalt.c  |  6 ++++++
+ 7 files changed, 34 insertions(+), 9 deletions(-)
 
-Regards,
-Lucas
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index fc196421b2ce..9f157e973555 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -400,6 +400,7 @@ config ARCH_DOVE
+ 	select GENERIC_IRQ_MULTI_HANDLER
+ 	select GPIOLIB
+ 	select HAVE_PCI
++	select PCI_QUIRKS if PCI
+ 	select MVEBU_MBUS
+ 	select PINCTRL
+ 	select PINCTRL_DOVE
+diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
+index ee91ac6b5ebf..ecf057a0f5ba 100644
+--- a/arch/arm/mach-dove/pcie.c
++++ b/arch/arm/mach-dove/pcie.c
+@@ -135,14 +135,19 @@ static struct pci_ops pcie_ops = {
+ 	.write = pcie_wr_conf,
+ };
+ 
++/*
++ * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
++ * is operating as a root complex this needs to be switched to
++ * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
++ * the device. Decoding setup is handled by the orion code.
++ */
+ static void rc_pci_fixup(struct pci_dev *dev)
+ {
+-	/*
+-	 * Prevent enumeration of root complex.
+-	 */
+ 	if (dev->bus->parent == NULL && dev->devfn == 0) {
+ 		int i;
+ 
++		dev->class &= 0xff;
++		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
+ 		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 			dev->resource[i].start = 0;
+ 			dev->resource[i].end   = 0;
+diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
+index 636d84b40466..9362b5fc116f 100644
+--- a/arch/arm/mach-mv78xx0/pcie.c
++++ b/arch/arm/mach-mv78xx0/pcie.c
+@@ -177,14 +177,19 @@ static struct pci_ops pcie_ops = {
+ 	.write = pcie_wr_conf,
+ };
+ 
++/*
++ * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
++ * is operating as a root complex this needs to be switched to
++ * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
++ * the device. Decoding setup is handled by the orion code.
++ */
+ static void rc_pci_fixup(struct pci_dev *dev)
+ {
+-	/*
+-	 * Prevent enumeration of root complex.
+-	 */
+ 	if (dev->bus->parent == NULL && dev->devfn == 0) {
+ 		int i;
+ 
++		dev->class &= 0xff;
++		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
+ 		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 			dev->resource[i].start = 0;
+ 			dev->resource[i].end   = 0;
+diff --git a/arch/arm/mach-orion5x/Kconfig b/arch/arm/mach-orion5x/Kconfig
+index e94a61901ffd..7189a5b1ec46 100644
+--- a/arch/arm/mach-orion5x/Kconfig
++++ b/arch/arm/mach-orion5x/Kconfig
+@@ -6,6 +6,7 @@ menuconfig ARCH_ORION5X
+ 	select GPIOLIB
+ 	select MVEBU_MBUS
+ 	select FORCE_PCI
++	select PCI_QUIRKS
+ 	select PHYLIB if NETDEVICES
+ 	select PLAT_ORION_LEGACY
+ 	help
+diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
+index 76951bfbacf5..5145fe89702e 100644
+--- a/arch/arm/mach-orion5x/pci.c
++++ b/arch/arm/mach-orion5x/pci.c
+@@ -509,14 +509,20 @@ static int __init pci_setup(struct pci_sys_data *sys)
+ /*****************************************************************************
+  * General PCIe + PCI
+  ****************************************************************************/
++
++/*
++ * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
++ * is operating as a root complex this needs to be switched to
++ * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
++ * the device. Decoding setup is handled by the orion code.
++ */
+ static void rc_pci_fixup(struct pci_dev *dev)
+ {
+-	/*
+-	 * Prevent enumeration of root complex.
+-	 */
+ 	if (dev->bus->parent == NULL && dev->devfn == 0) {
+ 		int i;
+ 
++		dev->class &= 0xff;
++		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
+ 		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 			dev->resource[i].start = 0;
+ 			dev->resource[i].end   = 0;
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index 771ca53af06d..c8d51bd20b84 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -346,6 +346,7 @@ config MIPS_COBALT
+ 	select CEVT_GT641XX
+ 	select DMA_NONCOHERENT
+ 	select FORCE_PCI
++	select PCI_QUIRKS
+ 	select I8253
+ 	select I8259
+ 	select IRQ_MIPS_CPU
+diff --git a/arch/mips/pci/fixup-cobalt.c b/arch/mips/pci/fixup-cobalt.c
+index 44be65c3e6bb..202f3a0bd97d 100644
+--- a/arch/mips/pci/fixup-cobalt.c
++++ b/arch/mips/pci/fixup-cobalt.c
+@@ -36,6 +36,12 @@
+ #define VIA_COBALT_BRD_ID_REG  0x94
+ #define VIA_COBALT_BRD_REG_to_ID(reg)	((unsigned char)(reg) >> 4)
+ 
++/*
++ * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
++ * is operating as a root complex this needs to be switched to
++ * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
++ * the device. Decoding setup is handled by the orion code.
++ */
+ static void qube_raq_galileo_early_fixup(struct pci_dev *dev)
+ {
+ 	if (dev->devfn == PCI_DEVFN(0, 0) &&
+-- 
+2.20.1
 
