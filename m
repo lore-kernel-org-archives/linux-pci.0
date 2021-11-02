@@ -2,165 +2,218 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A2B9C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Nov 2021 16:37:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D82FC433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Nov 2021 17:11:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2DA261179
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Nov 2021 16:37:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 174D860F58
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Nov 2021 17:11:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234788AbhKBQkF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Nov 2021 12:40:05 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:54425 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235070AbhKBQjF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Nov 2021 12:39:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635870988;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=39wLrKe9Oq3pcEjpduAiQZ3+L5GazI7AIIHG7sUcGnc=;
-        b=cmiudYz5qeRgQhHuAf+fRvlI7ND5IZai72qhWEdOQuhtC5w7QLl2udF1sXSW0ddzQCuGm8
-        BZssG6zCx9+02W3fyX6SQs53HUf6Q4GnNiDoubALpbZ4ezMJtHL45uHg49u6azpVkEQ2ps
-        YdFawhqUaSEd4E1Fb5Nuk+6H0rV14TI=
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
- [209.85.161.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-165-uG19xZitP-a3jPRaEP-Hrg-1; Tue, 02 Nov 2021 12:22:40 -0400
-X-MC-Unique: uG19xZitP-a3jPRaEP-Hrg-1
-Received: by mail-oo1-f69.google.com with SMTP id x23-20020a4ad057000000b002b7e3782496so10081673oor.7
-        for <linux-pci@vger.kernel.org>; Tue, 02 Nov 2021 09:22:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=39wLrKe9Oq3pcEjpduAiQZ3+L5GazI7AIIHG7sUcGnc=;
-        b=UDmfMeWJYQSquVrVwpsKeMI/L81rmBBIdg+XD61FmGfLiMl+0+rZH/sauPV2dvk9uz
-         06aPK8V8jzDJ6J0ZFYrygbNhWIXjr4ftep+/0upfuY5zkN5AiKf/hSEgVRoZ5EWmTtAj
-         CCPM51tYp3UOCCWNuYrzMLeY6R2l84vv+IH1ndCnoA4hoSB1tGDfULqGdjaklkviBjln
-         E6iXNYGyfS9vBLaE6CS8SUTaZFxQRo2DSYgj0ATV6mN1uHccfbzq+HXEii0XVW9mc0tp
-         myDgsjtJERfssTJTH5Z3hkEM3Yka1WVKogq9gmdDiAVYvz41QyxUDGG0h7JQFdQfk41M
-         a/Gw==
-X-Gm-Message-State: AOAM531JY774LwTepfJP66DXS+KQ+07yKaEXQLNXQU42uU45ILEGjF2+
-        zJ1+91th/z1ypWRPHZkohDfgnRBHYujuMTzdfHXO+e6gDLvohrKS65+fHx7gTPoqxcvrNAV0r7B
-        uPi1wK4XissQp+DjQ2M4c
-X-Received: by 2002:a05:6830:238f:: with SMTP id l15mr28169214ots.83.1635870159523;
-        Tue, 02 Nov 2021 09:22:39 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxZ5tVmFV1vGaAn4hO9rkE+/oPBx9f1jgKrda4qDaWnPkCtc66YQYOzrhBmWlYb1oXdsaZPLA==
-X-Received: by 2002:a05:6830:238f:: with SMTP id l15mr28169188ots.83.1635870159301;
-        Tue, 02 Nov 2021 09:22:39 -0700 (PDT)
-Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id f23sm2034401oou.21.2021.11.02.09.22.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Nov 2021 09:22:38 -0700 (PDT)
-Date:   Tue, 2 Nov 2021 10:22:36 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Yishai Hadas <yishaih@nvidia.com>, bhelgaas@google.com,
-        saeedm@nvidia.com, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, kuba@kernel.org, leonro@nvidia.com,
-        kwankhede@nvidia.com, mgurtovoy@nvidia.com, maorg@nvidia.com,
-        "Dr. David Alan Gilbert" <dgilbert@redhat.com>
-Subject: Re: [PATCH V2 mlx5-next 12/14] vfio/mlx5: Implement vfio_pci driver
- for mlx5 devices
-Message-ID: <20211102102236.711dc6b5.alex.williamson@redhat.com>
-In-Reply-To: <20211102155420.GK2744544@nvidia.com>
-References: <20211026151851.GW2744544@nvidia.com>
-        <20211026135046.5190e103.alex.williamson@redhat.com>
-        <20211026234300.GA2744544@nvidia.com>
-        <20211027130520.33652a49.alex.williamson@redhat.com>
-        <20211027192345.GJ2744544@nvidia.com>
-        <20211028093035.17ecbc5d.alex.williamson@redhat.com>
-        <20211028234750.GP2744544@nvidia.com>
-        <20211029160621.46ca7b54.alex.williamson@redhat.com>
-        <20211101172506.GC2744544@nvidia.com>
-        <20211102085651.28e0203c.alex.williamson@redhat.com>
-        <20211102155420.GK2744544@nvidia.com>
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
+        id S231280AbhKBRON (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Nov 2021 13:14:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51110 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230364AbhKBROJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Nov 2021 13:14:09 -0400
+X-Greylist: delayed 479 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 02 Nov 2021 10:11:34 PDT
+Received: from mout-u-204.mailbox.org (mout-u-204.mailbox.org [IPv6:2001:67c:2050:1::465:204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2254BC061714;
+        Tue,  2 Nov 2021 10:11:27 -0700 (PDT)
+Received: from smtp1.mailbox.org (unknown [91.198.250.123])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mout-u-204.mailbox.org (Postfix) with ESMTPS id 4HkGSW5PLRzQlDX;
+        Tue,  2 Nov 2021 18:03:23 +0100 (CET)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Subject: Re: [PATCH] PCI: Marvell: Update PCIe fixup
+To:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Russell King <linux@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        =?UTF-8?Q?Marek_Beh=c3=ban?= <kabel@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20211101150405.14618-1-pali@kernel.org>
+ <20211102084241.GA6134@alpha.franken.de>
+ <20211102090246.unmbruykfdjabfga@pali>
+ <20211102094700.GA7376@alpha.franken.de>
+ <20211102100034.rhcb3k2jvr6alm6y@pali>
+ <alpine.DEB.2.21.2111021210180.57165@angie.orcam.me.uk>
+ <20211102125843.sqsusis4krnmhorq@pali>
+ <alpine.DEB.2.21.2111021312160.57165@angie.orcam.me.uk>
+ <20211102144929.c5wt5pbl42ocrxly@pali> <20211102154831.xtrlgrmrizl5eidl@pali>
+From:   Stefan Roese <sr@denx.de>
+Message-ID: <aa580000-b4c6-2590-6196-48c10998320a@denx.de>
+Date:   Tue, 2 Nov 2021 18:03:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20211102154831.xtrlgrmrizl5eidl@pali>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: de-DE
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: F064618BF
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2 Nov 2021 12:54:20 -0300
-Jason Gunthorpe <jgg@nvidia.com> wrote:
-
-> On Tue, Nov 02, 2021 at 08:56:51AM -0600, Alex Williamson wrote:
+On 02.11.21 16:48, Pali Rohár wrote:
+> On Tuesday 02 November 2021 15:49:29 Pali Rohár wrote:
+>> On Tuesday 02 November 2021 14:01:41 Maciej W. Rozycki wrote:
+>>> On Tue, 2 Nov 2021, Pali Rohár wrote:
+>>>
+>>>>>   None of the Galileo system controllers I came across had the class code
+>>>>> set incorrectly.
+>>>>
+>>>> In kernel there is quirk only for one device with id:
+>>>> PCI_VENDOR_ID_MARVELL (0x11ab) PCI_DEVICE_ID_MARVELL_GT64111 (0x4146)
+>>>>
+>>>> So for some reasons quirk is needed... Anyway, patch for this quirk just
+>>>> adds comment as there is no explanation for it. It does not modify quirk
+>>>> code.
+>>>>
+>>>> So it is possible that Marvell (or rather Galileo at that time) included
+>>>> some config space fixup in some products and 0x4146 did not have it.
+>>>> Just guessing... We can really only guess what could happen at that time
+>>>> 20 years ago...
+>>>
+>>>   Ah, there you go! -- sadly I don't seem to have a copy of the datasheet
+>>> for the GT-64111, but the GT-64115 has it[1]:
+>>>
+>>> Table 158: PCI Class Code and Revision ID, Offset: 0x008
+>>>   Bits  Field name Function                                     Initial Value
+>>>   7:0   RevID      Indicates the GT-64115 PCI Revision          0x01
+>>>                    number.
+>>>   15:8  Reserved   Read only.                                   0x0
+>>>   23:16 SubClass   Indicates the GT-64115 Subclass - Mem-       0x80
+>>>                    ory controller.
+>>>   31:24 BaseClass  Indicates the GT-64115 Base Class -          0x05
+>>>                    memory controller.
+>>>
+>>> and then:
+>>>
+>>> "Device and Vendor ID (0x000), Class Code and Revision ID (0x008), and
+>>> Header Type (0x00e) fields are read only from the PCI bus.  These fields
+>>> can be modified and read via the CPU bus."
+>>>
+>>> Likewise with the GT-64120[2]:
+>>>
+>>> Table 208: PCI_0 Class Code and Revision ID, Offset: 0x008 from PCI_0 or CPU; 0x088 from
+>>>             PCI_1
+>>>   Bits  Field name Function                                      Initial Value
+>>>   7:0   RevID      Indicates the GT-64120 PCI_0 revision number. 0x02
+>>>   15:8  Reserved   Read Only 0.                                  0x0
+>>>   23:16 SubClass   Indicates the GT-64120 Subclass               Depends on value
+>>>                    0x00 - Host Bridge Device.                    sampled at reset
+>>>                    0x80 - Memory Device.                         on BankSel[0]. See
+>>>                                                                  Table 44 on page
+>>>                                                                  11-1.
+>>>   31:24 BaseClass  Indicates the GT-64120 Base Class             Depends on value
+>>>                    0x06 - Bridge Device.                         sampled at reset
+>>>                    0x05 - Memory Device.                         on BankSel[0]. See
+>>>                                                                  Table 44 on page
+>>>                                                                  11-1.
+>>>
+>>> Table 209: PCI_1 Class Code and Revision ID, Offset: 0x088 from PCI_0 or CPU; 0x008 from
+>>>             PCI_1
+>>>   Bits  Field name Function                                      Initial Value
+>>>   31:0  Various    Same as for PCI_0 Class Code and Revision ID.
+>>>
+>>> and then also:
+>>>
+>>> "Device and Vendor ID (0x000), Class Code and Revision ID (0x008), and
+>>> Header Type (0x00e) fields are read only from the PCI bus.  These fields
+>>> can be modified and read via the CPU bus."
+>>>
+>>> -- so this is system-specific and an intended chip feature rather than an
+>>> erratum (or rather it is a system erratum if the reset strap or the boot
+>>> firmware has got it wrong).
+>>>
+>>>   The memory device class code is IIUC meant to be typically chosen when
+>>> the Galileo/Marvell device is used without the CPU interface, i.e. as a
+>>> PCI memory controller device only[3].
 > 
-> > > Still, this is something that needs clear definition, I would expect
-> > > the SET_IRQS to happen after resuming clears but before running sets
-> > > to give maximum HW flexibility and symmetry with saving.  
-> > 
-> > There's no requirement that the device enters a null state (!_RESUMING
-> > | !_SAVING | !_RUNNING), the uAPI even species the flows as _RESUMING
-> > transitioning to _RUNNING.    
+> I have found on internet some copy of GT64111 datasheet ("GT-64111
+> System Controller for RC4640, RM523X and VR4300 CPUs", Galileo
+> Technology, Product Preview Revision 1.1, FEB 4, 1999) and in section
+> "17.15 PCI Configuration Registers" there is subsection "Class Code and
+> Revision ID, Offset: 0x008" with content:
 > 
-> If the device saves the MSI-X state inside it's migration data (as
-> apparently would be convenient for other OSs) then when RESUMING
-> clears and the migration data is de-serialized the device will
-> overwrite the MSI-X data.
+> Bits  Field name Function                                           Initial Value
+> 7:0   RevID      Indicates the GT-64111 Revision number.            0x10
+>                   GT-64111-P-0 = 0x10
+> 15:8  Reserved                                                      0x0
+> 23:16 SubClass   Indicates the GT-64111 Subclass (0x80 - other mem- 0x80
+>                   ory controller)
+> 31:24 BaseClass  Indicates the GT-64111 Base Class (0x5 - memory    0x05
+>                   controller).
 > 
-> Since Linux as an OS wants to control the MSI-X it needs to load it
-> after RESUMING, but before RUNNING.
-
-This is not how it works today, QEMU enables MSI/X based on the config
-space information, which is also outside of the device migration stream.
-
-> > There's no point at which we can do SET_IRQS other than in the
-> > _RESUMING state.  Generally SET_IRQS ioctls are coordinated with the
-> > guest driver based on actions to the device, we can't be mucking
-> > with IRQs while the device is presumed running and already
-> > generating interrupt conditions.  
+> And in section "6.5.3 PCI Autoconfiguration at RESET" is following
+> interesting information:
 > 
-> We need to do it in state 000
+> Eight PCI registers can be automatically loaded after Rst*.
+> Autoconfiguration mode is enabled by asserting the DMAReq[3]* LOW on
+> Rst*. Any PCI transactions targeted for the GT-64111 will be retried
+> while the loading of the PCI configuration registers is in process.
 > 
-> ie resume should go 
+> It is highly recommended that all PC applications utilize the PCI
+> Autoconfiguration at RESET feature. The autoload feature can be easily
+> implemented with a very low cost EPLD. Galileo provides sample EPLD
+> equations upon request. (You can always pull the EPLD off your final
+> product if you find there are no issues during testing.)
 > 
->   000 -> 100 -> 000 -> 001
+> NOTE: The GT-64111’s default Class Code is 0x0580 (Memory Controller)
+> which is a change from the GT-64011.
 > 
-> With SET_IRQS and any other fixing done during the 2nd 000, after the
-> migration data has been loaded into the device.
-
-Again, this is not how QEMU works today.
-
-> > > And we should really define clearly what a device is supposed to do
-> > > with the interrupt vectors during migration. Obviously there are races
-> > > here.  
-> > 
-> > The device should not be generating interrupts while !_RUNNING, pending
-> > interrupts should be held until the device is _RUNNING.  To me this
-> > means the sequence must be that INTx/MSI/MSI-X are restored while in
-> > the !_RUNNING state.  
+> The GT-64011 used the Class Code 0x0600 which denotes Host Bridge. Some
+> PCs refuse to configure host bridges if they are found plugged into a
+> PCI slot (ask the BIOS vendors why...). The “Memory Controller” Class
+> Code does not cause a problem for these non-compliant BIOSes, so we used
+> this as the default in the GT-64111. The Class Code can be reporgrammed
+> in both devices via autoload or CPU register writes.
 > 
-> Yes
-
-Except I suppose them to be restored while _RESUMING is set.
-
-> > > > In any case, it requires that the device cannot be absolutely static
-> > > > while !_RUNNING.  Does (_RESUMING) have different rules than
-> > > > (_SAVING)?    
-> > > 
-> > > I'd prever to avoid all device touches during both resuming and
-> > > saving, and do them during !RUNNING  
-> > 
-> > There's no such state required by the uAPI.  
+> The PCI register values are loaded from the ROM controlled by BootCS*
+> are shown in Table 21, below.
 > 
-> The uAPI comment does not define when to do the SET_IRQS, it seems
-> this has been missed.
+> TABLE 21. PCI Registers Loaded at RESET
+> Register                        Offset Boot Device Address
+> Device and Vendor ID            0x000  0x1fffffe0
+> Class Code and Revision ID      0x008  0x1fffffe4
+> Subsystem Device and Vendor ID  0x02c  0x1fffffe8
+> Interrupt Pin and Line          0x03c  0x1fffffec
+> RAS[1:0]* Bank Size             0xc08  0x1ffffff0
+> RAS[3:2]* Bank Size             0xc0c  0x1ffffff4
+> CS[2:0]* Bank Size              0xc10  0x1ffffff8
+> CS[3]* & Boot CS* Bank Size     0xc14  0x1ffffffc
 > 
-> We really should fix it, unless you feel strongly that the
-> experimental API in qemu shouldn't be changed.
+> ===
+> 
+> So the conclusion is that there is also some RESET configuration via
+> BootCS (I have no idea what it is or was). And default value (when RESET
+> configuration is not used) is always "Memory controller" due to
+> existence of "broken PC BIOSes" (probably x86).
+> 
+> Hence the quirk for GT64111 in kernel is always needed. And Thomas
+> already confirmed in his pci hexdump that PCI Class code is set to
+> Memory Controller.
+> 
+> I hope that now this mystery of this GT64111 quirk is solved :-) I will
+> update patch with correct comment, why quirk is needed.
+> 
+> So due to the fact that 20 years ago there were broken x86 BIOSes which
+> did not like PCI devices with PCI Class code of Host Bridge, Marvell
+> changed default PCI Class code to Memory Controller and let it in this
+> state also for future PCIe-based ARM and AR64 SoCs for next 20 years.
+> Which generally leaded to broken PCIe support in mvebu SoCs. I have no
+> more comments about it... :-(
 
-I think the QEMU implementation fills in some details of how the uAPI
-is expected to work.  MSI/X is expected to be restored while _RESUMING
-based on the config space of the device, there is no intermediate step
-between _RESUMING and _RUNNING.  Introducing such a requirement
-precludes the option of a post-copy implementation of (_RESUMING |
-_RUNNING).  Thanks,
+If this is really the case, that all this was "copied" in such a bad
+design state into newer SoC's for that many years, which I don't doubt
+right now any more, then this is absolutely amazing and pretty sad IMHO.
 
-Alex
+Pali, many thanks for being persistant enough to dig through this.
 
+Thanks,
+Stefan
