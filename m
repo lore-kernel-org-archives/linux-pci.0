@@ -2,214 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C46C43217
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Nov 2021 16:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88E32C433EF
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Nov 2021 19:11:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA14261361
-	for <linux-pci@archiver.kernel.org>; Sun,  7 Nov 2021 16:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F51861027
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Nov 2021 19:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235804AbhKGQco (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 7 Nov 2021 11:32:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59256 "EHLO
+        id S236264AbhKGTOC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 7 Nov 2021 14:14:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234861AbhKGQcn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Nov 2021 11:32:43 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73A74C061570;
-        Sun,  7 Nov 2021 08:30:00 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id x15so21541747edv.1;
-        Sun, 07 Nov 2021 08:30:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Mnh2Je31kXke/FQYVUvveakBauZ5U23X82U3Kp0Tx3M=;
-        b=pPJ8t2F2hYPuA0XqqwyPMokwhNggc2Zh2Gh9kergnf6M0TqiTK/EgVJJAvY5j8Ug7b
-         JXQgwKeJ8bBhZ7Ze+3q29Wz7J04pgoha83RG6IrxXA03UaP0lxA0jT71Cw9gJVwKCh7B
-         58b/vXkqK+E5iowZQYlPfJKgPq1Uec0MMXcj62XdXBLOX35CrjE1DJJCCRo15WgrsvC4
-         1g0UUmglXhmEyUlYk+5FmroOl+kbYXf4MFVQTg2cB0uHnEdtMDiAFXT1lC71MAYV66Hn
-         P4MbJObTNFq8ukRYIpPJfVhh9XKdR5WQh/ke6vN5an6VfD8juG7NhZMiQZOLQTh1H9sb
-         83FA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Mnh2Je31kXke/FQYVUvveakBauZ5U23X82U3Kp0Tx3M=;
-        b=3f1bYllywKB7vuaR49RHTynokz9QJ4Nh9UVSIbSTHCNSZop+u0vInTWui6MjEbsoJC
-         wiY07aJXpZnWFO339Cnpb1iZGKOsVgZHBw5Cuq2cYEsHL0mZsQATxbSnlYzK/N10TpH2
-         5uuups3Dfu/Xgnwrec4+He9zLm3D8DPNqVkCpKXt03c64kKRkxNmMIm2Jn3VHGWOn0p+
-         wN2926Zi2QmIo8LJ7j36j6T3K0U+lJGpnMKoXBeBWrNME/p2lVkvvTxtG/sz4t0fZOtn
-         zHEXNQoZWpwVBQIrxnQpjqBTxDbI5CJC02sXKVmvQDNDEC1agUtr41/rDh6Ewmk8eBFV
-         Y/FQ==
-X-Gm-Message-State: AOAM532VC8hRGUkjCbsv+/bGod4edOT3aHxC/q5hEHYPXdNs9JNkapzg
-        lEQ/SJG8Ou5UWc1/9Jl1gWIcL7MIuZs=
-X-Google-Smtp-Source: ABdhPJz9tHCyYeaQqHalsAEWI0OM70CjMfJ0PGSoZyL3d9SlVSykW4/2hTfsKlOzK9sHwKYhcZXwyA==
-X-Received: by 2002:a17:906:7951:: with SMTP id l17mr17698654ejo.284.1636302599087;
-        Sun, 07 Nov 2021 08:29:59 -0800 (PST)
-Received: from localhost.localdomain ([2a02:ab88:109:9f0:f6a6:7fbe:807a:e1cc])
-        by smtp.googlemail.com with ESMTPSA id hq37sm7195270ejc.116.2021.11.07.08.29.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Nov 2021 08:29:58 -0800 (PST)
-From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org
-Cc:     "Bolarinwa O. Saheed" <refactormyself@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v4 5/5] PCI/ASPM: Remove unncessary linked list from aspm.c
-Date:   Sun,  7 Nov 2021 17:29:41 +0100
-Message-Id: <20211107162941.1196-6-refactormyself@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20211107162941.1196-1-refactormyself@gmail.com>
-References: <20211107162941.1196-1-refactormyself@gmail.com>
+        with ESMTP id S236262AbhKGTOC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Nov 2021 14:14:02 -0500
+Received: from phobos.denx.de (phobos.denx.de [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9638C061570;
+        Sun,  7 Nov 2021 11:11:18 -0800 (PST)
+Received: from tr.lan (ip-89-176-112-137.net.upcbroadband.cz [89.176.112.137])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: marex@denx.de)
+        by phobos.denx.de (Postfix) with ESMTPSA id F402A8350D;
+        Sun,  7 Nov 2021 20:11:14 +0100 (CET)
+From:   marek.vasut@gmail.com
+To:     linux-pci@vger.kernel.org
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v3] PCI: rcar: Check if device is runtime suspended instead of __clk_is_enabled()
+Date:   Sun,  7 Nov 2021 20:10:57 +0100
+Message-Id: <20211107191057.145467-1-marek.vasut@gmail.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.2 at phobos.denx.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Bolarinwa O. Saheed" <refactormyself@gmail.com>
+From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-aspm.c defines a linked list - `link_list` and stores each of
-its node in struct pcie_link_state.sibling. This linked list
-tracks devices for which the struct pcie_link_state object
-was successfully created. It is used to loop through the list
-for instance to set ASPM policy or update changes. However, it
-is possible to access these devices via existing lists defined
-inside pci.h
+Replace __clk_is_enabled() with pm_runtime_suspended(),
+otherwise the following build error occurs:
+  arm-linux-gnueabi-ld: drivers/pci/controller/pcie-rcar-host.o: in function `rcar_pcie_aarch32_abort_handler':
+  pcie-rcar-host.c:(.text+0xdd0): undefined reference to `__clk_is_enabled'
 
-- removes link_list and struct pcie_link_state.sibling
-- accesses child devices via struct pci_dev.bust_list
-- create pcie_config_bus_devices() which walk across the device
-  heirarchies linked to the bus
-- accesses all PCI buses via pci_root_buses on struct pci_bus.node
-
-Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
+Fixes: a115b1bd3af0 ("PCI: rcar: Add L1 link state fix into data abort hook")
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Stephen Boyd <sboyd@kernel.org>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: linux-renesas-soc@vger.kernel.org
 ---
- drivers/pci/pcie/aspm.c | 54 ++++++++++++++++++++++++++---------------
- 1 file changed, 34 insertions(+), 20 deletions(-)
+V2: Drop the __clk_is_enabled(), like it was done already in V1 of
+    a115b1bd3af0 ("PCI: rcar: Add L1 link state fix into data abort hook")
+V3: Use pm_runtime_suspended() instead of __clk_is_enabled()
+---
+ drivers/pci/controller/pcie-rcar-host.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 12623556f750..f9e52c785f91 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -48,7 +48,6 @@ struct aspm_latency {
+diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
+index e12c2d8be05a..138592e22600 100644
+--- a/drivers/pci/controller/pcie-rcar-host.c
++++ b/drivers/pci/controller/pcie-rcar-host.c
+@@ -50,10 +50,10 @@ struct rcar_msi {
+  */
+ static void __iomem *pcie_base;
+ /*
+- * Static copy of bus clock pointer, so we can check whether the clock
+- * is enabled or not.
++ * Static copy of pcie device pointer, so we can check whether the
++ * device is runtime suspended or not.
+  */
+-static struct clk *pcie_bus_clk;
++static struct device *pcie_dev;
+ #endif
  
- struct pcie_link_state {
- 	struct pci_dev *pdev;		/* Upstream component of the Link */
--	struct list_head sibling;	/* node in link_list */
+ /* Structure representing the PCIe interface */
+@@ -792,7 +792,7 @@ static int rcar_pcie_get_resources(struct rcar_pcie_host *host)
+ #ifdef CONFIG_ARM
+ 	/* Cache static copy for L1 link state fixup hook on aarch32 */
+ 	pcie_base = pcie->base;
+-	pcie_bus_clk = host->bus_clk;
++	pcie_dev = pcie->dev;
+ #endif
  
- 	/* ASPM state */
- 	u32 aspm_support:7;		/* Supported ASPM state */
-@@ -76,7 +75,6 @@ struct pcie_link_state {
- static int aspm_disabled, aspm_force;
- static bool aspm_support_enabled = true;
- static DEFINE_MUTEX(aspm_lock);
--static LIST_HEAD(link_list);
- 
- #define POLICY_DEFAULT 0	/* BIOS default setting */
- #define POLICY_PERFORMANCE 1	/* high performance */
-@@ -880,10 +878,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	if (!link)
- 		return NULL;
- 
--	INIT_LIST_HEAD(&link->sibling);
- 	link->pdev = pdev;
--
--	list_add(&link->sibling, &link_list);
- 	pdev->link_state = link;
- 	return link;
- }
-@@ -968,26 +963,25 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- /* Recheck latencies and update aspm_capable for links under the root */
- static void pcie_update_aspm_capable(struct pcie_link_state *root)
- {
--	struct pcie_link_state *link;
- 	struct pci_dev *dev, *root_dev;
-+	struct pci_bus *rootbus = root->pdev->bus;
- 
- 	/* Ensure it is the root device */
- 	root_dev = pcie_get_root(root->pdev);
- 	root = root_dev ? root_dev->link_state : root;
- 
--	list_for_each_entry(link, &link_list, sibling) {
--		dev = pcie_get_root(link->pdev);
--		if (dev->link_state != root)
-+	list_for_each_entry(dev, &rootbus->devices, bus_list) {
-+		struct pcie_link_state *link = dev->link_state;
-+
-+		if (!link)
- 			continue;
- 
- 		link->aspm_capable = link->aspm_support;
- 	}
--	list_for_each_entry(link, &link_list, sibling) {
-+
-+	list_for_each_entry(dev, &rootbus->devices, bus_list) {
- 		struct pci_dev *child;
--		struct pci_bus *linkbus = link->pdev->subordinate;
--		dev = pcie_get_root(link->pdev);
--		if (dev->link_state != root)
--			continue;
-+		struct pci_bus *linkbus = dev->subordinate;
- 
- 		list_for_each_entry(child, &linkbus->devices, bus_list) {
- 			if ((pci_pcie_type(child) != PCI_EXP_TYPE_ENDPOINT) &&
-@@ -1022,7 +1016,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 
- 	/* All functions are removed, so just disable ASPM for the link */
- 	pcie_config_aspm_link(link, 0);
--	list_del(&link->sibling);
- 	/* Clock PM is for endpoint device */
- 	free_link_state(link);
- 
-@@ -1157,11 +1150,33 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
-+static void pcie_config_bus_devices(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+	struct pcie_link_state *link;
-+
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		if (!pci_is_pcie(pdev))
-+			break;
-+
-+		link = pdev->link_state;
-+		if (!link)
-+			continue;
-+
-+		pcie_config_aspm_link(link, policy_to_aspm_state(link));
-+		pcie_set_clkpm(link, policy_to_clkpm_state(link));
-+
-+		/* if this is a bridge, cross it */
-+		if (pdev->subordinate && pdev->subordinate != bus)
-+			pcie_config_bus_devices(pdev->subordinate);
-+	}
-+}
-+
- static int pcie_aspm_set_policy(const char *val,
- 				const struct kernel_param *kp)
- {
- 	int i;
--	struct pcie_link_state *link;
-+	struct pci_bus *bus;
- 
- 	if (aspm_disabled)
- 		return -EPERM;
-@@ -1174,10 +1189,9 @@ static int pcie_aspm_set_policy(const char *val,
- 	down_read(&pci_bus_sem);
- 	mutex_lock(&aspm_lock);
- 	aspm_policy = i;
--	list_for_each_entry(link, &link_list, sibling) {
--		pcie_config_aspm_link(link, policy_to_aspm_state(link));
--		pcie_set_clkpm(link, policy_to_clkpm_state(link));
--	}
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcie_config_bus_devices(bus);
-+
- 	mutex_unlock(&aspm_lock);
- 	up_read(&pci_bus_sem);
  	return 0;
+@@ -1062,7 +1062,7 @@ static int rcar_pcie_aarch32_abort_handler(unsigned long addr,
+ 
+ 	spin_lock_irqsave(&pmsr_lock, flags);
+ 
+-	if (!pcie_base || !__clk_is_enabled(pcie_bus_clk)) {
++	if (!pcie_base || pm_runtime_suspended(pcie_dev)) {
+ 		ret = 1;
+ 		goto unlock_exit;
+ 	}
 -- 
-2.20.1
+2.33.0
 
