@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D90BC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 741BFC433FE
 	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:18:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46A056112F
+	by mail.kernel.org (Postfix) with ESMTP id 5EE1F61288
 	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:18:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233840AbhKJWUk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Nov 2021 17:20:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35068 "EHLO
+        id S233870AbhKJWUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Nov 2021 17:20:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233537AbhKJWUZ (ORCPT
+        with ESMTP id S233592AbhKJWUZ (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Nov 2021 17:20:25 -0500
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6DC4C0797BE;
-        Wed, 10 Nov 2021 14:15:22 -0800 (PST)
-Received: by mail-pl1-x62a.google.com with SMTP id q17so4127687plr.11;
-        Wed, 10 Nov 2021 14:15:22 -0800 (PST)
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFAC4C0797BA;
+        Wed, 10 Nov 2021 14:15:14 -0800 (PST)
+Received: by mail-pg1-x531.google.com with SMTP id b4so3434234pgh.10;
+        Wed, 10 Nov 2021 14:15:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=0gmJaKhK11nXMnfZy6D3iJ9fmoD5F9ICuC/zbPbZo8Q=;
-        b=CyFcKDsRCa5KYV8P7aoQ8YPt6+N0dvzf0k5pBp/yR+OkQiQKbu6PUP3igdHtA/1Vwg
-         rq/qiFYLcKcxRkjvVZsclFy8P1eaBIeIc5WD5mOFlMSTJ6KvKludpemuZsKwflpXIYRw
-         7zzgxJMXZuzUrhG0PdpiLoswDKQSYon4lyL1I9btrskMt8Tw32G2x+QfaePgb1PXeXrP
-         gzk2MUqJ34v4ImuJAOJwj9kw2Ehv/v2cifrHCFsUP7Yv87JHopfGX/wQuijEuRGiKG7K
-         W6hANVTrrAdyQn7jz192fbPeQP4RBdOUtreuSt3ivBVkTCVUUmKTxBj8RmMxImZ0yh+d
-         mdgg==
+        bh=EzGuitgr5O7QkVIiJlPIGcCv/kBFTEjV8U/C16lgEUk=;
+        b=FanXgsDdNmpBuR87HQ/95pOEL7eiqfg809EOeaUMLygY4L8gdozqDhl4Rww2YnyJuY
+         hRKNlXUd4/M/dt87G/Wr19KZKa0XLq5EtTdC2aQAK76liCfodzUFvoZDgPgXEYHbkRSw
+         RIPf6RyKu20IaT/rMAx1gRBmO3sLjNYrgEyN9ayQMfbUrVilQiTfGQjfQaoCKqHGe84m
+         EXFHCdaL0iBPcMRwmfkmvxCmWAZB9zZ4YjvJpHPczN3EIqFw6jxMd5ckKQKzjWYxHuPc
+         x/J0D9VoxTB6QlF+VJtSojweXim03rliOICN2RDlE84OwhmOne1a5h+9zZKccaXpuJdm
+         SRoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=0gmJaKhK11nXMnfZy6D3iJ9fmoD5F9ICuC/zbPbZo8Q=;
-        b=SoPFVNgeJvtPd89zXu+q4pIH4cf0M3j7GXSeRnl7qyBoL38hLgTT0FnlzXWaI/68F2
-         ivGL9CwDoooDRaFJH5K4fSBNs1Q4qAbp9nQGWfYK4v8YUX821OawjzF8BiKotf2lOTgv
-         1BZPwwN98RDNEkR6Zox1ZL/wiEwXWdbgsrOnXGdln+7MaaI59fIoUe6g6WT9bXHyeGxQ
-         namHFmNJObfCngf/DE5qh3XP6cdC+LzpJd6np/ELOehefFUWRH5o7tFgusjTSKDjeJou
-         Gy7h6M+8YzY4hAi9PqxA3lhXrq5qnRInU4rvdsdK5d5hKujPKe3wGnIhEzBGcfjv+JzF
-         4ROg==
-X-Gm-Message-State: AOAM5331sIKfl7829vA7vPs3w7cbWhb+RWOsBCoWLsrrC+8oXmx4MRzN
-        zUnxzlTNNpvsu3qjwHWvBXwBXHG9y8RM3w==
-X-Google-Smtp-Source: ABdhPJzk+FzS5BpdWjqyeNXvbZIVEND/jsGBCPxnTd+iUyvwATjClj2jClYHrqmlG5iHfJsVtwcurg==
-X-Received: by 2002:a17:902:c145:b0:142:50c3:c2a with SMTP id 5-20020a170902c14500b0014250c30c2amr2786039plj.32.1636582522083;
-        Wed, 10 Nov 2021 14:15:22 -0800 (PST)
+        bh=EzGuitgr5O7QkVIiJlPIGcCv/kBFTEjV8U/C16lgEUk=;
+        b=KIiL0kyPMCrewZQOl69LtuID/FTALwumceDh63S1OQVpfdQHtI+0P1C79jepLWlBc3
+         AL9WyZo2MmX1u8OCwKjJ9P49yK7wMIZOENaDGYbS4On3NFfkEwpDDggVUWt38ta9NO4j
+         NLSDgF9hH6BmZmlQFv3ezKkJ82IxeGCRPngKgJwuJGSvRx/lF1TNjNjYGSr463gynTeU
+         rJzql53YmOKKwmmS+6r9Y1/kI3uju8MCK0zKec6zNSsnhSrcrw8bokqNCeKlMOj02GmG
+         Z0cdPJ413Q87fiM1+QEAX4LOMzfI+prCho7OqN/8VKtyRPnBWWqNR94YuQ+XXf/rSpns
+         jTFw==
+X-Gm-Message-State: AOAM533Qr87eRjE8loc58FIL1/aJhh54/R4JIT3dD0lhxd3bAKTlIvC9
+        98JDEQ1cc5tf37z7JKc6WLwyK5AVmhRMVg==
+X-Google-Smtp-Source: ABdhPJw4Nk8losN6D8MhiPpD5tsdOSh608Q5s6DLTLlcmUPPrtsJ1nAaftriEL21/t/6yrICZBC1MQ==
+X-Received: by 2002:a05:6a00:10d1:b0:47b:aa9b:1e7a with SMTP id d17-20020a056a0010d100b0047baa9b1e7amr2325924pfu.57.1636582513951;
+        Wed, 10 Nov 2021 14:15:13 -0800 (PST)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.11.250])
-        by smtp.gmail.com with ESMTPSA id q11sm611774pfk.192.2021.11.10.14.15.20
+        by smtp.gmail.com with ESMTPSA id q11sm611774pfk.192.2021.11.10.14.15.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Nov 2021 14:15:21 -0800 (PST)
+        Wed, 10 Nov 2021 14:15:13 -0800 (PST)
 From:   Jim Quinlan <jim2101024@gmail.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Nicolas Saenz Julienne <nsaenz@kernel.org>,
@@ -60,9 +60,9 @@ Cc:     Sean V Kelley <sean.v.kelley@intel.com>,
         Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
         Keith Busch <kbusch@kernel.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 6/8] PCI/portdrv: Do not turn off subdev regulators if EP can wake up
-Date:   Wed, 10 Nov 2021 17:14:46 -0500
-Message-Id: <20211110221456.11977-7-jim2101024@gmail.com>
+Subject: [PATCH v8 4/8] PCI/portdrv: Create pcie_is_port_dev() func from existing code
+Date:   Wed, 10 Nov 2021 17:14:44 -0500
+Message-Id: <20211110221456.11977-5-jim2101024@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211110221456.11977-1-jim2101024@gmail.com>
 References: <20211110221456.11977-1-jim2101024@gmail.com>
@@ -70,93 +70,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If any downstream device may wake up during S2/S3 suspend, we do not want
-to turn off its power when suspending.
+The function will be needed elsewhere in a few commits.
 
 Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
- drivers/pci/pci.h              |  1 +
- drivers/pci/pcie/portdrv_pci.c | 43 +++++++++++++++++++++++++++++-----
- 2 files changed, 38 insertions(+), 6 deletions(-)
+ drivers/pci/pci.h              |  2 ++
+ drivers/pci/pcie/portdrv_pci.c | 23 ++++++++++++++++++-----
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3f6cf75b91cc..27abb977d0ec 100644
+index 1cce56c2aea0..c2bd1995d3a9 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -746,6 +746,7 @@ extern const struct attribute_group aspm_ctrl_attr_group;
+@@ -744,4 +744,6 @@ extern const struct attribute_group aspm_ctrl_attr_group;
+ 
  extern const struct attribute_group pci_dev_reset_method_attr_group;
  
- struct subdev_regulators {
-+	bool ep_wakeup_capable;
- 	unsigned int num_supplies;
- 	struct regulator_bulk_data supplies[];
- };
++bool pcie_is_port_dev(struct pci_dev *dev);
++
+ #endif /* DRIVERS_PCI_H */
 diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 9330cfbebdc1..717e816d0fc8 100644
+index c7ff1eea225a..63f2a87e9db8 100644
 --- a/drivers/pci/pcie/portdrv_pci.c
 +++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -111,24 +111,55 @@ bool pcie_is_port_dev(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pcie_is_port_dev);
+@@ -90,6 +90,23 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ #define PCIE_PORTDRV_PM_OPS	NULL
+ #endif /* !PM */
  
-+static int pci_dev_may_wakeup(struct pci_dev *dev, void *data)
++bool pcie_is_port_dev(struct pci_dev *dev)
 +{
-+	bool *ret = data;
++	int type;
 +
-+	if (device_may_wakeup(&dev->dev)) {
-+		*ret = true;
-+		dev_dbg(&dev->dev, "disable cancelled for wake-up device\n");
-+	}
-+	return (int) *ret;
++	if (!dev)
++		return false;
++
++	type = pci_pcie_type(dev);
++
++	return pci_is_pcie(dev) &&
++		((type == PCI_EXP_TYPE_ROOT_PORT) ||
++		 (type == PCI_EXP_TYPE_UPSTREAM) ||
++		 (type == PCI_EXP_TYPE_DOWNSTREAM) ||
++		 (type == PCI_EXP_TYPE_RC_EC));
 +}
++EXPORT_SYMBOL_GPL(pcie_is_port_dev);
 +
- static int subdev_regulator_resume(struct pci_dev *dev)
- {
- 	struct subdev_regulators *sr = dev->dev.driver_data;
- 
--	if (sr)
--		return regulator_bulk_enable(sr->num_supplies, sr->supplies);
-+	if (!sr)
-+		return 0;
- 
--	return 0;
-+	if (sr->ep_wakeup_capable) {
-+		/*
-+		 * We are resuming from a suspend.  In the previous suspend
-+		 * we did not disable the power supplies, so there is no
-+		 * need to enable them (and falsely increase their usage
-+		 * count).
-+		 */
-+		sr->ep_wakeup_capable = false;
-+		return 0;
-+	}
-+
-+	return regulator_bulk_enable(sr->num_supplies, sr->supplies);
- }
- 
- static int subdev_regulator_suspend(struct pci_dev *dev, pm_message_t state)
- {
- 	struct subdev_regulators *sr = dev->dev.driver_data;
- 
--	if (sr)
--		return regulator_bulk_disable(sr->num_supplies, sr->supplies);
-+	if (!sr)
-+		return 0;
-+	/*
-+	 * If at least one device on this bus is enabled as a
-+	 * wake-up source, do not turn off regulators.
-+	 */
-+	sr->ep_wakeup_capable = false;
-+	pci_walk_bus(dev->bus, pci_dev_may_wakeup,
-+		     &sr->ep_wakeup_capable);
-+	if (sr->ep_wakeup_capable)
-+		return 0;
- 
--	return 0;
-+	return regulator_bulk_disable(sr->num_supplies, sr->supplies);
- }
- 
  /*
+  * pcie_portdrv_probe - Probe PCI-Express port devices
+  * @dev: PCI-Express port device being probed
+@@ -104,11 +121,7 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 	int type = pci_pcie_type(dev);
+ 	int status;
+ 
+-	if (!pci_is_pcie(dev) ||
+-	    ((type != PCI_EXP_TYPE_ROOT_PORT) &&
+-	     (type != PCI_EXP_TYPE_UPSTREAM) &&
+-	     (type != PCI_EXP_TYPE_DOWNSTREAM) &&
+-	     (type != PCI_EXP_TYPE_RC_EC)))
++	if (!pcie_is_port_dev(dev))
+ 		return -ENODEV;
+ 
+ 	if (type == PCI_EXP_TYPE_RC_EC)
 -- 
 2.17.1
 
