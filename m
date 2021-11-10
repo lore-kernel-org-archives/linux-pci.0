@@ -2,305 +2,236 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9BAAC43217
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B0CC433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:48:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D881961058
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:18:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A84CD61105
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Nov 2021 22:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233888AbhKJWUr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Nov 2021 17:20:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35076 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233634AbhKJWUZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Nov 2021 17:20:25 -0500
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD966C0797BB;
-        Wed, 10 Nov 2021 14:15:18 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id t21so4169339plr.6;
-        Wed, 10 Nov 2021 14:15:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Q7xWPiqvj4XKHulLL1eHGbq1NYyNecAyqUmvtMj9j7w=;
-        b=QR6XZHmd0BXUwooTKVbLqU2AwFFmj6g69MCF+N2YBxp/jaM7bPyzg8K5Gg3NvdXlyt
-         nibfLpKWNpQ6a7dfhoYMAWOer8FpC6Ry+OmWxo3QVf1kusc35j75rnOHrGttrdZWZse7
-         6bs6L5iAeCTqCp/almtWS9LNJCXtAeIw61gkeY+yO6M9AWqCezquoJ8CS4KShEmOcq0T
-         iGkjtX7rlqJNdwOJpxeE3cT3gaLQcKB7F70T8m96TfRxHLLNPkumSYeqi9HejX7jqM0F
-         3kYjfklE8ouhTuIHKiOwaq0QbcpqMjF8uw6vFYlGh+6aUTNSMY76fYU+cOfTQ8NbF6M/
-         JVbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Q7xWPiqvj4XKHulLL1eHGbq1NYyNecAyqUmvtMj9j7w=;
-        b=V+LzDT7v6e9foPXb4SLftyAgtFDop84W/q12JIVYpcMfh4G3uuFSuFksa9eC5MGAg5
-         JIH1lOVKrdBI48TmwdfqlZYKVm0PX3ZkfxNpiknZG+Ckk/mZcxHOME5nSYlHZOjDYeMo
-         7bjS1KA5V1vKZ9xP9MWgkXO91b/BTssBPhNxzx56qAAqD/njGVZYrnG8an27c7CAa7Yt
-         Wwfh8xhFxeAfxJN9ysCasDF2dSj/HT9ZfNgkUgtzA/NjHrYo+FCCSFO63IOe2+N1WPyZ
-         PcvDpa9uOCoufYKsxKKjOpOTaMJZjkt6F5/mRpevYmKu8+NIUCPmHpOyM34yt9MKwfY8
-         weeQ==
-X-Gm-Message-State: AOAM532nu0YULT0Wy9KpRCweYs/B8GiDsjPAxzWsT7oRIjY/bvif13ft
-        sz/W3uP3TSfisd4Ktl0ypcdRTyA6UGqHyw==
-X-Google-Smtp-Source: ABdhPJwLPOD4QxrDI9PlH7wLItzHcT6GvwnsdoaBPqIc3Vf7Izp64gYM5DaA7CtcrNhLATsZFHePgg==
-X-Received: by 2002:a17:902:d2cd:b0:141:fbe2:b658 with SMTP id n13-20020a170902d2cd00b00141fbe2b658mr2726438plc.49.1636582518017;
-        Wed, 10 Nov 2021 14:15:18 -0800 (PST)
-Received: from stbsrv-and-01.and.broadcom.net ([192.19.11.250])
-        by smtp.gmail.com with ESMTPSA id q11sm611774pfk.192.2021.11.10.14.15.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Nov 2021 14:15:17 -0800 (PST)
-From:   Jim Quinlan <jim2101024@gmail.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Nicolas Saenz Julienne <nsaenz@kernel.org>,
-        Rob Herring <robh@kernel.org>, Mark Brown <broonie@kernel.org>,
-        bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-        james.quinlan@broadcom.com
-Cc:     Sean V Kelley <sean.v.kelley@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
-        Keith Busch <kbusch@kernel.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 5/8] PCI/portdrv: add mechanism to turn on subdev regulators
-Date:   Wed, 10 Nov 2021 17:14:45 -0500
-Message-Id: <20211110221456.11977-6-jim2101024@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20211110221456.11977-1-jim2101024@gmail.com>
-References: <20211110221456.11977-1-jim2101024@gmail.com>
+        id S233695AbhKJWvR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Nov 2021 17:51:17 -0500
+Received: from mail-cusazon11020024.outbound.protection.outlook.com ([52.101.61.24]:20283
+        "EHLO na01-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233569AbhKJWvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Nov 2021 17:51:16 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WAXeoBKRIeVX3uVF4cWyq4fMFmp+xL5I6ngEXmSUgBJhi1QbmNgDlgFZHClB9pymL2c4sMz+EkoSH1gNjPk/gsv8pxeE9h3VO9fAt1XtpyFczApUh2eYsG6CUHIAy4iPxBnasoYs7W+FRHdb5z1uqiSVGHt9+TS9/6CcJT+S9vf9K8IOjcbxnTEXHJxFDI/bM4o8lwf+GfGM6fZNMdjzHbjeotPUeMW72QOBB/jQbG/+KVhRrIrnE7SxZlgggMNQHkl5Sr8d+tD3Ixbo5iHR92u1vepNLu+OThkWt8i8YuPaCMij62O8YBD91daRQz3A7bsrw8dQZb9Tx3e3UZfMjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3JdLUl7J48CDYNkvR5SrfXw7aWSZE3ofeqpCtisizsc=;
+ b=TKblW/m+uLmfMVK7kiZkda9BRREr1/k7YxVBM7N4c0DF5FprC66o8+rHmhZrryWmzB6uHk5363wFJ0BenKO02b9fZcD6gw2V01wB70Io495oAuR7RER8UtjxBncrP/1KzKQVI8w+wWyb/SD6L30f71VuWOCgH6vltXFeEwK2J9+DeHnT226AMkZ18k1PS4xWyOpAKApkhYDWu9kFzFS2WS79Z1RFNDHkyTkLkBk2KtK+QpZPTpYYDmM9YXb6VqkObC3LQBgCuK+ElJngYdx/TcYFaLMoADwcNuV7JNdBjOZK5k2jk1rNe40uLKrEiuy2x1NccYG0WX/7/OO//nv2nA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3JdLUl7J48CDYNkvR5SrfXw7aWSZE3ofeqpCtisizsc=;
+ b=j3QOGLorzWxs/rN4KYduK6dz3wOfmCpRedeiV+zkXf8Yh1CMulTxr8+L33hIixibn01uAmXrEF9rQPDemX+ZLu+KmLXhBQU5G8pP7wAGZ1ode1lo8HzCIAnF6uqGyTx2T39cCq4NCpzhyILtskl+hH8yWNnBcW0rgRkYvmlU1fQ=
+Received: from BN8PR21MB1140.namprd21.prod.outlook.com (20.179.72.139) by
+ BN7PR21MB1666.namprd21.prod.outlook.com (52.135.243.21) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4713.3; Wed, 10 Nov 2021 22:48:24 +0000
+Received: from BN8PR21MB1140.namprd21.prod.outlook.com
+ ([fe80::48fb:8577:ba03:23a5]) by BN8PR21MB1140.namprd21.prod.outlook.com
+ ([fe80::48fb:8577:ba03:23a5%9]) with mapi id 15.20.4713.005; Wed, 10 Nov 2021
+ 22:48:24 +0000
+From:   Sunil Muthuswamy <sunilmut@microsoft.com>
+To:     Sunil Muthuswamy <sunilmut@microsoft.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Sunil Muthuswamy <sunilmut@linux.microsoft.com>
+CC:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>, "hpa@zytor.com" <hpa@zytor.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "x86@kernel.org" <x86@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>
+Subject: RE: [EXTERNAL] Re: [PATCH v4 2/2] arm64: PCI: hv: Add support for
+ Hyper-V vPCI
+Thread-Topic: [EXTERNAL] Re: [PATCH v4 2/2] arm64: PCI: hv: Add support for
+ Hyper-V vPCI
+Thread-Index: AQHX1bderE/dJFbGykyqoP6WpgV6hqv8wAoAgAABlYCAAEjSEIAAU4WQ
+Date:   Wed, 10 Nov 2021 22:48:24 +0000
+Message-ID: <BN8PR21MB1140C4416E0B338A8FDBA18BC0939@BN8PR21MB1140.namprd21.prod.outlook.com>
+References: <1636496060-29424-1-git-send-email-sunilmut@linux.microsoft.com>
+        <1636496060-29424-3-git-send-email-sunilmut@linux.microsoft.com>
+        <87v91087vj.wl-maz@kernel.org> <87tugk87m4.wl-maz@kernel.org>
+ <BN8PR21MB1140769D6EC879C646E7DB92C0939@BN8PR21MB1140.namprd21.prod.outlook.com>
+In-Reply-To: <BN8PR21MB1140769D6EC879C646E7DB92C0939@BN8PR21MB1140.namprd21.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=54c4b1b7-16a5-4b88-8df4-065c7b9b4d8f;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-11-10T17:46:49Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 54c539aa-5bdb-4ff8-ecf5-08d9a49c33f6
+x-ms-traffictypediagnostic: BN7PR21MB1666:
+x-microsoft-antispam-prvs: <BN7PR21MB1666B5F85B686389BCF5617DC0939@BN7PR21MB1666.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: R/3UmAUQ+ha9yYo30/33GerQpr0/ei6+Lqz4/810EhVv3L9Fy+r7i8EJxFSypPtZ9+pigpUCM2F0WY1YsxCBIS5oTKyHerQwCRS0t8fnL5fxgJBXExyp/em4wCYVvno3O6vM7I2YiV1AD+E8MMH3tfu8cuVvQgMw7GzzGegvVvNLJppbiONcUbot8ynL0miheBTC/lpm+CSyAb7lK2qard3vwtVVDAAM5LZk0AEU/rwtCGJ7hsmHvwTi6CrYCYdD693OdPVa2XE5bo1MG+0fHlOUaQ6VNFglgHcrgu9ST/ENv20OiyoP3LkdJA/cedKcYhB5AfdRw0/hdUtDt30QPu9FgvIvlCpaXRhc8WkqU6f5oq7Q236sAPd4S8Hc91hIWb4SUn+gIf/ZI7Dij+3HNH21ZyK8evsRZmGRYD+ZzWniwAyI/ytHxZLvR5tMlZg5rQ/eC2PQU9xdBjwlg3badF2+/iX9sqcVQ9ehPgWKa+9EXlzpQJQG79Fgnv56xQIir5b5HU9Zns7us/F5NIgm3+VDYcPOH6JUZkpAKbYoBOxVub+pCSak/XUc1nDRhZJytcRX1udTtN2Pvo8EC5bmVZYTlBNVtIjdIkjhTJ7TYGsKYmvv14G0PVin2AHIVkJb69KQVNMlhqH8HNKUPdAUswZUFv2iwSgGcooLnFitAtbRD6VpieBj0ieMPyjwSKBWHpBEfTF+El7l5GaxDUHmeA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR21MB1140.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(2906002)(8936002)(66446008)(8676002)(64756008)(4326008)(8990500004)(186003)(38070700005)(122000001)(38100700002)(86362001)(83380400001)(2940100002)(110136005)(66556008)(7696005)(10290500003)(76116006)(7416002)(5660300002)(316002)(33656002)(82950400001)(82960400001)(54906003)(66476007)(508600001)(71200400001)(9686003)(6506007)(66946007)(52536014);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?OYdZ7C/69NWeeQWQayPnzAPa/5xFTzVSpt+4FklOg7+R2qHcJIFsNDEKey2u?=
+ =?us-ascii?Q?h7Kg5BVNQxnWMGJ7tVXaZ4La231WVAZkDLA37F6vIr0s54QYlZtn7JBG/0Qf?=
+ =?us-ascii?Q?Xl/mz5trNs6a8VgNx+1ZNzihMNjEMddWalocf+E3jkIQ7G2YyYRH9w3r08uH?=
+ =?us-ascii?Q?G/O6v7kiBUVl+nkvNaofcX2uiZTXhpu5s38sdEAE5KeFFa8D2QNXwVO57QGW?=
+ =?us-ascii?Q?ahEDP4jz0D5hCqrOHS22mmf/VsTXZf/6NmfUMHGslwxZmrIq5eEUqb2ZR/Fu?=
+ =?us-ascii?Q?Wthz5SpyzsVJWNsRz6DqhS2cEa7ap/t7phG5axIHGmjhTkkOKBeD0CeDVeYy?=
+ =?us-ascii?Q?Au1jvTjXhDW/OXUgmKEU0k28fNTVFiPliDIXspph8Gm5GMQmiJDU0h2rBYwA?=
+ =?us-ascii?Q?g/PRl4XWRpAQOWLw0hAyqpPqxnkCZnlvf+jMEQ9tXScHg6wFF5D6aHLRKb9Y?=
+ =?us-ascii?Q?HKfNBYvCNSlPCsDeUQwXEuYMybMNujEpgIcupSc9sLyLzHu2jnc3uxG3B2su?=
+ =?us-ascii?Q?2QaeWcHhBth/Dylp1Z1cH5rA0S1e1EXiqnEQDIh/gcaBTThZ1XLRUsNN+JIO?=
+ =?us-ascii?Q?o6+m+CaKxbMMDyrM/iYFvgXkh+ENNd2NJsAud8HzjoH1moHUhvRPoIRJHJ7P?=
+ =?us-ascii?Q?465ZzV/GTXHsZKe5M8hkNFc/THIjeAWvE0ysRKRX2DNEfjgHDCsavIMXCOBv?=
+ =?us-ascii?Q?fDeD1qTi6TbuP6eYU77j66YkzsRN6PoD1+kDTwyCmJng6ntYlDowHtnp6k1H?=
+ =?us-ascii?Q?Z99hOVxbEgwTSxGFH3ydfloaOORslILgRq5/IOJhlByJZzVv+xr1CUlJd+6b?=
+ =?us-ascii?Q?FV9Rz9OQ0DKOTGIAkW/eWpNUb6Rk/V++OwdG9JVuckKKlOlh3LGby+0zwdSS?=
+ =?us-ascii?Q?UwGKmo+Gy/pbtDOv38/3H8bgldluWzhpgYT6W8tjJyL/7oP4bKltw2VBpxaw?=
+ =?us-ascii?Q?HJViFXjyY/387dl5qXvScUrJUJB6wgXLRL176LYXP821wasf9xJOuB3LsIiW?=
+ =?us-ascii?Q?7ZU8m+qHV16UWXcpHoFjGN81DxJQmGHfcWo/LKz/OWcfnCao4s2Xpp8TiabK?=
+ =?us-ascii?Q?81WWIDHBLXkM3gswWVKfQQsa2gz2RA5MnxIRkmO0Xga0SQjMosOy0WBWGOiR?=
+ =?us-ascii?Q?LbQzs82dLZ5gKxwsDoiMhYoMEDg/l84Fv+zJ0asj1ScjJhtOKRcDkteTpKCv?=
+ =?us-ascii?Q?OYSIOpBx/XQJPWecZAzHs/kS89/Qa4v7YWhgMkkHKiqFTUDt6sq9h3Ju3fxG?=
+ =?us-ascii?Q?1dlkiNp1qgQwMth1LS70xnJ2+gN8js5DC2x8d8t6wJdbJAyX33lIBkFKrVPs?=
+ =?us-ascii?Q?cN7Y/gD3qTN6FxrLQZkXVXMHq5nVZ+mJMSRUtyvy1yXj9+NiVPPWUE1q+uTA?=
+ =?us-ascii?Q?/o1gWiURdGgAEOiRLweXGkIel07EGQ8mC4A0/B7YD+PFsvbAuhZhpewPVBX0?=
+ =?us-ascii?Q?qgSJJP//jrUEMv2sZ5GhAPaa+k4+eht9MVgvnVWuj+Xx8tJ814ecW6+fxl1u?=
+ =?us-ascii?Q?9SLrua6ivzW5Fm/yEBHtUaaAQManmllvOWwaXFWsQXExqhzZH9J6TuATHyk/?=
+ =?us-ascii?Q?vJJAYMy9Mf5vMxZjr68cueI+xd1736Q454rOIozL/4w+r6PinKsWxUf964PE?=
+ =?us-ascii?Q?gAHeZztgfDRrGzNx3TXbJVYItmivaDXVx+AzKGes0PA9ARF6e/mHafrksUmB?=
+ =?us-ascii?Q?GpzlvZ+HmnE9EgC9EcXxYJNxA1lInRyo6d44S7OVBaMdMf3bf799pp71j/sX?=
+ =?us-ascii?Q?bioji6qlmA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR21MB1140.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 54c539aa-5bdb-4ff8-ecf5-08d9a49c33f6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Nov 2021 22:48:24.2320
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ZzOz+8a97RLD09nIgnUMbqrgT69Bh9Yb8S6+4V5u1pzd61Ka6jgrlvlj7Mcl1m0mehGy1g3haHbvqdezn2h/NDAFvTFmbVX+/Gz0EflZ5X8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR21MB1666
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Adds a mechanism inside the root port device to identify standard PCIe
-regulators in the DT, allocate them, and turn them on before the rest of
-the bus is scanned during pci_host_probe().  A root complex driver can
-leverage this mechanism by setting the pci_ops methods add_bus and
-remove_bus to pci_subdev_regulators_{add,remove}_bus.
+> > > On Tue, 09 Nov 2021 22:14:20 +0000,
+> > > Sunil Muthuswamy <sunilmut@linux.microsoft.com> wrote:
+> > > >
+> > > > From: Sunil Muthuswamy <sunilmut@microsoft.com>
+> > > >
+> > > > Add support for Hyper-V vPCI for arm64 by implementing the arch spe=
+cific
+> > > > interfaces. Introduce an IRQ domain and chip specific to Hyper-v vP=
+CI that
+> > > > is based on SPIs. The IRQ domain parents itself to the arch GIC IRQ=
+ domain
+> > > > for basic vector management.
+> > > >
+> > > > Signed-off-by: Sunil Muthuswamy <sunilmut@microsoft.com>
+> > > > ---
+> > > > In v2, v3 & v4:
+> > > >  Changes are described in the cover letter.
+> > > >
+> > > >  arch/arm64/include/asm/hyperv-tlfs.h |   9 ++
+> > > >  drivers/pci/Kconfig                  |   2 +-
+> > > >  drivers/pci/controller/Kconfig       |   2 +-
+> > > >  drivers/pci/controller/pci-hyperv.c  | 207 +++++++++++++++++++++++=
++++-
+> > > >  4 files changed, 217 insertions(+), 3 deletions(-)
+> > >
+> > > [...]
+> > >
+> > > > +static int hv_pci_vec_irq_domain_activate(struct irq_domain *domai=
+n,
+> > > > +					  struct irq_data *irqd, bool reserve)
+> > > > +{
+> > > > +	static int cpu;
+> > > > +
+> > > > +	/*
+> > > > +	 * Pick a cpu using round-robin as the irq affinity that can be
+> > > > +	 * temporarily used for composing MSI from the hypervisor. GIC
+> > > > +	 * will eventually set the right affinity for the irq and the
+> > > > +	 * 'unmask' will retarget the interrupt to that cpu.
+> > > > +	 */
+> > > > +	if (cpu >=3D cpumask_last(cpu_online_mask))
+> > > > +		cpu =3D 0;
+> > > > +	cpu =3D cpumask_next(cpu, cpu_online_mask);
+> > > > +	irq_data_update_effective_affinity(irqd, cpumask_of(cpu));
+> > >
+> > > The mind boggles.
+> > >
+> > > Let's imagine a single machine. cpu_online_mask only has bit 0 set,
+> >
+> > single *CPU* machine
+> >
+> > > and nr_cpumask_bits is 1. This is the first run, and cpu is 1:
+> >
+> > cpu is *obviously* 0:
+> >
+> > >
+> > > 	cpu =3D cpumask_next(cpu, cpu_online_mask);
+> > >
+> > > cpu is now set to 1. Which is not a valid CPU number, but a valid
+> > > return value indicating that there is no next CPU as it is equal to
+> > > nr_cpumask_bits. cpumask_of(cpu) will then diligently return crap,
+> > > which you carefully store into the irq descriptor. The IRQ subsystem
+> > > thanks you.
+> > >
+> > > The same reasoning applies to any number of CPUs, and you obviously
+> > > never checked what any of this does :-(. As to what the behaviour is
+> > > when multiple CPUs run this function in parallel, let's not even
+> > > bother (locking is overrated).
+> > >
+> > > Logic and concurrency issues aside, why do you even bother setting
+> > > some round-robin affinity if all you need is to set *something* so
+> > > that a hypervisor message can be composed? Why not use the first
+> > > online CPU? At least it will be correct.
+> >
+> > Everything else holds.
+> >
+> > 	M.
+>=20
+> Good call on not being able to pick cpu 0 and that being a problem for
+> single cpu system. The cpu initialization should have been '-1' to be abl=
+e
+> to successfully pick cpu 0.
+>=20
+> I don't see concurrency an issue because this was a best-case effort to
+> randomize the interrupt distribution across cpu's. So, even if two irq's
+> ended up with the same cpu, that will still work.
+>=20
+> I also had thoughts of just using the first online cpu since this is just
+> temporary. So, I will go with that as that will also simplify things. Tha=
+nks
+> for your feedback.
+>=20
+> - Sunil
 
-The allocated structure that contains the regulators is stored in
-dev.driver_data.
+But, yes, for the concurrency, I do see a possibility of a race condition
+with the last cpu check and 'cpumask_next' call where it could lead
+to a failure. v5 moves this to the first online cpu and that should
+fix this issue.
 
-The unabridged reason for doing this is as follows.  We would like the
-Broadcom STB PCIe root complex driver (and others) to be able to turn
-off/on regulators[1] that provide power to endpoint[2] devices.  Typically,
-the drivers of these endpoint devices are stock Linux drivers that are not
-aware that these regulator(s) exist and must be turned on for the driver to
-be probed.  The simple solution of course is to turn these regulators on at
-boot and keep them on.  However, this solution does not satisfy at least
-three of our usage modes:
-
-1. For example, one customer uses multiple PCIe controllers, but wants the
-ability to, by script invoking and unbind, turn any or all of them by and
-their subdevices off to save power, e.g. when in battery mode.
-
-2. Another example is when a watchdog script discovers that an endpoint
-device is in an unresponsive state and would like to unbind, power toggle,
-and re-bind just the PCIe endpoint and controller.
-
-3. Of course we also want power turned off during suspend mode.  However,
-some endpoint devices may be able to "wake" during suspend and we need to
-recognise this case and veto the nominal act of turning off its regulator.
-Such is the case with Wake-on-LAN and Wake-on-WLAN support where PCIe
-end-point device needs to be kept powered on in order to receive network
-packets and wake-up the system.
-
-In all of these cases it is advantageous for the PCIe controller to govern
-the turning off/on the regulators needed by the endpoint device.  The first
-two cases can be done by simply unbinding and binding the PCIe controller,
-if the controller has control of these regulators.
-
-[1] These regulators typically govern the actual power supply to the
-    endpoint chip.  Sometimes they may be a the official PCIe socket
-    power -- such as 3.3v or aux-3.3v.  Sometimes they are truly
-    the regulator(s) that supply power to the EP chip.
-
-[2] The 99% configuration of our boards is a single endpoint device
-    attached to the PCIe controller.  I use the term endpoint but it could
-    possible mean a switch as well.
-
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- drivers/pci/bus.c              | 72 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h              |  8 ++++
- drivers/pci/pcie/portdrv_pci.c | 32 +++++++++++++++
- 3 files changed, 112 insertions(+)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 3cef835b375f..c39fdf36b0ad 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -419,3 +419,75 @@ void pci_bus_put(struct pci_bus *bus)
- 	if (bus)
- 		put_device(&bus->dev);
- }
-+
-+static void *alloc_subdev_regulators(struct device *dev)
-+{
-+	static const char * const supplies[] = {
-+		"vpcie3v3",
-+		"vpcie3v3aux",
-+		"vpcie12v",
-+	};
-+	const size_t size = sizeof(struct subdev_regulators)
-+		+ sizeof(struct regulator_bulk_data) * ARRAY_SIZE(supplies);
-+	struct subdev_regulators *sr;
-+	int i;
-+
-+	sr = devm_kzalloc(dev, size, GFP_KERNEL);
-+
-+	if (sr) {
-+		sr->num_supplies = ARRAY_SIZE(supplies);
-+		for (i = 0; i < ARRAY_SIZE(supplies); i++)
-+			sr->supplies[i].supply = supplies[i];
-+	}
-+
-+	return sr;
-+}
-+
-+
-+int pci_subdev_regulators_add_bus(struct pci_bus *bus)
-+{
-+	struct device *dev = &bus->dev;
-+	struct subdev_regulators *sr;
-+	int ret;
-+
-+	if (!pcie_is_port_dev(bus->self))
-+		return 0;
-+
-+	if (WARN_ON(bus->dev.driver_data))
-+		dev_err(dev, "multiple clients using dev.driver_data\n");
-+
-+	sr = alloc_subdev_regulators(&bus->dev);
-+	if (!sr)
-+		return -ENOMEM;
-+
-+	bus->dev.driver_data = sr;
-+	ret = regulator_bulk_get(dev, sr->num_supplies, sr->supplies);
-+	if (ret)
-+		return ret;
-+
-+	ret = regulator_bulk_enable(sr->num_supplies, sr->supplies);
-+	if (ret) {
-+		dev_err(dev, "failed to enable regulators for downstream device\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_subdev_regulators_add_bus);
-+
-+void pci_subdev_regulators_remove_bus(struct pci_bus *bus)
-+{
-+	struct device *dev = &bus->dev;
-+	struct subdev_regulators *sr;
-+
-+	if (!pcie_is_port_dev(bus->self))
-+		return;
-+
-+	sr = bus->dev.driver_data;
-+	if (!sr)
-+		return;
-+
-+	if (regulator_bulk_disable(sr->num_supplies, sr->supplies))
-+		dev_err(dev, "failed to disable regulators for downstream device\n");
-+}
-+EXPORT_SYMBOL_GPL(pci_subdev_regulators_remove_bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index c2bd1995d3a9..3f6cf75b91cc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -3,6 +3,7 @@
- #define DRIVERS_PCI_H
- 
- #include <linux/pci.h>
-+#include <linux/regulator/consumer.h>
- 
- /* Number of possible devfns: 0.0 to 1f.7 inclusive */
- #define MAX_NR_DEVFNS 256
-@@ -744,6 +745,13 @@ extern const struct attribute_group aspm_ctrl_attr_group;
- 
- extern const struct attribute_group pci_dev_reset_method_attr_group;
- 
-+struct subdev_regulators {
-+	unsigned int num_supplies;
-+	struct regulator_bulk_data supplies[];
-+};
-+
- bool pcie_is_port_dev(struct pci_dev *dev);
-+int pci_subdev_regulators_add_bus(struct pci_bus *bus);
-+void pci_subdev_regulators_remove_bus(struct pci_bus *bus);
- 
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 63f2a87e9db8..9330cfbebdc1 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -15,6 +15,7 @@
- #include <linux/init.h>
- #include <linux/aer.h>
- #include <linux/dmi.h>
-+#include <linux/regulator/consumer.h>
- 
- #include "../pci.h"
- #include "portdrv.h"
-@@ -35,6 +36,9 @@ bool pcie_ports_native;
-  */
- bool pcie_ports_dpc_native;
- 
-+/* forward declaration */
-+static struct pci_driver pcie_portdriver;
-+
- static int __init pcie_port_setup(char *str)
- {
- 	if (!strncmp(str, "compat", 6))
-@@ -107,6 +111,26 @@ bool pcie_is_port_dev(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pcie_is_port_dev);
- 
-+static int subdev_regulator_resume(struct pci_dev *dev)
-+{
-+	struct subdev_regulators *sr = dev->dev.driver_data;
-+
-+	if (sr)
-+		return regulator_bulk_enable(sr->num_supplies, sr->supplies);
-+
-+	return 0;
-+}
-+
-+static int subdev_regulator_suspend(struct pci_dev *dev, pm_message_t state)
-+{
-+	struct subdev_regulators *sr = dev->dev.driver_data;
-+
-+	if (sr)
-+		return regulator_bulk_disable(sr->num_supplies, sr->supplies);
-+
-+	return 0;
-+}
-+
- /*
-  * pcie_portdrv_probe - Probe PCI-Express port devices
-  * @dev: PCI-Express port device being probed
-@@ -131,6 +155,13 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 	if (status)
- 		return status;
- 
-+	if (dev->bus->ops &&
-+	    dev->bus->ops->add_bus &&
-+	    dev->bus->dev.driver_data) {
-+		pcie_portdriver.resume = subdev_regulator_resume;
-+		pcie_portdriver.suspend = subdev_regulator_suspend;
-+	}
-+
- 	pci_save_state(dev);
- 
- 	dev_pm_set_driver_flags(&dev->dev, DPM_FLAG_NO_DIRECT_COMPLETE |
-@@ -237,6 +268,7 @@ static struct pci_driver pcie_portdriver = {
- 	.err_handler	= &pcie_portdrv_err_handler,
- 
- 	.driver.pm	= PCIE_PORTDRV_PM_OPS,
-+	/* Note: suspend and resume may be set during probe */
- };
- 
- static int __init dmi_pcie_pme_disable_msi(const struct dmi_system_id *d)
--- 
-2.17.1
-
+- Sunil
