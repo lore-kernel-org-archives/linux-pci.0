@@ -2,39 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 477E5C4321E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Nov 2021 22:35:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D722BC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Nov 2021 22:35:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3204260F39
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Nov 2021 22:35:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C00D860F39
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Nov 2021 22:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236073AbhKLWiL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S236055AbhKLWiL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 12 Nov 2021 17:38:11 -0500
-Received: from inva020.nxp.com ([92.121.34.13]:57378 "EHLO inva020.nxp.com"
+Received: from inva020.nxp.com ([92.121.34.13]:57338 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236001AbhKLWh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235990AbhKLWh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 12 Nov 2021 17:37:57 -0500
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id BCEE41A031E;
-        Fri, 12 Nov 2021 23:35:05 +0100 (CET)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 80E751A2080;
+        Fri, 12 Nov 2021 23:35:04 +0100 (CET)
 Received: from smtp.na-rdc02.nxp.com (usphx01srsp001v.us-phx01.nxp.com [134.27.49.11])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 758551A2089;
-        Fri, 12 Nov 2021 23:35:05 +0100 (CET)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 4361E1A2077;
+        Fri, 12 Nov 2021 23:35:04 +0100 (CET)
 Received: from right.am.freescale.net (right.am.freescale.net [10.81.116.142])
-        by usphx01srsp001v.us-phx01.nxp.com (Postfix) with ESMTP id CCBD140BF1;
-        Fri, 12 Nov 2021 15:35:04 -0700 (MST)
+        by usphx01srsp001v.us-phx01.nxp.com (Postfix) with ESMTP id B178840BF1;
+        Fri, 12 Nov 2021 15:35:03 -0700 (MST)
 From:   Li Yang <leoyang.li@nxp.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Shawn Guo <shawnguo@kernel.org>
 Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Vabhav Sharma <vabhav.sharma@nxp.com>,
-        Fugang Duan <fugang.duan@nxp.com>,
-        Vladimir Oltean <vladimir.oltean@nxp.com>
-Subject: [PATCH 09/11] arm64: dts: ls1028a-qds: enable lpuart1
-Date:   Fri, 12 Nov 2021 16:34:55 -0600
-Message-Id: <20211112223457.10599-10-leoyang.li@nxp.com>
+        Li Yang <leoyang.li@nxp.com>
+Subject: [PATCH 06/11] arm64: dts: ls1028a-rdb: reorder nodes to be alphabetic
+Date:   Fri, 12 Nov 2021 16:34:52 -0600
+Message-Id: <20211112223457.10599-7-leoyang.li@nxp.com>
 X-Mailer: git-send-email 2.25.1.377.g2d2118b
 In-Reply-To: <20211112223457.10599-1-leoyang.li@nxp.com>
 References: <20211112223457.10599-1-leoyang.li@nxp.com>
@@ -45,31 +43,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vabhav Sharma <vabhav.sharma@nxp.com>
+Keep these overrides node in alphabetic order in order to prevent
+unnoticed duplicated nodes.
 
-LPUART nodes by default are disabled in LS1028A device
-tree, Enabling LPUART1 node.
-
-Signed-off-by: Vabhav Sharma <vabhav.sharma@nxp.com>
-Acked-by: Fugang Duan <fugang.duan@nxp.com>
-Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Signed-off-by: Li Yang <leoyang.li@nxp.com>
 ---
- arch/arm64/boot/dts/freescale/fsl-ls1028a-qds.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../boot/dts/freescale/fsl-ls1028a-rdb.dts    | 92 +++++++++----------
+ 1 file changed, 46 insertions(+), 46 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1028a-qds.dts b/arch/arm64/boot/dts/freescale/fsl-ls1028a-qds.dts
-index d10593a191e5..4e58a03a9985 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1028a-qds.dts
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1028a-qds.dts
-@@ -336,6 +336,10 @@ &lpuart0 {
- 	status = "okay";
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1028a-rdb.dts b/arch/arm64/boot/dts/freescale/fsl-ls1028a-rdb.dts
+index 49ec2821d15f..81d0f3ac27ec 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1028a-rdb.dts
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1028a-rdb.dts
+@@ -102,6 +102,52 @@ can-transceiver {
+ 	};
  };
  
-+&lpuart1 {
++&duart0 {
 +	status = "okay";
 +};
 +
- &sai1 {
++&duart1 {
++	status = "okay";
++};
++
++&enetc_mdio_pf3 {
++	/* VSC8514 QSGMII quad PHY */
++	qsgmii_phy0: ethernet-phy@10 {
++		reg = <0x10>;
++	};
++
++	qsgmii_phy1: ethernet-phy@11 {
++		reg = <0x11>;
++	};
++
++	qsgmii_phy2: ethernet-phy@12 {
++		reg = <0x12>;
++	};
++
++	qsgmii_phy3: ethernet-phy@13 {
++		reg = <0x13>;
++	};
++};
++
++&enetc_port0 {
++	phy-handle = <&sgmii_phy0>;
++	phy-connection-type = "sgmii";
++	managed = "in-band-status";
++	status = "okay";
++
++	mdio {
++		#address-cells = <1>;
++		#size-cells = <0>;
++		sgmii_phy0: ethernet-phy@2 {
++			reg = <0x2>;
++		};
++	};
++};
++
++&enetc_port2 {
++	status = "okay";
++};
++
+ &esdhc {
+ 	sd-uhs-sdr104;
+ 	sd-uhs-sdr50;
+@@ -192,52 +238,6 @@ rtc@51 {
+ 	};
+ };
+ 
+-&duart0 {
+-	status = "okay";
+-};
+-
+-&duart1 {
+-	status = "okay";
+-};
+-
+-&enetc_mdio_pf3 {
+-	/* VSC8514 QSGMII quad PHY */
+-	qsgmii_phy0: ethernet-phy@10 {
+-		reg = <0x10>;
+-	};
+-
+-	qsgmii_phy1: ethernet-phy@11 {
+-		reg = <0x11>;
+-	};
+-
+-	qsgmii_phy2: ethernet-phy@12 {
+-		reg = <0x12>;
+-	};
+-
+-	qsgmii_phy3: ethernet-phy@13 {
+-		reg = <0x13>;
+-	};
+-};
+-
+-&enetc_port0 {
+-	phy-handle = <&sgmii_phy0>;
+-	phy-connection-type = "sgmii";
+-	managed = "in-band-status";
+-	status = "okay";
+-
+-	mdio {
+-		#address-cells = <1>;
+-		#size-cells = <0>;
+-		sgmii_phy0: ethernet-phy@2 {
+-			reg = <0x2>;
+-		};
+-	};
+-};
+-
+-&enetc_port2 {
+-	status = "okay";
+-};
+-
+ &mscc_felix {
  	status = "okay";
  };
 -- 
