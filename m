@@ -2,133 +2,129 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A310C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 01:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E162EC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78F1961ACE
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 01:59:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CABD161178
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238981AbhKPCCg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Nov 2021 21:02:36 -0500
-Received: from mga06.intel.com ([134.134.136.31]:2819 "EHLO mga06.intel.com"
+        id S242447AbhKPCKG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Nov 2021 21:10:06 -0500
+Received: from mga06.intel.com ([134.134.136.31]:28673 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1347758AbhKPCAf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Nov 2021 21:00:35 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10169"; a="294420382"
+        id S238127AbhKORyo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Nov 2021 12:54:44 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10169"; a="294311134"
 X-IronPort-AV: E=Sophos;i="5.87,237,1631602800"; 
-   d="scan'208";a="294420382"
+   d="scan'208";a="294311134"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 17:57:21 -0800
-X-ExtLoop1: 1
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 09:49:54 -0800
 X-IronPort-AV: E=Sophos;i="5.87,237,1631602800"; 
-   d="scan'208";a="494266192"
-Received: from allen-box.sh.intel.com (HELO [10.239.159.118]) ([10.239.159.118])
-  by orsmga007.jf.intel.com with ESMTP; 15 Nov 2021 17:57:15 -0800
-Cc:     baolu.lu@linux.intel.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, Will Deacon <will@kernel.org>,
-        rafael@kernel.org, Diana Craciun <diana.craciun@oss.nxp.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Liu Yi L <yi.l.liu@intel.com>,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/11] iommu: Add device dma ownership set/release
- interfaces
-To:     Bjorn Helgaas <helgaas@kernel.org>
-References: <20211115203848.GA1586192@bhelgaas>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <6a2e3d54-8c7f-0367-081b-5448d93f5ca5@linux.intel.com>
-Date:   Tue, 16 Nov 2021 09:52:49 +0800
+   d="scan'208";a="494113110"
+Received: from asperbe-mobl.amr.corp.intel.com (HELO [10.255.91.105]) ([10.255.91.105])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 09:49:53 -0800
+Subject: Re: [Bug 214995] New: Sof audio didn't recognize Intel Smart Sound
+ (SST) speakers, microphone and headphone jack
+To:     Bjorn Helgaas <helgaas@kernel.org>, nicolarevelant44@gmail.com
+Cc:     Liam Girdwood <lgirdwood@gmail.com>,
+        Ranjani Sridharan <ranjani.sridharan@linux.intel.com>,
+        Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+        Daniel Baluta <daniel.baluta@nxp.com>,
+        sound-open-firmware@alsa-project.org, linux-pci@vger.kernel.org
+References: <20211112222432.GA1423380@bhelgaas>
+From:   Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
+Message-ID: <4cf00ae5-f3d7-ecb5-7dae-f8629becc0d2@linux.intel.com>
+Date:   Mon, 15 Nov 2021 11:49:22 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+ Firefox/78.0 Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211115203848.GA1586192@bhelgaas>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20211112222432.GA1423380@bhelgaas>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
 
-On 11/16/21 4:38 AM, Bjorn Helgaas wrote:
-> On Mon, Nov 15, 2021 at 10:05:42AM +0800, Lu Baolu wrote:
->>  From the perspective of who is initiating the device to do DMA, device
->> DMA could be divided into the following types:
+
+On 11/12/21 4:24 PM, Bjorn Helgaas wrote:
+> On Fri, Nov 12, 2021 at 09:11:45AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=214995
 >>
->>          DMA_OWNER_KERNEL: kernel device driver intiates the DMA
->>          DMA_OWNER_USER: userspace device driver intiates the DMA
-> 
-> s/intiates/initiates/ (twice)
-
-Yes.
-
-> 
-> As your first sentence suggests, the driver doesn't actually
-> *initiate* the DMA in either case.  One of the drivers programs the
-> device, and the *device* initiates the DMA.
-
-You are right. I could rephrase it as:
-
-"From the perspective of who is controlling the device to do DMA ..."
-
-> 
->> DMA_OWNER_KERNEL and DMA_OWNER_USER are exclusive for all devices in
->> same iommu group as an iommu group is the smallest granularity of device
->> isolation and protection that the IOMMU subsystem can guarantee.
-> 
-> I think this basically says DMA_OWNER_KERNEL and DMA_OWNER_USER are
-> attributes of the iommu_group (not an individual device), and it
-> applies to all devices in the iommu_group.  Below, you allude to the
-> fact that the interfaces are per-device.  It's not clear to me why you
-> made a per-device interface instead of a per-group interface.
-
-Yes, the attributes are of the iommu_group. We have both per-device and
-per-iommu_group interfaces. The former is for device drivers and the
-latter is only for vfio who has an iommu_group based iommu abstract.
-
->> This
->> extends the iommu core to enforce this exclusion when devices are
->> assigned to userspace.
+>>             Bug ID: 214995
+>>            Summary: Sof audio didn't recognize Intel Smart Sound (SST)
+>>                     speakers, microphone and headphone jack
+>>            Product: Drivers
+>>            Version: 2.5
+>>     Kernel Version: 5.11.0-40-generic
+>>           Hardware: Intel
+>>                 OS: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: high
+>>           Priority: P1
+>>          Component: PCI
+>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>           Reporter: nicolarevelant44@gmail.com
+>>         Regression: No
 >>
->> Basically two new interfaces are provided:
+>> Created attachment 299549
+>>   --> https://bugzilla.kernel.org/attachment.cgi?id=299549&action=edit
+>> The output of dmesg and lspci -v
 >>
->>          int iommu_device_set_dma_owner(struct device *dev,
->>                  enum iommu_dma_owner mode, struct file *user_file);
->>          void iommu_device_release_dma_owner(struct device *dev,
->>                  enum iommu_dma_owner mode);
+>> I have a Huawei Matebook D15 notebook with Intel Smart Sound Technology as
+>> sound card. SST includes speakers, microphone and headphone jack so none of the
+>> 3 work. Bluetooth and USB headphones work. I have already tried to change
+>> "options snd_intel_dspcfg dsp_driver" and reload alsa (alsa reload) for each
+>> value but nothing (only small changes in dmesg).
+>> The first lines of dmesg_dump.txt are errors because of the 'alsa reload'
+>> command. The log is verbose because I add some options from this web page:
+>> https://thesofproject.github.io/latest/getting_started/intel_debug/suggestions.html
 >>
->> Although above interfaces are per-device, DMA owner is tracked per group
->> under the hood. An iommu group cannot have both DMA_OWNER_KERNEL
->> and DMA_OWNER_USER set at the same time. Violation of this assumption
->> fails iommu_device_set_dma_owner().
+>> My sound card is listed in PCI so the last lines of dmesg_dump.txt are the
+>> output of the 'lspci -v' command
 >>
->> Kernel driver which does DMA have DMA_OWNER_KENREL automatically
->> set/released in the driver binding process (see next patch).
+>> aplay -l shows only 3 HDMI outputs with sof-hda-dsp
 > 
-> s/DMA_OWNER_KENREL/DMA_OWNER_KERNEL/
-
-Yes. Sorry for the typo.
-
+> Hi Nicola,
 > 
->> Kernel driver which doesn't do DMA should not set the owner type (via a
->> new suppress flag in next patch). Device bound to such driver is considered
->> same as a driver-less device which is compatible to all owner types.
->>
->> Userspace driver framework (e.g. vfio) should set DMA_OWNER_USER for
->> a device before the userspace is allowed to access it, plus a fd pointer to
->> mark the user identity so a single group cannot be operated by multiple
->> users simultaneously. Vice versa, the owner type should be released after
->> the user access permission is withdrawn.
+> Thanks very much for the report and sorry for the problem.
+> 
+> It's possible there's a power management issue, e.g., reads to the
+> 00:1f.3 device are timing out because the device is in D3cold, but I
+> can't tell from the part of the dmesg log you attached.  In that case,
+> reads will generally return ~0 (0xffffffff), but it looks like some
+> reads *do* return valid data, e.g.,
+> 
+>   sof-audio-pci 0000:00:1f.3: DSP detected with PCI class/subclass/prog-if info 0x040100
+>   sof-audio-pci 0000:00:1f.3: found ML capability at 0xc00
+> 
+> I don't see an obvious PCI core connection here, so I cc'd the SOF
+> maintainers in case they have any insight.
+> 
+>   - It looks like you're running v5.11.0.  Can you reproduce the same
+>     problem on a current kernel, e.g., v5.15?  It's possible the
+>     problem has been fixed since v5.11.
+> 
+>   - Did this ever work?  In other words, is this a regression?  If so,
+>     what's the newest kernel you know of that *did* work?  In the
+>     worst case, we could bisect to identify a change that broke it.
+> 
+>   - It might be useful if you could attach the complete dmesg log and
+>     output of "sudo lspci -vv" to the bugzilla.
 
-Best regards,
-baolu
+That seems like a known issue already tracked at
+https://github.com/thesofproject/linux/issues/3248
+
+There's a set of devices based on the ES8316/36 I2S audio codec which
+needs dedicated quirks. In the existing reports the Huawei Matebook D15
+is listed as using that codec.
+
+The latest experimental code we have is here:
+https://github.com/thesofproject/linux/pull/3107/commits
+
+If confirmed, can we track this on GitHub so that all results for this
+sort of devices are collected in one place? Thanks!
+
+
