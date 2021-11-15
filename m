@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE9D8C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:10:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8F2C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:10:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A535C60FD8
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:10:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15B0560F46
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:10:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234982AbhKOCNX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Nov 2021 21:13:23 -0500
-Received: from mga03.intel.com ([134.134.136.65]:15410 "EHLO mga03.intel.com"
+        id S236261AbhKOCNj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Nov 2021 21:13:39 -0500
+Received: from mga06.intel.com ([134.134.136.31]:51230 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230395AbhKOCNV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 14 Nov 2021 21:13:21 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10168"; a="233307209"
+        id S236259AbhKOCNf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 14 Nov 2021 21:13:35 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10168"; a="294186331"
 X-IronPort-AV: E=Sophos;i="5.87,235,1631602800"; 
-   d="scan'208";a="233307209"
+   d="scan'208";a="294186331"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 18:10:26 -0800
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 18:10:36 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,235,1631602800"; 
-   d="scan'208";a="505714518"
+   d="scan'208";a="505714551"
 Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga008.jf.intel.com with ESMTP; 14 Nov 2021 18:10:21 -0800
+  by orsmga008.jf.intel.com with ESMTP; 14 Nov 2021 18:10:31 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joerg Roedel <joro@8bytes.org>,
@@ -42,120 +42,118 @@ Cc:     Will Deacon <will@kernel.org>, rafael@kernel.org,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH 00/11] Fix BUG_ON in vfio_iommu_group_notifier()
-Date:   Mon, 15 Nov 2021 10:05:41 +0800
-Message-Id: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
+Subject: [PATCH 02/11] driver core: Set DMA ownership during driver bind/unbind
+Date:   Mon, 15 Nov 2021 10:05:43 +0800
+Message-Id: <20211115020552.2378167-3-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
+References: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi folks,
+This extends really_probe() to allow checking for dma ownership conflict
+during the driver binding process. By default, the DMA_OWNER_KERNEL is
+claimed for the bound driver before calling its .probe() callback. If this
+operation fails (e.g. the iommu group of the target device already has the
+DMA_OWNER_USER set), the binding process is aborted to avoid breaking the
+security contract for devices in the iommu group.
 
-The iommu group is the minimal isolation boundary for DMA. Devices in
-a group can access each other's MMIO registers via peer to peer DMA
-and also need share the same I/O address space.
+Without this change, the vfio driver has to listen to a bus BOUND_DRIVER
+event and then BUG_ON() in case of dma ownership conflict. This leads to
+bad user experience since careless driver binding operation may crash the
+system if the admin overlooks the group restriction.
 
-Once the I/O address space is assigned to user control it is no longer
-available to the dma_map* API, which effectively makes the DMA API
-non-working.
+Aside from bad design, this leads to a security problem as a root user,
+even with lockdown=integrity, can force the kernel to BUG.
 
-Second, userspace can use DMA initiated by a device that it controls
-to access the MMIO spaces of other devices in the group. This allows
-userspace to indirectly attack any kernel owned device and it's driver.
+Driver may set a new flag (suppress_auto_claim_dma_owner) to disable auto
+claim in the binding process. Examples include kernel drivers (pci_stub,
+PCI bridge drivers, etc.) which don't trigger DMA at all thus can be safely
+exempted in DMA ownership check and userspace framework drivers (vfio/vdpa
+etc.) which need to manually claim DMA_OWNER_USER when assigning a device
+to userspace.
 
-Therefore groups must either be entirely under kernel control or
-userspace control, never a mixture. Unfortunately some systems have
-problems with the granularity of groups and there are a couple of
-important exceptions:
+Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
+Link: https://lore.kernel.org/linux-iommu/20210922123931.GI327412@nvidia.com/
+Link: https://lore.kernel.org/linux-iommu/20210928115751.GK964074@nvidia.com/
+Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+---
+ include/linux/device/driver.h |  7 ++++++-
+ drivers/base/dd.c             | 12 ++++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
 
- - pci_stub allows the admin to block driver binding on a device and
-   make it permanently shared with userspace. Since PCI stub does not
-   do DMA it is safe, however the admin must understand that using
-   pci_stub allows userspace to attack whatever device it was bound
-   it.
-
- - PCI bridges are sometimes included in groups. Typically PCI bridges
-   do not use DMA, and generally do not have MMIO regions.
-
-Generally any device that does not have any MMIO registers is a
-possible candidate for an exception.
-
-Currently vfio adopts a workaround to detect violations of the above
-restrictions by monitoring the driver core BOUND event, and hardwiring
-the above exceptions. Since there is no way for vfio to reject driver
-binding at this point, BUG_ON() is triggered if a violation is
-captured (kernel driver BOUND event on a group which already has some
-devices assigned to userspace). Aside from the bad user experience
-this opens a way for root userspace to crash the kernel, even in high
-integrity configurations, by manipulating the module binding and
-triggering the BUG_ON.
-
-This series solves this problem by making the user/kernel ownership a
-core concept at the IOMMU layer. The driver core enforces kernel
-ownership while drivers are bound and violations now result in a error
-codes during probe, not BUG_ON failures.
-
-Patch partitions:
-  [PATCH 1-2]: Detect DMA ownership conflicts during driver binding;
-  [PATCH 3-6]: Add security context management for assigned devices;
-  [PATCH 7-11]: Various cleanups.
-
-Ideas contributed by:
-  Jason Gunthorpe <jgg@nvidia.com>
-  Kevin Tian <kevin.tian@intel.com>
-  Ashok Raj <ashok.raj@intel.com>
-  Lu Baolu <baolu.lu@linux.intel.com>
-
-Review contributors:
-  Jason Gunthorpe <jgg@nvidia.com>
-  Kevin Tian <kevin.tian@intel.com>
-  Ashok Raj <ashok.raj@intel.com>
-  Liu Yi L <yi.l.liu@intel.com>
-  Jacob jun Pan <jacob.jun.pan@intel.com>
-  Chaitanya Kulkarni <kch@nvidia.com>
-
-This also is part one of three initial series for IOMMUFD:
- * Move IOMMU Group security into the iommu layer
- - Generic IOMMUFD implementation
- - VFIO ability to consume IOMMUFD
-
-This is based on v5.16-rc1 and available on github:
-https://github.com/LuBaolu/intel-iommu/commits/iommu-dma-ownership-v1
-
-Best regards,
-baolu
-
-Jason Gunthorpe (1):
-  vfio: Delete the unbound_list
-
-Lu Baolu (10):
-  iommu: Add device dma ownership set/release interfaces
-  driver core: Set DMA ownership during driver bind/unbind
-  PCI: pci_stub: Suppress kernel DMA ownership auto-claiming
-  PCI: portdrv: Suppress kernel DMA ownership auto-claiming
-  iommu: Add security context management for assigned devices
-  iommu: Expose group variants of dma ownership interfaces
-  vfio: Use DMA_OWNER_USER to declaim passthrough devices
-  vfio: Remove use of vfio_group_viable()
-  vfio: Remove iommu group notifier
-  iommu: Remove iommu group changes notifier
-
- include/linux/device/driver.h         |   7 +-
- include/linux/iommu.h                 |  75 ++++---
- drivers/base/dd.c                     |  12 ++
- drivers/iommu/iommu.c                 | 274 ++++++++++++++++++--------
- drivers/pci/pci-stub.c                |   3 +
- drivers/pci/pcie/portdrv_pci.c        |   2 +
- drivers/vfio/fsl-mc/vfio_fsl_mc.c     |   1 +
- drivers/vfio/pci/vfio_pci.c           |   3 +
- drivers/vfio/platform/vfio_amba.c     |   1 +
- drivers/vfio/platform/vfio_platform.c |   1 +
- drivers/vfio/vfio.c                   | 247 ++---------------------
- 11 files changed, 294 insertions(+), 332 deletions(-)
-
+diff --git a/include/linux/device/driver.h b/include/linux/device/driver.h
+index a498ebcf4993..25d39c64c4d9 100644
+--- a/include/linux/device/driver.h
++++ b/include/linux/device/driver.h
+@@ -54,6 +54,10 @@ enum probe_type {
+  * @owner:	The module owner.
+  * @mod_name:	Used for built-in modules.
+  * @suppress_bind_attrs: Disables bind/unbind via sysfs.
++ * @suppress_auto_claim_dma_owner: Disable auto claiming of kernel DMA owner.
++ *		Drivers which don't require DMA or want to manually claim the
++ *		owner type (e.g. userspace driver frameworks) could set this
++ *		flag.
+  * @probe_type:	Type of the probe (synchronous or asynchronous) to use.
+  * @of_match_table: The open firmware table.
+  * @acpi_match_table: The ACPI match table.
+@@ -99,7 +103,8 @@ struct device_driver {
+ 	struct module		*owner;
+ 	const char		*mod_name;	/* used for built-in modules */
+ 
+-	bool suppress_bind_attrs;	/* disables bind/unbind via sysfs */
++	bool suppress_bind_attrs:1;	/* disables bind/unbind via sysfs */
++	bool suppress_auto_claim_dma_owner:1;
+ 	enum probe_type probe_type;
+ 
+ 	const struct of_device_id	*of_match_table;
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index 68ea1f949daa..ab3333351f19 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -28,6 +28,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/pinctrl/devinfo.h>
+ #include <linux/slab.h>
++#include <linux/iommu.h>
+ 
+ #include "base.h"
+ #include "power/power.h"
+@@ -566,6 +567,12 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 		goto done;
+ 	}
+ 
++	if (!drv->suppress_auto_claim_dma_owner) {
++		ret = iommu_device_set_dma_owner(dev, DMA_OWNER_KERNEL, NULL);
++		if (ret)
++			return ret;
++	}
++
+ re_probe:
+ 	dev->driver = drv;
+ 
+@@ -673,6 +680,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 		dev->pm_domain->dismiss(dev);
+ 	pm_runtime_reinit(dev);
+ 	dev_pm_set_driver_flags(dev, 0);
++	if (!drv->suppress_auto_claim_dma_owner)
++		iommu_device_release_dma_owner(dev, DMA_OWNER_KERNEL);
+ done:
+ 	return ret;
+ }
+@@ -1215,6 +1224,9 @@ static void __device_release_driver(struct device *dev, struct device *parent)
+ 		pm_runtime_reinit(dev);
+ 		dev_pm_set_driver_flags(dev, 0);
+ 
++		if (!drv->suppress_auto_claim_dma_owner)
++			iommu_device_release_dma_owner(dev, DMA_OWNER_KERNEL);
++
+ 		klist_remove(&dev->p->knode_driver);
+ 		device_pm_check_callbacks(dev);
+ 		if (dev->bus)
 -- 
 2.25.1
 
