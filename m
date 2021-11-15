@@ -2,38 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 575A7C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 14:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53FA3C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 12:37:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4145361C12
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 14:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3442E61ABD
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 12:37:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231230AbhKPOfi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Nov 2021 09:35:38 -0500
-Received: from tomli.me ([31.220.7.45]:17872 "EHLO tomli.me"
+        id S236320AbhKPMkH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Nov 2021 07:40:07 -0500
+Received: from tomli.me ([31.220.7.45]:31118 "EHLO tomli.me"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237383AbhKPOfd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Nov 2021 09:35:33 -0500
+        id S236306AbhKPMkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 16 Nov 2021 07:40:05 -0500
+X-Greylist: delayed 397 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Nov 2021 07:40:03 EST
 Received: from tomli.me (localhost [127.0.0.1])
-        by tomli.me (OpenSMTPD) with ESMTP id 4f345bd1;
-        Tue, 16 Nov 2021 14:32:33 +0000 (UTC)
+        by tomli.me (OpenSMTPD) with ESMTP id 7130ef63;
+        Tue, 16 Nov 2021 12:30:25 +0000 (UTC)
 Authentication-Results: tomli.me; auth=pass (login) smtp.auth=tomli
 Received: from Unknown (HELO work) (221.219.136.22)
- by tomli.me (qpsmtpd/0.96) with ESMTPSA (AEAD-AES256-GCM-SHA384 encrypted); Tue, 16 Nov 2021 14:32:32 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed; d=tomli.me; h=date:from:to:subject:message-id:mime-version:content-type; s=1490979754; bh=uRYxxnQe24Rgwi722KS30HiLpHAXqmuIhCb6oiw2y+A=; b=B9grhZl3PZAvz1QQ7CecQGPSITtjBgq97mIYrfhe+LepFe6vHBDmcFJ7+wzmKI0fPE8eC/iOhQJdFplDGvnk2J7Gehum6JyqkBNiH0EvMHMua/w1RjaOqR1Ab9Cw3JnVUitpmIvDKNIKjxdJfeyTdRgDZ2mFtBP+g66A/orYpBGwJN0fbUTryiUD3NCC9LF3QmJ1bfcr7vwAIk3SacUF6pENEDc9u5mZpZYZNx/YVOOV6iSC0Aj+orHaqhj8uE439WvDPwg+RF7DRm7zXjzkzoU7MuqjqAXrZqBbDrd/Hy4EdYyM3HE+/ivvGJjdf5vo66W5eNyc02Wb/nLGUQIfWQ==
-Date:   Tue, 16 Nov 2021 14:32:26 +0000
+ by tomli.me (qpsmtpd/0.96) with ESMTPSA (AEAD-AES256-GCM-SHA384 encrypted); Tue, 16 Nov 2021 12:30:25 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed; d=tomli.me; h=resent-from:resent-date:resent-message-id:resent-to:from:date:subject; s=1490979754; bh=KBfiT1w0XL11Z1fG5BYzBut0m+TzF/AfNmY64Lyh3Tk=; b=yKaAZBFD7DJrTT/M8n6HusL9M1/ruIi790LL/47aMOTz6naAMEwevu+4J2oMBH0hnQwcGwUCmxsuFi9LhLWSYBE9ioqnG5zophlHDLey5TKfO2eexYJqBoW7abP2oRul0tA1mPzZ0S0TwtmxQ9LMTYH9OKy/ouIH/JL24D7LEO6uJIVkT5bsm877OzwANgERr29npLatg3ZSpzOKqoZSI81HrQGkaJz+mYs/6fplWhk4QUekmB2miDlRR+8wLs+fdTku7aq4EL1vMsQVgWgYuBm7fXEDleNy+tUEhGKqgxb6rn9NxE54XDIlnJVhmBc6pTl0XqNemGrjVn9r3zopEw==
 From:   Yifeng Li <tomli@tomli.me>
-To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: Add func1 DMA quirk for Marvell 88SE9125 SATA
- controller
-Message-ID: <YZPA+gSsGWI6+xBP@work>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date:   Mon, 15 Nov 2021 14:55:16 +0000
+Subject: [PATCH] PCI: Add func1 DMA quirk for Marvell 88SE9125 SATA controller
+Message-ID: <15293b9898bae404@tomli.me>
+Apparently-To: <tomli@tomli.me>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+To:     unlisted-recipients:; (no To-header on input)
 
 Like other SATA controller chips in the Marvell 88SE91xx series, the
 Marvell 88SE9125 has the same DMA requester ID hardware bug that prevents
@@ -59,19 +56,9 @@ After applying the patch, the controller can be successfully initialized.
     ata8.00: configured for UDMA/100
     scsi 7:0:0:0: CD-ROM            PIONEER  BD-RW   BDR-207M 1.21 PQ: 0 ANSI: 5
 
-Cc: stable@vger.kernel.org
 Reported-by: sbingner <sam@bingner.com>
-Tested-by: sbingner <sam@bingner.com>
-Tested-by: Yifeng Li <tomli@tomli.me>
 Signed-off-by: Yifeng Li <tomli@tomli.me>
 ---
-
-Notes:
-    I accidentally sent an earlier version of the commit without CCing
-    stable@vger.kernel.org. The mail itself was also rejected by
-    many servers due to a DKIM issue. Thus [PATCH v2], sorry for the
-    noise.
-
  drivers/pci/quirks.c | 3 +++
  1 file changed, 3 insertions(+)
 
