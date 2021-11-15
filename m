@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EC42C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E717C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:13:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4D2360FE7
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:11:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0E1A60FD8
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Nov 2021 02:13:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236332AbhKOCNp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Nov 2021 21:13:45 -0500
-Received: from mga04.intel.com ([192.55.52.120]:50553 "EHLO mga04.intel.com"
+        id S236232AbhKOCQV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Nov 2021 21:16:21 -0500
+Received: from mga05.intel.com ([192.55.52.43]:53953 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236253AbhKOCNm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 14 Nov 2021 21:13:42 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10168"; a="232086645"
+        id S236329AbhKOCOR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 14 Nov 2021 21:14:17 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10168"; a="319573952"
 X-IronPort-AV: E=Sophos;i="5.87,235,1631602800"; 
-   d="scan'208";a="232086645"
+   d="scan'208";a="319573952"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 18:10:47 -0800
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 18:11:03 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,235,1631602800"; 
-   d="scan'208";a="505714581"
+   d="scan'208";a="505714658"
 Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga008.jf.intel.com with ESMTP; 14 Nov 2021 18:10:42 -0800
+  by orsmga008.jf.intel.com with ESMTP; 14 Nov 2021 18:10:58 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joerg Roedel <joro@8bytes.org>,
@@ -42,9 +42,9 @@ Cc:     Will Deacon <will@kernel.org>, rafael@kernel.org,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH 04/11] PCI: portdrv: Suppress kernel DMA ownership auto-claiming
-Date:   Mon, 15 Nov 2021 10:05:45 +0800
-Message-Id: <20211115020552.2378167-5-baolu.lu@linux.intel.com>
+Subject: [PATCH 07/11] vfio: Use DMA_OWNER_USER to declaim passthrough devices
+Date:   Mon, 15 Nov 2021 10:05:48 +0800
+Message-Id: <20211115020552.2378167-8-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
 References: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
@@ -54,47 +54,104 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-IOMMU grouping on PCI necessitates that if we lack isolation on a bridge
-then all of the downstream devices will be part of the same IOMMU group
-as the bridge. As long as the bridge kernel driver doesn't map and
-access any PCI mmio bar, it's safe to bind it to the device in a USER-
-owned group. Hence, safe to suppress the kernel DMA ownership auto-
-claiming.
+Set DMA_OWNER_USER when an iommu group is set to a container, and
+release DMA_OWNER_USER once the iommu group is unset from a container.
 
-The commit 5f096b14d421b ("vfio: Whitelist PCI bridges") permitted a
-class of kernel drivers. This is not always safe. For example, the SHPC
-system design requires that it must be integrated into a PCI-to-PCI
-bridge or a host bridge. The shpchp_core driver relies on the PCI mmio
-bar access for the controller functionality. Binding it to the device
-belonging to a USER-owned group will allow the user to change the
-controller via p2p transactions which is unknown to the hot-plug driver
-and could lead to some unpredictable consequences.
-
-Now that we have driver self-declaration of safety we should rely on that.
-This change may cause regression on some platforms, since all bridges were
-exempted before, but now they have to be manually audited before doing so.
-This is actually the desired outcome anyway.
-
-Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
-Suggested-by: Kevin Tian <kevin.tian@intel.com>
 Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/vfio/fsl-mc/vfio_fsl_mc.c     |  1 +
+ drivers/vfio/pci/vfio_pci.c           |  3 +++
+ drivers/vfio/platform/vfio_amba.c     |  1 +
+ drivers/vfio/platform/vfio_platform.c |  1 +
+ drivers/vfio/vfio.c                   | 12 +++++++++++-
+ 5 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 35eca6277a96..1285862a9aa8 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -203,6 +203,8 @@ static struct pci_driver pcie_portdriver = {
- 	.err_handler	= &pcie_portdrv_err_handler,
- 
- 	.driver.pm	= PCIE_PORTDRV_PM_OPS,
-+
-+	.driver.suppress_auto_claim_dma_owner = true,
+diff --git a/drivers/vfio/fsl-mc/vfio_fsl_mc.c b/drivers/vfio/fsl-mc/vfio_fsl_mc.c
+index 6e2e62c6f47a..b749d092a185 100644
+--- a/drivers/vfio/fsl-mc/vfio_fsl_mc.c
++++ b/drivers/vfio/fsl-mc/vfio_fsl_mc.c
+@@ -587,6 +587,7 @@ static struct fsl_mc_driver vfio_fsl_mc_driver = {
+ 	.driver	= {
+ 		.name	= "vfio-fsl-mc",
+ 		.owner	= THIS_MODULE,
++		.suppress_auto_claim_dma_owner = true,
+ 	},
  };
  
- static int __init dmi_pcie_pme_disable_msi(const struct dmi_system_id *d)
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index a5ce92beb655..8961bfaf0eb5 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -193,6 +193,9 @@ static struct pci_driver vfio_pci_driver = {
+ 	.remove			= vfio_pci_remove,
+ 	.sriov_configure	= vfio_pci_sriov_configure,
+ 	.err_handler		= &vfio_pci_core_err_handlers,
++	.driver = {
++		.suppress_auto_claim_dma_owner = true,
++	},
+ };
+ 
+ static void __init vfio_pci_fill_ids(void)
+diff --git a/drivers/vfio/platform/vfio_amba.c b/drivers/vfio/platform/vfio_amba.c
+index badfffea14fb..2146ee52901a 100644
+--- a/drivers/vfio/platform/vfio_amba.c
++++ b/drivers/vfio/platform/vfio_amba.c
+@@ -94,6 +94,7 @@ static struct amba_driver vfio_amba_driver = {
+ 	.drv = {
+ 		.name = "vfio-amba",
+ 		.owner = THIS_MODULE,
++		.suppress_auto_claim_dma_owner = true,
+ 	},
+ };
+ 
+diff --git a/drivers/vfio/platform/vfio_platform.c b/drivers/vfio/platform/vfio_platform.c
+index 68a1c87066d7..5ef06e668192 100644
+--- a/drivers/vfio/platform/vfio_platform.c
++++ b/drivers/vfio/platform/vfio_platform.c
+@@ -75,6 +75,7 @@ static struct platform_driver vfio_platform_driver = {
+ 	.remove		= vfio_platform_remove,
+ 	.driver	= {
+ 		.name	= "vfio-platform",
++		.suppress_auto_claim_dma_owner = true,
+ 	},
+ };
+ 
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 82fb75464f92..4e21b37e0ea8 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -1198,6 +1198,8 @@ static void __vfio_group_unset_container(struct vfio_group *group)
+ 		driver->ops->detach_group(container->iommu_data,
+ 					  group->iommu_group);
+ 
++	iommu_group_release_dma_owner(group->iommu_group, DMA_OWNER_USER);
++
+ 	group->container = NULL;
+ 	wake_up(&group->container_q);
+ 	list_del(&group->container_next);
+@@ -1282,13 +1284,21 @@ static int vfio_group_set_container(struct vfio_group *group, int container_fd)
+ 		goto unlock_out;
+ 	}
+ 
++	ret = iommu_group_set_dma_owner(group->iommu_group,
++					DMA_OWNER_USER, f.file);
++	if (ret)
++		goto unlock_out;
++
+ 	driver = container->iommu_driver;
+ 	if (driver) {
+ 		ret = driver->ops->attach_group(container->iommu_data,
+ 						group->iommu_group,
+ 						group->type);
+-		if (ret)
++		if (ret) {
++			iommu_group_release_dma_owner(group->iommu_group,
++						      DMA_OWNER_USER);
+ 			goto unlock_out;
++		}
+ 	}
+ 
+ 	group->container = container;
 -- 
 2.25.1
 
