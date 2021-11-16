@@ -2,129 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E162EC433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2792AC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CABD161178
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15468611ED
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 02:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242447AbhKPCKG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Nov 2021 21:10:06 -0500
-Received: from mga06.intel.com ([134.134.136.31]:28673 "EHLO mga06.intel.com"
+        id S241990AbhKPCKI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Nov 2021 21:10:08 -0500
+Received: from mga18.intel.com ([134.134.136.126]:52541 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238127AbhKORyo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Nov 2021 12:54:44 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10169"; a="294311134"
+        id S239291AbhKPCFD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Nov 2021 21:05:03 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10169"; a="220490188"
 X-IronPort-AV: E=Sophos;i="5.87,237,1631602800"; 
-   d="scan'208";a="294311134"
+   d="scan'208";a="220490188"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 09:49:54 -0800
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 18:02:02 -0800
+X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,237,1631602800"; 
-   d="scan'208";a="494113110"
-Received: from asperbe-mobl.amr.corp.intel.com (HELO [10.255.91.105]) ([10.255.91.105])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 09:49:53 -0800
-Subject: Re: [Bug 214995] New: Sof audio didn't recognize Intel Smart Sound
- (SST) speakers, microphone and headphone jack
-To:     Bjorn Helgaas <helgaas@kernel.org>, nicolarevelant44@gmail.com
-Cc:     Liam Girdwood <lgirdwood@gmail.com>,
-        Ranjani Sridharan <ranjani.sridharan@linux.intel.com>,
-        Kai Vehmanen <kai.vehmanen@linux.intel.com>,
-        Daniel Baluta <daniel.baluta@nxp.com>,
-        sound-open-firmware@alsa-project.org, linux-pci@vger.kernel.org
-References: <20211112222432.GA1423380@bhelgaas>
-From:   Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
-Message-ID: <4cf00ae5-f3d7-ecb5-7dae-f8629becc0d2@linux.intel.com>
-Date:   Mon, 15 Nov 2021 11:49:22 -0600
+   d="scan'208";a="494268259"
+Received: from allen-box.sh.intel.com (HELO [10.239.159.118]) ([10.239.159.118])
+  by orsmga007.jf.intel.com with ESMTP; 15 Nov 2021 18:01:56 -0800
+Cc:     baolu.lu@linux.intel.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>, kvm@vger.kernel.org,
+        rafael@kernel.org, linux-pci@vger.kernel.org,
+        Cornelia Huck <cohuck@redhat.com>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Will Deacon <will@kernel.org>
+Subject: Re: [PATCH 01/11] iommu: Add device dma ownership set/release
+ interfaces
+To:     Christoph Hellwig <hch@infradead.org>
+References: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
+ <20211115020552.2378167-2-baolu.lu@linux.intel.com>
+ <YZJdJH4AS+vm0j06@infradead.org>
+From:   Lu Baolu <baolu.lu@linux.intel.com>
+Message-ID: <cc7ce6f4-b1ec-49ef-e245-ab6c330154c2@linux.intel.com>
+Date:   Tue, 16 Nov 2021 09:57:30 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.14.0
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20211112222432.GA1423380@bhelgaas>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <YZJdJH4AS+vm0j06@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Christoph,
 
+On 11/15/21 9:14 PM, Christoph Hellwig wrote:
+> On Mon, Nov 15, 2021 at 10:05:42AM +0800, Lu Baolu wrote:
+>> +enum iommu_dma_owner {
+>> +	DMA_OWNER_NONE,
+>> +	DMA_OWNER_KERNEL,
+>> +	DMA_OWNER_USER,
+>> +};
+>> +
+> 
+>> +	enum iommu_dma_owner dma_owner;
+>> +	refcount_t owner_cnt;
+>> +	struct file *owner_user_file;
+> 
+> I'd just overload the ownership into owner_user_file,
+> 
+>   NULL			-> no owner
+>   (struct file *)1UL)	-> kernel
+>   real pointer		-> user
+> 
+> Which could simplify a lot of the code dealing with the owner.
+> 
 
-On 11/12/21 4:24 PM, Bjorn Helgaas wrote:
-> On Fri, Nov 12, 2021 at 09:11:45AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=214995
->>
->>             Bug ID: 214995
->>            Summary: Sof audio didn't recognize Intel Smart Sound (SST)
->>                     speakers, microphone and headphone jack
->>            Product: Drivers
->>            Version: 2.5
->>     Kernel Version: 5.11.0-40-generic
->>           Hardware: Intel
->>                 OS: Linux
->>               Tree: Mainline
->>             Status: NEW
->>           Severity: high
->>           Priority: P1
->>          Component: PCI
->>           Assignee: drivers_pci@kernel-bugs.osdl.org
->>           Reporter: nicolarevelant44@gmail.com
->>         Regression: No
->>
->> Created attachment 299549
->>   --> https://bugzilla.kernel.org/attachment.cgi?id=299549&action=edit
->> The output of dmesg and lspci -v
->>
->> I have a Huawei Matebook D15 notebook with Intel Smart Sound Technology as
->> sound card. SST includes speakers, microphone and headphone jack so none of the
->> 3 work. Bluetooth and USB headphones work. I have already tried to change
->> "options snd_intel_dspcfg dsp_driver" and reload alsa (alsa reload) for each
->> value but nothing (only small changes in dmesg).
->> The first lines of dmesg_dump.txt are errors because of the 'alsa reload'
->> command. The log is verbose because I add some options from this web page:
->> https://thesofproject.github.io/latest/getting_started/intel_debug/suggestions.html
->>
->> My sound card is listed in PCI so the last lines of dmesg_dump.txt are the
->> output of the 'lspci -v' command
->>
->> aplay -l shows only 3 HDMI outputs with sof-hda-dsp
-> 
-> Hi Nicola,
-> 
-> Thanks very much for the report and sorry for the problem.
-> 
-> It's possible there's a power management issue, e.g., reads to the
-> 00:1f.3 device are timing out because the device is in D3cold, but I
-> can't tell from the part of the dmesg log you attached.  In that case,
-> reads will generally return ~0 (0xffffffff), but it looks like some
-> reads *do* return valid data, e.g.,
-> 
->   sof-audio-pci 0000:00:1f.3: DSP detected with PCI class/subclass/prog-if info 0x040100
->   sof-audio-pci 0000:00:1f.3: found ML capability at 0xc00
-> 
-> I don't see an obvious PCI core connection here, so I cc'd the SOF
-> maintainers in case they have any insight.
-> 
->   - It looks like you're running v5.11.0.  Can you reproduce the same
->     problem on a current kernel, e.g., v5.15?  It's possible the
->     problem has been fixed since v5.11.
-> 
->   - Did this ever work?  In other words, is this a regression?  If so,
->     what's the newest kernel you know of that *did* work?  In the
->     worst case, we could bisect to identify a change that broke it.
-> 
->   - It might be useful if you could attach the complete dmesg log and
->     output of "sudo lspci -vv" to the bugzilla.
+Yeah! Sounds reasonable. I will make this in the next version.
 
-That seems like a known issue already tracked at
-https://github.com/thesofproject/linux/issues/3248
-
-There's a set of devices based on the ES8316/36 I2S audio codec which
-needs dedicated quirks. In the existing reports the Huawei Matebook D15
-is listed as using that codec.
-
-The latest experimental code we have is here:
-https://github.com/thesofproject/linux/pull/3107/commits
-
-If confirmed, can we track this on GitHub so that all results for this
-sort of devices are collected in one place? Thanks!
-
-
+Best regards,
+baolu
