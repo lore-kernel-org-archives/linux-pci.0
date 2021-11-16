@@ -2,79 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53FA3C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 12:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B9DC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 15:29:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3442E61ABD
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 12:37:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D0E961BFE
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Nov 2021 15:29:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236320AbhKPMkH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Nov 2021 07:40:07 -0500
-Received: from tomli.me ([31.220.7.45]:31118 "EHLO tomli.me"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236306AbhKPMkF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Nov 2021 07:40:05 -0500
-X-Greylist: delayed 397 seconds by postgrey-1.27 at vger.kernel.org; Tue, 16 Nov 2021 07:40:03 EST
-Received: from tomli.me (localhost [127.0.0.1])
-        by tomli.me (OpenSMTPD) with ESMTP id 7130ef63;
-        Tue, 16 Nov 2021 12:30:25 +0000 (UTC)
-Authentication-Results: tomli.me; auth=pass (login) smtp.auth=tomli
-Received: from Unknown (HELO work) (221.219.136.22)
- by tomli.me (qpsmtpd/0.96) with ESMTPSA (AEAD-AES256-GCM-SHA384 encrypted); Tue, 16 Nov 2021 12:30:25 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed; d=tomli.me; h=resent-from:resent-date:resent-message-id:resent-to:from:date:subject; s=1490979754; bh=KBfiT1w0XL11Z1fG5BYzBut0m+TzF/AfNmY64Lyh3Tk=; b=yKaAZBFD7DJrTT/M8n6HusL9M1/ruIi790LL/47aMOTz6naAMEwevu+4J2oMBH0hnQwcGwUCmxsuFi9LhLWSYBE9ioqnG5zophlHDLey5TKfO2eexYJqBoW7abP2oRul0tA1mPzZ0S0TwtmxQ9LMTYH9OKy/ouIH/JL24D7LEO6uJIVkT5bsm877OzwANgERr29npLatg3ZSpzOKqoZSI81HrQGkaJz+mYs/6fplWhk4QUekmB2miDlRR+8wLs+fdTku7aq4EL1vMsQVgWgYuBm7fXEDleNy+tUEhGKqgxb6rn9NxE54XDIlnJVhmBc6pTl0XqNemGrjVn9r3zopEw==
-From:   Yifeng Li <tomli@tomli.me>
-Date:   Mon, 15 Nov 2021 14:55:16 +0000
-Subject: [PATCH] PCI: Add func1 DMA quirk for Marvell 88SE9125 SATA controller
-Message-ID: <15293b9898bae404@tomli.me>
-Apparently-To: <tomli@tomli.me>
+        id S238134AbhKPPcg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Nov 2021 10:32:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53792 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238210AbhKPPcd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Nov 2021 10:32:33 -0500
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C5CDC061570;
+        Tue, 16 Nov 2021 07:29:36 -0800 (PST)
+Received: by mail-ed1-x52f.google.com with SMTP id b15so89270412edd.7;
+        Tue, 16 Nov 2021 07:29:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XP/WD34N2xW31YEPPdTkLsFiPxD+BXuI6TQenMThUU0=;
+        b=k+xen1al/ElL2mRGcFuvoH64vuRVEdtffXC7y7Xuty7GIb6UdowAG3+pBld0/ZUVrg
+         xv+R/lqbr5t9zDJuZEhcgIPps2pV52Ec8vl12s5AH063hwaaR/oGUI6pMSBKBT0hw5av
+         2t33juLbhmwOQdL4hSgch6yzxdBHVgcPRwpIVWocpQNlRxbIHPWu7wYAib71oYqgUpzO
+         YLbLUX4PAlH9Ui5cvgLaTUAOpNL6y7sDdmshBalzpOT0H8T17KpK9mI5iZGOMXVZMvXi
+         TweMrQ6GCkN1N4DZg6gm+6kIDZLVKtYzm/gOtsDzEhM8pFCsJPIhkgR/2knvx8e+AjL9
+         /92g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XP/WD34N2xW31YEPPdTkLsFiPxD+BXuI6TQenMThUU0=;
+        b=lcixeUHsNjiLD/U6NOQfFHHUNWmCOpnaksumVP2f6YM7VyTNqe5+JPfAbluIjJ18or
+         X5BfJgA6Y8IDj4SwhHZC5PIRey0NL0Dx/7ciwPJK6kLQecxrnq84DTNDzzRSHI9d9XNX
+         erPxVwfgyhF0aqZ1JAwv57kUH5eDpXI0t7x0BPAMr6oCXTmDnocO6njMeA/JPGSXdrFo
+         4kGrjw8a5lyi8Ocrkg9onB+vAynipzCstcq5z745p9MQyyekkIZS04kQp8AbFlFbMmK3
+         LVv9o5vpyNZiYsPegbYVCL+XiyMgTp5GX5c+HpjqPNF2oucXlpaF+kilVDx+slv4ScFm
+         H8mA==
+X-Gm-Message-State: AOAM533MuvxTf4NpHr7b/491911YGGlRatISQfyXanJfbgVOScavipIU
+        +13aAmqcEdaWbKR6gbzkGN8vHbaj667V4fo8oDY=
+X-Google-Smtp-Source: ABdhPJy24zGx0EGIId68pmO/RIPAS3eflKt4vSUATfPZpGYsYh0Rdqaj9fJhQCII6f7euP5QBoXcnk7JIozbX08ZjiM=
+X-Received: by 2002:a50:fd16:: with SMTP id i22mr11299530eds.224.1637076575153;
+ Tue, 16 Nov 2021 07:29:35 -0800 (PST)
+MIME-Version: 1.0
+References: <20211116131247.508424-1-hdegoede@redhat.com>
+In-Reply-To: <20211116131247.508424-1-hdegoede@redhat.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Tue, 16 Nov 2021 17:28:54 +0200
+Message-ID: <CAHp75Vfb6Apx4wwcK6m3wKuj5O0xq7g2tGhiOJTuZZA4hfmT1A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Make the pci_dev_present() stub a static inline
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        kernel test robot <lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-To:     unlisted-recipients:; (no To-header on input)
 
-Like other SATA controller chips in the Marvell 88SE91xx series, the
-Marvell 88SE9125 has the same DMA requester ID hardware bug that prevents
-it from working under IOMMU. This patch adds its device ID 0x9125 to the
-Function 1 DMA alias quirk list.
+On Tue, Nov 16, 2021 at 3:14 PM Hans de Goede <hdegoede@redhat.com> wrote:
+>
+> Change the pci_dev_present() stub which is used when CONFIG_PCI is not set
+> from a #define to a static inline stub.
+>
+> Thix should fix clang -Werror builds failing due to errors like this:
+>
+> drivers/platform/x86/thinkpad_acpi.c:4475:35:
+>  error: unused variable 'fwbug_cards_ids' [-Werror,-Wunused-const-variable]
+>
+> Where fwbug_cards_ids is an array if pci_device_id-s passed to
+> pci_dev_present() during a quirk check.
+>
+> Fixing this in include/linux/pci.h should ensure that the same issue is
+> also fixed in any other drivers hitting the same -Werror issue.
 
-This patch should not be confused with an earlier patch, commit 059983790a4c
-("PCI: Add function 1 DMA alias quirk for Marvell 9215 SATA controller"),
-which applies to a different chip with a similar model number, 88SE9215.
+FWIW,
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-Without this patch, device initialization fails with DMA errors.
+> Cc: platform-driver-x86@vger.kernel.org
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+> Note the commit message says "should fix" because I could not actually
+> be bothered to verify this. The whole notion of combining:
+> 1. clang
+> 2. -Werror
+> 3. -Wunused-const-variable
+> Is frankly a bit crazy, causing way too much noise and has already
+> cost me too much time IMHO.
+> ---
+>  include/linux/pci.h | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 18a75c8e615c..7d825637d7ca 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1775,7 +1775,10 @@ static inline struct pci_dev *pci_get_class(unsigned int class,
+>                                             struct pci_dev *from)
+>  { return NULL; }
+>
+> -#define pci_dev_present(ids)   (0)
+> +
+> +static inline int pci_dev_present(const struct pci_device_id *ids)
+> +{ return 0; }
+> +
+>  #define no_pci_devices()       (1)
+>  #define pci_dev_put(dev)       do { } while (0)
+>
+> --
+> 2.31.1
+>
 
-    ata8: softreset failed (1st FIS failed)
-    DMAR: DRHD: handling fault status reg 2
-    DMAR: [DMA Write NO_PASID] Request device [03:00.1] fault addr 0xfffc0000 [fault reason 0x02] Present bit in context entry is clear
-    DMAR: DRHD: handling fault status reg 2
-    DMAR: [DMA Read NO_PASID] Request device [03:00.1] fault addr 0xfffc0000 [fault reason 0x02] Present bit in context entry is clear
 
-After applying the patch, the controller can be successfully initialized.
-
-    ata8: SATA link up 1.5 Gbps (SStatus 113 SControl 330)
-    ata8.00: ATAPI: PIONEER BD-RW   BDR-207M, 1.21, max UDMA/100
-    ata8.00: configured for UDMA/100
-    scsi 7:0:0:0: CD-ROM            PIONEER  BD-RW   BDR-207M 1.21 PQ: 0 ANSI: 5
-
-Reported-by: sbingner <sam@bingner.com>
-Signed-off-by: Yifeng Li <tomli@tomli.me>
----
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 003950c73..20a932690 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4103,6 +4103,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9120,
- 			 quirk_dma_func1_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
- 			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c136 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
-+			 quirk_dma_func1_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9128,
- 			 quirk_dma_func1_alias);
- /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
 -- 
-2.31.1
+With Best Regards,
+Andy Shevchenko
