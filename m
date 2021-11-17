@@ -2,82 +2,189 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3004C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Nov 2021 21:50:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81ADBC433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Nov 2021 21:54:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A62F361BD2
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Nov 2021 21:50:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 608616128A
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Nov 2021 21:54:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230415AbhKQVxp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Nov 2021 16:53:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55284 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229935AbhKQVxp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Nov 2021 16:53:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8DE4260F9C;
-        Wed, 17 Nov 2021 21:50:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637185845;
-        bh=12bBRp3Kd6xWyPSV8o/1HgC8rO/LOUpDVmkQv2UHwo0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=uauHmzYP2wtOVm9oDx0SC25cqFjVjFFoa961tjye7z5h14oscIl1LW9Iy+FzE6svJ
-         HNKwr78f4gOfXeLQFNsaongaeoK8rgoGOXU8hFuErQ7KWsT9aA+91XssNL2Bg3dZ89
-         elbf+sCZoDv2cSrWBfcN+T1CLK+y+B8y33lS1ue6w5WZver6q6qgOEbFD57D10dho7
-         EkMoAXp2r9KiJSeaAfWFk+BEVOvRBH5r7jRaixkEVbuFk0ECtgjbR3H4roTHd+/h4/
-         m3DicuMrlBjf7tkVMvz20JX8O96J5s7uQS3Kfdxl1R5qiUg9ktG7X4phfGna20SuWw
-         VDtj0TRTAmNSg==
-Date:   Wed, 17 Nov 2021 15:50:44 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     ira.weiny@intel.com
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: Add vendor ID for the PCI SIG
-Message-ID: <20211117215044.GA1777828@bhelgaas>
+        id S240902AbhKQV51 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Nov 2021 16:57:27 -0500
+Received: from ale.deltatee.com ([204.191.154.188]:58774 "EHLO
+        ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240850AbhKQV5Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Nov 2021 16:57:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=ssl/2HoZWYUVencC1NchVAWoP2TebO/zK0AWTtGRX5E=; b=CIXIX5rMRxPdLgpqM+lyPOQ0Lb
+        aJjhbKx1cJyZgoYkr+fMfijjCH45WV3lbnNtdApCTnLCHOfm+G+Cs+an+fpNkMdbPj/68EfP0SJkE
+        3/B3MxvMg/li677vfmHAun6ReZQ1cW1Axzg+t6vN2Fayu6Enymrc/07oTDi2OXYDZI1cIDB74Oq06
+        vyKV2DZjvaMoJWYuVXTWpaGEFDoRsjIi1Eq73ae/4KZPjCbz1eNPdp/tQP7d7DAEEkgLlvLaID+oC
+        Ft7SDp93lf/hY+TlLQ8nf5y+i/dmQ35aU+TfYlhIuMCDkrwJYrWDw2iegY+9EPPYm+76vsC2RdlOr
+        4ac4RYTQ==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1mnSsl-000Zo6-CZ; Wed, 17 Nov 2021 14:54:21 -0700
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1mnSsk-0000zn-Ko; Wed, 17 Nov 2021 14:54:18 -0700
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, iommu@lists.linux-foundation.org
+Cc:     Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Jakowski Andrzej <andrzej.jakowski@intel.com>,
+        Minturn Dave B <dave.b.minturn@intel.com>,
+        Jason Ekstrand <jason@jlekstrand.net>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Xiong Jianxin <jianxin.xiong@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Martin Oliveira <martin.oliveira@eideticom.com>,
+        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Wed, 17 Nov 2021 14:54:03 -0700
+Message-Id: <20211117215410.3695-17-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211117215410.3695-1-logang@deltatee.com>
+References: <20211117215410.3695-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211105235056.3711389-2-ira.weiny@intel.com>
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, jhubbard@nvidia.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v4 16/23] iov_iter: introduce iov_iter_get_pages_[alloc_]flags()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 05, 2021 at 04:50:52PM -0700, ira.weiny@intel.com wrote:
-> From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> 
-> This ID is used in DOE headers to identify protocols that are defined
-> within the PCI Express Base Specification.
-> 
-> Specified in Table 7-x2 of the Data Object Exchange ECN (approved 12 March
-> 2020) available from https://members.pcisig.com/wg/PCI-SIG/document/14143
-> 
-> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Add iov_iter_get_pages_flags() and iov_iter_get_pages_alloc_flags()
+which take a flags argument that is passed to get_user_pages_fast().
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+This is so that FOLL_PCI_P2PDMA can be passed when appropriate.
 
-> ---
->  include/linux/pci_ids.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 011f2f1ea5bb..849f514cd7db 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -149,6 +149,7 @@
->  #define PCI_CLASS_OTHERS		0xff
->  
->  /* Vendors and devices.  Sort key: vendor first, device next. */
-> +#define PCI_VENDOR_ID_PCI_SIG		0x0001
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ include/linux/uio.h | 21 +++++++++++++++++----
+ lib/iov_iter.c      | 15 +++++++--------
+ 2 files changed, 24 insertions(+), 12 deletions(-)
 
-We should probably also use this in pci_bus_crs_vendor_id().
+diff --git a/include/linux/uio.h b/include/linux/uio.h
+index 6350354f97e9..4c6e64d2f7dd 100644
+--- a/include/linux/uio.h
++++ b/include/linux/uio.h
+@@ -243,10 +243,23 @@ void iov_iter_pipe(struct iov_iter *i, unsigned int direction, struct pipe_inode
+ void iov_iter_discard(struct iov_iter *i, unsigned int direction, size_t count);
+ void iov_iter_xarray(struct iov_iter *i, unsigned int direction, struct xarray *xarray,
+ 		     loff_t start, size_t count);
+-ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
+-			size_t maxsize, unsigned maxpages, size_t *start);
+-ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
+-			size_t maxsize, size_t *start);
++ssize_t iov_iter_get_pages_flags(struct iov_iter *i, struct page **pages,
++		size_t maxsize, unsigned maxpages, size_t *start,
++		unsigned int gup_flags);
++ssize_t iov_iter_get_pages_alloc_flags(struct iov_iter *i,
++		struct page ***pages, size_t maxsize, size_t *start,
++		unsigned int gup_flags);
++static inline ssize_t iov_iter_get_pages(struct iov_iter *i,
++		struct page **pages, size_t maxsize, unsigned maxpages,
++		size_t *start)
++{
++	return iov_iter_get_pages_flags(i, pages, maxsize, maxpages, start, 0);
++}
++static inline ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
++		struct page ***pages, size_t maxsize, size_t *start)
++{
++	return iov_iter_get_pages_alloc_flags(i, pages, maxsize, start, 0);
++}
+ int iov_iter_npages(const struct iov_iter *i, int maxpages);
+ void iov_iter_restore(struct iov_iter *i, struct iov_iter_state *state);
+ 
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 66a740e6e153..0d557e0e82b2 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -1515,9 +1515,9 @@ static struct page *first_bvec_segment(const struct iov_iter *i,
+ 	return page;
+ }
+ 
+-ssize_t iov_iter_get_pages(struct iov_iter *i,
++ssize_t iov_iter_get_pages_flags(struct iov_iter *i,
+ 		   struct page **pages, size_t maxsize, unsigned maxpages,
+-		   size_t *start)
++		   size_t *start, unsigned int gup_flags)
+ {
+ 	size_t len;
+ 	int n, res;
+@@ -1528,7 +1528,6 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
+ 		return 0;
+ 
+ 	if (likely(iter_is_iovec(i))) {
+-		unsigned int gup_flags = 0;
+ 		unsigned long addr;
+ 
+ 		if (iov_iter_rw(i) != WRITE)
+@@ -1558,7 +1557,7 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
+ 		return iter_xarray_get_pages(i, pages, maxsize, maxpages, start);
+ 	return -EFAULT;
+ }
+-EXPORT_SYMBOL(iov_iter_get_pages);
++EXPORT_SYMBOL(iov_iter_get_pages_flags);
+ 
+ static struct page **get_pages_array(size_t n)
+ {
+@@ -1640,9 +1639,9 @@ static ssize_t iter_xarray_get_pages_alloc(struct iov_iter *i,
+ 	return actual;
+ }
+ 
+-ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
++ssize_t iov_iter_get_pages_alloc_flags(struct iov_iter *i,
+ 		   struct page ***pages, size_t maxsize,
+-		   size_t *start)
++		   size_t *start, unsigned int gup_flags)
+ {
+ 	struct page **p;
+ 	size_t len;
+@@ -1654,7 +1653,6 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ 		return 0;
+ 
+ 	if (likely(iter_is_iovec(i))) {
+-		unsigned int gup_flags = 0;
+ 		unsigned long addr;
+ 
+ 		if (iov_iter_rw(i) != WRITE)
+@@ -1667,6 +1665,7 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ 		p = get_pages_array(n);
+ 		if (!p)
+ 			return -ENOMEM;
++
+ 		res = get_user_pages_fast(addr, n, gup_flags, p);
+ 		if (unlikely(res <= 0)) {
+ 			kvfree(p);
+@@ -1694,7 +1693,7 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ 		return iter_xarray_get_pages_alloc(i, pages, maxsize, start);
+ 	return -EFAULT;
+ }
+-EXPORT_SYMBOL(iov_iter_get_pages_alloc);
++EXPORT_SYMBOL(iov_iter_get_pages_alloc_flags);
+ 
+ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
+ 			       struct iov_iter *i)
+-- 
+2.30.2
 
->  #define PCI_VENDOR_ID_LOONGSON		0x0014
->  
-> -- 
-> 2.28.0.rc0.12.gb6a658bd00c9
-> 
