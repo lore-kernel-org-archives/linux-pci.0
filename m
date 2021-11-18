@@ -2,138 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E0FC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 01:17:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E11B8C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 01:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9844C61B98
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 01:17:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C38E261266
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 01:34:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242182AbhKRBUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Nov 2021 20:20:17 -0500
-Received: from mga07.intel.com ([134.134.136.100]:42317 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242174AbhKRBUP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Nov 2021 20:20:15 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10171"; a="297510643"
-X-IronPort-AV: E=Sophos;i="5.87,243,1631602800"; 
-   d="scan'208";a="297510643"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2021 17:17:15 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,243,1631602800"; 
-   d="scan'208";a="495157953"
-Received: from allen-box.sh.intel.com (HELO [10.239.159.118]) ([10.239.159.118])
-  by orsmga007.jf.intel.com with ESMTP; 17 Nov 2021 17:17:09 -0800
-Cc:     baolu.lu@linux.intel.com, Christoph Hellwig <hch@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>, kvm@vger.kernel.org,
-        rafael@kernel.org, linux-pci@vger.kernel.org,
-        Cornelia Huck <cohuck@redhat.com>,
-        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Will Deacon <will@kernel.org>
-Subject: Re: [PATCH 01/11] iommu: Add device dma ownership set/release
- interfaces
-To:     Jason Gunthorpe <jgg@nvidia.com>
-References: <20211115020552.2378167-1-baolu.lu@linux.intel.com>
- <20211115020552.2378167-2-baolu.lu@linux.intel.com>
- <YZJdJH4AS+vm0j06@infradead.org>
- <cc7ce6f4-b1ec-49ef-e245-ab6c330154c2@linux.intel.com>
- <20211116134603.GA2105516@nvidia.com>
- <d79acc01-eeaf-e6ac-0415-af498c355a00@linux.intel.com>
- <20211117133517.GJ2105516@nvidia.com>
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-Message-ID: <5901c54b-a6eb-b060-aa52-15de7708d703@linux.intel.com>
-Date:   Thu, 18 Nov 2021 09:12:41 +0800
+        id S236932AbhKRBhL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Nov 2021 20:37:11 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41784 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S242277AbhKRBhG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Nov 2021 20:37:06 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AI0DJIC026916;
+        Thu, 18 Nov 2021 01:33:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=xn+sOmi8ndC4mBR3hUQSaLyvI8uirMt19YnrsauyzFU=;
+ b=gcuC3FyFsNJvBcNi99WvaRh3cJjwv1HftEgO/cGl47mQDUKKTuvkaOykUjMmio6ITxIh
+ oGdMEH7suvteDwOHbjYkJGAtsB4z+kWvEmtX9ssaOjLn/HI+fxP/9rcGb9UUkgEa8NTs
+ ZGlaL98OdV90TDENem/lg983qlbFzCI98QT8C5JNjljXpw7oMDSTvnPrLW/8c+FBLdNw
+ ZPZFdzwPVhgZcz55gBejj1GGFGZhvKw1x8d1OMYxPViOQEQgayuRYF0OquLTle4k/RWh
+ /huq/mLVcUR9VlNh88RWqRvHX/qeZAk3P8SypQOxJ0n7uscbgjGpy9THqkmLIekXujs7 1w== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3cdc3bs585-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 18 Nov 2021 01:33:54 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1AI1XFx1006361;
+        Thu, 18 Nov 2021 01:33:53 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 3ca4mk7vm4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 18 Nov 2021 01:33:53 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1AI1QpdJ61080060
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 18 Nov 2021 01:26:51 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BF380A405B;
+        Thu, 18 Nov 2021 01:33:50 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 593F0A4051;
+        Thu, 18 Nov 2021 01:33:50 +0000 (GMT)
+Received: from ozlabs.au.ibm.com (unknown [9.192.253.14])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 18 Nov 2021 01:33:50 +0000 (GMT)
+Received: from [9.102.52.144] (unknown [9.102.52.144])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by ozlabs.au.ibm.com (Postfix) with ESMTPSA id B871860272;
+        Thu, 18 Nov 2021 12:33:44 +1100 (AEDT)
+Subject: Re: [helgaas-pci:pci/driver 17/24] drivers/misc/cxl/pci.c:1816:29:
+ error: assignment discards 'const' qualifier from pointer target type
+To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        kernel test robot <lkp@intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, kbuild-all@lists.01.org,
+        linux-pci@vger.kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Frederic Barrat <fbarrat@linux.ibm.com>
+References: <202111120955.M4Pkd0T4-lkp@intel.com> <YY3GbjLsnkUc/zhG@rocinante>
+From:   Andrew Donnellan <ajd@linux.ibm.com>
+Message-ID: <180067dd-f640-d207-2ee7-6e84c54704f4@linux.ibm.com>
+Date:   Thu, 18 Nov 2021 12:33:36 +1100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-MIME-Version: 1.0
-In-Reply-To: <20211117133517.GJ2105516@nvidia.com>
+ Thunderbird/78.14.0
+In-Reply-To: <YY3GbjLsnkUc/zhG@rocinante>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: lf0WpNlGoZSTLtcCMFnnwBQFE6UyNdD_
+X-Proofpoint-ORIG-GUID: lf0WpNlGoZSTLtcCMFnnwBQFE6UyNdD_
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-11-17_09,2021-11-17_01,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 mlxscore=0
+ suspectscore=0 mlxlogscore=863 impostorscore=0 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 adultscore=0 malwarescore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2111180007
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/17/21 9:35 PM, Jason Gunthorpe wrote:
-> On Wed, Nov 17, 2021 at 01:22:19PM +0800, Lu Baolu wrote:
->> Hi Jason,
->>
->> On 11/16/21 9:46 PM, Jason Gunthorpe wrote:
->>> On Tue, Nov 16, 2021 at 09:57:30AM +0800, Lu Baolu wrote:
->>>> Hi Christoph,
->>>>
->>>> On 11/15/21 9:14 PM, Christoph Hellwig wrote:
->>>>> On Mon, Nov 15, 2021 at 10:05:42AM +0800, Lu Baolu wrote:
->>>>>> +enum iommu_dma_owner {
->>>>>> +	DMA_OWNER_NONE,
->>>>>> +	DMA_OWNER_KERNEL,
->>>>>> +	DMA_OWNER_USER,
->>>>>> +};
->>>>>> +
->>>>>
->>>>>> +	enum iommu_dma_owner dma_owner;
->>>>>> +	refcount_t owner_cnt;
->>>>>> +	struct file *owner_user_file;
->>>>>
->>>>> I'd just overload the ownership into owner_user_file,
->>>>>
->>>>>     NULL			-> no owner
->>>>>     (struct file *)1UL)	-> kernel
->>>>>     real pointer		-> user
->>>>>
->>>>> Which could simplify a lot of the code dealing with the owner.
->>>>>
->>>>
->>>> Yeah! Sounds reasonable. I will make this in the next version.
->>>
->>> It would be good to figure out how to make iommu_attach_device()
->>> enforce no other driver binding as a kernel user without a file *, as
->>> Robin pointed to, before optimizing this.
->>>
->>> This fixes an existing bug where iommu_attach_device() only checks the
->>> group size and is vunerable to a hot plug increasing the group size
->>> after it returns. That check should be replaced by this series's logic
->>> instead.
->>
->> As my my understanding, the essence of this problem is that only the
->> user owner of the iommu_group could attach an UNMANAGED domain to it.
->> If I understand it right, how about introducing a new interface to
->> allocate a user managed domain and storing the user file pointer in it.
+On 12/11/21 12:42 pm, Krzysztof Wilczyński wrote:
+> [+CC Adding Jonathan, Dan, Frederic and Andrew for visibility]
 > 
-> For iommu_attach_device() the semantic is simple non-sharing, so there
-> is no need for the file * at all, it can just be NULL.
+>> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/driver
+>> head:   0508b6f72f055b88df518db4f3811bda9bb35da4
+>> commit: 115c9d41e58388415f4956d0a988c90fb48663b9 [17/24] cxl: Factor out common dev->driver expressions
+>> config: powerpc64-allnoconfig (attached as .config)
 
-The file * being NULL means the device is only owned by the kernel
-driver. Perhaps we can check this pointer in iommu_attach_device() to
-avoid using it for user domain attachment.
+I think this issue has already been fixed, but I'm curious how 
+CONFIG_CXL ended up being y in a supposed allnoconfig...
 
-> 
->> Does above help here?
-> 
-> No, iommu_attach_device() is kernel only and should not interact with
-> userspace.
 
-The existing iommu_attach_device() allows only for singleton group. As
-we have added group ownership attribute, we can enforce this interface
-only for kernel domain usage.
+Andrew
 
-> 
-> I'm also going to see if I can learn what Tegra is doing with
-> iommu_attach_group()
 
-Okay! Thank you!
-
-> 
-> Jason
-> 
-
-Best regards,
-baolu
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+ajd@linux.ibm.com             IBM Australia Limited
