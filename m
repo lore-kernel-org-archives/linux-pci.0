@@ -2,116 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 128C1C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:44:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B31C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:58:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAD5A61452
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:44:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 015DD61407
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:58:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233605AbhKRUrX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Nov 2021 15:47:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34004 "EHLO mail.kernel.org"
+        id S231597AbhKRVBT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Nov 2021 16:01:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37720 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232565AbhKRUrX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Nov 2021 15:47:23 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 475F96128C;
-        Thu, 18 Nov 2021 20:44:22 +0000 (UTC)
+        id S229905AbhKRVBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Nov 2021 16:01:19 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 58560613A3;
+        Thu, 18 Nov 2021 20:58:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637268262;
-        bh=sVeugOXOThpr87Zi3LpkKeS4dLNuxTnnYlOPOREQuJ0=;
+        s=k20201202; t=1637269098;
+        bh=/xt+uXa7glCQc4NoV8PVvEQVFQeQykCNInRgbr3iJxM=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Jb8casGJHw1GPw52ROWvElXI1Y3Ol4NorSB8tY4VFUWAsxhMhJw1eGg8yeeDOl3HL
-         1gEwn+J/Nwj3oOgX2oyUA2qOkyE/QgPMADTRcCzD9yMiYgcjYUYDgq+dL2TdYrZkrO
-         DdUxiQel6roOXC65gdhkzxUJk9jgL+XYK9S7+j+2lkQ1K/Kzq9TxQ0cGLh3BqCmPU8
-         SJQVIITH1U7ML7B0BhEONKb9SbGnIRmDeuojCtWd98bXE7wmEYbfbkzXsfTzGIULyP
-         C+fXuO7dL5eKt7rtZyOn/GSS+MoJ67VMC4nYz5UwIajXf0XXzbE3KqP5TeTFwOTboQ
-         1i0TF1Z0kO7nA==
-Date:   Thu, 18 Nov 2021 14:44:21 -0600
+        b=W40RlW9A3DG5IR7234eCb49osgoPdyWqFY0IIxPdDFMWlZIidG8J98/0YJrQZ+3DM
+         2jI/eGwsASssjMFkMNTK5cmWfV83leADZtO48iF9IHxYLBvvwQVOQOIqJ5eiI7AV+P
+         /iPohx0AObaKf5rK26R9YXOnChBh/BV2+tKfEycdHo+tSPBxQ214A4IGmyr1qDTPeH
+         DqdF9/y/Bhs0xIktNREy61AZodRuHuvPAaAjsNWgOEr8Y5jI5PoNUp+S8/tDLz+QRq
+         RLXVHG2nVna4TYevQ2myx5tFc61sNOmXW45wa/pRSTB4tmKV9buFwqtJAjawhsaDUm
+         OTrzf7U4kjvPA==
+Date:   Thu, 18 Nov 2021 14:58:16 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Naveen Naidu <naveennaidu479@gmail.com>
-Cc:     bhelgaas@google.com,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-hyperv@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Toan Le <toan@os.amperecomputing.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Nirmal Patel <nirmal.patel@linux.intel.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Rob Herring <robh@kernel.org>, Wei Liu <wei.liu@kernel.org>,
-        linux-samsung-soc@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
-        Joyce Ooi <joyce.ooi@intel.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        linux-rockchip@lists.infradead.org,
-        "maintainer:BROADCOM IPROC ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Jonathan Derrick <jonathan.derrick@linux.dev>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Robert Richter <rric@kernel.org>,
-        Sean V Kelley <sean.v.kelley@intel.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        linux-mediatek@lists.infradead.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Qiuxu Zhuo <qiuxu.zhuo@intel.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Lukas Wunner <lukas@wunner.de>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Subject: Re: [PATCH v4 00/25] Unify PCI error response checking
-Message-ID: <20211118204421.GA1881943@bhelgaas>
+To:     Jiri Slaby <jslaby@suse.cz>
+Cc:     gregkh@linuxfoundation.org, linux-serial@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 18/19] mxser: move ids from pci_ids.h here
+Message-ID: <20211118205816.GA1883757@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1637243717.git.naveennaidu479@gmail.com>
+In-Reply-To: <20211118073125.12283-19-jslaby@suse.cz>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 18, 2021 at 07:33:10PM +0530, Naveen Naidu wrote:
-> An MMIO read from a PCI device that doesn't exist or doesn't respond
-> causes a PCI error.  There's no real data to return to satisfy the 
-> CPU read, so most hardware fabricates ~0 data.
+On Thu, Nov 18, 2021 at 08:31:24AM +0100, Jiri Slaby wrote:
+> There is no point having MOXA PCI device IDs in include/linux/pci_ids.h.
+> Move them to the driver and sort them all by the ID.
 > 
-> This patch series adds PCI_ERROR_RESPONSE definition and other helper
-> definition PCI_SET_ERROR_RESPONSE and PCI_POSSIBLE_ERROR and uses it
-> where appropriate to make these checks consistent and easier to find.
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I would capitalize "IDs" in the subject as you did in the commit log.
+
+> ---
+>  drivers/tty/mxser.c     | 20 +++++++++++++++++++-
+>  include/linux/pci_ids.h | 18 ------------------
+>  2 files changed, 19 insertions(+), 19 deletions(-)
 > 
-> This helps unify PCI error response checking and make error check
-> consistent and easier to find.
+> diff --git a/drivers/tty/mxser.c b/drivers/tty/mxser.c
+> index f6842089459a..ba96ffed193a 100644
+> --- a/drivers/tty/mxser.c
+> +++ b/drivers/tty/mxser.c
+> @@ -159,14 +159,32 @@
+>  #define MXSER_BAUD_BASE		921600
+>  #define MXSER_CUSTOM_DIVISOR	(MXSER_BAUD_BASE * 16)
+>  
+> +#define PCI_DEVICE_ID_MOXA_RC7000	0x0001
+> +#define PCI_DEVICE_ID_MOXA_CP102	0x1020
+> +#define PCI_DEVICE_ID_MOXA_CP102UL	0x1021
+> +#define PCI_DEVICE_ID_MOXA_CP102U	0x1022
+> +#define PCI_DEVICE_ID_MOXA_CP102UF	0x1023
+> +#define PCI_DEVICE_ID_MOXA_C104		0x1040
+> +#define PCI_DEVICE_ID_MOXA_CP104U	0x1041
+> +#define PCI_DEVICE_ID_MOXA_CP104JU	0x1042
+> +#define PCI_DEVICE_ID_MOXA_CP104EL	0x1043
+>  #define PCI_DEVICE_ID_MOXA_POS104UL	0x1044
+>  #define PCI_DEVICE_ID_MOXA_CB108	0x1080
+> -#define PCI_DEVICE_ID_MOXA_CP102UF	0x1023
+>  #define PCI_DEVICE_ID_MOXA_CP112UL	0x1120
+> +#define PCI_DEVICE_ID_MOXA_CT114	0x1140
+> +#define PCI_DEVICE_ID_MOXA_CP114	0x1141
+>  #define PCI_DEVICE_ID_MOXA_CB114	0x1142
+>  #define PCI_DEVICE_ID_MOXA_CP114UL	0x1143
+> +#define PCI_DEVICE_ID_MOXA_CP118U	0x1180
+> +#define PCI_DEVICE_ID_MOXA_CP118EL	0x1181
+> +#define PCI_DEVICE_ID_MOXA_CP132	0x1320
+> +#define PCI_DEVICE_ID_MOXA_CP132U	0x1321
+> +#define PCI_DEVICE_ID_MOXA_CP134U	0x1340
+>  #define PCI_DEVICE_ID_MOXA_CB134I	0x1341
+>  #define PCI_DEVICE_ID_MOXA_CP138U	0x1380
+> +#define PCI_DEVICE_ID_MOXA_C168		0x1680
+> +#define PCI_DEVICE_ID_MOXA_CP168U	0x1681
+> +#define PCI_DEVICE_ID_MOXA_CP168EL	0x1682
+>  
+>  #define MXSER_NPORTS(ddata)		((ddata) & 0xffU)
+>  #define MXSER_HIGHBAUD			0x0100
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index b5248f27910e..86678588d191 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1965,24 +1965,6 @@
+>  #define PCI_DEVICE_ID_APPLICOM_PCI2000PFB 0x0003
+>  
+>  #define PCI_VENDOR_ID_MOXA		0x1393
+> -#define PCI_DEVICE_ID_MOXA_RC7000	0x0001
+> -#define PCI_DEVICE_ID_MOXA_CP102	0x1020
+> -#define PCI_DEVICE_ID_MOXA_CP102UL	0x1021
+> -#define PCI_DEVICE_ID_MOXA_CP102U	0x1022
+> -#define PCI_DEVICE_ID_MOXA_C104		0x1040
+> -#define PCI_DEVICE_ID_MOXA_CP104U	0x1041
+> -#define PCI_DEVICE_ID_MOXA_CP104JU	0x1042
+> -#define PCI_DEVICE_ID_MOXA_CP104EL	0x1043
+> -#define PCI_DEVICE_ID_MOXA_CT114	0x1140
+> -#define PCI_DEVICE_ID_MOXA_CP114	0x1141
+> -#define PCI_DEVICE_ID_MOXA_CP118U	0x1180
+> -#define PCI_DEVICE_ID_MOXA_CP118EL	0x1181
+> -#define PCI_DEVICE_ID_MOXA_CP132	0x1320
+> -#define PCI_DEVICE_ID_MOXA_CP132U	0x1321
+> -#define PCI_DEVICE_ID_MOXA_CP134U	0x1340
+> -#define PCI_DEVICE_ID_MOXA_C168		0x1680
+> -#define PCI_DEVICE_ID_MOXA_CP168U	0x1681
+> -#define PCI_DEVICE_ID_MOXA_CP168EL	0x1682
+>  #define PCI_DEVICE_ID_MOXA_CP204J	0x2040
+>  #define PCI_DEVICE_ID_MOXA_C218		0x2180
+>  #define PCI_DEVICE_ID_MOXA_C320		0x3200
+> -- 
+> 2.33.1
 > 
-> This series also ensures that the error response fabrication now happens
-> in the PCI_OP_READ and PCI_USER_READ_CONFIG. This removes the
-> responsibility from controller drivers to do the error response setting. 
-
-Applied to pci/error for v5.17.  Thanks, this is really nice work.
-Somehow small changes like these add up to something much greater than
-one would expect.
-
-This touches many native controller drivers but in trivial ways, so I
-plan to merge this branch after the usual native controller stuff from
-Lorenzo.
-
-I tweaked the commit logs to clarify that this series is all about
-*config* reads, not MMIO reads.  MMIO reads have similar issues, and
-we can use PCI_ERROR_RESPONSE, etc., there, too, but that's not what
-this series does.
-
-Bjorn
