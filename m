@@ -2,166 +2,159 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C623DC433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 01:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B79C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 04:44:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8850611C7
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 01:17:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D80261B3B
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 04:44:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233973AbhKSBU7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Nov 2021 20:20:59 -0500
-Received: from mail-eopbgr70079.outbound.protection.outlook.com ([40.107.7.79]:6553
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S233965AbhKSBU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Nov 2021 20:20:58 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gi7c3W7suPc05x+qWKcOBlDKZrk72vcShQvn156NVHfKMios9NjREZP9Q/rg3i9fDv52XdbE0naHMpy0WdZtyt0jpO91QPPaVF3/2wpI58MSG6/7FUggbZsGwHRG0zOtiX+GZ27O2WQsxpxfwR1kdRhiYE5DZwCtvM3rMBAFoxPUCSdN9Bc118P6kf6JFxgfBkcufKGV/SOCk1OTJZ/IutOXq91LaYAzb6YucWZGqUX121QKN7QSJF4Sh3/WS8pDJCgr0CW/eHLmmUdV0Srp/mcneLPkk+VwfAjax8yGeGn13wMddy9nODn4VfecNzcXaKLkyOKmgSGZAiVGtWFwbg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BbZn4apwGbYfOTyEQf0jy0R4d8Jsw1alkHp32SNrEPE=;
- b=bPS8ALlyF+PQaO7hWhZ4wti+bc0kLjW95x4TyvpGG/PR/XjdPsYWxkLgQ7WOu2ykOwCMu2X/7Cya9tUb3LPVk7bKkT6mrxKO1nDvHLDKICS2gpN+R7dLDp9ORKaXS4SpYNjdGArV6rEySjj/JAYlzu/sOQ8d4BEeqd+rGzghG3f3QIJ9f8k6Li5tkASTBQcZalF2LwW0p44uh3mFnRwNtfDO9nvjJlFLYGaVkWeY/7GtM8Wh7ftkZyIGhyO3wvv8lKEW8N8tsaSxkq4Vc2CzH9kYyYxmNmW/VHGgUe6dCoiYDQwkHlIC6QxuXHKqECkdrtA10yAiJbL3Lnb8JBjZeA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BbZn4apwGbYfOTyEQf0jy0R4d8Jsw1alkHp32SNrEPE=;
- b=NF8mZBkLjSmsk1sQgBAAyMLB0mv2R6A/uCYmMbGj1/pwYLNoWVODNacj8sHj4Mjz3iuFMn3tC8QozdlJJv8q40/SXrW7H0l8CstAsrq2/qS4GJzmo2Xfgm5LMR5q8+Q79t1whnnfHG7c582y3DMjFtPFOW5Iam2mXEjQL3RvUqE=
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com (2603:10a6:20b:42b::10)
- by AS8PR04MB9109.eurprd04.prod.outlook.com (2603:10a6:20b:448::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4713.19; Fri, 19 Nov
- 2021 01:17:55 +0000
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::b059:46c6:685b:e0fc]) by AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::b059:46c6:685b:e0fc%4]) with mapi id 15.20.4713.024; Fri, 19 Nov 2021
- 01:17:55 +0000
-From:   Hongxing Zhu <hongxing.zhu@nxp.com>
-To:     Rob Herring <robh@kernel.org>
-CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Marcel Ziswiler <marcel.ziswiler@toradex.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        dl-linux-imx <linux-imx@nxp.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-        "tharvey@gateworks.com" <tharvey@gateworks.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>
-Subject: RE: [PATCH v6 2/8] dt-bindings: phy: Add imx8 pcie phy driver support
-Thread-Topic: [PATCH v6 2/8] dt-bindings: phy: Add imx8 pcie phy driver
- support
-Thread-Index: AQHX3CMIaTDMv+OFlEavEB4F1q+e/6wJ9eKAgAAXMKA=
-Date:   Fri, 19 Nov 2021 01:17:55 +0000
-Message-ID: <AS8PR04MB86764BE4357EA6FCAD009FD68C9C9@AS8PR04MB8676.eurprd04.prod.outlook.com>
-References: <1637200489-11855-1-git-send-email-hongxing.zhu@nxp.com>
- <1637200489-11855-3-git-send-email-hongxing.zhu@nxp.com>
- <YZbmy8asguINPF4O@robh.at.kernel.org>
-In-Reply-To: <YZbmy8asguINPF4O@robh.at.kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4ac7b605-ab0b-48ad-e1ad-08d9aafa6a70
-x-ms-traffictypediagnostic: AS8PR04MB9109:
-x-ld-processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-x-microsoft-antispam-prvs: <AS8PR04MB9109B25C44D810A259BC15118C9C9@AS8PR04MB9109.eurprd04.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:935;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: JDm4NQxbYEFw300faekduCBgf2AOu8SMpcGUHi82d+ozKvg7iRqBR8W5IgmHyyWfyZo4udhAOHWgiHF4Fl9Pqp9oJpOt6dXqPqNyIcjDj/v/gUcztIXH08zpA9NgU0g36erj/BB97RBUDJAGVEQQqhSuaemswP53YVz4zyrx93ZdsQNdGYXdDWAa4iYKxOZHouS2fICbJ9yoyqxRFjuLCvppocW/FQMHdXqBPRfGJ1FZiYSP8LYmUkO25vE7PhY9yKhYHPKys0JdlPY0LiKhBRCvKFhjnkpgN7VFHunLY+NNcE3dcoV1xJU7qjaw3zY6FNZyAuQijUsrDIbOmdhmuGl4lL3NBILrIPejAEoOtQw39kTSKgAYoOVngi/6mSc0QCbz4Obxe4SWzOluOK5T0UeeUNmC8kBNG+jdNnpCAPvGvU5QXTJcfJaDef94B7pDW2KlhftL2sFaHriD2hZT7EokIrJyrcPTCjeEMTZw+IMSF5b1ydO47VzL5pMcej+z7bdvJjFvb5VHN5PYEIOPHFE9eZ5MWIz3rhhrsB+g6FnaWS6La1x3NKDlnO4xulPYNX7jxhFwIDpk/LukifR39Dn52cYjOPJEDl6a6EV6wIEBxQkQ1VEQjNmM1Je/jDWQlkZ5B2x3EXDCZtBEkY8x7mhoRMBNmK0TtcPUbavu5DVNRbAc0Sc+2z8IK9ITCDdAGFfcL89j4wn+AEp6/2uUPQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8676.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(122000001)(2906002)(7416002)(38100700002)(38070700005)(4326008)(6916009)(52536014)(508600001)(316002)(54906003)(86362001)(5660300002)(66946007)(8676002)(186003)(71200400001)(66556008)(26005)(66446008)(64756008)(44832011)(83380400001)(76116006)(7696005)(55016002)(33656002)(9686003)(66476007)(6506007)(8936002)(53546011);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?1G71lYFEPlOjwbFULJeF+NpwPbsOC9DKhIHJj/d0+NwpnJIN9TWXaxMhMprA?=
- =?us-ascii?Q?75tZWEv8APybVH9buz1odCvObeO5MBkLUDyo7V+u9EcoaYuSmwmm5qb+cLnw?=
- =?us-ascii?Q?0HsOEnzXH0WJSHgDzn7ES+HcniXAgkVeP6/1ZOsF5iz+JEw5dAiFIwQvPY0f?=
- =?us-ascii?Q?rnvk/QXjOvWxPn9LYdMqaXQOfjNjnfpZTeUAxei61PM61QGCjEcTCTWcF9he?=
- =?us-ascii?Q?VtQoa+RuUv2gQSGbQ9tsmzKK6B3+aKHXCKKJ93ZTwIA3LK6fEiUvIH0PX8DO?=
- =?us-ascii?Q?zgCSgn/SoCuLZ9kCkkDvEIYl9GZ1Z/YlnzLZg2tuVn29yYbBSFEX9O7vmAyD?=
- =?us-ascii?Q?L1JNpz4rtm9SJifSH1pbj289ihD55GUxjz8wgaT/Nm5LpxpQNotuFRaKsUet?=
- =?us-ascii?Q?hgdf4255Jkm9Djxx/L12quZQYo0UWPYlZahpg4Y3z58hwZgfh0jJrdnPUdZ1?=
- =?us-ascii?Q?luLdiHkeLxdVe8fgJUtROps42bszti6aYupibo57bezlbiWmCWeaD5Zq/irE?=
- =?us-ascii?Q?YhhR2+nloSqpb4n2ShihhIlbpVs7h+cP6r5xNNGnGaoLUnqqPq9K/94t4Nu2?=
- =?us-ascii?Q?FzfWU2lxZaAQW1K3OhtMs3k74VSipPvPzE9VEofhdhVkWQCGEa9kLaOHIg7F?=
- =?us-ascii?Q?aumc3wtkU+eoOs8iZCB7I0JaAe20nO0SLbN2rr5VxWWBwBzmdI4g8k6dkvoJ?=
- =?us-ascii?Q?aH/ERjW7NwGKN52uQhgK1qxUWAkA6G3sazoGyUXxUcHsFQ/T8d8fDpBwdqtg?=
- =?us-ascii?Q?hOZVCuYgW6qkEn75S8MMEsQO3NSqe5awqW+y4FF5tyXbv8FmZUc7w/RZL4I0?=
- =?us-ascii?Q?4lunEp4i1UAcam/GdlQckZRGj1beg7JKNZlHE7QwaZc3UTzRLYis+/wZJl+z?=
- =?us-ascii?Q?CkWx12ovWtMWkl9brrelN2KxkioRmZ5ge99UdC+a29/B+m/jseWtrWqPkVx/?=
- =?us-ascii?Q?7TCaqfu4sibClk2ClGFtnukGL0ZKJTKo2cZZ+yjkGal/eHZVUAlldU6Na6QW?=
- =?us-ascii?Q?LlWIlFaeCUcihX4btPBHYGvKpwACIflXd3ZkHAlO4oBeEBaFDyp2sZ4Ttt+R?=
- =?us-ascii?Q?Bkp8jW/DbT7bAfMGvKBbbSpCb98uLY0buR705WQgeSGMUBFqQFniMeFw5ekZ?=
- =?us-ascii?Q?NwQCh9J7HOCElAI3oqnwS+HYIhsCay6kwG5DDFfRWXq4RGV6JpHjziRohrqK?=
- =?us-ascii?Q?sahl5zlogAG0LLeVNpvbihGWHUZGvQZKWfRv8iJEOo8x3GVO0mB5cjONTzx2?=
- =?us-ascii?Q?1rrw3w9bx8F2Joq44jXzKHsOUHWVY+ihbt7VVxklhiTaiCZL/RmcH4xZYfry?=
- =?us-ascii?Q?ex1BqhFw5h/7MO91/Q5mIEPZx8qXx/zrilazmo70kiVFldDyC4oghuwtalGx?=
- =?us-ascii?Q?A1xK3edNKOGJbcADLi4T+9VvDAPmd8RF+QqSCy4WXfizHHF0WcCdTBB/5NjH?=
- =?us-ascii?Q?s2A1JuNsQ/cwVWehoAVg43/vtHe3hCYR0Ycm7mUzien8T1YWsV+ZLn1OLFOE?=
- =?us-ascii?Q?hccsDXs85gV7T7sVPKb5lQF592cJxbGRtRRO15xcmmTlrrnlB59DFqeToqED?=
- =?us-ascii?Q?hetg1HpMlbylWbKLiJ49QNZtrA3CNtuQZumNuhlBOGh+9vGdmR5v/PkXb7gn?=
- =?us-ascii?Q?EQ=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S230105AbhKSErI convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Nov 2021 23:47:08 -0500
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:34846
+        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229701AbhKSErI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Nov 2021 23:47:08 -0500
+Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 4A21E40079
+        for <linux-pci@vger.kernel.org>; Fri, 19 Nov 2021 04:44:06 +0000 (UTC)
+Received: by mail-lf1-f42.google.com with SMTP id m27so37203029lfj.12
+        for <linux-pci@vger.kernel.org>; Thu, 18 Nov 2021 20:44:06 -0800 (PST)
+X-Gm-Message-State: AOAM530WlR2K+eu70P228yIL6ix/Wmnagat7cckWMXBt0l9D/4jv4eN7
+        +4eQFh7J6AKh1yDMmuinloI+J5fDxnCL0vt8hhpDug==
+X-Google-Smtp-Source: ABdhPJxxVw3CxiCDUCwoHU2pcBXmDs3+8o9d5fBniGdWGBnDBI0uh+Mk9UpDIf4ZR7Tgqc9Cba5Nk+tDPxWCdzGetnA=
+X-Received: by 2002:ac2:4281:: with SMTP id m1mr30335872lfh.168.1637297045646;
+ Thu, 18 Nov 2021 20:44:05 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8676.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4ac7b605-ab0b-48ad-e1ad-08d9aafa6a70
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Nov 2021 01:17:55.1654
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: wlmIlKKbzpSllhy1RCJ9o1dOkCP7FrBhZ6iCupWxsE4szdtN9max5+i7zTGEHfVPCJvzaN3cxd0Dkm0IJcD8qA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB9109
+References: <CA+enf=v9rY_xnZML01oEgKLmvY1NGBUUhnSJaETmXtDtXfaczA@mail.gmail.com>
+ <CAL_JsqL8ofiJv4gyP+rnDEKxjd5+ANL3XwhxaSF13aznvGpE9g@mail.gmail.com> <CAL_JsqKrfpDtQZMMuhA_tURit6fO82FzPbKA40o6_8jWRewm8g@mail.gmail.com>
+In-Reply-To: <CAL_JsqKrfpDtQZMMuhA_tURit6fO82FzPbKA40o6_8jWRewm8g@mail.gmail.com>
+From:   =?UTF-8?Q?St=C3=A9phane_Graber?= <stgraber@ubuntu.com>
+Date:   Thu, 18 Nov 2021 23:43:54 -0500
+X-Gmail-Original-Message-ID: <CA+enf=uZex3hC+HxahV25cSFyp9Hz7bLC-h=PnUKEUydDh1Tmw@mail.gmail.com>
+Message-ID: <CA+enf=uZex3hC+HxahV25cSFyp9Hz7bLC-h=PnUKEUydDh1Tmw@mail.gmail.com>
+Subject: Re: PCIe regression on APM Merlin (aarch64 dev platform) preventing
+ NVME initialization
+To:     Rob Herring <robh@kernel.org>
+Cc:     PCI <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> -----Original Message-----
-> From: Rob Herring <robh@kernel.org>
-> Sent: Friday, November 19, 2021 7:51 AM
-> To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> Cc: bhelgaas@google.com; shawnguo@kernel.org; Marcel Ziswiler
-> <marcel.ziswiler@toradex.com>; l.stach@pengutronix.de;
-> linux-phy@lists.infradead.org; linux-arm-kernel@lists.infradead.org;
-> dl-linux-imx <linux-imx@nxp.com>; devicetree@vger.kernel.org;
-> lorenzo.pieralisi@arm.com; vkoul@kernel.org; linux-pci@vger.kernel.org;
-> galak@kernel.crashing.org; tharvey@gateworks.com;
-> linux-kernel@vger.kernel.org; kishon@ti.com; kernel@pengutronix.de
-> Subject: Re: [PATCH v6 2/8] dt-bindings: phy: Add imx8 pcie phy driver
-> support
->=20
-> On Thu, 18 Nov 2021 09:54:43 +0800, Richard Zhu wrote:
-> > Add dt-binding for the standalone i.MX8 PCIe PHY driver.
+On Thu, Nov 18, 2021 at 5:03 PM Rob Herring <robh@kernel.org> wrote:
+>
+> On Thu, Nov 18, 2021 at 3:20 PM Rob Herring <robh@kernel.org> wrote:
 > >
-> > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> > Tested-by: Marcel Ziswiler <marcel.ziswiler@toradex.com>
-> > Reviewed-by: Tim Harvey <tharvey@gateworks.com>
-> > Tested-by: Tim Harvey <tharvey@gateworks.com>
-> > ---
-> >  .../bindings/phy/fsl,imx8-pcie-phy.yaml       | 92
-> +++++++++++++++++++
-> >  1 file changed, 92 insertions(+)
-> >  create mode 100644
-> Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml
+> > On Thu, Nov 18, 2021 at 12:10 PM Stéphane Graber <stgraber@ubuntu.com> wrote:
+> > >
+> > > Hello,
+> > >
+> > > I've recently been given access to a set of 4 APM X-Gene2 Merlin
+> > > boards (old-ish development platform).
+> > > Running them on Ubuntu 20.04's stock 5.4 kernel worked fine but trying
+> > > to run anything else would fail to boot due to a NVME initialization
+> > > timeout preventing the main drive from showing up at all.
+> > >
+> > > Tracking this issue, I first moved to clean mainline kernels and then
+> > > isolated the issue to be somewhere between 5.4.0 and 5.5.0-rc1, which
+> > > sadly meant the merge window (so much for a quick bisect...). I've
+> > > then bisected between those two points and came up with:
+> > >
+> > >   6dce5aa59e0bf2430733d7a8b11c205ec10f408e (refs/bisect/bad) PCI:
+> > > xgene: Use inbound resources for setup
+> > >
+> > > I finally switched to the latest 5.15.2 tree, reverted that one
+> > > commit, built a new kernel and confirmed that those boards now work
+> > > flawlessly.
+> > >
+> > > Unfortunately that's about the extent of my abilities with kernel
+> > > debugging and I won't pretend to understand what that commit does or
+> > > how it may be breaking PCIe initialization on those systems.
+> > >
+> > > I'm not technically blocked on this, I can manually build my own
+> > > kernels by reverting that one commit every time, but that's obviously
+> > > not ideal and I'd much rather have this fixed upstream :)
 > >
->=20
-> Reviewed-by: Rob Herring <robh@kernel.org>
-[Richard Zhu] Thanks a lot.
+> > Doesn't this platform have ACPI f/w you can use? From the log, it
+> > looks like ACPI tables are passed to the kernel, but since a full DT
+> > is passed it is used by default. Does 'acpi=on' not work?
 
-Best Regards
-Richard Zhu
+Gave that a try with a clean 5.15.2 and unfortunately it's not booting
+at all, all I get is:
+
+Loading Linux 5.15.2 ...
+Loading initial ramdisk ...
+EFI stub: Booting Linux Kernel...
+EFI stub: EFI_RNG_PROTOCOL unavailable
+EFI stub: ERROR: FIRMWARE BUG: kernel image not aligned on 64k boundary
+EFI stub: ERROR: FIRMWARE BUG: Image BSS overlaps adjacent EFI memory region
+EFI stub: Using DTB from configuration table
+EFI stub: Exiting boot services...
+L3C: 8MB
+
+> > Given no one noticed the breakage for 2 years, I'd really like to
+> > remove these dts and binding files otherwise someone needs to convert
+> > bindings to schema and fix warnings. Current stats look like this:
+> > Processing apm:
+> > warnings: 240
+> > undocumented compat: 114
+> >
+> > For example, I noticed that dma-ranges declares the entries are 32-bit
+> > (0x42000000 is 32-bit prefetch), yet the PCI bus address and sizes are
+> > >32-bit. AFAICT, that isn't part of the problem here.
+> >
+> > > == Good boot on 5.15.2 (commit reverted) ==
+> > > Full log at: https://gist.github.com/stgraber/e489b7e55dd7ffaac9f77dd8634ca2ff
+> > >
+> > > root@entak:~# dmesg | grep -Ei "nvme|pci"
+> > > [    0.094146] PCI: CLS 0 bytes, default 64
+> > > [    0.130573] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+> > > [    0.131324] xgene-pcie 1f2b0000.pcie: host bridge /soc/pcie@1f2b0000 ranges:
+> > > [    0.131344] xgene-pcie 1f2b0000.pcie:   No bus range found for
+> > > /soc/pcie@1f2b0000, using [bus 00-ff]
+> > > [    0.131365] xgene-pcie 1f2b0000.pcie:       IO
+> > > 0xc010000000..0xc01000ffff -> 0x0000000000
+> > > [    0.131388] xgene-pcie 1f2b0000.pcie:      MEM
+> > > 0xc120000000..0xc13fffffff -> 0x0020000000
+> > > [    0.131401] xgene-pcie 1f2b0000.pcie:      MEM
+> > > 0xe000000000..0xffffffffff -> 0xe000000000
+> > > [    0.131416] xgene-pcie 1f2b0000.pcie:   IB MEM
+> > > 0x8000000000..0x807fffffff -> 0x8000000000
+> > > [    0.131427] xgene-pcie 1f2b0000.pcie:   IB MEM
+> > > 0x0000000000..0x7fffffffff -> 0x0000000000
+> >
+> > My best guess is while the above is the parsed order of 'IB MEM'
+> > regions, we sort the entries by address now and that changes which
+> > inbound registers get used for each region. And one doesn't handle >
+> > 32-bit addresses. Can you try out this change? It's not what I want
+> > for a final change because the code is just as fragile:
+>
+> Actually, a better change is this:
+>
+> diff --git a/drivers/pci/controller/pci-xgene.c
+> b/drivers/pci/controller/pci-xgene.c
+> index 56d0d50338c8..d83dbd977418 100644
+> --- a/drivers/pci/controller/pci-xgene.c
+> +++ b/drivers/pci/controller/pci-xgene.c
+> @@ -465,7 +465,7 @@ static int xgene_pcie_select_ib_reg(u8
+> *ib_reg_mask, u64 size)
+>                 return 1;
+>         }
+>
+> -       if ((size > SZ_1K) && (size < SZ_1T) && !(*ib_reg_mask & (1 << 0))) {
+> +       if ((size > SZ_1K) && (size < SZ_4G) && !(*ib_reg_mask & (1 << 0))) {
+>                 *ib_reg_mask |= (1 << 0);
+>                 return 0;
+>         }
+
+Just tested it, and it booted just fine!
+
+Full boot log: https://gist.github.com/stgraber/41b2419ef88611ab7a2b4dceb028b4f7
+
+Stéphane
