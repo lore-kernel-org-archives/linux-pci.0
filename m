@@ -2,139 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 896E5C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:46:58 +0000 (UTC)
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.lore.kernel.org (Postfix) with ESMTPS id C242BC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 20:49:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C69A6112E
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Nov 2021 20:46:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95F2F61A53
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Nov 2021 20:49:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232262AbhKRUt6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Nov 2021 15:49:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46766 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbhKRUt5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Nov 2021 15:49:57 -0500
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 995EEC061574
-        for <linux-pci@vger.kernel.org>; Thu, 18 Nov 2021 12:46:56 -0800 (PST)
-Received: by mail-wr1-x435.google.com with SMTP id s13so14021726wrb.3
-        for <linux-pci@vger.kernel.org>; Thu, 18 Nov 2021 12:46:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:content-language:to:from
-         :subject:content-transfer-encoding;
-        bh=G3fZmKOo/J9cc206xBW7iBHSldwFZyhKfuaM71Z1/Po=;
-        b=lOCJtpidvIM4AlQ3EMHZGPAANTVZBVsdwHtc5SoUUv4PbqZ9fi8FsnXE0N2geJ7WkQ
-         cZ8DLqt2r8Td+QzbVfSS/cDdPjyuWpZyCl6OGxs5OkytV2x7iKauMuC+r5+fZ9c09JUc
-         Wn1R6ELi3v/9a3VMyr5sSaEVlHSowOUa4ef7rm+GdskDLMe2nsILCAdD8xm3Vm20DFyL
-         SwKgkBX4rf03erTr9wjIP0L1lqXN4iPL1wQZHiPUI/kHk6Q4cgaxbG8MvlksGp8T/5SR
-         Z9ddfZDdo89rf61zzJ2tjxHpSKFAepe0oT3yYKy2RuP3mR8BKjsOzCnJ3hlbQ+kBcz17
-         x05A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent
-         :content-language:to:from:subject:content-transfer-encoding;
-        bh=G3fZmKOo/J9cc206xBW7iBHSldwFZyhKfuaM71Z1/Po=;
-        b=U2Jxvi91dzrzi3wVrKjudKx9d09ElxSZgUSrabyqC/0wbxyzHjmya04mB/9JYjA39F
-         v2vAmzKFCyZUdWuX3wuTVJjV09SSt8BnMjoVJ8LNfSrVDPSUSjNoaG5AHLy+5MKPonIO
-         vcoh5PnAJ23taSwhZoxuuQzy8MB1BrWSUMAwJbkXI9UEvL4N4i0iPNj05jm9TbrPBAs0
-         QrLA9mZ+dQzlQxwLktUykzFrhVXjMpNnOfTFiUT7qmPjvtIwPOw7hzZrTFDM98Kjdeu1
-         ReUr82fbVf7jMuujXTeM0A+K+EUTa5qLyNvLxJpKWlDojL98fIgpNECOt1O6cFDMQX+D
-         CiDA==
-X-Gm-Message-State: AOAM530EL4IewOvXpF06Oh9FoQu/unjIKhBw29qdR8Auq/7bABFKUS70
-        8gt0tmxaDtpqpycX+u4Xh2uge5vs1Xg=
-X-Google-Smtp-Source: ABdhPJzoiHFgHSEvZzzAUbA2bSRWZ80XIj6Jazd6EJGjfxvW/CWvlwFvvQBaqEjGmSuOmJhzwFV7Eg==
-X-Received: by 2002:a5d:51cf:: with SMTP id n15mr534983wrv.106.1637268415167;
-        Thu, 18 Nov 2021 12:46:55 -0800 (PST)
-Received: from ?IPV6:2003:ea:8f1a:f00:fc8d:4de8:c1d1:9213? (p200300ea8f1a0f00fc8d4de8c1d19213.dip0.t-ipconnect.de. [2003:ea:8f1a:f00:fc8d:4de8:c1d1:9213])
-        by smtp.googlemail.com with ESMTPSA id d9sm827085wre.52.2021.11.18.12.46.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Nov 2021 12:46:54 -0800 (PST)
-Message-ID: <bcc921e4-942c-b95c-ce9c-6d92f1bbba1e@gmail.com>
-Date:   Thu, 18 Nov 2021 21:46:48 +0100
+        id S230169AbhKSUwV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Nov 2021 15:52:21 -0500
+Received: from mga14.intel.com ([192.55.52.115]:54517 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231958AbhKSUwP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Nov 2021 15:52:15 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10173"; a="234729121"
+X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
+   d="scan'208";a="234729121"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 12:49:04 -0800
+X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
+   d="scan'208";a="455919443"
+Received: from patelni-mobl1.amr.corp.intel.com (HELO [10.78.16.165]) ([10.78.16.165])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 12:49:04 -0800
+Message-ID: <a8b5f6d3-ff52-1bf6-994e-2aa0421c011a@linux.intel.com>
+Date:   Fri, 19 Nov 2021 13:48:59 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v5] PCI: vmd: Clean up domain before enumeration
 Content-Language: en-US
-To:     Bjorn Helgaas <bhelgaas@google.com>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] PCI/VPD: Add simple VPD read cache
+To:     lorenzo.pieralisi@arm.com, Bjorn Helgaas <helgaas@kernel.org>
+References: <20211116221136.85134-1-nirmal.patel@linux.intel.com>
+Cc:     jonathan.derrick@linux.dev, linux-pci@vger.kernel.org,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
+From:   "Patel, Nirmal" <nirmal.patel@linux.intel.com>
+In-Reply-To: <20211116221136.85134-1-nirmal.patel@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VPD reads can be time-consuming operations, and when reading bytes
-sequentially then worst-case we may read the same VPD dword four times.
-Typically it happens in pci_vpd_size() already that the same VPD dword
-is read more than once. Therefore let's add a simple read cache that
-caches the last read VPD dword.
+On 11/16/2021 3:11 PM, Nirmal Patel wrote:
+> During VT-d pass-through, the VMD driver occasionally fails to
+> enumerate underlying NVMe devices when repetitive reboots are
+> performed in the guest OS. The issue can be resolved by resetting
+> VMD root ports for proper enumeration and triggering secondary bus
+> reset which will also propagate reset through downstream bridges.
+>
+> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+> Reviewed-by: Jon Derrick <jonathan.derrick@linux.dev>
+> ---
+> ---
+> v4->v5: Fixing small nitpick fix.
+> v3->v4: Using pci_reset_bus function for secondary bus reset instead of
+>         manually triggering secondary bus reset, addressing review
+>         comments of v3.
+> v2->v3: Combining two functions into one, Remove redundant definations
+>         and Formatting fixes
+>
+>  drivers/pci/controller/vmd.c | 37 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
+>
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index a5987e52700e..a905fce6232f 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -498,6 +498,40 @@ static inline void vmd_acpi_begin(void) { }
+>  static inline void vmd_acpi_end(void) { }
+>  #endif /* CONFIG_ACPI */
+>  
+> +static void vmd_domain_reset(struct vmd_dev *vmd)
+> +{
+> +	u16 bus, max_buses = resource_size(&vmd->resources[0]);
+> +	u8 dev, functions, fn, hdr_type;
+> +	char __iomem *base;
+> +
+> +	for (bus = 0; bus < max_buses; bus++) {
+> +		for (dev = 0; dev < 32; dev++) {
+> +			base = vmd->cfgbar + PCIE_ECAM_OFFSET(bus,
+> +						PCI_DEVFN(dev, 0), 0);
+> +
+> +			hdr_type = readb(base + PCI_HEADER_TYPE) &
+> +					 PCI_HEADER_TYPE_MASK;
+> +
+> +			functions = (hdr_type & 0x80) ? 8 : 1;
+> +			for (fn = 0; fn < functions; fn++) {
+> +				base = vmd->cfgbar + PCIE_ECAM_OFFSET(bus,
+> +						PCI_DEVFN(dev, fn), 0);
+> +
+> +				hdr_type = readb(base + PCI_HEADER_TYPE) &
+> +						PCI_HEADER_TYPE_MASK;
+> +
+> +				if (hdr_type != PCI_HEADER_TYPE_BRIDGE ||
+> +				    (readw(base + PCI_CLASS_DEVICE) !=
+> +				     PCI_CLASS_BRIDGE_PCI))
+> +					continue;
+> +
+> +				memset_io(base + PCI_IO_BASE, 0,
+> +					  PCI_ROM_ADDRESS1 - PCI_IO_BASE);
+> +			}
+> +		}
+> +	}
+> +}
+> +
+>  static void vmd_attach_resources(struct vmd_dev *vmd)
+>  {
+>  	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
+> @@ -801,6 +835,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  	vmd_acpi_begin();
+>  
+>  	pci_scan_child_bus(vmd->bus);
+> +	vmd_domain_reset(vmd);
+> +	list_for_each_entry(child, &vmd->bus->children, node)
+> +		pci_reset_bus(child->self);
+>  	pci_assign_unassigned_bus_resources(vmd->bus);
+>  
+>  	/*
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/pci/vpd.c   | 13 +++++++++++++
- include/linux/pci.h |  2 ++
- 2 files changed, 15 insertions(+)
+Hi
 
-diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-index 75e48df2e..2315e45f6 100644
---- a/drivers/pci/vpd.c
-+++ b/drivers/pci/vpd.c
-@@ -194,6 +194,11 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 			break;
- 		}
- 
-+		if (vpd->cached_offset == (pos & ~3)) {
-+			val = vpd->cached_val;
-+			goto process;
-+		}
-+
- 		ret = pci_user_write_config_word(dev, vpd->cap + PCI_VPD_ADDR,
- 						 pos & ~3);
- 		if (ret < 0)
-@@ -206,6 +211,9 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 		if (ret < 0)
- 			break;
- 
-+		vpd->cached_val = val;
-+		vpd->cached_offset = pos & ~3;
-+process:
- 		skip = pos & 3;
- 		for (i = 0;  i < sizeof(u32); i++) {
- 			if (i >= skip) {
-@@ -242,6 +250,10 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 		return -EINTR;
- 
- 	while (pos < end) {
-+		/* invalidate read cache */
-+		if (vpd->cached_offset == pos)
-+			vpd->cached_offset = -1;
-+
- 		ret = pci_user_write_config_dword(dev, vpd->cap + PCI_VPD_DATA,
- 						  get_unaligned_le32(buf));
- 		if (ret < 0)
-@@ -270,6 +282,7 @@ void pci_vpd_init(struct pci_dev *dev)
- 
- 	dev->vpd.cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	mutex_init(&dev->vpd.lock);
-+	dev->vpd.cached_offset = -1;
- }
- 
- static ssize_t vpd_read(struct file *filp, struct kobject *kobj,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index cd8aa6fce..fb123c248 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -297,6 +297,8 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
- struct pci_vpd {
- 	struct mutex	lock;
- 	unsigned int	len;
-+	u32		cached_val;
-+	int		cached_offset;
- 	u8		cap;
- };
- 
--- 
-2.33.0
+Gentle ping. Please let me know if you are okay with these changes (with Jon's Reviewed-by). Thanks.
+
+-nirmal
 
