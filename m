@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A11C28D15
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8E6DC433EF
 	for <linux-pci@archiver.kernel.org>; Sat, 20 Nov 2021 00:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236300AbhKTAGR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Nov 2021 19:06:17 -0500
-Received: from mga12.intel.com ([192.55.52.136]:5719 "EHLO mga12.intel.com"
+        id S236376AbhKTAGS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Nov 2021 19:06:18 -0500
+Received: from mga12.intel.com ([192.55.52.136]:5726 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234439AbhKTAGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S234759AbhKTAGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 19 Nov 2021 19:06:10 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10173"; a="214542414"
+X-IronPort-AV: E=McAfee;i="6200,9189,10173"; a="214542411"
 X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
-   d="scan'208";a="214542414"
+   d="scan'208";a="214542411"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
   by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:59 -0800
 X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
-   d="scan'208";a="496088395"
+   d="scan'208";a="496088386"
 Received: from jfaistl-mobl1.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.139.58])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:59 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:58 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Ben Widawsky <ben.widawsky@intel.com>,
@@ -28,9 +28,9 @@ Cc:     Ben Widawsky <ben.widawsky@intel.com>,
         Ira Weiny <ira.weiny@intel.com>,
         Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
         Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH 17/23] cxl: Cache and pass DVSEC ranges
-Date:   Fri, 19 Nov 2021 16:02:44 -0800
-Message-Id: <20211120000250.1663391-18-ben.widawsky@intel.com>
+Subject: [PATCH 14/23] cxl: Introduce topology host registration
+Date:   Fri, 19 Nov 2021 16:02:41 -0800
+Message-Id: <20211120000250.1663391-15-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.34.0
 In-Reply-To: <20211120000250.1663391-1-ben.widawsky@intel.com>
 References: <20211120000250.1663391-1-ben.widawsky@intel.com>
@@ -40,243 +40,188 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-CXL 1.1 specification provided a mechanism for mapping an address space
-of a CXL device. That functionality is known as a "range" and can be
-programmed through PCIe DVSEC. In addition to this, the specification
-defines an active bit which a device will expose through the same DVSEC
-to notify system software that memory is initialized and ready.
+The description of the CXL topology will be conveyed by a platform
+specific entity that is expected to be a singleton. For ACPI based
+systems, this is ACPI0017. When the topology host goes away, which as of
+now can only be triggered by module unload, it is desirable to have the
+entire topology cleaned up. Regular devm unwinding handles most
+situations already, but what's missing is the ability to teardown the
+root port. Since the root port is platform specific, the core needs a
+set of APIs to allow platform specific drivers to register their root
+ports. With that, all the automatic teardown can occur.
 
-While CXL 2.0 introduces a more powerful mechanism called HDM decoders
-that are controlled by MMIO behind a PCIe BAR, the spec does allow the
-1.1 style mapping to still be present. In such a case, when the CXL
-driver takes over, if it were to enable HDM decoding and there was an
-actively used range, things would likely blow up, in particular if it
-wasn't an identical mapping.
-
-This patch caches the relevant information which the cxl_mem driver will
-need to make the proper decision and passes it along.
+cxl_test makes for an interesting case. cxl_test creates an alternate
+universe where there are possibly two root topology hosts (a real
+ACPI0016, and a fake ACPI0016). For this to work in the future, cxl_acpi
+(or some future platform host driver) will need to be unloaded first.
 
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 ---
- drivers/cxl/cxlmem.h |  19 +++++++
- drivers/cxl/pci.c    | 126 +++++++++++++++++++++++++++++++++++++++++++
- drivers/cxl/pci.h    |  13 +++++
- 3 files changed, 158 insertions(+)
+The topology lock can be used for more things. I'd like to save that as
+an add-on patch since it's extra risk for no reward, at this point.
+---
+ drivers/cxl/acpi.c     | 18 ++++++++++---
+ drivers/cxl/core/bus.c | 57 +++++++++++++++++++++++++++++++++++++++---
+ drivers/cxl/cxl.h      |  5 +++-
+ 3 files changed, 73 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index 3ef3c652599e..eac5528ccaae 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -89,6 +89,22 @@ struct cxl_mbox_cmd {
-  */
- #define CXL_CAPACITY_MULTIPLIER SZ_256M
+diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
+index 3415184a2e61..82cc42ab38c6 100644
+--- a/drivers/cxl/acpi.c
++++ b/drivers/cxl/acpi.c
+@@ -224,8 +224,7 @@ static int add_host_bridge_uport(struct device *match, void *arg)
+ 		return 0;
+ 	}
  
-+/**
-+ * struct cxl_endpoint_dvsec_info - Cached DVSEC info
-+ * @mem_enabled: cached value of mem_enabled in the DVSEC, PCIE_DEVICE
-+ * @ranges: Number of HDM ranges this device contains.
-+ * @range.base: cached value of the range base in the DVSEC, PCIE_DEVICE
-+ * @range.size: cached value of the range size in the DVSEC, PCIE_DEVICE
-+ */
-+struct cxl_endpoint_dvsec_info {
-+	bool mem_enabled;
-+	int ranges;
-+	struct {
-+		u64 base;
-+		u64 size;
-+	} range[2];
-+};
-+
- /**
-  * struct cxl_dev_state - The driver device state
-  *
-@@ -117,6 +133,7 @@ struct cxl_mbox_cmd {
-  * @active_persistent_bytes: sum of hard + soft persistent
-  * @next_volatile_bytes: volatile capacity change pending device reset
-  * @next_persistent_bytes: persistent capacity change pending device reset
-+ * @info: Cached DVSEC information about the device.
-  * @mbox_send: @dev specific transport for transmitting mailbox commands
-  *
-  * See section 8.2.9.5.2 Capacity Configuration and Label Storage for
-@@ -147,6 +164,8 @@ struct cxl_dev_state {
- 	u64 next_volatile_bytes;
- 	u64 next_persistent_bytes;
- 
-+	struct cxl_endpoint_dvsec_info *info;
-+
- 	int (*mbox_send)(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *cmd);
- };
- 
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index f3872cbee7f8..b3f46045bf3e 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -452,8 +452,126 @@ static int cxl_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
- 	return rc;
+-	port = devm_cxl_add_port(host, match, dport->component_reg_phys,
+-				 root_port);
++	port = devm_cxl_add_port(match, dport->component_reg_phys, root_port);
+ 	if (IS_ERR(port))
+ 		return PTR_ERR(port);
+ 	dev_dbg(host, "%s: add: %s\n", dev_name(match), dev_name(&port->dev));
+@@ -376,6 +375,11 @@ static int add_root_nvdimm_bridge(struct device *match, void *data)
+ 	return 1;
  }
  
-+#define CDPD(cxlds, which)                                                     \
-+	cxlds->device_dvsec + CXL_DVSEC_PCIE_DEVICE_##which##_OFFSET
-+
-+#define CDPDR(cxlds, which, sorb, lohi)                                        \
-+	cxlds->device_dvsec +                                                  \
-+		CXL_DVSEC_PCIE_DEVICE_RANGE_##sorb##_##lohi##_OFFSET(which)
-+
-+static int wait_for_valid(struct cxl_dev_state *cxlds)
++static void clear_topology_host(void *data)
 +{
-+	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
-+	const unsigned long timeout = jiffies + HZ;
-+	bool valid;
-+
-+	do {
-+		u64 size;
-+		u32 temp;
-+		int rc;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, 0, SIZE, HIGH),
-+					   &temp);
-+		if (rc)
-+			return -ENXIO;
-+		size = (u64)temp << 32;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, 0, SIZE, LOW),
-+					   &temp);
-+		if (rc)
-+			return -ENXIO;
-+		size |= temp & CXL_DVSEC_PCIE_DEVICE_MEM_SIZE_LOW_MASK;
-+
-+		/*
-+		 * Memory_Info_Valid: When set, indicates that the CXL Range 1
-+		 * Size high and Size Low registers are valid. Must be set
-+		 * within 1 second of deassertion of reset to CXL device.
-+		 */
-+		valid = FIELD_GET(CXL_DVSEC_PCIE_DEVICE_MEM_INFO_VALID, temp);
-+		if (valid)
-+			break;
-+		cpu_relax();
-+	} while (!time_after(jiffies, timeout));
-+
-+	return valid ? 0 : -ETIMEDOUT;
++	cxl_unregister_topology_host(data);
 +}
 +
-+static struct cxl_endpoint_dvsec_info *dvsec_ranges(struct cxl_dev_state *cxlds)
+ static int cxl_acpi_probe(struct platform_device *pdev)
+ {
+ 	int rc;
+@@ -384,7 +388,15 @@ static int cxl_acpi_probe(struct platform_device *pdev)
+ 	struct acpi_device *adev = ACPI_COMPANION(host);
+ 	struct cxl_cfmws_context ctx;
+ 
+-	root_port = devm_cxl_add_port(host, host, CXL_RESOURCE_NONE, NULL);
++	rc = cxl_register_topology_host(host);
++	if (rc)
++		return rc;
++
++	rc = devm_add_action_or_reset(host, clear_topology_host, host);
++	if (rc)
++		return rc;
++
++	root_port = devm_cxl_add_port(host, CXL_RESOURCE_NONE, root_port);
+ 	if (IS_ERR(root_port))
+ 		return PTR_ERR(root_port);
+ 	dev_dbg(host, "add: %s\n", dev_name(&root_port->dev));
+diff --git a/drivers/cxl/core/bus.c b/drivers/cxl/core/bus.c
+index cd6fe7823c69..2ad38167796d 100644
+--- a/drivers/cxl/core/bus.c
++++ b/drivers/cxl/core/bus.c
+@@ -25,6 +25,53 @@
+  */
+ 
+ static DEFINE_IDA(cxl_port_ida);
++static DECLARE_RWSEM(topology_host_sem);
++
++static struct device *cxl_topology_host;
++
++int cxl_register_topology_host(struct device *host)
 +{
-+	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
-+	struct cxl_endpoint_dvsec_info *info;
-+	int hdm_count, rc, i;
-+	u16 cap, ctrl;
-+
-+	rc = pci_read_config_word(pdev, CDPD(cxlds, CAP), &cap);
-+	if (rc)
-+		return ERR_PTR(-ENXIO);
-+	rc = pci_read_config_word(pdev, CDPD(cxlds, CTRL), &ctrl);
-+	if (rc)
-+		return ERR_PTR(-ENXIO);
-+
-+	if (!(cap & CXL_DVSEC_PCIE_DEVICE_MEM_CAPABLE))
-+		return ERR_PTR(-ENODEV);
-+
-+	/*
-+	 * It is not allowed by spec for MEM.capable to be set and have 0 HDM
-+	 * decoders. Therefore, the device is not considered CXL.mem capable.
-+	 */
-+	hdm_count = FIELD_GET(CXL_DVSEC_PCIE_DEVICE_HDM_COUNT_MASK, cap);
-+	if (!hdm_count || hdm_count > 2)
-+		return ERR_PTR(-EINVAL);
-+
-+	rc = wait_for_valid(cxlds);
-+	if (rc)
-+		return ERR_PTR(rc);
-+
-+	info = devm_kzalloc(cxlds->dev, sizeof(*info), GFP_KERNEL);
-+	if (!info)
-+		return ERR_PTR(-ENOMEM);
-+
-+	info->mem_enabled = FIELD_GET(CXL_DVSEC_PCIE_DEVICE_MEM_ENABLE, ctrl);
-+
-+	for (i = 0; i < hdm_count; i++) {
-+		u64 base, size;
-+		u32 temp;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, i, SIZE, HIGH),
-+					   &temp);
-+		if (rc)
-+			continue;
-+		size = (u64)temp << 32;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, i, SIZE, LOW),
-+					   &temp);
-+		if (rc)
-+			continue;
-+		size |= temp & CXL_DVSEC_PCIE_DEVICE_MEM_SIZE_LOW_MASK;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, i, BASE, HIGH),
-+					   &temp);
-+		if (rc)
-+			continue;
-+		base = (u64)temp << 32;
-+
-+		rc = pci_read_config_dword(pdev, CDPDR(cxlds, i, BASE, LOW),
-+					   &temp);
-+		if (rc)
-+			continue;
-+		base |= temp & CXL_DVSEC_PCIE_DEVICE_MEM_BASE_LOW_MASK;
-+
-+		info->range[i].base = base;
-+		info->range[i].size = size;
-+		info->ranges++;
++	down_write(&topology_host_sem);
++	if (cxl_topology_host) {
++		up_write(&topology_host_sem);
++		pr_warn("%s host currently in use. Please try unloading %s",
++			dev_name(cxl_topology_host), host->driver->name);
++		return -EBUSY;
 +	}
 +
-+	return info;
++	cxl_topology_host = host;
++	up_write(&topology_host_sem);
++
++	return 0;
++}
++EXPORT_SYMBOL_NS_GPL(cxl_register_topology_host, CXL);
++
++void cxl_unregister_topology_host(struct device *host)
++{
++	down_write(&topology_host_sem);
++	if (cxl_topology_host == host)
++		cxl_topology_host = NULL;
++	else
++		pr_warn("topology host in use by %s\n",
++			cxl_topology_host->driver->name);
++	up_write(&topology_host_sem);
++}
++EXPORT_SYMBOL_NS_GPL(cxl_unregister_topology_host, CXL);
++
++static struct device *get_cxl_topology_host(void)
++{
++	down_read(&topology_host_sem);
++	if (cxl_topology_host)
++		return cxl_topology_host;
++	up_read(&topology_host_sem);
++	return NULL;
 +}
 +
-+#undef CDPDR
-+
- static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++static void put_cxl_topology_host(struct device *dev)
++{
++	WARN_ON(dev != cxl_topology_host);
++	up_read(&topology_host_sem);
++}
+ 
+ static ssize_t devtype_show(struct device *dev, struct device_attribute *attr,
+ 			    char *buf)
+@@ -362,17 +409,16 @@ static struct cxl_port *cxl_port_alloc(struct device *uport,
+ 
+ /**
+  * devm_cxl_add_port - register a cxl_port in CXL memory decode hierarchy
+- * @host: host device for devm operations
+  * @uport: "physical" device implementing this upstream port
+  * @component_reg_phys: (optional) for configurable cxl_port instances
+  * @parent_port: next hop up in the CXL memory decode hierarchy
+  */
+-struct cxl_port *devm_cxl_add_port(struct device *host, struct device *uport,
++struct cxl_port *devm_cxl_add_port(struct device *uport,
+ 				   resource_size_t component_reg_phys,
+ 				   struct cxl_port *parent_port)
  {
-+	struct cxl_endpoint_dvsec_info *info;
- 	struct cxl_register_map map;
- 	struct cxl_memdev *cxlmd;
- 	struct cxl_dev_state *cxlds;
-@@ -505,6 +623,14 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++	struct device *dev, *host;
+ 	struct cxl_port *port;
+-	struct device *dev;
+ 	int rc;
+ 
+ 	port = cxl_port_alloc(uport, component_reg_phys, parent_port);
+@@ -391,7 +437,12 @@ struct cxl_port *devm_cxl_add_port(struct device *host, struct device *uport,
  	if (rc)
- 		return rc;
+ 		goto err;
  
-+	info = dvsec_ranges(cxlds);
-+	if (IS_ERR(info))
-+		dev_err(&pdev->dev,
-+			"Failed to get DVSEC range information (%ld)\n",
-+			PTR_ERR(info));
-+	else
-+		cxlds->info = info;
++	host = get_cxl_topology_host();
++	if (!host)
++		return ERR_PTR(-ENODEV);
 +
- 	cxlmd = devm_cxl_add_memdev(cxlds);
- 	if (IS_ERR(cxlmd))
- 		return PTR_ERR(cxlmd);
-diff --git a/drivers/cxl/pci.h b/drivers/cxl/pci.h
-index a4b506bb37d1..2a48cd65bf59 100644
---- a/drivers/cxl/pci.h
-+++ b/drivers/cxl/pci.h
-@@ -15,6 +15,19 @@
+ 	rc = devm_add_action_or_reset(host, unregister_port, port);
++	put_cxl_topology_host(host);
+ 	if (rc)
+ 		return ERR_PTR(rc);
  
- /* CXL 2.0 8.1.3: PCIe DVSEC for CXL Device */
- #define CXL_DVSEC_PCIE_DEVICE					0
-+#define   CXL_DVSEC_PCIE_DEVICE_CAP_OFFSET			0xA
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_CAPABLE			BIT(2)
-+#define     CXL_DVSEC_PCIE_DEVICE_HDM_COUNT_MASK		GENMASK(5, 4)
-+#define   CXL_DVSEC_PCIE_DEVICE_CTRL_OFFSET			0xC
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_ENABLE			BIT(2)
-+#define   CXL_DVSEC_PCIE_DEVICE_RANGE_SIZE_HIGH_OFFSET(i)	0x18 + (i * 0x10)
-+#define   CXL_DVSEC_PCIE_DEVICE_RANGE_SIZE_LOW_OFFSET(i)	0x1C + (i * 0x10)
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_INFO_VALID		BIT(0)
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_ACTIVE			BIT(1)
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_SIZE_LOW_MASK		GENMASK(31, 28)
-+#define   CXL_DVSEC_PCIE_DEVICE_RANGE_BASE_HIGH_OFFSET(i)	0x20 + (i * 0x10)
-+#define   CXL_DVSEC_PCIE_DEVICE_RANGE_BASE_LOW_OFFSET(i)	0x24 + (i * 0x10)
-+#define     CXL_DVSEC_PCIE_DEVICE_MEM_BASE_LOW_MASK		GENMASK(31, 28)
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 2c5627fa8a34..6fac4826d22b 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -152,6 +152,9 @@ int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
+ #define CXL_RESOURCE_NONE ((resource_size_t) -1)
+ #define CXL_TARGET_STRLEN 20
  
- /* CXL 2.0 8.1.4: Non-CXL Function Map DVSEC */
- #define CXL_DVSEC_FUNCTION_MAP					2
++int cxl_register_topology_host(struct device *host);
++void cxl_unregister_topology_host(struct device *host);
++
+ /*
+  * cxl_decoder flags that define the type of memory / devices this
+  * decoder supports as well as configuration lock status See "CXL 2.0
+@@ -279,7 +282,7 @@ struct cxl_dport {
+ };
+ 
+ struct cxl_port *to_cxl_port(struct device *dev);
+-struct cxl_port *devm_cxl_add_port(struct device *host, struct device *uport,
++struct cxl_port *devm_cxl_add_port(struct device *uport,
+ 				   resource_size_t component_reg_phys,
+ 				   struct cxl_port *parent_port);
+ 
 -- 
 2.34.0
 
