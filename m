@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A896AC4321E
-	for <linux-pci@archiver.kernel.org>; Sat, 20 Nov 2021 00:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 076A5C4167B
+	for <linux-pci@archiver.kernel.org>; Sat, 20 Nov 2021 00:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236349AbhKTAGN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Nov 2021 19:06:13 -0500
-Received: from mga12.intel.com ([192.55.52.136]:5726 "EHLO mga12.intel.com"
+        id S232763AbhKTAGO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Nov 2021 19:06:14 -0500
+Received: from mga12.intel.com ([192.55.52.136]:5719 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232763AbhKTAGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S229523AbhKTAGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 19 Nov 2021 19:06:09 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10173"; a="214542401"
+X-IronPort-AV: E=McAfee;i="6200,9189,10173"; a="214542404"
 X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
-   d="scan'208";a="214542401"
+   d="scan'208";a="214542404"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:56 -0800
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:57 -0800
 X-IronPort-AV: E=Sophos;i="5.87,248,1631602800"; 
-   d="scan'208";a="496088357"
+   d="scan'208";a="496088364"
 Received: from jfaistl-mobl1.amr.corp.intel.com (HELO bad-guy.kumite) ([10.252.139.58])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:56 -0800
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2021 16:02:57 -0800
 From:   Ben Widawsky <ben.widawsky@intel.com>
 To:     linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Ben Widawsky <ben.widawsky@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
         Dan Williams <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
         Ira Weiny <ira.weiny@intel.com>,
         Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
         Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH 07/23] cxl/pci: Add new DVSEC definitions
-Date:   Fri, 19 Nov 2021 16:02:34 -0800
-Message-Id: <20211120000250.1663391-8-ben.widawsky@intel.com>
+Subject: [PATCH 09/23] cxl: Introduce module_cxl_driver
+Date:   Fri, 19 Nov 2021 16:02:36 -0800
+Message-Id: <20211120000250.1663391-10-ben.widawsky@intel.com>
 X-Mailer: git-send-email 2.34.0
 In-Reply-To: <20211120000250.1663391-1-ben.widawsky@intel.com>
 References: <20211120000250.1663391-1-ben.widawsky@intel.com>
@@ -40,46 +40,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-While the new definitions are yet necessary at this point, they are
-introduced at this point to help solidify the newly minted schema for
-naming registers.
+Many CXL drivers simply want to register and unregister themselves.
+module_driver already supported this. A simple wrapper around that
+reduces a decent amount of boilerplate in upcoming patches.
 
+Suggested-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-
 ---
-This was split from
-https://lore.kernel.org/linux-cxl/20211103170552.55ae5u7uvurkync6@intel.com/T/#u
-per Dan's request.
----
- drivers/cxl/pci.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/cxl/cxl.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/cxl/pci.h b/drivers/cxl/pci.h
-index 29b8eaef3a0a..8ae2b4adc59d 100644
---- a/drivers/cxl/pci.h
-+++ b/drivers/cxl/pci.h
-@@ -16,6 +16,21 @@
- /* CXL 2.0 8.1.3: PCIe DVSEC for CXL Device */
- #define CXL_DVSEC_PCIE_DEVICE					0
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 7150a9694f66..d39d45f4a770 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -308,6 +308,9 @@ int __cxl_driver_register(struct cxl_driver *cxl_drv, struct module *owner,
+ #define cxl_driver_register(x) __cxl_driver_register(x, THIS_MODULE, KBUILD_MODNAME)
+ void cxl_driver_unregister(struct cxl_driver *cxl_drv);
  
-+/* CXL 2.0 8.1.4: Non-CXL Function Map DVSEC */
-+#define CXL_DVSEC_FUNCTION_MAP					2
++#define module_cxl_driver(__cxl_driver) \
++	module_driver(__cxl_driver, cxl_driver_register, cxl_driver_unregister)
 +
-+/* CXL 2.0 8.1.5: CXL 2.0 Extensions DVSEC for Ports */
-+#define CXL_DVSEC_PORT_EXTENSIONS				3
-+
-+/* CXL 2.0 8.1.6: GPF DVSEC for CXL Port */
-+#define CXL_DVSEC_PORT_GPF					4
-+
-+/* CXL 2.0 8.1.7: GPF DVSEC for CXL Device */
-+#define CXL_DVSEC_DEVICE_GPF					5
-+
-+/* CXL 2.0 8.1.8: PCIe DVSEC for Flex Bus Port */
-+#define CXL_DVSEC_PCIE_FLEXBUS_PORT				7
-+
- /* CXL 2.0 8.1.9: Register Locator DVSEC */
- #define CXL_DVSEC_REG_LOCATOR					8
- #define   CXL_DVSEC_REG_LOCATOR_BLOCK1_OFFSET			0xC
+ #define CXL_DEVICE_NVDIMM_BRIDGE	1
+ #define CXL_DEVICE_NVDIMM		2
+ 
 -- 
 2.34.0
 
