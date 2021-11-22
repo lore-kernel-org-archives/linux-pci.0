@@ -2,80 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41162C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Nov 2021 14:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EF2C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Nov 2021 15:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232963AbhKVOyq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Nov 2021 09:54:46 -0500
-Received: from mga02.intel.com ([134.134.136.20]:50520 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239546AbhKVOyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Nov 2021 09:54:45 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10175"; a="222018899"
-X-IronPort-AV: E=Sophos;i="5.87,255,1631602800"; 
-   d="scan'208";a="222018899"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2021 06:51:38 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,255,1631602800"; 
-   d="scan'208";a="649471384"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga001.fm.intel.com with ESMTP; 22 Nov 2021 06:51:38 -0800
-Received: from malshaye-mobl.amr.corp.intel.com (malshaye-mobl.amr.corp.intel.com [10.212.153.61])
-        by linux.intel.com (Postfix) with ESMTP id EB53E5807C8;
-        Mon, 22 Nov 2021 06:51:37 -0800 (PST)
-Message-ID: <7ba2c0c40b3abeecdef0eacb46d957aaa2fd24bf.camel@linux.intel.com>
-Subject: Re: [PATCH 4/4] platform/x86: Add Intel Software Defined Silicon
- driver
-From:   "David E. Box" <david.e.box@linux.intel.com>
-Reply-To: david.e.box@linux.intel.com
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     lee.jones@linaro.org, hdegoede@redhat.com, bhelgaas@google.com,
-        andriy.shevchenko@linux.intel.com, srinivas.pandruvada@intel.com,
-        mgross@linux.intel.com, linux-kernel@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, linux-pci@vger.kernel.org
-Date:   Mon, 22 Nov 2021 06:51:37 -0800
-In-Reply-To: <YZs28g87GE3XgAKk@kroah.com>
-References: <20211120231705.189969-1-david.e.box@linux.intel.com>
-         <20211120231705.189969-5-david.e.box@linux.intel.com>
-         <YZo8HUxx8LNgOMeK@kroah.com>
-         <4d8ba355de09a4a806b6075305ca8d7156dc70ef.camel@linux.intel.com>
-         <YZs28g87GE3XgAKk@kroah.com>
-Organization: David E. Box
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        id S238665AbhKVPFl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Nov 2021 10:05:41 -0500
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4129 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237699AbhKVPFj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Nov 2021 10:05:39 -0500
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HyVqL4QPTz67LfL;
+        Mon, 22 Nov 2021 23:02:06 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Mon, 22 Nov 2021 16:02:30 +0100
+Received: from localhost (10.202.226.41) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Mon, 22 Nov
+ 2021 15:02:28 +0000
+Date:   Mon, 22 Nov 2021 15:02:27 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Ben Widawsky <ben.widawsky@intel.com>
+CC:     <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        "Alison Schofield" <alison.schofield@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 04/23] cxl/pci: Implement Interface Ready Timeout
+Message-ID: <20211122150227.00000020@Huawei.com>
+In-Reply-To: <20211120000250.1663391-5-ben.widawsky@intel.com>
+References: <20211120000250.1663391-1-ben.widawsky@intel.com>
+        <20211120000250.1663391-5-ben.widawsky@intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.41]
+X-ClientProxiedBy: lhreml737-chm.china.huawei.com (10.201.108.187) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2021-11-22 at 07:21 +0100, Greg KH wrote:
-> On Sun, Nov 21, 2021 at 09:18:25AM -0800, David E. Box wrote:
-> > > These sysfs attributes are crazy.  Who has audited them to be correct
-> > > and work properly? It feels like there are just buffer overflows
-> > > waiting to be exploited in them due to the reading/writing of raw memory
-> > > buffers all over the place.
-> > 
-> > Agree with the concern. I can submit the tests that were used. Is selftests
-> > the
-> > best place?
-> 
-> Yes.
-> 
-> > > Where is the userspace tool that uses these files?
-> > 
-> > The tool will be published in the same github repo as the spec once the
-> > driver
-> > is ready.
-> 
-> Isn't the driver "ready" if you are asking for it to be accepted
-> here?  Why isn't it published already so we can see if it actually is
-> tested?
+On Fri, 19 Nov 2021 16:02:31 -0800
+Ben Widawsky <ben.widawsky@intel.com> wrote:
 
-It will be required for the tests anyway, so I'll submit it with them.
+> The original driver implementation used the doorbell timeout for the
+> Mailbox Interface Ready bit to piggy back off of, since the latter
+> doesn't have a defined timeout. This functionality, introduced in
+> 8adaf747c9f0 ("cxl/mem: Find device capabilities"), can now be improved
+> since a timeout has been defined with an ECN to the 2.0 spec.
+> 
+> While devices implemented prior to the ECN could have an arbitrarily
+> long wait and still be within spec, the max ECN value (256s) is chosen
+> as the default for all devices. All vendors in the consortium agreed to
+> this amount and so it is reasonable to assume no devices made will
+> exceed this amount.
 
-Thanks.
+Optimistic :)
 
-David
+> 
+> Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
+> ---
+> This patch did not exist in RFCv2
+> ---
+>  drivers/cxl/pci.c | 29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+> 
+> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+> index 6c8d09fb3a17..2cef9fec8599 100644
+> --- a/drivers/cxl/pci.c
+> +++ b/drivers/cxl/pci.c
+> @@ -2,6 +2,7 @@
+>  /* Copyright(c) 2020 Intel Corporation. All rights reserved. */
+>  #include <linux/io-64-nonatomic-lo-hi.h>
+>  #include <linux/module.h>
+> +#include <linux/delay.h>
+>  #include <linux/sizes.h>
+>  #include <linux/mutex.h>
+>  #include <linux/list.h>
+> @@ -298,6 +299,34 @@ static int cxl_pci_mbox_send(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *c
+>  static int cxl_pci_setup_mailbox(struct cxl_dev_state *cxlds)
+>  {
+>  	const int cap = readl(cxlds->regs.mbox + CXLDEV_MBOX_CAPS_OFFSET);
+> +	unsigned long timeout;
+> +	u64 md_status;
+> +	int rc;
+> +
+> +	/*
+> +	 * CXL 2.0 ECN "Add Mailbox Ready Time" defines a capability field to
+> +	 * dictate how long to wait for the mailbox to become ready. For
+> +	 * simplicity, and to handle devices that might have been implemented
+
+I'm not keen on the 'for simplicity' argument here.  If the device is advertising
+a lower value, then that is what we should use.  It's fine to wait the max time
+if nothing is specified.  It'll cost us a few lines of code at most unless
+I am missing something...
+
+Jonathan
+
+> +	 * prior to the ECN, wait the max amount of time no matter what the
+> +	 * device says.
+> +	 */
+> +	timeout = jiffies + 256 * HZ;
+> +
+> +	rc = check_device_status(cxlds);
+> +	if (rc)
+> +		return rc;
+> +
+> +	do {
+> +		md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
+> +		if (md_status & CXLMDEV_MBOX_IF_READY)
+> +			break;
+> +		if (msleep_interruptible(100))
+> +			break;
+> +	} while (!time_after(jiffies, timeout));
+> +
+> +	/* It's assumed that once the interface is ready, it will remain ready. */
+> +	if (!(md_status & CXLMDEV_MBOX_IF_READY))
+> +		return -EIO;
+>  
+>  	cxlds->mbox_send = cxl_pci_mbox_send;
+>  	cxlds->payload_size =
 
