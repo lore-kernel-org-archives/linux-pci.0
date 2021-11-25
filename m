@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAA3C4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2542C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:48:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354505AbhKYMvq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Nov 2021 07:51:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45096 "EHLO mail.kernel.org"
+        id S1350512AbhKYMvv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Nov 2021 07:51:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237495AbhKYMto (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Nov 2021 07:49:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CD70E61074;
-        Thu, 25 Nov 2021 12:46:32 +0000 (UTC)
+        id S1347848AbhKYMtq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Nov 2021 07:49:46 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 14572610FB;
+        Thu, 25 Nov 2021 12:46:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637844393;
-        bh=1XclSRaolokdnja6teAdCvRFwmwoQlvxxpkApF8Sjnw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=U2C/BvEST8d9Tj26du0mnnsupLv+jpm2tRI3Luz8v7fn/I5mNozRkBN5177K63bcW
-         dK3MGG+LgxB3GlSUjfcjeSKrlOyKwRYnmmZHfpAAximNVkgYZ7RLtSfyJzGHCRXgLQ
-         0C0BJd1XpfBKi4/sbJWRL8wwKPg9XR3UKsRAGTroRtFYwOUOed9C6RRy6y8QY6cQVa
-         gYtD2kqwzxj3bzCdi2q4IsOaTYCanbYTQ0gun5ZbYtDCPjf65vdgk4+Ccq0f7Euk+t
-         DYq1o5bi37Xy2dSbCw241liWcqO+xAEsoTwxmCxqsPmxYMtzALIn+/zooHk3Bfsjar
-         QqA+6OY9/m0Ng==
+        s=k20201202; t=1637844395;
+        bh=V49Dl6I3ETYyBXCva0Ab5YRCPF20sbpwGL5aEs5sgZE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Kvm31VUlPXoPnaVkKfH4RfPkFELOCasP8eM7ZRiPWKDrUYF7fe5tvMMhhoU+fzDiL
+         7SzZkIR9yvX9tPU7K3+kjN21luO04b9pUjXPL5Cw7ylhZOaGVHSIlqrLL8z4kC744P
+         5N1xI0mTznUKsgoDU6uyKayGJmQqqdWNSaQD9oOqNTZHMXhEKygg/PmVSu9R1yhrIa
+         86E47HhNcRElH1tekn2OEFdJav3JxOh0pctuDBBBaF6lY/oxwLRcqFSVQb1Rx86Uqj
+         t9PNgSBTw2pKnN768RVJIz5Y/1Ag84yCWZdkqzRhRE+KelYvIrbd2DfTeFXTJ5JGof
+         To1vc5sTxiVaA==
 Received: by pali.im (Postfix)
-        id DDC8C67E; Thu, 25 Nov 2021 13:46:29 +0100 (CET)
+        id 6C55467E; Thu, 25 Nov 2021 13:46:34 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -34,10 +34,12 @@ To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 00/15] pci: mvebu: Various fixes
-Date:   Thu, 25 Nov 2021 13:45:50 +0100
-Message-Id: <20211125124605.25915-1-pali@kernel.org>
+Subject: [PATCH 04/15] PCI: mvebu: Handle invalid size of read config request
+Date:   Thu, 25 Nov 2021 13:45:54 +0100
+Message-Id: <20211125124605.25915-5-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20211125124605.25915-1-pali@kernel.org>
+References: <20211125124605.25915-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -45,39 +47,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series contains various fixes for pci-mvebu.c driver. Only
-bugfixes, no new features.
+Function mvebu_pcie_hw_rd_conf() does not handle invalid size. So correctly
+set read value to all-ones and return appropriate error return value
+PCIBIOS_BAD_REGISTER_NUMBER like in mvebu_pcie_hw_wr_conf() function.
 
-For pci-mvebu.c I have prepared another 30+ patches with cleanups and
-new features, they are currently available in my git branch:
-https://git.kernel.org/pub/scm/linux/kernel/git/pali/linux.git/log/?h=pci-mvebu
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/controller/pci-mvebu.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Pali Rohár (15):
-  PCI: mvebu: Check for valid ports
-  PCI: mvebu: Check for errors from pci_bridge_emul_init() call
-  PCI: mvebu: Check that PCI bridge specified in DT has function number
-    zero
-  PCI: mvebu: Handle invalid size of read config request
-  PCI: mvebu: Disallow mapping interrupts on emulated bridges
-  PCI: mvebu: Fix support for bus mastering and PCI_COMMAND on emulated
-    bridge
-  PCI: mvebu: Do not modify PCI IO type bits in conf_write
-  PCI: mvebu: Propagate errors when updating PCI_IO_BASE and
-    PCI_MEM_BASE registers
-  PCI: mvebu: Setup PCIe controller to Root Complex mode
-  PCI: mvebu: Set PCI Bridge Class Code to PCI Bridge
-  PCI: mvebu: Fix configuring secondary bus of PCIe Root Port via
-    emulated bridge
-  PCI: mvebu: Fix support for PCI_BRIDGE_CTL_BUS_RESET on emulated
-    bridge
-  PCI: mvebu: Fix support for PCI_EXP_DEVCTL on emulated bridge
-  PCI: mvebu: Fix support for PCI_EXP_RTSTA on emulated bridge
-  PCI: mvebu: Fix support for DEVCAP2, DEVCTL2 and LNKCTL2 registers on
-    emulated bridge
-
- drivers/pci/controller/pci-mvebu.c | 380 ++++++++++++++++++++++++-----
- 1 file changed, 313 insertions(+), 67 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 08274132cdfb..19c6ee298442 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -261,6 +261,9 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+ 	case 4:
+ 		*val = readl_relaxed(conf_data);
+ 		break;
++	default:
++		*val = 0xffffffff;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
+ 
+ 	return PCIBIOS_SUCCESSFUL;
 -- 
 2.20.1
 
