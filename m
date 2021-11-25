@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 382BFC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 542FBC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350028AbhKYMxU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Nov 2021 07:53:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45578 "EHLO mail.kernel.org"
+        id S1354766AbhKYMxu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Nov 2021 07:53:50 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1353365AbhKYMvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Nov 2021 07:51:44 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9CA366112D;
-        Thu, 25 Nov 2021 12:46:37 +0000 (UTC)
+        id S1354830AbhKYMvt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Nov 2021 07:51:49 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D66DD6113B;
+        Thu, 25 Nov 2021 12:46:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637844397;
-        bh=M7RVNYqJpq9GBdt/IbkDk02dbz1vB+spQULec4Ir+Cg=;
+        s=k20201202; t=1637844407;
+        bh=dOK1Q8ui3OxrTW5NWDaV2x8xsH/B8xAQ7TbI/Tpnk80=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ixvmxJhjksDOJD4scZVavPK6vsC14fkStyOjsYuJyH6kp7Kk13lwTuv+JlEAY6KKy
-         hD99qv3k1nuFILREDjCQTp0fOCXertNrKjjHTFFFya53mniotvv7Pzhhf2iFGZJYbQ
-         Fch4YnLZbxjcBlnF9/XhR/BDBLRJ5IHi5uSPaQt4qkxebJG8Izb5v42VnzxXDhq4a/
-         u5AyJ8GOVCjzWzwkSr2i2EaJlbxuvyQ4KJZrntNqd6TeLeVDLJpIzJQg3IKe6sS+FO
-         1RnQI96aAfz4anv6RGm6dblkqVqkeZJuOdM/ZNx0/tYQtBshPZWcw7Mgfb6qDSKs8h
-         Uy5lcmVH3PnkA==
+        b=N3i3gDaQtNeKWacYBowXh4lVNmS64IGWu9G4Rh9Pz4hA+4kXn33jvUSiTCCKFwqQH
+         22LZyY4TnoWWip71S+eoO/ECbe3KbafplU4KfAKnG5UccGtuDvILMrOhuxJ2DBmOHb
+         x2hilyEes2645QKw9m33NCSPkU5iSWHN2uynXPrfwfp3NIEulU/u2EEg+ZwscawoP8
+         21HRl+z6o1Re7aCYDciGDg/R848A4WrW3vsuG8dGiKx3On0EFDppE5tMz8F8+8ds3b
+         5j+2OWqrvHFav4ZYPqOCb9JVdhKwQvUkOM/9wxzBBG67mOBGG57UmDY5lxy+kKGOCk
+         n0u4OtdaMX4Lg==
 Received: by pali.im (Postfix)
-        id 5D6DAEDE; Thu, 25 Nov 2021 13:46:37 +0100 (CET)
+        id B4222EDE; Thu, 25 Nov 2021 13:46:44 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -34,9 +34,9 @@ To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 07/15] PCI: mvebu: Do not modify PCI IO type bits in conf_write
-Date:   Thu, 25 Nov 2021 13:45:57 +0100
-Message-Id: <20211125124605.25915-8-pali@kernel.org>
+Subject: [PATCH 14/15] PCI: mvebu: Fix support for PCI_EXP_RTSTA on emulated bridge
+Date:   Thu, 25 Nov 2021 13:46:04 +0100
+Message-Id: <20211125124605.25915-15-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211125124605.25915-1-pali@kernel.org>
 References: <20211125124605.25915-1-pali@kernel.org>
@@ -47,40 +47,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI IO type bits are already initialized in mvebu_pci_bridge_emul_init()
-function and only when IO support is enabled. These type bits are read-only
-and pci-bridge-emul.c code already does not allow to modify them from upper
-layers.
-
-When IO support is disabled then all IO registers should be read-only and
-return zeros. Therefore do not modify PCI IO type bits in
-mvebu_pci_bridge_emul_base_conf_write() callback.
+PME Status bit in Root Status Register (PCIE_RC_RTSTA_OFF) is read-only and
+can be cleared only by writing 0b to the Interrupt Cause RW0C register
+(PCIE_INT_CAUSE_OFF).
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Fixes: 1f08673eef12 ("PCI: mvebu: Convert to PCI emulated bridge config space")
 Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-mvebu.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 32694763e930..a0b661972436 100644
+index c9b736344b56..798cf5cff8be 100644
 --- a/drivers/pci/controller/pci-mvebu.c
 +++ b/drivers/pci/controller/pci-mvebu.c
-@@ -522,13 +522,6 @@ mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
+@@ -52,6 +52,8 @@
+ 	 PCIE_CONF_FUNC(PCI_FUNC(devfn)) | PCIE_CONF_REG(where) | \
+ 	 PCIE_CONF_ADDR_EN)
+ #define PCIE_CONF_DATA_OFF	0x18fc
++#define PCIE_INT_CAUSE_OFF	0x1900
++#define  PCIE_INT_PM_PME		BIT(28)
+ #define PCIE_MASK_OFF		0x1910
+ #define  PCIE_MASK_ENABLE_INTS          0x0f000000
+ #define PCIE_CTRL_OFF		0x1a00
+@@ -672,7 +674,14 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
  		break;
  
- 	case PCI_IO_BASE:
--		/*
--		 * We keep bit 1 set, it is a read-only bit that
--		 * indicates we support 32 bits addressing for the
--		 * I/O
--		 */
--		conf->iobase |= PCI_IO_RANGE_TYPE_32;
--		conf->iolimit |= PCI_IO_RANGE_TYPE_32;
- 		mvebu_pcie_handle_iobase_change(port);
+ 	case PCI_EXP_RTSTA:
+-		mvebu_writel(port, new, PCIE_RC_RTSTA);
++		/*
++		 * PME Status bit in Root Status Register (PCIE_RC_RTSTA)
++		 * is read-only and can be cleared only by writing 0b to the
++		 * Interrupt Cause RW0C register (PCIE_INT_CAUSE_OFF). So
++		 * clear PME via Interrupt Cause.
++		 */
++		if (new & PCI_EXP_RTSTA_PME)
++			mvebu_writel(port, ~PCIE_INT_PM_PME, PCIE_INT_CAUSE_OFF);
  		break;
- 
+ 	}
+ }
 -- 
 2.20.1
 
