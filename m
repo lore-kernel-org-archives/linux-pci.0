@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3839C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 959F7C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:50:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245494AbhKYMxS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Nov 2021 07:53:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45586 "EHLO mail.kernel.org"
+        id S1351060AbhKYMxU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Nov 2021 07:53:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45582 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1353575AbhKYMvp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1353413AbhKYMvp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 25 Nov 2021 07:51:45 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 312CC610F9;
-        Thu, 25 Nov 2021 12:46:41 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7750D61139;
+        Thu, 25 Nov 2021 12:46:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637844401;
-        bh=I22+rZTnzG+DDCPyUEnV19dYpz4cUH9W+Ns6gKnI/bo=;
+        s=k20201202; t=1637844399;
+        bh=8IVaDVY9hPRIGDZRDN90aFjLyHB9vSl+f8YJ0WtixNg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GjVCqedx94OmhYlagOgMOGMSEpsMVcpvrjaii9/oLYfZ+dIP4NAKEhhvly67MOgJo
-         fJUmifie6FJwo2wUCExn+EZ5MI11dPLKBQIUrhm/zhkwnl6OEZ8UMiX6q+zgb8UdKV
-         t4Jv5i1cVtFsK+Kq/nrw58A0ABDbcxY9R4Thkvq4qNMOnOv+5QqAQLUKMUMHrtdRI1
-         JNf3J6y21K2JNRS10MM0spUFI6P5Wib+7kZPvtFQDrCI5rnrqjW2PWY/GqXXPTJtUB
-         eOl0XW5GwHXTiUU1O/Z67bJMpM/amWj1r+dk7j3n3P0Xz0hAMJWrivQh6eNA88KPQh
-         LwLQjFtRvh+kQ==
+        b=rEwyH3uNfHbBqv91vf66yCBCcd+vPBv2NFDtCdRxmaEbxzVZFKfzIBhUntF7oCDHs
+         RWeiQYola42948pTu9MtHMtmCjjnbtIzLzOsc1DEbKlKyU59CSjNTfUFCCgk2MXs9v
+         N+Gsu7p45MG2E56JNfAfKxQ8Ed2BM7MaQ0bd3oqmAEoWgIOuS8C9/oGEpXfVkbpNrM
+         82LYNbCfpkB+iMxy4atLGUUz1yhHeD7NkpLestOwtcg5+fBlRiI8kQkWtuDbXsd2Ww
+         iWrUeHXCRyRqqowtQSyigEKU9rU7VVaT8hc5uYnmBKPMx3PW6AxPep/5c8rbaYvqlp
+         gNeyoJIiHdjGQ==
 Received: by pali.im (Postfix)
-        id 8AD9767E; Thu, 25 Nov 2021 13:46:40 +0100 (CET)
+        id 57DC467E; Thu, 25 Nov 2021 13:46:36 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -34,9 +34,9 @@ To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 10/15] PCI: mvebu: Set PCI Bridge Class Code to PCI Bridge
-Date:   Thu, 25 Nov 2021 13:46:00 +0100
-Message-Id: <20211125124605.25915-11-pali@kernel.org>
+Subject: [PATCH 06/15] PCI: mvebu: Fix support for bus mastering and PCI_COMMAND on emulated bridge
+Date:   Thu, 25 Nov 2021 13:45:56 +0100
+Message-Id: <20211125124605.25915-7-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211125124605.25915-1-pali@kernel.org>
 References: <20211125124605.25915-1-pali@kernel.org>
@@ -47,68 +47,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The default value of Class Code of this bridge corresponds to a Memory
-controller, though. This is probably relict from the past when old
-Marvell/Galileo PCI-based controllers were used as standalone PCI device
-for connecting SDRAM or workaround for PCs with broken BIOS. Details are
-in commit 36de23a4c5f0 ("MIPS: Cobalt: Explain GT64111 early PCI fixup").
+According to PCI specifications bits [0:2] of Command Register, this should
+be by default disabled on reset. So explicitly disable these bits at early
+beginning of driver initialization.
 
-Change the Class Code to correspond to a PCI Bridge.
+Also remove code which unconditionally enables all 3 bits and let kernel
+code (via pci_set_master() function) to handle bus mastering of PCI Bridge
+via emulated PCI_COMMAND on emulated bridge.
 
-Add comment explaining this change.
+Adjust existing functions mvebu_pcie_handle_iobase_change() and
+mvebu_pcie_handle_membase_change() to handle PCI_IO_BASE and PCI_MEM_BASE
+registers correctly even when bus mastering on emulated bridge is disabled.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-mvebu.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-mvebu.c | 52 ++++++++++++++++++------------
+ 1 file changed, 32 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 017ae9f869ac..4edce441901c 100644
+index a3df352d440e..32694763e930 100644
 --- a/drivers/pci/controller/pci-mvebu.c
 +++ b/drivers/pci/controller/pci-mvebu.c
-@@ -225,7 +225,7 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
- 
- static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+@@ -226,16 +226,14 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
  {
--	u32 ctrl, cmd, mask;
-+	u32 ctrl, cmd, dev_rev, mask;
+ 	u32 cmd, mask;
  
- 	/* Setup PCIe controller to Root Complex mode. */
- 	ctrl = mvebu_readl(port, PCIE_CTRL_OFF);
-@@ -237,6 +237,32 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
- 	cmd &= ~(PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
+-	/* Point PCIe unit MBUS decode windows to DRAM space. */
+-	mvebu_pcie_setup_wins(port);
+-
+-	/* Master + slave enable. */
++	/* Disable Root Bridge I/O space, memory space and bus mastering. */
+ 	cmd = mvebu_readl(port, PCIE_CMD_OFF);
+-	cmd |= PCI_COMMAND_IO;
+-	cmd |= PCI_COMMAND_MEMORY;
+-	cmd |= PCI_COMMAND_MASTER;
++	cmd &= ~(PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
  	mvebu_writel(port, cmd, PCIE_CMD_OFF);
  
-+	/*
-+	 * Change Class Code of PCI Bridge device to PCI Bridge (0x6004)
-+	 * because default value is Memory controller (0x5080).
-+	 *
-+	 * Note that this mvebu PCI Bridge does not have compliant Type 1
-+	 * Configuration Space. Header Type is reported as Type 0 and it
-+	 * has format of Type 0 config space.
-+	 *
-+	 * Moreover Type 0 BAR registers (ranges 0x10 - 0x28 and 0x30 - 0x34)
-+	 * have the same format in Marvell's specification as in PCIe
-+	 * specification, but their meaning is totally different and they do
-+	 * different things: they are aliased into internal mvebu registers
-+	 * (e.g. PCIE_BAR_LO_OFF) and these should not be changed or
-+	 * reconfigured by pci device drivers.
-+	 *
-+	 * Therefore driver uses emulation of PCI Bridge which emulates
-+	 * access to configuration space via internal mvebu registers or
-+	 * emulated configuration buffer. Driver access these PCI Bridge
-+	 * directly for simplification, but these registers can be accessed
-+	 * also via standard mvebu way for accessing PCI config space.
-+	 */
-+	dev_rev = mvebu_readl(port, PCIE_DEV_REV_OFF);
-+	dev_rev &= ~0xffffff00;
-+	dev_rev |= (PCI_CLASS_BRIDGE_PCI << 8) << 8;
-+	mvebu_writel(port, dev_rev, PCIE_DEV_REV_OFF);
++	/* Point PCIe unit MBUS decode windows to DRAM space. */
++	mvebu_pcie_setup_wins(port);
 +
- 	/* Point PCIe unit MBUS decode windows to DRAM space. */
- 	mvebu_pcie_setup_wins(port);
+ 	/* Enable interrupt lines A-D. */
+ 	mask = mvebu_readl(port, PCIE_MASK_OFF);
+ 	mask |= PCIE_MASK_ENABLE_INTS;
+@@ -385,8 +383,7 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
  
+ 	/* Are the new iobase/iolimit values invalid? */
+ 	if (conf->iolimit < conf->iobase ||
+-	    conf->iolimitupper < conf->iobaseupper ||
+-	    !(conf->command & PCI_COMMAND_IO)) {
++	    conf->iolimitupper < conf->iobaseupper) {
+ 		mvebu_pcie_set_window(port, port->io_target, port->io_attr,
+ 				      &desired, &port->iowin);
+ 		return;
+@@ -423,8 +420,7 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ 	struct pci_bridge_emul_conf *conf = &port->bridge.conf;
+ 
+ 	/* Are the new membase/memlimit values invalid? */
+-	if (conf->memlimit < conf->membase ||
+-	    !(conf->command & PCI_COMMAND_MEMORY)) {
++	if (conf->memlimit < conf->membase) {
+ 		mvebu_pcie_set_window(port, port->mem_target, port->mem_attr,
+ 				      &desired, &port->memwin);
+ 		return;
+@@ -444,6 +440,24 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
+ 			      &port->memwin);
+ }
+ 
++static pci_bridge_emul_read_status_t
++mvebu_pci_bridge_emul_base_conf_read(struct pci_bridge_emul *bridge,
++				     int reg, u32 *value)
++{
++	struct mvebu_pcie_port *port = bridge->data;
++
++	switch (reg) {
++	case PCI_COMMAND:
++		*value = mvebu_readl(port, PCIE_CMD_OFF);
++		break;
++
++	default:
++		return PCI_BRIDGE_EMUL_NOT_HANDLED;
++	}
++
++	return PCI_BRIDGE_EMUL_HANDLED;
++}
++
+ static pci_bridge_emul_read_status_t
+ mvebu_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+ 				     int reg, u32 *value)
+@@ -498,17 +512,14 @@ mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
+ 
+ 	switch (reg) {
+ 	case PCI_COMMAND:
+-	{
+-		if (!mvebu_has_ioport(port))
+-			conf->command &= ~PCI_COMMAND_IO;
+-
+-		if ((old ^ new) & PCI_COMMAND_IO)
+-			mvebu_pcie_handle_iobase_change(port);
+-		if ((old ^ new) & PCI_COMMAND_MEMORY)
+-			mvebu_pcie_handle_membase_change(port);
++		if (!mvebu_has_ioport(port)) {
++			conf->command = cpu_to_le16(
++				le16_to_cpu(conf->command) & ~PCI_COMMAND_IO);
++			new &= ~PCI_COMMAND_IO;
++		}
+ 
++		mvebu_writel(port, new, PCIE_CMD_OFF);
+ 		break;
+-	}
+ 
+ 	case PCI_IO_BASE:
+ 		/*
+@@ -575,6 +586,7 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ }
+ 
+ static struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
++	.read_base = mvebu_pci_bridge_emul_base_conf_read,
+ 	.write_base = mvebu_pci_bridge_emul_base_conf_write,
+ 	.read_pcie = mvebu_pci_bridge_emul_pcie_conf_read,
+ 	.write_pcie = mvebu_pci_bridge_emul_pcie_conf_write,
 -- 
 2.20.1
 
