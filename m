@@ -2,91 +2,157 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 542FBC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11250C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 15:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354766AbhKYMxu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Nov 2021 07:53:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
+        id S1356241AbhKYPyv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Nov 2021 10:54:51 -0500
+Received: from foss.arm.com ([217.140.110.172]:52606 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354830AbhKYMvt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Nov 2021 07:51:49 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D66DD6113B;
-        Thu, 25 Nov 2021 12:46:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637844407;
-        bh=dOK1Q8ui3OxrTW5NWDaV2x8xsH/B8xAQ7TbI/Tpnk80=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N3i3gDaQtNeKWacYBowXh4lVNmS64IGWu9G4Rh9Pz4hA+4kXn33jvUSiTCCKFwqQH
-         22LZyY4TnoWWip71S+eoO/ECbe3KbafplU4KfAKnG5UccGtuDvILMrOhuxJ2DBmOHb
-         x2hilyEes2645QKw9m33NCSPkU5iSWHN2uynXPrfwfp3NIEulU/u2EEg+ZwscawoP8
-         21HRl+z6o1Re7aCYDciGDg/R848A4WrW3vsuG8dGiKx3On0EFDppE5tMz8F8+8ds3b
-         5j+2OWqrvHFav4ZYPqOCb9JVdhKwQvUkOM/9wxzBBG67mOBGG57UmDY5lxy+kKGOCk
-         n0u4OtdaMX4Lg==
-Received: by pali.im (Postfix)
-        id B4222EDE; Thu, 25 Nov 2021 13:46:44 +0100 (CET)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 14/15] PCI: mvebu: Fix support for PCI_EXP_RTSTA on emulated bridge
-Date:   Thu, 25 Nov 2021 13:46:04 +0100
-Message-Id: <20211125124605.25915-15-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20211125124605.25915-1-pali@kernel.org>
-References: <20211125124605.25915-1-pali@kernel.org>
+        id S1356252AbhKYPwu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Nov 2021 10:52:50 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8819E1FB;
+        Thu, 25 Nov 2021 07:49:34 -0800 (PST)
+Received: from [10.57.56.56] (unknown [10.57.56.56])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 77B2A3F73B;
+        Thu, 25 Nov 2021 07:49:30 -0800 (PST)
+Message-ID: <38bfa372-54c8-2e81-adab-ca24051a0fe6@arm.com>
+Date:   Thu, 25 Nov 2021 15:49:24 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: [PATCH v2 2/6] hwtracing: Add trace function support for
+ HiSilicon PCIe Tune and Trace device
+Content-Language: en-GB
+To:     Yicong Yang <yangyicong@hisilicon.com>, gregkh@linuxfoundation.org,
+        helgaas@kernel.org, alexander.shishkin@linux.intel.com,
+        lorenzo.pieralisi@arm.com, will@kernel.org, mark.rutland@arm.com,
+        mathieu.poirier@linaro.org, suzuki.poulose@arm.com,
+        mike.leach@linaro.org, leo.yan@linaro.org,
+        jonathan.cameron@huawei.com, daniel.thompson@linaro.org,
+        joro@8bytes.org, john.garry@huawei.com,
+        shameerali.kolothum.thodi@huawei.com, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, coresight@lists.linaro.org,
+        linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc:     zhangshaokun@hisilicon.com, liuqi115@huawei.com,
+        linuxarm@huawei.com, prime.zeng@huawei.com
+References: <20211116090625.53702-1-yangyicong@hisilicon.com>
+ <20211116090625.53702-3-yangyicong@hisilicon.com>
+ <0b67745c-13dd-1fea-1b8b-d55212bad232@arm.com>
+ <3644ad6e-d800-c84b-9d62-6dda8462450f@hisilicon.com>
+ <e7d4afb7-e4e4-e581-872b-2477850ad8da@hisilicon.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+In-Reply-To: <e7d4afb7-e4e4-e581-872b-2477850ad8da@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PME Status bit in Root Status Register (PCIE_RC_RTSTA_OFF) is read-only and
-can be cleared only by writing 0b to the Interrupt Cause RW0C register
-(PCIE_INT_CAUSE_OFF).
+On 2021-11-18 09:01, Yicong Yang via iommu wrote:
+> Hi Robin,
+> 
+> On 2021/11/16 19:37, Yicong Yang wrote:
+>> On 2021/11/16 18:56, Robin Murphy wrote:
+>>> On 2021-11-16 09:06, Yicong Yang via iommu wrote:
+>>> [...]
+>>>> +/*
+>>>> + * Get RMR address if provided by the firmware.
+>>>> + * Return 0 if the IOMMU doesn't present or the policy of the
+>>>> + * IOMMU domain is passthrough or we get a usable RMR region.
+>>>> + * Otherwise a negative value is returned.
+>>>> + */
+>>>> +static int hisi_ptt_get_rmr(struct hisi_ptt *hisi_ptt)
+>>>> +{
+>>>> +    struct pci_dev *pdev = hisi_ptt->pdev;
+>>>> +    struct iommu_domain *iommu_domain;
+>>>> +    struct iommu_resv_region *region;
+>>>> +    LIST_HEAD(list);
+>>>> +
+>>>> +    /*
+>>>> +     * Use direct DMA if IOMMU does not present or the policy of the
+>>>> +     * IOMMU domain is passthrough.
+>>>> +     */
+>>>> +    iommu_domain = iommu_get_domain_for_dev(&pdev->dev);
+>>>> +    if (!iommu_domain || iommu_domain->type == IOMMU_DOMAIN_IDENTITY)
+>>>> +        return 0;
+>>>> +
+>>>> +    iommu_get_resv_regions(&pdev->dev, &list);
+>>>> +    list_for_each_entry(region, &list, list)
+>>>> +        if (region->type == IOMMU_RESV_DIRECT &&
+>>>> +            region->length >= HISI_PTT_TRACE_BUFFER_SIZE) {
+>>>> +            hisi_ptt->trace_ctrl.has_rmr = true;
+>>>> +            hisi_ptt->trace_ctrl.rmr_addr = region->start;
+>>>> +            hisi_ptt->trace_ctrl.rmr_length = region->length;
+>>>> +            break;
+>>>> +        }
+>>>> +
+>>>> +    iommu_put_resv_regions(&pdev->dev, &list);
+>>>> +    return hisi_ptt->trace_ctrl.has_rmr ? 0 : -ENOMEM;
+>>>> +}
+>>>
+>>> No.
+>>>
+>>> The whole point of RMRs is for devices that are already configured to access the given address range in a manner beyond the kernel's control. If you can do this, it proves that you should not have an RMR in the first place.
+>>>
+>>> The notion of a kernel driver explicitly configuring its device to DMA into any random RMR that looks big enough is so egregiously wrong that I'm almost lost for words...
+>>>
+>>
+>> our bios will reserve such a region and reported it through iort. the device will write to the region and in the driver we need to access the region
+>> to get the traced data. the region is reserved exclusively and will not be accessed by kernel or other devices.
+>>
+>> is it ok to let bios configure the address to the device and from CPU side we just read it?
+>>
+> 
+> Any suggestion?  Is this still an issue you concern if we move the configuration of the device address to BIOS and just read from the CPU side?
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Fixes: 1f08673eef12 ("PCI: mvebu: Convert to PCI emulated bridge config space")
-Cc: stable@vger.kernel.org
----
- drivers/pci/controller/pci-mvebu.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+If the firmware configures the device so that it's actively tracing and 
+writing out to memory while the kernel boots, then that is a valid 
+reason to have an RMR. However what you're doing in the driver is still 
+complete nonsense. As far as I can follow, the way it's working is this:
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index c9b736344b56..798cf5cff8be 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -52,6 +52,8 @@
- 	 PCIE_CONF_FUNC(PCI_FUNC(devfn)) | PCIE_CONF_REG(where) | \
- 	 PCIE_CONF_ADDR_EN)
- #define PCIE_CONF_DATA_OFF	0x18fc
-+#define PCIE_INT_CAUSE_OFF	0x1900
-+#define  PCIE_INT_PM_PME		BIT(28)
- #define PCIE_MASK_OFF		0x1910
- #define  PCIE_MASK_ENABLE_INTS          0x0f000000
- #define PCIE_CTRL_OFF		0x1a00
-@@ -672,7 +674,14 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 		break;
- 
- 	case PCI_EXP_RTSTA:
--		mvebu_writel(port, new, PCIE_RC_RTSTA);
-+		/*
-+		 * PME Status bit in Root Status Register (PCIE_RC_RTSTA)
-+		 * is read-only and can be cleared only by writing 0b to the
-+		 * Interrupt Cause RW0C register (PCIE_INT_CAUSE_OFF). So
-+		 * clear PME via Interrupt Cause.
-+		 */
-+		if (new & PCI_EXP_RTSTA_PME)
-+			mvebu_writel(port, ~PCIE_INT_PM_PME, PCIE_INT_CAUSE_OFF);
- 		break;
- 	}
- }
--- 
-2.20.1
+- At probe time, the initial state of the hardware is entirely ignored. 
+If it *is* already active, there appears to be a fun chance of crashing 
+if TRACE_INT_MASK is clear and an interrupt happens to fire before 
+anyone has got round to calling perf_aux_output_begin() to make 
+trace_ctrl.handle.rb non-NULL.
 
+- Later, once the user starts a tracing session, a buffer is set up 
+*either* as a completely normal DMA allocation, or by memremap()ing some 
+random IOVA carveout which may or may not be whatever memory the 
+firmware was tracing to.
+
+- The hardware is then reset and completely reprogrammed to use the new 
+buffer, again without any consideration of its previous state (other 
+than possibly timing out and failing if it's already running and that 
+means it never goes idle).
+
+Therefore the driver does not seem to respect any prior configuration of 
+the device by firmware, does not seem to expect it to be running at boot 
+time, does not seem to have any way to preserve and export any trace 
+data captured in an RMR if it *was* running at boot time, and thus 
+without loss of generality could simply use the dma_alloc_coherent() 
+path all the time. Am I missing anything?
+
+As things stand, RMRs are not yet supported upstream (FYI we're still 
+working on fixing the spec...), so the code above is at best dead, and 
+at worst actively wrong. Furthermore, if the expected usage model *is* 
+that the kernel driver completely resets and reprograms the hardware, 
+then even if there is an RMR for boot-time tracing I would rather expect 
+it to be flagged as remappable, and thus potentially end up as an 
+IOMMU_RESV_DIRECT_RELAXABLE reservation which you wouldn't match anyway.
+
+And after all that, if you really do have a genuine need to respect and 
+preserve prior firmware configuration of the device, then I would surely 
+expect to see the driver actually doing exactly that. Presumably: at 
+probe time, look at TRACE_CTRL; if the device is already configured, 
+read out that configuration - especially including TRACE_ADDR_* - and 
+make sure to reuse it. Not go off on a tangent blindly poking into 
+internal IOMMU API abstractions in the vain hope that the first thing 
+you find happens to be sort-of-related to the information that you 
+actually care about.
+
+Thanks,
+Robin.
