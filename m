@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71040C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 732D9C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Nov 2021 12:48:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352392AbhKYMv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Nov 2021 07:51:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45590 "EHLO mail.kernel.org"
+        id S1352763AbhKYMv7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Nov 2021 07:51:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354618AbhKYMvq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Nov 2021 07:51:46 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EFC5961131;
-        Thu, 25 Nov 2021 12:46:42 +0000 (UTC)
+        id S1353380AbhKYMvo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Nov 2021 07:51:44 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A8B0761130;
+        Thu, 25 Nov 2021 12:46:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637844403;
-        bh=7IW9blK/IMJBVLWjKlB8p1LQPUnBoN7J+3jnRgIKmoI=;
+        s=k20201202; t=1637844395;
+        bh=kIxbqqnl03bqhcc87mZU1EX4mGZmPj5F3GGmUg4gbBc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Bln5kbB7dLx5PJDb/oLLEqvWOKQ1+NmzcCexth7QJp7mASDPM8LN05ujos6LP1die
-         YP5RhuPz8TosihuoAqXObqM6Hz8IcdT/Rd23nd/YZP3U5KmMMqJLJg0srm3wRlrJ9z
-         QKOj77j+j6CK2pcI/Zt/vVAuVZOXmEwrf89UzUUCdqWwJAc+T2dyiuTQT0gWExlN77
-         MMD50tp2zFGhA2EsXUJ8Y475YGWs66fB8DAVeGB0vMhSgHIYz9GXdls6b1IhaBIw9d
-         Dm91B52G/O1PUO8ZcUUUT67n383bila83NW/P2IQELZGPlCpMR+I4goKC0sddc80i2
-         izijHrwr0gt3g==
+        b=OOSLIddDQzrES0ip0gB2f3eHw28HqIopb6ULFkYl07tSmyuCZX22Z7kEMCMFlckyw
+         /sO4M8wnpL9eszVep/luKUCWo9U+s7ixygTmGPMNhbi0o2pCcQ1H4NnHFWyB743eYH
+         k4JMrVWVIRFu+bblJzQSY+qRlUSBW7dhXk3IroRz6t/5qZNLGocsYQvQs+Fe/dsMq+
+         SgSTvaP2O9x/N9ssMijCY98ATo02yqDhYkXnruNlGhf/wz50IRvLp2/+xRjoRYcpOi
+         PxZCizDaQmLHdOswi4PLKNuTGKNF7tZrDwBLUpNKjqSvdY/WM3eKoT7qf03nNhwJwO
+         ThdbnAJMlmm7A==
 Received: by pali.im (Postfix)
-        id B096767E; Thu, 25 Nov 2021 13:46:42 +0100 (CET)
+        id 0D591F3C; Thu, 25 Nov 2021 13:46:32 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -34,9 +34,9 @@ To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 12/15] PCI: mvebu: Fix support for PCI_BRIDGE_CTL_BUS_RESET on emulated bridge
-Date:   Thu, 25 Nov 2021 13:46:02 +0100
-Message-Id: <20211125124605.25915-13-pali@kernel.org>
+Subject: [PATCH 02/15] PCI: mvebu: Check for errors from pci_bridge_emul_init() call
+Date:   Thu, 25 Nov 2021 13:45:52 +0100
+Message-Id: <20211125124605.25915-3-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211125124605.25915-1-pali@kernel.org>
 References: <20211125124605.25915-1-pali@kernel.org>
@@ -47,73 +47,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hardware supports PCIe Hot Reset via PCIE_CTRL_OFF register. Use it for
-implementing PCI_BRIDGE_CTL_BUS_RESET bit of PCI_BRIDGE_CONTROL register on
-emulated bridge.
-
-With this change the function pci_reset_secondary_bus() starts working and
-can reset connected PCIe card.
+Function pci_bridge_emul_init() may fail so correctly check for errors.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Fixes: 1f08673eef12 ("PCI: mvebu: Convert to PCI emulated bridge config space")
 Cc: stable@vger.kernel.org
 ---
- drivers/pci/controller/pci-mvebu.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/pci/controller/pci-mvebu.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 36fbdc4f0e06..3075ea98c131 100644
+index d655c887ba1b..6197f7e7c317 100644
 --- a/drivers/pci/controller/pci-mvebu.c
 +++ b/drivers/pci/controller/pci-mvebu.c
-@@ -57,6 +57,7 @@
- #define PCIE_CTRL_OFF		0x1a00
- #define  PCIE_CTRL_X1_MODE		0x0001
- #define  PCIE_CTRL_RC_MODE		BIT(1)
-+#define  PCIE_CTRL_MASTER_HOT_RESET	BIT(24)
- #define PCIE_STAT_OFF		0x1a04
- #define  PCIE_STAT_BUS                  0xff00
- #define  PCIE_STAT_DEV                  0x1f0000
-@@ -509,6 +510,22 @@ mvebu_pci_bridge_emul_base_conf_read(struct pci_bridge_emul *bridge,
- 		break;
- 	}
+@@ -581,7 +581,7 @@ static struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
+  * Initialize the configuration space of the PCI-to-PCI bridge
+  * associated with the given PCIe interface.
+  */
+-static void mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
++static int mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
+ {
+ 	struct pci_bridge_emul *bridge = &port->bridge;
+ 	u32 pcie_cap = mvebu_readl(port, PCIE_CAP_PCIEXP);
+@@ -608,7 +608,7 @@ static void mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
+ 	bridge->data = port;
+ 	bridge->ops = &mvebu_pci_bridge_emul_ops;
  
-+	case PCI_INTERRUPT_LINE: {
-+		/*
-+		 * From the whole 32bit register we support reading from HW only
-+		 * one bit: PCI_BRIDGE_CTL_BUS_RESET.
-+		 * Other bits are retrieved only from emulated config buffer.
-+		 */
-+		__le32 *cfgspace = (__le32 *)&bridge->conf;
-+		u32 val = le32_to_cpu(cfgspace[PCI_INTERRUPT_LINE / 4]);
-+		if (mvebu_readl(port, PCIE_CTRL_OFF) & PCIE_CTRL_MASTER_HOT_RESET)
-+			val |= PCI_BRIDGE_CTL_BUS_RESET << 16;
-+		else
-+			val &= ~(PCI_BRIDGE_CTL_BUS_RESET << 16);
-+		*value = val;
-+		break;
-+	}
-+
- 	default:
- 		return PCI_BRIDGE_EMUL_NOT_HANDLED;
- 	}
-@@ -617,6 +634,17 @@ mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
- 			mvebu_pcie_set_local_bus_nr(port, conf->secondary_bus);
- 		break;
+-	pci_bridge_emul_init(bridge, PCI_BRIDGE_EMUL_NO_PREFETCHABLE_BAR);
++	return pci_bridge_emul_init(bridge, PCI_BRIDGE_EMUL_NO_PREFETCHABLE_BAR);
+ }
  
-+	case PCI_INTERRUPT_LINE:
-+		if (mask & (PCI_BRIDGE_CTL_BUS_RESET << 16)) {
-+			u32 ctrl = mvebu_readl(port, PCIE_CTRL_OFF);
-+			if (new & (PCI_BRIDGE_CTL_BUS_RESET << 16))
-+				ctrl |= PCIE_CTRL_MASTER_HOT_RESET;
-+			else
-+				ctrl &= ~PCIE_CTRL_MASTER_HOT_RESET;
-+			mvebu_writel(port, ctrl, PCIE_CTRL_OFF);
+ static inline struct mvebu_pcie *sys_to_pcie(struct pci_sys_data *sys)
+@@ -1094,9 +1094,18 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 			continue;
+ 		}
+ 
++		ret = mvebu_pci_bridge_emul_init(port);
++		if (ret < 0) {
++			dev_err(dev, "%s: cannot init emulated bridge\n",
++				port->name);
++			devm_iounmap(dev, port->base);
++			port->base = NULL;
++			mvebu_pcie_powerdown(port);
++			continue;
 +		}
-+		break;
 +
- 	default:
- 		break;
+ 		mvebu_pcie_setup_hw(port);
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+-		mvebu_pci_bridge_emul_init(port);
  	}
+ 
+ 	bridge->sysdata = pcie;
 -- 
 2.20.1
 
