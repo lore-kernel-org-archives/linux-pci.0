@@ -2,102 +2,214 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B94BCC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D71C433FE
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 14:16:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245742AbhK0OT1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1343494AbhK0OT1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Nov 2021 09:19:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355251AbhK0OR0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Nov 2021 09:17:26 -0500
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 357F9C061763
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:27 -0800 (PST)
-Received: by mail-wr1-x435.google.com with SMTP id i5so25194463wrb.2
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:27 -0800 (PST)
+        with ESMTP id S1355256AbhK0OR1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Nov 2021 09:17:27 -0500
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 943BDC0613DD
+        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:30 -0800 (PST)
+Received: by mail-wm1-x32a.google.com with SMTP id 133so10513099wme.0
+        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ZeGEHAKfMbPXR1KcbmOU/2a8N0rO1GRkwrWVxl0aiQg=;
-        b=gcSYaUwzjMwLMP3bKGNxML/5OfboqYPpZggkfRIAPteA8TS/CxqONSzMUiDG72CNPC
-         /plyMk/py+hgr0ScuXJ1M2P5APY0Q8JTEbuAX44eYRXx+fHwM3tFUcVdFXLqBmsUcYeP
-         fvt7vZ3yM+N2jXSBQX7rcHrT1B2llxLoce5TAkx96152MfdaLdcnpKoPpEm341CsihQn
-         wi5q/aDGF31/GJy5G2KwwblBkPrMRP8Dv1A6JaOORVGeE6iiDEzRm/8HD5lJntPZYM+a
-         4n6NLlqCfq1lqzJEOcFHEoOuA1bPPrwY4fvidlByJb8m3VrbuwVa1T72woO5h0CjgyNR
-         0I2A==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LmWjHjdGbQoIJfyKhc/exaHghcRqYp973teYZWWGz8M=;
+        b=XflV2PrRsGZW06woAOgpKprsZHn/64NG+PmhffRkptVWjQV/qYz+bMOUxVBEBPCDWU
+         7FToM+kbDiA0oG0IjGjp5ojZL3j1+5v7JhvqOV3FETlUIUV7NRIoLIvtUqocj9J1Lpw2
+         Dy59Kg7rj7fR6gNMDrOe/1y9KoJRxbJZtClJYXmHw/wF071EEGPkf8S5J4e+/RZstdXT
+         7GJDErzS/xUcYfebfFgSL526KWOUGoZdDz2YVNfBP+fMRLFB+lOYzUVn0wGj5c18za0S
+         ysg+B+SLqzVWLnvv73KZh35nnclkne2/DgsNCGA19ov20YxRs5X/49sNxxjh4MF5ix6A
+         vMpw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ZeGEHAKfMbPXR1KcbmOU/2a8N0rO1GRkwrWVxl0aiQg=;
-        b=X/So05YpSP7CBbPqtfBF4SKBV3OKuh0N+IfC0/o9A/VFM+f4vDj4qSfPS1qtYLZxkU
-         5UH99ls3a76wYtkXn+jiBJB6ixEWxRUy+HvUtp6ckCTdM2vv18prmJYmuEK4KiKJZD5k
-         U5klsHYWn6PmUg8MuDBRNiQghXaKYjwOWCVtyulFqZnreCSuog6jDUfAH5ddtZpEUwEY
-         +EHr7cBpbcve2LT2ZKr9RLgohjMQ3VNgn1oKGeQqWEtoKVQxYfsaFL8iCVjshOGTv7HU
-         /h5XG+wiMwjbhiyUetSSqXKQoEpy2Wd32q/gNqYvPFwVQ7yMELxlwobSih4M6BOyI8xj
-         12IA==
-X-Gm-Message-State: AOAM532953igRFmEkkL9QuCLdB+Naft9ZVi0/DOEqFQBV47az+ikEe09
-        4UxZWTUtU9yd2aTsShFXxKY=
-X-Google-Smtp-Source: ABdhPJz3JR+3GFMnwgGc//wlK0+gs4iSCW/wFpcUwHRCNjQJOtAhQ/EDm5AQltBrm479VWDFJfG84g==
-X-Received: by 2002:adf:ce8b:: with SMTP id r11mr21063033wrn.294.1638022285592;
-        Sat, 27 Nov 2021 06:11:25 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=LmWjHjdGbQoIJfyKhc/exaHghcRqYp973teYZWWGz8M=;
+        b=oDKxR2VdJ5YItjSQlSfquEhWPK492qnG6b2KTo+Hx0OZ5Xhl6779erojSU6nUlCmZg
+         oIyB6J1y7zYan5IVvXzYoSDzrwD0ojfnDeQPYMjcjOvaDp1CYu9A5UI1v79M/mWoQmqC
+         ox2SVsKrLA3dCBR9A5To5aXsfgBeTOlfjU9TlSdqmvA/lPGQG+2jCfG4xiDyrXHitgxb
+         iBo6Cebd/ymA+qSKV+Wv/AGSh3eXlla5T8UfmBal7elrbTt3VZeYlac7x265mFnfSOO3
+         fcPAZMUASG1QHciKkfJCIBt48PwSarK7RAxFeNwMXHsjHyly3GFXEQ9pFTgcDlzUzFCA
+         DXYA==
+X-Gm-Message-State: AOAM531K5K9HA3z2u2ejGW1wdlYwx1rdPfS+/u6lQn7E2AzXSI2UFYZt
+        VmdgcBai81RxSMeVSaHHPQ3IpPXE969kcQ==
+X-Google-Smtp-Source: ABdhPJyslNT+I+sJlkbEkCguIK7n7Vwea0YGiB9RpRvyv9lVWnQXa8gSwBiHYA4DaeK7Aq3hhF4lPg==
+X-Received: by 2002:a1c:9d48:: with SMTP id g69mr23642406wme.188.1638022289115;
+        Sat, 27 Nov 2021 06:11:29 -0800 (PST)
 Received: from claire-ThinkPad-T470.localdomain (dynamic-2a01-0c22-7349-1000-d163-c2fa-698a-934f.c22.pool.telefonica.de. [2a01:c22:7349:1000:d163:c2fa:698a:934f])
-        by smtp.gmail.com with ESMTPSA id q26sm8754522wrc.39.2021.11.27.06.11.24
+        by smtp.gmail.com with ESMTPSA id q26sm8754522wrc.39.2021.11.27.06.11.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Nov 2021 06:11:25 -0800 (PST)
+        Sat, 27 Nov 2021 06:11:28 -0800 (PST)
 From:   Fan Fei <ffclaire1224@gmail.com>
 To:     bjorn@helgaas.com
 Cc:     Fan Fei <ffclaire1224@gmail.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 00/13] Unify device * to platform_device *
-Date:   Sat, 27 Nov 2021 15:11:08 +0100
-Message-Id: <cover.1638022048.git.ffclaire1224@gmail.com>
+Subject: [PATCH 02/13] PCI: mediatek: Replace device * with platform_device *
+Date:   Sat, 27 Nov 2021 15:11:10 +0100
+Message-Id: <30848bb62fc3854bf5d800fba51bb60f8897dc79.1638022049.git.ffclaire1224@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <cover.1638022048.git.ffclaire1224@gmail.com>
+References: <cover.1638022048.git.ffclaire1224@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some PCI controller structs contain "device *", while others contain
-"platform_device *". These patches unify "device *dev" to 
-"platform_device *pdev" in 13 controller struct, to make the controller 
-struct more consistent. Consider that PCI controllers interact with 
-platform_device directly, not device, to enumerate the controlled device.
+Some PCI controller struct contain "device *", while others contain
+"platform_device *". Unify "device *dev" to "platform_device *pdev" in
+struct mediatek_pcie, because PCI controllers interact with platform_device
+directly, not device, to enumerate the controlled device.
 
-Fan Fei (13):
-  PCI: xilinx: Replace device * with platform_device *
-  PCI: mediatek: Replace device * with platform_device *
-  PCI: tegra: Replace device * with platform_device *
-  PCI: xegene: Replace device * with platform_device *
-  PCI: microchip: Replace device * with platform_device *
-  PCI: brcmstb: Replace device * with platform_device *
-  PCI: mediatek-gen3: Replace device * with platform_device *
-  PCI: rcar-gen2: Replace device * with platform_device *
-  PCI: ftpci100: Replace device * with platform_device *
-  PCI: v3-semi: Replace device * with platform_device *
-  PCI: ixp4xx: Replace device * with platform_device *
-  PCI: xilinx-nwl: Replace device * with platform_device *
-  PCI: rcar: Replace device * with platform_device *
+Signed-off-by: Fan Fei <ffclaire1224@gmail.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 31 +++++++++++++-------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
- drivers/pci/controller/pci-ftpci100.c        |  15 +-
- drivers/pci/controller/pci-ixp4xx.c          |  47 ++--
- drivers/pci/controller/pci-rcar-gen2.c       |  10 +-
- drivers/pci/controller/pci-tegra.c           |  85 +++----
- drivers/pci/controller/pci-v3-semi.c         |  19 +-
- drivers/pci/controller/pci-xgene.c           | 222 +++++++++----------
- drivers/pci/controller/pcie-brcmstb.c        |  35 +--
- drivers/pci/controller/pcie-mediatek-gen3.c  |  36 +--
- drivers/pci/controller/pcie-mediatek.c       |  31 +--
- drivers/pci/controller/pcie-microchip-host.c |  18 +-
- drivers/pci/controller/pcie-rcar-ep.c        |  40 ++--
- drivers/pci/controller/pcie-rcar-host.c      |  27 +--
- drivers/pci/controller/pcie-rcar.h           |   2 +-
- drivers/pci/controller/pcie-xilinx-nwl.c     |  28 +--
- drivers/pci/controller/pcie-xilinx.c         |  21 +-
- 15 files changed, 328 insertions(+), 308 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 2f3f974977a3..9e49d3ee9cff 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -216,7 +216,7 @@ struct mtk_pcie_port {
+  * @soc: pointer to SoC-dependent operations
+  */
+ struct mtk_pcie {
+-	struct device *dev;
++	struct platform_device *pdev;
+ 	void __iomem *base;
+ 	struct regmap *cfg;
+ 	struct clk *free_ck;
+@@ -227,7 +227,7 @@ struct mtk_pcie {
+ 
+ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 
+ 	clk_disable_unprepare(pcie->free_ck);
+ 
+@@ -238,7 +238,7 @@ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+ static void mtk_pcie_port_free(struct mtk_pcie_port *port)
+ {
+ 	struct mtk_pcie *pcie = port->pcie;
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 
+ 	devm_iounmap(dev, port->base);
+ 	list_del(&port->list);
+@@ -410,7 +410,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 
+ 	msg->data = data->hwirq;
+ 
+-	dev_dbg(port->pcie->dev, "msi#%d address_hi %#x address_lo %#x\n",
++	dev_dbg(&port->pcie->pdev->dev, "msi#%d address_hi %#x address_lo %#x\n",
+ 		(int)data->hwirq, msg->address_hi, msg->address_lo);
+ }
+ 
+@@ -470,7 +470,7 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
+ 	mutex_lock(&port->lock);
+ 
+ 	if (!test_bit(d->hwirq, port->msi_irq_in_use))
+-		dev_err(port->pcie->dev, "trying to free unused MSI#%lu\n",
++		dev_err(&port->pcie->pdev->dev, "trying to free unused MSI#%lu\n",
+ 			d->hwirq);
+ 	else
+ 		__clear_bit(d->hwirq, port->msi_irq_in_use);
+@@ -500,21 +500,22 @@ static struct msi_domain_info mtk_msi_domain_info = {
+ 
+ static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
+ {
+-	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
++	struct device *dev = &port->pcie->pdev->dev;
++	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
+ 
+ 	mutex_init(&port->lock);
+ 
+ 	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
+ 						      &msi_domain_ops, port);
+ 	if (!port->inner_domain) {
+-		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
++		dev_err(dev, "failed to create IRQ domain\n");
+ 		return -ENOMEM;
+ 	}
+ 
+ 	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
+ 						     port->inner_domain);
+ 	if (!port->msi_domain) {
+-		dev_err(port->pcie->dev, "failed to create MSI domain\n");
++		dev_err(dev, "failed to create MSI domain\n");
+ 		irq_domain_remove(port->inner_domain);
+ 		return -ENOMEM;
+ 	}
+@@ -573,7 +574,7 @@ static const struct irq_domain_ops intx_domain_ops = {
+ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 				    struct device_node *node)
+ {
+-	struct device *dev = port->pcie->dev;
++	struct device *dev = &port->pcie->pdev->dev;
+ 	struct device_node *pcie_intc_node;
+ 	int ret;
+ 
+@@ -640,7 +641,7 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ 			      struct device_node *node)
+ {
+ 	struct mtk_pcie *pcie = port->pcie;
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	int err;
+ 
+@@ -830,7 +831,7 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
+ {
+ 	struct mtk_pcie *pcie = port->pcie;
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 	int err;
+ 
+ 	err = clk_prepare_enable(port->sys_ck);
+@@ -913,7 +914,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 			       int slot)
+ {
+ 	struct mtk_pcie_port *port;
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	char name[10];
+ 	int err;
+@@ -990,7 +991,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 
+ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct resource *regs;
+ 	struct device_node *cfg_node;
+@@ -1041,7 +1042,7 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 
+ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
++	struct device *dev = &pcie->pdev->dev;
+ 	struct device_node *node = dev->of_node, *child;
+ 	struct mtk_pcie_port *port, *tmp;
+ 	int err, slot;
+@@ -1098,7 +1099,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie = pci_host_bridge_priv(host);
+ 
+-	pcie->dev = dev;
++	pcie->pdev = pdev;
+ 	pcie->soc = of_device_get_match_data(dev);
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
 -- 
 2.25.1
 
