@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 777E5C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F62C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345593AbhK0B0T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1344510AbhK0B0T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 26 Nov 2021 20:26:19 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:35300 "EHLO
+Received: from Galois.linutronix.de ([193.142.43.55]:37388 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345778AbhK0BYR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:17 -0500
-Message-ID: <20211126230524.540744026@linutronix.de>
+        with ESMTP id S1345412AbhK0BYH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:07 -0500
+Message-ID: <20211126230524.295122054@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976023;
+        s=2020; t=1637976016;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=gn8p+zMtjjrDzl8WaoyQn+U7cmDXCgk8UU3FdWlgcVs=;
-        b=vMSQa0GYeGhY/pQ4O3tvUkTqJYLpCVkeC4y3u62zMn4FDrQJklj+STCq5BEfsBTu0s2M5V
-        99+bbp9ELyYr+aMYUNTAdckGT0s4QZGAhftfFq4vaT12BSiAiglPhl/pJu5pvfNLgaBuwd
-        kVox6DN0xr4zl4AtTeFqpfMGZJvbL2W6KeeYSAHPC7rcosHlgznuyHpq+qngY0fR2pBV8y
-        wPD/evKPzFPBWXS5apl2H0qjp00Uw+kLC/wlv1XDYLZ/+BW6uV9TDEz8KSPr9i+jd0lgrn
-        q/9a9ase9H/VIUE6ZmkDWZr6RBhaPGzfXWma37ssvD7c1Lu+tHGbdZiNuploNg==
+         references:references; bh=Oh8EM+g3S/QfSPoDjrJmTy+Z80Zsw+m+X3NUsXacOTE=;
+        b=qVZGDbNZ2EPWgWKeie9Lsg8SlBXlB0cdjwpWi66yeNG4DYIWMBeGOpSML8TzTYX+IBXTLC
+        MytS9/7pPDvx+5uOdmMK7tsJf7Ty5rDTRSyLyz3rUILaGDpD78K/KinpA9spc//yXsu3gN
+        es43eYzq8WxrwsxRBJzulVPjdWWxECSfHrNvVbIpbHXTO4du8HBL66WTL0tQYDkuwnrV1V
+        PPHrx45+4UKv8DU+YAJ7euQ68e3XyTtqHvf2s+uztrRavCQ0DyLPUn8PCzZD6IvxFPHea8
+        bXkbZI3WH5L+7y2A9eEGs9xy4p0pSnnPxY75sPwFeTWsH96Mo6TP/W1vzRoDBw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976023;
+        s=2020e; t=1637976016;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=gn8p+zMtjjrDzl8WaoyQn+U7cmDXCgk8UU3FdWlgcVs=;
-        b=IV5GXmqv30WsdjaLssWUqwbUHWgEsyb8Y2Lk5LCM/xnsp5ZHKD4zFbZrnhqMuTkEm6CJyI
-        K6bYpwodx7daw0Bg==
+         references:references; bh=Oh8EM+g3S/QfSPoDjrJmTy+Z80Zsw+m+X3NUsXacOTE=;
+        b=xOkGJjLxWWpLTjyaY3a3wt1jNJ6brnrPkO+LEWpUUYBkEz0HM87BkrlRzK6xnt7ICAcZBo
+        9lh6ntzQZMTtE/BA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -38,72 +38,61 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
         Stuart Yoder <stuyoder@gmail.com>,
         Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
         Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
         linux-arm-kernel@lists.infradead.org, x86@kernel.org,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 10/37] platform-msi: Let the core code handle sysfs groups
+Subject: [patch 06/37] bus: fsl-mc-msi: Allocate MSI device data on first use
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:20:22 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:20:16 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Set the domain info flag and remove the local sysfs code.
+Allocate the MSI device data on first invocation of the allocation function.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Stuart Yoder <stuyoder@gmail.com>
+Cc: Laurentiu Tudor <laurentiu.tudor@nxp.com>
 ---
- drivers/base/platform-msi.c |   11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ drivers/bus/fsl-mc/fsl-mc-msi.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -23,7 +23,6 @@
- struct platform_msi_priv_data {
- 	struct device			*dev;
- 	void				*host_data;
--	const struct attribute_group    **msi_irq_groups;
- 	msi_alloc_info_t		arg;
- 	irq_write_msi_msg_t		write_msg;
- 	int				devid;
-@@ -191,6 +190,7 @@ struct irq_domain *platform_msi_create_i
- 		platform_msi_update_dom_ops(info);
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		platform_msi_update_chip_ops(info);
-+	info->flags |= MSI_FLAG_DEV_SYSFS;
+--- a/drivers/bus/fsl-mc/fsl-mc-msi.c
++++ b/drivers/bus/fsl-mc/fsl-mc-msi.c
+@@ -253,6 +253,14 @@ int fsl_mc_msi_domain_alloc_irqs(struct
+ 	struct irq_domain *msi_domain;
+ 	int error;
  
- 	domain = msi_create_irq_domain(fwnode, info, parent);
- 	if (domain)
-@@ -279,16 +279,8 @@ int platform_msi_domain_alloc_irqs(struc
- 	if (err)
- 		goto out_free_desc;
++	msi_domain = dev_get_msi_domain(dev);
++	if (!msi_domain)
++		return -EINVAL;
++
++	error = msi_setup_device_data(dev);
++	if (error)
++		return error;
++
+ 	if (!list_empty(dev_to_msi_list(dev)))
+ 		return -EINVAL;
  
--	priv_data->msi_irq_groups = msi_populate_sysfs(dev);
--	if (IS_ERR(priv_data->msi_irq_groups)) {
--		err = PTR_ERR(priv_data->msi_irq_groups);
--		goto out_free_irqs;
+@@ -260,12 +268,6 @@ int fsl_mc_msi_domain_alloc_irqs(struct
+ 	if (error < 0)
+ 		return error;
+ 
+-	msi_domain = dev_get_msi_domain(dev);
+-	if (!msi_domain) {
+-		error = -EINVAL;
+-		goto cleanup_msi_descs;
 -	}
 -
- 	return 0;
- 
--out_free_irqs:
--	msi_domain_free_irqs(dev->msi.domain, dev);
- out_free_desc:
- 	platform_msi_free_descs(dev, 0, nvec);
- out_free_priv_data:
-@@ -308,7 +300,6 @@ void platform_msi_domain_free_irqs(struc
- 		struct msi_desc *desc;
- 
- 		desc = first_msi_entry(dev);
--		msi_destroy_sysfs(dev, desc->platform.msi_priv_data->msi_irq_groups);
- 		platform_msi_free_priv_data(desc->platform.msi_priv_data);
- 	}
- 
+ 	/*
+ 	 * NOTE: Calling this function will trigger the invocation of the
+ 	 * its_fsl_mc_msi_prepare() callback
 
