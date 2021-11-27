@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C6C4C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EA16C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348763AbhK0BaX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:30:23 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:40144 "EHLO
+        id S1349053AbhK0Bab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:30:31 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40214 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348975AbhK0B2W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:22 -0500
-Message-ID: <20211126230524.778704986@linutronix.de>
+        with ESMTP id S1349128AbhK0B2a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:30 -0500
+Message-ID: <20211126230524.956623715@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976100;
+        s=2020; t=1637976105;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Ehi/wwF9q+UnZyXX27wliNOB9+x0r0rx0yUOBA3VcWA=;
-        b=tBqZQCS9YU5DQpG9i8DUNduY8gTY7v/4YQu54X5TVPfWTJxEl1sWWl/HfMF+G+eu7JvDrV
-        pxCTgFKc5Blqt/xEtzShloketg00LpTL2NKF7AyK5nApd2TxxqF8/u0EUbfP0W3eorxL9c
-        1QegDgE/8KUERShUS2zseXBocvpPm8vPoS6qwIs6+NMHBT7VnwAC1WZ2NZ1QtoxN3g6E4j
-        TZwnKb3qDVmz+0w6AteZclp31CHEB3S5aVxclM1t7QipKUtArv55/x/2SasN8+/AwikpG+
-        TLNHhcFPNQJ/XcNbC/Spc+Pz6iSRmK/XxJJPWi+SWHREd6MXKbdxTCJjODGCDw==
+         references:references; bh=E+zTAHs9Nymatzr+Yqyb5m4mctEau3gQEfp24M+P+yQ=;
+        b=L2gYsXA2MX9pEm8u1L3v2SWSxPHTdxRLF3ASGqPMO7Q5up4ZYAQdxTw4zpSOvUP6cR+OZ9
+        l5dpnrPU7aGujWy9zMGQaCh7Ye4+U6WF240IaSX+TEm3XGW5QGiIObus0bBNj1kuxvc1Mt
+        Vs6fthLIBmLGeND8dvfw4413hOxpiko7kGhlDuTE0i16Vf2QCLfZaaFMn+Mwm/vHD55+tT
+        xuRbv7x1HaFKT7IgYRSS2kFkuIQLQQgfcHGmQT/gCU24ZaMvRwIsiYfY7Rn6QOtFym/Lck
+        t/BlZCX7WhLOlMA+4S9s3/xXvAxgyjaJGQ8Fs88vwpMo91NNwwxBDnLfZsRlOQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976100;
+        s=2020e; t=1637976105;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Ehi/wwF9q+UnZyXX27wliNOB9+x0r0rx0yUOBA3VcWA=;
-        b=IUBjpcQCmstxohM+19EemWaO5DY8ZMH/BRfqndD9sy2xafN+yKVHugwJ5S/co3Uu7fJfg6
-        Sws+rYuNB9M2oDBA==
+         references:references; bh=E+zTAHs9Nymatzr+Yqyb5m4mctEau3gQEfp24M+P+yQ=;
+        b=KRs99NAUmijTivfHMhGqZ0B5800fmPlo46sa3n18YY9kIoGFKgv04bEsfIIC19s3skA97y
+        u/HzlkB7OoTWdFDA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -47,43 +47,102 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 14/37] genirq/msi: Consolidate MSI descriptor data
+Subject: [patch 17/37] soc: ti: ti_sci_inta_msi: Use msi_desc::msi_index
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:21:39 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:21:44 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012139.KppCgnX5eO-sxJxeAFkfpJ_qE79kzQ6FDAmdA-DxXvo@z>
+Message-ID: <20211127012144.f-mmZpSvOCCivvpgN-ginj4uqU2MEp2ac3U5OR54124@z>
 
-All non PCI/MSI usage variants have data structures in struct msi_desc with
-only one member: xxx_index. PCI/MSI has a entry_nr member.
-
-Add a common msi_index member to struct msi_desc so all implementations can
-share it which allows further consolidation.
+Use the common msi_index member and get rid of the pointless wrapper struct.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/irqchip/irq-ti-sci-inta.c |    2 +-
+ drivers/soc/ti/ti_sci_inta_msi.c  |    6 +++---
+ include/linux/msi.h               |   16 ++--------------
+ 3 files changed, 6 insertions(+), 18 deletions(-)
 
+--- a/drivers/irqchip/irq-ti-sci-inta.c
++++ b/drivers/irqchip/irq-ti-sci-inta.c
+@@ -595,7 +595,7 @@ static void ti_sci_inta_msi_set_desc(msi
+ 	struct platform_device *pdev = to_platform_device(desc->dev);
+ 
+ 	arg->desc = desc;
+-	arg->hwirq = TO_HWIRQ(pdev->id, desc->inta.dev_index);
++	arg->hwirq = TO_HWIRQ(pdev->id, desc->msi_index);
+ }
+ 
+ static struct msi_domain_ops ti_sci_inta_msi_ops = {
+--- a/drivers/soc/ti/ti_sci_inta_msi.c
++++ b/drivers/soc/ti/ti_sci_inta_msi.c
+@@ -84,7 +84,7 @@ static int ti_sci_inta_msi_alloc_descs(s
+ 				return -ENOMEM;
+ 			}
+ 
+-			msi_desc->inta.dev_index = res->desc[set].start + i;
++			msi_desc->msi_index = res->desc[set].start + i;
+ 			INIT_LIST_HEAD(&msi_desc->list);
+ 			list_add_tail(&msi_desc->list, dev_to_msi_list(dev));
+ 			count++;
+@@ -96,7 +96,7 @@ static int ti_sci_inta_msi_alloc_descs(s
+ 				return -ENOMEM;
+ 			}
+ 
+-			msi_desc->inta.dev_index = res->desc[set].start_sec + i;
++			msi_desc->msi_index = res->desc[set].start_sec + i;
+ 			INIT_LIST_HEAD(&msi_desc->list);
+ 			list_add_tail(&msi_desc->list, dev_to_msi_list(dev));
+ 			count++;
+@@ -154,7 +154,7 @@ unsigned int ti_sci_inta_msi_get_virq(st
+ 	struct msi_desc *desc;
+ 
+ 	for_each_msi_entry(desc, dev)
+-		if (desc->inta.dev_index == dev_index)
++		if (desc->msi_index == dev_index)
+ 			return desc->irq;
+ 
+ 	return -ENODEV;
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -142,6 +142,7 @@ struct ti_sci_inta_msi_desc {
-  *			address or data changes
+@@ -106,14 +106,6 @@ struct pci_msi_desc {
+ };
+ 
+ /**
+- * ti_sci_inta_msi_desc - TISCI based INTA specific msi descriptor data
+- * @dev_index: TISCI device index
+- */
+-struct ti_sci_inta_msi_desc {
+-	u16	dev_index;
+-};
+-
+-/**
+  * struct msi_desc - Descriptor structure for MSI based interrupts
+  * @list:	List head for management
+  * @irq:	The base interrupt number
+@@ -127,8 +119,7 @@ struct ti_sci_inta_msi_desc {
   * @write_msi_msg_data:	Data parameter for the callback.
   *
-+ * @msi_index:	Index of the msi descriptor
-  * @pci:	[PCI]	    PCI speficic msi descriptor data
-  * @platform:	[platform]  Platform device specific msi descriptor data
-  * @fsl_mc:	[fsl-mc]    FSL MC device specific msi descriptor data
-@@ -162,6 +163,7 @@ struct msi_desc {
- 	void (*write_msi_msg)(struct msi_desc *entry, void *data);
+  * @msi_index:	Index of the msi descriptor
+- * @pci:	[PCI]	    PCI speficic msi descriptor data
+- * @inta:	[INTA]	    TISCI based INTA specific msi descriptor data
++ * @pci:	PCI speficic msi descriptor data
+  */
+ struct msi_desc {
+ 	/* Shared device/bus type independent data */
+@@ -146,10 +137,7 @@ struct msi_desc {
  	void *write_msi_msg_data;
  
-+	u16				msi_index;
- 	union {
- 		struct pci_msi_desc		pci;
- 		struct platform_msi_desc	platform;
+ 	u16				msi_index;
+-	union {
+-		struct pci_msi_desc		pci;
+-		struct ti_sci_inta_msi_desc	inta;
+-	};
++	struct pci_msi_desc		pci;
+ };
+ 
+ /**
 
