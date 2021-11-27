@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72FD2C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C67BC4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349636AbhK0Ba7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:30:59 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:40390 "EHLO
+        id S1347931AbhK0BbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:31:10 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40454 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349624AbhK0B26 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:58 -0500
-Message-ID: <20211126230525.491832071@linutronix.de>
+        with ESMTP id S1349784AbhK0B3G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:29:06 -0500
+Message-ID: <20211126230525.603398433@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976119;
+        s=2020; t=1637976122;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iaLCpiERLpuGITLjESnXqZksSqXjgw+jF1i/FwPrQ3E=;
-        b=W2GuIJlq7AQkjY+TpBwh6iize8fxXkwX0xPm+QTJEjeJCk2Yy5+rjcuVL9Kvk4D68OrcFB
-        kGcc2ghnZOrnr6tpvjGmSh4+aJDEcl5r74sHp6aDCrP7EEgunndhTONTlrJQUk++KwmbIe
-        Mt1ytGTecL/R4yk3s6utBEQXp0Lg9Eq9Kc5+2T7fknjDX+ze2RU5DaKW6DVMkGzq4uCOR/
-        CShgn71xiUys5oR1D4yVMiQypEzLwc1sp9YOKmO6aYS6kcxe2K4TzJM5gLoxGag7TCkFH3
-        U1zO0BvQZu6z+CX7p5bL+DVLgzurBhOGGTM/BJC9O7SykOziozKfCrtzlvGh2g==
+         references:references; bh=OStoQ1k4lhD67pt01NEuqrVFlk3DmZUUJiTL5O5hAPA=;
+        b=p/NPVHkYkWacp959EAGV63t+QF44M4nmwyJpkmxhobzHMy0oLeXCml4Dr7nGtmPNC0j+WY
+        B7A+XOX+bUiQGGnqmMeYDCi6nuPATIptOhpsfS6cXI93itu1a39nmOe3EbTIHJPYHxHJl/
+        XJKPi6FmSn54C8eYngXdjjlg5nTuN6a/ZboSRqT6YWuNUK9jSxbqg8/oAYI5jlkVYTdMCt
+        H1C6eAWCV+Ct3UnEO7kwgd8AlvWgSHDYcClguXlcmdH6z2n0jDEfUP11605adYmJ3lTsWt
+        0veZehPwbKT+6+xkp5lhiaNBDoo35OX5lr/p1bk3ueG0H0O/j/Dbx0Y1nbMU1g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976119;
+        s=2020e; t=1637976122;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iaLCpiERLpuGITLjESnXqZksSqXjgw+jF1i/FwPrQ3E=;
-        b=zL3aej6xUWG5VzZFErreMPztALkuHXw5/PtsQzPaqu8b+sAM4YZ06QzJSDSIc+Xlek+ghk
-        M3PMcrDWSdjuiaAw==
+         references:references; bh=OStoQ1k4lhD67pt01NEuqrVFlk3DmZUUJiTL5O5hAPA=;
+        b=myakaVvhQTfIHvDEKNp6aQzHpJx42UzrH2h+7Ogy2xKClVuLIsMQRKwjYYVfx3QxA0yElw
+        jWtiyr7lcC5BO3BQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -47,61 +47,99 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 26/37] PCI/MSI: Provide MSI_FLAG_MSIX_CONTIGUOUS
+Subject: [patch 28/37] genirq/msi: Provide interface to retrieve Linux
+ interrupt number
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:21:58 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:22:01 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012158.J0Ea6PwrPjfJDIMekqiGQKwuesfD6iZatQb4pA3do0Y@z>
+Message-ID: <20211127012201.v-1TbwOtd2jue3KGpzUrEGz-jzHDLw8Xd6p0pubZyVo@z>
 
-Provide a domain info flag which makes the core code check for a contiguous
-MSI-X index on allocation. That's simpler than checking it at some other
-domain callback in architecture code.
+This allows drivers to retrieve the Linux interrupt number instead of
+fiddling with MSI descriptors.
+
+msi_get_virq() returns the Linux interrupt number or 0, __msi_get_virq()
+has more detailed return codes so pci_irq_vector() can use it as well.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/irqdomain.c |   16 ++++++++++++++--
- include/linux/msi.h         |    2 ++
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ include/linux/msi.h |   16 ++++++++++++++++
+ kernel/irq/msi.c    |   38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+)
 
---- a/drivers/pci/msi/irqdomain.c
-+++ b/drivers/pci/msi/irqdomain.c
-@@ -89,9 +89,21 @@ static int pci_msi_domain_check_cap(stru
- 	if (pci_msi_desc_is_multi_msi(desc) &&
- 	    !(info->flags & MSI_FLAG_MULTI_PCI_MSI))
- 		return 1;
--	else if (desc->pci.msi_attrib.is_msix && !(info->flags & MSI_FLAG_PCI_MSIX))
--		return -ENOTSUPP;
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -169,6 +169,22 @@ static inline bool msi_device_has_proper
+ }
+ #endif
  
-+	if (desc->pci.msi_attrib.is_msix) {
-+		if (!(info->flags & MSI_FLAG_PCI_MSIX))
-+			return -ENOTSUPP;
++int __msi_get_virq(struct device *dev, unsigned int index);
 +
-+		if (info->flags & MSI_FLAG_MSIX_CONTIGUOUS) {
-+			unsigned int idx = 0;
++/**
++ * msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * @dev:	Device to operate on
++ * @index:	MSI interrupt index to look for (0-based)
++ *
++ * Return: The Linux interrupt number on success (> 0), 0 if not found
++ */
++static inline unsigned int msi_get_virq(struct device *dev, unsigned int index)
++{
++	int ret = __msi_get_virq(dev, index);
 +
-+			/* Check for gaps in the entry indices */
-+			for_each_msi_entry(desc, dev) {
-+				if (desc->msi_index != idx++)
-+					return -ENOTSUPP;
-+			}
-+		}
-+	}
++	return ret < 0 ? 0 : ret;
++}
++
+ /* Helpers to hide struct msi_desc implementation details */
+ #define msi_desc_to_dev(desc)		((desc)->dev)
+ #define dev_to_msi_list(dev)		(&(dev)->msi_list)
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -120,6 +120,44 @@ int msi_setup_device_data(struct device
  	return 0;
  }
  
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -378,6 +378,8 @@ enum {
- 	MSI_FLAG_LEVEL_CAPABLE		= (1 << 6),
- 	/* Populate sysfs on alloc() and destroy it on free() */
- 	MSI_FLAG_DEV_SYSFS		= (1 << 7),
-+	/* MSI-X entries must be contiguous */
-+	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 8),
- };
- 
- int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
++/**
++ * __msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * @dev:	Device to operate on
++ * @index:	MSI interrupt index to look for (0-based)
++ *
++ * Return: The Linux interrupt number on success (> 0)
++ *	   -ENODEV when the device is not using MSI
++ *	   -ENOENT if no such entry exists
++ */
++int __msi_get_virq(struct device *dev, unsigned int index)
++{
++	struct msi_desc *desc;
++	bool pcimsi;
++
++	if (!dev->msi.data)
++		return -ENODEV;
++
++	pcimsi = msi_device_has_property(dev, MSI_PROP_PCI_MSI);
++
++	for_each_msi_entry(desc, dev) {
++		/* PCI-MSI has only one descriptor for multiple interrupts. */
++		if (pcimsi) {
++			if (desc->irq && index < desc->nvec_used)
++				return desc->irq + index;
++			break;
++		}
++
++		/*
++		 * PCI-MSIX and platform MSI use a descriptor per
++		 * interrupt.
++		 */
++		if (desc->msi_index == index)
++			return desc->irq;
++	}
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(__msi_get_virq);
++
+ #ifdef CONFIG_SYSFS
+ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
 
