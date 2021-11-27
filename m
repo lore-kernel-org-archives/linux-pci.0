@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85034C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C62DC433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 02:14:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345238AbhK0CAQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 21:00:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43952 "EHLO
+        id S1347362AbhK0CSD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 21:18:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242970AbhK0B6N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:58:13 -0500
+        with ESMTP id S234348AbhK0CQD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 21:16:03 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF898C061758;
-        Fri, 26 Nov 2021 17:26:43 -0800 (PST)
-Message-ID: <20211126230526.055361768@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CA7BC08EB39;
+        Fri, 26 Nov 2021 17:31:05 -0800 (PST)
+Message-ID: <20211126232735.010399268@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976134;
+        s=2020; t=1637976228;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=WWQWE9G0qlaU80ha+cNMAdUuPV31PLPDySvVFyYiVGo=;
-        b=kOeK4FSgHNNbjsRpba+x+gFuM5VTKSMpjBFoXaixhLcGRr+Q4UktJ/RMOWy2bCoSnigNNf
-        xq2Qumm4s3qGQyr+nW4G0M+mDk8+NhBWonU2Ea8giHlPydPhDqRtOrtalA7ank1BP8WVCz
-        d5mXndzQtbF65fsjYpLSihEGpWBe3Zv8B7QlOu6NMUWkuDB5bQr6EbdM9EgSaMAhQO4U+S
-        JYJU7Q8idVzs5MS6vo64papRRJOievSiHNxPHSe+6pj0TTZXD4273QnBWTp0Ru4wcBXMHb
-        7bL0HBMFBS/jC7yYdr2vNIsSymnSVm4bbDJSNrcepGKOYXo91lNLYbT9sYKwgA==
+         references:references; bh=mHgTxiBl9Pg381SuWjuguHHZxZ6bDXurYM8uLZLwzPA=;
+        b=Flk9jqiwodYDq32oY3PYnMQm/YOqwKDQ7cmmLKJ0lajH+8Ex2lsY//uMmz2ElpkGDPaYtd
+        xbKePfG+vqS4YDrriDcjXrIf8Byvs/HYcqMfxYHUhSL6SMdphYYLNlAHl6tO6NkrCVLq8c
+        rDD7nm0uvUbiNhZOw2GsMU48ugDjAIjJYUJZmyCHUGImXlhy39EqW2o9MibaB1zzn7aEVc
+        H1x8KQ3wOi6/pjq32kMiTtHt+Bj6A254ZgoV/OCjbqOHhcmrq1q39M62NPDhuC1AAtQ15W
+        WHxr5ALDTDsVZVkDcFbS3ZtN0uXNJwXCq8+ruCLLmkxslvM2TfK8ww988sBdTg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976134;
+        s=2020e; t=1637976228;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=WWQWE9G0qlaU80ha+cNMAdUuPV31PLPDySvVFyYiVGo=;
-        b=MWHxbRnGSsWexGbDIFc1iJCNytHY4IMsvOQsYNxiFqPb23RJ3qm/HhDZFpVI80nQ3bMDne
-        /PUq7ElfE1zLnIDA==
+         references:references; bh=mHgTxiBl9Pg381SuWjuguHHZxZ6bDXurYM8uLZLwzPA=;
+        b=Y5WUWmApJsT3J8ErrRYJzpfNt68A9GSLSzw8k2IiNfGTkmAYxnp3l/haBIpMPfQE64YFFD
+        o8bIDdFVc5Y3XkAw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -41,133 +41,70 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 36/37] soc: ti: ti_sci_inta_msi: Get rid of ti_sci_inta_msi_get_virq()
-References: <20211126224100.303046749@linutronix.de>
+        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
+Subject: [patch 12/32] x86/pci/xen: Use msi_for_each_desc()
+References: <20211126230957.239391799@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:22:14 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:23:47 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012214.q4N1H9P7mrVaX2oMgDhW13sKPTNYQm2DwS67k6zKSG0@z>
+Message-ID: <20211127012347.NWnrGLMwC2oZ_IphTtLD98Z62-l42WGuhY-wLVjkijQ@z>
 
-Just use the core function msi_get_virq().
+Replace the about to vanish iterators.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/dma/ti/k3-udma-private.c       |    6 ++----
- drivers/dma/ti/k3-udma.c               |   10 ++++------
- drivers/soc/ti/k3-ringacc.c            |    2 +-
- drivers/soc/ti/ti_sci_inta_msi.c       |   12 ------------
- include/linux/soc/ti/ti_sci_inta_msi.h |    1 -
- 5 files changed, 7 insertions(+), 24 deletions(-)
+ arch/x86/pci/xen.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
---- a/drivers/dma/ti/k3-udma-private.c
-+++ b/drivers/dma/ti/k3-udma-private.c
-@@ -168,8 +168,7 @@ int xudma_pktdma_tflow_get_irq(struct ud
- {
- 	const struct udma_oes_offsets *oes = &ud->soc_data->oes;
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -184,7 +184,7 @@ static int xen_setup_msi_irqs(struct pci
+ 	if (ret)
+ 		goto error;
+ 	i = 0;
+-	for_each_pci_msi_entry(msidesc, dev) {
++	msi_for_each_desc(msidesc, &dev->dev, MSI_DESC_NOTASSOCIATED) {
+ 		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, v[i],
+ 					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
+ 					       (type == PCI_CAP_ID_MSIX) ?
+@@ -235,7 +235,7 @@ static int xen_hvm_setup_msi_irqs(struct
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
  
--	return ti_sci_inta_msi_get_virq(ud->dev, udma_tflow_id +
--					oes->pktdma_tchan_flow);
-+	return msi_get_virq(ud->dev, udma_tflow_id + oes->pktdma_tchan_flow);
- }
- EXPORT_SYMBOL(xudma_pktdma_tflow_get_irq);
+-	for_each_pci_msi_entry(msidesc, dev) {
++	msi_for_each_desc(msidesc, &dev->dev, MSI_DESC_NOTASSOCIATED) {
+ 		pirq = xen_allocate_pirq_msi(dev, msidesc);
+ 		if (pirq < 0) {
+ 			irq = -ENODEV;
+@@ -270,7 +270,7 @@ static int xen_initdom_setup_msi_irqs(st
+ 	int ret = 0;
+ 	struct msi_desc *msidesc;
  
-@@ -177,7 +176,6 @@ int xudma_pktdma_rflow_get_irq(struct ud
- {
- 	const struct udma_oes_offsets *oes = &ud->soc_data->oes;
+-	for_each_pci_msi_entry(msidesc, dev) {
++	msi_for_each_desc(msidesc, &dev->dev, MSI_DESC_NOTASSOCIATED) {
+ 		struct physdev_map_pirq map_irq;
+ 		domid_t domid;
  
--	return ti_sci_inta_msi_get_virq(ud->dev, udma_rflow_id +
--					oes->pktdma_rchan_flow);
-+	return msi_get_virq(ud->dev, udma_rflow_id + oes->pktdma_rchan_flow);
- }
- EXPORT_SYMBOL(xudma_pktdma_rflow_get_irq);
---- a/drivers/dma/ti/k3-udma.c
-+++ b/drivers/dma/ti/k3-udma.c
-@@ -2313,8 +2313,7 @@ static int udma_alloc_chan_resources(str
+@@ -389,11 +389,9 @@ static void xen_teardown_msi_irqs(struct
+ 	struct msi_desc *msidesc;
+ 	int i;
  
- 	/* Event from UDMA (TR events) only needed for slave TR mode channels */
- 	if (is_slave_direction(uc->config.dir) && !uc->config.pkt_mode) {
--		uc->irq_num_udma = ti_sci_inta_msi_get_virq(ud->dev,
--							    irq_udma_idx);
-+		uc->irq_num_udma = msi_get_virq(ud->dev, irq_udma_idx);
- 		if (uc->irq_num_udma <= 0) {
- 			dev_err(ud->dev, "Failed to get udma irq (index: %u)\n",
- 				irq_udma_idx);
-@@ -2486,7 +2485,7 @@ static int bcdma_alloc_chan_resources(st
- 		uc->psil_paired = true;
+-	for_each_pci_msi_entry(msidesc, dev) {
+-		if (msidesc->irq) {
+-			for (i = 0; i < msidesc->nvec_used; i++)
+-				xen_destroy_irq(msidesc->irq + i);
+-		}
++	msi_for_each_desc(msidesc, &dev->dev, MSI_DESC_ASSOCIATED) {
++		for (i = 0; i < msidesc->nvec_used; i++)
++			xen_destroy_irq(msidesc->irq + i);
  	}
- 
--	uc->irq_num_ring = ti_sci_inta_msi_get_virq(ud->dev, irq_ring_idx);
-+	uc->irq_num_ring = msi_get_virq(ud->dev, irq_ring_idx);
- 	if (uc->irq_num_ring <= 0) {
- 		dev_err(ud->dev, "Failed to get ring irq (index: %u)\n",
- 			irq_ring_idx);
-@@ -2503,8 +2502,7 @@ static int bcdma_alloc_chan_resources(st
- 
- 	/* Event from BCDMA (TR events) only needed for slave channels */
- 	if (is_slave_direction(uc->config.dir)) {
--		uc->irq_num_udma = ti_sci_inta_msi_get_virq(ud->dev,
--							    irq_udma_idx);
-+		uc->irq_num_udma = msi_get_virq(ud->dev, irq_udma_idx);
- 		if (uc->irq_num_udma <= 0) {
- 			dev_err(ud->dev, "Failed to get bcdma irq (index: %u)\n",
- 				irq_udma_idx);
-@@ -2672,7 +2670,7 @@ static int pktdma_alloc_chan_resources(s
- 
- 	uc->psil_paired = true;
- 
--	uc->irq_num_ring = ti_sci_inta_msi_get_virq(ud->dev, irq_ring_idx);
-+	uc->irq_num_ring = msi_get_virq(ud->dev, irq_ring_idx);
- 	if (uc->irq_num_ring <= 0) {
- 		dev_err(ud->dev, "Failed to get ring irq (index: %u)\n",
- 			irq_ring_idx);
---- a/drivers/soc/ti/k3-ringacc.c
-+++ b/drivers/soc/ti/k3-ringacc.c
-@@ -647,7 +647,7 @@ int k3_ringacc_get_ring_irq_num(struct k
- 	if (!ring)
- 		return -EINVAL;
- 
--	irq_num = ti_sci_inta_msi_get_virq(ring->parent->dev, ring->ring_id);
-+	irq_num = msi_get_virq(ring->parent->dev, ring->ring_id);
- 	if (irq_num <= 0)
- 		irq_num = -EINVAL;
- 	return irq_num;
---- a/drivers/soc/ti/ti_sci_inta_msi.c
-+++ b/drivers/soc/ti/ti_sci_inta_msi.c
-@@ -148,15 +148,3 @@ void ti_sci_inta_msi_domain_free_irqs(st
- 	ti_sci_inta_msi_free_descs(dev);
  }
- EXPORT_SYMBOL_GPL(ti_sci_inta_msi_domain_free_irqs);
--
--unsigned int ti_sci_inta_msi_get_virq(struct device *dev, u32 dev_index)
--{
--	struct msi_desc *desc;
--
--	for_each_msi_entry(desc, dev)
--		if (desc->msi_index == dev_index)
--			return desc->irq;
--
--	return -ENODEV;
--}
--EXPORT_SYMBOL_GPL(ti_sci_inta_msi_get_virq);
---- a/include/linux/soc/ti/ti_sci_inta_msi.h
-+++ b/include/linux/soc/ti/ti_sci_inta_msi.h
-@@ -18,6 +18,5 @@ struct irq_domain
- 				   struct irq_domain *parent);
- int ti_sci_inta_msi_domain_alloc_irqs(struct device *dev,
- 				      struct ti_sci_resource *res);
--unsigned int ti_sci_inta_msi_get_virq(struct device *dev, u32 index);
- void ti_sci_inta_msi_domain_free_irqs(struct device *dev);
- #endif /* __INCLUDE_LINUX_IRQCHIP_TI_SCI_INTA_H */
+ 
 
