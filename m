@@ -2,36 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D917C35263
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CBAC4167B
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347935AbhK0B0K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:26:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36538 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345485AbhK0BYJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:09 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14311C0613F8;
-        Fri, 26 Nov 2021 17:19:32 -0800 (PST)
-Message-ID: <20211126223824.441771859@linutronix.de>
+        id S1345561AbhK0B0P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:26:15 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:35196 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345656AbhK0BYN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:13 -0500
+Message-ID: <20211126230524.478418625@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637975970;
+        s=2020; t=1637976021;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=EjQK06gGut8wpWxb3xXf7TaaLrkIbQLhpXZXlXqI+1E=;
-        b=3IN7G2Z+0trEJeykGv7kUnMltcrJgw6/YiiYZT8QXhspQzKvcIJW3i6gR+n0r+g0hsjZAO
-        6Y9KrK5zYseTHHVb7+c8IptjiFQeVXBeJDPflWUfULp3GtFjmbp9XFuGtmX1U+/q2euX+7
-        jbyTLqyRLHFcvAPwlksKJBmoQq5tScd89MT6QeCRCoLuq+1hECPKCcrJEwZqd6tTMvJfgo
-        omFGhCP0pUYeNAhfPERNfI16sLmeF3+3CoWsyDCxxVlEIkwnejxyxNkkc5/OsucKZ6M2Wz
-        9b3BXGVs3dTsq0Elas1wdnxn4Qa5k8MRI/8VEocHf7LWeYN/GB276k0tmU8dkg==
+         references:references; bh=6Kf8uoDdfqcgp3MpzFvCoiTWQV1YmFn3oOwS+G3NmiU=;
+        b=iWolB7GTQpESFLCRMVKgPs1KrxaKC2ow1tGQffcaDNv2F0xW3vx0KvkQyu9E3HoqpLbjwF
+        a1DMLtRU5UQi+E6tXiG7XgZSenRjWBZ95EguzyhGqxM8+8j1umUpkDH563q1Yt15pe9KgW
+        /7Jxt5orP58QzGcs9NGfHM2D7jy6vbZFC00c4OO6SMHMXlCTv97VIWnLj085ApIev+4lMm
+        AzMxX8cGljCptpTHoj6VaH8H7zpAxG8rZl+SpEqQ0BhNzR6xvOZlrjhoboEFBMtQ5wcmxv
+        QLLD+xUVD7tM30wav2yu47nC6rzmcxUaWTmvPTRzKZEbeEVH6dF/47vx12DYwg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637975970;
+        s=2020e; t=1637976021;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=EjQK06gGut8wpWxb3xXf7TaaLrkIbQLhpXZXlXqI+1E=;
-        b=tNxaZsUisx8qmcOuXzPTbk9OTikfV8u0CcSvhiEBov4PNCxknl15jCdw3kB2y8lH62s1JS
-        bmCvi3+Z0sDU1eBw==
+         references:references; bh=6Kf8uoDdfqcgp3MpzFvCoiTWQV1YmFn3oOwS+G3NmiU=;
+        b=0U7PCipwIXxPj9e5b6tNbyglTbNA/F6jyYdL9UjWoQb8at8gcc4eTSOpgaxNCw926RLOpS
+        s+s7MXXsuD+XUuBw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -40,90 +37,133 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Paul Mackerras <paulus@samba.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-mips@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        sparclinux@vger.kernel.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org, ath11k@lists.infradead.org,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Juergen Gross <jgross@suse.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>
-Subject: [patch 06/22] PCI/MSI: Make pci_msi_domain_write_msg() static
-References: <20211126222700.862407977@linutronix.de>
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
+        Vinod Koul <vkoul@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Subject: [patch 09/37] PCI/MSI: Let the irq code handle sysfs groups
+References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:19:30 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:20:20 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127011930.0v_dDbC_Z3YrKkC8u_H2m8Cg4vp_qBjl6afvh_HuPdg@z>
 
-There is no point to have this function public as it is set by the PCI core
-anyway when a PCI/MSI irqdomain is created.
+Set the domain info flag which makes the core code handle sysfs groups and
+put an explicit invocation into the legacy code.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/irqchip/irq-gic-v2m.c            |    1 -
- drivers/irqchip/irq-gic-v3-its-pci-msi.c |    1 -
- drivers/irqchip/irq-gic-v3-mbi.c         |    1 -
- drivers/pci/msi.c                        |    2 +-
- include/linux/msi.h                      |    1 -
- 5 files changed, 1 insertion(+), 5 deletions(-)
+ drivers/pci/msi/irqdomain.c |    2 +-
+ drivers/pci/msi/legacy.c    |    6 +++++-
+ drivers/pci/msi/msi.c       |   23 -----------------------
+ include/linux/pci.h         |    1 -
+ 4 files changed, 6 insertions(+), 26 deletions(-)
 
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -88,7 +88,6 @@ static struct irq_chip gicv2m_msi_irq_ch
- 	.irq_mask		= gicv2m_mask_msi_irq,
- 	.irq_unmask		= gicv2m_unmask_msi_irq,
- 	.irq_eoi		= irq_chip_eoi_parent,
--	.irq_write_msi_msg	= pci_msi_domain_write_msg,
- };
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -159,7 +159,7 @@ struct irq_domain *pci_msi_create_irq_do
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
  
- static struct msi_domain_info gicv2m_msi_domain_info = {
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -28,7 +28,6 @@ static struct irq_chip its_msi_irq_chip
- 	.irq_unmask		= its_unmask_msi_irq,
- 	.irq_mask		= its_mask_msi_irq,
- 	.irq_eoi		= irq_chip_eoi_parent,
--	.irq_write_msi_msg	= pci_msi_domain_write_msg,
- };
+-	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
++	info->flags |= MSI_FLAG_ACTIVATE_EARLY | MSI_FLAG_DEV_SYSFS;
+ 	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
+ 		info->flags |= MSI_FLAG_MUST_REACTIVATE;
  
- static int its_pci_msi_vec_count(struct pci_dev *pdev, void *data)
---- a/drivers/irqchip/irq-gic-v3-mbi.c
-+++ b/drivers/irqchip/irq-gic-v3-mbi.c
-@@ -171,7 +171,6 @@ static struct irq_chip mbi_msi_irq_chip
- 	.irq_unmask		= mbi_unmask_msi_irq,
- 	.irq_eoi		= irq_chip_eoi_parent,
- 	.irq_compose_msi_msg	= mbi_compose_msi_msg,
--	.irq_write_msi_msg	= pci_msi_domain_write_msg,
- };
- 
- static struct msi_domain_info mbi_msi_domain_info = {
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1267,7 +1267,7 @@ EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdat
-  * @irq_data:	Pointer to interrupt data of the MSI interrupt
-  * @msg:	Pointer to the message
-  */
--void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
-+static void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
+--- a/drivers/pci/msi/legacy.c
++++ b/drivers/pci/msi/legacy.c
+@@ -71,10 +71,14 @@ int pci_msi_legacy_setup_msi_irqs(struct
  {
- 	struct msi_desc *desc = irq_data_get_msi_desc(irq_data);
+ 	int ret = arch_setup_msi_irqs(dev, nvec, type);
  
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -454,7 +454,6 @@ void *platform_msi_get_host_data(struct
- #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+-	return pci_msi_setup_check_result(dev, type, ret);
++	ret = pci_msi_setup_check_result(dev, type, ret);
++	if (!ret)
++		ret = msi_device_populate_sysfs(&dev->dev);
++	return ret;
+ }
  
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
--void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
- struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent);
+ void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev)
+ {
++	msi_device_destroy_sysfs(&dev->dev);
+ 	arch_teardown_msi_irqs(dev);
+ }
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -233,11 +233,6 @@ static void free_msi_irqs(struct pci_dev
+ 			for (i = 0; i < entry->nvec_used; i++)
+ 				BUG_ON(irq_has_action(entry->irq + i));
+ 
+-	if (dev->msi_irq_groups) {
+-		msi_destroy_sysfs(&dev->dev, dev->msi_irq_groups);
+-		dev->msi_irq_groups = NULL;
+-	}
+-
+ 	pci_msi_teardown_msi_irqs(dev);
+ 
+ 	list_for_each_entry_safe(entry, tmp, msi_list, list) {
+@@ -415,7 +410,6 @@ static int msi_verify_entries(struct pci
+ static int msi_capability_init(struct pci_dev *dev, int nvec,
+ 			       struct irq_affinity *affd)
+ {
+-	const struct attribute_group **groups;
+ 	struct msi_desc *entry;
+ 	int ret;
+ 
+@@ -439,14 +433,6 @@ static int msi_capability_init(struct pc
+ 	if (ret)
+ 		goto err;
+ 
+-	groups = msi_populate_sysfs(&dev->dev);
+-	if (IS_ERR(groups)) {
+-		ret = PTR_ERR(groups);
+-		goto err;
+-	}
+-
+-	dev->msi_irq_groups = groups;
+-
+ 	/* Set MSI enabled bits	*/
+ 	pci_intx_for_msi(dev, 0);
+ 	pci_msi_set_enable(dev, 1);
+@@ -574,7 +560,6 @@ static void msix_mask_all(void __iomem *
+ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
+ 				int nvec, struct irq_affinity *affd)
+ {
+-	const struct attribute_group **groups;
+ 	void __iomem *base;
+ 	int ret, tsize;
+ 	u16 control;
+@@ -616,14 +601,6 @@ static int msix_capability_init(struct p
+ 
+ 	msix_update_entries(dev, entries);
+ 
+-	groups = msi_populate_sysfs(&dev->dev);
+-	if (IS_ERR(groups)) {
+-		ret = PTR_ERR(groups);
+-		goto out_free;
+-	}
+-
+-	dev->msi_irq_groups = groups;
+-
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -474,7 +474,6 @@ struct pci_dev {
+ #endif
+ #ifdef CONFIG_PCI_MSI
+ 	void __iomem	*msix_base;
+-	const struct attribute_group **msi_irq_groups;
+ #endif
+ 	struct pci_vpd	vpd;
+ #ifdef CONFIG_PCIE_DPC
 
