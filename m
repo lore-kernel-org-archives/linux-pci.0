@@ -2,33 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E509C43219
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71ED5C3525B
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347885AbhK0B0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1347899AbhK0B0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 26 Nov 2021 20:26:08 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:37362 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345394AbhK0BYG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:06 -0500
-Message-ID: <20211126230524.236729743@linutronix.de>
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36528 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345435AbhK0BYH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:07 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E400EC0613F6;
+        Fri, 26 Nov 2021 17:19:28 -0800 (PST)
+Message-ID: <20211126223824.322987915@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976015;
+        s=2020; t=1637975967;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=MsQMrlpTATaTMzIfF99P8uE12mWb1u9o9W8ziR/qOrU=;
-        b=v+0MDRnHIZmUYh9muIDezvCL+GrBrMKFHLXhnXDbx/aIi2Wrrx2btpQc2pbAq708vAOooJ
-        ObadXZFbvQQRZhMeKea1bFWMBR++d2Kee/VhqKH4WHWiniGjoIj/ZOXWd4n8EoZVQ82t2C
-        nko5LxZWgMMymJUvjSUGyQm0rfeRyd5sFUXOKIVxxVcL0iLy3n3tVNdEZtgRf1hC78nAr2
-        bk9apjv2EpkYiMxr4EuHqAXH2Mf4K0ob8IkVlrkTIbQ+lNr0Z/0RN+LJkfsjRRlVaQBn7P
-        Qr3lelca0UZiVpBnbQsaRtzf/2roo+7eVAdf5rYtyNBt7Xe9zdOlWr5n2eHbow==
+         references:references; bh=AwO21SR5HwD8yhhWfgGPPa41s/dLuMAByqtyG5X5FJI=;
+        b=a0ZgqAHm77/GoyZRX88BCacRbvb4M6WP36nYKI7gIcYYAKt3D9nyCPRPeG87pRtO8eo1mx
+        puA7H603KGaOG4JQAsGiG7EdKjI6mwrMOJWOZLc8fV3kTCSnAOb0vR2ovfpPyPv8k6Ofef
+        MVKcT2ksaDYJHAD86iT0ZYdHE759EuvI/4E1+q+f9uqjvJ7TMebnhRia2W8E4C3X5S+Lfh
+        XBzD/IzDC1STXdWAUj8w+xp1ZA8g0F0qEGTSEA90gvt6VES8n0rrYTNctomxUY1s4mOj8c
+        ZCHHM8qX3RwLSn0y8IkHydQ89SBOZNGoWe5dt67n3ReBbUDg79RJqUnbR9NPUg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976015;
+        s=2020e; t=1637975967;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=MsQMrlpTATaTMzIfF99P8uE12mWb1u9o9W8ziR/qOrU=;
-        b=xNoV+WZ/LZHW9aCCjR5qeNdZLfCaDUJ0rJxOsmXMnhAv7pGi4kmklBVoXkagTGMlO0Ex2g
-        B8JBNqCfSLc9oTCw==
+         references:references; bh=AwO21SR5HwD8yhhWfgGPPa41s/dLuMAByqtyG5X5FJI=;
+        b=HqZAKurVXyG8LQD7fjFChyTlTaw4FgkiDsL9W5YdV8HfGuPbwUxwUBvoS7mZEC0e8sOaKi
+        D1lr9yb3Cez1UvBw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -37,62 +40,91 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@samba.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-mips@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 05/37] platform-msi: Allocate MSI device data on first use
-References: <20211126224100.303046749@linutronix.de>
+        sparclinux@vger.kernel.org, x86@kernel.org,
+        xen-devel@lists.xenproject.org, ath11k@lists.infradead.org,
+        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
+        Juergen Gross <jgross@suse.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>
+Subject: [patch 04/22] genirq/msi: Remove unused domain callbacks
+References: <20211126222700.862407977@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:20:14 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:19:26 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+Message-ID: <20211127011926.Lxav1P1u8EH64U2pFCHVWMqEGXvb3TWVwScmjwatQPY@z>
 
-Allocate the MSI device data on first invocation of the allocation function
-for platform MSI private data.
+No users and there is no need to grow them.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/base/platform-msi.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ include/linux/msi.h |   11 ++++-------
+ kernel/irq/msi.c    |    5 -----
+ 2 files changed, 4 insertions(+), 12 deletions(-)
 
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -204,6 +204,8 @@ platform_msi_alloc_priv_data(struct devi
- 			     irq_write_msi_msg_t write_msi_msg)
- {
- 	struct platform_msi_priv_data *datap;
-+	int err;
-+
- 	/*
- 	 * Limit the number of interrupts to 2048 per device. Should we
- 	 * need to bump this up, DEV_ID_SHIFT should be adjusted
-@@ -218,6 +220,10 @@ platform_msi_alloc_priv_data(struct devi
- 		return ERR_PTR(-EINVAL);
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -304,7 +304,6 @@ struct msi_domain_info;
+  * @msi_free:		Domain specific function to free a MSI interrupts
+  * @msi_check:		Callback for verification of the domain/info/dev data
+  * @msi_prepare:	Prepare the allocation of the interrupts in the domain
+- * @msi_finish:		Optional callback to finalize the allocation
+  * @set_desc:		Set the msi descriptor for an interrupt
+  * @handle_error:	Optional error handler if the allocation fails
+  * @domain_alloc_irqs:	Optional function to override the default allocation
+@@ -312,12 +311,11 @@ struct msi_domain_info;
+  * @domain_free_irqs:	Optional function to override the default free
+  *			function.
+  *
+- * @get_hwirq, @msi_init and @msi_free are callbacks used by
+- * msi_create_irq_domain() and related interfaces
++ * @get_hwirq, @msi_init and @msi_free are callbacks used by the underlying
++ * irqdomain.
+  *
+- * @msi_check, @msi_prepare, @msi_finish, @set_desc and @handle_error
+- * are callbacks used by msi_domain_alloc_irqs() and related
+- * interfaces which are based on msi_desc.
++ * @msi_check, @msi_prepare, @handle_error and @set_desc are callbacks used by
++ * msi_domain_alloc/free_irqs().
+  *
+  * @domain_alloc_irqs, @domain_free_irqs can be used to override the
+  * default allocation/free functions (__msi_domain_alloc/free_irqs). This
+@@ -351,7 +349,6 @@ struct msi_domain_ops {
+ 	int		(*msi_prepare)(struct irq_domain *domain,
+ 				       struct device *dev, int nvec,
+ 				       msi_alloc_info_t *arg);
+-	void		(*msi_finish)(msi_alloc_info_t *arg, int retval);
+ 	void		(*set_desc)(msi_alloc_info_t *arg,
+ 				    struct msi_desc *desc);
+ 	int		(*handle_error)(struct irq_domain *domain,
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -562,8 +562,6 @@ int __msi_domain_alloc_irqs(struct irq_d
+ 			ret = -ENOSPC;
+ 			if (ops->handle_error)
+ 				ret = ops->handle_error(domain, desc, ret);
+-			if (ops->msi_finish)
+-				ops->msi_finish(&arg, ret);
+ 			return ret;
+ 		}
+ 
+@@ -573,9 +571,6 @@ int __msi_domain_alloc_irqs(struct irq_d
+ 		}
  	}
  
-+	err = msi_setup_device_data(dev);
-+	if (err)
-+		return ERR_PTR(err);
-+
- 	/* Already had a helping of MSI? Greed... */
- 	if (!list_empty(dev_to_msi_list(dev)))
- 		return ERR_PTR(-EBUSY);
-@@ -229,7 +235,7 @@ platform_msi_alloc_priv_data(struct devi
- 	datap->devid = ida_simple_get(&platform_msi_devid_ida,
- 				      0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
- 	if (datap->devid < 0) {
--		int err = datap->devid;
-+		err = datap->devid;
- 		kfree(datap);
- 		return ERR_PTR(err);
- 	}
+-	if (ops->msi_finish)
+-		ops->msi_finish(&arg, 0);
+-
+ 	can_reserve = msi_check_reservation_mode(domain, info, dev);
+ 
+ 	/*
 
