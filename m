@@ -2,36 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3BBC4167B
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E509C43219
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345366AbhK0B0H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:26:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36076 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344510AbhK0BYF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:05 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB7D8C0613F2;
-        Fri, 26 Nov 2021 17:19:25 -0800 (PST)
-Message-ID: <20211126223824.204004845@linutronix.de>
+        id S1347885AbhK0B0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:26:08 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:37362 "EHLO
+        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345394AbhK0BYG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:06 -0500
+Message-ID: <20211126230524.236729743@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637975964;
+        s=2020; t=1637976015;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=yyhtvslqP4HLRieVFfAZFU9HV4/e0iOdDJgsQQb4EZc=;
-        b=2CGwSzv8GJU60xQIlfgVOaRi5g9Fn+D0hzWIX0d0pUqtFU4hdxgFID5ZAs4YMb4G+S5Wrv
-        avqCKVkAif5q5QbFxS7cEQhGnCY2S+6e28XQmeCnJRn2T0XoJ4u7U8UnVhTwn9fv4Dn0xB
-        SA+5dfMbSTbKf+A7DDFaxOGfTXkGGQ5SBh1bG9k//gWsSsiprWcstpFZ2e8h6B/VM2UFUJ
-        LdQV8C7hFqrZUfOS72q/yy+isOPS0nsKpb9++fl/GOil+WjZl8BRrzcF7WdwhFoz2N2PGF
-        3ivKoXc4RUormXF6RJNnnNMFOrPUmNhdaGzXzR1mfZQva9D/gVP49O9y4DcYJw==
+         references:references; bh=MsQMrlpTATaTMzIfF99P8uE12mWb1u9o9W8ziR/qOrU=;
+        b=v+0MDRnHIZmUYh9muIDezvCL+GrBrMKFHLXhnXDbx/aIi2Wrrx2btpQc2pbAq708vAOooJ
+        ObadXZFbvQQRZhMeKea1bFWMBR++d2Kee/VhqKH4WHWiniGjoIj/ZOXWd4n8EoZVQ82t2C
+        nko5LxZWgMMymJUvjSUGyQm0rfeRyd5sFUXOKIVxxVcL0iLy3n3tVNdEZtgRf1hC78nAr2
+        bk9apjv2EpkYiMxr4EuHqAXH2Mf4K0ob8IkVlrkTIbQ+lNr0Z/0RN+LJkfsjRRlVaQBn7P
+        Qr3lelca0UZiVpBnbQsaRtzf/2roo+7eVAdf5rYtyNBt7Xe9zdOlWr5n2eHbow==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637975964;
+        s=2020e; t=1637976015;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=yyhtvslqP4HLRieVFfAZFU9HV4/e0iOdDJgsQQb4EZc=;
-        b=0XCFh3K4IrRNY6L0MyY+vUemfrvkZlIFY/qYHFr3mYxeMx0ngocRG4o0KW8jALmJLkbbXC
-        ZNYbsj1qUqXZJQCw==
+         references:references; bh=MsQMrlpTATaTMzIfF99P8uE12mWb1u9o9W8ziR/qOrU=;
+        b=xNoV+WZ/LZHW9aCCjR5qeNdZLfCaDUJ0rJxOsmXMnhAv7pGi4kmklBVoXkagTGMlO0Ex2g
+        B8JBNqCfSLc9oTCw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -40,105 +37,62 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Paul Mackerras <paulus@samba.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-mips@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        sparclinux@vger.kernel.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org, ath11k@lists.infradead.org,
-        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
-        Juergen Gross <jgross@suse.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>
-Subject: [patch 02/22] PCI/MSI: Fix pci_irq_vector()/pci_irq_get_attinity()
-References: <20211126222700.862407977@linutronix.de>
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
+        Vinod Koul <vkoul@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Subject: [patch 05/37] platform-msi: Allocate MSI device data on first use
+References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:19:23 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:20:14 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127011923.bBhaxlw0omtwpo7jofenNTEJClmXPplwHoFmjvHSwzA@z>
 
-pci_irq_vector() and pci_irq_get_affinity() use the list position to find the
-MSI-X descriptor at a given index. That's correct for the normal case where
-the entry number is the same as the list position.
+Allocate the MSI device data on first invocation of the allocation function
+for platform MSI private data.
 
-But it's wrong for cases where MSI-X was allocated with an entries array
-describing sparse entry numbers into the hardware message descriptor
-table. That's inconsistent at best.
-
-Make it always check the entry number because that's what the zero base
-index really means. This change won't break existing users which use a
-sparse entries array for allocation because these users retrieve the Linux
-interrupt number from the entries array after allocation and none of them
-uses pci_irq_vector() or pci_irq_get_affinity().
-
-Fixes: aff171641d18 ("PCI: Provide sensible IRQ vector alloc/free routines")
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi.c |   26 ++++++++++++++++++--------
- 1 file changed, 18 insertions(+), 8 deletions(-)
+ drivers/base/platform-msi.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1187,19 +1187,24 @@ EXPORT_SYMBOL(pci_free_irq_vectors);
- 
- /**
-  * pci_irq_vector - return Linux IRQ number of a device vector
-- * @dev: PCI device to operate on
-- * @nr: device-relative interrupt vector index (0-based).
-+ * @dev:	PCI device to operate on
-+ * @nr:		Interrupt vector index (0-based)
-+ *
-+ * @nr has the following meanings depending on the interrupt mode:
-+ *   MSI-X:	The index in the MSI-X vector table
-+ *   MSI:	The index of the enabled MSI vectors
-+ *   INTx:	Must be 0
-+ *
-+ * Return: The Linux interrupt number or -EINVAl if @nr is out of range.
-  */
- int pci_irq_vector(struct pci_dev *dev, unsigned int nr)
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -204,6 +204,8 @@ platform_msi_alloc_priv_data(struct devi
+ 			     irq_write_msi_msg_t write_msi_msg)
  {
- 	if (dev->msix_enabled) {
- 		struct msi_desc *entry;
--		int i = 0;
+ 	struct platform_msi_priv_data *datap;
++	int err;
++
+ 	/*
+ 	 * Limit the number of interrupts to 2048 per device. Should we
+ 	 * need to bump this up, DEV_ID_SHIFT should be adjusted
+@@ -218,6 +220,10 @@ platform_msi_alloc_priv_data(struct devi
+ 		return ERR_PTR(-EINVAL);
+ 	}
  
- 		for_each_pci_msi_entry(entry, dev) {
--			if (i == nr)
-+			if (entry->msi_attrib.entry_nr == nr)
- 				return entry->irq;
--			i++;
- 		}
- 		WARN_ON_ONCE(1);
- 		return -EINVAL;
-@@ -1223,17 +1228,22 @@ EXPORT_SYMBOL(pci_irq_vector);
-  * pci_irq_get_affinity - return the affinity of a particular MSI vector
-  * @dev:	PCI device to operate on
-  * @nr:		device-relative interrupt vector index (0-based).
-+ *
-+ * @nr has the following meanings depending on the interrupt mode:
-+ *   MSI-X:	The index in the MSI-X vector table
-+ *   MSI:	The index of the enabled MSI vectors
-+ *   INTx:	Must be 0
-+ *
-+ * Return: A cpumask pointer or NULL if @nr is out of range
-  */
- const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
- {
- 	if (dev->msix_enabled) {
- 		struct msi_desc *entry;
--		int i = 0;
- 
- 		for_each_pci_msi_entry(entry, dev) {
--			if (i == nr)
-+			if (entry->msi_attrib.entry_nr == nr)
- 				return &entry->affinity->mask;
--			i++;
- 		}
- 		WARN_ON_ONCE(1);
- 		return NULL;
++	err = msi_setup_device_data(dev);
++	if (err)
++		return ERR_PTR(err);
++
+ 	/* Already had a helping of MSI? Greed... */
+ 	if (!list_empty(dev_to_msi_list(dev)))
+ 		return ERR_PTR(-EBUSY);
+@@ -229,7 +235,7 @@ platform_msi_alloc_priv_data(struct devi
+ 	datap->devid = ida_simple_get(&platform_msi_devid_ida,
+ 				      0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
+ 	if (datap->devid < 0) {
+-		int err = datap->devid;
++		err = datap->devid;
+ 		kfree(datap);
+ 		return ERR_PTR(err);
+ 	}
 
