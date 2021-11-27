@@ -2,33 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D9EC43217
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7B0C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242272AbhK0B1M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:27:12 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:36594 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347320AbhK0BZK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:25:10 -0500
-Message-ID: <20211126230525.256653991@linutronix.de>
+        id S1348124AbhK0B1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:27:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36016 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242351AbhK0BZu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:25:50 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B7CC0613FB;
+        Fri, 26 Nov 2021 17:19:43 -0800 (PST)
+Message-ID: <20211126223824.855947162@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976042;
+        s=2020; t=1637975981;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=W0h8cFkpSlrjWKkacc77gmgmQ9hJjfO/HefW6QQlYnQ=;
-        b=r4eal6rIfDIoamvlWEISLX+P71N4hhZWD6sAKPeFo0r/w9+NdyQL8mH9WU9ard2q78GBGM
-        puSfzbYsc/CLTm4wMoatWZX8JGm4zcDz4aypqFRJVzPwpahZK4bLGm8GmHxqVRFswULQN0
-        vxOuVPmklXTu1Dt3I0tBOTNgRG0Sn42XfnNRTSfuGvZb5z0VAdT9OkLzq3IHXHIVqeB93p
-        6gSP3m2B7KtG9jwXFYWdBmrxG0dhkXKDqJjtZ7VFkiA3Wet92nFLuAj2ktppNDpf85Evr9
-        iBbS8mzN6/r/uRiEFpkV7cESINPLw2PRGvei1yfLXYzA9yftlrSnsJt6JFh6dA==
+         references:references; bh=lhIUE61Y2ARmaAA3RG1h6L7zHDs4cKgQsOndAjR5STU=;
+        b=3I27l9siS6/oWE1JVUleWaLVyIqltkA2MLPegdLeuNH4xABPDw/VJVaN4/5xZwR/ZGDZ/X
+        z+Yu7BvVlI1Y8bjNWoik91+y02TV4O1ndMArqPpxXOjDKZc7tlfYU+IDvy9/QevhvUBSSe
+        nyPwZJhyvMtFooayQnVqCf1qlIROsanIGmDDCCtFBXia2UMjMfl/6bOUpWxdL7U7K8o12E
+        JDsMmY+UavmvHDtkNDK/mVPz680wKGlII+yHcirzIllt9Z7FWCJTiaD8RGfRwVR8wCXrIw
+        Fm3H9jm1jwNh8R+ZVC5kx7Gidr5VdZYHXIY0uS6MsgUEApx3IIaeb7WLJgRlLA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976042;
+        s=2020e; t=1637975981;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=W0h8cFkpSlrjWKkacc77gmgmQ9hJjfO/HefW6QQlYnQ=;
-        b=exDXzbWNyzm8lpC8blE93+qo6A6+cBUS2GiuAcExzXacXAdgjQYexIMIGb0pS8kwazFa+i
-        WxdkIBqLR1OS8LDw==
+         references:references; bh=lhIUE61Y2ARmaAA3RG1h6L7zHDs4cKgQsOndAjR5STU=;
+        b=cSljuXSfhLC27NoLNfSXkLMLt2p1DhSlr0Y1CawLWxZ6xSqD3SbIMB5YfCzJcABWyjJgHj
+        cjBENAHWPOx02EDA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -37,45 +40,63 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Mackerras <paulus@samba.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-mips@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 22/37] x86/apic/msi: Use device MSI properties
-References: <20211126224100.303046749@linutronix.de>
+        sparclinux@vger.kernel.org, x86@kernel.org,
+        xen-devel@lists.xenproject.org, ath11k@lists.infradead.org,
+        Wei Liu <wei.liu@kernel.org>, linux-hyperv@vger.kernel.org,
+        Juergen Gross <jgross@suse.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>
+Subject: [patch 13/22] PCI/MSI: Cleanup include zoo
+References: <20211126222700.862407977@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:20:42 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:19:41 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+Message-ID: <20211127011941.bASBqTYci2dNWkRt0OtUGchArVsbU6rhDhsESdgLC2o@z>
 
-instead of fiddling with MSI descriptors.
+Get rid of the pile of unneeded includes which accumulated over time.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/kernel/apic/msi.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/pci/msi.c |   16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -160,11 +160,8 @@ static struct irq_chip pci_msi_controlle
- int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
- 		    msi_alloc_info_t *arg)
- {
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct msi_desc *desc = first_pci_msi_entry(pdev);
--
- 	init_irq_alloc_info(arg, NULL);
--	if (desc->pci.msi_attrib.is_msix) {
-+	if (msi_device_has_property(dev, MSI_PROP_PCI_MSIX)) {
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
- 	} else {
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -7,22 +7,14 @@
+  * Copyright (C) 2016 Christoph Hellwig.
+  */
+ 
++#include <linux/acpi_iort.h>
+ #include <linux/err.h>
+-#include <linux/mm.h>
+-#include <linux/irq.h>
+-#include <linux/interrupt.h>
+ #include <linux/export.h>
+-#include <linux/ioport.h>
+-#include <linux/pci.h>
+-#include <linux/proc_fs.h>
+-#include <linux/msi.h>
+-#include <linux/smp.h>
+-#include <linux/errno.h>
+-#include <linux/io.h>
+-#include <linux/acpi_iort.h>
+-#include <linux/slab.h>
++#include <linux/irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/msi.h>
+ #include <linux/of_irq.h>
++#include <linux/pci.h>
+ 
+ #include "pci.h"
+ 
 
