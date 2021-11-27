@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13064C4321E
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D96E2C4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348614AbhK0BaN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:30:13 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:37362 "EHLO
+        id S1348885AbhK0BaR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:30:17 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40044 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348684AbhK0B2L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:11 -0500
-Message-ID: <20211126230524.355599952@linutronix.de>
+        with ESMTP id S1348827AbhK0B2O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:14 -0500
+Message-ID: <20211126230524.540744026@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976089;
+        s=2020; t=1637976093;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=eU/+MzcFFw4K2a/jF7MWe8bjN6ge/wr+X0hgqu8YCCQ=;
-        b=w3yOdkCQ4UTe9AU5cTlEvoKRKmXQe5BGZ4u1JuDqTc5TJPm2swb4E+8DYZSJ0Q+GwQuoto
-        23QNOic6jnbz2hTLSxtnS7tRkIYD8RmoFUhy3ejrHvsE0CIo8a7ipr8THkS/bQO1CWb3LF
-        rhkOb/zXg46e3KTci6Hh8bYWM/uHrdysMxDRH16XBaHgqwtfGXCh7aXLNWlHuoUDAfm5u6
-        ZZsMNjGGal+blkg7MR0liHB5X6PAC3Qk0W3aELLwntGM3HUM0a8feWq4dORyHecwYCzM+w
-        0w/MT3cW57N2brGpII8fDhY/7gSJgIDmrQkb0Aj+jmMn7lJtXqmrUmOS799mRg==
+         references:references; bh=gn8p+zMtjjrDzl8WaoyQn+U7cmDXCgk8UU3FdWlgcVs=;
+        b=veI2kEfZAljWdxQgH+oFZ06NGIS0u4jv5b6G0YVI/5tq0tfagdI9IzMyR4CwU8aFholbY4
+        Ar0/6hZ9VNP8ai6nQzq7wvIJZBEKKWYg2ijV3RD7Yk3vSpH4gjvQSpIjsj4Sj/qg+kcmrN
+        jK0k3hR1CTjpPXSVJE0wsQdnIrz3/7+ol1iaZvA37AiezpcXLKS6UydHatzHBRKCLSistU
+        3Qbt9x/D24kcA2iKdhqFHANFfHoyKA+Qaor+ulU8sr6J5DaPTCsp5qfBQrQREk66LlOgh3
+        Y9/vWc1KD6Ylz1To5GJA4ikmkAO+SsMBR6ku/uTdxAd5sGVIT3SkmaNOSbMnVg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976089;
+        s=2020e; t=1637976093;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=eU/+MzcFFw4K2a/jF7MWe8bjN6ge/wr+X0hgqu8YCCQ=;
-        b=gICoxlzVKfUIqFUbyQUBfHogoN/LZj+1jxcxYhQ/4J94rjF8YUZZgkPpncWmf9Q+Z0w3ca
-        F0ETDJO38rjwcdBg==
+         references:references; bh=gn8p+zMtjjrDzl8WaoyQn+U7cmDXCgk8UU3FdWlgcVs=;
+        b=1m3EWOJMso/qIATs0qfEVb9kpV3JoMbSygyvjX/kUnML2Id8FFWmajWiakMISHAtKihGEl
+        bfUst7p3P2z5afDg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -38,47 +38,73 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
         Santosh Shilimkar <ssantosh@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
         iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
         Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>, x86@kernel.org,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 07/37] soc: ti: ti_sci_inta_msi: Allocate MSI device data on first use
+Subject: [patch 10/37] platform-msi: Let the core code handle sysfs groups
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:21:28 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:21:33 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012128.2ySJNqkqeYBa0gvJnNhl_nMOE3tylYZ1rybNqwafX2c@z>
+Message-ID: <20211127012133.WbvGdU1aZqxOEYtSAnZYmrl9CQ1io7yK4TtGB8NQs8Q@z>
 
-Allocate the MSI device data on first invocation of the allocation function.
+Set the domain info flag and remove the local sysfs code.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Nishanth Menon <nm@ti.com>
-Cc: Tero Kristo <kristo@kernel.org>
-Cc: Santosh Shilimkar <ssantosh@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org
 ---
- drivers/soc/ti/ti_sci_inta_msi.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/base/platform-msi.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
---- a/drivers/soc/ti/ti_sci_inta_msi.c
-+++ b/drivers/soc/ti/ti_sci_inta_msi.c
-@@ -120,6 +120,10 @@ int ti_sci_inta_msi_domain_alloc_irqs(st
- 	if (pdev->id < 0)
- 		return -ENODEV;
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -23,7 +23,6 @@
+ struct platform_msi_priv_data {
+ 	struct device			*dev;
+ 	void				*host_data;
+-	const struct attribute_group    **msi_irq_groups;
+ 	msi_alloc_info_t		arg;
+ 	irq_write_msi_msg_t		write_msg;
+ 	int				devid;
+@@ -191,6 +190,7 @@ struct irq_domain *platform_msi_create_i
+ 		platform_msi_update_dom_ops(info);
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		platform_msi_update_chip_ops(info);
++	info->flags |= MSI_FLAG_DEV_SYSFS;
  
-+	ret = msi_setup_device_data(dev);
-+	if (ret)
-+		return ret;
-+
- 	nvec = ti_sci_inta_msi_alloc_descs(dev, res);
- 	if (nvec <= 0)
- 		return nvec;
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (domain)
+@@ -279,16 +279,8 @@ int platform_msi_domain_alloc_irqs(struc
+ 	if (err)
+ 		goto out_free_desc;
+ 
+-	priv_data->msi_irq_groups = msi_populate_sysfs(dev);
+-	if (IS_ERR(priv_data->msi_irq_groups)) {
+-		err = PTR_ERR(priv_data->msi_irq_groups);
+-		goto out_free_irqs;
+-	}
+-
+ 	return 0;
+ 
+-out_free_irqs:
+-	msi_domain_free_irqs(dev->msi.domain, dev);
+ out_free_desc:
+ 	platform_msi_free_descs(dev, 0, nvec);
+ out_free_priv_data:
+@@ -308,7 +300,6 @@ void platform_msi_domain_free_irqs(struc
+ 		struct msi_desc *desc;
+ 
+ 		desc = first_msi_entry(dev);
+-		msi_destroy_sysfs(dev, desc->platform.msi_priv_data->msi_irq_groups);
+ 		platform_msi_free_priv_data(desc->platform.msi_priv_data);
+ 	}
+ 
 
