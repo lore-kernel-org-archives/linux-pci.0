@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B5DC43217
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DBB1C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:27:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346141AbhK0Baw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:30:52 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:40358 "EHLO
+        id S1346616AbhK0Ba6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:30:58 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40386 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349573AbhK0B2w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:52 -0500
-Message-ID: <20211126230525.137299282@linutronix.de>
+        with ESMTP id S1346667AbhK0B26 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:28:58 -0500
+Message-ID: <20211126230525.374699615@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976109;
+        s=2020; t=1637976116;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=ZWaHMo5/cxTSb8aCm3CN77ES3jPYHd9BeCyQKbhAf1Q=;
-        b=hy97HFE6I814pV4rx+xUrwuUAhL4IUA798mts+smaySzKuUadOTBalyUe9VTE3Hx8vG+TZ
-        hIuTfOk36OH3vQYQZefI5I3Rw3EAi8HCjA/3s6icu+vdv2PFRY7dWD3CUk+dgwwntHLSFg
-        YyNTHMOWkiuKCIWIb0zFBNJpiz69LHC5rMFKk3ShYcanbbVttRGLGrJZCnI6+Ecd/BlckC
-        OEvsof342hr0uLMAcDan61lIqCeE6/Kee5YFN6JIGUB30gTy4531wLcwnPea6KcxvzCp4M
-        gjKx6hMBTQKuf2Ls44rtIPD7505IuqKnel6KsjHMq+66g5dCaastAkR/IPEcWQ==
+         references:references; bh=G+kQoqkWvFJXcdz5PQCdFWimR12BfigYgz7Zbwfcs54=;
+        b=JhI6uHv7tjDr4XTF2/wDNanwvizKXSIBRLKqWSPFIedWDe76hyO7a+orBUwzRZ91Ht/+aI
+        nWkG6Q0+NVx0rjxIjtckjTuyz62DNHUj6sNTF/AZ22bIVJas4GHWA/VS+AK98D3BbbQifl
+        lThege2XS5GYuVy1STGXhsU2N2DONtD56Ex2IVeW+ArMVfCnmFn3WJ9NEyYmxkPgvtOCDI
+        9knvQ1LX09h+9fta0TBcP639bHVJWNYLNKtEegiyyKwJDFFeRLCsRIqrB0+8Uyug6aokNw
+        LygrrNslzpIZ/bNR+8iHjLWYK70ZfBadJneHnJ+bMVHhg/uhWkkxjOulrVJJ5g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976109;
+        s=2020e; t=1637976116;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=ZWaHMo5/cxTSb8aCm3CN77ES3jPYHd9BeCyQKbhAf1Q=;
-        b=DfYv5Qo1fNDyy/u2FnjloE8DeN/fnIR0Tl+Jv4cf71yMysYcKARkCZEL1g1Y02rzlDPgNE
-        w4pJ5/U3r3YQu1Bg==
+         references:references; bh=G+kQoqkWvFJXcdz5PQCdFWimR12BfigYgz7Zbwfcs54=;
+        b=VVu+iF3NWmFeGDs3jIWnfe9PCFru3Jn1OpFv0fKNuDtar49mG7l7Bw0VWijnN595QiAo+9
+        XfgIMFT2phAUnQCg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -47,51 +47,45 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 20/37] PCI/MSI: Store properties in device::msi::data
+Subject: [patch 24/37] powerpc/cell/axon_msi: Use MSI device properties
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:21:49 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:21:55 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012149.WsI6w0Fp3xlgD0Ddkxu2NqELjtJPq7vuldhDZnyyE_k@z>
+Message-ID: <20211127012155.nvC740bXjAU8QC4SiD0vLtgGejGtoqGuMWw3UQDZemY@z>
 
-Store the properties which are interesting for various places so the MSI
-descriptor fiddling can be removed.
+instead of fiddling with MSI descriptors.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/msi.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/powerpc/platforms/cell/axon_msi.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -244,6 +244,8 @@ static void free_msi_irqs(struct pci_dev
- 		iounmap(dev->msix_base);
- 		dev->msix_base = NULL;
- 	}
-+
-+	dev->dev.msi.data->properties = 0;
- }
+--- a/arch/powerpc/platforms/cell/axon_msi.c
++++ b/arch/powerpc/platforms/cell/axon_msi.c
+@@ -199,7 +199,7 @@ static struct axon_msic *find_msi_transl
+ static int setup_msi_msg_address(struct pci_dev *dev, struct msi_msg *msg)
+ {
+ 	struct device_node *dn;
+-	struct msi_desc *entry;
++	bool is_64bit;
+ 	int len;
+ 	const u32 *prop;
  
- static void pci_intx_for_msi(struct pci_dev *dev, int enable)
-@@ -372,6 +374,9 @@ msi_setup_entry(struct pci_dev *dev, int
- 	if (entry->pci.msi_attrib.can_mask)
- 		pci_read_config_dword(dev, entry->pci.mask_pos, &entry->pci.msi_mask);
- 
-+	dev->dev.msi.data->properties = MSI_PROP_PCI_MSI;
-+	if (entry->pci.msi_attrib.is_64)
-+		dev->dev.msi.data->properties |= MSI_PROP_64BIT;
- out:
- 	kfree(masks);
- 	return entry;
-@@ -514,6 +519,7 @@ static int msix_setup_entries(struct pci
- 		if (masks)
- 			curmsk++;
+@@ -209,10 +209,10 @@ static int setup_msi_msg_address(struct
+ 		return -ENODEV;
  	}
-+	dev->dev.msi.data->properties = MSI_PROP_PCI_MSIX | MSI_PROP_64BIT;
- 	ret = 0;
- out:
- 	kfree(masks);
+ 
+-	entry = first_pci_msi_entry(dev);
++	is_64bit = msi_device_has_property(MSI_PROP_64BIT);
+ 
+ 	for (; dn; dn = of_get_next_parent(dn)) {
+-		if (entry->pci.msi_attrib.is_64) {
++		if (is_64bit) {
+ 			prop = of_get_property(dn, "msi-address-64", &len);
+ 			if (prop)
+ 				break;
 
