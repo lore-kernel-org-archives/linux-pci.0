@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC30C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE97BC433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:29:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349065AbhK0Bcd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:32:33 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:40212 "EHLO
+        id S1349274AbhK0Bcn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:32:43 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:40294 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237873AbhK0Bab (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:30:31 -0500
-Message-ID: <20211126232734.767081423@linutronix.de>
+        with ESMTP id S1349350AbhK0Ban (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:30:43 -0500
+Message-ID: <20211126232734.888679179@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976160;
+        s=2020; t=1637976163;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=WFZ5TbXOLHt4Y7UKwbwYSGaB1XnhSBfu8TcTJVhpL6E=;
-        b=iZYR47boamclyHyhX2cQMxfT+tX9aE+QW+TmOLSoVqVd6iMZrsDWz0LkVFhTLvjE6wpOba
-        pQkZkYtY0P7FcYmfd3PsvnIbaVJ5lmMZIcDoyV/3YU24FMp0UsXCZNJ3ShZHrA22fkclia
-        eG1Kut69nCQypG1iPqwdDz1PYPlDpTchCwYYh8OICpJQ/sL2MmAa4+wnhCpVypltNPPyQh
-        K/N8xDbHDfdvAYoDaDtA+PcgEYZtdHbr2qhARIN07YDRnOAzz82QVTqHJbHayKUmeYOzBR
-        8H9hHbZDO6cID2g1dYHwBoYSVV/Ze2R8yv7HbduQfTnV37iW7Mp8riKn8wlSqA==
+         references:references; bh=iosGiYlhYBo//aWwbi8Bz/t2OkGIwccy2DoihzPp5zA=;
+        b=NkHP56QqPI26ZkjI+rbC4TT1SdRWhhMatKpb9b0ieEBRDCkj+M9l9Lf8nd4XqfyQmkY2c2
+        RZXdK4U92O7HW6bTSS5FxlccK+QrZgeTGXAKbs2Swm7Pxga8tgO+YeuLbl0HRJ8nxq4quC
+        ud5ApRvAnPOblbXlzREOLWnSRQyDlnVZrffmEl5a8M8phWfuqpYdpCLwkACeieejcQKcGE
+        MFTrkOau/mkIopHA6k0yg18+YNjRw9wBfWsnDmGYJz6PFWTqgCxDatnNBoTknJ/g2EA2/W
+        be3Fg1e9aFUCwQyxIpal5O6nhLCsblWmfTJlCQF3HXP+2e1IDHGQpJg/Q7BmvA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976160;
+        s=2020e; t=1637976163;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=WFZ5TbXOLHt4Y7UKwbwYSGaB1XnhSBfu8TcTJVhpL6E=;
-        b=vThCVepS72TbIniwQimcfQGBzGjg23H9S1VSbVugJNiu3OK50BHABijG8Aso8vrQesBY2Y
-        nN9FBa19T7Q4QJDw==
+         references:references; bh=iosGiYlhYBo//aWwbi8Bz/t2OkGIwccy2DoihzPp5zA=;
+        b=Lq4sM7/UKcGY3YF9Q30FYqn9LvYrrTCF9Vz1/3InaSqNckIkAzIBNMnvpJK1W+2bYevHTB
+        eCxzuZyZ0soSpGBw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -43,315 +43,69 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jon Mason <jdmason@kudzu.us>,
         Dave Jiang <dave.jiang@intel.com>,
         Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
-Subject: [patch 08/32] PCI/MSI: Protect MSI operations
+Subject: [patch 10/32] PCI/MSI: Let core code free MSI descriptors
 References: <20211126230957.239391799@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:22:39 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:22:42 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To prepare for dynamic extension of MSI-X vectors, protect the MSI
-operations for MSI and MSI-X. This requires to move the invocation of
-irq_create_affinity_masks() out of the descriptor lock section to avoid
-reverse lock ordering vs. CPU hotplug lock as some callers of the PCI/MSI
-allocation interfaces already hold it.
+Set the domain info flag which tells the core code to free the MSI
+descriptors from msi_domain_free_irqs() and add an explicit call to the
+core function into the legacy code.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/irqdomain.c |    4 -
- drivers/pci/msi/msi.c       |  120 ++++++++++++++++++++++++++------------------
- 2 files changed, 73 insertions(+), 51 deletions(-)
+ drivers/pci/msi/irqdomain.c |    3 ++-
+ drivers/pci/msi/legacy.c    |    1 +
+ drivers/pci/msi/msi.c       |   14 --------------
+ 3 files changed, 3 insertions(+), 15 deletions(-)
 
 --- a/drivers/pci/msi/irqdomain.c
 +++ b/drivers/pci/msi/irqdomain.c
-@@ -14,7 +14,7 @@ int pci_msi_setup_msi_irqs(struct pci_de
+@@ -171,7 +171,8 @@ struct irq_domain *pci_msi_create_irq_do
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
  
- 	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
--		return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
-+		return msi_domain_alloc_irqs_descs_locked(domain, &dev->dev, nvec);
+-	info->flags |= MSI_FLAG_ACTIVATE_EARLY | MSI_FLAG_DEV_SYSFS;
++	info->flags |= MSI_FLAG_ACTIVATE_EARLY | MSI_FLAG_DEV_SYSFS |
++		       MSI_FLAG_FREE_MSI_DESCS;
+ 	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
+ 		info->flags |= MSI_FLAG_MUST_REACTIVATE;
  
- 	return pci_msi_legacy_setup_msi_irqs(dev, nvec, type);
- }
-@@ -25,7 +25,7 @@ void pci_msi_teardown_msi_irqs(struct pc
- 
- 	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
--		msi_domain_free_irqs(domain, &dev->dev);
-+		msi_domain_free_irqs_descs_locked(domain, &dev->dev);
- 	else
- 		pci_msi_legacy_teardown_msi_irqs(dev);
+--- a/drivers/pci/msi/legacy.c
++++ b/drivers/pci/msi/legacy.c
+@@ -81,4 +81,5 @@ void pci_msi_legacy_teardown_msi_irqs(st
+ {
+ 	msi_device_destroy_sysfs(&dev->dev);
+ 	arch_teardown_msi_irqs(dev);
++	msi_free_msi_descs(&dev->dev);
  }
 --- a/drivers/pci/msi/msi.c
 +++ b/drivers/pci/msi/msi.c
-@@ -322,11 +322,13 @@ static void __pci_restore_msix_state(str
+@@ -224,22 +224,8 @@ EXPORT_SYMBOL_GPL(pci_write_msi_msg);
  
- 	write_msg = arch_restore_msi_irqs(dev);
- 
-+	msi_lock_descs(&dev->dev);
- 	for_each_pci_msi_entry(entry, dev) {
- 		if (write_msg)
- 			__pci_write_msi_msg(entry, &entry->msg);
- 		pci_msix_write_vector_ctrl(entry, entry->pci.msix_ctrl);
- 	}
-+	msi_unlock_descs(&dev->dev);
- 
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- }
-@@ -339,19 +341,15 @@ void pci_restore_msi_state(struct pci_de
- EXPORT_SYMBOL_GPL(pci_restore_msi_state);
- 
- static struct msi_desc *
--msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity *affd)
-+msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity_desc *masks)
+ static void free_msi_irqs(struct pci_dev *dev)
  {
--	struct irq_affinity_desc *masks = NULL;
- 	struct msi_desc *entry;
- 	u16 control;
- 
--	if (affd)
--		masks = irq_create_affinity_masks(nvec, affd);
+-	struct list_head *msi_list = dev_to_msi_list(&dev->dev);
+-	struct msi_desc *entry, *tmp;
+-	int i;
 -
- 	/* MSI Entry Initialization */
- 	entry = alloc_msi_entry(&dev->dev, nvec, masks);
- 	if (!entry)
--		goto out;
-+		return NULL;
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	/* Lies, damned lies, and MSIs */
-@@ -377,8 +375,7 @@ msi_setup_entry(struct pci_dev *dev, int
- 	dev->dev.msi.data->properties = MSI_PROP_PCI_MSI;
- 	if (entry->pci.msi_attrib.is_64)
- 		dev->dev.msi.data->properties |= MSI_PROP_64BIT;
--out:
--	kfree(masks);
-+
- 	return entry;
- }
- 
-@@ -414,14 +411,21 @@ static int msi_verify_entries(struct pci
- static int msi_capability_init(struct pci_dev *dev, int nvec,
- 			       struct irq_affinity *affd)
- {
-+	struct irq_affinity_desc *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret;
- 
- 	pci_msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	entry = msi_setup_entry(dev, nvec, affd);
--	if (!entry)
--		return -ENOMEM;
-+	if (affd)
-+		masks = irq_create_affinity_masks(nvec, affd);
-+
-+	msi_lock_descs(&dev->dev);
-+	entry = msi_setup_entry(dev, nvec, masks);
-+	if (!entry) {
-+		ret = -ENOMEM;
-+		goto unlock;
-+	}
- 
- 	/* All MSIs are unmasked by default; mask them all */
- 	pci_msi_mask(entry, msi_multi_mask(entry));
-@@ -444,11 +448,14 @@ static int msi_capability_init(struct pc
- 
- 	pcibios_free_irq(dev);
- 	dev->irq = entry->irq;
--	return 0;
-+	goto unlock;
- 
- err:
- 	pci_msi_unmask(entry, msi_multi_mask(entry));
- 	free_msi_irqs(dev);
-+unlock:
-+	msi_unlock_descs(&dev->dev);
-+	kfree(masks);
- 	return ret;
- }
- 
-@@ -475,23 +482,18 @@ static void __iomem *msix_map_region(str
- 
- static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			      struct msix_entry *entries, int nvec,
--			      struct irq_affinity *affd)
-+			      struct irq_affinity_desc *masks)
- {
--	struct irq_affinity_desc *curmsk, *masks = NULL;
-+	int i, vec_count = pci_msix_vec_count(dev);
-+	struct irq_affinity_desc *curmsk;
- 	struct msi_desc *entry;
- 	void __iomem *addr;
--	int ret, i;
--	int vec_count = pci_msix_vec_count(dev);
+-	for_each_pci_msi_entry(entry, dev)
+-		if (entry->irq)
+-			for (i = 0; i < entry->nvec_used; i++)
+-				BUG_ON(irq_has_action(entry->irq + i));
 -
--	if (affd)
--		masks = irq_create_affinity_masks(nvec, affd);
+ 	pci_msi_teardown_msi_irqs(dev);
  
- 	for (i = 0, curmsk = masks; i < nvec; i++) {
- 		entry = alloc_msi_entry(&dev->dev, 1, curmsk);
- 		if (!entry) {
- 			/* No enough memory. Don't try again */
--			ret = -ENOMEM;
--			goto out;
-+			return -ENOMEM;
- 		}
- 
- 		entry->pci.msi_attrib.is_msix	= 1;
-@@ -520,10 +522,7 @@ static int msix_setup_entries(struct pci
- 			curmsk++;
- 	}
- 	dev->dev.msi.data->properties = MSI_PROP_PCI_MSIX | MSI_PROP_64BIT;
--	ret = 0;
--out:
--	kfree(masks);
--	return ret;
-+	return 0;
- }
- 
- static void msix_update_entries(struct pci_dev *dev, struct msix_entry *entries)
-@@ -550,6 +549,41 @@ static void msix_mask_all(void __iomem *
- 		writel(ctrl, base + PCI_MSIX_ENTRY_VECTOR_CTRL);
- }
- 
-+static int msix_setup_interrupts(struct pci_dev *dev, void __iomem *base,
-+				 struct msix_entry *entries, int nvec,
-+				 struct irq_affinity *affd)
-+{
-+	struct irq_affinity_desc *masks = NULL;
-+	int ret;
-+
-+	if (affd)
-+		masks = irq_create_affinity_masks(nvec, affd);
-+
-+	msi_lock_descs(&dev->dev);
-+	ret = msix_setup_entries(dev, base, entries, nvec, masks);
-+	if (ret)
-+		goto out_free;
-+
-+	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
-+	if (ret)
-+		goto out_free;
-+
-+	/* Check if all MSI entries honor device restrictions */
-+	ret = msi_verify_entries(dev);
-+	if (ret)
-+		goto out_free;
-+
-+	msix_update_entries(dev, entries);
-+	goto out_unlock;
-+
-+out_free:
-+	free_msi_irqs(dev);
-+out_unlock:
-+	msi_unlock_descs(&dev->dev);
-+	kfree(masks);
-+	return ret;
-+}
-+
- /**
-  * msix_capability_init - configure device's MSI-X capability
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-@@ -590,20 +624,9 @@ static int msix_capability_init(struct p
- 	/* Ensure that all table entries are masked. */
- 	msix_mask_all(base, tsize);
- 
--	ret = msix_setup_entries(dev, base, entries, nvec, affd);
-+	ret = msix_setup_interrupts(dev, base, entries, nvec, affd);
- 	if (ret)
--		goto out_free;
+-	list_for_each_entry_safe(entry, tmp, msi_list, list) {
+-		list_del(&entry->list);
+-		free_msi_entry(entry);
+-	}
 -
--	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
--	if (ret)
--		goto out_free;
--
--	/* Check if all MSI entries honor device restrictions */
--	ret = msi_verify_entries(dev);
--	if (ret)
--		goto out_free;
--
--	msix_update_entries(dev, entries);
-+		goto out_disable;
- 
- 	/* Set MSI-X enabled bits and unmask the function */
- 	pci_intx_for_msi(dev, 0);
-@@ -613,12 +636,8 @@ static int msix_capability_init(struct p
- 	pcibios_free_irq(dev);
- 	return 0;
- 
--out_free:
--	free_msi_irqs(dev);
--
- out_disable:
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
--
- 	return ret;
- }
- 
-@@ -723,8 +742,10 @@ void pci_disable_msi(struct pci_dev *dev
- 	if (!pci_msi_enable || !dev || !dev->msi_enabled)
- 		return;
- 
-+	msi_lock_descs(&dev->dev);
- 	pci_msi_shutdown(dev);
- 	free_msi_irqs(dev);
-+	msi_unlock_descs(&dev->dev);
- }
- EXPORT_SYMBOL(pci_disable_msi);
- 
-@@ -810,8 +831,10 @@ void pci_disable_msix(struct pci_dev *de
- 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
- 		return;
- 
-+	msi_lock_descs(&dev->dev);
- 	pci_msix_shutdown(dev);
- 	free_msi_irqs(dev);
-+	msi_unlock_descs(&dev->dev);
- }
- EXPORT_SYMBOL(pci_disable_msix);
- 
-@@ -872,7 +895,6 @@ int pci_enable_msi(struct pci_dev *dev)
- 
- 	if (!rc)
- 		rc = __pci_enable_msi_range(dev, 1, 1, NULL);
--
- 	return rc < 0 ? rc : 0;
- }
- EXPORT_SYMBOL(pci_enable_msi);
-@@ -959,11 +981,7 @@ int pci_alloc_irq_vectors_affinity(struc
- 				   struct irq_affinity *affd)
- {
- 	struct irq_affinity msi_default_affd = {0};
--	int ret = msi_setup_device_data(&dev->dev);
--	int nvecs = -ENOSPC;
--
--	if (ret)
--		return ret;
-+	int ret, nvecs;
- 
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
-@@ -973,6 +991,10 @@ int pci_alloc_irq_vectors_affinity(struc
- 			affd = NULL;
- 	}
- 
-+	ret = msi_setup_device_data(&dev->dev);
-+	if (ret)
-+		return ret;
-+
- 	if (flags & PCI_IRQ_MSIX) {
- 		nvecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
- 						affd, flags);
-@@ -1001,7 +1023,7 @@ int pci_alloc_irq_vectors_affinity(struc
- 		}
- 	}
- 
--	return nvecs;
-+	return -ENOSPC;
- }
- EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
- 
+ 	if (dev->msix_base) {
+ 		iounmap(dev->msix_base);
+ 		dev->msix_base = NULL;
 
