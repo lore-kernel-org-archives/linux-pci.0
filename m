@@ -2,97 +2,91 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 329F5C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 14:19:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FE0C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 19:25:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235734AbhK0OWz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Nov 2021 09:22:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34538 "EHLO
+        id S1355983AbhK0T2N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Nov 2021 14:28:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235610AbhK0OUz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Nov 2021 09:20:55 -0500
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47FDC061574
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:17:40 -0800 (PST)
-Received: by mail-wr1-x436.google.com with SMTP id o13so25122657wrs.12
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:17:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=wfPJG337NiEiGZknamoNSmWy9jdr+ykPSrvVDRBcRhk=;
-        b=R5RdcJGCIMSIyZ1UnkUiDR7CpEO7Gta7R1EHBMKnW8bqul9Aj6f9wLXlF88UXkXKll
-         yCjk1fKBoeFuurSKWYi27Ip8mb+gXZm+dDwaEjELIzwHju99NysyNvKezJr5O2nmOryw
-         lgd0zp6Ccn+L1zNjXfjVeYl92KNK1JPKnv4URK/uypK1FAdQVYoXbE+dI9mAXtA8VDOI
-         EUo/okiS4TIvvE4NUC8I/ngrmMl41dYEai+4wXDBm0id14ou/9pArtNmzuUbfY6RVqec
-         g9zVxuCAKh9P3mUfyQ9lnQu2udZKPradeV/jEDSIHbYhfByD3488eZ1mXyWZOXOuNzrR
-         JMZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=wfPJG337NiEiGZknamoNSmWy9jdr+ykPSrvVDRBcRhk=;
-        b=x6X7Xsm2zWMxeizsYKLx1aHXYs/2CzrHNBXUBteQiGAF3hkfRZqdHU0128dzbrNYLm
-         uxnOzTrDqqxro7aWNC5XI1vWCy1adX5jXWX1zBfQnjWMBUXGqPKBz51QEal2JkZNjQc+
-         CMtepOIfr7+I1biTUsm1ha6LaJD20QKkpsjtFjtkEGXmFrvSCJcLiDnjIXdCmE20F5PA
-         RtJtegv02v5Lul6K8qjFzr1BMBSfY4Gnm8uJAYxrCK8JDXkWuIE+C25qV1cUF4UO8wBJ
-         mgZylSubAT3tAeEhR5FJG0lDlKzy8JvFLG6KqFDuYHFWxFByhgk8EiPYGfCjdB4inDC7
-         M6Sw==
-X-Gm-Message-State: AOAM530ZNhj6eZ+woxfBEey08C73nVttViQ4M55kma9OpXArS+hHDE4K
-        EnaBlHvw00wRVCSn4PivTaxb+/QcjiiFhw==
-X-Google-Smtp-Source: ABdhPJys5pL695Uuh57hZFp3qna2Z8S1pa6xz3jsx1M+Y+8YUOVwsk8cf1FMa3h1Zr+vBB5Zv/c9eA==
-X-Received: by 2002:adf:e2c4:: with SMTP id d4mr20586303wrj.568.1638022659177;
-        Sat, 27 Nov 2021 06:17:39 -0800 (PST)
-Received: from claire-ThinkPad-T470 (dynamic-2a01-0c22-7349-1000-d163-c2fa-698a-934f.c22.pool.telefonica.de. [2a01:c22:7349:1000:d163:c2fa:698a:934f])
-        by smtp.gmail.com with ESMTPSA id l21sm8609593wrb.38.2021.11.27.06.17.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Nov 2021 06:17:38 -0800 (PST)
-Date:   Sat, 27 Nov 2021 15:17:37 +0100
-From:   Fan Fei <ffclaire1224@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     bjorn@helgaas.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/4] Remove device * in struct
-Message-ID: <20211127141737.GA46129@claire-ThinkPad-T470>
-References: <cover.1637533108.git.ffclaire1224@gmail.com>
- <20211123160531.GA2225123@bhelgaas>
+        with ESMTP id S235665AbhK0T0M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Nov 2021 14:26:12 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A209DC061763;
+        Sat, 27 Nov 2021 11:22:29 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1638040947;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B1qxQCFfbrdFSxQkL8hZX6Zfer69wbZc+107UOQS45k=;
+        b=E1FJbCvWO7yuYLjHi6JwLKVgq2jlrRGKU1HBNyRwkQgjKRoSGjUb4pVTuxy8aoeGJGziDl
+        r8JphJFwXy3pRd938tJMCqGxnJcUAp9iA6H7wUgVJDLPQYC0hlltbZnQ7fw5eKbBG50NEQ
+        FXLOJNHJX5/bywfSByEFauxlCkc/tKg30CWc3nYUoynQmX3k2ccGXnhWmWx3vjTJiI2hhg
+        isRToszMiuoEqJ2vNhYq2qaKA1Kc14PumeixOZdyhyijjHMgqhIG/j3ipGInWGCKUkhwTV
+        LJZ6KSloel2ZHgcO4LenCtL2OSRR9rqtn2MV2WNvi6r/dOTn5fDEhunBQL8+VA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1638040947;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B1qxQCFfbrdFSxQkL8hZX6Zfer69wbZc+107UOQS45k=;
+        b=YbWaCIQ16i7j9FW8GIP6eOod9vGpKoNmsdX1E4W3VcFQqHxjQb/AxNhkFM9vvx1QRhO7Yp
+        kNlszx9Qprspl7CA==
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Marc Zygnier <maz@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Megha Dey <megha.dey@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
+Subject: Re: [patch 07/32] genirq/msi: Count the allocated MSI descriptors
+In-Reply-To: <YaIiPISLr7VokL8P@kroah.com>
+References: <20211126230957.239391799@linutronix.de>
+ <20211126232734.708730446@linutronix.de> <YaIiPISLr7VokL8P@kroah.com>
+Date:   Sat, 27 Nov 2021 20:22:26 +0100
+Message-ID: <87o865flot.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211123160531.GA2225123@bhelgaas>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 23, 2021 at 10:05:31AM -0600, Bjorn Helgaas wrote:
-> On Tue, Nov 23, 2021 at 04:38:34PM +0100, Fan Fei wrote:
-> > Remove "device *" in structs that refer struct dw_pcie or cdns_pcie.
-> > Because these two struct contain a "struct device *" already.
-> > 
-> > Fan Fei (4): PCI: j721e: Remove cast of void* type PCI: tegra194:
-> > Remove device * in struct PCI: al: Remove device * in struct PCI:
-> > j721e: Remove device * in struct
-> > 
-> >  drivers/pci/controller/cadence/pci-j721e.c |  14 ++-
-> >  drivers/pci/controller/dwc/pcie-al.c       |  10 +-
-> >  drivers/pci/controller/dwc/pcie-tegra194.c | 109 +++++++++++----------
-> >  3 files changed, 69 insertions(+), 64 deletions(-)
-> 
-> Your "Prefer of_device_get_match_data()" series applies cleanly on my
-> "main" branch.
-> 
-> But this series doesn't apply cleanly on "main" (v5.16-rc1) or on top of
-> the "Prefer of_device_get_match_data()" series.
-> 
-> Can you rebase to apply on v5.16-rc1 or, if there are conflicts with the
-> previous series, on top of that previous series?
+On Sat, Nov 27 2021 at 13:19, Greg Kroah-Hartman wrote:
+> On Sat, Nov 27, 2021 at 02:22:38AM +0100, Thomas Gleixner wrote:
+>> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 >
-I sent the 1st patch sereis "rename-struct", and the 2nd patch series 
-"unify-platform_device" to the mailing list.
+> No changelog?
 
-Also, does this response go the correct list?
+Bah. This one should not be there at all.
 
-Thank you for helping me learn the rules to work with the kernel 
-community.
+> Anyway, why do we care about the number of decriptors?
+>> +/**
+>> + * msi_device_num_descs - Query the number of allocated MSI descriptors of a device
+>> + * @dev:	The device to read from
+>> + *
+>> + * Note: This is a lockless snapshot of msi_device_data::num_descs
+>> + *
+>> + * Returns the number of MSI descriptors which are allocated for @dev
+>> + */
+>> +unsigned int msi_device_num_descs(struct device *dev)
+>> +{
+>> +	if (dev->msi.data)
+>> +		return dev->msi.data->num_descs;
 >
-Kind regards
-Fan 
+> As this number can change after it is read, what will callers do with
+> it?
+
+I wanted to get rid of this, but then forgot. Getting old.
+
+Thanks,
+
+        tglx
