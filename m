@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B6DC433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 02:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1410C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 02:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242568AbhK0CWF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 21:22:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48270 "EHLO
+        id S1350470AbhK0CWY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 21:22:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352462AbhK0CUE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 21:20:04 -0500
+        with ESMTP id S1350328AbhK0CUM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 21:20:12 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17402C08EC3C;
-        Fri, 26 Nov 2021 17:31:54 -0800 (PST)
-Message-ID: <20211127000919.004572849@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D79C5C08EC69;
+        Fri, 26 Nov 2021 17:32:02 -0800 (PST)
+Message-ID: <20211127000918.534790941@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976284;
+        s=2020; t=1637976299;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iXWx8ngjVm94paCMjL44qtncyzw3jmQTRYweVvwdUTE=;
-        b=twc9E/k5sGMn2fquLHv5+7zfix6uLYi9RH9SGLZSSA3ABcOvbp0/gPOpQlesgzHkbj1UVu
-        fxR6AoIcwrtz/nn3bycIRy8P9kAGaK0ECHfhbEqIdbz1o3vq7H1JdPjQaWggom9fcYLCdX
-        BOmuzr15HeqHdEIDMKSLq/WavFlqpW/xYMSc3r2wN7DXzv+PNwO5cRgSi7yjS1wpb/86Ru
-        gJmjSdRE0skAiQjFeQ3BBC/okRhBX5BOlbe4JLQChHLlOjJiIRqAKAnL9t8GF853DwnxyU
-        l0iBSahv+YZe+ToUNkpkfYscK/wzeDb2wgYipZlnYU4lySHkxy2LdxVpk1XRIg==
+         references:references; bh=FLvm8heMaeaty/kI8f2vBLPLCFbQls4zKlJo+z99yXU=;
+        b=Rgn2VawwzQ0ib5p4AELlzTAOBT3z/JgcnD6AnK0Qfzl6Uwsil8g1x/9XiTMVZQsgyeVIi3
+        0gXRql6Ez1Bwux6eJRLZZN6ep1ZKt7yHr9WNWwyQgv2J2iPQv2OpUkVTphzxjQc/TXjQd6
+        QrEbHa8FlPjzAbmFfDyjz0xlOuEFu285ccRglffWT5nPxzJzVuJEmafUHPqz/AG3d8bbiC
+        irhNiREHR29EkuDLYQYQiozWrtkmshtjkubVVO5yckAdZsLUMR7pd/idgzU6HQsYelAHGN
+        ey2KAnWKLAw0kqNlSuHDIQ5OoiKhbviDoKw5C8m9d9EblJZtZ3+D8LXxcDlDeA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976284;
+        s=2020e; t=1637976299;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iXWx8ngjVm94paCMjL44qtncyzw3jmQTRYweVvwdUTE=;
-        b=Cwze/7Fqot4zxUe/5Tt8x3Rdu1Qo6xyHVQISU76a2p6ptM3z6Ii3pkLaG0Yznt5n2sNBh3
-        EqDN2aJVSQRqTdBA==
+         references:references; bh=FLvm8heMaeaty/kI8f2vBLPLCFbQls4zKlJo+z99yXU=;
+        b=OypxZJqCdtcbu0qEZDL96om+fVeYFNbs5Fj6R/pfkyy3JlnHxvBL8Mt/s28uDHYZRunVd2
+        CR6gFWwaMCE9ObCQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -44,109 +44,196 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Andrew Cooper <amc96@cam.ac.uk>,
         Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
         xen-devel@lists.xenproject.org
-Subject: [patch 09/10] PCI/MSI: Provide pci_msix_expand_vectors[_at]()
+Subject: [patch 01/10] genirq/msi: Add range argument to alloc/free MSI domain ops
 References: <20211126233124.618283684@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:24:44 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:24:58 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012444.JT4ua-aI6V6PRfSBesFr-V9fEE1kZy2k17ocd_BI1F8@z>
+Message-ID: <20211127012458.U3NJroDRuWg2PFq4agVojMgtdNh0MkqJixJu__GjbQ4@z>
 
-Provide a new interface which allows to expand the MSI-X vector space if
-the underlying irq domain implementation supports it.
+In preparation for supporting range allocations for MSI-X, add a range
+argument to the MSI domain alloc/free function pointers and fixup all
+affected places.
+
+The range is supplied via a pointer to a struct msi_range which contains
+the first and last MSI index and the number of vectors to allocate/free.
+
+To support the sparse MSI-X allocations via pci_enable_msix_range() and
+pci_enable_msix_exact() the number of vectors can be smaller than the range
+defined by the first and last MSI index. This can be cleaned up later once
+the code is converted by converting these sparse allocations to an initial
+allocation on enable and expansion of the vector space at the required
+indices.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/msi.c |   41 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h   |   13 +++++++++++++
- 2 files changed, 54 insertions(+)
+ arch/powerpc/platforms/pseries/msi.c |    6 +++---
+ arch/x86/pci/xen.c                   |   10 +++++-----
+ include/linux/msi.h                  |   30 +++++++++++++++++++++++-------
+ kernel/irq/msi.c                     |   12 ++++++------
+ 4 files changed, 37 insertions(+), 21 deletions(-)
 
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -1025,6 +1025,47 @@ int pci_alloc_irq_vectors_affinity(struc
- EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
- 
- /**
-+ * pci_msix_expand_vectors_at - Expand MSI-X interrupts for a device
-+ *
-+ * @dev:	PCI device to operate on
-+ * @at:		Allocate at MSI-X index. If @at == PCI_MSI_EXPAND_AUTO
-+ *		the function expands automatically after the last
-+ *		active index.
-+ * @nvec:	Number of vectors to allocate
-+ *
-+ * Expand the MSI-X vectors of a device after an initial enablement and
-+ * allocation.
-+ *
-+ * Return: 0 if the allocation was successful, an error code otherwise.
-+ */
-+int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec)
-+{
-+	struct msi_device_data *md = dev->dev.msi.data;
-+	struct msi_range range = { .ndesc = nvec, };
-+	unsigned int max_vecs;
-+	int ret;
-+
-+	if (!pci_msi_enable || !dev || !dev->msix_enabled || !md)
-+		return -ENOTSUPP;
-+
-+	if (!pci_msi_domain_supports_expand(dev))
-+		return -ENOTSUPP;
-+
-+	max_vecs = pci_msix_vec_count(dev);
-+	if (!nvec || nvec > max_vecs)
-+		return -EINVAL;
-+
-+	range.first = at == PCI_MSIX_EXPAND_AUTO ? md->num_descs : at;
-+
-+	if (range.first >= max_vecs || nvec > max_vecs - range.first)
-+		return -ENOSPC;
-+
-+	ret = msix_setup_interrupts(dev, dev->msix_base, &range, NULL, NULL, true);
-+	return ret <= 0 ? ret : -ENOSPC;;
-+}
-+EXPORT_SYMBOL_GPL(pci_msix_expand_vectors_at);
-+
-+/**
-  * pci_free_irq_vectors - free previously allocated IRQs for a device
-  * @dev:		PCI device to operate on
-  *
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1534,6 +1534,7 @@ static inline int pci_enable_msix_exact(
- int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 				   unsigned int max_vecs, unsigned int flags,
- 				   struct irq_affinity *affd);
-+int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec);
- 
- void pci_free_irq_vectors(struct pci_dev *dev);
- int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
-@@ -1565,6 +1566,11 @@ pci_alloc_irq_vectors_affinity(struct pc
- 	return -ENOSPC;
- }
- 
-+static inline int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec)
-+{
-+	return -ENOTSUPP;
-+}
-+
- static inline void pci_free_irq_vectors(struct pci_dev *dev)
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -450,13 +450,13 @@ static void pseries_msi_ops_msi_free(str
+  * RTAS can not disable one MSI at a time. It's all or nothing. Do it
+  * at the end after all IRQs have been freed.
+  */
+-static void pseries_msi_domain_free_irqs(struct irq_domain *domain,
+-					 struct device *dev)
++static void pseries_msi_domain_free_irqs(struct irq_domain *domain, struct device *dev,
++					 struct msi_range *range)
  {
- }
-@@ -1582,6 +1588,13 @@ static inline const struct cpumask *pci_
- }
- #endif
+ 	if (WARN_ON_ONCE(!dev_is_pci(dev)))
+ 		return;
  
-+#define PCI_MSIX_EXPAND_AUTO	(UINT_MAX)
+-	__msi_domain_free_irqs(domain, dev);
++	__msi_domain_free_irqs(domain, dev, range);
+ 
+ 	rtas_disable_msi(to_pci_dev(dev));
+ }
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -407,8 +407,8 @@ static void xen_pv_teardown_msi_irqs(str
+ 	xen_teardown_msi_irqs(dev);
+ }
+ 
+-static int xen_msi_domain_alloc_irqs(struct irq_domain *domain,
+-				     struct device *dev,  int nvec)
++static int xen_msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
++				     struct msi_range *range)
+ {
+ 	int type;
+ 
+@@ -420,11 +420,11 @@ static int xen_msi_domain_alloc_irqs(str
+ 	else
+ 		type = PCI_CAP_ID_MSI;
+ 
+-	return xen_msi_ops.setup_msi_irqs(to_pci_dev(dev), nvec, type);
++	return xen_msi_ops.setup_msi_irqs(to_pci_dev(dev), range->ndesc, type);
+ }
+ 
+-static void xen_msi_domain_free_irqs(struct irq_domain *domain,
+-				     struct device *dev)
++static void xen_msi_domain_free_irqs(struct irq_domain *domain, struct device *dev,
++				     struct msi_range *range)
+ {
+ 	if (WARN_ON_ONCE(!dev_is_pci(dev)))
+ 		return;
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -191,6 +191,23 @@ struct msi_device_data {
+ 	enum msi_desc_filter		__iter_filter;
+ };
+ 
++/**
++ * msi_range - Descriptor for a MSI index range
++ * @first:	First index
++ * @last:	Last index (inclusive)
++ * @ndesc:	Number of descriptors for allocations
++ *
++ * @first = 0 and @last = UINT_MAX is the full range for an operation.
++ *
++ * Note: @ndesc can be less than the range defined by @first and @last to
++ * support sparse allocations from PCI/MSI-X.
++ */
++struct msi_range {
++	unsigned int	first;
++	unsigned int	last;
++	unsigned int	ndesc;
++};
 +
-+static inline int pci_msix_expand_vectors(struct pci_dev *dev, unsigned int nvec)
-+{
-+	return pci_msix_expand_vectors_at(dev, PCI_MSIX_EXPAND_AUTO, nvec);
-+}
-+
+ int msi_setup_device_data(struct device *dev);
+ 
+ /* MSI device properties */
+@@ -415,10 +432,10 @@ struct msi_domain_ops {
+ 				       msi_alloc_info_t *arg);
+ 	void		(*set_desc)(msi_alloc_info_t *arg,
+ 				    struct msi_desc *desc);
+-	int		(*domain_alloc_irqs)(struct irq_domain *domain,
+-					     struct device *dev, int nvec);
+-	void		(*domain_free_irqs)(struct irq_domain *domain,
+-					    struct device *dev);
++	int		(*domain_alloc_irqs)(struct irq_domain *domain, struct device *dev,
++					     struct msi_range *range);
++	void		(*domain_free_irqs)(struct irq_domain *domain, struct device *dev,
++					    struct msi_range *range);
+ };
+ 
  /**
-  * pci_irqd_intx_xlate() - Translate PCI INTx value to an IRQ domain hwirq
-  * @d: the INTx IRQ domain
+@@ -484,13 +501,12 @@ int msi_domain_set_affinity(struct irq_d
+ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
+ 					 struct msi_domain_info *info,
+ 					 struct irq_domain *parent);
+-int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+-			    int nvec);
++int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev, struct msi_range *range);
+ int msi_domain_alloc_irqs_descs_locked(struct irq_domain *domain, struct device *dev,
+ 				       int nvec);
+ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+ 			  int nvec);
+-void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
++void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev, struct msi_range *range);
+ void msi_domain_free_irqs_descs_locked(struct irq_domain *domain, struct device *dev);
+ void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+ struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -869,8 +869,7 @@ static int msi_init_virq(struct irq_doma
+ 	return 0;
+ }
+ 
+-int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+-			    int nvec)
++int __msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev, struct msi_range *range)
+ {
+ 	struct msi_domain_info *info = domain->host_data;
+ 	struct msi_domain_ops *ops = info->ops;
+@@ -880,7 +879,7 @@ int __msi_domain_alloc_irqs(struct irq_d
+ 	int allocated = 0;
+ 	int i, ret, virq;
+ 
+-	ret = msi_domain_prepare_irqs(domain, dev, nvec, &arg);
++	ret = msi_domain_prepare_irqs(domain, dev, range->ndesc, &arg);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -960,6 +959,7 @@ int msi_domain_alloc_irqs_descs_locked(s
+ 				       int nvec)
+ {
+ 	struct msi_domain_info *info = domain->host_data;
++	struct msi_range range = { .ndesc = nvec };
+ 	struct msi_domain_ops *ops = info->ops;
+ 	int ret;
+ 
+@@ -969,7 +969,7 @@ int msi_domain_alloc_irqs_descs_locked(s
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = ops->domain_alloc_irqs(domain, dev, nvec);
++	ret = ops->domain_alloc_irqs(domain, dev, &range);
+ 	if (ret)
+ 		msi_domain_free_irqs_descs_locked(domain, dev);
+ 	return ret;
+@@ -994,7 +994,7 @@ int msi_domain_alloc_irqs(struct irq_dom
+ 	return ret;
+ }
+ 
+-void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
++void __msi_domain_free_irqs(struct irq_domain *domain, struct device *dev, struct msi_range *range)
+ {
+ 	struct msi_domain_info *info = domain->host_data;
+ 	struct irq_data *irqd;
+@@ -1041,7 +1041,7 @@ void msi_domain_free_irqs_descs_locked(s
+ 
+ 	lockdep_assert_held(&dev->msi.data->mutex);
+ 
+-	ops->domain_free_irqs(domain, dev);
++	ops->domain_free_irqs(domain, dev, NULL);
+ 	msi_domain_free_msi_descs(info, dev);
+ }
+ 
 
