@@ -2,33 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB72C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2149DC4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347407AbhK0BiF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:38:05 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:40764 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352462AbhK0BgE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:36:04 -0500
-Message-ID: <20211127000919.004572849@linutronix.de>
+        id S233082AbhK0Bvy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:51:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41702 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235889AbhK0Btx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:49:53 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182A3C0617A0;
+        Fri, 26 Nov 2021 17:25:03 -0800 (PST)
+Message-ID: <20211126230524.600490756@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976311;
+        s=2020; t=1637976095;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iXWx8ngjVm94paCMjL44qtncyzw3jmQTRYweVvwdUTE=;
-        b=XMZ8+C4S5qdKr1Con79Z8ll6XVMM2fnwfUd6VibARMXKBZJmbzz2rdgHplVFzqQWoTjqXL
-        a71t/1Td6DZLsRGHxaA0Xy69M6LynlfnUWWrPppwCpmvz1S4krQdufBQTGAqkoP0l3s8T3
-        5/d33e6N4qMca0wqhegVl6SB4Kg+rkn1Q5Lq3ndlMN3YDCufaLN+bpKiuw5/eO8PEddKg7
-        KXX4wVb7cTsJ2Tc/55bKjXTrqTb0PPVsc9nsJs/ZzoOSFGZaIbOseCSK90/VO3qoq0OR3S
-        bX2HgbvnzX2XCKSBc8Aiz7O3JmG+aqKSvt2jQ+saMx9qcR/0zEVPXRcCgYtdXQ==
+         references:references; bh=rnKORZE/4q0+dcWq5txOsnvSH8CsBB5Zw8/HocPRCso=;
+        b=mo6zD0Aqr7U54k+FSOHjrEzlOHKb1QgppSxapZGm79sRdVC/yTiLntOXeL+iE2rLfw8rM7
+        AGraTGE71anj/PDVEb84qtD/kGahkk1EQxcbsGr/P9Xm/s+q7knW7WrwXjuYYEfS2G5nsT
+        +QUmkWlRARQ2SlZYduNIUN9KZ7uGsocaHEYF50ZNtokaDiZFdBFmKctMv8JxcvL8OwccY+
+        NMjiqGGYFm0jw+2MSOMoKh34QWzGYnNnymPdhCPx6fvdm4KstWYyzqIT+xsNMfDArJOahV
+        PeUL5lO+o4/GgN7b8j/998+6DBTMcVm2s0hutWJMot0WyH2RzhpLgtvPlFpIjQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976311;
+        s=2020e; t=1637976095;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=iXWx8ngjVm94paCMjL44qtncyzw3jmQTRYweVvwdUTE=;
-        b=KqCEEAwQIQ5ub2ZhfoOhVriWcwZnFHllmQP6Q5tXV21krUdnjIG0tW2/eI3ljwxV7nF3wo
-        hBnPVTOZ03C+6jDQ==
+         references:references; bh=rnKORZE/4q0+dcWq5txOsnvSH8CsBB5Zw8/HocPRCso=;
+        b=71f/riK2awxxr5jNfsDzPA4UMVkE8RGUx6WhaYcnER7ZmV57jsbMtOaHgYPB48tYk4AZ5B
+        Ai3G8Q0PhijenYBQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -36,113 +39,134 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Kevin Tian <kevin.tian@intel.com>,
         Jason Gunthorpe <jgg@nvidia.com>,
         Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Andrew Cooper <amc96@cam.ac.uk>,
-        Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: [patch 09/10] PCI/MSI: Provide pci_msix_expand_vectors[_at]()
-References: <20211126233124.618283684@linutronix.de>
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
+        Vinod Koul <vkoul@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
+Subject: [patch 11/37] genirq/msi: Remove the original sysfs interfaces
+References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:25:11 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:21:34 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
+Message-ID: <20211127012134.TuF7bB0TmNUhzgrtqVnkY7TO_aH8Izg-n3xWLro9sk8@z>
 
-Provide a new interface which allows to expand the MSI-X vector space if
-the underlying irq domain implementation supports it.
+No more users. Refactor the core code accordingly.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/msi.c |   41 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h   |   13 +++++++++++++
- 2 files changed, 54 insertions(+)
+ include/linux/msi.h |   12 -----------
+ kernel/irq/msi.c    |   53 +++++++++++++++++++---------------------------------
+ 2 files changed, 20 insertions(+), 45 deletions(-)
 
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -1025,6 +1025,47 @@ int pci_alloc_irq_vectors_affinity(struc
- EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -246,21 +246,9 @@ void pci_msi_unmask_irq(struct irq_data
+ #ifdef CONFIG_SYSFS
+ int msi_device_populate_sysfs(struct device *dev);
+ void msi_device_destroy_sysfs(struct device *dev);
+-
+-const struct attribute_group **msi_populate_sysfs(struct device *dev);
+-void msi_destroy_sysfs(struct device *dev,
+-		       const struct attribute_group **msi_irq_groups);
+ #else
+ static inline int msi_device_populate_sysfs(struct device *dev) { return 0; }
+ static inline void msi_device_destroy_sysfs(struct device *dev) { }
+-
+-static inline const struct attribute_group **msi_populate_sysfs(struct device *dev)
+-{
+-	return NULL;
+-}
+-static inline void msi_destroy_sysfs(struct device *dev, const struct attribute_group **msi_irq_groups)
+-{
+-}
+ #endif
+ 
+ /*
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -132,12 +132,8 @@ static ssize_t msi_mode_show(struct devi
+ /**
+  * msi_populate_sysfs - Populate msi_irqs sysfs entries for devices
+  * @dev:	The device(PCI, platform etc) who will get sysfs entries
+- *
+- * Return attribute_group ** so that specific bus MSI can save it to
+- * somewhere during initilizing msi irqs. If devices has no MSI irq,
+- * return NULL; if it fails to populate sysfs, return ERR_PTR
+  */
+-const struct attribute_group **msi_populate_sysfs(struct device *dev)
++static const struct attribute_group **msi_populate_sysfs(struct device *dev)
+ {
+ 	const struct attribute_group **msi_irq_groups;
+ 	struct attribute **msi_attrs, *msi_attr;
+@@ -228,41 +224,32 @@ int msi_device_populate_sysfs(struct dev
+ }
  
  /**
-+ * pci_msix_expand_vectors_at - Expand MSI-X interrupts for a device
-+ *
-+ * @dev:	PCI device to operate on
-+ * @at:		Allocate at MSI-X index. If @at == PCI_MSI_EXPAND_AUTO
-+ *		the function expands automatically after the last
-+ *		active index.
-+ * @nvec:	Number of vectors to allocate
-+ *
-+ * Expand the MSI-X vectors of a device after an initial enablement and
-+ * allocation.
-+ *
-+ * Return: 0 if the allocation was successful, an error code otherwise.
-+ */
-+int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec)
-+{
-+	struct msi_device_data *md = dev->dev.msi.data;
-+	struct msi_range range = { .ndesc = nvec, };
-+	unsigned int max_vecs;
-+	int ret;
-+
-+	if (!pci_msi_enable || !dev || !dev->msix_enabled || !md)
-+		return -ENOTSUPP;
-+
-+	if (!pci_msi_domain_supports_expand(dev))
-+		return -ENOTSUPP;
-+
-+	max_vecs = pci_msix_vec_count(dev);
-+	if (!nvec || nvec > max_vecs)
-+		return -EINVAL;
-+
-+	range.first = at == PCI_MSIX_EXPAND_AUTO ? md->num_descs : at;
-+
-+	if (range.first >= max_vecs || nvec > max_vecs - range.first)
-+		return -ENOSPC;
-+
-+	ret = msix_setup_interrupts(dev, dev->msix_base, &range, NULL, NULL, true);
-+	return ret <= 0 ? ret : -ENOSPC;;
-+}
-+EXPORT_SYMBOL_GPL(pci_msix_expand_vectors_at);
-+
-+/**
-  * pci_free_irq_vectors - free previously allocated IRQs for a device
-  * @dev:		PCI device to operate on
-  *
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1534,6 +1534,7 @@ static inline int pci_enable_msix_exact(
- int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 				   unsigned int max_vecs, unsigned int flags,
- 				   struct irq_affinity *affd);
-+int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec);
- 
- void pci_free_irq_vectors(struct pci_dev *dev);
- int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
-@@ -1565,6 +1566,11 @@ pci_alloc_irq_vectors_affinity(struct pc
- 	return -ENOSPC;
- }
- 
-+static inline int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec)
-+{
-+	return -ENOTSUPP;
-+}
-+
- static inline void pci_free_irq_vectors(struct pci_dev *dev)
+- * msi_destroy_sysfs - Destroy msi_irqs sysfs entries for devices
+- * @dev:		The device(PCI, platform etc) who will remove sysfs entries
+- * @msi_irq_groups:	attribute_group for device msi_irqs entries
+- */
+-void msi_destroy_sysfs(struct device *dev, const struct attribute_group **msi_irq_groups)
+-{
+-	struct device_attribute *dev_attr;
+-	struct attribute **msi_attrs;
+-	int count = 0;
+-
+-	if (msi_irq_groups) {
+-		sysfs_remove_groups(&dev->kobj, msi_irq_groups);
+-		msi_attrs = msi_irq_groups[0]->attrs;
+-		while (msi_attrs[count]) {
+-			dev_attr = container_of(msi_attrs[count],
+-					struct device_attribute, attr);
+-			kfree(dev_attr->attr.name);
+-			kfree(dev_attr);
+-			++count;
+-		}
+-		kfree(msi_attrs);
+-		kfree(msi_irq_groups[0]);
+-		kfree(msi_irq_groups);
+-	}
+-}
+-
+-/**
+  * msi_device_destroy_sysfs - Destroy msi_irqs sysfs entries for a device
+  * @dev:		The device(PCI, platform etc) for which to remove
+  *			sysfs entries
+  */
+ void msi_device_destroy_sysfs(struct device *dev)
  {
- }
-@@ -1582,6 +1588,13 @@ static inline const struct cpumask *pci_
+-	msi_destroy_sysfs(dev, dev->msi.data->attrs);
++	const struct attribute_group **msi_irq_groups = dev->msi.data->attrs;
++	struct device_attribute *dev_attr;
++	struct attribute **msi_attrs;
++	int count = 0;
++
+ 	dev->msi.data->attrs = NULL;
++	if (!msi_irq_groups)
++		return;
++
++	sysfs_remove_groups(&dev->kobj, msi_irq_groups);
++	msi_attrs = msi_irq_groups[0]->attrs;
++	while (msi_attrs[count]) {
++		dev_attr = container_of(msi_attrs[count], struct device_attribute, attr);
++		kfree(dev_attr->attr.name);
++		kfree(dev_attr);
++		++count;
++	}
++	kfree(msi_attrs);
++	kfree(msi_irq_groups[0]);
++	kfree(msi_irq_groups);
  }
  #endif
  
-+#define PCI_MSIX_EXPAND_AUTO	(UINT_MAX)
-+
-+static inline int pci_msix_expand_vectors(struct pci_dev *dev, unsigned int nvec)
-+{
-+	return pci_msix_expand_vectors_at(dev, PCI_MSIX_EXPAND_AUTO, nvec);
-+}
-+
- /**
-  * pci_irqd_intx_xlate() - Translate PCI INTx value to an IRQ domain hwirq
-  * @d: the INTx IRQ domain
 
