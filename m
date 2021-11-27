@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E7D3C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D6CC4332F
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347768AbhK0B0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:26:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36494 "EHLO
+        id S1347728AbhK0B0B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:26:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345137AbhK0BX7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:23:59 -0500
+        with ESMTP id S1344945AbhK0BXz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:23:55 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD4C0C061763;
-        Fri, 26 Nov 2021 17:19:08 -0800 (PST)
-Message-ID: <20211126223825.264524206@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB821C06175E;
+        Fri, 26 Nov 2021 17:19:03 -0800 (PST)
+Message-ID: <20211126223825.093887718@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637975946;
+        s=2020; t=1637975941;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=N3CFGfVjsY7LgA1Yw7Ey6P6ZQR/J2nTOxZlFyVj+tfU=;
-        b=Fv0in+37WjQu8qaGw1d+sJDwVg72jTWmW4A0ir4m/M4Ok5n1Maj2zCuqkFlqoDcwKtFhN9
-        usAjQogUj8AjRYgg4XnitKY5rxgW2TkyutAVrKlGFCgr/QOORGiNR/7ULx+gebHewQ2s/A
-        /cIqE2xCgTcvSdjMl/o8jTzKo/rp+T2wCqIQmwW2CBFlppFIU1Ogv1xMa/PU+QvLJWk4QA
-        8ApzSw5z7JxXdKYOPEwzVrt2L/3gLDfjQsxsE0x31MpU5s4q2t0v8iWXAumITmxLRYrtTJ
-        iU+boulqpaCbZh/WpK684wQ0UEls6YBAyu7dgFYcD4eyOfwcT+9k0SAxWnS9Bw==
+         references:references; bh=Fm5t3j//2ZJWIAwQC/lUTYq1h7igaXJ6yKKmISA8BnE=;
+        b=YXrvDdjinCV1yBjHyHLHh4kbucu2LHURHR+t0zVJv5Iwe67q0LFuruaQh3vkwbzQtPwio7
+        pprtMrfRvledbc2Kp38dfn11v4y5Inu453zNnn62UbDXbEMDnzTVB2lG+F7/o751ne62V0
+        wuLwIsQnEtadtEUUBTR+POd7nVjDpAaMG5nsqWghfqGryom7R0YB/K06iimvmxsJ5KiFpB
+        JPV3B+r8CqqTRE3oo30uaAVzGJqzMsu2Bz/vPrVyNZToyYv3yqNeZE81QSacrNZkpZTNFS
+        XGAAgWOht7wVhoHHI0patyvWHbhFxyJn+zFlcFj6JBZ8L2lsCdtihTsPXR9eTg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637975946;
+        s=2020e; t=1637975941;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=N3CFGfVjsY7LgA1Yw7Ey6P6ZQR/J2nTOxZlFyVj+tfU=;
-        b=LToY0nY68kcZvyJBO8o4NrjRDqhd7lfHJRva1kjIMCQSN9rrfWrqKa7vfx0y47lZyVAi7T
-        hHRAYB/im3bzNaAA==
+         references:references; bh=Fm5t3j//2ZJWIAwQC/lUTYq1h7igaXJ6yKKmISA8BnE=;
+        b=RvZm8oUXbruNEue8m0QI5IgMFXDCNY3ru8yRX0pyG3paqWiHR2a2l+sKosxSZ9wf0ryS/Q
+        OiKV6WwXAMjbYnDg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -53,47 +53,143 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Juergen Gross <jgross@suse.com>,
         Christian Borntraeger <borntraeger@de.ibm.com>,
         Heiko Carstens <hca@linux.ibm.com>
-Subject: [patch 20/22] PCI/MSI: Make pci_msi_domain_check_cap() static
+Subject: [patch 17/22] PCI/MSI: Split out !IRQDOMAIN code
 References: <20211126222700.862407977@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:19:05 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:19:01 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127011905.GsWQFZpvbQRC09Jvb9pnyASXAj7B_AQIHd11B5H3qLU@z>
+Message-ID: <20211127011901.6XYgC3x9QpSNhSudW1lYkhvO3T24e2ykI7owAXTI7jc@z>
 
-No users outside of that file.
+Split out the non irqdomain code into its own file.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/irqdomain.c |    5 +++--
- include/linux/msi.h         |    2 --
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/msi/Makefile |    5 ++--
+ drivers/pci/msi/legacy.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi/msi.c    |   46 ------------------------------------------
+ 3 files changed, 54 insertions(+), 48 deletions(-)
 
---- a/drivers/pci/msi/irqdomain.c
-+++ b/drivers/pci/msi/irqdomain.c
-@@ -79,8 +79,9 @@ static inline bool pci_msi_desc_is_multi
-  *  1 if Multi MSI is requested, but the domain does not support it
-  *  -ENOTSUPP otherwise
-  */
--int pci_msi_domain_check_cap(struct irq_domain *domain,
--			     struct msi_domain_info *info, struct device *dev)
-+static int pci_msi_domain_check_cap(struct irq_domain *domain,
-+				    struct msi_domain_info *info,
-+				    struct device *dev)
- {
- 	struct msi_desc *desc = first_pci_msi_entry(to_pci_dev(dev));
+--- a/drivers/pci/msi/Makefile
++++ b/drivers/pci/msi/Makefile
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0
+ #
+ # Makefile for the PCI/MSI
+-obj-$(CONFIG_PCI)		+= pcidev_msi.o
+-obj-$(CONFIG_PCI_MSI)		+= msi.o
++obj-$(CONFIG_PCI)			+= pcidev_msi.o
++obj-$(CONFIG_PCI_MSI)			+= msi.o
++obj-$(CONFIG_PCI_MSI_ARCH_FALLBACKS)	+= legacy.o
+--- /dev/null
++++ b/drivers/pci/msi/legacy.c
+@@ -0,0 +1,51 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCI Message Signaled Interrupt (MSI).
++ *
++ * Legacy architecture specific setup and teardown mechanism.
++ */
++#include "msi.h"
++
++/* Arch hooks */
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++{
++	return -EINVAL;
++}
++
++void __weak arch_teardown_msi_irq(unsigned int irq)
++{
++}
++
++int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	struct msi_desc *desc;
++	int ret;
++
++	/*
++	 * If an architecture wants to support multiple MSI, it needs to
++	 * override arch_setup_msi_irqs()
++	 */
++	if (type == PCI_CAP_ID_MSI && nvec > 1)
++		return 1;
++
++	for_each_pci_msi_entry(desc, dev) {
++		ret = arch_setup_msi_irq(dev, desc);
++		if (ret)
++			return ret < 0 ? ret : -ENOSPC;
++	}
++
++	return 0;
++}
++
++void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
++{
++	struct msi_desc *desc;
++	int i;
++
++	for_each_pci_msi_entry(desc, dev) {
++		if (desc->irq) {
++			for (i = 0; i < entry->nvec_used; i++)
++				arch_teardown_msi_irq(desc->irq + i);
++		}
++	}
++}
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -50,52 +50,6 @@ static void pci_msi_teardown_msi_irqs(st
+ #define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
+ #endif
  
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -438,8 +438,6 @@ void *platform_msi_get_host_data(struct
- struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent);
--int pci_msi_domain_check_cap(struct irq_domain *domain,
--			     struct msi_domain_info *info, struct device *dev);
- u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
- bool pci_dev_has_special_msi_domain(struct pci_dev *pdev);
+-#ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
+-/* Arch hooks */
+-int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+-{
+-	return -EINVAL;
+-}
+-
+-void __weak arch_teardown_msi_irq(unsigned int irq)
+-{
+-}
+-
+-int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-{
+-	struct msi_desc *entry;
+-	int ret;
+-
+-	/*
+-	 * If an architecture wants to support multiple MSI, it needs to
+-	 * override arch_setup_msi_irqs()
+-	 */
+-	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
+-
+-	for_each_pci_msi_entry(entry, dev) {
+-		ret = arch_setup_msi_irq(dev, entry);
+-		if (ret < 0)
+-			return ret;
+-		if (ret > 0)
+-			return -ENOSPC;
+-	}
+-
+-	return 0;
+-}
+-
+-void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+-{
+-	int i;
+-	struct msi_desc *entry;
+-
+-	for_each_pci_msi_entry(entry, dev)
+-		if (entry->irq)
+-			for (i = 0; i < entry->nvec_used; i++)
+-				arch_teardown_msi_irq(entry->irq + i);
+-}
+-#endif /* CONFIG_PCI_MSI_ARCH_FALLBACKS */
+-
+ /*
+  * PCI 2.3 does not specify mask bits for each MSI interrupt.  Attempting to
+  * mask all MSI interrupts by clearing the MSI enable bit does not work
 
