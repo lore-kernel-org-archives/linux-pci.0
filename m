@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C87FC43219
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B921C41535
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:25:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348990AbhK0B2W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:28:22 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:35064 "EHLO
+        id S1349011AbhK0B2X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:28:23 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:35300 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347907AbhK0B0K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:26:10 -0500
-Message-ID: <20211126230525.548258086@linutronix.de>
+        with ESMTP id S1345708AbhK0B0S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:26:18 -0500
+Message-ID: <20211126230525.717286966@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976050;
+        s=2020; t=1637976055;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wJMUpNJgyC/5WRXAWU3ClvJ2/7JlSux0SjtaYWx+PkY=;
-        b=aQ1pSGzf1xljCMjV+A0HzBdj533zrI8Sn8/x78I5JLlzyaGEt2oaQIsa1H+VK1HinYpueS
-        +3myORcpC+LyitSb3vMrxPMq0DdPSeOmr+hwbfxW2AzPhxwb5L2zDvpDENXii3Eq3fARgs
-        moKEGxluXefb305ZDtRjnMujpBvPT5xFMXT0JTPNbH3aMGBKzkStBUqVjhor692Rl+IOBE
-        xCmjzF0+vA/27cY8FjGJpCndjmidTZiuHmk0dsQDSB89lO5FRMUDZPKROlJ/JjU+NGZTPd
-        kT+u92mqPp823zt8fgiXmt8+iJowIP8MdiBGyRV6mE2PiuLN6I3OdDf/9GaWZg==
+         references:references; bh=lGMoGQDOkZmCsZ8FLKTWCWUkNfIx3jWYUDFtnIf5/U4=;
+        b=n4VA8TjjZsXj/YLR8uW0WeKOoBPJSySmhK2nKGm0r3Wh2p8sTvTpHR5gWBRHDThXy+K+dz
+        6AiylyRSUXFPZE/Fj9Yu8hzexzr/5Vw2yAztW+xHXq/pg//du8RtZ7ybxjZR9dd4IuIcGB
+        4D4E2iaVOqQX0CJ9oXuAhH/CVRrwMhVZVs3EmaM0+PRy5adQKlMMIt8usJp8vrLp+5Cbms
+        gPu4H/k1GfGipgFgV/AnmLnou76HJA9/K5tVVRdabCP22CHIUF0OIf2i0+dwhOgxSHMhyl
+        /ra+9LpdeRyQrOdJsnXGdZ2nkJkpwi8CtVDani6kjk+GeBlx1cer13punBJygw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976050;
+        s=2020e; t=1637976055;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wJMUpNJgyC/5WRXAWU3ClvJ2/7JlSux0SjtaYWx+PkY=;
-        b=+khAQI9uNx8/zRgnV5rYXfaV6JyxSqTfzihC0RwrUHqKrPuQ+rUqH7qGte4yfUVdbfquwh
-        jJs8fClZojrNxQDg==
+         references:references; bh=lGMoGQDOkZmCsZ8FLKTWCWUkNfIx3jWYUDFtnIf5/U4=;
+        b=HXPwrcAtVW7VEWtyIJ2EKcLCItORCI9ek4u23jGiih1EjCqWeRibc3sijpeTPMTbglZvdM
+        3Vk2GrKWo1Ocw7BQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -47,77 +47,60 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 27/37] powerpc/pseries/msi: Let core code check for contiguous entries
+Subject: [patch 30/37] PCI/MSI: Simplify pci_irq_get_affinity()
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:20:50 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:20:54 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Set the domain info flag and remove the check.
+Replace open coded MSI descriptor chasing and use the proper accessor
+functions instead.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/powerpc/platforms/pseries/msi.c |   32 +++++++++-----------------------
- 1 file changed, 9 insertions(+), 23 deletions(-)
+ drivers/pci/msi/msi.c |   26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -321,27 +321,6 @@ static int msi_quota_for_device(struct p
- 	return request;
- }
- 
--static int check_msix_entries(struct pci_dev *pdev)
--{
--	struct msi_desc *entry;
--	int expected;
--
--	/* There's no way for us to express to firmware that we want
--	 * a discontiguous, or non-zero based, range of MSI-X entries.
--	 * So we must reject such requests. */
--
--	expected = 0;
--	for_each_pci_msi_entry(entry, pdev) {
--		if (entry->msi_index != expected) {
--			pr_debug("rtas_msi: bad MSI-X entries.\n");
--			return -EINVAL;
--		}
--		expected++;
--	}
--
--	return 0;
--}
--
- static void rtas_hack_32bit_msi_gen2(struct pci_dev *pdev)
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -1040,26 +1040,20 @@ EXPORT_SYMBOL(pci_irq_vector);
+  */
+ const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
  {
- 	u32 addr_hi, addr_lo;
-@@ -380,7 +359,7 @@ static int rtas_prepare_msi_irqs(struct
- 	if (quota && quota < nvec)
- 		return quota;
+-	if (dev->msix_enabled) {
+-		struct msi_desc *entry;
++	int irq = pci_irq_vector(dev, nr);
++	struct msi_desc *desc;
  
--	if (type == PCI_CAP_ID_MSIX && check_msix_entries(pdev))
-+	if (type == PCI_CAP_ID_MSIX)
- 		return -EINVAL;
+-		for_each_pci_msi_entry(entry, dev) {
+-			if (entry->msi_index == nr)
+-				return &entry->affinity->mask;
+-		}
+-		WARN_ON_ONCE(1);
++	if (WARN_ON_ONCE(irq <= 0))
+ 		return NULL;
+-	} else if (dev->msi_enabled) {
+-		struct msi_desc *entry = first_pci_msi_entry(dev);
  
- 	/*
-@@ -530,9 +509,16 @@ static struct irq_chip pseries_pci_msi_i
- 	.irq_write_msi_msg	= pseries_msi_write_msg,
- };
- 
+-		if (WARN_ON_ONCE(!entry || !entry->affinity ||
+-				 nr >= entry->nvec_used))
+-			return NULL;
+-
+-		return &entry->affinity[nr].mask;
+-	} else {
++	desc = irq_get_msi_desc(irq);
++	/* Non-MSI does not have the information handy */
++	if (!desc)
+ 		return cpu_possible_mask;
+-	}
 +
-+/*
-+ * Set MSI_FLAG_MSIX_CONTIGUOUS as there is no way to express to
-+ * firmware to request a discontiguous or non-zero based range of
-+ * MSI-X entries. Core code will reject such setup attempts.
-+ */
- static struct msi_domain_info pseries_msi_domain_info = {
- 	.flags = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		  MSI_FLAG_MULTI_PCI_MSI  | MSI_FLAG_PCI_MSIX),
-+		  MSI_FLAG_MULTI_PCI_MSI  | MSI_FLAG_PCI_MSIX |
-+		  MSI_FLAG_MSIX_CONTIGUOUS),
- 	.ops   = &pseries_pci_msi_domain_ops,
- 	.chip  = &pseries_pci_msi_irq_chip,
- };
++	if (WARN_ON_ONCE(!desc->affinity))
++		return NULL;
++	return &desc->affinity[nr].mask;
+ }
+ EXPORT_SYMBOL(pci_irq_get_affinity);
+ 
 
