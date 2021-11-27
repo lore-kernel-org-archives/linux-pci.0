@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A4ACC433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45B32C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:57:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347997AbhK0B4J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:56:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42620 "EHLO
+        id S242459AbhK0CAP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 21:00:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344442AbhK0ByJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:54:09 -0500
+        with ESMTP id S243777AbhK0B6N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:58:13 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1C66C08E6E1;
-        Fri, 26 Nov 2021 17:26:02 -0800 (PST)
-Message-ID: <20211126230525.942768779@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5C29C0617A1;
+        Fri, 26 Nov 2021 17:26:45 -0800 (PST)
+Message-ID: <20211126230526.111397616@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637976131;
+        s=2020; t=1637976136;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=p/qcF7fn4OxVhWuReK+wMgikFJMOqHr6o9RPZFmkX94=;
-        b=gfY18K1PptQtyPHmabVsGvvC+pvzSfnByydKSSGdn8ca3yQx5cpUJrRdhkroeyPlYoGghp
-        Z70yHgkIaiACemm5Rv/Gd/Cf82w4l3ij6Z0CCEbNL6v22BS+BPcHxbDE+I2nHvtA7fToJN
-        w395cjlUeLaJPSlKXCLccHwF/GoK80dxmvoDRBtWGB01hQwz5ZxCpwKSVu/WvOW1WCz/ZC
-        hQYvi9laeNN7AguWZxH9o0txMDTnmZ6DCKzICdx98qae1Vi5UyEjrJfqKjrV18zTueYmNM
-        PUTENxMyB6KORBhHa7hMkDsMMhAwXialywgDmJZuMCTtVsgr3Rv2kzQ27t3Pug==
+         references:references; bh=t/L3bect6Otcyaj5o3pOpna8DPyPttA1iOCagOeFNh8=;
+        b=MDXzFKK4lr7UhxJr8zp1tnFqO7RBHR8TIBOCCqPZbm9TBg7n6NpaaNpSVf4XYgu/bM7MpQ
+        LAZBCI8/GM+AQgJo3uDNG6c6MgFwYCzMRdpqjXMFBFeY4A1CMqCSz0VpFyGaDSyRnU+wYv
+        TPyDR77qDcIj3zvJ+IUtu/DIveMxky0JcoNAu5WReTlN2DJ9V9MFtnS6pCGrogTCrWOsA+
+        C2D3trPH/k6abcSxrrZTBzrl4oHUQRvjts+XdudCYhYbquSyHDf80dgeQz6zgaRnuzNafq
+        GHlDnRXvR6cZMDAu8jiHdKKTFCd2kowLu3EokNhsvvvb86VtiIEU8yFlvfDVkg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637976131;
+        s=2020e; t=1637976136;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=p/qcF7fn4OxVhWuReK+wMgikFJMOqHr6o9RPZFmkX94=;
-        b=IMIJLSn8WA7R9n7eZkGrNRjY06sFv4cVI9+K7xwjNhpVeYayZMSXCOU5spCh1yMg+IQ3B4
-        gkQV3YqgHSGPb/Cw==
+         references:references; bh=t/L3bect6Otcyaj5o3pOpna8DPyPttA1iOCagOeFNh8=;
+        b=JUOb/B7Qq8t+E96GsSguepWh9UD02us4qamllS9i4niMvkxuriOgrZJorE7mfE/KU14Eij
+        WX276QInU44VhqBw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -41,54 +41,112 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sinan Kaya <okaya@kernel.org>, dmaengine@vger.kernel.org,
         Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
+        iommu@lists.linux-foundation.org,
         Stuart Yoder <stuyoder@gmail.com>,
         Laurentiu Tudor <laurentiu.tudor@nxp.com>,
         Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
         linux-arm-kernel@lists.infradead.org, x86@kernel.org,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
-        Will Deacon <will@kernel.org>, Sinan Kaya <okaya@kernel.org>
-Subject: [patch 34/37] mailbox: bcm-flexrm-mailbox: Rework MSI interrupt handling
+        Will Deacon <will@kernel.org>
+Subject: [patch 37/37] dmaengine: qcom_hidma: Cleanup MSI handling
 References: <20211126224100.303046749@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:22:11 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:22:15 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127012211.IZChpvcvklP5hH-Z1ND8Ly9sYibheYoGb9Zy2dcxGu0@z>
+Message-ID: <20211127012215.pACAgeHwuFwFNTfDmShwjZhX_XrgDtyw2u-AsJnA9nI@z>
 
-No point in retrieving the MSI descriptors. Just query the Linux interrupt
-number.
+There is no reason to walk the MSI descriptors to retrieve the interrupt
+number for a device. Use msi_get_virq() instead.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Sinan Kaya <okaya@kernel.org>
+Cc: dmaengine@vger.kernel.org
 ---
- drivers/mailbox/bcm-flexrm-mailbox.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/dma/qcom/hidma.c |   42 ++++++++++++++++++------------------------
+ 1 file changed, 18 insertions(+), 24 deletions(-)
 
---- a/drivers/mailbox/bcm-flexrm-mailbox.c
-+++ b/drivers/mailbox/bcm-flexrm-mailbox.c
-@@ -1497,7 +1497,6 @@ static int flexrm_mbox_probe(struct plat
- 	int index, ret = 0;
- 	void __iomem *regs;
- 	void __iomem *regs_end;
+--- a/drivers/dma/qcom/hidma.c
++++ b/drivers/dma/qcom/hidma.c
+@@ -678,11 +678,13 @@ static void hidma_free_msis(struct hidma
+ {
+ #ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+ 	struct device *dev = dmadev->ddev.dev;
 -	struct msi_desc *desc;
- 	struct resource *iomem;
- 	struct flexrm_ring *ring;
- 	struct flexrm_mbox *mbox;
-@@ -1608,10 +1607,8 @@ static int flexrm_mbox_probe(struct plat
- 		goto fail_destroy_cmpl_pool;
++	int i, virq;
  
- 	/* Save alloced IRQ numbers for each ring */
--	for_each_msi_entry(desc, dev) {
--		ring = &mbox->rings[desc->msi_index];
--		ring->irq = desc->irq;
--	}
-+	for (index = 0; index < mbox->num_rings; index++)
-+		mbox->rings[index].irq = msi_get_virq(dev, index);
+-	/* free allocated MSI interrupts above */
+-	for_each_msi_entry(desc, dev)
+-		devm_free_irq(dev, desc->irq, &dmadev->lldev);
++	for (i = 0; i < HIDMA_MSI_INTS; i++) {
++		virq = msi_get_virq(dev, i);
++		if (virq)
++			devm_free_irq(dev, virq, &dmadev->lldev);
++	}
  
- 	/* Check availability of debugfs */
- 	if (!debugfs_initialized())
+ 	platform_msi_domain_free_irqs(dev);
+ #endif
+@@ -692,45 +694,37 @@ static int hidma_request_msi(struct hidm
+ 			     struct platform_device *pdev)
+ {
+ #ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+-	int rc;
+-	struct msi_desc *desc;
+-	struct msi_desc *failed_desc = NULL;
++	int rc, i, virq;
+ 
+ 	rc = platform_msi_domain_alloc_irqs(&pdev->dev, HIDMA_MSI_INTS,
+ 					    hidma_write_msi_msg);
+ 	if (rc)
+ 		return rc;
+ 
+-	for_each_msi_entry(desc, &pdev->dev) {
+-		if (!desc->msi_index)
+-			dmadev->msi_virqbase = desc->irq;
+-
+-		rc = devm_request_irq(&pdev->dev, desc->irq,
++	for (i = 0; i < HIDMA_MSI_INTS; i++) {
++		virq = msi_get_virq(&pdev->dev, i);
++		rc = devm_request_irq(&pdev->dev, virq,
+ 				       hidma_chirq_handler_msi,
+ 				       0, "qcom-hidma-msi",
+ 				       &dmadev->lldev);
+-		if (rc) {
+-			failed_desc = desc;
++		if (rc)
+ 			break;
+-		}
++		if (!i)
++			dmadev->msi_virqbase = virq;
+ 	}
+ 
+ 	if (rc) {
+ 		/* free allocated MSI interrupts above */
+-		for_each_msi_entry(desc, &pdev->dev) {
+-			if (desc == failed_desc)
+-				break;
+-			devm_free_irq(&pdev->dev, desc->irq,
+-				      &dmadev->lldev);
++		for (--i; i >= 0; i--) {
++			virq = msi_get_virq(&pdev->dev, i);
++			devm_free_irq(&pdev->dev, virq, &dmadev->lldev);
+ 		}
++		dev_warn(&pdev->dev,
++			 "failed to request MSI irq, falling back to wired IRQ\n");
+ 	} else {
+ 		/* Add callback to free MSIs on teardown */
+ 		hidma_ll_setup_irq(dmadev->lldev, true);
+-
+ 	}
+-	if (rc)
+-		dev_warn(&pdev->dev,
+-			 "failed to request MSI irq, falling back to wired IRQ\n");
+ 	return rc;
+ #else
+ 	return -EINVAL;
 
