@@ -2,57 +2,57 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3974C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5988C43219
 	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 14:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355186AbhK0OTw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S244740AbhK0OTw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sat, 27 Nov 2021 09:19:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33880 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244740AbhK0ORv (ORCPT
+        with ESMTP id S244976AbhK0ORv (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Nov 2021 09:17:51 -0500
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5CCAC0613F3
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:40 -0800 (PST)
-Received: by mail-wr1-x433.google.com with SMTP id s13so25216406wrb.3
-        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:40 -0800 (PST)
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0514FC0613F6
+        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:44 -0800 (PST)
+Received: by mail-wr1-x42a.google.com with SMTP id d9so4283543wrw.4
+        for <linux-pci@vger.kernel.org>; Sat, 27 Nov 2021 06:11:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8nFR1D3sjPQN1xzd4WfJBHS1L8Y0eUshfiPdageUB7U=;
-        b=eth2+FlBt7PAEaAzBLfDtk19omNBuPAFTeUldR5wJqNHbiGMvtzOrpPpdHFe6FfDSm
-         CHSo+zLZN7gZcvS8Z3dldwFgbqZxKjo+xC9vZ7qhNcfB9ZGb7syuGQfQHG2JefdBlKPv
-         4YWc82vh98zI6aajCaM2w5lLAFXUyNZVQAAg5c/aIXUsR4SVy2u9kjD9HX86tBer7hdu
-         UPoBaEx4/4PMe80v6pN6dFCt6QOYxDuJkLTYn1m6mP7JAdjquxxBtMkz+Chv1rjbOgXL
-         SaMCC4QQwiZTD11ZICNbhYIPJltWvO8lmzQVI5Xt13Hhg92U8vMX8mPzwFB0obVztJ6s
-         LawA==
+        bh=84sRKjOIcFLH6yEzmszwRjwTc0G3wDfY0PEvqFwFO18=;
+        b=nWtf/e9B3LbshM6kF/N1B5iXbLnVLwodrIRSUG3BetQ2oWLPNoB+6z7k5BLonYuIFu
+         5LAeiyegX1fWfFC0voIqGZDZVRIWxnjIneWRFpZpeCSj5/BnX3FnHJp73bUQH2JXTBi7
+         t27N4FWBqfZ7C/2JZG6/0iQNuWWd+Uv4uTx6VKKLio9m5JEni9tv/4nPhXSVrlWbB7Qi
+         6ggOQ+igfNJw0jJFYzsfKyKnEZO7R38k8+6pOi5V3OFT6vUB94+8pRL2qdo51phrXptf
+         8TjLqF7oET91RQZGUjPfarHLijan6dtyyGMuKkBQfJmRZLlwYsdDnQsQxXE5RfVP1RDT
+         GyLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8nFR1D3sjPQN1xzd4WfJBHS1L8Y0eUshfiPdageUB7U=;
-        b=gC1YRNXtrMkKKGawWmerAViER7WlNUdwT2tW0pTPaztV1qPFHYPFECtqogSM1ZxK1K
-         U8QsLKp9XCVidZEYL3cLqlar1RyveYjUK4iRJ5HhN8qqsT8tedpxTSJq7kfMaAhqnd7K
-         x+4MuYquL7cvxroC3bJbsH3rxsjkpuIC017qGqLKntA5pVKPV+5kxTY1h/CtKsN2UB2p
-         /ubuidDGX5HbhgTheO6ntm9DXuV+HfuyIcV5yl6qCboTcUy8jb/95woITIcV9/qehfwj
-         ntp1e76n3JZ9Ce9n3UZx/ogQSIri7yxvtCfF+lXRCwYoLwa+WT3JALGslY97CZuVwOXD
-         2KCQ==
-X-Gm-Message-State: AOAM531xupN5nvyENVz9px5EzK9l86z1km0y79Ax3Sz5lUfivQG3Dz4L
-        JrOeV9zA0mHdcrmqW0qIKuk=
-X-Google-Smtp-Source: ABdhPJz//yrYPQcKROeJv2eNeRPsn8Niq0vV4pio23vG1xrTJs8W+z9NU3zepUp2DtDyfyO/UIzQxg==
-X-Received: by 2002:a5d:64eb:: with SMTP id g11mr21324581wri.438.1638022299455;
-        Sat, 27 Nov 2021 06:11:39 -0800 (PST)
+        bh=84sRKjOIcFLH6yEzmszwRjwTc0G3wDfY0PEvqFwFO18=;
+        b=umzyxYnBJTW9NncleocemOglgOpBDMmLaHIOqx2Dab3JAeRA+exn1im3yudn6Z26Sa
+         kwg8XcoXQYhiOVBJ9z5ueWdGIGekKyoN5xCLiE5WqmfsSrqy5oAap67CaG/P328LUy0p
+         gUt3M+bZMuMl2TRCqUfnxHNqwyGHUfHo+Ggr1cOj+8icbGyFVaEI/38Q7++8WvzOgUxb
+         osnnSkSJNHzoZDNOkBOpv17N4/OtE7cLnhriJDx8MN5FCMg9VN0rn3PQYh1lc5BzElae
+         UhD6rhWdRqS12NYmXBi3LndUTX0q9kyYaI58kB4A9lylAWWLku2G62V3Ytajoec9aqXk
+         kwhw==
+X-Gm-Message-State: AOAM531wEVHPELT4TMAQ2MFPyfBss69THz9OHfW21nm5ucdmm52cBDjl
+        oGK2683WNKw+XsPlXiNlap3L6hqF/k17tw==
+X-Google-Smtp-Source: ABdhPJwiTNCPDP5xYLP9PBXCTB6DVav9naFFAZZ8T0W/YgVbk98OPvlGPMfhB7nIhwLTsSWQsY6MWg==
+X-Received: by 2002:a05:6000:15c8:: with SMTP id y8mr21890085wry.55.1638022302516;
+        Sat, 27 Nov 2021 06:11:42 -0800 (PST)
 Received: from claire-ThinkPad-T470.localdomain (dynamic-2a01-0c22-7349-1000-d163-c2fa-698a-934f.c22.pool.telefonica.de. [2a01:c22:7349:1000:d163:c2fa:698a:934f])
-        by smtp.gmail.com with ESMTPSA id q26sm8754522wrc.39.2021.11.27.06.11.38
+        by smtp.gmail.com with ESMTPSA id q26sm8754522wrc.39.2021.11.27.06.11.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Nov 2021 06:11:39 -0800 (PST)
+        Sat, 27 Nov 2021 06:11:42 -0800 (PST)
 From:   Fan Fei <ffclaire1224@gmail.com>
 To:     bjorn@helgaas.com
 Cc:     Fan Fei <ffclaire1224@gmail.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 08/13] PCI: rcar-gen2: Replace device * with platform_device *
-Date:   Sat, 27 Nov 2021 15:11:16 +0100
-Message-Id: <758fc6c4dbd95b7bded954db3159fc8f962660c1.1638022049.git.ffclaire1224@gmail.com>
+Subject: [PATCH 10/13] PCI: v3-semi: Replace device * with platform_device *
+Date:   Sat, 27 Nov 2021 15:11:18 +0100
+Message-Id: <c520f6acf78ee69dd4fb87804aba384c77e76f87.1638022049.git.ffclaire1224@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1638022048.git.ffclaire1224@gmail.com>
 References: <cover.1638022048.git.ffclaire1224@gmail.com>
@@ -64,63 +64,105 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Some PCI controller struct contain "device *", while others contain
 "platform_device *". Unify "device *dev" to "platform_device *pdev" in
-struct rcar_pci_priv, because PCI controllers interact with platform_device
+struct v3_pci, because PCI controllers interact with platform_device
 directly, not device, to enumerate the controlled device.
 
 Signed-off-by: Fan Fei <ffclaire1224@gmail.com>
 ---
- drivers/pci/controller/pci-rcar-gen2.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/controller/pci-v3-semi.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
-index afde4aa8f6dc..be24b08dfbaa 100644
---- a/drivers/pci/controller/pci-rcar-gen2.c
-+++ b/drivers/pci/controller/pci-rcar-gen2.c
-@@ -94,7 +94,7 @@
- #define RCAR_PCI_UNIT_REV_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x48)
+diff --git a/drivers/pci/controller/pci-v3-semi.c b/drivers/pci/controller/pci-v3-semi.c
+index 154a5398633c..96b486650667 100644
+--- a/drivers/pci/controller/pci-v3-semi.c
++++ b/drivers/pci/controller/pci-v3-semi.c
+@@ -236,7 +236,7 @@
+ #define INTEGRATOR_SC_LBFCODE_OFFSET	0x24
  
- struct rcar_pci_priv {
+ struct v3_pci {
 -	struct device *dev;
 +	struct platform_device *pdev;
- 	void __iomem *reg;
- 	struct resource mem_res;
- 	struct resource *cfg_res;
-@@ -133,7 +133,7 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
- static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
+ 	void __iomem *base;
+ 	void __iomem *config_base;
+ 	u32 config_mem;
+@@ -438,7 +438,7 @@ static struct pci_ops v3_pci_ops = {
+ static irqreturn_t v3_irq(int irq, void *data)
  {
- 	struct rcar_pci_priv *priv = pw;
--	struct device *dev = priv->dev;
-+	struct device *dev = &priv->pdev->dev;
- 	u32 status = ioread32(priv->reg + RCAR_PCI_INT_STATUS_REG);
+ 	struct v3_pci *v3 = data;
+-	struct device *dev = v3->dev;
++	struct device *dev = &v3->pdev->dev;
+ 	u32 status;
  
- 	if (status & RCAR_PCI_INT_ALLERRORS) {
-@@ -150,7 +150,7 @@ static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
+ 	status = readw(v3->base + V3_PCI_STAT);
+@@ -481,12 +481,13 @@ static irqreturn_t v3_irq(int irq, void *data)
  
- static void rcar_pci_setup_errirq(struct rcar_pci_priv *priv)
+ static int v3_integrator_init(struct v3_pci *v3)
  {
--	struct device *dev = priv->dev;
-+	struct device *dev = &priv->pdev->dev;
- 	int ret;
- 	u32 val;
++	struct device *dev = &v3->pdev->dev;
+ 	unsigned int val;
  
-@@ -173,7 +173,7 @@ static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
- static void rcar_pci_setup(struct rcar_pci_priv *priv)
+ 	v3->map =
+ 		syscon_regmap_lookup_by_compatible("arm,integrator-ap-syscon");
+ 	if (IS_ERR(v3->map)) {
+-		dev_err(v3->dev, "no syscon\n");
++		dev_err(dev, "no syscon\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -511,7 +512,7 @@ static int v3_integrator_init(struct v3_pci *v3)
+ 			 readb(v3->base + V3_MAIL_DATA) != 0x55);
+ 	}
+ 
+-	dev_info(v3->dev, "initialized PCI V3 Integrator/AP integration\n");
++	dev_info(dev, "initialized PCI V3 Integrator/AP integration\n");
+ 
+ 	return 0;
+ }
+@@ -520,7 +521,7 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
+ 				 struct pci_host_bridge *host,
+ 				 struct resource_entry *win)
  {
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(priv);
--	struct device *dev = priv->dev;
-+	struct device *dev = &priv->pdev->dev;
- 	void __iomem *reg = priv->reg;
+-	struct device *dev = v3->dev;
++	struct device *dev = &v3->pdev->dev;
+ 	struct resource *mem;
+ 	struct resource *io;
+ 
+@@ -598,7 +599,7 @@ static int v3_get_dma_range_config(struct v3_pci *v3,
+ 				   struct resource_entry *entry,
+ 				   u32 *pci_base, u32 *pci_map)
+ {
+-	struct device *dev = v3->dev;
++	struct device *dev = &v3->pdev->dev;
+ 	u64 cpu_addr = entry->res->start;
+ 	u64 cpu_end = entry->res->end;
+ 	u64 pci_end = cpu_end - entry->offset;
+@@ -656,7 +657,7 @@ static int v3_get_dma_range_config(struct v3_pci *v3,
+ 		val |= V3_LB_BASE_ADR_SIZE_2GB;
+ 		break;
+ 	default:
+-		dev_err(v3->dev, "illegal dma memory chunk size\n");
++		dev_err(dev, "illegal dma memory chunk size\n");
+ 		return -EINVAL;
+ 	}
+ 	val |= V3_PCI_MAP_M_REG_EN | V3_PCI_MAP_M_ENABLE;
+@@ -676,7 +677,7 @@ static int v3_pci_parse_map_dma_ranges(struct v3_pci *v3,
+ 				       struct device_node *np)
+ {
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(v3);
+-	struct device *dev = v3->dev;
++	struct device *dev = &v3->pdev->dev;
  	struct resource_entry *entry;
- 	unsigned long window_size;
-@@ -307,7 +307,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 	int i = 0;
  
- 	priv->irq = platform_get_irq(pdev, 0);
- 	priv->reg = reg;
--	priv->dev = dev;
-+	priv->pdev = pdev;
+@@ -723,7 +724,7 @@ static int v3_pci_probe(struct platform_device *pdev)
+ 	host->ops = &v3_pci_ops;
+ 	v3 = pci_host_bridge_priv(host);
+ 	host->sysdata = v3;
+-	v3->dev = dev;
++	v3->pdev = pdev;
  
- 	if (priv->irq < 0) {
- 		dev_err(dev, "no valid irq found\n");
+ 	/* Get and enable host clock */
+ 	clk = devm_clk_get(dev, NULL);
 -- 
 2.25.1
 
