@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D6CC4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3BBC4167B
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Nov 2021 01:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347728AbhK0B0B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Nov 2021 20:26:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36032 "EHLO
+        id S1345366AbhK0B0H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Nov 2021 20:26:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344945AbhK0BXz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:23:55 -0500
+        with ESMTP id S1344510AbhK0BYF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Nov 2021 20:24:05 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB821C06175E;
-        Fri, 26 Nov 2021 17:19:03 -0800 (PST)
-Message-ID: <20211126223825.093887718@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB7D8C0613F2;
+        Fri, 26 Nov 2021 17:19:25 -0800 (PST)
+Message-ID: <20211126223824.204004845@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637975941;
+        s=2020; t=1637975964;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Fm5t3j//2ZJWIAwQC/lUTYq1h7igaXJ6yKKmISA8BnE=;
-        b=YXrvDdjinCV1yBjHyHLHh4kbucu2LHURHR+t0zVJv5Iwe67q0LFuruaQh3vkwbzQtPwio7
-        pprtMrfRvledbc2Kp38dfn11v4y5Inu453zNnn62UbDXbEMDnzTVB2lG+F7/o751ne62V0
-        wuLwIsQnEtadtEUUBTR+POd7nVjDpAaMG5nsqWghfqGryom7R0YB/K06iimvmxsJ5KiFpB
-        JPV3B+r8CqqTRE3oo30uaAVzGJqzMsu2Bz/vPrVyNZToyYv3yqNeZE81QSacrNZkpZTNFS
-        XGAAgWOht7wVhoHHI0patyvWHbhFxyJn+zFlcFj6JBZ8L2lsCdtihTsPXR9eTg==
+         references:references; bh=yyhtvslqP4HLRieVFfAZFU9HV4/e0iOdDJgsQQb4EZc=;
+        b=2CGwSzv8GJU60xQIlfgVOaRi5g9Fn+D0hzWIX0d0pUqtFU4hdxgFID5ZAs4YMb4G+S5Wrv
+        avqCKVkAif5q5QbFxS7cEQhGnCY2S+6e28XQmeCnJRn2T0XoJ4u7U8UnVhTwn9fv4Dn0xB
+        SA+5dfMbSTbKf+A7DDFaxOGfTXkGGQ5SBh1bG9k//gWsSsiprWcstpFZ2e8h6B/VM2UFUJ
+        LdQV8C7hFqrZUfOS72q/yy+isOPS0nsKpb9++fl/GOil+WjZl8BRrzcF7WdwhFoz2N2PGF
+        3ivKoXc4RUormXF6RJNnnNMFOrPUmNhdaGzXzR1mfZQva9D/gVP49O9y4DcYJw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637975941;
+        s=2020e; t=1637975964;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Fm5t3j//2ZJWIAwQC/lUTYq1h7igaXJ6yKKmISA8BnE=;
-        b=RvZm8oUXbruNEue8m0QI5IgMFXDCNY3ru8yRX0pyG3paqWiHR2a2l+sKosxSZ9wf0ryS/Q
-        OiKV6WwXAMjbYnDg==
+         references:references; bh=yyhtvslqP4HLRieVFfAZFU9HV4/e0iOdDJgsQQb4EZc=;
+        b=0XCFh3K4IrRNY6L0MyY+vUemfrvkZlIFY/qYHFr3mYxeMx0ngocRG4o0KW8jALmJLkbbXC
+        ZNYbsj1qUqXZJQCw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -53,143 +53,92 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Juergen Gross <jgross@suse.com>,
         Christian Borntraeger <borntraeger@de.ibm.com>,
         Heiko Carstens <hca@linux.ibm.com>
-Subject: [patch 17/22] PCI/MSI: Split out !IRQDOMAIN code
+Subject: [patch 02/22] PCI/MSI: Fix pci_irq_vector()/pci_irq_get_attinity()
 References: <20211126222700.862407977@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 27 Nov 2021 02:19:01 +0100 (CET)
+Date:   Sat, 27 Nov 2021 02:19:23 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
-Message-ID: <20211127011901.6XYgC3x9QpSNhSudW1lYkhvO3T24e2ykI7owAXTI7jc@z>
+Message-ID: <20211127011923.bBhaxlw0omtwpo7jofenNTEJClmXPplwHoFmjvHSwzA@z>
 
-Split out the non irqdomain code into its own file.
+pci_irq_vector() and pci_irq_get_affinity() use the list position to find the
+MSI-X descriptor at a given index. That's correct for the normal case where
+the entry number is the same as the list position.
 
+But it's wrong for cases where MSI-X was allocated with an entries array
+describing sparse entry numbers into the hardware message descriptor
+table. That's inconsistent at best.
+
+Make it always check the entry number because that's what the zero base
+index really means. This change won't break existing users which use a
+sparse entries array for allocation because these users retrieve the Linux
+interrupt number from the entries array after allocation and none of them
+uses pci_irq_vector() or pci_irq_get_affinity().
+
+Fixes: aff171641d18 ("PCI: Provide sensible IRQ vector alloc/free routines")
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/Makefile |    5 ++--
- drivers/pci/msi/legacy.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/msi/msi.c    |   46 ------------------------------------------
- 3 files changed, 54 insertions(+), 48 deletions(-)
+ drivers/pci/msi.c |   26 ++++++++++++++++++--------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
---- a/drivers/pci/msi/Makefile
-+++ b/drivers/pci/msi/Makefile
-@@ -1,5 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
- #
- # Makefile for the PCI/MSI
--obj-$(CONFIG_PCI)		+= pcidev_msi.o
--obj-$(CONFIG_PCI_MSI)		+= msi.o
-+obj-$(CONFIG_PCI)			+= pcidev_msi.o
-+obj-$(CONFIG_PCI_MSI)			+= msi.o
-+obj-$(CONFIG_PCI_MSI_ARCH_FALLBACKS)	+= legacy.o
---- /dev/null
-+++ b/drivers/pci/msi/legacy.c
-@@ -0,0 +1,51 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCI Message Signaled Interrupt (MSI).
-+ *
-+ * Legacy architecture specific setup and teardown mechanism.
-+ */
-+#include "msi.h"
-+
-+/* Arch hooks */
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+{
-+	return -EINVAL;
-+}
-+
-+void __weak arch_teardown_msi_irq(unsigned int irq)
-+{
-+}
-+
-+int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_desc *desc;
-+	int ret;
-+
-+	/*
-+	 * If an architecture wants to support multiple MSI, it needs to
-+	 * override arch_setup_msi_irqs()
-+	 */
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+
-+	for_each_pci_msi_entry(desc, dev) {
-+		ret = arch_setup_msi_irq(dev, desc);
-+		if (ret)
-+			return ret < 0 ? ret : -ENOSPC;
-+	}
-+
-+	return 0;
-+}
-+
-+void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
-+{
-+	struct msi_desc *desc;
-+	int i;
-+
-+	for_each_pci_msi_entry(desc, dev) {
-+		if (desc->irq) {
-+			for (i = 0; i < entry->nvec_used; i++)
-+				arch_teardown_msi_irq(desc->irq + i);
-+		}
-+	}
-+}
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -50,52 +50,6 @@ static void pci_msi_teardown_msi_irqs(st
- #define pci_msi_teardown_msi_irqs	arch_teardown_msi_irqs
- #endif
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1187,19 +1187,24 @@ EXPORT_SYMBOL(pci_free_irq_vectors);
  
--#ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
--/* Arch hooks */
--int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
--{
--	return -EINVAL;
--}
--
--void __weak arch_teardown_msi_irq(unsigned int irq)
--{
--}
--
--int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
--{
--	struct msi_desc *entry;
--	int ret;
--
--	/*
--	 * If an architecture wants to support multiple MSI, it needs to
--	 * override arch_setup_msi_irqs()
--	 */
--	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
--
--	for_each_pci_msi_entry(entry, dev) {
--		ret = arch_setup_msi_irq(dev, entry);
--		if (ret < 0)
--			return ret;
--		if (ret > 0)
--			return -ENOSPC;
--	}
--
--	return 0;
--}
--
--void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
--{
--	int i;
--	struct msi_desc *entry;
--
--	for_each_pci_msi_entry(entry, dev)
--		if (entry->irq)
--			for (i = 0; i < entry->nvec_used; i++)
--				arch_teardown_msi_irq(entry->irq + i);
--}
--#endif /* CONFIG_PCI_MSI_ARCH_FALLBACKS */
--
- /*
-  * PCI 2.3 does not specify mask bits for each MSI interrupt.  Attempting to
-  * mask all MSI interrupts by clearing the MSI enable bit does not work
+ /**
+  * pci_irq_vector - return Linux IRQ number of a device vector
+- * @dev: PCI device to operate on
+- * @nr: device-relative interrupt vector index (0-based).
++ * @dev:	PCI device to operate on
++ * @nr:		Interrupt vector index (0-based)
++ *
++ * @nr has the following meanings depending on the interrupt mode:
++ *   MSI-X:	The index in the MSI-X vector table
++ *   MSI:	The index of the enabled MSI vectors
++ *   INTx:	Must be 0
++ *
++ * Return: The Linux interrupt number or -EINVAl if @nr is out of range.
+  */
+ int pci_irq_vector(struct pci_dev *dev, unsigned int nr)
+ {
+ 	if (dev->msix_enabled) {
+ 		struct msi_desc *entry;
+-		int i = 0;
+ 
+ 		for_each_pci_msi_entry(entry, dev) {
+-			if (i == nr)
++			if (entry->msi_attrib.entry_nr == nr)
+ 				return entry->irq;
+-			i++;
+ 		}
+ 		WARN_ON_ONCE(1);
+ 		return -EINVAL;
+@@ -1223,17 +1228,22 @@ EXPORT_SYMBOL(pci_irq_vector);
+  * pci_irq_get_affinity - return the affinity of a particular MSI vector
+  * @dev:	PCI device to operate on
+  * @nr:		device-relative interrupt vector index (0-based).
++ *
++ * @nr has the following meanings depending on the interrupt mode:
++ *   MSI-X:	The index in the MSI-X vector table
++ *   MSI:	The index of the enabled MSI vectors
++ *   INTx:	Must be 0
++ *
++ * Return: A cpumask pointer or NULL if @nr is out of range
+  */
+ const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
+ {
+ 	if (dev->msix_enabled) {
+ 		struct msi_desc *entry;
+-		int i = 0;
+ 
+ 		for_each_pci_msi_entry(entry, dev) {
+-			if (i == nr)
++			if (entry->msi_attrib.entry_nr == nr)
+ 				return &entry->affinity->mask;
+-			i++;
+ 		}
+ 		WARN_ON_ONCE(1);
+ 		return NULL;
 
