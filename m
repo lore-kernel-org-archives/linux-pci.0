@@ -2,96 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0CEC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 18:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBCEEC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 18:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350561AbhK2SUB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 13:20:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59928 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349599AbhK2SSB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 13:18:01 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95423C0698FC;
-        Mon, 29 Nov 2021 06:46:02 -0800 (PST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638197160;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=moCVXIgDd3WnVTqImBDpITWvvySrFpXIFP1kWeQJHKU=;
-        b=3S6nmBadZg5tSz0rZHXEDZM40jhTHe/7y2CLs37JoDJvOsqgG2cw7AFkhZmO3IdHZkuU9R
-        pVQt9YCIdmL3mqxv0ggmb01VmoCUbHZRd64fJZOBgy3p6qf0yt+N3IeVkNZOmjc2ffHdBW
-        Fe3cKz/hyz3coikXPRJojbmAf8pnQXCKIifn18l8SAPBIAtd++qZL7lcd2GUQ43ReBZSSb
-        YEaX4dZnsyMGt030d1oeJE78U9xH9MpjyOlXGXYTOBLeSTyHK/p9iuz/Yv3815hL8aqm+X
-        NprgrTl+hvQHD/9Rby3+aV+xzNqCHnMwOelYZ23ZX4e7euce2B93n/AvKumo8A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638197160;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=moCVXIgDd3WnVTqImBDpITWvvySrFpXIFP1kWeQJHKU=;
-        b=vkhx9Uk6Dv9aGqVVDjVmHZWJ3IWDihE7siFS7bF7kSJaV33N0jk920aDAUwoTwmfFwotsF
-        Cg8b0iVzhVwufjCA==
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
-Subject: Re: [patch 04/32] genirq/msi: Provide a set of advanced MSI
- accessors and iterators
-In-Reply-To: <20211129140112.GX4670@nvidia.com>
-References: <877dcsf5l5.ffs@tglx> <87o863e2j0.ffs@tglx>
- <20211129140112.GX4670@nvidia.com>
-Date:   Mon, 29 Nov 2021 15:46:00 +0100
-Message-ID: <87a6hndnpz.ffs@tglx>
+        id S1351084AbhK2SZq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 13:25:46 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:47108 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229683AbhK2SXp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 13:23:45 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 85439CE13D7;
+        Mon, 29 Nov 2021 18:20:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EF96C53FAD;
+        Mon, 29 Nov 2021 18:20:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1638210024;
+        bh=GZGDxE8s+2V561z3QS8z0po771bfpbHBVhYMNFTZPXI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=mdRIBtvTmf88vjKsGmMH9hHm+a/vb274PqujYc45fWeJ+2D/XfPivh3HfEdViVr9u
+         uGJYOPYnk4jmyK45kkr9b+IO7KxWUpvCKzKI9dpfgxLC/mNVhjXo8gXMGO4yGVq6xp
+         fcVsa8a4sJv1MAIaQaKDD3DzIoMrZwMsOgv84pao=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Wen Yang <wen.yang99@zte.com.cn>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+Subject: [PATCH 4.19 17/69] PCI: aardvark: Fix a leaked reference by adding missing of_node_put()
+Date:   Mon, 29 Nov 2021 19:17:59 +0100
+Message-Id: <20211129181704.225629103@linuxfoundation.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20211129181703.670197996@linuxfoundation.org>
+References: <20211129181703.670197996@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Jason,
+From: Wen Yang <wen.yang99@zte.com.cn>
 
-On Mon, Nov 29 2021 at 10:01, Jason Gunthorpe wrote:
-> On Mon, Nov 29, 2021 at 10:26:11AM +0100, Thomas Gleixner wrote:
->> After looking at all the call sites again, there is no real usage for
->> this local index variable.
->> 
->> If anything needs the index of a descriptor then it's available in the
->> descriptor itself. That won't change because the low level message write
->> code needs the index too and the only accessible storage there is
->> msi_desc.
->
-> Oh, that makes it simpler, just use the current desc->index as the
-> input to the xa_for_each_start() and then there should be no need of
-> hidden state?
+commit 3842f5166bf1ef286fe7a39f262b5c9581308366 upstream.
 
-That works for alloc, but on free that's going to end up badly.
+The call to of_get_next_child() returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
 
->> What for? The usage sites should not have to care about the storage
->> details of a facility they are using.
->
-> Generally for_each things shouldn't have hidden state that prevents
-> them from being nested. It is just an unexpected design pattern..
+irq_domain_add_linear() also calls of_node_get() to increase refcount,
+so irq_domain will not be affected when it is released.
 
-I'm not seeing any sensible use case for:
+Detected by coccinelle with the following warnings:
+  ./drivers/pci/controller/pci-aardvark.c:826:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 798, but without a corresponding object release within this function.
 
-     msi_for_each_desc(dev)
-        msi_for_each_desc(dev)
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Marek Behún <kabel@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/controller/pci-aardvark.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-If that ever comes forth, I'm happy to debate this further :)
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -754,6 +754,7 @@ static int advk_pcie_init_irq_domain(str
+ 	struct device_node *node = dev->of_node;
+ 	struct device_node *pcie_intc_node;
+ 	struct irq_chip *irq_chip;
++	int ret = 0;
+ 
+ 	raw_spin_lock_init(&pcie->irq_lock);
+ 
+@@ -768,8 +769,8 @@ static int advk_pcie_init_irq_domain(str
+ 	irq_chip->name = devm_kasprintf(dev, GFP_KERNEL, "%s-irq",
+ 					dev_name(dev));
+ 	if (!irq_chip->name) {
+-		of_node_put(pcie_intc_node);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto out_put_node;
+ 	}
+ 
+ 	irq_chip->irq_mask = advk_pcie_irq_mask;
+@@ -781,11 +782,13 @@ static int advk_pcie_init_irq_domain(str
+ 				      &advk_pcie_irq_domain_ops, pcie);
+ 	if (!pcie->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-		of_node_put(pcie_intc_node);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto out_put_node;
+ 	}
+ 
+-	return 0;
++out_put_node:
++	of_node_put(pcie_intc_node);
++	return ret;
+ }
+ 
+ static void advk_pcie_remove_irq_domain(struct advk_pcie *pcie)
 
-Thanks,
 
-        tglx
