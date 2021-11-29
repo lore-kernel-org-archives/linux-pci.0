@@ -2,163 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB78FC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 22:37:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62086C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 22:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233653AbhK2Wku (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 17:40:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33780 "EHLO
+        id S234808AbhK2WoS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 17:44:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231522AbhK2WkW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 17:40:22 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2505DC203960
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 11:18:42 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id j6-20020a17090a588600b001a78a5ce46aso16409885pji.0
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 11:18:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=64mdYM4TFDap+15tFzg//A188pEwlRg5eeO/kY3qwEo=;
-        b=0WPhk10QRX8aw8s2z/Us1MoEvLG4aJilJSHe+aSI/b3WKuAb/MpnhsicHbQZAPN8cF
-         Onb1LBIkTmQ/EqCrp/r+jN9h1eTJlanGOts6PgEFrBfhnk21laCF1ydzSX3kuCJVNShm
-         vWt114+3H0TaJxSdXwW0PbbvQ3yMHR7MUJI4LW/e63bg1vtc7bMb6DkC4FgJZkuLTK7O
-         OaC4NPru6mKTHPoNkm32OAe7ONDNsk6JBzBZZiYef/St/oedklmXv3TEoZgJES1lXi0z
-         oaZlA8MGJPBANuu4Gekp9jO5ydCDRgB0/2VscxREiQo0BMEyL7fvCJ3ffKVdz9z+MRJU
-         QOnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=64mdYM4TFDap+15tFzg//A188pEwlRg5eeO/kY3qwEo=;
-        b=uuVvrw3RkzNj+zYLenNEirkwL9OpxobL0G55iZdOFyLwamRsZ7ATTM6qfyOseAWIgb
-         Q+JSzYwDquhP6ycIyQ2lcFHwzNs1tHr0UMls7gt1yN9nbxwOIzNWhCt7DUEj+jM00R59
-         ruSLiz8Vih0pifla9sBuUOB1qchRVZajrmmDpZzBBJhFae9WbtJqFxPDkENShuXlA+1x
-         w6CDXR7n0ZbNRWMxDptV7sIPf1mweCjhxtq4Z05Bs+MwSPMS8aKgxRwU/ikoryjHfWmK
-         vI7RYDYm8pOb5fgGMqdHTUL1tS7o3KF1vQNV7x8Lc97MYLRVr4zBvPNoY2AyGINU67YD
-         KxDQ==
-X-Gm-Message-State: AOAM532HzCSFxGC4Wu7Ya3JVhVOvBAlf6DqcPnu0Q7VjqGENXIzuK64G
-        3QPQS7D+PgN/bx4diWtyAnRsKem+oH+/3HH8qKhO4A==
-X-Google-Smtp-Source: ABdhPJzpto0h5jTWmvea6qu030oHXXa3VLAJxIbmE+Ii6u+BCn7xekcL27lUJYBwFlPt1ClYPlZm+iACqKJGvTnPjkc=
-X-Received: by 2002:a17:90b:1e49:: with SMTP id pi9mr21907pjb.220.1638213521627;
- Mon, 29 Nov 2021 11:18:41 -0800 (PST)
+        with ESMTP id S234285AbhK2Wnp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 17:43:45 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0624CC043AD8;
+        Mon, 29 Nov 2021 12:51:13 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1638219071;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tz/JDx8g54Ok4OMBliMP1MHdAMZdu38KyT07rgK4kek=;
+        b=EJHYdtcQ7CkIX5jk0EPaQKBNxB/I4Fmx4psc3dNfeVrvTFpfEeqts20BFVbt5PAcORMNHi
+        YmEYN7qu9o9Nf+xrWi1DDTWj8DqHrD/TaMw5SFkbD9O9fYe/B4c4CovKJtoayoJFBLXFhN
+        h1GDxLrYh/zoeCY8+4MzczVeqOnc/INyFI9/5AX3gUiOfVu22C1ifU4McFVa8VwqLko/cL
+        R/kEgQCcjhyb30qp4KynvMsylSgqwoxDEXZFQey00qSiM47Wq3tkv0cLqJ0EqVtA/e+0Fv
+        AngN+lIgcGkoPC0smzvCoXGvs5qyyndto5EVdLqns8n0Bo2OfZztMwHgnyLp/A==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1638219071;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tz/JDx8g54Ok4OMBliMP1MHdAMZdu38KyT07rgK4kek=;
+        b=sVqzZBKzTnDKRGPDAdt0lfSw7znG5ecBJX8UUs+ZB5r69qdnSChYv4MKQc8kplV1rgOuob
+        O5RAPkes0fGbEIBg==
+To:     Logan Gunthorpe <logang@deltatee.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Megha Dey <megha.dey@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: Re: [patch 21/32] NTB/msi: Convert to msi_on_each_desc()
+In-Reply-To: <7daba0e2-73a3-4980-c3a5-a71f6b597b22@deltatee.com>
+References: <20211126230957.239391799@linutronix.de>
+ <20211126232735.547996838@linutronix.de>
+ <7daba0e2-73a3-4980-c3a5-a71f6b597b22@deltatee.com>
+Date:   Mon, 29 Nov 2021 21:51:10 +0100
+Message-ID: <874k7ueldt.ffs@tglx>
 MIME-Version: 1.0
-References: <20211120000250.1663391-1-ben.widawsky@intel.com>
- <20211120000250.1663391-6-ben.widawsky@intel.com> <CAPcyv4jUExKbFhTXQGs_ayUvQqrp_76Z5Wywf7=ADXKcTF3DnQ@mail.gmail.com>
- <20211129183330.svptvcystceazgwc@intel.com> <CAPcyv4hPP8KYXD-6mrpHRpLYLqSQb22Lie2_m1Nc=Y5NqqfJgQ@mail.gmail.com>
- <20211129191146.vhiwkf5jsegil4aa@intel.com>
-In-Reply-To: <20211129191146.vhiwkf5jsegil4aa@intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 29 Nov 2021 11:18:36 -0800
-Message-ID: <CAPcyv4gboiSXq1zCtmnP7oWzjaoMG=RL5sgmhFtXuxsTTPf3fA@mail.gmail.com>
-Subject: Re: [PATCH 05/23] cxl/pci: Don't poll doorbell for mailbox access
-To:     Ben Widawsky <ben.widawsky@intel.com>
-Cc:     linux-cxl@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Vishal Verma <vishal.l.verma@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 29, 2021 at 11:11 AM Ben Widawsky <ben.widawsky@intel.com> wrote:
->
-> On 21-11-29 11:02:41, Dan Williams wrote:
-> > On Mon, Nov 29, 2021 at 10:33 AM Ben Widawsky <ben.widawsky@intel.com> wrote:
-> > >
-> > > On 21-11-24 13:55:03, Dan Williams wrote:
-> > > > On Fri, Nov 19, 2021 at 4:03 PM Ben Widawsky <ben.widawsky@intel.com> wrote:
-> > > > >
-> > > > > The expectation is that the mailbox interface ready bit is the first
-> > > > > step in access through the mailbox interface. Therefore, waiting for the
-> > > > > doorbell busy bit to be clear would imply that the mailbox interface is
-> > > > > ready. The original driver implementation used the doorbell timeout for
-> > > > > the Mailbox Interface Ready bit to piggyback off of, since the latter
-> > > > > doesn't have a defined timeout (introduced in 8adaf747c9f0 ("cxl/mem:
-> > > > > Find device capabilities"), a timeout has since been defined with an ECN
-> > > > > to the 2.0 spec). With the current driver waiting for mailbox interface
-> > > > > ready as a part of probe() it's no longer necessary to use the
-> > > > > piggyback.
-> > > > >
-> > > > > With the piggybacking no longer necessary it doesn't make sense to check
-> > > > > doorbell status when acquiring the mailbox. It will be checked during
-> > > > > the normal mailbox exchange protocol.
-> > > > >
-> > > > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> > > > > ---
-> > > > > This patch did not exist in RFCv2
-> > > > > ---
-> > > > >  drivers/cxl/pci.c | 25 ++++++-------------------
-> > > > >  1 file changed, 6 insertions(+), 19 deletions(-)
-> > > > >
-> > > > > diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> > > > > index 2cef9fec8599..869b4fc18e27 100644
-> > > > > --- a/drivers/cxl/pci.c
-> > > > > +++ b/drivers/cxl/pci.c
-> > > > > @@ -221,27 +221,14 @@ static int cxl_pci_mbox_get(struct cxl_dev_state *cxlds)
-> > > > >
-> > > > >         /*
-> > > > >          * XXX: There is some amount of ambiguity in the 2.0 version of the spec
-> > > > > -        * around the mailbox interface ready (8.2.8.5.1.1).  The purpose of the
-> > > > > +        * around the mailbox interface ready (8.2.8.5.1.1). The purpose of the
-> > > > >          * bit is to allow firmware running on the device to notify the driver
-> > > > > -        * that it's ready to receive commands. It is unclear if the bit needs
-> > > > > -        * to be read for each transaction mailbox, ie. the firmware can switch
-> > > > > -        * it on and off as needed. Second, there is no defined timeout for
-> > > > > -        * mailbox ready, like there is for the doorbell interface.
-> > > > > -        *
-> > > > > -        * Assumptions:
-> > > > > -        * 1. The firmware might toggle the Mailbox Interface Ready bit, check
-> > > > > -        *    it for every command.
-> > > > > -        *
-> > > > > -        * 2. If the doorbell is clear, the firmware should have first set the
-> > > > > -        *    Mailbox Interface Ready bit. Therefore, waiting for the doorbell
-> > > > > -        *    to be ready is sufficient.
-> > > > > +        * that it's ready to receive commands. The spec does not clearly define
-> > > > > +        * under what conditions the bit may get set or cleared. As of the 2.0
-> > > > > +        * base specification there was no defined timeout for mailbox ready,
-> > > > > +        * like there is for the doorbell interface. This was fixed with an ECN,
-> > > > > +        * but it's possible early devices implemented this before the ECN.
-> > > >
-> > > > Can we just drop comment block altogether? Outside of
-> > > > cxl_pci_setup_mailbox() the only time the mailbox status should be
-> > > > checked is after a doorbell timeout after submitting a command.
-> > > >
-> > >
-> > > Yes, I think it's fine to drop it.
-> > >
-> > > > >          */
-> > > > > -       rc = cxl_pci_mbox_wait_for_doorbell(cxlds);
-> > > > > -       if (rc) {
-> > > > > -               dev_warn(dev, "Mailbox interface not ready\n");
-> > > > > -               goto out;
-> > > > > -       }
-> > > > > -
-> > > > >         md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
-> > > > >         if (!(md_status & CXLMDEV_MBOX_IF_READY && CXLMDEV_READY(md_status))) {
-> > > > >                 dev_err(dev, "mbox: reported doorbell ready, but not mbox ready\n");
-> > > >
-> > > > This error message is obsolete since nothing is pre-checking the
-> > > > mailbox anymore, and per above I see no problem waiting to check the
-> > > > status until after the mailbox has failed to respond after a timeout.
-> > >
-> > > The message is wrong, but I think the logic is still valuable. How about:
-> > > "mbox: reported interface ready, but mbox not ready"
-> >
-> > You mean check this every time even though the spec says the driver
-> > only needs to check it once per-reset?
->
-> Unfortunately it does not say that. "... it shall remain set until the next
-> reset or the device encounters an error that prevents any mailbox
-> communication."
->
-> Once we have real error checking in place, this could go away, though I see no
-> harm in leaving it.
+Logan,
 
-Right, there's no harm in the check, it just seems overly paranoid to
-me if it was already checked once. Until a doorbell timeout happens
-it's an extra MMIO cycle that can saved for a "what happened?" check
-after a timeout.
+On Mon, Nov 29 2021 at 11:21, Logan Gunthorpe wrote:
+> On 2021-11-26 6:23 p.m., Thomas Gleixner wrote:
+>> Replace the about to vanish iterators, make use of the filtering and take
+>> the descriptor lock around the iteration.
+>
+> This patch looks good to me:
+>
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+
+thanks for having a look at this. While I have your attention, I have a
+question related to NTB.
+
+The switchtec driver is the only one which uses PCI_IRQ_VIRTUAL in order
+to allocate non-hardware backed MSI-X descriptors.
+
+AFAIU these descriptors are not MSI-X descriptors in the regular sense
+of PCI/MSI-X. They are allocated via the PCI/MSI mechanism but their
+usage is somewhere in NTB which has nothing to do with the way how the
+real MSI-X interrupts of a device work which explains why we have those
+pci.msi_attrib.is_virtual checks all over the place.
+
+I assume that there are other variants feeding into NTB which can handle
+that without this PCI_IRQ_VIRTUAL quirk, but TBH, I got completely lost
+in that code.
+
+Could you please shed some light on the larger picture of this?
+
+Thanks,
+
+        tglx
