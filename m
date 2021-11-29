@@ -2,67 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6541C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 18:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0CEC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 18:16:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347380AbhK2SMP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 13:12:15 -0500
-Received: from foss.arm.com ([217.140.110.172]:44266 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245151AbhK2SKP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Nov 2021 13:10:15 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 940AC1063;
-        Mon, 29 Nov 2021 10:06:57 -0800 (PST)
-Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 994453F5A1;
-        Mon, 29 Nov 2021 10:06:56 -0800 (PST)
-Date:   Mon, 29 Nov 2021 18:06:54 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Cc:     linux-pci@vger.kernel.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] PCI: mt7621: declare 'mt7621_pci_ops' static
-Message-ID: <20211129180653.GB26780@lpieralisi>
-References: <20211117152952.12271-1-sergio.paracuellos@gmail.com>
+        id S1350561AbhK2SUB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 13:20:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349599AbhK2SSB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 13:18:01 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95423C0698FC;
+        Mon, 29 Nov 2021 06:46:02 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1638197160;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=moCVXIgDd3WnVTqImBDpITWvvySrFpXIFP1kWeQJHKU=;
+        b=3S6nmBadZg5tSz0rZHXEDZM40jhTHe/7y2CLs37JoDJvOsqgG2cw7AFkhZmO3IdHZkuU9R
+        pVQt9YCIdmL3mqxv0ggmb01VmoCUbHZRd64fJZOBgy3p6qf0yt+N3IeVkNZOmjc2ffHdBW
+        Fe3cKz/hyz3coikXPRJojbmAf8pnQXCKIifn18l8SAPBIAtd++qZL7lcd2GUQ43ReBZSSb
+        YEaX4dZnsyMGt030d1oeJE78U9xH9MpjyOlXGXYTOBLeSTyHK/p9iuz/Yv3815hL8aqm+X
+        NprgrTl+hvQHD/9Rby3+aV+xzNqCHnMwOelYZ23ZX4e7euce2B93n/AvKumo8A==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1638197160;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=moCVXIgDd3WnVTqImBDpITWvvySrFpXIFP1kWeQJHKU=;
+        b=vkhx9Uk6Dv9aGqVVDjVmHZWJ3IWDihE7siFS7bF7kSJaV33N0jk920aDAUwoTwmfFwotsF
+        Cg8b0iVzhVwufjCA==
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Marc Zygnier <maz@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Megha Dey <megha.dey@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
+Subject: Re: [patch 04/32] genirq/msi: Provide a set of advanced MSI
+ accessors and iterators
+In-Reply-To: <20211129140112.GX4670@nvidia.com>
+References: <877dcsf5l5.ffs@tglx> <87o863e2j0.ffs@tglx>
+ <20211129140112.GX4670@nvidia.com>
+Date:   Mon, 29 Nov 2021 15:46:00 +0100
+Message-ID: <87a6hndnpz.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211117152952.12271-1-sergio.paracuellos@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 17, 2021 at 04:29:52PM +0100, Sergio Paracuellos wrote:
-> Sparse complains about 'mt7621_pci_ops' symbol is not declared and asks if
-> it should be declared as 'static' instead. Sparse is right. Hence declare
-> symbol as static.
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
-> ---
->  drivers/pci/controller/pcie-mt7621.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Jason,
 
-Applied to pci/mt7621, thanks.
+On Mon, Nov 29 2021 at 10:01, Jason Gunthorpe wrote:
+> On Mon, Nov 29, 2021 at 10:26:11AM +0100, Thomas Gleixner wrote:
+>> After looking at all the call sites again, there is no real usage for
+>> this local index variable.
+>> 
+>> If anything needs the index of a descriptor then it's available in the
+>> descriptor itself. That won't change because the low level message write
+>> code needs the index too and the only accessible storage there is
+>> msi_desc.
+>
+> Oh, that makes it simpler, just use the current desc->index as the
+> input to the xa_for_each_start() and then there should be no need of
+> hidden state?
 
-Lorenzo
+That works for alloc, but on free that's going to end up badly.
 
-> 
-> diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
-> index b60dfb45ef7b..4138c0e83513 100644
-> --- a/drivers/pci/controller/pcie-mt7621.c
-> +++ b/drivers/pci/controller/pcie-mt7621.c
-> @@ -148,7 +148,7 @@ static void __iomem *mt7621_pcie_map_bus(struct pci_bus *bus,
->  	return pcie->base + RALINK_PCI_CONFIG_DATA + (where & 3);
->  }
->  
-> -struct pci_ops mt7621_pci_ops = {
-> +static struct pci_ops mt7621_pci_ops = {
->  	.map_bus	= mt7621_pcie_map_bus,
->  	.read		= pci_generic_config_read,
->  	.write		= pci_generic_config_write,
-> -- 
-> 2.33.0
-> 
+>> What for? The usage sites should not have to care about the storage
+>> details of a facility they are using.
+>
+> Generally for_each things shouldn't have hidden state that prevents
+> them from being nested. It is just an unexpected design pattern..
+
+I'm not seeing any sensible use case for:
+
+     msi_for_each_desc(dev)
+        msi_for_each_desc(dev)
+
+If that ever comes forth, I'm happy to debate this further :)
+
+Thanks,
+
+        tglx
