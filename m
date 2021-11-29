@@ -2,90 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAF7C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 19:20:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31105C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 19:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238429AbhK2TXj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 14:23:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46044 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351560AbhK2TVj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 14:21:39 -0500
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [IPv6:2a01:37:3000::53df:4ef0:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EF8C0619D3
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 07:39:47 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id AA2332805D230;
-        Mon, 29 Nov 2021 16:39:43 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 9DAC22ED5ED; Mon, 29 Nov 2021 16:39:43 +0100 (CET)
-Date:   Mon, 29 Nov 2021 16:39:43 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: pciehp: Use down_read/write_nested(reset_lock)
- to fix lockdep errors
-Message-ID: <20211129153943.GA4896@wunner.de>
-References: <20211129121934.4963-1-hdegoede@redhat.com>
- <20211129121934.4963-2-hdegoede@redhat.com>
+        id S1352293AbhK2Toq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 14:44:46 -0500
+Received: from mga02.intel.com ([134.134.136.20]:40138 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233335AbhK2Tmq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Nov 2021 14:42:46 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10183"; a="223285089"
+X-IronPort-AV: E=Sophos;i="5.87,273,1631602800"; 
+   d="scan'208";a="223285089"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2021 11:31:58 -0800
+X-IronPort-AV: E=Sophos;i="5.87,273,1631602800"; 
+   d="scan'208";a="511114997"
+Received: from dsshah-mobl2.amr.corp.intel.com (HELO intel.com) ([10.252.141.244])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2021 11:31:57 -0800
+Date:   Mon, 29 Nov 2021 11:31:56 -0800
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     linux-cxl@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 05/23] cxl/pci: Don't poll doorbell for mailbox access
+Message-ID: <20211129193156.wtm7p7cdpn7iedqa@intel.com>
+References: <20211120000250.1663391-1-ben.widawsky@intel.com>
+ <20211120000250.1663391-6-ben.widawsky@intel.com>
+ <CAPcyv4jUExKbFhTXQGs_ayUvQqrp_76Z5Wywf7=ADXKcTF3DnQ@mail.gmail.com>
+ <20211129183330.svptvcystceazgwc@intel.com>
+ <CAPcyv4hPP8KYXD-6mrpHRpLYLqSQb22Lie2_m1Nc=Y5NqqfJgQ@mail.gmail.com>
+ <20211129191146.vhiwkf5jsegil4aa@intel.com>
+ <CAPcyv4gboiSXq1zCtmnP7oWzjaoMG=RL5sgmhFtXuxsTTPf3fA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211129121934.4963-2-hdegoede@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CAPcyv4gboiSXq1zCtmnP7oWzjaoMG=RL5sgmhFtXuxsTTPf3fA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 29, 2021 at 01:19:34PM +0100, Hans de Goede wrote:
-> Use down_read_nested() and down_write_nested() when taking the
-> ctrl->reset_lock rw-sem, passing the PCI-device depth in the hierarchy
-> as lock subclass parameter. This fixes the following false-positive lockdep
-> report when unplugging a Lenovo X1C8 from a Lenovo 2nd gen TB3 dock:
-[...]
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+On 21-11-29 11:18:36, Dan Williams wrote:
 
-That's exactly what I had in mind, thanks.
+[snip]
 
-Reported-by: "Theodore Ts'o" <tytso@mit.edu>
-Link: https://lore.kernel.org/linux-pci/20190402021933.GA2966@mit.edu/
-Link: https://lore.kernel.org/linux-pci/de684a28-9038-8fc6-27ca-3f6f2f6400d7@redhat.com/
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+> > > > > > -       rc = cxl_pci_mbox_wait_for_doorbell(cxlds);
+> > > > > > -       if (rc) {
+> > > > > > -               dev_warn(dev, "Mailbox interface not ready\n");
+> > > > > > -               goto out;
+> > > > > > -       }
+> > > > > > -
+> > > > > >         md_status = readq(cxlds->regs.memdev + CXLMDEV_STATUS_OFFSET);
+> > > > > >         if (!(md_status & CXLMDEV_MBOX_IF_READY && CXLMDEV_READY(md_status))) {
+> > > > > >                 dev_err(dev, "mbox: reported doorbell ready, but not mbox ready\n");
+> > > > >
+> > > > > This error message is obsolete since nothing is pre-checking the
+> > > > > mailbox anymore, and per above I see no problem waiting to check the
+> > > > > status until after the mailbox has failed to respond after a timeout.
+> > > >
+> > > > The message is wrong, but I think the logic is still valuable. How about:
+> > > > "mbox: reported interface ready, but mbox not ready"
+> > >
+> > > You mean check this every time even though the spec says the driver
+> > > only needs to check it once per-reset?
+> >
+> > Unfortunately it does not say that. "... it shall remain set until the next
+> > reset or the device encounters an error that prevents any mailbox
+> > communication."
+> >
+> > Once we have real error checking in place, this could go away, though I see no
+> > harm in leaving it.
+> 
+> Right, there's no harm in the check, it just seems overly paranoid to
+> me if it was already checked once. Until a doorbell timeout happens
+> it's an extra MMIO cycle that can saved for a "what happened?" check
+> after a timeout.
 
+Well I suspect we're just rearranging the deck chairs on the Titanic now, but...
 
-> Note the 2nd patch can probably use a Fixes: tag but I had no
-> idea which commit to put there. Or maybe add a Cc: stable to
-> both patches?
+I see doorbell timeouts as disconnected from whether or not the mailbox
+interface is ready. If they were the same, we wouldn't need both bits and we
+could just wait extra long for the doorbell when probing.
 
-I'd just add a stable designation and let the stable maintainers decide
-which versions to backport to.  The problem I see is the dependency on
-the first patch in the series.  In theory there's a syntax to specify
-such prerequisites (see "Option 3" in
-Documentation/process/stable-kernel-rules.rst), but in practice,
-my experience is that stable maintainers may ignore such prerequisite tags.
-It might be simplest to just squash the two patches together.
+In other words, I expect if the interface goes unready, doorbell timeout will
+occur, but I don't think we should assume if doorbell timeout occurs, the
+interface is no longer ready. I don't purport to know why a doorbell timeout
+might occur while the interface remains available (likely a firmware bug, I
+presume).
 
-If you do respin, it would be good to explain in the commit message why
-one lockdep class is used per hierarchy level:  This is done to conserve
-class keys because their number is limited and the complexity grows
-quadratically with number of keys according to
-Documentation/locking/lockdep-design.rst.
-
-It would also be good to explain why the lockdep splat occurs and why
-it's a false positive:  With Thunderbolt, hotplug ports are nested.  When
-removing multiple devices in a daisy-chain, each hotplug port's reset_lock
-may be acquired recursively.  It's never the same lock, so the lockdep
-splat is a false positive.  Because locks at the same hierarchy level
-are never acquired recursively, a per-level lockdep class is sufficient
-to fix the lockdep splat.
-
-Thanks,
-
-Lukas
+It does seem interesting to check if the interface is no longer ready on timeout
+though.
