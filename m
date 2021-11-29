@@ -2,77 +2,91 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79288C4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 19:15:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27778C4321E
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 19:16:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379811AbhK2TS5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 14:18:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44566 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244092AbhK2TQ4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 14:16:56 -0500
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1625AC08EE2C;
-        Mon, 29 Nov 2021 07:33:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=ldLJAPaLyuaEbVb/P7FFe5WR0zhbiWV3eHox1SK3apU=; b=IiiG1cFg1Sx5wf8ERjrDajOkBf
-        qm7LY73LR68rcpRD883MIBOfqTWYhCoboGxqGahn3669hQ4T2jkFEE57KgvHJ+RLLFAUO+fqhQaAg
-        xFuLVIclYKwBTdIDFWwlsP+x1p/yUPcITyrKtKLonf46Y6YMC+vMP39oMG54ZXF43waY=;
-Received: from p54ae943f.dip0.t-ipconnect.de ([84.174.148.63] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1mriey-0000mo-Mo; Mon, 29 Nov 2021 16:33:40 +0100
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-arm-kernel@lists.infradead.org,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     john@phrozen.org, Rob Herring <robh@kernel.org>,
-        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 08/13] dt-bindings: PCI: Add support for Airoha EN7532
-Date:   Mon, 29 Nov 2021 16:33:24 +0100
-Message-Id: <20211129153330.37719-9-nbd@nbd.name>
-X-Mailer: git-send-email 2.30.1
-In-Reply-To: <20211129153330.37719-1-nbd@nbd.name>
-References: <20211129153330.37719-1-nbd@nbd.name>
+        id S1380133AbhK2TTp convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 14:19:45 -0500
+Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:42128
+        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1344159AbhK2TRo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 14:17:44 -0500
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 1B23D41E9C
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 19:14:25 +0000 (UTC)
+Received: by mail-lj1-f180.google.com with SMTP id i63so36451253lji.3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 11:14:25 -0800 (PST)
+X-Gm-Message-State: AOAM531tLAG9alx9pFgaQeHox+fOiMu5drJh5rIWrK166JhwIZnh7wfU
+        Z8RKaJ6tINxQrWXE0p1SW2cEKE9HyGcAJUSRnuAqLQ==
+X-Google-Smtp-Source: ABdhPJy6tlWcl9tuWIn0Dybo+bAubAlmBJK8KhhQEV/k3KiuxwCNQAo3iiP7Kt6c0VpHRRrrbX3Owws2wxiVzvWgVgI=
+X-Received: by 2002:a2e:5850:: with SMTP id x16mr51799860ljd.122.1638213264420;
+ Mon, 29 Nov 2021 11:14:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20211129173637.303201-1-robh@kernel.org>
+In-Reply-To: <20211129173637.303201-1-robh@kernel.org>
+From:   =?UTF-8?Q?St=C3=A9phane_Graber?= <stgraber@ubuntu.com>
+Date:   Mon, 29 Nov 2021 14:14:13 -0500
+X-Gmail-Original-Message-ID: <CA+enf=vOE7dAPL+fpcFytxMkVsDcgrroCchWKYfd6YjGaE4bVQ@mail.gmail.com>
+Message-ID: <CA+enf=vOE7dAPL+fpcFytxMkVsDcgrroCchWKYfd6YjGaE4bVQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: xgene: Fix IB window setup
+To:     Rob Herring <robh@kernel.org>
+Cc:     Toan Le <toan@os.amperecomputing.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        stable@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: John Crispin <john@phrozen.org>
+On Mon, Nov 29, 2021 at 12:36 PM Rob Herring <robh@kernel.org> wrote:
+>
+> Commit 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup")
+> broke PCI support on XGene. The cause is the IB resources are now sorted
+> in address order instead of being in DT dma-ranges order. The result is
+> which inbound registers are used for each region are swapped. I don't
+> know the details about this h/w, but it appears that IB region 0
+> registers can't handle a size greater than 4GB. In any case, limiting
+> the size for region 0 is enough to get back to the original assignment
+> of dma-ranges to regions.
+>
+> Reported-by: Stéphane Graber <stgraber@ubuntu.com>
+> Fixes: 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup")
+> Link: https://lore.kernel.org/all/CA+enf=v9rY_xnZML01oEgKLmvY1NGBUUhnSJaETmXtDtXfaczA@mail.gmail.com/
+> Cc: stable@vger.kernel.org # v5.5+
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-EN7532 is an ARM based platform SoC integrating the same PCIe IP as
-MT7622, add a binding for it.
+I've been running with this exact change on top of the latest 5.12
+stable release for a few days now, so can confirm that on my hardware
+it's behaving perfectly (on 4 different servers).
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: John Crispin <john@phrozen.org>
----
- Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 1 +
- 1 file changed, 1 insertion(+)
+Tested-by: Stéphane Graber <stgraber@ubuntu.com>
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 57ae73462272..684227522267 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -7,6 +7,7 @@ Required properties:
- 	"mediatek,mt7622-pcie"
- 	"mediatek,mt7623-pcie"
- 	"mediatek,mt7629-pcie"
-+	"airoha,en7523-pcie"
- - device_type: Must be "pci"
- - reg: Base addresses and lengths of the root ports.
- - reg-names: Names of the above areas to use during resource lookup.
--- 
-2.30.1
-
+> ---
+>  drivers/pci/controller/pci-xgene.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/controller/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
+> index 56d0d50338c8..d83dbd977418 100644
+> --- a/drivers/pci/controller/pci-xgene.c
+> +++ b/drivers/pci/controller/pci-xgene.c
+> @@ -465,7 +465,7 @@ static int xgene_pcie_select_ib_reg(u8 *ib_reg_mask, u64 size)
+>                 return 1;
+>         }
+>
+> -       if ((size > SZ_1K) && (size < SZ_1T) && !(*ib_reg_mask & (1 << 0))) {
+> +       if ((size > SZ_1K) && (size < SZ_4G) && !(*ib_reg_mask & (1 << 0))) {
+>                 *ib_reg_mask |= (1 << 0);
+>                 return 0;
+>         }
+> --
+> 2.32.0
+>
