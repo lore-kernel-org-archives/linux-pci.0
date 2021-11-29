@@ -2,117 +2,62 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A80CC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 11:48:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8957BC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 12:13:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238778AbhK2Lvj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 06:51:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59102 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346264AbhK2Ltj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 06:49:39 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 949FAC0698D4;
-        Mon, 29 Nov 2021 02:55:16 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EF9AE6128E;
-        Mon, 29 Nov 2021 10:55:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A396C53FAD;
-        Mon, 29 Nov 2021 10:55:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638183315;
-        bh=QhZNG7zEJdkQvS0LEX52li9AXzufJrQFobG0M6duX3k=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=In+AkzkxuwyvtyrVSnDdHfnln0ej7MVCOlSJ0dRt2ZWpilriGh6TuxtTbIvPZpGRc
-         3raF7kENSA7Iqg9d3lIFa1Tycva8OdSns9kjZGzFU/i0aJcBpVAWsw03om+s4qnUOM
-         fw8I9XrPtQ3Rho8qt5voFvB4S6aarTonmWrXmIFAJNjWosRUJn049/OYsViwr62iQF
-         gEyUDXXP/57E3hImuxQespEfMMrhMyK1bU1TI2fcChiOBzoxZ2prSilIA/X8hL/HV2
-         gt/PtTjrEAm0TvcLCwOpO2++IoNJLFndUJeT7h1TLYmVmW3HVey3dfUX8+sE/bT/k6
-         GGQZi90ZDL7Yg==
-Date:   Mon, 29 Nov 2021 10:55:07 +0000
-From:   Will Deacon <will@kernel.org>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, x86@kernel.org,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: Re: [patch 33/37] iommu/arm-smmu-v3: Use msi_get_virq()
-Message-ID: <20211129105506.GA22761@willie-the-truck>
-References: <20211126224100.303046749@linutronix.de>
- <20211126230525.885757679@linutronix.de>
+        id S241440AbhK2MQU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 07:16:20 -0500
+Received: from foss.arm.com ([217.140.110.172]:37186 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232507AbhK2MOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 Nov 2021 07:14:19 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 83BEC1042;
+        Mon, 29 Nov 2021 04:11:01 -0800 (PST)
+Received: from e123427-lin.arm.com (unknown [10.57.34.225])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 82DDC3F694;
+        Mon, 29 Nov 2021 04:10:59 -0800 (PST)
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, Ryan-JH.Yu@mediatek.com,
+        qizhong.cheng@mediatek.com, Tzung-Bi Shih <tzungbi@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: mediatek-gen3: Disable DVFSRC voltage request
+Date:   Mon, 29 Nov 2021 12:10:50 +0000
+Message-Id: <163818783058.10689.5907894274885753855.b4-ty@arm.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20211015063602.29058-1-jianjun.wang@mediatek.com>
+References: <20211015063602.29058-1-jianjun.wang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211126230525.885757679@linutronix.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
-
-On Sat, Nov 27, 2021 at 02:20:59AM +0100, Thomas Gleixner wrote:
-> Let the core code fiddle with the MSI descriptor retrieval.
+On Fri, 15 Oct 2021 14:36:02 +0800, Jianjun Wang wrote:
+> When the DVFSRC (dynamic voltage and frequency scaling resource collector)
+> feature is not implemented, the PCIe hardware will assert a voltage request
+> signal when exit from the L1 PM Substates to request a specific Vcore
+> voltage, but cannot receive the voltage ready signal, which will cause
+> the link to fail to exit the L1 PM Substates.
 > 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->  drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |   19 +++----------------
->  1 file changed, 3 insertions(+), 16 deletions(-)
+> Disable DVFSRC voltage request by default, we need to find a common way to
+> enable it in the future.
 > 
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -3154,7 +3154,6 @@ static void arm_smmu_write_msi_msg(struc
->  
->  static void arm_smmu_setup_msis(struct arm_smmu_device *smmu)
->  {
-> -	struct msi_desc *desc;
->  	int ret, nvec = ARM_SMMU_MAX_MSIS;
->  	struct device *dev = smmu->dev;
->  
-> @@ -3182,21 +3181,9 @@ static void arm_smmu_setup_msis(struct a
->  		return;
->  	}
->  
-> -	for_each_msi_entry(desc, dev) {
-> -		switch (desc->msi_index) {
-> -		case EVTQ_MSI_INDEX:
-> -			smmu->evtq.q.irq = desc->irq;
-> -			break;
-> -		case GERROR_MSI_INDEX:
-> -			smmu->gerr_irq = desc->irq;
-> -			break;
-> -		case PRIQ_MSI_INDEX:
-> -			smmu->priq.q.irq = desc->irq;
-> -			break;
-> -		default:	/* Unknown */
-> -			continue;
-> -		}
-> -	}
-> +	smmu->evtq.q.irq = msi_get_virq(dev, EVTQ_MSI_INDEX);
-> +	smmu->gerr_irq = msi_get_virq(dev, GERROR_MSI_INDEX);
-> +	smmu->priq.q.irq = msi_get_virq(dev, PRIQ_MSI_INDEX);
+> [...]
 
-Prviously, if retrieval of the MSI failed then we'd fall back to wired
-interrupts. Now, I think we'll clobber the interrupt with 0 instead. Can
-we make the assignments to smmu->*irq here conditional on the MSI being
-valid, please?
+Applied to pci/mediatek-gen3, thanks!
 
-Cheers,
+[1/1] PCI: mediatek-gen3: Disable DVFSRC voltage request
+      https://git.kernel.org/lpieralisi/pci/c/ab344fd43f
 
-Will
+Thanks,
+Lorenzo
