@@ -2,101 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F5EFC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 14:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F6FAC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 15:04:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234760AbhK2O7q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 09:59:46 -0500
-Received: from foss.arm.com ([217.140.110.172]:41692 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1346090AbhK2O5q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Nov 2021 09:57:46 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id F18AD1042;
-        Mon, 29 Nov 2021 06:54:25 -0800 (PST)
-Received: from [10.57.34.182] (unknown [10.57.34.182])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B7D1C3F766;
-        Mon, 29 Nov 2021 06:54:21 -0800 (PST)
-Message-ID: <b192ad88-5e4e-6f32-1cc7-7a50fc0676a1@arm.com>
-Date:   Mon, 29 Nov 2021 14:54:18 +0000
+        id S234493AbhK2PH4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 10:07:56 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:48874 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235915AbhK2PF4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 10:05:56 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 84DDCB811AB;
+        Mon, 29 Nov 2021 15:02:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE70C53FCB;
+        Mon, 29 Nov 2021 15:02:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638198156;
+        bh=zhRf03lDFc9TSrvVKgxJdUmxw/W+2kxW3IhlVzP8WK0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=JrP+buWbPWtF7SIfkt80LqsCiQOcbSx/+rZHn6c4Dspm5vczOsQffO7tktoFA+/e4
+         V/lvbo/U7yHc1xD1VZAJrzrd40SXgSbbY2q3zShEmHglRmHORAejV3/ADJs8osRCBP
+         HQw38nmRruf27pIMb5N2MblCdBYi+Oon+EZQppz/QaGBBY5FvaqxsXny+Sy8FjtzjU
+         B0ooXczbtNPD8cpiwUOZBzV/0xY36r80Z3La8O864JRIdgwgnFYS/87zbqV2mpvKZE
+         onYLtjAxG/sFsokzPQPa4b/rlayOCc++fjxiqKrR6coDxQVb3RC32tb71Eqky6aq2P
+         FVziHLhIXRQvg==
+Received: by mail-ed1-f50.google.com with SMTP id o20so72818608eds.10;
+        Mon, 29 Nov 2021 07:02:36 -0800 (PST)
+X-Gm-Message-State: AOAM530ZJh2xNKQwX0s74HbeKEN3a6zPKwCOYED42aNM8O5tQhc5zOlR
+        QAivWPm6E5KSKiq5vYWTofp/xmON7ep84Ki94A==
+X-Google-Smtp-Source: ABdhPJzSzu6jfOFyArdfwBJO/Ho+R7KjhXG542jIpqcF/QVwAF4bMwMwkXZCl1axXS+wi0VWzmgdCAJlI7DCGEbzQLc=
+X-Received: by 2002:aa7:dc07:: with SMTP id b7mr74349852edu.327.1638198150830;
+ Mon, 29 Nov 2021 07:02:30 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Subject: Re: [patch 33/37] iommu/arm-smmu-v3: Use msi_get_virq()
-Content-Language: en-GB
-To:     Thomas Gleixner <tglx@linutronix.de>, Will Deacon <will@kernel.org>
-Cc:     Nishanth Menon <nm@ti.com>, Mark Rutland <mark.rutland@arm.com>,
-        Stuart Yoder <stuyoder@gmail.com>, linux-pci@vger.kernel.org,
-        Ashok Raj <ashok.raj@intel.com>, Marc Zygnier <maz@kernel.org>,
-        x86@kernel.org, Sinan Kaya <okaya@kernel.org>,
-        iommu@lists.linux-foundation.org,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Megha Dey <megha.dey@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        Tero Kristo <kristo@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org
-References: <20211126224100.303046749@linutronix.de>
- <20211126230525.885757679@linutronix.de>
- <20211129105506.GA22761@willie-the-truck>
- <76a1b5c1-01c8-bb30-6105-b4073dc23065@arm.com> <87czmjdnw9.ffs@tglx>
-From:   Robin Murphy <robin.murphy@arm.com>
-In-Reply-To: <87czmjdnw9.ffs@tglx>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211122111332.72264-1-marcan@marcan.st> <CAL_Jsq+vFbFN+WQhi3dRicW+kaP1Oi9JPSmnAFL7XAc0eCvgrA@mail.gmail.com>
+ <8e881b80-614c-dccf-ddaf-895d1acf26c7@marcan.st>
+In-Reply-To: <8e881b80-614c-dccf-ddaf-895d1acf26c7@marcan.st>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 29 Nov 2021 09:02:18 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqLMgkTdbKNP=kAvwKFQp+m330ztTX8v_UFmj2zvzsB-KA@mail.gmail.com>
+Message-ID: <CAL_JsqLMgkTdbKNP=kAvwKFQp+m330ztTX8v_UFmj2zvzsB-KA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: apple: Configure link speeds properly
+To:     Hector Martin <marcan@marcan.st>
+Cc:     Marc Zyngier <maz@kernel.org>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2021-11-29 14:42, Thomas Gleixner wrote:
-> On Mon, Nov 29 2021 at 13:13, Robin Murphy wrote:
->> On 2021-11-29 10:55, Will Deacon wrote:
->>>> -	}
->>>> +	smmu->evtq.q.irq = msi_get_virq(dev, EVTQ_MSI_INDEX);
->>>> +	smmu->gerr_irq = msi_get_virq(dev, GERROR_MSI_INDEX);
->>>> +	smmu->priq.q.irq = msi_get_virq(dev, PRIQ_MSI_INDEX);
->>>
->>> Prviously, if retrieval of the MSI failed then we'd fall back to wired
->>> interrupts. Now, I think we'll clobber the interrupt with 0 instead. Can
->>> we make the assignments to smmu->*irq here conditional on the MSI being
->>> valid, please?
->>
->> I was just looking at that too, but reached the conclusion that it's
->> probably OK, since consumption of this value later is gated on
->> ARM_SMMU_FEAT_PRI, so the fact that it changes from 0 to an error value
->> in the absence of PRI should make no practical difference.
-> 
-> It's actually 0 when the vector cannot be found.
+On Wed, Nov 24, 2021 at 1:40 AM Hector Martin <marcan@marcan.st> wrote:
+>
+> On 24/11/2021 11.23, Rob Herring wrote:
+> >> +#include "../pci.h"
+> >> +/* Apple PCIe is based on DesignWare IP and shares some registers */
+> >> +#include "dwc/pcie-designware.h"
+> >
+> > I'm starting to regret this not being part of the DWC driver...
+>
+> Main issue is the DWC driver seems to have a pretty hard-coded
+> assumption of one port per controller, plus does a bunch of stuff
+> differently for the higher layers. It seems Apple used the DWC PHY/LTSSM
+> bits, then rolled their own upper layer.
 
-Oh, -1 for my reading comprehension but +1 for my confidence in the 
-patch then :)
+Yeah, it would need some work...
 
-I'll let Will have the final say over how cautious we really want to be 
-here, but as far as I'm concerned it's a welcome cleanup as-is. Ditto 
-for patch #32 based on the same reasoning, although I don't have a 
-suitable test platform on-hand to sanity-check that one.
+> >> +/* The offset of the PCIe capabilities structure in bridge config space */
+> >> +#define PCIE_CAP_BASE          0x70
+> >
+> > This offset is discoverable, so don't hardcode it.
+>
+> Sure, it just means I have to reinvent the PCI capability lookup wheel
+> again. I'd love to use the regular accessors, but the infrastructure
+> isn't up to the point where we can do that yet yere. DWC also reinvents
+> this wheel, but we can't reuse that code because it pokes these
+> registers through a separate reg range, not config space (even though it
+> seems like they should be the same thing? I'm not sure what's going on
+> in the DWC devices... for the Apple controller it's just the ECAM).
 
-Cheers,
-Robin.
+Since it is just ECAM, can you use the regular config space accessors?
 
->> If we don't have MSIs at all, we'd presumably still fail earlier
->> either at the dev->msi_domain check or upon trying to allocate the
->> vectors, so we'll still fall back to any previously-set wired values
->> before getting here.  The only remaining case is if we've
->> *successfully* allocated the expected number of vectors yet are then
->> somehow unable to retrieve one or more of them - presumably the system
->> has to be massively borked for that to happen, at which point do we
->> really want to bother trying to reason about anything?
-> 
-> Probably not. At that point something is going to explode sooner than
-> later in colorful ways.
-> 
-> Thanks,
-> 
->          tglx
-> 
+> >> +       max_gen = of_pci_get_max_link_speed(port->np);
+> >> +       if (max_gen < 0) {
+> >> +               dev_err(port->pcie->dev, "max link speed not specified\n");
+> >
+> > Better to fail than limp along in gen1? Though you don't check the
+> > return value...
+> >
+> > Usually, the DT property is there to limit the speed when there's a
+> > board limitation.
+>
+> The default *setting* is actually Gen4, but without
+> PCIE_LINK_WIDTH_SPEED_CONTROL poked it always trains at Gen1. Might make
+> more sense to only set the LNKCTL field if max-link-speed is specified,
+> and unconditionally poke that bit. That'll get us Gen4 by default (or
+> even presumably Gen5 in future controllers, if everything else stays
+> compatible).
+
+You already do some setup in firmware for ECAM, right? I think it
+would be better if you can do any default setup there and then
+max-link-speed is only an override for the kernel.
+
+Rob
