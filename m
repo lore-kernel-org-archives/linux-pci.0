@@ -2,75 +2,87 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10104C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 22:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CFAC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 22:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232548AbhK2WSV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 17:18:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56756 "EHLO
+        id S232088AbhK2WVM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 17:21:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231760AbhK2WRd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 17:17:33 -0500
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5f64:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E495C04C32A
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 10:59:48 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        with ESMTP id S233887AbhK2WTp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 17:19:45 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28D8BC07CA0E
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 11:53:08 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 2146330000641;
-        Mon, 29 Nov 2021 19:59:46 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 114A924ADCC; Mon, 29 Nov 2021 19:59:46 +0100 (CET)
-Date:   Mon, 29 Nov 2021 19:59:46 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: pciehp: Use down_read/write_nested(reset_lock)
- to fix lockdep errors
-Message-ID: <20211129185946.GA1475@wunner.de>
-References: <20211129121934.4963-1-hdegoede@redhat.com>
- <20211129121934.4963-2-hdegoede@redhat.com>
- <20211129153943.GA4896@wunner.de>
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 6231DCE13D3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 19:53:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 496A8C53FAD;
+        Mon, 29 Nov 2021 19:53:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638215584;
+        bh=n47dNt59W6WpMo8TT6WALBm96tMUEZDnXE0HKS2FnS8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=JMCFC1/UBqhD5ulVOfnc2t8wCKz4oP2i32PSFrnQatAFVBHduOSMp1jKblbFHbImL
+         /sEbFN+WcuuYHw2NVSoTJyJcIU6pbtztmmv/5ni15AqNp05cQsl7RNcJIUPNaCqQT6
+         fLoCsIZk8AvId1VYo5hhrBLSFtKuXfsPcqHp/PdF7dPDti6vYpKF3Ex+8O8Cj4Q2YO
+         FEaG7QOfk+pOk6MMFx24TvaEZ71Ei8bXqBw0eRI8QG7aMweuZs2p6YDT005Spkv/A+
+         SQYzywsPLz53xynBnPtKTW/gqQAGzB0Iw44rh4GWyisjmFAwA0g/qG843Uql6F4bo5
+         N7dm+P3aH2stg==
+Date:   Mon, 29 Nov 2021 13:53:02 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     francisco.munoz.ruiz@linux.intel.com
+Cc:     linux-pci@vger.kernel.org, jonathan.derrick@intel.com,
+        dan.j.williams@intel.com, nirmal.patel@linux.intel.com,
+        Karthik L Gopalakrishnan <karthik.l.gopalakrishnan@intel.com>
+Subject: Re: [PATCH] PCI: vmd: Add device id for VMD device 8086:A77F
+Message-ID: <20211129195302.GA2686292@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211129153943.GA4896@wunner.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20211129190232.24375-1-francisco.munoz.ruiz@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Nov 29, 2021 at 04:39:43PM +0100, Lukas Wunner wrote:
-> On Mon, Nov 29, 2021 at 01:19:34PM +0100, Hans de Goede wrote:
-> > Use down_read_nested() and down_write_nested() when taking the
-> > ctrl->reset_lock rw-sem, passing the PCI-device depth in the hierarchy
-> > as lock subclass parameter. This fixes the following false-positive lockdep
-> > report when unplugging a Lenovo X1C8 from a Lenovo 2nd gen TB3 dock:
-> [...]
-> > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+On Mon, Nov 29, 2021 at 11:02:32AM -0800, francisco.munoz.ruiz@linux.intel.com wrote:
+> From: Karthik L Gopalakrishnan <karthik.l.gopalakrishnan@intel.com>
 > 
-> That's exactly what I had in mind, thanks.
+> Add support for this VMD device which supports the bus rectriction mode.
+> The feature that turns off vector 0 for MSI-X remapping is also enabled.
 
-Hm, I found the notes that I took when I investigated Theodore's report:
-Using a subclass may be problematic because it's limited to a value < 8
-(MAX_LOCKDEP_SUBCLASSES).  If there's a hotplug port at a deeper level
-than 8 in the PCI hierarchy (can easily happen, Thunderbolt daisy chain
-allows up to 6 devices, each device contains a PCIe switch, so 2 levels per
-device), look_up_lock_class() in kernel/locking/lockdep.c will emit a BUG
-error message.
+s/rectriction/restriction/
 
-It may be necessary to call lockdep_register_key() for each level or
-for each hotplug port and assign the lock with lockdep_set_class()
-(or ..._and_name() and use the dev_name()).
+Is there any product name or code name you could put something in the
+subject line to connect this to the hardware?
 
-It's these complications that made me put aside the problem back in the day.
-My apologies for not remembering them earlier.
+Maybe you could also add the relevant details to the PCI ID database
+here?  https://pci-ids.ucw.cz/read/PC/8086  This will help lspci show
+the correct name.
 
-Thanks,
-
-Lukas
+> Signed-off-by: Karthik L Gopalakrishnan <karthik.l.gopalakrishnan@intel.com>
+> Signed-off-by: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+> ---
+>  drivers/pci/controller/vmd.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index a45e8e59d3d4..0e6ca6cae2c7 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -953,6 +953,10 @@ static const struct pci_device_id vmd_ids[] = {
+>  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+>  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+>  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
+> +	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0xa77f),
+> +		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+> +				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+> +				VMD_FEAT_OFFSET_FIRST_VECTOR,},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
+>  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+>  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+> -- 
+> 2.25.1
+> 
