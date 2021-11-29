@@ -2,89 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FB1C43217
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 20:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19BE3C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Nov 2021 20:39:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231906AbhK2UV0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Nov 2021 15:21:26 -0500
-Received: from mga03.intel.com ([134.134.136.65]:34090 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232484AbhK2UR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 Nov 2021 15:17:28 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10183"; a="236011259"
-X-IronPort-AV: E=Sophos;i="5.87,273,1631602800"; 
-   d="scan'208";a="236011259"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2021 12:05:16 -0800
-X-IronPort-AV: E=Sophos;i="5.87,273,1631602800"; 
-   d="scan'208";a="594818378"
-Received: from ajsteine-mobl13.amr.corp.intel.com (HELO intel.com) ([10.252.141.244])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2021 12:05:15 -0800
-Date:   Mon, 29 Nov 2021 12:05:14 -0800
-From:   Ben Widawsky <ben.widawsky@intel.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        linux-cxl@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [PATCH 12/23] cxl: Introduce endpoint decoders
-Message-ID: <20211129200514.2o2zmjelfl3nahyt@intel.com>
-References: <20211120000250.1663391-1-ben.widawsky@intel.com>
- <20211120000250.1663391-13-ben.widawsky@intel.com>
- <20211122162039.000022c1@Huawei.com>
- <20211122193751.gipqgs5ap24dacm3@intel.com>
- <CAPcyv4gBmc+C4d1RExH5qB2qunhkkMRqNZwzz29gc-1uaJiM4A@mail.gmail.com>
+        id S230386AbhK2UnE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Nov 2021 15:43:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34780 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232226AbhK2UlE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Nov 2021 15:41:04 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06318C09677B
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 09:16:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C2F3BB8120F
+        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 17:15:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5801C53FAD;
+        Mon, 29 Nov 2021 17:15:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638206157;
+        bh=JP6Bblx4Vh3MrNtB3GUhSi7CyJJS9rWRtyMrbQenCAg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=hg6EVArRLKF7E7C9HpuFrK3sx0YhUWcw5eMpwULioa+gn3FESKRhQJXw+KOFgadIf
+         WDWyJk5X/ZTIvRmoU5koPLSNupzhYHdV67J8faBPLJiDvNIEEbz5xTuHPEPnDHsni3
+         MneQEr4BAkyiTmREJsDsrxnEmZb6o+/p2H8KMAbRELAZVsy8q3PC1M0eD1vVh9lV9v
+         nMT/dts7Bt7CN+Zgpbk6Cbdyu7uoXsMNNQjcXfoM7oU2cslP5eES8K1ZGeexi/8wPw
+         KsesK9yVPr0q7fzoNkbtfrpoSW+I4Nb9ILW/n13eSiqQyx9JLDumketjdnPJZFFfy/
+         oyhGMapgniHdQ==
+Date:   Mon, 29 Nov 2021 18:15:53 +0100
+From:   Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, pali@kernel.org
+Subject: Re: [PATCH 7/7] PCI: aardvark: Reset PCIe card and disable PHY at
+ driver unbind
+Message-ID: <20211129181553.41a341bb@thinkpad>
+In-Reply-To: <20211129164043.GA26244@lpieralisi>
+References: <20211031181233.9976-1-kabel@kernel.org>
+        <20211031181233.9976-8-kabel@kernel.org>
+        <20211129164043.GA26244@lpieralisi>
+X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gBmc+C4d1RExH5qB2qunhkkMRqNZwzz29gc-1uaJiM4A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21-11-24 16:07:23, Dan Williams wrote:
-> On Mon, Nov 22, 2021 at 11:38 AM Ben Widawsky <ben.widawsky@intel.com> wrote:
-> >
-> > On 21-11-22 16:20:39, Jonathan Cameron wrote:
-> > > On Fri, 19 Nov 2021 16:02:39 -0800
-> > > Ben Widawsky <ben.widawsky@intel.com> wrote:
-> > >
-> > > > Endpoints have decoders too. It is useful to share the same
-> > > > infrastructure from cxl_core. Endpoints do not have dports (downstream
-> > > > targets), only the underlying physical medium. As a result, some special
-> > > > casing is needed.
-> > > >
-> > > > There is no functional change introduced yet as endpoints don't actually
-> > > > enumerate decoders yet.
-> > > >
-> > > > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> > >
-> > > I'm not a fan of special values like using 0 here to indicate endpoint
-> > > device.  I'd rather see a base cxl_decode_alloc(..., bool ep)
-> > > and possibly wrappers for the non ep case and ep one.
-> > >
-> > > Jonathan
-> > >
-> >
-> > My inclination is the opposite. However, I think you and Dan both brought up
-> > something to this effect in the previous RFCs.
-> >
-> > Dan, do you have a preference here?
-> 
-> I was thinking something along the lines of what Jonathan wants,
-> explicit per-type APIs, but internal / private to the core can use
-> heuristics like nr_targets == 0 == endpoint.
-> 
-> So unexport cxl_decoder_alloc() and have separate:
-> 
-> cxl_root_decoder_alloc()
-> cxl_switch_decoder_alloc()
-> cxl_endpoint_decoder_alloc()
-> 
-> ...apis that use a static cxl_decoder_alloc() internally. Probably
-> also wants a cxl_endpoint_decoder_add() that drops the need to pass a
-> NULL @target_map.
+On Mon, 29 Nov 2021 16:40:43 +0000
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 
-Would you a like a prep patch to set up the APIs first, or just do it all in
-one?
+> On Sun, Oct 31, 2021 at 07:12:33PM +0100, Marek Beh=C3=BAn wrote:
+> > From: Pali Roh=C3=A1r <pali@kernel.org>
+> >=20
+> > When unbinding driver, assert PERST# signal which prepares PCIe card for
+> > power down. Then disable link training and PHY. =20
+>=20
+> This reads as three actions. If we carry them out as a single patch we
+> have to explain why they are related and what problem they are solving
+> as a _single_ commit.
+>=20
+> Otherwise we have to split this patch into three and explain each of
+> them as a separate fix.
+>=20
+> I understand it is tempting to coalesce missing code in one single
+> change but every commit must implement a single logical change.
+
+Hi Lorenzo,
+
+this is a fix for driver remove function. Although each of these things
+could be introduced in separate commits, IMO it doesn't make sense to
+split it. It should have been done this way in the first place when the
+driver removal support was introduced. I guess we could rewrite the
+commit message to:
+
+  PCI: aardvark: Disable controller entirely at driver unbind
+
+  Add the following to driver unbind to disable the controller entirely:
+  - asserting PERST# signal
+  - disabling link training
+  - disable PHY
+
+Would this be okay?
+
+Marek
