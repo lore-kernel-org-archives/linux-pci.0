@@ -2,96 +2,124 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D766C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 06:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F98C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 07:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238733AbhK3Gpw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Nov 2021 01:45:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59514 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238723AbhK3Gpv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 01:45:51 -0500
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33225C061748
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 22:42:33 -0800 (PST)
-Received: by mail-pg1-x52e.google.com with SMTP id r5so18673608pgi.6
-        for <linux-pci@vger.kernel.org>; Mon, 29 Nov 2021 22:42:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=IvByH85k2GhB0gfAkNHfHQT5cnwP0kCymtjlqEmdVEg=;
-        b=rP2XIR3SzL0k9UD5LzqH+maIwpmypopDDn1/s7o6aJmnQ37C5OcSmZtlLBvGgWJcCd
-         vFhOzv1iDCXGhscwnSqOV2e9LNuFCYmeveIEHJbCB/Sh04hzCHkrQ9I3LZFX6Gjl4NPG
-         zV5SZuBx/pIo+vA4NzXYw0VrVyBJOAjZu8iAfj2BbU0/K4vL4e+P91LjeT3gfS5PrsPk
-         uoQy1BPdSB2b3Dz9tCzOIn6dq03GYyorwPk3fzKzokhve5HtVOMmP9Wp8agZ42O6br8d
-         ACWNPFQBDN4pabVExFzoi+uDIZrKzDHDETW5lkCkLhEewJ7f/9C8oUOX1oWy/zszSNRW
-         c8rQ==
+        id S239035AbhK3HcC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Nov 2021 02:32:02 -0500
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:43966 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233413AbhK3HcB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 02:32:01 -0500
+Received: by mail-pj1-f44.google.com with SMTP id nh10-20020a17090b364a00b001a69adad5ebso16405897pjb.2;
+        Mon, 29 Nov 2021 23:28:43 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=IvByH85k2GhB0gfAkNHfHQT5cnwP0kCymtjlqEmdVEg=;
-        b=fqAlWzOrAZo9sMAae3kXw1jdsPY3tPrreNOlIwBCLyCbKFPppChAnQTd9VIaE6zLZj
-         fuW752r3MojyTucGbsa72odAVfHr6Zs1ELAUHoDY9VjCLhJogVhRerDnSU4C8LUGHsTA
-         pkcKpmwqKxpzNfh6Z8ztyLpS27YGqJP6jaZTYVk1GNU0/NoJeoPErLmYxpklSSHw10aG
-         go1l00a7CIrWfSwZsXo3TVLsD8vfQwpGnTNVw0KFJ9SQPRXEmXEDHXTKTVmPoOHnS2e+
-         TvVgIDkn2by4bKhejNiGWrTGgVy2tSAKBKr/V3seoOLSNHj3va1u9tnQv3L5il9OydZi
-         +r2w==
-X-Gm-Message-State: AOAM532W5FJZLMbOmSQF8WO8kjBxUGVnxFSM9NVodo85v8HZaJdPwpB8
-        OAqS7UdEmAryFh0JKc8Sd2t2
-X-Google-Smtp-Source: ABdhPJzyr8nxGH+zQ/RuB47Y7mPcsgB7bQfz8SJ2nSbYjceTWZnsTbpIwiJmSvc4z146UCWg4sW00w==
-X-Received: by 2002:a65:5b41:: with SMTP id y1mr38857743pgr.481.1638254552633;
-        Mon, 29 Nov 2021 22:42:32 -0800 (PST)
-Received: from localhost.localdomain ([202.21.42.3])
-        by smtp.gmail.com with ESMTPSA id d19sm19683993pfv.199.2021.11.29.22.42.29
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=iz5wEeRsS04GwX3xBqETJnARTyHG1Ba5oDn/u/+myP8=;
+        b=XKId3QStNQkGrTpbR593Z6uBke4qDjLBgsTFPidtDloIiQGRyHWNSJOa95nY1CcunO
+         Ef6JyTmICE+BBGqcii2iO7aTK5Zbw+eAb1WhEcgbtq7srwZ2nvitOLSpzpCCtY1ihtkh
+         BResbo/zPZBZH4nbp8waAgkxF4LrNIhONv1ryc35wCN8cTeIyN8Csfhgn+vqMKoJdalm
+         hI9ZDPybP7YVxFa9F7qE/WazG7SMVhh1+QOABsiZAh5zpGdeLXmE8FLO6hI70LAquPxh
+         hDa9zNNUeLNtkjII8LQTRBCTdmayfq47Y5jVx0+ii1LjXCyH7Z5ZsPACq8XgOYpC0vIg
+         8L7w==
+X-Gm-Message-State: AOAM5338cqBe66Fv1MwFko8kQlkZR8W3cYsweUgDHfkApFs6q4IZsAaq
+        DQ7UAEDLcMZKMuOHNON6YqQ=
+X-Google-Smtp-Source: ABdhPJwBFzSLckRpxVwWDl/mHPiHMQEZD61fOwq8WhCy6SEBFljPTruH+oE41JFx+FFafXHr2ulzPw==
+X-Received: by 2002:a17:90b:3b43:: with SMTP id ot3mr4017318pjb.205.1638257322820;
+        Mon, 29 Nov 2021 23:28:42 -0800 (PST)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id v18sm5375354pgo.11.2021.11.29.23.28.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Nov 2021 22:42:32 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com
-Cc:     svarbanov@mm-sol.com, bjorn.andersson@linaro.org, robh@kernel.org,
+        Mon, 29 Nov 2021 23:28:42 -0800 (PST)
+Date:   Tue, 30 Nov 2021 08:28:32 +0100
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        svarbanov@mm-sol.com, bjorn.andersson@linaro.org, robh@kernel.org,
         linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH v2] PCI: qcom: Use __be16 for catching cpu_to_be16() return instead of u16
-Date:   Tue, 30 Nov 2021 12:12:15 +0530
-Message-Id: <20211130064215.207393-1-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
+        linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2] PCI: qcom: Use __be16 for catching cpu_to_be16()
+ return instead of u16
+Message-ID: <YaXSoLpIfrTh81/+@rocinante>
+References: <20211130064215.207393-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211130064215.207393-1-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-cpu_to_be16() returns __be16 value but the driver uses u16 and that's
-incorrect. Fix it by using __be16 as the datatype of bdf_be variable.
+Hi Manivannan,
 
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
+Thank you for sending the patch over!  Much appreciated!
 
-Changes in v2:
+A small nitpick, thus feel free to ignore it, of course: if I may, I would
+suggest the following subject:
 
-* Modified the commit message and subject to describe the actual issue
-as per comments from Bjorn.
+  PCI: qcom: Use __be16 type to store return value from cpu_to_be16()
 
- drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Or something along the lines.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 1c3d1116bb60..ddecd7f341c5 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1343,7 +1343,7 @@ static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
- 
- 	/* Look for an available entry to hold the mapping */
- 	for (i = 0; i < nr_map; i++) {
--		u16 bdf_be = cpu_to_be16(map[i].bdf);
-+		__be16 bdf_be = cpu_to_be16(map[i].bdf);
- 		u32 val;
- 		u8 hash;
- 
--- 
-2.25.1
+> cpu_to_be16() returns __be16 value but the driver uses u16 and that's
+> incorrect. Fix it by using __be16 as the datatype of bdf_be variable.
 
+It would be "data type" in the above.
+
+Not really a requirement to do so, but you could include the actual
+warning, as sometimes this is useful for reference later, as per:
+
+  drivers/pci/controller/dwc/pcie-qcom.c:1346:30: warning: incorrect type in initializer (different base types)
+  drivers/pci/controller/dwc/pcie-qcom.c:1346:30:    expected unsigned short [usertype] bdf_be
+  drivers/pci/controller/dwc/pcie-qcom.c:1346:30:    got restricted __be16 [usertype]
+
+> @@ -1343,7 +1343,7 @@ static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
+>  
+>  	/* Look for an available entry to hold the mapping */
+>  	for (i = 0; i < nr_map; i++) {
+> -		u16 bdf_be = cpu_to_be16(map[i].bdf);
+> +		__be16 bdf_be = cpu_to_be16(map[i].bdf);
+>  		u32 val;
+>  		u8 hash;
+
+Thank you!
+
+Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
+
+Also, since I have your attention, it seems we have a number of unused
+macros in the qcom driver, as per:
+
+  drivers/pci/controller/dwc/pcie-qcom.c:#define PCIE20_PARF_BDF_TRANSLATE_CFG            0x24C
+  drivers/pci/controller/dwc/pcie-qcom.c:#define PCIE20_PARF_SID_OFFSET                   0x234
+  drivers/pci/controller/dwc/pcie-qcom.c:#define PCIE20_PARF_SLV_ADDR_SPACE_SIZE          0x16C
+
+And also in the qcom-ep driver, as per:
+
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_BRIDGE_FLUSH_N           BIT(12)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_MHI_A7                   BIT(7)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_MHI_Q6                   BIT(6)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_SLV_ADDR_SPACE_SIZE              0x358
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_PLS_PME                  BIT(17)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_SLV_ADDR_MSB_CTRL                        0x2c0
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_DEBUG                    BIT(4)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_L1SUB_TIMEOUT            BIT(9)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_DBI_BASE_ADDR_HI                 0x354
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_ATU_BASE_ADDR                    0x634
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_SLV_ADDR_SPACE_SIZE_HI           0x35c
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_LTR                      BIT(5)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_DBI_BASE_ADDR                    0x350
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_SRIS_MODE                                0x644
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_MMIO_WRITE                       BIT(10)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_PLS_ERR                  BIT(15)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_AER_LEGACY                       BIT(14)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_CFG_WRITE                        BIT(11)
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_ATU_BASE_ADDR_HI                 0x638
+  drivers/pci/controller/dwc/pcie-qcom-ep.c:#define PARF_INT_ALL_PME_LEGACY                       BIT(16)
+
+Are these needed, or would it be fine to drop these?
+
+	Krzysztof
