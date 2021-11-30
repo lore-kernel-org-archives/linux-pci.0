@@ -2,39 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DD2C43217
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 12:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 923D9C433FE
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 12:36:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231571AbhK3MkA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Nov 2021 07:40:00 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:44524 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241635AbhK3Mj7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 07:39:59 -0500
+        id S241635AbhK3MkI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Nov 2021 07:40:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57310 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241653AbhK3MkE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 07:40:04 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E399EC061746
+        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 04:36:44 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A2194CE1992
-        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 12:36:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC395C53FC1;
-        Tue, 30 Nov 2021 12:36:36 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 412B2CE1992
+        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 12:36:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9033C53FCF;
+        Tue, 30 Nov 2021 12:36:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638275797;
-        bh=n5HCETooZH/CiDD+dPplikHl8cWiZOySlpjrYkny2NU=;
+        s=k20201202; t=1638275802;
+        bh=dYfzN6X0G22H94LW3KF/P1tqeqWEbRgCPaXPmrfgByY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FCiTdEVf4J1DFVl3VemibcMqXGgWPeiL1+h1Car4gqMfVO7FR8InwrR90yxnfHIEy
-         u7cvRH9/VHneJitFrOgiWbf5ilVJN2IMga2FmSP5byCKx5nEb+0g+AvlQI6+VBjyie
-         2W9QNeuQUaZAcMHdoZPs6yiBMb4RNctPs3GVqUZ1dzp7kerRvZQ00btAu+BV2PFh7s
-         hR3/XRNYh+RgD571zONFuT5lSHVPh5aEZja14z43Pvlabt3bSh4rX+lX7BqzF2/Am0
-         y0ysvG0kHB7CT5Cd+N1SvlOcLr/SPbeMKOnpKTLHGr6ERnYi8xbGN15UtkH9t7UhX1
-         N9safjr8NxTNw==
+        b=Hg/v2MPqT+nHMuHVKjY8f0UKDczzAoVXyt7Um61FX0xqyhk6lupSEoNrRN5OsRstC
+         j1b7U8jUcTTKIU2IOmm4bIf6DwXFKuhEIuVIsdpGdrB10xk3IrnXEeDRoZOMpf4n7W
+         bH1tTox2l7OB9uRmkd6HAIB/my6mV23jCFij4ThlQzjii8Odk+Wij3kt8EvdbfUrxj
+         Dz70QjT5U52UOjPimx/cPyNkrzwiy0/BJQ4hmJfeKiipKQpg1vuwZpW0SWP4e2vszV
+         TSOgQePAlX3CBbQmIYMhQ26azXmSnV81bkhAd/RLbDprYQTB2OAtYxoZOFvCd2gw18
+         0MFWdBq0dRMMg==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     pali@kernel.org, linux-pci@vger.kernel.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v2 07/11] PCI: aardvark: Mask all interrupts when unbinding driver
-Date:   Tue, 30 Nov 2021 13:36:17 +0100
-Message-Id: <20211130123621.23062-8-kabel@kernel.org>
+Subject: [PATCH v2 10/11] PCI: aardvark: Disable link training when unbinding driver
+Date:   Tue, 30 Nov 2021 13:36:20 +0100
+Message-Id: <20211130123621.23062-11-kabel@kernel.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211130123621.23062-1-kabel@kernel.org>
 References: <20211130123621.23062-1-kabel@kernel.org>
@@ -47,46 +50,30 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Pali Rohár <pali@kernel.org>
 
-Ensure that no interrupt can be triggered after driver unbind.
+Disable link training circuit in driver unbind sequence.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 12eae05f3d10..08b34accfe2f 100644
+index 271ebecee965..e5c88f1c177b 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1709,6 +1709,27 @@ static int advk_pcie_remove(struct platform_device *pdev)
- 	val &= ~(PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
- 	advk_writel(pcie, val, PCIE_CORE_CMD_STATUS_REG);
+@@ -1741,6 +1741,11 @@ static int advk_pcie_remove(struct platform_device *pdev)
+ 	if (pcie->reset_gpio)
+ 		gpiod_set_value_cansleep(pcie->reset_gpio, 1);
  
-+	/* Disable MSI */
-+	val = advk_readl(pcie, PCIE_CORE_CTRL2_REG);
-+	val &= ~PCIE_CORE_CTRL2_MSI_ENABLE;
-+	advk_writel(pcie, val, PCIE_CORE_CTRL2_REG);
++	/* Disable link training */
++	val = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
++	val &= ~LINK_TRAINING_EN;
++	advk_writel(pcie, val, PCIE_CORE_CTRL0_REG);
 +
-+	/* Clear MSI address */
-+	advk_writel(pcie, 0, PCIE_MSI_ADDR_LOW_REG);
-+	advk_writel(pcie, 0, PCIE_MSI_ADDR_HIGH_REG);
-+
-+	/* Mask all interrupts */
-+	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_MASK_REG);
-+	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_MASK_REG);
-+	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_MASK_REG);
-+	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_MASK_REG);
-+
-+	/* Clear all interrupts */
-+	advk_writel(pcie, PCIE_MSI_ALL_MASK, PCIE_MSI_STATUS_REG);
-+	advk_writel(pcie, PCIE_ISR0_ALL_MASK, PCIE_ISR0_REG);
-+	advk_writel(pcie, PCIE_ISR1_ALL_MASK, PCIE_ISR1_REG);
-+	advk_writel(pcie, PCIE_IRQ_ALL_MASK, HOST_CTRL_INT_STATUS_REG);
-+
- 	/* Remove IRQ domains */
- 	advk_pcie_remove_msi_irq_domain(pcie);
- 	advk_pcie_remove_irq_domain(pcie);
+ 	/* Disable outbound address windows mapping */
+ 	for (i = 0; i < OB_WIN_COUNT; i++)
+ 		advk_pcie_disable_ob_win(pcie, i);
 -- 
 2.32.0
 
