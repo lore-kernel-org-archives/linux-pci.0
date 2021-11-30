@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E57EAC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 12:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29999C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Nov 2021 12:36:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230406AbhK3Mjx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Nov 2021 07:39:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57262 "EHLO
+        id S229638AbhK3Mj4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Nov 2021 07:39:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbhK3Mjw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 07:39:52 -0500
+        with ESMTP id S231571AbhK3Mj4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Nov 2021 07:39:56 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A335FC061574
-        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 04:36:33 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B04FC061574
+        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 04:36:37 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 73727B81919
-        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 12:36:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AB42C53FCD;
-        Tue, 30 Nov 2021 12:36:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C7E46B81916
+        for <linux-pci@vger.kernel.org>; Tue, 30 Nov 2021 12:36:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B2E2C5831B;
+        Tue, 30 Nov 2021 12:36:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638275791;
-        bh=Zom8OJtYEZV8oJ9yPxDBKMP/73UFTt2PWS5ADcIzuzs=;
+        s=k20201202; t=1638275794;
+        bh=vViYlN52EqJfxR0NJjT0cQXo6zwIpZwfs3rrB0XD+ms=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nGhKtsbIRAFC4CxtxE3W2DA3jS3SwIsKzI3XU8cdI812bv/Uq5Q7TeqQelLzcPOZc
-         0S3AWf/x1V61DMSKPKJ+PshqnWxIMEo93OPLKPfP1b0vyK0zeUjn99mZiLtm54qEf0
-         IDOeRImuTBgrgY13cyERtsavyKz8PEDJ/aPjMgPTaM+hZpNWoSiENeqNYEWSHXdnCQ
-         5D1dJQqhrdL0mV3RDLw2tUZfR7XdtQKJLfs8tYzgN7TvlmEdB8QV5b+RL7FQC1EwqC
-         RhRm3DjKAVbgZXhSl6rRVOIhUAyubRbvL1K/qOY+J+VUAqJwzhoZQ92l57uyrAcaKF
-         XdKpfT5CINY3w==
+        b=r60aU1pGG85CuCoHEy/ZAJpOTLliIeAal04P1cYgrWP1Ezkw+4qr5Wb/4Hu0jrd2T
+         ukOXWTtTaDZwhPHt/VgZOGd+jj/AYRzFQU5YPzGMJXZbBFsJAFVuQJPvmF7/h0kWuo
+         1zEzorU8/GQtYuHftbfC2CdSotlCTC7+F2OK2M++qO7PaHuldX5umEoax+DWVmbbEJ
+         +AuqIrFeWcc3O/lKiBbp6WnMiFufbJtlfnqoP8aLu+9IDKmgQioVbpwGr5ETe6bonq
+         aURF+KWuOD88w6nXlQOM7LrhMNEsWO63tIqoCJl60dfSYrxuMhQGlk4AD4TJAKrn6U
+         Z1TUtcbbW6beg==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     pali@kernel.org, linux-pci@vger.kernel.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v2 03/11] PCI: aardvark: Add support for DEVCAP2, DEVCTL2, LNKCAP2 and LNKCTL2 registers on emulated bridge
-Date:   Tue, 30 Nov 2021 13:36:13 +0100
-Message-Id: <20211130123621.23062-4-kabel@kernel.org>
+Subject: [PATCH v2 05/11] PCI: aardvark: Comment actions in driver remove method
+Date:   Tue, 30 Nov 2021 13:36:15 +0100
+Message-Id: <20211130123621.23062-6-kabel@kernel.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211130123621.23062-1-kabel@kernel.org>
 References: <20211130123621.23062-1-kabel@kernel.org>
@@ -50,58 +50,32 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Pali Rohár <pali@kernel.org>
 
-PCI aardvark hardware supports access to DEVCAP2, DEVCTL2, LNKCAP2 and
-LNKCTL2 configuration registers of PCIe core via PCIE_CORE_PCIEXP_CAP.
-Export them via emulated software root bridge.
+Add two more comments into the advk_pcie_remove() method.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index c5300d49807a..25af189a1052 100644
+index 71ce9f02d596..6348584c33be 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -884,8 +884,13 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
- 	case PCI_CAP_LIST_ID:
- 	case PCI_EXP_DEVCAP:
- 	case PCI_EXP_DEVCTL:
-+	case PCI_EXP_DEVCAP2:
-+	case PCI_EXP_DEVCTL2:
-+	case PCI_EXP_LNKCAP2:
-+	case PCI_EXP_LNKCTL2:
- 		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
- 		return PCI_BRIDGE_EMUL_HANDLED;
-+
- 	default:
- 		return PCI_BRIDGE_EMUL_NOT_HANDLED;
- 	}
-@@ -899,10 +904,6 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 	struct advk_pcie *pcie = bridge->data;
+@@ -1697,11 +1697,13 @@ static int advk_pcie_remove(struct platform_device *pdev)
+ 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+ 	int i;
  
- 	switch (reg) {
--	case PCI_EXP_DEVCTL:
--		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
--		break;
--
- 	case PCI_EXP_LNKCTL:
- 		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
- 		if (new & PCI_EXP_LNKCTL_RL)
-@@ -924,6 +925,12 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 		advk_writel(pcie, new, PCIE_ISR0_REG);
- 		break;
++	/* Remove PCI bus with all devices */
+ 	pci_lock_rescan_remove();
+ 	pci_stop_root_bus(bridge->bus);
+ 	pci_remove_root_bus(bridge->bus);
+ 	pci_unlock_rescan_remove();
  
-+	case PCI_EXP_DEVCTL:
-+	case PCI_EXP_DEVCTL2:
-+	case PCI_EXP_LNKCTL2:
-+		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-+		break;
-+
- 	default:
- 		break;
- 	}
++	/* Remove IRQ domains */
+ 	advk_pcie_remove_msi_irq_domain(pcie);
+ 	advk_pcie_remove_irq_domain(pcie);
+ 
 -- 
 2.32.0
 
