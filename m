@@ -2,96 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59447C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 06:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0140C433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 08:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344786AbhLBGiy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Dec 2021 01:38:54 -0500
-Received: from tomli.me ([31.220.7.45]:12778 "EHLO tomli.me"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240839AbhLBGix (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Dec 2021 01:38:53 -0500
-Received: from tomli.me (localhost [127.0.0.1])
-        by tomli.me (OpenSMTPD) with ESMTP id ca9aa9be;
-        Thu, 2 Dec 2021 06:35:29 +0000 (UTC)
-Authentication-Results: tomli.me; auth=pass (login) smtp.auth=tomli
-Received: from Unknown (HELO work) (123.118.114.103)
- by tomli.me (qpsmtpd/0.96) with ESMTPSA (AEAD-AES256-GCM-SHA384 encrypted); Thu, 02 Dec 2021 06:35:28 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed; d=tomli.me; h=date:from:to:cc:subject:message-id:mime-version:content-type:content-transfer-encoding; s=1490979754; bh=bOCrpZ2RjHxF2pFYdnVUvO3AaF9fNozXR7lvIsSGFCw=; b=XgzS5bE/Zsljd92Q5lqyRkv/djF3PV4pmEKe3ipRAkMbslgUUn1KKBJgQ1phCgntMGmV5IfOB4i+FUl3HezGQYA/28IOHpxlPFArSC7tx4lAgJm9gvIHpgwdG9Pr58JCqLqgjMq6Aw/r+zxT1lvTksAnZ7LzHrSeSZSPJLAO8prxniZAE4ppyqN65HgAGozwIsNhZJBNNDnFj7bzZBAYZOj7NpZ/rxtsmt1bIa077LZ0Olo6uQHFVKCZSnTz4KfascwRlR9a/ZC5VFdS5oQnO0B+1TbZ2h+Gn65OaP6vrDZnedkKwM+0ldZ4OvKJFpCC5ezCgs6m8z/9vVf1zka4Gw==
-Date:   Thu, 2 Dec 2021 06:35:21 +0000
-From:   Yifeng Li <tomli@tomli.me>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Sam Bingner <sam@bingner.com>, linux-pci@vger.kernel.org,
-        trivial@kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 RESEND] PCI: Add func1 DMA quirk for Marvell 88SE9125 SATA
- controller
-Message-ID: <YahpKVR+McJVDdkD@work>
+        id S1345795AbhLBIMz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Dec 2021 03:12:55 -0500
+Received: from szxga08-in.huawei.com ([45.249.212.255]:28145 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241066AbhLBIMy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Dec 2021 03:12:54 -0500
+Received: from kwepemi100003.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4J4T7X200xz1DJb7;
+        Thu,  2 Dec 2021 16:06:48 +0800 (CST)
+Received: from kwepemm600003.china.huawei.com (7.193.23.202) by
+ kwepemi100003.china.huawei.com (7.221.188.122) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Thu, 2 Dec 2021 16:09:30 +0800
+Received: from localhost.localdomain (10.67.165.103) by
+ kwepemm600003.china.huawei.com (7.193.23.202) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Thu, 2 Dec 2021 16:09:30 +0800
+From:   Qi Liu <liuqi115@huawei.com>
+To:     <will@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <zhangshaokun@hisilicon.com>
+Subject: [PATCH v13 0/2] drivers/perf: hisi: Add support for PCIe PMU
+Date:   Thu, 2 Dec 2021 16:06:31 +0800
+Message-ID: <20211202080633.2919-1-liuqi115@huawei.com>
+X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.67.165.103]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemm600003.china.huawei.com (7.193.23.202)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Like other SATA controller chips in the Marvell 88SE91xx series, the
-Marvell 88SE9125 has the same DMA requester ID hardware bug that prevents
-it from working under IOMMU. This patch adds its device ID 0x9125 to the
-Function 1 DMA alias quirk list.
+This patchset adds support for HiSilicon PCIe Performance Monitoring
+Unit(PMU). It is a PCIe Root Complex integrated End Point(RCiEP) device
+added on Hip09. Each PCIe Core has a PMU RCiEP to monitor multi root
+ports and all Endpoints downstream these root ports.
 
-This patch should not be confused with an earlier patch, commit 059983790a4c
-("PCI: Add function 1 DMA alias quirk for Marvell 9215 SATA controller"),
-which applies to a different chip with a similar model number, 88SE9215.
+HiSilicon PCIe PMU is supported to collect performance data of PCIe bus,
+such as: bandwidth, latency etc.
 
-Without this patch, device initialization fails with DMA errors.
+Example usage of counting PCIe rx memory write latency::
 
-    ata8: softreset failed (1st FIS failed)
-    DMAR: DRHD: handling fault status reg 2
-    DMAR: [DMA Write NO_PASID] Request device [03:00.1] fault addr 0xfffc0000 [fault reason 0x02] Present bit in context entry is clear
-    DMAR: DRHD: handling fault status reg 2
-    DMAR: [DMA Read NO_PASID] Request device [03:00.1] fault addr 0xfffc0000 [fault reason 0x02] Present bit in context entry is clear
+  $# perf stat -e hisi_pcie0_core0/rx_mwr_latency/
+  $# perf stat -e hisi_pcie0_core0/rx_mwr_cnt/
+  $# perf stat -g -e hisi_pcie0_core0/rx_mwr_latency/ -e hisi_pcie0_core0/rx_mwr_cnt/
 
-After applying the patch, the controller can be successfully initialized.
+average rx memory write latency can be calculated like this:
+  latency = rx_mwr_latency / rx_mwr_cnt.
 
-    ata8: SATA link up 1.5 Gbps (SStatus 113 SControl 330)
-    ata8.00: ATAPI: PIONEER BD-RW   BDR-207M, 1.21, max UDMA/100
-    ata8.00: configured for UDMA/100
-    scsi 7:0:0:0: CD-ROM            PIONEER  BD-RW   BDR-207M 1.21 PQ: 0 ANSI: 5
+Common PMU events and metrics will be described in JSON file, and will be add
+in userspace perf tool latter.
 
-Cc: stable@vger.kernel.org
-Reported-by: Sam Bingner <sam@bingner.com>
-Tested-by: Sam Bingner <sam@bingner.com>
-Tested-by: Yifeng Li <tomli@tomli.me>
-Signed-off-by: Yifeng Li <tomli@tomli.me>
-Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
----
+Changes since v12:
+- Modify the printout message of cpuhotplug to standard.
+- Link: https://lore.kernel.org/linux-arm-kernel/20211130120450.2747-1-liuqi115@huawei.com/
 
-Notes:
-    v3: Use full names in Reported-by and Tested-by tags.
-    
-    v2: I accidentally sent an earlier version of the commit without
-    CCing stable@vger.kernel.org. The mail itself was also rejected by
-    many servers due to a DKIM issue. Thus [PATCH v2], sorry for the
-    noise.
+Changes since v11:
+- Address the comments from Krzysztof, drop all the final dot and change bdf in comment to BDF.
+- Link: https://lore.kernel.org/linux-arm-kernel/20211029093632.4350-1-liuqi115@huawei.com/
 
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
+Changes since v10:
+- Drop the out of date comment according to Jonathan's review.
+- Link: https://lore.kernel.org/linux-arm-kernel/20210915074524.18040-1-liuqi115@huawei.com/
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 003950c73..20a932690 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4103,6 +4103,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9120,
- 			 quirk_dma_func1_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9123,
- 			 quirk_dma_func1_alias);
-+/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c136 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
-+			 quirk_dma_func1_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9128,
- 			 quirk_dma_func1_alias);
- /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
+Changes since v9:
+- Add check in hisi_pcie_pmu_validate_event_group to count counters accurently .
+- Link: https://lore.kernel.org/linux-arm-kernel/20210818051246.29545-1-liuqi115@huawei.com/
+
+Changes since v8:
+- Remove subevent parameter in attr->config.
+- Check the counter scheduling constraints when accepting an event group.
+- Link: https://lore.kernel.org/linux-arm-kernel/20210728080932.72515-1-liuqi115@huawei.com/
+
+Changes since v7:
+- Drop headerfile cpumask.h and cpuhotplug.h.
+- Rename events in perf list: bw->flux, lat->delay, as driver doesn't
+  process bandwidth and average latency data.
+- Link: https://lore.kernel.org/linux-arm-kernel/1624532384-43002-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v6:
+- Move the driver to drivers/perf/hisilicon.
+- Treat content in PMU counter and ext_counter as different PMU events, and
+  export them separately.
+- Address the comments from Will and Krzysztof.
+- Link: https://lore.kernel.org/linux-arm-kernel/1622467951-32114-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v5:
+- Fix some errors when build under ARCH=xtensa.
+- Link: https://lore.kernel.org/linux-arm-kernel/1621946795-14046-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v4:
+- Replace irq_set_affinity_hint() with irq_set_affinity().
+- Link: https://lore.kernel.org/linux-arm-kernel/1621417741-5229-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v3:
+- Fix some warnings when build under 32bits architecture.
+- Address the comments from John.
+- Link: https://lore.kernel.org/linux-arm-kernel/1618490885-44612-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v2:
+- Address the comments from John.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617959157-22956-1-git-send-email-liuqi115@huawei.com/
+
+Changes since v1:
+- Drop the internal Reviewed-by tag.
+- Fix some build warnings when W=1.
+- Link: https://lore.kernel.org/linux-arm-kernel/1617788943-52722-1-git-send-email-liuqi115@huawei.com/
+Qi Liu (2):
+  docs: perf: Add description for HiSilicon PCIe PMU driver
+  drivers/perf: hisi: Add driver for HiSilicon PCIe PMU
+
+ .../admin-guide/perf/hisi-pcie-pmu.rst        | 106 ++
+ MAINTAINERS                                   |   2 +
+ drivers/perf/hisilicon/Kconfig                |   9 +
+ drivers/perf/hisilicon/Makefile               |   2 +
+ drivers/perf/hisilicon/hisi_pcie_pmu.c        | 948 ++++++++++++++++++
+ include/linux/cpuhotplug.h                    |   1 +
+ 6 files changed, 1068 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+ create mode 100644 drivers/perf/hisilicon/hisi_pcie_pmu.c
+
 -- 
-2.31.1
+2.33.0
+
