@@ -2,143 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D105BC433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 08:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 235CAC433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 08:30:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356108AbhLBIch (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Dec 2021 03:32:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38026 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356096AbhLBIcg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Dec 2021 03:32:36 -0500
-Received: from mail-ua1-x934.google.com (mail-ua1-x934.google.com [IPv6:2607:f8b0:4864:20::934])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF391C061574;
-        Thu,  2 Dec 2021 00:29:14 -0800 (PST)
-Received: by mail-ua1-x934.google.com with SMTP id i6so54257413uae.6;
-        Thu, 02 Dec 2021 00:29:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/+dV/s3EZ9EtWhdBvNVcj4uqFi9a9Uc5jksYGaROERg=;
-        b=FTNSpwBUxmQxlgn75IodgvZDFCtmzjKhGN2geKqj0PyJO0GxBN67wEtUQAmIT6y0DP
-         3TpbSbpLeIEadD4YIfrtwgg+oZxz/arCqY4AOm0hiLUA/kLxYz7cc88Sf3A15Z+Czcd3
-         cRDGIHdTQefuEd9D7grRDcDeIdYL096lBQpFeyjiYIzhU19VMFuOg9RRIxoRDUFp/oKQ
-         Up8F4CFRlDx02fXJiHyeV17j/X9c8yo27UDD/IP9tRwCebE8zQ6rCTp4cdMic4q2uz6S
-         mLRiDuTUpdf9Muudhp+9FfVEcnJSL4ppGgk0jRCGehboBJYrA5GlEy4mYM/iKgAIuS4q
-         X6AQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/+dV/s3EZ9EtWhdBvNVcj4uqFi9a9Uc5jksYGaROERg=;
-        b=5GZnrazj5UJHwwAWKw+mhG2z8QK223SfO/l0wJQ8COCdicX61oDXj2KU8gZX3oahS0
-         ZUdJcwyVM2YkBSj3KSdc0gDwT1cupVyFbMLPnR62cu3ydFT3llUtCX+FWJCrPaF3o/8E
-         d0GGKVzwG3p7JMupZ1vTtnMMaERQyMlWQ5J5rS4kqobVuAuaCDxa0nkIHLoHuxQ8CnB+
-         d2rvsDZ6us96iBlCcWPlv3PG2lrjNj99exITABfs9hWdRhh7B/14H5KUuvG7JH5TCbGz
-         A2Q/6yl2rB+0lgYlrIcD2GX0vaZCCtJZ+pLRepJkuzTRa7b8COtTdsx1Md+J6OxYqHdq
-         VfAA==
-X-Gm-Message-State: AOAM532poRa5LVEOLUprFxgRKb7Zf51w+C7e7kpGg/SxEVxQG9WzppKl
-        F6KvkkS+vLAIJqhM5NJJ3lF3FPNP6xlW64LCVDg=
-X-Google-Smtp-Source: ABdhPJycVJmoH+Ss9/0kvDCniGZiyR5GcS3E2GER5QOxKCDh16Ywz5Z+xkpzYl2SDtElqYkX7a9TJoQChNTtHFT4sRU=
-X-Received: by 2002:a05:6102:38ce:: with SMTP id k14mr13143796vst.70.1638433753882;
- Thu, 02 Dec 2021 00:29:13 -0800 (PST)
-MIME-Version: 1.0
-References: <20211201215127.23550-1-sergio.paracuellos@gmail.com>
- <20211201215127.23550-3-sergio.paracuellos@gmail.com> <d243a90d-25b2-a65f-b69d-af7497db8742@roeck-us.net>
-In-Reply-To: <d243a90d-25b2-a65f-b69d-af7497db8742@roeck-us.net>
-From:   Sergio Paracuellos <sergio.paracuellos@gmail.com>
-Date:   Thu, 2 Dec 2021 09:29:02 +0100
-Message-ID: <CAMhs-H_i7aFeqf4EBtzdL0SKgKrseZGpVU-ytvangpeCMVTmFw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] MIPS: ralink: implement 'pcibios_root_bridge_prepare()'
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S1356142AbhLBIdz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Dec 2021 03:33:55 -0500
+Received: from inva021.nxp.com ([92.121.34.21]:52838 "EHLO inva021.nxp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1356125AbhLBIdj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Dec 2021 03:33:39 -0500
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id CA3ED201CD6;
+        Thu,  2 Dec 2021 09:30:15 +0100 (CET)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 35F01200222;
+        Thu,  2 Dec 2021 09:30:15 +0100 (CET)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 0CBC3183AC96;
+        Thu,  2 Dec 2021 16:30:12 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, marcel.ziswiler@toradex.com,
+        tharvey@gateworks.com, kishon@ti.com, vkoul@kernel.org,
+        robh@kernel.org, galak@kernel.crashing.org, shawnguo@kernel.org
+Cc:     hongxing.zhu@nxp.com, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de, linux-imx@nxp.com
+Subject: [PATCH v7 0/8] Add the imx8m pcie phy driver and imx8mm pcie support
+Date:   Thu,  2 Dec 2021 16:02:30 +0800
+Message-Id: <1638432158-4119-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Guenter,
+Refer to the discussion [1] when try to enable i.MX8MM PCIe support,
+one standalone PCIe PHY driver should be seperated from i.MX PCIe
+driver when enable i.MX8MM PCIe support.
 
-On Wed, Dec 1, 2021 at 11:17 PM Guenter Roeck <linux@roeck-us.net> wrote:
->
-> On 12/1/21 1:51 PM, Sergio Paracuellos wrote:
-> > PCI core code call 'pcibios_root_bridge_prepare()' function inside function
-> > 'pci_register_host_bridge()'. This point is very good way to properly enter
-> > into this MIPS ralink specific code to properly setup I/O coherency units
-> > with PCI memory addresses.
-> >
-> > Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
-> > ---
-> >   arch/mips/ralink/mt7621.c | 30 ++++++++++++++++++++++++++++++
-> >   1 file changed, 30 insertions(+)
-> >
-> > diff --git a/arch/mips/ralink/mt7621.c b/arch/mips/ralink/mt7621.c
-> > index bd71f5b14238..7649416c1cd7 100644
-> > --- a/arch/mips/ralink/mt7621.c
-> > +++ b/arch/mips/ralink/mt7621.c
-> > @@ -10,6 +10,7 @@
-> >   #include <linux/slab.h>
-> >   #include <linux/sys_soc.h>
-> >   #include <linux/memblock.h>
-> > +#include <linux/pci.h>
-> >
-> >   #include <asm/bootinfo.h>
-> >   #include <asm/mipsregs.h>
-> > @@ -22,6 +23,35 @@
-> >
-> >   static void *detect_magic __initdata = detect_memory_region;
-> >
-> > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> > +{
-> > +     struct resource_entry *entry;
-> > +     resource_size_t mask;
-> > +
-> > +     entry = resource_list_first_type(&bridge->windows, IORESOURCE_MEM);
-> > +     if (!entry) {
-> > +             pr_err("Cannot get memory resource\n");
-> > +             return -EINVAL;
-> > +     }
-> > +
-> > +     if (mips_cps_numiocu(0)) {
-> > +             /*
-> > +              * FIXME: hardware doesn't accept mask values with 1s after
-> > +              * 0s (e.g. 0xffef), so it would be great to warn if that's
-> > +              * about to happen
-> > +              */ > +         mask = ~(entry->res->end - entry->res->start);
-> > +
->
-> Try something like this:
->                 WARN_ON((mask != ~0UL && BIT(ffz(mask)) - 1 != mask);
+This patch-set adds the standalone PCIe PHY driver suport[1-5], and i.MX8MM
+PCIe support[6-8] to have whole view to review this patch-set.
 
-Thanks for the tip. The following works for me:
+The PCIe works on i.MX8MM EVK board based the the blkctrl power driver
+[2] and this patch-set. And tested by Tim and Marcel on the different
+reference clock modes boards.
 
-                  WARN_ON(mask != ~0UL && ~(BIT(__ffs(mask)) - 1) != mask);
+[1] https://patchwork.ozlabs.org/project/linux-pci/patch/20210510141509.929120-3-l.stach@pengutronix.de/
+[2] https://patchwork.kernel.org/project/linux-arm-kernel/cover/20210910202640.980366-1-l.stach@pengutronix.de/
 
-I will send this as a different patch, though.
+Main changes v6 --> v7:
+- Add "Reviewed-by: Rob Herring <robh@kernel.org>" into #2 patches.
+- Regarding Vinod's review comments do the following changes.
+  - Don't build in the PHY driver in default.
+  - Remove the extra blank line
+  - Correct the license tag.
 
-Best regards,
-    Sergio Paracuellos
+Main changes v5 --> v6:
+- Add "Reviewed-by: Rob Herring <robh@kernel.org>" into #1 and #3 patches.
+- Merge Rob's review comments to the #2 patch.
 
->
-> > +             write_gcr_reg1_base(entry->res->start);
-> > +             write_gcr_reg1_mask(mask | CM_GCR_REGn_MASK_CMTGT_IOCU0);
-> > +             pr_info("PCI coherence region base: 0x%08llx, mask/settings: 0x%08llx\n",
-> > +                     (unsigned long long)read_gcr_reg1_base(),
-> > +                     (unsigned long long)read_gcr_reg1_mask());
-> > +     }
-> > +
-> > +     return 0;
-> > +}
-> > +
-> >   phys_addr_t mips_cpc_default_phys_base(void)
-> >   {
-> >       panic("Cannot detect cpc address");
-> >
->
+Main changes v4 --> v5:
+- Set the AUX_EN always 1b'1, thus it can fix the regression introduced in v4
+  series on Marcel's board.
+- Use the lower-case letter in the devicetreee refer to Marcel's comments.
+- Since the default value of the deemphasis parameters are zero, only set
+  the deemphasis registers when the input paramters are none zero.
+
+Main changes v3 --> v4:
+- Update the yaml to fix syntax error, add maxitems and drop description of phy
+- Correct the clock name in PHY DT node.
+- Squash the EVK board relalted dts changes into one patch, and drop the
+  useless dummy clock and gpio suffix in DT nodes.
+- Add board specific de-emphasis parameters as DT properties. Thus each board
+  can specify its actual de-emphasis values.
+- Update the commit log of PHY driver.
+- Remove the useless codes from PCIe driver, since they are moved to PHY driver
+- After the discussion and verification of the CLKREQ# configurations with Tim,
+  agree to add an optional boolean property "fsl,clkreq-unsupported", indicates
+  the CLKREQ# signal is hooked or not in HW designs.
+- Add "Tested-by: Marcel Ziswiler <marcel.ziswiler@toradex.com>" tag, since
+  Marcel help to test the v3 patch-set.
+
+Main changes v2 --> v3:
+- Regarding Lucas' comments.
+ - to have a whole view to review the patches, send out the i.MX8MM PCIe support too.
+ - move the PHY related bits manipulations of the GPR/SRC to standalone PHY driver.
+ - split the dts changes to SOC and board DT, and use the enum instead of raw value.
+ - update the license of the dt-binding header file.
+
+Changes v1 --> v2:
+- Update the license of the dt-binding header file to make the license
+  compatible with dts files.
+- Fix the dt_binding_check errors.
+
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml    |   6 +++
+Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml |  92 +++++++++++++++++++++++++++++++
+arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi                |  55 +++++++++++++++++++
+arch/arm64/boot/dts/freescale/imx8mm.dtsi                    |  46 +++++++++++++++-
+drivers/pci/controller/dwc/pci-imx6.c                        |  83 +++++++++++++++++++++++++---
+drivers/phy/freescale/Kconfig                                |   8 +++
+drivers/phy/freescale/Makefile                               |   1 +
+drivers/phy/freescale/phy-fsl-imx8m-pcie.c                   | 236 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+include/dt-bindings/phy/phy-imx8-pcie.h                      |  14 +++++
+9 files changed, 532 insertions(+), 9 deletions(-)
+
+[PATCH v7 1/8] dt-bindings: phy: phy-imx8-pcie: Add binding for the
+[PATCH v7 2/8] dt-bindings: phy: Add imx8 pcie phy driver support
+[PATCH v7 3/8] dt-bindings: imx6q-pcie: Add PHY phandles and name
+[PATCH v7 4/8] arm64: dts: imx8mm: Add the pcie phy support
+[PATCH v7 5/8] phy: freescale: pcie: Initialize the imx8 pcie
+[PATCH v7 6/8] arm64: dts: imx8mm: Add the pcie support
+[PATCH v7 7/8] arm64: dts: imx8mm-evk: Add the pcie support on imx8mm
+[PATCH v7 8/8] PCI: imx: Add the imx8mm pcie support
