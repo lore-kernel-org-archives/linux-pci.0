@@ -2,151 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB486C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 01:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B456BC433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 02:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354188AbhLBBLc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Dec 2021 20:11:32 -0500
-Received: from mga04.intel.com ([192.55.52.120]:11688 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354159AbhLBBLb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Dec 2021 20:11:31 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10185"; a="235329196"
-X-IronPort-AV: E=Sophos;i="5.87,280,1631602800"; 
-   d="scan'208";a="235329196"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 17:08:10 -0800
-X-IronPort-AV: E=Sophos;i="5.87,280,1631602800"; 
-   d="scan'208";a="602514884"
-Received: from meghadey-mobl1.amr.corp.intel.com (HELO [10.213.191.214]) ([10.213.191.214])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 17:08:09 -0800
-Message-ID: <7ad200fa-dda3-4932-cd23-ad6e79288ea4@intel.com>
-Date:   Wed, 1 Dec 2021 17:08:01 -0800
+        id S237354AbhLBCpY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Dec 2021 21:45:24 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:40334 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354817AbhLBCpU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Dec 2021 21:45:20 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id BED39CE2152;
+        Thu,  2 Dec 2021 02:41:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E67E3C53FAD;
+        Thu,  2 Dec 2021 02:41:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638412887;
+        bh=3m7u+sZ/JfXv7vqQawelWiRYjzHEFtbgYJYUWG9r1b8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=hjCrMloeAlo//c8uV0wTXGJY0VQVzX9ss7WawxL7wQRoAuBKXP0WojV1OZOv4aujV
+         KCtvKUcdYwiK8Q+W2ZiGz8xHCknfrXPF+AME8sulXPEwr4WchGXsDsfg9GFWTg/8jN
+         4hch1iY5Y7fLi1vXa8GySt12r/DDBlSevFTd2XJcgNbYePsSpep1f3wXVRuYQNweGQ
+         aYarJWYG3EexQmMMETCQoOvgQt73cuu+DL122qwK9gjVpuCynAe/DmHnoxF5AxGQ7z
+         kIIkLxmECwJbaIebeWVqGGGVPdiZwTYtNghm+NvS6bYRqQUe0KoNHgUii9KGHxfuwc
+         c34XVzxEryGyQ==
+Received: by mail-ed1-f44.google.com with SMTP id t5so110118732edd.0;
+        Wed, 01 Dec 2021 18:41:27 -0800 (PST)
+X-Gm-Message-State: AOAM53394BURSf8kjVpS1Ms0BpZTSnnu+v1ZaBg0tA3ekV4bWI3d9Lra
+        rZ1gc607Cd13VhXyTzhQd+1mE3gsOzAjHCFRBw==
+X-Google-Smtp-Source: ABdhPJx3F1WjNpDHru/DM96kME/hsAFfccUE3YKHA93VV80AISgDEazU3AyQVF7UBufYAD4s9o/PG7DqPjwpNjKq0MU=
+X-Received: by 2002:a17:906:9941:: with SMTP id zm1mr11679319ejb.466.1638412886275;
+ Wed, 01 Dec 2021 18:41:26 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-Subject: Re: [patch 09/10] PCI/MSI: Provide pci_msix_expand_vectors[_at]()
-Content-Language: en-US
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Andrew Cooper <amc96@cam.ac.uk>,
-        Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org
-References: <20211126233124.618283684@linutronix.de>
- <20211127000919.004572849@linutronix.de>
-From:   "Dey, Megha" <megha.dey@intel.com>
-In-Reply-To: <20211127000919.004572849@linutronix.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20211101180243.23761-1-tharvey@gateworks.com> <CAJ+vNU2Pfwz5e0Jj6c5npceOwuNTB_dTVuL4NMD2qxr0CGyeGQ@mail.gmail.com>
+ <AS8PR04MB86769FC6021C2C137776D7A68C699@AS8PR04MB8676.eurprd04.prod.outlook.com>
+In-Reply-To: <AS8PR04MB86769FC6021C2C137776D7A68C699@AS8PR04MB8676.eurprd04.prod.outlook.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Wed, 1 Dec 2021 20:41:14 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKLqcRdHBQRnra20mkoPsEjy0Boni-mOVNQxNTwhbc7sQ@mail.gmail.com>
+Message-ID: <CAL_JsqKLqcRdHBQRnra20mkoPsEjy0Boni-mOVNQxNTwhbc7sQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx: do not remap invalid res
+To:     Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc:     "tharvey@gateworks.com" <tharvey@gateworks.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
-On 11/26/2021 5:25 PM, Thomas Gleixner wrote:
-> Provide a new interface which allows to expand the MSI-X vector space if
-> the underlying irq domain implementation supports it.
+On Wed, Dec 1, 2021 at 6:48 PM Hongxing Zhu <hongxing.zhu@nxp.com> wrote:
 >
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->   drivers/pci/msi/msi.c |   41 +++++++++++++++++++++++++++++++++++++++++
->   include/linux/pci.h   |   13 +++++++++++++
->   2 files changed, 54 insertions(+)
 >
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -1025,6 +1025,47 @@ int pci_alloc_irq_vectors_affinity(struc
->   EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
->   
->   /**
-> + * pci_msix_expand_vectors_at - Expand MSI-X interrupts for a device
-> + *
-> + * @dev:	PCI device to operate on
-> + * @at:		Allocate at MSI-X index. If @at == PCI_MSI_EXPAND_AUTO
-> + *		the function expands automatically after the last
-Not sure why some of these changes related to PCI_MSIX_EXPAND_AUTO and 
-num_descs did not make it to the 'msi' branch.
-Is this intentional?
-> + *		active index.
-> + * @nvec:	Number of vectors to allocate
-> + *
-> + * Expand the MSI-X vectors of a device after an initial enablement and
-> + * allocation.
-> + *
-> + * Return: 0 if the allocation was successful, an error code otherwise.
-> + */
-> +int pci_msix_expand_vectors_at(struct pci_dev *dev, unsigned int at, unsigned int nvec)
-> +{
-> +	struct msi_device_data *md = dev->dev.msi.data;
-> +	struct msi_range range = { .ndesc = nvec, };
-> +	unsigned int max_vecs;
-> +	int ret;
-> +
-> +	if (!pci_msi_enable || !dev || !dev->msix_enabled || !md)
-> +		return -ENOTSUPP;
-> +
-> +	if (!pci_msi_domain_supports_expand(dev))
-> +		return -ENOTSUPP;
-> +
-> +	max_vecs = pci_msix_vec_count(dev);
-> +	if (!nvec || nvec > max_vecs)
-> +		return -EINVAL;
-> +
-> +	range.first = at == PCI_MSIX_EXPAND_AUTO ? md->num_descs : at;
-> +
-> +	if (range.first >= max_vecs || nvec > max_vecs - range.first)
-> +		return -ENOSPC;
-> +
-> +	ret = msix_setup_interrupts(dev, dev->msix_base, &range, NULL, NULL, true);
-> +	return ret <= 0 ? ret : -ENOSPC;;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_msix_expand_vectors_at);
-> +
-I am having trouble fully comprehending how this expansion scheme would 
-work..
+> > -----Original Message-----
+> > From: Tim Harvey <tharvey@gateworks.com>
+> > Sent: Thursday, December 2, 2021 6:07 AM
+> > To: Jingoo Han <jingoohan1@gmail.com>; Gustavo Pimentel
+> > <gustavo.pimentel@synopsys.com>; Rob Herring <robh@kernel.org>;
+> > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>; Krzysztof Wilczy=C5=84sk=
+i
+> > <kw@linux.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> > linux-pci@vger.kernel.org
+> > Cc: open list <linux-kernel@vger.kernel.org>; Hongxing Zhu
+> > <hongxing.zhu@nxp.com>
+> > Subject: Re: [PATCH] PCI: imx: do not remap invalid res
 
-For instance, say:
-1. Driver requests for 5 vectors:
-pci_enable_msix_range(dev, NULL, 5, 5)
-=>num_descs = 5
+Please fix your quoting style with all the headers (hint: don't use
+Outlook). It's base64 encoded too which isn't ideal for maillists, but
+somewhat tolerated nowadays.
 
-2. Driver frees vectors at index 1,2:
-range = {1, 2, 2};
-pci_msi_teardown_msi_irqs(dev, range)
-=>num_descs = 3; Current active vectors are at index: 0, 3, 4
+> >
+> > On Mon, Nov 1, 2021 at 11:03 AM Tim Harvey <tharvey@gateworks.com>
+> > wrote:
+> > >
+> > > On imx6 and perhaps others when pcie probes you get a:
+> > > imx6q-pcie 33800000.pcie: invalid resource
+> > >
+> > > This occurs because the atu is not specified in the DT and as such it
+> > > should not be remapped.
+> > >
+> > > Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> > > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> [Richard Zhu] Please merge Rob's commit log changes.
 
-3. Driver requests for 3 more vectors using the new API:
-pci_msix_expand_vectors(dev, 3)
-=>range.first = 3 => It will try to allocate index 3-5, but we already 
-have 3,4 active?
-Ideally, we would want index 1,2 and 5 to be allocated for this request 
-right?
+The maintainer tools do that automatically.
 
-Could you please let me know what I am missing?
+> Then, Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
 
-With the 'range' approach, the issue is that we are trying to allocate 
-contiguous indexes. Perhaps, we also need to check if all the indexes in 
-the requested range are available,
-if not, find a contiguous range large enough to accommodate the request. 
-But there will be fragmentation issues if we choose to go with this way...
+But probably not when you prefix your tag with 'Then, '... :(
 
-I had a version of the dynamic MSI-X patch series (which never got sent 
-out). For the expansion, I had the following:
-pci_add_msix_irq_vector(pdev): On each invocation, add 1 MSI-X vector to 
-the device and return the msi-x index assigned by the kernel (using a 
-bitmap)
-Correspondingly, pci_free_msix_irq_vector(pdev, irq) frees all the 
-allocated resources associated with MSI-X interrupt with Linux IRQ 
-number 'irq'.
-I had issues when trying to dynamically allocate more than 1 interrupt 
-because I didn't have a clean way to communicate to the driver what 
-indexes were assigned in the current allocation.
-
--Megha
->
+Rob
