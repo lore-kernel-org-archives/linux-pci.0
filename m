@@ -2,81 +2,70 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB0A3C4332F
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 00:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F15C4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Dec 2021 00:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354083AbhLBAGr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Dec 2021 19:06:47 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:44218 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354038AbhLBAFG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Dec 2021 19:05:06 -0500
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638403303;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sL+YIaY0kXx9h0ZbGxqN7dkvXLUzeLZfDG9h71cyvO0=;
-        b=wwn+hpt0XnJfDkFE5pg37ANYJtFnOIy3FjiYVnKOtejDXM8uCnkxu+nh7L/Gt7UI1Mznej
-        zm/jXSJ8zu1FRnqiDDEnnIda6Hm9awW653bsk3gmtsFS5bdhFgLpvguxugwMjmimAoDXGP
-        MI6j85IqGUEkNWJ0Y6VZaY8CHvzYsWxvm4gxrYDb+4S+OeiBytABjZMye+/6hPnLkDoVv9
-        PLwcWEgQO+z9NfGAYS2Ig+/s9MwNuPxiZoL5aqfBf0zZHNmZfZ5+gEGSKZkGVc4UicQw0N
-        4Pxe+kcWs1WTUhOL+BDwP/+OOVm+QVzvUqSSWmCL4/nzzQ+MfeLBuxPiOR5ZyQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638403303;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sL+YIaY0kXx9h0ZbGxqN7dkvXLUzeLZfDG9h71cyvO0=;
-        b=EgThZXNWcMkIxl29m1yERZS89u/hm615vIHy6fzYAwVqJgaHfeGocaaf76bjgJPa/atLqw
-        b5jxYX7bxpP9pjBg==
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
-        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>, x86@kernel.org,
-        Joerg Roedel <jroedel@suse.de>,
-        iommu@lists.linux-foundation.org
-Subject: Re: [patch 21/32] NTB/msi: Convert to msi_on_each_desc()
-In-Reply-To: <87mtlk84ae.ffs@tglx>
-References: <6ba084d6-2b26-7c86-4526-8fcd3d921dfd@deltatee.com>
- <87ilwacwp8.ffs@tglx> <d6f13729-1b83-fa7d-3f0d-98d4e3f7a2aa@deltatee.com>
- <87v909bf2k.ffs@tglx> <20211130202800.GE4670@nvidia.com>
- <87o861banv.ffs@tglx> <20211201001748.GF4670@nvidia.com>
- <87mtlkaauo.ffs@tglx> <20211201130023.GH4670@nvidia.com>
- <87y2548byw.ffs@tglx> <20211201181406.GM4670@nvidia.com>
- <87mtlk84ae.ffs@tglx>
-Date:   Thu, 02 Dec 2021 01:01:42 +0100
-Message-ID: <87r1av7u3d.ffs@tglx>
+        id S1344437AbhLBAuI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Dec 2021 19:50:08 -0500
+Received: from inva020.nxp.com ([92.121.34.13]:41266 "EHLO inva020.nxp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1354928AbhLBAuH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Dec 2021 19:50:07 -0500
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 731DC1A0045;
+        Thu,  2 Dec 2021 01:46:45 +0100 (CET)
+Received: from smtp.na-rdc02.nxp.com (usphx01srsp001v.us-phx01.nxp.com [134.27.49.11])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3612B1A1482;
+        Thu,  2 Dec 2021 01:46:45 +0100 (CET)
+Received: from right.am.freescale.net (right.am.freescale.net [10.81.116.142])
+        by usphx01srsp001v.us-phx01.nxp.com (Postfix) with ESMTP id 58F134043C;
+        Wed,  1 Dec 2021 17:46:44 -0700 (MST)
+From:   Li Yang <leoyang.li@nxp.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Cc:     Rob Herring <robh@kernel.org>
+Subject: [PATCH v2 1/4] dt-bindings: pci: layerscape-pci: Add a optional property big-endian
+Date:   Wed,  1 Dec 2021 18:46:33 -0600
+Message-Id: <20211202004636.5276-2-leoyang.li@nxp.com>
+X-Mailer: git-send-email 2.25.1.377.g2d2118b
+In-Reply-To: <20211202004636.5276-1-leoyang.li@nxp.com>
+References: <20211202004636.5276-1-leoyang.li@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Jason,
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-On Wed, Dec 01 2021 at 21:21, Thomas Gleixner wrote:
-> On Wed, Dec 01 2021 at 14:14, Jason Gunthorpe wrote:
-> Which in turn is consistent all over the place and does not require any
-> special case for anything. Neither for interrupts nor for anything else.
+This property is to indicate the endianness when accessing the
+PEX_LUT and PF register block, so if these registers are
+implemented in big-endian, specify this property.
 
-that said, feel free to tell me that I'm getting it all wrong.
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/layerscape-pci.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-The reason I'm harping on this is that we are creating ABIs on several
-ends and we all know that getting that wrong is a major pain.
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index f36efa73a470..215d2ee65c83 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -40,6 +40,10 @@ Required properties:
+   of the data transferred from/to the IP block. This can avoid the software
+   cache flush/invalid actions, and improve the performance significantly.
+ 
++Optional properties:
++- big-endian: If the PEX_LUT and PF register block is in big-endian, specify
++  this property.
++
+ Example:
+ 
+ 	pcie@3400000 {
+-- 
+2.25.1
 
-Thanks,
-
-        tglx
