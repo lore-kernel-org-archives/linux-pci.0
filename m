@@ -2,268 +2,165 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E10C433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 02:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B83E5C433EF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 02:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231876AbhLFCG5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Dec 2021 21:06:57 -0500
-Received: from mga18.intel.com ([134.134.136.126]:32647 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233223AbhLFCEx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 5 Dec 2021 21:04:53 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10189"; a="224099234"
-X-IronPort-AV: E=Sophos;i="5.87,290,1631602800"; 
-   d="scan'208";a="224099234"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2021 18:01:25 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,290,1631602800"; 
-   d="scan'208";a="514542679"
-Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga008.jf.intel.com with ESMTP; 05 Dec 2021 18:01:18 -0800
-From:   Lu Baolu <baolu.lu@linux.intel.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>
-Cc:     Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-        Dan Williams <dan.j.williams@intel.com>, rafael@kernel.org,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Liu Yi L <yi.l.liu@intel.com>,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Li Yang <leoyang.li@nxp.com>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH v3 16/18] vfio: Remove iommu group notifier
-Date:   Mon,  6 Dec 2021 09:59:01 +0800
-Message-Id: <20211206015903.88687-17-baolu.lu@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211206015903.88687-1-baolu.lu@linux.intel.com>
-References: <20211206015903.88687-1-baolu.lu@linux.intel.com>
+        id S232799AbhLFCHO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Dec 2021 21:07:14 -0500
+Received: from mail-eopbgr60086.outbound.protection.outlook.com ([40.107.6.86]:38579
+        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232591AbhLFCHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 5 Dec 2021 21:07:14 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TEq6nnRUg7kbNETw/v9gwzBze9j6ltoTNMSz2KVUl4N42AozRXXrl4Vm40g2at1E93i80fidJENIoPTeqQxc4cqS0dUsHPwfzbMruZoW4u4ZqL1JuZtoyAQuboUB0KOm3Uu47o17hFA/D65YdkC6cViEPbet3mXX/jbq7FFP3cPxg7I2fH36gQqh2vVuatojm8iM2H3RnTzwwQ7pXD2NmT/drqxggnrLZnoG29HoSwH7aahmQ1ueTmkkG/HDxJ9H1kB8X4BtEQiQA7Y1rYkznzHEdCn1BMJ61AntHFdhaLpKxDDb1Z5Ln4ZZMwcFubYueszJAkeOlJam28cHYVlo+Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=m3NqH9CDCtMle8dmzBPNac68SxqV8Rw5h9/1cAAGvwI=;
+ b=WpnRFtURoJCyGhNHEjtkIV4P40+8xsDq/2+m+PynkJfRrwdOzO8hNm/FFSYau6ghg6glMQ7T/QMSlxAIP4QTJnGi2Fmx/b0UIlbMP8lzWmJOz8B4L4cYDrMmlKyFLtZMAn/ieluu2zP5ZHEjTlPYyoTjBbdOgI03JwNMPIm/m4V/dbNE7fyNro73UdT/rXNyT6S/8d+hT6EzGIAH6N2cWdI9RWaUEHutGj6Flv0512N7Ak0/NK11ZaNk3jaFhEcYY7rk2iuXQafHtLQPhFsPxSeNR7zT5hu+JWsT0VD+bJo8SWaBIlkry/daKHJe5RmELkT4tLiYIraN87CUuANUzw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m3NqH9CDCtMle8dmzBPNac68SxqV8Rw5h9/1cAAGvwI=;
+ b=sP9sESWVD/8TWZBrgJVGTN44y+IcAHc7pztDKxo/yGEZ2sULKRT2MCSHi3yQwKyikBmX6Yiyk4wgxfUEMLEBpHldydfEJzoe17ct7yDfkshWwvvwqeVxLvi0ft4E3EjEotiHMTNNCbQgPogjGqoVObffHGXOtW+mqdUawrTeodk=
+Received: from AS8PR04MB8676.eurprd04.prod.outlook.com (2603:10a6:20b:42b::10)
+ by AS8PR04MB8754.eurprd04.prod.outlook.com (2603:10a6:20b:42d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4755.11; Mon, 6 Dec
+ 2021 02:03:44 +0000
+Received: from AS8PR04MB8676.eurprd04.prod.outlook.com
+ ([fe80::b059:46c6:685b:e0fc]) by AS8PR04MB8676.eurprd04.prod.outlook.com
+ ([fe80::b059:46c6:685b:e0fc%5]) with mapi id 15.20.4755.021; Mon, 6 Dec 2021
+ 02:03:44 +0000
+From:   Hongxing Zhu <hongxing.zhu@nxp.com>
+To:     Fabio Estevam <festevam@gmail.com>
+CC:     "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: imx6: Allow to probe when dw_pcie_wait_for_link()
+ fails
+Thread-Topic: [PATCH] PCI: imx6: Allow to probe when dw_pcie_wait_for_link()
+ fails
+Thread-Index: AQHX0Q86pmFTFD0HQ0+vlkapkYarDKvyiKYAgDAeMICAAjjjUA==
+Date:   Mon, 6 Dec 2021 02:03:44 +0000
+Message-ID: <AS8PR04MB86760CC96C1A50776DA48C558C6D9@AS8PR04MB8676.eurprd04.prod.outlook.com>
+References: <20211104000202.4028036-1-festevam@gmail.com>
+ <AS8PR04MB8676C527C11B6E0BCB455E1B8C8D9@AS8PR04MB8676.eurprd04.prod.outlook.com>
+ <CAOMZO5BcinSC=h+uTGiYJqhE7qHeQa7NwYZsSiKgC_Zkm5XROA@mail.gmail.com>
+In-Reply-To: <CAOMZO5BcinSC=h+uTGiYJqhE7qHeQa7NwYZsSiKgC_Zkm5XROA@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: c8a2c16b-0f2d-4115-63d4-08d9b85ca20a
+x-ms-traffictypediagnostic: AS8PR04MB8754:
+x-microsoft-antispam-prvs: <AS8PR04MB8754B20DFD18A28271DE961F8C6D9@AS8PR04MB8754.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: my4X2+9AcANVNjXlT2xc0W0IFPtSSea3ARQk+bsevqjF92OElMXGNEEavIC4k+Is8c1oRCyP67pCWfR+Tbx/TgX6iBPvO8tUHbche+ZkUEFHJuNJ/K1EsI0C0GpIpiiAonKLAT14uVH2dJ+dEictI2VDIrw4JbECzaezCTWTj4iUr+3kf2KaIA15LiP3pXDYaYc8gSL8iuLvHuVdbJg0rQcWYhuN4A67ZxHfWtI5snBH+mLMKzq4T4SGhowx6v3IJAD2sptm026RbmpqCQBEkCSF07Vt8vzF0QmjO/Q+8rZk4GAtCS7h2xxcd4/+TIQK0tuD7uYaAinXRNvy7xc4RkGqfbVGyH2Cssmix4Quxyjd24Jx4jIEuyDFefTKQE4LLIoaJNxkhN5VamEWUXkG3quARwO0YrAWJxhKe8ZPMixNlZK2fyV17G3T2PQEYw13/vsf8k6YG9DfdDOCrRICF5n7GFSIuXcfxB7CSUosQjz6YHTuNbOD7Y62DgKa6BKZ0I7FtRCvBzAyJK/HJPRd+0riCG2674zQmDrrVGHdEVVmKET0XtTQFZolkBdVD2KwwNuIZRsxb4RINel3888qczg6fhG0BZpThwrhvIGo6fihVPxHlMdprpX/PnhZEWyhJOThstb04Ku5Ej/Bh1R94XNVtEVGrOpeC1rGKwLftuvNB2s2GEN2XCAlIKkAPmSfrM8jmI4VIG1YO3bHiFzKo3gUTGdRMIg4lweUnVciulki3aIV+VE9Gw+nRismjr+PVWXanuPQkFQOuqh+j8OS/5m1Qs5L2folDTgc5bF6sx4=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8676.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(66946007)(64756008)(8676002)(71200400001)(122000001)(6506007)(508600001)(186003)(66446008)(9686003)(45080400002)(8936002)(66476007)(66556008)(38100700002)(53546011)(52536014)(4326008)(38070700005)(33656002)(83380400001)(86362001)(54906003)(5660300002)(6916009)(76116006)(55016003)(2906002)(44832011)(316002)(26005)(7696005);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?IMsCCzhDy9J1jxkkZD5ugzfb79TAUeo+eofQfpCR9twyqcSa/F+FD+OVZ0z+?=
+ =?us-ascii?Q?Oi24nsjXhd/o0AvTRt3hWFNHwsUVX9KaxsY0iSEWp69yQFhYpGZrwYzOJJI+?=
+ =?us-ascii?Q?qtSnEA+MarDc3i4DgYnsijYSxYUEBQhGoXIWuxwd6QsGseoHt7zCnW2tNBr+?=
+ =?us-ascii?Q?Mt6hJqnghZ7XZq9QTAI0UMpMhf3DcpXxnwF9PmI86s0rCAnMTfdmxMhdDifq?=
+ =?us-ascii?Q?kCS7UTaGO5sBwVOs08wBzGyeTXYm0qohwc9yU1KmqBXTumCgcEuGA549MbyS?=
+ =?us-ascii?Q?riIem9Q6VDPhd/SbkUskOp22Ln0Xl7nwSCfpZgIytOxySbHVqug6jv3hSvry?=
+ =?us-ascii?Q?qlcV8VN0S3BE96U48xOV+MpDBU9GzO0MB7j48UmAcKLWMcC3qy/GBlRwKvRl?=
+ =?us-ascii?Q?Bes4d8i2iFjdRPbS4JQ+k4jLtETscuVzRFLefLry2i1pW616CvnL6Dn/Hgzp?=
+ =?us-ascii?Q?IgVMnHZmyI52Ry1cne12CKiHMtUOTJh+TDw/tpWnqQqvP7K01liMA7mMUSXh?=
+ =?us-ascii?Q?JQc0I7IuLyf6V6O4hrxlUVXWWbzvyiY4DqdLV8qElw0hjRRWNzvC5pRxrfJo?=
+ =?us-ascii?Q?PT7tjJj+zDH0SbJF21omKuaMycabQuZOF44fs8rOjn3+y8S7ISodN2YDrzF3?=
+ =?us-ascii?Q?mqJHO6kQalpyI8AH0vO8f57PY3zieYwn6eFT3loFkY2jnlppEZcGgiElFWya?=
+ =?us-ascii?Q?GnLqr3OxQp8dC9AWxOaKrVemfrivciYxYiZfzn34gnheh0eKGgsro1mn0azY?=
+ =?us-ascii?Q?3g+6vKJfqunmgxdppPxWOao6mRIkR27OWWXDDFLwxAJNlmHFQobYXIkuEaaU?=
+ =?us-ascii?Q?/HjMrPs5mt7NhD+AyqiVChNPvxcnF7fB4uQmezq0s3m0+WKhLn9AEO3U3xWV?=
+ =?us-ascii?Q?+CYqxs8XAxppTW55zvIyg5yhLqmkEI1RO0Gzw1ltlpM8DA+YzuSWbo2khXkw?=
+ =?us-ascii?Q?SHBYnlHbsK75FskP+RrGAkMVnwXhaQaPAs1D+Aq3E/dhatdVkj5PnwycLEmy?=
+ =?us-ascii?Q?CkOZtPILyUYMP+3WFyhe/eqVhvLL2OtDaEnAstjRNDFVkMwCIxwzat7+5/m6?=
+ =?us-ascii?Q?qGowanoa2SvfeKJOGbjQ0AkR+WOf+DcH2M5AzLVTzRN+HgOReGypP1JU218B?=
+ =?us-ascii?Q?ymF3LfbhJ+yN4T1LWA86zP139vYWWffGdpm6sDf3vXkZsUsq+a7uVADKotE4?=
+ =?us-ascii?Q?oI4s93YixUaGtfg29bTmlbIkKuWvcSQIASj5rN25EJdyf1GW5+idTjIS2Rlq?=
+ =?us-ascii?Q?W8jMRskNhaxz5IsRjYD/C2jRdQC4YIBycNx4bhn8QoYGJuX0TPF51blKgx0R?=
+ =?us-ascii?Q?XaMZ/l+5dbIMMKIJ7rlxKm1YedyMGUt8grZdBBg4gecT33xC9ugXkdTC56jo?=
+ =?us-ascii?Q?iQrTDQJW59wrdIoYPsrvSagbMWwgDjg1uy5TJMVh1cup0ksI8FmNwSZUWkqz?=
+ =?us-ascii?Q?XK7pxwUZfMZZjc0mejhy/bsvbU08mdpOdUfkO/2q8aIjkcJojGZ6xfofzTXk?=
+ =?us-ascii?Q?t5qsWxycT38rxemCQ0zfnAB9l31hl+oxb2iBPoDjN3s0E5RtBmgEJeH94gAE?=
+ =?us-ascii?Q?gvyV0ffQvLztLMBddk657RQOXtIvGVVoFoyZUrw8huDamvb89iEwu6GGEAkR?=
+ =?us-ascii?Q?Rg=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8676.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c8a2c16b-0f2d-4115-63d4-08d9b85ca20a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Dec 2021 02:03:44.3821
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: lGOTWx4LQ3+yG3mSd0rn78DYSOAq4YzCo3vvwtoMnG5yXni2B41xfMoZb0yiXbC5OId/ZDpxBamSZiIO+qNDWw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB8754
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The iommu core and driver core have been enhanced to avoid unsafe driver
-binding to a live group after iommu_group_set_dma_owner(PRIVATE_USER)
-has been called. There's no need to register iommu group notifier. This
-removes the iommu group notifer which contains BUG_ON() and WARN().
 
-Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
----
- drivers/vfio/vfio.c | 147 --------------------------------------------
- 1 file changed, 147 deletions(-)
+> -----Original Message-----
+> From: Fabio Estevam <festevam@gmail.com>
+> Sent: Saturday, December 4, 2021 11:35 PM
+> To: Hongxing Zhu <hongxing.zhu@nxp.com>
+> Cc: l.stach@pengutronix.de; lorenzo.pieralisi@arm.com;
+> robh@kernel.org; bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH] PCI: imx6: Allow to probe when
+> dw_pcie_wait_for_link() fails
+>=20
+> Hi Richard,
+>=20
+> On Wed, Nov 3, 2021 at 9:58 PM Hongxing Zhu <hongxing.zhu@nxp.com>
+> wrote:
+>=20
+> > [Richard Zhu] Hi Fabio:
+> > First of all, thanks for your help to care this bug.
+> > This dump is planned to be fixed in the #5 patch of  '[v4,0/6] PCI:
+> > imx6: refine codes and add compliance tests mode support'
+> >
+> "https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Fp
+> atchwork.kernel.org%2Fproject%2Flinux-arm-kernel%2Fcover%2F163574
+> 7478-25562-1-git-send-email-hongxing.zhu%40nxp.com%2F&amp;data=3D
+> 04%7C01%7Chongxing.zhu%40nxp.com%7C5ead6c09df204e65988908d9
+> b73ba44d%7C686ea1d3bc2b4c6fa92cd99c5c301635%7C0%7C0%7C637
+> 742289061098040%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAw
+> MDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&am
+> p;sdata=3D%2FbJokqkG1jyolTO1%2FmZhxLhmzcBKUQqU4fNx%2BoKnhGg%
+> 3D&amp;reserved=3D0"
+>=20
+> Any progress with this?
+>=20
+> Since this problem affects the stable kernels, would your series be appli=
+ed
+> to the stable tree too?
+>=20
+> Could you please resend your series so we can get this issue resolved?
+[Richard Zhu] I'm glad if this series can be applied to the stable tree too=
+.
+And I can re-send this patch-set again include the stable kernel tree.
 
-diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-index 5c81346367b1..33d984ff3cc5 100644
---- a/drivers/vfio/vfio.c
-+++ b/drivers/vfio/vfio.c
-@@ -71,7 +71,6 @@ struct vfio_group {
- 	struct vfio_container		*container;
- 	struct list_head		device_list;
- 	struct mutex			device_lock;
--	struct notifier_block		nb;
- 	struct list_head		vfio_next;
- 	struct list_head		container_next;
- 	atomic_t			opened;
-@@ -274,8 +273,6 @@ void vfio_unregister_iommu_driver(const struct vfio_iommu_driver_ops *ops)
- }
- EXPORT_SYMBOL_GPL(vfio_unregister_iommu_driver);
- 
--static int vfio_iommu_group_notifier(struct notifier_block *nb,
--				     unsigned long action, void *data);
- static void vfio_group_get(struct vfio_group *group);
- 
- /**
-@@ -395,13 +392,6 @@ static struct vfio_group *vfio_create_group(struct iommu_group *iommu_group,
- 		goto err_put;
- 	}
- 
--	group->nb.notifier_call = vfio_iommu_group_notifier;
--	err = iommu_group_register_notifier(iommu_group, &group->nb);
--	if (err) {
--		ret = ERR_PTR(err);
--		goto err_put;
--	}
--
- 	mutex_lock(&vfio.group_lock);
- 
- 	/* Did we race creating this group? */
-@@ -422,7 +412,6 @@ static struct vfio_group *vfio_create_group(struct iommu_group *iommu_group,
- 
- err_unlock:
- 	mutex_unlock(&vfio.group_lock);
--	iommu_group_unregister_notifier(group->iommu_group, &group->nb);
- err_put:
- 	put_device(&group->dev);
- 	return ret;
-@@ -447,7 +436,6 @@ static void vfio_group_put(struct vfio_group *group)
- 	cdev_device_del(&group->cdev, &group->dev);
- 	mutex_unlock(&vfio.group_lock);
- 
--	iommu_group_unregister_notifier(group->iommu_group, &group->nb);
- 	put_device(&group->dev);
- }
- 
-@@ -503,141 +491,6 @@ static struct vfio_device *vfio_group_get_device(struct vfio_group *group,
- 	return NULL;
- }
- 
--/*
-- * Some drivers, like pci-stub, are only used to prevent other drivers from
-- * claiming a device and are therefore perfectly legitimate for a user owned
-- * group.  The pci-stub driver has no dependencies on DMA or the IOVA mapping
-- * of the device, but it does prevent the user from having direct access to
-- * the device, which is useful in some circumstances.
-- *
-- * We also assume that we can include PCI interconnect devices, ie. bridges.
-- * IOMMU grouping on PCI necessitates that if we lack isolation on a bridge
-- * then all of the downstream devices will be part of the same IOMMU group as
-- * the bridge.  Thus, if placing the bridge into the user owned IOVA space
-- * breaks anything, it only does so for user owned devices downstream.  Note
-- * that error notification via MSI can be affected for platforms that handle
-- * MSI within the same IOVA space as DMA.
-- */
--static const char * const vfio_driver_allowed[] = { "pci-stub" };
--
--static bool vfio_dev_driver_allowed(struct device *dev,
--				    struct device_driver *drv)
--{
--	if (dev_is_pci(dev)) {
--		struct pci_dev *pdev = to_pci_dev(dev);
--
--		if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
--			return true;
--	}
--
--	return match_string(vfio_driver_allowed,
--			    ARRAY_SIZE(vfio_driver_allowed),
--			    drv->name) >= 0;
--}
--
--/*
-- * A vfio group is viable for use by userspace if all devices are in
-- * one of the following states:
-- *  - driver-less
-- *  - bound to a vfio driver
-- *  - bound to an otherwise allowed driver
-- *  - a PCI interconnect device
-- *
-- * We use two methods to determine whether a device is bound to a vfio
-- * driver.  The first is to test whether the device exists in the vfio
-- * group.  The second is to test if the device exists on the group
-- * unbound_list, indicating it's in the middle of transitioning from
-- * a vfio driver to driver-less.
-- */
--static int vfio_dev_viable(struct device *dev, void *data)
--{
--	struct vfio_group *group = data;
--	struct vfio_device *device;
--	struct device_driver *drv = READ_ONCE(dev->driver);
--
--	if (!drv || vfio_dev_driver_allowed(dev, drv))
--		return 0;
--
--	device = vfio_group_get_device(group, dev);
--	if (device) {
--		vfio_device_put(device);
--		return 0;
--	}
--
--	return -EINVAL;
--}
--
--/**
-- * Async device support
-- */
--static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
--{
--	struct vfio_device *device;
--
--	/* Do we already know about it?  We shouldn't */
--	device = vfio_group_get_device(group, dev);
--	if (WARN_ON_ONCE(device)) {
--		vfio_device_put(device);
--		return 0;
--	}
--
--	/* Nothing to do for idle groups */
--	if (!atomic_read(&group->container_users))
--		return 0;
--
--	/* TODO Prevent device auto probing */
--	dev_WARN(dev, "Device added to live group %d!\n",
--		 iommu_group_id(group->iommu_group));
--
--	return 0;
--}
--
--static int vfio_group_nb_verify(struct vfio_group *group, struct device *dev)
--{
--	/* We don't care what happens when the group isn't in use */
--	if (!atomic_read(&group->container_users))
--		return 0;
--
--	return vfio_dev_viable(dev, group);
--}
--
--static int vfio_iommu_group_notifier(struct notifier_block *nb,
--				     unsigned long action, void *data)
--{
--	struct vfio_group *group = container_of(nb, struct vfio_group, nb);
--	struct device *dev = data;
--
--	switch (action) {
--	case IOMMU_GROUP_NOTIFY_ADD_DEVICE:
--		vfio_group_nb_add_dev(group, dev);
--		break;
--	case IOMMU_GROUP_NOTIFY_DEL_DEVICE:
--		/*
--		 * Nothing to do here.  If the device is in use, then the
--		 * vfio sub-driver should block the remove callback until
--		 * it is unused.  If the device is unused or attached to a
--		 * stub driver, then it should be released and we don't
--		 * care that it will be going away.
--		 */
--		break;
--	case IOMMU_GROUP_NOTIFY_BIND_DRIVER:
--		dev_dbg(dev, "%s: group %d binding to driver\n", __func__,
--			iommu_group_id(group->iommu_group));
--		break;
--	case IOMMU_GROUP_NOTIFY_BOUND_DRIVER:
--		dev_dbg(dev, "%s: group %d bound to driver %s\n", __func__,
--			iommu_group_id(group->iommu_group), dev->driver->name);
--		BUG_ON(vfio_group_nb_verify(group, dev));
--		break;
--	case IOMMU_GROUP_NOTIFY_UNBIND_DRIVER:
--		dev_dbg(dev, "%s: group %d unbinding from driver %s\n",
--			__func__, iommu_group_id(group->iommu_group),
--			dev->driver->name);
--		break;
--	}
--	return NOTIFY_OK;
--}
--
- /**
-  * VFIO driver API
-  */
--- 
-2.25.1
+Unfortunately, I can't get contact and response from Lucas for a while.
+Without his ack, I'm afraid that this series wouldn't be merged.
+Lucas might be on his vocation and limited to access the email.
+I will ping him from time to time.=20
 
+Best Regards
+Richard
