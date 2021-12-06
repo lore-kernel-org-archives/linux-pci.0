@@ -2,163 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86143C433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A58D9C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 23:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377367AbhLFW4V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:56:21 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:48392 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359684AbhLFWzK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:55:10 -0500
-Message-ID: <20211206210748.847219474@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638831100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=BUH8kO9WlotKw1Jm4iAVN62jvoEejpolEUEH0KsFyqY=;
-        b=tkf6bcVZHT1vI5JwxsngLbDMdnn2lBna/IkgSEZ9qzd3LKYAdX5p3zvNKUebBGpCAM6CJx
-        BbKf+B1Qk5UyIKOzpvq++GVC6W6rWHVd0BvjEVOtA/GJvzzu66VcQgk+kGe+ar7QZPe6t0
-        /ww5Acp8h5i0qKoObgyWrNfQ08o3c2XWlUN4zltdcbyzTI9jfj1h9knJjj8mYFeNzno8W+
-        OrSP+fB66SMGpTT1Y+4sLn8gpfJhkXq6fpNwI1zgA2WGZsdX1ibWLHtxfQAZNPGKhNrNy6
-        xmWW8XjfZUQpp7yv/8hWXrYyZavzKNpUoFIYuiefEaNe9+P8ge2U69ebgZMuoA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638831100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=BUH8kO9WlotKw1Jm4iAVN62jvoEejpolEUEH0KsFyqY=;
-        b=V7ZDB1fDrNysdWEbulYRahYuzwoHAn9aIh3jtzGHZC23V577AVQihnfAkbh0fZTVDbvuIZ
-        V36JM4tCqbvyYeAA==
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        Cedric Le Goater <clg@kaod.org>,
-        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
-Subject: [patch V2 23/31] bus: fsl-mc-msi: Simplify MSI descriptor handling
-References: <20211206210600.123171746@linutronix.de>
+        id S1376866AbhLFXPz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Dec 2021 18:15:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59214 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1376764AbhLFXPy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 18:15:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88FDCC061746;
+        Mon,  6 Dec 2021 15:12:25 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4CA78B8111B;
+        Mon,  6 Dec 2021 23:12:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CBE2C004DD;
+        Mon,  6 Dec 2021 23:12:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1638832343;
+        bh=N+sG/ua5ywere0oxAo3CtHcnOnnRgW8/3YFg1XGB34w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ofP9EOSc5wGmI30zOggT2vYNOWGnUJNY8GUgpe6+QvFYywQ64dcCQkWpaVPHhGNGw
+         DrIlQx2fvLi8h5YfGxdVYF52ux60Dx9rPceHpQ2tdg1bE/UkCaOIGTv0acyLbpY3Xo
+         LkM/pUzpwMZv8zTMe5x618AWU7OWp+5Xfqxa6084Epq7vvZwyor/Zu2CT2nxepnTSb
+         f+RBYC+rGx5cVdzaXYNJCEoZFN6ixecWm2QtFDYx/1zZSia8DyX1gHnVUYFsHlHlRP
+         jJlgllKI2mcu89nKRtI5fsOW3dStqep7jRtWjrbUYWixU+bKt1qwN1qbHiGFRDYhS/
+         T/Zs++NObJhqw==
+Date:   Mon, 6 Dec 2021 15:12:18 -0800
+From:   Keith Busch <kbusch@kernel.org>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     bhelgaas@google.com, linux-pm@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Jonathan Derrick <jonathan.derrick@linux.dev>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: vmd: Honor ACPI _OSC on PCIe features
+Message-ID: <20211206231218.GA3843138@dhcp-10-100-145-180.wdc.com>
+References: <20211203031541.1428904-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon,  6 Dec 2021 23:51:39 +0100 (CET)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211203031541.1428904-1-kai.heng.feng@canonical.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Let the MSI irq domain code handle descriptor allocation and free.
+On Fri, Dec 03, 2021 at 11:15:41AM +0800, Kai-Heng Feng wrote:
+> When Samsung PCIe Gen4 NVMe is connected to Intel ADL VMD, the
+> combination causes AER message flood and drags the system performance
+> down.
+> 
+> The issue doesn't happen when VMD mode is disabled in BIOS, since AER
+> isn't enabled by acpi_pci_root_create() . When VMD mode is enabled, AER
+> is enabled regardless of _OSC:
+> [    0.410076] acpi PNP0A08:00: _OSC: platform does not support [AER]
+> ...
+> [    1.486704] pcieport 10000:e0:06.0: AER: enabled with IRQ 146
+> 
+> Since VMD is an aperture to regular PCIe root ports, honor ACPI _OSC to
+> disable PCIe features accordingly to resolve the issue.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- drivers/bus/fsl-mc/fsl-mc-msi.c |   61 ++--------------------------------------
- 1 file changed, 4 insertions(+), 57 deletions(-)
+At least for some versions of this hardare, I recall ACPI is unaware of
+any devices in the VMD domain; the platform can not see past the VMD
+endpoint, so I throught the driver was supposed to always let the VMD
+domain use OS native support regardless of the parent's ACPI _OSC.
 
---- a/drivers/bus/fsl-mc/fsl-mc-msi.c
-+++ b/drivers/bus/fsl-mc/fsl-mc-msi.c
-@@ -170,6 +170,7 @@ struct irq_domain *fsl_mc_msi_create_irq
- 		fsl_mc_msi_update_dom_ops(info);
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		fsl_mc_msi_update_chip_ops(info);
-+	info->flags |= MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS | MSI_FLAG_FREE_MSI_DESCS;
  
- 	domain = msi_create_irq_domain(fwnode, info, parent);
- 	if (domain)
-@@ -210,45 +211,7 @@ struct irq_domain *fsl_mc_find_msi_domai
- 	return msi_domain;
- }
- 
--static void fsl_mc_msi_free_descs(struct device *dev)
--{
--	struct msi_desc *desc, *tmp;
--
--	list_for_each_entry_safe(desc, tmp, dev_to_msi_list(dev), list) {
--		list_del(&desc->list);
--		free_msi_entry(desc);
--	}
--}
--
--static int fsl_mc_msi_alloc_descs(struct device *dev, unsigned int irq_count)
--
--{
--	unsigned int i;
--	int error;
--	struct msi_desc *msi_desc;
--
--	for (i = 0; i < irq_count; i++) {
--		msi_desc = alloc_msi_entry(dev, 1, NULL);
--		if (!msi_desc) {
--			dev_err(dev, "Failed to allocate msi entry\n");
--			error = -ENOMEM;
--			goto cleanup_msi_descs;
--		}
--
--		msi_desc->msi_index = i;
--		INIT_LIST_HEAD(&msi_desc->list);
--		list_add_tail(&msi_desc->list, dev_to_msi_list(dev));
--	}
--
--	return 0;
--
--cleanup_msi_descs:
--	fsl_mc_msi_free_descs(dev);
--	return error;
--}
--
--int fsl_mc_msi_domain_alloc_irqs(struct device *dev,
--				 unsigned int irq_count)
-+int fsl_mc_msi_domain_alloc_irqs(struct device *dev,  unsigned int irq_count)
- {
- 	struct irq_domain *msi_domain;
- 	int error;
-@@ -261,28 +224,17 @@ int fsl_mc_msi_domain_alloc_irqs(struct
- 	if (error)
- 		return error;
- 
--	if (!list_empty(dev_to_msi_list(dev)))
-+	if (msi_first_desc(dev, MSI_DESC_ALL))
- 		return -EINVAL;
- 
--	error = fsl_mc_msi_alloc_descs(dev, irq_count);
--	if (error < 0)
--		return error;
--
- 	/*
- 	 * NOTE: Calling this function will trigger the invocation of the
- 	 * its_fsl_mc_msi_prepare() callback
- 	 */
- 	error = msi_domain_alloc_irqs(msi_domain, dev, irq_count);
- 
--	if (error) {
-+	if (error)
- 		dev_err(dev, "Failed to allocate IRQs\n");
--		goto cleanup_msi_descs;
--	}
--
--	return 0;
--
--cleanup_msi_descs:
--	fsl_mc_msi_free_descs(dev);
- 	return error;
- }
- 
-@@ -295,9 +247,4 @@ void fsl_mc_msi_domain_free_irqs(struct
- 		return;
- 
- 	msi_domain_free_irqs(msi_domain, dev);
--
--	if (list_empty(dev_to_msi_list(dev)))
--		return;
--
--	fsl_mc_msi_free_descs(dev);
- }
-
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=215027
+> Suggested-by: Rafael J. Wysocki <rafael@kernel.org>
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> ---
+> v3:
+>  - Use a new helper function.
+> 
+> v2:
+>  - Use pci_find_host_bridge() instead of open coding.
+> 
+>  drivers/pci/controller/vmd.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index a45e8e59d3d48..691765e6c12aa 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -661,6 +661,21 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Since VMD is an aperture to regular PCIe root ports, only allow it to
+> + * control features that the OS is allowed to control on the physical PCI bus.
+> + */
+> +static void vmd_copy_host_bridge_flags(struct pci_host_bridge *root_bridge,
+> +				       struct pci_host_bridge *vmd_bridge)
+> +{
+> +	vmd_bridge->native_pcie_hotplug = root_bridge->native_pcie_hotplug;
+> +	vmd_bridge->native_shpc_hotplug = root_bridge->native_shpc_hotplug;
+> +	vmd_bridge->native_aer = root_bridge->native_aer;
+> +	vmd_bridge->native_pme = root_bridge->native_pme;
+> +	vmd_bridge->native_ltr = root_bridge->native_ltr;
+> +	vmd_bridge->native_dpc = root_bridge->native_dpc;
+> +}
+> +
+>  static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  {
+>  	struct pci_sysdata *sd = &vmd->sysdata;
+> @@ -798,6 +813,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  		return -ENODEV;
+>  	}
+>  
+> +	vmd_copy_host_bridge_flags(pci_find_host_bridge(vmd->dev->bus),
+> +				   to_pci_host_bridge(vmd->bus->bridge));
+> +
+>  	vmd_attach_resources(vmd);
+>  	if (vmd->irq_domain)
+>  		dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+> -- 
+> 2.32.0
+> 
