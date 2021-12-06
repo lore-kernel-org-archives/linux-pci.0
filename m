@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1444C43219
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2C6BC433EF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358102AbhLFWoG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:44:06 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:47472 "EHLO
+        id S1358159AbhLFWoH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Dec 2021 17:44:07 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:47330 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358667AbhLFWnS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:43:18 -0500
-Message-ID: <20211206210439.400844376@linutronix.de>
+        with ESMTP id S1359052AbhLFWnK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:43:10 -0500
+Message-ID: <20211206210439.128089025@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638830388;
+        s=2020; t=1638830380;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=lGS+IkXmE+9GAo5xc0vZ9k4XzYRWim7AXuJ3Yf4prmo=;
-        b=1rdh0uBIjRFPVJb0NRyQpQptlV/IqltLenr45mOonGb1VHJ/Kb/bZxEHCMdNY6i8Rsl3lU
-        3LeqeuR5+/TelAqjf8r4Ks6XK/KIFolBHpOGsdFI5iWQZCh4EyUbbBQRP/UsEqSSd34PqQ
-        CGWYXx1l3Ha6SI6sGKdzCI+pjUM3G9v435Md6e0/lLQECkoMsR/nFZ+ZQi1wRTh82GNKIa
-        VkCD8Ru4e1/yyGWEO+6kuMDv7hVYoHw87sh+R9wOR482T4v06q6RFEL7LzlekMOKFNQ0af
-        GGFaLu61fEzOgmHosPLGbKXOzPYbBO79MG2SX62W7byRtHXl19o2mfrKF/oTmA==
+         references:references; bh=yTGriMSBQw12ZMYwEGW0S48cT2DY3/1yk7kZdgU1pmY=;
+        b=abvHkvl7MHes9mfOR9bqibGGIq+vx064Sx/2IoxZNFoXq1/arNYeM7Fbw9vyud2BFpcCyl
+        8gYXLi5T6uox7YrF/wkwGrMbOYbu8YeDNLMftUhInxY9rK7K3bLobmPm3i1yFDmDTt3Sz8
+        FivfavzedB+NMyNAHZGsBXI5xY3YXl5/y7Z8BJwltsgNA86ygdtVAKJ9/QL9NYaT4aF83x
+        FfUbp+918U2Of/Jb3GGCZN/G6A6CFJdtTNeZeidruI3SVzDwS/Wqx5Mwzt5+j9ENoiITfF
+        2EmWdlKv5+TyJK4oh9mDVyz937Nyh0L46t/la0gvE9sDn8q0Hx5sEwvmQSn/0g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638830388;
+        s=2020e; t=1638830380;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=lGS+IkXmE+9GAo5xc0vZ9k4XzYRWim7AXuJ3Yf4prmo=;
-        b=ePEtkTTGN09IiG05GytAFMd60ZI7x21kGECcBweiIwUP3OufMZOiTYfQXaXuKmiMIqGKKl
-        Sec95JNvjvlYv9Bg==
+         references:references; bh=yTGriMSBQw12ZMYwEGW0S48cT2DY3/1yk7kZdgU1pmY=;
+        b=1N0K5YuxqLac5NJ0H3KkeMbsgwgxSEc2RhXJyC59uy5mjovjdeMAYcA2crOwpjyQKiRZJy
+        VIAHD13n0j3h8SAA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -39,7 +39,6 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Cedric Le Goater <clg@kaod.org>,
         xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
-        Robin Murphy <robin.murphy@arm.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Will Deacon <will@kernel.org>,
         Santosh Shilimkar <ssantosh@kernel.org>,
@@ -50,59 +49,86 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         linux-arm-kernel@lists.infradead.org,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V2 32/36] iommu/arm-smmu-v3: Use msi_get_virq()
+Subject: [patch V2 27/36] genirq/msi: Provide interface to retrieve Linux
+ interrupt number
 References: <20211206210307.625116253@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon,  6 Dec 2021 23:39:47 +0100 (CET)
+Date:   Mon,  6 Dec 2021 23:39:39 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Let the core code fiddle with the MSI descriptor retrieval.
+This allows drivers to retrieve the Linux interrupt number instead of
+fiddling with MSI descriptors.
+
+msi_get_virq() returns the Linux interrupt number or 0 in case that there
+is no entry for the given MSI index.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Robin Murphy <robin.murphy@arm.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |   19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
+V2: Simplify the implementation and let PCI deal with the PCI specialities - Marc
+---
+ include/linux/msi.h |    2 ++
+ kernel/irq/msi.c    |   36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -3154,7 +3154,6 @@ static void arm_smmu_write_msi_msg(struc
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -170,6 +170,8 @@ static inline bool msi_device_has_proper
+ static inline void msi_device_set_properties(struct device *dev, unsigned long prop) { }
+ #endif
  
- static void arm_smmu_setup_msis(struct arm_smmu_device *smmu)
- {
--	struct msi_desc *desc;
- 	int ret, nvec = ARM_SMMU_MAX_MSIS;
- 	struct device *dev = smmu->dev;
++unsigned int msi_get_virq(struct device *dev, unsigned int index);
++
+ /* Helpers to hide struct msi_desc implementation details */
+ #define msi_desc_to_dev(desc)		((desc)->dev)
+ #define dev_to_msi_list(dev)		(&(dev)->msi_list)
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -129,6 +129,42 @@ int msi_setup_device_data(struct device
+ 	return 0;
+ }
  
-@@ -3182,21 +3181,9 @@ static void arm_smmu_setup_msis(struct a
- 		return;
- 	}
- 
--	for_each_msi_entry(desc, dev) {
--		switch (desc->msi_index) {
--		case EVTQ_MSI_INDEX:
--			smmu->evtq.q.irq = desc->irq;
--			break;
--		case GERROR_MSI_INDEX:
--			smmu->gerr_irq = desc->irq;
--			break;
--		case PRIQ_MSI_INDEX:
--			smmu->priq.q.irq = desc->irq;
--			break;
--		default:	/* Unknown */
--			continue;
--		}
--	}
-+	smmu->evtq.q.irq = msi_get_virq(dev, EVTQ_MSI_INDEX);
-+	smmu->gerr_irq = msi_get_virq(dev, GERROR_MSI_INDEX);
-+	smmu->priq.q.irq = msi_get_virq(dev, PRIQ_MSI_INDEX);
- 
- 	/* Add callback to free MSIs on teardown */
- 	devm_add_action(dev, arm_smmu_free_msis, dev);
++/**
++ * msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * @dev:	Device to operate on
++ * @index:	MSI interrupt index to look for (0-based)
++ *
++ * Return: The Linux interrupt number on success (> 0), 0 if not found
++ */
++unsigned int msi_get_virq(struct device *dev, unsigned int index)
++{
++	struct msi_desc *desc;
++	bool pcimsi;
++
++	if (!dev->msi.data)
++		return 0;
++
++	pcimsi = msi_device_has_property(dev, MSI_PROP_PCI_MSI);
++
++	for_each_msi_entry(desc, dev) {
++		/* PCI-MSI has only one descriptor for multiple interrupts. */
++		if (pcimsi) {
++			if (desc->irq && index < desc->nvec_used)
++				return desc->irq + index;
++			break;
++		}
++
++		/*
++		 * PCI-MSIX and platform MSI use a descriptor per
++		 * interrupt.
++		 */
++		if (desc->msi_index == index)
++			return desc->irq;
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(msi_get_virq);
++
+ #ifdef CONFIG_SYSFS
+ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
 
