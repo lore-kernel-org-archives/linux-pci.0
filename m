@@ -2,33 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CE9C43219
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:40:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62DBEC433EF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:41:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359383AbhLFWoW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:44:22 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:47196 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358943AbhLFWnE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:43:04 -0500
-Message-ID: <20211206210438.913603962@linutronix.de>
+        id S1359645AbhLFWod (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Dec 2021 17:44:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51250 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1358749AbhLFWnw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:43:52 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0993C0613F8;
+        Mon,  6 Dec 2021 14:39:31 -0800 (PST)
+Message-ID: <20211206210438.798385721@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638830373;
+        s=2020; t=1638830370;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Ep5zFYMr2dpuKFMI1pf/izOHx/wmIORxQk2vil3OoJI=;
-        b=nfZZ3sBOutSvGHqk1sS290DDgjFJGXEhzG9mKo8h3KNUTS21yvque0kvoe6kdy44X6ihqJ
-        rlecPnSuBE8kWWqzbTh8ZfS2t/6i87b9mxuCdiQdAWfWgv/FXfDMxOB4hPcENaQevz8X1t
-        sfoi2d3W+glPX+uizuVT258ABJFrCCoKMbU990PZvSPJbq47uN//h7RBBdikCbG4VbXTMa
-        uzPGLlJ6oqG4Ba1T/Qi10UeHj0+DdaJ0BuryMFaEruZB4DB4ufEmaO0gHVQmA6rDjulOYP
-        4odcYLKYN6S0ZLHgH8AU1siZXSl2RCWz6Zdbj85yUeDpTNP4mcveuhP4LXFExg==
+         references:references; bh=QKm5Bkgh66jv1esKyW8TAnHsECmZ82riLvDb0inI4Eg=;
+        b=D895zweyz5rbn/kKNt1XSIZZIuu70zOfe8t7aNy6eaPuk9Jq384UyDeqpSVebKzdt73wdz
+        bv7oA/8soERWvg0vMVEhhtWvYy4IfPCtuN/t3lSP2LujCACSKlucdnk1rwd2IuGWqJIFD8
+        nOVDr0ME8uC+jRHNJzxXbEtkp66jTzTjncgcDGqbqeAttmBFKXBWKcHTEzc0T76+lCvfWa
+        MAQDG916FrRq9K4G7NfDRXGR98nTfIVsRZ1vGbWC8yf3qj15N4x8kVyYNA45iti3xk7yDI
+        ytFRfME9YaBXfT1xX96SqT4gmdILXf5V3Ng1EWWU6qBlvAGu+w/79e/X7HV6Ow==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638830373;
+        s=2020e; t=1638830370;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Ep5zFYMr2dpuKFMI1pf/izOHx/wmIORxQk2vil3OoJI=;
-        b=zIv8vjiKX+sZKy9gbTJ2X4+XfGOmD/O04fsKImX/MjjZGQEs9MDTD7XhFu7ricmc2LeLAj
-        jEryKJg6XslL1KCw==
+         references:references; bh=QKm5Bkgh66jv1esKyW8TAnHsECmZ82riLvDb0inI4Eg=;
+        b=sryxMrjcTSIoBdRCnKd98j0nEMOVFGKXsMpQoApejZmYu5+s8j3Ve6PT3Ubr/cO+sp4m5N
+        PPEkyZUsYvUJINDg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -51,11 +54,11 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V2 23/36] powerpc/cell/axon_msi: Use MSI device properties
+Subject: [patch V2 21/36] x86/apic/msi: Use device MSI properties
 References: <20211206210307.625116253@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon,  6 Dec 2021 23:39:33 +0100 (CET)
+Date:   Mon,  6 Dec 2021 23:39:29 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -63,34 +66,25 @@ X-Mailing-List: linux-pci@vger.kernel.org
 instead of fiddling with MSI descriptors.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
-V2: Invoke the function with the correct number of arguments - Andy
----
- arch/powerpc/platforms/cell/axon_msi.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ arch/x86/kernel/apic/msi.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
---- a/arch/powerpc/platforms/cell/axon_msi.c
-+++ b/arch/powerpc/platforms/cell/axon_msi.c
-@@ -199,7 +199,7 @@ static struct axon_msic *find_msi_transl
- static int setup_msi_msg_address(struct pci_dev *dev, struct msi_msg *msg)
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -160,11 +160,8 @@ static struct irq_chip pci_msi_controlle
+ int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
+ 		    msi_alloc_info_t *arg)
  {
- 	struct device_node *dn;
--	struct msi_desc *entry;
-+	bool is_64bit;
- 	int len;
- 	const u32 *prop;
- 
-@@ -209,10 +209,10 @@ static int setup_msi_msg_address(struct
- 		return -ENODEV;
- 	}
- 
--	entry = first_pci_msi_entry(dev);
-+	is_64bit = msi_device_has_property(&dev->dev, MSI_PROP_64BIT);
- 
- 	for (; dn; dn = of_get_next_parent(dn)) {
--		if (entry->pci.msi_attrib.is_64) {
-+		if (is_64bit) {
- 			prop = of_get_property(dn, "msi-address-64", &len);
- 			if (prop)
- 				break;
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct msi_desc *desc = first_pci_msi_entry(pdev);
+-
+ 	init_irq_alloc_info(arg, NULL);
+-	if (desc->pci.msi_attrib.is_msix) {
++	if (msi_device_has_property(dev, MSI_PROP_PCI_MSIX)) {
+ 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
+ 	} else {
+ 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
 
