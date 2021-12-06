@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F20C433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 02:01:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E10C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 02:03:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233059AbhLFCFR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Dec 2021 21:05:17 -0500
-Received: from mga18.intel.com ([134.134.136.126]:32788 "EHLO mga18.intel.com"
+        id S231876AbhLFCG5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Dec 2021 21:06:57 -0500
+Received: from mga18.intel.com ([134.134.136.126]:32647 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232795AbhLFCFH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 5 Dec 2021 21:05:07 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10189"; a="224099269"
+        id S233223AbhLFCEx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 5 Dec 2021 21:04:53 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10189"; a="224099234"
 X-IronPort-AV: E=Sophos;i="5.87,290,1631602800"; 
-   d="scan'208";a="224099269"
+   d="scan'208";a="224099234"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2021 18:01:39 -0800
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2021 18:01:25 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,290,1631602800"; 
-   d="scan'208";a="514542734"
+   d="scan'208";a="514542679"
 Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga008.jf.intel.com with ESMTP; 05 Dec 2021 18:01:32 -0800
+  by orsmga008.jf.intel.com with ESMTP; 05 Dec 2021 18:01:18 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joerg Roedel <joro@8bytes.org>,
@@ -49,9 +49,9 @@ Cc:     Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH v3 18/18] drm/tegra: Use the iommu dma_owner mechanism
-Date:   Mon,  6 Dec 2021 09:59:03 +0800
-Message-Id: <20211206015903.88687-19-baolu.lu@linux.intel.com>
+Subject: [PATCH v3 16/18] vfio: Remove iommu group notifier
+Date:   Mon,  6 Dec 2021 09:59:01 +0800
+Message-Id: <20211206015903.88687-17-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211206015903.88687-1-baolu.lu@linux.intel.com>
 References: <20211206015903.88687-1-baolu.lu@linux.intel.com>
@@ -61,165 +61,209 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jason Gunthorpe <jgg@nvidia.com>
+The iommu core and driver core have been enhanced to avoid unsafe driver
+binding to a live group after iommu_group_set_dma_owner(PRIVATE_USER)
+has been called. There's no need to register iommu group notifier. This
+removes the iommu group notifer which contains BUG_ON() and WARN().
 
-Tegra joins many platform devices onto the same iommu_domain and builds
-sort-of a DMA API on top of it.
-
-Given that iommu_attach/detatch_device_shared() has supported this usage
-model. Each device that wants to use the special domain will use
-suppress_auto_claim_dma_owner and call iommu_attach_device_shared() which
-will use dma owner framework to lock out other usages of the group and
-refcount the domain attachment.
-
-When the last device calls detatch the domain will be disconnected.
-
-Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
-Tested-by: Dmitry Osipenko <digetx@gmail.com> # Nexus7 T30
 ---
- drivers/gpu/drm/tegra/dc.c   |  1 +
- drivers/gpu/drm/tegra/drm.c  | 55 ++++++++++++++++++------------------
- drivers/gpu/drm/tegra/gr2d.c |  1 +
- drivers/gpu/drm/tegra/gr3d.c |  1 +
- drivers/gpu/drm/tegra/vic.c  |  1 +
- 5 files changed, 31 insertions(+), 28 deletions(-)
+ drivers/vfio/vfio.c | 147 --------------------------------------------
+ 1 file changed, 147 deletions(-)
 
-diff --git a/drivers/gpu/drm/tegra/dc.c b/drivers/gpu/drm/tegra/dc.c
-index a29d64f87563..3a2458f56fbc 100644
---- a/drivers/gpu/drm/tegra/dc.c
-+++ b/drivers/gpu/drm/tegra/dc.c
-@@ -3111,4 +3111,5 @@ struct platform_driver tegra_dc_driver = {
- 	},
- 	.probe = tegra_dc_probe,
- 	.remove = tegra_dc_remove,
-+	.suppress_auto_claim_dma_owner = true,
- };
-diff --git a/drivers/gpu/drm/tegra/drm.c b/drivers/gpu/drm/tegra/drm.c
-index 8d37d6b00562..1e83e3f5da5b 100644
---- a/drivers/gpu/drm/tegra/drm.c
-+++ b/drivers/gpu/drm/tegra/drm.c
-@@ -928,12 +928,15 @@ int tegra_drm_unregister_client(struct tegra_drm *tegra,
- 	return 0;
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 5c81346367b1..33d984ff3cc5 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -71,7 +71,6 @@ struct vfio_group {
+ 	struct vfio_container		*container;
+ 	struct list_head		device_list;
+ 	struct mutex			device_lock;
+-	struct notifier_block		nb;
+ 	struct list_head		vfio_next;
+ 	struct list_head		container_next;
+ 	atomic_t			opened;
+@@ -274,8 +273,6 @@ void vfio_unregister_iommu_driver(const struct vfio_iommu_driver_ops *ops)
  }
+ EXPORT_SYMBOL_GPL(vfio_unregister_iommu_driver);
  
-+/*
-+ * Clients which use this function must set suppress_auto_claim_dma_owner in
-+ * their platform_driver's device_driver struct.
-+ */
- int host1x_client_iommu_attach(struct host1x_client *client)
- {
- 	struct iommu_domain *domain = iommu_get_domain_for_dev(client->dev);
- 	struct drm_device *drm = dev_get_drvdata(client->host);
- 	struct tegra_drm *tegra = drm->dev_private;
--	struct iommu_group *group = NULL;
- 	int err;
+-static int vfio_iommu_group_notifier(struct notifier_block *nb,
+-				     unsigned long action, void *data);
+ static void vfio_group_get(struct vfio_group *group);
  
- 	/*
-@@ -941,48 +944,44 @@ int host1x_client_iommu_attach(struct host1x_client *client)
- 	 * not the shared IOMMU domain, don't try to attach it to a different
- 	 * domain. This allows using the IOMMU-backed DMA API.
- 	 */
--	if (domain && domain != tegra->domain)
-+	client->group = NULL;
-+	if (!client->dev->iommu_group || (domain && domain != tegra->domain))
-+		return iommu_device_set_dma_owner(client->dev,
-+						  DMA_OWNER_DMA_API, NULL);
-+
-+	if (!tegra->domain)
- 		return 0;
- 
--	if (tegra->domain) {
--		group = iommu_group_get(client->dev);
--		if (!group)
--			return -ENODEV;
--
--		if (domain != tegra->domain) {
--			err = iommu_attach_group(tegra->domain, group);
--			if (err < 0) {
--				iommu_group_put(group);
--				return err;
--			}
--		}
-+	err = iommu_device_set_dma_owner(client->dev,
-+					 DMA_OWNER_PRIVATE_DOMAIN, NULL);
-+	if (err)
-+		return err;
- 
--		tegra->use_explicit_iommu = true;
-+	err = iommu_attach_device_shared(tegra->domain, client->dev);
-+	if (err) {
-+		iommu_device_release_dma_owner(client->dev,
-+					       DMA_OWNER_PRIVATE_DOMAIN);
-+		return err;
+ /**
+@@ -395,13 +392,6 @@ static struct vfio_group *vfio_create_group(struct iommu_group *iommu_group,
+ 		goto err_put;
  	}
  
--	client->group = group;
+-	group->nb.notifier_call = vfio_iommu_group_notifier;
+-	err = iommu_group_register_notifier(iommu_group, &group->nb);
+-	if (err) {
+-		ret = ERR_PTR(err);
+-		goto err_put;
+-	}
 -
-+	tegra->use_explicit_iommu = true;
-+	client->group = client->dev->iommu_group;
- 	return 0;
+ 	mutex_lock(&vfio.group_lock);
+ 
+ 	/* Did we race creating this group? */
+@@ -422,7 +412,6 @@ static struct vfio_group *vfio_create_group(struct iommu_group *iommu_group,
+ 
+ err_unlock:
+ 	mutex_unlock(&vfio.group_lock);
+-	iommu_group_unregister_notifier(group->iommu_group, &group->nb);
+ err_put:
+ 	put_device(&group->dev);
+ 	return ret;
+@@ -447,7 +436,6 @@ static void vfio_group_put(struct vfio_group *group)
+ 	cdev_device_del(&group->cdev, &group->dev);
+ 	mutex_unlock(&vfio.group_lock);
+ 
+-	iommu_group_unregister_notifier(group->iommu_group, &group->nb);
+ 	put_device(&group->dev);
  }
  
- void host1x_client_iommu_detach(struct host1x_client *client)
- {
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(client->dev);
- 	struct drm_device *drm = dev_get_drvdata(client->host);
- 	struct tegra_drm *tegra = drm->dev_private;
--	struct iommu_domain *domain;
+@@ -503,141 +491,6 @@ static struct vfio_device *vfio_group_get_device(struct vfio_group *group,
+ 	return NULL;
+ }
  
- 	if (client->group) {
+-/*
+- * Some drivers, like pci-stub, are only used to prevent other drivers from
+- * claiming a device and are therefore perfectly legitimate for a user owned
+- * group.  The pci-stub driver has no dependencies on DMA or the IOVA mapping
+- * of the device, but it does prevent the user from having direct access to
+- * the device, which is useful in some circumstances.
+- *
+- * We also assume that we can include PCI interconnect devices, ie. bridges.
+- * IOMMU grouping on PCI necessitates that if we lack isolation on a bridge
+- * then all of the downstream devices will be part of the same IOMMU group as
+- * the bridge.  Thus, if placing the bridge into the user owned IOVA space
+- * breaks anything, it only does so for user owned devices downstream.  Note
+- * that error notification via MSI can be affected for platforms that handle
+- * MSI within the same IOVA space as DMA.
+- */
+-static const char * const vfio_driver_allowed[] = { "pci-stub" };
+-
+-static bool vfio_dev_driver_allowed(struct device *dev,
+-				    struct device_driver *drv)
+-{
+-	if (dev_is_pci(dev)) {
+-		struct pci_dev *pdev = to_pci_dev(dev);
+-
+-		if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+-			return true;
+-	}
+-
+-	return match_string(vfio_driver_allowed,
+-			    ARRAY_SIZE(vfio_driver_allowed),
+-			    drv->name) >= 0;
+-}
+-
+-/*
+- * A vfio group is viable for use by userspace if all devices are in
+- * one of the following states:
+- *  - driver-less
+- *  - bound to a vfio driver
+- *  - bound to an otherwise allowed driver
+- *  - a PCI interconnect device
+- *
+- * We use two methods to determine whether a device is bound to a vfio
+- * driver.  The first is to test whether the device exists in the vfio
+- * group.  The second is to test if the device exists on the group
+- * unbound_list, indicating it's in the middle of transitioning from
+- * a vfio driver to driver-less.
+- */
+-static int vfio_dev_viable(struct device *dev, void *data)
+-{
+-	struct vfio_group *group = data;
+-	struct vfio_device *device;
+-	struct device_driver *drv = READ_ONCE(dev->driver);
+-
+-	if (!drv || vfio_dev_driver_allowed(dev, drv))
+-		return 0;
+-
+-	device = vfio_group_get_device(group, dev);
+-	if (device) {
+-		vfio_device_put(device);
+-		return 0;
+-	}
+-
+-	return -EINVAL;
+-}
+-
+-/**
+- * Async device support
+- */
+-static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
+-{
+-	struct vfio_device *device;
+-
+-	/* Do we already know about it?  We shouldn't */
+-	device = vfio_group_get_device(group, dev);
+-	if (WARN_ON_ONCE(device)) {
+-		vfio_device_put(device);
+-		return 0;
+-	}
+-
+-	/* Nothing to do for idle groups */
+-	if (!atomic_read(&group->container_users))
+-		return 0;
+-
+-	/* TODO Prevent device auto probing */
+-	dev_WARN(dev, "Device added to live group %d!\n",
+-		 iommu_group_id(group->iommu_group));
+-
+-	return 0;
+-}
+-
+-static int vfio_group_nb_verify(struct vfio_group *group, struct device *dev)
+-{
+-	/* We don't care what happens when the group isn't in use */
+-	if (!atomic_read(&group->container_users))
+-		return 0;
+-
+-	return vfio_dev_viable(dev, group);
+-}
+-
+-static int vfio_iommu_group_notifier(struct notifier_block *nb,
+-				     unsigned long action, void *data)
+-{
+-	struct vfio_group *group = container_of(nb, struct vfio_group, nb);
+-	struct device *dev = data;
+-
+-	switch (action) {
+-	case IOMMU_GROUP_NOTIFY_ADD_DEVICE:
+-		vfio_group_nb_add_dev(group, dev);
+-		break;
+-	case IOMMU_GROUP_NOTIFY_DEL_DEVICE:
 -		/*
--		 * Devices that are part of the same group may no longer be
--		 * attached to a domain at this point because their group may
--		 * have been detached by an earlier client.
+-		 * Nothing to do here.  If the device is in use, then the
+-		 * vfio sub-driver should block the remove callback until
+-		 * it is unused.  If the device is unused or attached to a
+-		 * stub driver, then it should be released and we don't
+-		 * care that it will be going away.
 -		 */
--		domain = iommu_get_domain_for_dev(client->dev);
--		if (domain)
--			iommu_detach_group(tegra->domain, client->group);
+-		break;
+-	case IOMMU_GROUP_NOTIFY_BIND_DRIVER:
+-		dev_dbg(dev, "%s: group %d binding to driver\n", __func__,
+-			iommu_group_id(group->iommu_group));
+-		break;
+-	case IOMMU_GROUP_NOTIFY_BOUND_DRIVER:
+-		dev_dbg(dev, "%s: group %d bound to driver %s\n", __func__,
+-			iommu_group_id(group->iommu_group), dev->driver->name);
+-		BUG_ON(vfio_group_nb_verify(group, dev));
+-		break;
+-	case IOMMU_GROUP_NOTIFY_UNBIND_DRIVER:
+-		dev_dbg(dev, "%s: group %d unbinding from driver %s\n",
+-			__func__, iommu_group_id(group->iommu_group),
+-			dev->driver->name);
+-		break;
+-	}
+-	return NOTIFY_OK;
+-}
 -
--		iommu_group_put(client->group);
-+		iommu_detach_device_shared(tegra->domain, client->dev);
-+		iommu_device_release_dma_owner(client->dev,
-+					       DMA_OWNER_PRIVATE_DOMAIN);
- 		client->group = NULL;
-+	} else {
-+		iommu_device_release_dma_owner(client->dev, DMA_OWNER_DMA_API);
- 	}
- }
- 
-diff --git a/drivers/gpu/drm/tegra/gr2d.c b/drivers/gpu/drm/tegra/gr2d.c
-index de288cba3905..8d92141c3c86 100644
---- a/drivers/gpu/drm/tegra/gr2d.c
-+++ b/drivers/gpu/drm/tegra/gr2d.c
-@@ -271,4 +271,5 @@ struct platform_driver tegra_gr2d_driver = {
- 	},
- 	.probe = gr2d_probe,
- 	.remove = gr2d_remove,
-+	.suppress_auto_claim_dma_owner = true,
- };
-diff --git a/drivers/gpu/drm/tegra/gr3d.c b/drivers/gpu/drm/tegra/gr3d.c
-index 24442ade0da3..33c4954977ab 100644
---- a/drivers/gpu/drm/tegra/gr3d.c
-+++ b/drivers/gpu/drm/tegra/gr3d.c
-@@ -400,4 +400,5 @@ struct platform_driver tegra_gr3d_driver = {
- 	},
- 	.probe = gr3d_probe,
- 	.remove = gr3d_remove,
-+	.suppress_auto_claim_dma_owner = true,
- };
-diff --git a/drivers/gpu/drm/tegra/vic.c b/drivers/gpu/drm/tegra/vic.c
-index c02010ff2b7f..114df067ea00 100644
---- a/drivers/gpu/drm/tegra/vic.c
-+++ b/drivers/gpu/drm/tegra/vic.c
-@@ -527,6 +527,7 @@ struct platform_driver tegra_vic_driver = {
- 	},
- 	.probe = vic_probe,
- 	.remove = vic_remove,
-+	.suppress_auto_claim_dma_owner = true,
- };
- 
- #if IS_ENABLED(CONFIG_ARCH_TEGRA_124_SOC)
+ /**
+  * VFIO driver API
+  */
 -- 
 2.25.1
 
