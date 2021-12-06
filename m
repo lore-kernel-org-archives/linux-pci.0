@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7786C4167B
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10D4DC433EF
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358052AbhLFWmg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:42:36 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:46598 "EHLO
+        id S1358012AbhLFWmi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Dec 2021 17:42:38 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:46574 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357895AbhLFWmd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:42:33 -0500
-Message-ID: <20211206210437.875316747@linutronix.de>
+        with ESMTP id S1358008AbhLFWmg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:42:36 -0500
+Message-ID: <20211206210437.984321429@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638830343;
+        s=2020; t=1638830346;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=hFdKqxRH3cfzgioYGe6Wt7w61YxBjqbdkXo6merCrrA=;
-        b=OMnExLFiyr2l3DaeHBZpbFl2M24cvNzxDNL/9aYSNE94q++59kEmfVGKa5ZlhAe07Fl3uU
-        Za2x9mlRaEoMlFL5FR1Yt9/sqLPoYXCMPjqQw4WwMtRTKofDpynBiY6Jl0rxHJOkcMX9dw
-        AKh+hNeiRoS63cA7VuiUq+1N62xSAWLbXP1hCjtAIoq1LsEYItH7wAY5tc4nfMbGGtYDuF
-        fJU/wntmrOV0pnsKdqs0t3j9Fcc8XuBSCnFkFMGRffuHbe8KbWxBhE+GGbocWvfNjKYz6q
-        jHzrIsyfG/fs3wIXw7Tss35KZPRoYyc8DlL6z8BcWhdY+ZDIBEv4mQdQig+Tog==
+         references:references; bh=wtPMGV5PTpz1yqWy70m2nhuRZOAE9ffD5q8PvX2HIIo=;
+        b=FWpnEY9/Zjn8PcmvL5gy8OQMtSAgOf2w5Kf3cMg51UELgoNnReATs8yuuH/ZN3gPg+8scB
+        cwvQH9VUFWLlCbLQ6PInp2mwIO9QT0iNFBgnt5onIeLiEqkEFBOgdZAz+8cwUWuNKnQJXa
+        N5TO8eSKXeP/bhU8bRF6BIcanMCqXhld7Ah/J7ZPfieGVDvzYhRUv9Y1Au4prmsH1nGOaI
+        L67Zrex05IDgdCfyf+Te40MDuirDyGTTT8f7/Pbz9AoruyGC+5CDL6LOU9GL2V+Ucf1Vn1
+        W+uptRcO9Dq4pewx8SE1u8QdnFhSbUhLofZvB1Y6DUEEB3qtSVgzRPmv/dHMaA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638830343;
+        s=2020e; t=1638830346;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=hFdKqxRH3cfzgioYGe6Wt7w61YxBjqbdkXo6merCrrA=;
-        b=Wmw1TW9VtGF7GmA2M1BkXP4IXVGQeS/AtXBgcY5867Qr3359clTNz15RIffmYLeD26efTT
-        Tn7VoBQPW9R2PTDw==
+         references:references; bh=wtPMGV5PTpz1yqWy70m2nhuRZOAE9ffD5q8PvX2HIIo=;
+        b=3iJ1sRdxnOfhMeFz/of0Hh7n9fP3JPzTifzOUTZle2NbTuTSk9CyV+KPnDIDd6tDt73mL5
+        s3SenUGZDykxIpDw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -40,65 +40,51 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Cedric Le Goater <clg@kaod.org>,
         xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Will Deacon <will@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
         Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Will Deacon <will@kernel.org>,
         iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
         Stuart Yoder <stuyoder@gmail.com>,
         Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
         Vinod Koul <vkoul@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V2 04/36] platform-msi: Allocate MSI device data on first use
+Subject: [patch V2 06/36] soc: ti: ti_sci_inta_msi: Allocate MSI device data
+ on first use
 References: <20211206210307.625116253@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon,  6 Dec 2021 23:39:02 +0100 (CET)
+Date:   Mon,  6 Dec 2021 23:39:05 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allocate the MSI device data on first invocation of the allocation function
-for platform MSI private data.
+Allocate the MSI device data on first invocation of the allocation function.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Nishanth Menon <nm@ti.com>
+Cc: Tero Kristo <kristo@kernel.org>
+Cc: Santosh Shilimkar <ssantosh@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org
 ---
- drivers/base/platform-msi.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/soc/ti/ti_sci_inta_msi.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -204,6 +204,8 @@ platform_msi_alloc_priv_data(struct devi
- 			     irq_write_msi_msg_t write_msi_msg)
- {
- 	struct platform_msi_priv_data *datap;
-+	int err;
-+
- 	/*
- 	 * Limit the number of interrupts to 2048 per device. Should we
- 	 * need to bump this up, DEV_ID_SHIFT should be adjusted
-@@ -218,6 +220,10 @@ platform_msi_alloc_priv_data(struct devi
- 		return ERR_PTR(-EINVAL);
- 	}
+--- a/drivers/soc/ti/ti_sci_inta_msi.c
++++ b/drivers/soc/ti/ti_sci_inta_msi.c
+@@ -120,6 +120,10 @@ int ti_sci_inta_msi_domain_alloc_irqs(st
+ 	if (pdev->id < 0)
+ 		return -ENODEV;
  
-+	err = msi_setup_device_data(dev);
-+	if (err)
-+		return ERR_PTR(err);
++	ret = msi_setup_device_data(dev);
++	if (ret)
++		return ret;
 +
- 	/* Already had a helping of MSI? Greed... */
- 	if (!list_empty(dev_to_msi_list(dev)))
- 		return ERR_PTR(-EBUSY);
-@@ -229,7 +235,7 @@ platform_msi_alloc_priv_data(struct devi
- 	datap->devid = ida_simple_get(&platform_msi_devid_ida,
- 				      0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
- 	if (datap->devid < 0) {
--		int err = datap->devid;
-+		err = datap->devid;
- 		kfree(datap);
- 		return ERR_PTR(err);
- 	}
+ 	nvec = ti_sci_inta_msi_alloc_descs(dev, res);
+ 	if (nvec <= 0)
+ 		return nvec;
 
