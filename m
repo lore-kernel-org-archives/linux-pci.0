@@ -2,36 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4BEC433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 944D7C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Dec 2021 22:51:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376964AbhLFWot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Dec 2021 17:44:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51554 "EHLO
+        id S1358698AbhLFWye (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Dec 2021 17:54:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376306AbhLFWnz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:43:55 -0500
+        with ESMTP id S1358621AbhLFWyd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Dec 2021 17:54:33 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 485DEC0698DD;
-        Mon,  6 Dec 2021 14:39:54 -0800 (PST)
-Message-ID: <20211206210439.563159167@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F5EC061746;
+        Mon,  6 Dec 2021 14:51:04 -0800 (PST)
+Message-ID: <20211206210600.123171746@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1638830393;
+        s=2020; t=1638831063;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=jHyezEoA6dhB4ZSrBoZ23WpPCkveZt9yuxL9BvGVX8Y=;
-        b=fSODZTv6AD7cSUnet1lA0cqP/4dL95Iu7D5l0WKszY8dggFQTtnEV3OUn3y9urhS5lmSRr
-        bFPJzjBz3KIY5JStVk2zLspbNKsiDElGLLBtmMeic1y43ALqfA26qf9j9voFO6UYMBcyGo
-        xANld6SPj5Tddo7FyTlAhz2h/RnlckwFpyglJv1Mm4P9x3xPdkLLUFYTmBGH0ndCDFXWmn
-        +HwZpvPjvn9qzUm1kTQMlIWr5a5R0DwCYqn4UG81FQqEXp0/qvhQ7ci1MdMRGaMY/JzthP
-        oh5Q61Ci98kFYJdOLoeMxVLrXNkS7mQiutBs2vw0mQuUoUWq2VaDx8FtqpYpNA==
+         content-transfer-encoding:content-transfer-encoding;
+        bh=zuaVjYRhYaXSnxhOlTO3/+R1NRokr9z15QjTY7nAlqg=;
+        b=g/R4QSH9IT1htMarbLNdxFDavRX6bJv4OUQ/T0gt4OQTqWZXzTnEFGfVNGY6u3WarVEX0M
+        fO4dKL3Nm1idJ1EHNtMX9r3gv7Aa9o3YXnLoyDUhkVhTcL9wyzfCwA4mRP43jrVG1lBrvk
+        ufNL0788SoAA7ns5LdioDLX/09NweJXy7JmQK0sepafvaSdQB0dkUuy9APy8Z+ZZpZRmtZ
+        UyO27tAZTKgZE/UHN5p4OPkUXcwgOWtBGytrfD/kqC5Kq+IksH7RiH5qUuZ9fR60c7jrom
+        Il+EusOQlF4egTWzDwPjnoc5PCnLeWjJc6hprAFpEnNdSv7BoTX/aaA5Ro+wcA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1638830393;
+        s=2020e; t=1638831063;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=jHyezEoA6dhB4ZSrBoZ23WpPCkveZt9yuxL9BvGVX8Y=;
-        b=ey27UtKMqiE+fXqJWfKK+X9EYyKnROGFcjxs9M1r6hk+PzmcSb+zFvcui9i4NN5/NwzEv9
-        ug0Fq3tF+65z+tBg==
+         content-transfer-encoding:content-transfer-encoding;
+        bh=zuaVjYRhYaXSnxhOlTO3/+R1NRokr9z15QjTY7nAlqg=;
+        b=EiJLBZ0I2k31uIESwAuf3JVleODzfA1PUF4FPIFRUFMUdHiPUHwv8yQK8cFPw5MnxUJoi2
+        tEyzCBesXZg681CA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -43,137 +45,94 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Cedric Le Goater <clg@kaod.org>,
         xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Will Deacon <will@kernel.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: [patch V2 35/36] soc: ti: ti_sci_inta_msi: Get rid of
- ti_sci_inta_msi_get_virq()
-References: <20211206210307.625116253@linutronix.de>
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        linux-s390@vger.kernel.org, Heiko Carstens <hca@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com
+Subject: [patch V2 00/31] genirq/msi, PCI/MSI: Spring cleaning - Part 3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon,  6 Dec 2021 23:39:52 +0100 (CET)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Date:   Mon,  6 Dec 2021 23:51:02 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Just use the core function msi_get_virq().
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
----
- drivers/dma/ti/k3-udma-private.c       |    6 ++----
- drivers/dma/ti/k3-udma.c               |   10 ++++------
- drivers/soc/ti/k3-ringacc.c            |    2 +-
- drivers/soc/ti/ti_sci_inta_msi.c       |   12 ------------
- include/linux/soc/ti/ti_sci_inta_msi.h |    1 -
- 5 files changed, 7 insertions(+), 24 deletions(-)
-
---- a/drivers/dma/ti/k3-udma-private.c
-+++ b/drivers/dma/ti/k3-udma-private.c
-@@ -168,8 +168,7 @@ int xudma_pktdma_tflow_get_irq(struct ud
- {
- 	const struct udma_oes_offsets *oes = &ud->soc_data->oes;
- 
--	return ti_sci_inta_msi_get_virq(ud->dev, udma_tflow_id +
--					oes->pktdma_tchan_flow);
-+	return msi_get_virq(ud->dev, udma_tflow_id + oes->pktdma_tchan_flow);
- }
- EXPORT_SYMBOL(xudma_pktdma_tflow_get_irq);
- 
-@@ -177,7 +176,6 @@ int xudma_pktdma_rflow_get_irq(struct ud
- {
- 	const struct udma_oes_offsets *oes = &ud->soc_data->oes;
- 
--	return ti_sci_inta_msi_get_virq(ud->dev, udma_rflow_id +
--					oes->pktdma_rchan_flow);
-+	return msi_get_virq(ud->dev, udma_rflow_id + oes->pktdma_rchan_flow);
- }
- EXPORT_SYMBOL(xudma_pktdma_rflow_get_irq);
---- a/drivers/dma/ti/k3-udma.c
-+++ b/drivers/dma/ti/k3-udma.c
-@@ -2313,8 +2313,7 @@ static int udma_alloc_chan_resources(str
- 
- 	/* Event from UDMA (TR events) only needed for slave TR mode channels */
- 	if (is_slave_direction(uc->config.dir) && !uc->config.pkt_mode) {
--		uc->irq_num_udma = ti_sci_inta_msi_get_virq(ud->dev,
--							    irq_udma_idx);
-+		uc->irq_num_udma = msi_get_virq(ud->dev, irq_udma_idx);
- 		if (uc->irq_num_udma <= 0) {
- 			dev_err(ud->dev, "Failed to get udma irq (index: %u)\n",
- 				irq_udma_idx);
-@@ -2486,7 +2485,7 @@ static int bcdma_alloc_chan_resources(st
- 		uc->psil_paired = true;
- 	}
- 
--	uc->irq_num_ring = ti_sci_inta_msi_get_virq(ud->dev, irq_ring_idx);
-+	uc->irq_num_ring = msi_get_virq(ud->dev, irq_ring_idx);
- 	if (uc->irq_num_ring <= 0) {
- 		dev_err(ud->dev, "Failed to get ring irq (index: %u)\n",
- 			irq_ring_idx);
-@@ -2503,8 +2502,7 @@ static int bcdma_alloc_chan_resources(st
- 
- 	/* Event from BCDMA (TR events) only needed for slave channels */
- 	if (is_slave_direction(uc->config.dir)) {
--		uc->irq_num_udma = ti_sci_inta_msi_get_virq(ud->dev,
--							    irq_udma_idx);
-+		uc->irq_num_udma = msi_get_virq(ud->dev, irq_udma_idx);
- 		if (uc->irq_num_udma <= 0) {
- 			dev_err(ud->dev, "Failed to get bcdma irq (index: %u)\n",
- 				irq_udma_idx);
-@@ -2672,7 +2670,7 @@ static int pktdma_alloc_chan_resources(s
- 
- 	uc->psil_paired = true;
- 
--	uc->irq_num_ring = ti_sci_inta_msi_get_virq(ud->dev, irq_ring_idx);
-+	uc->irq_num_ring = msi_get_virq(ud->dev, irq_ring_idx);
- 	if (uc->irq_num_ring <= 0) {
- 		dev_err(ud->dev, "Failed to get ring irq (index: %u)\n",
- 			irq_ring_idx);
---- a/drivers/soc/ti/k3-ringacc.c
-+++ b/drivers/soc/ti/k3-ringacc.c
-@@ -647,7 +647,7 @@ int k3_ringacc_get_ring_irq_num(struct k
- 	if (!ring)
- 		return -EINVAL;
- 
--	irq_num = ti_sci_inta_msi_get_virq(ring->parent->dev, ring->ring_id);
-+	irq_num = msi_get_virq(ring->parent->dev, ring->ring_id);
- 	if (irq_num <= 0)
- 		irq_num = -EINVAL;
- 	return irq_num;
---- a/drivers/soc/ti/ti_sci_inta_msi.c
-+++ b/drivers/soc/ti/ti_sci_inta_msi.c
-@@ -148,15 +148,3 @@ void ti_sci_inta_msi_domain_free_irqs(st
- 	ti_sci_inta_msi_free_descs(dev);
- }
- EXPORT_SYMBOL_GPL(ti_sci_inta_msi_domain_free_irqs);
--
--unsigned int ti_sci_inta_msi_get_virq(struct device *dev, u32 dev_index)
--{
--	struct msi_desc *desc;
--
--	for_each_msi_entry(desc, dev)
--		if (desc->msi_index == dev_index)
--			return desc->irq;
--
--	return -ENODEV;
--}
--EXPORT_SYMBOL_GPL(ti_sci_inta_msi_get_virq);
---- a/include/linux/soc/ti/ti_sci_inta_msi.h
-+++ b/include/linux/soc/ti/ti_sci_inta_msi.h
-@@ -18,6 +18,5 @@ struct irq_domain
- 				   struct irq_domain *parent);
- int ti_sci_inta_msi_domain_alloc_irqs(struct device *dev,
- 				      struct ti_sci_resource *res);
--unsigned int ti_sci_inta_msi_get_virq(struct device *dev, u32 index);
- void ti_sci_inta_msi_domain_free_irqs(struct device *dev);
- #endif /* __INCLUDE_LINUX_IRQCHIP_TI_SCI_INTA_H */
-
+VGhpcyBpcyB0aGUgdGhpcmQgcGFydCBvZiBbUENJXU1TSSByZWZhY3RvcmluZyB3aGljaCBhaW1z
+IHRvIHByb3ZpZGUgdGhlCmFiaWxpdHkgb2YgZXhwYW5kaW5nIE1TSS1YIHZlY3RvcnMgYWZ0ZXIg
+ZW5hYmxpbmcgTVNJLVguCgpUaGUgZmlyc3QgdHdvIHBhcnRzIG9mIHRoaXMgd29yayBjYW4gYmUg
+Zm91bmQgaGVyZToKCiAgICBodHRwczovL2xvcmUua2VybmVsLm9yZy9yLzIwMjExMjA2MjEwMTQ3
+Ljg3Mjg2NTgyM0BsaW51dHJvbml4LmRlCiAgICBodHRwczovL2xvcmUua2VybmVsLm9yZy9yLzIw
+MjExMjA2MjEwMzA3LjYyNTExNjI1M0BsaW51dHJvbml4LmRlCgpUaGlzIHRoaXJkIHBhcnQgaGFz
+IHRoZSBmb2xsb3dpbmcgaW1wb3J0YW50IGNoYW5nZXM6CgogICAxKSBBZGQgbG9ja2luZyB0byBw
+cm90ZWN0IHRoZSBNU0kgZGVzY3JpcHRvciBzdG9yYWdlCgogICAgICBSaWdodCBub3cgdGhlIE1T
+SSBkZXNjcmlwdG9yIHN0b3JhZ2UgKGxpbmtlZCBsaXN0KSBpcyBub3QgcHJvdGVjdGVkCiAgICAg
+IGJ5IGFueXRoaW5nIHVuZGVyIHRoZSBhc3N1bXB0aW9uIHRoYXQgdGhlIGxpc3QgaXMgaW5zdGFs
+bGVkIGJlZm9yZQogICAgICB1c2UgYW5kIGRlc3Ryb3llZCBhZnRlciB1c2UuIEFzIHRoaXMgaXMg
+YWJvdXQgdG8gY2hhbmdlIHRoZXJlIGhhcyB0bwogICAgICBiZSBwcm90ZWN0aW9uCgogICAyKSBB
+IG5ldyBzZXQgb2YgaXRlcmF0b3JzIHdoaWNoIGFsbG93IGZpbHRlcmluZyBvbiB0aGUgc3RhdGUg
+b2YgdGhlCiAgICAgIGRlc2NyaXB0b3JzIG5hbWVseSB3aGV0aGVyIGEgZGVzY3JpcHRvciBpcyBh
+c3NvY2lhdGVkIHRvIGEgTGludXgKICAgICAgaW50ZXJydXB0IG9yIG5vdC4KCiAgICAgIFRoaXMg
+Y2xlYW5zIHVwIGEgbG90IG9mIHVzZSBjYXNlcyB3aGljaCBoYXZlIHRvIGRvIHRoaXMgZmlsdGVy
+aW5nCiAgICAgIG1hbnVhbGx5LgoKICAgMykgQSBuZXcgc2V0IG9mIE1TSSBkZXNjcmlwdG9yIGFs
+bG9jYXRpb24gZnVuY3Rpb25zIHdoaWNoIG1ha2UgdGhlIHVzYWdlCiAgICAgIHNpdGVzIHNpbXBs
+ZXIgYW5kIGNvbmZpbmUgdGhlIHN0b3JhZ2UgaGFuZGxpbmcgdG8gdGhlIGNvcmUgY29kZS4KCiAg
+ICAgIFRyaXZpYWwgTVNJIGRlc2NyaXB0b3JzIChub24gUENJKSBhcmUgbm93IGFsbG9jYXRlZCBi
+eSB0aGUgY29yZSBjb2RlCiAgICAgIGF1dG9tYXRpY2FsbHkgd2hlbiB0aGUgdW5kZXJseWluZyBp
+cnEgZG9tYWluIHJlcXVlc3RzIHRoYXQuCgogICA0KSBSZXdvcmsgb2Ygc3lzZnMgaGFuZGxpbmcg
+dG8gcHJlcGFyZSBmb3IgZHluYW1pYyBleHRlbnNpb24gb2YgTVNJLVgKCiAgICAgIFRoZSBjdXJy
+ZW50IG1lY2hhbmlzbSB3aGljaCBjcmVhdGVzIHRoZSBkaXJlY3RvcnkgYW5kIHRoZSBhdHRyaWJ1
+dGVzCiAgICAgIGZvciBhbGwgTVNJIGRlc2NyaXB0b3JzIGluIG9uZSBnbyBpcyBvYnZpb3VzbHkg
+bm90IHN1aXRhYmxlIGZvcgogICAgICBkeW5hbWljIGV4dGVuc2lvbi4gVGhlIHJld29yayBzcGxp
+dHMgdGhlIGRpcmVjdG9yeSBjcmVhdGlvbiBvdXQgYW5kCiAgICAgIGxldHMgdGhlIE1TSSBpbnRl
+cnJ1cHQgYWxsb2NhdGlvbiBjcmVhdGUgdGhlIHBlciBkZXNjcmlwdG9yCiAgICAgIGF0dHJpYnV0
+ZXMuCgogICA1KSBDb252ZXJzaW9uIG9mIHRoZSBNU0kgZGVzY3JpcHRvciBzdG9yYWdlIHRvIHhh
+cnJheQoKICAgICAgVGhlIGxpbmtlZCBsaXN0IGJhc2VkIHN0b3JhZ2UgaXMgc3Vib3B0aW1hbCBl
+dmVuIHdpdGhvdXQgZHluYW1pYwogICAgICBleHBhbnNpb24gYXMgaXQgcmVxdWlyZXMgZnVsbCBs
+aXN0IHdhbGtzIHRvIGdldCB0byBhIHNwZWNpZmljCiAgICAgIGRlc2NyaXB0b3IuIFdpdGggZHlu
+YW1pYyBleHBhbnNpb24gdGhpcyBnZXRzIGV2ZW4gbW9yZQogICAgICBjb252b2x1dGVkLiBYYXJy
+YXkgaXMgd2F5IG1vcmUgc3VpdGFibGUgYW5kIHNpbXBsaWZpZXMgdGhlCiAgICAgIGZpbmFsIGdv
+YWwgb2YgZHluYW1pYyBleHBhbnNpb24gb2YgdGhlIE1TSS1YIHNwYWNlLgoKVGhpcyB0aGlyZCBz
+ZXJpZXMgaXMgYmFzZWQgb246CgogICAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGlu
+dXgva2VybmVsL2dpdC90Z2x4L2RldmVsLmdpdCBtc2ktdjItcGFydC0yCgphbmQgYWxzbyBhdmFp
+bGFibGUgZnJvbSBnaXQ6CgogICAgIGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgv
+a2VybmVsL2dpdC90Z2x4L2RldmVsLmdpdCBtc2ktdjItcGFydC0zCgpWMSBvZiB0aGlzIHNlcmll
+cyBjYW4gYmUgZm91bmQgaGVyZToKCiAgICBodHRwczovL2xvcmUua2VybmVsLm9yZy9yLzIwMjEx
+MTI2MjI0MTAwLjMwMzA0Njc0OUBsaW51dHJvbml4LmRlCgpDaGFuZ2VzIHZlcnN1cyBWMToKCiAg
+LSBSZW1vdmUgdGhlIGFsbG9jYXRpb24gY291bnRlciBwYXRjaCBhcyBpdCBpcyBub3QgcmVxdWly
+ZWQKCiAgLSBGaXggdGhlIHBvd2VycGMgZmFsbG91dCAtIENlZHJpYwoKICAtIEZpeCB0aGUgQ09O
+RklHIHR5cG8gLSBOaWtsYXMKCiAgLSBQaWNrZWQgdXAgUmV2aWV3ZWQvVGVzdGVkL0Fja2VkLWJ5
+IHRhZ3MgYXMgYXBwcm9wcmlhdGUKCkFzIGEgY29uc2VxdWVuY2Ugb2YgdGhlIGRpc2N1c3Npb24g
+dnMuIHRoZSBnZW5lcmFsIGRpcmVjdGlvbiBvZiB0aGVzZQpwYXRjaGVzLCBwYXJ0IDQgaXMgbm90
+IGdvaW5nIHRvIGJlIHVwZGF0ZWQgaW4gaXQncyBjdXJyZW50IGZvcm0uCgpUaGUgYXNzdW1wdGlv
+biB0aGF0IE1TSVtYXSBhbmQgSU1TIGFyZSBtdXR1YWxseSBleGNsdXNpdmUgYW5kIHRoYXQgSU1T
+IGlzCmJhc2ljYWxseSBhbiBleHRlbnNpb24gZm9yIGZpbmVyIGdyYWluZWQgc3BsaXR1cCBvZiB0
+aGUgUENJIGRldmljZSBkb2VzIG5vdApob2xkLgoKVGhlcmUgaXMgYSBwbGFuIHRvIHJlZmFjdG9y
+IHRoZSBjb2RlIGZ1cnRoZXIgaW4gb3JkZXIgdG8gcHJvdmlkZSB0aGUKZGVzaXJlZCBmdW5jdGlv
+bmFsaXR5IG9mIE1TSVtYXS9JTVMgd2hpY2ggd2lsbCBhbHNvIGdhaW4gdGhlIGR5bmFtaWMKZXh0
+ZW5zaW9uIG9mIE1TSS1YIHZlY3RvcnM6CgogICAgICBodHRwczovL2xvcmUua2VybmVsLm9yZy9y
+Lzg3bzg1djN6bmIuZmZzQHRnbHgKClRoYW5rcywKCgl0Z2x4Ci0tLQogLmNsYW5nLWZvcm1hdCAg
+ICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAxIAogYXJjaC9wb3dlcnBjL3BsYXRmb3Jtcy80
+eHgvaHN0YV9tc2kuYyAgfCAgICA3IAogYXJjaC9wb3dlcnBjL3BsYXRmb3Jtcy9jZWxsL2F4b25f
+bXNpLmMgfCAgICA3IAogYXJjaC9wb3dlcnBjL3BsYXRmb3Jtcy9wYXNlbWkvbXNpLmMgICAgfCAg
+ICA5IAogYXJjaC9wb3dlcnBjL3N5c2Rldi9mc2xfbXNpLmMgICAgICAgICAgfCAgICA4IAogYXJj
+aC9wb3dlcnBjL3N5c2Rldi9tcGljX3UzbXNpLmMgICAgICAgfCAgICA5IAogYXJjaC9zMzkwL3Bj
+aS9wY2lfaXJxLmMgICAgICAgICAgICAgICAgfCAgICA2IAogYXJjaC94ODYvcGNpL3hlbi5jICAg
+ICAgICAgICAgICAgICAgICAgfCAgIDE0IAogZHJpdmVycy9iYXNlL2NvcmUuYyAgICAgICAgICAg
+ICAgICAgICAgfCAgICAzIAogZHJpdmVycy9iYXNlL3BsYXRmb3JtLW1zaS5jICAgICAgICAgICAg
+fCAgMTEwIC0tLS0tCiBkcml2ZXJzL2J1cy9mc2wtbWMvZnNsLW1jLW1zaS5jICAgICAgICB8ICAg
+NjEgLS0KIGRyaXZlcnMvbnRiL21zaS5jICAgICAgICAgICAgICAgICAgICAgIHwgICAxOSAKIGRy
+aXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpLWh5cGVydi5jICAgIHwgICAxNSAKIGRyaXZlcnMvcGNp
+L21zaS9pcnFkb21haW4uYyAgICAgICAgICAgIHwgICAxMSAKIGRyaXZlcnMvcGNpL21zaS9sZWdh
+Y3kuYyAgICAgICAgICAgICAgIHwgICAyMCAKIGRyaXZlcnMvcGNpL21zaS9tc2kuYyAgICAgICAg
+ICAgICAgICAgIHwgIDI1OCArKysrKystLS0tLS0KIGRyaXZlcnMvcGNpL3hlbi1wY2lmcm9udC5j
+ICAgICAgICAgICAgIHwgICAgMiAKIGRyaXZlcnMvc29jL3RpL3RpX3NjaV9pbnRhX21zaS5jICAg
+ICAgIHwgICA3NyArLS0KIGluY2x1ZGUvbGludXgvZGV2aWNlLmggICAgICAgICAgICAgICAgIHwg
+ICAgNCAKIGluY2x1ZGUvbGludXgvbXNpLmggICAgICAgICAgICAgICAgICAgIHwgIDEwNyArKyst
+LQogaW5jbHVkZS9saW51eC9zb2MvdGkvdGlfc2NpX2ludGFfbXNpLmggfCAgICAxIAoga2VybmVs
+L2lycS9tc2kuYyAgICAgICAgICAgICAgICAgICAgICAgfCAgNzAwICsrKysrKysrKysrKysrKysr
+KysrKystLS0tLS0tLS0tLQogMjIgZmlsZXMgY2hhbmdlZCwgNzk0IGluc2VydGlvbnMoKyksIDY1
+NSBkZWxldGlvbnMoLSkK
