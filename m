@@ -2,169 +2,135 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAA2C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Dec 2021 17:57:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC56DC433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Dec 2021 18:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235695AbhLGSBJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Dec 2021 13:01:09 -0500
-Received: from smtpout3.mo529.mail-out.ovh.net ([46.105.54.81]:40831 "EHLO
-        smtpout3.mo529.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235627AbhLGSBI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Dec 2021 13:01:08 -0500
-Received: from mxplan5.mail.ovh.net (unknown [10.108.16.17])
-        by mo529.mail-out.ovh.net (Postfix) with ESMTPS id 4DC6CD06F169;
-        Tue,  7 Dec 2021 18:42:25 +0100 (CET)
-Received: from kaod.org (37.59.142.102) by DAG4EX1.mxp5.local (172.16.2.31)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Tue, 7 Dec
- 2021 18:42:23 +0100
-Authentication-Results: garm.ovh; auth=pass (GARM-102R0045e25c049-ab10-4875-94b1-6aac2f02c5c1,
-                    EDCC1E77E28A65BD51DFCD2B92BF934EEA10E5FB) smtp.auth=clg@kaod.org
-X-OVh-ClientIp: 86.201.172.254
-Message-ID: <e32237f3-0ff2-cf80-cd99-0b4813d1ed21@kaod.org>
-Date:   Tue, 7 Dec 2021 18:42:22 +0100
+        id S240314AbhLGSFb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Dec 2021 13:05:31 -0500
+Received: from foss.arm.com ([217.140.110.172]:37860 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S240013AbhLGSFb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Dec 2021 13:05:31 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7E3FE11FB;
+        Tue,  7 Dec 2021 10:02:00 -0800 (PST)
+Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 782953F73B;
+        Tue,  7 Dec 2021 10:01:58 -0800 (PST)
+Date:   Tue, 7 Dec 2021 18:01:48 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     qizhong cheng <qizhong.cheng@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, chuanjia.liu@mediatek.com,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Mark Kettenis <mark.kettenis@xs4all.nl>,
+        Luca Ceresoli <luca@lucaceresoli.net>
+Subject: Re: [RESEND PATCH v2] PCI: mediatek: Delay 100ms to wait power and
+ clock to become stable
+Message-ID: <20211207180140.GA5938@lpieralisi>
+References: <20211207084153.23019-1-qizhong.cheng@mediatek.com>
+ <20211207175416.GA42725@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-Subject: Re: [patch V2 29/36] PCI/MSI: Simplify pci_irq_get_affinity()
-Content-Language: en-US
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, <linux-pci@vger.kernel.org>,
-        <xen-devel@lists.xenproject.org>, Juergen Gross <jgross@suse.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Will Deacon <will@kernel.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        <iommu@lists.linux-foundation.org>, <dmaengine@vger.kernel.org>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Sinan Kaya <okaya@kernel.org>
-References: <20211206210307.625116253@linutronix.de>
- <20211206210439.235197701@linutronix.de>
-From:   =?UTF-8?Q?C=c3=a9dric_Le_Goater?= <clg@kaod.org>
-In-Reply-To: <20211206210439.235197701@linutronix.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [37.59.142.102]
-X-ClientProxiedBy: DAG5EX1.mxp5.local (172.16.2.41) To DAG4EX1.mxp5.local
- (172.16.2.31)
-X-Ovh-Tracer-GUID: 9a201c60-92f7-40d1-8e65-204b0cf1b1c0
-X-Ovh-Tracer-Id: 11313323742435773410
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvuddrjeehgddutdeiucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvfhfhjggtgfhisehtjeertddtfeejnecuhfhrohhmpeevrogurhhitggpnfgvpgfiohgrthgvrhcuoegtlhhgsehkrghougdrohhrgheqnecuggftrfgrthhtvghrnhephffhleegueektdetffdvffeuieeugfekkeelheelteeftdfgtefffeehueegleehnecukfhppedtrddtrddtrddtpdefjedrheelrddugedvrddutddvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmohguvgepshhmthhpohhuthdphhgvlhhopehmgihplhgrnhehrdhmrghilhdrohhvhhdrnhgvthdpihhnvghtpedtrddtrddtrddtpdhmrghilhhfrhhomheptghlgheskhgrohgurdhorhhgpdhrtghpthhtohepohhkrgihrgeskhgvrhhnvghlrdhorhhg
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211207175416.GA42725@bhelgaas>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thomas,
-
-On 12/6/21 23:39, Thomas Gleixner wrote:
-> Replace open coded MSI descriptor chasing and use the proper accessor
-> functions instead.
+On Tue, Dec 07, 2021 at 11:54:16AM -0600, Bjorn Helgaas wrote:
+> [+cc Marc, Alyssa, Mark, Luca for reset timing questions]
 > 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> ---
->   drivers/pci/msi/msi.c |   26 ++++++++++----------------
->   1 file changed, 10 insertions(+), 16 deletions(-)
+> On Tue, Dec 07, 2021 at 04:41:53PM +0800, qizhong cheng wrote:
+> > Described in PCIe CEM specification sections 2.2 (PERST# Signal) and
+> > 2.2.1 (Initial Power-Up (G3 to S0)). The deassertion of PERST# should
+> > be delayed 100ms (TPVPERL) for the power and clock to become stable.
+> > 
+> > Signed-off-by: qizhong cheng <qizhong.cheng@mediatek.com>
+> > Acked-by: Pali Roh�r <pali@kernel.org>
+> > ---
+> > 
+> > v2:
+> >  - Typo fix.
+> >  - Rewrap into one paragraph.
 > 
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -1056,26 +1056,20 @@ EXPORT_SYMBOL(pci_irq_vector);
->    */
->   const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
->   {
-> -	if (dev->msix_enabled) {
-> -		struct msi_desc *entry;
-> +	int irq = pci_irq_vector(dev, nr);
-> +	struct msi_desc *desc;
->   
-> -		for_each_pci_msi_entry(entry, dev) {
-> -			if (entry->msi_index == nr)
-> -				return &entry->affinity->mask;
-> -		}
-> -		WARN_ON_ONCE(1);
-> +	if (WARN_ON_ONCE(irq <= 0))
->   		return NULL;
-> -	} else if (dev->msi_enabled) {
-> -		struct msi_desc *entry = first_pci_msi_entry(dev);
->   
-> -		if (WARN_ON_ONCE(!entry || !entry->affinity ||
-> -				 nr >= entry->nvec_used))
-> -			return NULL;
-> -
-> -		return &entry->affinity[nr].mask;
-> -	} else {
-> +	desc = irq_get_msi_desc(irq);
-> +	/* Non-MSI does not have the information handy */
-> +	if (!desc)
->   		return cpu_possible_mask;
-> -	}
-> +
-> +	if (WARN_ON_ONCE(!desc->affinity))
-> +		return NULL;
-> +	return &desc->affinity[nr].mask;
->   }
->   EXPORT_SYMBOL(pci_irq_get_affinity);
+> 1) If you change something, even in the commit log or comments, it is
+> a new version, not a "RESEND".  A "RESEND" means "I sent this quite a
+> while ago and didn't hear anything, so I'm sending the exact same
+> thing again in case the first one got lost."
+> 
+> 2) I suggested a subject line update, which apparently got missed.
+> Here's a better one:
+> 
+>   PCI: mediatek: Assert PERST# for 100ms for power and clock to stabilize
+> 
+> 3) Most importantly, this needs to be reconciled with the similar
+> change to the apple driver:
+> 
+>   https://lore.kernel.org/r/20211123180636.80558-2-maz@kernel.org
+> 
+> In the apple driver, we're doing:
+> 
+>   - Assert PERST#
+>   - Set up REFCLK
+>   - Sleep 100us (T_perst-clk, CEM r5 2.2, 2.9.2)
+>   - Deassert PERST#
+>   - Sleep 100ms (not sure there's a name? PCIe r5 6.6.1)
+> 
+> But here in mediatek, we're doing:
+> 
+>   - Assert PERST#
+>   - Sleep 100ms (T_pvperl, CEM r5 2.2, 2.2.1, 2.9.2)
+>   - Deassert PERST#
+> 
+> My questions:
+> 
+>   - Where does apple enforce T_pvperl?  I can't tell where power to
+>     the slot is turned on.
+> 
+>   - Where does mediatek enforce the PCIe sec 6.6.1 delay after
+>     deasserting PERST# and before config requests?
+> 
+>   - Does either apple or mediatek support speeds greater than 5 GT/s,
+>     and if so, shouldn't we start the sec 6.6.1 100ms delay *after*
+>     Link training completes?
 
-This is breaking nvme on pseries but it's probably one of the previous
-patches. I haven't figured out what's wrong yet. Here is the oops FYI.
+I dropped this patch from my pci/mediatek branch, waiting for
+clarification.
 
 Thanks,
+Lorenzo
 
-C.
-
-[   32.494536] ------------[ cut here ]------------
-[   32.494562] WARNING: CPU: 26 PID: 658 at kernel/irq/chip.c:210 irq_startup+0x1c0/0x1e0
-[   32.494575] Modules linked in: ibmvscsi ibmveth scsi_transport_srp bnx2x ipr libata xhci_pci xhci_hcd nvme xts vmx_crypto nvme_core mdio t10_pi libcrc32c dm_mirror dm_region_hash dm_log dm_mod
-[   32.494601] CPU: 26 PID: 658 Comm: kworker/26:1H Not tainted 5.16.0-rc4-clg+ #54
-[   32.494607] Workqueue: kblockd blk_mq_timeout_work
-[   32.494615] NIP:  c000000000206f00 LR: c000000000206df0 CTR: c000000000201570
-[   32.494619] REGS: c0000018050f3610 TRAP: 0700   Not tainted  (5.16.0-rc4-clg+)
-[   32.494624] MSR:  800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  CR: 44002288  XER: 00000000
-[   32.494636] CFAR: c000000000206e0c IRQMASK: 1
-[   32.494636] GPR00: c000000000206df0 c0000018050f38b0 c000000001ca2900 0000000000000800
-[   32.494636] GPR04: c000000001ce21b8 0000000000000800 0000000000000800 0000000000000000
-[   32.494636] GPR08: 0000000000000000 0000000000000200 0000000000000000 fffffffffffffffd
-[   32.494636] GPR12: 0000000000000000 c000001fff7c5880 c00000000018f488 c00000012faaba40
-[   32.494636] GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000001
-[   32.494636] GPR20: 0000000000000000 c0000018050f3c40 c00000000076e110 c00000013ac23678
-[   32.494636] GPR24: 000000000000007f 0000000000000100 0000000000000001 c000001805b08000
-[   32.494636] GPR28: c000000139b8cc18 0000000000000001 0000000000000001 c000000139b8cc00
-[   32.494681] NIP [c000000000206f00] irq_startup+0x1c0/0x1e0
-[   32.494686] LR [c000000000206df0] irq_startup+0xb0/0x1e0
-[   32.494690] Call Trace:
-[   32.494692] [c0000018050f38b0] [c000000000206df0] irq_startup+0xb0/0x1e0 (unreliable)
-[   32.494699] [c0000018050f38f0] [c00000000020155c] __enable_irq+0x9c/0xb0
-[   32.494705] [c0000018050f3950] [c0000000002015d0] enable_irq+0x60/0xc0
-[   32.494710] [c0000018050f39d0] [c008000014a54ae8] nvme_poll_irqdisable+0x80/0xc0 [nvme]
-[   32.494719] [c0000018050f3a00] [c008000014a55824] nvme_timeout+0x18c/0x420 [nvme]
-[   32.494726] [c0000018050f3ae0] [c00000000076e1b8] blk_mq_check_expired+0xa8/0x130
-[   32.494732] [c0000018050f3b10] [c0000000007793e8] bt_iter+0xd8/0x120
-[   32.494737] [c0000018050f3b60] [c00000000077a34c] blk_mq_queue_tag_busy_iter+0x25c/0x3f0
-[   32.494742] [c0000018050f3c20] [c00000000076ffa4] blk_mq_timeout_work+0x84/0x1a0
-[   32.494747] [c0000018050f3c70] [c000000000182a78] process_one_work+0x2a8/0x5a0
-[   32.494754] [c0000018050f3d10] [c000000000183468] worker_thread+0xa8/0x610
-[   32.494759] [c0000018050f3da0] [c00000000018f634] kthread+0x1b4/0x1c0
-[   32.494764] [c0000018050f3e10] [c00000000000cd64] ret_from_kernel_thread+0x5c/0x64
-[   32.494769] Instruction dump:
-[   32.494773] 60000000 0b030000 38a00000 7f84e378 7fc3f378 4bff9a55 60000000 7fe3fb78
-[   32.494781] 4bfffd79 eb810020 7c7e1b78 4bfffe94 <0fe00000> 60000000 60000000 60420000
-[   32.494788] ---[ end trace 2a27b87f2b3e7a1f ]---
-[   32.494798] nvme nvme0: I/O 192 QID 128 timeout, aborting
-[   32.584562] nvme nvme0: Abort status: 0x0
-[   62.574526] nvme nvme0: I/O 200 QID 128 timeout, aborting
-[   62.574587]  nvme0n1: p1
-
+> >  drivers/pci/controller/pcie-mediatek.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 2f3f974977a3..a61ea3940471 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -702,6 +702,13 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> >  	 */
+> >  	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+> >  
+> > +	/*
+> > +	 * Described in PCIe CEM specification sections 2.2 (PERST# Signal) and
+> > +	 * 2.2.1 (Initial Power-Up (G3 to S0)). The deassertion of PERST# should
+> > +	 * be delayed 100ms (TPVPERL) for the power and clock to become stable.
+> > +	 */
+> > +	msleep(100);
+> > +
+> >  	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
+> >  	val = readl(port->base + PCIE_RST_CTRL);
+> >  	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+> > -- 
+> > 2.25.1
+> > 
