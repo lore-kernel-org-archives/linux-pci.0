@@ -2,135 +2,90 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC56DC433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Dec 2021 18:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D28C433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Dec 2021 18:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240314AbhLGSFb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Dec 2021 13:05:31 -0500
-Received: from foss.arm.com ([217.140.110.172]:37860 "EHLO foss.arm.com"
+        id S231193AbhLGSMd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Dec 2021 13:12:33 -0500
+Received: from mga12.intel.com ([192.55.52.136]:42956 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240013AbhLGSFb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Dec 2021 13:05:31 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7E3FE11FB;
-        Tue,  7 Dec 2021 10:02:00 -0800 (PST)
-Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 782953F73B;
-        Tue,  7 Dec 2021 10:01:58 -0800 (PST)
-Date:   Tue, 7 Dec 2021 18:01:48 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     qizhong cheng <qizhong.cheng@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, chuanjia.liu@mediatek.com,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Mark Kettenis <mark.kettenis@xs4all.nl>,
-        Luca Ceresoli <luca@lucaceresoli.net>
-Subject: Re: [RESEND PATCH v2] PCI: mediatek: Delay 100ms to wait power and
- clock to become stable
-Message-ID: <20211207180140.GA5938@lpieralisi>
-References: <20211207084153.23019-1-qizhong.cheng@mediatek.com>
- <20211207175416.GA42725@bhelgaas>
+        id S231267AbhLGSM3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Dec 2021 13:12:29 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10190"; a="217668646"
+X-IronPort-AV: E=Sophos;i="5.87,295,1631602800"; 
+   d="scan'208";a="217668646"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2021 09:36:58 -0800
+X-IronPort-AV: E=Sophos;i="5.87,293,1631602800"; 
+   d="scan'208";a="657784068"
+Received: from smile.fi.intel.com ([10.237.72.184])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2021 09:36:55 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.95)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1mueNf-003J9g-0y;
+        Tue, 07 Dec 2021 19:35:55 +0200
+Date:   Tue, 7 Dec 2021 19:35:54 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "David E. Box" <david.e.box@linux.intel.com>
+Cc:     lee.jones@linaro.org, hdegoede@redhat.com, bhelgaas@google.com,
+        gregkh@linuxfoundation.org, srinivas.pandruvada@intel.com,
+        shuah@kernel.org, mgross@linux.intel.com,
+        linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [V2 2/6] driver core: auxiliary bus: Add driver data helpers
+Message-ID: <Ya+beiuKrqFjNkEH@smile.fi.intel.com>
+References: <20211207171448.799376-1-david.e.box@linux.intel.com>
+ <20211207171448.799376-3-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20211207175416.GA42725@bhelgaas>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20211207171448.799376-3-david.e.box@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 07, 2021 at 11:54:16AM -0600, Bjorn Helgaas wrote:
-> [+cc Marc, Alyssa, Mark, Luca for reset timing questions]
-> 
-> On Tue, Dec 07, 2021 at 04:41:53PM +0800, qizhong cheng wrote:
-> > Described in PCIe CEM specification sections 2.2 (PERST# Signal) and
-> > 2.2.1 (Initial Power-Up (G3 to S0)). The deassertion of PERST# should
-> > be delayed 100ms (TPVPERL) for the power and clock to become stable.
-> > 
-> > Signed-off-by: qizhong cheng <qizhong.cheng@mediatek.com>
-> > Acked-by: Pali Roh�r <pali@kernel.org>
-> > ---
-> > 
-> > v2:
-> >  - Typo fix.
-> >  - Rewrap into one paragraph.
-> 
-> 1) If you change something, even in the commit log or comments, it is
-> a new version, not a "RESEND".  A "RESEND" means "I sent this quite a
-> while ago and didn't hear anything, so I'm sending the exact same
-> thing again in case the first one got lost."
-> 
-> 2) I suggested a subject line update, which apparently got missed.
-> Here's a better one:
-> 
->   PCI: mediatek: Assert PERST# for 100ms for power and clock to stabilize
-> 
-> 3) Most importantly, this needs to be reconciled with the similar
-> change to the apple driver:
-> 
->   https://lore.kernel.org/r/20211123180636.80558-2-maz@kernel.org
-> 
-> In the apple driver, we're doing:
-> 
->   - Assert PERST#
->   - Set up REFCLK
->   - Sleep 100us (T_perst-clk, CEM r5 2.2, 2.9.2)
->   - Deassert PERST#
->   - Sleep 100ms (not sure there's a name? PCIe r5 6.6.1)
-> 
-> But here in mediatek, we're doing:
-> 
->   - Assert PERST#
->   - Sleep 100ms (T_pvperl, CEM r5 2.2, 2.2.1, 2.9.2)
->   - Deassert PERST#
-> 
-> My questions:
-> 
->   - Where does apple enforce T_pvperl?  I can't tell where power to
->     the slot is turned on.
-> 
->   - Where does mediatek enforce the PCIe sec 6.6.1 delay after
->     deasserting PERST# and before config requests?
-> 
->   - Does either apple or mediatek support speeds greater than 5 GT/s,
->     and if so, shouldn't we start the sec 6.6.1 100ms delay *after*
->     Link training completes?
+On Tue, Dec 07, 2021 at 09:14:44AM -0800, David E. Box wrote:
+> Adds get/set driver data helpers for auxiliary devices.
 
-I dropped this patch from my pci/mediatek branch, waiting for
-clarification.
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Thanks,
-Lorenzo
+> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+> Reviewed-by: Mark Gross <markgross@kernel.org>
+> ---
+> V2
+>   - No changes
+> 
+>  include/linux/auxiliary_bus.h | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/include/linux/auxiliary_bus.h b/include/linux/auxiliary_bus.h
+> index fc51d45f106b..a8338d456e81 100644
+> --- a/include/linux/auxiliary_bus.h
+> +++ b/include/linux/auxiliary_bus.h
+> @@ -28,6 +28,16 @@ struct auxiliary_driver {
+>  	const struct auxiliary_device_id *id_table;
+>  };
+>  
+> +static inline void *auxiliary_get_drvdata(struct auxiliary_device *auxdev)
+> +{
+> +	return dev_get_drvdata(&auxdev->dev);
+> +}
+> +
+> +static inline void auxiliary_set_drvdata(struct auxiliary_device *auxdev, void *data)
+> +{
+> +	dev_set_drvdata(&auxdev->dev, data);
+> +}
+> +
+>  static inline struct auxiliary_device *to_auxiliary_dev(struct device *dev)
+>  {
+>  	return container_of(dev, struct auxiliary_device, dev);
+> -- 
+> 2.25.1
+> 
 
-> >  drivers/pci/controller/pcie-mediatek.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index 2f3f974977a3..a61ea3940471 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -702,6 +702,13 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  	 */
-> >  	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-> >  
-> > +	/*
-> > +	 * Described in PCIe CEM specification sections 2.2 (PERST# Signal) and
-> > +	 * 2.2.1 (Initial Power-Up (G3 to S0)). The deassertion of PERST# should
-> > +	 * be delayed 100ms (TPVPERL) for the power and clock to become stable.
-> > +	 */
-> > +	msleep(100);
-> > +
-> >  	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
-> >  	val = readl(port->base + PCIE_RST_CTRL);
-> >  	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-> > -- 
-> > 2.25.1
-> > 
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
