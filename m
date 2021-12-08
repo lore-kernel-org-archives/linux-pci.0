@@ -2,151 +2,158 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B58C433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 00:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DAF5C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 00:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242741AbhLHANX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Dec 2021 19:13:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242706AbhLHANX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Dec 2021 19:13:23 -0500
-Received: from mail-pl1-x64a.google.com (mail-pl1-x64a.google.com [IPv6:2607:f8b0:4864:20::64a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A6BC061748
-        for <linux-pci@vger.kernel.org>; Tue,  7 Dec 2021 16:09:52 -0800 (PST)
-Received: by mail-pl1-x64a.google.com with SMTP id a4-20020a170902ecc400b00142562309c7so145210plh.6
-        for <linux-pci@vger.kernel.org>; Tue, 07 Dec 2021 16:09:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=ZhZqkrbXveIv+sF93ngTV4dolBugW8SLj/WlAruMndc=;
-        b=haiug30QueIEeXZKZerIrWwOlLcx0NPxj7oel7q56Ms8ORjWmUu9ma6nCYk3HGP9se
-         5VNC3XnJZl7K49uY1Oc/xFgfRvzp/jxuYce7gFsXHMmSr8jE9xESun8kOV8FRbBjgj2B
-         CnBFDKO/kc43Pq+s0ijBeQqN2Pf3x9nFfhhP3hwQ2YErRpR9U75gJbtXLJwxEdbEiqg0
-         LrnWnwjRbB1facyrnQ4D9WykXTyN62sBIrm7fdpQm+15MRK5O7Blfev6HsOIf2x0WyjN
-         jIwId55vj6zmWbfLat3BDge1gULMlu9HH5531oFsrZ7ebSDUM0nDiAKFwPT5qVTwG+YK
-         9aaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=ZhZqkrbXveIv+sF93ngTV4dolBugW8SLj/WlAruMndc=;
-        b=eM7P3XlE0odb9q7qmiMYCcdf2V3Ue0fbLm2zRX/DU63JhXv9/ZWChweNwPDS7F5ysJ
-         g62Wntrz+MY3e/WiEfQQJlKxlAkNXxs/uXMCTiVQjgBM6s1riAF48RNysiP5o1UBrEWQ
-         gOAGArRl2OWF7yV4Tt9ie0FKxpvJztv6XsYFBkbWiZxm9vt5TE+vSg42UobYTdHATdBu
-         YQ+Rv0tIi1IjofZILx9yfb7rv7DGBnJLInLddUv3dHKt1+jf81t3kZfaYYnN9NlCG/XW
-         DX5vh0l9F7zO+7sLoKyozZrsFoMlxWrQbxaa78Awx2oibAaP/1k9HRjy0lEOTUSjLiO9
-         GcAQ==
-X-Gm-Message-State: AOAM530GalIwvzYd33FeXMH0g6KYTGW3z9Azxk9uh3cuFv74c8QDfRdg
-        /Dk+/CG/DjnoRMIiVZZrTRV2rJPTt68C
-X-Google-Smtp-Source: ABdhPJxhbqVDGRB2UnUeMhC2ilGnjp0KZLlmkebCf87L92SjvQNJGuprErGx53WG4SkzAMyY9RC6303YyY7X
-X-Received: from rajat2.mtv.corp.google.com ([2620:15c:202:201:acaf:41ab:cb2e:2a2])
- (user=rajatja job=sendgmr) by 2002:a17:903:186:b0:141:eda2:d5fa with SMTP id
- z6-20020a170903018600b00141eda2d5famr54935956plg.63.1638922192032; Tue, 07
- Dec 2021 16:09:52 -0800 (PST)
-Date:   Tue,  7 Dec 2021 16:09:48 -0800
-Message-Id: <20211208000948.487820-1-rajatja@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.34.1.400.ga245620fadb-goog
-Subject: [PATCH] pci/quirks: Add quirk for Bayhub O2 SD controller
-From:   Rajat Jain <rajatja@google.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-mmc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Rajat Jain <rajatja@google.com>, rajatxjain@gmail.com,
-        jsbarnes@google.com, gwendal@google.com
-Content-Type: text/plain; charset="UTF-8"
+        id S234728AbhLHAZr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Dec 2021 19:25:47 -0500
+Received: from mga06.intel.com ([134.134.136.31]:24068 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229662AbhLHAZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Dec 2021 19:25:47 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10191"; a="298518384"
+X-IronPort-AV: E=Sophos;i="5.87,295,1631602800"; 
+   d="scan'208";a="298518384"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2021 16:20:45 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,295,1631602800"; 
+   d="scan'208";a="563883182"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga008.fm.intel.com with ESMTP; 07 Dec 2021 16:20:45 -0800
+Received: from debox1-desk4.hsd1.or.comcast.net (unknown [10.251.18.198])
+        by linux.intel.com (Postfix) with ESMTP id 242975804B4;
+        Tue,  7 Dec 2021 16:20:45 -0800 (PST)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
+        lorenzo.pieralisi@arm.com, kw@linux.com, bhelgaas@google.com,
+        david.e.box@linux.intel.com, michael.a.bottini@linux.intel.com,
+        rafael@kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Adhitya Mohan <me@adhityamohan.in>
+Subject: [PATCH V2 2/2] PCI: vmd: Override ASPM on TGL/ADL VMD devices
+Date:   Tue,  7 Dec 2021 16:20:43 -0800
+Message-Id: <20211208002043.882200-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211208002043.882200-1-david.e.box@linux.intel.com>
+References: <20211208002043.882200-1-david.e.box@linux.intel.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This particular SD controller from O2 / Bayhub only allows dword
-accesses to its LTR max latency registers:
-https://github.com/rajatxjain/public_shared/blob/main/OZ711LV2_appnote.pdf
+From: Michael Bottini <michael.a.bottini@linux.intel.com>
 
-Thus add a quirk that saves and restores these registers
-manually using dword acesses:
-LTR Max Snoop Latency Register
-LTR Max No-Snoop Latency Register
+On Tiger Lake and Alder Lake platforms, VMD controllers do not have ASPM
+enabled nor LTR values set by BIOS. This leads high power consumption on
+these platforms when VMD is enabled as reported in bugzilla [1].  Enable
+these features in the VMD driver using pcie_aspm_policy_override() to set
+the ASPM policy for the root ports.
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
+To do this, add an additional flag in VMD features to specify devices that
+must have their respective policies overridden.
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=213717
+
+Signed-off-by: Michael Bottini <michael.a.bottini@linux.intel.com>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Tested-by: Adhitya Mohan <me@adhityamohan.in>
 ---
- drivers/mmc/host/sdhci-pci.h |  1 -
- drivers/pci/quirks.c         | 39 ++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h      |  1 +
- 3 files changed, 40 insertions(+), 1 deletion(-)
+V2
+ - Use return status to print pci_info message if ASPM cannot be enabled.
+ - Add missing static declaration, caught by lkp@intel.com
 
-diff --git a/drivers/mmc/host/sdhci-pci.h b/drivers/mmc/host/sdhci-pci.h
-index 5e3193278ff9..d47cc0ba7ca4 100644
---- a/drivers/mmc/host/sdhci-pci.h
-+++ b/drivers/mmc/host/sdhci-pci.h
-@@ -10,7 +10,6 @@
- #define PCI_DEVICE_ID_O2_SDS1		0x8421
- #define PCI_DEVICE_ID_O2_FUJIN2		0x8520
- #define PCI_DEVICE_ID_O2_SEABIRD0	0x8620
--#define PCI_DEVICE_ID_O2_SEABIRD1	0x8621
+ drivers/pci/controller/vmd.c | 42 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index a45e8e59d3d4..e555dcae73cc 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -20,6 +20,8 @@
  
- #define PCI_DEVICE_ID_INTEL_PCH_SDIO0	0x8809
- #define PCI_DEVICE_ID_INTEL_PCH_SDIO1	0x880a
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 003950c738d2..b7bd19802744 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5857,3 +5857,42 @@ static void nvidia_ion_ahci_fixup(struct pci_dev *pdev)
- 	pdev->dev_flags |= PCI_DEV_FLAGS_HAS_MSI_MASKING;
+ #include <asm/irqdomain.h>
+ 
++#include "../pci.h"
++
+ #define VMD_CFGBAR	0
+ #define VMD_MEMBAR1	2
+ #define VMD_MEMBAR2	4
+@@ -67,6 +69,12 @@ enum vmd_features {
+ 	 * interrupt handling.
+ 	 */
+ 	VMD_FEAT_CAN_BYPASS_MSI_REMAP		= (1 << 4),
++
++	/*
++	 * Device must have ASPM policy overridden, as its default policy is
++	 * incorrect.
++	 */
++	VMD_FEAT_QUIRK_OVERRIDE_ASPM		= (1 << 5),
+ };
+ 
+ static DEFINE_IDA(vmd_instance_ida);
+@@ -661,6 +669,29 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+ 	return 0;
  }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0ab8, nvidia_ion_ahci_fixup);
-+
-+/*
-+ * Bayhub OZ711LV2 SD controller has an errata that only allows DWORD accesses
-+ * to the LTR max latency registers. Thus need to save and restore these
-+ * registers manually.
-+ */
-+static void o2_seabird1_save_ltr(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	u32 *reg32;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
-+	if (save_state) {
-+		reg32 = &save_state->cap.data[0];
-+		/* Preserve PCI_LTR_MAX_SNOOP_LAT & PCI_LTR_MAX_NOSNOOP_LAT */
-+		pci_read_config_dword(dev, 0x234, reg32);
-+	} else {
-+		pci_err(dev, "quirk can't save LTR snoop latency\n");
-+	}
-+}
-+
-+static void o2_seabird1_restore_ltr(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	u32 *reg32;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
-+	if (save_state) {
-+		reg32 = &save_state->cap.data[0];
-+		/* Restore PCI_LTR_MAX_SNOOP_LAT & PCI_LTR_MAX_NOSNOOP_LAT */
-+		pci_write_config_dword(dev, 0x234, *reg32);
-+	} else {
-+		pci_err(dev, "quirk can't restore LTR snoop latency\n");
-+	}
-+}
-+DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_O2, PCI_DEVICE_ID_O2_SEABIRD1,
-+			       o2_seabird1_save_ltr);
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_O2, PCI_DEVICE_ID_O2_SEABIRD1,
-+			       o2_seabird1_restore_ltr);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 011f2f1ea5bb..6ed16aa38196 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1717,6 +1717,7 @@
- #define PCI_DEVICE_ID_O2_8221		0x8221
- #define PCI_DEVICE_ID_O2_8320		0x8320
- #define PCI_DEVICE_ID_O2_8321		0x8321
-+#define PCI_DEVICE_ID_O2_SEABIRD1	0x8621
  
- #define PCI_VENDOR_ID_3DFX		0x121a
- #define PCI_DEVICE_ID_3DFX_VOODOO	0x0001
++/*
++ * Override the BIOS ASPM policy and set the LTR value for PCI storage
++ * devices on the VMD bride.
++ */
++static int vmd_enable_aspm(struct pci_dev *pdev, void *userdata)
++{
++	int features = *(int *)userdata;
++
++	if (features & VMD_FEAT_QUIRK_OVERRIDE_ASPM &&
++	    pdev->class == PCI_CLASS_STORAGE_EXPRESS) {
++		int pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
++
++		if (pos) {
++			pci_write_config_word(pdev, pos + PCI_LTR_MAX_SNOOP_LAT, 0x1003);
++			pci_write_config_word(pdev, pos + PCI_LTR_MAX_NOSNOOP_LAT, 0x1003);
++			if (pcie_aspm_policy_override(pdev))
++				pci_info(pdev, "Unable of override ASPM policy\n");
++		}
++	}
++
++	return 0;
++}
++
+ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ {
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+@@ -807,6 +838,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	pci_scan_child_bus(vmd->bus);
+ 	pci_assign_unassigned_bus_resources(vmd->bus);
+ 
++	pci_walk_bus(vmd->bus, vmd_enable_aspm, &features);
++
+ 	/*
+ 	 * VMD root buses are virtual and don't return true on pci_is_pcie()
+ 	 * and will fail pcie_bus_configure_settings() early. It can instead be
+@@ -948,15 +981,18 @@ static const struct pci_device_id vmd_ids[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x467f),
+ 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++				VMD_FEAT_OFFSET_FIRST_VECTOR |
++				VMD_FEAT_QUIRK_OVERRIDE_ASPM,},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x4c3d),
+ 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++				VMD_FEAT_OFFSET_FIRST_VECTOR |
++				VMD_FEAT_QUIRK_OVERRIDE_ASPM,},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
+ 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++				VMD_FEAT_OFFSET_FIRST_VECTOR |
++				VMD_FEAT_QUIRK_OVERRIDE_ASPM,},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
 -- 
-2.34.1.400.ga245620fadb-goog
+2.25.1
 
