@@ -2,116 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F99BC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 00:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF288C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 00:52:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236245AbhLHAZt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Dec 2021 19:25:49 -0500
-Received: from mga06.intel.com ([134.134.136.31]:24068 "EHLO mga06.intel.com"
+        id S234749AbhLHAzx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Dec 2021 19:55:53 -0500
+Received: from mga12.intel.com ([192.55.52.136]:14399 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235439AbhLHAZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Dec 2021 19:25:48 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10191"; a="298518382"
+        id S233074AbhLHAzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Dec 2021 19:55:53 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10191"; a="217750492"
 X-IronPort-AV: E=Sophos;i="5.87,295,1631602800"; 
-   d="scan'208";a="298518382"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2021 16:20:45 -0800
+   d="scan'208";a="217750492"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2021 16:52:22 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,295,1631602800"; 
-   d="scan'208";a="563883177"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga008.fm.intel.com with ESMTP; 07 Dec 2021 16:20:44 -0800
-Received: from debox1-desk4.hsd1.or.comcast.net (unknown [10.251.18.198])
-        by linux.intel.com (Postfix) with ESMTP id 90ADE5804B4;
-        Tue,  7 Dec 2021 16:20:44 -0800 (PST)
-From:   "David E. Box" <david.e.box@linux.intel.com>
-To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
+   d="scan'208";a="751677756"
+Received: from lkp-server02.sh.intel.com (HELO 9e1e9f9b3bcb) ([10.239.97.151])
+  by fmsmga005.fm.intel.com with ESMTP; 07 Dec 2021 16:52:19 -0800
+Received: from kbuild by 9e1e9f9b3bcb with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1mulBy-000NAB-Og; Wed, 08 Dec 2021 00:52:18 +0000
+Date:   Wed, 8 Dec 2021 08:51:55 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "David E. Box" <david.e.box@linux.intel.com>,
+        nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
         lorenzo.pieralisi@arm.com, kw@linux.com, bhelgaas@google.com,
-        david.e.box@linux.intel.com, michael.a.bottini@linux.intel.com,
-        rafael@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V2 1/2] PCI/ASPM: Add ASPM BIOS override function
-Date:   Tue,  7 Dec 2021 16:20:42 -0800
-Message-Id: <20211208002043.882200-1-david.e.box@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
+        michael.a.bottini@linux.intel.com, rafael@kernel.org
+Cc:     kbuild-all@lists.01.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [V2 1/2] PCI/ASPM: Add ASPM BIOS override function
+Message-ID: <202112080830.ItjrEFOo-lkp@intel.com>
+References: <20211207223050.872095-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211207223050.872095-1-david.e.box@linux.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Michael Bottini <michael.a.bottini@linux.intel.com>
+Hi "David,
 
-Devices that appear under the Intel VMD host bridge are not visible to BIOS
-and therefore not programmed by BIOS with ASPM settings. For these devices,
-it is necessary for the driver to configure ASPM. Since ASPM settings are
-adjustable at runtime by module parameter, use the same mechanism to allow
-drivers to override the default (in this case never configured) BIOS policy
-to ASPM_STATE_ALL. Then, reconfigure ASPM on the link. Do not override if
-ASPM control is disabled.
+Thank you for the patch! Yet something to improve:
 
-Signed-off-by: Michael Bottini <michael.a.bottini@linux.intel.com>
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+[auto build test ERROR on v5.16-rc4]
+[also build test ERROR on next-20211207]
+[cannot apply to helgaas-pci/next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/0day-ci/linux/commits/David-E-Box/PCI-ASPM-Add-ASPM-BIOS-override-function/20211208-063240
+base:    0fcfb00b28c0b7884635dacf38e46d60bf3d4eb1
+config: nds32-defconfig (https://download.01.org/0day-ci/archive/20211208/202112080830.ItjrEFOo-lkp@intel.com/config)
+compiler: nds32le-linux-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/efd5524bd4005ec84d4eb6681c54d1ba93fe9ca1
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review David-E-Box/PCI-ASPM-Add-ASPM-BIOS-override-function/20211208-063240
+        git checkout efd5524bd4005ec84d4eb6681c54d1ba93fe9ca1
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=nds32 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   In file included from drivers/pci/of.c:16:
+   drivers/pci/pci.h: In function 'pcie_aspm_policy_override':
+>> drivers/pci/pci.h:571:83: error: expected ';' before '}' token
+     571 | static inline int pcie_aspm_policy_override(struct pci_dev *dev) { return -EINVAL }
+         |                                                                                   ^
+
+
+vim +571 drivers/pci/pci.h
+
+   553	
+   554	/* PCI error reporting and recovery */
+   555	pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+   556			pci_channel_state_t state,
+   557			pci_ers_result_t (*reset_subordinates)(struct pci_dev *pdev));
+   558	
+   559	bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
+   560	#ifdef CONFIG_PCIEASPM
+   561	void pcie_aspm_init_link_state(struct pci_dev *pdev);
+   562	void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+   563	void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+   564	void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+   565	int pcie_aspm_policy_override(struct pci_dev *dev);
+   566	#else
+   567	static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+   568	static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
+   569	static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
+   570	static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+ > 571	static inline int pcie_aspm_policy_override(struct pci_dev *dev) { return -EINVAL }
+   572	#endif
+   573	
+
 ---
-V2
- - Change return type to int so caller can determine if override was
-   successful
- - Return immediately if link is not found so that lock it not
-   unecessarily taken, suggested by kw@linux.com
- - Don't override if aspm_disabled is true
-
- drivers/pci/pci.h       |  2 ++
- drivers/pci/pcie/aspm.c | 19 +++++++++++++++++++
- 2 files changed, 21 insertions(+)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3d60cabde1a1..c741791f15e0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -562,11 +562,13 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
- void pcie_aspm_pm_state_change(struct pci_dev *pdev);
- void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
-+int pcie_aspm_policy_override(struct pci_dev *dev);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
- static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
- static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
- static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
-+static inline int pcie_aspm_policy_override(struct pci_dev *dev) { return -EINVAL }
- #endif
- 
- #ifdef CONFIG_PCIE_ECRC
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 52c74682601a..e2c61e14e724 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1140,6 +1140,25 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
-+int pcie_aspm_policy_override(struct pci_dev *pdev)
-+{
-+	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
-+
-+	if (!link || aspm_disabled)
-+		return -EINVAL;
-+
-+	down_read(&pci_bus_sem);
-+	mutex_lock(&aspm_lock);
-+	link->aspm_default = ASPM_STATE_ALL;
-+	pcie_config_aspm_link(link, policy_to_aspm_state(link));
-+	pcie_set_clkpm(link, policy_to_clkpm_state(link));
-+	mutex_unlock(&aspm_lock);
-+	up_read(&pci_bus_sem);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pcie_aspm_policy_override);
-+
- static int pcie_aspm_set_policy(const char *val,
- 				const struct kernel_param *kp)
- {
--- 
-2.25.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
