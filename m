@@ -2,101 +2,95 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA99C433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 06:22:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4C3C433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 07:03:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239695AbhLHGZp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Dec 2021 01:25:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
+        id S231434AbhLHHG4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Dec 2021 02:06:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239648AbhLHGZo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Dec 2021 01:25:44 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C2DBC061574
-        for <linux-pci@vger.kernel.org>; Tue,  7 Dec 2021 22:22:13 -0800 (PST)
+        with ESMTP id S231351AbhLHHG4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Dec 2021 02:06:56 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBFC9C061574;
+        Tue,  7 Dec 2021 23:03:24 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A0D8FCE19BA
-        for <linux-pci@vger.kernel.org>; Wed,  8 Dec 2021 06:22:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7203AC00446;
-        Wed,  8 Dec 2021 06:22:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BCBB7B8168C;
+        Wed,  8 Dec 2021 07:03:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91A29C00446;
+        Wed,  8 Dec 2021 07:03:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638944529;
-        bh=eiPxxP16JDkon4m/LlRix4vyXMIa2XyaUi9rZA8k5Q8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=u9amCIpiFWBZJokN1iHSKlQnfVXVeYvJ8wbin2V9huz7IfOO2NHfdoWqAmDtKuM0D
-         svKmChV32n1weOl3eU+qXXVrqY/2IYnKnDjI6R4A40pT9zQA0SS1JEkIwrW4Ag65qB
-         k5iH/vf7ByJZptSxyn2n6XarwZEtIrfx7cbMXr8IbEK7ZUEPDNQaE8p0b4amFZcd95
-         /7PHiSj/BilDDbatPdg0F8XJLauCJViVbkQEX31+RYZNaC7mYrq8NB5H9O+XR1NOKy
-         GSbGPkSy31gHdKBa8F0AEKGrRoLCExk4ArFBtA1B8il/li5tFT/14FVKScI4F/FddK
-         dC6BYhFXjSkSg==
-Date:   Wed, 8 Dec 2021 07:22:05 +0100
-From:   Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        pali@kernel.org
-Subject: Re: [PATCH 00/17] PCI: aardvark controller fixes BATCH 4
-Message-ID: <20211208072205.47134b27@thinkpad>
-In-Reply-To: <20211208061851.31867-1-kabel@kernel.org>
-References: <20211208061851.31867-1-kabel@kernel.org>
-X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        s=k20201202; t=1638947001;
+        bh=61BDRbqt72/j21ziiTqfJ4Zxtxfeh5eTASuLWQWiX9E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=rBLQ9znpA6Vsm3QxkJ7FTcBcO+mwm7o09IppTNlj6AKHyU3uQ9X/9RQ8ZhdUK/iox
+         cxzsdGTxQ3hwwGFDxNsUgzbzZWBSMlAwupBsLSxhRNQzJImMI+RMe+KTpZP0KyGrUo
+         HM4QvZelLppsRlja/K7oKXFGLL6Z/6Wu9PZX66eCtvxlHLvD+3nGfObCcX9kxhmLXg
+         3LxWM6KYr7DRGDMEEOCbo3TBVs+9I7+O2jEXiG/q1mtsLk7z43TJyu3NUuE1xd7uBu
+         co3Uv55lA+LBt7frm/uVLj9sFzYnTMrIIi/5eU9zqSCI9DI5dnZS2rYg+9KKU1t6aF
+         5L6/JkRJ2bGCQ==
+Date:   Wed, 8 Dec 2021 09:03:16 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     "David E. Box" <david.e.box@linux.intel.com>
+Cc:     lee.jones@linaro.org, hdegoede@redhat.com, bhelgaas@google.com,
+        gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com,
+        srinivas.pandruvada@intel.com, shuah@kernel.org,
+        mgross@linux.intel.com, linux-kernel@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [V2 2/6] driver core: auxiliary bus: Add driver data helpers
+Message-ID: <YbBYtJFQ47UH2h/k@unreal>
+References: <20211207171448.799376-1-david.e.box@linux.intel.com>
+ <20211207171448.799376-3-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211207171448.799376-3-david.e.box@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Marc,
+On Tue, Dec 07, 2021 at 09:14:44AM -0800, David E. Box wrote:
+> Adds get/set driver data helpers for auxiliary devices.
+> 
+> Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+> Reviewed-by: Mark Gross <markgross@kernel.org>
+> ---
+> V2
+>   - No changes
+> 
+>  include/linux/auxiliary_bus.h | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 
-sorry about this, I wanted to send this series also to you, but
-I accidentally sent it to your @arm.com e-mail address.
-Does that address still work? Should I resend to your @kernel.org
-address?
+I would really like to see an explanation why such obfuscation is really
+needed. dev_*_drvdata() is a standard way to access driver data.
 
-Marek
+Thanks
 
-On Wed,  8 Dec 2021 07:18:34 +0100
-Marek Beh=C3=BAn <kabel@kernel.org> wrote:
-
-> Hello Lorenzo, Marc,
->=20
-> this is batch 4 of patches for Aardvark PCIe controller driver.
->=20
-> This series mainly fixes and adds support for stuff around interrupts.
-> (All but the first one.)
->=20
-> I have rebased it sot that first come patches that change the API to the
-> new one, as Marc requested. Marc, could you find time to review these?
->=20
-> Marek
->=20
-> Marek Beh=C3=BAn (1):
->   PCI: aardvark: Drop __maybe_unused from advk_pcie_disable_phy()
->=20
-> Pali Roh=C3=A1r (16):
->   PCI: aardvark: Rewrite IRQ code to chained IRQ handler
->   PCI: aardvark: Fix support for MSI interrupts
->   PCI: aardvark: Fix reading MSI interrupt number
->   PCI: aardvark: Refactor unmasking summary MSI interrupt
->   PCI: aardvark: Add support for masking MSI interrupts
->   PCI: aardvark: Fix setting MSI address
->   PCI: aardvark: Enable MSI-X support
->   PCI: aardvark: Add support for ERR interrupt on emulated bridge
->   PCI: aardvark: Fix reading PCI_EXP_RTSTA_PME bit on emulated bridge
->   PCI: aardvark: Optimize writing PCI_EXP_RTCTL_PMEIE and
->     PCI_EXP_RTSTA_PME on emulated bridge
->   PCI: aardvark: Add support for PME interrupts
->   PCI: aardvark: Fix support for PME requester on emulated bridge
->   PCI: aardvark: Use separate INTA interrupt for emulated root bridge
->   PCI: aardvark: Check return value of generic_handle_domain_irq() when
->     processing INTx IRQ
->   PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
->   PCI: aardvark: Don't mask irq when mapping
->=20
->  drivers/pci/controller/pci-aardvark.c | 332 +++++++++++++++++++-------
->  1 file changed, 245 insertions(+), 87 deletions(-)
->=20
-
+> 
+> diff --git a/include/linux/auxiliary_bus.h b/include/linux/auxiliary_bus.h
+> index fc51d45f106b..a8338d456e81 100644
+> --- a/include/linux/auxiliary_bus.h
+> +++ b/include/linux/auxiliary_bus.h
+> @@ -28,6 +28,16 @@ struct auxiliary_driver {
+>  	const struct auxiliary_device_id *id_table;
+>  };
+>  
+> +static inline void *auxiliary_get_drvdata(struct auxiliary_device *auxdev)
+> +{
+> +	return dev_get_drvdata(&auxdev->dev);
+> +}
+> +
+> +static inline void auxiliary_set_drvdata(struct auxiliary_device *auxdev, void *data)
+> +{
+> +	dev_set_drvdata(&auxdev->dev, data);
+> +}
+> +
+>  static inline struct auxiliary_device *to_auxiliary_dev(struct device *dev)
+>  {
+>  	return container_of(dev, struct auxiliary_device, dev);
+> -- 
+> 2.25.1
+> 
