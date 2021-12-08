@@ -2,88 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6675C433F5
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 09:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC7BC433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 10:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230478AbhLHJWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Dec 2021 04:22:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53494 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230471AbhLHJWM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Dec 2021 04:22:12 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53DAFC061746;
-        Wed,  8 Dec 2021 01:18:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0AE7BB8200D;
-        Wed,  8 Dec 2021 09:18:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1332C341C3;
-        Wed,  8 Dec 2021 09:18:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1638955117;
-        bh=rdVg3VWa1um6V8JdDhtynquK+COZiesUPvhcitWSMP8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hiSpUKqH4tMcBEBYlETNrzFsj29YqW8Lagp1h/wmrAgmhuUykdKHGt+IFomcoWRjv
-         OLVqFmTsBUJgq+FneRJ9j1z8srKV/bfiFi+qJQwquD8KNKjCCUmJJ6jXmHSpOAY0V3
-         9X3e2xcJiAMPkAJN8VYj8jEFcCVZgAoX6WVIuc9NJsF51/aDH1HChMj4snRID2lzDd
-         tb4W+sIk3z4tifR1lzEpk9ZdQnfvL2csMffsokvZUlu4KYgdUdfsJm3O2yf6jpuRf2
-         DIkucb/lcfJF9NpZtiHOrdG1pikkuF64bYTG6a3SGzZaZR1UptUEV92u9Z0okU5NIK
-         PP+KHBJxr4r+A==
-Date:   Wed, 8 Dec 2021 11:18:33 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Lee Jones <lee.jones@linaro.org>
+        id S231342AbhLHKTR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Dec 2021 05:19:17 -0500
+Received: from mga06.intel.com ([134.134.136.31]:61533 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229515AbhLHKTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Dec 2021 05:19:17 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10191"; a="298595931"
+X-IronPort-AV: E=Sophos;i="5.87,297,1631602800"; 
+   d="scan'208";a="298595931"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2021 02:15:45 -0800
+X-IronPort-AV: E=Sophos;i="5.87,297,1631602800"; 
+   d="scan'208";a="606246767"
+Received: from smile.fi.intel.com ([10.237.72.184])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2021 02:15:41 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.95)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1mutyD-003bOW-Of;
+        Wed, 08 Dec 2021 12:14:41 +0200
+Date:   Wed, 8 Dec 2021 12:14:41 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Leon Romanovsky <leon@kernel.org>
 Cc:     Greg KH <gregkh@linuxfoundation.org>,
-        "David E. Box" <david.e.box@linux.intel.com>, hdegoede@redhat.com,
-        bhelgaas@google.com, andriy.shevchenko@linux.intel.com,
+        "David E. Box" <david.e.box@linux.intel.com>, lee.jones@linaro.org,
+        hdegoede@redhat.com, bhelgaas@google.com,
         srinivas.pandruvada@intel.com, shuah@kernel.org,
         mgross@linux.intel.com, linux-kernel@vger.kernel.org,
         platform-driver-x86@vger.kernel.org,
         linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org
 Subject: Re: [V2 2/6] driver core: auxiliary bus: Add driver data helpers
-Message-ID: <YbB4aYK4fOESbbMl@unreal>
+Message-ID: <YbCFkQZvIDLtPJTR@smile.fi.intel.com>
 References: <20211207171448.799376-1-david.e.box@linux.intel.com>
  <20211207171448.799376-3-david.e.box@linux.intel.com>
  <YbBYtJFQ47UH2h/k@unreal>
  <YbBZuwXZWMV9uRXI@kroah.com>
- <YbBwSV2IwDHNUrFH@google.com>
+ <YbBtjSNz8z34czeN@unreal>
+ <YbBwOb6JvWkT3JWI@kroah.com>
+ <YbB29BaOWibImGf5@unreal>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <YbBwSV2IwDHNUrFH@google.com>
+In-Reply-To: <YbB29BaOWibImGf5@unreal>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Dec 08, 2021 at 08:43:53AM +0000, Lee Jones wrote:
-> On Wed, 08 Dec 2021, Greg KH wrote:
+On Wed, Dec 08, 2021 at 11:12:20AM +0200, Leon Romanovsky wrote:
+> On Wed, Dec 08, 2021 at 09:43:37AM +0100, Greg KH wrote:
+
+...
+
+> The idea that you have two APIs which do the same thing, one is
+> obfuscated version of another.
 > 
-> > On Wed, Dec 08, 2021 at 09:03:16AM +0200, Leon Romanovsky wrote:
-> > > On Tue, Dec 07, 2021 at 09:14:44AM -0800, David E. Box wrote:
-> > > > Adds get/set driver data helpers for auxiliary devices.
-> > > > 
-> > > > Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-> > > > Reviewed-by: Mark Gross <markgross@kernel.org>
-> > > > ---
-> > > > V2
-> > > >   - No changes
-> > > > 
-> > > >  include/linux/auxiliary_bus.h | 10 ++++++++++
-> > > >  1 file changed, 10 insertions(+)
-> > > 
-> > > I would really like to see an explanation why such obfuscation is really
-> > > needed. dev_*_drvdata() is a standard way to access driver data.
-> 
-> I wouldn't call it obfuscation, but it does looks like abstraction for
-> the sake of abstraction, which I usually push back on.  What are the
-> technical benefits over using the dev_*() variant?
+> If you don't want from people to use driver core function and structures,
+> you shouldn't expose them in global headers.
 
-You can see it in Greg's answer, there is no technical benefits in any
-variant. It is simple copy/paste pattern from other buses.
+For all these APIs the rationale is very simple. If you have callback that
+takes a pointer to the container (*), you better use the APIs related to
+this container (no need to have an explicit dereferencing). Otherwise you
+use dev_*() APIs (when it's pointer to the pure struct device).
 
-Maybe it is not clear from my response, I don't care if this patch is
-going to be applied or not, but I would like to hear someone explains
-to me what are the benefits of such one liners.
+The value is to have coherent APIs around struct device containers.
 
-Thanks
+*) under container here I assume the data structure that has the embedded
+   struct device in it.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
