@@ -2,125 +2,86 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D46FDC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 17:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E46E1C433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Dec 2021 17:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237922AbhLHRgO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Dec 2021 12:36:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56582 "EHLO
+        id S229846AbhLHR4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Dec 2021 12:56:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234854AbhLHRgO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Dec 2021 12:36:14 -0500
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C4D5C061746;
-        Wed,  8 Dec 2021 09:32:42 -0800 (PST)
-Received: by mail-pf1-x42e.google.com with SMTP id p13so3078710pfw.2;
-        Wed, 08 Dec 2021 09:32:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=GTnOygRYVjIjLSwuhIL1Lc+5UjBjxzuVt14IqySkkNA=;
-        b=OoXxuvNL1SZdgC7J4oqN/PTzUJDiznDtwII7++hd6xtR4ZdlzCPnHavbNPFnzI/alb
-         4TrfjC2Me0CcfnKVxl3HMhb4pTYxYXCCLzyaFIWAg3vwiFEwxNBBK+sanGRjt7Zpjt6c
-         9gTAlh1T5INoGRdwUpY1wx35x+rp346uy2fI9aSXJDiADe1iwQCx92+KV5ntDXaPTXxL
-         hNWoA8rLAhi8p6n8GqI9pGkIHlwvf57/Gw9zx98myvRo7oyzlJqsDL/YEJUe8zs0GN+2
-         TZPL2RlJY7/CB5ldhl4Mqz5X74nFZ2OmbRQt6Ynq3nRIQADWYNXNLB6fIQujNivo979M
-         +Dng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=GTnOygRYVjIjLSwuhIL1Lc+5UjBjxzuVt14IqySkkNA=;
-        b=Nh9TtDXxW+QnyCWCDMbG2DeCqUTKK1DZHJ2grK/8FycAqKybhcDZyny5Gy+O0242GB
-         0NFrRGn03qYPMFnmLRrnqLa25iM9bnjtOi8pnxCOBOI8GnbA2yg+Z5XPAQhTosHxnJb0
-         B62aKRCPP0f5dVLNVqvv686rjQ8lhaDC52oeiho24yfA2k0U05FGXUzHqWTbfikGfjkk
-         3HoPyYDSM99IaLjKSJJmhFoIX4Ot9ZWmRTRSgR2pHIbE1jRfKeSvNrQZ5WUW6cUBBP6s
-         rEq3uU2G13EV3WNz/0824niyZ3MHknKbNJUBs2Bp4zfvCajwUZJir9Ho2BO3prECE0RL
-         8u5Q==
-X-Gm-Message-State: AOAM533UBDU8osQbgFZ2O4EG632xLrGGokhkOyUq0UYNA99o0pEob86O
-        ew9WVAI6hUwPKjHL4QyeMu/UhY1S7R8=
-X-Google-Smtp-Source: ABdhPJyDDF2CspZ7OwtoageGUQ3rKh88TPg58DGSzt6iO8ytJwslleC2V3vOwFN7Ff8aBMLU3SUsIg==
-X-Received: by 2002:a63:4458:: with SMTP id t24mr30420895pgk.236.1638984761057;
-        Wed, 08 Dec 2021 09:32:41 -0800 (PST)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id i3sm3941617pfe.75.2021.12.08.09.32.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Dec 2021 09:32:40 -0800 (PST)
-Subject: Re: [PATCH v3 6/6] dt-bindings: pci: Convert iProc PCIe to YAML
-To:     Rob Herring <robh@kernel.org>,
-        Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Ray Jui <rjui@broadcom.com>, devicetree@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        with ESMTP id S236222AbhLHR4n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Dec 2021 12:56:43 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3652C061746;
+        Wed,  8 Dec 2021 09:53:11 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1638985988;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3VE0nNlLZyDP2MmX/vYQZeWgKNo5Uy6Cr5E5oEyE//0=;
+        b=yVnW54g9mJPoCSUF2QVZDU2f/xrPC/IYtzosNqipMCrUE3ublT0WkCXcFyPVrEXNiDojbG
+        WW1CUtpK3VyoAq9fSgOMsdsrptfY0amXBwna/GvfaJqkTvsyAVL5hI1SpplK1OmRnxMVrX
+        L5hSSsO8qCmLbj+GpNXsAcp58GYvqbj2Cej56RVnAFHSASUWcdaICSkYgNnc4MXsVS22aL
+        8yNx41somh4ngRIGaL6Bs8mvddn976wAff7JClugcbIPHTmhPJafFg/+oWVQNEXsavVz8Q
+        ECHb4fzOEv458qXYE4Q7kYbod/VikxJKFLy0KA5gkzv0UDl1V1bDcOOf7ps2JA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1638985988;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3VE0nNlLZyDP2MmX/vYQZeWgKNo5Uy6Cr5E5oEyE//0=;
+        b=tcPpBzNArpjTicF6DwnR6v7vnK+DexgwPINycnkhbizry34b4Yd5f7r99TAQsJpmyDoy7E
+        NsIoYzOvgoObEZDg==
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Marc Zygnier <maz@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Megha Dey <megha.dey@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        Cedric Le Goater <clg@kaod.org>,
+        xen-devel@lists.xenproject.org, Juergen Gross <jgross@suse.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Will Deacon <will@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        iommu@lists.linux-foundation.org, dmaengine@vger.kernel.org,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
         linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Scott Branden <sbranden@broadcom.com>,
-        linux-kernel@vger.kernel.org
-References: <20211208040432.3658355-1-f.fainelli@gmail.com>
- <20211208040432.3658355-7-f.fainelli@gmail.com>
- <1638971068.781821.3857737.nullmailer@robh.at.kernel.org>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <536cbdb6-a541-2f86-faa6-acb1a4e1c173@gmail.com>
-Date:   Wed, 8 Dec 2021 09:32:39 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        Vinod Koul <vkoul@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Sinan Kaya <okaya@kernel.org>
+Subject: Re: [patch V2 20/36] x86/pci/XEN: Use device MSI properties
+In-Reply-To: <20211208155314.GX6385@nvidia.com>
+References: <20211206210307.625116253@linutronix.de>
+ <20211206210438.742297272@linutronix.de>
+ <20211208155314.GX6385@nvidia.com>
+Date:   Wed, 08 Dec 2021 18:53:07 +0100
+Message-ID: <877dcf0yrg.ffs@tglx>
 MIME-Version: 1.0
-In-Reply-To: <1638971068.781821.3857737.nullmailer@robh.at.kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 12/8/21 5:44 AM, Rob Herring wrote:
-> On Tue, 07 Dec 2021 20:04:32 -0800, Florian Fainelli wrote:
->> Conver the iProc PCIe controller Device Tree binding to YAML now that
->> all DTS in arch/arm and arch/arm64 have been fixed to be compliant.
->>
->> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
->> ---
->>  .../bindings/pci/brcm,iproc-pcie.txt          | 133 -------------
->>  .../bindings/pci/brcm,iproc-pcie.yaml         | 176 ++++++++++++++++++
->>  2 files changed, 176 insertions(+), 133 deletions(-)
->>  delete mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->>  create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml
->>
-> 
-> Running 'make dtbs_check' with the schema in this patch gives the
-> following warnings. Consider if they are expected or the schema is
-> incorrect. These may not be new warnings.
-> 
-> Note that it is not yet a requirement to have 0 warnings for dtbs_check.
-> This will change in the future.
-> 
-> Full log is available here: https://patchwork.ozlabs.org/patch/1565076
-> 
-> 
-> pcie@18012000: msi-controller: 'oneOf' conditional failed, one must be fixed:
-> 	arch/arm/boot/dts/bcm53340-ubnt-unifi-switch8.dt.yaml
-> 	arch/arm/boot/dts/bcm911360_entphn.dt.yaml
-> 	arch/arm/boot/dts/bcm911360k.dt.yaml
-> 	arch/arm/boot/dts/bcm958300k.dt.yaml
-> 	arch/arm/boot/dts/bcm958305k.dt.yaml
-> 	arch/arm/boot/dts/bcm958522er.dt.yaml
-> 	arch/arm/boot/dts/bcm958525er.dt.yaml
-> 	arch/arm/boot/dts/bcm958525xmc.dt.yaml
-> 	arch/arm/boot/dts/bcm958622hr.dt.yaml
-> 	arch/arm/boot/dts/bcm958623hr.dt.yaml
-> 	arch/arm/boot/dts/bcm958625hr.dt.yaml
-> 	arch/arm/boot/dts/bcm958625k.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx64-a0.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx64.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx64w-a0.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx64w.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx65.dt.yaml
-> 	arch/arm/boot/dts/bcm958625-meraki-mx65w.dt.yaml
-> 	arch/arm/boot/dts/bcm988312hr.dt.yaml
+On Wed, Dec 08 2021 at 11:53, Jason Gunthorpe wrote:
+> On Mon, Dec 06, 2021 at 11:39:28PM +0100, Thomas Gleixner wrote:
+>>  static void xen_pv_teardown_msi_irqs(struct pci_dev *dev)
+>>  {
+>> -	struct msi_desc *msidesc = first_pci_msi_entry(dev);
+>> -
+>> -	if (msidesc->pci.msi_attrib.is_msix)
+>> +	if (msi_device_has_property(&dev->dev, MSI_PROP_PCI_MSIX))
+>>  		xen_pci_frontend_disable_msix(dev);
+>>  	else
+>>  		xen_pci_frontend_disable_msi(dev);
+>
+> Same remark as for power, we have a pci_dev, so can it be
+> dev->msix_enabled?
 
-Those would mean that the binding patch was applied without the DTS
-patches earlier in the series?
--- 
-Florian
+Yes, let me rework that.
