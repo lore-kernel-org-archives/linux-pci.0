@@ -2,113 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC04C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 20:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E394C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 20:31:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344120AbhLJUIw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Dec 2021 15:08:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52176 "EHLO
+        id S1344208AbhLJUex (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Dec 2021 15:34:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237300AbhLJUIj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 15:08:39 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36828C061A32;
-        Fri, 10 Dec 2021 12:05:04 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id 200so117819pgg.3;
-        Fri, 10 Dec 2021 12:05:04 -0800 (PST)
+        with ESMTP id S1344211AbhLJUew (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 15:34:52 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C37E9C0617A1;
+        Fri, 10 Dec 2021 12:31:16 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id k4so7003371plx.8;
+        Fri, 10 Dec 2021 12:31:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=6PtQ+iCOtg8wKI/383IxFyqZ9i0rudNbH4n4NHCffbA=;
-        b=P9PK+g5pd0zUN7vBecpw5kRKHQ4ONdv3uxggvZWCKMk1DeNsbq4AhePgOSAn/qBhZL
-         eMsd6kZtO81nZyzVD6eew1+4VUkymIvPZdsNNIFqCdxorwyl2LXPXOj6d1KsDQIfVGcu
-         SvoaR1DtpNpEJQv/ziyGmY5F37jhzPk4JnUI5oLur0u5/h/D+K1vrJ3rQrwiAj4JnvOM
-         i06TYdLNy28DdnO0d2iH4pMZ6iwdHhYXKKte6OUP3iJXkeGdnchinryksaDlT+VTz2BX
-         6o04JaH/63H28H8XPHc5YMNN4uaEzTR+KMzcMVWECNvwmkj09btB9va9GbxFQSvCbtcA
-         lV+Q==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jw1R+y/hcHxw2PT0p++dPCEF0COGjgzOAfMrHqXYnmM=;
+        b=Bj+eXpOd8SzmrJr7YedQ/prWz5Nhb/UwYzn4LYbYC36INmkJgXTghx2tdmOgL51KpZ
+         /NMu5KRvGw6V/m3A81JqHlgtdx0VwVYcS1qmRcwsxnxxQ1mctQXAHoAIGvp5cplvrgLu
+         oGsDF+VTRyiY7OIaz/t2SwS32w4Ab/92XtjcZ8UgvbUQIUjp9d2JJa0h1oQDDpVg0SnS
+         5WcE6IcGXwGx3JcCw4uuBDKQoJ1FDnoNeYvK1/D7i5mp3wCbZIMdFTM5JrZCkKMJWavw
+         v6Ig7kgp4cQxi9sQs4wAAf/gEPRhgqNdInYf9Hw6F6bEGgAPnNV8KBREpolxKgqZe2gv
+         8E/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6PtQ+iCOtg8wKI/383IxFyqZ9i0rudNbH4n4NHCffbA=;
-        b=rxEVYkPsNzOTHn1fF9pZnfs31wMgTkDFWjxNkxtbaj8N6Vxe4v0t5e9iaNp63LUKYa
-         IQtTZ5EmdWKAO28JFJqeKIywsHBtfHiCjT0qX9GUyl0XYMMhS1erDGRfSe4S46KZ941A
-         AziHxZTrB/k2SUAQSCqWPeG+TvRXLjkbKdEHMXMTz8hlUnBSe84X16JvVhR8TV74wuU2
-         5fyw/6LJbTsEXUSeg4ntGiR0fDhQ55VKoeNLV06fUdedR4HItevhY2tqw/Zn1drZEpzw
-         TubJQ6iKrw1lAvu3pfQMMTi+koe9YBiq02guIPCGIax+2SMt7NdzQscqJad6JN0eDsDZ
-         5lgg==
-X-Gm-Message-State: AOAM533hSpYIYoIr8sl0ZCwL7+mwH0f/mfEgDHS8XWg06ckdVuLOXdmK
-        qC5X9r7eef64oW6sv6aByfE19Hif3xQ=
-X-Google-Smtp-Source: ABdhPJzLai1LzHaLHJ983CX/T7ku5ydPVdpFfHWVtadiam0qshf38kLWDsCvkH8YA+FI6tdnC6TyFg==
-X-Received: by 2002:a05:6a00:21c4:b0:4a7:ec46:34b7 with SMTP id t4-20020a056a0021c400b004a7ec4634b7mr19891146pfj.15.1639166703345;
-        Fri, 10 Dec 2021 12:05:03 -0800 (PST)
-Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g13sm3474463pjc.39.2021.12.10.12.05.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Dec 2021 12:05:02 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jw1R+y/hcHxw2PT0p++dPCEF0COGjgzOAfMrHqXYnmM=;
+        b=HTCoyHaNSrnNgV4VO0+qe6bJynT+0tRFwgSTmb+C6NRHUKPsj6uI0O6mSzekUOpHhf
+         wGoj001YXmOtQorFnJuazZMZGMIj+3w7xNrxnmbC9KQjgGzBprYl5hARqTPsUN01hU/R
+         iPCTMpHj1ahx32jYRMNmcMtR/t0i6eTxB4XyblKQYhvA8WLbrrI3jROrZ4Rf558NT5TR
+         IVNniGg5yac51DL1pmdWQPMA6PM2VMb8qfwPr3UneyVPqyQfmeI/+ONQ3XyEQCj7qk+t
+         7umirB8Ap9BRRVNjUKDWRn5sEn7FOzU9TX4AX5ksUsP0Pv7QHsJNdeo6qBrl0Sss84gh
+         3yHw==
+X-Gm-Message-State: AOAM531k3nSqmID+DUYV/K2NWUF9JsZvcWQVQEoZGsM5/dTTIHhgWHBd
+        doLKZk43kHunWRp2KpqMkkM=
+X-Google-Smtp-Source: ABdhPJxTn8cdjm0nDrmj3G2/X5TV7UORnvYHQW3Jxaa+vjIKePL9ujp9yEQXIZ3Pnlrd8hZuQYmxdw==
+X-Received: by 2002:a17:90b:1e07:: with SMTP id pg7mr26302078pjb.185.1639168276271;
+        Fri, 10 Dec 2021 12:31:16 -0800 (PST)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id s19sm4434823pfu.137.2021.12.10.12.31.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 10 Dec 2021 12:31:15 -0800 (PST)
+Subject: Re: [PATCH v10 0/7] PCI: brcmstb: root port turns on sub-device power
+To:     Rob Herring <robh@kernel.org>, Jim Quinlan <jim2101024@gmail.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Mark Brown <broonie@kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Saenz Julienne <nsaenzjulienne@suse.de>
+References: <20211209211407.8102-1-jim2101024@gmail.com>
+ <YbOf836C58fUSmCO@robh.at.kernel.org>
 From:   Florian Fainelli <f.fainelli@gmail.com>
-To:     devicetree@vger.kernel.org
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM IPROC ARM
-        ARCHITECTURE),
-        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM
-        ARCHITECTURE), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 4/6] ARM: dts: NSP: Fixed iProc PCIe MSI sub-node
-Date:   Fri, 10 Dec 2021 12:04:49 -0800
-Message-Id: <20211210200451.3849106-5-f.fainelli@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211210200451.3849106-1-f.fainelli@gmail.com>
-References: <20211210200451.3849106-1-f.fainelli@gmail.com>
+Message-ID: <d659ec6c-ddf8-87b9-ebf1-b32c3730d038@gmail.com>
+Date:   Fri, 10 Dec 2021 12:31:10 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <YbOf836C58fUSmCO@robh.at.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rename the msi controller unit name to 'msi' to avoid collisions with
-the 'msi-controller' boolean property.
+On 12/10/21 10:44 AM, Rob Herring wrote:
+> On Thu, Dec 09, 2021 at 04:13:58PM -0500, Jim Quinlan wrote:
+>> v10 -- Bindings commit example: in comment, refer to bridge under
+>>        controller node as a root port. (Pali)
+>>     -- Bindings commit example: remove three properties that are not
+>>        appropriate for a PCIe endpoint node. (Rob)
+>>
+>> v9  -- Simplify where this mechanism works: instead of looking for
+>>        regulators below every bridge, just look for them at the
+>>        bridge under the root bus (root port).  Now there is no
+>>        modification of portdrv_{pci,core}.c in this submission.
+>>     -- Although Pali is working on support for probing native
+>>        PCIe controller drivers, this work may take some time to
+>>        implement and it still might not be able to accomodate
+>>        our driver's requirements (e.g. vreg suspend/resume control).
+>>     -- Move regulator suspend/resume control to Brcm RC driver.  It
+>>        must reside there because (a) in order to know when to
+>>        initiate linkup during resume and (b) to turn on the
+>>        regulators before any config-space accesses occur.
+> 
+> You now have a mixture of 'generic' add/remove_bus hooks and the host 
+> controller suspend/resume managing the regulators. I think long term, 
+> the portdrv is going to be the right place for all of this with some 
+> interface defined for link control. So I think this solution moves 
+> sideways rather than towards anything common.
+> 
+> Unfortunately, the only leverage maintainers have to get folks to care 
+> about any refactoring is to reject features. We're lucky to find anyone 
+> to test refactoring when posted if done independently. There's a long 
+> list of commits of PCI hosts that I've broken to prove that. So it's 
+> up to Lorenzo and Bjorn on what they want to do here.
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- arch/arm/boot/dts/bcm-nsp.dtsi | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+After version 10, it would seem pretty clear that we are still very much
+committed to and interested in getting that set merged and do it the
+most acceptable way possible. Common code with a single user is always a
+little bit of a grey area to me as it tends to be developed to cater for
+the specific needs of that single user, so the entire common aspect is
+debatable. I suppose as long as we have the binding right, the code can
+change at will.
 
-diff --git a/arch/arm/boot/dts/bcm-nsp.dtsi b/arch/arm/boot/dts/bcm-nsp.dtsi
-index 1c08daa18858..f242763c3bde 100644
---- a/arch/arm/boot/dts/bcm-nsp.dtsi
-+++ b/arch/arm/boot/dts/bcm-nsp.dtsi
-@@ -587,7 +587,7 @@ pcie0: pcie@18012000 {
- 		status = "disabled";
- 
- 		msi-parent = <&msi0>;
--		msi0: msi-controller {
-+		msi0: msi {
- 			compatible = "brcm,iproc-msi";
- 			msi-controller;
- 			interrupt-parent = <&gic>;
-@@ -624,7 +624,7 @@ pcie1: pcie@18013000 {
- 		status = "disabled";
- 
- 		msi-parent = <&msi1>;
--		msi1: msi-controller {
-+		msi1: msi {
- 			compatible = "brcm,iproc-msi";
- 			msi-controller;
- 			interrupt-parent = <&gic>;
-@@ -661,7 +661,7 @@ pcie2: pcie@18014000 {
- 		status = "disabled";
- 
- 		msi-parent = <&msi2>;
--		msi2: msi-controller {
-+		msi2: msi {
- 			compatible = "brcm,iproc-msi";
- 			msi-controller;
- 			interrupt-parent = <&gic>;
+Not trying to coerce Bjorn and Lorenzo into accepting these patches if
+they don't feel comfortable, but what about getting it included so we
+can sort of move on from that topic for a little bit (as we have other
+PCIe changes coming in, supporting additional chips etc.) and we work
+with Pali on a common solution and ensure it works on our pcie-brcmstb.c
+based devices? We are not going to vanish and not come back looking at this.
 -- 
-2.25.1
-
+Florian
