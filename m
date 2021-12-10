@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E40BC4167B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:19:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5B19C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:19:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344838AbhLJWXA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Dec 2021 17:23:00 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:49962 "EHLO
+        id S1344971AbhLJWXO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Dec 2021 17:23:14 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:50238 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344721AbhLJWWr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:22:47 -0500
-Message-ID: <20211210221814.228706214@linutronix.de>
+        with ESMTP id S1344830AbhLJWXA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:23:00 -0500
+Message-ID: <20211210221814.780824745@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1639174750;
+        s=2020; t=1639174764;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=FY9MZMWsXlGRWGpD4j0ndw3rUmZHrgdx/qnJrYogpAU=;
-        b=crLRwjpnFmL9vMNtYINDNn4+8OCsKUZw52CQiHwIVumoubywFORkfBtVSxdUwDOiyGUIps
-        SdPbjYumbRS7Dk0Tgi6Y/2GEaoHyNf3xM1ST45hNpPG8I++VRH/Xfyu5M6k0jaiAe1DD/j
-        kSWc3pDKfWBD5VYIOD6/b3OT2/vGnA+ynRtfJErlglQ56u3evX1lNm6SY5e5ESQpnC06kx
-        rO0rwjrjup3yPCpzY0hbURoWkLwMbwYM4SDBwawx9Oq3kMe6iQYCe3zJnMa+fJfxJQperJ
-        mHwXN3+qpbrRWvV5MauCMj8j3vkrSrndxScpReORwflYKATV8Hy8vzh3NpTffg==
+         references:references; bh=ZEIc+hYHtGZ+R8Y42PTVzHWVlXMSBVtNMJGsH152424=;
+        b=ZnOdjYsyWWWPA45DX/sEP1Hz7/N21g6u4UZdn8c1qyQRQwctj1a4i6BAp20kDLoVrj6D2s
+        MbD+ZTo1q9CByKhQo2XRoN4WdhbqsWP8IhvQmO5n4QjDLb4bQeMj+tjt/r7iv7ulqjYgof
+        F4ISSFlfQwvH4mj7rI3COb7fhYfIaOuZZwt6hdi7/i1KgHhxe1miuwBC9ALPHJWSgBGtAq
+        Hm9GThVygPLyQUzGEUG99ih95uj7Ifn3w+/L6+ojF2urlcLuEKAYpMauAHf1+Mdai5rTl4
+        6N8IRoupzCe+vvFuCq6MovD0Voro2Z7OmtZqPzl66KvGCxnWY1NqHMI0nV1/OA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1639174750;
+        s=2020e; t=1639174764;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=FY9MZMWsXlGRWGpD4j0ndw3rUmZHrgdx/qnJrYogpAU=;
-        b=KyrVeJ0G9MOl8qF99M67WEg99zQMMH+5HSv5GJnHZovMto8RmqfPLbkbG09zVhDJ2hpCNg
-        8MnOzpWo1zDzWXBQ==
+         references:references; bh=ZEIc+hYHtGZ+R8Y42PTVzHWVlXMSBVtNMJGsH152424=;
+        b=IxahGrtxRlopXsWUYNpTNdhCUtnqonpOEodZ3IuQBz/DFc/KxGCheju7XzPFrWnx3hqpKg
+        Kcg6g5cSFSWCRQCA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -58,191 +58,87 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jassi Brar <jassisinghbrar@gmail.com>,
         Peter Ujfalusi <peter.ujfalusi@gmail.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V3 17/35] platform-msi: Rename functions and clarify comments
+Subject: [patch V3 26/35] genirq/msi: Provide interface to retrieve Linux
+ interrupt number
 References: <20211210221642.869015045@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 10 Dec 2021 23:19:09 +0100 (CET)
+Date:   Fri, 10 Dec 2021 23:19:23 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-It's hard to distinguish what platform_msi_domain_alloc() and
-platform_msi_domain_alloc_irqs() are about. Make the distinction more
-explicit and add comments which explain the use cases properly.
+This allows drivers to retrieve the Linux interrupt number instead of
+fiddling with MSI descriptors.
+
+msi_get_virq() returns the Linux interrupt number or 0 in case that there
+is no entry for the given MSI index.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/base/platform-msi.c     |   36 +++++++++++++++++++++---------------
- drivers/irqchip/irq-mbigen.c    |    4 ++--
- drivers/irqchip/irq-mvebu-icu.c |    6 +++---
- include/linux/msi.h             |    8 ++++----
- 4 files changed, 30 insertions(+), 24 deletions(-)
+V2: Simplify the implementation and let PCI deal with the PCI specialities - Marc
+---
+ include/linux/msi.h |    2 ++
+ kernel/irq/msi.c    |   36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -313,17 +313,18 @@ EXPORT_SYMBOL_GPL(platform_msi_domain_fr
-  *                              a platform-msi domain
-  * @domain:	The platform-msi domain
-  *
-- * Returns the private data provided when calling
-- * platform_msi_create_device_domain.
-+ * Return: The private data provided when calling
-+ * platform_msi_create_device_domain().
-  */
- void *platform_msi_get_host_data(struct irq_domain *domain)
- {
- 	struct platform_msi_priv_data *data = domain->host_data;
-+
- 	return data->host_data;
- }
- 
- /**
-- * __platform_msi_create_device_domain - Create a platform-msi domain
-+ * __platform_msi_create_device_domain - Create a platform-msi device domain
-  *
-  * @dev:		The device generating the MSIs
-  * @nvec:		The number of MSIs that need to be allocated
-@@ -332,7 +333,11 @@ void *platform_msi_get_host_data(struct
-  * @ops:		The hierarchy domain operations to use
-  * @host_data:		Private data associated to this domain
-  *
-- * Returns an irqdomain for @nvec interrupts
-+ * Return: An irqdomain for @nvec interrupts on success, NULL in case of error.
-+ *
-+ * This is for interrupt domains which stack on a platform-msi domain
-+ * created by platform_msi_create_irq_domain(). @dev->msi.domain points to
-+ * that platform-msi domain which is the parent for the new domain.
-  */
- struct irq_domain *
- __platform_msi_create_device_domain(struct device *dev,
-@@ -372,18 +377,19 @@ struct irq_domain *
- }
- 
- /**
-- * platform_msi_domain_free - Free interrupts associated with a platform-msi
-- *                            domain
-+ * platform_msi_device_domain_free - Free interrupts associated with a platform-msi
-+ *				     device domain
-  *
-- * @domain:	The platform-msi domain
-+ * @domain:	The platform-msi device domain
-  * @virq:	The base irq from which to perform the free operation
-  * @nvec:	How many interrupts to free from @virq
-  */
--void platform_msi_domain_free(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nvec)
-+void platform_msi_device_domain_free(struct irq_domain *domain, unsigned int virq,
-+				     unsigned int nvec)
- {
- 	struct platform_msi_priv_data *data = domain->host_data;
- 	struct msi_desc *desc, *tmp;
-+
- 	for_each_msi_entry_safe(desc, tmp, data->dev) {
- 		if (WARN_ON(!desc->irq || desc->nvec_used != 1))
- 			return;
-@@ -397,10 +403,10 @@ void platform_msi_domain_free(struct irq
- }
- 
- /**
-- * platform_msi_domain_alloc - Allocate interrupts associated with
-- *			       a platform-msi domain
-+ * platform_msi_device_domain_alloc - Allocate interrupts associated with
-+ *				      a platform-msi device domain
-  *
-- * @domain:	The platform-msi domain
-+ * @domain:	The platform-msi device domain
-  * @virq:	The base irq from which to perform the allocate operation
-  * @nr_irqs:	How many interrupts to free from @virq
-  *
-@@ -408,8 +414,8 @@ void platform_msi_domain_free(struct irq
-  * with irq_domain_mutex held (which can only be done as part of a
-  * top-level interrupt allocation).
-  */
--int platform_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nr_irqs)
-+int platform_msi_device_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				     unsigned int nr_irqs)
- {
- 	struct platform_msi_priv_data *data = domain->host_data;
- 	int err;
-@@ -421,7 +427,7 @@ int platform_msi_domain_alloc(struct irq
- 	err = msi_domain_populate_irqs(domain->parent, data->dev,
- 				       virq, nr_irqs, &data->arg);
- 	if (err)
--		platform_msi_domain_free(domain, virq, nr_irqs);
-+		platform_msi_device_domain_free(domain, virq, nr_irqs);
- 
- 	return err;
- }
---- a/drivers/irqchip/irq-mbigen.c
-+++ b/drivers/irqchip/irq-mbigen.c
-@@ -207,7 +207,7 @@ static int mbigen_irq_domain_alloc(struc
- 	if (err)
- 		return err;
- 
--	err = platform_msi_domain_alloc(domain, virq, nr_irqs);
-+	err = platform_msi_device_domain_alloc(domain, virq, nr_irqs);
- 	if (err)
- 		return err;
- 
-@@ -223,7 +223,7 @@ static int mbigen_irq_domain_alloc(struc
- static void mbigen_irq_domain_free(struct irq_domain *domain, unsigned int virq,
- 				   unsigned int nr_irqs)
- {
--	platform_msi_domain_free(domain, virq, nr_irqs);
-+	platform_msi_device_domain_free(domain, virq, nr_irqs);
- }
- 
- static const struct irq_domain_ops mbigen_domain_ops = {
---- a/drivers/irqchip/irq-mvebu-icu.c
-+++ b/drivers/irqchip/irq-mvebu-icu.c
-@@ -221,7 +221,7 @@ mvebu_icu_irq_domain_alloc(struct irq_do
- 		icu_irqd->icu_group = msi_data->subset_data->icu_group;
- 	icu_irqd->icu = icu;
- 
--	err = platform_msi_domain_alloc(domain, virq, nr_irqs);
-+	err = platform_msi_device_domain_alloc(domain, virq, nr_irqs);
- 	if (err) {
- 		dev_err(icu->dev, "failed to allocate ICU interrupt in parent domain\n");
- 		goto free_irqd;
-@@ -245,7 +245,7 @@ mvebu_icu_irq_domain_alloc(struct irq_do
- 	return 0;
- 
- free_msi:
--	platform_msi_domain_free(domain, virq, nr_irqs);
-+	platform_msi_device_domain_free(domain, virq, nr_irqs);
- free_irqd:
- 	kfree(icu_irqd);
- 	return err;
-@@ -260,7 +260,7 @@ mvebu_icu_irq_domain_free(struct irq_dom
- 
- 	kfree(icu_irqd);
- 
--	platform_msi_domain_free(domain, virq, nr_irqs);
-+	platform_msi_device_domain_free(domain, virq, nr_irqs);
- }
- 
- static const struct irq_domain_ops mvebu_icu_domain_ops = {
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -434,10 +434,10 @@ struct irq_domain *
- #define platform_msi_create_device_tree_domain(dev, nvec, write, ops, data) \
- 	__platform_msi_create_device_domain(dev, nvec, true, write, ops, data)
+@@ -153,6 +153,8 @@ struct msi_device_data {
  
--int platform_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nr_irqs);
--void platform_msi_domain_free(struct irq_domain *domain, unsigned int virq,
--			      unsigned int nvec);
-+int platform_msi_device_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				     unsigned int nr_irqs);
-+void platform_msi_device_domain_free(struct irq_domain *domain, unsigned int virq,
-+				     unsigned int nvec);
- void *platform_msi_get_host_data(struct irq_domain *domain);
- #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+ int msi_setup_device_data(struct device *dev);
  
++unsigned int msi_get_virq(struct device *dev, unsigned int index);
++
+ /* Helpers to hide struct msi_desc implementation details */
+ #define msi_desc_to_dev(desc)		((desc)->dev)
+ #define dev_to_msi_list(dev)		(&(dev)->msi_list)
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -105,6 +105,42 @@ int msi_setup_device_data(struct device
+ 	return 0;
+ }
+ 
++/**
++ * msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * @dev:	Device to operate on
++ * @index:	MSI interrupt index to look for (0-based)
++ *
++ * Return: The Linux interrupt number on success (> 0), 0 if not found
++ */
++unsigned int msi_get_virq(struct device *dev, unsigned int index)
++{
++	struct msi_desc *desc;
++	bool pcimsi;
++
++	if (!dev->msi.data)
++		return 0;
++
++	pcimsi = dev_is_pci(dev) ? to_pci_dev(dev)->msi_enabled : false;
++
++	for_each_msi_entry(desc, dev) {
++		/* PCI-MSI has only one descriptor for multiple interrupts. */
++		if (pcimsi) {
++			if (desc->irq && index < desc->nvec_used)
++				return desc->irq + index;
++			break;
++		}
++
++		/*
++		 * PCI-MSIX and platform MSI use a descriptor per
++		 * interrupt.
++		 */
++		if (desc->msi_index == index)
++			return desc->irq;
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(msi_get_virq);
++
+ #ifdef CONFIG_SYSFS
+ static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
 
