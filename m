@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA8B4C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5C0DC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345321AbhLJWYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Dec 2021 17:24:33 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:49920 "EHLO
+        id S1344683AbhLJWYc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Dec 2021 17:24:32 -0500
+Received: from Galois.linutronix.de ([193.142.43.55]:50058 "EHLO
         galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344722AbhLJWWq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:22:46 -0500
-Message-ID: <20211210221814.168362229@linutronix.de>
+        with ESMTP id S1344744AbhLJWWs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:22:48 -0500
+Message-ID: <20211210221814.287680528@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1639174748;
+        s=2020; t=1639174751;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=4+eiQosnG7JBR1uN0KlyRVrLtcLvBVvbMU+2SFmyB+o=;
-        b=NSzn6eemNJ0eDNqaqfj0J4J5JGz7K56XnV9MyWe+zf1xqWyQujeFifj1x8v1csqVsCT35t
-        QLOBO4/H7MoxkENiZW8/nmowd1Ubo+DfNDjfKXhl2o5H7ToEraGOyHrOB7FSOS+TO5BgjI
-        biGY2JzKjzM5QxI7ropVsxtR2M+ZThlJOVZeCGTANbL7LC+fDH/Rtit9AAEpwdrpXdRGHR
-        Blu5YEQSuMGWdbfsyAdjgnIWrgZEw9bO0+JWoNyUXqpHlcu5oisXl1DmuSUkUxyIqM/4ph
-        QKgY3AFIQW1W1o9UcVgJRHzuXgUs4HLehTHcLW+ol5AfhGFocJkGtZD94o1FWw==
+         references:references; bh=zIZczyRlH4Mx4fB5mmlODqe9FKNOKEFU5ncWnwPgL4o=;
+        b=A7TX/LnwMZ3WbXEnRoPrDP/wLd2iphxwXGgFB2xNDcix6PjdERSNAqWZP3cDL+ul1e+OgS
+        XZwjDctIfCLuV18Dm1hv3qTKEaY6pfv6/JrJwTE0Zi/Mq6iBPgIO6QtvtT1kN6nSLPvNPW
+        0u0s7/PZpPkZNxO2RTqbZAkwSRF23scy5J5cf67INwsZCQZA1X62o97PiKxMfxj6o8/GxZ
+        aO9H2WxcI08XgbYFKtYRHKYr0lWyDUFfBt68wukumRk/J7k3llF+aqTWeB78Uo5s/n8eAj
+        eO0F5f71EAQkycZW2+2rOZR7xc5Gp2SnvBytgZ4S05qo6bkqWTDwARQoLAvwQA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1639174748;
+        s=2020e; t=1639174751;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=4+eiQosnG7JBR1uN0KlyRVrLtcLvBVvbMU+2SFmyB+o=;
-        b=TTtSvTMz55N3aey6UgmLwPcn+vLffGKKd6RnWhYE43JcPUh8gDb277w95Yidb3WOxXOzkX
-        6CrbbZQt5BdYqYDA==
+         references:references; bh=zIZczyRlH4Mx4fB5mmlODqe9FKNOKEFU5ncWnwPgL4o=;
+        b=/snRPAepbgN6BXoxpR9Y/cwG/pUn2U+BFbd6X9S/kPABlfdlYLuradGw7bcnIwrFcdQcFh
+        R0NHGOxeEpedSOCw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -58,148 +58,260 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jassi Brar <jassisinghbrar@gmail.com>,
         Peter Ujfalusi <peter.ujfalusi@gmail.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V3 16/35] genirq/msi: Remove the original sysfs interfaces
+Subject: [patch V3 18/35] platform-msi: Store platform private data pointer in
+ msi_device_data
 References: <20211210221642.869015045@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 10 Dec 2021 23:19:08 +0100 (CET)
+Date:   Fri, 10 Dec 2021 23:19:11 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-No more users. Refactor the core code accordingly and move the global
-interface under CONFIG_PCI_MSI_ARCH_FALLBACKS.
+Storing the platform private data in a MSI descriptor is sloppy at
+best. The data belongs to the device and not to the descriptor.
+Add a pointer to struct msi_device_data and store the pointer there.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- include/linux/msi.h |   29 +++++++---------------------
- kernel/irq/msi.c    |   53 +++++++++++++++++++---------------------------------
- 2 files changed, 28 insertions(+), 54 deletions(-)
+ drivers/base/platform-msi.c |   79 +++++++++++++++++---------------------------
+ include/linux/msi.h         |    4 +-
+ 2 files changed, 34 insertions(+), 49 deletions(-)
 
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -38,9 +38,7 @@ static DEFINE_IDA(platform_msi_devid_ida
+  */
+ static irq_hw_number_t platform_msi_calc_hwirq(struct msi_desc *desc)
+ {
+-	u32 devid;
+-
+-	devid = desc->platform.msi_priv_data->devid;
++	u32 devid = desc->dev->msi.data->platform_data->devid;
+ 
+ 	return (devid << (32 - DEV_ID_SHIFT)) | desc->platform.msi_index;
+ }
+@@ -85,11 +83,8 @@ static void platform_msi_update_dom_ops(
+ static void platform_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+-	struct platform_msi_priv_data *priv_data;
+-
+-	priv_data = desc->platform.msi_priv_data;
+ 
+-	priv_data->write_msg(desc, msg);
++	desc->dev->msi.data->platform_data->write_msg(desc, msg);
+ }
+ 
+ static void platform_msi_update_chip_ops(struct msi_domain_info *info)
+@@ -126,9 +121,7 @@ static void platform_msi_free_descs(stru
+ }
+ 
+ static int platform_msi_alloc_descs_with_irq(struct device *dev, int virq,
+-					     int nvec,
+-					     struct platform_msi_priv_data *data)
+-
++					     int nvec)
+ {
+ 	struct msi_desc *desc;
+ 	int i, base = 0;
+@@ -144,7 +137,6 @@ static int platform_msi_alloc_descs_with
+ 		if (!desc)
+ 			break;
+ 
+-		desc->platform.msi_priv_data = data;
+ 		desc->platform.msi_index = base + i;
+ 		desc->irq = virq ? virq + i : 0;
+ 
+@@ -161,11 +153,9 @@ static int platform_msi_alloc_descs_with
+ 	return 0;
+ }
+ 
+-static int platform_msi_alloc_descs(struct device *dev, int nvec,
+-				    struct platform_msi_priv_data *data)
+-
++static int platform_msi_alloc_descs(struct device *dev, int nvec)
+ {
+-	return platform_msi_alloc_descs_with_irq(dev, 0, nvec, data);
++	return platform_msi_alloc_descs_with_irq(dev, 0, nvec);
+ }
+ 
+ /**
+@@ -199,9 +189,8 @@ struct irq_domain *platform_msi_create_i
+ 	return domain;
+ }
+ 
+-static struct platform_msi_priv_data *
+-platform_msi_alloc_priv_data(struct device *dev, unsigned int nvec,
+-			     irq_write_msi_msg_t write_msi_msg)
++static int platform_msi_alloc_priv_data(struct device *dev, unsigned int nvec,
++					irq_write_msi_msg_t write_msi_msg)
+ {
+ 	struct platform_msi_priv_data *datap;
+ 	int err;
+@@ -213,41 +202,44 @@ platform_msi_alloc_priv_data(struct devi
+ 	 * capable devices).
+ 	 */
+ 	if (!dev->msi.domain || !write_msi_msg || !nvec || nvec > MAX_DEV_MSIS)
+-		return ERR_PTR(-EINVAL);
++		return -EINVAL;
+ 
+ 	if (dev->msi.domain->bus_token != DOMAIN_BUS_PLATFORM_MSI) {
+ 		dev_err(dev, "Incompatible msi_domain, giving up\n");
+-		return ERR_PTR(-EINVAL);
++		return -EINVAL;
+ 	}
+ 
+ 	err = msi_setup_device_data(dev);
+ 	if (err)
+-		return ERR_PTR(err);
++		return err;
+ 
+-	/* Already had a helping of MSI? Greed... */
+-	if (!list_empty(dev_to_msi_list(dev)))
+-		return ERR_PTR(-EBUSY);
++	/* Already initialized? */
++	if (dev->msi.data->platform_data)
++		return -EBUSY;
+ 
+ 	datap = kzalloc(sizeof(*datap), GFP_KERNEL);
+ 	if (!datap)
+-		return ERR_PTR(-ENOMEM);
++		return -ENOMEM;
+ 
+ 	datap->devid = ida_simple_get(&platform_msi_devid_ida,
+ 				      0, 1 << DEV_ID_SHIFT, GFP_KERNEL);
+ 	if (datap->devid < 0) {
+ 		err = datap->devid;
+ 		kfree(datap);
+-		return ERR_PTR(err);
++		return err;
+ 	}
+ 
+ 	datap->write_msg = write_msi_msg;
+ 	datap->dev = dev;
+-
+-	return datap;
++	dev->msi.data->platform_data = datap;
++	return 0;
+ }
+ 
+-static void platform_msi_free_priv_data(struct platform_msi_priv_data *data)
++static void platform_msi_free_priv_data(struct device *dev)
+ {
++	struct platform_msi_priv_data *data = dev->msi.data->platform_data;
++
++	dev->msi.data->platform_data = NULL;
+ 	ida_simple_remove(&platform_msi_devid_ida, data->devid);
+ 	kfree(data);
+ }
+@@ -264,14 +256,13 @@ static void platform_msi_free_priv_data(
+ int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+ 				   irq_write_msi_msg_t write_msi_msg)
+ {
+-	struct platform_msi_priv_data *priv_data;
+ 	int err;
+ 
+-	priv_data = platform_msi_alloc_priv_data(dev, nvec, write_msi_msg);
+-	if (IS_ERR(priv_data))
+-		return PTR_ERR(priv_data);
++	err = platform_msi_alloc_priv_data(dev, nvec, write_msi_msg);
++	if (err)
++		return err;
+ 
+-	err = platform_msi_alloc_descs(dev, nvec, priv_data);
++	err = platform_msi_alloc_descs(dev, nvec);
+ 	if (err)
+ 		goto out_free_priv_data;
+ 
+@@ -284,8 +275,7 @@ int platform_msi_domain_alloc_irqs(struc
+ out_free_desc:
+ 	platform_msi_free_descs(dev, 0, nvec);
+ out_free_priv_data:
+-	platform_msi_free_priv_data(priv_data);
+-
++	platform_msi_free_priv_data(dev);
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(platform_msi_domain_alloc_irqs);
+@@ -296,15 +286,9 @@ EXPORT_SYMBOL_GPL(platform_msi_domain_al
+  */
+ void platform_msi_domain_free_irqs(struct device *dev)
+ {
+-	if (!list_empty(dev_to_msi_list(dev))) {
+-		struct msi_desc *desc;
+-
+-		desc = first_msi_entry(dev);
+-		platform_msi_free_priv_data(desc->platform.msi_priv_data);
+-	}
+-
+ 	msi_domain_free_irqs(dev->msi.domain, dev);
+ 	platform_msi_free_descs(dev, 0, MAX_DEV_MSIS);
++	platform_msi_free_priv_data(dev);
+ }
+ EXPORT_SYMBOL_GPL(platform_msi_domain_free_irqs);
+ 
+@@ -351,10 +335,11 @@ struct irq_domain *
+ 	struct irq_domain *domain;
+ 	int err;
+ 
+-	data = platform_msi_alloc_priv_data(dev, nvec, write_msi_msg);
+-	if (IS_ERR(data))
++	err = platform_msi_alloc_priv_data(dev, nvec, write_msi_msg);
++	if (err)
+ 		return NULL;
+ 
++	data = dev->msi.data->platform_data;
+ 	data->host_data = host_data;
+ 	domain = irq_domain_create_hierarchy(dev->msi.domain, 0,
+ 					     is_tree ? 0 : nvec,
+@@ -372,7 +357,7 @@ struct irq_domain *
+ free_domain:
+ 	irq_domain_remove(domain);
+ free_priv:
+-	platform_msi_free_priv_data(data);
++	platform_msi_free_priv_data(dev);
+ 	return NULL;
+ }
+ 
+@@ -420,7 +405,7 @@ int platform_msi_device_domain_alloc(str
+ 	struct platform_msi_priv_data *data = domain->host_data;
+ 	int err;
+ 
+-	err = platform_msi_alloc_descs_with_irq(data->dev, virq, nr_irqs, data);
++	err = platform_msi_alloc_descs_with_irq(data->dev, virq, nr_irqs);
+ 	if (err)
+ 		return err;
+ 
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -246,26 +246,6 @@ void __pci_write_msi_msg(struct msi_desc
- void pci_msi_mask_irq(struct irq_data *data);
- void pci_msi_unmask_irq(struct irq_data *data);
- 
--#ifdef CONFIG_SYSFS
--int msi_device_populate_sysfs(struct device *dev);
--void msi_device_destroy_sysfs(struct device *dev);
--
--const struct attribute_group **msi_populate_sysfs(struct device *dev);
--void msi_destroy_sysfs(struct device *dev,
--		       const struct attribute_group **msi_irq_groups);
--#else
--static inline int msi_device_populate_sysfs(struct device *dev) { return 0; }
--static inline void msi_device_destroy_sysfs(struct device *dev) { }
--
--static inline const struct attribute_group **msi_populate_sysfs(struct device *dev)
--{
--	return NULL;
--}
--static inline void msi_destroy_sysfs(struct device *dev, const struct attribute_group **msi_irq_groups)
--{
--}
--#endif
--
- /*
-  * The arch hooks to setup up msi irqs. Default functions are implemented
-  * as weak symbols so that they /can/ be overriden by architecture specific
-@@ -279,7 +259,14 @@ int arch_setup_msi_irq(struct pci_dev *d
- void arch_teardown_msi_irq(unsigned int irq);
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
--#endif
-+#ifdef CONFIG_SYSFS
-+int msi_device_populate_sysfs(struct device *dev);
-+void msi_device_destroy_sysfs(struct device *dev);
-+#else /* CONFIG_SYSFS */
-+static inline int msi_device_populate_sysfs(struct device *dev) { return 0; }
-+static inline void msi_device_destroy_sysfs(struct device *dev) { }
-+#endif /* !CONFIG_SYSFS */
-+#endif /* CONFIG_PCI_MSI_ARCH_FALLBACKS */
- 
- /*
-  * The restore hook is still available even for fully irq domain based
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -118,12 +118,8 @@ static ssize_t msi_mode_show(struct devi
- /**
-  * msi_populate_sysfs - Populate msi_irqs sysfs entries for devices
-  * @dev:	The device(PCI, platform etc) who will get sysfs entries
-- *
-- * Return attribute_group ** so that specific bus MSI can save it to
-- * somewhere during initilizing msi irqs. If devices has no MSI irq,
-- * return NULL; if it fails to populate sysfs, return ERR_PTR
-  */
--const struct attribute_group **msi_populate_sysfs(struct device *dev)
-+static const struct attribute_group **msi_populate_sysfs(struct device *dev)
- {
- 	const struct attribute_group **msi_irq_groups;
- 	struct attribute **msi_attrs, *msi_attr;
-@@ -214,41 +210,32 @@ int msi_device_populate_sysfs(struct dev
- }
+@@ -108,11 +108,9 @@ struct pci_msi_desc {
  
  /**
-- * msi_destroy_sysfs - Destroy msi_irqs sysfs entries for devices
-- * @dev:		The device(PCI, platform etc) who will remove sysfs entries
-- * @msi_irq_groups:	attribute_group for device msi_irqs entries
-- */
--void msi_destroy_sysfs(struct device *dev, const struct attribute_group **msi_irq_groups)
--{
--	struct device_attribute *dev_attr;
--	struct attribute **msi_attrs;
--	int count = 0;
--
--	if (msi_irq_groups) {
--		sysfs_remove_groups(&dev->kobj, msi_irq_groups);
--		msi_attrs = msi_irq_groups[0]->attrs;
--		while (msi_attrs[count]) {
--			dev_attr = container_of(msi_attrs[count],
--					struct device_attribute, attr);
--			kfree(dev_attr->attr.name);
--			kfree(dev_attr);
--			++count;
--		}
--		kfree(msi_attrs);
--		kfree(msi_irq_groups[0]);
--		kfree(msi_irq_groups);
--	}
--}
--
--/**
-  * msi_device_destroy_sysfs - Destroy msi_irqs sysfs entries for a device
-  * @dev:		The device (PCI, platform etc) for which to remove
-  *			sysfs entries
+  * platform_msi_desc - Platform device specific msi descriptor data
+- * @msi_priv_data:	Pointer to platform private data
+  * @msi_index:		The index of the MSI descriptor for multi MSI
   */
- void msi_device_destroy_sysfs(struct device *dev)
- {
--	msi_destroy_sysfs(dev, dev->msi.data->attrs);
-+	const struct attribute_group **msi_irq_groups = dev->msi.data->attrs;
-+	struct device_attribute *dev_attr;
-+	struct attribute **msi_attrs;
-+	int count = 0;
-+
- 	dev->msi.data->attrs = NULL;
-+	if (!msi_irq_groups)
-+		return;
-+
-+	sysfs_remove_groups(&dev->kobj, msi_irq_groups);
-+	msi_attrs = msi_irq_groups[0]->attrs;
-+	while (msi_attrs[count]) {
-+		dev_attr = container_of(msi_attrs[count], struct device_attribute, attr);
-+		kfree(dev_attr->attr.name);
-+		kfree(dev_attr);
-+		++count;
-+	}
-+	kfree(msi_attrs);
-+	kfree(msi_irq_groups[0]);
-+	kfree(msi_irq_groups);
- }
- #endif
+ struct platform_msi_desc {
+-	struct platform_msi_priv_data	*msi_priv_data;
+ 	u16				msi_index;
+ };
  
+@@ -177,10 +175,12 @@ struct msi_desc {
+  * msi_device_data - MSI per device data
+  * @properties:		MSI properties which are interesting to drivers
+  * @attrs:		Pointer to the sysfs attribute group
++ * @platform_data:	Platform-MSI specific data
+  */
+ struct msi_device_data {
+ 	unsigned long			properties;
+ 	const struct attribute_group    **attrs;
++	struct platform_msi_priv_data	*platform_data;
+ };
+ 
+ int msi_setup_device_data(struct device *dev);
 
