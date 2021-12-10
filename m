@@ -2,33 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83257C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 953E3C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Dec 2021 22:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344687AbhLJWWm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Dec 2021 17:22:42 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:49782 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344684AbhLJWWZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:22:25 -0500
-Message-ID: <20211210221813.372357371@linutronix.de>
+        id S1344723AbhLJWWo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Dec 2021 17:22:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54530 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344690AbhLJWW3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Dec 2021 17:22:29 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E731FC0617A1;
+        Fri, 10 Dec 2021 14:18:52 -0800 (PST)
+Message-ID: <20211210221813.493922179@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1639174728;
+        s=2020; t=1639174731;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=jxff/xJv3Qst4ZB5tRChjTLXCWZK8WA2PIPQRiU/rvY=;
-        b=0nUrI//widUx8A75bvq7IZvZU0OgOd7DLmm1Zp2ltSlJUJ9r/TrE9oF6ObjsG/CcBOkiYi
-        qXw9+h4dQG4uyEMuyKeiBlxL4kElXM0TpMwsf3wmE81Z2stJW+ptloJgs/g6qP6M8dR2QU
-        njRyGX3+6rX5xnHULZR7tzFqLrE14gpMsFum/pVWgPlIZ+TpaG54gue+YwCmJ2mvy52BBv
-        eJfY6AUb8aIr3HCk56T6i2B/ksAdJHhdmvylSbmQ1UvjRhp/j3IltXf1nTsUbtPgTPyfJ7
-        dTv1xOVMJ9eZrRTBBhQoxRXkLcJLQxyY0zHx9KeMYtAVYinBZUzQopdXWot8gQ==
+         references:references; bh=cKJHJ5pvxdQcbJzsUJMGqgFGoQj9I03QbSL7vU1xGJs=;
+        b=1jYFlR/s4Fj8fK94IM8CGV2VaLN70VTxWOKgzd9JP93YsuiSkhZnYFY06GM/ck1LqQztP1
+        MLFaGOIeCqYoexBgXapeoyYhkU0pOjGlXAPId/ebxaePxjkxMr+yK8v+0hb5X4+5ZG7B1H
+        +va0VUPX0Xv4Yu86zDErk4wKNgJjI/W705RdoDtPXV+TGIU1/gfVAaxPimBu0jir0PtNCO
+        fOlCra2fXDQuTRaSAH0ZtTlPuz+4kAZXETO59wFrYfdqVEy+3UT6OV5Rro3KejHz+49vks
+        CFqN18s6k1HR1ibmPHBMCiufu6FCMC8wl1bZC8BEvjjvQ7GzWILhEocUSrICGA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1639174728;
+        s=2020e; t=1639174731;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=jxff/xJv3Qst4ZB5tRChjTLXCWZK8WA2PIPQRiU/rvY=;
-        b=vv6Me8N9GQvFvm+KtHhMWgm41j6C3fva9jay/jD8ClFpKD7/3pJq+KAqrq6JZCZO9BTGwf
-        CoMF7Kja5mNu2oDA==
+         references:references; bh=cKJHJ5pvxdQcbJzsUJMGqgFGoQj9I03QbSL7vU1xGJs=;
+        b=CKltebaN9sJb+/12aypx+vxMoPzMz+hKX+LQCpakacpcX5G/L+sQu6V9DoCJj9DznHwv8C
+        jZHW+tYr3PY7biBA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
@@ -38,11 +41,11 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Megha Dey <megha.dey@intel.com>,
         Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
         Cedric Le Goater <clg@kaod.org>,
-        Juergen Gross <jgross@suse.com>,
-        xen-devel@lists.xenproject.org, Arnd Bergmann <arnd@arndb.de>,
+        Arnd Bergmann <arnd@arndb.de>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org,
+        linuxppc-dev@lists.ozlabs.org, Juergen Gross <jgross@suse.com>,
+        xen-devel@lists.xenproject.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Stuart Yoder <stuyoder@gmail.com>,
@@ -59,11 +62,11 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, Marc Zygnier <maz@kernel.org>,
         Jassi Brar <jassisinghbrar@gmail.com>,
         Peter Ujfalusi <peter.ujfalusi@gmail.com>,
         Sinan Kaya <okaya@kernel.org>
-Subject: [patch V3 03/35] x86/apic/msi: Use PCI device MSI property
+Subject: [patch V3 05/35] powerpc/cell/axon_msi: Use PCI device property
 References: <20211210221642.869015045@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 10 Dec 2021 23:18:47 +0100 (CET)
+Date:   Fri, 10 Dec 2021 23:18:51 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -73,25 +76,37 @@ From: Thomas Gleixner <tglx@linutronix.de>
 instead of fiddling with MSI descriptors.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
-V3: Use pci_dev->msix_enabled - Jason
+V3: Use pci_dev property - Jason
+V2: Invoke the function with the correct number of arguments - Andy
 ---
- arch/x86/kernel/apic/msi.c |    5 +----
+ arch/powerpc/platforms/cell/axon_msi.c |    5 +----
  1 file changed, 1 insertion(+), 4 deletions(-)
 
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -160,11 +160,8 @@ static struct irq_chip pci_msi_controlle
- int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
- 		    msi_alloc_info_t *arg)
+--- a/arch/powerpc/platforms/cell/axon_msi.c
++++ b/arch/powerpc/platforms/cell/axon_msi.c
+@@ -199,7 +199,6 @@ static struct axon_msic *find_msi_transl
+ static int setup_msi_msg_address(struct pci_dev *dev, struct msi_msg *msg)
  {
--	struct pci_dev *pdev = to_pci_dev(dev);
--	struct msi_desc *desc = first_pci_msi_entry(pdev);
+ 	struct device_node *dn;
+-	struct msi_desc *entry;
+ 	int len;
+ 	const u32 *prop;
+ 
+@@ -209,10 +208,8 @@ static int setup_msi_msg_address(struct
+ 		return -ENODEV;
+ 	}
+ 
+-	entry = first_pci_msi_entry(dev);
 -
- 	init_irq_alloc_info(arg, NULL);
--	if (desc->pci.msi_attrib.is_msix) {
-+	if (to_pci_dev(dev)->msix_enabled) {
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
- 	} else {
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
+ 	for (; dn; dn = of_get_next_parent(dn)) {
+-		if (entry->pci.msi_attrib.is_64) {
++		if (!dev->no_64bit_msi) {
+ 			prop = of_get_property(dn, "msi-address-64", &len);
+ 			if (prop)
+ 				break;
 
