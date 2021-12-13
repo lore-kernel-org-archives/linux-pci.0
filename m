@@ -2,103 +2,80 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46792C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 17:58:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9818C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 17:59:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241090AbhLMR6l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Dec 2021 12:58:41 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:56948 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240983AbhLMR6k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Dec 2021 12:58:40 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 1BDHvg60044666;
-        Mon, 13 Dec 2021 11:57:43 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1639418263;
-        bh=pGs+7nCpdx7S5XWFe/UO8XALjMbjY1+VfXkPmDrylYE=;
-        h=Date:From:To:CC:Subject:References:In-Reply-To;
-        b=TereNqQsHrOJN5x2htMCys19fN9lF6WIIbjFUj5DyrKhTGgPXKwfNA/gNxTT6+77z
-         JRw2kQu/xJl8fmFScS+cwwxZ07+XG8xXUbwh8Kk8HR+9ArnUZz+3a5U0jiM3or8k0i
-         mUKft05BDVfyOiq0ie7rKisbaUamlftbBRwigjBY=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 1BDHvgPV120889
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 13 Dec 2021 11:57:42 -0600
-Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Mon, 13
- Dec 2021 11:57:42 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14 via
- Frontend Transport; Mon, 13 Dec 2021 11:57:42 -0600
-Received: from localhost (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 1BDHvg6L017557;
-        Mon, 13 Dec 2021 11:57:42 -0600
-Date:   Mon, 13 Dec 2021 11:57:41 -0600
-From:   Nishanth Menon <nm@ti.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-CC:     LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zygnier <maz@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Megha Dey <megha.dey@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>, <linux-pci@vger.kernel.org>,
-        Cedric Le Goater <clg@kaod.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Peter Ujfalusi <peter.ujfalusi@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>, <dmaengine@vger.kernel.org>,
-        Juergen Gross <jgross@suse.com>,
-        <xen-devel@lists.xenproject.org>, Arnd Bergmann <arnd@arndb.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        <linuxppc-dev@lists.ozlabs.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Tero Kristo <kristo@kernel.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        <iommu@lists.linux-foundation.org>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Sinan Kaya <okaya@kernel.org>
-Subject: Re: [patch V3 34/35] soc: ti: ti_sci_inta_msi: Get rid of
- ti_sci_inta_msi_get_virq()
-Message-ID: <20211213175741.yxabloph4dr37dmt@abroad>
-References: <20211210221642.869015045@linutronix.de>
- <20211210221815.269468319@linutronix.de>
+        id S241419AbhLMR72 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Dec 2021 12:59:28 -0500
+Received: from mga02.intel.com ([134.134.136.20]:21829 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237144AbhLMR70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Dec 2021 12:59:26 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10197"; a="226067272"
+X-IronPort-AV: E=Sophos;i="5.88,203,1635231600"; 
+   d="scan'208";a="226067272"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2021 09:59:25 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,203,1635231600"; 
+   d="scan'208";a="613915237"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga004.jf.intel.com with ESMTP; 13 Dec 2021 09:59:25 -0800
+Received: from debox1-desk4.intel.com (unknown [10.212.243.203])
+        by linux.intel.com (Postfix) with ESMTP id D7F35580C34;
+        Mon, 13 Dec 2021 09:59:24 -0800 (PST)
+From:   "David E. Box" <david.e.box@linux.intel.com>
+To:     lee.jones@linaro.org, hdegoede@redhat.com,
+        david.e.box@linux.intel.com, bhelgaas@google.com,
+        gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com,
+        srinivas.pandruvada@intel.com, mgross@linux.intel.com
+Cc:     linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH V3 1/6] PCI: Add #defines for accessing PCIe DVSEC fields
+Date:   Mon, 13 Dec 2021 09:59:16 -0800
+Message-Id: <20211213175921.1897860-2-david.e.box@linux.intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211213175921.1897860-1-david.e.box@linux.intel.com>
+References: <20211213175921.1897860-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20211210221815.269468319@linutronix.de>
-User-Agent: NeoMutt/20171215
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23:19-20211210, Thomas Gleixner wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
-> 
-> Just use the core function msi_get_virq().
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> Cc: Peter Ujfalusi <peter.ujfalusi@gmail.com>
-> Cc: Vinod Koul <vkoul@kernel.org>
-> Cc: dmaengine@vger.kernel.org
+Add #defines for accessing Vendor ID, Revision, Length, and ID offsets
+in the Designated Vendor Specific Extended Capability (DVSEC). Defined
+in PCIe r5.0, sec 7.9.6.
 
-Acked-by: Nishanth Menon <nm@ti.com>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+V3
+  - No changes
+V2
+  - No changes
 
+ include/uapi/linux/pci_regs.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index ff6ccbc6efe9..318f3f1f9e92 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1086,7 +1086,11 @@
+ 
+ /* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
+ #define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
++#define  PCI_DVSEC_HEADER1_VID(x)	((x) & 0xffff)
++#define  PCI_DVSEC_HEADER1_REV(x)	(((x) >> 16) & 0xf)
++#define  PCI_DVSEC_HEADER1_LEN(x)	(((x) >> 20) & 0xfff)
+ #define PCI_DVSEC_HEADER2		0x8 /* Designated Vendor-Specific Header2 */
++#define  PCI_DVSEC_HEADER2_ID(x)		((x) & 0xffff)
+ 
+ /* Data Link Feature */
+ #define PCI_DLF_CAP		0x04	/* Capabilities Register */
 -- 
-Regards,
-Nishanth Menon
-Key (0xDDB5849D1736249D)/Fingerprint: F8A2 8693 54EB 8232 17A3  1A34 DDB5 849D 1736 249D
+2.25.1
+
