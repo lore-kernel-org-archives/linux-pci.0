@@ -2,88 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28541C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 18:45:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6044C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 19:18:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241899AbhLMSpD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Dec 2021 13:45:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44518 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234611AbhLMSpC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Dec 2021 13:45:02 -0500
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2355FC061574;
-        Mon, 13 Dec 2021 10:45:02 -0800 (PST)
-Received: by mail-pj1-x1029.google.com with SMTP id v23so12485191pjr.5;
-        Mon, 13 Dec 2021 10:45:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ZupeclOAcso4hoqTXtQMuYwkfCRn+B/m6AVve583m9M=;
-        b=GEdbu4YM0X6HdqWNpX04pzIBj+5bAAoWMx5sl79LeWXJo6hbEZl/51U5b60G72F2WZ
-         5mu3eI3POFDT9c4rhadGM0tuhWW4GLZegAX02hxns7SDlKzAOdruWEWgbzos51uW9yeh
-         iaR4eGt28fGuM8LjxMPLwclTgg9PyptS2zHQmNSTvfHYmjezoZwkzQbEpbJaEyjyyOSa
-         HCQuOi/8OTx6/WFR+GHBRlqmewFQUlrIOFF2NCMm3rlG3pM8zktS7d+s+6XO8SGLQKXC
-         BDE0ZucAnlf/VvPGe0Nt58d2GPfdINIpNFZAyjK7/ONTviTGyXtug4X77HZjN068zRWF
-         ChOw==
+        id S235524AbhLMTSU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Dec 2021 14:18:20 -0500
+Received: from mail-oi1-f182.google.com ([209.85.167.182]:37690 "EHLO
+        mail-oi1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235389AbhLMTST (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Dec 2021 14:18:19 -0500
+Received: by mail-oi1-f182.google.com with SMTP id bj13so24526648oib.4;
+        Mon, 13 Dec 2021 11:18:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ZupeclOAcso4hoqTXtQMuYwkfCRn+B/m6AVve583m9M=;
-        b=V1OtS8VQKaC1NQeYIhRLFg1c8JPzx1xYDxx/HwYlXBxdMkfXr5rgq9JjWu3RNtMbUU
-         XX3GHOpVWqPw3nNJpAHaGRCvNU885FGvAqAR/WYqWIvDWFnIbUal5lyUnSNk2VDjVQfC
-         66Izigtw92vfoiWxxcitWvET9NqzClRsxf5yGLQlol+iTssuMvSe1T4Jq2rQFyM5e/h/
-         wfsb/OG4MCKD8nT35QIwAcWEVecalbOMn7gWsBMlNc9G8vp+rLoPg+Fi+/OIV9cCL8Fz
-         tWFR/OAgIVMP5dVLWXISeZAB2MCM6kwF8/csAQHcHMobOmYY1cQjh3PDg9DOTk+MwWu8
-         g76Q==
-X-Gm-Message-State: AOAM530N9S2WtLka03UPNAqJL9xLEXjuBsto91Jw5cWAtk0N9Q/E3CDJ
-        kQ9F5OZNaYurkSZ90gncRb9cv9r+/II=
-X-Google-Smtp-Source: ABdhPJzk6Civtv1xJEpbs8vx/aixI3f7kcE49mJsPddPJQJibfNcjf34SJQUA53BLHcPsHkxnnM/9A==
-X-Received: by 2002:a17:90b:4b4e:: with SMTP id mi14mr72260pjb.122.1639421100918;
-        Mon, 13 Dec 2021 10:45:00 -0800 (PST)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id z2sm13907511pfh.188.2021.12.13.10.44.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Dec 2021 10:45:00 -0800 (PST)
-Subject: Re: [PATCH v4 0/6] Convert iProc PCIe binding to YAML
-To:     Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        "maintainer:BROADCOM IPROC ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "moderated list:BROADCOM IPROC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20211210200451.3849106-1-f.fainelli@gmail.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <7d44fec0-bbbd-c15e-9d60-1a0ecd962045@gmail.com>
-Date:   Mon, 13 Dec 2021 10:44:58 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=R/zNofg9s1DxdI5VeTHZvff8L4CaAo1nQD16KrTGNeo=;
+        b=xfWbCDbMkLPxjauAS2rFgE0Jc7ECFyH2cLsNKd6rQon+zEhXpSJZBiHyzGcKAquN1Q
+         U25t7tKKicxlhb31XBa4IvNRxaWVK7bf9EnwXF8RnicLSWl+zqw6N5ByiSm7fm94Cl60
+         ERH4jD6kDySJrPQBISj4gF6sZ4674QIiCNL3m+94JSBDDz4XfjtnWfGhszf3fWtYRRZk
+         1mOzBjnGNmf1URvimDF6VEYRIPJf/Wem10NnkeqaiH9xLfGL77b3r7RxFHhlNyR79yWv
+         NjadocXZUjBNqbLsFQePm9E1gnpowO2sB5wOKVVls1yHR+RgHM1dh9+JaY6yUpISdIb5
+         8usA==
+X-Gm-Message-State: AOAM533wwY1IU7kWhnKL7OijAO5B4HsfY8OIBqKfD2vPnvOqBgvoP9oO
+        sjvQOeOENKrAolBQbHUCFQ==
+X-Google-Smtp-Source: ABdhPJxgR3bMAASLLVa1GRLK96PgQv2XYW3WIaufufWwqdTssF9f7ALWr0YgiR70uVViS38+5kzRVQ==
+X-Received: by 2002:a05:6808:2016:: with SMTP id q22mr475655oiw.81.1639423098988;
+        Mon, 13 Dec 2021 11:18:18 -0800 (PST)
+Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
+        by smtp.gmail.com with ESMTPSA id v20sm2286544otj.27.2021.12.13.11.18.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Dec 2021 11:18:18 -0800 (PST)
+Received: (nullmailer pid 1410569 invoked by uid 1000);
+        Mon, 13 Dec 2021 19:18:17 -0000
+Date:   Mon, 13 Dec 2021 13:18:17 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Li Yang <leoyang.li@nxp.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH v2 4/4] dt-bindings: pci: layerscape-pci: define AER/PME
+ interrupts
+Message-ID: <YbececugsiFdOh0H@robh.at.kernel.org>
+References: <20211202004636.5276-1-leoyang.li@nxp.com>
+ <20211202004636.5276-5-leoyang.li@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20211210200451.3849106-1-f.fainelli@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211202004636.5276-5-leoyang.li@nxp.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 12/10/21 12:04 PM, Florian Fainelli wrote:
-> This patch series converts the iProc PCIe binding to YAML. Given there
-> is a majority of DTS changes, it would make sense for me to pull this
-> via the Broadcom ARM SoC git tree.
+On Wed, 01 Dec 2021 18:46:36 -0600, Li Yang wrote:
+> Different platforms using this controller are using different numbers of
+> interrupt lines and the routing of events to these interrupt lines are
+> different too.  So instead of trying to define names for these interrupt
+> lines, we define the more specific AER/PME events that are routed to
+> these interrupt lines.
 > 
-> Thanks!
+> For platforms which only has a single interrupt line for miscellaneous
+> controller events, we can keep using the original "intr" name for
+> backward compatibility.
 > 
-> Changes in v4:
+> Also change the example from ls1021a to ls2088a for better representation.
+> 
+> Signed-off-by: Li Yang <leoyang.li@nxp.com>
+> ---
+>  .../bindings/pci/layerscape-pci.txt           | 40 +++++++++++--------
+>  1 file changed, 24 insertions(+), 16 deletions(-)
+> 
 
-This is not what I did in this version, I will send a v5. Sorry about
-the noise.
--- 
-Florian
+Reviewed-by: Rob Herring <robh@kernel.org>
