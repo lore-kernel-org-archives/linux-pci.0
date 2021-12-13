@@ -2,127 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F775C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 19:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37929C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Dec 2021 20:00:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242622AbhLMT6c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Dec 2021 14:58:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33498 "EHLO
+        id S242683AbhLMUAM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Dec 2021 15:00:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242627AbhLMT6a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Dec 2021 14:58:30 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0407CC06173F
-        for <linux-pci@vger.kernel.org>; Mon, 13 Dec 2021 11:58:30 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id 133so15475307pgc.12
-        for <linux-pci@vger.kernel.org>; Mon, 13 Dec 2021 11:58:29 -0800 (PST)
+        with ESMTP id S242685AbhLMUAM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Dec 2021 15:00:12 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0940C06173F;
+        Mon, 13 Dec 2021 12:00:11 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id v23so12624382pjr.5;
+        Mon, 13 Dec 2021 12:00:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=cmtlwaoKecb3OjlTS1+QUQgYom0U7BYI17ypi8x6kXI=;
-        b=GnrjInCguT1hYvRxEFp2FFlcWJk+X6scQ0TguTZJYVs5btZvLe4+YCVtdB1wZBA4ql
-         lPf7oCvJEdd0G+oUe5yfcRXur4cxWEXfxcjyEJoITH2W9As4AMyaF/6oqsEcsNBAgWD/
-         UBIucA6BcyhNjSnCqT/ISHXWrlgFdN+ILDONTu1HlNwv1vdXyPxGBU9vO+59APihDv/L
-         /nwhYbGPq5FxpkV4Q212xLuEDTP4CAF4U5LzT8KXzoBVVzuau0xfXfTisMvTpfIsPlgw
-         +17xll8EDuD0UqXiCAsNXUxf++d7lYacez0U09SFm2L5hSCMz5JIZS3+Y+DKV/2HHGL6
-         Pi6A==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mRs7BTLOPGBvw4/QXdtwYkk5fJi9H2qobC8xHjwW8Ow=;
+        b=lq/6tS9HOCtO/og5GqpVOumb/0brxKrhnClhEpm4czkANPDojhQr7tG3cu3/jwPRwM
+         ZtV6CxgNm0QLYv/7m7jse8VJuFbhUz12ctshsoT2NeazEho091/ewXoIuytB4lGoa1DB
+         h6AYe2qwep0NV49rfVvWQVPLVfTfvNSUDTy1wrhIkPwXmYi+joCureVuv8GmepFZWLC6
+         PLzRWcbADxOqudAXk66BAPEs83o9cKZR1pZt7DVoJ6XbMMGidFN1IY+czqKvoyBOWlB0
+         EbWnsEM0MPwpdYhhMJC6t3L4B3IbLliehtJmDup0TbPZ4xq4shU5ctwPtKcMZbnAY7/6
+         EJtw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=cmtlwaoKecb3OjlTS1+QUQgYom0U7BYI17ypi8x6kXI=;
-        b=GUHzQtPz59aVyNf0ab0zKzCKRUk7KKxaXE7QZqoAqy26cPCYf9z9+5X+Cd57P5T12a
-         TLfoe7FY//PUtN9PJxkwa59zWF3TWrPOdinYRNRzeCSDW62XdQ5Ino7CHPLyfRp0ZnQa
-         ErB4IeAfU/LwhuER9Ke/fRnlfD0qFiib3V8NW3eZK8RsB24a55zv9Gfuu7ogeHwc0mzs
-         TKvdGJY8VJapRko3QpZ+tyX3D4iwa2ZinF9Gr7SSGxZjgdou9fB64H0LpQI5v0YXJSGJ
-         tls/sRZYmwJsyQiMsxIdqvGgueyTDIRBioVtj3LaxkGSBNBc0cUR0aenPc1XU835cs6B
-         /8KA==
-X-Gm-Message-State: AOAM530A49YKbPfVsVYhaeqWC3ofe9qwGUWqukq3zLv1FWrXGQ2lDgzB
-        d0ZKwgVAKSuCY7RzWL+6wtTrn8ONCPyJsWtDoRBDnA==
-X-Google-Smtp-Source: ABdhPJyxdpF8yw1Mfppja7TttKdq2KytY/u0mapNh2UceVCKIokfMXDLBzkp5pk5YhzPAhPmfct2uhkiNfnabLvww9s=
-X-Received: by 2002:a63:ef44:: with SMTP id c4mr564190pgk.146.1639425509218;
- Mon, 13 Dec 2021 11:58:29 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mRs7BTLOPGBvw4/QXdtwYkk5fJi9H2qobC8xHjwW8Ow=;
+        b=DWNph5Wr/HyJOGrEJSbLPgYqOufWfJ4eK8EGZre4sSdoAI5KaAkiM5nkZ1kc1N0Wpe
+         nWwqxc6mXD0hI5pIVEhhts/S7stKiyNvAQ+SFg9zcV/vanRSxLuajkgE78vO4sYC3jLD
+         /MMWnDP/0gXr8FXPH+/g0wlYBfzzkVGIevRAAyRefieHguruOA46HhVFPLGdxigS/t8i
+         dcshefqTm6yqYXaD/PwnW/4Pbo6xjJNSo+Tg3IZues0rH3AcqdOd0YertidH6qYWMrlp
+         ESI+mcDFL0s6+8zswbdrX/CrK773DddrVkHTuN1Sa9dKYpRbkfYB2h6vH5pI0eV2swww
+         w/Hw==
+X-Gm-Message-State: AOAM531YIb1C/QgObZHJPzQDqJ+o8NLyvzz80GwXmn1SVjefOAl27k8Q
+        YrfFX72MWaWAqJhjp9GeqsN865XfsUM=
+X-Google-Smtp-Source: ABdhPJylX6kAbzCeZaxhKJ4pawxZdRmdHJLdpx74Rnx4Tfn08yjWw9ghmfEkpacWAqn6n5Gwj7EE4A==
+X-Received: by 2002:a17:90a:ea09:: with SMTP id w9mr395870pjy.46.1639425610937;
+        Mon, 13 Dec 2021 12:00:10 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id z14sm13926195pfh.60.2021.12.13.12.00.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Dec 2021 12:00:10 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     devicetree@vger.kernel.org
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM IPROC ARM
+        ARCHITECTURE),
+        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM IPROC ARM
+        ARCHITECTURE), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 0/6] Convert iProc PCIe binding to YAML
+Date:   Mon, 13 Dec 2021 11:02:15 -0800
+Message-Id: <20211213190221.355678-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20211209094556.2085357-1-jiasheng@iscas.ac.cn> <20211211175450.GA398271@bhelgaas>
-In-Reply-To: <20211211175450.GA398271@bhelgaas>
-From:   Rajat Jain <rajatja@google.com>
-Date:   Mon, 13 Dec 2021 11:57:52 -0800
-Message-ID: <CACK8Z6EntHP0TWfq=JdQ7QS8vCgXoRUJOWqbGYLvD6R2Mq0paw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/AER: potential dereference of null pointer
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Jiasheng Jiang <jiasheng@iscas.ac.cn>, ruscur@russell.cc,
-        oohall@gmail.com, bhelgaas@google.com,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello
+This patch series converts the iProc PCIe binding to YAML. Given there
+is a majority of DTS changes, it would make sense for me to pull this
+via the Broadcom ARM SoC git tree.
 
-On Sat, Dec 11, 2021 at 9:54 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Rajat, author of aer_stats:
-> db89ccbe52c7 ("PCI/AER: Define aer_stats structure for AER capable devices"
-> 81aa5206f9a7 ("PCI/AER: Add sysfs attributes to provide AER stats and breakdown"]
->
-> On Thu, Dec 09, 2021 at 05:45:56PM +0800, Jiasheng Jiang wrote:
-> > he return value of kzalloc() needs to be checked.
-> > To avoid use of null pointer in case of the failure of alloc.
-> >
-> > Fixes: db89ccbe52c7 ("PCI/AER: Define aer_stats structure for AER capable devices")
-> > Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
-> > ---
-> >  drivers/pci/pcie/aer.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > index ec943cee5ecc..d04303edf468 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -376,6 +376,8 @@ void pci_aer_init(struct pci_dev *dev)
-> >               return;
-> >
-> >       dev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
-> > +     if (!dev->aer_stats)
-> > +             return;
->
-> Did you actually trip over a null pointer dereference, and if so,
-> where was it?
->
-> I think the intent here was that aer_stats is a non-essential feature,
-> and if we can't allocate space to keep the statistics, we can still
-> use the device without the stats.
+Thanks!
 
-Ack. Yes, this was my intention.
+Changes in v5:
 
-Practically speaking though, if a system cannot allocate space for
-aer_stats (608 bytes), I would think it is under an extreme memory
-pressure so not really sure if will be able to really do anything with
-the PCI device (probe the driver which may want to allocate more
-memory etc). But that isn't anything that we can help with.
+- Listed 'bus-ranges', '#address-cells', '#size-cells' and 'device_type'
+  as evaluated
+- fixed first patch to drop reference to 'interrupt-controller'
 
-The current patch AFAICS looks like a no-op to me.
+Changes in v4:
 
-Thanks,
+- none, sent by mistake
 
-Rajat
+Changes in v3:
 
->
-> I *think* all the users of dev->aer_stats check for NULL before
-> dereferencing it, but if you found a case that doesn't do that, we
-> should definitely fix it.
->
-> In a few cases (aer_stats_dev_attr, aer_stats_rootport_attr), the
-> check isn't obvious -- it happens in aer_stats_attrs_are_visible().
-> If aer_stats_attrs_are_visible() finds that aer_stats is NULL, those
-> sysfs attributes should not be visible, and the corresponding *_show()
-> functions should never be called.
->
-> >       /*
-> >        * We save/restore PCI_ERR_UNCOR_MASK, PCI_ERR_UNCOR_SEVER,
-> > --
-> > 2.25.1
-> >
+- converted Cygnus PCIe PHY binding
+- removed interrupt-controller from being a mandatory property
+
+Changes in v2:
+
+- document msi sub-node compatible string
+
+Florian Fainelli (6):
+  ARM: dts: Cygnus: Fixed iProc PCIe controller properties
+  ARM: dts: Cygnus: Update PCIe PHY node unit name(s)
+  ARM: dts: HR2: Fixed iProc PCIe MSI sub-node
+  ARM: dts: NSP: Fixed iProc PCIe MSI sub-node
+  dt-bindings: phy: Convert Cygnus PCIe PHY to YAML
+  dt-bindings: pci: Convert iProc PCIe to YAML
+
+ .../bindings/pci/brcm,iproc-pcie.txt          | 133 -------------
+ .../bindings/pci/brcm,iproc-pcie.yaml         | 184 ++++++++++++++++++
+ .../bindings/phy/brcm,cygnus-pcie-phy.txt     |  47 -----
+ .../bindings/phy/brcm,cygnus-pcie-phy.yaml    |  76 ++++++++
+ arch/arm/boot/dts/bcm-cygnus.dtsi             |  18 +-
+ arch/arm/boot/dts/bcm-hr2.dtsi                |   4 +-
+ arch/arm/boot/dts/bcm-nsp.dtsi                |   6 +-
+ 7 files changed, 274 insertions(+), 194 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,iproc-pcie.yaml
+ delete mode 100644 Documentation/devicetree/bindings/phy/brcm,cygnus-pcie-phy.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/brcm,cygnus-pcie-phy.yaml
+
+-- 
+2.25.1
+
