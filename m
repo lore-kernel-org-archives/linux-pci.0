@@ -2,45 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDDFC433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Dec 2021 11:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3818C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Dec 2021 11:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235410AbhLQLYS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Dec 2021 06:24:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55560 "EHLO
+        id S233459AbhLQLYs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Dec 2021 06:24:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235399AbhLQLYN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Dec 2021 06:24:13 -0500
+        with ESMTP id S233367AbhLQLYr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Dec 2021 06:24:47 -0500
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE88C061574;
-        Fri, 17 Dec 2021 03:24:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 549A4C06173E;
+        Fri, 17 Dec 2021 03:24:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=MFyEYw8hfFZry89fBZPaaRJJpXELjngNud4Pkg3znpQ=; b=eKEr6OVnOAIoflEt+d1zh70Cc+
-        lZU+Fzb/XGJnPwsLo9f/efqJ6oXSzcXlNPzZwaGK49nvcIEamfabqIC9IMLZ6gQEDf2B6HuEIJHFP
-        Nx6zNV1BrtJLbTNAtWXoq3jKBqaPo8YO6PjJ+ZVl7itfgrtyrzBpR0sV9LEff1oJNB3Y=;
+        bh=Fo12LyElK6HTFfc1CLwdAEtHL45MRT2gxsJ7jkMYIM4=; b=QwFEQQDUrZ6x+yjvpb2cbo6eeu
+        5ZlMDahgC3yImVXi5vW+bejALbNItgNXeBYsMXJGT72KkSDNZxl/xXDD7qoLQo1GqjWdIeax3jNV/
+        gYfclU5OrHiQHclY7NBTD3Kg28W7c5qWAaYYs6ocInNaNKj+e0PrRcRM/jrognBx46QE=;
 Received: from p54ae911a.dip0.t-ipconnect.de ([84.174.145.26] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1myBLI-000742-0D; Fri, 17 Dec 2021 12:24:04 +0100
+        id 1myBLI-000742-S2; Fri, 17 Dec 2021 12:24:04 +0100
 From:   Felix Fietkau <nbd@nbd.name>
-To:     Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
         Matthias Brugger <matthias.bgg@gmail.com>
 Cc:     john@phrozen.org, linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v7 09/14] dt-bindings: PCI: Add support for Airoha EN7532
-Date:   Fri, 17 Dec 2021 12:23:39 +0100
-Message-Id: <20211217112345.14029-10-nbd@nbd.name>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v7 10/14] PCI: mediatek: Allow selecting controller driver for airoha arch
+Date:   Fri, 17 Dec 2021 12:23:40 +0100
+Message-Id: <20211217112345.14029-11-nbd@nbd.name>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20211217112345.14029-1-nbd@nbd.name>
 References: <20211217112345.14029-1-nbd@nbd.name>
@@ -50,29 +49,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: John Crispin <john@phrozen.org>
+This patch allows selecting the pcie-mediatek driver if ARCH_AIROHA is set,
+because the Airoha EN7523 SoC uses the same controller as MT7622.
+The driver itself is not modified. The PCIe controller DT node should use
+mediatek,mt7622-pcie after airoha,en7523-pcie.
 
-EN7532 is an ARM based platform SoC integrating the same PCIe IP as
-MT7622, add a binding for it.
-
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- Documentation/devicetree/bindings/pci/mediatek-pcie.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 57ae73462272..684227522267 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -7,6 +7,7 @@ Required properties:
- 	"mediatek,mt7622-pcie"
- 	"mediatek,mt7623-pcie"
- 	"mediatek,mt7629-pcie"
-+	"airoha,en7523-pcie"
- - device_type: Must be "pci"
- - reg: Base addresses and lengths of the root ports.
- - reg-names: Names of the above areas to use during resource lookup.
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 93b141110537..f1342059c2a3 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -233,7 +233,7 @@ config PCIE_ROCKCHIP_EP
+ 
+ config PCIE_MEDIATEK
+ 	tristate "MediaTek PCIe controller"
+-	depends on ARCH_MEDIATEK || COMPILE_TEST
++	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	help
 -- 
 2.34.1
 
