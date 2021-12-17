@@ -2,75 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3F9C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Dec 2021 10:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B7BDC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Dec 2021 11:23:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235160AbhLQK7H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Dec 2021 05:59:07 -0500
-Received: from mga04.intel.com ([192.55.52.120]:64771 "EHLO mga04.intel.com"
+        id S233443AbhLQLXu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Dec 2021 06:23:50 -0500
+Received: from mga17.intel.com ([192.55.52.151]:47797 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235165AbhLQK7H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Dec 2021 05:59:07 -0500
+        id S232376AbhLQLXu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Dec 2021 06:23:50 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1639738747; x=1671274747;
+  t=1639740229; x=1671276229;
   h=message-id:date:subject:to:cc:references:from:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=MXHO8vgcHyd/TVMIPJYLDz8MYBtMsuRsPOEuSgVRvF0=;
-  b=GFl6ZxgJqjNK3OZD5YapEqTe/t81hxHKFHXNlmBpYM2SzgEibTDz25cY
-   lPwOxmaxQWM1OzexKrDlNA33FJO5tNrLEeP7kr8wCKGN+V+ynRswcSMpw
-   ks/Pi94eCJFzao/x24oYgMVEg+qFLn+V9OmwW8+jcdbkkHvPrWkVLr8c+
-   b7TSKAOPv1K5L28NF1XTTizejy0yzZhOqyQ6ZUuL33eBUy2vEWs0aUIdy
-   b/x19/5Y+aZPzL7xxeVZzyvcb4m4klac1omkLLJD22A2z0BexpnCbKdOI
-   RAXQoc+xBeJCVTRz3KwqmlcflsmGEXy6eJ6hrgGMovV7TRQMbIwszkOzC
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="238475526"
+  bh=9XN0DDLnEci5y/p5ugTDHM+r6B41a7fszqquHJfviHc=;
+  b=VzGrAVdBFHZwweh2UgLg0379+LMLN8r3Ksq/0pdT/cdk8yTGp9NIrXkK
+   2vJRp77NMkbyIfCHXSM2y3KaoaV+MvC0EV4ePnmJj8pIURz6u19gFIGkX
+   ZTvmP4qGdqWnY1nTcmnLS1KoVMXV4A/0JGQoc6ACIVDt34++ILadLRZcb
+   L3juGBmXHigVGtOfCLd/0uwtcXX7hirNpBXlIkjt+w0YbgPnSbeeNbI6d
+   AYcFaUaKItUOXo+VCwnx/49XHhvKTQ2ZjucHnzbXMsaZfhk60Cn9fV4lc
+   wKHJdkCAnysm8fvXiMgNzYZxT8obsOUAMn3l1os7nOAhFAjCGm/TIQDYY
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="220416365"
 X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="238475526"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 02:59:07 -0800
+   d="scan'208";a="220416365"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 03:23:49 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
-   d="scan'208";a="754528703"
+   d="scan'208";a="615532124"
 Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by fmsmga006.fm.intel.com with ESMTP; 17 Dec 2021 02:59:06 -0800
-Received: from orsmsx605.amr.corp.intel.com (10.22.229.18) by
+  by orsmga004.jf.intel.com with ESMTP; 17 Dec 2021 03:23:49 -0800
+Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
  ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Fri, 17 Dec 2021 02:59:06 -0800
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx605.amr.corp.intel.com (10.22.229.18) with Microsoft SMTP Server
+ 15.1.2308.20; Fri, 17 Dec 2021 03:23:48 -0800
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX612.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20 via Frontend Transport; Fri, 17 Dec 2021 02:59:06 -0800
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.176)
+ 15.1.2308.20; Fri, 17 Dec 2021 03:23:48 -0800
+Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
+ orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20 via Frontend Transport; Fri, 17 Dec 2021 03:23:48 -0800
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.169)
  by edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2308.20; Fri, 17 Dec 2021 02:59:06 -0800
+ 15.1.2308.20; Fri, 17 Dec 2021 03:23:48 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UctsZv5sK46PUUaHZp72pOes/U/92IXYKAHpKpt8QDKtbEQ5BV4X+4970pkvJbg31llpqfflEtH8jvGdYAg4xSuM1d2W54fSQTft+6kL35nhI1LGixMD1Y1cRecDDfLGQxF/FV2XoL5FOkz6ZIte2uJmFiaiTAiiwWg/Nc/XNj2fcONHGCKMTpLj28d2SWM+ni2rvLdU786iycw2Du7TCa29IUe7L/TFV7CGU6IPbNAxd5PLB2Rmy06N6vIHjU57mqoY9sC+bnhGVgeSClZzZle2BUfoyDFsuXf7w2vn+AbCetyCD6lMkqPOp2SMZuTKHeY9iZyNwxAtBmpCyEErfg==
+ b=LPMeW4Lc+bZsN3ScaVRtkCKFgr+dffooKGdExSO0o6C/rYy+BcK45nyKZ3eGSDgKtA8R59oZhvJn65nyYBmwNP4JPhyr1FBW8AcDttOkD2Jr0zN/SWkVHRpi5AK34UV0s5EcADNA6VhlgLb7MGYDcg0xFYbPUGiLeqsCehd+BGJ+is6WYEEFS7y1tF32UUTEEhUR726Pcrlu4Z+lQHmM1w6ZhJXgnuE3A2B+GCPTnihTqLsvY8wiGNuGzXEY6IJWsGVTkSBW7R5VKL0ja1m1wT9ji0WZcdX3gM7CXgSSb+KHqhRPCShptgb0IqaLe72k6CU79ZtPmwHc033qc3JK/A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1SeyjTfOmfd1C8JMH/PSbMa/KZRQ8Wqo10wwIEDTuq0=;
- b=L4UJFNeKOAlIG9Kfo98+n0PHwga4/alxqkKRkNcjOPhnVf9B190GphFYqJIRAQHRQdrQZfnl0CxXXP7dXanWCjRTQEe/ce1Jh78WeEnonQB5UnWEiajVMfD6rDw7Dxze2YeTh3RTMR9tp+DYgWsxu1ECNHXgtUNfvMSH3Jl1GOHz66PlJoi8tZK8tv+z2djOJliXgDnuPmM0PGTTzT3Otum8xIe+m145IWlpPUu/KpFUNg8FOklqh0dwuG+YveCgkEmCZSiruw+1QGrngbu+vedT5AU9M1B18wjCUsWecE0NJghtF8p6Y7+EOcIpTDyypF4+4oGrgWBoOI1ELEJkUw==
+ bh=2PPHQUbeUhTKYRJEFdaiZKDqTMz4p85JwGdrm0s5XdU=;
+ b=hvoAHQshC6Dre5meaaWELPcsfxzcNF6N219dHb0VZixpJVqrdeejJrQsgof2BWAFERC/SEeGF4QfBpYl2cCrYDOZ2umKZoqdkwXCeEPpHk/qCZS5ccrd/iyaDWVmece7Q0v6w9kF2PB4iKCWj5G/TI9dr2j0gz9CMwmFaTMRHXp7vr35GHjFgTBCTgswW+SljNx1sW9uRZKxEuFIxAnNxzrWoRqFs2r30MM0IecVmJrFjkVB/UY6+uJX/VNb4PmGw+sRZ0joV9BYPgSJ/HxLDB4vlIsXPrk92JPEz+YenoK1U9B1BCfst0B/ravFr1/Zt8xNlDFlYDcCSf7Dny6+3g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
  dkim=pass header.d=intel.com; arc=none
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=intel.com;
 Received: from DM4PR11MB5373.namprd11.prod.outlook.com (2603:10b6:5:394::7) by
- DM8PR11MB5688.namprd11.prod.outlook.com (2603:10b6:8:23::12) with Microsoft
+ DM6PR11MB4187.namprd11.prod.outlook.com (2603:10b6:5:19e::32) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4801.14; Fri, 17 Dec 2021 10:59:04 +0000
+ 15.20.4801.14; Fri, 17 Dec 2021 11:23:46 +0000
 Received: from DM4PR11MB5373.namprd11.prod.outlook.com
  ([fe80::54fb:8c9f:670:3658]) by DM4PR11MB5373.namprd11.prod.outlook.com
  ([fe80::54fb:8c9f:670:3658%4]) with mapi id 15.20.4801.017; Fri, 17 Dec 2021
- 10:59:04 +0000
-Message-ID: <44100bee-81a0-079a-7247-5c1580142bac@intel.com>
-Date:   Fri, 17 Dec 2021 11:58:58 +0100
+ 11:23:46 +0000
+Message-ID: <7a82ddb8-5cb9-aeb8-df20-9f0e2c6fccaa@intel.com>
+Date:   Fri, 17 Dec 2021 12:23:40 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Firefox/91.0 Thunderbird/91.4.0
-Subject: Re: [PATCH 1/2] PCI: Add support for VF Resizable Bar extended cap
+Subject: Re: [PATCH 2/2] PCI: Don't fail BAR resize if nothing is reassigned
 Content-Language: en-US
 To:     =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
@@ -79,307 +83,205 @@ CC:     Ard Biesheuvel <ardb@kernel.org>,
         "Michael J . Ruhl" <michael.j.ruhl@intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>
 References: <20211215141626.3090807-1-michal.winiarski@intel.com>
- <20211215141626.3090807-2-michal.winiarski@intel.com>
- <7a09b5c5-9c7c-106a-65c6-8c25c4918960@amd.com>
+ <20211215141626.3090807-3-michal.winiarski@intel.com>
+ <60ff4820-5dd9-bb3b-9baa-55ac53c0646c@amd.com>
 From:   =?UTF-8?Q?Micha=c5=82_Winiarski?= <michal.winiarski@intel.com>
-In-Reply-To: <7a09b5c5-9c7c-106a-65c6-8c25c4918960@amd.com>
+In-Reply-To: <60ff4820-5dd9-bb3b-9baa-55ac53c0646c@amd.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AS8PR04CA0067.eurprd04.prod.outlook.com
- (2603:10a6:20b:313::12) To DM4PR11MB5373.namprd11.prod.outlook.com
+X-ClientProxiedBy: AM5PR0301CA0033.eurprd03.prod.outlook.com
+ (2603:10a6:206:14::46) To DM4PR11MB5373.namprd11.prod.outlook.com
  (2603:10b6:5:394::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 901258db-2d16-4222-fee8-08d9c14c3d9b
-X-MS-TrafficTypeDiagnostic: DM8PR11MB5688:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8105b605-ac97-49c3-b48a-08d9c14fb0fd
+X-MS-TrafficTypeDiagnostic: DM6PR11MB4187:EE_
 X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-Microsoft-Antispam-PRVS: <DM8PR11MB56882CDD586582FFDC43602098789@DM8PR11MB5688.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <DM6PR11MB41877BC9EA4904770590095298789@DM6PR11MB4187.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: j9tYbpVyfHFkXUUksZhWQLaODAlRGMfQfqrUdQoGNRCu7ZYc/UbUzpQu/BfoXQcb+Tk9gIcKiZYPrJuYiaN6aX/7ED7fADxbdzDuVfmHPnBNaHGph67vUqggkFlfp5oSr6tiNZ9jH5tYUsjybrI4AxEh1AepwbV1j0GRmi+UvU0uY6Gupo6SqPwejkR8uUlAJzt+QGkHwyqr9ziWlk1DPn7qNrq9JpR+69jgLIVFVmloyGLSWfnzKHR0Opg+NkV6zYg1aaxL5tYN1+3LzUUa+vLRO4Lg6uLeXM+bP20iUI46btpzuSk9QH/L6OWUAl8pdZNwxwlW5KntSLu1uz8TGkeZBKv+UpP47wgdbK4O4ojHunxllPFDSNaDyKVwN/pLHBZkO3Fn2H2lv7wRveecfMsEChxQ/ICMYT+fZ+s9pJG9kMHVsX/04B3xnBQ6jvS++jMTpq1qJKo5JBDY/R4B3AsH7s9nGqGvBbLk85v/jrsKTDPizIfAuPIpZGLpT8QAyOfkmc/aThf9xRmKUdDycdeDyQsh9kNDeHjJHHOviiozOonvpDQzmZoHnkrI74fl5BkybSPXeNzoVWE5NrwEFx7D68raTANGPlksVzz01TXgUhaklb+3eGrK5KEB7KpsCW4lAnhEsAXTSYqKS367WD9eE17TkwOy/7hz2/FJdMgrJJc56+aeLYAMh3ztH64XfQ/PozJpStiSE2xIQUAWH36hvwcgGpNcy8wARvf80fw=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR11MB5373.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(54906003)(66556008)(31696002)(86362001)(2616005)(6512007)(508600001)(186003)(66574015)(82960400001)(83380400001)(36756003)(31686004)(316002)(66946007)(5660300002)(66476007)(6486002)(2906002)(4326008)(53546011)(8936002)(110136005)(6666004)(38100700002)(107886003)(6506007)(8676002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: a1S12OJZ7kKSUwoE+1GFjBCXyV/FPxOJddFVxKGuJMcCKYaXBbmjE0CspuET0P4qav5UX5uPa3vKy5CBs/K1DhvspzeuuGCg9N1aWG7Y/YB3rYiUv504zJfhTd6jMXPdSDY4GUDlXazMIVNeeYZ91AOmSOHwQ5wrgZDKZM4lrWW3fwf0itmYNRLnwv/1YspDLkLg6n0orOpXl83J6NHkc1ojHGE8MKPj7IQlzatbvd20AlrJ87OzwYkS2xLVnfiDJh4dvCEnLAOsd9oMrE1TkFhmetS4SGXGskjFOBHBBa8Xs9kw/oERvqST5XWANLEBmfU5gSk7WYOC0RCIK0hXM8nc+cOKyiowD5uuTO48e1C66Rfjp2apt8cv3ipqQ7IC2dvAZrTNnza760vsOqz2VonZpTbT4lICTjzbhRGcKcwqdxjh2BK3Y4I5Hu73I6igKNC3JnW8q9Ge/fO83urpwB4sTaVB5gMRH21JXXg8gzlkRCv8O0UjjgIx1owxrhMx3/oJDy3HCbHU9yDJcGtwvC8z/lQF+/Lxs+R/b1gl9l0rBYDpxwXAfpXJMY70LqSNxIdgBvyLgfaM2gveorEJyd5BJtdYOHOzCHVTbDjkg7WCd5vs7lkUiWLrpDHGM4hZ9cAwq6pQ8epQOr93tvPxPmpDvUdT5Gs87ZWVg+EabyQI5nV6XJM2M1/znXalNQousiQT3bzoSW3QN+2EalH/7nlg8+UDuzPYDW3XP4nUHa0=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR11MB5373.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(2906002)(86362001)(508600001)(8936002)(8676002)(5660300002)(6506007)(82960400001)(36756003)(6512007)(38100700002)(31686004)(83380400001)(6666004)(4326008)(107886003)(31696002)(6486002)(186003)(110136005)(66574015)(54906003)(2616005)(316002)(66476007)(66556008)(66946007)(53546011)(45980500001)(43740500002);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?S3A0K0RYNHZNbUwrVXRiVWVKZjlZUjVxcDk3SHdGaUtOem1rUkF0MTl3QXk5?=
- =?utf-8?B?d0VhOTZNOVJlb1YzR2xFRkxCWG9UL1pyUGVMNklhRGU1RmhrTUhuYW1qRm1s?=
- =?utf-8?B?c2x5anBGVFFKdWYrV09HSkRxcWhRTkNIbmVZN3ZWaFRaTmZBSG9hM2FxQ2oy?=
- =?utf-8?B?aWxsT1pZZ2UwWEZTc25ILytaTnlPRGx3d3p6OStFKzA4ZGt5UnhSSUduNTVp?=
- =?utf-8?B?WDgvZmRKbWxOVDh0NjNJL1hwa0k4TjBsQjZlek1FbGgwdFkvSkRMeG5UV3l4?=
- =?utf-8?B?d2syZVlkZUpDTUNaU0IrN2ZVRis4M3pxVlYwak9ib2RBc3J0VERwNzZJZTVk?=
- =?utf-8?B?VlhMOTl1Y3hQbCtwYW1mUlowWTdKbE51OWdKd0EvWW9NVlZEaktSTmhZd2Fw?=
- =?utf-8?B?ODVVeVVQODRQOHhYT3RaYlh1Q3hZcnM3bEVpZHJJVGlPZHp4SSs1WEtURUhj?=
- =?utf-8?B?eUI3OHJPUk94WEJ3K3pRQVlUNXVjdUpvaWxLZU4rTk1aRjJaMkN5OVRXMXZG?=
- =?utf-8?B?TE5ick1aK3NFK0VIMVFyT2xJT0RoQSt3V1RIWWxBY1c4NzNjaVphc0hhdXJu?=
- =?utf-8?B?TitOY2VtM2N2aUhNMlpoUVlEZk1adUhDV0ZrMjM3WVArbVQ3Z3NsL3RYTlZi?=
- =?utf-8?B?ajdUYUJiWlowdzdZK1dzcFN6Z2JJaEhUc21lVHgvR1NSUllaRW5uRm5Nb3Ry?=
- =?utf-8?B?ZEpZUHEybCtTZ3Y4SFNGVmNraUlLTUN0V2tiTWQ5ME44WjQwRThLdUM5U09j?=
- =?utf-8?B?Y080ZnNPN0tBMmZQV21HeUR4MU9LQlkrZFVmVTBicCtwVGNkWDV4aUtINTJr?=
- =?utf-8?B?dmNyRmh4ckRxR0ZyRDdaVXNnV1RXaU1lTEJLSmxBNm9kLzJNcHQ2cFlWTHJB?=
- =?utf-8?B?SFJpbkdFMjBFSkVWWkpONFhrdDhMa3M4L2taU2dzWUgwOUQrcnkrN3dGd2Zq?=
- =?utf-8?B?eFI5MVFvd1JsWjNnYUFNZXRPWmlsM28zWHdBT21icFFOdnpqbTFIeUtseVlE?=
- =?utf-8?B?N29oQnFFSWpVUk1YczgwbGh3MDNoV0dnL0IvSk8yNmh1WnZBMm43ZU9qSWZ0?=
- =?utf-8?B?Y0VGYUQ5bGVzOEh4Z1pwZklqMk9BTVl5SFh2WkFja0lzSzYwRkp2amhNT3V5?=
- =?utf-8?B?STBibjZkMGpkOXNscTRYdm51SUdXTFM1NG1neHluRllVdm93U2xaL3hXMFFs?=
- =?utf-8?B?eHJvbW9zbzZ0d01udVU3V2lZNnU5VG5pRUlqSXJYUXk2MjBiNnpYSXB5cVF1?=
- =?utf-8?B?bm0wcC9HNGxTcUFUaTFzZ3VkeW9UWUpHbDJ1L1ZrdnJ5T1Nqajh3djZsUC96?=
- =?utf-8?B?cXNuWU1QZFdKWEx6SFovU3RiMkNkeTNyQjBqM1U2dWJBUjF2ZjJEbTJmK2tL?=
- =?utf-8?B?R3hkRHN5L0lvZEVTalM1bHpRbHp5RUp2alpQS1M2YnYvRDdKNkNtY3I0YVh4?=
- =?utf-8?B?U3J6RG9laUhBQ0FVNSt6bERYaE0ySjN1c3UxZXJZVGx1ZFV3OXpVeEZMdXcv?=
- =?utf-8?B?dXc0M0xTM2lralNMK1BGMlZXcGppcDNoRmtIaFcxOWVtRGxGRU92ZG1oMk9R?=
- =?utf-8?B?TGtKTGx6ZUNoSHFJbGVKYThGeThveUs1RmxtaXpXK2tuamlPTDRrNitFd3BI?=
- =?utf-8?B?K0RyVlBOUUZzeFZkeThBakdxVUZlR2hPTEEyVnZSYjcxY3NFK29KR2RWa0VU?=
- =?utf-8?B?RTRQeTlwRlBiV2hXNys3NGkrT1dzTzlvQnlYWG4vRTgybWFsY0duTTZoVS8z?=
- =?utf-8?B?bjQ4ODY3a1U4ZFhiTXh0SCs0b2JpY0c1TnR1b1R5VGpWdVhUU1RaYXFHZDdJ?=
- =?utf-8?B?MzNQMXBmL0hsSTk3VmZ6MXc0SEVsZTBsZzBuQzJjWkNqeVE0M3pNRW43dGxv?=
- =?utf-8?B?Y1YyY0hEcTQrUmdKdHdpVU5ZcHExK3I1M2x5TkJKWFVtUkl6d3pNbXdORWxm?=
- =?utf-8?B?bjJoWVk3djZkNmFwQmREU25GSytoWG03RlZKNW5oY0RQc2w1MEpWbVNMdzdO?=
- =?utf-8?B?S3V4d2w1Vm01QjJ1WUhmTEl3WTBNcy9wMFdDTzhUQUtEWUtmbGVkMnI4VzZQ?=
- =?utf-8?B?Z3pQMzJ4b1cxTElmZ1BnZlJtTUJVcEd0clB4dFZEdE5hSllOejZCeHRnbSt4?=
- =?utf-8?B?ZUxWMGFRVG5lQWZMRldETnFjTHpZdEsrTFJYeEx4M25ZSmV0TWsrQzA5bHlQ?=
- =?utf-8?B?NkJORWV4b2N5Ulkxb0xJOGx6ZGVNa2t1WWwvV0ZGVHVoemV3WTE5QWVKZjBJ?=
- =?utf-8?B?VUJ0aW9TVjRSSXRWeWdDRlFyV0RpOE5waWVZZGcvT0hjMTVpTTY3S055SHhC?=
- =?utf-8?Q?38+Mf1+8EqpfUW9Kpc?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 901258db-2d16-4222-fee8-08d9c14c3d9b
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?a3VUOHB3eU1XRGtFc3VNaHVMdzd2TDlQV1ZCT2Z5dTRMbzdLdjNYU0VzZEhQ?=
+ =?utf-8?B?NXlTYkw2QlNSVnJiVHlRblNyN2VsZGF5eTRRY29McTEwVzJGd085dFZlWW1j?=
+ =?utf-8?B?RmdvbEJJMjcwWExiRnJwWlhLcm51WG1ZVmhrdENucnRGK3hrVXJWcDVPK293?=
+ =?utf-8?B?aStMSEllV2FETXRwaFRnMHVXcFRsLzh0OWVwV2FmOHZVSFlXL2tOTDA0ZFNU?=
+ =?utf-8?B?ZVZhcXNGd1E1SWNkY0puWlFkcWZBTUZBQ2c5R0hqNXQ4UkhYTUhLOGNvMml2?=
+ =?utf-8?B?a09SK1Q0bWtiYjc2Ry9UOTRaN0xVWldCTVJQVG5JbVZYZjRLRGlGUkx5azcv?=
+ =?utf-8?B?cTY3VUF1MFcxdmcrQnZIR21HeTRlYzYreVJsMmVNWlQrSVg5T09HYjNhUmJs?=
+ =?utf-8?B?akxQaWU3V2d2b0J2ekhkUml0K2RLR0pmSmE1aGI5Z1dDOS9odk9uZEhoUFJy?=
+ =?utf-8?B?K1pGM0syZWRFdGxZU2dmQTV2WTgrNVRxQnI0eVR6TWlQZFhka2NyQWR2WmFh?=
+ =?utf-8?B?VlJkVndQcXRVbmwwSFp2U3ZtM1dDTnRFUU9SQkkydG5XUmNrVzhINTlWdFVh?=
+ =?utf-8?B?SWdUTEhFTzFUMWNRdWk0aHZTL1BVSzdvaVVhUWhYYW80aS9wdi82NC81MTgz?=
+ =?utf-8?B?SjJrc0ZIZEJOK2VzR1ExQ1Q2TjlrL1dsNUxTc1ZFYnNrMUV0blRBcjBPMXl2?=
+ =?utf-8?B?QlNiRTJhOUxFSFRES3oxdncvT1pkMzh4OXp6bUhscmI5Y21iK1NIZ2JmZnkr?=
+ =?utf-8?B?TzFMVmdaa04wd3VPdDFucnVlMGNVRlNWeGg5YkEybHJmTXlaKy82RXNWR2VD?=
+ =?utf-8?B?ZWdjMFpMLys3NlV2dFpyMDBuWjBvTWNFdFBWM1NnM2xDd2Y4eVZpbWxjaSt3?=
+ =?utf-8?B?TC9rOTJ2eS9UYUVFK0krdDJlRWJVblhaeC9IdU5iT3hKbHlzaFNpRjYydmoy?=
+ =?utf-8?B?S2VxdllEakhEL29WajR1dUU1YmQ3WHJ2TDFTWmJGVzA0YVBwV2QzUUlEWlVh?=
+ =?utf-8?B?RGxoSFI4d25PN2RYTEtmdFRJb2FFbnZoWFJlNU9YcVIrYVUzb3dIVUtVVjVH?=
+ =?utf-8?B?M0xFQ3NYYk5iRkQreTAvblh0VTlkVkcxUXQ5VTFMTXByK1RMNmd2RHdwOEhD?=
+ =?utf-8?B?RGNLSGZROXJxLzZGb1lNVVJNTFVFUFlEbGlWRjduNnFzUTFkSmp1Ylp5M3Fw?=
+ =?utf-8?B?YzlyRlE0a2VaSlJjWVdIN2szTnRJRS9Gb1E2U1RNMnBQRTlkOVRBcTlvMmxm?=
+ =?utf-8?B?RXU3SWtDRjZiNUR2MVo0YW9XVVd3K0NxbmlNbzNaTENaODVxRG4wTXcxOENQ?=
+ =?utf-8?B?dWplNm5TMjA5ZWMzdjdkNmF6MDh0U2xqYkJ1RDg0VlhPU2E5REEwc21HMGtm?=
+ =?utf-8?B?anZob2V4azkzM2Zwckx1aGp5RGs0c1hYaEhYSGNUWW9BVUZIak8ydUs5dU1s?=
+ =?utf-8?B?d1U3UVl4TEY2VTVHYnhEQndvbDJOMTVQQzV3UkRTSUxHa096RUhkazRFNnpu?=
+ =?utf-8?B?a3lOaXZQWmpWNHJYazU1LzB4SnRjbkRpcnVDMHlKdm4yb2huUmlwQkxBUzZX?=
+ =?utf-8?B?TGVWelpEQkY3eVhqaHU4dUt2UWdISDV5Z21KMXVVMENDN292NkpVY0puSTEx?=
+ =?utf-8?B?T1l5TTU0MTFJMmsyVkZiZStiR0w5OWNzSU9QZWV3eW9BWmlHa05FY0NyQnRp?=
+ =?utf-8?B?VWdseklaNTVnSGRvRWdJY3VNdFY1d2dxcC9UMFJLTmxtQ284M1BoZkJSK3V3?=
+ =?utf-8?B?MFVWYWNZWjl3cldXbkF6WjNuWXhkNDNkL3g3ZEVmNm5mTGRjTkJSNDJlZmla?=
+ =?utf-8?B?VEFCeXlTVTBQT0FNWCt6YUhiTjMwQWJ6S3N0cVlvS3dsVC85RHdLQm9DS0JJ?=
+ =?utf-8?B?RFFsNmhadW55NEZ1dWgvT1BMSXVkWXIrQUZaaHpoWXpQSHJ0c09OY25SUU0y?=
+ =?utf-8?B?aXJCWXlOTnhWaVJMTStkQkRwVjJ2MUlTKzB4TTJQQUljYWRUM0oxSk42M3Vw?=
+ =?utf-8?B?K1U5LzdGanZDcHg1SUJKSjNQbHlzVEFsNXd3Zjc1S01FdEFPZHdqejVrUGM3?=
+ =?utf-8?B?RjRJSDlrMGJtMnd6bTlCM2phUDZYTWcvU0ZtUXpyNnphWkZueVV0WFJNVi9E?=
+ =?utf-8?B?K3cwaGNOa1hDciszSStpeUc5ZDVPTEhZemx4QVhjc3poNXdxTm9BbUlTYVZr?=
+ =?utf-8?B?bGZSZ2NZRWJEYUd3ZER5Um5ka2FxU285bWZBMmV6QytGRTlJY2NXSUs1Qkhw?=
+ =?utf-8?B?Z1k4cEVzMHlBbDN1YTdxejFZR3pnaURWSEMrWS9KSmxPTnd3eUJNWlI1MG9P?=
+ =?utf-8?Q?cQv541dAyzrGIqSviA?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8105b605-ac97-49c3-b48a-08d9c14fb0fd
 X-MS-Exchange-CrossTenant-AuthSource: DM4PR11MB5373.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2021 10:59:04.6818
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Dec 2021 11:23:46.7348
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QwCdKEebc4zzii1SyTca3wosOMUPwyby7phIViND2jyge1W0HLTR5SeLrfMH7CcjifHLRy3c94oyutBnB/CQsh8g+8hoQ22Qz3a7CF43bB8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8PR11MB5688
+X-MS-Exchange-CrossTenant-UserPrincipalName: B/wijtwAWlgvsIQ9RzWWs8ZeZ3haF3mh2MqvoVgRyAt9iFJFmn7n9gl0wusQXqHpT2J6levPMRu04/6C/bVegPy8IWOBuxqKlg08qrGTy9U=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4187
 X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 16.12.2021 08:50, Christian König wrote:
-> 
-> 
+On 16.12.2021 08:12, Christian König wrote:
 > Am 15.12.21 um 15:16 schrieb Michał Winiarski:
->> Similar to regular resizable BAR, VF BAR can also be resized.
->> The structures are very similar, which means we can reuse most of the
->> implementation. See PCIe r4.0, sec 9.3.7.4.
->>
->> Signed-off-by: Michał Winiarski <michal.winiarski@intel.com>
->> ---
->>   drivers/pci/pci.c             | 25 +++++++++++++++--
->>   drivers/pci/setup-res.c       | 53 ++++++++++++++++++++++++++++++++---
->>   include/uapi/linux/pci_regs.h |  1 +
->>   3 files changed, 72 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 3d2fb394986a4..89448c5104e46 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -1682,12 +1682,15 @@ static void pci_restore_config_space(struct 
->> pci_dev *pdev)
->>       }
->>   }
->> -static void pci_restore_rebar_state(struct pci_dev *pdev)
->> +static void __pci_restore_rebar_state(struct pci_dev *pdev, int cap)
->>   {
->>       unsigned int pos, nbars, i;
->>       u32 ctrl;
->> -    pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
->> +    if (WARN_ON(cap != PCI_EXT_CAP_ID_REBAR && cap != 
->> PCI_EXT_CAP_ID_VF_REBAR))
->> +        return;
->> +
->> +    pos = pci_find_ext_capability(pdev, cap);
->>       if (!pos)
->>           return;
->> @@ -1709,6 +1712,14 @@ static void pci_restore_rebar_state(struct 
->> pci_dev *pdev)
->>       }
->>   }
->> +static void pci_restore_rebar_state(struct pci_dev *pdev)
->> +{
->> +    __pci_restore_rebar_state(pdev, PCI_EXT_CAP_ID_REBAR);
->> +#ifdef CONFIG_PCI_IOV
->> +    __pci_restore_rebar_state(pdev, PCI_EXT_CAP_ID_VF_REBAR);
->> +#endif
->> +}
->> +
+>> When pci_reassign_bridge_resources returns -ENOENT, it means that no
+>> resources needed to be "moved". This can happen when the resource was
+>> resized to be smaller, and it's completely fine - there's no need to 
+>> treat
+>> this as an error and go back to the original BAR size.
 > 
-> It's probably cleaner to let the caller specify the capability to 
-> restore directly.
+> Well that doesn't make much sense as far as I can see.
+> 
+> Drivers mandatory need to call pci_release_resource() on all resources 
+> which might need to move for a resize, including the one which is about 
+> to be resized.
 
-Ok - I'll go with:
-pci_restore_rebar_state(dev);
-pci_restore_vf_rebar_state(dev);
-
-in pci_restore_state() (where pci_restore_vf_rebar_state() will be 
-"no-op" if there's no CONFIG_PCI_IOV).
+Since IOV BARs have their own memory-decoding enabled bit, which is 
+usually tied to the lifetime of virtual functions, the PF driver could 
+do IOV BAR resize during its lifetime (without releasing its own resources).
 
 > 
->>   /**
->>    * pci_restore_state - Restore the saved state of a PCI device
->>    * @dev: PCI device that we're dealing with
->> @@ -3639,10 +3650,18 @@ void pci_acs_init(struct pci_dev *dev)
->>    */
->>   static int pci_rebar_find_pos(struct pci_dev *pdev, int bar)
->>   {
->> +    int cap = PCI_EXT_CAP_ID_REBAR;
->>       unsigned int pos, nbars, i;
->>       u32 ctrl;
->> -    pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
->> +#ifdef CONFIG_PCI_IOV
->> +    if (bar >= PCI_IOV_RESOURCES) {
->> +        cap = PCI_EXT_CAP_ID_VF_REBAR;
->> +        bar -= PCI_IOV_RESOURCES;
->> +    }
->> +#endif
->> +
->> +    pos = pci_find_ext_capability(pdev, cap);
->>       if (!pos)
->>           return -ENOTSUPP;
->> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->> index 7f1acb3918d0c..1946e52e7678a 100644
->> --- a/drivers/pci/setup-res.c
->> +++ b/drivers/pci/setup-res.c
->> @@ -407,13 +407,36 @@ void pci_release_resource(struct pci_dev *dev, 
->> int resno)
->>   }
->>   EXPORT_SYMBOL(pci_release_resource);
->> +static int pci_memory_decoding(struct pci_dev *dev)
->> +{
->> +    u16 cmd;
->> +
->> +    pci_read_config_word(dev, PCI_COMMAND, &cmd);
->> +    if (cmd & PCI_COMMAND_MEMORY)
->> +        return -EBUSY;
->> +
->> +    return 0;
->> +}
->> +
->> +#ifdef CONFIG_PCI_IOV
->> +static int pci_vf_memory_decoding(struct pci_dev *dev)
->> +{
->> +    u16 cmd;
->> +
->> +    pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_CTRL, &cmd);
->> +    if (cmd & PCI_SRIOV_CTRL_MSE)
->> +        return -EBUSY;
->> +
->> +    return 0;
->> +}
->> +#endif
->> +
->>   int pci_resize_resource(struct pci_dev *dev, int resno, int size)
->>   {
->>       struct resource *res = dev->resource + resno;
->>       struct pci_host_bridge *host;
->>       int old, ret;
->>       u32 sizes;
->> -    u16 cmd;
->>       /* Check if we must preserve the firmware's resource assignment */
->>       host = pci_find_host_bridge(dev->bus);
->> @@ -424,9 +447,14 @@ int pci_resize_resource(struct pci_dev *dev, int 
->> resno, int size)
->>       if (!(res->flags & IORESOURCE_UNSET))
->>           return -EBUSY;
->> -    pci_read_config_word(dev, PCI_COMMAND, &cmd);
->> -    if (cmd & PCI_COMMAND_MEMORY)
->> -        return -EBUSY;
->> +#ifdef CONFIG_PCI_IOV
->> +    if (resno >= PCI_IOV_RESOURCES)
->> +        ret = pci_vf_memory_decoding(dev);
->> +    else
->> +#endif
->> +    ret = pci_memory_decoding(dev);
->> +    if (ret)
->> +        return ret;
+> When you get -ENOENT from pci_reassign_bridge_resources() it just means 
+> that the function was not able to do it's work because the driver failed 
+> to release it's resources before the resize.
 > 
-> Way to many #ifdef spread around inside the code, please restructure that.
-> 
-> For example concentrating the logic in a single function should help:
-> 
-> static int pci_check_decoding_disabled(..., inr resno)
-> {
-> 
-> #ifdef CONFIG_PCI_IOV
->      if (resno...
->          return -EBUSY;
->      else
->          return 0;
-> #endif
-> 
->      if (...)
->          return -EBUSY;
->      return 0;
-> 
-> }
-> 
+> Technically we could indeed skip this step if the new size is smaller 
+> than the old size, but then the question is why would somebody resize in 
+> the first place? The freed up address space is not usable if you don't 
+> do this.
 
-Ok.
+With regular BAR, the size of MMIO resource is equal to bar_size.
+With IOV BAR, the size of MMIO resource is equal to iov_bar_size * 
+total_vfs.
 
->>       sizes = pci_rebar_get_possible_sizes(dev, resno);
->>       if (!sizes)
->> @@ -445,6 +473,14 @@ int pci_resize_resource(struct pci_dev *dev, int 
->> resno, int size)
->>       res->end = res->start + pci_rebar_size_to_bytes(size) - 1;
->> +#ifdef CONFIG_PCI_IOV
->> +    if (resno >= PCI_IOV_RESOURCES) {
->> +        dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = 
->> pci_rebar_size_to_bytes(size);
->> +        res->end = res->start +
->> +            resource_size(res) * pci_sriov_get_totalvfs(dev) - 1;
->> +    }
->> +#endif
->> +
->>       /* Check if the new config works by trying to assign everything. */
->>       if (dev->bus->self) {
->>           ret = pci_reassign_bridge_resources(dev->bus->self, 
->> res->flags);
->> @@ -456,6 +492,15 @@ int pci_resize_resource(struct pci_dev *dev, int 
->> resno, int size)
->>   error_resize:
->>       pci_rebar_set_size(dev, resno, old);
->>       res->end = res->start + pci_rebar_size_to_bytes(old) - 1;
->> +
->> +#ifdef CONFIG_PCI_IOV
->> +    if (resno >= PCI_IOV_RESOURCES) {
->> +        dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = 
->> pci_rebar_size_to_bytes(old);
->> +        res->end = res->start +
->> +            pci_rebar_size_to_bytes(old) * 
->> pci_sriov_get_totalvfs(dev) - 1;
->> +    }
->> +#endif
->> +
-> 
-> Looks like this deserves it's own function.
+It means that the driver could use the pci_resize_resource in two ways, 
+it could just call it like for the native BAR - overall MMIO resource is 
+going to grow, or it could limit its total_vfs (overall MMIO resource is 
+going to shrink, but from VF perspective, its individual BAR is going to 
+be larger).
 
-I'll extract the whole "restore after failed resize" to separate 
-function (for both native and IOV).
+To ilustrate:
 
-Thanks!
+Native:
+
+  1G    2G
++--+  +--+
+|  |  |  |
++--+  |  |
+       |  |
+       +--+
+
+Resource grows from 1G to 2G. No surprises.
+
+
+IOV 4 VFs:
+
+  1G    2G
++--+  +--+
+|  |  |  |
++--+  |  |
+|  |  |  |
++--+  +--+
+|  |  |  |
++--+  |  |
+|  |  |  |
++--+  +--+
+       |  |
+       |  |
+       |  |
+       +--+
+       |  |
+       |  |
+       |  |
+       +--+
+
+Resource grows from 4G to 8G. But for larger number of VFs, and larger 
+BAR sizes, finding MMIO space to accomodate may end up being tricky on 
+some platforms.
+
+
+IOV (limited to 2 VFs):
+
+  1G    2G
++--+  +--+
+|  |  |  |
++--+  |  |
+|  |  |  |
++--+  +--+
+|  |  |  |
++--+  |  |
+|  |  |  |
++--+  +--+
+
+No changes in resource size, we started with 4G and we end up with 4G 
+after resize (but those 2 VFs can now use 2G BAR).
+
+Does that make sense?
+
+Thanks
 -Michał
 
 > 
 > Regards,
 > Christian.
 > 
->>       return ret;
->>   }
->>   EXPORT_SYMBOL(pci_resize_resource);
->> diff --git a/include/uapi/linux/pci_regs.h 
->> b/include/uapi/linux/pci_regs.h
->> index ff6ccbc6efe96..7f5726d23b038 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -734,6 +734,7 @@
->>   #define PCI_EXT_CAP_ID_L1SS    0x1E    /* L1 PM Substates */
->>   #define PCI_EXT_CAP_ID_PTM    0x1F    /* Precision Time Measurement */
->>   #define PCI_EXT_CAP_ID_DVSEC    0x23    /* Designated 
->> Vendor-Specific */
->> +#define PCI_EXT_CAP_ID_VF_REBAR    0x24    /* VF Resizable BAR */
->>   #define PCI_EXT_CAP_ID_DLF    0x25    /* Data Link Feature */
->>   #define PCI_EXT_CAP_ID_PL_16GT    0x26    /* Physical Layer 16.0 
->> GT/s */
->>   #define PCI_EXT_CAP_ID_MAX    PCI_EXT_CAP_ID_PL_16GT
+>>
+>> Signed-off-by: Michał Winiarski <michal.winiarski@intel.com>
+>> ---
+>>   drivers/pci/setup-res.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>> index 1946e52e7678a..5de5129055e0a 100644
+>> --- a/drivers/pci/setup-res.c
+>> +++ b/drivers/pci/setup-res.c
+>> @@ -484,7 +484,7 @@ int pci_resize_resource(struct pci_dev *dev, int 
+>> resno, int size)
+>>       /* Check if the new config works by trying to assign everything. */
+>>       if (dev->bus->self) {
+>>           ret = pci_reassign_bridge_resources(dev->bus->self, 
+>> res->flags);
+>> -        if (ret)
+>> +        if (ret && ret != -ENOENT)
+>>               goto error_resize;
+>>       }
+>>       return 0;
 > 
 
