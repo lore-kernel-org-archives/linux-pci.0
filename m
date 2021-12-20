@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 043A9C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Dec 2021 14:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6ABFC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Dec 2021 14:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236112AbhLTOrg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:47:36 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:38042 "EHLO
+        id S236142AbhLTOu7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:50:59 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:41674 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236885AbhLTOpL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Dec 2021 09:45:11 -0500
+        with ESMTP id S237533AbhLTOtj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Dec 2021 09:49:39 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 14FC9611A1;
-        Mon, 20 Dec 2021 14:45:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA160C36AE8;
-        Mon, 20 Dec 2021 14:45:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B23A961165;
+        Mon, 20 Dec 2021 14:49:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B3BBC36AE8;
+        Mon, 20 Dec 2021 14:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1640011510;
-        bh=DE+qHWkJ23uZ/MaUpspTYDDfJ6jw+rIb2osT9F9pm34=;
+        s=korg; t=1640011778;
+        bh=FKgjUTnHxLhnTqkLeiskC4O+XKIzMTeT+ZkR5QhLj9w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=D8lWFM8xrA+kn+T9gxI43ydiY6Iu1uLLRUjWqn2yPZXvzU0WCujKerR53f7ajtkvv
-         E5BWwXabh3/g0uCLwmf6LokJs8VAN2OLcEyd1GL5/Nojzk7w0wwvN4hVdinOxupzXB
-         KpWEWjy8srzwcU+3YHoMtyusTgAIOGp7kdpq+PYQ=
+        b=LAziwftf7JcHZEJggOAIG2Rag5UQ2dICDbkTBTBSfPjJUCyxn6rQILe4sFdI2bXVP
+         ChUJEF4Yo0oQA8dcu/z/OzOw6nU3b4n8lLcxz6sblBWbhK3EEoMQ2Gn8qNlCzpEcdw
+         Hodtz2o4VVAfqv82zC/FOci8TY+eaL9uCR+Fb2G8=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -33,12 +33,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Michal Simek <michal.simek@xilinx.com>,
         Marek Vasut <marex@denx.de>
-Subject: [PATCH 5.4 46/71] PCI/MSI: Clear PCI_MSIX_FLAGS_MASKALL on error
-Date:   Mon, 20 Dec 2021 15:34:35 +0100
-Message-Id: <20211220143027.232621207@linuxfoundation.org>
+Subject: [PATCH 5.10 70/99] PCI/MSI: Clear PCI_MSIX_FLAGS_MASKALL on error
+Date:   Mon, 20 Dec 2021 15:34:43 +0100
+Message-Id: <20211220143031.749053004@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211220143025.683747691@linuxfoundation.org>
-References: <20211220143025.683747691@linuxfoundation.org>
+In-Reply-To: <20211220143029.352940568@linuxfoundation.org>
+References: <20211220143029.352940568@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -79,7 +79,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -878,7 +878,7 @@ out_free:
+@@ -879,7 +879,7 @@ out_free:
  	free_msi_irqs(dev);
  
  out_disable:
