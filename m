@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13773C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Dec 2021 14:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28097C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Dec 2021 14:47:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235181AbhLTOni (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Dec 2021 09:43:38 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:50640 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235438AbhLTOmP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Dec 2021 09:42:15 -0500
+        id S235934AbhLTOrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Dec 2021 09:47:15 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:37240 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236929AbhLTOpO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Dec 2021 09:45:14 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 44E6AB80EE3;
-        Mon, 20 Dec 2021 14:42:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87487C36AE8;
-        Mon, 20 Dec 2021 14:42:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D4497611A4;
+        Mon, 20 Dec 2021 14:45:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1B47C36AE7;
+        Mon, 20 Dec 2021 14:45:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1640011333;
-        bh=dsyhPV3pGgf/4WJmlaH/zgA+cgIArokgSGhXtKSLHqc=;
+        s=korg; t=1640011513;
+        bh=IZUAOpP/aFVFgtT+UIAzSg3UTtWyIHQlvCH39+CLweI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PRlxF98EwLCsPDsKHWSVDCyR5vwCe3ZiGqyO1mP+YdhyKgCtdF4V9hktUVkI0kKW2
-         3eb6+HOMOc8CWdKIFGOoFrOZ8X5Olgnnzz8yiKZ0okuBiU6YawLGanTYzp2miiG33M
-         2w18zKksvKlNR0RmVqjl/2qtHoykrvmwZv4vQrqg=
+        b=JAziphiVZ+j0x7/ENMTWgQikuxbhiViGILNyc2KvA3d1xV84lRCs+xXlgkPjqXHdW
+         Fe9L0TP6qEklSEB1feqBI0MIt2IqNHWCxZswmzk9L04cyee/AtV+4nWZacOCOHiaar
+         f3B1ZUaevkEw+6NWMr8S5RjibSFeyRPCfmF29lc8=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -33,12 +33,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Michal Simek <michal.simek@xilinx.com>,
         Marek Vasut <marex@denx.de>
-Subject: [PATCH 4.19 33/56] PCI/MSI: Mask MSI-X vectors only on success
-Date:   Mon, 20 Dec 2021 15:34:26 +0100
-Message-Id: <20211220143024.526582062@linuxfoundation.org>
+Subject: [PATCH 5.4 47/71] PCI/MSI: Mask MSI-X vectors only on success
+Date:   Mon, 20 Dec 2021 15:34:36 +0100
+Message-Id: <20211220143027.271381305@linuxfoundation.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211220143023.451982183@linuxfoundation.org>
-References: <20211220143023.451982183@linuxfoundation.org>
+In-Reply-To: <20211220143025.683747691@linuxfoundation.org>
+References: <20211220143025.683747691@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -89,7 +89,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -799,9 +799,6 @@ static int msix_capability_init(struct p
+@@ -827,9 +827,6 @@ static int msix_capability_init(struct p
  		goto out_disable;
  	}
  
@@ -99,7 +99,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	ret = msix_setup_entries(dev, base, entries, nvec, affd);
  	if (ret)
  		goto out_disable;
-@@ -824,6 +821,16 @@ static int msix_capability_init(struct p
+@@ -852,6 +849,16 @@ static int msix_capability_init(struct p
  	/* Set MSI-X enabled bits and unmask the function */
  	pci_intx_for_msi(dev, 0);
  	dev->msix_enabled = 1;
