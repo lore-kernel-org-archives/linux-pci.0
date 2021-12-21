@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9EB3C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 14:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A702DC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 14:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238726AbhLUO4y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Dec 2021 09:56:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52104 "EHLO
+        id S238731AbhLUO4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Dec 2021 09:56:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238702AbhLUO4v (ORCPT
+        with ESMTP id S238704AbhLUO4v (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Dec 2021 09:56:51 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D534EC061574;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD14C06173F;
         Tue, 21 Dec 2021 06:56:50 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6BF9C61655;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 842A861659;
         Tue, 21 Dec 2021 14:56:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19D1EC36AEF;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32573C36AF1;
         Tue, 21 Dec 2021 14:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1640098610;
-        bh=XitsvLC/8XJT/51VWhTuEEqkPH1X2y3/JU2pM5KluWc=;
+        bh=iOm7uhs+2+Y00wU5942hoH5Ypg2VEv9NlwRanu6QquM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KBE0gq6r3q7Oi/WAoEZr4Exsun8OSvQOwhBAN857k6nbdRJtP4xpJ66+RDIy2R7F9
-         xeYCVrhtcgPSe1QcW8zGPr3ew48V+hV16V4vVs6LBhXItDTxWMpdRkMqq0To44uIxU
-         a0+CuifReh9juMvMcqlpsP1JwDkeo2kQA/ee0n/u2v0ylAxpwq2TjjHQXA9ke6aphy
-         8NBXa59vFBJ0gF1gHqHla/mSV15m71yUVbOHemj7mCMnaTPOso70bLUmG7yhaj0j6x
-         vtjzmbE2sAgzPDi29Idaxdn7zl9Kf3sWayzlqxWVBjHKVwliiYCl6oNKQ1VQkSSPhC
-         YAN9yru8u4OQw==
+        b=Y8JGCyWQiEo0FeYt4MhAer93WIjm9rkmEHCBYUc8ETBTMpv/I4bjQYagB28X+ul+I
+         M1PIAjpdaHrzVIwIQo1DqMgkaZ9x+QYGvAD81STAzNYi0CJ0otvX4ibGz2rtuFTR4K
+         q+eKkEwbS8Z5yCrxNZFnaETERxtPGjmSfyXiJVklLiwerDdl4CA6GevhgLdXNu7ujo
+         xRacVza+ntAs+QBFDve3C0lNiA0jydBC+3gPKWa6O8kzgYH9k4RoAxjOgKpuqar53Q
+         sb2iO1vF83AD3ZCExX709WzVHaxAE8tvDI5Go6+vGhmvLolr+0umW301WJmS330AbU
+         TPe+OyEra98iQ==
 Received: by pali.im (Postfix)
-        id 4574228D5; Tue, 21 Dec 2021 15:18:14 +0100 (CET)
+        id 24FCE284D; Tue, 21 Dec 2021 15:18:12 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     "Thomas Petazzoni" <thomas.petazzoni@bootlin.com>,
         "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
@@ -42,9 +42,9 @@ To:     "Thomas Petazzoni" <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 05/11] PCI: mvebu: Add help string for CONFIG_PCI_MVEBU option
-Date:   Tue, 21 Dec 2021 15:14:49 +0100
-Message-Id: <20211221141455.30011-6-pali@kernel.org>
+Subject: [PATCH 01/11] =?UTF-8?q?MAINTAINERS:=20Add=20Pali=20Roh=C3=A1r=20?= =?UTF-8?q?as=20pci-mvebu.c=20maintainer?=
+Date:   Tue, 21 Dec 2021 15:14:45 +0100
+Message-Id: <20211221141455.30011-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211221141455.30011-1-pali@kernel.org>
 References: <20211221141455.30011-1-pali@kernel.org>
@@ -55,28 +55,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no description for CONFIG_PCI_MVEBU option. Add it.
-
 Signed-off-by: Pali Rohár <pali@kernel.org>
----
- drivers/pci/controller/Kconfig | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 67189bcd5d89..534b446f2cf0 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -10,6 +10,10 @@ config PCI_MVEBU
- 	depends on ARM
- 	depends on OF
- 	select PCI_BRIDGE_EMUL
-+	help
-+	 Add support for Marvell EBU PCIe controller. This PCIe controller
-+	 is used on 32-bit Marvell ARM SoCs: Dove, Kirkwood, Armada 370,
-+	 Armada XP, Armada 375, Armada 38x and Armada 39x.
+---
+I discussed with Thomas and he ask me for taking maintenance of pci-mvebu.c driver.
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7a2345ce8521..24527789d933 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -14617,6 +14617,7 @@ F:	drivers/pci/controller/mobiveil/pcie-mobiveil*
  
- config PCI_AARDVARK
- 	tristate "Aardvark PCIe controller"
+ PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
+ M:	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
++M:	Pali Rohár <pali@kernel.org>
+ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
 -- 
 2.20.1
 
