@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE0EC433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 14:56:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A70C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 14:56:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238709AbhLUO4w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S238712AbhLUO4w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 21 Dec 2021 09:56:52 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:38040 "EHLO
+Received: from ams.source.kernel.org ([145.40.68.75]:38056 "EHLO
         ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238696AbhLUO4u (ORCPT
+        with ESMTP id S238697AbhLUO4u (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Dec 2021 09:56:50 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1C523B8171F;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 30FBAB8172E;
         Tue, 21 Dec 2021 14:56:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDB9C36AE9;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3909C36AEB;
         Tue, 21 Dec 2021 14:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1640098607;
-        bh=xxyZnGOuH63mToYeFJtMrqvVZxip4BN1x7ap3lhZeHA=;
+        bh=QKua9WgN49q+Sz5vAXpEygIK8zQDaGYklGosEd8el0I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=idtSM6rMG+OrXmXorvmrw2fZYYLnc+eEStSm/wS7s1kslRoLHbzSL6Sty8lOYWrnq
-         L6ET6iT/H+SBW6t2KdOrIqQI2Ne6+WU4s5sKaZF03lRZD3BfxbacrSlD2vLtd0/SR6
-         YdB5MWPvwMBivOufHymMy83vf27qs9XjPseSXHzaB7T/wGzBq8+ndkeJPoQk8qZpzB
-         fqNdiCauJAN3khpLKyNQAq0vmA6G/N13omI+xyLEGV7Uk3J3S5CkW+FVscRVcQ4BHx
-         0GVWk2kO30/4Zk8SFBLQB7+KOSPx63p4TlkwGzQTosuG5SxLqPVKbaukSpjhQ9Aon4
-         l0uPHjpF1C3Ag==
+        b=j5qIL7hJn3PnjTem3tU/WrYcC63sG+E+IRLEbKfcTjR6eWwyPt5HjKX2wVlSd7bef
+         uS848wT/gLFOaD+gKrT8xgw0odIKfoRfbMF8N6tSPqA7yHG/U9GyByATnwNYGYqe1m
+         XA/IVlAYvQIo40XfBAbTsABWtNFSvbyfOdiAnnG55CSQOiFtCx8N7noa/xEJ5T4cNp
+         37sJnygGc6btafthtB4APDxgYXgUHbwmNIg6agxxu89rXHKIIc6raP/fhaXQkGJdBI
+         BdLXjf506rc0cJZWkVFN6/4zOx9nREEmueILrigu2sYkF+g3CAEzqhK8R8dXZF1JFt
+         oa6FaoRoHKg6Q==
 Received: by pali.im (Postfix)
-        id AAFD62ABF; Tue, 21 Dec 2021 15:18:16 +0100 (CET)
+        id A428F284E; Tue, 21 Dec 2021 15:18:12 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     "Thomas Petazzoni" <thomas.petazzoni@bootlin.com>,
         "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
@@ -39,9 +39,9 @@ To:     "Thomas Petazzoni" <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 10/11] PCI: mvebu: Update comment for PCI_EXP_LNKCTL register on emulated bridge
-Date:   Tue, 21 Dec 2021 15:14:54 +0100
-Message-Id: <20211221141455.30011-11-pali@kernel.org>
+Subject: [PATCH 02/11] PCI: pci-bridge-emul: Make struct pci_bridge_emul_ops as const
+Date:   Tue, 21 Dec 2021 15:14:46 +0100
+Message-Id: <20211221141455.30011-3-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20211221141455.30011-1-pali@kernel.org>
 References: <20211221141455.30011-1-pali@kernel.org>
@@ -52,33 +52,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Logic and code for clearing PCI_EXP_LNKCTL_CLKREQ_EN bit is correct, but
-comment describing it is misleading. PCI_EXP_LNKCTL_CLKREQ_EN bit should be
-hardwired to zero but mvebu hw allows to change it.
+It is read-only constant structure, so properly mark it with const keyword.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/pci-mvebu.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 2 +-
+ drivers/pci/controller/pci-mvebu.c    | 2 +-
+ drivers/pci/pci-bridge-emul.h         | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 62fc55f2ed40..1fa6fe1e022a 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -928,7 +928,7 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 	}
+ }
+ 
+-static struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
++static const struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
+ 	.read_base = advk_pci_bridge_emul_base_conf_read,
+ 	.write_base = advk_pci_bridge_emul_base_conf_write,
+ 	.read_pcie = advk_pci_bridge_emul_pcie_conf_read,
 diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 1aac65977b97..dffa330de174 100644
+index 68aa94a258ff..2ecc1ab12249 100644
 --- a/drivers/pci/controller/pci-mvebu.c
 +++ b/drivers/pci/controller/pci-mvebu.c
-@@ -663,10 +663,9 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+@@ -709,7 +709,7 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 	}
+ }
  
- 	case PCI_EXP_LNKCTL:
- 		/*
--		 * If we don't support CLKREQ, we must ensure that the
--		 * CLKREQ enable bit always reads zero.  Since we haven't
--		 * had this capability, and it's dependent on board wiring,
--		 * disable it for the time being.
-+		 * PCIe requires that the Enable Clock Power Management bit
-+		 * is hard-wired to zero for downstream ports but HW allows
-+		 * to change it.
- 		 */
- 		new &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
- 
+-static struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
++static const struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
+ 	.read_base = mvebu_pci_bridge_emul_base_conf_read,
+ 	.write_base = mvebu_pci_bridge_emul_base_conf_write,
+ 	.read_pcie = mvebu_pci_bridge_emul_pcie_conf_read,
+diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
+index 49bbd37ee318..0690b6369755 100644
+--- a/drivers/pci/pci-bridge-emul.h
++++ b/drivers/pci/pci-bridge-emul.h
+@@ -112,7 +112,7 @@ struct pci_bridge_reg_behavior;
+ struct pci_bridge_emul {
+ 	struct pci_bridge_emul_conf conf;
+ 	struct pci_bridge_emul_pcie_conf pcie_conf;
+-	struct pci_bridge_emul_ops *ops;
++	const struct pci_bridge_emul_ops *ops;
+ 	struct pci_bridge_reg_behavior *pci_regs_behavior;
+ 	struct pci_bridge_reg_behavior *pcie_cap_regs_behavior;
+ 	void *data;
 -- 
 2.20.1
 
