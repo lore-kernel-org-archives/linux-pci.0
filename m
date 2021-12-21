@@ -2,20 +2,20 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28834C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 15:39:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C7ECC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 15:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbhLUPjc convert rfc822-to-8bit (ORCPT
+        id S233117AbhLUPj4 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Dec 2021 10:39:32 -0500
-Received: from relay1-d.mail.gandi.net ([217.70.183.193]:47821 "EHLO
-        relay1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230306AbhLUPjc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Dec 2021 10:39:32 -0500
+        Tue, 21 Dec 2021 10:39:56 -0500
+Received: from relay9-d.mail.gandi.net ([217.70.183.199]:60259 "EHLO
+        relay9-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230306AbhLUPj4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Dec 2021 10:39:56 -0500
 Received: (Authenticated sender: thomas.petazzoni@bootlin.com)
-        by relay1-d.mail.gandi.net (Postfix) with ESMTPSA id 1E1F724000A;
-        Tue, 21 Dec 2021 15:39:28 +0000 (UTC)
-Date:   Tue, 21 Dec 2021 16:39:28 +0100
+        by relay9-d.mail.gandi.net (Postfix) with ESMTPSA id B7BC8FF802;
+        Tue, 21 Dec 2021 15:39:52 +0000 (UTC)
+Date:   Tue, 21 Dec 2021 16:39:51 +0100
 From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
 Cc:     "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
@@ -25,12 +25,12 @@ Cc:     "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
         Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/11] MAINTAINERS: Add Pali =?UTF-8?B?Um9ow6Fy?= as
- pci-mvebu.c maintainer
-Message-ID: <20211221163928.210e68ca@windsurf>
-In-Reply-To: <20211221141455.30011-2-pali@kernel.org>
+Subject: Re: [PATCH 02/11] PCI: pci-bridge-emul: Make struct
+ pci_bridge_emul_ops as const
+Message-ID: <20211221163951.4070877f@windsurf>
+In-Reply-To: <20211221141455.30011-3-pali@kernel.org>
 References: <20211221141455.30011-1-pali@kernel.org>
-        <20211221141455.30011-2-pali@kernel.org>
+        <20211221141455.30011-3-pali@kernel.org>
 Organization: Bootlin
 X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
@@ -40,16 +40,14 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 21 Dec 2021 15:14:45 +0100
+On Tue, 21 Dec 2021 15:14:46 +0100
 Pali Rohár <pali@kernel.org> wrote:
 
+> It is read-only constant structure, so properly mark it with const keyword.
+> 
 > Signed-off-by: Pali Rohár <pali@kernel.org>
 
 Acked-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-
-Thanks a lot Pali for volunteering to maintain this driver!
-
-Thomas
 -- 
 Thomas Petazzoni, co-owner and CEO, Bootlin
 Embedded Linux and Kernel engineering and training
