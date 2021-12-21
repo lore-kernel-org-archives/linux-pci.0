@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB96EC43219
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 18:09:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FA52C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 18:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240961AbhLUSJR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Dec 2021 13:09:17 -0500
-Received: from mga18.intel.com ([134.134.136.126]:63849 "EHLO mga18.intel.com"
+        id S240948AbhLUSKF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Dec 2021 13:10:05 -0500
+Received: from mga03.intel.com ([134.134.136.65]:42956 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240940AbhLUSJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Dec 2021 13:09:13 -0500
+        id S233550AbhLUSKE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Dec 2021 13:10:04 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1640110153; x=1671646153;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=4k4x29Qb+0v8l+0y3SmwpANCykxqEpDNAkQhk4vCpjE=;
-  b=kLsrcbriaaN2AA9LlhV6P98QGP2cSy/I+p96H6S6gvwboR6MHAqsJ+AJ
-   Sj+9Miwp14gUs1SC+n3w4pStmICY7tP9yepqEeUiW6KGmg97/A4kMBz5f
-   kogTQszBwQhhAlty3sPwHxUeGBtVUk6s3PFoGvnrWJrkyUKmUix/Rk0dS
-   NpWJT/CcApRQbiGU4gwe71ASmHDvX0nuvm2xUbNXKnhuN1Z7UL1Nekxm1
-   U1S59rsFwgNPSQraGmmW7VSZ54f/IF7vYf42V5rJkURsCye6jmFXYaLlA
-   CjWa8tnNWOxHRMaCX6DBvRBF/PqfzF41TCekAc6oUcQd5OYIjhw0u0cur
+  t=1640110204; x=1671646204;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=3DqlyHFNaDBMcquaHNTfzmoeBsD/R1tWDi1GcZhi78c=;
+  b=ZTX1G14j3pY4pYkoUpW8OlkcDyP2hen0METSR2efVKDTRw5QRUFJ9udC
+   ctTRwexVsvebjdJdgbb6FnkRc/HjVzTEBa3H9PEQP2GeAEbQzMXKLQFSC
+   Q0LtuMLHyeQeSUJsjdxXH/jk5PhPOLeeO1cm9qEqGOFxTlSkOR/a6kZX0
+   3JRx3CSkGM0tJkFHEptgwV11wrVqJG2CDEEx6pPFIBE4US+K9dniJ36Sw
+   ZVIhMGRmchBZig79FER9xWa3nh0q7ykvRarAZLsK4maiTLNVpUk9Q154f
+   zKTU6bvwCo0xNFLgRA6jiGl7K5DZ5CS6mEWsc+lQjOb3PW23MVELa1TSO
    w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10205"; a="227306802"
+X-IronPort-AV: E=McAfee;i="6200,9189,10205"; a="240410807"
 X-IronPort-AV: E=Sophos;i="5.88,224,1635231600"; 
-   d="scan'208";a="227306802"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2021 09:41:06 -0800
+   d="scan'208";a="240410807"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2021 09:41:13 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,224,1635231600"; 
-   d="scan'208";a="521338928"
+   d="scan'208";a="466370835"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga008.jf.intel.com with ESMTP; 21 Dec 2021 09:41:01 -0800
+  by orsmga003.jf.intel.com with ESMTP; 21 Dec 2021 09:41:07 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 872F8190; Tue, 21 Dec 2021 19:41:09 +0200 (EET)
+        id D43533AE; Tue, 21 Dec 2021 19:41:09 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa@kernel.org>, Jean Delvare <jdelvare@suse.de>,
         Heiner Kallweit <hkallweit1@gmail.com>,
@@ -54,78 +54,175 @@ Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         Andy Shevchenko <andy@kernel.org>,
         Linus Walleij <linus.walleij@linaro.org>,
         Mark Gross <markgross@kernel.org>
-Subject: [PATCH v2 1/8] PCI: Introduce pci_bus_*() printing macros when device is not available
-Date:   Tue, 21 Dec 2021 19:39:38 +0200
-Message-Id: <20211221173945.53674-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 7/8] mfd: lpc_ich: Add support for pinctrl in non-ACPI system
+Date:   Tue, 21 Dec 2021 19:39:44 +0200
+Message-Id: <20211221173945.53674-7-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20211221173945.53674-1-andriy.shevchenko@linux.intel.com>
+References: <20211221173945.53674-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In some cases PCI device structure is not available and we want to print
-information based on the bus and devfn parameters. For this cases introduce
-pci_bus_*() printing macros and replace in existing users.
+From: Tan Jui Nee <jui.nee.tan@intel.com>
 
+Add support for non-ACPI systems, such as system that uses
+Advanced Boot Loader (ABL) whereby a platform device has to be created
+in order to bind with pin control and GPIO.
+
+At the moment, Intel Apollo Lake In-Vehicle Infotainment (IVI) system
+requires a driver to hide and unhide P2SB to lookup P2SB BAR and pass
+the PCI BAR address to GPIO.
+
+Signed-off-by: Tan Jui Nee <jui.nee.tan@intel.com>
+Co-developed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Jean Delvare <jdelvare@suse.de>
 ---
- drivers/pci/probe.c | 12 +++---------
- include/linux/pci.h |  8 ++++++++
- 2 files changed, 11 insertions(+), 9 deletions(-)
+ drivers/mfd/lpc_ich.c | 101 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 100 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 78962652f5bf..82014b248f4d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2333,16 +2333,12 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
- 	 */
- 	while (pci_bus_crs_vendor_id(*l)) {
- 		if (delay > timeout) {
--			pr_warn("pci %04x:%02x:%02x.%d: not ready after %dms; giving up\n",
--				pci_domain_nr(bus), bus->number,
--				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+			pci_bus_warn(bus, devfn, "not ready after %dms; giving up\n", delay - 1);
+diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
+index 95dca5434917..563e4ed251fd 100644
+--- a/drivers/mfd/lpc_ich.c
++++ b/drivers/mfd/lpc_ich.c
+@@ -8,7 +8,8 @@
+  *  Configuration Registers.
+  *
+  *  This driver is derived from lpc_sch.
+-
++ *
++ *  Copyright (c) 2017, 2021 Intel Corporation
+  *  Copyright (c) 2011 Extreme Engineering Solution, Inc.
+  *  Author: Aaron Sierra <asierra@xes-inc.com>
+  *
+@@ -42,6 +43,7 @@
+ #include <linux/errno.h>
+ #include <linux/acpi.h>
+ #include <linux/pci.h>
++#include <linux/pinctrl/pinctrl.h>
+ #include <linux/mfd/core.h>
+ #include <linux/mfd/lpc_ich.h>
+ #include <linux/platform_data/itco_wdt.h>
+@@ -140,6 +142,70 @@ static struct mfd_cell lpc_ich_gpio_cell = {
+ 	.ignore_resource_conflicts = true,
+ };
  
- 			return false;
- 		}
- 		if (delay >= 1000)
--			pr_info("pci %04x:%02x:%02x.%d: not ready after %dms; waiting\n",
--				pci_domain_nr(bus), bus->number,
--				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+			pci_bus_info(bus, devfn, "not ready after %dms; waiting\n", delay - 1);
++#define APL_GPIO_NORTH		0
++#define APL_GPIO_NORTHWEST	1
++#define APL_GPIO_WEST		2
++#define APL_GPIO_SOUTHWEST	3
++#define APL_GPIO_NR_DEVICES	4
++
++/* Offset data for Apollo Lake GPIO controllers */
++#define APL_GPIO_NORTH_OFFSET		0xc50000
++#define APL_GPIO_NORTHWEST_OFFSET	0xc40000
++#define APL_GPIO_WEST_OFFSET		0xc70000
++#define APL_GPIO_SOUTHWEST_OFFSET	0xc00000
++
++#define APL_GPIO_IRQ			14
++
++static struct resource apl_gpio_resources[APL_GPIO_NR_DEVICES][2] = {
++	[APL_GPIO_NORTH] = {
++		DEFINE_RES_MEM(APL_GPIO_NORTH_OFFSET, 0x1000),
++		DEFINE_RES_IRQ(APL_GPIO_IRQ),
++	},
++	[APL_GPIO_NORTHWEST] = {
++		DEFINE_RES_MEM(APL_GPIO_NORTHWEST_OFFSET, 0x1000),
++		DEFINE_RES_IRQ(APL_GPIO_IRQ),
++	},
++	[APL_GPIO_WEST] = {
++		DEFINE_RES_MEM(APL_GPIO_WEST_OFFSET, 0x1000),
++		DEFINE_RES_IRQ(APL_GPIO_IRQ),
++	},
++	[APL_GPIO_SOUTHWEST] = {
++		DEFINE_RES_MEM(APL_GPIO_SOUTHWEST_OFFSET, 0x1000),
++		DEFINE_RES_IRQ(APL_GPIO_IRQ),
++	},
++};
++
++/* The order must be in sync with apl_pinctrl_soc_data */
++static const struct mfd_cell apl_gpio_devices[APL_GPIO_NR_DEVICES] = {
++	[APL_GPIO_NORTH] = {
++		.name = "apollolake-pinctrl",
++		.id = APL_GPIO_NORTH,
++		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_NORTH]),
++		.resources = apl_gpio_resources[APL_GPIO_NORTH],
++		.ignore_resource_conflicts = true,
++	},
++	[APL_GPIO_NORTHWEST] = {
++		.name = "apollolake-pinctrl",
++		.id = APL_GPIO_NORTHWEST,
++		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_NORTHWEST]),
++		.resources = apl_gpio_resources[APL_GPIO_NORTHWEST],
++		.ignore_resource_conflicts = true,
++	},
++	[APL_GPIO_WEST] = {
++		.name = "apollolake-pinctrl",
++		.id = APL_GPIO_WEST,
++		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_WEST]),
++		.resources = apl_gpio_resources[APL_GPIO_WEST],
++		.ignore_resource_conflicts = true,
++	},
++	[APL_GPIO_SOUTHWEST] = {
++		.name = "apollolake-pinctrl",
++		.id = APL_GPIO_SOUTHWEST,
++		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_SOUTHWEST]),
++		.resources = apl_gpio_resources[APL_GPIO_SOUTHWEST],
++		.ignore_resource_conflicts = true,
++	},
++};
  
- 		msleep(delay);
- 		delay *= 2;
-@@ -2352,9 +2348,7 @@ static bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
+ static struct mfd_cell lpc_ich_spi_cell = {
+ 	.name = "intel-spi",
+@@ -1083,6 +1149,33 @@ static int lpc_ich_init_wdt(struct pci_dev *dev)
+ 	return ret;
+ }
+ 
++static int lpc_ich_init_pinctrl(struct pci_dev *dev)
++{
++	struct resource base;
++	unsigned int i;
++	int ret;
++
++	/* Check, if GPIO has been exported as an ACPI device */
++	if (acpi_dev_present("INT3452", NULL, -1))
++		return -EEXIST;
++
++	ret = p2sb_bar(dev->bus, 0, &base);
++	if (ret)
++		return ret;
++
++	for (i = 0; i < ARRAY_SIZE(apl_gpio_devices); i++) {
++		struct resource *mem = &apl_gpio_resources[i][0];
++
++		/* Fill MEM resource */
++		mem->start += base.start;
++		mem->end += base.start;
++		mem->flags = base.flags;
++	}
++
++	return mfd_add_devices(&dev->dev, 0, apl_gpio_devices,
++			       ARRAY_SIZE(apl_gpio_devices), NULL, 0, NULL);
++}
++
+ static void lpc_ich_test_spi_write(struct pci_dev *dev, unsigned int devfn,
+ 				   struct intel_spi_boardinfo *info)
+ {
+@@ -1199,6 +1292,12 @@ static int lpc_ich_probe(struct pci_dev *dev,
+ 			cell_added = true;
  	}
  
- 	if (delay >= 1000)
--		pr_info("pci %04x:%02x:%02x.%d: ready after %dms\n",
--			pci_domain_nr(bus), bus->number,
--			PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+		pci_bus_info(bus, devfn, "ready after %dms\n", delay - 1);
- 
- 	return true;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d4308f847e58..e3c9edd103df 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2484,4 +2484,12 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
- 	WARN_ONCE(condition, "%s %s: " fmt, \
- 		  dev_driver_string(&(pdev)->dev), pci_name(pdev), ##arg)
- 
-+#define pci_bus_printk(level, bus, devfn, fmt, arg...) \
-+	printk(level "pci %04x:%02x:%02x.%d: " fmt, \
-+	       pci_domain_nr(bus), (bus)->number, PCI_SLOT(devfn), PCI_FUNC(devfn), ##arg)
++	if (priv->chipset == LPC_APL) {
++		ret = lpc_ich_init_pinctrl(dev);
++		if (!ret)
++			cell_added = true;
++	}
 +
-+#define pci_bus_err(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_ERR, (bus), devfn, fmt, ##arg)
-+#define pci_bus_warn(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_WARNING, (bus), devfn, fmt, ##arg)
-+#define pci_bus_info(bus, devfn, fmt, arg...)	pci_bus_printk(KERN_INFO, (bus), devfn, fmt, ##arg)
-+
- #endif /* LINUX_PCI_H */
+ 	if (lpc_chipset_info[priv->chipset].spi_type) {
+ 		ret = lpc_ich_init_spi(dev);
+ 		if (!ret)
 -- 
 2.34.1
 
