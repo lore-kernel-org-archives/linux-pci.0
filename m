@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BD8C433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 18:22:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7117EC433FE
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Dec 2021 18:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241249AbhLUSWr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Dec 2021 13:22:47 -0500
-Received: from mga18.intel.com ([134.134.136.126]:1346 "EHLO mga18.intel.com"
+        id S241278AbhLUSXc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Dec 2021 13:23:32 -0500
+Received: from mga03.intel.com ([134.134.136.65]:44983 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231459AbhLUSWq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Dec 2021 13:22:46 -0500
+        id S241271AbhLUSXb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Dec 2021 13:23:31 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1640110966; x=1671646966;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=3DqlyHFNaDBMcquaHNTfzmoeBsD/R1tWDi1GcZhi78c=;
-  b=Mb58/Gj33mPnJpR+iXjR013sZf69C9sIhnt8+/o3cjk7enpNI/cCm9eG
-   8fwNTB25Vfh5f7/ONTmgdiwiSn5SQjH4+yprmuq0E4/4JsTZCOhQy4pI9
-   n9fuli0kvB74p9dZ7u+bnFUvvhleN+MOyrOKibyur0Oiu0YntLV5HQeTs
-   H7n1V4/sTMsKxg6sZ5VEOk8Ua+Mxa2yyRBVNJxJ/0hvVw1bMMohMDpBuX
-   klZ7eSW8PpWN+6iO8gnrg7nflmGBqydYXqg1pGyy8qEgoXCIrgkE3nCa9
-   35oh+WHEDNvRnFagrEaxZDcBGNlN9RBFmsWLB9NmMQS5AwCXb9whApfn3
+  t=1640111010; x=1671647010;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=7+5zVsIZ/ITzZCzzI7K9rUDfhR9Qdw/EbbOne19K668=;
+  b=gVs8+190OiL8EQPn7U2X7kAYX2f7tb7ofUAqLUbl3h9SL7fE6vU/1Yv5
+   kGhegiWN8c4OWCZqAtbqQEdvxW3u/2/wFIoBtdWSCRKjlLv+j2PEqt7oc
+   eRq7z4S9hm3OySKM9JBdgG9RwN30Uy6VOywzrmw0qxU/IQLMmAD8Iyv85
+   fZGV2uhPtPeyRq4WfsSxZsnK8U7bpfxlsXuDc16NJ1OnWZtx/UiYvPydV
+   g7xNi1rC/0FPLFl0N3pwztd32X//F7o/gM0hu3XecDLAJIWPYS3nf7k3q
+   P6BdgAZhG/Kb25XdjQi3jWr4ivlX0ALzrr5fXpXNDFn0voAtkpAGmxAKa
    Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10205"; a="227313390"
+X-IronPort-AV: E=McAfee;i="6200,9189,10205"; a="240418045"
 X-IronPort-AV: E=Sophos;i="5.88,224,1635231600"; 
-   d="scan'208";a="227313390"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2021 10:15:43 -0800
+   d="scan'208";a="240418045"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Dec 2021 10:15:37 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,224,1635231600"; 
-   d="scan'208";a="484502686"
+   d="scan'208";a="548200384"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga002.jf.intel.com with ESMTP; 21 Dec 2021 10:15:37 -0800
+  by orsmga001.jf.intel.com with ESMTP; 21 Dec 2021 10:15:31 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 380D623E; Tue, 21 Dec 2021 20:15:40 +0200 (EET)
+        id D30F9190; Tue, 21 Dec 2021 20:15:39 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Wolfram Sang <wsa@kernel.org>, Jean Delvare <jdelvare@suse.de>,
         Heiner Kallweit <hkallweit1@gmail.com>,
@@ -55,175 +55,98 @@ Cc:     Jean Delvare <jdelvare@suse.com>, Peter Tyser <ptyser@xes-inc.com>,
         Linus Walleij <linus.walleij@linaro.org>,
         Mark Gross <markgross@kernel.org>,
         Henning Schild <henning.schild@siemens.com>
-Subject: [PATCH v3 7/8] mfd: lpc_ich: Add support for pinctrl in non-ACPI system
-Date:   Tue, 21 Dec 2021 20:15:25 +0200
-Message-Id: <20211221181526.53798-8-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 0/8] platform/x86: introduce p2sb_bar() helper
+Date:   Tue, 21 Dec 2021 20:15:18 +0200
+Message-Id: <20211221181526.53798-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20211221181526.53798-1-andriy.shevchenko@linux.intel.com>
-References: <20211221181526.53798-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Tan Jui Nee <jui.nee.tan@intel.com>
+There are a few users and at least one more is coming that would
+like to utilize P2SB mechanism of hiding and unhiding a device from
+the PCI configuration space.
 
-Add support for non-ACPI systems, such as system that uses
-Advanced Boot Loader (ABL) whereby a platform device has to be created
-in order to bind with pin control and GPIO.
+Here is the series to deduplicate existing users and provide
+a generic way for new comers.
 
-At the moment, Intel Apollo Lake In-Vehicle Infotainment (IVI) system
-requires a driver to hide and unhide P2SB to lookup P2SB BAR and pass
-the PCI BAR address to GPIO.
+It also includes a patch to enable GPIO controllers on Apollo Lake
+when it's used with ABL bootloader w/o ACPI support.
 
-Signed-off-by: Tan Jui Nee <jui.nee.tan@intel.com>
-Co-developed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/mfd/lpc_ich.c | 101 +++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 100 insertions(+), 1 deletion(-)
+The patch that bring the helper ("platform/x86/intel: Add Primary
+to Sideband (P2SB) bridge support") has a commit message that
+sheds a light on what the P2SB is and why this is needed.
 
-diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
-index 95dca5434917..563e4ed251fd 100644
---- a/drivers/mfd/lpc_ich.c
-+++ b/drivers/mfd/lpc_ich.c
-@@ -8,7 +8,8 @@
-  *  Configuration Registers.
-  *
-  *  This driver is derived from lpc_sch.
--
-+ *
-+ *  Copyright (c) 2017, 2021 Intel Corporation
-  *  Copyright (c) 2011 Extreme Engineering Solution, Inc.
-  *  Author: Aaron Sierra <asierra@xes-inc.com>
-  *
-@@ -42,6 +43,7 @@
- #include <linux/errno.h>
- #include <linux/acpi.h>
- #include <linux/pci.h>
-+#include <linux/pinctrl/pinctrl.h>
- #include <linux/mfd/core.h>
- #include <linux/mfd/lpc_ich.h>
- #include <linux/platform_data/itco_wdt.h>
-@@ -140,6 +142,70 @@ static struct mfd_cell lpc_ich_gpio_cell = {
- 	.ignore_resource_conflicts = true,
- };
- 
-+#define APL_GPIO_NORTH		0
-+#define APL_GPIO_NORTHWEST	1
-+#define APL_GPIO_WEST		2
-+#define APL_GPIO_SOUTHWEST	3
-+#define APL_GPIO_NR_DEVICES	4
-+
-+/* Offset data for Apollo Lake GPIO controllers */
-+#define APL_GPIO_NORTH_OFFSET		0xc50000
-+#define APL_GPIO_NORTHWEST_OFFSET	0xc40000
-+#define APL_GPIO_WEST_OFFSET		0xc70000
-+#define APL_GPIO_SOUTHWEST_OFFSET	0xc00000
-+
-+#define APL_GPIO_IRQ			14
-+
-+static struct resource apl_gpio_resources[APL_GPIO_NR_DEVICES][2] = {
-+	[APL_GPIO_NORTH] = {
-+		DEFINE_RES_MEM(APL_GPIO_NORTH_OFFSET, 0x1000),
-+		DEFINE_RES_IRQ(APL_GPIO_IRQ),
-+	},
-+	[APL_GPIO_NORTHWEST] = {
-+		DEFINE_RES_MEM(APL_GPIO_NORTHWEST_OFFSET, 0x1000),
-+		DEFINE_RES_IRQ(APL_GPIO_IRQ),
-+	},
-+	[APL_GPIO_WEST] = {
-+		DEFINE_RES_MEM(APL_GPIO_WEST_OFFSET, 0x1000),
-+		DEFINE_RES_IRQ(APL_GPIO_IRQ),
-+	},
-+	[APL_GPIO_SOUTHWEST] = {
-+		DEFINE_RES_MEM(APL_GPIO_SOUTHWEST_OFFSET, 0x1000),
-+		DEFINE_RES_IRQ(APL_GPIO_IRQ),
-+	},
-+};
-+
-+/* The order must be in sync with apl_pinctrl_soc_data */
-+static const struct mfd_cell apl_gpio_devices[APL_GPIO_NR_DEVICES] = {
-+	[APL_GPIO_NORTH] = {
-+		.name = "apollolake-pinctrl",
-+		.id = APL_GPIO_NORTH,
-+		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_NORTH]),
-+		.resources = apl_gpio_resources[APL_GPIO_NORTH],
-+		.ignore_resource_conflicts = true,
-+	},
-+	[APL_GPIO_NORTHWEST] = {
-+		.name = "apollolake-pinctrl",
-+		.id = APL_GPIO_NORTHWEST,
-+		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_NORTHWEST]),
-+		.resources = apl_gpio_resources[APL_GPIO_NORTHWEST],
-+		.ignore_resource_conflicts = true,
-+	},
-+	[APL_GPIO_WEST] = {
-+		.name = "apollolake-pinctrl",
-+		.id = APL_GPIO_WEST,
-+		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_WEST]),
-+		.resources = apl_gpio_resources[APL_GPIO_WEST],
-+		.ignore_resource_conflicts = true,
-+	},
-+	[APL_GPIO_SOUTHWEST] = {
-+		.name = "apollolake-pinctrl",
-+		.id = APL_GPIO_SOUTHWEST,
-+		.num_resources = ARRAY_SIZE(apl_gpio_resources[APL_GPIO_SOUTHWEST]),
-+		.resources = apl_gpio_resources[APL_GPIO_SOUTHWEST],
-+		.ignore_resource_conflicts = true,
-+	},
-+};
- 
- static struct mfd_cell lpc_ich_spi_cell = {
- 	.name = "intel-spi",
-@@ -1083,6 +1149,33 @@ static int lpc_ich_init_wdt(struct pci_dev *dev)
- 	return ret;
- }
- 
-+static int lpc_ich_init_pinctrl(struct pci_dev *dev)
-+{
-+	struct resource base;
-+	unsigned int i;
-+	int ret;
-+
-+	/* Check, if GPIO has been exported as an ACPI device */
-+	if (acpi_dev_present("INT3452", NULL, -1))
-+		return -EEXIST;
-+
-+	ret = p2sb_bar(dev->bus, 0, &base);
-+	if (ret)
-+		return ret;
-+
-+	for (i = 0; i < ARRAY_SIZE(apl_gpio_devices); i++) {
-+		struct resource *mem = &apl_gpio_resources[i][0];
-+
-+		/* Fill MEM resource */
-+		mem->start += base.start;
-+		mem->end += base.start;
-+		mem->flags = base.flags;
-+	}
-+
-+	return mfd_add_devices(&dev->dev, 0, apl_gpio_devices,
-+			       ARRAY_SIZE(apl_gpio_devices), NULL, 0, NULL);
-+}
-+
- static void lpc_ich_test_spi_write(struct pci_dev *dev, unsigned int devfn,
- 				   struct intel_spi_boardinfo *info)
- {
-@@ -1199,6 +1292,12 @@ static int lpc_ich_probe(struct pci_dev *dev,
- 			cell_added = true;
- 	}
- 
-+	if (priv->chipset == LPC_APL) {
-+		ret = lpc_ich_init_pinctrl(dev);
-+		if (!ret)
-+			cell_added = true;
-+	}
-+
- 	if (lpc_chipset_info[priv->chipset].spi_type) {
- 		ret = lpc_ich_init_spi(dev);
- 		if (!ret)
+Please, comment on the approach and individual patches.
+
+The changes made in v2 do not change the main idea and the functionality
+in a big scale. What we need is probably one more (RE-)test done by Henning.
+I hope to have it merged to v5.17-rc1 that Siemens can develop their changes
+based on this series.
+
+I have tested this on Apollo Lake platform (I'm able to see SPI NOR and
+since we have an ACPI device for GPIO I do not see any attempts to recreate
+one).
+
+(Since it's cross subsystem, the PDx86 seems the main one and
+I think it makes sense to route it throught it with immutable
+tag or branch provided for the others).
+
+Bjorn, are you okay with this approach and the commit message in the main
+patch?
+
+Changes in v3:
+- resent with cover letter
+
+Changes in v2:
+- added parentheses around bus in macros (Joe)
+- added tag (Jean)
+- fixed indentation and wrapping in the header (Christoph)
+- moved out of PCI realm to PDx86 as the best common denominator (Bjorn)
+- added a verbose commit message to explain P2SB thingy (Bjorn)
+- converted first parameter from pci_dev to pci_bus
+- made first two parameters (bus and devfn) optional (Henning, Lee)
+- added Intel pin control patch to the series (Henning, Mika)
+- fixed English style in the commit message of one of MFD patch (Lee)
+- added tags to my MFD LPC ICH patches (Lee)
+- used consistently (c) (Lee)
+- made indexing for MFD cell and resource arrays (Lee)
+- fixed the resource size in i801 (Jean)
+
+Andy Shevchenko (6):
+  PCI: Introduce pci_bus_*() printing macros when device is not
+    available
+  PCI: Convert __pci_read_base() to __pci_bus_read_base()
+  pinctrl: intel: Check against matching data instead of ACPI companion
+  mfd: lpc_ich: Factor out lpc_ich_enable_spi_write()
+  mfd: lpc_ich: Switch to generic p2sb_bar()
+  i2c: i801: convert to use common P2SB accessor
+
+Jonathan Yong (1):
+  platform/x86/intel: Add Primary to Sideband (P2SB) bridge support
+
+Tan Jui Nee (1):
+  mfd: lpc_ich: Add support for pinctrl in non-ACPI system
+
+ drivers/i2c/busses/Kconfig             |   1 +
+ drivers/i2c/busses/i2c-i801.c          |  39 ++-----
+ drivers/mfd/Kconfig                    |   1 +
+ drivers/mfd/lpc_ich.c                  | 136 +++++++++++++++++++++----
+ drivers/pci/pci.h                      |  16 ++-
+ drivers/pci/probe.c                    |  81 +++++++--------
+ drivers/pinctrl/intel/pinctrl-intel.c  |  14 ++-
+ drivers/platform/x86/intel/Kconfig     |  12 +++
+ drivers/platform/x86/intel/Makefile    |   2 +
+ drivers/platform/x86/intel/p2sb.c      |  99 ++++++++++++++++++
+ include/linux/pci.h                    |   8 ++
+ include/linux/platform_data/x86/p2sb.h |  27 +++++
+ 12 files changed, 335 insertions(+), 101 deletions(-)
+ create mode 100644 drivers/platform/x86/intel/p2sb.c
+ create mode 100644 include/linux/platform_data/x86/p2sb.h
+
 -- 
 2.34.1
 
