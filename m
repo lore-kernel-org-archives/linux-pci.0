@@ -2,32 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DD07C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Dec 2021 01:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A73C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Dec 2021 01:12:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345788AbhLWBLr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 22 Dec 2021 20:11:47 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:57894 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345743AbhLWBLk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Dec 2021 20:11:40 -0500
+        id S1345911AbhLWBMH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 22 Dec 2021 20:12:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38564 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345754AbhLWBLm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Dec 2021 20:11:42 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF7B8C061746;
+        Wed, 22 Dec 2021 17:11:41 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id F23C3CE1F05;
-        Thu, 23 Dec 2021 01:11:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A2A1C36AED;
-        Thu, 23 Dec 2021 01:11:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FF4761C04;
+        Thu, 23 Dec 2021 01:11:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BB67C36AE8;
+        Thu, 23 Dec 2021 01:11:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640221897;
-        bh=0QYOsHS5wj8XlJwNRMAGvRqv6+NUOG9O0hN3WUXDp44=;
+        s=k20201202; t=1640221900;
+        bh=JEMd6rbvAJo5/E0VVbBCtxpY1OwkDouz6ExYkZiuVQU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M6OSkDDvAFIANsXOdvzGFs8IpZScUztP7K7pwQlGe2BZ8KSI+LKIWBQRVnwmfFBiW
-         gOqd0n32/EFKsepqNKAH6SAl2rkxrJIr45yUmb8Sy+lrg1uhvKujTD5ZdvIkStL/G/
-         8F3wyDQnuhlrIKF9FbMj0LjKMYLCB/WaJPeyAPiopoVtboAZMhhGrvOIA1TmCsx1kP
-         xBW8SSHMD4wyOwNVS2gUhj417U/JSpkPVJumEsVRKu+2fgZ18RZ2oRA5At1R0qJa8N
-         t+kmEkG+KZVFKO6eJqhotVWLyQmuDPb+sxXNIBDRna8N796xuvMLNNbw7BYo/FqHMY
-         Mkekpg0L6pjTw==
+        b=hW0hvav0Nme8bJkjVlYbJCp4QsLxXxZtPVZphM7W3oFDqz+0Dwc7l6amya0PB4RNc
+         9hdMc9o3yDOCsEzZtWGM04BvH+GbSb1qS/dxZNFDYS/3SAIyfSPsY4jTq/9+KDq9ys
+         lMG3FQwHF8i8YXznN9YQT7zJSjctduMwkNpRpbytk2IkJFk5qkcI38p2xxfMEyT7er
+         owdv/I6d6/oReZn5tuXFKN4xP4GUzQ20V3QRO6CmhP9TIINcey+ZwuZJQPkt3Gm3cV
+         g8R8kAHaMKKOz0R0/1H7iMiwdMSImmzIcU1ymEdE0QxsCiRIC7FqTjuF8tqPI736XI
+         dHGJ2KzX33Byg==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org, Fan Fei <ffclaire1224@gmail.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -35,10 +38,13 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         Shuah Khan <skhan@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Daire McNamara <daire.mcnamara@microchip.com>
-Subject: [PATCH v2 15/23] PCI: microchip: Rename mc_port to mc_pcie
-Date:   Wed, 22 Dec 2021 19:10:46 -0600
-Message-Id: <20211223011054.1227810-16-helgaas@kernel.org>
+        Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v2 17/23] PCI: mt7621: Rename mt7621_pci_ to mt7621_pcie_
+Date:   Wed, 22 Dec 2021 19:10:48 -0600
+Message-Id: <20211223011054.1227810-18-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211223011054.1227810-1-helgaas@kernel.org>
 References: <20211223011054.1227810-1-helgaas@kernel.org>
@@ -50,208 +56,141 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Rename struct mc_port to mc_pcie to match the convention of <driver>_pcie.
-No functional change intended.
+Rename mt7621_pci_* structs and functions to mt7621_pcie_* for consistency
+with the rest of the file.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daire McNamara <daire.mcnamara@microchip.com>
+Cc: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
 ---
- drivers/pci/controller/pcie-microchip-host.c | 42 ++++++++++----------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+ drivers/pci/controller/pcie-mt7621.c | 36 ++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 329f930d17aa..29d8e81e4181 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -262,7 +262,7 @@ struct mc_msi {
- 	DECLARE_BITMAP(used, MC_NUM_MSI_IRQS);
- };
- 
--struct mc_port {
-+struct mc_pcie {
- 	void __iomem *axi_base_addr;
+diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
+index 4138c0e83513..b8fea7afdb1b 100644
+--- a/drivers/pci/controller/pcie-mt7621.c
++++ b/drivers/pci/controller/pcie-mt7621.c
+@@ -93,8 +93,8 @@ struct mt7621_pcie_port {
+  * reset lines are inverted.
+  */
+ struct mt7621_pcie {
+-	void __iomem *base;
  	struct device *dev;
- 	struct irq_domain *intx_domain;
-@@ -382,7 +382,7 @@ static struct {
- 
- static char poss_clks[][5] = { "fic0", "fic1", "fic2", "fic3" };
- 
--static void mc_pcie_enable_msi(struct mc_port *port, void __iomem *base)
-+static void mc_pcie_enable_msi(struct mc_pcie *port, void __iomem *base)
- {
- 	struct mc_msi *msi = &port->msi;
- 	u32 cap_offset = MC_MSI_CAP_CTRL_OFFSET;
-@@ -405,7 +405,7 @@ static void mc_pcie_enable_msi(struct mc_port *port, void __iomem *base)
- 
- static void mc_handle_msi(struct irq_desc *desc)
- {
--	struct mc_port *port = irq_desc_get_handler_data(desc);
-+	struct mc_pcie *port = irq_desc_get_handler_data(desc);
- 	struct device *dev = port->dev;
- 	struct mc_msi *msi = &port->msi;
- 	void __iomem *bridge_base_addr =
-@@ -428,7 +428,7 @@ static void mc_handle_msi(struct irq_desc *desc)
- 
- static void mc_msi_bottom_irq_ack(struct irq_data *data)
- {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
- 	u32 bitpos = data->hwirq;
-@@ -443,7 +443,7 @@ static void mc_msi_bottom_irq_ack(struct irq_data *data)
- 
- static void mc_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	phys_addr_t addr = port->msi.vector_phy;
- 
- 	msg->address_lo = lower_32_bits(addr);
-@@ -470,7 +470,7 @@ static struct irq_chip mc_msi_bottom_irq_chip = {
- static int mc_irq_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 				   unsigned int nr_irqs, void *args)
- {
--	struct mc_port *port = domain->host_data;
-+	struct mc_pcie *port = domain->host_data;
- 	struct mc_msi *msi = &port->msi;
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-@@ -503,7 +503,7 @@ static void mc_irq_msi_domain_free(struct irq_domain *domain, unsigned int virq,
- 				   unsigned int nr_irqs)
- {
- 	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
--	struct mc_port *port = irq_data_get_irq_chip_data(d);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(d);
- 	struct mc_msi *msi = &port->msi;
- 
- 	mutex_lock(&msi->lock);
-@@ -534,7 +534,7 @@ static struct msi_domain_info mc_msi_domain_info = {
- 	.chip = &mc_msi_irq_chip,
++	void __iomem *base;
+ 	struct list_head ports;
+ 	bool resets_inverted;
  };
- 
--static int mc_allocate_msi_domains(struct mc_port *port)
-+static int mc_allocate_msi_domains(struct mc_pcie *port)
- {
- 	struct device *dev = port->dev;
- 	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-@@ -562,7 +562,7 @@ static int mc_allocate_msi_domains(struct mc_port *port)
- 
- static void mc_handle_intx(struct irq_desc *desc)
- {
--	struct mc_port *port = irq_desc_get_handler_data(desc);
-+	struct mc_pcie *port = irq_desc_get_handler_data(desc);
- 	struct device *dev = port->dev;
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-@@ -585,7 +585,7 @@ static void mc_handle_intx(struct irq_desc *desc)
- 
- static void mc_ack_intx_irq(struct irq_data *data)
- {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
- 	u32 mask = BIT(data->hwirq + PM_MSI_INT_INTX_SHIFT);
-@@ -595,7 +595,7 @@ static void mc_ack_intx_irq(struct irq_data *data)
- 
- static void mc_mask_intx_irq(struct irq_data *data)
- {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
- 	unsigned long flags;
-@@ -611,7 +611,7 @@ static void mc_mask_intx_irq(struct irq_data *data)
- 
- static void mc_unmask_intx_irq(struct irq_data *data)
- {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
- 	unsigned long flags;
-@@ -698,7 +698,7 @@ static u32 local_events(void __iomem *addr)
- 	return val;
+@@ -129,7 +129,7 @@ static inline void pcie_port_write(struct mt7621_pcie_port *port,
+ 	writel_relaxed(val, port->base + reg);
  }
  
--static u32 get_events(struct mc_port *port)
-+static u32 get_events(struct mc_pcie *port)
+-static inline u32 mt7621_pci_get_cfgaddr(unsigned int bus, unsigned int slot,
++static inline u32 mt7621_pcie_get_cfgaddr(unsigned int bus, unsigned int slot,
+ 					 unsigned int func, unsigned int where)
  {
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-@@ -715,7 +715,7 @@ static u32 get_events(struct mc_port *port)
- 
- static irqreturn_t mc_event_handler(int irq, void *dev_id)
+ 	return (((where & 0xf00) >> 8) << 24) | (bus << 16) | (slot << 11) |
+@@ -140,7 +140,7 @@ static void __iomem *mt7621_pcie_map_bus(struct pci_bus *bus,
+ 					 unsigned int devfn, int where)
  {
--	struct mc_port *port = dev_id;
-+	struct mc_pcie *port = dev_id;
- 	struct device *dev = port->dev;
- 	struct irq_data *data;
+ 	struct mt7621_pcie *pcie = bus->sysdata;
+-	u32 address = mt7621_pci_get_cfgaddr(bus->number, PCI_SLOT(devfn),
++	u32 address = mt7621_pcie_get_cfgaddr(bus->number, PCI_SLOT(devfn),
+ 					     PCI_FUNC(devfn), where);
  
-@@ -731,7 +731,7 @@ static irqreturn_t mc_event_handler(int irq, void *dev_id)
+ 	writel_relaxed(address, pcie->base + RALINK_PCI_CONFIG_ADDR);
+@@ -148,7 +148,7 @@ static void __iomem *mt7621_pcie_map_bus(struct pci_bus *bus,
+ 	return pcie->base + RALINK_PCI_CONFIG_DATA + (where & 3);
+ }
  
- static void mc_handle_event(struct irq_desc *desc)
+-static struct pci_ops mt7621_pci_ops = {
++static struct pci_ops mt7621_pcie_ops = {
+ 	.map_bus	= mt7621_pcie_map_bus,
+ 	.read		= pci_generic_config_read,
+ 	.write		= pci_generic_config_write,
+@@ -156,7 +156,7 @@ static struct pci_ops mt7621_pci_ops = {
+ 
+ static u32 read_config(struct mt7621_pcie *pcie, unsigned int dev, u32 reg)
  {
--	struct mc_port *port = irq_desc_get_handler_data(desc);
-+	struct mc_pcie *port = irq_desc_get_handler_data(desc);
- 	unsigned long events;
- 	u32 bit;
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
-@@ -748,7 +748,7 @@ static void mc_handle_event(struct irq_desc *desc)
+-	u32 address = mt7621_pci_get_cfgaddr(0, dev, 0, reg);
++	u32 address = mt7621_pcie_get_cfgaddr(0, dev, 0, reg);
  
- static void mc_ack_event_irq(struct irq_data *data)
+ 	pcie_write(pcie, address, RALINK_PCI_CONFIG_ADDR);
+ 	return pcie_read(pcie, RALINK_PCI_CONFIG_DATA);
+@@ -165,7 +165,7 @@ static u32 read_config(struct mt7621_pcie *pcie, unsigned int dev, u32 reg)
+ static void write_config(struct mt7621_pcie *pcie, unsigned int dev,
+ 			 u32 reg, u32 val)
  {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	u32 event = data->hwirq;
- 	void __iomem *addr;
- 	u32 mask;
-@@ -763,7 +763,7 @@ static void mc_ack_event_irq(struct irq_data *data)
+-	u32 address = mt7621_pci_get_cfgaddr(0, dev, 0, reg);
++	u32 address = mt7621_pcie_get_cfgaddr(0, dev, 0, reg);
  
- static void mc_mask_event_irq(struct irq_data *data)
+ 	pcie_write(pcie, address, RALINK_PCI_CONFIG_ADDR);
+ 	pcie_write(pcie, val, RALINK_PCI_CONFIG_DATA);
+@@ -505,16 +505,16 @@ static int mt7621_pcie_register_host(struct pci_host_bridge *host)
  {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	u32 event = data->hwirq;
- 	void __iomem *addr;
- 	u32 mask;
-@@ -793,7 +793,7 @@ static void mc_mask_event_irq(struct irq_data *data)
+ 	struct mt7621_pcie *pcie = pci_host_bridge_priv(host);
  
- static void mc_unmask_event_irq(struct irq_data *data)
+-	host->ops = &mt7621_pci_ops;
++	host->ops = &mt7621_pcie_ops;
+ 	host->sysdata = pcie;
+ 	return pci_host_probe(host);
+ }
+ 
+-static const struct soc_device_attribute mt7621_pci_quirks_match[] = {
++static const struct soc_device_attribute mt7621_pcie_quirks_match[] = {
+ 	{ .soc_id = "mt7621", .revision = "E2" }
+ };
+ 
+-static int mt7621_pci_probe(struct platform_device *pdev)
++static int mt7621_pcie_probe(struct platform_device *pdev)
  {
--	struct mc_port *port = irq_data_get_irq_chip_data(data);
-+	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
- 	u32 event = data->hwirq;
- 	void __iomem *addr;
- 	u32 mask;
-@@ -881,7 +881,7 @@ static int mc_pcie_init_clks(struct device *dev)
+ 	struct device *dev = &pdev->dev;
+ 	const struct soc_device_attribute *attr;
+@@ -535,7 +535,7 @@ static int mt7621_pci_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 
+-	attr = soc_device_match(mt7621_pci_quirks_match);
++	attr = soc_device_match(mt7621_pcie_quirks_match);
+ 	if (attr)
+ 		pcie->resets_inverted = true;
+ 
+@@ -572,7 +572,7 @@ static int mt7621_pci_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
+-static int mt7621_pci_remove(struct platform_device *pdev)
++static int mt7621_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct mt7621_pcie *pcie = platform_get_drvdata(pdev);
+ 	struct mt7621_pcie_port *port;
+@@ -583,18 +583,18 @@ static int mt7621_pci_remove(struct platform_device *pdev)
  	return 0;
  }
  
--static int mc_pcie_init_irq_domains(struct mc_port *port)
-+static int mc_pcie_init_irq_domains(struct mc_pcie *port)
- {
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
-@@ -957,7 +957,7 @@ static void mc_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
- }
+-static const struct of_device_id mt7621_pci_ids[] = {
++static const struct of_device_id mt7621_pcie_ids[] = {
+ 	{ .compatible = "mediatek,mt7621-pci" },
+ 	{},
+ };
+-MODULE_DEVICE_TABLE(of, mt7621_pci_ids);
++MODULE_DEVICE_TABLE(of, mt7621_pcie_ids);
  
- static int mc_pcie_setup_windows(struct platform_device *pdev,
--				 struct mc_port *port)
-+				 struct mc_pcie *port)
- {
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-@@ -983,7 +983,7 @@ static int mc_platform_init(struct pci_config_window *cfg)
- {
- 	struct device *dev = cfg->parent;
- 	struct platform_device *pdev = to_platform_device(dev);
--	struct mc_port *port;
-+	struct mc_pcie *port;
- 	void __iomem *bridge_base_addr;
- 	void __iomem *ctrl_base_addr;
- 	int ret;
+-static struct platform_driver mt7621_pci_driver = {
+-	.probe = mt7621_pci_probe,
+-	.remove = mt7621_pci_remove,
++static struct platform_driver mt7621_pcie_driver = {
++	.probe = mt7621_pcie_probe,
++	.remove = mt7621_pcie_remove,
+ 	.driver = {
+ 		.name = "mt7621-pci",
+-		.of_match_table = of_match_ptr(mt7621_pci_ids),
++		.of_match_table = of_match_ptr(mt7621_pcie_ids),
+ 	},
+ };
+-builtin_platform_driver(mt7621_pci_driver);
++builtin_platform_driver(mt7621_pcie_driver);
 -- 
 2.25.1
 
