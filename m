@@ -2,336 +2,271 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2242FC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Dec 2021 02:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66B15C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Dec 2021 02:50:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350909AbhLXCJZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Dec 2021 21:09:25 -0500
-Received: from mail-eopbgr150043.outbound.protection.outlook.com ([40.107.15.43]:47790
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        id S1350996AbhLXCul (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Dec 2021 21:50:41 -0500
+Received: from mail-bn1nam07on2078.outbound.protection.outlook.com ([40.107.212.78]:64834
+        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230044AbhLXCJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Dec 2021 21:09:24 -0500
+        id S1350885AbhLXCul (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Dec 2021 21:50:41 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B8T+O/9ri9cCRAdQWxVZV10yFHp8l11DSyXM6X9Lr5XewUw+3P1YpN0jdm0ltOeo6JeKXFg0eBtgDj/ywsEmGH2WH9IvoPBgVyJ2bA/VnySLck+UeJy/r3+1G55/CXmbWX232d6T7h+weJnTgNf44pnJpWpphcNBoTcnMXh9paCfLMklKAfy5okCsjIovk98R5lui++sMVdZlIbCHdbE3D7EGb/BkfGWZI9clWF9SpxGujeNHP+OvOh5mXa6cicYQUSX8eVUfa6OAn3lNWp1iyydiRGZvR1sE/x2kRGc/WeXccHn5hMhgUaY2qRgyDy2zHMpf5ycpOQfhcpTU0wJ6A==
+ b=AUKrsO0+8K6dqR6MKJrTSiVdjQKs4FYd7zJmkHzz0H5QMcOQch2wU+SXEdfp7aMLhpAeTVGc1NXrMwqoLH9jlKJ9Qb2B9LcdH2QY1G32WdSblcJN+ULECCsMFibSc+gV9wQVZmTjC4aWZ0PM/m1jNtkcK/khvL4H6FnU5kSsMrhvocA2IlCMfKOA3uPih7v+nf9pUk1K6ZjH3WDIZO0SSnoHRqIESh96mbGjN/ieXdnXldqVuxElVyi7F02Ze9NfYwSxhj4OOMdAmusoXAmeCl3243hj9XgrdAswwE1/evasMFRyKWj1ZsxiO+jtgMKoXFBi56wjLjLU83TsOfzGQQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yDOJ+vjEOjpOcqEd4lL5eeAeAQFK5TuUtYcLN+ZrQSc=;
- b=aCNxcCqed7AL9GaHFYtwNIZi0wkSWtsYODwX6R8X9t9qByVPtfec3DR1OD0zdrUqZuiV1AhOa+Cgt4seL23mO1AZxGHCtyZZwJ7e82b2DkUwsEoUNKSP+dpW2fRQr4tnUmKWUfC32ysc/0dqLFL5qGIg0ABOXWTE+ftAtRmJCG20it7RFIsQMBsC8KJ2pg3JQ6PwL7iRBp5hghRDrFbOMq1kN5JWujMfkANygKcAJ4HvyUAB/i+0HYLNcb9GTiiN5Rop322cTfS5Hgt/YWl409WyDr+NmGrMURKU7GClu8ij8uPeaAlLFvezMHxR8YCdCiQ5HRMpvY1dM4iBOGpp3g==
+ bh=WcgCT2Z8fo+N7Fhombpe1mL3S24LHC2LNxt2IsC0hUg=;
+ b=cBWc9OClJPvIqaFjVUo5x8a4ss7y9Q6D/D+KPloZ118y/nPJ2o8no/L0xSNmzdKtb6Jfcb6MaqlT9dom8kQoCs2jF/i/LFXm4HBguG4oy6mmPsU6gzF/xDJ8irk2IFrkS8Kjnh2bXvLpdsrgC+L8BCh0fRzpqz4tQkZCHQ4Yc2yD/DU+v3saVtgGvCrF2ZxEWyZh5u4n9/fOlMcNC1B01XUp2I5zDSfSNJ1RLpuL3Gt14XMiScdwFGvzCCEhoZOR+H1XGjPPyM80p/V5FgGhX4SyweRVSwWUrsX4bkcbgo9G9bg9AiBkUW9nIhHhD2QzG5I8Tm4UVWpo+mrwWjPm6w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yDOJ+vjEOjpOcqEd4lL5eeAeAQFK5TuUtYcLN+ZrQSc=;
- b=kVtnrtHH7TB57C9mFAGh7DmJQ3grmtzjgmBXrrtQRIXvtoVTehTUsNbwpHopDxwmSvKqz1WwBkyee7102dkxqssKds1/96Y7yz4ApUNtej4qCbTL5D1hB++KzgiyCzZXXKvJDURw4mhnQJ9b+cLUsKU/kRa++2E+WT9umFZjP9Y=
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com (2603:10a6:20b:42b::10)
- by AS8PR04MB8914.eurprd04.prod.outlook.com (2603:10a6:20b:42d::6) with
+ bh=WcgCT2Z8fo+N7Fhombpe1mL3S24LHC2LNxt2IsC0hUg=;
+ b=Q5DDKtcDNLE8kIcde2+I7sebTLDZrL9+jM1axAMjHBW4+jYe1rVGrtCOOwK2gxuk7zyext2Opt+2pLmMhnZ5AIHr4M2dKB81d+d8BfFwp4kG9zeUSFLCRDMnRG6pjqWQuXbc93c1xeKXrHK5kEJ8K6jWFk27BJO4a/FnqIhlvBhGGSVpJFoiPoOeW9GkPQnmwRQTvJc0CvuFZ+32C7jspf0cV/MsxzsoYwUSdE1NBchUXoCKxwJTvjXyqvsoyKvdOoF/y/RTzW2A1Uhs/oQ1ZPgXEpvK3AK3qoebhZdg7bcfLCJxC7WHPKyH/EcDFsW5OcCKpI9fLNLpDismdCkDKw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com (2603:10b6:208:1cb::22)
+ by BL1PR12MB5336.namprd12.prod.outlook.com (2603:10b6:208:314::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4823.18; Fri, 24 Dec
- 2021 02:09:21 +0000
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::d15e:c0be:cc2d:77f9]) by AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::d15e:c0be:cc2d:77f9%6]) with mapi id 15.20.4823.021; Fri, 24 Dec 2021
- 02:09:21 +0000
-From:   Hongxing Zhu <hongxing.zhu@nxp.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Marcel Ziswiler <marcel.ziswiler@toradex.com>,
-        "tharvey@gateworks.com" <tharvey@gateworks.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "galak@kernel.crashing.org" <galak@kernel.crashing.org>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        dl-linux-imx <linux-imx@nxp.com>
-Subject: RE: [PATCH v7 8/8] PCI: imx: Add the imx8mm pcie support
-Thread-Topic: [PATCH v7 8/8] PCI: imx: Add the imx8mm pcie support
-Thread-Index: AQHX51bdQrJfUAGahEmIU+86q0TYAKw1a7+AgACkc9CACgeLAIAA78yg
-Date:   Fri, 24 Dec 2021 02:09:21 +0000
-Message-ID: <AS8PR04MB8676DC6855B91B34E441E4648C7F9@AS8PR04MB8676.eurprd04.prod.outlook.com>
-References: <1638432158-4119-1-git-send-email-hongxing.zhu@nxp.com>
- <1638432158-4119-9-git-send-email-hongxing.zhu@nxp.com>
- <Ybtuo0CzfUhoJwsT@rocinante>
- <AS8PR04MB8676F7F8BBE79E36D3EAFB6B8C789@AS8PR04MB8676.eurprd04.prod.outlook.com>
- <20211223114958.GA30243@lpieralisi>
-In-Reply-To: <20211223114958.GA30243@lpieralisi>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 65fad9b0-dbc9-4050-d469-08d9c6826660
-x-ms-traffictypediagnostic: AS8PR04MB8914:EE_
-x-ld-processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-x-microsoft-antispam-prvs: <AS8PR04MB891469ACDA3DB48BEA492C008C7F9@AS8PR04MB8914.eurprd04.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Z6/TAU/qG8AENQ1o4Qo5bFf1fu8a+zFaCc0B+9So6FwpfPOcrq9XHTL0dsHK1T7YwUz9MCHR5C0HvFDOJto1/3Qqu2V48EDxrbBvBy3z1QOO5pE43rg850+PgO79LU8pYnCjrc4HLU7rkZ3gTjnAMKmeSFnvpBfHobH32oBd3PUAsG2iwj5AfiYtlZalAP7eiFezJKKPeV0AAtnCjxAlSQdmeCbRaxtVow2Upqv5irVWJYVvVujFrjnhB+/AYaXSfZMf3rU5I5kL/Dh8q7CXAR2mxf3zcOdbcZVphd6geQT+UmUpR3ty4sp0ZGh9PIZ6L7fY6UolhiLeC+U3KwrpFrz58S1zurU64JCgIJKJ9ZnRFjUX8sCnMd5R5GS82cNq9RRmJc9k6A4ErZmSqRdBoT9ZcsrBKCQ8KbCHqTPwGWYW2CmcnBWmasKKn9KKSGV2D3uKlRz1WaI9QRjHI9fjLbtLVA280lRPddhM8jDYvNb/OX1IDDtzrz5FymuvifVn/mozIacYiKmZBqKBZ9c99JNMIV3sts2fD9Q0ezfzJ6l4Ljw5mw3P0lxWc7hU7J/+OBcwo7D1cdP1ehkzIPjjrySdCksutRAi07QBb5aF8HRI8Edni1OfjgJfhE/SOsFu9B4tFv3R8V4P1iGpEEPwEKuwxE9bRqUsUB97KOE+3zp3iSfmErvlhy861ILTtMe1ZmsMyx6oypIS4p0pk1jop6Mj0oQMzKiZq+REBT3aLx1APKrADGfEgn7iKYh0QJrowBA5kHLQVVd+qBpDgzK+HiSs4bnp3EHuhy5+AefEbTQCJdhvwiZZqZjfUU22zpKYa/z0Dj+Ua2HitfEC+tJ10io1zosVpWrDGNkF4CUQGC8=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8676.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(966005)(508600001)(45080400002)(7696005)(9686003)(8936002)(7416002)(2906002)(83380400001)(316002)(54906003)(8676002)(66574015)(6916009)(122000001)(66946007)(76116006)(38100700002)(33656002)(66556008)(5660300002)(66476007)(53546011)(6506007)(66446008)(64756008)(186003)(26005)(71200400001)(44832011)(4326008)(86362001)(38070700005)(52536014)(55016003)(32563001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-2?Q?aWEqXjLO1RaUJ1v1hzgiKCaqg3/Olz3tt0dRs3055YaFRvYesprZt0V0C3?=
- =?iso-8859-2?Q?DiOCf+qdMOGKkYAJBZmZwU6fpolo4YXgO1ruoouvhUPwh/6RhGnWnGnBqT?=
- =?iso-8859-2?Q?RoqI53th13k05kjQT0zmJZRBMWwUkLvk0IoBgRGrIFjkekNM914rkExfQW?=
- =?iso-8859-2?Q?CPTKfUFqi4n5IInovBDOJQXDC3//0sHSWDztp56vL4ctg6VfCQA3Okb1Qz?=
- =?iso-8859-2?Q?CHpZzBxIIcCFp9plaEFT2c6Xmi1zHPdZt/UUIm/xeoKtN4Cl7smU3u9rKg?=
- =?iso-8859-2?Q?2bA8kLmWlWQPcpmGViA8fEtmn39Q9/da097CCfcRz9jo7LJmzp778sjFjA?=
- =?iso-8859-2?Q?c6WJzg0iGiBrRKKlNNjJO0t6ide0oHxrVjKoAfCWncHE71GpLWDX/mL77g?=
- =?iso-8859-2?Q?p/8F9JXL5vDpA0YAeaF+54f2Qfl7DKFCXfpChkxiyJLn9z/6oYjFEZbxzo?=
- =?iso-8859-2?Q?euG0aDKgrNBffn4H4TsSXkt0czA5uYw8YwdRrZJ/yqRlX2Q/sVtG2oKz6P?=
- =?iso-8859-2?Q?s+rJbYLfUpCYbWP3c6Ak6y92mgk2ClAZtRBn6GSBqOFZUZVmmE2FnJhT8r?=
- =?iso-8859-2?Q?8//eay/2ZBeY7IyEm0SQ+V6kjwHkVe7FnLL/bjCkl25DIHIzYi8LdctHE7?=
- =?iso-8859-2?Q?Mxw5axbJDCwEpuZUaxgT0xlZgCy+DHSKt8KU/W3TmElzC6Lew1rKFwbRER?=
- =?iso-8859-2?Q?fTD1ASZIGw+1f7xWHu8zR5ma3oqtmMkUkrx6spkvHPx36T7qSeVUZ1GIzS?=
- =?iso-8859-2?Q?OhTjAydWAaxycfXHWUXo+FCCVUbbrvSEyF1H60l0Wknx5/6aD6ggfK5ke4?=
- =?iso-8859-2?Q?meT++RrLNqWiRZZ1TGMyTvHd/dgPqAvPaV8MhCZqowCTZ4k3aZqc+GUARV?=
- =?iso-8859-2?Q?V1LjdaDf07699Bql96fQ9KvFlaEg4uuDhat7ssqUCKfFx5u5poud83JY7P?=
- =?iso-8859-2?Q?qfVPrR3RveFayN5gv+yh9V7cZSPbCXPtbDsGK5tSH55uTpMb4jcgAjRwBf?=
- =?iso-8859-2?Q?5GENvwhCX8etCqUuBkFWhk11nqoJC0A3YkFEEzDfX78Ucih7a9QRqomjLI?=
- =?iso-8859-2?Q?lmTDy5cXutrQRN5fh/Qum6XqREr7+7slDSRYK6fvkVT2sfL4pO52lLF14c?=
- =?iso-8859-2?Q?waepWffx/6aRTCekYtAQsAW6jb+VwFzzAfF8Y3Y1OOn3I/shWdMJXgUEgm?=
- =?iso-8859-2?Q?5YOvXmwjGXfnLl+iL69kvbIG7wrM0nOrAQWz82zOnCatckhK7A9Nzm8+jf?=
- =?iso-8859-2?Q?bv/paxgKRSlDoP+Nnn9Jn81TAUgewXC+BVwss3wtDOBakQuItLYahi3xs/?=
- =?iso-8859-2?Q?Rf1RTk5+Z6a8O3y9DqoYAON3B2rCuoJD4Okv0trQv3U6DKmBc79BSztHIG?=
- =?iso-8859-2?Q?mk2ywypP2KiDiKpdtOqQ7slYaTTkvt6eBaUOQwD/RbbkAxsd1H7ybx+iad?=
- =?iso-8859-2?Q?vm2hJsAsLp4U6uJ87A7tYkLPSJr9ngojGO1rNb02VnqHS+cYeiayoCsXVx?=
- =?iso-8859-2?Q?X5gZCSbqUgwHjKTDtB/RgT0di+5ZwWleXQ/EWAURyM2zg0qhqt7oJJA2l9?=
- =?iso-8859-2?Q?NPc2wlpjHmC2r9M/ca7r+nj98hPqQ0naAxLbJLYzknDGbl8N1uizj0LjUi?=
- =?iso-8859-2?Q?vyKJDG+8F2x07mijr5ZJV4NI9KvL7f7jbaOwxrfdQdOznnw3W0+Kx80A?=
- =?iso-8859-2?Q?=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4823.19; Fri, 24 Dec
+ 2021 02:50:38 +0000
+Received: from BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::d8be:e4e4:ce53:6d11]) by BL0PR12MB5506.namprd12.prod.outlook.com
+ ([fe80::d8be:e4e4:ce53:6d11%7]) with mapi id 15.20.4823.019; Fri, 24 Dec 2021
+ 02:50:38 +0000
+Date:   Thu, 23 Dec 2021 22:50:36 -0400
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Lu Baolu <baolu.lu@linux.intel.com>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, Will Deacon <will@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>, rafael@kernel.org,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Liu Yi L <yi.l.liu@intel.com>,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Li Yang <leoyang.li@nxp.com>,
+        Dmitry Osipenko <digetx@gmail.com>,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        kvm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 07/13] iommu: Add iommu_at[de]tach_device_shared() for
+ multi-device groups
+Message-ID: <20211224025036.GD1779224@nvidia.com>
+References: <20211217063708.1740334-1-baolu.lu@linux.intel.com>
+ <20211217063708.1740334-8-baolu.lu@linux.intel.com>
+ <dd797dcd-251a-1980-ca64-bb38e67a526f@arm.com>
+ <20211221184609.GF1432915@nvidia.com>
+ <aebbd9c7-a239-0f89-972b-a9059e8b218b@arm.com>
+ <20211223005712.GA1779224@nvidia.com>
+ <fea0fc91-ac4c-dfe4-f491-5f906bea08bd@linux.intel.com>
+ <20211223140300.GC1779224@nvidia.com>
+ <50b8bb0f-3873-b128-48e8-22f6142f7118@linux.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <50b8bb0f-3873-b128-48e8-22f6142f7118@linux.intel.com>
+X-ClientProxiedBy: MN2PR16CA0004.namprd16.prod.outlook.com
+ (2603:10b6:208:134::17) To BL0PR12MB5506.namprd12.prod.outlook.com
+ (2603:10b6:208:1cb::22)
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7d3c78d8-9f96-45d5-69b0-08d9c6882a82
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5336:EE_
+X-Microsoft-Antispam-PRVS: <BL1PR12MB533696E6B7C42E178E322574C27F9@BL1PR12MB5336.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: whKNVD/pznbTd0ZXR0nZxS/ILsl9oL5gkhiEDw08CmJ8hM3hx55Vqj8wR3zpZXtfpWOFZr7+9rjKYiaJIFG3SK6N3+r3xDCBaOplvrrH9IjWSRPMJCtQVIpxi3B5s1iQTnVn2I+evOK3DMaZEafP1ombkyIFWbJr4VSbzMtvn2Di4H4hwgf4Fb3AQKTKPeUp7VE4NVrVMAFSi2LeB6v0GaW1lyxCXfFzgfiq6M+CCWi5cI3C4UasrIrQLSoFt3TFlbNT/F9rLfJKlzb2L2htXPHye/zIPMghlLGfySw8zgVF9BLcLe/8exXfty74WABooxPbV/Xkxy8Tyo4cfeks3yMPYAMbXVDua0EvnvVJbwC4zPVAkxa/ouN4PXcGJmFrNjZfIRM4xi4cY3wzTsqln12nWz//pDYiOhdryATfhMsU65usz/H2LMQNCGG7vwdNNLaIs9IhUczvfOatHptPOpr2lODvw3+R6zzaqx1637A0tmEXexbkXSixEjDfFRDAZ2ZUibpVGtq/USJkvRxwJ1XRtiKWa3ptzVCRfspGPPiFXDAmVD5rN50Nhe283OppgQ0rC3flzCAVrZAlDKhVXIg9JK5oJdc2vjWtTNYxppqTp10EpIfxfQKv4HL99PL0ikt06ueIZnPDPejJujWV1w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB5506.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(36756003)(8676002)(186003)(2616005)(26005)(508600001)(5660300002)(6512007)(6486002)(33656002)(8936002)(53546011)(66476007)(38100700002)(7416002)(6916009)(66946007)(2906002)(6506007)(54906003)(316002)(83380400001)(4326008)(66556008)(1076003)(86362001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xN+JxGmzyMHn1Sgl56ROULEyf/cVDjbZYECfkhLDIchvkQNUtDlF4F1vTHCN?=
+ =?us-ascii?Q?pCyvtVhpHUYFWE7CMVRZ6l6kgJjR0BGxvLKwS9Oz5FyZcYx1B7Syfwugw+Uk?=
+ =?us-ascii?Q?idg30uGg8GQKmoitOL2fBliMtjzFon+khLZQLqtrHNEpjh9fRNGhkjtpigeH?=
+ =?us-ascii?Q?na2Scy/cMlOFhrlWcmDiucWiwldkhfGdxvTYGqnx7na8KVaosmIGfuaEmalq?=
+ =?us-ascii?Q?gN6oJcP8Oixm3glu/XEjolUp50lL36woQHg+LHOAq0ZnrCCXIQbEF25P+/TI?=
+ =?us-ascii?Q?N+GtgxgT2iiypcZMl4riHvRoE3s5mXqU1SgkgQRHejxfSlYWsI+pdv3w33I8?=
+ =?us-ascii?Q?wV3qzPUYf/6mIdxCabJkC6yjoJUCLYBgHtFG84DxJKfXw08KY/R86es+CW1z?=
+ =?us-ascii?Q?qPXu2VEp4s7nPlfZbPbITXn2SZYDprzrNYfvaxrhBDczoFJOxJ3kuVnsEUoh?=
+ =?us-ascii?Q?R37mjXgGa4g9vXcd+eQr/t2bGS+LR+QsRtYt+sOUC1ihv+SzfZHCQr10ynrG?=
+ =?us-ascii?Q?J+fctkPqC7/H1I4CyOndHPso7biHkjK0z4VLdfQzgFeONt6M4XeTxDCh32lc?=
+ =?us-ascii?Q?YOJTlrXrpzyWYOw3vABeYIjFNfSktXuFuLy4b+fDaeWqcpuY8tHMfY+lbMtX?=
+ =?us-ascii?Q?JDH0YXWPfxJSmwsxR3mDzzk4uc/aslOGFzH3oHAK6ledHvbB6hPkDYa/WOMl?=
+ =?us-ascii?Q?yZtuYgg/p43hTBQxnw3H7tMNH0vdambn4yttYzdmwVtv9juELBDMG1o1P/pE?=
+ =?us-ascii?Q?8GFILQjk9w8IE41rNmm3thXO50TQtoMQttuBd9T0U/NAMbLI3sKNausoLj7Y?=
+ =?us-ascii?Q?UgQKjWq0YpytCHGj2deoAhKG1I3LV1Z2JnwgL5T/Y4o/i7zIruYSHTYQHgrq?=
+ =?us-ascii?Q?10/R9HYksC/bZExazP80wpYQTmf9qLDVImlWoJo7V4F6e7sCFlSYBKdUnMdd?=
+ =?us-ascii?Q?AU1T1V6m+/1F7RMdplNIsNOkIhJk0XT2Ru1ie+zqCm6PTlH6Cijk44Tx6QmL?=
+ =?us-ascii?Q?IzuaAXTwNoMVW508G1+V8+gNhi2oTam+zyA8Q/P3XjKtfUr6xGJMqafojSfT?=
+ =?us-ascii?Q?G9ojaCLv/bY5EQBM5xeaTFnFs8F+dtO1XDuPsjGggmLmhtpvoukVtpANhFWK?=
+ =?us-ascii?Q?tjppKpFDA5uR/uteFlcWOdSfHncHsw0GXWJ8tZRWAWUERZ00iA8y2zpflwEo?=
+ =?us-ascii?Q?km0hcvCk9D76In3fgz/rHRluyLuI1ilTuCCowEWmrK53DD7GK22Bp8XH9a1R?=
+ =?us-ascii?Q?HeA8wmpeJoGTd1G9/9MolUoGvQCao9GuHeByM7EiBU5NO4rUsAcIebqOBcao?=
+ =?us-ascii?Q?jPpXqVeuQMizM5lUQXyscmx6ivV+TupjRWYOB+njfVUqLbY7n9G017xVHq8A?=
+ =?us-ascii?Q?J0LhIly6koL/awSJ4GNOBDNvX1W5h8KKuvqq6G2IlZED86EvSvVxGwtBmf+2?=
+ =?us-ascii?Q?NIKgwWRGTGq16DBUo6g8HVlT8joaFSIaiLccwBV8M6EgMDQdio6/MK7IswMB?=
+ =?us-ascii?Q?hn6JZClE2LcIE858J8aWuzojch4nj7mjOZ44gFWf5ecgitL09PsawjrA5Z6v?=
+ =?us-ascii?Q?AVEh+ZshDVuhYAo8Lnk=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7d3c78d8-9f96-45d5-69b0-08d9c6882a82
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB5506.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8676.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 65fad9b0-dbc9-4050-d469-08d9c6826660
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Dec 2021 02:09:21.3744
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Dec 2021 02:50:38.3489
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: J8yBGBSv3bjlex9GBvqPp5+pZZfhaT/IYXFNhfz4KAP5TXqyATvVKkwf5Usg5+153mtGO0tvUoN3QIz5OROwUA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB8914
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zTz0yz5t/XzwnIL/LHm8GuyRdTG6/pRS6kbdnEcZtp3B44/N2VVLaCPyjfUcAbQp
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5336
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> -----Original Message-----
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Sent: Thursday, December 23, 2021 7:50 PM
-> To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> Cc: Krzysztof Wilczy=F1ski <kw@linux.com>; l.stach@pengutronix.de;
-> bhelgaas@google.com; Marcel Ziswiler <marcel.ziswiler@toradex.com>;
-> tharvey@gateworks.com; kishon@ti.com; vkoul@kernel.org;
-> robh@kernel.org; galak@kernel.crashing.org; shawnguo@kernel.org;
-> linux-phy@lists.infradead.org; devicetree@vger.kernel.org;
-> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> linux-kernel@vger.kernel.org; kernel@pengutronix.de; dl-linux-imx
-> <linux-imx@nxp.com>
-> Subject: Re: [PATCH v7 8/8] PCI: imx: Add the imx8mm pcie support
->=20
-> On Fri, Dec 17, 2021 at 05:54:21AM +0000, Hongxing Zhu wrote:
-> > > -----Original Message-----
-> > > From: Krzysztof Wilczy=F1ski <kw@linux.com>
-> > > Sent: Friday, December 17, 2021 12:52 AM
-> > > To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> > > Cc: l.stach@pengutronix.de; bhelgaas@google.com;
-> > > lorenzo.pieralisi@arm.com; Marcel Ziswiler
-> > > <marcel.ziswiler@toradex.com>; tharvey@gateworks.com;
-> kishon@ti.com;
-> > > vkoul@kernel.org; robh@kernel.org; galak@kernel.crashing.org;
-> > > shawnguo@kernel.org; linux-phy@lists.infradead.org;
-> > > devicetree@vger.kernel.org; linux-pci@vger.kernel.org;
-> > > linux-arm-kernel@lists.infradead.org;
-> > > linux-kernel@vger.kernel.org; kernel@pengutronix.de; dl-linux-imx
-> > > <linux-imx@nxp.com>
-> > > Subject: Re: [PATCH v7 8/8] PCI: imx: Add the imx8mm pcie support
-> > >
-> > > Hi Richard,
-> > >
-> > > Apologies for a very late review!  Especially since Lorenzo already
-> > > took patches as per:
-> > >
-> > >
-> > >
-> https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Flo
-> > > r
-> > >
-> e.kernel.org%2Flinux-pci%2F163965080404.20006.52416095516435017
-> > >
-> 49.b4-ty%40arm.com%2F&amp;data=3D04%7C01%7Chongxing.zhu%40nxp
-> > > .com%7C8afb673348214261883608d9c0b45b1d%7C686ea1d3bc2b4
-> c6fa
-> > >
-> 92cd99c5c301635%7C0%7C0%7C637752703124166805%7CUnknown%7
-> > >
-> CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1ha
-> > >
-> WwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=3DrfmN1Xojubap2vi3J4Jol3ozy
-> > > N1Q2q7YiBM5bqMm22s%3D&amp;reserved=3D0
-> > >
-> > > However, perhaps it's not too late.
-> > [Richard Zhu] Hi Krzysztof:
-> > Thanks for your review.
-> > But I don't know how to handle this situation.
-> > How about that I add this refine patch into the following bug fix and
-> > refine patch-set later?
-> > PCI: imx6: refine codes and add compliance tests mode support "
-> >
-> https://eur01.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Fpa
-> tchwork.kernel.org%2Fproject%2Flinux-arm-kernel%2Fcover%2F1635747
-> 478-25562-1-git-send-email-hongxing.zhu%40nxp.com%2F&amp;data=3D0
-> 4%7C01%7Chongxing.zhu%40nxp.com%7Ce04c6cda020b4f3849bf08d9c
-> 60a5da0%7C686ea1d3bc2b4c6fa92cd99c5c301635%7C0%7C1%7C6377
-> 58570100053598%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwM
-> DAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C2000&amp;
-> sdata=3DjoTJZcYJhmYlzSTWY%2BhGCFV5ch12HPR4mbbOwZ5vcO0%3D&a
-> mp;reserved=3D0"
-> >
-> > >
-> > > [...]
-> > > > @@ -446,6 +452,13 @@ static int imx6_pcie_enable_ref_clk(struct
-> > > imx6_pcie *imx6_pcie)
-> > > >  		break;
-> > > >  	case IMX7D:
-> > > >  		break;
-> > > > +	case IMX8MM:
-> > > > +		ret =3D clk_prepare_enable(imx6_pcie->pcie_aux);
-> > > > +		if (ret) {
-> > > > +			dev_err(dev, "unable to enable pcie_aux clock\n");
-> > > > +			break;
-> > > > +		}
-> > > > +		break;
-> > >
-> > > You can drop the inner break, it wouldn't do much here, unless this
-> > > was intended to be a return?
-> > [Richard Zhu] Yes, it is. The inner break can be dropped. The error
-> > return would be handled in the end.
-> >
-> > >
-> > > > @@ -538,6 +559,10 @@ static void
-> > > imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
-> > > >  	case IMX8MQ:
-> > > >  		reset_control_deassert(imx6_pcie->pciephy_reset);
-> > > >  		break;
-> > > > +	case IMX8MM:
-> > > > +		if (phy_init(imx6_pcie->phy) !=3D 0)
-> > > > +			dev_err(dev, "Waiting for PHY ready timeout!\n");
-> > > > +		break;
-> > >
-> > > If the above, you can keep the same style as used throughout the
-> > > file already, so it would just simply be:
-> > >
-> > >   if (phy_init(imx6_pcie->phy))
-> > >
-> > > Also, a nitpick: to be consistent with other such messages here, the
-> > > error message would be all lower-case letters.
-> > [Richard Zhu] Yes, it is.
-> > >
-> > > [...]
-> > > > @@ -614,6 +639,8 @@ static void imx6_pcie_configure_type(struct
-> > > > imx6_pcie *imx6_pcie)  static void imx6_pcie_init_phy(struct
-> > > imx6_pcie
-> > > > *imx6_pcie)  {
-> > > >  	switch (imx6_pcie->drvdata->variant) {
-> > > > +	case IMX8MM:
-> > > > +		break;
-> > > >  	case IMX8MQ:
-> > >
-> > > Would it warrant a comment that adds a note there to this single
-> > > bare break?  Perhaps this version is not support, lack this
-> > > particular functionality, etc.
-> > [Richard Zhu] Yes, it's easier to understand after add one comment.
-> > >
-> > > [...]
-> > > > @@ -1089,10 +1122,39 @@ static int imx6_pcie_probe(struct
-> > > platform_device *pdev)
-> > > >  			dev_err(dev, "Failed to get PCIE APPS reset
-> control\n");
-> > > >  			return PTR_ERR(imx6_pcie->apps_reset);
-> > > >  		}
-> > > > +		break;
-> > > > +	case IMX8MM:
-> > > > +		imx6_pcie->pcie_aux =3D devm_clk_get(dev, "pcie_aux");
-> > > > +		if (IS_ERR(imx6_pcie->pcie_aux))
-> > > > +			return dev_err_probe(dev,
-> > > PTR_ERR(imx6_pcie->pcie_aux),
-> > > > +					     "pcie_aux clock source missing or
-> > > invalid\n");
-> > > > +		imx6_pcie->apps_reset =3D
-> > > devm_reset_control_get_exclusive(dev,
-> > > > +									 "apps");
-> > > > +		if (IS_ERR(imx6_pcie->apps_reset)) {
-> > > > +			dev_err(dev, "Failed to get PCIE APPS reset
-> control\n");
-> > > > +			return PTR_ERR(imx6_pcie->apps_reset);
-> > > > +		}
-> > > > +
-> > > > +		imx6_pcie->phy =3D devm_phy_get(dev, "pcie-phy");
-> > > > +		if (IS_ERR(imx6_pcie->phy)) {
-> > > > +			if (PTR_ERR(imx6_pcie->phy) =3D=3D -EPROBE_DEFER)
-> > > > +				return -EPROBE_DEFER;
-> > > > +			dev_err(dev, "Failed to get PCIE PHY\n");
-> > > > +			return PTR_ERR(imx6_pcie->phy);
-> > > > +		}
-> > >
-> > > A question about handling of the -EPROBE_DEFER above: why not to
-> use
-> > > the
-> > > dev_err_probe() helper similarly to the code above and below?
-> Would
-> > > there be something different preventing the use of dev_err_probe()
-> > > here too?
-> > [Richard Zhu] To be aligned, the above one can be replaced totally.
-> > I didn't want to dump the error message when -EPROBE_DEFFER
-> occurs.
-> > Anyway, I can make them aligned later.
->=20
-> Can you send me an update for this patch only so that I can update the
-> corresponding commit according to this review please ?
-[Richard Zhu] Sure, thanks a lot for your kindly help.
+On Fri, Dec 24, 2021 at 09:30:17AM +0800, Lu Baolu wrote:
+> Hi Jason,
+> 
+> On 12/23/21 10:03 PM, Jason Gunthorpe wrote:
+> > > > I think it would be clear why iommu_group_set_dma_owner(), which
+> > > > actually does detatch, is not the same thing as iommu_attach_device().
+> > > iommu_device_set_dma_owner() will eventually call
+> > > iommu_group_set_dma_owner(). I didn't get why
+> > > iommu_group_set_dma_owner() is special and need to keep.
+> > Not quite, they would not call each other, they have different
+> > implementations:
+> > 
+> > int iommu_device_use_dma_api(struct device *device)
+> > {
+> > 	struct iommu_group *group = device->iommu_group;
+> > 
+> > 	if (!group)
+> > 		return 0;
+> > 
+> > 	mutex_lock(&group->mutex);
+> > 	if (group->owner_cnt != 0 ||
+> > 	    group->domain != group->default_domain) {
+> > 		mutex_unlock(&group->mutex);
+> > 		return -EBUSY;
+> > 	}
+> > 	group->owner_cnt = 1;
+> > 	group->owner = NULL;
+> > 	mutex_unlock(&group->mutex);
+> > 	return 0;
+> > }
+> 
+> It seems that this function doesn't work for multi-device groups. When
+> the user unbinds all native drivers from devices in the group and start
+> to bind them with vfio-pci and assign them to user, how could iommu know
+> whether the group is viable for user?
 
-Best Regards
-Richard Zhu
+It is just a mistake, I made this very fast. It should work as your
+patch had it with a ++. More like this:
 
->=20
-> Thanks,
-> Lorenzo
->=20
-> > Best Regards
-> > Richard
-> >
-> > >
-> > > >  		break;
-> > > >  	default:
-> > > >  		break;
-> > > >  	}
-> > > > +	/* Don't fetch the pcie_phy clock, if it has abstract PHY driver =
-*/
-> > > > +	if (imx6_pcie->phy =3D=3D NULL) {
-> > > > +		imx6_pcie->pcie_phy =3D devm_clk_get(dev, "pcie_phy");
-> > > > +		if (IS_ERR(imx6_pcie->pcie_phy))
-> > > > +			return dev_err_probe(dev,
-> > > PTR_ERR(imx6_pcie->pcie_phy),
-> > > > +					     "pcie_phy clock source missing or
-> > > invalid\n");
-> > > > +	}
-> > >
-> > > Thank you for another amazing patch!
-> > >
-> > > 	Krzysztof
+int iommu_device_use_dma_api(struct device *device)
+{
+	struct iommu_group *group = device->iommu_group;
+
+	if (!group)
+		return 0;
+
+	mutex_lock(&group->mutex);
+	if (group->owner_cnt != 0) {
+		if (group->domain != group->default_domain ||
+		    group->owner != NULL) {
+			mutex_unlock(&group->mutex);
+			return -EBUSY;
+		}
+	}
+	group->owner_cnt++;
+	mutex_unlock(&group->mutex);
+	return 0;
+}
+
+> > See, we get rid of the enum as a multiplexor parameter, each API does
+> > only wnat it needs, they don't call each other.
+> 
+> I like the idea of removing enum parameter and make the API name
+> specific. But I didn't get why they can't call each other even the
+> data in group is the same.
+
+Well, I think when you type them out you'll find they don't work the
+same. Ie the iommu_group_set_dma_owner() does __iommu_detach_group()
+which iommu_device_use_dma_api() definately doesn't want to
+do. iommu_device_use_dma_api() checks the domain while
+iommu_group_set_dma_owner() must not.
+
+This is basically the issue, all the places touching ownercount are
+superficially the same but each use different predicates. Given the
+predicate is more than half the code I wouldn't try to share the rest
+of it. But maybe when it is all typed in something will become
+obvious?
+
+> > We don't need _USER anymore because iommu_group_set_dma_owner() always
+> > does detatch, and iommu_replace_group_domain() avoids ever reassigning
+> > default_domain. The sepecial USER behavior falls out automatically.
+> 
+> This means we will grow more group-centric interfaces. My understanding
+> is the opposite that we should hide the concept of group in IOMMU
+> subsystem, and the device drivers only faces device specific interfaces.
+
+Ideally group interfaces would be reduced, but in this case VFIO needs
+the group. It has sort of a fundamental problem with its uAPI that
+expects the container is fully setup with a domain at the moment the
+group is attached. So deferring domain setup to when the device is
+available becomes a user visible artifact - and if this is important
+or not is a whole research question that isn't really that important
+for this series.
+
+We also can't just pull a device out of thin air, a device that hasn't
+been probed() hasn't even had dma_configure called! Let alone the
+lifetime and locking problems with that kind of idea.
+
+So.. leaving it as a group interface makes the most sense,
+particularly for this series which is really about fixing the sharing
+model in the iommu core and deleting the BUG_ONs. 
+
+Also, I'm sitting here looking at Robin's idea that
+iommu_attach_device() and iommu_attach_device_shared() should be the
+same - and that does seem conceptually appealing, but not so simple.
+
+The difference is that iommu_attach_device_shared() requires the
+device_driver to have set suppress_auto_claim_dma_owner while
+iommu_attach_device() does not (Lu, please do add a kdoc comment
+documenting this, and maybe a WARN_ON check to enforce it).
+
+Changing all 11 drivers using iommu_attach_device() to also set
+suppress_auto_claim_dma_owner is something to do in another series,
+merged properly through the driver trees, if it is done at all. So
+this series needs to keep both APIs.
+
+However, what we should be doing is fixing iommu_attach_device() to
+rely on the owner_cnt, and not iommu_group_device_count().
+
+Basically it's logic should instead check for the owner_cnt == 1 and
+then transform the group from a DMA_OWNER_DMA_API to a
+DMA_OWNER_PRIVATE_DOMAIN. If we get rid of the enum then this happens
+naturally by making group->domain != group->default_domain. All that
+is missing is the owner_cnt == 1 check and some commentary.  Again
+also with a WARN_ON and documentation that
+suppress_auto_claim_dma_owner is not set. (TBH, I thought this was
+discussed already, I haven't yet carefully checked v4..)
+
+Then, we rely on iommu_device_use_dma_api() to block further users of
+the group and remove the iommu_group_device_count() hack.
+
+Jason
