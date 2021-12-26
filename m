@@ -2,126 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F84C433F5
-	for <linux-pci@archiver.kernel.org>; Sun, 26 Dec 2021 22:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE9BCC433EF
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Dec 2021 22:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234724AbhLZWmF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 26 Dec 2021 17:42:05 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:39888 "EHLO
+        id S234746AbhLZWrT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 26 Dec 2021 17:47:19 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:42078 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234703AbhLZWmF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Dec 2021 17:42:05 -0500
+        with ESMTP id S234729AbhLZWrT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Dec 2021 17:47:19 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E8C0660F15
-        for <linux-pci@vger.kernel.org>; Sun, 26 Dec 2021 22:42:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 309EAC36AE9;
-        Sun, 26 Dec 2021 22:42:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B9E0560E17
+        for <linux-pci@vger.kernel.org>; Sun, 26 Dec 2021 22:47:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E30D6C36AE8;
+        Sun, 26 Dec 2021 22:47:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1640558524;
-        bh=PHZOGwl+r2JjFC+g0qIlEzMLPudTsuiQyDxyxoMnVXc=;
+        s=k20201202; t=1640558838;
+        bh=oRabUiyLCcQ/aJz5HYD2V+SpSEZKExXrnFhBJFCLUP4=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=iHBljENcXitYeMWXuL1e8GEiZ4IU/ycmKHC+KuMWm9vXpd85dSZgxRRp7j/db03hI
-         V/VY3F/EalkT4r7Ztj5aGhGxjpjDK3RM938cbgrgWdLqCm5M2XdJOuYYj+OPnW/MHI
-         Q7e0UPir4gL3zBvou0ZJ23ppSYr9WQp7Ka21005n5GLsWweZG4CjxZnCqtpXa9Xtoh
-         gjekyz/aq2tGZHxuBbWS8ZegVScpY9JOACfrMrZI5GVkZ37teo0aj74XoiKKd4Yb3L
-         Yq1RLuFC1ATcj9+N3MkLpapYnDYK/+pL/84IlH9E7ufwTfhz1/wXTwLS+Sp/Z25WP0
-         j3LmrbzO1JWYQ==
+        b=olCIiuTwpZud/ylFO9kvGbB6JHJFKPGZCZGvBzyKGjW8ygnqjGrK1wQistBUpv8rx
+         JyLVSzYMPIC8Bmu2hyiFI9zvTWcmZbGgyVPEp8DXwvIRVgnFWRnuyGlpPPMrCRD+V1
+         SrERtYhhXSSj+nUQbszVfVBnvHU9hh2hXAPhPKwKfkq4hX7CtwGCzkdhPW2Vq0tfK2
+         fa0ejcED8YRMtWCPKXLGBYBVbagwmfnxEB1y/1Z+FaLpaZaY59fmGFGH8YndK4xDwr
+         +KA/ZGdS8g05vRkdsB4Jstc0K8V7i1WwuJ+Erf3S2KUVKo8Km4gl+x+CwAQYZeWs0X
+         rUk9fv8J1eS2Q==
 Received: by pali.im (Postfix)
-        id 93B7B9D0; Sun, 26 Dec 2021 23:42:01 +0100 (CET)
+        id A7F529D0; Sun, 26 Dec 2021 23:47:15 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Martin Mares <mj@ucw.cz>, Bjorn Helgaas <helgaas@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Matthew Wilcox <willy@infradead.org>, linux-pci@vger.kernel.org
-Subject: [PATCH v3 pciutils] lspci: Show Slot Power Limit values above EFh
-Date:   Sun, 26 Dec 2021 23:41:47 +0100
-Message-Id: <20211226224147.19960-1-pali@kernel.org>
+Subject: [PATCH v2 pciutils] libpci: Fix intel_sanity_check() function
+Date:   Sun, 26 Dec 2021 23:47:03 +0100
+Message-Id: <20211226224703.20445-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <mj+md-20211226.220617.62062.albireo@ucw.cz>
-References: <20210403114857.n3h2wr3e3bpdsgnl@pali> <20211101144740.14256-1-pali@kernel.org> <YYABw84admN1+8Ly@casper.infradead.org> <20211124124611.wi6u77pnparg2563@pali> <mj+md-20211226.220617.62062.albireo@ucw.cz>
+In-Reply-To: <mj+md-20211226.215029.60895.albireo@ucw.cz>
+References: <mj+md-20211226.215029.60895.albireo@ucw.cz>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI Express Base Specification rev. 3.0 has the following definition for
-the Slot Power Limit Value:
+Function intel_sanity_check() calls conf1_read() which access d->domain
+field. But intel_sanity_check() does not initialize this field and so
+conf1_read() access some random data on stack.
 
-=======================================================================
-When the Slot Power Limit Scale field equals 00b (1.0x) and Slot Power
-Limit Value exceeds EFh, the following alternative encodings are used:
-  F0h = 250 W Slot Power Limit
-  F1h = 275 W Slot Power Limit
-  F2h = 300 W Slot Power Limit
-  F3h to FFh = Reserved for Slot Power Limit values above 300 W
-=======================================================================
+Tests showed that intel_sanity_check() always fails as in d->domain is
+stored some non-zero number.
 
-Replace function power_limit() by show_power_limit() which also prints
-power limit value. Show reserved value as string ">300W".
+Fix this issue by zeroing struct pci_dev d in intel_sanity_check() as
+sanity check is verifying PCI devices at domain 0.
 ---
-v3: Use floating point and %g printf format to avoid trailing zeros.
+v2: Remove explicit set of d->domain to zero.
 ---
- ls-caps.c | 29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+ lib/i386-ports.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/ls-caps.c b/ls-caps.c
-index db56556971cb..6f5613794790 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -656,10 +656,20 @@ static int exp_downstream_port(int type)
- 	 type == PCI_EXP_TYPE_PCIE_BRIDGE;	/* PCI/PCI-X to PCIe Bridge */
- }
- 
--static float power_limit(int value, int scale)
-+static void show_power_limit(int value, int scale)
+diff --git a/lib/i386-ports.c b/lib/i386-ports.c
+index b3b752cb1f3f..2f90aa4cee0a 100644
+--- a/lib/i386-ports.c
++++ b/lib/i386-ports.c
+@@ -72,6 +72,7 @@ intel_sanity_check(struct pci_access *a, struct pci_methods *m)
  {
-   static const float scales[4] = { 1.0, 0.1, 0.01, 0.001 };
--  return value * scales[scale];
-+  static const int scale0_values[3] = { 250, 275, 300 };
-+
-+  if (scale == 0 && value >= 0xF0) {
-+    /* F3h to FFh = Reserved for Slot Power Limit values above 300 W */
-+    if (value >= 0xF3) {
-+      printf(">300W");
-+      return;
-+    }
-+    value = scale0_values[value - 0xF0];
-+  }
-+  printf("%gW", value * scales[scale]);
- }
+   struct pci_dev d;
  
- static const char *latency_l0s(int value)
-@@ -700,10 +710,10 @@ static void cap_express_dev(struct device *d, int where, int type)
-     printf(" FLReset%c",
- 	FLAG(t, PCI_EXP_DEVCAP_FLRESET));
-   if ((type == PCI_EXP_TYPE_ENDPOINT) || (type == PCI_EXP_TYPE_UPSTREAM) ||
--      (type == PCI_EXP_TYPE_PCI_BRIDGE))
--    printf(" SlotPowerLimit %.3fW",
--	power_limit((t & PCI_EXP_DEVCAP_PWR_VAL) >> 18,
--		    (t & PCI_EXP_DEVCAP_PWR_SCL) >> 26));
-+      (type == PCI_EXP_TYPE_PCI_BRIDGE)) {
-+    printf(" SlotPowerLimit ");
-+    show_power_limit((t & PCI_EXP_DEVCAP_PWR_VAL) >> 18, (t & PCI_EXP_DEVCAP_PWR_SCL) >> 26);
-+  }
-   printf("\n");
- 
-   w = get_conf_word(d, where + PCI_EXP_DEVCTL);
-@@ -871,9 +881,10 @@ static void cap_express_slot(struct device *d, int where)
- 	FLAG(t, PCI_EXP_SLTCAP_PWRI),
- 	FLAG(t, PCI_EXP_SLTCAP_HPC),
- 	FLAG(t, PCI_EXP_SLTCAP_HPS));
--  printf("\t\t\tSlot #%d, PowerLimit %.3fW; Interlock%c NoCompl%c\n",
--	(t & PCI_EXP_SLTCAP_PSN) >> 19,
--	power_limit((t & PCI_EXP_SLTCAP_PWR_VAL) >> 7, (t & PCI_EXP_SLTCAP_PWR_SCL) >> 15),
-+  printf("\t\t\tSlot #%d, PowerLimit ",
-+	(t & PCI_EXP_SLTCAP_PSN) >> 19);
-+  show_power_limit((t & PCI_EXP_SLTCAP_PWR_VAL) >> 7, (t & PCI_EXP_SLTCAP_PWR_SCL) >> 15);
-+  printf("; Interlock%c NoCompl%c\n",
- 	FLAG(t, PCI_EXP_SLTCAP_INTERLOCK),
- 	FLAG(t, PCI_EXP_SLTCAP_NOCMDCOMP));
- 
++  memset(&d, 0, sizeof(d));
+   a->debug("...sanity check");
+   d.bus = 0;
+   d.func = 0;
 -- 
 2.20.1
 
