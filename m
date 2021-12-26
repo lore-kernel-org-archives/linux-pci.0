@@ -2,50 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1EADC433EF
-	for <linux-pci@archiver.kernel.org>; Sun, 26 Dec 2021 09:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA290C433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Dec 2021 12:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233170AbhLZJmI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 26 Dec 2021 04:42:08 -0500
-Received: from slot0.jllresort.com ([62.197.136.5]:40772 "EHLO
-        slot0.jllresort.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233179AbhLZJmI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Dec 2021 04:42:08 -0500
-X-Greylist: delayed 721 seconds by postgrey-1.27 at vger.kernel.org; Sun, 26 Dec 2021 04:42:07 EST
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=dkim; d=jllresort.com;
- h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding; i=ele.mon@jllresort.com;
- bh=qKFXbbyBWnIEHYiihCi93aR/cAU=;
- b=v5e9xXIngZOI7/gDNKa/GWuJmXohjkL+HzbkegB8IO0EqVf7ngHfF+lhly+4sRXl5g2TQz1kJbeW
-   WG1WwDDHf4n16E7jdtLsZ9DwrVTubN6zkBdzTWeTOQNum2O1Pn7TR49SvJjUccr8hieaIR1jmp2T
-   q01qCVethz0gtGo8qFnge91a+zr8O8QiZl+KZu2fnsTxO9ofxQ5Rwio7JWW+sYwVilCd8P6JXE5s
-   5S2iKW2+2qE7ItkYIMwHoJvnVAmyO7FE2GPzepYwrL09Ipuy7bt3LxzXdTHD9D9l8xyVSXC3zMaP
-   aiycNTJ+yqkvP1Kyd8lp/k0NNvYTX/hubjjS4Q==
-DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=dkim; d=jllresort.com;
- b=oJ1xcoXFiUWHPBsgFp/yKTuuOIMZ7HDgUTFVnZX/tMB35lm3kVsiDiAM8h8WMeWU4CkYPKoP9ANs
-   khscc3vhiDtRUwWw2n8R2pLkpt7B9z8GpJE119bBDeHBYK7ljefNeV4DkfavK3sFe2T+oAX701tG
-   eJ4bpSIIE9BJ3IxOYcd7v9BrhHDUdaX8vGyYMllN+/fSKN3zKI0KfmOprxr7hPHA8aEy8Isz1ddK
-   BBbpY8cQxk/oTODsX1SfRImFVnVVkVnZNy9KBpWtocAey7gSAXB8DhYaCTSNdXLzKJb302hNjkZJ
-   ZMYwfHmT6yFQm2CVJElnJvCbOUr/mSpWRt/p2A==;
-Reply-To: mustafa.ayvaz@ayvazburosu.com
-From:   ele.mon@jllresort.com
-To:     linux-pci@vger.kernel.org
-Subject: Happy Weekend:
-Date:   26 Dec 2021 10:29:28 +0100
-Message-ID: <20211226102855.967A84B8A5E209C0@jllresort.com>
+        id S233391AbhLZMEw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 26 Dec 2021 07:04:52 -0500
+Received: from foss.arm.com ([217.140.110.172]:40026 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233379AbhLZMEw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 26 Dec 2021 07:04:52 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id F2AEC6D;
+        Sun, 26 Dec 2021 04:04:51 -0800 (PST)
+Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D822F3F5A1;
+        Sun, 26 Dec 2021 04:04:50 -0800 (PST)
+Date:   Sun, 26 Dec 2021 12:04:45 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, Fan Fei <ffclaire1224@gmail.com>,
+        Rob Herring <robh@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 00/23] PCI: Name structs, functions consistently
+Message-ID: <20211226120445.GA19807@lpieralisi>
+References: <20211223011054.1227810-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211223011054.1227810-1-helgaas@kernel.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Greetings to you linux-pci,
+On Wed, Dec 22, 2021 at 07:10:31PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> This is a v2 of Fan's patches, previously posted at:
+> 
+>   https://lore.kernel.org/r/cover.1637678103.git.ffclaire1224@gmail.com
+>   https://lore.kernel.org/r/cover.1638021831.git.ffclaire1224@gmail.com
+> 
+> I added a few more patches along the same lines and added driver
+> maintainers to the cc lists.
+> 
+> There should be no functional changes here at all; this is strictly to make
+> the drivers more consistent so it's easier to see defects and opportunities
+> for consolidation.
+> 
+> Lorenzo, if this seems OK, I propose that I merge it after all of your
+> branches so it doesn't get in the way of what you have pending.
 
-I was wondering if you got my previous email? I have been trying=20
-to reach you by email linux-pci@vger.kernel.org, kindly get back=20
-to me swiftly, it is very important and urgent.
+That works for me, thank you very much for putting it together.
 
-Thanks
-Mustafa Ayvaz
-Email: mustafa.ayvaz@ayvazburosu.com
+Lorenzo
+
+> 
+> This series applies on v5.16-rc1.
+> 
+> Bjorn Helgaas (10):
+>   PCI: j721e: Drop pointless of_device_get_match_data() cast
+>   PCI: j721e: Drop redundant struct device *
+>   PCI: iproc: Rename iproc_pcie_bcma_ to iproc_bcma_pcie_
+>   PCI: iproc: Rename iproc_pcie_pltfm_ to iproc_pltfm_pcie_
+>   PCI: ls-gen4: Rename ls_pcie_g4 to ls_g4_pcie
+>   PCI: microchip: Rename mc_port to mc_pcie
+>   PCI: mt7621: Make pci_ops static
+>   PCI: mt7621: Rename mt7621_pci_ to mt7621_pcie_
+>   PCI: rcar-gen2: Rename rcar_pci_priv to rcar_pci
+>   PCI: xilinx-cpm: Rename xilinx_cpm_pcie_port to xilinx_cpm_pcie
+> 
+> Fan Fei (13):
+>   PCI: altera: Prefer of_device_get_match_data()
+>   PCI: artpec6: Prefer of_device_get_match_data()
+>   PCI: cadence: Prefer of_device_get_match_data()
+>   PCI: designware-plat: Prefer of_device_get_match_data()
+>   PCI: dra7xx: Prefer of_device_get_match_data()
+>   PCI: keystone: Prefer of_device_get_match_data()
+>   PCI: kirin: Prefer of_device_get_match_data()
+>   PCI: intel-gw: Rename intel_pcie_port to intel_pcie
+>   PCI: mediatek-gen3: Rename mtk_pcie_port to mtk_gen3_pcie
+>   PCI: tegra194: Rename tegra_pcie_dw to tegra194_pcie
+>   PCI: uniphier: Rename uniphier_pcie_priv to uniphier_pcie
+>   PCI: xgene: Rename xgene_pcie_port to xgene_pcie
+>   PCI: xilinx: Rename xilinx_pcie_port to xilinx_pcie
+> 
+>  drivers/pci/controller/cadence/pci-j721e.c    |  18 +-
+>  .../controller/cadence/pcie-cadence-plat.c    |   6 +-
+>  drivers/pci/controller/dwc/pci-dra7xx.c       |   6 +-
+>  drivers/pci/controller/dwc/pci-keystone.c     |   4 +-
+>  drivers/pci/controller/dwc/pcie-artpec6.c     |   6 +-
+>  .../pci/controller/dwc/pcie-designware-plat.c |   6 +-
+>  drivers/pci/controller/dwc/pcie-intel-gw.c    | 204 +++++-----
+>  drivers/pci/controller/dwc/pcie-kirin.c       |   6 +-
+>  drivers/pci/controller/dwc/pcie-tegra194.c    | 222 +++++------
+>  drivers/pci/controller/dwc/pcie-uniphier.c    | 147 +++----
+>  .../mobiveil/pcie-layerscape-gen4.c           |  84 ++--
+>  drivers/pci/controller/pci-rcar-gen2.c        |  14 +-
+>  drivers/pci/controller/pci-xgene.c            |  46 +--
+>  drivers/pci/controller/pcie-altera.c          |   8 +-
+>  drivers/pci/controller/pcie-iproc-bcma.c      |  22 +-
+>  drivers/pci/controller/pcie-iproc-platform.c  |  16 +-
+>  drivers/pci/controller/pcie-mediatek-gen3.c   | 372 +++++++++---------
+>  drivers/pci/controller/pcie-microchip-host.c  |  42 +-
+>  drivers/pci/controller/pcie-mt7621.c          |  36 +-
+>  drivers/pci/controller/pcie-xilinx-cpm.c      |  44 +--
+>  drivers/pci/controller/pcie-xilinx.c          | 158 ++++----
+>  21 files changed, 727 insertions(+), 740 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
