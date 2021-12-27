@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB257C43219
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6DFC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231303AbhL0Qoa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 11:44:30 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42328 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S230125AbhL0QoM (ORCPT
+        id S231553AbhL0Qok (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:44:40 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46864 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230128AbhL0QoM (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:12 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRDkIMd013691;
-        Mon, 27 Dec 2021 16:43:57 GMT
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGfoR6017518;
+        Mon, 27 Dec 2021 16:43:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=rYV9VE/VMJoalojpdsK4Id1E+mAKnmHuAyuSjAZnqms=;
- b=N5Ms6Rak69O2eTd4UiVaYE1CAsOHFbsyuoLC+vqmFf7sN0/fczLP/g9n9nDuCDOBQtP+
- 4UQiQk4MiepkhrRzjukOmT3ezAMLRBMQU90LESpn0LlXvIXJct2Qt7w95dNKq5g+/TQh
- OGBUKQ32xSwcF9ey7aLvaBKE1CkIWFIG3Z1EiUNz1QcAjQN4ybrGUcvxItMGPBrVQ5xX
- 2YSAZYeafhwV1IqYbO6G1TnsFDenHTyrDspV1qwMMvE7LO//OvztBFMI3o5zW1zk64wO
- D0ZnyPV7+7H/yszSBOMiheH2Zndc1fJgqsK/+ZtlEAiSpH2w+8o6U7CACHH97JcPn/V3 Jg== 
+ bh=eo6zE487cpKaOW4tRHAPwXKzTXoz+NYW/y/7HK1Bt4g=;
+ b=mjx6tdKZgzbzBMl671YEH988ZpEryJ+ftI8Zewnohls89MWKz0n/zmzwZvmLN9iv0f4g
+ ZiIeyV2qJKEENPvrA9jkXsq/g7a9dsX6eumwZ0y4HDB1VIbYVqD6ccbfJRBm/b0SGaVx
+ 40NJCsnf9YkgqqWw9Vykq2SYiRNT9vz1AGLMEq6rWsSSedWreVUzFPd+e8sVtfoPNr4o
+ UlEJr0RB6w6zo4BUBR5dbetmhCXTZBQS4FGJeY31GzSsq5TfZhbTgXSS8Ye+yO/vMOdk
+ Elb9wbVguGJgGRQnhb8ZT3doTSyIgU16p5g6pB0T0Hje7+NynbihHBWlCKbqZH+as7P/ qA== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7e5d3j94-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7h7u80wf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:57 +0000
-Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGa2mW030470;
-        Mon, 27 Dec 2021 16:43:56 GMT
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7e5d3j8m-1
+        Mon, 27 Dec 2021 16:43:46 +0000
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGhjlP023997;
+        Mon, 27 Dec 2021 16:43:46 GMT
+Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7h7u80w3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:56 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGhtU6010546;
-        Mon, 27 Dec 2021 16:43:55 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma03fra.de.ibm.com with ESMTP id 3d5tx9as42-1
+        Mon, 27 Dec 2021 16:43:45 +0000
+Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
+        by ppma01fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGhXDB028626;
+        Mon, 27 Dec 2021 16:43:44 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma01fra.de.ibm.com with ESMTP id 3d5tx92sq7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:54 +0000
+        Mon, 27 Dec 2021 16:43:43 +0000
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhq0k36307224
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhfE143057636
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Dec 2021 16:43:52 GMT
+        Mon, 27 Dec 2021 16:43:41 GMT
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0B3FDA4060;
-        Mon, 27 Dec 2021 16:43:52 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 4DE30A405C;
+        Mon, 27 Dec 2021 16:43:41 +0000 (GMT)
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8661CA405C;
-        Mon, 27 Dec 2021 16:43:51 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B30D8A405F;
+        Mon, 27 Dec 2021 16:43:40 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 27 Dec 2021 16:43:51 +0000 (GMT)
+        Mon, 27 Dec 2021 16:43:40 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -64,81 +64,132 @@ To:     Arnd Bergmann <arnd@kernel.org>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>
 Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-csky@vger.kernel.org
-Subject: [RFC 30/32] /dev/port: don't compile file operations without CONFIG_DEVPORT
-Date:   Mon, 27 Dec 2021 17:43:15 +0100
-Message-Id: <20211227164317.4146918-31-schnelle@linux.ibm.com>
+        linux-csky@vger.kernel.org, netdev@vger.kernel.org,
+        linux-can@vger.kernel.org
+Subject: [RFC 17/32] net: Kconfig: add HAS_IOPORT dependencies
+Date:   Mon, 27 Dec 2021 17:43:02 +0100
+Message-Id: <20211227164317.4146918-18-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: gyVIHlTrceY54FOT6heiCOtU1NBvLT-M
-X-Proofpoint-GUID: 5haca4oBfchx7d7VUcfO4JM968iHz4U0
+X-Proofpoint-GUID: r1PMtT0i8NwLvGeQcDuE90R1l_Qh7u0E
+X-Proofpoint-ORIG-GUID: -8qZcipZwuL7bq32zdyuniaG3OuaHw__
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
  definitions=2021-12-27_08,2021-12-24_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- lowpriorityscore=0 adultscore=0 impostorscore=0 mlxscore=0 phishscore=0
- suspectscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 spamscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
+ spamscore=0 impostorscore=0 mlxscore=0 phishscore=0 mlxlogscore=914
+ clxscore=1011 priorityscore=1501 bulkscore=0 adultscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2110150000 definitions=main-2112270080
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the future inb() and friends will not be available when compiling
-with CONFIG_HAS_IOPORT=n so we must only try to access them here if
-CONFIG_DEVPORT is set which depends on HAS_IOPORT.
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/char/mem.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/Kconfig              | 2 +-
+ drivers/net/can/cc770/Kconfig    | 1 +
+ drivers/net/can/sja1000/Kconfig  | 1 +
+ drivers/net/ethernet/via/Kconfig | 1 +
+ drivers/net/hamradio/Kconfig     | 6 +++---
+ 5 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index cc296f0823bd..c1373617153f 100644
---- a/drivers/char/mem.c
-+++ b/drivers/char/mem.c
-@@ -402,6 +402,7 @@ static int mmap_mem(struct file *file, struct vm_area_struct *vma)
- 	return 0;
- }
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index 6cccc3dc00bc..362d20c9a571 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -476,7 +476,7 @@ source "drivers/net/ipa/Kconfig"
  
-+#ifdef CONFIG_DEVPORT
- static ssize_t read_port(struct file *file, char __user *buf,
- 			 size_t count, loff_t *ppos)
- {
-@@ -443,6 +444,7 @@ static ssize_t write_port(struct file *file, const char __user *buf,
- 	*ppos = i;
- 	return tmp-buf;
- }
-+#endif
+ config NET_SB1000
+ 	tristate "General Instruments Surfboard 1000"
+-	depends on PNP
++	depends on ISAPNP
+ 	help
+ 	  This is a driver for the General Instrument (also known as
+ 	  NextLevel) SURFboard 1000 internal
+diff --git a/drivers/net/can/cc770/Kconfig b/drivers/net/can/cc770/Kconfig
+index 9ef1359319f0..467ef19de1c1 100644
+--- a/drivers/net/can/cc770/Kconfig
++++ b/drivers/net/can/cc770/Kconfig
+@@ -7,6 +7,7 @@ if CAN_CC770
  
- static ssize_t read_null(struct file *file, char __user *buf,
- 			 size_t count, loff_t *ppos)
-@@ -665,12 +667,14 @@ static const struct file_operations null_fops = {
- 	.splice_write	= splice_write_null,
- };
+ config CAN_CC770_ISA
+ 	tristate "ISA Bus based legacy CC770 driver"
++	depends on ISA
+ 	help
+ 	  This driver adds legacy support for CC770 and AN82527 chips
+ 	  connected to the ISA bus using I/O port, memory mapped or
+diff --git a/drivers/net/can/sja1000/Kconfig b/drivers/net/can/sja1000/Kconfig
+index 110071b26921..be1943a27ed0 100644
+--- a/drivers/net/can/sja1000/Kconfig
++++ b/drivers/net/can/sja1000/Kconfig
+@@ -87,6 +87,7 @@ config CAN_PLX_PCI
  
--static const struct file_operations __maybe_unused port_fops = {
-+#ifdef CONFIG_DEVPORT
-+static const struct file_operations port_fops = {
- 	.llseek		= memory_lseek,
- 	.read		= read_port,
- 	.write		= write_port,
- 	.open		= open_port,
- };
-+#endif
+ config CAN_SJA1000_ISA
+ 	tristate "ISA Bus based legacy SJA1000 driver"
++	depends on ISA
+ 	help
+ 	  This driver adds legacy support for SJA1000 chips connected to
+ 	  the ISA bus using I/O port, memory mapped or indirect access.
+diff --git a/drivers/net/ethernet/via/Kconfig b/drivers/net/ethernet/via/Kconfig
+index 0ca7d8f7bfde..25add3d64859 100644
+--- a/drivers/net/ethernet/via/Kconfig
++++ b/drivers/net/ethernet/via/Kconfig
+@@ -20,6 +20,7 @@ config VIA_RHINE
+ 	tristate "VIA Rhine support"
+ 	depends on LEGACY_PCI || (OF_IRQ && GENERIC_PCI_IOMAP)
+ 	depends on LEGACY_PCI || ARCH_VT8500 || COMPILE_TEST
++	depends on HAS_IOPORT
+ 	depends on HAS_DMA
+ 	select CRC32
+ 	select MII
+diff --git a/drivers/net/hamradio/Kconfig b/drivers/net/hamradio/Kconfig
+index 441da03c23ee..61c0bc156870 100644
+--- a/drivers/net/hamradio/Kconfig
++++ b/drivers/net/hamradio/Kconfig
+@@ -117,7 +117,7 @@ config SCC_TRXECHO
  
- static const struct file_operations zero_fops = {
- 	.llseek		= zero_lseek,
+ config BAYCOM_SER_FDX
+ 	tristate "BAYCOM ser12 fullduplex driver for AX.25"
+-	depends on AX25 && !S390
++	depends on AX25 && HAS_IOPORT
+ 	select CRC_CCITT
+ 	help
+ 	  This is one of two drivers for Baycom style simple amateur radio
+@@ -137,7 +137,7 @@ config BAYCOM_SER_FDX
+ 
+ config BAYCOM_SER_HDX
+ 	tristate "BAYCOM ser12 halfduplex driver for AX.25"
+-	depends on AX25 && !S390
++	depends on AX25 && HAS_IOPORT
+ 	select CRC_CCITT
+ 	help
+ 	  This is one of two drivers for Baycom style simple amateur radio
+@@ -185,7 +185,7 @@ config BAYCOM_EPP
+ 
+ config YAM
+ 	tristate "YAM driver for AX.25"
+-	depends on AX25 && !S390
++	depends on AX25 && HAS_IOPORT
+ 	help
+ 	  The YAM is a modem for packet radio which connects to the serial
+ 	  port and includes some of the functions of a Terminal Node
 -- 
 2.32.0
 
