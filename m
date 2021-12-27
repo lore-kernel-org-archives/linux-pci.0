@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93079C43217
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E503FC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232622AbhL0Qqb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 11:46:31 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50474 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230450AbhL0QoY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:24 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGCORT003213;
-        Mon, 27 Dec 2021 16:43:51 GMT
+        id S232636AbhL0Qqc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:46:32 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49874 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230409AbhL0QoV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:21 -0500
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRDkF8f038587;
+        Mon, 27 Dec 2021 16:43:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=rVA/opujcDurk3T7BUVOWmBKZAmV4zilWfIilRnO+MA=;
- b=FrM8XWC3BtAu/mNOm38ZFBM4D4F6/vcbKnxwsl+zjE8HVJuilRziHeaE9FelFK6H02RY
- upByhv481Q5PVBgfR4ygy2/YhmSH5usiZXai6yWyft77C4ZCdmf2YycybKKj4oWD7Laf
- NNkf0vSPYdjdAXIcc8NisbCBDI4f1SZhA1qDNH26cswScS812uUYXJ1xQfyGL9fIVc3A
- s3oc5lJxvfmIP2Qcjq8Sat1Xa9lekDDrO+voVGwsO1uVb+RpWP0nu2J6Lrnagrlb3q7p
- SZGdtjZihsvsb2nzmH6v+hIKNCJJdOHWRNEmywKf73bhwqjDvjoGHKT3Q9GLi6KbF/r8 8A== 
+ bh=/hchrCNOUGL0KjCXJFz151XEtGX0vrgBMBuMc1hFth0=;
+ b=Yaz8HUj/AHvHvpPHCXgKnIORXiWMzvVJeUe72vK2aCgEKCpu65wm1maQjWNPPbc52QtP
+ aX8jqMKLbzojMAEEKWegg9IfMkugBy50YkWZVZ3FKRmhWQ3E3OR9oOwwsg/Kh7MRrXrM
+ ZcV/LLzh5v7l6DGQgfNBIMNnC3xK3zh/jnXVJfNSlGwuEkGiXHn0tAAT4mQIkusWfKs1
+ WUAYkibif9CpASfPwlISTtHZHNdNFHCM8T+R8dUaretXECYF+WnCtmZB3v/fUMGM/JFD
+ h6EnJ0AawTVurotFbY0IqSHRm1f655GWYhoiJSOdk2clkPhd1aukB2pLmDRLqN0NlzXK OA== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7gswgfg9-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7dqdv916-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:51 +0000
-Received: from m0098421.ppops.net (m0098421.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGVGZS014787;
-        Mon, 27 Dec 2021 16:43:50 GMT
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7gswgffu-1
+        Mon, 27 Dec 2021 16:43:43 +0000
+Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGhgsZ014351;
+        Mon, 27 Dec 2021 16:43:42 GMT
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7dqdv90n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:50 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGbgD4001684;
-        Mon, 27 Dec 2021 16:43:48 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma03fra.de.ibm.com with ESMTP id 3d5tx9as3q-1
+        Mon, 27 Dec 2021 16:43:42 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGc6PB005244;
+        Mon, 27 Dec 2021 16:43:40 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 3d5tjjbhke-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:48 +0000
+        Mon, 27 Dec 2021 16:43:39 +0000
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhkjL41615672
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhbPc44826904
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Dec 2021 16:43:46 GMT
+        Mon, 27 Dec 2021 16:43:37 GMT
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4598EA4060;
-        Mon, 27 Dec 2021 16:43:46 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 700E5A4066;
+        Mon, 27 Dec 2021 16:43:37 +0000 (GMT)
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B30DDA405B;
-        Mon, 27 Dec 2021 16:43:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id E75A3A405C;
+        Mon, 27 Dec 2021 16:43:36 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 27 Dec 2021 16:43:45 +0000 (GMT)
+        Mon, 27 Dec 2021 16:43:36 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -64,30 +64,30 @@ To:     Arnd Bergmann <arnd@kernel.org>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>
 Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-csky@vger.kernel.org, linux-rtc@vger.kernel.org
-Subject: [RFC 23/32] rtc: Kconfig: add HAS_IOPORT dependencies
-Date:   Mon, 27 Dec 2021 17:43:08 +0100
-Message-Id: <20211227164317.4146918-24-schnelle@linux.ibm.com>
+        linux-csky@vger.kernel.org, linux-hwmon@vger.kernel.org
+Subject: [RFC 13/32] hwmon: Kconfig: add HAS_IOPORT dependencies
+Date:   Mon, 27 Dec 2021 17:42:58 +0100
+Message-Id: <20211227164317.4146918-14-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: _nRzpFR8XZugFnDlJYuZthkPV3pNLzx6
-X-Proofpoint-GUID: YYAqwpTGAprwqTg35VINxMMyHGeBa-PB
+X-Proofpoint-GUID: Og05-Aa6Tix89qkG8pECrpDGcs7lvPjB
+X-Proofpoint-ORIG-GUID: 5FeheTftJwqXsrAo31O_i8KOyYQrnG3Q
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
  definitions=2021-12-27_08,2021-12-24_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
- impostorscore=0 mlxlogscore=856 lowpriorityscore=0 adultscore=0
- bulkscore=0 clxscore=1011 phishscore=0 malwarescore=0 priorityscore=1501
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2112270080
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=891
+ mlxscore=0 malwarescore=0 priorityscore=1501 phishscore=0 clxscore=1015
+ impostorscore=0 bulkscore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
+ definitions=main-2112270080
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -100,38 +100,133 @@ Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/rtc/Kconfig | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/hwmon/Kconfig | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/rtc/Kconfig b/drivers/rtc/Kconfig
-index 058e56a10ab8..fde2bdb7090d 100644
---- a/drivers/rtc/Kconfig
-+++ b/drivers/rtc/Kconfig
-@@ -951,6 +951,7 @@ comment "Platform RTC drivers"
- config RTC_DRV_CMOS
- 	tristate "PC-style 'CMOS'"
- 	depends on X86 || ARM || PPC || MIPS || SPARC64
-+	depends on HAS_IOPORT
- 	default y if X86
- 	select RTC_MC146818_LIB
- 	help
-@@ -971,6 +972,7 @@ config RTC_DRV_CMOS
- config RTC_DRV_ALPHA
- 	bool "Alpha PC-style CMOS"
- 	depends on ALPHA
-+	depends on HAS_IOPORT
- 	select RTC_MC146818_LIB
- 	default y
- 	help
-@@ -1188,7 +1190,7 @@ config RTC_DRV_MSM6242
+diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
+index 09397562c396..c1a2d8ac96fd 100644
+--- a/drivers/hwmon/Kconfig
++++ b/drivers/hwmon/Kconfig
+@@ -547,6 +547,7 @@ config SENSORS_SPARX5
  
- config RTC_DRV_BQ4802
- 	tristate "TI BQ4802"
--	depends on HAS_IOMEM
-+	depends on HAS_IOMEM && HAS_IOPORT
+ config SENSORS_F71805F
+ 	tristate "Fintek F71805F/FG, F71806F/FG and F71872F/FG"
++	depends on HAS_IOPORT
+ 	depends on !PPC
  	help
- 	  If you say Y here you will get support for the TI
- 	  BQ4802 RTC chip.
+ 	  If you say yes here you get support for hardware monitoring
+@@ -558,6 +559,7 @@ config SENSORS_F71805F
+ 
+ config SENSORS_F71882FG
+ 	tristate "Fintek F71882FG and compatibles"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	help
+ 	  If you say yes here you get support for hardware monitoring
+@@ -761,6 +763,7 @@ config SENSORS_CORETEMP
+ 
+ config SENSORS_IT87
+ 	tristate "ITE IT87xx and compatibles"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	select HWMON_VID
+ 	help
+@@ -1387,6 +1390,7 @@ config SENSORS_LM95245
+ 
+ config SENSORS_PC87360
+ 	tristate "National Semiconductor PC87360 family"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	select HWMON_VID
+ 	help
+@@ -1401,6 +1405,7 @@ config SENSORS_PC87360
+ 
+ config SENSORS_PC87427
+ 	tristate "National Semiconductor PC87427"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	help
+ 	  If you say yes here you get access to the hardware monitoring
+@@ -1432,6 +1437,7 @@ config SENSORS_NTC_THERMISTOR
+ 
+ config SENSORS_NCT6683
+ 	tristate "Nuvoton NCT6683D"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	help
+ 	  If you say yes here you get support for the hardware monitoring
+@@ -1442,6 +1448,7 @@ config SENSORS_NCT6683
+ 
+ config SENSORS_NCT6775
+ 	tristate "Nuvoton NCT6775F and compatibles"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	depends on ACPI_WMI || ACPI_WMI=n
+ 	select HWMON_VID
+@@ -1664,6 +1671,7 @@ config SENSORS_SIS5595
+ 
+ config SENSORS_DME1737
+ 	tristate "SMSC DME1737, SCH311x and compatibles"
++	depends on HAS_IOPORT
+ 	depends on I2C && !PPC
+ 	select HWMON_VID
+ 	help
+@@ -1707,6 +1715,7 @@ config SENSORS_EMC6W201
+ 
+ config SENSORS_SMSC47M1
+ 	tristate "SMSC LPC47M10x and compatibles"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	help
+ 	  If you say yes here you get support for the integrated fan
+@@ -1741,6 +1750,7 @@ config SENSORS_SMSC47M192
+ 
+ config SENSORS_SMSC47B397
+ 	tristate "SMSC LPC47B397-NC"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	help
+ 	  If you say yes here you get support for the SMSC LPC47B397-NC
+@@ -1754,6 +1764,7 @@ config SENSORS_SCH56XX_COMMON
+ 
+ config SENSORS_SCH5627
+ 	tristate "SMSC SCH5627"
++	depends on HAS_IOPORT
+ 	depends on !PPC && WATCHDOG
+ 	select SENSORS_SCH56XX_COMMON
+ 	select WATCHDOG_CORE
+@@ -1767,6 +1778,7 @@ config SENSORS_SCH5627
+ 
+ config SENSORS_SCH5636
+ 	tristate "SMSC SCH5636"
++	depends on HAS_IOPORT
+ 	depends on !PPC && WATCHDOG
+ 	select SENSORS_SCH56XX_COMMON
+ 	select WATCHDOG_CORE
+@@ -1995,6 +2007,7 @@ config SENSORS_VIA686A
+ 
+ config SENSORS_VT1211
+ 	tristate "VIA VT1211"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	select HWMON_VID
+ 	help
+@@ -2114,6 +2127,7 @@ config SENSORS_W83L786NG
+ 
+ config SENSORS_W83627HF
+ 	tristate "Winbond W83627HF, W83627THF, W83637HF, W83687THF, W83697HF"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	select HWMON_VID
+ 	help
+@@ -2126,6 +2140,7 @@ config SENSORS_W83627HF
+ 
+ config SENSORS_W83627EHF
+ 	tristate "Winbond W83627EHF/EHG/DHG/UHG, W83667HG"
++	depends on HAS_IOPORT
+ 	depends on !PPC
+ 	select HWMON_VID
+ 	help
 -- 
 2.32.0
 
