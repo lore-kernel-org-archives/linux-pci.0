@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 797CBC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13345C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:47:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232654AbhL0Qqd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 11:46:33 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49824 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S230346AbhL0QoS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:18 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRFbnjP003400;
-        Mon, 27 Dec 2021 16:43:53 GMT
+        id S231822AbhL0QrF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:47:05 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:25988 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231831AbhL0QpC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:45:02 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BREBfR0012485;
+        Mon, 27 Dec 2021 16:43:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=gs41DymVZm/06h6gA3wSVmbjzwz3BdX7RpZlKsT6E4g=;
- b=DYBr8LLxBFCmN3oZZ+hPQ1cPtycTSoxSyVAq+hGDo6yCEp8qt0CxhHeNrWCf+Z+4b4Pn
- JPA8avzvqAuFvVoOGFwY+BvxgaDKH7gI9++Zq4Hv/SS8nvLVNQAjWXM1LHVpJqzZT8RC
- rJXpmEzNjbElC3Il20Y/cYdI5olJeIhCT2hXRcV9RDAy7Kb5FH4GRyR8eTe/lMXBrirQ
- 3vtxyu4yz/a5nmevrISk9oUbd3U5xavI6C+NkfwnW0SR5kAy0RrUvaHMehOtfnbwV1U9
- al+tvm9cKQ/ubyheo41s/JDSlBM9J+2OQjJuUvVXYUMU2UBFkw7BZN0jJDimLbNO1tms uQ== 
+ bh=72gq8KqtPufaLlGJy3p5Ui8DPnidqN8imumjA88XMwg=;
+ b=rzXtc12Ni+vG+qNqNjxlDfpPdH3s6LFEFCkSKYdTwCCGXuWofXdf1le+tmzliq8g3tfl
+ ADyuMa/wnyeCUe4lCHlLV4d8MUgYPXP81uoA+q8Rwug350UVa/3gZTPaHwaDEQWw3Xye
+ gBql1a57ahluf+BgRBvpEfPFss/MDsEmHBbBFt/gMvS4b++3avT/57fg8ifvAs9Z/c/l
+ HkKipfGuoZlP9cmB6L/xmdGfplLgGpyLa5/f5L8/cNRX8/hjI2WPqxdJmXI99bwNEfwz
+ qNKQ91YbxB61T77aA7Vv+EC40qH4bFmX+079IjuQxXbacaKw80sXqu4U0Iy5tuB8FrA1 Gg== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7dqfuunu-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7f1nar8n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:53 +0000
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGW9Ci032010;
-        Mon, 27 Dec 2021 16:43:52 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7dqfuunc-1
+        Mon, 27 Dec 2021 16:43:37 +0000
+Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGha5q012722;
+        Mon, 27 Dec 2021 16:43:36 GMT
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7f1nar7w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:52 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGbvhP008362;
-        Mon, 27 Dec 2021 16:43:50 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma04ams.nl.ibm.com with ESMTP id 3d5txakf9e-1
+        Mon, 27 Dec 2021 16:43:36 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGbgCx001684;
+        Mon, 27 Dec 2021 16:43:34 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma03fra.de.ibm.com with ESMTP id 3d5tx9as2m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:50 +0000
+        Mon, 27 Dec 2021 16:43:34 +0000
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhmkd44368350
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhVpX31064372
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Dec 2021 16:43:48 GMT
+        Mon, 27 Dec 2021 16:43:31 GMT
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E8BDBA4054;
-        Mon, 27 Dec 2021 16:43:47 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 9C828A4054;
+        Mon, 27 Dec 2021 16:43:31 +0000 (GMT)
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 61FF0A405C;
-        Mon, 27 Dec 2021 16:43:47 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 095FBA4066;
+        Mon, 27 Dec 2021 16:43:31 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 27 Dec 2021 16:43:47 +0000 (GMT)
+        Mon, 27 Dec 2021 16:43:30 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -64,65 +64,58 @@ To:     Arnd Bergmann <arnd@kernel.org>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>
+        William Hubbs <w.d.hubbs@gmail.com>,
+        Chris Brannon <chris@the-brannons.com>,
+        Kirk Reiser <kirk@reisers.ca>,
+        Samuel Thibault <samuel.thibault@ens-lyon.org>
 Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-csky@vger.kernel.org, linux-watchdog@vger.kernel.org
-Subject: [RFC 25/32] watchdog: Kconfig: add HAS_IOPORT dependencies
-Date:   Mon, 27 Dec 2021 17:43:10 +0100
-Message-Id: <20211227164317.4146918-26-schnelle@linux.ibm.com>
+        linux-csky@vger.kernel.org, speakup@linux-speakup.org
+Subject: [RFC 06/32] speakup: Kconfig: add HAS_IOPORT dependencies
+Date:   Mon, 27 Dec 2021 17:42:51 +0100
+Message-Id: <20211227164317.4146918-7-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: CE6xOEmltaA_Ly2kbIh4w1kfUmmGMdg5
-X-Proofpoint-GUID: 5ehZBGigAiA3Z9fiKjnKwzi2T5bv7ZNy
+X-Proofpoint-GUID: TvS-qMbCiX1L0hwUDx_FvbF-GszlXFZJ
+X-Proofpoint-ORIG-GUID: rBoBzUI_D22ceTGazxZUcmgEczWjlo5z
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
  definitions=2021-12-27_08,2021-12-24_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- clxscore=1015 malwarescore=0 priorityscore=1501 spamscore=0 bulkscore=0
- mlxlogscore=999 adultscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2112270080
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 clxscore=1011 bulkscore=0
+ priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2112270080
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+not being declared. SPEAKUP_SERIALIO thus needs to depend on HAS_IOPORT.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/watchdog/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/accessibility/speakup/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/watchdog/Kconfig b/drivers/watchdog/Kconfig
-index 05258109bcc2..2e87a65bdc8b 100644
---- a/drivers/watchdog/Kconfig
-+++ b/drivers/watchdog/Kconfig
-@@ -452,6 +452,7 @@ config 21285_WATCHDOG
- config 977_WATCHDOG
- 	tristate "NetWinder WB83C977 watchdog"
- 	depends on (FOOTBRIDGE && ARCH_NETWINDER) || (ARM && COMPILE_TEST)
+diff --git a/drivers/accessibility/speakup/Kconfig b/drivers/accessibility/speakup/Kconfig
+index 07ecbbde0384..e84fb617acc4 100644
+--- a/drivers/accessibility/speakup/Kconfig
++++ b/drivers/accessibility/speakup/Kconfig
+@@ -46,6 +46,7 @@ if SPEAKUP
+ config SPEAKUP_SERIALIO
+ 	def_bool y
+ 	depends on ISA || COMPILE_TEST
 +	depends on HAS_IOPORT
- 	help
- 	  Say Y here to include support for the WB977 watchdog included in
- 	  NetWinder machines. Alternatively say M to compile the driver as
-@@ -1200,6 +1201,7 @@ config ITCO_WDT
- 	select WATCHDOG_CORE
- 	depends on I2C || I2C=n
- 	depends on MFD_INTEL_PMC_BXT || !MFD_INTEL_PMC_BXT
-+	depends on HAS_IOPORT # for I2C_I801
- 	select LPC_ICH if !EXPERT
- 	select I2C_I801 if !EXPERT && I2C
- 	help
+ 
+ config SPEAKUP_SYNTH_ACNTSA
+ 	tristate "Accent SA synthesizer support"
 -- 
 2.32.0
 
