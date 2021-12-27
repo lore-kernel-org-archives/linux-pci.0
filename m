@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2DAC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 15:58:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB61C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240609AbhL0P63 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 10:58:29 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:47787 "EHLO mx1.molgen.mpg.de"
+        id S229491AbhL0Q1E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:27:04 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:37007 "EHLO mx1.molgen.mpg.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S240890AbhL0P5q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Dec 2021 10:57:46 -0500
+        id S229453AbhL0Q1D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Dec 2021 11:27:03 -0500
 Received: from handsomejack.molgen.mpg.de (handsomejack.molgen.mpg.de [141.14.17.248])
-        by mx.molgen.mpg.de (Postfix) with ESMTP id DD8F761EA1922;
-        Mon, 27 Dec 2021 16:57:43 +0100 (CET)
+        by mx.molgen.mpg.de (Postfix) with ESMTP id 9679F61EA1922;
+        Mon, 27 Dec 2021 17:27:02 +0100 (CET)
 From:   Paul Menzel <pmenzel@molgen.mpg.de>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: Add device code for AMD FCH SATA Controller in AHCI mode
-Date:   Mon, 27 Dec 2021 16:57:33 +0100
-Message-Id: <20211227155735.10519-1-pmenzel@molgen.mpg.de>
+Subject: [PATCH v2 1/3] PCI: Add device code for AMD FCH SATA Controller in AHCI mode
+Date:   Mon, 27 Dec 2021 17:26:56 +0100
+Message-Id: <20211227162658.11314-1-pmenzel@molgen.mpg.de>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
