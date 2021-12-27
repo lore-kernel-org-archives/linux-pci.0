@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D5FC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:44:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0D9C46467
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:45:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230195AbhL0Qou (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 11:44:50 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:11694 "EHLO
+        id S232013AbhL0QpJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:45:09 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56056 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230323AbhL0QoR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:17 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BREBsQO013190;
-        Mon, 27 Dec 2021 16:43:51 GMT
+        by vger.kernel.org with ESMTP id S231625AbhL0Qom (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:42 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRFfTZq022176;
+        Mon, 27 Dec 2021 16:43:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=Pvtf+6bGtw1lT1XKK96EsrHI6tn2htfQybVbOkeijcI=;
- b=FWqqq+2pMQz5sGZ9BpCBenbMsG/ylJZIr+DKbLQBpQ5B3nthCTg6kegYizBOwCI+6d3B
- purrpfZL0hxte9ENk5CTZLg4033BMH5ea/+HoVFsHzn2zQJA1DvkXli697bYvA12IcZ5
- xpdF2YVNk3l41C+heUW70ciKYQUKl1IGajUBJU0u+z8nM19+sDT16FAOVVD94KOizjV3
- fVLrSNtcPk4ClHOCCt86VGxD79fsIGvkBzcCOHRJu4lN96bnvJ16ZetRvjEG2An8v3iq
- XcUwgTwnq90RmWJyERHwMIZK3Ab8kHZEgPknGXt/bAz/f2HWWYHpTyCef9KF7l9LDqVW eg== 
+ bh=OumYKR7x/kmTh36tJozCiGImOdb1vuza0DrcnTPvHyg=;
+ b=q+/mpF4HPR2QyEgfOtmhEF/tjUffbfsnVsaBlJSN2r/9k0MECkNYnF9zl3C6Oo5avyOk
+ kz25DPa3x4ZvrKwJfQDAxkqYqilBFa8LcRwC/MF2+KCGYjuzAjXvTbebZg12gTKhCa5i
+ ctSG5uKRJM7NeD+Ie67ZmlzGcQqMct1Xko4vH/w2udxo/Jf7UKBaWj1NN8+hI5eTeX2N
+ yEfqXL6Bt0NM/IJ4aupdOCN5ApX+9uPd94hMV8O2Bwp01gjzYS1UfoTrqAoJ3jgyuMi+
+ rt0YKRieYwW05lz46QAbeZACIzwwkad49mHMdseVnSLNiURtwRzqWa73TgRLVeTCwaLn bA== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7f1narbv-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7gbns17q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:51 +0000
-Received: from m0098410.ppops.net (m0098410.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGGYPU031705;
-        Mon, 27 Dec 2021 16:43:50 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7f1narb7-1
+        Mon, 27 Dec 2021 16:43:40 +0000
+Received: from m0098404.ppops.net (m0098404.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGWLke018109;
+        Mon, 27 Dec 2021 16:43:39 GMT
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7gbns16y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:50 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGgkpN003026;
-        Mon, 27 Dec 2021 16:43:48 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma03ams.nl.ibm.com with ESMTP id 3d5tx9bf52-1
+        Mon, 27 Dec 2021 16:43:39 +0000
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGbh7T001767;
+        Mon, 27 Dec 2021 16:43:36 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03fra.de.ibm.com with ESMTP id 3d5tx9as2u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:48 +0000
+        Mon, 27 Dec 2021 16:43:36 +0000
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhjor40108482
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhYHi44499210
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Dec 2021 16:43:45 GMT
+        Mon, 27 Dec 2021 16:43:34 GMT
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6CE3EA4054;
-        Mon, 27 Dec 2021 16:43:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 280A0A4064;
+        Mon, 27 Dec 2021 16:43:34 +0000 (GMT)
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EA3ECA405B;
-        Mon, 27 Dec 2021 16:43:44 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 95B97A405C;
+        Mon, 27 Dec 2021 16:43:33 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 27 Dec 2021 16:43:44 +0000 (GMT)
+        Mon, 27 Dec 2021 16:43:33 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -63,29 +63,29 @@ To:     Arnd Bergmann <arnd@kernel.org>,
         Vincent Chen <deanbo422@gmail.com>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>
+        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
+        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
 Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-csky@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-fbdev@vger.kernel.org
-Subject: [RFC 22/32] video: handle HAS_IOPORT dependencies
-Date:   Mon, 27 Dec 2021 17:43:07 +0100
-Message-Id: <20211227164317.4146918-23-schnelle@linux.ibm.com>
+        linux-csky@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [RFC 09/32] sound: Kconfig: add HAS_IOPORT dependencies
+Date:   Mon, 27 Dec 2021 17:42:54 +0100
+Message-Id: <20211227164317.4146918-10-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: dajHH7ysqYXG6zAJZbpZ-TuOsR9X149-
-X-Proofpoint-ORIG-GUID: whmQ-It2gXfjGHUjD3wLCqsb2tIPDbiw
+X-Proofpoint-ORIG-GUID: FloekVg-uv6CMDPoIQG0AcxlgTivbRcT
+X-Proofpoint-GUID: p_95kSAAQrDh_g4HDZ0LOAh4gDCshcjn
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
  definitions=2021-12-27_08,2021-12-24_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0
- priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
+ malwarescore=0 suspectscore=0 clxscore=1015 bulkscore=0 impostorscore=0
+ phishscore=0 mlxlogscore=999 priorityscore=1501 adultscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2110150000 definitions=main-2112270080
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -93,59 +93,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
 not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them and guard inline code in headers.
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/video/fbdev/Kconfig | 1 +
- include/video/vga.h         | 8 ++++++++
- 2 files changed, 9 insertions(+)
+ sound/drivers/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/video/fbdev/Kconfig b/drivers/video/fbdev/Kconfig
-index a3446d44c118..d95f638f4deb 100644
---- a/drivers/video/fbdev/Kconfig
-+++ b/drivers/video/fbdev/Kconfig
-@@ -436,6 +436,7 @@ config FB_FM2
- config FB_ARC
- 	tristate "Arc Monochrome LCD board support"
- 	depends on FB && (X86 || COMPILE_TEST)
+diff --git a/sound/drivers/Kconfig b/sound/drivers/Kconfig
+index ca4cdf666f82..4b5ba916d93e 100644
+--- a/sound/drivers/Kconfig
++++ b/sound/drivers/Kconfig
+@@ -128,6 +128,7 @@ config SND_VIRMIDI
+ 
+ config SND_MTPAV
+ 	tristate "MOTU MidiTimePiece AV multiport MIDI"
 +	depends on HAS_IOPORT
- 	select FB_SYS_FILLRECT
- 	select FB_SYS_COPYAREA
- 	select FB_SYS_IMAGEBLIT
-diff --git a/include/video/vga.h b/include/video/vga.h
-index d334e64c1c19..53cb52c0fddb 100644
---- a/include/video/vga.h
-+++ b/include/video/vga.h
-@@ -201,18 +201,26 @@ extern int restore_vga(struct vgastate *state);
-  
- static inline unsigned char vga_io_r (unsigned short port)
- {
-+#ifdef CONFIG_HAS_IOPORT
- 	return inb_p(port);
-+#else
-+	return 0xff;
-+#endif
- }
+ 	select SND_RAWMIDI
+ 	help
+ 	  To use a MOTU MidiTimePiece AV multiport MIDI adapter
+@@ -152,6 +153,7 @@ config SND_MTS64
  
- static inline void vga_io_w (unsigned short port, unsigned char val)
- {
-+#ifdef CONFIG_HAS_IOPORT
- 	outb_p(val, port);
-+#endif
- }
+ config SND_SERIAL_U16550
+ 	tristate "UART16550 serial MIDI driver"
++	depends on HAS_IOPORT
+ 	select SND_RAWMIDI
+ 	help
+ 	  To include support for MIDI serial port interfaces, say Y here
+@@ -167,6 +169,7 @@ config SND_SERIAL_U16550
  
- static inline void vga_io_w_fast (unsigned short port, unsigned char reg,
- 				  unsigned char val)
- {
-+#ifdef CONFIG_HAS_IOPORT
- 	outw(VGA_OUT16VAL (val, reg), port);
-+#endif
- }
- 
- static inline unsigned char vga_mm_r (void __iomem *regbase, unsigned short port)
+ config SND_MPU401
+ 	tristate "Generic MPU-401 UART driver"
++	depends on HAS_IOPORT
+ 	select SND_MPU401_UART
+ 	help
+ 	  Say Y here to include support for MIDI ports compatible with
 -- 
 2.32.0
 
