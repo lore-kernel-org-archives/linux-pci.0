@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC8DC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FD6C4167B
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Dec 2021 16:44:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230265AbhL0QoQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Dec 2021 11:44:16 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57610 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229949AbhL0QoE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:04 -0500
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGfnCa017488;
-        Mon, 27 Dec 2021 16:43:41 GMT
+        id S230309AbhL0QoR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Dec 2021 11:44:17 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9746 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S229992AbhL0QoG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Dec 2021 11:44:06 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BRDkinF013672;
+        Mon, 27 Dec 2021 16:43:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=zFVamE5yMrJop6aOfxuo/svDSoyuUM8QC9jHNU4Bwh8=;
- b=SC8GPIWPvRrakW2Kwz1vS20hmcEQm6Y2OsqQ7kN9gHY3DcETPUcx/QGQo8HXUX+vezBB
- A4tbrNQfAMgr29a5JrvgLKSKaqkgsEKDRV+8vHx/xAXnxa2ckrP75WXygEoar9M/ykWz
- kVT9m6Bku9LD37F4OkvUD4QBgPUVc4fbW1s+ItDMDW0PPlFrBbnFR2qUhEeOI07mslr6
- yoGsAfVzej4yKCeZC+2joKouAAq1BKpZGhwgM9ya7iyJbBTOQ4aI8rck33K7MifNDMJz
- k5UDJR0gdPHPx0XJKpH3azdlkgf2Pp5ZjLZa/SqHuUiOSeuLt2Wb4yxUg/MNlyKcp3N7 2w== 
+ bh=A2DlUMxCsYB6d35tWhrR+bPmCE0MFDOrBz/JiYeiXIk=;
+ b=nuUPm11FYObBrLxMehN/Q3ei0oqtBEX2hwKqEPuC/3/keral0kvzcVkyfvH2HWX5bthi
+ 7r0pSyhgr7aXeFiqVn4zs4L6dJdN7j0VOnFRMhNKj6VIF6ifnIPUHbd13MNe3v3i0bky
+ thJcePrvFrYAjLmfSM4mqpyVgm2rc/pEt2AT5PHWeClPV9MYAZNj7m+d1EmdVEMLYRt+
+ lLCR0ENoLAiRZXRaRzmKF8pdKozQBbr0CostrfJrFRneJyiG0g+CWcrf0XWw3ikwYaal
+ dP2lA24bttXyVSdFIzaRG6UmWoYFWm50FSfpue7RX9EYJRgSTbbTWKNyTcFTStdrUyIX 4w== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7h7u80v0-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7dqem174-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:41 +0000
-Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGhe3e023887;
-        Mon, 27 Dec 2021 16:43:40 GMT
+        Mon, 27 Dec 2021 16:43:48 +0000
+Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BRGcP7E013329;
+        Mon, 27 Dec 2021 16:43:47 GMT
 Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7h7u80u9-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3d7dqem16m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:40 +0000
+        Mon, 27 Dec 2021 16:43:47 +0000
 Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
-        by ppma02fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGh4g8007888;
-        Mon, 27 Dec 2021 16:43:38 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma02fra.de.ibm.com with ESMTP id 3d5tx9asm9-1
+        by ppma02fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BRGh4g9007888;
+        Mon, 27 Dec 2021 16:43:45 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma02fra.de.ibm.com with ESMTP id 3d5tx9asmw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 27 Dec 2021 16:43:38 +0000
+        Mon, 27 Dec 2021 16:43:45 +0000
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGhZRH40632760
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BRGZGDd49414636
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 27 Dec 2021 16:43:35 GMT
+        Mon, 27 Dec 2021 16:35:16 GMT
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BFA59A405C;
-        Mon, 27 Dec 2021 16:43:35 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id E63B6A405B;
+        Mon, 27 Dec 2021 16:43:42 +0000 (GMT)
 Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 48993A4054;
-        Mon, 27 Dec 2021 16:43:35 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 744C3A4062;
+        Mon, 27 Dec 2021 16:43:42 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 27 Dec 2021 16:43:35 +0000 (GMT)
+        Mon, 27 Dec 2021 16:43:42 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -64,28 +64,28 @@ To:     Arnd Bergmann <arnd@kernel.org>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+        Benson Leung <bleung@chromium.org>
 Cc:     linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-csky@vger.kernel.org, linux-input@vger.kernel.org
-Subject: [RFC 11/32] Input: Kconfig: add HAS_IOPORT dependencies
-Date:   Mon, 27 Dec 2021 17:42:56 +0100
-Message-Id: <20211227164317.4146918-12-schnelle@linux.ibm.com>
+        linux-csky@vger.kernel.org
+Subject: [RFC 19/32] platform: Kconfig: add HAS_IOPORT dependencies
+Date:   Mon, 27 Dec 2021 17:43:04 +0100
+Message-Id: <20211227164317.4146918-20-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: A1DUS9DrDIJkHlzeXlDXpoEFLDhFrKX0
-X-Proofpoint-ORIG-GUID: ECthtyuMMzAFK14KJqQYBG2ERGxapcuK
+X-Proofpoint-GUID: 7kr-mNWloWreKpwAbtW3QVjWlZdNVsED
+X-Proofpoint-ORIG-GUID: csSH6EuVS4UmcscwbB2qlJsyYJtXNFWL
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
  definitions=2021-12-27_08,2021-12-24_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
- spamscore=0 impostorscore=0 mlxscore=0 phishscore=0 mlxlogscore=943
- clxscore=1015 priorityscore=1501 bulkscore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ phishscore=0 spamscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999
+ priorityscore=1501 bulkscore=0 clxscore=1011 malwarescore=0 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2110150000 definitions=main-2112270080
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -99,42 +99,34 @@ Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/input/serio/Kconfig       | 2 ++
- drivers/input/touchscreen/Kconfig | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/platform/chrome/Kconfig          | 1 +
+ drivers/platform/chrome/wilco_ec/Kconfig | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/input/serio/Kconfig b/drivers/input/serio/Kconfig
-index f39b7b3f7942..5d125627c595 100644
---- a/drivers/input/serio/Kconfig
-+++ b/drivers/input/serio/Kconfig
-@@ -75,6 +75,7 @@ config SERIO_Q40KBD
- config SERIO_PARKBD
- 	tristate "Parallel port keyboard adapter"
- 	depends on PARPORT
+diff --git a/drivers/platform/chrome/Kconfig b/drivers/platform/chrome/Kconfig
+index ccc23d8686e8..b43ef78e75d4 100644
+--- a/drivers/platform/chrome/Kconfig
++++ b/drivers/platform/chrome/Kconfig
+@@ -111,6 +111,7 @@ config CROS_EC_SPI
+ config CROS_EC_LPC
+ 	tristate "ChromeOS Embedded Controller (LPC)"
+ 	depends on CROS_EC && ACPI && (X86 || COMPILE_TEST)
 +	depends on HAS_IOPORT
  	help
- 	  Say Y here if you built a simple parallel port adapter to attach
- 	  an additional AT keyboard, XT keyboard or PS/2 mouse.
-@@ -148,6 +149,7 @@ config HIL_MLC
- config SERIO_PCIPS2
- 	tristate "PCI PS/2 keyboard and PS/2 mouse controller"
- 	depends on PCI
+ 	  If you say Y here, you get support for talking to the ChromeOS EC
+ 	  over an LPC bus, including the LPC Microchip EC (MEC) variant.
+diff --git a/drivers/platform/chrome/wilco_ec/Kconfig b/drivers/platform/chrome/wilco_ec/Kconfig
+index 49e8530ca0ac..d1648fb099ac 100644
+--- a/drivers/platform/chrome/wilco_ec/Kconfig
++++ b/drivers/platform/chrome/wilco_ec/Kconfig
+@@ -3,6 +3,7 @@ config WILCO_EC
+ 	tristate "ChromeOS Wilco Embedded Controller"
+ 	depends on X86 || COMPILE_TEST
+ 	depends on ACPI && CROS_EC_LPC && LEDS_CLASS
 +	depends on HAS_IOPORT
  	help
- 	  Say Y here if you have a Mobility Docking station with PS/2
- 	  keyboard and mice ports.
-diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index 2f6adfb7b938..a77663b79aec 100644
---- a/drivers/input/touchscreen/Kconfig
-+++ b/drivers/input/touchscreen/Kconfig
-@@ -664,6 +664,7 @@ config TOUCHSCREEN_INEXIO
- 
- config TOUCHSCREEN_MK712
- 	tristate "ICS MicroClock MK712 touchscreen"
-+	depends on ISA
- 	help
- 	  Say Y here if you have the ICS MicroClock MK712 touchscreen
- 	  controller chip in your system.
+ 	  If you say Y here, you get support for talking to the ChromeOS
+ 	  Wilco EC over an eSPI bus. This uses a simple byte-level protocol
 -- 
 2.32.0
 
