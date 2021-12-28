@@ -2,49 +2,49 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3029AC4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Dec 2021 10:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49929C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Dec 2021 10:22:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233690AbhL1KOU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Dec 2021 05:14:20 -0500
-Received: from mail-vk1-f175.google.com ([209.85.221.175]:34371 "EHLO
-        mail-vk1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233619AbhL1KOU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Dec 2021 05:14:20 -0500
-Received: by mail-vk1-f175.google.com with SMTP id h67so10049983vkh.1;
-        Tue, 28 Dec 2021 02:14:19 -0800 (PST)
+        id S234004AbhL1KWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Dec 2021 05:22:12 -0500
+Received: from mail-ua1-f52.google.com ([209.85.222.52]:36532 "EHLO
+        mail-ua1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229565AbhL1KWM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Dec 2021 05:22:12 -0500
+Received: by mail-ua1-f52.google.com with SMTP id r15so31300120uao.3;
+        Tue, 28 Dec 2021 02:22:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=W24YzS7gvKwvztwIMu0FSg1RWOYoxzVo3HaBbi+k4Wo=;
-        b=nOFMSXbm01ddbE396exefqk3FZB4s2dDhAssINXA5+u6A/aJAz+BU69zkN8MBqQPC+
-         AQKIokl4/e4Te6qgGHgvwz3E+IziTUFOrZS7bhu1KWCJTtFycBu4sWG8waD8coank5rS
-         PfJbpxLSiMNgWe8vBWtIn3S5ix5L26PsnNhDm25qtLR7Pl1pYb5Ris7AKZ9xNAou87YM
-         e4QWnrqxuzMjyyhXfsDZ+Aam8lFhHvRX+OmqGnT7p7/QsJBnAuVZ1xoPxcxfVd+V3Caz
-         tEY9tFkILBq7OVJjKZ+L4r66DajRGU+/DD2cNfn8oRmQnOWAsvje0zV65HXV2bqLKykS
-         4Rpw==
-X-Gm-Message-State: AOAM530mFtZZyajSTmdWwemps/mDsuawiYNUD+z7ya3PuUG6QdOcjTk6
-        7sa6Fex2H/xPl/ClMiyASiBOse6yGTsy/w==
-X-Google-Smtp-Source: ABdhPJxzE+erAcnry/fMrmjYh38ppvAj1LQCEuQxjX8rALN3cIPvWQGnrZzLNwSysz3O+EvcfbD7BA==
-X-Received: by 2002:a05:6122:e12:: with SMTP id bk18mr6645433vkb.40.1640686459203;
-        Tue, 28 Dec 2021 02:14:19 -0800 (PST)
-Received: from mail-vk1-f175.google.com (mail-vk1-f175.google.com. [209.85.221.175])
-        by smtp.gmail.com with ESMTPSA id m25sm3513077vsl.34.2021.12.28.02.14.18
+        bh=XlHqM3s89iXtoWPBbjZMgYeJo6DHmFUlBr+aZlxVLoA=;
+        b=q1YdajygjkQHu5ABSonWIWLBmV6Kx/qvtXSmNrMoyy7FCc6f8uOMNzF/TD06hW3gVn
+         gX2zb/J+TnTD5kzUuSqpBzA4Pop476NaBjmu1UebI3l7NK3OvU7KXKCYfPBA4LHfZCAt
+         GHf/42p0AWTkZ6iEgniQkBeZg/n5WCNj7y95pcILOd8bmQAebWQM2UVUrAE755faa12J
+         lOCc0K5XjXeQx3ZFP1W70G9947nu6l8e7T1pnpEoBpP1lvAig+5uJQm6hsHhffv+imPW
+         9o0G7obDwaF8+/7fsCZOO6jlt9epbKlHCDAXcHVmMMH+n46viS3MQKw8Sis1AY+Gm44r
+         7lMQ==
+X-Gm-Message-State: AOAM532Hc+ArOpFoQ1Jrd6seU9Gf7I9Idm7XG7N3gRLbOnUwo3Pr3t4S
+        1OnU2jthlIoL2HPAAumQH3qZAqBDDerfFQ==
+X-Google-Smtp-Source: ABdhPJxGeg4vABh1qSkMFju3Lr7SrVkB7xRQvvi3AUXFhVALjgiZVrIXi4syUQKPtuzRu8GQRxiy+w==
+X-Received: by 2002:a05:6102:e8b:: with SMTP id l11mr5977878vst.37.1640686931130;
+        Tue, 28 Dec 2021 02:22:11 -0800 (PST)
+Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
+        by smtp.gmail.com with ESMTPSA id l28sm3947514vkn.45.2021.12.28.02.22.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Dec 2021 02:14:18 -0800 (PST)
-Received: by mail-vk1-f175.google.com with SMTP id c10so9871312vkn.2;
-        Tue, 28 Dec 2021 02:14:18 -0800 (PST)
-X-Received: by 2002:a1f:4641:: with SMTP id t62mr6390863vka.0.1640686458447;
- Tue, 28 Dec 2021 02:14:18 -0800 (PST)
+        Tue, 28 Dec 2021 02:22:10 -0800 (PST)
+Received: by mail-ua1-f43.google.com with SMTP id c36so5672737uae.13;
+        Tue, 28 Dec 2021 02:22:10 -0800 (PST)
+X-Received: by 2002:a67:c81c:: with SMTP id u28mr5694404vsk.38.1640686930392;
+ Tue, 28 Dec 2021 02:22:10 -0800 (PST)
 MIME-Version: 1.0
-References: <20211227164317.4146918-1-schnelle@linux.ibm.com> <20211227164317.4146918-5-schnelle@linux.ibm.com>
-In-Reply-To: <20211227164317.4146918-5-schnelle@linux.ibm.com>
+References: <20211227164317.4146918-1-schnelle@linux.ibm.com> <20211227164317.4146918-11-schnelle@linux.ibm.com>
+In-Reply-To: <20211227164317.4146918-11-schnelle@linux.ibm.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 28 Dec 2021 11:14:07 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdVBXBXSE8bQFNqxkbCASZKq25evHGXHjC6u7f3ktW4dpQ@mail.gmail.com>
-Message-ID: <CAMuHMdVBXBXSE8bQFNqxkbCASZKq25evHGXHjC6u7f3ktW4dpQ@mail.gmail.com>
-Subject: Re: [RFC 04/32] parport: PC style parport depends on HAS_IOPORT
+Date:   Tue, 28 Dec 2021 11:21:59 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXcfGhVjB2pNB=ct8dExLeh-cY+Vmb0NWpZ2T0bfa8VdA@mail.gmail.com>
+Message-ID: <CAMuHMdXcfGhVjB2pNB=ct8dExLeh-cY+Vmb0NWpZ2T0bfa8VdA@mail.gmail.com>
+Subject: Re: [RFC 10/32] i2c: Kconfig: add HAS_IOPORT dependencies
 To:     Niklas Schnelle <schnelle@linux.ibm.com>
 Cc:     Arnd Bergmann <arnd@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -55,12 +55,11 @@ Cc:     Arnd Bergmann <arnd@kernel.org>,
         Paul Walmsley <paul.walmsley@sifive.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Linux-Arch <linux-arch@vger.kernel.org>,
         linux-pci <linux-pci@vger.kernel.org>,
         linux-riscv <linux-riscv@lists.infradead.org>,
-        linux-csky@vger.kernel.org
+        linux-csky@vger.kernel.org, Linux I2C <linux-i2c@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -68,10 +67,10 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi Niklas,
 
-On Mon, Dec 27, 2021 at 5:48 PM Niklas Schnelle <schnelle@linux.ibm.com> wrote:
+On Mon, Dec 27, 2021 at 5:49 PM Niklas Schnelle <schnelle@linux.ibm.com> wrote:
 > In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. As PC style parport uses these functions we need to
-> handle this dependency for HAS_IOPORT.
+> not being declared. We thus need to add HAS_IOPORT as dependency for
+> those drivers using them.
 >
 > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 > Signed-off-by: Arnd Bergmann <arnd@kernel.org>
@@ -79,20 +78,31 @@ On Mon, Dec 27, 2021 at 5:48 PM Niklas Schnelle <schnelle@linux.ibm.com> wrote:
 
 Thanks for your patch!
 
-> --- a/drivers/parport/Kconfig
-> +++ b/drivers/parport/Kconfig
-> @@ -14,7 +14,6 @@ config ARCH_MIGHT_HAVE_PC_PARPORT
+> --- a/drivers/i2c/busses/Kconfig
+> +++ b/drivers/i2c/busses/Kconfig
+> @@ -828,6 +828,7 @@ config I2C_NPCM7XX
 >
->  menuconfig PARPORT
->         tristate "Parallel port support"
-> -       depends on HAS_IOMEM
+>  config I2C_OCORES
+>         tristate "OpenCores I2C Controller"
+> +       depends on HAS_IOPORT
 
-Why drop this?
-Don't all other parport drivers depend on it?
+While drivers/i2c/busses/i2c-ocores.c does use {in,out}(), I doubt this
+is used to access legacy I/O space.
 
 >         help
->           If you want to use devices connected to your machine's parallel port
->           (the connector at the computer with 25 holes), e.g. printer, ZIP
+>           If you say yes to this option, support will be included for the
+>           OpenCores I2C controller. For details see
+> @@ -1227,6 +1228,7 @@ config I2C_CP2615
+>  config I2C_PARPORT
+>         tristate "Parallel port adapter"
+>         depends on PARPORT
+> +       depends on HAS_IOPORT
+
+Same as PRINTER: shouldn't this work with all parport drivers?
+
+>         select I2C_ALGOBIT
+>         select I2C_SMBUS
+>         help
 
 Gr{oetje,eeting}s,
 
