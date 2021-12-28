@@ -2,161 +2,229 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD074C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Dec 2021 12:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A4AC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Dec 2021 12:23:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230341AbhL1MOE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Dec 2021 07:14:04 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32906 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230300AbhL1MOD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Dec 2021 07:14:03 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BSC7Ux4021981;
-        Tue, 28 Dec 2021 12:13:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=rLpMJsYOSPIxUTZJ3DquDE1otn6Qi02ImTXn7iVPxwo=;
- b=qe5BaO2Q6j511PuFFiQNPgP/M+3R4S1ua8LmPYVpJ/kjL+V5Ws+C4sCPVO/k8WaBEWfZ
- jdzC/SUzS4jwbzRt96FyCEFSKTRbKR6L/Q6tGRU9avG5zK9MYJvztso1w9iQjnsD19RV
- 3PQ8+nKGPclVmzD+Bp0DUNFqPeFUJSrku72ztfiSH36lrTKA+Bj8mhXW8fr54vl8Ev2x
- g23chObEjs055MnP9nVCM62uyOhJFIr6wxmanU6aHQ1qdA62dzoFQH+pYbX/UcTp9spU
- UsWqDIdq39fbhdzaCGMx5kQpZLHylizQvRDjzoscR58mbR0325Radjmx7qLhq0Hdsv0H zw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7vne7263-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Dec 2021 12:13:12 +0000
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BSC9wCG032723;
-        Tue, 28 Dec 2021 12:13:11 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d7vne724u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Dec 2021 12:13:10 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BSCCBoq014192;
-        Tue, 28 Dec 2021 12:13:08 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma04ams.nl.ibm.com with ESMTP id 3d5txar6yy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 28 Dec 2021 12:13:08 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BSCD5eb47317312
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Dec 2021 12:13:05 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5259111C04A;
-        Tue, 28 Dec 2021 12:13:05 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 02CCC11C052;
-        Tue, 28 Dec 2021 12:13:04 +0000 (GMT)
-Received: from sig-9-145-12-118.uk.ibm.com (unknown [9.145.12.118])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 28 Dec 2021 12:13:03 +0000 (GMT)
-Message-ID: <58e6aeaf78d093e7621cd589f69e68bab3b9c8aa.camel@linux.ibm.com>
-Subject: Re: [RFC 05/32] char: impi, tpm: depend on HAS_IOPORT
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        John Garry <john.garry@huawei.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Corey Minyard <minyard@acm.org>,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        linux-csky@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-integrity <linux-integrity@vger.kernel.org>
-Date:   Tue, 28 Dec 2021 13:13:03 +0100
-In-Reply-To: <CAMuHMdW2qsZZqE_hAchoD7_41ak8btTZb0UZE6DsXDehhT63fg@mail.gmail.com>
-References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
-         <20211227164317.4146918-6-schnelle@linux.ibm.com>
-         <CAMuHMdW2qsZZqE_hAchoD7_41ak8btTZb0UZE6DsXDehhT63fg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: SREVe-Ue0gtTgAjeBLawwZn7tbKkuZc9
-X-Proofpoint-GUID: 8RKn5vvFcRvEetmS5YBxkXh5NTpMa2on
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2021-12-28_07,2021-12-28_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999
- priorityscore=1501 adultscore=0 bulkscore=0 spamscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2112280055
+        id S230428AbhL1MXS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Dec 2021 07:23:18 -0500
+Received: from ams.source.kernel.org ([145.40.68.75]:33498 "EHLO
+        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230290AbhL1MXS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Dec 2021 07:23:18 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id ADFBFB811BD;
+        Tue, 28 Dec 2021 12:23:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CA1EC36AE8;
+        Tue, 28 Dec 2021 12:23:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640694195;
+        bh=ctzCAJML9qMvzhn8zf3X+uHDG/LU7mhRfvDCv/DU5+c=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Hsfy1FCV6/kLsTWdRLKKONenuyoAGROPdbP4BiXY3md0f0fAHSml4MZyk5eeTiZAH
+         WtM62Xt0aIc5SnGUDyv62QwtCMFhCfuWKfqLHvudKSV4SvnuVx9gAMXPew7+UQxoVX
+         E+6Uh/qqqgW+1OgG8lfrfv2VvTOc/dhSOSjmTP5L9OuJLS4TnlKuWmZi+lOGny4QGf
+         97iyywzeeW9wr1YxBLaOHMd1djkQOSE43hWX9kEsXt7QFt4qN7iyyfBB2j5+GEDIZL
+         6ct1aQ0h5FMRqsCC8OC0w3PNlgWmc6oZ7gKO2c7PttC6f7QByamDpT5LGxHMfK6Gl1
+         JuvHHWcyM/BbQ==
+Received: from cfbb000407.r.cam.camfibre.uk ([185.219.108.64] helo=wait-a-minute.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <maz@kernel.org>)
+        id 1n2BVZ-00EiPi-8y; Tue, 28 Dec 2021 12:23:13 +0000
+Date:   Tue, 28 Dec 2021 12:23:12 +0000
+Message-ID: <87ilv8zznz.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+Cc:     Sunil Muthuswamy <sunilmut@linux.microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>, "hpa@zytor.com" <hpa@zytor.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "x86@kernel.org" <x86@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Sunil Muthuswamy <sunilmut@microsoft.com>
+Subject: Re: [PATCH v7 2/2] PCI: hv: Add arm64 Hyper-V vPCI support
+In-Reply-To: <MWHPR21MB1593272A454D568311C3B254D7429@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <1639767121-22007-1-git-send-email-sunilmut@linux.microsoft.com>
+        <1639767121-22007-3-git-send-email-sunilmut@linux.microsoft.com>
+        <MWHPR21MB1593272A454D568311C3B254D7429@MWHPR21MB1593.namprd21.prod.outlook.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: mikelley@microsoft.com, sunilmut@linux.microsoft.com, kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de, x86@kernel.org, linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, sunilmut@microsoft.com
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2021-12-28 at 11:17 +0100, Geert Uytterhoeven wrote:
-> Hi Niklas,
+On Mon, 27 Dec 2021 17:38:07 +0000,
+"Michael Kelley (LINUX)" <mikelley@microsoft.com> wrote:
 > 
-> Thanks for your patch!
-> 
-> On Mon, Dec 27, 2021 at 5:51 PM Niklas Schnelle <schnelle@linux.ibm.com> wrote:
-> > In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> > not being declared. We thus need to add this dependency and ifdef
-> > sections of code using inb()/outb() as alternative access methods.
+> From: Sunil Muthuswamy <sunilmut@linux.microsoft.com> Sent: Friday, December 17, 2021 10:52 AM
 > > 
-> > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> > Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> > Add arm64 Hyper-V vPCI support by implementing the arch specific
+> > interfaces. Introduce an IRQ domain and chip specific to Hyper-v vPCI that
+> > is based on SPIs. The IRQ domain parents itself to the arch GIC IRQ domain
+> > for basic vector management.
+> > 
+> > Signed-off-by: Sunil Muthuswamy <sunilmut@microsoft.com>
 > > ---
-> >  drivers/char/Kconfig             |  3 ++-
-> 
-> Your oneline-summary doesn't cover this file.
-
-Thanks, I guess then I should go with "char: depend on HAS_IOPORT"
-
-> 
-> >  drivers/char/ipmi/Makefile       | 11 ++++-------
-> >  drivers/char/ipmi/ipmi_si_intf.c |  3 ++-
-> >  drivers/char/ipmi/ipmi_si_pci.c  |  3 +++
-> >  drivers/char/tpm/Kconfig         |  1 +
-> >  drivers/char/tpm/tpm_infineon.c  | 14 ++++++++++----
-> >  drivers/char/tpm/tpm_tis_core.c  | 19 ++++++++-----------
-> >  7 files changed, 30 insertions(+), 24 deletions(-)
+> > In v2, v3, v4, v5, v6 & v7:
+> >  Changes are described in the cover letter.
 > > 
-> > diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
-> > index 740811893c57..3d046e364e53 100644
-> > --- a/drivers/char/Kconfig
-> > +++ b/drivers/char/Kconfig
-> > @@ -33,6 +33,7 @@ config TTY_PRINTK_LEVEL
-> >  config PRINTER
-> >         tristate "Parallel printer support"
-> >         depends on PARPORT
-> > +       depends on HAS_IOPORT
+> >  arch/arm64/include/asm/hyperv-tlfs.h |   9 +
+> >  drivers/pci/Kconfig                  |   2 +-
+> >  drivers/pci/controller/Kconfig       |   2 +-
+> >  drivers/pci/controller/pci-hyperv.c  | 241 ++++++++++++++++++++++++++-
+> >  4 files changed, 251 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/arch/arm64/include/asm/hyperv-tlfs.h b/arch/arm64/include/asm/hyperv-tlfs.h
+> > index 4d964a7f02ee..bc6c7ac934a1 100644
+> > --- a/arch/arm64/include/asm/hyperv-tlfs.h
+> > +++ b/arch/arm64/include/asm/hyperv-tlfs.h
+> > @@ -64,6 +64,15 @@
+> >  #define HV_REGISTER_STIMER0_CONFIG	0x000B0000
+> >  #define HV_REGISTER_STIMER0_COUNT	0x000B0001
+> > 
+> > +union hv_msi_entry {
+> > +	u64 as_uint64[2];
+> > +	struct {
+> > +		u64 address;
+> > +		u32 data;
+> > +		u32 reserved;
+> > +	} __packed;
+> > +};
+> > +
+> >  #include <asm-generic/hyperv-tlfs.h>
+> > 
+> >  #endif
+> > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> > index 43e615aa12ff..d98fafdd0f99 100644
+> > --- a/drivers/pci/Kconfig
+> > +++ b/drivers/pci/Kconfig
+> > @@ -184,7 +184,7 @@ config PCI_LABEL
+> > 
+> >  config PCI_HYPERV
+> >  	tristate "Hyper-V PCI Frontend"
+> > -	depends on X86_64 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && SYSFS
+> > +	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && SYSFS
+> >  	select PCI_HYPERV_INTERFACE
+> >  	help
+> >  	  The PCI device frontend driver allows the kernel to import arbitrary
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> > index 93b141110537..2536abcc045a 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -281,7 +281,7 @@ config PCIE_BRCMSTB
+> > 
+> >  config PCI_HYPERV_INTERFACE
+> >  	tristate "Hyper-V PCI Interface"
+> > -	depends on X86 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && X86_64
+> > +	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN
+> >  	help
+> >  	  The Hyper-V PCI Interface is a helper driver allows other drivers to
+> >  	  have a common interface with the Hyper-V PCI frontend driver.
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index ead7d6cb6bf1..02ba2e7e2618 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
+> > @@ -47,6 +47,8 @@
+> >  #include <linux/msi.h>
+> >  #include <linux/hyperv.h>
+> >  #include <linux/refcount.h>
+> > +#include <linux/irqdomain.h>
+> > +#include <linux/acpi.h>
+> >  #include <asm/mshyperv.h>
+> > 
+> >  /*
+> > @@ -614,7 +616,236 @@ static int hv_msi_prepare(struct irq_domain *domain, struct device *dev,
+> >  {
+> >  	return pci_msi_prepare(domain, dev, nvec, info);
+> >  }
+> > -#endif /* CONFIG_X86 */
+> > +#elif defined(CONFIG_ARM64)
+> > +/*
+> > + * SPI vectors to use for vPCI; arch SPIs range is [32, 1019], but leaving a bit
+> > + * of room at the start to allow for SPIs to be specified through ACPI and
+> > + * starting with a power of two to satisfy power of 2 multi-MSI requirement.
+> > + */
+> > +#define HV_PCI_MSI_SPI_START	64
+> > +#define HV_PCI_MSI_SPI_NR	(1020 - HV_PCI_MSI_SPI_START)
+> > +#define DELIVERY_MODE		0
+> > +#define FLOW_HANDLER		NULL
+> > +#define FLOW_NAME		NULL
+> > +#define hv_msi_prepare		NULL
+> > +
+> > +struct hv_pci_chip_data {
+> > +	DECLARE_BITMAP(spi_map, HV_PCI_MSI_SPI_NR);
+> > +	struct mutex	map_lock;
+> > +};
+> > +
+> > +/* Hyper-V vPCI MSI GIC IRQ domain */
+> > +static struct irq_domain *hv_msi_gic_irq_domain;
+> > +
+> > +/* Hyper-V PCI MSI IRQ chip */
+> > +static struct irq_chip hv_arm64_msi_irq_chip = {
+> > +	.name = "MSI",
+> > +	.irq_set_affinity = irq_chip_set_affinity_parent,
+> > +	.irq_eoi = irq_chip_eoi_parent,
+> > +	.irq_mask = irq_chip_mask_parent,
+> > +	.irq_unmask = irq_chip_unmask_parent
+> > +};
+> > +
+> > +static unsigned int hv_msi_get_int_vector(struct irq_data *irqd)
+> > +{
+> > +	return irqd->parent_data->hwirq;
+> > +}
+> > +
+> > +static void hv_set_msi_entry_from_desc(union hv_msi_entry *msi_entry,
+> > +				       struct msi_desc *msi_desc)
+> > +{
+> > +	msi_entry->address = ((u64)msi_desc->msg.address_hi << 32) |
+> > +			      msi_desc->msg.address_lo;
+> > +	msi_entry->data = msi_desc->msg.data;
+> > +}
+> > +
+> > +/*
+> > + * @nr_bm_irqs:		Indicates the number of IRQs that were allocated from
+> > + *			the bitmap.
+> > + * @nr_dom_irqs:	Indicates the number of IRQs that were allocated from
+> > + *			the parent domain.
+> > + */
+> > +static void hv_pci_vec_irq_free(struct irq_domain *domain,
+> > +				unsigned int virq,
+> > +				unsigned int nr_bm_irqs,
+> > +				unsigned int nr_dom_irqs)
+> > +{
+> > +	struct hv_pci_chip_data *chip_data = domain->host_data;
+> > +	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
 > 
-> Why? drivers/char/lp.c doesn't use I/O accessors, and should work with
-> all parport drivers.
+> FWIW, irq_domain_get_irq_data() can return NULL.   Maybe that's an
+> error in the "should never happen" category.   Throughout kernel code,
+> some callers check for a NULL result, but a lot do not.
 
-You're right that should work.
+irq_domain_get_irq_data() returns NULL when there is no mapping. If
+this happens here, then the allocation tracking has gone horribly
+wrong, and I certainly want to see the resulting Oops rather than
+papering over it.
 
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+	M.
 
+-- 
+Without deviation from the norm, progress is not possible.
