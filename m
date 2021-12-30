@@ -2,84 +2,69 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EFAFC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Dec 2021 16:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9828C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Dec 2021 16:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241257AbhL3Q24 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Dec 2021 11:28:56 -0500
-Received: from mail-qt1-f180.google.com ([209.85.160.180]:38755 "EHLO
-        mail-qt1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239850AbhL3Q24 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Dec 2021 11:28:56 -0500
-Received: by mail-qt1-f180.google.com with SMTP id 8so22141378qtx.5;
-        Thu, 30 Dec 2021 08:28:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=594xPajnx1lQ2Gq+QQhoW7EPw32DH5yt64jS4MfoP8Q=;
-        b=X2DgoHHdh4uWuiFTWgrYzyNYwpnnEoDiNVX7kC76tHs6Dyzx+zbHgKiGhTBZQqJimX
-         RIHQKKg80/i58M1Bsy4qnywxdl3tt1IKptd7DKTg3R1ITqXEuhWgvOYT8fMg5kU9EFeg
-         nrgK37chFklaFOITZayQRISMhv+//q8grxKGZdGu4ji9H47HjB9HVb1HTZ7nj9/8esDq
-         49yaW5lgBXd2VbE4iiJRAyiAIXVoTxVsNaNvsRdPo7THApo4gbo9dorMMfayICulQWZL
-         5Dnd0HI+CsTk7xEYiwi1HK3EaON5O7taH00B27vSgxUwwFGLcFm1tUEcQOTFSZwrHcH5
-         flsQ==
-X-Gm-Message-State: AOAM530NT5q8QQrqSqUDcJL1Iz1po1hLvkx/3J2gvcSzwjdirqnkWFwq
-        /7DWQoYEXw6ysjaGYY+Bs0OY3U4b56xWKE3Nk5Jf7FSJ
-X-Google-Smtp-Source: ABdhPJx1pG/geFzyTx2rrs7JE51T0xN/ij5gLcEYrADz0jW4p2FFp+l9lNnuSXYW2NeaAY/EUHQlXZnmTcqzKqbNpe8=
-X-Received: by 2002:ac8:5f4e:: with SMTP id y14mr26831737qta.305.1640881725489;
- Thu, 30 Dec 2021 08:28:45 -0800 (PST)
+        id S241368AbhL3Qul (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Dec 2021 11:50:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42486 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240222AbhL3Qul (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Dec 2021 11:50:41 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2F59C061574;
+        Thu, 30 Dec 2021 08:50:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=KCIuKfYCj4UNj6Bbz3o+wzTEwkTdr3miPJh0cjsBii0=; b=PyDcTfTYoXlY89XosfCrZV15Xb
+        4dgELtnkGLeUg+RtHdl+gCYTyGRsOzt3e/nu7+NApB97KfCyumzwt/OlrIpGKf7XixRZWN1HbZO76
+        636OoDykHk+6GyV+WhdCb6kBaTs7A6QRzZui2+wdwYuRu9cKIO89Dc9bFR4jz8yD/CRGPyZzCHQzu
+        4z2Lzol2f8mu1JdijQULmc5K9KNjSMDdZzwFzKTglrp+AlciaElI1PbnvNzPVxjtICLwX0ndfefWx
+        9G2/N9gMHBfd6h/yIV2nrL8rOKvB2829tOM1dMkRwHVaGiJS/cGq9V6ugSpk6qS5K/dwUNDczBZXV
+        jIpmn+0Q==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1n2ydQ-009vPU-Ri; Thu, 30 Dec 2021 16:50:37 +0000
+Message-ID: <1e32a809-013d-fea5-2f9c-eee382afc3cc@infradead.org>
+Date:   Thu, 30 Dec 2021 08:50:32 -0800
 MIME-Version: 1.0
-References: <20211223022856.27822-1-yang.lee@linux.alibaba.com>
-In-Reply-To: <20211223022856.27822-1-yang.lee@linux.alibaba.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 30 Dec 2021 17:28:34 +0100
-Message-ID: <CAJZ5v0h4u6+4N5ZBSu6CRKn4GCBPgPHC_5-crzULozhzCTCh6w@mail.gmail.com>
-Subject: Re: [PATCH -next] PCI/ACPI: Fix acpi_pci_osc_control_set() kernel-doc comment
-To:     Yang Li <yang.lee@linux.alibaba.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>, Joerg Roedel <jroedel@suse.de>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: [RFC PATCH] PCI: Add "pci=reassign_all_bus" boot parameter
+Content-Language: en-US
+To:     Yao Hongbo <yaohongbo@linux.alibaba.com>, bhelgaas@google.com
+Cc:     zhangliguang@linux.alibaba.com,
+        alikernel-developer@linux.alibaba.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1640856613-101412-1-git-send-email-yaohongbo@linux.alibaba.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <1640856613-101412-1-git-send-email-yaohongbo@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 23, 2021 at 3:29 AM Yang Li <yang.lee@linux.alibaba.com> wrote:
->
-> Add the description of @support and remove @req in
-> acpi_pci_osc_control_set() kernel-doc comment to remove warnings found
-> by running scripts/kernel-doc, which is caused by using 'make W=1'.
->
-> drivers/acpi/pci_root.c:337: warning: Excess function parameter 'req'
-> description in 'acpi_pci_osc_control_set'
-> drivers/acpi/pci_root.c:337: warning: Function parameter or member
-> 'support' not described in 'acpi_pci_osc_control_set'
->
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Fixes: 6bc779ee05d4 ("PCI/ACPI: Check for _OSC support in acpi_pci_osc_control_set()")
-> Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
-> ---
->  drivers/acpi/pci_root.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 41a8fef06534..084916604f3c 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -322,7 +322,7 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_dev);
->   * acpi_pci_osc_control_set - Request control of PCI root _OSC features.
->   * @handle: ACPI handle of a PCI root bridge (or PCIe Root Complex).
->   * @mask: Mask of _OSC bits to request control of, place to store control mask.
-> - * @req: Mask of _OSC bits the control of is essential to the caller.
-> + * @support: _OSC supported capability.
->   *
->   * Run _OSC query for @mask and if that is successful, compare the returned
->   * mask of control bits with @req.  If all of the @req bits are set in the
-> --
+Hi--
 
-Applied as 5.17 material, thanks!
+On 12/30/21 01:30, Yao Hongbo wrote:
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 2fba824..c83a2e5 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -4084,6 +4084,7 @@
+>  		nomio		[S390] Do not use MIO instructions.
+>  		norid		[S390] ignore the RID field and force use of
+>  				one PCI domain per PCI function
+> +		reassign_all_bus	The OS fully configure the PCI bus.
+
+		                                     configures
+>  
+>  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
+>  			Management.
+
+thanks.
+-- 
+~Randy
