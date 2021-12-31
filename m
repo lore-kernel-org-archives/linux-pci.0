@@ -2,65 +2,57 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE524C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Dec 2021 11:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B519DC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Dec 2021 16:04:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229787AbhLaL3x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 Dec 2021 06:29:53 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:55760 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229674AbhLaL3v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Dec 2021 06:29:51 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BV6teKp016507;
-        Fri, 31 Dec 2021 11:28:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=pzUt4LgyPXDJP5o63yyZnj398P6Tb55t1EAvGioG3k8=;
- b=g160z1MzL7ZaBJP0PCFl8WM+/oaNldyPX5T/b2OeqniIg6zpoJJ47PVZUowg0MtVBM+b
- 75D8w5J5YM6d+KsITNJ6SyAPHmjNd4qzLkRKe2Aa5iqaRILDTl8nTunlrD/V/PWQopyi
- ffu+DrDe3G3FsNW8naQ0Vs9Jme2ccq8/xhb9T75Om2b3Ho14lej524nWlJSXlp9TAAz1
- NyTMooQ1KiqpJr+uzRKwIcFVyCGx228US4hJSEC5MwRoddDO03iAEPHtx6Mul7n9ZuAB
- j9Zbs6TrzO/vN/WHJf/odeWes281S8+pAqE18r2f1uyR1y9UGT7YCQUk3l3U7i4EttAT XQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d9qyvfxnh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Dec 2021 11:28:34 +0000
-Received: from m0098393.ppops.net (m0098393.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 1BVBRr2I030593;
-        Fri, 31 Dec 2021 11:28:33 GMT
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3d9qyvfxms-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Dec 2021 11:28:33 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1BVBO64f003482;
-        Fri, 31 Dec 2021 11:28:30 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma03fra.de.ibm.com with ESMTP id 3d5txa0f1e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Dec 2021 11:28:30 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (mk.ibm.com [9.149.105.60])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1BVBSRO447514016
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 31 Dec 2021 11:28:27 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A7DF04203F;
-        Fri, 31 Dec 2021 11:28:27 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2638942047;
-        Fri, 31 Dec 2021 11:28:24 +0000 (GMT)
-Received: from sig-9-145-181-202.de.ibm.com (unknown [9.145.181.202])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 31 Dec 2021 11:28:24 +0000 (GMT)
-Message-ID: <072b9080be4a408052bf2c2cc1a9be0089cce5cc.camel@linux.ibm.com>
-Subject: Re: [RFC 02/32] Kconfig: introduce HAS_IOPORT option and select it
- as necessary
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Michael Schmitz <schmitzmic@gmail.com>,
-        Arnd Bergmann <arnd@kernel.org>
+        id S231240AbhLaQEq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 Dec 2021 11:04:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34892 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229503AbhLaQEo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Dec 2021 11:04:44 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2807DC061574;
+        Fri, 31 Dec 2021 08:04:44 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E78B2B81D9B;
+        Fri, 31 Dec 2021 16:04:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B56E0C36AF4;
+        Fri, 31 Dec 2021 16:04:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1640966681;
+        bh=pu3EOtLhubDoxaVwiYbh4e/NfH+lhjOkYe7VbmME5Z0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=raXMVpPTRAf3vF8B62lkOgsA/cVfsPOPEGtrByVh26tgU6FewLliwwvE5oVSxTfvJ
+         1isY+reYV6wkTVj9kZeXXITYA4ZLSnegTHP2FPOPl+zVGpV7aOvkSmkBLyhNAOgHR1
+         2sxK+Ewu9K8opb6D6pVml2o8615MS9DLn+olxHqwVzvT8Xh5P7+RRwmCSJfOODKM51
+         uCDoa4le3AzkzvHOK55tCCwn96EKQBOHpr853njIbdmLrUqgvOFCO+ErxSuQhW1ZUE
+         /E5E7A34ZTJ7Vtr7fXqJFcLl8V4bz4PcNAUhmkNNyPOu/FhFcut4rQ7dYvKY+75A6Q
+         F+kxB9VuFSY/g==
+Received: by mail-lf1-f50.google.com with SMTP id h2so50380521lfv.9;
+        Fri, 31 Dec 2021 08:04:41 -0800 (PST)
+X-Gm-Message-State: AOAM532KKP2lW9+vigWtiFAVx+ScumiyAxB4mgB6XqwFtA2NIAGwSqYP
+        /MOKLXDGej5zOzL+XyY78CNLeGxPzFIzBbu32fc=
+X-Google-Smtp-Source: ABdhPJzApDVGjcuVEHw18tz1R9gDPlbk/Ui+m3pYQWhrQTDSy0tEhDoMzOEccUFjcDO7rPU48bSeyrks7IEcpaugXLU=
+X-Received: by 2002:adf:f051:: with SMTP id t17mr29442418wro.192.1640966669503;
+ Fri, 31 Dec 2021 08:04:29 -0800 (PST)
+MIME-Version: 1.0
+References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
+ <20211227164317.4146918-3-schnelle@linux.ibm.com> <CAMuHMdXk6VcDryekkMJ3aGFnw4LLWOWMi8M2PwjT81PsOsOBMQ@mail.gmail.com>
+ <d406b93a-0f76-d056-3380-65d459d05ea9@gmail.com> <CAK8P3a2j-OFUUp+haHoV4PyL-On4EASZ9+59SDqNqmL8Gv_k7Q@mail.gmail.com>
+ <1f90f145-219e-1cad-6162-9959d43a27ad@gmail.com> <CAK8P3a3NqU-3nUZ9ve=QyPPB5Uep3eK+_hicjjSiP8VuL4FYfA@mail.gmail.com>
+ <0211719b-8402-9865-8e5d-5c0a35715816@gmail.com>
+In-Reply-To: <0211719b-8402-9865-8e5d-5c0a35715816@gmail.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Fri, 31 Dec 2021 11:04:12 -0500
+X-Gmail-Original-Message-ID: <CAK8P3a2GGGuP0miLRy8w2+8vdSsGRNioBHEZ-ervSBrYbuZ+5w@mail.gmail.com>
+Message-ID: <CAK8P3a2GGGuP0miLRy8w2+8vdSsGRNioBHEZ-ervSBrYbuZ+5w@mail.gmail.com>
+Subject: Re: [RFC 02/32] Kconfig: introduce HAS_IOPORT option and select it as necessary
+To:     Michael Schmitz <schmitzmic@gmail.com>
 Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         John Garry <john.garry@huawei.com>,
         Nick Hu <nickhu@andestech.com>,
@@ -93,80 +85,89 @@ Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
         "David S. Miller" <davem@davemloft.net>,
         Thomas Gleixner <tglx@linutronix.de>,
         Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, openrisc@lists.librecores.org,
-        linux-s390@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-snps-arc@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-riscv <linux-riscv@lists.infradead.org>,
+        linux-csky@vger.kernel.org,
+        "open list:TENSILICA XTENSA PORT (xtensa)" 
+        <linux-xtensa@linux-xtensa.org>,
+        Openrisc <openrisc@lists.librecores.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        alpha <linux-alpha@vger.kernel.org>,
+        "open list:SYNOPSYS ARC ARCHITECTURE" 
+        <linux-snps-arc@lists.infradead.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-ia64@vger.kernel.org,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Linux-sh list <linux-sh@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
         Greg Ungerer <gerg@linux-m68k.org>
-Date:   Fri, 31 Dec 2021 12:28:23 +0100
-In-Reply-To: <0211719b-8402-9865-8e5d-5c0a35715816@gmail.com>
-References: <20211227164317.4146918-1-schnelle@linux.ibm.com>
-         <20211227164317.4146918-3-schnelle@linux.ibm.com>
-         <CAMuHMdXk6VcDryekkMJ3aGFnw4LLWOWMi8M2PwjT81PsOsOBMQ@mail.gmail.com>
-         <d406b93a-0f76-d056-3380-65d459d05ea9@gmail.com>
-         <CAK8P3a2j-OFUUp+haHoV4PyL-On4EASZ9+59SDqNqmL8Gv_k7Q@mail.gmail.com>
-         <1f90f145-219e-1cad-6162-9959d43a27ad@gmail.com>
-         <CAK8P3a3NqU-3nUZ9ve=QyPPB5Uep3eK+_hicjjSiP8VuL4FYfA@mail.gmail.com>
-         <0211719b-8402-9865-8e5d-5c0a35715816@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: d7GAvK0BVAwkfUmW9z0Tnb-kHBnvpkJi
-X-Proofpoint-ORIG-GUID: nVApRVBnj1QdMi6qsc--MaC8MDeDduB8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2021-12-31_04,2021-12-30_02,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 spamscore=0 adultscore=0 clxscore=1011
- priorityscore=1501 mlxscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2112310050
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2021-12-30 at 16:44 +1300, Michael Schmitz wrote:
-> Hi Arnd,
-> 
+On Wed, Dec 29, 2021 at 10:44 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
 > Am 30.12.2021 um 14:48 schrieb Arnd Bergmann:
 > > On Tue, Dec 28, 2021 at 11:15 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> > > Am 29.12.2021 um 16:41 schrieb Arnd Bergmann:
-> > > > On Tue, Dec 28, 2021 at 8:20 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
----8<---
-> 
 > > What some other architectures do is to rely on inb()/outb() to have a
 > > zero-based offset, and use an io_offset in PCI buses to ensure that a
 > > low port number on the bus gets translated into a pointer value for the
 > > virtual mapping in the kernel, which is then represented as an unsigned
 > > int.
-> 
+>
 > M54xx does just that for Coldfire:
-> 
+>
 > arch/m68k/include/asm/io_no.h:
-> #define PCI_IO_PA	0xf8000000		/* Host physical address */
-> 
+> #define PCI_IO_PA       0xf8000000              /* Host physical address */
+>
 > (used to set PCI BAR mappings, so matches your definition above).
-> 
-> All other (MMU) m68k users of inb()/outb() apply an io_offset in the 
+
+I think coldfire gets it right here, using PCI_IOBASE to find the start of
+the window and a zero io_offset:
+
+#define PCI_IOBASE ((void __iomem *) PCI_IO_PA)
+
+> All other (MMU) m68k users of inb()/outb() apply an io_offset in the
 > platform specific address translation:
-> 
-> 
----8<---
-> So as long as support for any of the m68k PCI or ISA bridges is selected 
-> in the kernel config, the appropriate IO space mapping is applied. If no 
-> support for PCI or ISA bridges is selected, we already fall back to zero 
-> offset mapping (but as far as I can tell, it shouldn't be possible to 
+>
+> arch/m68k/include/asm/io_mm.h:
+>
+> #define q40_isa_io_base  0xff400000
+> #define enec_isa_read_base  0xfffa0000
+> #define enec_isa_write_base 0xfffb0000
+>
+> arch/m68k/include/asm/amigayle.h:
+>
+> #define GAYLE_IO                (0xa20000+zTwoBase)     /* 16bit and
+> even 8bit registers */
+> #define GAYLE_IO_8BITODD        (0xa30000+zTwoBase)     /* odd 8bit
+> registers */
+>
+> (all constants used in address translation inlines that are used by the
+> m68k inb()/outb() macros - you can call that the poor man's version of
+> PCI BAR mappings ...).
+
+This still looks like the same thing to me, where you have inb() take a
+zero-based port number, not a pointer. The effect is the same as the
+coldfire version, it just uses a custom inline function instead of the
+version from asm-generic/io.h.
+
+> So as long as support for any of the m68k PCI or ISA bridges is selected
+> in the kernel config, the appropriate IO space mapping is applied. If no
+> support for PCI or ISA bridges is selected, we already fall back to zero
+> offset mapping (but as far as I can tell, it shouldn't be possible to
 > build a kernel without bridge support but drivers that require it).
-> 
+
+Right.
+
 > > As this is indistinguishable from architectures that just don't have
 > > a base address for I/O ports (we unfortunately picked 0 as the default
 > > PCI_IOBASE value), my suggestion was to start marking architectures
@@ -174,18 +175,18 @@ On Thu, 2021-12-30 at 16:44 +1300, Michael Schmitz wrote:
 > > the existing behavior unchanged. If m68k does not suffer from this,
 > > making HAS_IOPORT conditional on those config options that actually
 > > need it would of course be best.
-> 
-> Following your description, HAS_IOPORT would be required for neither of 
+>
+> Following your description, HAS_IOPORT would be required for neither of
 > PCI, ISA or ATARI_ROM_ISA ??
-> 
 
-No, HAS_IOPORT being set just means that inb() etc. exist and are
-functional be it as special instructions like on x86 or via an I/O
-address offset. As I understand it if you do have PCI, ISA or
-ATARI_ROM_ISA they are functional. If none of them are set and your
-zero offset mapping means these accessors can't actually be used you
-could make the declerations ifdeffed on CONFIG_HAS_IOPORT to detect the
-cases where somone managed to build drivers that require them and that
-would result in a compile time error instead of silently, or with a
-NULL pointer warning, compiling code that won't work.
+For these three options, we definitely need HAS_IOPORT, which would
+imply that some version of inb()/outb() is provided. The difference between
+using a custom PCI_IOBASE (or an open-coded equivalent) and using
+a zero PCI_IOBASE in combination with registering PCI using a custom
+io_offset is whether we can use drivers with hardcoded port numbers.
+These should depend on a different Kconfig symbol to be introduced
+(CONFIG_HARDCODED_IOPORT or similar) once we introduce them,
+and you could decide for m68k whether to allow those or not, I would
+assume you do want them in order to use certain legacy ISA drivers.
 
+       Arnd
