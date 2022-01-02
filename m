@@ -2,21 +2,22 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29548C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCEA9C4321E
 	for <linux-pci@archiver.kernel.org>; Sun,  2 Jan 2022 23:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231131AbiABXcy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Jan 2022 18:32:54 -0500
-Received: from angie.orcam.me.uk ([78.133.224.34]:38398 "EHLO
+        id S229683AbiABXc4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Jan 2022 18:32:56 -0500
+Received: from angie.orcam.me.uk ([78.133.224.34]:38400 "EHLO
         angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiABXcx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jan 2022 18:32:53 -0500
+        with ESMTP id S229516AbiABXcy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jan 2022 18:32:54 -0500
+X-Greylist: delayed 553 seconds by postgrey-1.27 at vger.kernel.org; Sun, 02 Jan 2022 18:32:53 EST
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id D921E9200CB; Mon,  3 Jan 2022 00:24:52 +0100 (CET)
+        id DBD2E9200C1; Mon,  3 Jan 2022 00:24:19 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id D5F8D9200CA;
-        Sun,  2 Jan 2022 23:24:52 +0000 (GMT)
-Date:   Sun, 2 Jan 2022 23:24:52 +0000 (GMT)
+        by angie.orcam.me.uk (Postfix) with ESMTP id D8CD09200BF;
+        Sun,  2 Jan 2022 23:24:19 +0000 (GMT)
+Date:   Sun, 2 Jan 2022 23:24:19 +0000 (GMT)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Thomas Gleixner <tglx@linutronix.de>,
@@ -24,9 +25,8 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         "H. Peter Anvin" <hpa@zytor.com>
 cc:     x86@kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v3] x86/PCI: Add support for the Intel 82378ZB/82379AB
- (SIO/SIO.A) PIRQ router
-Message-ID: <alpine.DEB.2.21.2201022030220.56863@angie.orcam.me.uk>
+Subject: [PATCH v2 0/4] x86/PCI: Odd generic PIRQ router improvements
+Message-ID: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -34,128 +34,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Intel 82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A) 
-ISA bridges implement PCI interrupt steering with a PIRQ router[1][2] 
-that is exactly the same as that of the PIIX and ICH southbridges (or 
-actually the other way round, given that the SIO ASIC was there first).
-
-An earlier version of the SIO, the 82378IB[3][4], does not implement PCI 
-interrupt steering however, so we need to exclude it by checking the low 
-nibble of the PCI Revision Identification Register[5][6] for being at 
-least 3.
-
-There is a note in the 82379AB specification update[7] saying that the 
-device ID for that chip is 0x7, rather than 0x484 as stated in the 
-datasheet[8].  It looks like a red herring however, for no report has 
-been ever seen with that value quoted and it matches the documented 
-default value of the PCI Command Register, which comes next after the 
-PCI Device Identification Register, so it looks like a copy-&-paste 
-editorial mistake.
-
-NB the 82378ZB has been commonly used with smaller DEC Alpha systems 
-with the contents of the Revision Identification Register reported as 
-one of 0x3, 0x43, or 0x84, so the masking of the high nibble seems 
-indeed right by empirical observation.  The value in the high nibble 
-might be either random, or depend on the batch, or correspond to some 
-other state such as reset straps.
-
-References:
-
-[1] "82378 System I/O (SIO)", Intel Corporation, Order Number: 
-    290473-004, December 1994, Section 4.1.26 "PIRQ[3:0]#--PIRQ Route 
-    Control Registers"
-
-[2] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
-    Intel Corporation, Order Number: 290571-001, March 1996, Section 
-    3.1.25. "PIRQ[3:0]#--PIRQ Route Control Registers", p. 48
-
-[3] "82378IB System I/O (SIO)", Intel Corporation, Order Number:
-    290473-002, April 1993, Section 5.8.7.7 "Edge and Level Triggered
-    Modes"
-
-[4] "82378IB to 82378ZB Errata Fix and Feature Enhancement Conversion
-    FOL933002-01",
-    <https://web.archive.org/web/19990421045433/http://support.intel.com/support/chipsets/420/8511.htm>
-
-[5] "82378 System I/O (SIO)", Intel Corporation, Order Number: 
-    290473-004, December 1994, Section 4.1.5. "RID--Revision 
-    Identification Register"
-
-[6] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
-    Intel Corporation, Order Number: 290571-001, March 1996, Section 
-    3.1.5. "RID--Revision Identification Register", p. 34
-
-[7] "Intel 82379AB (SIO.A) System I/O Component Specification Update", 
-    Intel Corporation, Order Number: 297734-001, May, 1996, "Component 
-    Identification via Programming Interface", p. 5
-
-[8] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
-    Intel Corporation, Order Number: 290571-001, March 1996, Section 
-    3.1.2. "DID--Device Identification Register", p. 33
-
-Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
----
 Hi,
 
- Reposting as it seems to have been missed and now needs to be regenerated 
-to resolve a merge conflict with a later change that did make it.
+ Resending as this has gone into void.  Also there is a context dependency 
+with a change developed later possibly causing a merge conflict, so to 
+make it easier to queue the incoming patches I have folded the follow-up 
+change into this series, expanding it to 4 patches from the original 3 and 
+mechanically regenerating according to upstream changes.  I have updated 
+the cover letter accordingly.
+
+ While working on the SiS85C497 PIRQ router I have noticed an odd
+phenomenon with my venerable Tyan Tomcat IV S1564D board, where the PCI 
+INTD# line of the USB host controller included as function 3 of the PIIX3 
+southbridge cannot be routed in the `noapic' mode.  As it turns out the 
+reason for this is the BIOS has two individual entries in its PIRQ table 
+for two of its three functions, and the wrong one is chosen for routing 
+said line.
+
+ Strictly speaking this violates the PCI BIOS specification, but it can be 
+easily worked around while preserving the semantics for compliant systems.
+
+ Therefore I have come up with this patch series, which addresses this 
+problem with 3/4, adds function reporting to the debug PIRQ table dump 
+with 2/4 and also prints a usable physical memory address of the PIRQ 
+table in a debug message with 1/4.
+
+ Then 4/4 follows, addressing the inability to use a PIRQ table to route 
+interrupts for devices placed behind PCI-to-PCI bridges on option cards, 
+and especially where the BIOS has failed to enumerate the whole bus tree 
+in the first place.
+
+ See individual change descriptions for further details.
 
  Please apply.
 
   Maciej
-
-Changes from v2:
-
-- Regenerate for a merge conflict.
-
-Changes from v1:
-
-- Add [PATCH] annotation (umm...).
-
-- Fix RID values listed to include 0x84 rather than 0x83 (braino).
----
- arch/x86/pci/irq.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-linux-x86-pirq-router-sio.diff
-Index: linux-macro/arch/x86/pci/irq.c
-===================================================================
---- linux-macro.orig/arch/x86/pci/irq.c
-+++ linux-macro/arch/x86/pci/irq.c
-@@ -801,11 +801,18 @@ static __init int intel_router_probe(str
- 		return 0;
- 
- 	switch (device) {
-+		u8 rid;
- 	case PCI_DEVICE_ID_INTEL_82375:
- 		r->name = "PCEB/ESC";
- 		r->get = pirq_esc_get;
- 		r->set = pirq_esc_set;
- 		return 1;
-+	case PCI_DEVICE_ID_INTEL_82378:
-+		pci_read_config_byte(router, PCI_REVISION_ID, &rid);
-+		/* Tell 82378IB (rev < 3) and 82378ZB/82379AB apart.  */
-+		if ((rid & 0xfu) < 3)
-+			break;
-+		fallthrough;
- 	case PCI_DEVICE_ID_INTEL_82371FB_0:
- 	case PCI_DEVICE_ID_INTEL_82371SB_0:
- 	case PCI_DEVICE_ID_INTEL_82371AB_0:
-@@ -847,7 +854,7 @@ static __init int intel_router_probe(str
- 	case PCI_DEVICE_ID_INTEL_ICH10_3:
- 	case PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0:
- 	case PCI_DEVICE_ID_INTEL_PATSBURG_LPC_1:
--		r->name = "PIIX/ICH";
-+		r->name = "SIO/PIIX/ICH";
- 		r->get = pirq_piix_get;
- 		r->set = pirq_piix_set;
- 		return 1;
-@@ -866,7 +873,7 @@ static __init int intel_router_probe(str
- 	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
- 	||  (device >= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
- 	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
--		r->name = "PIIX/ICH";
-+		r->name = "SIO/PIIX/ICH";
- 		r->get = pirq_piix_get;
- 		r->set = pirq_piix_set;
- 		return 1;
