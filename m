@@ -2,37 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61613C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 383BBC4332F
 	for <linux-pci@archiver.kernel.org>; Sun,  2 Jan 2022 23:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231167AbiABXc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231166AbiABXc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sun, 2 Jan 2022 18:32:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41952 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231139AbiABXcz (ORCPT
+        with ESMTP id S231151AbiABXcz (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jan 2022 18:32:55 -0500
 Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8EC6BC061784
-        for <linux-pci@vger.kernel.org>; Sun,  2 Jan 2022 15:32:54 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2B431C061799
+        for <linux-pci@vger.kernel.org>; Sun,  2 Jan 2022 15:32:55 -0800 (PST)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 228549200CF; Mon,  3 Jan 2022 00:25:05 +0100 (CET)
+        id EB4C49200C9; Mon,  3 Jan 2022 00:24:41 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 1F6B29200CE;
-        Sun,  2 Jan 2022 23:25:05 +0000 (GMT)
-Date:   Sun, 2 Jan 2022 23:25:05 +0000 (GMT)
+        by angie.orcam.me.uk (Postfix) with ESMTP id E571A9200C8;
+        Sun,  2 Jan 2022 23:24:41 +0000 (GMT)
+Date:   Sun, 2 Jan 2022 23:24:41 +0000 (GMT)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Nikolai Zhubr <zhubr.2@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+To:     Bjorn Helgaas <bhelgaas@google.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         "H. Peter Anvin" <hpa@zytor.com>
-cc:     Arnd Bergmann <arnd@kernel.org>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] x86/PCI: Disambiguate SiS85C503 PIRQ router code
- entities
-In-Reply-To: <alpine.DEB.2.21.2201022040130.56863@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2201022044250.56863@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2201022040130.56863@angie.orcam.me.uk>
+cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 4/4] x86/PCI: Handle IRQ swizzling with PIRQ routers
+In-Reply-To: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2201020158320.56863@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -40,88 +38,239 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In preparation to adding support for the SiS85C497 PIRQ router add `503' 
-to the names of SiS85C503 PIRQ router code entities so that they clearly 
-indicate which device they refer to.
+Similarly to MP-tables PIRQ routing tables may not list devices behind 
+PCI-to-PCI bridges, leading to interrupt routing failures, e.g.:
 
-Also restructure `sis_router_probe' such that new device IDs will be 
-just new switch cases.
+pci 0000:00:07.0: PIIX/ICH IRQ router [8086:7000]
+pci 0000:02:00.0: ignoring bogus IRQ 255
+pci 0000:02:01.0: ignoring bogus IRQ 255
+pci 0000:02:02.0: ignoring bogus IRQ 255
+pci 0000:04:00.0: ignoring bogus IRQ 255
+pci 0000:04:00.3: ignoring bogus IRQ 255
+pci 0000:00:11.0: PCI INT A -> PIRQ 63, mask deb8, excl 0c20
+pci 0000:00:11.0: PCI INT A -> newirq 0
+PCI: setting IRQ 11 as level-triggered
+pci 0000:00:11.0: found PCI INT A -> IRQ 11
+pci 0000:00:11.0: sharing IRQ 11 with 0000:00:07.2
+pci 0000:02:00.0: PCI INT A not found in routing table
+pci 0000:02:01.0: PCI INT A not found in routing table
+pci 0000:02:02.0: PCI INT A not found in routing table
+pci 0000:04:00.0: PCI INT A not found in routing table
+pci 0000:04:00.3: PCI INT D not found in routing table
+pci 0000:06:05.0: PCI INT A not found in routing table
+pci 0000:06:08.0: PCI INT A not found in routing table
+pci 0000:06:08.1: PCI INT B not found in routing table
+pci 0000:06:08.2: PCI INT C not found in routing table
 
-No functional change.
+and consequently non-working devices.  Since PCI-to-PCI bridges have a 
+standardised way of routing interrupts by the means of swizzling do it 
+for configurations that use a PIRQ router as well, like with APIC-based 
+setups, and use the determined corresponding topmost bridge's interrupt 
+pin assignment to route a given device's interrupt:
+
+pci 0000:00:07.0: PIIX/ICH IRQ router [8086:7000]
+pci 0000:02:00.0: ignoring bogus IRQ 255
+pci 0000:02:01.0: ignoring bogus IRQ 255
+pci 0000:02:02.0: ignoring bogus IRQ 255
+pci 0000:04:00.0: ignoring bogus IRQ 255
+pci 0000:04:00.3: ignoring bogus IRQ 255
+pci 0000:00:11.0: PCI INT A -> PIRQ 63, mask deb8, excl 0c20
+pci 0000:00:11.0: PCI INT A -> newirq 0
+PCI: setting IRQ 11 as level-triggered
+pci 0000:00:11.0: found PCI INT A -> IRQ 11
+pci 0000:00:11.0: sharing IRQ 11 with 0000:00:07.2
+pci 0000:02:00.0: using bridge 0000:00:11.0 INT A to get INT A
+pci 0000:00:11.0: sharing IRQ 11 with 0000:02:00.0
+pci 0000:02:01.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:02.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:04:00.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:04:00.3: using bridge 0000:00:11.0 INT A to get INT D
+pci 0000:00:11.0: sharing IRQ 11 with 0000:04:00.3
+pci 0000:06:05.0: using bridge 0000:00:11.0 INT D to get INT A
+pci 0000:06:08.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:06:08.1: using bridge 0000:00:11.0 INT D to get INT B
+pci 0000:06:08.2: using bridge 0000:00:11.0 INT A to get INT C
+pci 0000:00:11.0: sharing IRQ 11 with 0000:06:08.2
+pci 0000:02:01.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:01.0: PCI INT A -> PIRQ 60, mask deb8, excl 0c20
+pci 0000:02:01.0: PCI INT A -> newirq 0
+PCI: setting IRQ 10 as level-triggered
+pci 0000:02:01.0: found PCI INT A -> IRQ 10
+pci 0000:02:01.0: sharing IRQ 10 with 0000:00:14.0
+pci 0000:02:00.0: using bridge 0000:00:11.0 INT A to get INT A
+pci 0000:02:01.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:02.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:04:00.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:01.0: sharing IRQ 10 with 0000:04:00.0
+pci 0000:04:00.3: using bridge 0000:00:11.0 INT A to get INT D
+pci 0000:06:05.0: using bridge 0000:00:11.0 INT D to get INT A
+pci 0000:06:08.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:06:08.1: using bridge 0000:00:11.0 INT D to get INT B
+pci 0000:06:08.2: using bridge 0000:00:11.0 INT A to get INT C
+pci 0000:02:02.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:02:02.0: PCI INT A -> PIRQ 61, mask deb8, excl 0c20
+pci 0000:02:02.0: PCI INT A -> newirq 0
+PCI: setting IRQ 5 as level-triggered
+pci 0000:02:02.0: found PCI INT A -> IRQ 5
+pci 0000:02:02.0: sharing IRQ 5 with 0000:00:13.0
+pci 0000:02:00.0: using bridge 0000:00:11.0 INT A to get INT A
+pci 0000:02:01.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:02.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:04:00.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:04:00.3: using bridge 0000:00:11.0 INT A to get INT D
+pci 0000:06:05.0: using bridge 0000:00:11.0 INT D to get INT A
+pci 0000:06:08.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:02:02.0: sharing IRQ 5 with 0000:06:08.0
+pci 0000:06:08.1: using bridge 0000:00:11.0 INT D to get INT B
+pci 0000:06:08.2: using bridge 0000:00:11.0 INT A to get INT C
+pci 0000:06:05.0: using bridge 0000:00:11.0 INT D to get INT A
+pci 0000:06:05.0: PCI INT A -> PIRQ 62, mask deb8, excl 0c20
+pci 0000:06:05.0: PCI INT A -> newirq 0
+pci 0000:06:05.0: found PCI INT A -> IRQ 5
+pci 0000:06:05.0: sharing IRQ 5 with 0000:00:12.0
+pci 0000:02:00.0: using bridge 0000:00:11.0 INT A to get INT A
+pci 0000:02:01.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:02:02.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:04:00.0: using bridge 0000:00:11.0 INT B to get INT A
+pci 0000:04:00.3: using bridge 0000:00:11.0 INT A to get INT D
+pci 0000:06:05.0: using bridge 0000:00:11.0 INT D to get INT A
+pci 0000:06:08.0: using bridge 0000:00:11.0 INT C to get INT A
+pci 0000:06:08.1: using bridge 0000:00:11.0 INT D to get INT B
+pci 0000:06:05.0: sharing IRQ 5 with 0000:06:08.1
+pci 0000:06:08.2: using bridge 0000:00:11.0 INT A to get INT C
+
+Adjust log messages accordingly.
 
 Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
 ---
-No change from v1.
+New change in v2, imported from a discrete submission.
 ---
- arch/x86/pci/irq.c |   33 ++++++++++++++++++---------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+ arch/x86/pci/irq.c |   60 +++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 47 insertions(+), 13 deletions(-)
 
-linux-x86-pirq-router-sis85c503.diff
+linux-x86-pirq-swizzle-irq.diff
 Index: linux-macro/arch/x86/pci/irq.c
 ===================================================================
 --- linux-macro.orig/arch/x86/pci/irq.c
 +++ linux-macro/arch/x86/pci/irq.c
-@@ -641,11 +641,12 @@ static int pirq_cyrix_set(struct pci_dev
-  *				bit 6-4 are probably unused, not like 5595
+@@ -1138,7 +1138,7 @@ static void __init pirq_find_router(stru
+  * for motherboard devices, so if a complete match is found, then give
+  * it precedence over a slot match.
   */
- 
--#define PIRQ_SIS_IRQ_MASK	0x0f
--#define PIRQ_SIS_IRQ_DISABLE	0x80
--#define PIRQ_SIS_USB_ENABLE	0x40
-+#define PIRQ_SIS503_IRQ_MASK	0x0f
-+#define PIRQ_SIS503_IRQ_DISABLE	0x80
-+#define PIRQ_SIS503_USB_ENABLE	0x40
- 
--static int pirq_sis_get(struct pci_dev *router, struct pci_dev *dev, int pirq)
-+static int pirq_sis503_get(struct pci_dev *router, struct pci_dev *dev,
-+			   int pirq)
+-static struct irq_info *pirq_get_info(struct pci_dev *dev)
++static struct irq_info *pirq_get_dev_info(struct pci_dev *dev)
  {
- 	u8 x;
- 	int reg;
-@@ -654,10 +655,11 @@ static int pirq_sis_get(struct pci_dev *
- 	if (reg >= 0x01 && reg <= 0x04)
- 		reg += 0x40;
- 	pci_read_config_byte(router, reg, &x);
--	return (x & PIRQ_SIS_IRQ_DISABLE) ? 0 : (x & PIRQ_SIS_IRQ_MASK);
-+	return (x & PIRQ_SIS503_IRQ_DISABLE) ? 0 : (x & PIRQ_SIS503_IRQ_MASK);
+ 	struct irq_routing_table *rt = pirq_table;
+ 	int entries = (rt->size - sizeof(struct irq_routing_table)) /
+@@ -1157,11 +1157,42 @@ static struct irq_info *pirq_get_info(st
+ 	return slotinfo;
  }
  
--static int pirq_sis_set(struct pci_dev *router, struct pci_dev *dev, int pirq, int irq)
-+static int pirq_sis503_set(struct pci_dev *router, struct pci_dev *dev,
-+			   int pirq, int irq)
- {
- 	u8 x;
- 	int reg;
-@@ -666,8 +668,8 @@ static int pirq_sis_set(struct pci_dev *
- 	if (reg >= 0x01 && reg <= 0x04)
- 		reg += 0x40;
- 	pci_read_config_byte(router, reg, &x);
--	x &= ~(PIRQ_SIS_IRQ_MASK | PIRQ_SIS_IRQ_DISABLE);
--	x |= irq ? irq: PIRQ_SIS_IRQ_DISABLE;
-+	x &= ~(PIRQ_SIS503_IRQ_MASK | PIRQ_SIS503_IRQ_DISABLE);
-+	x |= irq ? irq : PIRQ_SIS503_IRQ_DISABLE;
- 	pci_write_config_byte(router, reg, x);
- 	return 1;
- }
-@@ -966,13 +968,14 @@ static __init int serverworks_router_pro
- 
- static __init int sis_router_probe(struct irq_router *r, struct pci_dev *router, u16 device)
- {
--	if (device != PCI_DEVICE_ID_SI_503)
--		return 0;
--
--	r->name = "SIS";
--	r->get = pirq_sis_get;
--	r->set = pirq_sis_set;
--	return 1;
-+	switch (device) {
-+	case PCI_DEVICE_ID_SI_503:
-+		r->name = "SiS85C503";
-+		r->get = pirq_sis503_get;
-+		r->set = pirq_sis503_set;
-+		return 1;
++/*
++ * Buses behind bridges are typically not listed in the PIRQ routing table.
++ * Do the usual dance then and walk the tree of bridges up adjusting the
++ * pin number accordingly on the way until the originating root bus device
++ * has been reached and then use its routing information.
++ */
++static struct irq_info *pirq_get_info(struct pci_dev *dev, u8 *pin)
++{
++	struct pci_dev *temp_dev = dev;
++	struct irq_info *info;
++	u8 temp_pin = *pin;
++	u8 dpin = temp_pin;
++
++	info = pirq_get_dev_info(dev);
++	while (!info && temp_dev->bus->parent) {
++		struct pci_dev *bridge = temp_dev->bus->self;
++
++		temp_pin = pci_swizzle_interrupt_pin(temp_dev, temp_pin);
++		info = pirq_get_dev_info(bridge);
++		if (info)
++			dev_warn(&dev->dev,
++				 "using bridge %s INT %c to get INT %c\n",
++				 pci_name(bridge),
++				 'A' + temp_pin - 1, 'A' + dpin - 1);
++
++		temp_dev = bridge;
 +	}
-+	return 0;
- }
++	*pin = temp_pin;
++	return info;
++}
++
+ static int pcibios_lookup_irq(struct pci_dev *dev, int assign)
+ {
+-	u8 pin;
+ 	struct irq_info *info;
+ 	int i, pirq, newirq;
++	u8 dpin, pin;
+ 	int irq = 0;
+ 	u32 mask;
+ 	struct irq_router *r = &pirq_router;
+@@ -1169,8 +1200,8 @@ static int pcibios_lookup_irq(struct pci
+ 	char *msg = NULL;
  
- static __init int cyrix_router_probe(struct irq_router *r, struct pci_dev *router, u16 device)
+ 	/* Find IRQ pin */
+-	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
+-	if (!pin) {
++	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &dpin);
++	if (!dpin) {
+ 		dev_dbg(&dev->dev, "no interrupt pin\n");
+ 		return 0;
+ 	}
+@@ -1183,20 +1214,21 @@ static int pcibios_lookup_irq(struct pci
+ 	if (!pirq_table)
+ 		return 0;
+ 
+-	info = pirq_get_info(dev);
++	pin = dpin;
++	info = pirq_get_info(dev, &pin);
+ 	if (!info) {
+ 		dev_dbg(&dev->dev, "PCI INT %c not found in routing table\n",
+-			'A' + pin - 1);
++			'A' + dpin - 1);
+ 		return 0;
+ 	}
+ 	pirq = info->irq[pin - 1].link;
+ 	mask = info->irq[pin - 1].bitmap;
+ 	if (!pirq) {
+-		dev_dbg(&dev->dev, "PCI INT %c not routed\n", 'A' + pin - 1);
++		dev_dbg(&dev->dev, "PCI INT %c not routed\n", 'A' + dpin - 1);
+ 		return 0;
+ 	}
+ 	dev_dbg(&dev->dev, "PCI INT %c -> PIRQ %02x, mask %04x, excl %04x",
+-		'A' + pin - 1, pirq, mask, pirq_table->exclusive_irqs);
++		'A' + dpin - 1, pirq, mask, pirq_table->exclusive_irqs);
+ 	mask &= pcibios_irq_mask;
+ 
+ 	/* Work around broken HP Pavilion Notebooks which assign USB to
+@@ -1238,7 +1270,7 @@ static int pcibios_lookup_irq(struct pci
+ 				newirq = i;
+ 		}
+ 	}
+-	dev_dbg(&dev->dev, "PCI INT %c -> newirq %d", 'A' + pin - 1, newirq);
++	dev_dbg(&dev->dev, "PCI INT %c -> newirq %d", 'A' + dpin - 1, newirq);
+ 
+ 	/* Check if it is hardcoded */
+ 	if ((pirq & 0xf0) == 0xf0) {
+@@ -1272,15 +1304,17 @@ static int pcibios_lookup_irq(struct pci
+ 			return 0;
+ 		}
+ 	}
+-	dev_info(&dev->dev, "%s PCI INT %c -> IRQ %d\n", msg, 'A' + pin - 1, irq);
++	dev_info(&dev->dev, "%s PCI INT %c -> IRQ %d\n",
++		 msg, 'A' + dpin - 1, irq);
+ 
+ 	/* Update IRQ for all devices with the same pirq value */
+ 	for_each_pci_dev(dev2) {
+-		pci_read_config_byte(dev2, PCI_INTERRUPT_PIN, &pin);
+-		if (!pin)
++		pci_read_config_byte(dev2, PCI_INTERRUPT_PIN, &dpin);
++		if (!dpin)
+ 			continue;
+ 
+-		info = pirq_get_info(dev2);
++		pin = dpin;
++		info = pirq_get_info(dev2, &pin);
+ 		if (!info)
+ 			continue;
+ 		if (info->irq[pin - 1].link == pirq) {
