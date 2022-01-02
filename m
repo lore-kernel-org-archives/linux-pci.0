@@ -2,22 +2,21 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCEA9C4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2AC0C4167D
 	for <linux-pci@archiver.kernel.org>; Sun,  2 Jan 2022 23:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbiABXc4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Jan 2022 18:32:56 -0500
-Received: from angie.orcam.me.uk ([78.133.224.34]:38400 "EHLO
+        id S231156AbiABXc5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Jan 2022 18:32:57 -0500
+Received: from angie.orcam.me.uk ([78.133.224.34]:38420 "EHLO
         angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbiABXcy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jan 2022 18:32:54 -0500
-X-Greylist: delayed 553 seconds by postgrey-1.27 at vger.kernel.org; Sun, 02 Jan 2022 18:32:53 EST
+        with ESMTP id S230046AbiABXcz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jan 2022 18:32:55 -0500
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id DBD2E9200C1; Mon,  3 Jan 2022 00:24:19 +0100 (CET)
+        id 200B39200C5; Mon,  3 Jan 2022 00:24:29 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id D8CD09200BF;
-        Sun,  2 Jan 2022 23:24:19 +0000 (GMT)
-Date:   Sun, 2 Jan 2022 23:24:19 +0000 (GMT)
+        by angie.orcam.me.uk (Postfix) with ESMTP id 1A1399200C3;
+        Sun,  2 Jan 2022 23:24:29 +0000 (GMT)
+Date:   Sun, 2 Jan 2022 23:24:29 +0000 (GMT)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Thomas Gleixner <tglx@linutronix.de>,
@@ -25,8 +24,10 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         "H. Peter Anvin" <hpa@zytor.com>
 cc:     x86@kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/4] x86/PCI: Odd generic PIRQ router improvements
-Message-ID: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
+Subject: [PATCH v2 2/4] x86/PCI: Include function number in $PIR table dump
+In-Reply-To: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2201020153230.56863@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2201020142430.56863@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -34,38 +35,109 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Contrary to the PCI BIOS specification[1] some systems include the PCI 
+function number for motherboard devices in their $PIR table, e.g. this 
+is what the Tyan Tomcat IV S1564D board reports:
 
- Resending as this has gone into void.  Also there is a context dependency 
-with a change developed later possibly causing a merge conflict, so to 
-make it easier to queue the incoming patches I have folded the follow-up 
-change into this series, expanding it to 4 patches from the original 3 and 
-mechanically regenerating according to upstream changes.  I have updated 
-the cover letter accordingly.
+00:14 slot=01
+ 0:60/deb8
+ 1:61/deb8
+ 2:62/deb8
+ 3:63/deb8
 
- While working on the SiS85C497 PIRQ router I have noticed an odd
-phenomenon with my venerable Tyan Tomcat IV S1564D board, where the PCI 
-INTD# line of the USB host controller included as function 3 of the PIIX3 
-southbridge cannot be routed in the `noapic' mode.  As it turns out the 
-reason for this is the BIOS has two individual entries in its PIRQ table 
-for two of its three functions, and the wrong one is chosen for routing 
-said line.
+00:13 slot=02
+ 0:61/deb8
+ 1:62/deb8
+ 2:63/deb8
+ 3:60/deb8
 
- Strictly speaking this violates the PCI BIOS specification, but it can be 
-easily worked around while preserving the semantics for compliant systems.
+00:12 slot=03
+ 0:62/deb8
+ 1:63/deb8
+ 2:60/deb8
+ 3:61/deb8
 
- Therefore I have come up with this patch series, which addresses this 
-problem with 3/4, adds function reporting to the debug PIRQ table dump 
-with 2/4 and also prints a usable physical memory address of the PIRQ 
-table in a debug message with 1/4.
+00:11 slot=04
+ 0:63/deb8
+ 1:60/deb8
+ 2:61/deb8
+ 3:62/deb8
 
- Then 4/4 follows, addressing the inability to use a PIRQ table to route 
-interrupts for devices placed behind PCI-to-PCI bridges on option cards, 
-and especially where the BIOS has failed to enumerate the whole bus tree 
-in the first place.
+00:07 slot=00
+ 0:00/deb8
+ 1:00/deb8
+ 2:00/deb8
+ 3:00/deb8
 
- See individual change descriptions for further details.
+00:07 slot=00
+ 0:00/deb8
+ 1:00/deb8
+ 2:00/deb8
+ 3:63/deb8
 
- Please apply.
+Print the function number then in the debug $PIR table dump:
 
-  Maciej
+00:14.0 slot=01
+ 0:60/deb8
+ 1:61/deb8
+ 2:62/deb8
+ 3:63/deb8
+
+00:13.0 slot=02
+ 0:61/deb8
+ 1:62/deb8
+ 2:63/deb8
+ 3:60/deb8
+
+00:12.0 slot=03
+ 0:62/deb8
+ 1:63/deb8
+ 2:60/deb8
+ 3:61/deb8
+
+00:11.0 slot=04
+ 0:63/deb8
+ 1:60/deb8
+ 2:61/deb8
+ 3:62/deb8
+
+00:07.1 slot=00
+ 0:00/deb8
+ 1:00/deb8
+ 2:00/deb8
+ 3:00/deb8
+
+00:07.2 slot=00
+ 0:00/deb8
+ 1:00/deb8
+ 2:00/deb8
+ 3:63/deb8
+
+References:
+
+[1] "PCI BIOS Specification", Revision 2.1, PCI Special Interest Group, 
+    August 26, 1994, Table 4-1 "Layout of IRQ routing table entry.", p. 
+    12
+
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+---
+No change from v1.
+---
+ arch/x86/pci/irq.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+linux-x86-debug-pirq-fn.diff
+Index: linux-macro/arch/x86/pci/irq.c
+===================================================================
+--- linux-macro.orig/arch/x86/pci/irq.c
++++ linux-macro/arch/x86/pci/irq.c
+@@ -135,7 +135,8 @@ static void __init pirq_peer_trick(void)
+ #ifdef DEBUG
+ 		{
+ 			int j;
+-			DBG(KERN_DEBUG "%02x:%02x slot=%02x", e->bus, e->devfn/8, e->slot);
++			DBG(KERN_DEBUG "%02x:%02x.%x slot=%02x",
++			    e->bus, e->devfn / 8, e->devfn % 8, e->slot);
+ 			for (j = 0; j < 4; j++)
+ 				DBG(" %d:%02x/%04x", j, e->irq[j].link, e->irq[j].bitmap);
+ 			DBG("\n");
