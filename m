@@ -2,34 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 059CBC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jan 2022 15:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D75DC433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jan 2022 15:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241202AbiAEPC5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jan 2022 10:02:57 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:46450 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241196AbiAEPCz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jan 2022 10:02:55 -0500
+        id S241211AbiAEPC7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jan 2022 10:02:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49908 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236542AbiAEPCy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jan 2022 10:02:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85D8EC061245;
+        Wed,  5 Jan 2022 07:02:54 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 00B9661795;
-        Wed,  5 Jan 2022 15:02:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19473C36AE9;
-        Wed,  5 Jan 2022 15:02:54 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 48716B81BA3;
+        Wed,  5 Jan 2022 15:02:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8A0BC36AE0;
+        Wed,  5 Jan 2022 15:02:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641394974;
-        bh=xtgWnMzNPIMa08zjjeeaZB3knTJH44avqoA9ZVBaK7A=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mQrIjJWQ6mQm4ZDwpbDcxjHgg78Lesw66c4c6xoPrjFLoqfregIO6sA0pto1QGHqM
-         wMJzN6x9L4nz/Dry+dAIW76lFI+SOxpFLBx08veMYlK2aHpf+wMr4q9F5fuPLZalji
-         nq0/gkiORhGHDQLcZ6cKxWJvRG6WKgwi0EzBaeX/e+qfJfnJDbFegyHXIvj0NmHiE6
-         RfgSHmNlo4asnKFb3xqtTiqmg+nOaUJJpW7a3svzbhkpOsT1WcPEUFJ7MjuFTOWJKg
-         sz4HVKfyefnBH9QX/H1Gk9CbWKuCfN5NdzUNDLN2EPYWqBFNUGzz3Zo83VLHWhd/Pm
-         yb+HcFMryPkAg==
+        s=k20201202; t=1641394972;
+        bh=wjn320Q4DEOaeeCjYoDrjX9G/mND1Q5tCyT5sWz6ZRk=;
+        h=From:To:Cc:Subject:Date:From;
+        b=t0qz88ik2Pzibi2tVKTFQjxOFnHlX475pqu0tIpbLtqyZQd8XkFMpecb68tjMozt/
+         GOuOM2dyNH27tzm8YNIvFL00OMGl23X0o+IQEuy70581NkvHviRghI0Rkc48qrgaNt
+         ukSBuUN2vtDEBNFc7wVOeb8XavNINzpuerLf+Ac6ZkkXIAKFLKXAxnMgLwg1Bsnvda
+         IobkkbsegtwSONSrBy3K+R7DBejpbUxw3oxFrh2GzW8Fq8iAfmFxOzdj6Z8i+9mg4x
+         nJsbPVQafv/XlCCHXVP5KwpixIotm7cBz5fVKizfzp3Lg6UhNmQb6+UV503DXi7ECA
+         uH+iuxIGJ1omQ==
 Received: by pali.im (Postfix)
-        id C5D7682A; Wed,  5 Jan 2022 16:02:53 +0100 (CET)
+        id 0C10582A; Wed,  5 Jan 2022 16:02:49 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -37,17 +40,13 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>
+        Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH 04/11] dt-bindings: PCI: mvebu: Add num-lanes property
-Date:   Wed,  5 Jan 2022 16:02:32 +0100
-Message-Id: <20220105150239.9628-5-pali@kernel.org>
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 00/11] PCI: mvebu: subsystem ids, AER and INTx
+Date:   Wed,  5 Jan 2022 16:02:28 +0100
+Message-Id: <20220105150239.9628-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220105150239.9628-1-pali@kernel.org>
-References: <20220105150239.9628-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -55,108 +54,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Controller driver needs to correctly configure PCIe link if it contains 1
-or 4 SerDes PCIe lanes. Therefore add a new 'num-lanes' DT property for
-mvebu PCIe controller. Property 'num-lanes' seems to be de-facto standard
-way how number of lanes is specified in other PCIe controllers.
+This patch series extends pci-bridge-emul.c driver to emulate PCI Subsystem
+Vendor ID capability and PCIe extended capabilities. And then implement
+in pci-mvebu.c driver support for PCI Subsystem Vendor IDs, PCIe AER
+registers, support for legacy INTx interrupts, configuration for X1/X4
+mode and usage of new PCI child_ops API.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- Documentation/devicetree/bindings/pci/mvebu-pci.txt | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+This patch series depends on other pci-mvebu and pci-bridge-emul patches from:
+https://lore.kernel.org/linux-pci/20220104153529.31647-1-pali@kernel.org/
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index 6173af6885f8..24225852bce0 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -77,6 +77,7 @@ and the following optional properties:
- - marvell,pcie-lane: the physical PCIe lane number, for ports having
-   multiple lanes. If this property is not found, we assume that the
-   value is 0.
-+- num-lanes: number of SerDes PCIe lanes for this link (1 or 4)
- - reset-gpios: optional GPIO to PERST#
- - reset-delay-us: delay in us to wait after reset de-assertion, if not
-   specified will default to 100ms, as required by the PCIe specification.
-@@ -141,6 +142,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 58>;
- 		marvell,pcie-port = <0>;
- 		marvell,pcie-lane = <0>;
-+		num-lanes = <1>;
- 		/* low-active PERST# reset on GPIO 25 */
- 		reset-gpios = <&gpio0 25 1>;
- 		/* wait 20ms for device settle after reset deassertion */
-@@ -161,6 +163,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 59>;
- 		marvell,pcie-port = <0>;
- 		marvell,pcie-lane = <1>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 6>;
- 	};
- 
-@@ -177,6 +180,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 60>;
- 		marvell,pcie-port = <0>;
- 		marvell,pcie-lane = <2>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 7>;
- 	};
- 
-@@ -193,6 +197,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 61>;
- 		marvell,pcie-port = <0>;
- 		marvell,pcie-lane = <3>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 8>;
- 	};
- 
-@@ -209,6 +214,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 62>;
- 		marvell,pcie-port = <1>;
- 		marvell,pcie-lane = <0>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 9>;
- 	};
- 
-@@ -225,6 +231,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 63>;
- 		marvell,pcie-port = <1>;
- 		marvell,pcie-lane = <1>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 10>;
- 	};
- 
-@@ -241,6 +248,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 64>;
- 		marvell,pcie-port = <1>;
- 		marvell,pcie-lane = <2>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 11>;
- 	};
- 
-@@ -257,6 +265,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 65>;
- 		marvell,pcie-port = <1>;
- 		marvell,pcie-lane = <3>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 12>;
- 	};
- 
-@@ -273,6 +282,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 99>;
- 		marvell,pcie-port = <2>;
- 		marvell,pcie-lane = <0>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 26>;
- 	};
- 
-@@ -289,6 +299,7 @@ pcie-controller {
- 		interrupt-map = <0 0 0 0 &mpic 103>;
- 		marvell,pcie-port = <3>;
- 		marvell,pcie-lane = <0>;
-+		num-lanes = <1>;
- 		clocks = <&gateclk 27>;
- 	};
- };
+Pali Rohár (9):
+  PCI: pci-bridge-emul: Add support for PCI Bridge Subsystem Vendor ID
+    capability
+  dt-bindings: PCI: mvebu: Add num-lanes property
+  PCI: mvebu: Correctly configure x1/x4 mode
+  PCI: mvebu: Add support for PCI Bridge Subsystem Vendor ID on emulated
+    bridge
+  PCI: mvebu: Add support for Advanced Error Reporting registers on
+    emulated bridge
+  PCI: mvebu: Use child_ops API
+  dt-bindings: PCI: mvebu: Update information about intx interrupts
+  PCI: mvebu: Implement support for legacy INTx interrupts
+  ARM: dts: armada-385.dtsi: Add definitions for PCIe legacy INTx
+    interrupts
+
+Russell King (2):
+  PCI: pci-bridge-emul: Re-arrange register tests
+  PCI: pci-bridge-emul: Add support for PCIe extended capabilities
+
+ .../devicetree/bindings/pci/mvebu-pci.txt     |  16 +
+ arch/arm/boot/dts/armada-385.dtsi             |  52 ++-
+ drivers/pci/controller/pci-mvebu.c            | 352 +++++++++++++++---
+ drivers/pci/pci-bridge-emul.c                 | 167 ++++++---
+ drivers/pci/pci-bridge-emul.h                 |  17 +
+ 5 files changed, 494 insertions(+), 110 deletions(-)
+
 -- 
 2.20.1
 
