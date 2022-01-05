@@ -2,70 +2,164 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5406C433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jan 2022 14:50:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACC00C433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jan 2022 15:02:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241071AbiAEOuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jan 2022 09:50:16 -0500
-Received: from foss.arm.com ([217.140.110.172]:45114 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S241092AbiAEOuO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Jan 2022 09:50:14 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C831211D4;
-        Wed,  5 Jan 2022 06:50:13 -0800 (PST)
-Received: from lpieralisi (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 774873F774;
-        Wed,  5 Jan 2022 06:50:12 -0800 (PST)
-Date:   Wed, 5 Jan 2022 14:50:06 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        id S241178AbiAEPCy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jan 2022 10:02:54 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:46394 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236542AbiAEPCx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jan 2022 10:02:53 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5E4D061791;
+        Wed,  5 Jan 2022 15:02:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B6EBC36AEF;
+        Wed,  5 Jan 2022 15:02:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641394972;
+        bh=dOKwtHaPNlkgW3INrUS/DqG3hJgd3fUV+vVGrwrZHco=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iavGmojLJJpxaq47kvgt+0bqh6y20VySlglkoPkPcEv32fFMRphi4Z2epNisJDRHo
+         EdJKzkZz4aoIKjLlxAoiAZnj3EO9HZa1a1G5Jy80VT1bpPiO41MlYQyR3oMC3/lHYB
+         gNbBNw7Fh3to6h8soKg0rM/KL63QYMV6v93NRtjOleoVvokRWZ7IqdmW1UGcDKQSZf
+         bDwFfl7sEOurPSYhgQYJVB0pac17oVeMpLwKQS8jCAiSY5+kTrJAXm5syNMytWSKlq
+         WMJBEy5GtpqvONNXaZwB5p1juI6shyni5RXxcx8ZGT6wdJ9yUZKcmYfwNCk0J09iqy
+         awj+zIuId0SbQ==
+Received: by pali.im (Postfix)
+        id 32F5B848; Wed,  5 Jan 2022 16:02:50 +0100 (CET)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>, john@phrozen.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v8 10/14] PCI: mediatek: Allow building for ARCH_AIROHA
-Message-ID: <20220105145006.GA7465@lpieralisi>
-References: <20211220211854.89452-1-nbd@nbd.name>
- <20211220211854.89452-11-nbd@nbd.name>
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
+        Russell King <rmk+kernel@armlinux.org.uk>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 01/11] PCI: pci-bridge-emul: Re-arrange register tests
+Date:   Wed,  5 Jan 2022 16:02:29 +0100
+Message-Id: <20220105150239.9628-2-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220105150239.9628-1-pali@kernel.org>
+References: <20220105150239.9628-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211220211854.89452-11-nbd@nbd.name>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 20, 2021 at 10:18:50PM +0100, Felix Fietkau wrote:
-> Allow selecting the pcie-mediatek driver if ARCH_AIROHA is set, because the
-> Airoha EN7523 SoC uses the same controller as MT7622.
-> The driver itself is not modified. The PCIe controller DT node should use
-> mediatek,mt7622-pcie after airoha,en7523-pcie.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  drivers/pci/controller/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+From: Russell King <rmk+kernel@armlinux.org.uk>
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Re-arrange the tests for which sets of registers are being accessed so that
+it is easier to add further regions later. No functional change.
 
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index 93b141110537..f1342059c2a3 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -233,7 +233,7 @@ config PCIE_ROCKCHIP_EP
->  
->  config PCIE_MEDIATEK
->  	tristate "MediaTek PCIe controller"
-> -	depends on ARCH_MEDIATEK || COMPILE_TEST
-> +	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
->  	depends on OF
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	help
-> -- 
-> 2.34.1
-> 
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+[pali: Fix reading old value in pci_bridge_emul_conf_write]
+Signed-off-by: Pali Rohár <pali@kernel.org>
+---
+ drivers/pci/pci-bridge-emul.c | 61 ++++++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index 033bbeb99176..56b2cb741498 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -418,25 +418,25 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ 	__le32 *cfgspace;
+ 	const struct pci_bridge_reg_behavior *behavior;
+ 
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END) {
+-		*value = 0;
+-		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END) {
++	if (reg < PCI_BRIDGE_CONF_END) {
++		/* Emulated PCI space */
++		read_op = bridge->ops->read_base;
++		cfgspace = (__le32 *) &bridge->conf;
++		behavior = bridge->pci_regs_behavior;
++	} else if (!bridge->has_pcie) {
++		/* PCIe space is not implemented, and no PCI capabilities */
+ 		*value = 0;
+ 		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
++	} else if (reg < PCI_CAP_PCIE_END) {
++		/* Our emulated PCIe capability */
+ 		reg -= PCI_CAP_PCIE_START;
+ 		read_op = bridge->ops->read_pcie;
+ 		cfgspace = (__le32 *) &bridge->pcie_conf;
+ 		behavior = bridge->pcie_cap_regs_behavior;
+ 	} else {
+-		read_op = bridge->ops->read_base;
+-		cfgspace = (__le32 *) &bridge->conf;
+-		behavior = bridge->pci_regs_behavior;
++		/* Beyond our PCIe space */
++		*value = 0;
++		return PCIBIOS_SUCCESSFUL;
+ 	}
+ 
+ 	if (read_op)
+@@ -480,11 +480,27 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 	__le32 *cfgspace;
+ 	const struct pci_bridge_reg_behavior *behavior;
+ 
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_END)
+-		return PCIBIOS_SUCCESSFUL;
++	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return ret;
+ 
+-	if (!bridge->has_pcie && reg >= PCI_BRIDGE_CONF_END)
++	if (reg < PCI_BRIDGE_CONF_END) {
++		/* Emulated PCI space */
++		write_op = bridge->ops->write_base;
++		cfgspace = (__le32 *) &bridge->conf;
++		behavior = bridge->pci_regs_behavior;
++	} else if (!bridge->has_pcie) {
++		/* PCIe space is not implemented, and no PCI capabilities */
+ 		return PCIBIOS_SUCCESSFUL;
++	} else if (reg < PCI_CAP_PCIE_END) {
++		/* Our emulated PCIe capability */
++		reg -= PCI_CAP_PCIE_START;
++		write_op = bridge->ops->write_pcie;
++		cfgspace = (__le32 *) &bridge->pcie_conf;
++		behavior = bridge->pcie_cap_regs_behavior;
++	} else {
++		return PCIBIOS_SUCCESSFUL;
++	}
+ 
+ 	shift = (where & 0x3) * 8;
+ 
+@@ -497,21 +513,6 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+-	ret = pci_bridge_emul_conf_read(bridge, reg, 4, &old);
+-	if (ret != PCIBIOS_SUCCESSFUL)
+-		return ret;
+-
+-	if (bridge->has_pcie && reg >= PCI_CAP_PCIE_START) {
+-		reg -= PCI_CAP_PCIE_START;
+-		write_op = bridge->ops->write_pcie;
+-		cfgspace = (__le32 *) &bridge->pcie_conf;
+-		behavior = bridge->pcie_cap_regs_behavior;
+-	} else {
+-		write_op = bridge->ops->write_base;
+-		cfgspace = (__le32 *) &bridge->conf;
+-		behavior = bridge->pci_regs_behavior;
+-	}
+-
+ 	/* Keep all bits, except the RW bits */
+ 	new = old & (~mask | ~behavior[reg / 4].rw);
+ 
+-- 
+2.20.1
+
