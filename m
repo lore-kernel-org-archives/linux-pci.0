@@ -2,46 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6629AC43217
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Jan 2022 00:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF7AC4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Jan 2022 00:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343543AbiAFAH2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jan 2022 19:07:28 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:41796 "EHLO
+        id S1343532AbiAFAHY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jan 2022 19:07:24 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:41672 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343511AbiAFAHZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jan 2022 19:07:25 -0500
+        with ESMTP id S1343504AbiAFAHU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jan 2022 19:07:20 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8884E619AC;
-        Thu,  6 Jan 2022 00:07:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8B53C36AE9;
-        Thu,  6 Jan 2022 00:07:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25468619B5;
+        Thu,  6 Jan 2022 00:07:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41F8FC36AE9;
+        Thu,  6 Jan 2022 00:07:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641427645;
-        bh=55uUY3DU+Al2f4mzQBUIMkBQgWRIn5Cls1b0nr4Zsds=;
+        s=k20201202; t=1641427639;
+        bh=ahBRjiBAtZjsrnVkGxGvahvqf+RlJsegpSQPBitCsSY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cpr/yrL99ZdYakbjuuIPqsR7VcfQEPTQh03YhFahW91+yhZvch6yhAcXwyNS4tJw9
-         oek6bTZG8KniYzf8v7ojV3Uf5lOnDAYxpbW5YA/poUJHRIK9hTFDUomzdgYyWC6xsg
-         OjSrLXfpwx8e2qJQc8p8QgkVLuHv6+kU+3gngKsbBTqu0lA7ukvBoTbFvayflfEe97
-         AiBSSURXAcoesWGbHdvYoGu0/rVP2cHt6E7m7TaR4XHj/FlQUsojRjE2dS6YP94/WA
-         cKtjj92wliHJCDmi6DSTEDo2lP+dZDDUqaGLLWQic0VUvt1LHwTPf5CC/uW3HXLFuU
-         xzij/ieJE0/6A==
+        b=R8JbJjFKqNqaQ00xJIjSgzYZplM1A4rAjqJ8f1oWsaMZ+yfuIHuV8LFXHgsexXhm3
+         mqhwRgxJa0k4nM8ppDLmWf5kMdthsC+8LAxn6iB58NXbs0/35OMqI0oxwOolz2ZC3T
+         kSfA9lwDetJJ9jSgi7WEWJTtV/mdWP6MBfe2zA4p77xcQ5J/QgpR3TBlA35BlGbTd7
+         t8BUSOyc8D9XscY1jr8CKF5dCrposvKRgGnWzJ/PnYW2ZsTAu4pi0ELQgePKuL00RJ
+         3sP1g9aPwdYn/ZDsoUFWKWBNLtnaYQ9TT3nosYOqslBTiZOB64PgQHWZ6lZ5Fn8cCO
+         lupW1b7MxOwKg==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
 Cc:     Xuefeng Li <lixuefeng@loongson.cn>,
         Huacai Chen <chenhuacai@gmail.com>,
         Huacai Chen <chenhuacai@loongson.cn>,
         linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v8 07/10] vgaarb: Remove empty vga_arb_device_card_gone()
-Date:   Wed,  5 Jan 2022 18:06:55 -0600
-Message-Id: <20220106000658.243509-8-helgaas@kernel.org>
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Bruno=20Pr=C3=A9mont?= <bonbons@linux-vserver.org>
+Subject: [PATCH v8 04/10] vgaarb: Move framebuffer detection to ADD_DEVICE path
+Date:   Wed,  5 Jan 2022 18:06:52 -0600
+Message-Id: <20220106000658.243509-5-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220106000658.243509-1-helgaas@kernel.org>
 References: <20220106000658.243509-1-helgaas@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -49,68 +51,122 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-vga_arb_device_card_gone() has always been empty.  Remove it.
+Previously we selected a device that owns the boot framebuffer as the
+default device in vga_arb_select_default_device().  This was only done in
+the vga_arb_device_init() subsys_initcall, so devices enumerated later,
+e.g., by pcibios_init(), were not eligible.
 
+Fix this by moving the framebuffer device selection from
+vga_arb_select_default_device() to vga_arbiter_add_pci_device(), which is
+called after every PCI device is enumerated, either by the
+vga_arb_device_init() subsys_initcall or as an ADD_DEVICE notifier.
+
+Note that if vga_arb_select_default_device() found a device owning the boot
+framebuffer, it unconditionally set it to be the default VGA device, and no
+subsequent device could replace it.
+
+Link: https://lore.kernel.org/r/20211015061512.2941859-7-chenhuacai@loongson.cn
+Based-on-patch-by: Huacai Chen <chenhuacai@loongson.cn>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bruno Prémont <bonbons@linux-vserver.org>
 ---
- drivers/gpu/vga/vgaarb.c | 16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ drivers/gpu/vga/vgaarb.c | 37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index ad548917e602..455cf048fae8 100644
+index b0ae0f177c6f..aefa4f406f7d 100644
 --- a/drivers/gpu/vga/vgaarb.c
 +++ b/drivers/gpu/vga/vgaarb.c
-@@ -123,8 +123,6 @@ static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
- /* this is only used a cookie - it should not be dereferenced */
- static struct pci_dev *vga_default;
+@@ -72,6 +72,7 @@ struct vga_device {
+ 	unsigned int io_norm_cnt;	/* normal IO count */
+ 	unsigned int mem_norm_cnt;	/* normal MEM count */
+ 	bool bridge_has_one_vga;
++	bool is_framebuffer;	/* BAR covers firmware framebuffer */
+ 	unsigned int (*set_decode)(struct pci_dev *pdev, bool decode);
+ };
  
--static void vga_arb_device_card_gone(struct pci_dev *pdev);
--
- /* Find somebody in our list */
- static struct vga_device *vgadev_find(struct pci_dev *pdev)
+@@ -565,10 +566,9 @@ void vga_put(struct pci_dev *pdev, unsigned int rsrc)
+ }
+ EXPORT_SYMBOL(vga_put);
+ 
+-static void __init vga_select_framebuffer_device(struct pci_dev *pdev)
++static bool vga_is_framebuffer_device(struct pci_dev *pdev)
  {
-@@ -878,10 +876,6 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
- 	/* Remove entry from list */
- 	list_del(&vgadev->list);
- 	vga_count--;
--	/* Notify userland driver that the device is gone so it discards
--	 * it's copies of the pci_dev pointer
+ #if defined(CONFIG_X86) || defined(CONFIG_IA64)
+-	struct device *dev = &pdev->dev;
+ 	u64 base = screen_info.lfb_base;
+ 	u64 size = screen_info.lfb_size;
+ 	u64 limit;
+@@ -583,15 +583,6 @@ static void __init vga_select_framebuffer_device(struct pci_dev *pdev)
+ 
+ 	limit = base + size;
+ 
+-	/*
+-	 * Override vga_arbiter_add_pci_device()'s I/O based detection
+-	 * as it may take the wrong device (e.g. on Apple system under
+-	 * EFI).
+-	 *
+-	 * Select the device owning the boot framebuffer if there is
+-	 * one.
 -	 */
--	vga_arb_device_card_gone(pdev);
+-
+ 	/* Does firmware framebuffer belong to us? */
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		flags = pci_resource_flags(pdev, i);
+@@ -608,13 +599,10 @@ static void __init vga_select_framebuffer_device(struct pci_dev *pdev)
+ 		if (base < start || limit >= end)
+ 			continue;
  
- 	/* Wake up all possible waiters */
- 	wake_up_all(&vga_wait_queue);
-@@ -1131,9 +1125,7 @@ static ssize_t vga_arb_read(struct file *file, char __user *buf,
- 	if (lbuf == NULL)
- 		return -ENOMEM;
- 
--	/* Shields against vga_arb_device_card_gone (pci_dev going
--	 * away), and allows access to vga list
--	 */
-+	/* Protects vga_list */
- 	spin_lock_irqsave(&vga_lock, flags);
- 
- 	/* If we are targeting the default, use it */
-@@ -1150,8 +1142,6 @@ static ssize_t vga_arb_read(struct file *file, char __user *buf,
- 		/* Wow, it's not in the list, that shouldn't happen,
- 		 * let's fix us up and return invalid card
- 		 */
--		if (pdev == priv->target)
--			vga_arb_device_card_gone(pdev);
- 		spin_unlock_irqrestore(&vga_lock, flags);
- 		len = sprintf(lbuf, "invalid");
- 		goto done;
-@@ -1495,10 +1485,6 @@ static int vga_arb_release(struct inode *inode, struct file *file)
- 	return 0;
+-		if (!vga_default_device())
+-			vgaarb_info(dev, "setting as boot device\n");
+-		else if (pdev != vga_default_device())
+-			vgaarb_info(dev, "overriding boot device\n");
+-		vga_set_default_device(pdev);
++		return true;
+ 	}
+ #endif
++	return false;
  }
  
--static void vga_arb_device_card_gone(struct pci_dev *pdev)
--{
--}
+ static bool vga_arb_integrated_gpu(struct device *dev)
+@@ -635,6 +623,7 @@ static bool vga_arb_integrated_gpu(struct device *dev)
+ static bool vga_is_boot_device(struct vga_device *vgadev)
+ {
+ 	struct vga_device *boot_vga = vgadev_find(vga_default_device());
++	struct pci_dev *pdev = vgadev->pdev;
+ 
+ 	/*
+ 	 * We select the default VGA device in this order:
+@@ -645,6 +634,18 @@ static bool vga_is_boot_device(struct vga_device *vgadev)
+ 	 *   Other device (see vga_arb_select_default_device())
+ 	 */
+ 
++	/*
++	 * We always prefer a firmware framebuffer, so if we've already
++	 * found one, there's no need to consider vgadev.
++	 */
++	if (boot_vga && boot_vga->is_framebuffer)
++		return false;
++
++	if (vga_is_framebuffer_device(pdev)) {
++		vgadev->is_framebuffer = true;
++		return true;
++	}
++
+ 	/*
+ 	 * A legacy VGA device has MEM and IO enabled and any bridges
+ 	 * leading to it have PCI_BRIDGE_CTL_VGA enabled so the legacy
+@@ -1531,10 +1532,6 @@ static void __init vga_arb_select_default_device(void)
+ 	struct pci_dev *pdev, *found = NULL;
+ 	struct vga_device *vgadev;
+ 
+-	list_for_each_entry(vgadev, &vga_list, list) {
+-		vga_select_framebuffer_device(vgadev->pdev);
+-	}
 -
- /*
-  * callback any registered clients to let them know we have a
-  * change in VGA cards
+ 	if (!vga_default_device()) {
+ 		list_for_each_entry_reverse(vgadev, &vga_list, list) {
+ 			struct device *dev = &vgadev->pdev->dev;
 -- 
 2.25.1
 
