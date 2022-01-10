@@ -2,35 +2,32 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19AF1C4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 01:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15202C43219
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 01:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237996AbiAJBvD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 Jan 2022 20:51:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59626 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238012AbiAJBu5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jan 2022 20:50:57 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 227E0C061748
-        for <linux-pci@vger.kernel.org>; Sun,  9 Jan 2022 17:50:57 -0800 (PST)
+        id S238002AbiAJBvF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Jan 2022 20:51:05 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:59602 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238017AbiAJBvD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jan 2022 20:51:03 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D6897B8111A
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 01:50:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23038C36AEF;
-        Mon, 10 Jan 2022 01:50:52 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B84B60F61
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 01:51:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AF46C36AF5;
+        Mon, 10 Jan 2022 01:51:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641779454;
-        bh=L5qm5GZkhw1XGmwCXWuUT/hFhgkastabpvuhld2hr2g=;
+        s=k20201202; t=1641779462;
+        bh=TYb33GgCKOsNY6NxVzwzD4oOwOuZ7EIU5PjjVRGm2nQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LI31DLB782ePWiM8xYtb7v0lyr6VaiB6v4rmiolIUwwY4fG9U3IYTAtUCSK2xVOpg
-         0lIc135gu76U5+CReCpiG4ux9EToyY/WcRtrHvOhxvm6HKBwjRnvIeIUMhKc+8Q9X6
-         /KihXrd1VniM0md6cXdYFzEWy8tQwG0hs1UkBv3SbepTH/CI7faegXWOPuW99Stmve
-         o4HcYiG713vbeWTaF9l2Q7928KGsV3+/bPnlSU8vZAN0BiE1uFZk2vvdO4CGDU8c1O
-         OhlXOMulqgf5/WpuH/lQdSwKe2vQTeZp+udxs8jJa33Ubsh9xeV0uSsipcszRYG+7r
-         uw12FkI4KTRYA==
+        b=LKcxqhBgjydS42WzcWc9t8xqekXY8L8bmv1JJ6ihcwBfgrSNPtS+Kv9cVBkP0lOAx
+         keDVNzGo3+p1429wD7OKwNR/oitwIJYrc8rng3jWWYMcO+wSbNbHriX82oHdbhs8NY
+         MGjXilO1+/CgJ6gTa2DBM8vyXByoznpLe9t4WoFZhdWmYGsEtEzPd6ASx/RcUnXhQZ
+         DjNG9b46HN9PO6uzZGTbx1Uk7SM52H1unQgaPCd55f6Cptr/yhDuNZeJ3JA4jq5EPt
+         gw+QjcsGyBAemGDF0DAtjeIhNRLDzcBSnzj/hms+mR5qiDU7GT7FtLyA6gEc50ka9R
+         MU0mMjV4r3PBA==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Marc Zyngier <maz@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -38,9 +35,9 @@ To:     Marc Zyngier <maz@kernel.org>,
 Cc:     pali@kernel.org, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v2 15/23] PCI: aardvark: Optimize writing PCI_EXP_RTCTL_PMEIE and PCI_EXP_RTSTA_PME on emulated bridge
-Date:   Mon, 10 Jan 2022 02:50:10 +0100
-Message-Id: <20220110015018.26359-16-kabel@kernel.org>
+Subject: [PATCH v2 19/23] PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
+Date:   Mon, 10 Jan 2022 02:50:14 +0100
+Message-Id: <20220110015018.26359-20-kabel@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220110015018.26359-1-kabel@kernel.org>
 References: <20220110015018.26359-1-kabel@kernel.org>
@@ -53,51 +50,28 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Pali Rohár <pali@kernel.org>
 
-To optimize advk_pci_bridge_emul_pcie_conf_write() code, touch
-PCIE_ISR0_REG and PCIE_ISR0_MASK_REG registers only when it is really
-needed, when processing PCI_EXP_RTCTL_PMEIE and PCI_EXP_RTSTA_PME bits.
+Callback for irq_mask_ack is the same as for irq_mask. As there is no
+special handling for irq_ack, there is no need to define irq_mask_ack too.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
+Acked-by: Marc Zyngier <maz@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 8706a5f58eb5..e7b9ca31c79c 100644
+index ca519cadcdfe..a41e3e206478 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -934,19 +934,21 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 			advk_pcie_wait_for_retrain(pcie);
- 		break;
+@@ -1422,7 +1422,6 @@ static int advk_pcie_init_irq_domain(struct advk_pcie *pcie)
+ 	}
  
--	case PCI_EXP_RTCTL: {
-+	case PCI_EXP_RTCTL:
- 		/* Only mask/unmask PME interrupt */
--		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG) &
--			~PCIE_MSG_PM_PME_MASK;
--		if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
--			val |= PCIE_MSG_PM_PME_MASK;
--		advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
-+		if (mask & PCI_EXP_RTCTL_PMEIE) {
-+			u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+			if (new & PCI_EXP_RTCTL_PMEIE)
-+				val &= ~PCIE_MSG_PM_PME_MASK;
-+			else
-+				val |= PCIE_MSG_PM_PME_MASK;
-+			advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
-+		}
- 		break;
--	}
+ 	irq_chip->irq_mask = advk_pcie_irq_mask;
+-	irq_chip->irq_mask_ack = advk_pcie_irq_mask;
+ 	irq_chip->irq_unmask = advk_pcie_irq_unmask;
  
- 	case PCI_EXP_RTSTA:
--		new = (new & PCI_EXP_RTSTA_PME) >> 9;
--		advk_writel(pcie, new, PCIE_ISR0_REG);
-+		if (new & PCI_EXP_RTSTA_PME)
-+			advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
- 		break;
- 
- 	case PCI_EXP_DEVCTL:
+ 	pcie->irq_domain =
 -- 
 2.34.1
 
