@@ -2,162 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D93BC433F5
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Jan 2022 15:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A297AC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 01:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234604AbiAHPuB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 8 Jan 2022 10:50:01 -0500
-Received: from mga11.intel.com ([192.55.52.93]:6357 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233952AbiAHPuA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 8 Jan 2022 10:50:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1641657000; x=1673193000;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Pv9qwSg5RSApKUfnSFTIWmi8+qSMHuKGhpLaUC59ZV4=;
-  b=NLKywZJoAXrapOTJYcjC+sXcC9Elf629O8b9VE6wXtMBoxVZ3igcQfYu
-   5HkjfM8py/l/bAJlju/qwzp7oCKiFghBVcbpeqavCwd4Q4m/snSRPmLmP
-   8N7SvJ8pzhE7evLGg3c5Rs1U7ISNQFQiUsM+B2z49/F07PHUgvUnn2xc2
-   S+Sy8HJodaa8dgYDwQ//I5dsZ4yj+MZiTzXDbSjCP7gNUduNN3ZnGBwf+
-   QPA+JToOoIsSn6BctMFH6Hoxxk39vZKuX9HPlhL+txBy+qE9CrR/aj+QI
-   3s1+kjXOCgO0pv/Zz979M3+PbtBCj6JVUrPwaYtrY/jDrTo8jAt8WSGlP
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10220"; a="240572657"
-X-IronPort-AV: E=Sophos;i="5.88,272,1635231600"; 
-   d="scan'208";a="240572657"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2022 07:50:00 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,272,1635231600"; 
-   d="scan'208";a="471619572"
-Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 08 Jan 2022 07:49:59 -0800
-Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1n6Dyg-0000lc-Hy; Sat, 08 Jan 2022 15:49:58 +0000
-Date:   Sat, 08 Jan 2022 23:49:27 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/misc] BUILD SUCCESS
- ccd36795be48956248dc308f4525c06c7f419d76
-Message-ID: <61d9b287.Gx4XAI/wurusNWU0%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S237980AbiAJBu1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Jan 2022 20:50:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59496 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237983AbiAJBu1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jan 2022 20:50:27 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D33F8C06173F
+        for <linux-pci@vger.kernel.org>; Sun,  9 Jan 2022 17:50:26 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 57572B81118
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 01:50:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C978C36AE3;
+        Mon, 10 Jan 2022 01:50:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641779424;
+        bh=B7sfen2UllzsVBzAuAws7MqogCv0oaPUjCj0ZlnHL0w=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Nl5aBrsv1eSEgqfb9C4lv4zeCcYmPLIli/odFOs+PHOlZXKJ3CaOmBHFmRPR6HlR3
+         zWQY4kuoRXRH/OmLEndiZuy62YfZ1EsnxiN5pDgcC0oIzdeLf5XWt6fOmR2eWU8sA4
+         h8dXx1irCOWHqrVSABTOa75HYltItv9j9+f4VigAizR18FFUGicfWLmbXxs9bL54b5
+         DUX2RbOskVCVgwzYYxrwmGRbst0rbl8mLCgFQUaarsqyXnJelj+Hyc8uh+hNw6zBwu
+         PUFu8k82laIi8+pY0Lso19mzA+lR8KdigFZfVcB9en0W3aE/lyHyzDxYP0wsSmjztp
+         eKDS0OHF0NknQ==
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+To:     Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     pali@kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+Subject: [PATCH v2 00/23] PCI: aardvark controller fixes BATCH 4
+Date:   Mon, 10 Jan 2022 02:49:55 +0100
+Message-Id: <20220110015018.26359-1-kabel@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
-branch HEAD: ccd36795be48956248dc308f4525c06c7f419d76  PCI: Correct misspelled words
+Hello Lorenzo, Bjorn and Marc,
 
-elapsed time: 771m
+this is v2 of fourth batch of fixes for the Aardvark PCIe controller
+driver.
 
-configs tested: 91
-configs skipped: 3
+Stuff is converted to new interrupt APIs and recommendations from Marc.
+Marc, could you look at these and acknowledge or comment?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+This series mainly fixes and adds support for stuff around interrupts:
+the most important thing is fixing MSI support.
 
-gcc tested configs:
-arm                              allyesconfig
-arm                              allmodconfig
-arm                                 defconfig
-arm64                               defconfig
-arm64                            allyesconfig
-arm                  randconfig-c002-20220107
-arm                  randconfig-c002-20220108
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-nios2                            allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-arc                                 defconfig
-sh                               allmodconfig
-h8300                            allyesconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-powerpc                          allyesconfig
-i386                 randconfig-a003-20220107
-i386                 randconfig-a005-20220107
-i386                 randconfig-a004-20220107
-i386                 randconfig-a006-20220107
-i386                 randconfig-a002-20220107
-i386                 randconfig-a001-20220107
-x86_64               randconfig-a015-20220108
-x86_64               randconfig-a012-20220108
-x86_64               randconfig-a014-20220108
-x86_64               randconfig-a013-20220108
-x86_64               randconfig-a011-20220108
-x86_64               randconfig-a016-20220108
-x86_64               randconfig-a005-20220107
-x86_64               randconfig-a001-20220107
-x86_64               randconfig-a004-20220107
-x86_64               randconfig-a006-20220107
-x86_64               randconfig-a002-20220107
-x86_64               randconfig-a003-20220107
-arc                  randconfig-r043-20220108
-s390                 randconfig-r044-20220108
-riscv                randconfig-r042-20220108
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
+The series is rebased on helgaas/next.
 
-clang tested configs:
-i386                 randconfig-a003-20220108
-i386                 randconfig-a004-20220108
-i386                 randconfig-a001-20220108
-i386                 randconfig-a002-20220108
-i386                 randconfig-a005-20220108
-i386                 randconfig-a006-20220108
-x86_64               randconfig-a012-20220107
-x86_64               randconfig-a013-20220107
-x86_64               randconfig-a011-20220107
-x86_64               randconfig-a015-20220107
-x86_64               randconfig-a014-20220107
-x86_64               randconfig-a016-20220107
-hexagon              randconfig-r041-20220108
-hexagon              randconfig-r045-20220108
+Marek
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Changes since v1:
+- added patches converting irq_chip and msi_domain_info structures into
+  static driver structures, instead of creating them dynamically, as
+  suggested by Marc
+- added some small patches that should be easy to review
+  - conversion to use constants from linux/pci.h instead of ad-hoc
+    constants int patch 1
+  - use dev_fwnode(dev) instead of of_node_to_fwnode(dev->of_node) in
+    patch 8
+  - fix of a comment in patch 22
+
+Marek Behún (6):
+  PCI: aardvark: Make MSI irq_chip structures static driver structures
+  PCI: aardvark: Make msi_domain_info structure a static driver
+    structure
+  PCI: aardvark: Use dev_fwnode() instead of
+    of_node_to_fwnode(dev->of_node)
+  PCI: aardvark: Drop __maybe_unused from advk_pcie_disable_phy()
+  PCI: aardvark: Update comment about link going down after link-up
+  PCI: aardvark: Make main irq_chip structure a static driver structure
+
+Pali Rohár (17):
+  PCI: aardvark: Replace custom PCIE_CORE_INT_* macros with
+    PCI_INTERRUPT_*
+  PCI: aardvark: Fix reading MSI interrupt number
+  PCI: aardvark: Fix support for MSI interrupts
+  PCI: aardvark: Rewrite IRQ code to chained IRQ handler
+  PCI: aardvark: Check return value of generic_handle_domain_irq() when
+    processing INTx IRQ
+  PCI: aardvark: Refactor unmasking summary MSI interrupt
+  PCI: aardvark: Add support for masking MSI interrupts
+  PCI: aardvark: Fix setting MSI address
+  PCI: aardvark: Enable MSI-X support
+  PCI: aardvark: Add support for ERR interrupt on emulated bridge
+  PCI: aardvark: Fix reading PCI_EXP_RTSTA_PME bit on emulated bridge
+  PCI: aardvark: Optimize writing PCI_EXP_RTCTL_PMEIE and
+    PCI_EXP_RTSTA_PME on emulated bridge
+  PCI: aardvark: Add support for PME interrupts
+  PCI: aardvark: Fix support for PME requester on emulated bridge
+  PCI: aardvark: Use separate INTA interrupt for emulated root bridge
+  PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
+  PCI: aardvark: Don't mask irq when mapping
+
+ drivers/pci/controller/pci-aardvark.c | 415 +++++++++++++++++---------
+ 1 file changed, 281 insertions(+), 134 deletions(-)
+
+-- 
+2.34.1
+
