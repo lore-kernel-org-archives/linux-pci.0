@@ -2,143 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D5EC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 17:11:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 690F3C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 17:12:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237960AbiAJRL3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Jan 2022 12:11:29 -0500
-Received: from sin.source.kernel.org ([145.40.73.55]:49110 "EHLO
-        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232637AbiAJRL3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jan 2022 12:11:29 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id D620CCE1677;
-        Mon, 10 Jan 2022 17:11:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 069ADC36AE3;
-        Mon, 10 Jan 2022 17:11:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641834685;
-        bh=X4tXoAGC6EqJ6PYEuG6VCZ/OpyF8blgVmWjeySllZjQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=empKVpZSr2IPSLiNwSMhcQyNj0YdWaPaD1kHUE2YOI95Bc0/xHllJHIJ2w1eEzItk
-         /Ag9iEjQ3tvNVUjQAshIVIgB45mBrjIjVtKRi8YNTDjz+bQBRZ5zhIrAEbIfK2cl/O
-         nV/x3qj6KAdajx7F49Vj2GjPUATphHfNsrWBQDLX+v9iT6ERZGqZAYtL/h0G7KN8d2
-         rNnds4Y5qmTQl76eEdPBPUi5zK+i2Wv/Vrn1khMtXibf5x9NkOZuT+e5ti4YCF7yAT
-         V2HXSP8zsyVFd650EoK0kLpV1tLdSy+ICmWVXJYdIw1fKPjUe886ijAQihynoApjBy
-         jEAvK1ta7unvg==
-Date:   Mon, 10 Jan 2022 11:11:23 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        id S238053AbiAJRM6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Jan 2022 12:12:58 -0500
+Received: from mga09.intel.com ([134.134.136.24]:45869 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238040AbiAJRM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jan 2022 12:12:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1641834778; x=1673370778;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ifmtXYn73SEXT+bTNG5FPL1SkH5wV8qe2pa7C4w2axE=;
+  b=btZstPD4hziRwY62GqkQl3IC1lgYzG4nKBNNMMLRzL95nrpM/2W1qOpB
+   kXiRHBIK1iRijv4ZbNyVL0q10zwR/fgJcCDRpFyD9vjvwnggYYUqzwnbG
+   V3dgOUril72ljCwZJUe5KRB4sx5KUyJOys8YengWP1apRoEhf3HjIx6XU
+   RqIp8bgrRpgAvCdIAsjl0xxwKFQYY8VcM06iLy4CnzXG8F/jGXehKGiW3
+   nzJMnW803GtYLNfZ7wvptc0DlMDMaz74Hia6ll33Wqx+hDIGgfrRLRkmi
+   NYlb2U+I1UdnRWUvZbCaK3LTmMDxED2JibIDqCt6AR7czsRlHjpzYI7I8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10222"; a="243066789"
+X-IronPort-AV: E=Sophos;i="5.88,277,1635231600"; 
+   d="scan'208";a="243066789"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 09:11:56 -0800
+X-IronPort-AV: E=Sophos;i="5.88,277,1635231600"; 
+   d="scan'208";a="622739388"
+Received: from ryanjor-mobl.amr.corp.intel.com (HELO intel.com) ([10.255.36.174])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 09:11:55 -0800
+Date:   Mon, 10 Jan 2022 12:11:54 -0500
+From:   Rodrigo Vivi <rodrigo.vivi@intel.com>
+To:     Lucas De Marchi <lucas.demarchi@intel.com>
+Cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Ingo Molnar <mingo@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, x86@kernel.org,
-        linux-kernel@vger.kernel.org,
-        Benoit =?iso-8859-1?Q?Gr=E9goire?= <benoitg@coeus.ca>,
-        Hui Wang <hui.wang@canonical.com>, stable@vger.kernel.org,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v6] x86/PCI: Ignore E820 reservations for bridge windows
- on newer systems
-Message-ID: <20220110171123.GA60297@bhelgaas>
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [Intel-gfx] [PATCH v3 2/3] x86/quirks: Improve line wrap on
+ quirk conditions
+Message-ID: <Ydxo2jTmb3W7IxDx@intel.com>
+References: <20220107210516.907834-1-lucas.demarchi@intel.com>
+ <20220107210516.907834-2-lucas.demarchi@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c992ece7-6878-a39e-0386-5a499265c4cb@redhat.com>
+In-Reply-To: <20220107210516.907834-2-lucas.demarchi@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 10, 2022 at 12:41:37PM +0100, Hans de Goede wrote:
-> Hi All,
+On Fri, Jan 07, 2022 at 01:05:15PM -0800, Lucas De Marchi wrote:
+> Remove extra parenthesis and wrap lines so it's easier to read what are
+> the conditions being checked. The call to the hook also had an extra
+> indentation: remove here to conform to coding style.
 > 
-> On 12/17/21 15:13, Hans de Goede wrote:
-> > Some BIOS-es contain a bug where they add addresses which map to system
-> > RAM in the PCI host bridge window returned by the ACPI _CRS method, see
-> > commit 4dc2287c1805 ("x86: avoid E820 regions when allocating address
-> > space").
-> > 
-> > To work around this bug Linux excludes E820 reserved addresses when
-> > allocating addresses from the PCI host bridge window since 2010.
-> > 
-> > Recently (2019) some systems have shown-up with E820 reservations which
-> > cover the entire _CRS returned PCI bridge memory window, causing all
-> > attempts to assign memory to PCI BARs which have not been setup by the
-> > BIOS to fail. For example here are the relevant dmesg bits from a
-> > Lenovo IdeaPad 3 15IIL 81WE:
-> > 
-> >  [mem 0x000000004bc50000-0x00000000cfffffff] reserved
-> >  pci_bus 0000:00: root bus resource [mem 0x65400000-0xbfffffff window]
-> > 
-> > The ACPI specifications appear to allow this new behavior:
-> > 
-> > The relationship between E820 and ACPI _CRS is not really very clear.
-> > ACPI v6.3, sec 15, table 15-374, says AddressRangeReserved means:
-> > 
-> >   This range of addresses is in use or reserved by the system and is
-> >   not to be included in the allocatable memory pool of the operating
-> >   system's memory manager.
-> > 
-> > and it may be used when:
-> > 
-> >   The address range is in use by a memory-mapped system device.
-> > 
-> > Furthermore, sec 15.2 says:
-> > 
-> >   Address ranges defined for baseboard memory-mapped I/O devices, such
-> >   as APICs, are returned as reserved.
-> > 
-> > A PCI host bridge qualifies as a baseboard memory-mapped I/O device,
-> > and its apertures are in use and certainly should not be included in
-> > the general allocatable pool, so the fact that some BIOS-es reports
-> > the PCI aperture as "reserved" in E820 doesn't seem like a BIOS bug.
-> > 
-> > So it seems that the excluding of E820 reserved addresses is a mistake.
-> > 
-> > Ideally Linux would fully stop excluding E820 reserved addresses,
-> > but then the old systems this was added for will regress.
-> > Instead keep the old behavior for old systems, while ignoring
-> > the E820 reservations for any systems from now on.
-> > 
-> > Old systems are defined here as BIOS year < 2018, this was chosen to make
-> > sure that E820 reservations will not be used on the currently affected
-> > systems, while at the same time also taking into account that the systems
-> > for which the E820 checking was originally added may have received BIOS
-> > updates for quite a while (esp. CVE related ones), giving them a more
-> > recent BIOS year then 2010.
-> > 
-> > BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=206459
-> > BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1868899
-> > BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1871793
-> > BugLink: https://bugs.launchpad.net/bugs/1878279
-> > BugLink: https://bugs.launchpad.net/bugs/1931715
-> > BugLink: https://bugs.launchpad.net/bugs/1932069
-> > BugLink: https://bugs.launchpad.net/bugs/1921649
-> > Cc: Benoit Grégoire <benoitg@coeus.ca>
-> > Cc: Hui Wang <hui.wang@canonical.com>
-> > Cc: stable@vger.kernel.org
-> > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-> > ---
-> > Changes in v6:
-> > - Remove the possibility to change the behavior from the commandline
-> >   because of worries that users may use this to paper over other problems
+> Signed-off-by: Lucas De Marchi <lucas.demarchi@intel.com>
+
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+
+> ---
+>  arch/x86/kernel/early-quirks.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
 > 
-> ping ?
-
-Thanks, Hans.  Maybe I'm quixotic, but I'm still hoping for an
-approach based on firmware behavior instead of firmware date.  If
-nobody else tries, I will eventually try myself, but I don't have any
-ETA.
-
-Bjorn
+> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+> index 8b689c2b8cc7..df34963e23bf 100644
+> --- a/arch/x86/kernel/early-quirks.c
+> +++ b/arch/x86/kernel/early-quirks.c
+> @@ -767,14 +767,12 @@ static int __init check_dev_quirk(int num, int slot, int func)
+>  	device = read_pci_config_16(num, slot, func, PCI_DEVICE_ID);
+>  
+>  	for (i = 0; early_qrk[i].f != NULL; i++) {
+> -		if (((early_qrk[i].vendor == PCI_ANY_ID) ||
+> -			(early_qrk[i].vendor == vendor)) &&
+> -			((early_qrk[i].device == PCI_ANY_ID) ||
+> -			(early_qrk[i].device == device)) &&
+> -			(!((early_qrk[i].class ^ class) &
+> -			    early_qrk[i].class_mask)))
+> -				early_qrk[i].f(num, slot, func);
+> -
+> +		if ((early_qrk[i].vendor == PCI_ANY_ID ||
+> +		     early_qrk[i].vendor == vendor) &&
+> +		    (early_qrk[i].device == PCI_ANY_ID ||
+> +		     early_qrk[i].device == device) &&
+> +		    !((early_qrk[i].class ^ class) & early_qrk[i].class_mask))
+> +			early_qrk[i].f(num, slot, func);
+>  	}
+>  
+>  	type = read_pci_config_byte(num, slot, func,
+> -- 
+> 2.34.1
+> 
