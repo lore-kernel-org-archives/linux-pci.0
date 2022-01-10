@@ -2,127 +2,131 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B88C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 12:17:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB183C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jan 2022 14:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245276AbiAJMRr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Jan 2022 07:17:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60062 "EHLO
+        id S235694AbiAJOoW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Jan 2022 09:44:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229677AbiAJMRr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jan 2022 07:17:47 -0500
-Received: from mout-u-204.mailbox.org (mout-u-204.mailbox.org [IPv6:2001:67c:2050:1::465:204])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BDC7C06173F
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 04:17:47 -0800 (PST)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:105:465:1:4:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        with ESMTP id S234981AbiAJOoV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jan 2022 09:44:21 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 686A0C06173F
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 06:44:21 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mout-u-204.mailbox.org (Postfix) with ESMTPS id 4JXXs51lVwzQjgn;
-        Mon, 10 Jan 2022 13:17:45 +0100 (CET)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-Message-ID: <590a3be9-6ef6-b93e-165d-d8269497eceb@denx.de>
-Date:   Mon, 10 Jan 2022 13:17:40 +0100
-MIME-Version: 1.0
-Subject: Re: PCIe AER generates no interrupts on host (ZynqMP)
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>
-References: <20220107203415.GA398389@bhelgaas>
-From:   Stefan Roese <sr@denx.de>
-In-Reply-To: <20220107203415.GA398389@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E61CC60E33
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jan 2022 14:44:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BBB9C36AE3;
+        Mon, 10 Jan 2022 14:44:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1641825860;
+        bh=QTlLtVmA4M6A/doosWcn+xwS48663pzABVMvW6Gyr4M=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=EgfaRDFnEHM8wW0auRDMXieHj6JQR1i6sQ/AQUPzl2To/Di+UjDQCQx1SaNNZJLUV
+         kEuD+EQvJiqLHZrAFh+cuy9mPf3lK8KzbrAsXrrd0MfrydpsNb/4NH1DnADC3qL/P/
+         JJkzzf+qkZ7mPJtwn4mVOstZ4XokLm50gUy70hibpwLWXY5Q8IWSUX4HPXlKxQ5BMe
+         sDJEMjDPYWOcdDZGFZaJJNcLc3Dy/My5Xti0vJeS/HMzIbuTz9+xzjZ0FoxCZYGKkn
+         iTUFoBl9IFnfuhRUXh6x6zyVc4j1P4x/Z5yVrY5ZAMzdJYzLZbs5BHWTBWjsgde80K
+         /JYuFi4b7mB+A==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=why.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <maz@kernel.org>)
+        id 1n6vuD-00H9ok-V5; Mon, 10 Jan 2022 14:44:18 +0000
+Date:   Mon, 10 Jan 2022 14:44:17 +0000
+Message-ID: <87mtk3tzum.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>
+Cc:     Marek =?UTF-8?B?QmVow7pu?= <kabel@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 23/23] PCI: aardvark: Make main irq_chip structure a static driver structure
+In-Reply-To: <20220110105324.jud6bzdtmoiuvyas@pali>
+References: <20220110015018.26359-1-kabel@kernel.org>
+        <20220110015018.26359-24-kabel@kernel.org>
+        <bf65af53fe1a4e6b814b124b59ad3aa9@kernel.org>
+        <20220110105324.jud6bzdtmoiuvyas@pali>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
+ (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: pali@kernel.org, kabel@kernel.org, lorenzo.pieralisi@arm.com, helgaas@kernel.org, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 1/7/22 21:34, Bjorn Helgaas wrote:
-> On Fri, Jan 07, 2022 at 11:04:58AM +0100, Pali Rohár wrote:
->> Hello! You asked me in another email for comments to this email, so I'm
->> replying directly to this email...
->>
->> On Tuesday 04 January 2022 10:02:18 Stefan Roese wrote:
->>> Hi,
->>>
->>> I'm trying to get the Kernel PCIe AER infrastructure to work on my
->>> ZynqMP based system. E.g. handle the events (correctable, uncorrectable
->>> etc). In my current tests, no AER interrupt is generated though. I'm
->>> currently using the "surprise down error status" in the uncorrectable
->>> error status register of the connected PCIe switch (PLX / Broadcom
->>> PEX8718). Here the bit is correctly logged in the PEX switch
->>> uncorrectable error status register but no interrupt is generated
->>> to the root-port / system. And hence no AER message(s) reported.
-> 
-> I think the error should also be logged in the Root Port AER
-> Capability.  And of course the interrupt enable bits in the Root Error
-> Command register would have to be set.
+On Mon, 10 Jan 2022 10:53:24 +0000,
+Pali Roh=C3=A1r <pali@kernel.org> wrote:
+>=20
+> On Monday 10 January 2022 09:28:39 Marc Zyngier wrote:
+> > On 2022-01-10 01:50, Marek Beh=C3=BAn wrote:
+> > > Marc Zyngier says [1] that we should use struct irq_chip as a global
+> > > static struct in the driver. Even though the structure currently
+> > > contains a dynamic member (parent_device), Marc says [2] that he plans
+> > > to kill it and make the structure completely static.
+> > >=20
+> > > We have already converted others irq_chip structures in this driver in
+> > > this way, but we omitted this one because the .name member is
+> > > dynamically created from device's name, and the name is displayed in
+> > > sysfs, so changing it would break sysfs ABI.
+> > >=20
+> > > The rationale for changing the name (to "advk-INT") in spite of sysfs
+> > > ABI, and thus allowing to convert to a static structure, is that after
+> > > the other changes we made in this series, the IRQ chip is basically
+> > > something different: it no logner generates ERR and PME interrupts (t=
+hey
+> > > are generated by emulated bridge's rp_irq_chip).
+> >=20
+> > There is no 'is spite of the ABI'. If you don't understand why
+> > we don't break the ABI, you have an even bigger problem.
+> >=20
+> > So NAK to this patch, now and forever. Any change to the structure to
+> > make it read-only must allow the preservation of the existing names
+> > when they are generated by the driver.
+>=20
+> Marc, you already presented that you do not like Armada 3720 platform
+> and that you do not care about it.
 
-I'm seeing no change at all in the Root Port PCIe device after the
-surprise down on one of the PCIe switch downstream ports via
-"lspci -vvv".
+What I like or not is irrelevant here. What I ask for is that
+userspace ABIs are not broken.
 
->>> Does any one of you have some ideas on what might be missing? Why are
->>> these events not reported to the PCIe rootport driver via IRQ? Might
->>> this be a problem of the missing MSI-X support of the ZynqMP? The AER
->>> interrupt is connected as legacy IRQ:
->>>
->>> cat /proc/interrupts | grep -i aer
->>>   58:          0          0          0          0  nwl_pcie:legacy   0 Level
->>> PCIe PME, aerdrv
-> 
-> I guess this means whatever INTx the Root Port is using is connected
-> to IRQ 58?  Can you tell whether that INTx works if a device below the
-> Root Port uses it?  Or whether it is asserted for PMEs?
+> But please do not slowdown development for this platform.
 
-INTx works just fine for "normal" legacy interrupts, e.g. a PCIe
-driver requesting a non-MSI interrupt.
+That's quite an accusation.
 
->> Error events (correctable, non-fatal and fatal) are reported by PCIe
->> devices to the Root Complex via PCIe error messages (Message code of TLP
->> is set to Error Message) and not via interrupts. Root Port is then
->> responsible to "convert" these PCIe error messages to MSI(X) interrupt
->> and report it to the system. According to PCIe spec, AER is supported
->> only via MSI(X) interrupts, not legacy INTx.
-> 
-> Where does it say that?  PCIe r5.0, sec 6.2.4.1.2 and 6.2.6, both
-> mention INTx, and the diagram in 6.2.6 even shows possible
-> platform-specific System Error signaling.
-> 
-> But I doubt Linux is smart enough to configure this correctly for
-> INTx.  You could experiment by setting the AER control bits with
-> setpci.
-> 
-> There was some previous discussion, and it even mentions ZynqMP as a
-> device that has a dedicated non-MSI mechanism for AER signaling:
-> 
->    https://lore.kernel.org/linux-pci/1533141889-19962-1-git-send-email-bharat.kumar.gogada@xilinx.com/
->    https://lore.kernel.org/all/1464242406-20203-1-git-send-email-po.liu@nxp.com/T/#u
-> 
-> But I don't think it went anywhere.
-> 
-> It seems like maybe this *could* be made to work.
+> Arguments about ABIs, breaking it and similar are not relevant here as
+> this current kernel implementation is broken. And has to be replaced by
+> a working one. We are doing on it for more than year.
+>
+> It really does not make sense to try doing some backward compatibility
+> with something which is broken by design and does not work. It just take
+> lot of time without any value.
+>=20
+> We really need to more forward and fix driver as in current state is
+> PCIe on Armada 3720 unusable.
 
-Thanks Bjorn for the reference. As already mentioned to Pali in the
-other mail, Bharat from Xilinx has sent me a link to a newer, updated
-patch series to use this "misc" interrupts for AER in the meantime:
+This patch doesn't fix anything. It has the potential to break
+userspace, and I'm not having any of it. You may not care about
+backward compatibility, but this is thankfully *not* your pet
+playground.
 
-https://lore.kernel.org/lkml/1542206878-24587-1-git-send-email-bharat.kumar.gogada@xilinx.com/
+You can claim that I am doing a bad job. In which case, feel free to
+submit a patch removing me from the MAINTAINER file, and we can have
+that discussion.
 
-AFAICT, this patch series was not really reviewed. At least I can't find
-any comments / replies.
+In the meantime, I will continue to oppose these kind of patches that
+pretend to 'fix' things without adding any value.
 
-I now applied this series (after some merge issues) to v5.16 and re-
-tested with this new MISC interrupts for AER. Still no cigar. No
-interrupt / AER event upon surprise down on the PEX switch received.
+	M.
 
-I might have missed something in the setup / configuration though. Is
-my understanding correct, that I don't need to "manually" tune the SERR
-in the Command register? And is my understanding correct that '0' / '-'
-in the AER mask register enables this AER event?
-
-Thanks,
-Stefan
+--=20
+Without deviation from the norm, progress is not possible.
