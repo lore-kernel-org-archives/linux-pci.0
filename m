@@ -2,100 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BBA6C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 15:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BB71C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 15:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354444AbiALPJv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Jan 2022 10:09:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56838 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354436AbiALPJs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 10:09:48 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06FCFC06173F;
-        Wed, 12 Jan 2022 07:09:48 -0800 (PST)
+        id S241266AbiALPSr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 10:18:47 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:51842 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243343AbiALPSi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 10:18:38 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C48A0B81F6B;
-        Wed, 12 Jan 2022 15:09:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907B5C36AF4;
-        Wed, 12 Jan 2022 15:09:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1783F6191C;
+        Wed, 12 Jan 2022 15:18:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29C40C36AE5;
+        Wed, 12 Jan 2022 15:18:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642000185;
-        bh=h3fkWHCAV5x/zKoNsPAzmv82eux9e2j7e/NxPgQfh1M=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=JG62vFRG3wB6eOg09wBugRwH2nfjhWQ0G+KxTZhrXnBwv89TtUPwgRM80yqULqeDL
-         73WtIoWuLnrBmHvX4ydu7j+b5Gsr7VDGd8F075SH+MB/R8fWspV/0sQ/l0f2MQEsMG
-         24e2z+3ESDRF9sYJfcHt1as9VdMGxxpHRXWl10LuWCBQj/Nu9DSIoqDWQKVmbRQjMD
-         m0MgfsPsDFn1g1EEitum3nxhz9BGJiLCQyjMaF6CazpVBrSqQbIu/c6inTQUQYHZgW
-         MFLJ59oa8csaRknpHTTXiY/FJTzj+EvwA3C7Hf1YGspgZxPUOAs5EMPDRGR+K/6Yop
-         6VlXxIKCy5ooA==
-Received: by mail-ed1-f51.google.com with SMTP id k15so11074425edk.13;
-        Wed, 12 Jan 2022 07:09:45 -0800 (PST)
-X-Gm-Message-State: AOAM531H4S09Rbq6IiwmgMdHr479zKayBVWc6FaiMjBbYTq7ZBZEqxI0
-        KBK0pSQIB4LyXiaCZedBFhyufWO1gmEpStRIVA==
-X-Google-Smtp-Source: ABdhPJxhV+LT9DDlm1+3GiwpmO7VFy5DgD7sf7a99AA056uQov7A+ISg5Ea1HKqaqM6NQJvF4mZDcCg7lCeayFF+yAk=
-X-Received: by 2002:a05:6402:4315:: with SMTP id m21mr79460edc.67.1642000183813;
- Wed, 12 Jan 2022 07:09:43 -0800 (PST)
+        s=k20201202; t=1642000716;
+        bh=+jMY7Fmff/vHRcGElzdiiNPW97CbApnkgNqfokKetjw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Hj9WAY0FF6lE/3VliE0EW/JG+NolvfngXWWWka0gCknI0mBE0A5Ewk3XZ8IUGLNdU
+         8S+KYixX1ZFqGlN3KeycZmPKecUew0gkEsuAB55Gtl6dOFaRAFA60Pw1+Io/7//pO7
+         /8wweSG9ExJe+NLw5lZunpwAe/97mKz9fneGassaa2BanM/+7Mj26NsVuLA3oThGVl
+         EfKOOYxBwfSxFrsNXxDl7uAqNDKmUUMNdj49NQoR8cPzSrmK51ZnZPYQzQGwMSyDet
+         omUGMsgDKwGMlxfn4l3v9Lr4ogbffOLQuRKi9zFh+GTT2rppVeIK8+Q9zyMMTTkJIJ
+         I/zwnI7ufgV4w==
+Received: by pali.im (Postfix)
+        id D63B4768; Wed, 12 Jan 2022 16:18:35 +0100 (CET)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
+        Russell King <rmk+kernel@armlinux.org.uk>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 04/11] dt-bindings: PCI: mvebu: Add num-lanes property
+Date:   Wed, 12 Jan 2022 16:18:07 +0100
+Message-Id: <20220112151814.24361-5-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220112151814.24361-1-pali@kernel.org>
+References: <20220105150239.9628-1-pali@kernel.org>
+ <20220112151814.24361-1-pali@kernel.org>
 MIME-Version: 1.0
-References: <20200722022514.1283916-20-robh@kernel.org> <20220111214608.GA169999@bhelgaas>
-In-Reply-To: <20220111214608.GA169999@bhelgaas>
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 12 Jan 2022 09:09:31 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqKoK6Vewwn4X0L+TKAz-UdK4n7CQ+OKpiEwGe2HqR5L8g@mail.gmail.com>
-Message-ID: <CAL_JsqKoK6Vewwn4X0L+TKAz-UdK4n7CQ+OKpiEwGe2HqR5L8g@mail.gmail.com>
-Subject: Re: [PATCH 19/19] PCI: Set bridge map_irq and swizzle_irq to default functions
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Tiezhu Yang <yangtiezhu@loongson.cn>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Huacai Chen <chenhuacai@kernel.org>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        linux-tegra <linux-tegra@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 11, 2022 at 3:46 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [-cc many, +cc iproc, loongson, tegra maintainers]
->
-> On Tue, Jul 21, 2020 at 08:25:14PM -0600, Rob Herring wrote:
-> > The majority of DT based host drivers use the default .map_irq() and
-> > .swizzle_irq() functions, so let's initialize the function pointers to
-> > the default and drop setting them in the host drivers.
-> >
-> > Drivers like iProc which don't support legacy interrupts need to set
-> > .map_irq() back to NULL.
->
-> Probably a dumb question...
->
-> This patch removed all the ->swizzle_irq users in drivers/pci/, which
-> is great -- IIUC swizzling is specified by the PCI-to-PCI Bridge Spec,
-> r1.2, sec 9.1, and should not be device-specific.  I assume the few
-> remaining arch/ users (arm and alpha) are either bugs or workarounds
-> for broken devices.
->
-> My question is why we still have a few users of ->map_irq: loongson,
-> tegra, iproc.  Shouldn't this mapping be described somehow via DT?
+Controller driver needs to correctly configure PCIe link if it contains 1
+or 4 SerDes PCIe lanes. Therefore add a new 'num-lanes' DT property for
+mvebu PCIe controller. Property 'num-lanes' seems to be de-facto standard
+way how number of lanes is specified in other PCIe controllers.
 
-Tegra could perhaps be written another way. The mapping is standard,
-but it's disabling an idle state when PCI interrupts are used. It just
-needs some way to know if legacy interrupts are being used.
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/mvebu-pci.txt | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-iproc looks pretty special with its bcma bus.
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index 6173af6885f8..24225852bce0 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -77,6 +77,7 @@ and the following optional properties:
+ - marvell,pcie-lane: the physical PCIe lane number, for ports having
+   multiple lanes. If this property is not found, we assume that the
+   value is 0.
++- num-lanes: number of SerDes PCIe lanes for this link (1 or 4)
+ - reset-gpios: optional GPIO to PERST#
+ - reset-delay-us: delay in us to wait after reset de-assertion, if not
+   specified will default to 100ms, as required by the PCIe specification.
+@@ -141,6 +142,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 58>;
+ 		marvell,pcie-port = <0>;
+ 		marvell,pcie-lane = <0>;
++		num-lanes = <1>;
+ 		/* low-active PERST# reset on GPIO 25 */
+ 		reset-gpios = <&gpio0 25 1>;
+ 		/* wait 20ms for device settle after reset deassertion */
+@@ -161,6 +163,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 59>;
+ 		marvell,pcie-port = <0>;
+ 		marvell,pcie-lane = <1>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 6>;
+ 	};
+ 
+@@ -177,6 +180,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 60>;
+ 		marvell,pcie-port = <0>;
+ 		marvell,pcie-lane = <2>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 7>;
+ 	};
+ 
+@@ -193,6 +197,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 61>;
+ 		marvell,pcie-port = <0>;
+ 		marvell,pcie-lane = <3>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 8>;
+ 	};
+ 
+@@ -209,6 +214,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 62>;
+ 		marvell,pcie-port = <1>;
+ 		marvell,pcie-lane = <0>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 9>;
+ 	};
+ 
+@@ -225,6 +231,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 63>;
+ 		marvell,pcie-port = <1>;
+ 		marvell,pcie-lane = <1>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 10>;
+ 	};
+ 
+@@ -241,6 +248,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 64>;
+ 		marvell,pcie-port = <1>;
+ 		marvell,pcie-lane = <2>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 11>;
+ 	};
+ 
+@@ -257,6 +265,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 65>;
+ 		marvell,pcie-port = <1>;
+ 		marvell,pcie-lane = <3>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 12>;
+ 	};
+ 
+@@ -273,6 +282,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 99>;
+ 		marvell,pcie-port = <2>;
+ 		marvell,pcie-lane = <0>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 26>;
+ 	};
+ 
+@@ -289,6 +299,7 @@ pcie-controller {
+ 		interrupt-map = <0 0 0 0 &mpic 103>;
+ 		marvell,pcie-port = <3>;
+ 		marvell,pcie-lane = <0>;
++		num-lanes = <1>;
+ 		clocks = <&gateclk 27>;
+ 	};
+ };
+-- 
+2.20.1
 
-Adding something to DT doesn't really help because we'd still have to
-support the old way.
-
-Rob
