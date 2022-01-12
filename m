@@ -2,77 +2,216 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A44C433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 01:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F4A9C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 05:37:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347876AbiALBoB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Jan 2022 20:44:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44628 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236309AbiALBoA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jan 2022 20:44:00 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDE51C06173F;
-        Tue, 11 Jan 2022 17:44:00 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B0A361682;
-        Wed, 12 Jan 2022 01:44:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B0A3C36AE3;
-        Wed, 12 Jan 2022 01:43:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641951839;
-        bh=ssV4IOZe/mj0Wlv5asZC4ExDpfjoHEImje+e8erdkTA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lL8DtX0XUF8W3JOYxAct5pcraAVNmUX4WBgSVTaxTIB7Jg4PYIEovyDMe3bx6wBhP
-         pyFAA7642KgBAzYI9n5nate65pbU9ysw5Nm9PDi8OIeu6Kx59rLF5l40erXnRXUBpR
-         Y5yskVlNqBeMTP7etDovG3IzrlfMEB0G+R6JpoIwp2fj+VHTxQqaEzaMIaR3Sb8Sch
-         4ruXS4i4ZTJhaXZO160ib9S5nwiGs1naEi+x6qDxCbCjiIUOkARTkB/uqPgvtups7W
-         3PeR5gWS7EgP7RPxj6o/5VmN31g4znRe4OfSiHjyV4wQmm3mhP4uLcFeM/wbL8PrMJ
-         Gk0o0rZnKgiWw==
-Received: by pali.im (Postfix)
-        id 97B49B98; Wed, 12 Jan 2022 02:43:56 +0100 (CET)
-Date:   Wed, 12 Jan 2022 02:43:56 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Rob Herring <robh+dt@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Marek =?utf-8?B?QmVow7pu?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        PCI <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 08/11] PCI: mvebu: Use child_ops API
-Message-ID: <20220112014356.h2pm7nc3vzsvjexq@pali>
-References: <20220105150239.9628-1-pali@kernel.org>
- <20220105150239.9628-9-pali@kernel.org>
- <CAL_Jsq+1hoAUVOzyOGZ1vVMsChhHJJpzk5HNU4Gi=Luy_8LArA@mail.gmail.com>
+        id S1350904AbiALFhY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 00:37:24 -0500
+Received: from mga02.intel.com ([134.134.136.20]:62472 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232195AbiALFhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jan 2022 00:37:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1641965844; x=1673501844;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Ifv08V5nb+n/IjyWDBm9oYQXWwf6/Q3sV0+SrMG26TY=;
+  b=oC7N2zJ3UxIYjCDAClHwxjL+YBsw8HYFO0X511LI8m6ip0XsdFUVAZHo
+   0SOd80Riz89Os888latCn9tE2Zwjhf8hQI7WnJhBj/ZbVRUekWDSCSbEw
+   jrEkEptcd01YC+HeDu+j+xXF3z52shRo45LvdcijpcTRyHM2VzXO3Qp5t
+   hYrtYDd1Wx7OXhnMr8AnLNwbQLmB9Dm1gmRHQhNh+hX3U8ZxB9+b1Z0h4
+   VL4lB6K1wvvdM10uGso6BFeSiUJ/ot65Iq4xahAvfWqzjCF0dG5Hm7qE7
+   N9jkS+Lly9XjrEQl/adnHcjRSY9nbm/5gTzbxAdFuNwpDoSAcM0qz80Hq
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10224"; a="231004990"
+X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
+   d="scan'208";a="231004990"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2022 21:37:23 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
+   d="scan'208";a="691262862"
+Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 11 Jan 2022 21:37:22 -0800
+Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1n7WK2-0005Xk-3M; Wed, 12 Jan 2022 05:37:22 +0000
+Date:   Wed, 12 Jan 2022 13:36:45 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [helgaas-pci:pci/misc] BUILD SUCCESS
+ 560dbc4654fa013fadcbcd9647904051d6fadc11
+Message-ID: <61de68ed.LyBMmUyJrfzRxXb8%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAL_Jsq+1hoAUVOzyOGZ1vVMsChhHJJpzk5HNU4Gi=Luy_8LArA@mail.gmail.com>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wednesday 05 January 2022 09:41:51 Rob Herring wrote:
-> On Wed, Jan 5, 2022 at 9:03 AM Pali Rohár <pali@kernel.org> wrote:
-> >
-> > Split struct pci_ops between ops and child_ops. Member ops is used for
-> > accessing PCIe Root Ports via pci-bridge-emul.c driver and child_ops for
-> > accessing real PCIe cards.
-> >
-> > There is no need to mix these two struct pci_ops into one as PCI core code
-> > already provides separate callbacks via bridge->ops and bridge->child_ops.
-> 
-> I had similar patches including mvebu that I never got around to
-> sending out. I pushed the branch out now at least[1].
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
+branch HEAD: 560dbc4654fa013fadcbcd9647904051d6fadc11  misc: pci_endpoint_test: Terminate statement with semicolon
 
-Are you going to finish your patch series and send it? Because if yes,
-I can drop this my patch in v3 and let all ->child_ops conversion for
-you.
+elapsed time: 730m
+
+configs tested: 140
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                          randconfig-c001
+arc                                 defconfig
+s390                             allmodconfig
+sh                          sdk7780_defconfig
+m68k                        mvme16x_defconfig
+arm                        cerfcube_defconfig
+arm                            pleb_defconfig
+sh                          r7785rp_defconfig
+arc                    vdk_hs38_smp_defconfig
+h8300                               defconfig
+s390                          debug_defconfig
+arc                              allyesconfig
+arm                       multi_v4t_defconfig
+arm                           viper_defconfig
+nios2                         3c120_defconfig
+powerpc                      bamboo_defconfig
+arm                      footbridge_defconfig
+ia64                         bigsur_defconfig
+arm                        multi_v7_defconfig
+sh                          rsk7203_defconfig
+sparc                            alldefconfig
+m68k                       m5275evb_defconfig
+sh                        edosk7705_defconfig
+powerpc                     rainier_defconfig
+sh                            shmin_defconfig
+sh                            hp6xx_defconfig
+h8300                       h8s-sim_defconfig
+sh                           se7751_defconfig
+arm                         assabet_defconfig
+microblaze                          defconfig
+sh                           se7722_defconfig
+sh                 kfr2r09-romimage_defconfig
+sh                          landisk_defconfig
+sh                           se7712_defconfig
+powerpc                  storcenter_defconfig
+xtensa                generic_kc705_defconfig
+powerpc                     tqm8548_defconfig
+ia64                             allyesconfig
+s390                                defconfig
+sh                     magicpanelr2_defconfig
+powerpc                     pq2fads_defconfig
+parisc                              defconfig
+mips                           xway_defconfig
+m68k                         amcore_defconfig
+arm                            mps2_defconfig
+mips                      maltasmvp_defconfig
+powerpc                    adder875_defconfig
+sh                             shx3_defconfig
+m68k                        stmark2_defconfig
+arm                        trizeps4_defconfig
+powerpc                 mpc8272_ads_defconfig
+powerpc                 mpc836x_mds_defconfig
+m68k                            q40_defconfig
+sh                        edosk7760_defconfig
+mips                        jmr3927_defconfig
+xtensa                           alldefconfig
+arm                  randconfig-c002-20220111
+ia64                             allmodconfig
+ia64                                defconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+sh                               allmodconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+i386                          randconfig-a003
+i386                          randconfig-a001
+i386                          randconfig-a005
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+riscv                randconfig-r042-20220111
+arc                  randconfig-r043-20220111
+s390                 randconfig-r044-20220111
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                                  kexec
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+
+clang tested configs:
+arm                  randconfig-c002-20220111
+x86_64                        randconfig-c007
+riscv                randconfig-c006-20220111
+powerpc              randconfig-c003-20220111
+i386                          randconfig-c001
+mips                 randconfig-c004-20220111
+s390                 randconfig-c005-20220111
+arm                      tct_hammer_defconfig
+mips                        workpad_defconfig
+mips                          ath79_defconfig
+arm                    vt8500_v6_v7_defconfig
+mips                           ip27_defconfig
+powerpc                          allmodconfig
+powerpc                     kmeter1_defconfig
+powerpc                 mpc8272_ads_defconfig
+powerpc                 mpc836x_mds_defconfig
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
