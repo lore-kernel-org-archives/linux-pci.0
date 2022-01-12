@@ -2,65 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F46C433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 08:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74576C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 09:43:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351552AbiALI2F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Jan 2022 03:28:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49436 "EHLO
+        id S237055AbiALJnB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 04:43:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237957AbiALI2F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 03:28:05 -0500
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5f64:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA6BDC06173F
-        for <linux-pci@vger.kernel.org>; Wed, 12 Jan 2022 00:28:04 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 9F5A030000E55;
-        Wed, 12 Jan 2022 09:28:01 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 93E961701B8; Wed, 12 Jan 2022 09:28:01 +0100 (CET)
-Date:   Wed, 12 Jan 2022 09:28:01 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH resend v2] PCI: pciehp: Use
- down_read/write_nested(reset_lock) to fix lockdep errors
-Message-ID: <20220112082801.GA19022@wunner.de>
-References: <20211217141709.379663-1-hdegoede@redhat.com>
- <20220111171447.GA152379@bhelgaas>
+        with ESMTP id S238775AbiALJm7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 04:42:59 -0500
+Received: from mout-u-204.mailbox.org (mout-u-204.mailbox.org [IPv6:2001:67c:2050:1::465:204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E88EC06173F
+        for <linux-pci@vger.kernel.org>; Wed, 12 Jan 2022 01:42:59 -0800 (PST)
+Received: from smtp202.mailbox.org (unknown [91.198.250.118])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mout-u-204.mailbox.org (Postfix) with ESMTPS id 4JYjKY0SpMzQlGd;
+        Wed, 12 Jan 2022 10:42:57 +0100 (CET)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+From:   Stefan Roese <sr@denx.de>
+To:     linux-pci@vger.kernel.org
+Cc:     Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>
+Subject: [RESEND PATCH v2 2/4] PCI: Add pci_check_platform_service_irqs
+Date:   Wed, 12 Jan 2022 10:42:49 +0100
+Message-Id: <20220112094251.1271531-2-sr@denx.de>
+In-Reply-To: <20220112094251.1271531-1-sr@denx.de>
+References: <20220112094251.1271531-1-sr@denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220111171447.GA152379@bhelgaas>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 11, 2022 at 11:14:47AM -0600, Bjorn Helgaas wrote:
-> On Fri, Dec 17, 2021 at 03:17:09PM +0100, Hans de Goede wrote:
-> > Use down_read_nested() and down_write_nested() when taking the
-> > ctrl->reset_lock rw-sem, passing the number of PCIe hotplug controllers in
-> > the path to the PCI root bus as lock subclass parameter. This fixes the
-> > following false-positive lockdep report when unplugging a Lenovo X1C8 from
-> > a Lenovo 2nd gen TB3 dock:
-[...]
-> Applied to pci/hotplug for v5.17, thanks, Hans!
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
 
-I've realized only now that Hans reported this issue already in August 2020
-and opened a bugzilla for it:
+Adding method pci_check_platform_service_irqs to check if platform
+has registered method to proivde dedicated IRQ lines for PCIe services
+like AER.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208855
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Signed-off-by: Stefan Roese <sr@denx.de>
+Tested-by: Stefan Roese <sr@denx.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Pali Rohár <pali@kernel.org>
+Cc: Michal Simek <michal.simek@xilinx.com>
+---
+ include/linux/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-The status can now be set to RESOLVED FIXED.  I don't have permission
-to do that but perhaps either of you, Bjorn or Hans, has?
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 291eadade811..d6812d596ecc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2420,6 +2420,24 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
+ 	return bus->self && bus->self->ari_enabled;
+ }
+ 
++/**
++ * pci_check_platform_service_irqs - check platform service irq's
++ * @pdev: PCI Express device to check
++ * @irqs: Array of irqs to populate
++ * @mask: Bitmask of capabilities
++ */
++static inline void pci_check_platform_service_irqs(struct pci_dev *dev,
++						   int *irqs, int mask)
++{
++	struct pci_host_bridge *bridge;
++
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
++		bridge = pci_find_host_bridge(dev->bus);
++		if (bridge && bridge->setup_platform_service_irq)
++			bridge->setup_platform_service_irq(bridge, irqs, mask);
++	}
++}
++
+ /**
+  * pci_is_thunderbolt_attached - whether device is on a Thunderbolt daisy chain
+  * @pdev: PCI device to check
+-- 
+2.34.1
 
-Also, the commit could optionally be amended with a Link: tag to that
-bugzilla entry.
-
-Thanks,
-
-Lukas
