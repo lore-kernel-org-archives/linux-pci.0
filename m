@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F4A9C433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 05:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 298FFC4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 05:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350904AbiALFhY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Jan 2022 00:37:24 -0500
-Received: from mga02.intel.com ([134.134.136.20]:62472 "EHLO mga02.intel.com"
+        id S233661AbiALFhZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 00:37:25 -0500
+Received: from mga01.intel.com ([192.55.52.88]:17946 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232195AbiALFhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1350902AbiALFhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 12 Jan 2022 00:37:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1641965844; x=1673501844;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=Ifv08V5nb+n/IjyWDBm9oYQXWwf6/Q3sV0+SrMG26TY=;
-  b=oC7N2zJ3UxIYjCDAClHwxjL+YBsw8HYFO0X511LI8m6ip0XsdFUVAZHo
-   0SOd80Riz89Os888latCn9tE2Zwjhf8hQI7WnJhBj/ZbVRUekWDSCSbEw
-   jrEkEptcd01YC+HeDu+j+xXF3z52shRo45LvdcijpcTRyHM2VzXO3Qp5t
-   hYrtYDd1Wx7OXhnMr8AnLNwbQLmB9Dm1gmRHQhNh+hX3U8ZxB9+b1Z0h4
-   VL4lB6K1wvvdM10uGso6BFeSiUJ/ot65Iq4xahAvfWqzjCF0dG5Hm7qE7
-   N9jkS+Lly9XjrEQl/adnHcjRSY9nbm/5gTzbxAdFuNwpDoSAcM0qz80Hq
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10224"; a="231004990"
+  bh=7xCN3gMh66dGvGJeW19jQ2TJSlEFCTbJhlElIgdfrOc=;
+  b=ITlEdN6Vyw/4LDA/hjw+wUnxqFrGDLPPYUZfCA83GdEe4X8qTF1BcW5i
+   EkUr/gC8mgP7HA4pahop1l2X+jUMx65ZEFUBVPKmkVuLjq9zfpaJO2Pf9
+   cQFhaTUzDx/N2ZaTX5njVQFPFESklsrg6wYnsCAZW4Ztd8d62fQSomvCG
+   QK0A8K2lrDm2aepdXcyuyxfkwAsR7TTPDvD5VOjHBGBFFsTuLKL60WuIA
+   5HVZX2mUS8FC5PrStbF9PaNsuycesyRqQ8fAz7ZaXHz3rAwX7ASR5EgSb
+   ceKJS18jYH4qHJ2PfsZEmatAashgyBlawiVZ0F3H2oWeOak9hWB8u0x6/
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10224"; a="268006647"
 X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="231004990"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2022 21:37:23 -0800
+   d="scan'208";a="268006647"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2022 21:37:24 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="691262862"
+   d="scan'208";a="558605377"
 Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 11 Jan 2022 21:37:22 -0800
+  by orsmga001.jf.intel.com with ESMTP; 11 Jan 2022 21:37:22 -0800
 Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1n7WK2-0005Xk-3M; Wed, 12 Jan 2022 05:37:22 +0000
-Date:   Wed, 12 Jan 2022 13:36:45 +0800
+        id 1n7WK2-0005Xm-3r; Wed, 12 Jan 2022 05:37:22 +0000
+Date:   Wed, 12 Jan 2022 13:36:19 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/misc] BUILD SUCCESS
- 560dbc4654fa013fadcbcd9647904051d6fadc11
-Message-ID: <61de68ed.LyBMmUyJrfzRxXb8%lkp@intel.com>
+Subject: [helgaas-pci:pci/resource] BUILD SUCCESS
+ 500b55b05d0a21c4adddf4c3b29ee6f32b502046
+Message-ID: <61de68d3.hLOEp+/MglKnB30r%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -52,10 +52,10 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
-branch HEAD: 560dbc4654fa013fadcbcd9647904051d6fadc11  misc: pci_endpoint_test: Terminate statement with semicolon
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/resource
+branch HEAD: 500b55b05d0a21c4adddf4c3b29ee6f32b502046  PCI: Work around Intel I210 ROM BAR overlap defect
 
-elapsed time: 730m
+elapsed time: 728m
 
 configs tested: 140
 configs skipped: 3
