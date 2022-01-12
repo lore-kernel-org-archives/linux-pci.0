@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1979CC433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 15:18:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BFBC433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 15:18:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354536AbiALPSw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Jan 2022 10:18:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58920 "EHLO
+        id S1354542AbiALPSx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 10:18:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354525AbiALPSs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 10:18:48 -0500
+        with ESMTP id S1354499AbiALPSn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jan 2022 10:18:43 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F138AC06173F;
-        Wed, 12 Jan 2022 07:18:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2236AC061759;
+        Wed, 12 Jan 2022 07:18:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B1737B81F18;
-        Wed, 12 Jan 2022 15:18:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36F1DC36AF3;
-        Wed, 12 Jan 2022 15:18:45 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BE7EBB81F6A;
+        Wed, 12 Jan 2022 15:18:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3398DC36AE5;
+        Wed, 12 Jan 2022 15:18:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642000725;
-        bh=jtnXy/0wJdPoAj9Kl/G+9fKg5jNFoqP7I41ddO0yJHU=;
+        s=k20201202; t=1642000721;
+        bh=ruv44ME+jSLkAUMCwvE3mepyvhnL6RdH9qeyYV3y9FU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ENeH389Z3K9A22RNGYp0xhpNB+lzR0N6Meuhn18YBeBmJBdwailmJJISl2GMjmBLa
-         zYvFbJwW5JrXVjEXUfgET8EBieYAPDs2OGFz75oBEo9CyHrtpk0pUT/Pcri++gGsDS
-         FWLCmXEdIBd5O0dey2SBurbA0QF04b6BCKhDdj1RPQaTVTv53HspBi8qd0vWLfeTq6
-         EW9Fmi7g1bTf00urjsEO+gzPnlX4otXCtITP4DNZ4x2q7NLYZxlxKO1hG2TkN2dtIp
-         c4fEKbw4MF3OyUJ2fDXjxKd5iHGZMOFnTF+hm1+ira9pxBRJ4ncQ2QSMd5qdeDaZWM
-         xzQS8flUpmEqA==
+        b=op+PTECE8qrukvx8iwvFSMneKKSei8sug8FQ7dejYGmEerqgNNcs5DEFPZOT1LhWB
+         6FmezBaa2SS/hDyOtimiffD+9W5Mn0dDzhWmW8jP+x0dSS3vblzXCTKDdJSyyPyljU
+         MWMnK2KTf5imoZP7uvfQN5UMs/gTxaWE6O8o7uWa2naJZcN/jhA2xGGbr/PBd41iEF
+         o+v4fo05yDwOEWwiCLfVDuqoF9r5sfUsQItKRjKRTKZc4bMc3jmdsDOkLVRh4fyvs1
+         u27dEKFWiLropa82jE0rmF2v5q26gBtJ3DeMF2A/lm/DYRz8cqfotVr0InlOIOQSYJ
+         +a6aKSjbMcwfw==
 Received: by pali.im (Postfix)
-        id E28D2768; Wed, 12 Jan 2022 16:18:44 +0100 (CET)
+        id DFE8B768; Wed, 12 Jan 2022 16:18:40 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -40,14 +40,12 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>
+        Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v2 11/11] ARM: dts: armada-385.dtsi: Add definitions for PCIe legacy INTx interrupts
-Date:   Wed, 12 Jan 2022 16:18:14 +0100
-Message-Id: <20220112151814.24361-12-pali@kernel.org>
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 08/11] PCI: mvebu: Use child_ops API
+Date:   Wed, 12 Jan 2022 16:18:11 +0100
+Message-Id: <20220112151814.24361-9-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220112151814.24361-1-pali@kernel.org>
 References: <20220105150239.9628-1-pali@kernel.org>
@@ -59,130 +57,160 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With this change legacy INTA, INTB, INTC and INTD interrupts are reported
-separately and not mixed into one Linux virq source anymore.
+Split struct pci_ops between ops and child_ops. Member ops is used for
+accessing PCIe Root Ports via pci-bridge-emul.c driver and child_ops for
+accessing real PCIe cards.
+
+There is no need to mix these two struct pci_ops into one as PCI core code
+already provides separate callbacks via bridge->ops and bridge->child_ops.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- arch/arm/boot/dts/armada-385.dtsi | 52 ++++++++++++++++++++++++++-----
- 1 file changed, 44 insertions(+), 8 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 82 ++++++++++++++++--------------
+ 1 file changed, 44 insertions(+), 38 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-385.dtsi b/arch/arm/boot/dts/armada-385.dtsi
-index f0022d10c715..83392b92dae2 100644
---- a/arch/arm/boot/dts/armada-385.dtsi
-+++ b/arch/arm/boot/dts/armada-385.dtsi
-@@ -69,16 +69,25 @@
- 				reg = <0x0800 0 0 0 0>;
- 				#address-cells = <3>;
- 				#size-cells = <2>;
-+				interrupt-names = "intx";
-+				interrupts-extended = <&gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
- 				#interrupt-cells = <1>;
- 				ranges = <0x82000000 0 0 0x82000000 0x1 0 1 0
- 					  0x81000000 0 0 0x81000000 0x1 0 1 0>;
- 				bus-range = <0x00 0xff>;
--				interrupt-map-mask = <0 0 0 0>;
--				interrupt-map = <0 0 0 0 &gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie1_intc 0>,
-+						<0 0 0 2 &pcie1_intc 1>,
-+						<0 0 0 3 &pcie1_intc 2>,
-+						<0 0 0 4 &pcie1_intc 3>;
- 				marvell,pcie-port = <0>;
- 				marvell,pcie-lane = <0>;
- 				clocks = <&gateclk 8>;
- 				status = "disabled";
-+				pcie1_intc: interrupt-controller {
-+					interrupt-controller;
-+					#interrupt-cells = <1>;
-+				};
- 			};
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 9ea2f6a7c2b0..1e90ab888075 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -294,11 +294,29 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+ 	mvebu_writel(port, mask, PCIE_MASK_OFF);
+ }
  
- 			/* x1 port */
-@@ -88,16 +97,25 @@
- 				reg = <0x1000 0 0 0 0>;
- 				#address-cells = <3>;
- 				#size-cells = <2>;
-+				interrupt-names = "intx";
-+				interrupts-extended = <&gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
- 				#interrupt-cells = <1>;
- 				ranges = <0x82000000 0 0 0x82000000 0x2 0 1 0
- 					  0x81000000 0 0 0x81000000 0x2 0 1 0>;
- 				bus-range = <0x00 0xff>;
--				interrupt-map-mask = <0 0 0 0>;
--				interrupt-map = <0 0 0 0 &gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie2_intc 0>,
-+						<0 0 0 2 &pcie2_intc 1>,
-+						<0 0 0 3 &pcie2_intc 2>,
-+						<0 0 0 4 &pcie2_intc 3>;
- 				marvell,pcie-port = <1>;
- 				marvell,pcie-lane = <0>;
- 				clocks = <&gateclk 5>;
- 				status = "disabled";
-+				pcie2_intc: interrupt-controller {
-+					interrupt-controller;
-+					#interrupt-cells = <1>;
-+				};
- 			};
+-static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+-				 struct pci_bus *bus,
+-				 u32 devfn, int where, int size, u32 *val)
++static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
++						    struct pci_bus *bus,
++						    int devfn);
++
++static int mvebu_pcie_child_rd_conf(struct pci_bus *bus, u32 devfn, int where,
++				    int size, u32 *val)
+ {
+-	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
++	struct mvebu_pcie *pcie = bus->sysdata;
++	struct mvebu_pcie_port *port;
++	void __iomem *conf_data;
++
++	port = mvebu_pcie_find_port(pcie, bus, devfn);
++	if (!port) {
++		*val = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	if (!mvebu_pcie_link_up(port)) {
++		*val = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	conf_data = port->base + PCIE_CONF_DATA_OFF;
  
- 			/* x1 port */
-@@ -107,16 +125,25 @@
- 				reg = <0x1800 0 0 0 0>;
- 				#address-cells = <3>;
- 				#size-cells = <2>;
-+				interrupt-names = "intx";
-+				interrupts-extended = <&gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
- 				#interrupt-cells = <1>;
- 				ranges = <0x82000000 0 0 0x82000000 0x3 0 1 0
- 					  0x81000000 0 0 0x81000000 0x3 0 1 0>;
- 				bus-range = <0x00 0xff>;
--				interrupt-map-mask = <0 0 0 0>;
--				interrupt-map = <0 0 0 0 &gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie3_intc 0>,
-+						<0 0 0 2 &pcie3_intc 1>,
-+						<0 0 0 3 &pcie3_intc 2>,
-+						<0 0 0 4 &pcie3_intc 3>;
- 				marvell,pcie-port = <2>;
- 				marvell,pcie-lane = <0>;
- 				clocks = <&gateclk 6>;
- 				status = "disabled";
-+				pcie3_intc: interrupt-controller {
-+					interrupt-controller;
-+					#interrupt-cells = <1>;
-+				};
- 			};
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+@@ -321,11 +339,21 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
  
- 			/*
-@@ -129,16 +156,25 @@
- 				reg = <0x2000 0 0 0 0>;
- 				#address-cells = <3>;
- 				#size-cells = <2>;
-+				interrupt-names = "intx";
-+				interrupts-extended = <&gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
- 				#interrupt-cells = <1>;
- 				ranges = <0x82000000 0 0 0x82000000 0x4 0 1 0
- 					  0x81000000 0 0 0x81000000 0x4 0 1 0>;
- 				bus-range = <0x00 0xff>;
--				interrupt-map-mask = <0 0 0 0>;
--				interrupt-map = <0 0 0 0 &gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &pcie4_intc 0>,
-+						<0 0 0 2 &pcie4_intc 1>,
-+						<0 0 0 3 &pcie4_intc 2>,
-+						<0 0 0 4 &pcie4_intc 3>;
- 				marvell,pcie-port = <3>;
- 				marvell,pcie-lane = <0>;
- 				clocks = <&gateclk 7>;
- 				status = "disabled";
-+				pcie4_intc: interrupt-controller {
-+					interrupt-controller;
-+					#interrupt-cells = <1>;
-+				};
- 			};
- 		};
- 	};
+-static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
+-				 struct pci_bus *bus,
+-				 u32 devfn, int where, int size, u32 val)
++static int mvebu_pcie_child_wr_conf(struct pci_bus *bus, u32 devfn,
++				    int where, int size, u32 val)
+ {
+-	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
++	struct mvebu_pcie *pcie = bus->sysdata;
++	struct mvebu_pcie_port *port;
++	void __iomem *conf_data;
++
++	port = mvebu_pcie_find_port(pcie, bus, devfn);
++	if (!port)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (!mvebu_pcie_link_up(port))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	conf_data = port->base + PCIE_CONF_DATA_OFF;
+ 
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+@@ -347,6 +375,11 @@ static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
++static struct pci_ops mvebu_pcie_child_ops = {
++	.read = mvebu_pcie_child_rd_conf,
++	.write = mvebu_pcie_child_wr_conf,
++};
++
+ /*
+  * Remove windows, starting from the largest ones to the smallest
+  * ones.
+@@ -862,25 +895,12 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ {
+ 	struct mvebu_pcie *pcie = bus->sysdata;
+ 	struct mvebu_pcie_port *port;
+-	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+ 	if (!port)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	/* Access the emulated PCI-to-PCI bridge */
+-	if (bus->number == 0)
+-		return pci_bridge_emul_conf_write(&port->bridge, where,
+-						  size, val);
+-
+-	if (!mvebu_pcie_link_up(port))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	/* Access the real PCIe interface */
+-	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+-				    where, size, val);
+-
+-	return ret;
++	return pci_bridge_emul_conf_write(&port->bridge, where, size, val);
+ }
+ 
+ /* PCI configuration space read function */
+@@ -889,7 +909,6 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ {
+ 	struct mvebu_pcie *pcie = bus->sysdata;
+ 	struct mvebu_pcie_port *port;
+-	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+ 	if (!port) {
+@@ -897,21 +916,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+ 
+-	/* Access the emulated PCI-to-PCI bridge */
+-	if (bus->number == 0)
+-		return pci_bridge_emul_conf_read(&port->bridge, where,
+-						 size, val);
+-
+-	if (!mvebu_pcie_link_up(port)) {
+-		*val = 0xffffffff;
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+-	/* Access the real PCIe interface */
+-	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+-				    where, size, val);
+-
+-	return ret;
++	return pci_bridge_emul_conf_read(&port->bridge, where, size, val);
+ }
+ 
+ static struct pci_ops mvebu_pcie_ops = {
+@@ -1421,6 +1426,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 
+ 	bridge->sysdata = pcie;
+ 	bridge->ops = &mvebu_pcie_ops;
++	bridge->child_ops = &mvebu_pcie_child_ops;
+ 	bridge->align_resource = mvebu_pcie_align_resource;
+ 	bridge->map_irq = mvebu_pcie_map_irq;
+ 
 -- 
 2.20.1
 
