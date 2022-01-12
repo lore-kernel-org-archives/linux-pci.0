@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1CF7C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 05:37:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B5FC433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Jan 2022 06:31:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236258AbiALFhZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Jan 2022 00:37:25 -0500
-Received: from mga03.intel.com ([134.134.136.65]:53896 "EHLO mga03.intel.com"
+        id S237230AbiALGb3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Jan 2022 01:31:29 -0500
+Received: from mga17.intel.com ([192.55.52.151]:49542 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233661AbiALFhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Jan 2022 00:37:24 -0500
+        id S237017AbiALGb3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jan 2022 01:31:29 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1641965844; x=1673501844;
+  t=1641969089; x=1673505089;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=TtiUOL0NOvPVNtAz/SEHEVk6ukU2aHH8pbGvPBdYhGI=;
-  b=HWj5SDmSVxoakhGZwFeIO6igCLnB7dHxh95Pnxo3t7kf3UlG9m/avohL
-   BjrT6TsGFofqP4BOJk2fqhPVctZUYlbAwWQNh/zTn4NX1IvmZiC/VKIJo
-   fmRQxcVSx9ONhAW3K+xrTyY6REngpo1ER+k9T/kBbggoYmUSW2rPEwqAP
-   WNy0LdJTvJn9Pd6GXoLnUhM7PiIAmSWhdoBN6CmCICtqvXdBomHZxOUuN
-   +oBPCj5r1LrE3EhYTdIKdkqN96fSGaO/kiFcAfnk5DM4vfoDsI6jG8xlY
-   IpVU3GhbxLiDuBaVZtOvq2SW3PcJIuwpDcpGk4/fdgfhkDKBvRsG1kjlX
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10224"; a="243619367"
+  bh=vK44CJ7c6IjwP6Q4baZ72DWY+8GJRdIXKGnUVsKFv/4=;
+  b=euEcc192wuMdjiqXiSdcsC0BjG3iUrC9oYhA76f0L9Kjjf+vzOFWIJYK
+   AOdirZgLGvCkSILyDWTvsMJVEjbG6URllgeWxB/3m2vjkc7+0V0XnDecD
+   LaTBS+ZF4T/JOnZg+JTz/XxtoFGvl2Hlue90DCGx62N4DINIUSgRoitGY
+   UqhRHBN2VcYgpPYjuh2aUZTIyKK8kSREyPwbsr2l591T0NojoaEiA4uJF
+   B3FJ0cCsJhBqVQQLkdRjTjo2Rc8PKQQ7H+hLGuPICSjzwdMrhCNIvHM+s
+   arO6LnVs5fLN7pdK1iry2+mLDK25qFCjfeAeTaaaaVpGRk1UINNyr9CaT
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10224"; a="224365582"
 X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="243619367"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2022 21:37:23 -0800
+   d="scan'208";a="224365582"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2022 22:31:28 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,282,1635231600"; 
-   d="scan'208";a="515359236"
+   d="scan'208";a="472726858"
 Received: from lkp-server01.sh.intel.com (HELO 276f1b88eecb) ([10.239.97.150])
-  by orsmga007.jf.intel.com with ESMTP; 11 Jan 2022 21:37:22 -0800
+  by orsmga003.jf.intel.com with ESMTP; 11 Jan 2022 22:31:26 -0800
 Received: from kbuild by 276f1b88eecb with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1n7WK2-0005Xf-09; Wed, 12 Jan 2022 05:37:22 +0000
-Date:   Wed, 12 Jan 2022 13:36:34 +0800
+        id 1n7XAM-0005ZF-4V; Wed, 12 Jan 2022 06:31:26 +0000
+Date:   Wed, 12 Jan 2022 14:31:06 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/hotplug] BUILD SUCCESS
- 42a46c70045915bcbdced3e694dc5825d124fb5c
-Message-ID: <61de68e2.HEaMg+7jv6f/6SPR%lkp@intel.com>
+Subject: [helgaas-pci:pci/enumeration] BUILD SUCCESS
+ 346865f0745357f9f4704614ce1d9a8e6f27dbc4
+Message-ID: <61de75aa.088kSXSvJKI5EBpf%lkp@intel.com>
 User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -52,12 +52,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
-branch HEAD: 42a46c70045915bcbdced3e694dc5825d124fb5c  PCI: pciehp: Use down_read/write_nested(reset_lock) to fix lockdep errors
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/enumeration
+branch HEAD: 346865f0745357f9f4704614ce1d9a8e6f27dbc4  x86/PCI: Remove initialization of static variables to false
 
-elapsed time: 730m
+elapsed time: 785m
 
-configs tested: 140
+configs tested: 145
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -119,6 +119,11 @@ powerpc                    adder875_defconfig
 sh                             shx3_defconfig
 m68k                        stmark2_defconfig
 arm                        trizeps4_defconfig
+sh                ecovec24-romimage_defconfig
+arm                      integrator_defconfig
+arm                           u8500_defconfig
+um                                  defconfig
+arm                       omap2plus_defconfig
 powerpc                 mpc8272_ads_defconfig
 powerpc                 mpc836x_mds_defconfig
 m68k                            q40_defconfig
@@ -197,6 +202,7 @@ arm                    vt8500_v6_v7_defconfig
 mips                           ip27_defconfig
 powerpc                          allmodconfig
 powerpc                     kmeter1_defconfig
+x86_64                           allyesconfig
 powerpc                 mpc8272_ads_defconfig
 powerpc                 mpc836x_mds_defconfig
 i386                          randconfig-a002
