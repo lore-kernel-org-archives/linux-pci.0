@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EC3C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jan 2022 00:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 306E7C43219
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jan 2022 00:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230165AbiANA2N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Jan 2022 19:28:13 -0500
-Received: from mga04.intel.com ([192.55.52.120]:24454 "EHLO mga04.intel.com"
+        id S238411AbiANA2O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Jan 2022 19:28:14 -0500
+Received: from mga09.intel.com ([134.134.136.24]:31865 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230491AbiANA2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S235600AbiANA2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 13 Jan 2022 19:28:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1642120093; x=1673656093;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=T53454V8nQ4gSGGOXNzK4CkJUyzEgeyk3LttBFKGHco=;
-  b=MxvfG6B6KFAmmEhdFefFUERBOnvXOY3MGRL1t5uIYwgRJnBKebshuNNN
-   m45y2K1pPDVtA7+vFAe/CbV7uTDmd4kUTQSvYEEQyRTJysK7Q96mrEuNw
-   DCZXwUv/DlXthm2RkKB2k5OfJzIXjTJy25iqEr7SE7O8CiayZpsw1kal1
-   s4ohVmsRNuA3XlWtKiF9YqUEtVYZtvvqNRvkfcN30XHAKH3j9F+Ze4NAL
-   dcekFHNVYiMcBHugdbsiZlcKJtwBTA5CJNdcIlp1Qf6gS7c1aPNGyOuSO
-   2RbzFVVaN00+iTI3EY15ee3D4XcftnC8akj31770seoHTsY3xll8VIbly
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10226"; a="242964240"
+  bh=9MmdtQRSP84iEIfaXDUKrSAI73pBddgm1gbmWx06UMk=;
+  b=oBOLX2s5orz0XD3VMoZuPtVb1soV5NVPxJ+6tYUjFPnt7IWOYJfdOjTI
+   HsGbJZcei7SvtcyqzULlbfaoc5hROkGVxdHHdJkkJDblYf/x3WYGczsi5
+   CdlcOS62is+FRMKQu1+7rRY+gYTei6zwGPdcViYF8ADC+zURLnouIjHJf
+   xnuEfqLxH8+4FNkACeKUiJSapXjybguDKNFXh7zEYNBO8FS98bt3nnN9a
+   1mf7WThVOUvg2z/O0uMqvpX+wS0M6sBtqMsparv35tNdpwN8OGpzbY/zO
+   RVQOk1ZytlNV0P5xm+PyjmvDW+Yg4HBujKhX4ALGD86T+kV2m64T6t2AV
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10226"; a="243945288"
 X-IronPort-AV: E=Sophos;i="5.88,287,1635231600"; 
-   d="scan'208";a="242964240"
+   d="scan'208";a="243945288"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 16:28:13 -0800
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 16:28:13 -0800
 X-IronPort-AV: E=Sophos;i="5.88,287,1635231600"; 
-   d="scan'208";a="491317605"
+   d="scan'208";a="491317611"
 Received: from lucas-s2600cw.jf.intel.com ([10.165.21.202])
   by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jan 2022 16:28:12 -0800
 From:   Lucas De Marchi <lucas.demarchi@intel.com>
@@ -44,9 +44,9 @@ Cc:     Dave Hansen <dave.hansen@linux.intel.com>,
         <ville.syrjala@linux.intel.com>,
         Matt Roper <matthew.d.roper@intel.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>
-Subject: [PATCH v5 3/5] x86/quirks: Stop using QFLAG_APPLY_ONCE in nvidia_bugs()
-Date:   Thu, 13 Jan 2022 16:28:41 -0800
-Message-Id: <20220114002843.2083382-3-lucas.demarchi@intel.com>
+Subject: [PATCH v5 5/5] x86/quirks: Improve line wrap on quirk conditions
+Date:   Thu, 13 Jan 2022 16:28:43 -0800
+Message-Id: <20220114002843.2083382-5-lucas.demarchi@intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220114002843.2083382-1-lucas.demarchi@intel.com>
 References: <20220114002843.2083382-1-lucas.demarchi@intel.com>
@@ -56,47 +56,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Adopt the same approach as in intel_graphics_quirks(), with a static
-local variable, to control when the quirk has already been applied.
-However, contrary to intel_graphics_quirks(), here we always set it as
-applied as soon as it's called to avoid changing the current behavior
-that is not failing.
-
-This is the last user of the flags, so we can cleanup the early-quirks,
-removing all the flags logic later.
+Remove extra parenthesis and wrap lines so it's easier to read what are
+the conditions being checked. The call to the hook also had an extra
+indentation: remove here to conform to coding style.
 
 Signed-off-by: Lucas De Marchi <lucas.demarchi@intel.com>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
 ---
- arch/x86/kernel/early-quirks.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ arch/x86/kernel/early-quirks.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 59cc67aace93..7c70977737de 100644
+index 1db4d92f8a85..996e3cbc1c5f 100644
 --- a/arch/x86/kernel/early-quirks.c
 +++ b/arch/x86/kernel/early-quirks.c
-@@ -88,6 +88,13 @@ static void __init nvidia_bugs(int num, int slot, int func)
- {
- #ifdef CONFIG_ACPI
- #ifdef CONFIG_X86_IO_APIC
-+	static bool quirk_applied __initdata;
-+
-+	if (quirk_applied)
-+		return;
-+
-+	quirk_applied = true;
-+
- 	/*
- 	 * Only applies to Nvidia root ports (bus 0) and not to
- 	 * Nvidia graphics cards with PCI ports on secondary buses.
-@@ -702,7 +709,7 @@ struct chipset {
+@@ -769,14 +769,12 @@ static int __init check_dev_quirk(int num, int slot, int func)
+ 	device = read_pci_config_16(num, slot, func, PCI_DEVICE_ID);
  
- static struct chipset early_qrk[] __initdata = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
--	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
-+	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, 0, nvidia_bugs },
- 	{ PCI_VENDOR_ID_VIA, PCI_ANY_ID,
- 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, 0, via_bugs },
- 	{ PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB,
+ 	for (i = 0; early_qrk[i].f != NULL; i++) {
+-		if (((early_qrk[i].vendor == PCI_ANY_ID) ||
+-			(early_qrk[i].vendor == vendor)) &&
+-			((early_qrk[i].device == PCI_ANY_ID) ||
+-			(early_qrk[i].device == device)) &&
+-			(!((early_qrk[i].class ^ class) &
+-			    early_qrk[i].class_mask)))
+-				early_qrk[i].f(num, slot, func);
+-
++		if ((early_qrk[i].vendor == PCI_ANY_ID ||
++		     early_qrk[i].vendor == vendor) &&
++		    (early_qrk[i].device == PCI_ANY_ID ||
++		     early_qrk[i].device == device) &&
++		    !((early_qrk[i].class ^ class) & early_qrk[i].class_mask))
++			early_qrk[i].f(num, slot, func);
+ 	}
+ 
+ 	type = read_pci_config_byte(num, slot, func,
 -- 
 2.34.1
 
