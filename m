@@ -2,180 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACD8C433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jan 2022 20:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2079C433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 15 Jan 2022 00:16:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237104AbiANUTk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Jan 2022 15:19:40 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:45518 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232761AbiANUTj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jan 2022 15:19:39 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9654AB82A28
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jan 2022 20:19:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 229ACC36AE5;
-        Fri, 14 Jan 2022 20:19:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642191577;
-        bh=x+WgLRk4SMV2nI2+xa6bew44FqW62hnnN2DNIkxHMBo=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=oFO5pvoEa5tlNJxDMXf0AJA9cvcqYzmjWr5F0z0WCXVAURAMj3FpzfErLdwdMFsj7
-         1gWPQuWlBHJFAs2rPa3zfVVsheyFLrBJrUuo1XAGFoKe+royx32xx9ydXb1/UuU2RG
-         p+p7o6U2Aagq+Z/IlUXt2+/kuupCLZp3BWI6c9E675WVNX0vt0T0iQIi8URAdnAYhG
-         SAlM/C5NZTwsl1+7IHVAthtQZMrtBTqDabCNk9CzDWLarTRauwSKP/WCrlUspN/rtZ
-         WgJEg/Ya8RF7tuCC766C47YPz/tt1hCcuUQ20x948CbWIqPoLpVi7+hypTsWuHnta8
-         5AmsU7q7bFN+g==
-Date:   Fri, 14 Jan 2022 14:19:35 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Stefan Roese <sr@denx.de>
-Cc:     linux-pci@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Yao Hongbo <yaohongbo@linux.alibaba.com>,
-        Naveen Naidu <naveennaidu479@gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Don't disable AER reporting in
- get_port_device_capability()
-Message-ID: <20220114201935.GA572866@bhelgaas>
+        id S230441AbiAOAQ1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Jan 2022 19:16:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43386 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229913AbiAOAQ1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jan 2022 19:16:27 -0500
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE04FC061574
+        for <linux-pci@vger.kernel.org>; Fri, 14 Jan 2022 16:16:26 -0800 (PST)
+Received: by mail-ed1-x52a.google.com with SMTP id a18so39815065edj.7
+        for <linux-pci@vger.kernel.org>; Fri, 14 Jan 2022 16:16:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=rivosinc-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=YMjl+BxlkAj0ocutgxgneZ3nnXQxRxjy7+A3Hb6S6MM=;
+        b=gwjMmUAyK1GBKkWHyvVu/xpiD3h5QUoGKZHkfi/GNbhoRcGZgtJ6G2cJZNrw6PFEbk
+         ZfnuHgUF+YbnFIUfw73vXqakRjBml+BD1K5MNNoUf+aJAlGTozdLQFskh1C3Vmibmipl
+         QsZJamvr0/jzhnpyxpxfI1PaQBVGpqt/2HaEc+U1/kOz3aGCHvCJfFSHHw71YnzulfPs
+         M5h1tsShnmFgJGJdDyvLaq19ZAq+ieaui6JMHsx+SDmvdUEApmuxTIRAVsFl0Jbvh4kv
+         YbZGkkjG0rmlsG86Sb0UF0zT6fpNcAA+ggFhCmCJJfDtbtsVBmXboJNfohpUI2QtZdh2
+         3s2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=YMjl+BxlkAj0ocutgxgneZ3nnXQxRxjy7+A3Hb6S6MM=;
+        b=WUTNOl38GqGCgBit8bKatyfmwcR6POwidSrRm8jOUUYPsxT49nFxyWZ4w2gsHRn4f5
+         812/ubL1ZhPiMySuUg2d/svUSLn3sbM1+53btELwnn7fYggP9a11KyiurX/MHCg7gJIi
+         DCNxr9SaTIXp3X91+mW41AlgDv+MVEzim0GdDkaUziWQ1CfDAGpLA9u4KNrcvYg36wMv
+         pKMRrJyd6cB0MqHc4/tCZxiHMu5CJh0ER6KXv0Qm97pviIcRgxfshhdgDJNkCRWdOJMt
+         L05fPgF0o/wfOTyK4mN3UUgkvC/b2tBYV5cueQghXKvl59SbAoZItNDZtCfKTNYzJHJv
+         7DNQ==
+X-Gm-Message-State: AOAM533BK1gjFEv6kj062PUoE7xj04deM0OIY3FDGRquWUcwl8w3ZnMw
+        AlFSk+4TarHn/7IP97XSMsNjmi8VjSct0jElzDDvgRZxgLnKTwZ0DQI=
+X-Google-Smtp-Source: ABdhPJwGD8I5X1TpOUXOIHpLfyEMYmXxOu6zyTxcLiks7tT8Zu+YtFx3OahdHMkXU/r/aM6sxcdmOzif5pcpDGMozNg=
+X-Received: by 2002:a05:6402:f02:: with SMTP id i2mr11194504eda.97.1642205785204;
+ Fri, 14 Jan 2022 16:16:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220113113604.1652425-1-sr@denx.de>
+References: <CAAJ9+9fq1=EcOaSoo3oD_5QjYNAv6PPDjKS+gC9o7XDp2p1XpQ@mail.gmail.com>
+ <CAAJ9+9ct3+N0LyH+9N03ZQYUZnF23LFAyWFcnNK4bD7SvaohrQ@mail.gmail.com> <20220113092512.000011d6@Huawei.com>
+In-Reply-To: <20220113092512.000011d6@Huawei.com>
+From:   Zayd Qumsieh <zaydq@rivosinc.com>
+Date:   Fri, 14 Jan 2022 16:15:00 -0800
+Message-ID: <CAAJ9+9df5HCawwDJA2nJ2M=EXQ2LWhZQUSau0DPtFmD0zNoiDQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/2] cxl/mem: Add CDAT table reading from DOE
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc:     alison.schofield@intel.com, ben.widawsky@intel.com,
+        cbrowy@avery-design.com, dan.j.williams@intel.com,
+        f.fangjian@huawei.com, helgaas@kernel.org, ira.weiny@intel.com,
+        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxarm@huawei.com,
+        lorenzo.pieralisi@arm.com, vishal.l.verma@intel.com,
+        Dylan Reid <dylan@rivosinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 13, 2022 at 12:36:04PM +0100, Stefan Roese wrote:
-> Testing has shown, that AER reporting is currently disabled in the
-> DevCtl registers of all non Root Port PCIe devices on systems using
-> pcie_ports_native || host->native_aer. Practically disabling AER
-> completely in such systems. 
+On Thu, Jan 13, 2022 at 1:25 AM Jonathan Cameron
+<Jonathan.Cameron@huawei.com> wrote:
+>
+> On Wed, 12 Jan 2022 14:16:18 -0800
+> Zayd Qumsieh <zaydq@rivosinc.com> wrote:
+>
+> > Hello all,
+> >
+> > Due to issues with vger.kernel.org marking HTML emails as spam, I'll
+> > be resending the email in plain text:
+> >
+> >
+> >
+> > Hello all, First off, thanks for your work on implementing PCI Data
+> > Object Exchange in QEMU and Linux.
+> >
+> > 1. Are these patches still being worked on? If not, I=E2=80=99ll try to=
+ get
+> > them rebased and finished.
+> >
+> > 2. Are there any notes not mentioned in the emails you feel are
+> > important to know about?
+> >
+> > 3. I'm particularly interested in the testing framework - the emails
+> > mention that a lot of testing has been done through QEMU but how can I
+> > carry out these tests on my own? What tools did you use?
+> >
+> > Thanks,
+> >
+> > Zayd
+>
+> https://lore.kernel.org/all/20211105235056.3711389-1-ira.weiny@intel.com/
+> Is the latest version of this.  For basic testing Ben's qemu branch shoul=
+d
+> work for you.
+> https://gitlab.com/bwidawsk/qemu/-/commits/cxl-2.0v4/
+>
+> Note there are some big questions over the approach used for integrating
+> this with the PCI subsystem (auxiliary bus vs library) which I'm not sure
+> we've reached a conclusion on yet.
+>
+> One minor thing on the wish list is lspci support to at least identify th=
+e
+> presence of a DOE.  I have patches for that and will send out fairly soon
+> once I've cleared a backlog of other stuff.
+>
+> My main focus right now is on resolving some of the opens around the
+> QEMU support for CXL emul in general, but I haven't touched the DOE stuff
+> beyond rebasing.  *fingers crossed* I should have an updated qemu tree
+> out sometime in next week or so.
+>
+> Thanks,
+>
+> Jonathan
 
-I want to be a little pedantic here because the error landscape is
-complicated, and I think it will help if we correspond closely to the
-spec language.
+Hey,
 
-Device Control controls Error Reporting (whether the device sends
-ERR_* messages), and IIUC this is relevant even without AER (I'm
-looking at PCIe r6.0, sec 6.2.5, which refers to CERE, NERE, FERE
-outside the AER box).
+I did some experimenting with Ben's QEMU branch and integrated your
+patch locally. I'll be doing some testing of my own. If I run into
+anything noteworthy I'll let you know. Again, thank you for all your
+help! :)
 
-Can you update this with analysis of the code as opposed to what we
-observe in testing?  Hopefully the analysis corresponds to the
-observations :)  Here's my take; probably too much for a commit log,
-but maybe it can be distilled:
-
-  pcie_portdrv_probe
-    pcie_port_device_register
-      get_port_device_capability
-        pci_disable_pcie_error_reporting
-          clear CERE NFERE FERE URRE               # <-- disable for RP USP DSP
-      pcie_device_init
-        device_register                            # new AER service device
-          aer_probe
-            aer_enable_rootport                    # RP only
-              set_downstream_devices_error_reporting
-                set_device_error_reporting         # self (RP)
-                  if (RP || USP || DSP)
-                    pci_enable_pcie_error_reporting
-                      set CERE NFERE FERE URRE     # <-- enable for RP
-                pci_walk_bus
-                  set_device_error_reporting
-                    if (RP || USP || DSP)
-                      pci_enable_pcie_error_reporting
-                        set CERE NFERE FERE URRE   # <-- enable for USP DSP
-
-In a typical Root Port -> Endpoint hierarchy, the above:
-
-  - Disables Error Reporting for the Root Port,
-
-  - Enables Error Reporting for the Root Port,
-
-  - Does NOT enable Error Reporting for the Endpoint because it is not
-    a Root Port or Switch Port.
-
-In a deeper Root Port -> Upstream Switch Port -> Downstream Switch
-Port -> Endpoint hierarchy:
-
-  - Disables Error Reporting for the Root Port,
-
-  - Enables Error Reporting for the Root Port,
-
-  - Enables Error Reporting for both Switch Ports,
-
-  - Does NOT enable Error Reporting for the Endpoint because it is not
-    a Root Port or Switch Port,
-
-  - Disables Error Reporting for the Switch Ports when
-    pcie_portdrv_probe() claims them.  AER does not re-enable it
-    because these are not Root Ports.
-
-I think the bottom line is that the current code leaves reporting
-enabled on Root Ports and disabled everywhere else.  It's enabled
-temporarily on Switch Ports, but disabled again when
-pcie_portdrv_probe() claims them.
-
-The core doesn't do anything with Endpoints, but a few drivers enable
-reporting themselves.  This probably only works when their devices are
-directly connected to a Root Port.
-
-> This is due to the fact that with commit 2bd50dd800b5 ("PCI: PCIe:
-> Disable PCIe port services during port initialization"), a call to
-> pci_disable_pcie_error_reporting() was added *after* the PCIe AER
-> setup was completed for the PCIe device tree.
-
-IIUC, 2bd50dd800b5 is really only an issue for Switch Ports, because
-it makes portdrv disable reporting for them, but AER doesn't re-enable
-it.
-
-> This patch now removes this call to pci_disable_pcie_error_reporting()
-> from get_port_device_capability(), leaving the already enabled AER
-> configuration intact. With this change, I'm able to fully use the
-> Kernel AER infrastructure on a ZynqMP system which has a PCIe switch
-> connected to the host CPU PCIe Root Port.
-
-This patch doesn't affect the Endpoint, and I assume you also need to
-enable reporting there?
-
-> Fixes: 2bd50dd800b5 ("PCI: PCIe: Disable PCIe port services during port initialization")
-> Signed-off-by: Stefan Roese <sr@denx.de>
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Pali Rohár <pali@kernel.org>
-> Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: Yao Hongbo <yaohongbo@linux.alibaba.com>
-> Cc: Naveen Naidu <naveennaidu479@gmail.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c | 9 +--------
->  1 file changed, 1 insertion(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 4dab74ff4368..48f5e67709f7 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -244,15 +244,8 @@ static int get_port_device_capability(struct pci_dev *dev)
->  
->  #ifdef CONFIG_PCIEAER
->  	if (dev->aer_cap && pci_aer_available() &&
-> -	    (pcie_ports_native || host->native_aer)) {
-> +	    (pcie_ports_native || host->native_aer))
->  		services |= PCIE_PORT_SERVICE_AER;
-> -
-> -		/*
-> -		 * Disable AER on this port in case it's been enabled by the
-> -		 * BIOS (the AER service driver will enable it when necessary).
-> -		 */
-> -		pci_disable_pcie_error_reporting(dev);
-> -	}
->  #endif
->  
->  	/* Root Ports and Root Complex Event Collectors may generate PMEs */
-> -- 
-> 2.34.1
-> 
+Thanks,
+Zayd
