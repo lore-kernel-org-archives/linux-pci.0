@@ -2,118 +2,189 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFA9C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 15 Jan 2022 16:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 034E5C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 15 Jan 2022 18:54:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229584AbiAOQCO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 15 Jan 2022 11:02:14 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:58106 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233026AbiAOQCO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 Jan 2022 11:02:14 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 028D460DF5;
-        Sat, 15 Jan 2022 16:02:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F5B4C36AE7;
-        Sat, 15 Jan 2022 16:02:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642262533;
-        bh=dXfz+j87xPDNeSX6HqrqgV0QIp9lXOhuOevSxgxBxAg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=fBZUceP1fm1936OzmEoRc6xtqdD5KbaOLzrdEc+FuWEcCjgwnmIq7E5Rf9kN/qhOD
-         8yJWG2lHkrpd6AAyQEMaHrVuUBaZQVsC04OOGISARjc6DNf4NcLCVz59LvwhH1XxXy
-         0moIJHeGq+McQ5xaKrJey/AyOw7Fme5/Aeh/hs1pS32r0E655g9LGIStj7Gcfsr48+
-         56Avbf+02HmjAu1u80ZQKazofB9alNivfvpNOb5XbdMHyaIPqwF/jXOCt6bO0279/8
-         BCmo6chcAZz0OG6WtjiZUYit2B7zeWX4IxUgwaJSjC9VMR5E8F4bpBlH9EnvKMZo94
-         Mk2j4H4tbkxmA==
-Received: by mail-ed1-f48.google.com with SMTP id q25so46084088edb.2;
-        Sat, 15 Jan 2022 08:02:13 -0800 (PST)
-X-Gm-Message-State: AOAM532iF24XQny1hY7MtF5WCxSm1CnvVYUE86Mzh2CW3ma8zqRgdmWp
-        UYoci5uR5GahZiClB0Poi5Qrkegzg/CcOTEX5Q==
-X-Google-Smtp-Source: ABdhPJxfQvzMyV4E/lfsW80blaC+yF6Jz6eXdtfrSUYSUFPPjf5rBowLMBSmFOPgGlwU3ROMI1ZeCovUN+HxGfr8daY=
-X-Received: by 2002:aa7:c587:: with SMTP id g7mr9586993edq.109.1642262531677;
- Sat, 15 Jan 2022 08:02:11 -0800 (PST)
+        id S233505AbiAOSyM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 15 Jan 2022 13:54:12 -0500
+Received: from mga01.intel.com ([192.55.52.88]:48464 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233483AbiAOSyL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 15 Jan 2022 13:54:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1642272851; x=1673808851;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=i76GCVlFBaOsyithlV0nHGAcP/Ted2+NVlUbn4Y3I/Q=;
+  b=h0BZoKLESU4Rq9lfrm1SMkHfXqTXiHbnXCI2z5+ozlWITIZ4YgxsTvcJ
+   7EohyqPq47o53FM1TL+Kug+KPJf9kDzvw6Ka1MbGZhYkoYQ73B0Hpqge3
+   gt4BryLc0PZDnKcSUUV+R1TxmMZPKaOQwgyk7DGF4wk4D5Kvq3Z3ud9Ik
+   DwuIGmV64JqiBchSh4UoMXSRg5K3akEYSAzo/sq/2Ua34ThyoHq3iRirG
+   84RbTzAj6SXrdC/Mvcg7tKokIpGb1AwoW0pD/EarNoNtJy3RbFHtb9rxi
+   /EyNAFKV9YkOwV484BvY3BWNmU1wr9ype0RhnA/HtN+CIlNV2xJkX1XlR
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10228"; a="268803410"
+X-IronPort-AV: E=Sophos;i="5.88,290,1635231600"; 
+   d="scan'208";a="268803410"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2022 10:54:11 -0800
+X-IronPort-AV: E=Sophos;i="5.88,290,1635231600"; 
+   d="scan'208";a="624746727"
+Received: from jayitada-mobl.amr.corp.intel.com (HELO intel.com) ([10.252.140.240])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jan 2022 10:54:11 -0800
+Date:   Sat, 15 Jan 2022 10:54:09 -0800
+From:   Ben Widawsky <ben.widawsky@intel.com>
+To:     linux-cxl@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org
+Cc:     patches@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 00/13] CXL Region driver
+Message-ID: <20220115185409.tllecpbztzblr3nc@intel.com>
+References: <20220107003756.806582-1-ben.widawsky@intel.com>
 MIME-Version: 1.0
-References: <20211214221450.589884-1-luca@lucaceresoli.net>
- <CAL_Jsq+GQTcx1EGKHug2ZcDZufrKM-4k6PB0vQeTCTG42MHzvA@mail.gmail.com>
- <59a23c89-0810-eb28-acd9-7051ac34d438@lucaceresoli.net> <4579940c-27dc-733e-4022-ebea4671c839@lucaceresoli.net>
-In-Reply-To: <4579940c-27dc-733e-4022-ebea4671c839@lucaceresoli.net>
-From:   Rob Herring <robh@kernel.org>
-Date:   Sat, 15 Jan 2022 10:02:00 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqJ5nr6xJoTv3A6UPMMDXhWKcwSEUA3ux3kK8OMWQxdc6w@mail.gmail.com>
-Message-ID: <CAL_JsqJ5nr6xJoTv3A6UPMMDXhWKcwSEUA3ux3kK8OMWQxdc6w@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: dra7xx: Fix link removal on probe error
-To:     Luca Ceresoli <luca@lucaceresoli.net>,
-        Saravana Kannan <saravanak@google.com>
-Cc:     PCI <linux-pci@vger.kernel.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sekhar Nori <nsekhar@ti.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220107003756.806582-1-ben.widawsky@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-+Saravana
+Hi all.
 
-On Tue, Jan 11, 2022 at 4:35 AM Luca Ceresoli <luca@lucaceresoli.net> wrote:
->
-> Hi Rob,
->
-> On 16/12/21 10:08, Luca Ceresoli wrote:
-> > Hi Rob,
-> >
-> > thanks for the quick feedback!
-> >
-> > On 14/12/21 23:42, Rob Herring wrote:
-> >> On Tue, Dec 14, 2021 at 4:15 PM Luca Ceresoli <luca@lucaceresoli.net> wrote:
-> >>>
-> >>> If a devm_phy_get() calls fails with phy_count==N (N > 0), then N links
-> >>> have already been added by device_link_add() and won't be deleted by
-> >>> device_link_del() because the code calls 'return' and not 'goto err_link'.
-> >>>
-> >>> Fix in a very simple way by doing all the devm_phy_get() calls before all
-> >>> the device_link_add() calls.
-> >>>
-> >>> Fixes: 7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-> >>> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-> >>> ---
-> >>>  drivers/pci/controller/dwc/pci-dra7xx.c | 2 ++
-> >>>  1 file changed, 2 insertions(+)
-> >>>
-> >>> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> >>> index f7f1490e7beb..2ccc53869e13 100644
-> >>> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> >>> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> >>> @@ -757,7 +757,9 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
-> >>>                 phy[i] = devm_phy_get(dev, name);
-> >>>                 if (IS_ERR(phy[i]))
-> >>>                         return PTR_ERR(phy[i]);
-> >>> +       }
-> >>>
-> >>> +       for (i = 0; i < phy_count; i++) {
-> >>>                 link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-> >>
-> >> I think this should happen automatically now with fw_devlink being
-> >> enabled by default. Can you try?
-> >
-> > Do you mean removal should be done automatically? I think they are not
-> > due to the DL_FLAG_STATELESS flag.
->
-> I would love to have feedback because, as said, I think my patch is
-> correct, but if I'm wrong (which might well be) I have to drop patch 1
-> and rewrite patch 2 in a slightly more complex form.
+I found some last minute bugs which I've fixed. Please ignore this series and
+wait until I send out v3.
 
-I mean that why do you need explicit dependency tracking here when
-dependencies on a PHY should happen automatically now. IOW, what is
-special about this driver and dependency?
+Thanks.
+Ben
 
-Rob
+On 22-01-06 16:37:43, Ben Widawsky wrote:
+> This patch series introduces the CXL region driver as well as associated APIs in
+> CXL core. The region driver enables the creation of "regions" which is a concept
+> defined by the CXL 2.0 specification [1]. Region verification and programming
+> state are owned by the cxl_region driver (implemented in the cxl_region module).
+> It relies on cxl_mem to determine if devices are CXL routed, and cxl_port to
+> actually handle the programming of the HDM decoders. Much of the region driver
+> is an implementation of algorithms described in the CXL Type 3 Memory Device
+> Software Guide [2].
+> 
+> The region driver will be responsible for configuring regions found on
+> persistent capacities in the Label Storage Area (LSA), it will also enumerate
+> regions configured by BIOS, usually volatile capacities, and will allow for
+> dynamic region creation (which can then be stored in the LSA). It is the primary
+> consumer of the CXL Port [3] and CXL Mem drivers introduced previously [4]. Dan
+> as reworked some of this which is required for this branch. A cached copy is
+> included in the gitlab for this project [5]. Those patches will be posted
+> shortly.
+> 
+> The patches for the region driver could be squashed. They're broken out to aid
+> review and because that's the order they were implemented in. My preference is
+> to keep those as they are.
+> 
+> Some things are still missing and will be worked on while these are reviewed (in
+> priority order):
+> 1. Connection to libnvdimm labels (No plan)
+> 2. Volatile regions/LSA regions (Have a plan)
+> 3. Switch ports (Have a plan)
+> 4. Decoder programming restrictions (No plan). The one know restriction I've
+>    missed is to disallow programming HDM decoders that aren't in incremental
+>    system physical address ranges.
+> 5. Stress testing
+> 
+> Here is an example of output when programming a x2 interleave region:
+> ./cxlctl create-region -i2 -n -a -s $((512<<20)) /sys/bus/cxl/devices/decoder0.0
+> [   42.971496][  T644] cxl_core:cxl_bus_probe:1384: cxl_region region0.0:0: probe: -19
+> [   42.972400][  T644] cxl_core:cxl_add_region:478: cxl region0.0:0: Added region0.0:0 to decoder0.0
+> [   42.979388][  T644] cxl_core:cxl_commit_decoder:394: cxl_port port1: decoder1.0
+> [   42.979388][  T644] 	Base 0x0000004c00000000
+> [   42.979388][  T644] 	Size 536870912
+> [   42.979388][  T644] 	IG 8
+> [   42.979388][  T644] 	IW 2
+> [   42.979388][  T644] 	TargetList: 0 1 -1 -1 -1 -1 -1 -1
+> [   42.982410][  T644] cxl_core:cxl_commit_decoder:394: cxl_port endpoint3: decoder3.0
+> [   42.982410][  T644] 	Base 0x0000004c00000000
+> [   42.982410][  T644] 	Size 536870912
+> [   42.982410][  T644] 	IG 8
+> [   42.982410][  T644] 	IW 2
+> [   42.982410][  T644] 	TargetList: -1 -1 -1 -1 -1 -1 -1 -1
+> [   42.985427][  T644] cxl_core:cxl_commit_decoder:394: cxl_port endpoint2: decoder2.0
+> [   42.985427][  T644] 	Base 0x0000004c00000000
+> [   42.985427][  T644] 	Size 536870912
+> [   42.985427][  T644] 	IG 8
+> [   42.985427][  T644] 	IW 2
+> [   42.985427][  T644] 	TargetList: -1 -1 -1 -1 -1 -1 -1 -1
+> [   42.987937][  T644] cxl_core:cxl_bus_probe:1384: cxl_region region0.0:0: probe: 0
+> 
+> If you're wondering how I tested this, I've baked it into my cxlctl app [6] and
+> lib [7]. Eventually this will get absorbed by ndctl/cxl-cli/libcxl.
+> 
+> To get the detailed errors, trace-cmd can be utilized. Until a region device
+> exists, the region module will not be loaded, which means the region tracepoints
+> will not exist. To get around this, modprobe cxl_region before anything.
+> 
+> trace-cmd record -e cxl ./cxlctl create-region -n -a -s $((256<<20)) /sys/bus/cxl/devices/decoder0.0
+> 
+> Branch can be found at gitlab [8].
+> 
+> ---
+> 
+> [1]: https://www.computeexpresslink.org/download-the-specification
+> [2]: https://cdrdv2.intel.com/v1/dl/getContent/643805?wapkw=CXL%20memory%20device%20sw%20guide
+> [3]: https://lore.kernel.org/linux-cxl/20211022183709.1199701-9-ben.widawsky@intel.com/
+> [4]: https://lore.kernel.org/linux-cxl/20211022183709.1199701-17-ben.widawsky@intel.com/
+> [5]: https://gitlab.com/bwidawsk/linux/-/commit/126793e22427f7975a8f2fca373764be78012e88
+> [6]: https://gitlab.com/bwidawsk-cxl/cxlctl
+> [7]: https://gitlab.com/bwidawsk-cxl/cxl_rs
+> [8]: https://gitlab.com/bwidawsk/linux/-/tree/cxl_region
+> 
+> ---
+> 
+> Ben Widawsky (13):
+>   cxl/core: Rename find_cxl_port
+>   cxl/core: Track port depth
+>   cxl/region: Add region creation ABI
+>   cxl/region: Introduce concept of region configuration
+>   cxl/mem: Cache port created by the mem dev
+>   cxl/region: Introduce a cxl_region driver
+>   cxl/acpi: Handle address space allocation
+>   cxl/region: Address space allocation
+>   cxl/region: Implement XHB verification
+>   cxl/region: HB port config verification
+>   cxl/region: Add infrastructure for decoder programming
+>   cxl/region: Record host bridge target list
+>   cxl: Program decoders for regions
+> 
+>  .clang-format                                 |   3 +
+>  Documentation/ABI/testing/sysfs-bus-cxl       |  63 ++
+>  .../driver-api/cxl/memory-devices.rst         |  14 +
+>  drivers/cxl/Makefile                          |   2 +
+>  drivers/cxl/acpi.c                            |  30 +
+>  drivers/cxl/core/Makefile                     |   1 +
+>  drivers/cxl/core/core.h                       |   4 +
+>  drivers/cxl/core/hdm.c                        | 198 +++++
+>  drivers/cxl/core/port.c                       | 132 +++-
+>  drivers/cxl/core/region.c                     | 525 +++++++++++++
+>  drivers/cxl/cxl.h                             |  32 +
+>  drivers/cxl/cxlmem.h                          |   9 +
+>  drivers/cxl/mem.c                             |  16 +-
+>  drivers/cxl/port.c                            |  42 +-
+>  drivers/cxl/region.c                          | 695 ++++++++++++++++++
+>  drivers/cxl/region.h                          |  47 ++
+>  drivers/cxl/trace.h                           |  54 ++
+>  tools/testing/cxl/Kbuild                      |   1 +
+>  18 files changed, 1849 insertions(+), 19 deletions(-)
+>  create mode 100644 drivers/cxl/core/region.c
+>  create mode 100644 drivers/cxl/region.c
+>  create mode 100644 drivers/cxl/region.h
+>  create mode 100644 drivers/cxl/trace.h
+> 
+> 
+> base-commit: 03716ce2db3c17ba38f26a88d75049c0472a629e
+> prerequisite-patch-id: af6a0315e22bfc1099d4f58610b8b897e6e5a060
+> -- 
+> 2.34.1
+> 
