@@ -2,134 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C9B1C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 13:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4270AC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 13:58:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380607AbiAUNU6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jan 2022 08:20:58 -0500
-Received: from jabberwock.ucw.cz ([46.255.230.98]:43936 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233333AbiAUNU4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jan 2022 08:20:56 -0500
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits)
-         client-signature RSA-PSS (1024 bits))
-        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-        by jabberwock.ucw.cz (Postfix) with ESMTPS id 58DE61C0BAB
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 14:20:55 +0100 (CET)
-Received: by albireo.burrow.ucw.cz (Postfix, from userid 1000)
-        id DDBAB1A1639; Fri, 21 Jan 2022 14:20:54 +0100 (CET)
-Date:   Fri, 21 Jan 2022 14:20:54 +0100
-From:   Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] lspci: Don't report PCIe link downgrades for downstream
- ports
-Message-ID: <mj+md-20220121.131934.39347.albireo@ucw.cz>
-References: <20210318170244.151240-1-helgaas@kernel.org>
- <20210318173325.GR3420@casper.infradead.org>
+        id S1350745AbiAUN6P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jan 2022 08:58:15 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:48318 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350794AbiAUN6P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jan 2022 08:58:15 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D30D6175E
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 13:58:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD476C340E4;
+        Fri, 21 Jan 2022 13:58:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1642773494;
+        bh=tZD9Kt2oqV3x+ucieG7rcKrQel3qU6fgABWWF2uxhjk=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=U+L0GxkwuwxF5tE0jXIbkU3q782FODZ46dpAZtjQ0rw0UGChJhPlJzilwaygZvUpK
+         sIn9yw6w6HQasjc/FI4rS6IiGcfSy4YXdQMijPgPLtzeFWHAQu5M/FYK1hMWCSBTxW
+         RD2tM5MZYhDhMLHvo1nv0YZClxHNzyXITKSaeTJGMjrjJxkRVb25K0I2Pi09t9xYWR
+         an+nHrn0tcrktuhTs8zJWYkwKkClp8Ty8+0ykTv1i/xZfbiytPonof93DAbyyqC39N
+         jqimYLvk1MXunO44lkNt6+9Az5luPUCLblWhnwwUTM0JRHR0kRUJWgMCXfhI59S24A
+         VFw1CV6I+XFQQ==
+Received: by pali.im (Postfix)
+        id A203FB8A; Fri, 21 Jan 2022 14:58:11 +0100 (CET)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Martin Mares <mj@ucw.cz>, Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Matthew Wilcox <willy@infradead.org>, linux-pci@vger.kernel.org
+Subject: [PATCH pciutils 1/5] libpci: Add new options for pci_fill_info: PROGIF, REVID and SUBSYS
+Date:   Fri, 21 Jan 2022 14:57:14 +0100
+Message-Id: <20220121135718.27172-2-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220121135718.27172-1-pali@kernel.org>
+References: <20220121135718.27172-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210318173325.GR3420@casper.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Rspamd-Queue-Id: 58DE61C0BAB
-X-Spamd-Bar: -
-Authentication-Results: jabberwock.ucw.cz;
-        dkim=none;
-        dmarc=none;
-        spf=none (jabberwock.ucw.cz: domain of mj@ucw.cz has no SPF policy when checking 91.219.245.20) smtp.mailfrom=mj@ucw.cz
-X-Spamd-Result: default: False [-1.49 / 15.00];
-         ARC_NA(0.00)[];
-         BAYES_HAM(-3.00)[100.00%];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         MIME_GOOD(-0.10)[text/plain];
-         HFILTER_HELO_IP_A(1.00)[albireo.burrow.ucw.cz];
-         DMARC_NA(0.00)[ucw.cz];
-         SENDER_REP_HAM(-0.69)[asn: 51744(-0.18), country: CZ(-0.01), ip: 91.219.245.20(-0.51)];
-         RCPT_COUNT_FIVE(0.00)[6];
-         AUTH_NA(1.00)[];
-         TO_MATCH_ENVRCPT_SOME(0.00)[];
-         HFILTER_HELO_NORES_A_OR_MX(0.30)[albireo.burrow.ucw.cz];
-         NEURAL_HAM(-0.00)[-1.000];
-         R_SPF_NA(0.00)[no SPF record];
-         RCVD_COUNT_ZERO(0.00)[0];
-         FROM_EQ_ENVFROM(0.00)[];
-         R_DKIM_NA(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         ASN(0.00)[asn:51744, ipnet:91.219.244.0/22, country:CZ];
-         TAGGED_FROM(0.00)[f-210122,linux-pci=vger.kernel.org];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello!
+This change extends libpci library and allows providers to fill these
+informations (Programming interface, Revision id and Subsystem ids) via
+native system APIs, which sometimes may differs from what is stored in PCI
+config space.
 
-This fell through the cracks in my mailbox, but I finally assembled
-pieces and here is what I applied.
+Programming interface is part of 24-bit Device Class number but apparently
+libpci exports only high 16-bit of this number via device_class member.
+---
+ lib/pci.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-				Martin
-
-
-commit 9f7681202fcfaefd02e202eb64c01eb9e962729d
-Author: Martin Mares <mj@ucw.cz>
-Date:   Fri Jan 21 14:16:37 2022 +0100
-
-    lspci: Improvements to PCIe link speed downgrade reporting
-    
-    Do not report PCIe link downgrades for downstream ports.
-    
-    Changed wording so that "overdriven" is reported instead of
-    "strange" for speeds greater than the maximum supported one.
-    
-    Also report nothing instead of "ok".
-    
-    Inspired by patches by Bjorn Helgaas and Matthew Wilcox.
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 91acb59..79b61cd 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -771,13 +771,16 @@ static char *link_speed(int speed)
-     }
- }
+diff --git a/lib/pci.h b/lib/pci.h
+index b9fd9bfb9b5b..8c3c11b9ebeb 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -145,6 +145,9 @@ struct pci_dev {
+   pciaddr_t bridge_base_addr[4];	/* Bridge base addresses (without flags) */
+   pciaddr_t bridge_size[4];		/* Bridge sizes */
+   pciaddr_t bridge_flags[4];		/* PCI_IORESOURCE_* flags for bridge addresses */
++  u8 prog_if;				/* Programming interface for device_class */
++  u8 rev_id;				/* Revision id */
++  u16 subsys_vendor_id, subsys_id;	/* Subsystem vendor id and subsystem id */
  
--static char *link_compare(int sta, int cap)
-+static char *link_compare(int type, int sta, int cap)
- {
--  if (sta < cap)
--    return "downgraded";
-   if (sta > cap)
--    return "strange";
--  return "ok";
-+    return " (overdriven)";
-+  if (sta == cap)
-+    return "";
-+  if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_DOWNSTREAM) ||
-+      (type == PCI_EXP_TYPE_PCIE_BRIDGE))
-+    return "";
-+  return " (downgraded)";
- }
+   /* Fields used internally */
+   struct pci_access *access;
+@@ -210,6 +213,9 @@ char *pci_get_string_property(struct pci_dev *d, u32 prop) PCI_ABI;
+ #define PCI_FILL_IOMMU_GROUP	0x4000
+ #define PCI_FILL_BRIDGE_BASES	0x8000
+ #define PCI_FILL_RESCAN		0x00010000
++#define PCI_FILL_PROGIF		0x00020000
++#define PCI_FILL_REVID		0x00040000
++#define PCI_FILL_SUBSYS		0x00080000
  
- static char *aspm_support(int code)
-@@ -850,11 +853,11 @@ static void cap_express_link(struct device *d, int where, int type)
-   w = get_conf_word(d, where + PCI_EXP_LNKSTA);
-   sta_speed = w & PCI_EXP_LNKSTA_SPEED;
-   sta_width = (w & PCI_EXP_LNKSTA_WIDTH) >> 4;
--  printf("\t\tLnkSta:\tSpeed %s (%s), Width x%d (%s)\n",
-+  printf("\t\tLnkSta:\tSpeed %s%s, Width x%d%s\n",
- 	link_speed(sta_speed),
--	link_compare(sta_speed, cap_speed),
-+	link_compare(type, sta_speed, cap_speed),
- 	sta_width,
--	link_compare(sta_width, cap_width));
-+	link_compare(type, sta_width, cap_width));
-   printf("\t\t\tTrErr%c Train%c SlotClk%c DLActive%c BWMgmt%c ABWMgmt%c\n",
- 	FLAG(w, PCI_EXP_LNKSTA_TR_ERR),
- 	FLAG(w, PCI_EXP_LNKSTA_TRAIN),
+ void pci_setup_cache(struct pci_dev *, u8 *cache, int len) PCI_ABI;
+ 
+-- 
+2.20.1
+
