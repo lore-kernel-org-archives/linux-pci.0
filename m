@@ -2,113 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C202AC433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 13:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17153C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 13:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350790AbiAUN6R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1350794AbiAUN6R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 21 Jan 2022 08:58:17 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:48358 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350794AbiAUN6Q (ORCPT
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37078 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350819AbiAUN6Q (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jan 2022 08:58:16 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40CE8C061574
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 05:58:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1970661774
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 13:58:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FB0DC340E4;
-        Fri, 21 Jan 2022 13:58:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0B709B81F88
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 13:58:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78FD0C340E1;
+        Fri, 21 Jan 2022 13:58:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642773495;
-        bh=ZGC6gqtt42W9gw5ryIcyecAu6nsWPJd2lgiaehTcKHM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=A1NmU4mWjTGKQoOFY/evGRivOnRh+F7D4MNhqPxZR7Hu64NzD0TfGlRjXl8kt+97O
-         N8EQdljiL/Y/KqNfn5k9faAh/Vvi8GFA5YoiSQy1cFOWl52FcvRkJd3J/O9ADGN3vU
-         wRzMB2Y2eYSwEGeeZY0UQUwaPfghuwaMBjZE4nuvVlZNmxviuDlWeyXq7KO0daZlKd
-         EaB5+pkDWLg9CFoYbKq32uLCbcOQd0TmMICOBw5QZicaMhtYzR/9Y6J07g5myhdCHq
-         TqAZmygFXzLMRV1qVDhL3PvndlueoNU/1QN8amnkuLMYyZcDSERF5HV0DFfIhAOPNZ
-         vWSUOuUe39Hmg==
+        s=k20201202; t=1642773493;
+        bh=JVf6h0NMxUJs4pkAAdBauLe7+1uoLIM13xiPaULE9O4=;
+        h=From:To:Subject:Date:From;
+        b=egmlLUVDl1ca6YzBuZn1oCfvutaKqzIOO7TOtehhziWXjgHlWmizmpR/PHEB5yO4W
+         0NNGs40iQttMGUFf5KHyTWaOwDaQ0IdkvVO80GjuqcUBCwwthhfl1f7isaqXPCeWvj
+         HqzlYUWBbISBIB++E2Q2F9nv23qABX3FfsKv/B3AZ/fXnAHZWTeBkBo/2m1kGk/YhN
+         xlAnIW5h7Sfh388UZVBH3rSLLZ6OAjUCOsnK+ulgZ6JgejIVXWk4yIe2nzAhXbwSuz
+         +1bD49ku1G+l8JN7/jJQfanzzJMpSbCdFBNYFkbv0fiJFbzFCiuolPdo5r2/tTFm5c
+         cr0JmqM90W6og==
 Received: by pali.im (Postfix)
-        id 16A30857; Fri, 21 Jan 2022 14:58:15 +0100 (CET)
+        id 8B9A0857; Fri, 21 Jan 2022 14:58:10 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Martin Mares <mj@ucw.cz>, Bjorn Helgaas <helgaas@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Matthew Wilcox <willy@infradead.org>, linux-pci@vger.kernel.org
-Subject: [PATCH pciutils 4/5] libpci: sysfs: Implement PROGIF, REVID and SUBSYS support
-Date:   Fri, 21 Jan 2022 14:57:17 +0100
-Message-Id: <20220121135718.27172-5-pali@kernel.org>
+Subject: [PATCH pciutils 0/5] Support for PROGIF, REVID and SUBSYS
+Date:   Fri, 21 Jan 2022 14:57:13 +0100
+Message-Id: <20220121135718.27172-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220121135718.27172-1-pali@kernel.org>
-References: <20220121135718.27172-1-pali@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In sysfs there are optional nodes with this information.
----
- lib/sysfs.c | 39 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 36 insertions(+), 3 deletions(-)
+libpci currently provides only access to bits [23:8] of class id via
+dev->device_class member. Remaining bits [7:0] of class id can be only
+accessed via reading config space.
 
-diff --git a/lib/sysfs.c b/lib/sysfs.c
-index 7c157a2688ad..7714607f66a0 100644
---- a/lib/sysfs.c
-+++ b/lib/sysfs.c
-@@ -329,6 +329,7 @@ static unsigned int
- sysfs_fill_info(struct pci_dev *d, unsigned int flags)
- {
-   unsigned int done = 0;
-+  int value;
- 
-   if (!d->access->buscentric)
-     {
-@@ -343,10 +344,42 @@ sysfs_fill_info(struct pci_dev *d, unsigned int flags)
- 	  d->device_id = sysfs_get_value(d, "device", 1);
- 	  done |= PCI_FILL_IDENT;
- 	}
--      if (flags & PCI_FILL_CLASS)
-+      if (flags & (PCI_FILL_CLASS | PCI_FILL_PROGIF))
- 	{
--	  d->device_class = sysfs_get_value(d, "class", 1) >> 8;
--	  done |= PCI_FILL_CLASS;
-+	  value = sysfs_get_value(d, "class", 1);
-+	  if (flags & PCI_FILL_CLASS)
-+	    {
-+	      d->device_class = value >> 8;
-+	      done |= PCI_FILL_CLASS;
-+	    }
-+	  if (flags & PCI_FILL_PROGIF)
-+	    {
-+	      d->prog_if = value & 0xff;
-+	      done |= PCI_FILL_PROGIF;
-+	    }
-+	}
-+      if (flags & PCI_FILL_REVID)
-+	{
-+	  value = sysfs_get_value(d, "revision", 0);
-+	  if (value >= 0)
-+	    {
-+	      d->rev_id = value;
-+	      done |= PCI_FILL_REVID;
-+	    }
-+        }
-+      if (flags & PCI_FILL_SUBSYS)
-+	{
-+	  value = sysfs_get_value(d, "subsystem_vendor", 0);
-+	  if (value >= 0)
-+	    {
-+	      d->subsys_vendor_id = value;
-+	      value = sysfs_get_value(d, "subsystem_device", 0);
-+	      if (value >= 0)
-+	        {
-+	          d->subsys_id = value;
-+	          done |= PCI_FILL_SUBSYS;
-+	        }
-+	    }
- 	}
-       if (flags & PCI_FILL_IRQ)
- 	{
+lspci in some places reads class id from dev->device_class and on some
+places from config space because it does not have access to all class bits.
+
+For some broken devices kernel reports different class id via sysfs as
+what is stored in device config space. Value reported by sysfs should be
+the correct one.
+
+lspci has -b option (Bus-centric view) to choose if information from
+kernel or from config space should be showed. But this option is not
+respected on all places because of missing bits.
+
+Same applies for vendor+device ids, subsystem ids and revision id.
+
+Export all these information from sysfs via libpci API use it in lspci.
+With this change lspci should now respect -b option for all these
+information.
+
+With this change are in libpci and lspci also available subsystem ids
+for PCI-to-PCI bridges.
+
+This patch series is based on top of another patch series:
+https://lore.kernel.org/linux-pci/20211220155448.1233-3-pali@kernel.org/
+
+Pali Rohár (5):
+  libpci: Add new options for pci_fill_info: PROGIF, REVID and SUBSYS
+  libpci: generic: Implement PROGIF, REVID and SUBSYS support
+  libpci: generic: Implement SUBSYS also for PCI_HEADER_TYPE_BRIDGE
+  libpci: sysfs: Implement PROGIF, REVID and SUBSYS support
+  lspci: Retrieve prog if, subsystem ids and revision id via libpci
+
+ lib/generic.c | 55 +++++++++++++++++++++++++++++++++++++++-
+ lib/pci.h     |  6 +++++
+ lib/sysfs.c   | 39 +++++++++++++++++++++++++---
+ ls-kernel.c   |  8 +++---
+ lspci.c       | 70 ++++++++++++++++++---------------------------------
+ lspci.h       |  2 --
+ 6 files changed, 123 insertions(+), 57 deletions(-)
+
 -- 
 2.20.1
 
