@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DEDC433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 14:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC16C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jan 2022 14:23:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232297AbiAUOX5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jan 2022 09:23:57 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:58864 "EHLO
+        id S235440AbiAUOX4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jan 2022 09:23:56 -0500
+Received: from dfw.source.kernel.org ([139.178.84.217]:58862 "EHLO
         dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348447AbiAUOX4 (ORCPT
+        with ESMTP id S232297AbiAUOX4 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jan 2022 09:23:56 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6906D6177B
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 14:23:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A536C340E4;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E454B6160D
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jan 2022 14:23:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BA68C340E3;
         Fri, 21 Jan 2022 14:23:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1642775035;
-        bh=/rRXL3o6paA/dIKr32VMbOl5DpJyeuJvD3889oiPYps=;
+        bh=Klw5dhSRcs51iQIRsovc8n92re/IQSrM3/hD0WnxPeM=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=KR+RXWiZYDGHX5zjua6l4va4rKIpi7xF1xCp2+VZeu2P1c1HVLV2hv7yxnB2zImCs
-         0Fm5SVhEuC6SaRi5T8FpvPOICBGXifAQZVuO5oFrp3sUmuGoV5kCw+tWWoLEkn9+yb
-         JINKalMBcvfqCsV2xJe1BU0B7fnoN99C+dDu88iGG+Y7YgfZkAXN1VfF8mSawFWFuZ
-         rWt0JE5ldY52ziAVpul15MFWfNCicjfTXGVR9P2d7SiQ17iYulzjpHCZS8+atHz0xC
-         YsPeW9u1yKmn4zTC4hlZLtb99/VWnGeQtjeqNWdpMIzYwR2TBj78tymDFqptW5SmCh
-         o20QeXyxtqaDQ==
+        b=GkAZx8DDrOjCjZNZPxP1oBL5H2Z2F2uj0+l90RTomQYmoE9s/6m5+nF8yw53UkS32
+         YnoPpT6Ki6OeZlV3fgpYqNzcYIDPLjhNOBK0OJeRKVecEJJHcu+k4804QbS6oFIH4z
+         GUivGG15EvgPTEmEzgeWZTHZeARuUaJKHi2FqrriKaiX89+gYHpLOb9FdnQ3jrG9Or
+         LnaOvXdRPq4aGbGnUxaRW92lN3oQnw3TyYGDd1xAQcnS3USvDcT+9OPzGq1kAVt70p
+         LHE2kzOJgO25UEqxOUXN5iZFioirvisy1xr6QJkPir3y+AThu3feMreVyJFRxdLo1C
+         xMVh94cHnVrSg==
 Received: by pali.im (Postfix)
-        id 31D73857; Fri, 21 Jan 2022 15:23:55 +0100 (CET)
+        id 1AEACB8A; Fri, 21 Jan 2022 15:23:53 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Martin Mares <mj@ucw.cz>, Bjorn Helgaas <helgaas@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Matthew Wilcox <willy@infradead.org>, linux-pci@vger.kernel.org
-Subject: [PATCH pciutils 3/4] lspci: Build tree based on PCI_FILL_PARENT information
-Date:   Fri, 21 Jan 2022 15:22:57 +0100
-Message-Id: <20220121142258.28170-4-pali@kernel.org>
+Subject: [PATCH pciutils 1/4] libpci: Add new option PCI_FILL_PARENT
+Date:   Fri, 21 Jan 2022 15:22:55 +0100
+Message-Id: <20220121142258.28170-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220121142258.28170-1-pali@kernel.org>
 References: <20220121142258.28170-1-pali@kernel.org>
@@ -46,128 +46,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Topology reported by system (libpci provider) may be different from
-topology built based on primary/secondary/subordinate numbers from PCI
-bridges by lspci.
-
-This happens for example when some non-compliant PCI-to-PCI bridge
-with Type 0 header (e.g. Marvell one) is available in the system.
-
-So add additional edges reported by libpci when building tree in lspci.
+This change extends libpci and allows providers to fill parent pci_dev.
+This is useful to retrieve topology as it is reported by the system itself.
 ---
- ls-tree.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++----
- lspci.c   |  2 +-
- 2 files changed, 62 insertions(+), 5 deletions(-)
+ lib/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/ls-tree.c b/ls-tree.c
-index aaa1ee99d9f2..fede581156e4 100644
---- a/ls-tree.c
-+++ b/ls-tree.c
-@@ -25,6 +25,19 @@ find_bus(struct bridge *b, unsigned int domain, unsigned int n)
-   return bus;
- }
+diff --git a/lib/pci.h b/lib/pci.h
+index c13387e2b4b1..de031f7a416b 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -148,6 +148,7 @@ struct pci_dev {
+   u8 prog_if;				/* Programming interface for device_class */
+   u8 rev_id;				/* Revision id */
+   u16 subsys_vendor_id, subsys_id;	/* Subsystem vendor id and subsystem id */
++  struct pci_dev *parent;		/* Parent device */
  
-+static struct device *
-+find_device(struct pci_dev *dd)
-+{
-+  struct device *d;
-+
-+  if (!dd)
-+    return NULL;
-+  for (d=first_dev; d; d=d->next)
-+    if (d->dev == dd)
-+      break;
-+  return d;
-+}
-+
- static struct bus *
- new_bus(struct bridge *b, unsigned int domain, unsigned int n)
- {
-@@ -47,9 +60,20 @@ static void
- insert_dev(struct device *d, struct bridge *b)
- {
-   struct pci_dev *p = d->dev;
--  struct bus *bus;
-+  struct device *parent = NULL;
-+  struct bus *bus = NULL;
-+
-+  if (p->known_fields & PCI_FILL_PARENT)
-+    parent = find_device(p->parent);
+   /* Fields used internally */
+   struct pci_access *access;
+@@ -217,6 +218,7 @@ char *pci_get_string_property(struct pci_dev *d, u32 prop) PCI_ABI;
+ #define PCI_FILL_REVID		0x00040000
+ #define PCI_FILL_SUBSYS		0x00080000
+ #define PCI_FILL_DRIVER		0x00100000
++#define PCI_FILL_PARENT		0x00200000
  
--  if (! (bus = find_bus(b, p->domain, p->bus)))
-+  if (parent && parent->bridge)
-+    {
-+      bus = parent->bridge->first_bus;
-+      if (!bus)
-+        bus = new_bus(parent->bridge, p->domain, p->bus);
-+    }
-+
-+  if (!bus && ! (bus = find_bus(b, p->domain, p->bus)))
-     {
-       struct bridge *c;
-       for (c=b->child; c; c=c->next)
-@@ -113,14 +137,47 @@ grow_tree(void)
- 	    b->primary, b->secondary, b->subordinate);
- 	}
-     }
-+
-+  /* Append additional bridges reported by libpci via d->parent */
-+
-+  for (d=first_dev; d; d=d->next)
-+    {
-+      struct device *parent = NULL;
-+      if (d->dev->known_fields & PCI_FILL_PARENT)
-+        parent = find_device(d->dev->parent);
-+      if (!parent || parent->bridge)
-+        continue;
-+      b = xmalloc(sizeof(struct bridge));
-+      b->domain = parent->dev->domain;
-+      b->primary = parent->dev->bus;
-+      b->secondary = d->dev->bus;
-+      /* At this stage subordinate number is unknown, so set it to secondary bus number. */
-+      b->subordinate = b->secondary;
-+      *last_br = b;
-+      last_br = &b->chain;
-+      b->next = b->child = NULL;
-+      b->first_bus = NULL;
-+      b->last_bus = NULL;
-+      b->br_dev = parent;
-+      parent->bridge = b;
-+      pacc->debug("Tree: bridge %04x:%02x:%02x.%d\n", b->domain,
-+        parent->dev->bus, parent->dev->dev, parent->dev->func);
-+    }
-   *last_br = NULL;
- 
-   /* Create a bridge tree */
- 
-   for (b=&host_bridge; b; b=b->chain)
-     {
--      struct bridge *c, *best;
--      best = NULL;
-+      struct device *br_dev = b->br_dev;
-+      struct bridge *c, *best = NULL;
-+      struct device *parent = NULL;
-+
-+      if (br_dev && (br_dev->dev->known_fields & PCI_FILL_PARENT))
-+        parent = find_device(br_dev->dev->parent);
-+      if (parent)
-+        best = parent->bridge;
-+      if (!best)
-       for (c=&host_bridge; c; c=c->chain)
- 	if (c != b && (c == &host_bridge || b->domain == c->domain) &&
- 	    b->primary >= c->secondary && b->primary <= c->subordinate &&
-diff --git a/lspci.c b/lspci.c
-index c4e6c93bc67a..b18ccba89049 100644
---- a/lspci.c
-+++ b/lspci.c
-@@ -143,7 +143,7 @@ scan_device(struct pci_dev *p)
- 	d->config_cached += 64;
-     }
-   pci_setup_cache(p, d->config, d->config_cached);
--  pci_fill_info(p, PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_PROGIF | PCI_FILL_REVID | PCI_FILL_SUBSYS);
-+  pci_fill_info(p, PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_PROGIF | PCI_FILL_REVID | PCI_FILL_SUBSYS | (need_topology ? PCI_FILL_PARENT : 0));
-   return d;
- }
+ void pci_setup_cache(struct pci_dev *, u8 *cache, int len) PCI_ABI;
  
 -- 
 2.20.1
