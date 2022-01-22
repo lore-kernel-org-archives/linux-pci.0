@@ -2,89 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75E9CC4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Jan 2022 05:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 636F7C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Jan 2022 14:46:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232955AbiAVF0l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 22 Jan 2022 00:26:41 -0500
-Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:50342 "EHLO
-        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232255AbiAVF0i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jan 2022 00:26:38 -0500
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R201e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e01424;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0V2UlMIm_1642829192;
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0V2UlMIm_1642829192)
-          by smtp.aliyun-inc.com(127.0.0.1);
-          Sat, 22 Jan 2022 13:26:33 +0800
-From:   Shuai Xue <xueshuai@linux.alibaba.com>
-To:     helgaas@kernel.org, rafael@kernel.org
-Cc:     bp@alien8.de, tony.luck@intel.com, james.morse@arm.com,
-        lenb@kernel.org, rjw@rjwysocki.net, bhelgaas@google.com,
-        xueshuai@linux.alibaba.com, zhangliguang@linux.alibaba.com,
-        zhuo.song@linux.alibaba.com, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v7 2/2] ACPI: APEI: rename ghes_init with an "acpi_" prefix
-Date:   Sat, 22 Jan 2022 13:26:18 +0800
-Message-Id: <20220122052618.1074-2-xueshuai@linux.alibaba.com>
-X-Mailer: git-send-email 2.30.1 (Apple Git-130)
-In-Reply-To: <20211126070422.73234-1-xueshuai@linux.alibaba.com>
-References: <20211126070422.73234-1-xueshuai@linux.alibaba.com>
+        id S232815AbiAVOqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 22 Jan 2022 09:46:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55548 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231322AbiAVOqJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jan 2022 09:46:09 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC974C06173B;
+        Sat, 22 Jan 2022 06:46:09 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 080D760DED;
+        Sat, 22 Jan 2022 14:46:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3472C004E1;
+        Sat, 22 Jan 2022 14:46:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1642862768;
+        bh=ud+t0dBFtbGXTAeSHGtRbHQmpNVgLMkB+7Q5Tq5bKYM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Hzt2jMtwhe+NtGLqd11rmipGL1ZXOy+RSMYM4b6zdKJalc4NP9UviqVJVvO+R3RJX
+         L+Pz6dQSOaGZqFrRCR2SkDtfK5dlDYZTbq9oi4h3wCe0WPtn3FDyjwUS/W/F8KFMmy
+         tymNXhQ1sdQiNc5OBsJaDZjbgZXJNvU3ttv9dYCc=
+Date:   Sat, 22 Jan 2022 15:46:05 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Rajat Jain <rajatja@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, rajatxjain@gmail.com,
+        dtor@google.com, jsbarnes@google.com,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Pavel Machek <pavel@denx.de>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH] PCI: ACPI: Allow internal devices to be marked as
+ untrusted
+Message-ID: <YewYrQeHsJWpNI5p@kroah.com>
+References: <20220120000409.2706549-1-rajatja@google.com>
+ <20220121214117.GA1154852@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220121214117.GA1154852@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
----
- drivers/acpi/apei/ghes.c | 2 +-
- drivers/acpi/bus.c       | 2 +-
- include/acpi/apei.h      | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+On Fri, Jan 21, 2022 at 03:41:17PM -0600, Bjorn Helgaas wrote:
+> [+cc Greg, Jean-Philippe, Mika, Pavel, Oliver, Joerg since they
+> commented on previous "external-facing" discussion]
+> 
+> On Wed, Jan 19, 2022 at 04:04:09PM -0800, Rajat Jain wrote:
+> > Today the pci_dev->untrusted is set for any devices sitting downstream
+> > an external facing port (determined via "ExternalFacingPort" property).
+> > This however, disallows any internal devices to be marked as untrusted.
+> 
+> This isn't stated quite accurately.  "dev->untrusted" is currently set
+> only by set_pcie_untrusted(), when "dev" has an upstream bridge that
+> is either external-facing or untrusted.
+> 
+> But that doesn't disallow or prevent internal devices from being
+> marked as untrusted; it just doesn't implement that.
+> 
+> > There are use-cases though, where a platform would like to treat an
+> > internal device as untrusted (perhaps because it runs untrusted
+> > firmware, or offers an attack surface by handling untrusted network
+> > data etc).
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index aadc0a972f18..d91ad378c00d 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -1457,7 +1457,7 @@ static struct platform_driver ghes_platform_driver = {
- 	.remove		= ghes_remove,
- };
- 
--void __init ghes_init(void)
-+void __init acpi_ghes_init(void)
- {
- 	int rc;
- 
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index 3f403db20f69..cd374210fb9f 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -1332,7 +1332,7 @@ static int __init acpi_init(void)
- 	pci_mmcfg_late_init();
- 	acpi_iort_init();
- 	acpi_hest_init();
--	ghes_init();
-+	acpi_ghes_init();
- 	acpi_scan_init();
- 	acpi_ec_init();
- 	acpi_debugfs_init();
-diff --git a/include/acpi/apei.h b/include/acpi/apei.h
-index 4e60dd73c3bb..afaca3a075e8 100644
---- a/include/acpi/apei.h
-+++ b/include/acpi/apei.h
-@@ -27,10 +27,10 @@ extern int hest_disable;
- extern int erst_disable;
- #ifdef CONFIG_ACPI_APEI_GHES
- extern bool ghes_disable;
--void __init ghes_init(void);
-+void __init acpi_ghes_init(void);
- #else
- #define ghes_disable 1
--static inline void ghes_init(void) { }
-+static inline void acpi_ghes_init(void) { }
- #endif
- 
- #ifdef CONFIG_ACPI_APEI
--- 
-2.20.1.12.g72788fdb
+Who is making this policy decision?
 
+> > This patch introduces a new "UntrustedDevice" property that can be used
+> > by the firmware to mark any device as untrusted.
+
+Is this in the ACPI standard?  If so, where?
+
+This notion of "trust" for PCI devices is crazy, as I have stated a
+number of times before.  But at least you are not trying to say kernel
+code is trusted or not.
+
+thanks,
+
+greg k-h
