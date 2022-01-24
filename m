@@ -2,44 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A6EC433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Jan 2022 00:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC9B9C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Jan 2022 00:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235253AbiAXAbE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 23 Jan 2022 19:31:04 -0500
-Received: from mga12.intel.com ([192.55.52.136]:40965 "EHLO mga12.intel.com"
+        id S240612AbiAXAbF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 23 Jan 2022 19:31:05 -0500
+Received: from mga03.intel.com ([134.134.136.65]:62312 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240611AbiAXAbD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 23 Jan 2022 19:31:03 -0500
+        id S240611AbiAXAbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 23 Jan 2022 19:31:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642984263; x=1674520263;
+  t=1642984265; x=1674520265;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9phvsEdVa2NG/oq5IvGjMBe+GhzMW82MW8Sk8mr3eO8=;
-  b=Z39eAnVL4l+JKRvTMoKeiKUz2vSK+gCkh2e+e5uT4LcnVVWVmOtzME2w
-   zTEvwGEEGCUqNqzlWBPcqC2CrIF2Iqw+1zcpL5grTUTTFpGJ+rQVuWQfe
-   mICieFRtfsD7lOB1gr3bQ6/kyoa5ttwEHzmTyXIkZYAk5raRhPhXJXgmh
-   95fZ3S96K3gBe59poOg/GjmGJTyZuV1jL8Rmtv2V23sUzbGeihqJ47ysY
-   t8dtMA/RX60NtWHqtFQMtuko34ffr0hqRXr5BGxN7LD5mTPqi9YG6MLbB
-   WpCGGMq9DfPP2jMOPmvKPWlfO5jhn9NDB5C/7Sn8O5EXjqtEKtNeebdPj
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10236"; a="225915283"
+  bh=SfrX49CEwqgdGrl9quxjdej7SjvgtM4DFLCaE+t2LKI=;
+  b=KHqeQvlcWdsKs+78/7MQxuoig2rM4ViOwc6a4Fq/GEX7287cuxPgkqC8
+   rgwaN0EQjWIOiK+eQMnsEzmf1ATSEj6q9WgxuyIzUuNiTG9KC4Fn43XJN
+   TQtFXqNMI/ldTOx2kdInBM16oeiFh4ARNW0ZOr1/ULOp49sdYDI2gJ9Bd
+   2AdqzqNXVFdPQR3moTBbGGVN90cMejcZutmtqdSY6l6xczBz+R4MKU1ih
+   NCjUsSKk6dg3NPeZQyu8xro5UYLmqDMs6q1TDF/IVDDZ5oQ4HHfgMKcfN
+   2ERyslVRdoEYfzisQuUPSnFDTRbxXyjYVCO45C0C0cl7ht9y7DeR2wr/i
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10236"; a="245879330"
 X-IronPort-AV: E=Sophos;i="5.88,311,1635231600"; 
-   d="scan'208";a="225915283"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jan 2022 16:31:03 -0800
+   d="scan'208";a="245879330"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jan 2022 16:30:41 -0800
 X-IronPort-AV: E=Sophos;i="5.88,311,1635231600"; 
-   d="scan'208";a="768517306"
+   d="scan'208";a="476536965"
 Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.25])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jan 2022 16:31:03 -0800
-Subject: [PATCH v3 27/40] cxl/pci: Cache device DVSEC offset
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jan 2022 16:30:41 -0800
+Subject: [PATCH v3 23/40] cxl/core: Emit modalias for CXL devices
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     linux-cxl@vger.kernel.org
-Cc:     Ben Widawsky <ben.widawsky@intel.com>, linux-pci@vger.kernel.org,
-        nvdimm@lists.linux.dev
-Date:   Sun, 23 Jan 2022 16:31:02 -0800
-Message-ID: <164298426273.3018233.9302136088649279124.stgit@dwillia2-desk3.amr.corp.intel.com>
+Cc:     linux-pci@vger.kernel.org, nvdimm@lists.linux.dev
+Date:   Sun, 23 Jan 2022 16:30:41 -0800
+Message-ID: <164298424120.3018233.15611905873808708542.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <164298411792.3018233.7493009997525360044.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <164298411792.3018233.7493009997525360044.stgit@dwillia2-desk3.amr.corp.intel.com>
 User-Agent: StGit/0.18-3-g996c
@@ -50,58 +49,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ben Widawsky <ben.widawsky@intel.com>
+In order to enable libkmod lookups for CXL device objects to their
+corresponding module, add 'modalias' to the base attribute of CXL
+devices.
 
-The PCIe device DVSEC, defined in the CXL 2.0 spec, 8.1.3 is required to
-be implemented by CXL 2.0 endpoint devices. Since the information
-contained within this DVSEC will be critically important, it makes sense
-to find the value early, and error out if it cannot be found.
-
-Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/cxl/cxlmem.h |    2 ++
- drivers/cxl/pci.c    |    9 +++++++++
- 2 files changed, 11 insertions(+)
+ Documentation/ABI/testing/sysfs-bus-cxl |    9 +++++++++
+ drivers/cxl/core/port.c                 |   26 +++++++++++++++++---------
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index 90d67fff5bed..cedc6d3c0448 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -98,6 +98,7 @@ struct cxl_mbox_cmd {
-  *
-  * @dev: The device associated with this CXL state
-  * @regs: Parsed register blocks
-+ * @device_dvsec: Offset to the PCIe device DVSEC
-  * @payload_size: Size of space for payload
-  *                (CXL 2.0 8.2.8.4.3 Mailbox Capabilities Register)
-  * @lsa_size: Size of Label Storage Area
-@@ -126,6 +127,7 @@ struct cxl_dev_state {
- 	struct device *dev;
+diff --git a/Documentation/ABI/testing/sysfs-bus-cxl b/Documentation/ABI/testing/sysfs-bus-cxl
+index 0b6a2e6e8fbb..6d8cbf3355b5 100644
+--- a/Documentation/ABI/testing/sysfs-bus-cxl
++++ b/Documentation/ABI/testing/sysfs-bus-cxl
+@@ -34,6 +34,15 @@ Description:
+ 		the same value communicated in the DEVTYPE environment variable
+ 		for uevents for devices on the "cxl" bus.
  
- 	struct cxl_regs regs;
-+	int device_dvsec;
- 
- 	size_t payload_size;
- 	size_t lsa_size;
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index e54dbdf9ac15..76de39b90351 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -408,6 +408,15 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (IS_ERR(cxlds))
- 		return PTR_ERR(cxlds);
- 
-+	cxlds->device_dvsec = pci_find_dvsec_capability(pdev,
-+							PCI_DVSEC_VENDOR_ID_CXL,
-+							CXL_DVSEC_PCIE_DEVICE);
-+	if (!cxlds->device_dvsec) {
-+		dev_err(&pdev->dev,
-+			"Device DVSEC not present. Expect limited functionality.\n");
-+		return -ENXIO;
-+	}
++What:		/sys/bus/cxl/devices/*/modalias
++Date:		December, 2021
++KernelVersion:	v5.18
++Contact:	linux-cxl@vger.kernel.org
++Description:
++		CXL device objects export the modalias attribute which mirrors
++		the same value communicated in the MODALIAS environment variable
++		for uevents for devices on the "cxl" bus.
 +
- 	rc = cxl_setup_regs(pdev, CXL_REGLOC_RBI_MEMDEV, &map);
- 	if (rc)
- 		return rc;
+ What:		/sys/bus/cxl/devices/portX/uport
+ Date:		June, 2021
+ KernelVersion:	v5.14
+diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+index 72633865b386..eede0bbe687a 100644
+--- a/drivers/cxl/core/port.c
++++ b/drivers/cxl/core/port.c
+@@ -34,8 +34,25 @@ static ssize_t devtype_show(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RO(devtype);
+ 
++static int cxl_device_id(struct device *dev)
++{
++	if (dev->type == &cxl_nvdimm_bridge_type)
++		return CXL_DEVICE_NVDIMM_BRIDGE;
++	if (dev->type == &cxl_nvdimm_type)
++		return CXL_DEVICE_NVDIMM;
++	return 0;
++}
++
++static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
++			     char *buf)
++{
++	return sysfs_emit(buf, CXL_MODALIAS_FMT "\n", cxl_device_id(dev));
++}
++static DEVICE_ATTR_RO(modalias);
++
+ static struct attribute *cxl_base_attributes[] = {
+ 	&dev_attr_devtype.attr,
++	&dev_attr_modalias.attr,
+ 	NULL,
+ };
+ 
+@@ -845,15 +862,6 @@ void cxl_driver_unregister(struct cxl_driver *cxl_drv)
+ }
+ EXPORT_SYMBOL_NS_GPL(cxl_driver_unregister, CXL);
+ 
+-static int cxl_device_id(struct device *dev)
+-{
+-	if (dev->type == &cxl_nvdimm_bridge_type)
+-		return CXL_DEVICE_NVDIMM_BRIDGE;
+-	if (dev->type == &cxl_nvdimm_type)
+-		return CXL_DEVICE_NVDIMM;
+-	return 0;
+-}
+-
+ static int cxl_bus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ {
+ 	return add_uevent_var(env, "MODALIAS=" CXL_MODALIAS_FMT,
 
