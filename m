@@ -2,146 +2,165 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA38C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jan 2022 08:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C659C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jan 2022 09:01:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379386AbiAYIrn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jan 2022 03:47:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42202 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1451860AbiAYIn4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jan 2022 03:43:56 -0500
-Received: from mout-u-107.mailbox.org (mout-u-107.mailbox.org [IPv6:2001:67c:2050:1::465:107])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D802C06B5AF
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jan 2022 23:18:29 -0800 (PST)
-Received: from smtp202.mailbox.org (unknown [91.198.250.118])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-u-107.mailbox.org (Postfix) with ESMTPS id 4JjdVq3zN0z9smG;
-        Tue, 25 Jan 2022 08:18:27 +0100 (CET)
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-From:   Stefan Roese <sr@denx.de>
-To:     linux-pci@vger.kernel.org
-Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Yao Hongbo <yaohongbo@linux.alibaba.com>,
-        Naveen Naidu <naveennaidu479@gmail.com>
-Subject: [PATCH v4 2/3] PCI/portdrv: Don't disable AER reporting in get_port_device_capability()
-Date:   Tue, 25 Jan 2022 08:18:19 +0100
-Message-Id: <20220125071820.2247260-3-sr@denx.de>
-In-Reply-To: <20220125071820.2247260-1-sr@denx.de>
-References: <20220125071820.2247260-1-sr@denx.de>
+        id S1454767AbiAYJAz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jan 2022 04:00:55 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:45245 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1454238AbiAYI62 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jan 2022 03:58:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643101104;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=9hJPkgKMKyrdhuh/ReLzRlMBQBnxQevcIKmrrryYVL0=;
+        b=cwnHGejRVKm2Dol9PLEU2E9rQZ2HR9R8PfIGX8Ph6kCDMadxapJMoqTvQpWwbTVe2BgVwz
+        5KntvMyi5iVEDHCo7PJamDfECTzeo72YjEkw85NXcxr9WJkoBKQSF2gaGzwtxmqrZriTgC
+        6nheazKhvG9hEeUO2RRclNgIXa86Bo4=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-96-2PdVeK3zP0Wq2pjzm1LCmA-1; Tue, 25 Jan 2022 03:58:21 -0500
+X-MC-Unique: 2PdVeK3zP0Wq2pjzm1LCmA-1
+Received: by mail-ej1-f69.google.com with SMTP id q19-20020a1709064c9300b006b39291ff3eso3228057eju.5
+        for <linux-pci@vger.kernel.org>; Tue, 25 Jan 2022 00:58:21 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=9hJPkgKMKyrdhuh/ReLzRlMBQBnxQevcIKmrrryYVL0=;
+        b=145myKZR9RjKJ5I/2yakh5lXKJGhWG8ltYL4OZNhj0YvHVONkgfGvBUY5dUO4by+i5
+         2WvjcK6YZJTYmnIu5njvfmK2JiggREjxwGSg5n4JxMNPvi/ey87ZUn1+kZKd13+RpibH
+         vbrOB6gkQC/ZOHLPN07RLhIWX1Jy7LEJs+cMzV58jD7y+F74Lq7jbSdkYFDl/btrOUoz
+         1D896gt9NEFlD6JJpNXNDq5+u0d8vSSFEk46Y+eW9OUIR+Brqn4snZY3Zanu5fKp/o+R
+         +X0GixwZWrckK5vpdC5R/s3otGMpK4pbodOY4uBl5UBou+A6JILel62ustjNJqDbBwNO
+         bt+g==
+X-Gm-Message-State: AOAM532bkgDRl1iw4b8HZ9qO6TNXFKL08xbUf62Klr2iEIAbZ09I9tCE
+        /FfUQkbq3JXg64zn+ISY529nRyOlkh8HXQG8n+0qsdggTVreY+ix+719lHNktUtvPvyXqew+MkP
+        3XMz35cZdE/VptsmsJdLh
+X-Received: by 2002:aa7:db8d:: with SMTP id u13mr19569676edt.111.1643101099882;
+        Tue, 25 Jan 2022 00:58:19 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwmbysy8sgPACubi83nNJN4S6lIDZXj6/heggPsJgslJm1E92EY2vKwjRRbsh3sBsI74KUNGQ==
+X-Received: by 2002:aa7:db8d:: with SMTP id u13mr19569664edt.111.1643101099706;
+        Tue, 25 Jan 2022 00:58:19 -0800 (PST)
+Received: from ?IPV6:2001:1c00:c1e:bf00:1db8:22d3:1bc9:8ca1? (2001-1c00-0c1e-bf00-1db8-22d3-1bc9-8ca1.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1db8:22d3:1bc9:8ca1])
+        by smtp.gmail.com with ESMTPSA id u12sm7936862edq.8.2022.01.25.00.58.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Jan 2022 00:58:19 -0800 (PST)
+Message-ID: <50702e5f-96e8-bc68-67ee-bcf11a5ccdc8@redhat.com>
+Date:   Tue, 25 Jan 2022 09:58:18 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.0
+Subject: Re: [Bug 215525] New: HotPlug does not work on upstream kernel
+ 5.17.0-rc1
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Blazej Kucman <blazej.kucman@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Naveen Naidu <naveennaidu479@gmail.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Jonathan Derrick <jonathan.derrick@linux.dev>
+References: <20220124214635.GA1553164@bhelgaas>
+From:   Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <20220124214635.GA1553164@bhelgaas>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Testing has shown, that AER reporting is currently disabled in the
-DevCtl registers of all non Root Port PCIe devices on systems using
-pcie_ports_native || host->native_aer. Practically disabling AER
-completely in such systems. This is due to the fact that with commit
-2bd50dd800b5 ("PCI: PCIe: Disable PCIe port services during port
-initialization"), a call to pci_disable_pcie_error_reporting() was
-added *after* the PCIe AER setup was completed for the PCIe device
-tree.
+Hi,
 
-Here a longer analysis about the currect status of AER enaling /
-disabling upon bootup provided by Bjorn:
+On 1/24/22 22:46, Bjorn Helgaas wrote:
+> [+cc linux-pci, Hans, Lukas, Naveen, Keith, Nirmal, Jonathan]
+> 
+> On Mon, Jan 24, 2022 at 11:46:14AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=215525
+>>
+>>             Bug ID: 215525
+>>            Summary: HotPlug does not work on upstream kernel 5.17.0-rc1
+>>            Product: Drivers
+>>            Version: 2.5
+>>     Kernel Version: 5.17.0-rc1 upstream
+>>           Hardware: x86-64
+>>                 OS: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: PCI
+>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>           Reporter: blazej.kucman@intel.com
+>>         Regression: No
+>>
+>> Created attachment 300308
+>>   --> https://bugzilla.kernel.org/attachment.cgi?id=300308&action=edit
+>> dmesg
+>>
+>> While testing on latest upstream
+>> kernel(https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/) we
+>> noticed that with the merge commit
+>> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d0a231f01e5b25bacd23e6edc7c979a18a517b2b)
+>> hotplug and hotunplug of nvme drives stopped working.
+>>
+>> Rescan PCI does not help.
+>> echo "1" > /sys/bus/pci/rescan
+>>
+>> Issue does not reproduce on a kernel built on an antecedent
+>> commit(88db8458086b1dcf20b56682504bdb34d2bca0e2).
+>>
+>>
+>> During hot-remove device does not disappear, however when we try to do I/O on
+>> the disk then there is an I/O error, and the device disappears.
+>>
+>> Before I/O no logs regarding the disk appeared in the dmesg, only after I/O the
+>> entries appeared like below:
+>> [  177.943703] nvme nvme5: controller is down; will reset: CSTS=0xffffffff,
+>> PCI_STATUS=0xffff
+>> [  177.971661] nvme 10000:0b:00.0: can't change power state from D3cold to D0
+>> (config space inaccessible)
+>> [  177.981121] pcieport 10000:00:02.0: can't derive routing for PCI INT A
+>> [  177.987749] nvme 10000:0b:00.0: PCI INT A: no GSI
+>> [  177.992633] nvme nvme5: Removing after probe failure status: -19
+>> [  178.004633] nvme5n1: detected capacity change from 83984375 to 0
+>> [  178.004677] I/O error, dev nvme5n1, sector 0 op 0x0:(READ) flags 0x0
+>> phys_seg 1 prio class 0
+>>
+>>
+>> OS: RHEL 8.4 GA
+>> Platform: Intel Purley
+>>
+>> The logs are collected on a non-recent upstream kernel, but a issue also occurs
+>> on the newest upstream kernel(dd81e1c7d5fb126e5fbc5c9e334d7b3ec29a16a0)
+> 
+> Apparently worked immediately before merging the PCI changes for
+> v5.17 and failed immediately after:
+> 
+>   good: 88db8458086b ("Merge tag 'exfat-for-5.17-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/linkinjeon/exfat")
+>   bad:  d0a231f01e5b ("Merge tag 'pci-v5.17-changes' of git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci")
+> 
+> Only three commits touch pciehp:
+> 
+>   085a9f43433f ("PCI: pciehp: Use down_read/write_nested(reset_lock) to fix lockdep errors")
+>   23584c1ed3e1 ("PCI: pciehp: Fix infinite loop in IRQ handler upon power fault")
+>   a3b0f10db148 ("PCI: pciehp: Use PCI_POSSIBLE_ERROR() to check config reads")
+> 
+> None seems obviously related to me.  Blazej, could you try setting
+> CONFIG_DYNAMIC_DEBUG=y and booting with 'dyndbg="file pciehp* +p"' to
+> enable more debug messages?
 
-  pcie_portdrv_probe
-    pcie_port_device_register
-      get_port_device_capability
-        pci_disable_pcie_error_reporting
-          clear CERE NFERE FERE URRE               # <-- disable for RP USP DSP
-      pcie_device_init
-        device_register                            # new AER service device
-          aer_probe
-            aer_enable_rootport                    # RP only
-              set_downstream_devices_error_reporting
-                set_device_error_reporting         # self (RP)
-                  if (RP || USP || DSP)
-                    pci_enable_pcie_error_reporting
-                      set CERE NFERE FERE URRE     # <-- enable for RP
-                pci_walk_bus
-                  set_device_error_reporting
-                    if (RP || USP || DSP)
-                      pci_enable_pcie_error_reporting
-                        set CERE NFERE FERE URRE   # <-- enable for USP DSP
+Since there are only 3 commits maybe try reverting them 1 by 1 in reverse history order
+(so revert latest commit first) ? And see if running a kernel with the reverted commit(s)
+fixes things ?
 
-In a typical Root Port -> Endpoint hierarchy, the above:
-  - Disables Error Reporting for the Root Port,
-  - Enables Error Reporting for the Root Port,
-  - Does NOT enable Error Reporting for the Endpoint because it is not
-    a Root Port or Switch Port.
+Regards,
 
-In a deeper Root Port -> Upstream Switch Port -> Downstream Switch
-Port -> Endpoint hierarchy:
-  - Disables Error Reporting for the Root Port,
-  - Enables Error Reporting for the Root Port,
-  - Enables Error Reporting for both Switch Ports,
-  - Does NOT enable Error Reporting for the Endpoint because it is not
-    a Root Port or Switch Port,
-  - Disables Error Reporting for the Switch Ports when
-    pcie_portdrv_probe() claims them.  AER does not re-enable it
-    because these are not Root Ports.
-
-This patch now removes this call to pci_disable_pcie_error_reporting()
-from get_port_device_capability(), leaving the already enabled AER
-configuration intact. With this change, AER is enabled in the Root Port
-and the PCIe switch upstream and downstream ports. Only the PCIe
-Endpoints don't have AER enabled yet. A follow-up patch will take
-care of this Endpoint enabling.
-
-Fixes: 2bd50dd800b5 ("PCI: PCIe: Disable PCIe port services during port initialization")
-Signed-off-by: Stefan Roese <sr@denx.de>
-Reviewed-by: Pali Rohár <pali@kernel.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Pali Rohár <pali@kernel.org>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Yao Hongbo <yaohongbo@linux.alibaba.com>
-Cc: Naveen Naidu <naveennaidu479@gmail.com>
----
-v4:
-- No change
-
-v3:
-- Added RB tag from Pali
-
-v2:
-- Enhance commit message as suggested by Bjorn
-
- drivers/pci/pcie/portdrv_core.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index f81c7be4d7d8..27b990cedb4c 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -244,15 +244,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 
- #ifdef CONFIG_PCIEAER
- 	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer)) {
-+	    (pcie_ports_native || host->native_aer))
- 		services |= PCIE_PORT_SERVICE_AER;
--
--		/*
--		 * Disable AER on this port in case it's been enabled by the
--		 * BIOS (the AER service driver will enable it when necessary).
--		 */
--		pci_disable_pcie_error_reporting(dev);
--	}
- #endif
- 
- 	/* Root Ports and Root Complex Event Collectors may generate PMEs */
--- 
-2.35.0
+Hans
 
