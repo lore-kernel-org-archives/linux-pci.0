@@ -2,32 +2,32 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0550C4707E
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Jan 2022 00:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC5E4C4321E
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Jan 2022 00:26:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344563AbiA1A0a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Jan 2022 19:26:30 -0500
-Received: from ale.deltatee.com ([204.191.154.188]:46938 "EHLO
+        id S1344571AbiA1A0b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Jan 2022 19:26:31 -0500
+Received: from ale.deltatee.com ([204.191.154.188]:46968 "EHLO
         ale.deltatee.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236048AbiA1A00 (ORCPT
+        with ESMTP id S235959AbiA1A00 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jan 2022 19:26:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=HHTYT5k3QiiDV6LMv4vKtzyhJ9FCFmq5gXJCns7NBlU=; b=nH+QGcWcTfLDJqbFBTkackrqrG
-        IP6cWyAeLl9RuOzP5vD7BPyQU58XFn47tuDx4R7Thwosc+4soLlQVecHvAgk4qyxAjLmiqxSW3I5g
-        SqIvy9WWdkwSYLgfzKnqG+dBpmOVLy4K6320JbcNr95+oWJo7UZV/NITfylMgQ8/RTfCcifnSfZBX
-        r41I8tSoanWnwJpvJUpUw/NlhzAT4jhPRHUIZoBCgMZi//CDOJpWdTYlF2dkrkYW2sa/+iJk+Oy+2
-        a2caIhrPLspGcwjE+BtlAnMEszIzOsYbKM+4zKJzw5grV9y8OoAAbzhfGXuxs5Cs9EpHAAqLDRLRB
-        NXs+TrNA==;
+        bh=64vXVneAT9A14nJ5Wy4DU2Ru5X/AwQFCZoUVhV2cz8s=; b=ZnQOa3fNCsoceXpkfTOvkkxhQ3
+        YPnv8R6b2Pia3DQGSm/S40Iw4dBsQ5v3Ro2prXcn89tVI0MzOTjtMLCPtkjEysFf36McWDRAuOuxo
+        ZIg7pNMDR3disto8RqevSoa5xVhahTIzavvy5qG++ccgQhBj4GG4J2IwOZXx3/P9xrXDeih/JvVcK
+        uPgAqYGjZgMaZG9WePCJZWo7eMidSu1Yain3cpxonh4FHpfclfmfJsj2uv/5fCZNs0tMHmuR5Q0Db
+        EF3FYDhp3FzdmOhXgut3tml0gqzsP6+8/6TBEGj1FP8uQakf6HyYBWeoW1hFJSf3CO5UxpfraTn2c
+        3fUhej/g==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nDF5p-005Oca-Lc; Thu, 27 Jan 2022 17:26:22 -0700
+        id 1nDF5q-005Oca-PY; Thu, 27 Jan 2022 17:26:23 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1nDF5m-0001cL-MP; Thu, 27 Jan 2022 17:26:18 -0700
+        id 1nDF5q-0001db-As; Thu, 27 Jan 2022 17:26:22 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -52,76 +52,130 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <martin.oliveira@eideticom.com>,
         Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
         Ralph Campbell <rcampbell@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Date:   Thu, 27 Jan 2022 17:25:54 -0700
-Message-Id: <20220128002614.6136-5-logang@deltatee.com>
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu, 27 Jan 2022 17:26:14 -0700
+Message-Id: <20220128002614.6136-25-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220128002614.6136-1-logang@deltatee.com>
 References: <20220128002614.6136-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, logang@deltatee.com, bhelgaas@google.com, jhubbard@nvidia.com, rcampbell@nvidia.com, kch@nvidia.com
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, jhubbard@nvidia.com, rcampbell@nvidia.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v5 04/24] PCI/P2PDMA: Attempt to set map_type if it has not been set
+Subject: [PATCH v5 24/24] nvme-pci: allow mmaping the CMB in userspace
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Attempt to find the mapping type for P2PDMA pages on the first
-DMA map attempt if it has not been done ahead of time.
+Allow userspace to obtain CMB memory by mmaping the controller's
+char device. The mmap call allocates and returns a hunk of CMB memory,
+(the offset is ignored) so userspace does not have control over the
+address within the CMB.
 
-Previously, the mapping type was expected to be calculated ahead of
-time, but if pages are to come from userspace then there's no
-way to ensure the path was checked ahead of time.
+A VMA allocated in this way will only be usable by drivers that set
+FOLL_PCI_P2PDMA when calling GUP. And inter-device support will be
+checked the first time the pages are mapped for DMA.
 
-This change will calculate the mapping type if it hasn't pre-calculated
-so it is no longer invalid to call pci_p2pdma_map_sg() before the mapping
-type is calculated, so drop the WARN_ON when that is he case.
+Currently this is only supported by O_DIRECT to an PCI NVMe device
+or through the NVMe passthrough IOCTL.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- drivers/pci/p2pdma.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/nvme/host/core.c | 15 +++++++++++++++
+ drivers/nvme/host/nvme.h |  2 ++
+ drivers/nvme/host/pci.c  | 17 +++++++++++++++++
+ 3 files changed, 34 insertions(+)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 1015274bd2fe..bb8900ce073a 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -848,6 +848,7 @@ static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct dev_pagemap *pgmap,
- 	struct pci_dev *provider = to_p2p_pgmap(pgmap)->provider;
- 	struct pci_dev *client;
- 	struct pci_p2pdma *p2pdma;
-+	int dist;
- 
- 	if (!provider->p2pdma)
- 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
-@@ -864,6 +865,10 @@ static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct dev_pagemap *pgmap,
- 		type = xa_to_value(xa_load(&p2pdma->map_types,
- 					   map_types_idx(client)));
- 	rcu_read_unlock();
-+
-+	if (type == PCI_P2PDMA_MAP_UNKNOWN)
-+		return calc_map_type_and_dist(provider, client, &dist, true);
-+
- 	return type;
- }
- 
-@@ -906,7 +911,7 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
- 	case PCI_P2PDMA_MAP_BUS_ADDR:
- 		return __pci_p2pdma_map_sg(p2p_pgmap, dev, sg, nents);
- 	default:
--		WARN_ON_ONCE(1);
-+		/* Mapping is not Supported */
- 		return 0;
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index ecb01984b55d..54a1c350098e 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3142,6 +3142,10 @@ static int nvme_dev_open(struct inode *inode, struct file *file)
  	}
+ 
+ 	file->private_data = ctrl;
++
++	if (ctrl->ops->cdev_file_open)
++		ctrl->ops->cdev_file_open(ctrl, file);
++
+ 	return 0;
  }
+ 
+@@ -3155,12 +3159,23 @@ static int nvme_dev_release(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static int nvme_dev_mmap(struct file *file, struct vm_area_struct *vma)
++{
++	struct nvme_ctrl *ctrl = file->private_data;
++
++	if (!ctrl->ops->mmap_cmb)
++		return -ENODEV;
++
++	return ctrl->ops->mmap_cmb(ctrl, vma);
++}
++
+ static const struct file_operations nvme_dev_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.open		= nvme_dev_open,
+ 	.release	= nvme_dev_release,
+ 	.unlocked_ioctl	= nvme_dev_ioctl,
+ 	.compat_ioctl	= compat_ptr_ioctl,
++	.mmap		= nvme_dev_mmap,
+ };
+ 
+ static ssize_t nvme_sysfs_reset(struct device *dev,
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 97efc6d0b146..6b1649d50bdf 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -494,6 +494,8 @@ struct nvme_ctrl_ops {
+ 	void (*delete_ctrl)(struct nvme_ctrl *ctrl);
+ 	int (*get_address)(struct nvme_ctrl *ctrl, char *buf, int size);
+ 	bool (*supports_pci_p2pdma)(struct nvme_ctrl *ctrl);
++	void (*cdev_file_open)(struct nvme_ctrl *ctrl, struct file *file);
++	int (*mmap_cmb)(struct nvme_ctrl *ctrl, struct vm_area_struct *vma);
+ };
+ 
+ /*
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 330515886dfc..47e47ffc12bf 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2961,6 +2961,21 @@ static bool nvme_pci_supports_pci_p2pdma(struct nvme_ctrl *ctrl)
+ 	return dma_pci_p2pdma_supported(dev->dev);
+ }
+ 
++static void nvme_pci_cdev_file_open(struct nvme_ctrl *ctrl, struct file *file)
++{
++	struct pci_dev *pdev = to_pci_dev(to_nvme_dev(ctrl)->dev);
++
++	pci_p2pdma_file_open(pdev, file);
++}
++
++static int nvme_pci_mmap_cmb(struct nvme_ctrl *ctrl,
++			     struct vm_area_struct *vma)
++{
++	struct pci_dev *pdev = to_pci_dev(to_nvme_dev(ctrl)->dev);
++
++	return pci_mmap_p2pmem(pdev, vma);
++}
++
+ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 	.name			= "pcie",
+ 	.module			= THIS_MODULE,
+@@ -2972,6 +2987,8 @@ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 	.submit_async_event	= nvme_pci_submit_async_event,
+ 	.get_address		= nvme_pci_get_address,
+ 	.supports_pci_p2pdma	= nvme_pci_supports_pci_p2pdma,
++	.cdev_file_open		= nvme_pci_cdev_file_open,
++	.mmap_cmb		= nvme_pci_mmap_cmb,
+ };
+ 
+ static int nvme_dev_map(struct nvme_dev *dev)
 -- 
 2.30.2
 
