@@ -2,92 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B2F6C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Jan 2022 22:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29796C433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 30 Jan 2022 14:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353123AbiA2WeG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Jan 2022 17:34:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243417AbiA2WeG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Jan 2022 17:34:06 -0500
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 282C3C061714
-        for <linux-pci@vger.kernel.org>; Sat, 29 Jan 2022 14:34:06 -0800 (PST)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 4E85792009C; Sat, 29 Jan 2022 23:34:03 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 4823E92009B;
-        Sat, 29 Jan 2022 22:34:03 +0000 (GMT)
-Date:   Sat, 29 Jan 2022 22:34:03 +0000 (GMT)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-cc:     Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Tiezhu Yang <yangtiezhu@loongson.cn>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Huacai Chen <chenhuacai@kernel.org>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 19/19] PCI: Set bridge map_irq and swizzle_irq to default
- functions
-In-Reply-To: <20220111214608.GA169999@bhelgaas>
-Message-ID: <alpine.DEB.2.21.2201220459090.58572@angie.orcam.me.uk>
-References: <20220111214608.GA169999@bhelgaas>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1354990AbiA3Oax (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 30 Jan 2022 09:30:53 -0500
+Received: from mail-yb1-f180.google.com ([209.85.219.180]:41507 "EHLO
+        mail-yb1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354993AbiA3Oaw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 30 Jan 2022 09:30:52 -0500
+Received: by mail-yb1-f180.google.com with SMTP id g14so32773239ybs.8;
+        Sun, 30 Jan 2022 06:30:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RaxK62DF2brZUuoILwZG6Sy3u6nklK5nRZA4Svlzegg=;
+        b=G+6it9Z1wVGKPNcPzKLlYRCvuJ10vYgb+Qyv+JWPNvGi7LV47dNmnjQ+aFwoZmETnF
+         wKqchiSaZqsakBdZuUVpEVGXrrtYgmLJe0nT9++DXV48NTJI1A2SEldhy3XuLSxLm4Zp
+         NrkslOw3GiEz0riZ2u97PVpO6Un6cKRjJ3GaNeJjudBgD4S+LczaR9H88Kx9v9nkiV64
+         ZChTsBPTKOSWFFvu4erCynTP0ePY9ZnC9M1MwynFXJRUvSBrD+WbLSU2jFfetQJ0DtvM
+         ZlRbS+gelIsdVhGshpLV3nvrUU10NzKgaEalGZI1ZoZ4Cg49VnKsZODaXdnMNFhvpAr0
+         X0AQ==
+X-Gm-Message-State: AOAM532PIfeXIwcMbz7m7qBuarV8ardfXhp2eBPCzndozzrG2BLmvXLH
+        +ttSBUhS25dNEsuwFGkWhhML7eeegi95TB6DSvU=
+X-Google-Smtp-Source: ABdhPJzWR8xePVFxdG2RbvkLhEC1Xi6Vt9iaBmXP/b8POsGPpLJlCXtoumfEAl0n/L56OHWwuokGYMt2PiXRhc6fB7M=
+X-Received: by 2002:a25:34c4:: with SMTP id b187mr24736922yba.78.1643553050777;
+ Sun, 30 Jan 2022 06:30:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <20220120000409.2706549-1-rajatja@google.com> <20220121214117.GA1154852@bhelgaas>
+ <Ye5GvQbFKo+CFtRb@lahna> <Ye/X7E2dKb+zem34@lahna> <Ye/btvA1rLB2rp02@kroah.com>
+ <Ye/zTHR5aCG58z87@lahna> <CAJZ5v0gitdeEAxcgSoB1=VHA9FnRdCtmUqA_cN_f1a2yFRDghQ@mail.gmail.com>
+ <CACK8Z6H2DLTJgxgS3pcvfOh=5S8cxEMKvwEPfB9zoVf1g2H_UQ@mail.gmail.com>
+ <YfOf2X7Snm7cvDRV@lahna> <CACK8Z6FMgc5UQY-ZGB9sKYR5Wt6L6huTnEKZaFyVRAmDmQt9XQ@mail.gmail.com>
+In-Reply-To: <CACK8Z6FMgc5UQY-ZGB9sKYR5Wt6L6huTnEKZaFyVRAmDmQt9XQ@mail.gmail.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Sun, 30 Jan 2022 15:30:39 +0100
+Message-ID: <CAJZ5v0iuM_qjhPxvhzgvtKM-4pBB2skf9G=R=Qo6NzKnZ2LN=w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: ACPI: Allow internal devices to be marked as untrusted
+To:     Rajat Jain <rajatja@google.com>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rajat Jain <rajatxjain@gmail.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Jesse Barnes <jsbarnes@google.com>,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Pavel Machek <pavel@denx.de>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 11 Jan 2022, Bjorn Helgaas wrote:
+On Fri, Jan 28, 2022 at 10:34 PM Rajat Jain <rajatja@google.com> wrote:
+>
+> Hi Mika, All,
+>
+> On Thu, Jan 27, 2022 at 11:49 PM Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> >
+> > Hi,
+> >
+> > On Thu, Jan 27, 2022 at 02:26:07PM -0800, Rajat Jain wrote:
+> > > Hello Rafael, Bjorn, Mika, Dmitry, Greg,
+> > >
+> > > Thanks a lot for your comments.
+> > >
+> > > On Tue, Jan 25, 2022 at 6:45 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > > >
+> > > > On Tue, Jan 25, 2022 at 1:55 PM Mika Westerberg
+> > > > <mika.westerberg@linux.intel.com> wrote:
+> > > > >
+> > > > > On Tue, Jan 25, 2022 at 12:15:02PM +0100, Greg Kroah-Hartman wrote:
+> > > > > > On Tue, Jan 25, 2022 at 12:58:52PM +0200, Mika Westerberg wrote:
+> > > > > > > On Mon, Jan 24, 2022 at 08:27:17AM +0200, Mika Westerberg wrote:
+> > > > > > > > > > This patch introduces a new "UntrustedDevice" property that can be used
+> > > > > > > > > > by the firmware to mark any device as untrusted.
+> > > > > > > >
+> > > > > > > > I think this new property should be documented somewhere too (also
+> > > > > > > > explain when to use it instead of ExternalFacingPort). If not in the
+> > > > > > > > next ACPI spec or some supplemental doc then perhaps in the DT bindings
+> > > > > > > > under Documentation/devicetree/bindings.
+> > > > > > >
+> > > > > > > Actually Microsoft has similar already:
+> > > > > > >
+> > > > > > > https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-internal-pcie-ports-accessible-to-users-and-requiring-dma-protection
+> > > > > > >
+> > > > > > > I think we should use that too here.
+> > >
+> > > But because this property also applies to a root port (only), it only
+> > > helps if the device is downstream a PCIe root port. In our case, we
+> > > have an internal (wifi) device 00:14.3 (sits on the internal PCI bus
+> > > 0), so cannot use this.
+> >
+> > Right. I wonder if we can expand it to cover all internal devices, not
+> > just PCIe root ports? We anyways need to support that property so does
+> > not make much sense to me to invent yet another that does pretty much
+> > the same thing.
+>
+> I'm open to doing so if the others also feel the same way. IMHO
+> though, the semantics of ACPI "DmaProperty" differ from the semantics
+> of the property I'm proposing here.
+>
+> The current (documented) semantics (of "DmaProperty"): *This device
+> (root port) is trusted*, but any devices downstream are not to be
+> trusted.
+>
+> What I need and am proposing (new "UntrustedDevice"): *This device as
+> well as any downstream devices* are untrusted.
+>
+> Note that there may be firmware implementing "DmaProperty" already out
+> there (for windows), and if we decide to use it for my purposes, then
+> there shall be a discrepancy in how Linux uses that property vs
+> Windows. Is that acceptable?
 
-> This patch removed all the ->swizzle_irq users in drivers/pci/, which
-> is great -- IIUC swizzling is specified by the PCI-to-PCI Bridge Spec,
-> r1.2, sec 9.1, and should not be device-specific.  I assume the few
-> remaining arch/ users (arm and alpha) are either bugs or workarounds
-> for broken devices.
+It may be confusing, so I'd rather not do that.
 
- I skimmed over the Alpha stuff and it seems to mostly care about setting 
-the slot value returned differently and defers to `pci_common_swizzle' for 
-actual pin determination.  This could be moderately easy to sort out.
+The platform firmware will use it with the Windows use case in mind
+and if it has side effects in Linux, problems are likely to appear in
+the field.
 
- One exception is `takara_swizzle' which looks incomplete to me; as this 
-is a PICMG device[1] someone would have to fill in the missing details as 
-AFAICT the PICMG connector is supposed to provide all the INT# A-D lines 
-and then routing is done on the backplane using binding defined by PICMG.
-
- According to DEC documentation there's an alternative interrupt routing 
-mode available too, using a external interrupt controller FPGA placed on 
-the backplane[2], where no swizzling is done and instead each of the four 
-INT# lines across all the PCI slots, up to 16, provided by a backplane is 
-individually routed to 64 inputs of the interrupt controller.
-
- There is a paper by DEC available online[3] that could help filling in 
-the missing details for either mode, especially someone who has access to 
-such a system and could verify it in reality.
-
-References:
-
-[1] "DIGITAL 21164 PICMG SBC, User Information for the EBM21 and EBM23",
-    V1.0, Digital Equipment Corporation, June 1997, Part Number: 
-    EK-A0937-UG. A01
-
-[2] "DIGITAL Modular Computing Components, OEM Information for DMCC 
-    Backplanes", Version 4.1, Compaq Computer Corporation, January 1999, 
-    Order Number: EK-A0929-TM. C01
-
-[3] Ross L. Armstrong, "PCI Interrupt Controller for Industry Standard 
-    PCI-ISA Bus Architecture using PCI-to-PCI Bridge Technology", Digital 
-    Equipment Corporation (Scotland) Ltd., 1996
-
- FWIW,
-
-  Maciej
+So the question is rather not about it being acceptable, but about
+whether or not this is generally going to work.
