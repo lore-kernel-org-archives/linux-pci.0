@@ -2,23 +2,23 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2574C433F5
-	for <linux-pci@archiver.kernel.org>; Sun, 30 Jan 2022 16:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD586C433EF
+	for <linux-pci@archiver.kernel.org>; Sun, 30 Jan 2022 16:15:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355560AbiA3QPS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 30 Jan 2022 11:15:18 -0500
-Received: from mail-bn8nam11on2085.outbound.protection.outlook.com ([40.107.236.85]:12897
-        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        id S1355566AbiA3QPY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 30 Jan 2022 11:15:24 -0500
+Received: from mail-bn1nam07on2059.outbound.protection.outlook.com ([40.107.212.59]:28932
+        "EHLO NAM02-BN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1355602AbiA3QPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 30 Jan 2022 11:15:17 -0500
+        id S1355585AbiA3QPF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 30 Jan 2022 11:15:05 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cWqUM1/7lZ0keQx0GV7R6U6zMyUfp4paSuKURThYHujDLAHon3puuGt4ikLHJYIH8nWH+CuCZoWLq8783CQRmpNAOKZ8LFdzu+xouh3k8HLB5xpZgckNp0SrvkVMnhmEMN3yM1OTvjf8FxHKm8mFr3hZrLMLJ0I6d17+BUCZbb29XUjCIG0LOdaR1BB4oYt0TRCFKSHwpAoizlmhEIYZ6xRJSzhfL0SNBDAnEjfcH5hm1n7j8j6l/ZySf4rJ68Oxy9nD7FUB71OUaHEw/ffpQwxaVKg/7Cyn0pfLCOXrJG1Ad1juTiYEmO1jBdp7qJuDU61Z7K2707zYeGYMf9q7sQ==
+ b=MCOJ8D0/1PfX6pxQa9JbcZM6yd0LB0wZIOsWG2xqKriBSVUtoN5FZkS92lIv3iFBmFknPwnPdzFYKVxfx2NoYBQ6gVDa2WTbMCl42ofpwhe0mJzqmksu1WZxY7cqIaQZq07lEx1DDjouNA1fy4xeQqA1hzUXchpKIytUspUU1LF4+Y7fOELLTYj0CnP9RRDg8fUno7lfuAMqZLeR4CEh2zMFAZfZ0aepHCWQlOvrx5+6QQ6pnN6jXoCsg21gpRbUZcB5uxHn+TOGtSRbXN8g2KCl+dqVw9QyQA4RgN7oxLWrE03eIt1io3BQHzJoyIHs0dMr8k6zPOBK4gJRvY5YDg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=luLR/5eOsjxSK/wUaU1c7tLlZVqG4OK20BeMFQxPs4Q=;
- b=PL9s2Jwg+ZN7uZReEzjywBtrLT2Avmz/KdKmdqJpn2zKYhtJdptWZ+cSHm2wKZfcyLf3XXbCeFEZcFZ8eswk0WWS+W0QtElz1V2v7ZfR6JvY5G/cOUr7QNaGa8PyXRBCjIyQuEiGa8JyGlHNbMA2ijDsWYZiUwKL+IVJ0VaQgtGNlZEUWQbkXwzWOJ1pxIYFvUZ6ZQ3Yu0qSl1UVK2oZeWLwJVjHmsBoNUdp/YzQ4XF6jsHa2J25d7sEBMc2WhCpU8JnWIB0qkeaPgEiBqE1qawqFBNPJby0qd0vsNS0Esnso/CEe5U7N+EhO947aQyfoGDrJYrK6xtpySypACjlcQ==
+ bh=61gwSfylWpcH4wUM2gijTwlrZsz7BPMQi4AgoGVantk=;
+ b=DzKCtCixgmlM/IxvBFVddxgqS4bQn3hyfWiyiUa8d38R6KPSUz/rjk2JwCHyj7IxWQQhpIvWHEQ3/iWJ+3RSpf9cscNstO/gYF1XtJada/Y9+uDbd7M6TxnUI3jHwKcYTUuqC5XsYdCwJ8tB6YlEYq17ZqzueEdTdxXwPUx7nNxh6Mg4gkuOebIG2GfiPkiEfzwQLaW/idOURKQngknAt3sej65NLtihbG2xShfoU6/PGqydCriAqIyDGZFIea7CIw7kN3FgeG/2gK54c0KtA7MuoN0uHqYU1c8egYtAMwWa4mLuAu3U4TBnmbhv8hxPZzoiIzo0M2eKOKD5O9ekzg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  12.22.5.234) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -26,17 +26,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=luLR/5eOsjxSK/wUaU1c7tLlZVqG4OK20BeMFQxPs4Q=;
- b=RHC0xMgNo5dRfl2S/hnqxm8LEhfP7Q1BJptEfc4GewfxIJDpsZorhas3gHRi2u85MMI8UwN94Tr2pJnJlXqocrTCKMbI2QklahBhr81uPfkbJCrUW3BAZz+s4x0wWp9JU6chElIkJesLotUzwUFk9+u/cTfv4s2XEYQkrfbIBUsWYOJJeIt77azTF+Fajun3DRiBRcBX9cUR60nYyqqEcW3xjO6UqswcFAAUt8t6xm6yPqoGBfznw2O3pZG2xUe+eIzHItbmibKj1hQBU6LEPrvBXvij4CyIIUyyDoVLQt7zc65HsiGQp2tofZsO9yJZngMe9xkO7ZndXMhxPtB9jw==
-Received: from DM5PR16CA0023.namprd16.prod.outlook.com (2603:10b6:3:c0::33) by
- BYAPR12MB2805.namprd12.prod.outlook.com (2603:10b6:a03:72::18) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4930.18; Sun, 30 Jan 2022 16:15:14 +0000
-Received: from DM6NAM11FT045.eop-nam11.prod.protection.outlook.com
- (2603:10b6:3:c0:cafe::21) by DM5PR16CA0023.outlook.office365.com
- (2603:10b6:3:c0::33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.21 via Frontend
- Transport; Sun, 30 Jan 2022 16:15:13 +0000
+ bh=61gwSfylWpcH4wUM2gijTwlrZsz7BPMQi4AgoGVantk=;
+ b=GVE7J5OdNbUjCIiX3kWhvhaPwBImIWIVoGWId4fp/vtrlIsFcfxoLIsqJ0W8q2Sjbff1Lx+ystThNCZ6c+6AM6WSS2lAwVJbVyLWZhLVl4PHSwiJoYGPBEjzebwFWAegvxFvnfI7vjaq5csqjOgCbDHmj0vYLZAfjtRUmVZPObpV0/eixJTml4pTDQfBLwm01EiGqnuGbM19ZZJkewTvuiCWqLoWPEMWDhmV0RtQtkEjGkTaib2gzyRgSrblMgGGHSDRyNJweDaVPXhm34DiijOE6EbmxEyz0q7hGn5ofPywdKnIEofdJ8SSeZWu2xfeTukW3qjOGGdXL8Fh9+98VQ==
+Received: from DS7PR03CA0347.namprd03.prod.outlook.com (2603:10b6:8:55::6) by
+ BL0PR12MB4884.namprd12.prod.outlook.com (2603:10b6:208:1ca::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.17; Sun, 30 Jan
+ 2022 16:15:03 +0000
+Received: from DM6NAM11FT040.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:8:55:cafe::36) by DS7PR03CA0347.outlook.office365.com
+ (2603:10b6:8:55::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.15 via Frontend
+ Transport; Sun, 30 Jan 2022 16:15:03 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -44,19 +45,19 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  12.22.5.234 as permitted sender) receiver=protection.outlook.com;
  client-ip=12.22.5.234; helo=mail.nvidia.com;
 Received: from mail.nvidia.com (12.22.5.234) by
- DM6NAM11FT045.mail.protection.outlook.com (10.13.173.123) with Microsoft SMTP
+ DM6NAM11FT040.mail.protection.outlook.com (10.13.173.133) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4930.15 via Frontend Transport; Sun, 30 Jan 2022 16:15:13 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by
+ 15.20.4930.15 via Frontend Transport; Sun, 30 Jan 2022 16:15:03 +0000
+Received: from drhqmail201.nvidia.com (10.126.190.180) by
  DRHQMAIL101.nvidia.com (10.27.9.10) with Microsoft SMTP Server (TLS) id
- 15.0.1497.18; Sun, 30 Jan 2022 16:15:10 +0000
+ 15.0.1497.18; Sun, 30 Jan 2022 16:15:03 +0000
 Received: from drhqmail202.nvidia.com (10.126.190.181) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9;
- Sun, 30 Jan 2022 08:15:09 -0800
+ Sun, 30 Jan 2022 08:15:02 -0800
 Received: from vdi.nvidia.com (10.127.8.10) by mail.nvidia.com
  (10.126.190.181) with Microsoft SMTP Server id 15.2.986.9 via Frontend
- Transport; Sun, 30 Jan 2022 08:15:06 -0800
+ Transport; Sun, 30 Jan 2022 08:14:59 -0800
 From:   Yishai Hadas <yishaih@nvidia.com>
 To:     <alex.williamson@redhat.com>, <bhelgaas@google.com>,
         <jgg@nvidia.com>, <saeedm@nvidia.com>
@@ -64,9 +65,9 @@ CC:     <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
         <netdev@vger.kernel.org>, <kuba@kernel.org>, <leonro@nvidia.com>,
         <kwankhede@nvidia.com>, <mgurtovoy@nvidia.com>,
         <yishaih@nvidia.com>, <maorg@nvidia.com>
-Subject: [PATCH V6 mlx5-next 07/15] vfio: Have the core code decode the VFIO_DEVICE_FEATURE ioctl
-Date:   Sun, 30 Jan 2022 18:08:18 +0200
-Message-ID: <20220130160826.32449-8-yishaih@nvidia.com>
+Subject: [PATCH V6 mlx5-next 05/15] net/mlx5: Expose APIs to get/put the mlx5 core device
+Date:   Sun, 30 Jan 2022 18:08:16 +0200
+Message-ID: <20220130160826.32449-6-yishaih@nvidia.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20220130160826.32449-1-yishaih@nvidia.com>
 References: <20220130160826.32449-1-yishaih@nvidia.com>
@@ -75,295 +76,126 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 84fab4b4-bfa4-49f9-cc21-08d9e40bb22a
-X-MS-TrafficTypeDiagnostic: BYAPR12MB2805:EE_
-X-Microsoft-Antispam-PRVS: <BYAPR12MB28050FE5DC0CBF5DB61212E6C3249@BYAPR12MB2805.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-MS-Office365-Filtering-Correlation-Id: f40fcb2e-00e0-4562-f2c2-08d9e40bac1a
+X-MS-TrafficTypeDiagnostic: BL0PR12MB4884:EE_
+X-Microsoft-Antispam-PRVS: <BL0PR12MB48847049C96DB9E7A57CE256C3249@BL0PR12MB4884.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2000;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wXCTTeGsK9+4T4IjoH5dpSZyZwAae/+XbrwkzNYtV4GhHFhjBlHt6QxmbwL9IdjhdBtyhzqwynw/oqDIk3s9Tf/pBFpBuN1swWErqHPeD+Za2SHI0m5zlR7qbBRV7H1Nkpncjc8Zd8eW2Mn+cVQmma73JMfowiYg+PNGddUbaLcYzsrnYlO3AdJ6AYjixat2RAp+gjoCFzZ7AnpbL0DZGiC3+UVM50yvs9i7Kzk3hyJAW76AmhJD2H2oeF+yDQ+AA6x5UMdoODeAB9Z0c/5K24dUj70GUWeOCkuBAWq5msAJ1NpoL+h1U9EdMQosqASjpswmZ4LWGwafZXTui0ChJVm0mLJNh27qFSoBNdmNFiiTmUCSL8uYyg21uo1eGu35Lu1oSAEX7MAFww3KfDh6rx3HhpE9PM3A0DIdilRldwggaNSTs/i1uD66yQdsj3CDxL4TB+zEM//TkyOSq8j97m32eVZQ4vkdZqzFLicJ2Yy30PcJFbflrBsfTC0Vc7sHic27im6Gb0kao+Ssfp/e2pxztyq3gKvq1ZODUglzdUNhQRf52/4bwxKQAZpKdrwDkBKlc69HGtTPDnHXNwpDDOYXkxWk0Ed2RhQbja1zwCaUmh98blgUm1V4FtBJa5htwBI7iLdaYVbRONV+KcZzCu8/85xWZpbOcQL1EtoOBLNcMJ9bPxz+TPuEGZ2ASQHJ1y2Efg4fhVGJxMx/7z5e9Q==
-X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(336012)(426003)(107886003)(2616005)(26005)(1076003)(186003)(47076005)(82310400004)(86362001)(508600001)(36860700001)(7696005)(6666004)(83380400001)(2906002)(70586007)(70206006)(36756003)(4326008)(8676002)(8936002)(40460700003)(5660300002)(316002)(6636002)(81166007)(110136005)(356005)(54906003)(36900700001)(20210929001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: qKrZG0Egx29Iauvgg2sgI+Uefjbku8B2aPiqIY5Sy7EsHw4BSyX2hVinCQRxiN70kUWFdiLooNb0TuWQsTA90JbFlEhCyTMdufr7hi9xg5KK8GNulxYKgyfm4YLXfTYkr+jKEjZv4Vah5FjlVzK7XphN+UhSDt/IYYpeCuMiU6/8ODE/rkBYMUfWiGtvwDuVC/nyxqSlJF7kWxXNiEzszdLGS0olAz1qGKgFeoJhNHP/jA+nADSIrxY8q406Q+vHD+nPOy4jbVMoY+9c2DGx+eZ9FjM5otGapixUgvce2Y2cUpDbzvzvqRBMAddYJZvwqZO0eC8AXFe+tYSM9RpPaS3Q9rJo2IoAvEyl/cM5xIXDCa/hWjLI7ekT4yCD2kAB8290yyWs54jm72H0Bsxlg5XQLaaNsddXqLdPLjY8JnLrhX7SSs3ON/+A7Tu4kEOyFtfogTFPG0m/xC4zk4CEAKAT4E6IXD+ZE8JAYTejPK0/HSWpR81nbl2/y3uzcv8ghPSkB70InB4dr+9dldsKn/BmfjxDViZrUmwMyxHs2AjF7A9upfpZrO58VBSIOpgg5rudTsyxjoj4o/ZoQ1e4gP9UsU7bkO/diODZgzXsp2YfGme2y1/Mlv5B3zbE+ZJwpMM0R4eNt90B7MTkf68m3TMDWwGEPi99XNxIQRCt/DPWFR+NBobNYKL7pLERmtypAv0Tv92d9YSkizrSJ07/nA==
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(46966006)(40470700004)(36840700001)(36756003)(107886003)(426003)(336012)(26005)(81166007)(2616005)(356005)(5660300002)(2906002)(1076003)(186003)(40460700003)(47076005)(4326008)(508600001)(70586007)(82310400004)(8936002)(70206006)(86362001)(8676002)(36860700001)(316002)(7696005)(6666004)(83380400001)(110136005)(6636002)(54906003)(36900700001)(20210929001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2022 16:15:13.2995
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jan 2022 16:15:03.1606
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 84fab4b4-bfa4-49f9-cc21-08d9e40bb22a
+X-MS-Exchange-CrossTenant-Network-Message-Id: f40fcb2e-00e0-4562-f2c2-08d9e40bac1a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT045.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT040.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB2805
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR12MB4884
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jason Gunthorpe <jgg@nvidia.com>
+Expose an API to get the mlx5 core device from a given VF PCI device if
+mlx5_core is its driver.
 
-Invoke a new device op 'device_feature' to handle just the data array
-portion of the command. This lifts the ioctl validation to the core code
-and makes it simpler for either the core code, or layered drivers, to
-implement their own feature values.
+Upon the get API we stay with the intf_state_mutex locked to make sure
+that the device can't be gone/unloaded till the caller will complete
+its job over the device, this expects to be for a short period of time
+for any flow that the lock is taken.
 
-Provide vfio_check_feature() to consolidate checking the flags/etc against
-what the driver supports.
+Upon the put API we unlock the intf_state_mutex.
 
-Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+The use case for those APIs is the migration flow of a VF over VFIO PCI.
+In that case the VF doesn't ride on mlx5_core, because the device is
+driving *two* different PCI devices, the PF owned by mlx5_core and the
+VF owned by the vfio driver.
+
+The mlx5_core of the PF is accessed only during the narrow window of the
+VF's ioctl that requires its services.
+
+This allows the PF driver to be more independent of the VF driver, so
+long as it doesn't reset the FW.
+
 Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci.c      |  1 +
- drivers/vfio/pci/vfio_pci_core.c | 90 ++++++++++++--------------------
- drivers/vfio/vfio.c              | 46 ++++++++++++++--
- include/linux/vfio.h             | 32 ++++++++++++
- include/linux/vfio_pci_core.h    |  2 +
- 5 files changed, 109 insertions(+), 62 deletions(-)
+ .../net/ethernet/mellanox/mlx5/core/main.c    | 44 +++++++++++++++++++
+ include/linux/mlx5/driver.h                   |  3 ++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index a5ce92beb655..2b047469e02f 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -130,6 +130,7 @@ static const struct vfio_device_ops vfio_pci_ops = {
- 	.open_device	= vfio_pci_open_device,
- 	.close_device	= vfio_pci_core_close_device,
- 	.ioctl		= vfio_pci_core_ioctl,
-+	.device_feature = vfio_pci_core_ioctl_feature,
- 	.read		= vfio_pci_core_read,
- 	.write		= vfio_pci_core_write,
- 	.mmap		= vfio_pci_core_mmap,
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index f948e6cd2993..14a22ff20ef8 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1114,70 +1114,44 @@ long vfio_pci_core_ioctl(struct vfio_device *core_vdev, unsigned int cmd,
- 
- 		return vfio_pci_ioeventfd(vdev, ioeventfd.offset,
- 					  ioeventfd.data, count, ioeventfd.fd);
--	} else if (cmd == VFIO_DEVICE_FEATURE) {
--		struct vfio_device_feature feature;
--		uuid_t uuid;
--
--		minsz = offsetofend(struct vfio_device_feature, flags);
--
--		if (copy_from_user(&feature, (void __user *)arg, minsz))
--			return -EFAULT;
--
--		if (feature.argsz < minsz)
--			return -EINVAL;
--
--		/* Check unknown flags */
--		if (feature.flags & ~(VFIO_DEVICE_FEATURE_MASK |
--				      VFIO_DEVICE_FEATURE_SET |
--				      VFIO_DEVICE_FEATURE_GET |
--				      VFIO_DEVICE_FEATURE_PROBE))
--			return -EINVAL;
--
--		/* GET & SET are mutually exclusive except with PROBE */
--		if (!(feature.flags & VFIO_DEVICE_FEATURE_PROBE) &&
--		    (feature.flags & VFIO_DEVICE_FEATURE_SET) &&
--		    (feature.flags & VFIO_DEVICE_FEATURE_GET))
--			return -EINVAL;
--
--		switch (feature.flags & VFIO_DEVICE_FEATURE_MASK) {
--		case VFIO_DEVICE_FEATURE_PCI_VF_TOKEN:
--			if (!vdev->vf_token)
--				return -ENOTTY;
--
--			/*
--			 * We do not support GET of the VF Token UUID as this
--			 * could expose the token of the previous device user.
--			 */
--			if (feature.flags & VFIO_DEVICE_FEATURE_GET)
--				return -EINVAL;
--
--			if (feature.flags & VFIO_DEVICE_FEATURE_PROBE)
--				return 0;
--
--			/* Don't SET unless told to do so */
--			if (!(feature.flags & VFIO_DEVICE_FEATURE_SET))
--				return -EINVAL;
-+	}
-+	return -ENOTTY;
-+}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_ioctl);
- 
--			if (feature.argsz < minsz + sizeof(uuid))
--				return -EINVAL;
-+int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
-+				void __user *arg, size_t argsz)
-+{
-+	struct vfio_pci_core_device *vdev =
-+		container_of(device, struct vfio_pci_core_device, vdev);
-+	uuid_t uuid;
-+	int ret;
- 
--			if (copy_from_user(&uuid, (void __user *)(arg + minsz),
--					   sizeof(uuid)))
--				return -EFAULT;
-+	switch (flags & VFIO_DEVICE_FEATURE_MASK) {
-+	case VFIO_DEVICE_FEATURE_PCI_VF_TOKEN:
-+		if (!vdev->vf_token)
-+			return -ENOTTY;
-+		/*
-+		 * We do not support GET of the VF Token UUID as this could
-+		 * expose the token of the previous device user.
-+		 */
-+		ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-+					sizeof(uuid));
-+		if (ret != 1)
-+			return ret;
- 
--			mutex_lock(&vdev->vf_token->lock);
--			uuid_copy(&vdev->vf_token->uuid, &uuid);
--			mutex_unlock(&vdev->vf_token->lock);
-+		if (copy_from_user(&uuid, arg, sizeof(uuid)))
-+			return -EFAULT;
- 
--			return 0;
--		default:
--			return -ENOTTY;
--		}
-+		mutex_lock(&vdev->vf_token->lock);
-+		uuid_copy(&vdev->vf_token->uuid, &uuid);
-+		mutex_unlock(&vdev->vf_token->lock);
-+		return 0;
-+	default:
-+		return -ENOTTY;
- 	}
--
--	return -ENOTTY;
- }
--EXPORT_SYMBOL_GPL(vfio_pci_core_ioctl);
-+EXPORT_SYMBOL_GPL(vfio_pci_core_ioctl_feature);
- 
- static ssize_t vfio_pci_rw(struct vfio_pci_core_device *vdev, char __user *buf,
- 			   size_t count, loff_t *ppos, bool iswrite)
-diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-index 735d1d344af9..71763e2ac561 100644
---- a/drivers/vfio/vfio.c
-+++ b/drivers/vfio/vfio.c
-@@ -1557,15 +1557,53 @@ static int vfio_device_fops_release(struct inode *inode, struct file *filep)
- 	return 0;
- }
- 
-+static int vfio_ioctl_device_feature(struct vfio_device *device,
-+				     struct vfio_device_feature __user *arg)
-+{
-+	size_t minsz = offsetofend(struct vfio_device_feature, flags);
-+	struct vfio_device_feature feature;
-+
-+	if (copy_from_user(&feature, arg, minsz))
-+		return -EFAULT;
-+
-+	if (feature.argsz < minsz)
-+		return -EINVAL;
-+
-+	/* Check unknown flags */
-+	if (feature.flags &
-+	    ~(VFIO_DEVICE_FEATURE_MASK | VFIO_DEVICE_FEATURE_SET |
-+	      VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_PROBE))
-+		return -EINVAL;
-+
-+	/* GET & SET are mutually exclusive except with PROBE */
-+	if (!(feature.flags & VFIO_DEVICE_FEATURE_PROBE) &&
-+	    (feature.flags & VFIO_DEVICE_FEATURE_SET) &&
-+	    (feature.flags & VFIO_DEVICE_FEATURE_GET))
-+		return -EINVAL;
-+
-+	switch (feature.flags & VFIO_DEVICE_FEATURE_MASK) {
-+	default:
-+		if (unlikely(!device->ops->device_feature))
-+			return -EINVAL;
-+		return device->ops->device_feature(device, feature.flags,
-+						   arg->data,
-+						   feature.argsz - minsz);
-+	}
-+}
-+
- static long vfio_device_fops_unl_ioctl(struct file *filep,
- 				       unsigned int cmd, unsigned long arg)
- {
- 	struct vfio_device *device = filep->private_data;
- 
--	if (unlikely(!device->ops->ioctl))
--		return -EINVAL;
--
--	return device->ops->ioctl(device, cmd, arg);
-+	switch (cmd) {
-+	case VFIO_DEVICE_FEATURE:
-+		return vfio_ioctl_device_feature(device, (void __user *)arg);
-+	default:
-+		if (unlikely(!device->ops->ioctl))
-+			return -EINVAL;
-+		return device->ops->ioctl(device, cmd, arg);
-+	}
- }
- 
- static ssize_t vfio_device_fops_read(struct file *filep, char __user *buf,
-diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-index 76191d7abed1..ca69516f869d 100644
---- a/include/linux/vfio.h
-+++ b/include/linux/vfio.h
-@@ -55,6 +55,7 @@ struct vfio_device {
-  * @match: Optional device name match callback (return: 0 for no-match, >0 for
-  *         match, -errno for abort (ex. match with insufficient or incorrect
-  *         additional args)
-+ * @device_feature: Fill in the VFIO_DEVICE_FEATURE ioctl
-  */
- struct vfio_device_ops {
- 	char	*name;
-@@ -69,8 +70,39 @@ struct vfio_device_ops {
- 	int	(*mmap)(struct vfio_device *vdev, struct vm_area_struct *vma);
- 	void	(*request)(struct vfio_device *vdev, unsigned int count);
- 	int	(*match)(struct vfio_device *vdev, char *buf);
-+	int	(*device_feature)(struct vfio_device *device, u32 flags,
-+				  void __user *arg, size_t argsz);
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 5b8958186157..e9aeba4267ff 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -1881,6 +1881,50 @@ static struct pci_driver mlx5_core_driver = {
+ 	.sriov_set_msix_vec_count = mlx5_core_sriov_set_msix_vec_count,
  };
  
 +/**
-+ * vfio_check_feature - Validate user input for the VFIO_DEVICE_FEATURE ioctl
-+ * @flags: Arg from the device_feature op
-+ * @argsz: Arg from the device_feature op
-+ * @supported_ops: Combination of VFIO_DEVICE_FEATURE_GET and SET the driver
-+ *                 supports
-+ * @minsz: Minimum data size the driver accepts
++ * mlx5_vf_get_core_dev - Get the mlx5 core device from a given VF PCI device if
++ *                     mlx5_core is its driver.
++ * @pdev: The associated PCI device.
 + *
-+ * For use in a driver's device_feature op. Checks that the inputs to the
-+ * VFIO_DEVICE_FEATURE ioctl are correct for the driver's feature. Returns 1 if
-+ * the driver should execute the get or set, otherwise the relevant
-+ * value should be returned.
++ * Upon return the interface state lock stay held to let caller uses it safely.
++ * Caller must ensure to use the returned mlx5 device for a narrow window
++ * and put it back with mlx5_vf_put_core_dev() immediately once usage was over.
++ *
++ * Return: Pointer to the associated mlx5_core_dev or NULL.
 + */
-+static inline int vfio_check_feature(u32 flags, size_t argsz, u32 supported_ops,
-+				    size_t minsz)
++struct mlx5_core_dev *mlx5_vf_get_core_dev(struct pci_dev *pdev)
++			__acquires(&mdev->intf_state_mutex)
 +{
-+	if ((flags & (VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_SET)) &
-+	    ~supported_ops)
-+		return -EINVAL;
-+	if (flags & VFIO_DEVICE_FEATURE_PROBE)
-+		return 0;
-+	/* Without PROBE one of GET or SET must be requested */
-+	if (!(flags & (VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_SET)))
-+		return -EINVAL;
-+	if (argsz < minsz)
-+		return -EINVAL;
-+	return 1;
-+}
++	struct mlx5_core_dev *mdev;
 +
- void vfio_init_group_dev(struct vfio_device *device, struct device *dev,
- 			 const struct vfio_device_ops *ops);
- void vfio_uninit_group_dev(struct vfio_device *device);
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index ef9a44b6cf5d..beba0b2ed87d 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -220,6 +220,8 @@ int vfio_pci_core_sriov_configure(struct pci_dev *pdev, int nr_virtfn);
- extern const struct pci_error_handlers vfio_pci_core_err_handlers;
- long vfio_pci_core_ioctl(struct vfio_device *core_vdev, unsigned int cmd,
- 		unsigned long arg);
-+int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
-+				void __user *arg, size_t argsz);
- ssize_t vfio_pci_core_read(struct vfio_device *core_vdev, char __user *buf,
- 		size_t count, loff_t *ppos);
- ssize_t vfio_pci_core_write(struct vfio_device *core_vdev, const char __user *buf,
++	mdev = pci_iov_get_pf_drvdata(pdev, &mlx5_core_driver);
++	if (IS_ERR(mdev))
++		return NULL;
++
++	mutex_lock(&mdev->intf_state_mutex);
++	if (!test_bit(MLX5_INTERFACE_STATE_UP, &mdev->intf_state)) {
++		mutex_unlock(&mdev->intf_state_mutex);
++		return NULL;
++	}
++
++	return mdev;
++}
++EXPORT_SYMBOL(mlx5_vf_get_core_dev);
++
++/**
++ * mlx5_vf_put_core_dev - Put the mlx5 core device back.
++ * @mdev: The mlx5 core device.
++ *
++ * Upon return the interface state lock is unlocked and caller should not
++ * access the mdev any more.
++ */
++void mlx5_vf_put_core_dev(struct mlx5_core_dev *mdev)
++			__releases(&mdev->intf_state_mutex)
++{
++	mutex_unlock(&mdev->intf_state_mutex);
++}
++EXPORT_SYMBOL(mlx5_vf_put_core_dev);
++
+ static void mlx5_core_verify_params(void)
+ {
+ 	if (prof_sel >= ARRAY_SIZE(profile)) {
+diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
+index 78655d8d13a7..319322a8ff94 100644
+--- a/include/linux/mlx5/driver.h
++++ b/include/linux/mlx5/driver.h
+@@ -1143,6 +1143,9 @@ int mlx5_dm_sw_icm_alloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type,
+ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type,
+ 			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
+ 
++struct mlx5_core_dev *mlx5_vf_get_core_dev(struct pci_dev *pdev);
++void mlx5_vf_put_core_dev(struct mlx5_core_dev *mdev);
++
+ #ifdef CONFIG_MLX5_CORE_IPOIB
+ struct net_device *mlx5_rdma_netdev_alloc(struct mlx5_core_dev *mdev,
+ 					  struct ib_device *ibdev,
 -- 
 2.18.1
 
