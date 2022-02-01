@@ -2,66 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB656C433F5
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Feb 2022 10:13:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF5C9C4321E
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Feb 2022 11:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239836AbiBBKNe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Feb 2022 05:13:34 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:45838 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232501AbiBBKNd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Feb 2022 05:13:33 -0500
-From:   Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1643796812;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xTbQhS0nAomVSVXvI4ZBw2g7TFGRH2Ml/TQfqhl0PBw=;
-        b=kYkBXL5AW+b+hTMRVTwbebEjOirhVPiK+p81JQKYYec5TN2qW2sOcd4DFtiz9bAR4ZUzSb
-        VWRDNWjS+VAv701iWeGNvvc63ljkoCp3CSA+NOkTa30sSeoEN2pgE4sYlNj01SYpNc+Jnq
-        D1MfwGyAWNtEmLku6df+7CvGZNv4yieNy1JtPBFGl19REnNoXbPzsk+pGCR9Q589H8Vqfh
-        Nu4vBv24bcjbkYIQOfGMkjVbx0P2Zq3vxuCSZCG88p/aC52/2C+WZmHEAVjLHlIVFRUoyW
-        RP+jsaUFYCwEeNiBv9Ur09aIDM4obM82l0Qc5A7HW/wVHOdXL4jKsoKkVUQPYg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1643796812;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xTbQhS0nAomVSVXvI4ZBw2g7TFGRH2Ml/TQfqhl0PBw=;
-        b=tRoQGuIEskb8IPgE6fXZTD9e29hdICxzXJBHkACcAC4z+asMRdL+onhHYaYhR5Y6Yvgk7B
-        81jwvG5XTy0fMABw==
-To:     "Maciej W. Rozycki" <macro@orcam.me.uk>,
-        Nikolai Zhubr <zhubr.2@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>,
-        Michal Necasek <mnecasek@yahoo.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] x86/PCI: Improve $PIR and add $IRT PIRQ routing
- support
-In-Reply-To: <alpine.DEB.2.21.2201021821480.56863@angie.orcam.me.uk>
-References: <alpine.DEB.2.21.2201021821480.56863@angie.orcam.me.uk>
-Date:   Wed, 02 Feb 2022 11:13:31 +0100
-Message-ID: <87sft1vano.ffs@tglx>
+        id S1343630AbiBBLCR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Feb 2022 06:02:17 -0500
+Received: from mail.profitfirm24.com.pl ([212.237.10.110]:59418 "EHLO
+        mail.profitfirm24.com.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343647AbiBBLCP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Feb 2022 06:02:15 -0500
+Received: by mail.profitfirm24.com.pl (Postfix, from userid 1001)
+        id 56B8EAA71E; Tue,  1 Feb 2022 09:17:29 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitfirm24.com.pl;
+        s=mail; t=1643707573;
+        bh=M1ZVeu3q6Upppe+FUx/3rgI7MKJXh389NZDbgCK1SX4=;
+        h=Date:From:To:Subject:From;
+        b=GS+GvXofHVUlnbKTNdVpcL0XuF1tmMO2kwiV1+IC4bs9OC/qNOo+/ldDETOH0aeqK
+         qWhLDSfaF9i9iyAolJx+sUEqjGg8mVhexgZD1INftpsa4Af7Odp/w4KfCnetIoGXA0
+         ZszXjnvb9jzCbS13BB8ThcPmFz6GzA9gNjpbV4N2rls4VWoQMM89526AtOgdfbphX+
+         GsU3jlUP0XOh2Za94H1REkWeDHiWGSYVgQf5pEIw/CpYauwhdq8oPiYEVpZdVMu01l
+         So1M7TFaZA71sYZZg1mzDZUlPNcFKrTNyjCNYm45GbuSmRYTRL8cTbEFC6qc20kKrL
+         Ve9H+tIzD8Aqw==
+Received: by profitfirm24.com.pl for <linux-pci@vger.kernel.org>; Tue,  1 Feb 2022 09:17:20 GMT
+Message-ID: <20220201074652-0.1.b.2yn7.0.wgjohudjb1@profitfirm24.com.pl>
+Date:   Tue,  1 Feb 2022 09:17:20 GMT
+From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
+        <arkadiusz.sokolowski@profitfirm24.com.pl>
+To:     <linux-pci@vger.kernel.org>
+Subject: Koszty instalacji fotowoltaicznej
+X-Mailer: mail.profitfirm24.com.pl
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Maciej,
+Dzie=C5=84 dobry,
 
-On Thu, Jan 06 2022 at 11:24, Maciej W. Rozycki wrote:
+stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
+ obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
 
->  This is a new patch series made around a discrete patch submitted earlier 
-> on that has gone nowhere, which is now 1/4.  That change handles $PIR
-> PIRQ
+Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
+acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
+ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
 
-sorry for ignoring this due to stack overflow. I'll go over it later
-today.
+Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
+=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
+=2E
 
-Thanks,
+Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
+temacie?
 
-        tglx
+
+Pozdrawiam
+Arkadiusz Soko=C5=82owski
