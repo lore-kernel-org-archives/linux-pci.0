@@ -2,195 +2,148 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF8DC433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Feb 2022 18:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F5DC433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Feb 2022 18:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236930AbiBASIT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Feb 2022 13:08:19 -0500
-Received: from alexa-out.qualcomm.com ([129.46.98.28]:30991 "EHLO
-        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232304AbiBASIS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Feb 2022 13:08:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1643738899; x=1675274899;
-  h=from:to:cc:subject:date:message-id;
-  bh=XibvicD4b/B19Mt1CSI3bLsU+ULqNBdRlOGv5+YBSrA=;
-  b=BzrXriCsfKfT3QNy2O8Rt8pTp9CjCuNKInXEKya4L3IVMSgWHLHaoP9J
-   YKfHbWuiysxC7UKuL6tr+95jcgd541i2zF6LSpQ968vif3yLtfYKUh/3L
-   sSuFA15ihI5mD2lURJNk+j1StB8MAFKlvFZ7hkj1+DylLDT7r/Wwx5ory
-   0=;
-Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
-  by alexa-out.qualcomm.com with ESMTP; 01 Feb 2022 10:08:19 -0800
-X-QCInternal: smtphost
-Received: from ironmsg01-blr.qualcomm.com ([10.86.208.130])
-  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/AES256-SHA; 01 Feb 2022 10:08:17 -0800
-X-QCInternal: smtphost
-Received: from pmaliset-linux.qualcomm.com ([10.206.64.233])
-  by ironmsg01-blr.qualcomm.com with ESMTP; 01 Feb 2022 23:37:59 +0530
-Received: by pmaliset-linux.qualcomm.com (Postfix, from userid 3848298)
-        id 7DAC32121A; Tue,  1 Feb 2022 23:37:58 +0530 (IST)
-From:   Prasad Malisetty <quic_pmaliset@quicinc.com>
-To:     agross@kernel.org, bjorn.andersson@linaro.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     quic_vbadigan@quicinc.com, quic_ramkri@quicinc.com,
-        manivannan.sadhasivam@linaro.org, swboyd@chromium.org,
-        Prasad Malisetty <quic_pmaliset@quicinc.com>
-Subject: [PATCH v2] PCI: qcom: Add system PM support
-Date:   Tue,  1 Feb 2022 23:37:56 +0530
-Message-Id: <1643738876-18572-1-git-send-email-quic_pmaliset@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        id S241879AbiBASQK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Feb 2022 13:16:10 -0500
+Received: from sin.source.kernel.org ([145.40.73.55]:50408 "EHLO
+        sin.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241882AbiBASOH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Feb 2022 13:14:07 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 52684CE1A61;
+        Tue,  1 Feb 2022 18:14:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40663C340EB;
+        Tue,  1 Feb 2022 18:14:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1643739243;
+        bh=bxpVdfDdN3+UOWDkMYjlazAW65+tG2rMIn+BtzcTIVE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Fak/9rZF2WDudfg33f+bIG1o27y3QQ7HL2Jt81416ejXlgqiP+NgHL2GY7UGDfFvt
+         9SShAfbTgkO2k+tq9CpAK3HRsS5IKH3fYW6HwGQyUUXEeX54qNDoj4oXqi8lfCxigh
+         sIh2vevbOTulvDGkKpio7jzGx/aolNScbPs6+UJUYEdAGDaEt4CKGs7lw9C4Ua38Lw
+         JwJjz3chAJBRS9aWk0g58r9MoSw3bIiUN+XFLD2Sapho8gulJHdlFGxGvBYZxrYj+S
+         I1O881iaJAx2rePRb/uJAuQ47vGd+30jIFpXZkkOuQW11b8qIMBhboTZJphlqBztZ0
+         Jrp8Wu3mTEpUw==
+Date:   Tue, 1 Feb 2022 12:14:01 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Wolfram Sang <wsa@kernel.org>, Jean Delvare <jdelvare@suse.de>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Tan Jui Nee <jui.nee.tan@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Kate Hsuan <hpa@redhat.com>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        Jean Delvare <jdelvare@suse.com>,
+        Peter Tyser <ptyser@xes-inc.com>,
+        Andy Shevchenko <andy@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mark Gross <markgross@kernel.org>,
+        Henning Schild <henning.schild@siemens.com>
+Subject: Re: [PATCH v3 3/8] platform/x86/intel: Add Primary to Sideband
+ (P2SB) bridge support
+Message-ID: <20220201181401.GA292815@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YfQ2PGzOyiBfCppd@smile.fi.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add suspend_noirq and resume_noirq callbacks to handle
-System suspend and resume in dwc pcie controller driver.
+On Fri, Jan 28, 2022 at 08:30:20PM +0200, Andy Shevchenko wrote:
+> On Fri, Jan 07, 2022 at 11:11:08AM -0600, Bjorn Helgaas wrote:
+> > On Fri, Jan 07, 2022 at 04:56:42PM +0200, Andy Shevchenko wrote:
+> 
+> ...
+> 
+> > > The unhide/hide back has been tested and we have already users
+> > > in the kernel (they have other issues though with the PCI rescan
+> > > lock, but it doesn't mean it wasn't ever tested).
+> > 
+> > Does the firmware team that hid this device sign off on the OS
+> > unhiding and using it?  How do we know that BIOS is not using the
+> > device?
+> 
+> BIOS might use the device via OperationRegion() in ACPI, but that
+> means that _CRS needs to have that region available. It seems not
+> the case.
+> 
+> And as far I as see in the internal documentation the hide / unhide
+> approach is not forbidden for OS side.
 
-When system suspends, send PME turnoff message to enter
-link into L2 state. Along with powerdown the PHY, disable
-pipe clock, switch gcc_pcie_1_pipe_clk_src to XO if mux is
-supported and disable the pcie clocks, regulators.
+Unhiding is device-specific behavior, so generic PCI enumeration
+cannot use it.  We have to know there's a P2SB device at some address
+before we can safely do a config write to it.  PCI enumeration would
+learn there's a P2SB device at an address by reading a Vendor/Device
+ID.
 
-When system resumes, PCIe link will be re-established and
-setup rc settings.
+> > My point is that the unhide is architecturally messed up.  The OS
+> > runs on the platform as described by ACPI.  Devices that cannot be
+> > enumerated are described in the ACPI namespace.
+> 
+> This device may or may not be _partially_ or _fully_ (due to being
+> multifunctional) described in ACPI. I agree, that ideally the
+> devices in question it has behind should be represented properly by
+> firmware.  However, the firmwares in the wild for selected products
+> / devices don't do that. We need to solve (work around) it in the
+> software.
+> 
+> This is already done for a few devices. This series consolidates
+> that and enables it for very known GPIO IPs.
 
-Signed-off-by: Prasad Malisetty <quic_pmaliset@quicinc.com>
-Reported-by: kernel test robot <lkp@intel.com>
+Consolidating the code to unhide the device and size the BAR is fine.
 
----
-Changes since v1:
-	- Removed unnecessary logs and modified log level suggested by Manivannan.
-	- Removed platform specific callbacks as PM support is generic.
----
- drivers/pci/controller/dwc/pcie-qcom.c | 97 ++++++++++++++++++++++++++++++++++
- 1 file changed, 97 insertions(+)
+I would prefer the PCI core to be involved as little as possible
+because we're violating some key assumptions and we could trip over
+those later.  We're assuming the existence of P2SB based on the fact
+that we found some *other* device, we're assuming firmware isn't using
+P2SB (may be true now, but impossible to verify), we're assuming the
+P2SB BAR contains a valid address that's not used elsewhere but also
+won't be assigned to anything.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index c19cd506..d1dd6c7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -73,6 +73,8 @@
- 
- #define PCIE20_PARF_Q2A_FLUSH			0x1AC
- 
-+#define PCIE20_PARF_PM_STTS                     0x24
-+
- #define PCIE20_MISC_CONTROL_1_REG		0x8BC
- #define DBI_RO_WR_EN				1
- 
-@@ -1616,6 +1618,100 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
-+static int qcom_pcie_send_pme_turnoff_msg(struct qcom_pcie *pcie)
-+{
-+	int ret = 0;
-+	u32 val = 0, poll_val = 0;
-+	u64 l23_rdy_poll_timeout = 100000;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+
-+	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+	val |= BIT(4);
-+	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
-+
-+	ret = readl_poll_timeout((pcie->parf + PCIE20_PARF_PM_STTS), poll_val,
-+			(poll_val & BIT(5)), 10000, l23_rdy_poll_timeout);
-+	if (!ret)
-+		dev_info(dev, "PM_Enter_L23 is received\n");
-+	else
-+		dev_err(dev, "PM_Enter_L23 is NOT received.PARF_PM_STTS 0x%x\n",
-+			readl_relaxed(pcie->parf + PCIE20_PARF_PM_STTS));
-+
-+	return ret;
-+}
-+
-+static void qcom_pcie_host_disable(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+
-+	/* Assert the reset of endpoint */
-+	qcom_ep_reset_assert(pcie);
-+
-+	/* Put PHY into POWER DOWN state */
-+	phy_power_off(pcie->phy);
-+
-+	writel(1, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	pcie->ops->post_deinit(pcie);
-+
-+	/* Disable PCIe clocks and regulators */
-+	pcie->ops->deinit(pcie);
-+}
-+
-+static int __maybe_unused qcom_pcie_pm_suspend_noirq(struct device *dev)
-+{
-+	int ret = 0;
-+	struct qcom_pcie *pcie = dev_get_drvdata(dev);
-+	struct dw_pcie *pci = pcie->pci;
-+
-+	if (!dw_pcie_link_up(pci)) {
-+		dev_dbg(dev, "Power has been turned off already\n");
-+		return ret;
-+	}
-+
-+	/* Send PME turnoff msg */
-+	ret = qcom_pcie_send_pme_turnoff_msg(pcie);
-+	if (ret)
-+		return ret;
-+
-+	/* Power down the PHY, disable clock and regulators */
-+	qcom_pcie_host_disable(pcie);
-+
-+	return ret;
-+}
-+
-+/* Resume the PCIe link */
-+static int __maybe_unused qcom_pcie_pm_resume_noirq(struct device *dev)
-+{
-+	int ret = 0;
-+	struct qcom_pcie *pcie = dev_get_drvdata(dev);
-+	struct dw_pcie *pci = pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
-+
-+	/* Initialize PCIe host */
-+	ret = qcom_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dev, "cannot initialize host\n");
-+		return ret;
-+	}
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	/* Start the PCIe link */
-+	qcom_pcie_start_link(pci);
-+
-+	ret = dw_pcie_wait_for_link(pci);
-+	if (ret)
-+		dev_err(dev, "Link never came up, Resume failed\n");
-+
-+	return ret;
-+}
-+
-+static const struct dev_pm_ops qcom_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(qcom_pcie_pm_suspend_noirq, qcom_pcie_pm_resume_noirq)
-+};
-+
- static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-apq8084", .data = &apq8084_cfg },
- 	{ .compatible = "qcom,pcie-ipq8064", .data = &ipq8064_cfg },
-@@ -1648,6 +1744,7 @@ static struct platform_driver qcom_pcie_driver = {
- 	.probe = qcom_pcie_probe,
- 	.driver = {
- 		.name = "qcom-pcie",
-+		.pm = &qcom_pcie_pm_ops,
- 		.suppress_bind_attrs = true,
- 		.of_match_table = qcom_pcie_match,
- 	},
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member 
-of Code Aurora Forum, hosted by The Linux Foundation
+> PCI core just provides a code that is very similar to what we need
+> here. Are you specifically suggesting that we have to copy'n'paste
+> that rather long function and maintain in parallel with PCI?
 
+I think we're talking about __pci_read_base(), which is currently an
+internal PCI interface.  This series adds pci_bus_info/warn/etc(),
+reworks __pci_read_base() to operate on a struct pci_bus *, exports
+it, and uses it via #include <../../../pci/pci.h>.
+
+__pci_read_base() is fairly long, but you apparently don't need all
+the functionality there because the core of the patch is this:
+
+  -   pci_bus_read_config_dword(bus, spi, PCI_BASE_ADDRESS_0,
+  -                             &spi_base);
+  -   if (spi_base != ~0) {
+  -           res->start = spi_base & 0xfffffff0;
+  -           res->end = res->start + SPIBASE_APL_SZ - 1;
+  -   }
+  +   __pci_bus_read_base(bus, devfn, pci_bar_unknown, mem, PCI_BASE_ADDRESS_0, true)
+
+I don't think it's worth all the __pci_read_base() changes to do that.
+What if you made a library function that looks like this?
+
+  int p2sb_bar(...)
+  {
+    pci_bus_write_config_byte(bus, devfn_p2sb, P2SBC_HIDE_BYTE, 0);
+    pci_bus_read_config_dword(bus, devfn, PCI_BASE_ADDRESS_0, &orig);
+    if (orig) {
+      pci_bus_write_config_dword(bus, devfn, PCI_BASE_ADDRESS_0, ~0);
+      pci_bus_read_config_dword(bus, devfn, PCI_BASE_ADDRESS_0, &val);
+      pci_bus_write_config_dword(bus, devfn, PCI_BASE_ADDRESS_0, orig);
+      res->start = orig;
+      res->end = res->start + (~val + 1);
+    }
+    pci_bus_write_config_byte(bus, devfn, P2SBC_HIDE_BYTE, P2SBC_HIDE_BIT);
+  }
