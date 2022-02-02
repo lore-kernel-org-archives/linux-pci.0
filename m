@@ -2,58 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF5C9C4321E
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Feb 2022 11:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C26C433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Feb 2022 11:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343630AbiBBLCR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Feb 2022 06:02:17 -0500
-Received: from mail.profitfirm24.com.pl ([212.237.10.110]:59418 "EHLO
-        mail.profitfirm24.com.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343647AbiBBLCP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Feb 2022 06:02:15 -0500
-Received: by mail.profitfirm24.com.pl (Postfix, from userid 1001)
-        id 56B8EAA71E; Tue,  1 Feb 2022 09:17:29 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitfirm24.com.pl;
-        s=mail; t=1643707573;
-        bh=M1ZVeu3q6Upppe+FUx/3rgI7MKJXh389NZDbgCK1SX4=;
-        h=Date:From:To:Subject:From;
-        b=GS+GvXofHVUlnbKTNdVpcL0XuF1tmMO2kwiV1+IC4bs9OC/qNOo+/ldDETOH0aeqK
-         qWhLDSfaF9i9iyAolJx+sUEqjGg8mVhexgZD1INftpsa4Af7Odp/w4KfCnetIoGXA0
-         ZszXjnvb9jzCbS13BB8ThcPmFz6GzA9gNjpbV4N2rls4VWoQMM89526AtOgdfbphX+
-         GsU3jlUP0XOh2Za94H1REkWeDHiWGSYVgQf5pEIw/CpYauwhdq8oPiYEVpZdVMu01l
-         So1M7TFaZA71sYZZg1mzDZUlPNcFKrTNyjCNYm45GbuSmRYTRL8cTbEFC6qc20kKrL
-         Ve9H+tIzD8Aqw==
-Received: by profitfirm24.com.pl for <linux-pci@vger.kernel.org>; Tue,  1 Feb 2022 09:17:20 GMT
-Message-ID: <20220201074652-0.1.b.2yn7.0.wgjohudjb1@profitfirm24.com.pl>
-Date:   Tue,  1 Feb 2022 09:17:20 GMT
-From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
-        <arkadiusz.sokolowski@profitfirm24.com.pl>
-To:     <linux-pci@vger.kernel.org>
-Subject: Koszty instalacji fotowoltaicznej
-X-Mailer: mail.profitfirm24.com.pl
+        id S244306AbiBBLej (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Feb 2022 06:34:39 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:33826 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239388AbiBBLej (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Feb 2022 06:34:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643801678;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zxJP7Iev1jF129Z7QvLz9cNQ21+tXUQ7Hkjq91PkZsk=;
+        b=KRijNyL2psPGzs/QyilaFILy8++b660VtHPaKAADVfrgprc2zTmsRqHABetzknSCWfk7VI
+        +TEGFfymTcs3LtiFPN1HvwX2Lkc4nBs/1EGWzvv8w5FHsIejQOsrhxxDPIZaVAjo2e+CpG
+        Gv4lXoZbkVdLDZcQuCLNpca0VPKwcZY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-251-J0ef2edTO7uCJfqVWmCKJA-1; Wed, 02 Feb 2022 06:34:35 -0500
+X-MC-Unique: J0ef2edTO7uCJfqVWmCKJA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A4489196632A;
+        Wed,  2 Feb 2022 11:34:33 +0000 (UTC)
+Received: from localhost (unknown [10.39.194.123])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 352FFA22D;
+        Wed,  2 Feb 2022 11:34:33 +0000 (UTC)
+From:   Cornelia Huck <cohuck@redhat.com>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Yishai Hadas <yishaih@nvidia.com>, alex.williamson@redhat.com,
+        bhelgaas@google.com, saeedm@nvidia.com, linux-pci@vger.kernel.org,
+        kvm@vger.kernel.org, netdev@vger.kernel.org, kuba@kernel.org,
+        leonro@nvidia.com, kwankhede@nvidia.com, mgurtovoy@nvidia.com,
+        maorg@nvidia.com
+Subject: Re: [PATCH V6 mlx5-next 10/15] vfio: Remove migration protocol v1
+In-Reply-To: <20220201142930.GG1786498@nvidia.com>
+Organization: Red Hat GmbH
+References: <20220130160826.32449-1-yishaih@nvidia.com>
+ <20220130160826.32449-11-yishaih@nvidia.com> <874k5izv8m.fsf@redhat.com>
+ <20220201121325.GB1786498@nvidia.com> <87sft2yd50.fsf@redhat.com>
+ <20220201125444.GE1786498@nvidia.com> <87mtjayayi.fsf@redhat.com>
+ <20220201135231.GF1786498@nvidia.com> <87k0eey8ih.fsf@redhat.com>
+ <20220201142930.GG1786498@nvidia.com>
+User-Agent: Notmuch/0.34 (https://notmuchmail.org)
+Date:   Wed, 02 Feb 2022 12:34:31 +0100
+Message-ID: <878ruty01k.fsf@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Tue, Feb 01 2022, Jason Gunthorpe <jgg@nvidia.com> wrote:
 
-stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
- obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
+> On Tue, Feb 01, 2022 at 03:19:18PM +0100, Cornelia Huck wrote:
+>> (- also continue to get the documentation into good shape)
+>
+> Which items do you see here?
 
-Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
-acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
-ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
+Well, it still needs to be updated, no?
 
-Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
-=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
-=2E
+>
+>> - have an RFC for QEMU that contains a provisional update of the
+>>   relevant vfio headers so that we can discuss the QEMU side (and maybe
+>>   shoot down any potential problems in the uapi before they are merged
+>>   in the kernel)
+>
+> This qemu patch is linked in the cover letter.
 
-Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
-temacie?
+The QEMU changes need to be discussed on qemu-devel, a link to a git
+tree with work in progress only goes so far.
 
+(From my quick look there, this needs to have any headers changes split
+out into a separate patch. The changes in migration.c are hard to
+review; is there any chance to split the error path cleanups from the
+interface changes?)
 
-Pozdrawiam
-Arkadiusz Soko=C5=82owski
