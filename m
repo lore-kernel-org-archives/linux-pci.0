@@ -2,133 +2,211 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB4EEC433FE
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Feb 2022 12:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3136AC433EF
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Feb 2022 13:06:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241446AbiBDMM2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Feb 2022 07:12:28 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:54887 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S241756AbiBDMM0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Feb 2022 07:12:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643976745;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yZ4sk8q50ZTV8rKcA8E+/BfbQj64WFy5L6RAZRHT8z8=;
-        b=OGsBWagfwTx0/wEJOqUzk3gPAOF/2T8wVKNj7HHaG6JQ0w6558IghnfFShtGaSEJzghxND
-        CFbM0xchVd35EzZN6Zu/96tSRsCsBGVHI1hlyN2bsxDDU9Uzb07ZO4scaxKNKkfGIpFSRV
-        6ecH5Pqz9WVf+zUuOHzRbCMgy6Pyaeo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-665-7oW6mt6LOG-DK6m5qaL82g-1; Fri, 04 Feb 2022 07:12:22 -0500
-X-MC-Unique: 7oW6mt6LOG-DK6m5qaL82g-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C169584DA41;
-        Fri,  4 Feb 2022 12:12:20 +0000 (UTC)
-Received: from localhost (unknown [10.39.194.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 63B254F854;
-        Fri,  4 Feb 2022 12:12:11 +0000 (UTC)
-From:   Cornelia Huck <cohuck@redhat.com>
-To:     Alex Williamson <alex.williamson@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Yishai Hadas <yishaih@nvidia.com>, bhelgaas@google.com,
-        saeedm@nvidia.com, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        netdev@vger.kernel.org, kuba@kernel.org, leonro@nvidia.com,
-        kwankhede@nvidia.com, mgurtovoy@nvidia.com, maorg@nvidia.com
-Subject: Re: [PATCH V6 mlx5-next 08/15] vfio: Define device migration
- protocol v2
-In-Reply-To: <20220202163656.4c0cc386.alex.williamson@redhat.com>
-Organization: Red Hat GmbH
-References: <20220130160826.32449-1-yishaih@nvidia.com>
- <20220130160826.32449-9-yishaih@nvidia.com>
- <20220131164318.3da9eae5.alex.williamson@redhat.com>
- <20220201003124.GZ1786498@nvidia.com>
- <20220201100408.4a68df09.alex.williamson@redhat.com>
- <20220201183620.GL1786498@nvidia.com>
- <20220201144916.14f75ca5.alex.williamson@redhat.com>
- <20220202002459.GP1786498@nvidia.com>
- <20220202163656.4c0cc386.alex.williamson@redhat.com>
-User-Agent: Notmuch/0.34 (https://notmuchmail.org)
-Date:   Fri, 04 Feb 2022 13:12:09 +0100
-Message-ID: <87o83mx23q.fsf@redhat.com>
+        id S235511AbiBDNGK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Feb 2022 08:06:10 -0500
+Received: from mail-bn8nam12on2076.outbound.protection.outlook.com ([40.107.237.76]:52640
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S240726AbiBDNGJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Feb 2022 08:06:09 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=P913wYApW1i096sLwyUOtuplH9V0pe0Z5h4n1gfkY2Wz29V2rGlYolsZlDgI8MIlcF1weShHRLXgxMeCIeuwjj9RPah8oOeej9U2MN09sykF86RM2ZDFn2fgGuDq2bYzMCVdVbIem65/QYJ6kEAeuAd6RRJNgzW9Rztz8SRIpRcklRoozVUE64cEG9TJNecm4zPzauc98x3M1JwXsTAb8xrWB7fEGBZ/ySmZrzY4ZeJ8wSGJAOgJQUoGcogvE3T/+8lpV3FHyWHbvwHzC3Fopma4rFiVx5V2aM6bZU+kPdcPHJawawRtVffBqjYPFImUWu4glDY1Z7QayT32GirUkw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XQztx4CQJr/b+brzajSB/3W1dw9k+ExjvVcb8QD7fhE=;
+ b=RBWXIUPOuc0c/QWKOjv4DI5GqrpRINN/H1iD90KowrTSGNIX+khwbnjgT/ilCNxinGc4CMCLWnDkVol5WbALFn82UYttY6EQPaWOw+8ckByY2l8YCuBQ1lNVqlYcW04kZDUKDvb6M6bHYuZryQ5kQNynd8EFQHIHTXAQmS1g6XBFBcFhTgHXoJyPF2etLr8aQf3l8wkYxDuDO/bJOsAlSIvdYK7Ov4nFPUFIzQGmNS/G9bzgOeBKH6heFWsFnxAYXzFEv9ZAPMMAvVSPTfhzl4eyitQRp/SDwhmCgliPSDJtzq1Zhlih2cFdo2bvq/tfpBLf4o1AjDQELDgLDQPqKQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 149.199.62.198) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=xilinx.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=xilinx.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XQztx4CQJr/b+brzajSB/3W1dw9k+ExjvVcb8QD7fhE=;
+ b=sJOtHqxMrduZ08F1VIf5i01jzZyqxT2r5IYzTLK84xmYkq6tXqS8hThiBJgRD5+kOuy578NCHdikIApOTtMA7dyP8NashUsWCPxwK2by5NSLgvTknVR618AWxd9DesQZX6LK15JCLOvPzztGKO1p9A62row3q4HajTvlI6a5zRE=
+Received: from BN0PR02CA0023.namprd02.prod.outlook.com (2603:10b6:408:e4::28)
+ by DM6PR02MB5291.namprd02.prod.outlook.com (2603:10b6:5:45::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4930.20; Fri, 4 Feb
+ 2022 13:06:07 +0000
+Received: from BN1NAM02FT062.eop-nam02.prod.protection.outlook.com
+ (2603:10b6:408:e4:cafe::b6) by BN0PR02CA0023.outlook.office365.com
+ (2603:10b6:408:e4::28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12 via Frontend
+ Transport; Fri, 4 Feb 2022 13:06:07 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
+ smtp.mailfrom=xilinx.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=xilinx.com;
+Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
+ 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=149.199.62.198; helo=xsj-pvapexch02.xlnx.xilinx.com;
+Received: from xsj-pvapexch02.xlnx.xilinx.com (149.199.62.198) by
+ BN1NAM02FT062.mail.protection.outlook.com (10.13.2.168) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4951.12 via Frontend Transport; Fri, 4 Feb 2022 13:06:06 +0000
+Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.14; Fri, 4 Feb 2022 05:05:54 -0800
+Received: from smtp.xilinx.com (172.19.127.95) by
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
+ 15.1.2176.14 via Frontend Transport; Fri, 4 Feb 2022 05:05:54 -0800
+Envelope-to: linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ lorenzo.pieralisi@arm.com,
+ bhelgaas@google.com
+Received: from [10.140.9.2] (port=44286 helo=xhdbharatku40.xilinx.com)
+        by smtp.xilinx.com with esmtp (Exim 4.90)
+        (envelope-from <bharat.kumar.gogada@xilinx.com>)
+        id 1nFyEN-000Bmk-73; Fri, 04 Feb 2022 05:02:27 -0800
+From:   Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <michals@xilinx.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: [PATCH 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root Port driver
+Date:   Fri, 4 Feb 2022 18:32:16 +0530
+Message-ID: <20220204130216.2206-3-bharat.kumar.gogada@xilinx.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20220204130216.2206-1-bharat.kumar.gogada@xilinx.com>
+References: <20220204130216.2206-1-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: cb334d17-bedb-4cff-e779-08d9e7df1b05
+X-MS-TrafficTypeDiagnostic: DM6PR02MB5291:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR02MB529161B7EFB9A6BE6F5FF199A5299@DM6PR02MB5291.namprd02.prod.outlook.com>
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-Oob-TLC-OOBClassifiers: OLM:849;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0uS4BlksizSF6upAkZdDEGIT6Ip8+0lxzLd2YBCcrsSvSloywdheXA75Xkwo32CNt8uftvLihrbBCzePHvCHDT+kDVqX7dstyCWZuSollgyh7UmqExf/9x4990qvuJ2QVon+pi+SEcV6s7uLYYPbxt+syOKmOtsXawAjJYCwthzHjx87DLvr6utnVj/ycwzx+5+mClOqHh7BnvNo0NcA3ug0d7bVJsAh0dwmWstdfmvCHnub2Ba7Cm6I5VFj2nuSJ5VZLEnLguDOj/Q3Bo77dLQj2Y0zSR1Vqf6COv4qZLbvcYN+v8Xs4emdGRiPd/e5NtWExfCZc0UqeJ15AgbF4RfzTevUi0HPOpEdn+n2cOLKQ1IL01XN23w3OY/A/k4wVs15hZiOrJVuFcq18fE47uUYJ7thSXFTYZPiQk6pO3kf6x/dGAB9FVdE81EH5pm8W+ryR5TgbZboTm1VqodT75gt8nusHyayw01gGkIO4tuhDSBaRfuVJd8sbjBAbdDKbjW5st4DFLa+YzZCUORtP8FftjhWA19VcSEtGmZp6calxLoJ2iGzClSzZ1aJGFrzXczTzGeS5A94V5jL0Kq2lQHno93uzHSxdkP24Kde8dUmgHK75OBYCUT90RfmAgdFFDE4dpQkkPDqCKLqb21vrAAR/7jdtPc8e6Zk4WWBR+ErFMNr2Z3Vb0sCIR2sUvbuKnWBnjgWVyu9DV/31Y3b5g==
+X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch02.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(46966006)(36840700001)(103116003)(336012)(26005)(186003)(426003)(8936002)(36860700001)(1076003)(82310400004)(8676002)(4326008)(7636003)(356005)(107886003)(83380400001)(47076005)(2906002)(6666004)(508600001)(40460700003)(36756003)(9786002)(7696005)(70206006)(110136005)(54906003)(2616005)(316002)(5660300002)(70586007)(102446001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Feb 2022 13:06:06.5324
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: cb334d17-bedb-4cff-e779-08d9e7df1b05
+X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch02.xlnx.xilinx.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN1NAM02FT062.eop-nam02.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR02MB5291
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Feb 02 2022, Alex Williamson <alex.williamson@redhat.com> wrote:
+Xilinx Versal Premium series has CPM5 block which supports Root port
+functioning at Gen5 speed.
+Xilinx Versal CPM5 has few changes with existing CPM block.
+- CPM5 has dedicated register space for control and status registers.
+- CPM5 legacy interrupt handling needs additional register bit
+  to enable and handle legacy interrupts.
 
-> On Tue, 1 Feb 2022 20:24:59 -0400
-> Jason Gunthorpe <jgg@nvidia.com> wrote:
->
->> On Tue, Feb 01, 2022 at 02:49:16PM -0700, Alex Williamson wrote:
->> > On Tue, 1 Feb 2022 14:36:20 -0400
->> > Jason Gunthorpe <jgg@nvidia.com> wrote:
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+---
+ drivers/pci/controller/pcie-xilinx-cpm.c | 33 +++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
 
->> > > I don't want to touch capabilities, but we can try to use feature for
->> > > set state. Please confirm this is what you want.  
->> > 
->> > It's a team sport, but to me it seems like it fits well both in my
->> > mental model of interacting with a device feature, without
->> > significantly altering the uAPI you're defining anyway.  
->> 
->> Well, my advice is that ioctls are fine, and a bit easier all around.
->> eg strace and syzkaller are a bit easier if everything neatly maps
->> into one struct per ioctl - their generator tools are optimized for
->> this common case.
->> 
->> Simple multiplexors are next-best-fine, but there should be a clear
->> idea when to use the multiplexer, or not.
->> 
->> Things like the cap chains enter a whole world of adventure for
->> strace/syzkaller :)
->
-> vfio's argsz/flags is not only a standard framework, but it's one that
-> promotes extensions.  We were able to add capability chains with
-> backwards compatibility because of this design.  IMO, that's avoided
-> ioctl sprawl; we've been able to maintain a fairly small set of core
-> ioctls rather than add add a new ioctl every time we want to describe
-> some new property of a device or region or IOMMU.  I think that
-> improves the usability of the uAPI.  I certainly wouldn't want to
-> program to a uAPI with a million ioctls.  A counter argument is that
-> we're making the interface more complex, but at the same time we're
-> adding shared infrastructure for dealing with that complexity.
->
-> Of course we do continue to add new ioctls as necessary, including this
-> FEATURE ioctl, and I recognize that with such a generic multiplexer we
-> run the risk of over using it, ie. everything looks like a nail.  You
-> initially did not see the fit for setting device state as interacting
-> with a device feature, but it doesn't seem like you had a strong
-> objection to my explanation of it in that context.
->
-> So I think if the FEATURE ioctl has an ongoing place in our uAPI (using
-> it to expose migration flags would seem to be a point in that
-> direction) and it doesn't require too many contortions to think of the
-> operation we're trying to perform on the device as interacting with a
-> device FEATURE, and there are no functional or performance implications
-> of it, I would think we should use it.  To do otherwise would suggest
-> that we should consider the FEATURE ioctl a failed experiment and not
-> continue to expand its use.
->
-> I'd be interested to hear more input on this from the community.
-
-My personal take would be: a new ioctl is more suitable for things that
-may be implemented by different backends, but in a non-generic way, and
-for mandatory functionality; the FEATURE ioctl is more suitable for
-things that either are very specific to a certain backend (i.e. don't
-reserve an ioctl for something that will only ever be used on one
-platform), or for things that have a lot of commonality for the backends
-that implement them (i.e. you are using a familiar scheme to interact
-with them.)
-
-From staring at the code and the discussion here for a bit (I have not
-yet made my way through all of this except in a superficial way), I'd
-lean more towards using FEATURE here.
+diff --git a/drivers/pci/controller/pcie-xilinx-cpm.c b/drivers/pci/controller/pcie-xilinx-cpm.c
+index c7cd44ed4dfc..eb69f494571a 100644
+--- a/drivers/pci/controller/pcie-xilinx-cpm.c
++++ b/drivers/pci/controller/pcie-xilinx-cpm.c
+@@ -35,6 +35,10 @@
+ #define XILINX_CPM_PCIE_MISC_IR_ENABLE	0x00000348
+ #define XILINX_CPM_PCIE_MISC_IR_LOCAL	BIT(1)
+ 
++#define XILINX_CPM_PCIE_IR_STATUS       0x000002A0
++#define XILINX_CPM_PCIE_IR_ENABLE       0x000002A8
++#define XILINX_CPM_PCIE_IR_LOCAL        BIT(0)
++
+ /* Interrupt registers definitions */
+ #define XILINX_CPM_PCIE_INTR_LINK_DOWN		0
+ #define XILINX_CPM_PCIE_INTR_HOT_RESET		3
+@@ -109,6 +113,7 @@
+  * @intx_irq: legacy interrupt number
+  * @irq: Error interrupt number
+  * @lock: lock protecting shared register access
++ * @is_cpm5: value to check cpm version
+  */
+ struct xilinx_cpm_pcie {
+ 	struct device			*dev;
+@@ -120,6 +125,7 @@ struct xilinx_cpm_pcie {
+ 	int				intx_irq;
+ 	int				irq;
+ 	raw_spinlock_t			lock;
++	bool                            is_cpm5;
+ };
+ 
+ static u32 pcie_read(struct xilinx_cpm_pcie *port, u32 reg)
+@@ -285,6 +291,14 @@ static void xilinx_cpm_pcie_event_flow(struct irq_desc *desc)
+ 		generic_handle_domain_irq(port->cpm_domain, i);
+ 	pcie_write(port, val, XILINX_CPM_PCIE_REG_IDR);
+ 
++	if (port->is_cpm5) {
++		val = readl_relaxed(port->cpm_base + XILINX_CPM_PCIE_IR_STATUS);
++		if (val)
++			writel_relaxed(val,
++				       port->cpm_base +
++				       XILINX_CPM_PCIE_IR_STATUS);
++	}
++
+ 	/*
+ 	 * XILINX_CPM_PCIE_MISC_IR_STATUS register is mapped to
+ 	 * CPM SLCR block.
+@@ -484,6 +498,12 @@ static void xilinx_cpm_pcie_init_port(struct xilinx_cpm_pcie *port)
+ 	 */
+ 	writel(XILINX_CPM_PCIE_MISC_IR_LOCAL,
+ 	       port->cpm_base + XILINX_CPM_PCIE_MISC_IR_ENABLE);
++
++	if (port->is_cpm5) {
++		writel(XILINX_CPM_PCIE_IR_LOCAL,
++		       port->cpm_base + XILINX_CPM_PCIE_IR_ENABLE);
++	}
++
+ 	/* Enable the Bridge enable bit */
+ 	pcie_write(port, pcie_read(port, XILINX_CPM_PCIE_REG_RPSC) |
+ 		   XILINX_CPM_PCIE_REG_RPSC_BEN,
+@@ -504,6 +524,9 @@ static int xilinx_cpm_pcie_parse_dt(struct xilinx_cpm_pcie *port,
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct resource *res;
+ 
++	if (of_device_is_compatible(dev->of_node, "xlnx,versal-cpm5-host-1.00"))
++		port->is_cpm5 = true;
++
+ 	port->cpm_base = devm_platform_ioremap_resource_byname(pdev,
+ 							       "cpm_slcr");
+ 	if (IS_ERR(port->cpm_base))
+@@ -518,7 +541,14 @@ static int xilinx_cpm_pcie_parse_dt(struct xilinx_cpm_pcie *port,
+ 	if (IS_ERR(port->cfg))
+ 		return PTR_ERR(port->cfg);
+ 
+-	port->reg_base = port->cfg->win;
++	if (!port->is_cpm5) {
++		port->reg_base = port->cfg->win;
++	} else {
++		port->reg_base = devm_platform_ioremap_resource_byname(pdev,
++								       "cpm_csr");
++		if (IS_ERR(port->reg_base))
++			return PTR_ERR(port->reg_base);
++	}
+ 
+ 	return 0;
+ }
+@@ -593,6 +623,7 @@ static int xilinx_cpm_pcie_probe(struct platform_device *pdev)
+ 
+ static const struct of_device_id xilinx_cpm_pcie_of_match[] = {
+ 	{ .compatible = "xlnx,versal-cpm-host-1.00", },
++	{ .compatible = "xlnx,versal-cpm5-host-1.00", },
+ 	{}
+ };
+ 
+-- 
+2.17.1
 
