@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA25BC2BA4C
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Feb 2022 14:46:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C67C433EF
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Feb 2022 14:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359449AbiBDOq5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Feb 2022 09:46:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51086 "EHLO
+        id S1359431AbiBDOq6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Feb 2022 09:46:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359451AbiBDOq4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Feb 2022 09:46:56 -0500
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 989ECC061756
-        for <linux-pci@vger.kernel.org>; Fri,  4 Feb 2022 06:46:55 -0800 (PST)
-Received: by mail-lf1-x12c.google.com with SMTP id i34so13175129lfv.2
-        for <linux-pci@vger.kernel.org>; Fri, 04 Feb 2022 06:46:55 -0800 (PST)
+        with ESMTP id S1359455AbiBDOq5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Feb 2022 09:46:57 -0500
+Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72368C06173D
+        for <linux-pci@vger.kernel.org>; Fri,  4 Feb 2022 06:46:57 -0800 (PST)
+Received: by mail-lj1-x22f.google.com with SMTP id c7so8781841ljr.13
+        for <linux-pci@vger.kernel.org>; Fri, 04 Feb 2022 06:46:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=834ZeSQv8JRt/AoDg49+kb7R02sAA8A0g9Z5La4Rnzg=;
-        b=CyhYJKOVMc1esvIiUcWVd5WK2YZuhualCB6ZHsuAHJ6f8hAcxs6mnd16A964xpcIbm
-         LM8xCIn5QyLW2g0AO9oHQbC+jZazXm8TIgY7hz6cw9SPfKas77V6DDaelGfFLVGqr4O5
-         MXsJDqW7mGhsYquwva0a69p4p5wKQt0LjG2rPRmUHCBDeVxX8I5QvTWQqg49rYJcWOGN
-         j0WXI4D8ChzJnrxRD51XNZk3DTkFlHA2hEHE+DCB/7e0W5aHS1+kOFPkfA9XdRvOL92W
-         VP73gg8kQDnQIExZEH8cY++tvXzdSr8og/TWM4REA/Y3Oqfc178iE1eI1Jt9+iAHkYpA
-         AGCQ==
+        bh=F1j2Q5XxkmWrr7M0KKFyu0KiO6cRW71BJZcx3JxtL2w=;
+        b=ainVI4CEOf94KXd/b/UCZEE37fzAFUz1AZzfVMkBnGgoZHbUymgeaxSRzyCcxG5nDb
+         UN5XgQKg2B4g2HqN4QarLWhRANAwDlykcN0GPZtnGqDBDHYAAGTviJwjoKwHih6z7xI2
+         rYpGN7LZcJUJgzazbG2AmjAe8LF1p10BHor/FMQATYHuH9bUVGHxAYK4KnXBRZozarga
+         Kp8Wp6odpsE3YuFip7M0GfnRyYdxzeeo/rvQkmJPo+fffzn9n9tc0s+of2qLUHwiChFt
+         gsBfbNn8zU93mNengHYaFFqWEO/1Uxn371gPQXNZWfK3vezeupVaFabvWVeI9pwkFjjm
+         cIRA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=834ZeSQv8JRt/AoDg49+kb7R02sAA8A0g9Z5La4Rnzg=;
-        b=LJxbCupVJUals0Q7H9knv0ti8SdDblImKOfYLaCPNVkt+aEUau9qA2FMa26CSsUIuR
-         neF8QxfB6pkYMjeHyPPWDJiilqyGoECj3ZBhZVd9mUxLTUR/LdlrutUj0tui1jZVl580
-         N27Iu6ICz6akqSkMoNZ27+Xp5RTxNWEFZ7XDS8r0Bybgb3nAwwwRsIap/oR47/P7fbAR
-         7M6CujVczuGNWqlNrYAWrjIbFZ0hqPUutviDbrvBct+uemC4GiMTb1rcGKTLTNGIJ9WY
-         NfGKVWLp0niSSgekYvd1F5o+F3dC6mxSef2xkXlqkfPCaz0G46VMwUVsJCHsv3UhKGev
-         hQUQ==
-X-Gm-Message-State: AOAM532+R+nCvwtyFauoWujyMvzGVIUvVkTxklv1btb4eA6GIRXUfeGP
-        W3RgUgFWfdiyT6l8hcaq93UO+w==
-X-Google-Smtp-Source: ABdhPJx4sRd11IQeo9M/dqAxTE76YJ5x7QE8Rs6t0Opx5T30kV8t1z5SL1VMXhhmPmB12DTQgQm11Q==
-X-Received: by 2002:a05:6512:2215:: with SMTP id h21mr2514037lfu.570.1643986013961;
-        Fri, 04 Feb 2022 06:46:53 -0800 (PST)
+        bh=F1j2Q5XxkmWrr7M0KKFyu0KiO6cRW71BJZcx3JxtL2w=;
+        b=Avd5rc3vr48m3tTfli+RfbB92u7qo3Qn+oXDR+NBxXaGfNbg3CFYGsWhvxkXhZVutP
+         gN1IunokBtCaInC8S31F2n2OOwNKW7NCT3vZuKjA/BtT0Kfj+lVLbHJ7lhyPpNQSAIww
+         /UuG5UbOW3GzeIonlYOjOjv9QZuW2dBJUqPEy80fMsvzr2tt6bc3n1R8gj1xVbEG0nME
+         GA/Xode9W3fKk/UVN+vDT80C27vH7UCeQwFpYB+izRJMN+MZsNi2Oeyp66WSlhF7lfjA
+         70lhVYpl1GpI9p0F+zA2pU94VzKjArIE7TpnQVI9RElZF88E8ytidGlSu7xwqQ/T+sNF
+         yo6g==
+X-Gm-Message-State: AOAM530KmOagpq5kIM/iFruLIXt9EgRQWna15/zymn9DUHSeYo1Lf+4W
+        PzAIVVtTlFw5PYbF0F50+JeyNQ==
+X-Google-Smtp-Source: ABdhPJzWW0z3SGSltZDbb869075XfBoW6NZXPOlLdEedYo2bmbGY5Ciuvlpil0HmrpQtyXso5PJS9w==
+X-Received: by 2002:a2e:96c6:: with SMTP id d6mr1961399ljj.215.1643986015812;
+        Fri, 04 Feb 2022 06:46:55 -0800 (PST)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id y23sm348222lfb.2.2022.02.04.06.46.53
+        by smtp.gmail.com with ESMTPSA id y23sm348222lfb.2.2022.02.04.06.46.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Feb 2022 06:46:53 -0800 (PST)
+        Fri, 04 Feb 2022 06:46:55 -0800 (PST)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -61,9 +61,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-clk@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: [PATCH v2 08/11] PCI: qcom: Remove pipe_clk_src reparenting
-Date:   Fri,  4 Feb 2022 17:46:42 +0300
-Message-Id: <20220204144645.3016603-9-dmitry.baryshkov@linaro.org>
+Subject: [PATCH v2 10/11] PCI: qcom: Add ddrss_sf_tbu flag
+Date:   Fri,  4 Feb 2022 17:46:44 +0300
+Message-Id: <20220204144645.3016603-11-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220204144645.3016603-1-dmitry.baryshkov@linaro.org>
 References: <20220204144645.3016603-1-dmitry.baryshkov@linaro.org>
@@ -73,129 +73,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SC7280 platform has switched to using GDSC wrapper for setting
-pipe_clk_src parent clock. Remove supporting code from the pcie-qcom
-driver.
+Qualcomm PCIe driver uses compatible string to check if the ddrss_sf_tbu
+clock should be used. Since sc7280 support has added flags, switch to
+the new mechanism to check if this clock should be used.
 
-Cc: Prasad Malisetty <pmaliset@codeaurora.org>
-Cc: Stephen Boyd <swboyd@chromium.org>
+Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 38 --------------------------
- 1 file changed, 38 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 85e84b621dbc..7df8632a21a8 100644
+index 3a0da577b75d..6034a933814d 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -164,9 +164,6 @@ struct qcom_pcie_resources_2_7_0 {
- 	int num_clks;
- 	struct regulator_bulk_data supplies[2];
- 	struct reset_control *pci_reset;
--	struct clk *pipe_clk_src;
--	struct clk *phy_pipe_clk;
--	struct clk *ref_clk_src;
- };
- 
- union qcom_pcie_resources {
-@@ -192,7 +189,6 @@ struct qcom_pcie_ops {
+@@ -189,6 +189,7 @@ struct qcom_pcie_ops {
  
  struct qcom_pcie_cfg {
  	const struct qcom_pcie_ops *ops;
--	unsigned int pipe_clk_need_muxing:1;
++	bool has_ddrss_sf_tbu_clk;
  };
  
  struct qcom_pcie {
-@@ -203,7 +199,6 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_ops *ops;
--	unsigned int pipe_clk_need_muxing:1;
+@@ -1131,7 +1132,7 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
+ 	res->clks[3].id = "bus_slave";
+ 	res->clks[4].id = "slave_q2a";
+ 	res->clks[5].id = "tbu";
+-	if (of_device_is_compatible(dev->of_node, "qcom,pcie-sm8250")) {
++	if (pcie->cfg->has_ddrss_sf_tbu_clk) {
+ 		res->clks[6].id = "ddrss_sf_tbu";
+ 		res->num_clks = 7;
+ 	} else {
+@@ -1430,6 +1431,7 @@ static const struct qcom_pcie_cfg sdm845_cfg = {
+ 
+ static const struct qcom_pcie_cfg sm8250_cfg = {
+ 	.ops = &ops_1_9_0,
++	.has_ddrss_sf_tbu_clk = true,
  };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1147,20 +1142,6 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	if (ret < 0)
- 		return ret;
- 
--	if (pcie->pipe_clk_need_muxing) {
--		res->pipe_clk_src = devm_clk_get(dev, "pipe_mux");
--		if (IS_ERR(res->pipe_clk_src))
--			return PTR_ERR(res->pipe_clk_src);
--
--		res->phy_pipe_clk = devm_clk_get(dev, "phy_pipe");
--		if (IS_ERR(res->phy_pipe_clk))
--			return PTR_ERR(res->phy_pipe_clk);
--
--		res->ref_clk_src = devm_clk_get(dev, "ref");
--		if (IS_ERR(res->ref_clk_src))
--			return PTR_ERR(res->ref_clk_src);
--	}
--
- 	return 0;
- }
- 
-@@ -1178,10 +1159,6 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 		return ret;
- 	}
- 
--	/* Set TCXO as clock source for pcie_pipe_clk_src */
--	if (pcie->pipe_clk_need_muxing)
--		clk_set_parent(res->pipe_clk_src, res->ref_clk_src);
--
- 	ret = clk_bulk_prepare_enable(res->num_clks, res->clks);
- 	if (ret < 0)
- 		goto err_disable_regulators;
-@@ -1243,17 +1220,6 @@ static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
--static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
--{
--	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
--
--	/* Set pipe clock as clock source for pcie_pipe_clk_src */
--	if (pcie->pipe_clk_need_muxing)
--		clk_set_parent(res->pipe_clk_src, res->phy_pipe_clk);
--
--	return 0;
--}
--
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
- 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-@@ -1427,7 +1393,6 @@ static const struct qcom_pcie_ops ops_2_7_0 = {
- 	.init = qcom_pcie_init_2_7_0,
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
--	.post_init = qcom_pcie_post_init_2_7_0,
- };
- 
- /* Qcom IP rev.: 1.9.0 */
-@@ -1436,7 +1401,6 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.init = qcom_pcie_init_2_7_0,
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
--	.post_init = qcom_pcie_post_init_2_7_0,
- 	.config_sid = qcom_pcie_config_sid_sm8250,
- };
- 
-@@ -1470,7 +1434,6 @@ static const struct qcom_pcie_cfg sm8250_cfg = {
  
  static const struct qcom_pcie_cfg sc7280_cfg = {
- 	.ops = &ops_1_9_0,
--	.pipe_clk_need_muxing = true,
- };
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
-@@ -1513,7 +1476,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	pcie->pci = pci;
- 
- 	pcie->ops = pcie_cfg->ops;
--	pcie->pipe_clk_need_muxing = pcie_cfg->pipe_clk_need_muxing;
- 
- 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
- 	if (IS_ERR(pcie->reset)) {
 -- 
 2.34.1
 
