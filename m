@@ -2,160 +2,144 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C41C433F5
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Feb 2022 09:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D87E3C433F5
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Feb 2022 11:33:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232761AbiBFJwM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 6 Feb 2022 04:52:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37410 "EHLO
+        id S234096AbiBFLdd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 6 Feb 2022 06:33:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232685AbiBFJwL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Feb 2022 04:52:11 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AED19C06173B;
-        Sun,  6 Feb 2022 01:52:09 -0800 (PST)
-Received: from ip4d144895.dynamic.kabel-deutschland.de ([77.20.72.149] helo=[192.168.66.200]); authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1nGeDE-0005xC-Nn; Sun, 06 Feb 2022 10:52:04 +0100
-Message-ID: <74cf71d9-8c9f-6b3d-8019-2d7f4e9d0d2d@leemhuis.info>
-Date:   Sun, 6 Feb 2022 10:52:04 +0100
+        with ESMTP id S234051AbiBFLdc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Feb 2022 06:33:32 -0500
+X-Greylist: delayed 222 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Feb 2022 03:33:31 PST
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92D8CC043181
+        for <linux-pci@vger.kernel.org>; Sun,  6 Feb 2022 03:33:31 -0800 (PST)
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 145D94003D
+        for <linux-pci@vger.kernel.org>; Sun,  6 Feb 2022 11:33:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1644147210;
+        bh=ZiDU9Eu3x+M8fVHZBfeMoqgYec/dSCr3pkNCtmbnF0Y=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=vt9a0OJwHTP5YJBNR4cI0KJmrPJZbHdfA19zAi95Km9ElnUYKVrrVL46KhjP6GEzD
+         tfpVKAuCyCl/qhRevWgtSb0DhuK1f0GyXO6+7v+maXLf35ITq3xVNotyWFptWRYMsk
+         PEvM4K10M/NXOL2zuOxLziC30D3JHZBbPn3ErxRFGGYVFQzjKj0p8U8qHKvXP1vYgU
+         uiMs4VBbppatnwo8jH1es0W5e9Rn2SxhuzVbIcCTyXaPT98r+y6KglKdDlTcg44Qwb
+         CCZdzjXuAxHeVb5gN3IgSlBj0878CkqMj3vUacLXPhU0goC2nEnUQvZuioDMVVGSlJ
+         k/DFhBfwoM9lg==
+Received: by mail-ed1-f72.google.com with SMTP id k12-20020a50c8cc000000b0040f28426e5aso2338485edh.17
+        for <linux-pci@vger.kernel.org>; Sun, 06 Feb 2022 03:33:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=ZiDU9Eu3x+M8fVHZBfeMoqgYec/dSCr3pkNCtmbnF0Y=;
+        b=W3xp59Gwy4vpkwZCYTb5iwi9jYEFfx9612XyuQ9jmKrvL5G0KRwOQbY0AiTEiQDUHL
+         0gkIwqOH6JWh92FC3X9RLNq7ah8ySZb1SUZd4tNGB710rkckItOL+eeKGsDNWaWdmkJ1
+         kfVT+O9/U4cG9Ckrf2Wo4p0PhQ7ef3dn0dTWhi4w6oU4quWNXCy9IU1uSVhSgFj4m9GJ
+         WWuBHf24hJMIuKr9Tp7+uBlHAnnLaZkXqc3iCiiY6ndki5GbJRAk5GXMZkdm+jbvWXoe
+         61OTTvFIfQ/fWBsQiFFdBEdFWZE0uCi9nXYj6SVlg4VmpGOSQgGAdo2qBOMEedWUwrJD
+         zuCQ==
+X-Gm-Message-State: AOAM531dF8MJFaYTflsSsJzjFv8+TPFhgPhSrUPGTRupTrIIQUVg2PT2
+        L2XoDKGoVgvnpFXOxeMo/VbA2xBnzmQndtCOVvQoR4SOo4mteoidKl8NE/ulHMerYdO7dF92SwC
+        fxMtDOIFw643FaPJpmap1ejghK8FjqG9Z/8W2+Q==
+X-Received: by 2002:a50:fc06:: with SMTP id i6mr6183209edr.89.1644147209699;
+        Sun, 06 Feb 2022 03:33:29 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwy3U1ftL3UccDBSq+2ALlKh+KNAz5yKkEnqRtTK4p/TCdyp5nH+nET54fdFXxmYZ3tk3uTmg==
+X-Received: by 2002:a50:fc06:: with SMTP id i6mr6183183edr.89.1644147209552;
+        Sun, 06 Feb 2022 03:33:29 -0800 (PST)
+Received: from [192.168.0.83] (xdsl-188-155-168-84.adslplus.ch. [188.155.168.84])
+        by smtp.gmail.com with ESMTPSA id ck7sm1294186ejb.44.2022.02.06.03.33.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 06 Feb 2022 03:33:28 -0800 (PST)
+Message-ID: <4e2bec9b-4759-b699-fa7b-974f5f43da9d@canonical.com>
+Date:   Sun, 6 Feb 2022 12:33:27 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH] PCI: xgene: Fix IB window setup
-Content-Language: en-BS
-To:     dann frazier <dann.frazier@canonical.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Toan Le <toan@os.amperecomputing.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        =?UTF-8?Q?St=c3=a9phane_Graber?= <stgraber@ubuntu.com>,
-        stable@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <20211129173637.303201-1-robh@kernel.org>
- <Yf2wTLjmcRj+AbDv@xps13.dannf>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <Yf2wTLjmcRj+AbDv@xps13.dannf>
+Subject: Re: [PATCH V1 03/10] dt-bindings: memory: Add Tegra234 PCIe memory
+Content-Language: en-US
+To:     Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, robh+dt@kernel.org,
+        thierry.reding@gmail.com, jonathanh@nvidia.com
+Cc:     kishon@ti.com, vkoul@kernel.org, kw@linux.com,
+        p.zabel@pengutronix.de, mperttunen@nvidia.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, kthota@nvidia.com,
+        mmaddireddy@nvidia.com, sagar.tv@gmail.com
+References: <20220205162144.30240-1-vidyas@nvidia.com>
+ <20220205162144.30240-4-vidyas@nvidia.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <20220205162144.30240-4-vidyas@nvidia.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1644141129;e2bf8b3e;
-X-HE-SMSGID: 1nGeDE-0005xC-Nn
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[TLDR: I'm adding the regression report below to regzbot, the Linux
-kernel regression tracking bot; nearly all text you find below is
-compiled from a few templates paragraphs you likely have encountered
-already already from mails similar to this one.]
+On 05/02/2022 17:21, Vidya Sagar wrote:
+> Add the memory client and stream ID definitions for the PCIe hardware
+> found on Tegra234 SoCs.
 
-Hi, this is your Linux kernel regression tracker speaking.
+I could not find dependencies or merging strategy in cover letter.
+Please always describe it, so I don't have to go through all the patches
+to figure this out.
 
-CCing the regression mailing list, as it should be in the loop for all
-regressions, as explained here:
-https://www.kernel.org/doc/html/latest/admin-guide/reporting-issues.html
-
-On 05.02.22 00:01, dann frazier wrote:
-> On Mon, Nov 29, 2021 at 11:36:37AM -0600, Rob Herring wrote:
->> Commit 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup")
->> broke PCI support on XGene. The cause is the IB resources are now sorted
->> in address order instead of being in DT dma-ranges order. The result is
->> which inbound registers are used for each region are swapped. I don't
->> know the details about this h/w, but it appears that IB region 0
->> registers can't handle a size greater than 4GB. In any case, limiting
->> the size for region 0 is enough to get back to the original assignment
->> of dma-ranges to regions.
 > 
-> hey Rob!
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+>  include/dt-bindings/memory/tegra234-mc.h | 64 ++++++++++++++++++++++++
+>  1 file changed, 64 insertions(+)
 > 
-> I've been seeing a panic on HP Moonshoot m400 cartridges (X-Gene1) -
-> only during network installs - that I also bisected down to commit
-> 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup"). I was
-> hoping that this patch that fixed the issue on Stéphane's X-Gene2
-> system would also fix my issue, but no luck. In fact, it seems to just
-> makes it fail differently. Reverting both patches is required to get a
-> v5.17-rc kernel to boot.
-> 
-> I've collected the following logs - let me know if anything else would
-> be useful.
-> 
-> 1) v5.17-rc2+ (unmodified):
->    http://dannf.org/bugs/m400-no-reverts.log
->    Note that the mlx4 driver fails initialization.
-> 
-> 2) v5.17-rc2+, w/o the commit that fixed Stéphane's system:
->    http://dannf.org/bugs/m400-xgene2-fix-reverted.log
->    Note the mlx4 MSI-X timeout, and later panic.
-> 
-> 3) v5.17-rc2+, w/ both commits reverted (works)
->    http://dannf.org/bugs/m400-both-reverted.log
+> diff --git a/include/dt-bindings/memory/tegra234-mc.h b/include/dt-bindings/memory/tegra234-mc.h
+> index 2662f70c15c6..60017684858a 100644
+> --- a/include/dt-bindings/memory/tegra234-mc.h
+> +++ b/include/dt-bindings/memory/tegra234-mc.h
+> @@ -7,15 +7,53 @@
+>  #define TEGRA234_SID_INVALID		0x00
+>  #define TEGRA234_SID_PASSTHROUGH	0x7f
+>  
+> +/* NISO0 stream IDs */
+> +#define TEGRA234_SID_PCIE0	0x12U
+> +#define TEGRA234_SID_PCIE4	0x13U
+> +#define TEGRA234_SID_PCIE5	0x14U
+> +#define TEGRA234_SID_PCIE6	0x15U
+> +#define TEGRA234_SID_PCIE9	0x1FU
+>  
+>  /* NISO1 stream IDs */
+>  #define TEGRA234_SID_SDMMC4	0x02
+> +#define TEGRA234_SID_PCIE1	0x5U
+> +#define TEGRA234_SID_PCIE2	0x6U
+> +#define TEGRA234_SID_PCIE3	0x7U
+> +#define TEGRA234_SID_PCIE7	0x8U
+> +#define TEGRA234_SID_PCIE8	0x9U
+> +#define TEGRA234_SID_PCIE10	0xBU
 
-Thanks for the report.
+I don't see usage of these...
 
-To be sure this issue doesn't fall through the cracks unnoticed, I'm
-adding it to regzbot, my Linux kernel regression tracking bot:
+>  #define TEGRA234_SID_BPMP	0x10
+>  
+>  /*
+>   * memory client IDs
+>   */
+>  
+> +/* PCIE6 read clients */
+> +#define TEGRA234_MEMORY_CLIENT_PCIE6AR 0x28
 
-#regzbot ^introduced c7a75d07827a1f33d
-#regzbot title Follow-up error for the commit fixing "PCIe regression on
-APM Merlin (aarch64 dev platform) preventing NVME initialization"
-#regzbot ignore-activity
+I see you use them in DTS but not in mc driver. Don't you miss anything
+here?
 
-Reminder for developers: when fixing the issue, please add a 'Link:'
-tags pointing to the report (the mail quoted above) using the
-lore.kernel.org/r/, as explained in
-'Documentation/process/submitting-patches.rst' and
-'Documentation/process/5.Posting.rst', as this allows the bot to assign
-any fixes posted or commited with the report to always show the current
-status of things and automatically close the issue when the fix hits the
-right tree.
+> +/* PCIE6 write clients */
+> +#define TEGRA234_MEMORY_CLIENT_PCIE6AW 0x29
+> +/* PCIE7 read clients */
+> +#define TEGRA234_MEMORY_
 
-I'm sending this to everyone that got the initial report, to make them
-aware of the tracking. I also hope that messages like this motivate
-people to directly get at least the regression mailing list and ideally
-even regzbot involved when dealing with regressions, as messages like
-this wouldn't be needed then.
-
-Don't worry, I'll send further messages wrt to this regression just to
-the lists (with a tag in the subject so people can filter them away), if
-they are relevant just for regzbot. With a bit of luck no such messages
-will be needed anyway.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I'm getting a lot of
-reports on my table. I can only look briefly into most of them and lack
-knowledge about most of the areas they concern. I thus unfortunately
-will sometimes get things wrong or miss something important. I hope
-that's not the case here; if you think it is, don't hesitate to tell me
-in a public reply, it's in everyone's interest to set the public record
-straight.
-
--- 
-Additional information about regzbot:
-
-If you want to know more about regzbot, check out its web-interface, the
-getting start guide, and the references documentation:
-
-https://linux-regtracking.leemhuis.info/regzbot/
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/getting_started.md
-https://gitlab.com/knurd42/regzbot/-/blob/main/docs/reference.md
-
-The last two documents will explain how you can interact with regzbot
-yourself if your want to.
-
-Hint for reporters: when reporting a regression it's in your interest to
-CC the regression list and tell regzbot about the issue, as that ensures
-the regression makes it onto the radar of the Linux kernel's regression
-tracker -- that's in your interest, as it ensures your report won't fall
-through the cracks unnoticed.
-
-Hint for developers: you normally don't need to care about regzbot once
-it's involved. Fix the issue as you normally would, just remember to
-include 'Link:' tag in the patch descriptions pointing to all reports
-about the issue. This has been expected from developers even before
-regzbot showed up for reasons explained in
-'Documentation/process/submitting-patches.rst' and
-'Documentation/process/5.Posting.rst'.
+Best regards,
+Krzysztof
