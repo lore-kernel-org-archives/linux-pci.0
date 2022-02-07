@@ -2,184 +2,150 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04110C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2655BC4321E
 	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 06:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241071AbiBGGPl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Feb 2022 01:15:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42536 "EHLO
+        id S243907AbiBGGPn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Feb 2022 01:15:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351276AbiBGENI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Feb 2022 23:13:08 -0500
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2056.outbound.protection.outlook.com [40.107.96.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24463C043180;
-        Sun,  6 Feb 2022 20:13:07 -0800 (PST)
+        with ESMTP id S236725AbiBGEbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Feb 2022 23:31:07 -0500
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam08on2046.outbound.protection.outlook.com [40.107.102.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 001B0C043181;
+        Sun,  6 Feb 2022 20:31:03 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=evPlkVCnWu6fvxRQacVbZ7oHD7wLy+qRtTay7LR7leFAwewTUr07/PKEQTcbHmG8o8w2xOrtqSIY57DkC6OSSQHBPL7VejGErFHm2cSMgpUfRYsgjTIyOlr8lXCOkjy5pZnN8zPT6HE7C62AIztI2AbUGa/12iPGvUvUvOBS5x6uwOJrWcXySZyjmPXxK+Mql+e+Ncd5YsCPoAT02JnnBmE4pCzc0midI2f9iUWIxejmliG/IBGuTD7SsL3PEJx1Dcm3T1yvSA3fXaYxdUhXAZs5DQsyt888UfGjuUatSKPEgAf4s3iarYOlVH1yeZiKiBkpAa+yeNpwAbFjBRj9tw==
+ b=CV7dAF3ZZCLkgyxI2XuH2zU0HQU0/6mRpuyIpsAuELEOYAIIEME7N3JBR97CrKGfirV/icHl78ds0lJg0aAAODqOe8E5FR6Fqy0ozEchq5/jz5BPy/q1j60Qb2nrgm9E9gBGx6lJxUvk2wl//iNBt5C+XacRZ4+rKRiHi1yMPfPtfL0W/e60yGZ1unzm5UCoQEjHUsbYuUPz5HOHe/q+iA8/7L/L6Hhry0CZcqq1AmAsYO2DtwsmbBcwNelg0gvniSh1+MxNPlRwMEvyip5MNkNViu4mPLCiPr79gJ1QXVI5YcOuY8/MDwfZAr/ub2lfGfVGsWTd5JvefgtRVyd21w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IdJI5ur0mYlyE8KZosw09tYlAKu4OjZBFoQ1x1k1vsw=;
- b=dltrw1A8tb3UaE22AVWENkwK48yzGzAjeN5YszqrovPNpuPhpNwV+9fEuEY8aqLKBo/+5opFDyGz4+ZZ6VKCiBMTyEDCv1d1TCiRuVLBm3N8L01AaxLeq8JrJPawCyjiKra0mLwvICcgiwfcGNhqCYItqOfHkYjkOPo9sFEWopjl27cyymIvCYkWFId0eu+GH8ORnkqQSrTRTVMzm19k7zblDzdK+NzsuF1GCxQJljhKxREU5yaiOd7p8aqa2fcaZxMV4w4j1KcuqFTydOVpQXmfeT097P2cFPCVgZfH4T5/l/cejIQOt0mo//GgfWUcEicNt+bhhMJFyo1SiPb7og==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 149.199.62.198) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=xilinx.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=xilinx.com;
- dkim=none (message not signed); arc=none
+ bh=EOKZIEe3d20wimC5sXmGSYZ7nU4QZjN/LDcbXJOBffI=;
+ b=gE9x8c99nVIK3beeqSNThsz9DSPTyMY90gL19AKbYvhyNb02GROGQ9rXEq/OM8LKUNKQx66qJCRGeWKAdjLXKWmD/Lu6p5Css49jnHsStJ35a7NssM2OEZtjjspFeHaZQqlUFd3RhlM06U9fD89Gtf/D1psebLsrxQIB0NX0wdhhuGgj/CZArlTr9FrRziaBa+BSyQY3vr6TL3lTmmqlCVsq5vIYOSNgKmUy1hqs3Z3lt/XxW3SIfY2gplYRv5uLTBSbasQHXts+QLwfvMROvfEL9hnTn4LSRoffyKJPk9ca0tmroLcUKF5Nqu0xVI93Ay3z7FBdoIVtat07od5qkg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IdJI5ur0mYlyE8KZosw09tYlAKu4OjZBFoQ1x1k1vsw=;
- b=koOu0Ta2RXDRpGNqlVZdGp/TTpK6cuV8xH5JkxWqGExI1nYU2uq2BFSFpvRvAtozcNc01IbWfvzuiGD3iybMF25ciAuYAZXzHwdAdVBTsSL2GN7R8+cKd2M+LMZ61AvASxreyKm/UYD2gc6kgWirPNSjmTuEI08k232+QOO2ZpM=
-Received: from DM5PR15CA0041.namprd15.prod.outlook.com (2603:10b6:4:4b::27) by
- BY5PR02MB6404.namprd02.prod.outlook.com (2603:10b6:a03:1f8::16) with
+ bh=EOKZIEe3d20wimC5sXmGSYZ7nU4QZjN/LDcbXJOBffI=;
+ b=QoNrDXl2Oi4D9e5umD3xd/7sQ28HsbJ5/uoRDLSYfYjKD0QDvZGinLgV5O2onMIrL/uZvTer1jeQjypjsfFdk8vMU8NqGd2V4X7Bm7fCup0p/vvcFp9wh4PK6T0ThlZzQ7NSfVTGocHyVKlGjrumqCx9KrpHnhMP4eKEARwgTuQ=
+Received: from BY5PR02MB6947.namprd02.prod.outlook.com (2603:10b6:a03:23e::12)
+ by BYAPR02MB6006.namprd02.prod.outlook.com (2603:10b6:a03:120::16) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.17; Mon, 7 Feb
- 2022 04:13:04 +0000
-Received: from DM3NAM02FT009.eop-nam02.prod.protection.outlook.com
- (2603:10b6:4:4b:cafe::7c) by DM5PR15CA0041.outlook.office365.com
- (2603:10b6:4:4b::27) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.18 via Frontend
- Transport; Mon, 7 Feb 2022 04:13:04 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
- smtp.mailfrom=xilinx.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=xilinx.com;
-Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
- 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=149.199.62.198; helo=xsj-pvapexch01.xlnx.xilinx.com;
-Received: from xsj-pvapexch01.xlnx.xilinx.com (149.199.62.198) by
- DM3NAM02FT009.mail.protection.outlook.com (10.13.5.5) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4951.12 via Frontend Transport; Mon, 7 Feb 2022 04:13:04 +0000
-Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
- xsj-pvapexch01.xlnx.xilinx.com (172.19.86.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Sun, 6 Feb 2022 20:13:01 -0800
-Received: from smtp.xilinx.com (172.19.127.96) by
- xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
- 15.1.2176.14 via Frontend Transport; Sun, 6 Feb 2022 20:13:01 -0800
-Envelope-to: linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- lorenzo.pieralisi@arm.com,
- bhelgaas@google.com
-Received: from [10.140.9.2] (port=45184 helo=xhdbharatku40.xilinx.com)
-        by smtp.xilinx.com with esmtp (Exim 4.90)
-        (envelope-from <bharat.kumar.gogada@xilinx.com>)
-        id 1nGvOe-0005Nx-TP; Sun, 06 Feb 2022 20:13:01 -0800
-From:   Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <michals@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH 1/2] PCI: xilinx-cpm: Update YAML schemas for Versal CPM5 Root Port
-Date:   Mon, 7 Feb 2022 09:42:48 +0530
-Message-ID: <20220207041250.1658-2-bharat.kumar.gogada@xilinx.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220207041250.1658-1-bharat.kumar.gogada@xilinx.com>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Mon, 7 Feb
+ 2022 04:31:00 +0000
+Received: from BY5PR02MB6947.namprd02.prod.outlook.com
+ ([fe80::259b:b0b6:7574:328f]) by BY5PR02MB6947.namprd02.prod.outlook.com
+ ([fe80::259b:b0b6:7574:328f%9]) with mapi id 15.20.4951.018; Mon, 7 Feb 2022
+ 04:31:00 +0000
+From:   Bharat Kumar Gogada <bharatku@xilinx.com>
+To:     Bharat Kumar Gogada <bharatku@xilinx.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Michal Simek <michals@xilinx.com>
+Subject: RE: [PATCH 0/2] Add support for Xilinx Versal CPM5 Root Port
+Thread-Topic: [PATCH 0/2] Add support for Xilinx Versal CPM5 Root Port
+Thread-Index: AQHYG9j9fzCCB50+a0qHkmZFwkrjpayHfwrg
+Date:   Mon, 7 Feb 2022 04:31:00 +0000
+Message-ID: <BY5PR02MB6947DBD1D5DEFAF24EC3E5ACA52C9@BY5PR02MB6947.namprd02.prod.outlook.com>
 References: <20220207041250.1658-1-bharat.kumar.gogada@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0b3879f3-9328-4956-3e8b-08d9e9f0232b
-X-MS-TrafficTypeDiagnostic: BY5PR02MB6404:EE_
-X-Microsoft-Antispam-PRVS: <BY5PR02MB64046FCE36775A591AA215B5A52C9@BY5PR02MB6404.namprd02.prod.outlook.com>
+In-Reply-To: <20220207041250.1658-1-bharat.kumar.gogada@xilinx.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
 X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
-X-MS-Oob-TLC-OOBClassifiers: OLM:2399;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uGfy8LXPGa4D6Zbo6KE6qd3fVNZKgPHhfbUtMxOJ5ioDpp1rKLErS4hTHIFvGJlljgcyWceFgDnN0vgQPISgXP70T+DmlD723IzSHQAvOz0pOHa+X04PTjlbllSqUVniUYjgeirE0Qyz8qbu8ATtuq61B7yKgF5sWOMUB70ycmrqKKcWZ9f4GEgSkK3W2rnlsEb/S2UJ6Tk2J1L1VWhhou1gtqoPMWfZnJOJgX+cWseh5TLOFibAuchLJSgZL0Upl6d3KyNeBrobp4VkwgHS0UNASzVjDN49xn9qeh7p1n2uF37llThcFalaL7ChnRXDrFE+BnZrTpZJSOpAAzPwADGp4cY93yiFpJxPfhIwfgLLegGw0sil2bN7P3qI3vu5Uo8OK3rMwHnUwG9wT9dD0KV26byDzfqdODTBlgjo1AWV5+6ccvs7iCDTaYG1l7TDqT2x1GeBegebYRI+Lz7R8vZoL38Yh+iW57uF45enM4RIuURFRRz3idrLrtzK+8uucHovxwhiNhtQgxHd2qDnoa/qawZaO/ps580vYqabipPa3vsD4F5AFppowYv43l/vAzh0Od5emfrRTssOKAfV4mtRp8ICL4vMzS5n7AM3eklUkUm77Cj68AUtBV54tzUd9r3w7xluFaiT2Yi/lSVG2uG0tbemNam/5LU5p8ydFMMlUiqDCga1yZNE0PESsc0v
-X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch01.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(103116003)(107886003)(2906002)(508600001)(26005)(186003)(1076003)(336012)(426003)(6666004)(2616005)(7696005)(82310400004)(47076005)(316002)(70586007)(70206006)(36860700001)(8936002)(36756003)(9786002)(83380400001)(5660300002)(54906003)(110136005)(4326008)(8676002)(7636003)(356005)(102446001);DIR:OUT;SFP:1101;
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=xilinx.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 877a1409-4dab-45ae-8e7e-08d9e9f2a4d2
+x-ms-traffictypediagnostic: BYAPR02MB6006:EE_
+x-microsoft-antispam-prvs: <BYAPR02MB60061CAC49932CB18B9CCE7AA52C9@BYAPR02MB6006.namprd02.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:1824;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: ACiUA2E2kPg0H1do37bD0vytkJYWGPNxz8ekqhnkmM+MsZDPgdnry4Wn2RtIkCvRk8Rx+9jkqxms4j0s3SfcV7cFDJ+BGlWI21N1OJHVPI/d+Wjdw77U/ANBDQVzVhChVhruJAD0csqtCFD7bToTI5OgSIaOjn94BDHaHoD0CrfFmPoKXcke2J12KlfgC9P+G9L6ZQxdUPDKLgWzg7LuhkGO3zJHz8t7iuCMT3WtGSqail0dPsYqMOza7ZzE9LXdYUzHDBgBOAA/qWWeZCx9lzBn7Hb9cTTqp+A5s/WlyhaiBLZ75Ox4KWqt/ngk9wr1sLqmORvr6ohpVzMAh2hb8Lu/wV8/KEOHGN+hncwzzxm+4ANqW3OtQ9I1EYIyvVRM7KQcp2g9JTRlzxjzxs2PqwmDCSQxcdThtzV34GHnlP6HwKueWPHw8CS67L3y3/XZqIt1h7+uzKMhinfBYUkdVTsp6F+ABL7dH7B65nVOehrc/NFTj+Z49Wr7KmEh5cRS/vjH73Ord0eT24zgyuWs33ezvgpD93/mN3VmxBzBduxQcIKPgsHjQTsEALxV5g1HEYUqx2s8kLNiyBOGiGzoZhbD2X8dE9J9s1hdgq+Px2rKgvEMoyAEChJoubBbiYer9YdO6xOkfcLzJG+QuzqLmQu3mxKZZ4Gj/LG+4o6RrYunxy1B0cEkOf/+yswOTqEEMpkyBmBxS3B9T9fWH21cgg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR02MB6947.namprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(5660300002)(122000001)(9686003)(6506007)(38100700002)(53546011)(86362001)(38070700005)(110136005)(7696005)(54906003)(71200400001)(2906002)(186003)(316002)(76116006)(66946007)(83380400001)(66446008)(64756008)(55016003)(66476007)(52536014)(8936002)(4326008)(66556008)(107886003)(26005)(8676002)(33656002)(508600001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?w8jtRWtHDpsymrcQwmVHizpa/mULhhW2swX7U1k2rRBlp5wjr1v3893qPZEE?=
+ =?us-ascii?Q?Pvu18grRakvuMA6kyPdyYmOBxVqP9OEooiyOcSwHMRJjFiwYVuefDb1OvAV8?=
+ =?us-ascii?Q?PDwKooVqNNoJzyxXsUJu9FJk4bxT6oe8Ee0ZoXvF8CZAFyWDDOBVFLKQZpw9?=
+ =?us-ascii?Q?KavB2/u/MVsudrVzmYtpBqkknnYJ6Gts8LWf8MW0RwApsW6e9BTzbJUMqCrv?=
+ =?us-ascii?Q?ie/XhyHHEhcQCj/EFlvuqSZLsX/AZmhNgPMnjYtB1xanA52JTBNSJTU0Z5WT?=
+ =?us-ascii?Q?w7nJPaoC0AWyok1DBrIVJXJqgUyAOiF1QYcBwCQ6giBVHXPumjJX6yVHxpkW?=
+ =?us-ascii?Q?P9QBE6RUHpLkizxambVHkWrJ2+8ElmxGG3IHSkHC8MKfHkWQP8lENpuuJwTk?=
+ =?us-ascii?Q?OBzUS9pycyBuS20QZ+yzDsMUo+zY3nk4+8L1r8dnyjnxSYfMsVBwisdu4sJn?=
+ =?us-ascii?Q?rDf3F0abDW105bSOu41M9geAHg0EKkCSVp+BZLvVrK4Uolo09ADZPhotNUbj?=
+ =?us-ascii?Q?fXk0kDRJOVNVoiO/qVZvcUm2yvsIVzzGkoz0ZQJukYfa+9zQ8Jeij8LDHFCi?=
+ =?us-ascii?Q?O4a7ECnjiS25ezBDyZNn0HBc7fvKeafv0b7b0D34C7e2OSzZTiqo3E7q+gjL?=
+ =?us-ascii?Q?YcfgSHhbImhNoYkJnWsP9FzVF5R8HdCjaWk28ppPzqBdrKMiRAXpaG0tzpdK?=
+ =?us-ascii?Q?0yXVRFI9kLzjMdWULSKFy5rd8dSbv63O0glbOhENck5KZg8pQJqiPTC37WvQ?=
+ =?us-ascii?Q?5zkHbDjyAiofkkymaXoYYsp5HVAE/7gwQx/obZIgjslHlaoeiACB4WfjBeJT?=
+ =?us-ascii?Q?qleGr8Kq/N2ffEcdatBY9api6eww/gLWTMG20TXUImiTqzlN2iDFSzsa8wxg?=
+ =?us-ascii?Q?h3l/kDMlO/DUzYMhIFfriPhPpzdv+m2cN1jI0rFZPYjtGBiGGeMAl8VRqqIm?=
+ =?us-ascii?Q?BH69+gZZvg+jF/M8+SHxasY7P4vnYNKiXjZLYHIVYmq1tgQI7xxtqGJa67c0?=
+ =?us-ascii?Q?uKFnoLZDOjkmUwB7upP1Glnxup1PenNvFXD+Gu+J6kbNp7CQyTyhq7+iAmW7?=
+ =?us-ascii?Q?+nNV8D7CcJm/neX1/Yp3m6AyOq9RCcA/3ss1nqRwTR2uZbX84Dk4gf/JvzOX?=
+ =?us-ascii?Q?quQ53yv0kRmDQkZkCdZss/6OaasFSb3E7rV/dJjj9tMeMfJ2w9IOtC280brk?=
+ =?us-ascii?Q?fIpKflF+myVEJ9hEcVPiGoVYLL2ImIG+rN7kNoabsT4jOeNSVuNl6UGK3EW0?=
+ =?us-ascii?Q?OCKVMeyYopdrngRVtFN1d+WfOcaPlDC9kIFOvAxRaarGcYsUECvJ1MSaeN5d?=
+ =?us-ascii?Q?rVZDdM4aywtODG1fBvf91zCu8QYmEoxP8/k+CuMnDxC+/k4sXLwbwii7m4/B?=
+ =?us-ascii?Q?DMScd/Y8DcCDEfozyAXhq/EYtGdJMCbOdimeSMBQf2Ml8oxLk7PWnKD4r7H7?=
+ =?us-ascii?Q?xepTkRv2QCXBg2AwU+7VS4vjA+Lv4Te6OnkNV9YeE4Io5v3v4PuEP4XTX4Cq?=
+ =?us-ascii?Q?eqQxRA7b1oV7k0C+zLABQ9GlNbtzGnqlqVGBDxD2vRr08kRuJEvUIEKniOx7?=
+ =?us-ascii?Q?dTpWy+7JL4trlNPDdonHSZMrhG1rlv2Uw358FLdw55PdhisJnOdI044mHGpO?=
+ =?us-ascii?Q?G8cO26BtRbEupfIbjsmGu8Y=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 04:13:04.0314
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR02MB6947.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 877a1409-4dab-45ae-8e7e-08d9e9f2a4d2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Feb 2022 04:31:00.5317
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b3879f3-9328-4956-3e8b-08d9e9f0232b
-X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch01.xlnx.xilinx.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM3NAM02FT009.eop-nam02.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR02MB6404
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: N9JvLXQ8Ak34R4nfkHlIC5OxArEeAhOGuhIMzLUhM7W+hm0/azYEBXNRulTf9Subw3wqkLa5CiQS/AalDgHXag==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR02MB6006
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Xilinx Versal Premium series has CPM5 block which supports Root port
-functioning at Gen5 speed.
-Add support for YAML schemas documentation for Versal CPM5 Root Port driver.
+Hi All,
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- .../bindings/pci/xilinx-versal-cpm.yaml       | 47 ++++++++++++++++---
- 1 file changed, 40 insertions(+), 7 deletions(-)
+Sorry for resending, my mailbox didn't show one patch, resent this assuming=
+ patch was missing.
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-index 32f4641085bc..97c7229d7f91 100644
---- a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-+++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-@@ -14,17 +14,21 @@ allOf:
- 
- properties:
-   compatible:
--    const: xlnx,versal-cpm-host-1.00
-+    contains:
-+      enum:
-+        - xlnx,versal-cpm-host-1.00
-+        - xlnx,versal-cpm5-host-1.00
- 
-   reg:
--    items:
--      - description: Configuration space region and bridge registers.
--      - description: CPM system level control and status registers.
-+    description: |
-+      Should contain cpm_slcr, cfg registers location and length.
-+      For xlnx,versal-cpm5-host-1.00, it should also contain cpm_csr.
-+    minItems: 2
-+    maxItems: 3
- 
-   reg-names:
--    items:
--      - const: cfg
--      - const: cpm_slcr
-+    minItems: 2
-+    maxItems: 3
- 
-   interrupts:
-     maxItems: 1
-@@ -95,4 +99,33 @@ examples:
-                                interrupt-controller;
-                        };
-                };
-+
-+              cpm5_pcie: pcie@fcdd0000 {
-+                       compatible = "xlnx,versal-cpm5-host-1.00";
-+                       device_type = "pci";
-+                       #address-cells = <3>;
-+                       #interrupt-cells = <1>;
-+                       #size-cells = <2>;
-+                       interrupts = <0 72 4>;
-+                       interrupt-parent = <&gic>;
-+                       interrupt-map-mask = <0 0 0 7>;
-+                       interrupt-map = <0 0 0 1 &pcie_intc_1 0>,
-+                                       <0 0 0 2 &pcie_intc_1 1>,
-+                                       <0 0 0 3 &pcie_intc_1 2>,
-+                                       <0 0 0 4 &pcie_intc_1 3>;
-+                       bus-range = <0x00 0xff>;
-+                       ranges = <0x02000000 0x0 0xe0000000 0x0 0xe0000000 0x0 0x10000000>,
-+                                <0x43000000 0x80 0x00000000 0x80 0x00000000 0x0 0x80000000>;
-+                       msi-map = <0x0 &its_gic 0x0 0x10000>;
-+                       reg = <0x00 0xfcdd0000 0x00 0x1000>,
-+                             <0x06 0x00000000 0x00 0x1000000>,
-+                             <0x00 0xfce20000 0x00 0x1000000>;
-+                       reg-names = "cpm_slcr", "cfg", "cpm_csr";
-+
-+                       pcie_intc_1: interrupt-controller {
-+                               #address-cells = <0>;
-+                               #interrupt-cells = <1>;
-+                               interrupt-controller;
-+                       };
-+               };
-     };
--- 
-2.17.1
+Regards,
+Bharat
+
+> -----Original Message-----
+> From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> Sent: Monday, February 7, 2022 9:43 AM
+> To: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Cc: lorenzo.pieralisi@arm.com; bhelgaas@google.com; Michal Simek
+> <michals@xilinx.com>; Bharat Kumar Gogada <bharatku@xilinx.com>
+> Subject: [PATCH 0/2] Add support for Xilinx Versal CPM5 Root Port
+>=20
+> Xilinx Versal Premium series has CPM5 block which supports Root port
+> functioning at Gen5 speed.
+> Xilinx Versal CPM5 has few changes with existing CPM block.
+> - CPM5 has dedicated register space for control and status registers.
+> - CPM5 legacy interrupt handling needs additonal register bit
+>   to enable and handle legacy interrupts.
+>=20
+> Bharat Kumar Gogada (2):
+>   PCI: xilinx-cpm: Update YAML schemas for Versal CPM5 Root Port
+>   PCI: xilinx-cpm: Add support for Versal CPM5 Root Port driver
+>=20
+>  .../bindings/pci/xilinx-versal-cpm.yaml       | 47 ++++++++++++++++---
+>  drivers/pci/controller/pcie-xilinx-cpm.c      | 33 ++++++++++++-
+>  2 files changed, 72 insertions(+), 8 deletions(-)
+>=20
+> --
+> 2.17.1
 
