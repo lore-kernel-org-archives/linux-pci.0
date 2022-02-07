@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45957C4167B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 359ECC43217
 	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 17:33:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352034AbiBGRbL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1346281AbiBGRbL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 7 Feb 2022 12:31:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44772 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345450AbiBGRXL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 12:23:11 -0500
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2064.outbound.protection.outlook.com [40.107.96.64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 977D7C0401D5;
-        Mon,  7 Feb 2022 09:23:10 -0800 (PST)
+        with ESMTP id S1346867AbiBGRXx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 12:23:53 -0500
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam07on2062.outbound.protection.outlook.com [40.107.95.62])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E142DC0401D5;
+        Mon,  7 Feb 2022 09:23:52 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PyMUaLore3Z0Z1Tv+4oIU/qnibDuuuZPvmiBujxbRU5xM+J+ikS1i4ZpGv4kdB7bzgwd5G3w21NY0khpeeST842BxSHQjk6FePA7lYw7hN0X/aOM2VkheAjHXLciH4/JGVE0c9oUw4aT/1SlqY70UMgpSJUsxM9xO4v1B6yRII484IACZ7H7zh4sPyRScD7hZJoTmQre+AJb0ddn6XBtA3U57AO9ln4tdx3Iv9+QxzJmhc1oxq5XfipfitNrrfGIAlRQra5hZ+KULMjFvUwIgAj1V02+Q2HgPsEs/yMawpFK1iTGqdOI/goOUvIfea/343fTRvX0XbezKTORE5d2cQ==
+ b=l6K+RKeHxgDKD3OFIBmgN5PUcPaCt6/TXPi7aZIi4Ar+ZZ3d9ZqyHqeVxsbSqKVcUszUboDHrxhbTgbQF2G4SFkGS1DmjP0XD3OBeQXXZcq9F8YAFE+spc0MOeOrGoiHdbQsq7oppbmXDDaYnh0yyHP8r2H4LnSQjhol0b9sqJpbXLRjb4V0hIkRzre6rJYktplYcw3BWPB41JTBDTArZndsumQf1nd0tLsdjIynv9uXHwum61FwA5ppV19XmKuwO49fSee1mXasDghzM/o935NSU1H0HWYYIlj17+TgLrH73AxsfAsFcmj8fvUwHuZWyBt4pmUBr1ctO90MT5EvSw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3rTFQH55KQBKEkrhel5/N78szLB56yVWOuj+baSXV0E=;
- b=JnercWuu1WGUeOlOpKalVeDwHHM4YiLSDmFzV3Mv4lL+X9bjqrKWQQDof/1ZdoGLb9XG5uIzbwMx2B+nl3XsJ+9RyY4z/FXQ9GyYu/izfO9DCy2WkOrlYCQC9aGtGtIV/y6ONQqg4eKAa99BBsxSKczuFWUGIJBEuL5x71lTq3FfgpeUkAjr8d2tLhV/KPyHS9Y5GIaredCP9LhDvU+91yUoKYBd7VCGf6y7FyQq1uCB+akt7Thadih79/4FhmM0SP8XepNcj/xhA15jaWKBfiCd26f3D5PfiiQsynOYydnOsClYs9c0SVRqHMHiX4M0wzcmxD7G09lTAmqD/WRTyA==
+ bh=b2N6s4sSXZvhjA4Cb+qqCGJAQJn7pmmVlSyyMIvFgeM=;
+ b=gKFIpqJ+9ien11+EKLz75WMJBJsuaHuMaIaGLiaE+vaZfRAipeANmNCewgW32r/InIIfUZePYE0sc99KyNwphm9HwrGf6d1+W+Dtpt1QXQGp+yYUi5psIAsI9mdj1yk9E67H0c6lY8iYM/6+rbBRXuHZPJEqTAFHaTRKslnIMX9ZLgivW0dc1cZALGmh8E2OxRAQh98w30XmBnBY6giexW92YK0l5kEX3tx1COrtEEzyviO/VRyYKMocGIpwg6UnPflzLx1kwmC+jrJNWnKBMqTkWuSh8tC+7vx6PU1i/ngFBIs1WOnVxZ0N6iEKj9iKcIZQ+C5uMRtPTPuTBE4PuA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  12.22.5.234) smtp.rcpttodomain=intel.com smtp.mailfrom=nvidia.com; dmarc=pass
  (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
@@ -28,18 +28,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3rTFQH55KQBKEkrhel5/N78szLB56yVWOuj+baSXV0E=;
- b=XC3zizKDnLfQ0yPGygghlXTIByjCC1tecghii786yejG/9MI9AQUASpmMyxtxlNp85QKffinkaBNti7Jl1tCBW55GCBTeo3ThaUFgy07lJGXfjiPzN76/7tHYp5XLhq4IoTt81AqM18zwjLg3ZNeg7PPlowWPC4vv3UWu6kv8otS5ea16BjGomHJ42iRr5S5kTevvotisxXoPs5lmqtQOk0g3zEDkHZ74/R7t0poYljnqf73ed/EvhnjIr0fyn3mseN9//ucHbvhXJHHhuB+ttMCoxJpmfg34wyY2XnIq7nkrL4BJDLhRtSGVuh9BFH9ke7dMkctu9WyZeEQiWT+PA==
-Received: from MWHPR13CA0005.namprd13.prod.outlook.com (2603:10b6:300:16::15)
- by BYAPR12MB3032.namprd12.prod.outlook.com (2603:10b6:a03:dd::28) with
+ bh=b2N6s4sSXZvhjA4Cb+qqCGJAQJn7pmmVlSyyMIvFgeM=;
+ b=H9ZeOIpc9ldn7oN1bV9Yxugklj3nmUphPdOBtXLduDFG5VbqeUwHcufkRuODJUQri3b4ozdFbSo3AzBYRVWAMLrvJbXYV+yOLW3WaldwNraV9SyLXA+PURyoAnKK0ejw2bzza5dN3uollariu424jkd3TE8K41qS987XWtYJ4FHY/tlEuH4WlcLwauQ4+o85qHB2AnEc947NOI7p3vg4Teq4Jx/60qC/e1Ipq/X5NGI6iQ3uXKKy1dggWvNqilhsK2wetbqDQpOtqrK57LT+lbK80/e1TshdOU4FDhziucpioiqz9vkRwzW5oDPbwPVnNJKpQJ+zUpGsXEd9agywaQ==
+Received: from MW4PR03CA0002.namprd03.prod.outlook.com (2603:10b6:303:8f::7)
+ by BY5PR12MB4642.namprd12.prod.outlook.com (2603:10b6:a03:1f6::29) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Mon, 7 Feb
- 2022 17:23:08 +0000
-Received: from CO1NAM11FT021.eop-nam11.prod.protection.outlook.com
- (2603:10b6:300:16:cafe::1) by MWHPR13CA0005.outlook.office365.com
- (2603:10b6:300:16::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.5 via Frontend
- Transport; Mon, 7 Feb 2022 17:23:08 +0000
+ 2022 17:23:50 +0000
+Received: from CO1NAM11FT018.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:8f:cafe::23) by MW4PR03CA0002.outlook.office365.com
+ (2603:10b6:303:8f::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12 via Frontend
+ Transport; Mon, 7 Feb 2022 17:23:50 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -47,19 +47,19 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  12.22.5.234 as permitted sender) receiver=protection.outlook.com;
  client-ip=12.22.5.234; helo=mail.nvidia.com;
 Received: from mail.nvidia.com (12.22.5.234) by
- CO1NAM11FT021.mail.protection.outlook.com (10.13.175.51) with Microsoft SMTP
+ CO1NAM11FT018.mail.protection.outlook.com (10.13.175.16) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4951.12 via Frontend Transport; Mon, 7 Feb 2022 17:23:07 +0000
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by DRHQMAIL101.nvidia.com
+ 15.20.4951.12 via Frontend Transport; Mon, 7 Feb 2022 17:23:49 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by DRHQMAIL101.nvidia.com
  (10.27.9.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 7 Feb
- 2022 17:23:05 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail202.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
+ 2022 17:23:49 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Mon, 7 Feb 2022
- 09:23:04 -0800
+ 09:23:48 -0800
 Received: from vdi.nvidia.com (10.127.8.10) by mail.nvidia.com (10.129.68.8)
  with Microsoft SMTP Server id 15.2.986.9 via Frontend Transport; Mon, 7 Feb
- 2022 09:23:00 -0800
+ 2022 09:23:44 -0800
 From:   Yishai Hadas <yishaih@nvidia.com>
 To:     <alex.williamson@redhat.com>, <bhelgaas@google.com>,
         <jgg@nvidia.com>, <saeedm@nvidia.com>
@@ -68,237 +68,273 @@ CC:     <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
         <kwankhede@nvidia.com>, <mgurtovoy@nvidia.com>,
         <yishaih@nvidia.com>, <maorg@nvidia.com>, <ashok.raj@intel.com>,
         <kevin.tian@intel.com>, <shameerali.kolothum.thodi@huawei.com>
-Subject: [PATCH V7 mlx5-next 00/15] Add mlx5 live migration driver and v2 migration protocol
-Date:   Mon, 7 Feb 2022 19:22:01 +0200
-Message-ID: <20220207172216.206415-1-yishaih@nvidia.com>
+Subject: [PATCH V7 mlx5-next 10/15] vfio: Remove migration protocol v1 documentation
+Date:   Mon, 7 Feb 2022 19:22:11 +0200
+Message-ID: <20220207172216.206415-11-yishaih@nvidia.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20220207172216.206415-1-yishaih@nvidia.com>
+References: <20220207172216.206415-1-yishaih@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e53c711b-7180-4a2e-e263-08d9ea5e8217
-X-MS-TrafficTypeDiagnostic: BYAPR12MB3032:EE_
-X-Microsoft-Antispam-PRVS: <BYAPR12MB30320A74CD8B8A5329866ED1C32C9@BYAPR12MB3032.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 03721b76-60db-4bd9-c84a-08d9ea5e9b13
+X-MS-TrafficTypeDiagnostic: BY5PR12MB4642:EE_
+X-Microsoft-Antispam-PRVS: <BY5PR12MB4642FDBB9631CF1D042438B7C32C9@BY5PR12MB4642.namprd12.prod.outlook.com>
 X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: uvu6L2dq14xabeSxJULr5UpOzmJq1hKthMztSIbro84HT3BV7tdudFYV/JyXqbyxH12k8XhcJQWDNqfDqKLYWWTxP9oa18goNygqjz0dU5Wmvo7VZg6GEsW3iQuBIP1LhApi3k1iuuP44O0MLxNED3nzpUYizvGVEkbj7MIOvKi3pDxvgDg9HtgxraC+gV1BVJ//PcmqZD+JLa8+UDES0Qv2mB66B5Cocwghun/aEq4T0By7hWMcbVZtl2dKZKXqgCbFdBu9xGd7pvqWDTc5xdG3ouK/h0Vrz+PuBQjiLX0OwVaPTUbY/81c8EUwPMYFyoEmMNOz16N/dfLtZgZwD5vqlbzw/d4KUdZI9bqxq3gMWqHS3QVFvoblOPPXjQ982e0z1hKqKgVO4RBaw0LxbaNQ7hdyDrBL0XNGo23M/Vlm1EJxGSESZgAMptEK2DSe7NXv8KuqK12/9FPg4Mxivcl0tGQRUqouU3cVLRW1RqYomg6dXGOaLSw+Yo0PxbJW+6VUTtN+grM6rptcTh+hj5ceKte0+Cl3AW8e00JB05zxYEMCwQTvFcSmDd5Hkt3lFNdq28l22QAL3fAWKcmjxwKMCcibkeAruK2tUiQnz6ZtnbcpMc5pJxAn13kgXfj0F3T4cuKqQ0KImpGTpO3OZjfrsBFMGgiabeZD2JzDOdQplqzql8NDqpxGJgbeqUEd8U9JuwWA61OY+nPt4FjL/Y/1rSodP6a6mD7CWU8eAsRkNozK4PxImnldTRdxDRRZvU0XW85XQnHt3zIZiCVRpywZ1XoyxL7K2QQqXMHGda8jyWGFVTi70iAxql0eUzxY+c2AlNJyXZV2eP5wACNYWw==
-X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(46966006)(40470700004)(36840700001)(5660300002)(70206006)(70586007)(966005)(508600001)(4326008)(8936002)(8676002)(36756003)(7696005)(40460700003)(82310400004)(110136005)(54906003)(6636002)(316002)(2906002)(47076005)(83380400001)(86362001)(1076003)(2616005)(426003)(36860700001)(81166007)(186003)(26005)(356005)(336012)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wIsOy5d3n8EIArUhd08TJNHzoX1I3//1LpER33vCpN+4YK5BAM1ToAPLUqn3NrBcO8fOZcX61KP9OeQV1heGin1tN4J0fSa1eM6Z8Z93jOftNzDO4GXUoDZGxd8R9xfPgZwcYIEIPGIzESdjdTqem9jdpQC3wU8TaUXCdAeoGDb2k8i2bAdgFsp8i/oT9eXxye93Xg81RV0RHqZX7ukM0FNsPmSZvD0Ab++T1g4Z5EnvXz3pZbqE3Tpjlj/0tf2G1mK53RdqG2cvdC5/E5uGV+TktcKYXiP+GuRNjqJKK2+z95U4m9b2UYjDl9X5sH1YPUqLo/X7fCqTnLtynqgQQhDOgY2oMY8Fp4Fxp/LUcawNJNx/YsiQYvGaFdpdFb/psVHy8xeqleNrd/pfuuuOIU3lYfI8NJobKj/Tjk7hlkpZzcSDIBnlTnN1zO+pLqgHd3CPoWE9sW+/3/71qso6BB1F+Dh55U3WeyH/2638DCQr46Wae3kplveLNmo/OR9e2DEZoXDMWSnG5lQY+JPu3rV37I5ToDY12htlCO/X6A/bRObRIxZ89CbJErSeLu7azy/OkdKJTNGqBCg4cEyUSjPKS6A6S+oCmSWXHxVDtWryElmrtDRB2E1TVGH0Z+De62Pny3A4DU8apWfcfnsMH8tu7AamLuJZXa6ncoP0Iz4XJucJHzrd1sjRoaWGajzDTkNcEpwjC/DSDwZRuA4cnQ==
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(7696005)(40460700003)(36756003)(8936002)(26005)(186003)(508600001)(316002)(83380400001)(6636002)(54906003)(110136005)(30864003)(4326008)(8676002)(1076003)(5660300002)(86362001)(70586007)(81166007)(70206006)(356005)(82310400004)(6666004)(426003)(336012)(47076005)(2616005)(2906002)(36860700001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 17:23:07.9127
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 17:23:49.8288
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e53c711b-7180-4a2e-e263-08d9ea5e8217
+X-MS-Exchange-CrossTenant-Network-Message-Id: 03721b76-60db-4bd9-c84a-08d9ea5e9b13
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT021.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT018.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3032
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4642
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds mlx5 live migration driver for VFs that are migration
-capable and includes the v2 migration protocol definition and mlx5
-implementation.
+From: Jason Gunthorpe <jgg@nvidia.com>
 
-The mlx5 driver uses the vfio_pci_core split to create a specific VFIO
-PCI driver that matches the mlx5 virtual functions. The driver provides
-the same experience as normal vfio-pci with the addition of migration
-support.
+v1 was never implemented and is replaced by v2.
 
-In HW the migration is controlled by the PF function, using its
-mlx5_core driver, and the VFIO PCI VF driver co-ordinates with the PF to
-execute the migration actions.
+The old uAPI documentation is removed from the header file.
 
-The bulk of the v2 migration protocol is semantically the same v1,
-however it has been recast into a FSM for the device_state and the
-actual syscall interface uses normal ioctl(), read() and write() instead
-of building a syscall interface using the region.
+The old uAPI definitions are still kept in the header file till v2 will
+reach Linus's tree.
 
-Several bits of infrastructure work are included here:
- - pci_iov_vf_id() to help drivers like mlx5 figure out the VF index from
-   a BDF
- - pci_iov_get_pf_drvdata() to clarify the tricky locking protocol when a
-   VF reaches into its PF's driver
- - mlx5_core uses the normal SRIOV lifecycle and disables SRIOV before
-   driver remove, to be compatible with pci_iov_get_pf_drvdata()
- - Lifting VFIO_DEVICE_FEATURE into core VFIO code
+Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+---
+ include/uapi/linux/vfio.h | 200 +-------------------------------------
+ 1 file changed, 2 insertions(+), 198 deletions(-)
 
-This series comes after alot of discussion. Some major points:
-- v1 ABI compatible migration defined using the same FSM approach:
-   https://lore.kernel.org/all/0-v1-a4f7cab64938+3f-vfio_mig_states_jgg@nvidia.com/
-- Attempts to clarify how the v1 API works:
-   Alex's:
-     https://lore.kernel.org/kvm/163909282574.728533.7460416142511440919.stgit@omen/
-   Jason's:
-     https://lore.kernel.org/all/0-v3-184b374ad0a8+24c-vfio_mig_doc_jgg@nvidia.com/
-- Etherpad exploring the scope and questions of general VFIO migration:
-     https://lore.kernel.org/kvm/87mtm2loml.fsf@redhat.com/
-
-NOTE: As this series touched mlx5_core parts we need to send this in a
-pull request format to VFIO to avoid conflicts.
-
-Matching qemu changes can be previewed here:
- https://github.com/jgunthorpe/qemu/commits/vfio_migration_v2
-
-Changes from V6: https://lore.kernel.org/netdev/20220130160826.32449-1-yishaih@nvidia.com/
-vfio:
-- Move to use the FEATURE ioctl for setting/getting the device state.
-- Use state_flags_table as part of vfio_mig_get_next_state() and use
-  WARN_ON as Alex suggested.
-- Leave the V1 definitions in the uAPI header and drop only its
-  documentation till V2 will be part of Linus's tree.
-- Fix errno's usage in few places.
-- Improve and adapt the uAPI documentation to match the latest code.
-- Put the VFIO_DEVICE_FEATURE_PCI_VF_TOKEN functionality into a separate
-  function.
-- Fix some rebase note.
-vfio/mlx5:
-- Adapt to use the vfio core changes.
-- Fix some bad flow upon load state.
-
-Changes from V5: https://lore.kernel.org/kvm/20211027095658.144468-1-yishaih@nvidia.com/
-vfio:
-- Migration protocol v2:
-  + enum for device state, not bitmap
-  + ioctl to manipulate device_state, not a region
-  + Only STOP_COPY is mandatory, P2P and PRE_COPY are optional, discovered
-    via VFIO_DEVICE_FEATURE
-  + Migration data transfer is done via dedicated FD
-- VFIO core code to implement the migration related ioctls and help
-  drivers implement it correctly
-- VFIO_DEVICE_FEATURE refactor
-- Delete migration protocol, drop patches fixing it
-- Drop "vfio/pci_core: Make the region->release() function optional"
-vfio/mlx5:
-- Switch to use migration v2 protocol, with core helpers
-- Eliminate the region implementation
-
-Changes from V4: https://lore.kernel.org/kvm/20211026090605.91646-1-yishaih@nvidia.com/
-vfio:
-- Add some Reviewed-by.
-- Rename to vfio_pci_core_aer_err_detected() as Alex asked.
-vfio/mlx5:
-- Improve to enter the error state only if unquiesce also fails.
-- Fix some typos.
-- Use the multi-line comment style as in drivers/vfio.
-
-Changes from V3: https://lore.kernel.org/kvm/20211024083019.232813-1-yishaih@nvidia.com/
-vfio/mlx5:
-- Align with mlx5 latest specification to create the MKEY with full read
-  write permissions.
-- Fix unlock ordering in mlx5vf_state_mutex_unlock() to prevent some
-  race.
-
-Changes from V2: https://lore.kernel.org/kvm/20211019105838.227569-1-yishaih@nvidia.com/
-vfio:
-- Put and use the new macro VFIO_DEVICE_STATE_SET_ERROR as Alex asked.
-vfio/mlx5:
-- Improve/fix state checking as was asked by Alex & Jason.
-- Let things be done in a deterministic way upon 'reset_done' following
-  the suggested algorithm by Jason.
-- Align with mlx5 latest specification when calling the SAVE command.
-- Fix some typos.
-vdpa/mlx5:
-- Drop the patch from the series based on the discussion in the mailing
-  list.
-
-Changes from V1: https://lore.kernel.org/kvm/20211013094707.163054-1-yishaih@nvidia.com/
-PCI/IOV:
-- Add actual interface in the subject as was asked by Bjorn and add
-  his Acked-by.
-- Move to check explicitly for !dev->is_virtfn as was asked by Alex.
-vfio:
-- Come with a separate patch for fixing the non-compiled
-  VFIO_DEVICE_STATE_SET_ERROR macro.
-- Expose vfio_pci_aer_err_detected() to be set by drivers on their own
-  pci error handles.
-- Add a macro for VFIO_DEVICE_STATE_ERROR in the uapi header file as was
-  suggested by Alex.
-vfio/mlx5:
-- Improve to use xor as part of checking the 'state' change command as
-  was suggested by Alex.
-- Set state to VFIO_DEVICE_STATE_ERROR when an error occurred instead of
-  VFIO_DEVICE_STATE_INVALID.
-- Improve state checking as was suggested by Jason.
-- Use its own PCI reset_done error handler as was suggested by Jason and
-  fix the locking scheme around the state mutex to work properly.
-
-Changes from V0: https://lore.kernel.org/kvm/cover.1632305919.git.leonro@nvidia.com/
-PCI/IOV:
-- Add an API (i.e. pci_iov_get_pf_drvdata()) that allows SRVIO VF drivers
-  to reach the drvdata of a PF.
-mlx5_core:
-- Add an extra patch to disable SRIOV before PF removal.
-- Adapt to use the above PCI/IOV API as part of mlx5_vf_get_core_dev().
-- Reuse the exported PCI/IOV virtfn index function call (i.e. pci_iov_vf_id().
-vfio:
-- Add support in the pci_core to let a driver be notified when
- 'reset_done' to let it sets its internal state accordingly.
-- Add some helper stuff for 'invalid' state handling.
-mlx5_vfio_pci:
-- Move to use the 'command mode' instead of the 'state machine'
- scheme as was discussed in the mailing list.
-- Handle the RESET scenario when called by vfio_pci_core to sets
- its internal state accordingly.
-- Set initial state as RUNNING.
-- Put the driver files as sub-folder under drivers/vfio/pci named mlx5
-  and update MAINTAINER file as was asked.
-vdpa_mlx5:
-Add a new patch to use mlx5_vf_get_core_dev() to get PF device.
-Jason Gunthorpe (7):
-  PCI/IOV: Add pci_iov_vf_id() to get VF index
-  PCI/IOV: Add pci_iov_get_pf_drvdata() to allow VF reaching the drvdata
-    of a PF
-  vfio: Have the core code decode the VFIO_DEVICE_FEATURE ioctl
-  vfio: Define device migration protocol v2
-  vfio: Extend the device migration protocol with RUNNING_P2P
-  vfio: Remove migration protocol v1 documentation
-  vfio: Extend the device migration protocol with PRE_COPY
-
-Leon Romanovsky (1):
-  net/mlx5: Reuse exported virtfn index function call
-
-Yishai Hadas (7):
-  net/mlx5: Disable SRIOV before PF removal
-  net/mlx5: Expose APIs to get/put the mlx5 core device
-  net/mlx5: Introduce migration bits and structures
-  vfio/mlx5: Expose migration commands over mlx5 device
-  vfio/mlx5: Implement vfio_pci driver for mlx5 devices
-  vfio/pci: Expose vfio_pci_core_aer_err_detected()
-  vfio/mlx5: Use its own PCI reset_done error handler
-
- MAINTAINERS                                   |   6 +
- .../net/ethernet/mellanox/mlx5/core/main.c    |  45 ++
- .../ethernet/mellanox/mlx5/core/mlx5_core.h   |   1 +
- .../net/ethernet/mellanox/mlx5/core/sriov.c   |  17 +-
- drivers/pci/iov.c                             |  43 ++
- drivers/vfio/pci/Kconfig                      |   3 +
- drivers/vfio/pci/Makefile                     |   2 +
- drivers/vfio/pci/mlx5/Kconfig                 |  10 +
- drivers/vfio/pci/mlx5/Makefile                |   4 +
- drivers/vfio/pci/mlx5/cmd.c                   | 259 +++++++
- drivers/vfio/pci/mlx5/cmd.h                   |  36 +
- drivers/vfio/pci/mlx5/main.c                  | 676 ++++++++++++++++++
- drivers/vfio/pci/vfio_pci.c                   |   1 +
- drivers/vfio/pci/vfio_pci_core.c              | 101 ++-
- drivers/vfio/vfio.c                           | 358 +++++++++-
- include/linux/mlx5/driver.h                   |   3 +
- include/linux/mlx5/mlx5_ifc.h                 | 147 +++-
- include/linux/pci.h                           |  15 +-
- include/linux/vfio.h                          |  50 ++
- include/linux/vfio_pci_core.h                 |   4 +
- include/uapi/linux/vfio.h                     | 504 +++++++------
- 21 files changed, 1994 insertions(+), 291 deletions(-)
- create mode 100644 drivers/vfio/pci/mlx5/Kconfig
- create mode 100644 drivers/vfio/pci/mlx5/Makefile
- create mode 100644 drivers/vfio/pci/mlx5/cmd.c
- create mode 100644 drivers/vfio/pci/mlx5/cmd.h
- create mode 100644 drivers/vfio/pci/mlx5/main.c
-
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 773895988cf1..227f55d57e06 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -323,7 +323,7 @@ struct vfio_region_info_cap_type {
+ #define VFIO_REGION_TYPE_PCI_VENDOR_MASK	(0xffff)
+ #define VFIO_REGION_TYPE_GFX                    (1)
+ #define VFIO_REGION_TYPE_CCW			(2)
+-#define VFIO_REGION_TYPE_MIGRATION              (3)
++#define VFIO_REGION_TYPE_MIGRATION_DEPRECATED   (3)
+ 
+ /* sub-types for VFIO_REGION_TYPE_PCI_* */
+ 
+@@ -405,203 +405,7 @@ struct vfio_region_gfx_edid {
+ #define VFIO_REGION_SUBTYPE_CCW_CRW		(3)
+ 
+ /* sub-types for VFIO_REGION_TYPE_MIGRATION */
+-#define VFIO_REGION_SUBTYPE_MIGRATION           (1)
+-
+-/*
+- * The structure vfio_device_migration_info is placed at the 0th offset of
+- * the VFIO_REGION_SUBTYPE_MIGRATION region to get and set VFIO device related
+- * migration information. Field accesses from this structure are only supported
+- * at their native width and alignment. Otherwise, the result is undefined and
+- * vendor drivers should return an error.
+- *
+- * device_state: (read/write)
+- *      - The user application writes to this field to inform the vendor driver
+- *        about the device state to be transitioned to.
+- *      - The vendor driver should take the necessary actions to change the
+- *        device state. After successful transition to a given state, the
+- *        vendor driver should return success on write(device_state, state)
+- *        system call. If the device state transition fails, the vendor driver
+- *        should return an appropriate -errno for the fault condition.
+- *      - On the user application side, if the device state transition fails,
+- *	  that is, if write(device_state, state) returns an error, read
+- *	  device_state again to determine the current state of the device from
+- *	  the vendor driver.
+- *      - The vendor driver should return previous state of the device unless
+- *        the vendor driver has encountered an internal error, in which case
+- *        the vendor driver may report the device_state VFIO_DEVICE_STATE_ERROR.
+- *      - The user application must use the device reset ioctl to recover the
+- *        device from VFIO_DEVICE_STATE_ERROR state. If the device is
+- *        indicated to be in a valid device state by reading device_state, the
+- *        user application may attempt to transition the device to any valid
+- *        state reachable from the current state or terminate itself.
+- *
+- *      device_state consists of 3 bits:
+- *      - If bit 0 is set, it indicates the _RUNNING state. If bit 0 is clear,
+- *        it indicates the _STOP state. When the device state is changed to
+- *        _STOP, driver should stop the device before write() returns.
+- *      - If bit 1 is set, it indicates the _SAVING state, which means that the
+- *        driver should start gathering device state information that will be
+- *        provided to the VFIO user application to save the device's state.
+- *      - If bit 2 is set, it indicates the _RESUMING state, which means that
+- *        the driver should prepare to resume the device. Data provided through
+- *        the migration region should be used to resume the device.
+- *      Bits 3 - 31 are reserved for future use. To preserve them, the user
+- *      application should perform a read-modify-write operation on this
+- *      field when modifying the specified bits.
+- *
+- *  +------- _RESUMING
+- *  |+------ _SAVING
+- *  ||+----- _RUNNING
+- *  |||
+- *  000b => Device Stopped, not saving or resuming
+- *  001b => Device running, which is the default state
+- *  010b => Stop the device & save the device state, stop-and-copy state
+- *  011b => Device running and save the device state, pre-copy state
+- *  100b => Device stopped and the device state is resuming
+- *  101b => Invalid state
+- *  110b => Error state
+- *  111b => Invalid state
+- *
+- * State transitions:
+- *
+- *              _RESUMING  _RUNNING    Pre-copy    Stop-and-copy   _STOP
+- *                (100b)     (001b)     (011b)        (010b)       (000b)
+- * 0. Running or default state
+- *                             |
+- *
+- * 1. Normal Shutdown (optional)
+- *                             |------------------------------------->|
+- *
+- * 2. Save the state or suspend
+- *                             |------------------------->|---------->|
+- *
+- * 3. Save the state during live migration
+- *                             |----------->|------------>|---------->|
+- *
+- * 4. Resuming
+- *                  |<---------|
+- *
+- * 5. Resumed
+- *                  |--------->|
+- *
+- * 0. Default state of VFIO device is _RUNNING when the user application starts.
+- * 1. During normal shutdown of the user application, the user application may
+- *    optionally change the VFIO device state from _RUNNING to _STOP. This
+- *    transition is optional. The vendor driver must support this transition but
+- *    must not require it.
+- * 2. When the user application saves state or suspends the application, the
+- *    device state transitions from _RUNNING to stop-and-copy and then to _STOP.
+- *    On state transition from _RUNNING to stop-and-copy, driver must stop the
+- *    device, save the device state and send it to the application through the
+- *    migration region. The sequence to be followed for such transition is given
+- *    below.
+- * 3. In live migration of user application, the state transitions from _RUNNING
+- *    to pre-copy, to stop-and-copy, and to _STOP.
+- *    On state transition from _RUNNING to pre-copy, the driver should start
+- *    gathering the device state while the application is still running and send
+- *    the device state data to application through the migration region.
+- *    On state transition from pre-copy to stop-and-copy, the driver must stop
+- *    the device, save the device state and send it to the user application
+- *    through the migration region.
+- *    Vendor drivers must support the pre-copy state even for implementations
+- *    where no data is provided to the user before the stop-and-copy state. The
+- *    user must not be required to consume all migration data before the device
+- *    transitions to a new state, including the stop-and-copy state.
+- *    The sequence to be followed for above two transitions is given below.
+- * 4. To start the resuming phase, the device state should be transitioned from
+- *    the _RUNNING to the _RESUMING state.
+- *    In the _RESUMING state, the driver should use the device state data
+- *    received through the migration region to resume the device.
+- * 5. After providing saved device data to the driver, the application should
+- *    change the state from _RESUMING to _RUNNING.
+- *
+- * reserved:
+- *      Reads on this field return zero and writes are ignored.
+- *
+- * pending_bytes: (read only)
+- *      The number of pending bytes still to be migrated from the vendor driver.
+- *
+- * data_offset: (read only)
+- *      The user application should read data_offset field from the migration
+- *      region. The user application should read the device data from this
+- *      offset within the migration region during the _SAVING state or write
+- *      the device data during the _RESUMING state. See below for details of
+- *      sequence to be followed.
+- *
+- * data_size: (read/write)
+- *      The user application should read data_size to get the size in bytes of
+- *      the data copied in the migration region during the _SAVING state and
+- *      write the size in bytes of the data copied in the migration region
+- *      during the _RESUMING state.
+- *
+- * The format of the migration region is as follows:
+- *  ------------------------------------------------------------------
+- * |vfio_device_migration_info|    data section                      |
+- * |                          |     ///////////////////////////////  |
+- * ------------------------------------------------------------------
+- *   ^                              ^
+- *  offset 0-trapped part        data_offset
+- *
+- * The structure vfio_device_migration_info is always followed by the data
+- * section in the region, so data_offset will always be nonzero. The offset
+- * from where the data is copied is decided by the kernel driver. The data
+- * section can be trapped, mmapped, or partitioned, depending on how the kernel
+- * driver defines the data section. The data section partition can be defined
+- * as mapped by the sparse mmap capability. If mmapped, data_offset must be
+- * page aligned, whereas initial section which contains the
+- * vfio_device_migration_info structure, might not end at the offset, which is
+- * page aligned. The user is not required to access through mmap regardless
+- * of the capabilities of the region mmap.
+- * The vendor driver should determine whether and how to partition the data
+- * section. The vendor driver should return data_offset accordingly.
+- *
+- * The sequence to be followed while in pre-copy state and stop-and-copy state
+- * is as follows:
+- * a. Read pending_bytes, indicating the start of a new iteration to get device
+- *    data. Repeated read on pending_bytes at this stage should have no side
+- *    effects.
+- *    If pending_bytes == 0, the user application should not iterate to get data
+- *    for that device.
+- *    If pending_bytes > 0, perform the following steps.
+- * b. Read data_offset, indicating that the vendor driver should make data
+- *    available through the data section. The vendor driver should return this
+- *    read operation only after data is available from (region + data_offset)
+- *    to (region + data_offset + data_size).
+- * c. Read data_size, which is the amount of data in bytes available through
+- *    the migration region.
+- *    Read on data_offset and data_size should return the offset and size of
+- *    the current buffer if the user application reads data_offset and
+- *    data_size more than once here.
+- * d. Read data_size bytes of data from (region + data_offset) from the
+- *    migration region.
+- * e. Process the data.
+- * f. Read pending_bytes, which indicates that the data from the previous
+- *    iteration has been read. If pending_bytes > 0, go to step b.
+- *
+- * The user application can transition from the _SAVING|_RUNNING
+- * (pre-copy state) to the _SAVING (stop-and-copy) state regardless of the
+- * number of pending bytes. The user application should iterate in _SAVING
+- * (stop-and-copy) until pending_bytes is 0.
+- *
+- * The sequence to be followed while _RESUMING device state is as follows:
+- * While data for this device is available, repeat the following steps:
+- * a. Read data_offset from where the user application should write data.
+- * b. Write migration data starting at the migration region + data_offset for
+- *    the length determined by data_size from the migration source.
+- * c. Write data_size, which indicates to the vendor driver that data is
+- *    written in the migration region. Vendor driver must return this write
+- *    operations on consuming data. Vendor driver should apply the
+- *    user-provided migration region data to the device resume state.
+- *
+- * If an error occurs during the above sequences, the vendor driver can return
+- * an error code for next read() or write() operation, which will terminate the
+- * loop. The user application should then take the next necessary action, for
+- * example, failing migration or terminating the user application.
+- *
+- * For the user application, data is opaque. The user application should write
+- * data in the same order as the data is received and the data should be of
+- * same transaction size at the source.
+- */
++#define VFIO_REGION_SUBTYPE_MIGRATION_DEPRECATED (1)
+ 
+ struct vfio_device_migration_info {
+ 	__u32 device_state;         /* VFIO device state */
 -- 
 2.18.1
 
