@@ -2,64 +2,64 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBC2C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45957C4167B
 	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 17:33:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343993AbiBGRbJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Feb 2022 12:31:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45414 "EHLO
+        id S1352034AbiBGRbL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Feb 2022 12:31:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233155AbiBGRYQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 12:24:16 -0500
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2075.outbound.protection.outlook.com [40.107.243.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E63B3C0401D6;
-        Mon,  7 Feb 2022 09:24:14 -0800 (PST)
+        with ESMTP id S1345450AbiBGRXL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 12:23:11 -0500
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2064.outbound.protection.outlook.com [40.107.96.64])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 977D7C0401D5;
+        Mon,  7 Feb 2022 09:23:10 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ri2SqwS0QyXGUNyBvUbESwki6qK4kR8CD6W2soV72UyI7zs52ho54dAgfgFZnqaqXUaI177r97IZhswYi0tpPKjkzizUgDZSkbru0hRFXSH6oGNXLc5PybR4TvlL7i16QLT9E2wdcDyrz55wHhPUiFTrW9vspqpniGqy64UbMe3DdVLq9baoKYhfv6jloddd173KLKDmcTCGVqZ9l3jaDbyzxvA4KbsfIFGeW0Fm1yOVM2RnpvWChoW1y0979tAmWkP2HSJLl3dEdHckNiGEkygLoYZkJtKBeyuSrH8+OsEbTs6jr34NVhP2AnUT3sOOMGza9lpGc1BiATqdxVcS0w==
+ b=PyMUaLore3Z0Z1Tv+4oIU/qnibDuuuZPvmiBujxbRU5xM+J+ikS1i4ZpGv4kdB7bzgwd5G3w21NY0khpeeST842BxSHQjk6FePA7lYw7hN0X/aOM2VkheAjHXLciH4/JGVE0c9oUw4aT/1SlqY70UMgpSJUsxM9xO4v1B6yRII484IACZ7H7zh4sPyRScD7hZJoTmQre+AJb0ddn6XBtA3U57AO9ln4tdx3Iv9+QxzJmhc1oxq5XfipfitNrrfGIAlRQra5hZ+KULMjFvUwIgAj1V02+Q2HgPsEs/yMawpFK1iTGqdOI/goOUvIfea/343fTRvX0XbezKTORE5d2cQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GILwQh9UN0e/szg6YBtlkdheha+GiHOw3hifeuWppxo=;
- b=MpWuETOaWu5dMbFJLbMCN1U6hJZ6ZS+v3IViNqtN0j72/KtV0cKan21hxr5yTkkktoTwNi4BMYBnXWxov4iDD0XUnwmRoghSEAx6g5hUqSl20RN5ZY2JyBfUit7gtNmDdxIrboYyr82hyunjMJxjABA+KWqp2/nCEKQXVHcgvB7wx7AVpRDAfPiPCj/mT6qR0lGboYf6GZYudaZ0c6HdlbY8QmbHuvbk/bQ1xm9SMlwmfrpLGpG2imeReL6pWQeZsK3F37q37d28yEekOBxDrcy2hO9voODzMiXcQ5sqPCwRRbU3RQ27sZxHmi38+9nMr5YqPRZ2vcoEVnTVEq7fSQ==
+ bh=3rTFQH55KQBKEkrhel5/N78szLB56yVWOuj+baSXV0E=;
+ b=JnercWuu1WGUeOlOpKalVeDwHHM4YiLSDmFzV3Mv4lL+X9bjqrKWQQDof/1ZdoGLb9XG5uIzbwMx2B+nl3XsJ+9RyY4z/FXQ9GyYu/izfO9DCy2WkOrlYCQC9aGtGtIV/y6ONQqg4eKAa99BBsxSKczuFWUGIJBEuL5x71lTq3FfgpeUkAjr8d2tLhV/KPyHS9Y5GIaredCP9LhDvU+91yUoKYBd7VCGf6y7FyQq1uCB+akt7Thadih79/4FhmM0SP8XepNcj/xhA15jaWKBfiCd26f3D5PfiiQsynOYydnOsClYs9c0SVRqHMHiX4M0wzcmxD7G09lTAmqD/WRTyA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.236) smtp.rcpttodomain=intel.com smtp.mailfrom=nvidia.com; dmarc=pass
+ 12.22.5.234) smtp.rcpttodomain=intel.com smtp.mailfrom=nvidia.com; dmarc=pass
  (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
  (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GILwQh9UN0e/szg6YBtlkdheha+GiHOw3hifeuWppxo=;
- b=qznB4b+e6w2UK+LLMzL8LAeHnkOWiF53+7122nuXwtpMPOgl+2paMt3PGNd63+bv+TJ1kBINlVbHodjE6t2A5utty6tkVtm39C0sZvwMmzdwehfk862s+hGtL8mzriqobnUZnMnYk2qwgZ+kSd/PdaBNVC/hj5ZvCWcMYxKFtSBpaiRWRYe+LAc4nEB3B3dLo0Ha1CprEvsvD6WWBRQ0GLp72o7YYxSCQjuEXBhslcOuAqKuoXpXb9clpquvuWHh6TFphymmFvmcOk7nypSSnFw2yNBpYqOwRjTZm+sHler2f5Cv1njzhnJDcrZ+JMC2ntHxsPjyODMUdRRr7C8CoA==
-Received: from DM6PR18CA0018.namprd18.prod.outlook.com (2603:10b6:5:15b::31)
- by PH0PR12MB5404.namprd12.prod.outlook.com (2603:10b6:510:d7::14) with
+ bh=3rTFQH55KQBKEkrhel5/N78szLB56yVWOuj+baSXV0E=;
+ b=XC3zizKDnLfQ0yPGygghlXTIByjCC1tecghii786yejG/9MI9AQUASpmMyxtxlNp85QKffinkaBNti7Jl1tCBW55GCBTeo3ThaUFgy07lJGXfjiPzN76/7tHYp5XLhq4IoTt81AqM18zwjLg3ZNeg7PPlowWPC4vv3UWu6kv8otS5ea16BjGomHJ42iRr5S5kTevvotisxXoPs5lmqtQOk0g3zEDkHZ74/R7t0poYljnqf73ed/EvhnjIr0fyn3mseN9//ucHbvhXJHHhuB+ttMCoxJpmfg34wyY2XnIq7nkrL4BJDLhRtSGVuh9BFH9ke7dMkctu9WyZeEQiWT+PA==
+Received: from MWHPR13CA0005.namprd13.prod.outlook.com (2603:10b6:300:16::15)
+ by BYAPR12MB3032.namprd12.prod.outlook.com (2603:10b6:a03:dd::28) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.11; Mon, 7 Feb
- 2022 17:24:12 +0000
-Received: from DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:15b:cafe::39) by DM6PR18CA0018.outlook.office365.com
- (2603:10b6:5:15b::31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.18 via Frontend
- Transport; Mon, 7 Feb 2022 17:24:12 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.12; Mon, 7 Feb
+ 2022 17:23:08 +0000
+Received: from CO1NAM11FT021.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:300:16:cafe::1) by MWHPR13CA0005.outlook.office365.com
+ (2603:10b6:300:16::15) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.5 via Frontend
+ Transport; Mon, 7 Feb 2022 17:23:08 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.236; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (12.22.5.236) by
- DM6NAM11FT024.mail.protection.outlook.com (10.13.172.159) with Microsoft SMTP
+ 12.22.5.234 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.234; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (12.22.5.234) by
+ CO1NAM11FT021.mail.protection.outlook.com (10.13.175.51) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4951.12 via Frontend Transport; Mon, 7 Feb 2022 17:24:12 +0000
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by DRHQMAIL109.nvidia.com
- (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 7 Feb
- 2022 17:24:11 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail203.nvidia.com
- (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.4951.12 via Frontend Transport; Mon, 7 Feb 2022 17:23:07 +0000
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by DRHQMAIL101.nvidia.com
+ (10.27.9.10) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 7 Feb
+ 2022 17:23:05 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by rnnvmail202.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.9; Mon, 7 Feb 2022
- 09:24:10 -0800
+ 09:23:04 -0800
 Received: from vdi.nvidia.com (10.127.8.10) by mail.nvidia.com (10.129.68.8)
  with Microsoft SMTP Server id 15.2.986.9 via Frontend Transport; Mon, 7 Feb
- 2022 09:24:06 -0800
+ 2022 09:23:00 -0800
 From:   Yishai Hadas <yishaih@nvidia.com>
 To:     <alex.williamson@redhat.com>, <bhelgaas@google.com>,
         <jgg@nvidia.com>, <saeedm@nvidia.com>
@@ -68,422 +68,237 @@ CC:     <linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
         <kwankhede@nvidia.com>, <mgurtovoy@nvidia.com>,
         <yishaih@nvidia.com>, <maorg@nvidia.com>, <ashok.raj@intel.com>,
         <kevin.tian@intel.com>, <shameerali.kolothum.thodi@huawei.com>
-Subject: [PATCH V7 mlx5-next 15/15] vfio: Extend the device migration protocol with PRE_COPY
-Date:   Mon, 7 Feb 2022 19:22:16 +0200
-Message-ID: <20220207172216.206415-16-yishaih@nvidia.com>
+Subject: [PATCH V7 mlx5-next 00/15] Add mlx5 live migration driver and v2 migration protocol
+Date:   Mon, 7 Feb 2022 19:22:01 +0200
+Message-ID: <20220207172216.206415-1-yishaih@nvidia.com>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20220207172216.206415-1-yishaih@nvidia.com>
-References: <20220207172216.206415-1-yishaih@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ae5f6f05-6355-4e80-074b-08d9ea5ea85a
-X-MS-TrafficTypeDiagnostic: PH0PR12MB5404:EE_
-X-Microsoft-Antispam-PRVS: <PH0PR12MB5404B64A5C6C5C77BAACD766C32C9@PH0PR12MB5404.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Office365-Filtering-Correlation-Id: e53c711b-7180-4a2e-e263-08d9ea5e8217
+X-MS-TrafficTypeDiagnostic: BYAPR12MB3032:EE_
+X-Microsoft-Antispam-PRVS: <BYAPR12MB30320A74CD8B8A5329866ED1C32C9@BYAPR12MB3032.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Ti9hxLEAjThqMkEFkHEpzSyL4bXgLwWktPmX1xrOJrSdSCeb6xKJh2DREPw/FEUiF4enMYzNreDX7kmtmo2PiouBCB8klDNvu9eOqIcJ0kvk5WbSP8faQY32TG8PgSd3XNCsBLM5Wz2kxehvqxHskU3JsBF5GQLreBlHer9A10ODvmgHcUCqdFF+7+eXYdakne1APXbf8Pt+SfOEgDkRA3miKMjHbf0yhOhuEKXSdXsA1wBjRLYwdb0aBEZvJrNOoxS2HE6bQEJeEtgcVJHFQ7kr9Xvm2A2LQccpztEPqQ90fby9YokQR+++tCkm5pvLADI+NPO8BEc7nZoVlzMTOWSQJbOlVHV2oLgr8hDFcr9P+c92HSVaJd8aby0vphC1GmhxG8h44DRjNWTHxMN1SKLxOtNC8/mqe2iSEq8yy+twjlB1pSp+ZIUfBlppujL7p5GaI7a8YM5/rzfVUTJGRv1VNXoABipvKwqBxkUSEVGH9MQIPWkE59O+hVFBKEg6BtjEeHn/jpZJ87GrSIK4qxHiiL60oXizhklAmOzWmtJoNNp3QwSES6I6S76F8zv+PYTMSoQ6dFjSBpIJ+TKLfIxcO19/at+Y9qR1o/6MxxqljSHSC0M7ZUvWCo491BoUjXtd5r92xaVRavBP5AJ1EGZ2/yTqzpokzGdFlaTuOHRGDJ/WEB1qdUhm5oNgupjH3kJgeiQz40/QRCZmNs01Fg==
-X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(186003)(1076003)(26005)(36860700001)(336012)(426003)(356005)(86362001)(82310400004)(83380400001)(81166007)(47076005)(40460700003)(4326008)(36756003)(8676002)(110136005)(6636002)(316002)(54906003)(70586007)(8936002)(30864003)(5660300002)(6666004)(7696005)(508600001)(70206006)(2906002)(2616005)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: uvu6L2dq14xabeSxJULr5UpOzmJq1hKthMztSIbro84HT3BV7tdudFYV/JyXqbyxH12k8XhcJQWDNqfDqKLYWWTxP9oa18goNygqjz0dU5Wmvo7VZg6GEsW3iQuBIP1LhApi3k1iuuP44O0MLxNED3nzpUYizvGVEkbj7MIOvKi3pDxvgDg9HtgxraC+gV1BVJ//PcmqZD+JLa8+UDES0Qv2mB66B5Cocwghun/aEq4T0By7hWMcbVZtl2dKZKXqgCbFdBu9xGd7pvqWDTc5xdG3ouK/h0Vrz+PuBQjiLX0OwVaPTUbY/81c8EUwPMYFyoEmMNOz16N/dfLtZgZwD5vqlbzw/d4KUdZI9bqxq3gMWqHS3QVFvoblOPPXjQ982e0z1hKqKgVO4RBaw0LxbaNQ7hdyDrBL0XNGo23M/Vlm1EJxGSESZgAMptEK2DSe7NXv8KuqK12/9FPg4Mxivcl0tGQRUqouU3cVLRW1RqYomg6dXGOaLSw+Yo0PxbJW+6VUTtN+grM6rptcTh+hj5ceKte0+Cl3AW8e00JB05zxYEMCwQTvFcSmDd5Hkt3lFNdq28l22QAL3fAWKcmjxwKMCcibkeAruK2tUiQnz6ZtnbcpMc5pJxAn13kgXfj0F3T4cuKqQ0KImpGTpO3OZjfrsBFMGgiabeZD2JzDOdQplqzql8NDqpxGJgbeqUEd8U9JuwWA61OY+nPt4FjL/Y/1rSodP6a6mD7CWU8eAsRkNozK4PxImnldTRdxDRRZvU0XW85XQnHt3zIZiCVRpywZ1XoyxL7K2QQqXMHGda8jyWGFVTi70iAxql0eUzxY+c2AlNJyXZV2eP5wACNYWw==
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(46966006)(40470700004)(36840700001)(5660300002)(70206006)(70586007)(966005)(508600001)(4326008)(8936002)(8676002)(36756003)(7696005)(40460700003)(82310400004)(110136005)(54906003)(6636002)(316002)(2906002)(47076005)(83380400001)(86362001)(1076003)(2616005)(426003)(36860700001)(81166007)(186003)(26005)(356005)(336012)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 17:24:12.0215
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Feb 2022 17:23:07.9127
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ae5f6f05-6355-4e80-074b-08d9ea5ea85a
+X-MS-Exchange-CrossTenant-Network-Message-Id: e53c711b-7180-4a2e-e263-08d9ea5e8217
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT021.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5404
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3032
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jason Gunthorpe <jgg@nvidia.com>
+This series adds mlx5 live migration driver for VFs that are migration
+capable and includes the v2 migration protocol definition and mlx5
+implementation.
 
-The optional PRE_COPY states open the saving data transfer FD before
-reaching STOP_COPY and allows the device to dirty track internal state
-changes with the general idea to reduce the volume of data transferred
-in the STOP_COPY stage.
+The mlx5 driver uses the vfio_pci_core split to create a specific VFIO
+PCI driver that matches the mlx5 virtual functions. The driver provides
+the same experience as normal vfio-pci with the addition of migration
+support.
 
-While in PRE_COPY the device remains RUNNING, but the saving FD is open.
+In HW the migration is controlled by the PF function, using its
+mlx5_core driver, and the VFIO PCI VF driver co-ordinates with the PF to
+execute the migration actions.
 
-Only if the device also supports RUNNING_P2P can it support PRE_COPY_P2P,
-which halts P2P transfers while continuing the saving FD.
+The bulk of the v2 migration protocol is semantically the same v1,
+however it has been recast into a FSM for the device_state and the
+actual syscall interface uses normal ioctl(), read() and write() instead
+of building a syscall interface using the region.
 
-PRE_COPY, with P2P support, requires the driver to implement 7 new arcs
-and exists as an optional FSM branch between RUNNING and STOP_COPY:
-    RUNNING -> PRE_COPY -> PRE_COPY_P2P -> STOP_COPY
+Several bits of infrastructure work are included here:
+ - pci_iov_vf_id() to help drivers like mlx5 figure out the VF index from
+   a BDF
+ - pci_iov_get_pf_drvdata() to clarify the tricky locking protocol when a
+   VF reaches into its PF's driver
+ - mlx5_core uses the normal SRIOV lifecycle and disables SRIOV before
+   driver remove, to be compatible with pci_iov_get_pf_drvdata()
+ - Lifting VFIO_DEVICE_FEATURE into core VFIO code
 
-A new ioctl VFIO_DEVICE_MIG_PRECOPY is provided to allow userspace to
-query the progress of the precopy operation in the driver with the idea it
-will judge to move to STOP_COPY at least once the initial data set is
-transferred, and possibly after the dirty size has shrunk appropriately.
+This series comes after alot of discussion. Some major points:
+- v1 ABI compatible migration defined using the same FSM approach:
+   https://lore.kernel.org/all/0-v1-a4f7cab64938+3f-vfio_mig_states_jgg@nvidia.com/
+- Attempts to clarify how the v1 API works:
+   Alex's:
+     https://lore.kernel.org/kvm/163909282574.728533.7460416142511440919.stgit@omen/
+   Jason's:
+     https://lore.kernel.org/all/0-v3-184b374ad0a8+24c-vfio_mig_doc_jgg@nvidia.com/
+- Etherpad exploring the scope and questions of general VFIO migration:
+     https://lore.kernel.org/kvm/87mtm2loml.fsf@redhat.com/
 
-We think there may also be merit in future extensions to the
-VFIO_DEVICE_MIG_PRECOPY ioctl to also command the device to throttle the
-rate it generates internal dirty state.
+NOTE: As this series touched mlx5_core parts we need to send this in a
+pull request format to VFIO to avoid conflicts.
 
-Compared to the v1 clarification, STOP_COPY -> PRE_COPY is made optional
-and to be defined in future. While making the whole PRE_COPY feature
-optional eliminates the concern from mlx5, this is still a complicated arc
-to implement and seems prudent to leave it closed until a proper use case
-is developed. We also split the pending_bytes report into the initial and
-sustaining values, and define the protocol to get an event via poll() for
-new dirty data during PRE_COPY.
+Matching qemu changes can be previewed here:
+ https://github.com/jgunthorpe/qemu/commits/vfio_migration_v2
 
-Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
-Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
----
- drivers/vfio/vfio.c       |  71 +++++++++++++++++++++++-
- include/uapi/linux/vfio.h | 110 ++++++++++++++++++++++++++++++++++++--
- 2 files changed, 176 insertions(+), 5 deletions(-)
+Changes from V6: https://lore.kernel.org/netdev/20220130160826.32449-1-yishaih@nvidia.com/
+vfio:
+- Move to use the FEATURE ioctl for setting/getting the device state.
+- Use state_flags_table as part of vfio_mig_get_next_state() and use
+  WARN_ON as Alex suggested.
+- Leave the V1 definitions in the uAPI header and drop only its
+  documentation till V2 will be part of Linus's tree.
+- Fix errno's usage in few places.
+- Improve and adapt the uAPI documentation to match the latest code.
+- Put the VFIO_DEVICE_FEATURE_PCI_VF_TOKEN functionality into a separate
+  function.
+- Fix some rebase note.
+vfio/mlx5:
+- Adapt to use the vfio core changes.
+- Fix some bad flow upon load state.
 
-diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-index 8c484593dfe0..b4c585114ef3 100644
---- a/drivers/vfio/vfio.c
-+++ b/drivers/vfio/vfio.c
-@@ -1577,7 +1577,7 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 			    enum vfio_device_mig_state new_fsm,
- 			    enum vfio_device_mig_state *next_fsm)
- {
--	enum { VFIO_DEVICE_NUM_STATES = VFIO_DEVICE_STATE_RUNNING_P2P + 1 };
-+	enum { VFIO_DEVICE_NUM_STATES = VFIO_DEVICE_STATE_PRE_COPY_P2P + 1 };
- 	/*
- 	 * The coding in this table requires the driver to implement
- 	 * FSM arcs:
-@@ -1596,25 +1596,59 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 	 *         RUNNING -> STOP
- 	 *         STOP -> RUNNING
- 	 *
-+	 * If precopy is supported then the driver must support these additional
-+	 * FSM arcs:
-+	 *         RUNNING -> PRE_COPY
-+	 *         PRE_COPY -> RUNNING
-+	 *         PRE_COPY -> STOP_COPY
-+	 * However, if precopy and P2P are supported together then the driver
-+	 * must support these additional arcs beyond the P2P arcs above:
-+	 *         PRE_COPY -> RUNNING
-+	 *         PRE_COPY -> PRE_COPY_P2P
-+	 *         PRE_COPY_P2P -> PRE_COPY
-+	 *         PRE_COPY_P2P -> RUNNING_P2P
-+	 *         PRE_COPY_P2P -> STOP_COPY
-+	 *         RUNNING -> PRE_COPY
-+	 *         RUNNING_P2P -> PRE_COPY_P2P
-+	 *
- 	 * If all optional features are supported then the coding will step
- 	 * through multiple states for these combination transitions:
-+	 *         PRE_COPY -> PRE_COPY_P2P -> STOP_COPY
-+	 *         PRE_COPY -> RUNNING -> RUNNING_P2P
-+	 *         PRE_COPY -> RUNNING -> RUNNING_P2P -> STOP
-+	 *         PRE_COPY -> RUNNING -> RUNNING_P2P -> STOP -> RESUMING
-+	 *         PRE_COPY_P2P -> RUNNING_P2P -> RUNNING
-+	 *         PRE_COPY_P2P -> RUNNING_P2P -> STOP
-+	 *         PRE_COPY_P2P -> RUNNING_P2P -> STOP -> RESUMING
- 	 *         RESUMING -> STOP -> RUNNING_P2P
-+	 *         RESUMING -> STOP -> RUNNING_P2P -> PRE_COPY_P2P
- 	 *         RESUMING -> STOP -> RUNNING_P2P -> RUNNING
-+	 *         RESUMING -> STOP -> RUNNING_P2P -> RUNNING -> PRE_COPY
- 	 *         RESUMING -> STOP -> STOP_COPY
-+	 *         RUNNING -> RUNNING_P2P -> PRE_COPY_P2P
- 	 *         RUNNING -> RUNNING_P2P -> STOP
- 	 *         RUNNING -> RUNNING_P2P -> STOP -> RESUMING
- 	 *         RUNNING -> RUNNING_P2P -> STOP -> STOP_COPY
-+	 *         RUNNING_P2P -> RUNNING -> PRE_COPY
- 	 *         RUNNING_P2P -> STOP -> RESUMING
- 	 *         RUNNING_P2P -> STOP -> STOP_COPY
-+	 *         STOP -> RUNNING_P2P -> PRE_COPY_P2P
- 	 *         STOP -> RUNNING_P2P -> RUNNING
-+	 *         STOP -> RUNNING_P2P -> RUNNING -> PRE_COPY
- 	 *         STOP_COPY -> STOP -> RESUMING
- 	 *         STOP_COPY -> STOP -> RUNNING_P2P
- 	 *         STOP_COPY -> STOP -> RUNNING_P2P -> RUNNING
-+	 *
-+	 *  The following transitions are blocked:
-+	 *         STOP_COPY -> PRE_COPY
-+	 *         STOP_COPY -> PRE_COPY_P2P
- 	 */
- 	static const u8 vfio_from_fsm_table[VFIO_DEVICE_NUM_STATES][VFIO_DEVICE_NUM_STATES] = {
- 		[VFIO_DEVICE_STATE_STOP] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_STOP_COPY,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_RESUMING,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
-@@ -1623,14 +1657,38 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 		[VFIO_DEVICE_STATE_RUNNING] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_PRE_COPY,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
- 			[VFIO_DEVICE_STATE_ERROR] = VFIO_DEVICE_STATE_ERROR,
- 		},
-+		[VFIO_DEVICE_STATE_PRE_COPY] = {
-+			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_PRE_COPY,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_PRE_COPY_P2P,
-+			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_PRE_COPY_P2P,
-+			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_ERROR] = VFIO_DEVICE_STATE_ERROR,
-+		},
-+		[VFIO_DEVICE_STATE_PRE_COPY_P2P] = {
-+			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_PRE_COPY,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_PRE_COPY_P2P,
-+			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_STOP_COPY,
-+			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
-+			[VFIO_DEVICE_STATE_ERROR] = VFIO_DEVICE_STATE_ERROR,
-+		},
- 		[VFIO_DEVICE_STATE_STOP_COPY] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_STOP,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_ERROR,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_ERROR,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_STOP_COPY,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_STOP,
-@@ -1639,6 +1697,8 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 		[VFIO_DEVICE_STATE_RESUMING] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_STOP,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_STOP,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_RESUMING,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_STOP,
-@@ -1647,6 +1707,8 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 		[VFIO_DEVICE_STATE_RUNNING_P2P] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_RUNNING,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_PRE_COPY_P2P,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_STOP,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_RUNNING_P2P,
-@@ -1655,6 +1717,8 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 		[VFIO_DEVICE_STATE_ERROR] = {
- 			[VFIO_DEVICE_STATE_STOP] = VFIO_DEVICE_STATE_ERROR,
- 			[VFIO_DEVICE_STATE_RUNNING] = VFIO_DEVICE_STATE_ERROR,
-+			[VFIO_DEVICE_STATE_PRE_COPY] = VFIO_DEVICE_STATE_ERROR,
-+			[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_DEVICE_STATE_ERROR,
- 			[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_DEVICE_STATE_ERROR,
- 			[VFIO_DEVICE_STATE_RESUMING] = VFIO_DEVICE_STATE_ERROR,
- 			[VFIO_DEVICE_STATE_RUNNING_P2P] = VFIO_DEVICE_STATE_ERROR,
-@@ -1665,6 +1729,11 @@ int vfio_mig_get_next_state(struct vfio_device *device,
- 	static const unsigned int state_flags_table[VFIO_DEVICE_NUM_STATES] = {
- 		[VFIO_DEVICE_STATE_STOP] = VFIO_MIGRATION_STOP_COPY,
- 		[VFIO_DEVICE_STATE_RUNNING] = VFIO_MIGRATION_STOP_COPY,
-+		[VFIO_DEVICE_STATE_PRE_COPY] =
-+			VFIO_MIGRATION_STOP_COPY | VFIO_MIGRATION_PRE_COPY,
-+		[VFIO_DEVICE_STATE_PRE_COPY_P2P] = VFIO_MIGRATION_STOP_COPY |
-+						   VFIO_MIGRATION_P2P |
-+						   VFIO_MIGRATION_PRE_COPY,
- 		[VFIO_DEVICE_STATE_STOP_COPY] = VFIO_MIGRATION_STOP_COPY,
- 		[VFIO_DEVICE_STATE_RESUMING] = VFIO_MIGRATION_STOP_COPY,
- 		[VFIO_DEVICE_STATE_RUNNING_P2P] =
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 227f55d57e06..6424c5b3415b 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -817,12 +817,20 @@ struct vfio_device_feature {
-  * VFIO_MIGRATION_STOP_COPY | VFIO_MIGRATION_P2P means that RUNNING_P2P
-  * is supported in addition to the STOP_COPY states.
-  *
-+ * VFIO_MIGRATION_STOP_COPY | VFIO_MIGRATION_PRE_COPY means that
-+ * PRE_COPY is supported in addition to the STOP_COPY states.
-+ *
-+ * VFIO_MIGRATION_STOP_COPY | VFIO_MIGRATION_P2P | VFIO_MIGRATION_PRE_COPY
-+ * means that RUNNING_P2P, PRE_COPY and PRE_COPY_P2P are supported
-+ * in addition to the STOP_COPY states.
-+ *
-  * Other combinations of flags have behavior to be defined in the future.
-  */
- struct vfio_device_feature_migration {
- 	__aligned_u64 flags;
- #define VFIO_MIGRATION_STOP_COPY	(1 << 0)
- #define VFIO_MIGRATION_P2P		(1 << 1)
-+#define VFIO_MIGRATION_PRE_COPY		(1 << 2)
- };
- #define VFIO_DEVICE_FEATURE_MIGRATION 1
- 
-@@ -873,8 +881,13 @@ struct vfio_device_feature_mig_state {
-  *  RESUMING - The device is stopped and is loading a new internal state
-  *  ERROR - The device has failed and must be reset
-  *
-- * And 1 optional state to support VFIO_MIGRATION_P2P:
-+ * And optional states to support VFIO_MIGRATION_P2P:
-  *  RUNNING_P2P - RUNNING, except the device cannot do peer to peer DMA
-+ * And VFIO_MIGRATION_PRE_COPY:
-+ *  PRE_COPY - The device is running normally but tracking internal state
-+ *             changes
-+ * And VFIO_MIGRATION_P2P | VFIO_MIGRATION_PRE_COPY:
-+ *  PRE_COPY_P2P - PRE_COPY, except the device cannot do peer to peer DMA
-  *
-  * The FSM takes actions on the arcs between FSM states. The driver implements
-  * the following behavior for the FSM arcs:
-@@ -906,20 +919,48 @@ struct vfio_device_feature_mig_state {
-  *
-  *   To abort a RESUMING session the device must be reset.
-  *
-+ * PRE_COPY -> RUNNING
-  * RUNNING_P2P -> RUNNING
-  *   While in RUNNING the device is fully operational, the device may generate
-  *   interrupts, DMA, respond to MMIO, all vfio device regions are functional,
-  *   and the device may advance its internal state.
-  *
-+ *   The PRE_COPY arc will terminate a data transfer session.
-+ *
-+ * PRE_COPY_P2P -> RUNNING_P2P
-  * RUNNING -> RUNNING_P2P
-  * STOP -> RUNNING_P2P
-  *   While in RUNNING_P2P the device is partially running in the P2P quiescent
-  *   state defined below.
-  *
-+ *   The PRE_COPY arc will terminate a data transfer session.
-+ *
-+ * RUNNING -> PRE_COPY
-+ * RUNNING_P2P -> PRE_COPY_P2P
-  * STOP -> STOP_COPY
-- *   This arc begin the process of saving the device state and will return a
-- *   new data_fd.
-+ *   PRE_COPY, PRE_COPY_P2P and STOP_COPY form the "saving group" of states
-+ *   which share a data transfer session. Moving between these states alters
-+ *   what is streamed in session, but does not terminate or otherwise effect
-+ *   the associated fd.
-+ *
-+ *   These arcs begin the process of saving the device state and will return a
-+ *   new data_fd. The migration driver may perform actions such as enabling
-+ *   dirty logging of device state when entering PRE_COPY or PER_COPY_P2P.
-  *
-+ *   Each arc does not change the device operation, the device remains
-+ *   RUNNING, P2P quiesced or in STOP. The STOP_COPY state is described below
-+ *   in PRE_COPY_P2P -> STOP_COPY.
-+ *
-+ * PRE_COPY -> PRE_COPY_P2P
-+ *   Entering PRE_COPY_P2P continues all the behaviors of PRE_COPY above.
-+ *   However, while in the PRE_COPY_P2P state, the device is partially running
-+ *   in the P2P quiescent state defined below, like RUNNING_P2P.
-+ *
-+ * PRE_COPY_P2P -> PRE_COPY
-+ *   This arc allows returning the device to a full RUNNING behavior while
-+ *   continuing all the behaviors of PRE_COPY.
-+ *
-+ * PRE_COPY_P2P -> STOP_COPY
-  *   While in the STOP_COPY state the device has the same behavior as STOP
-  *   with the addition that the data transfers session continues to stream the
-  *   migration state. End of stream on the FD indicates the entire device
-@@ -937,6 +978,13 @@ struct vfio_device_feature_mig_state {
-  *   internal device state for this arc if required to prepare the device to
-  *   receive the migration data.
-  *
-+ * STOP_COPY -> PRE_COPY
-+ * STOP_COPY -> PRE_COPY_P2P
-+ *   These arcs are not permitted and return error if requested. Future
-+ *   revisions of this API may define behaviors for these arcs, in this case
-+ *   support will be discoverable by a new flag in
-+ *   VFIO_DEVICE_FEATURE_MIGRATION.
-+ *
-  * any -> ERROR
-  *   ERROR cannot be specified as a device state, however any transition request
-  *   can be failed with an errno return and may then move the device_state into
-@@ -948,7 +996,7 @@ struct vfio_device_feature_mig_state {
-  * The optional peer to peer (P2P) quiescent state is intended to be a quiescent
-  * state for the device for the purposes of managing multiple devices within a
-  * user context where peer-to-peer DMA between devices may be active. The
-- * RUNNING_P2P states must prevent the device from initiating
-+ * RUNNING_P2P and PRE_COPY_P2P states must prevent the device from initiating
-  * any new P2P DMA transactions. If the device can identify P2P transactions
-  * then it can stop only P2P DMA, otherwise it must stop all DMA. The migration
-  * driver must complete any such outstanding operations prior to completing the
-@@ -959,6 +1007,8 @@ struct vfio_device_feature_mig_state {
-  * above FSM arcs. As there are multiple paths through the FSM arcs the path
-  * should be selected based on the following rules:
-  *   - Select the shortest path.
-+ *   - The path cannot have saving group states as interior arcs, only
-+ *     starting/end states.
-  * Refer to vfio_mig_get_next_state() for the result of the algorithm.
-  *
-  * The automatic transit through the FSM arcs that make up the combination
-@@ -972,6 +1022,9 @@ struct vfio_device_feature_mig_state {
-  * support them. The user can disocver if these states are supported by using
-  * VFIO_DEVICE_FEATURE_MIGRATION. By using combination transitions the user can
-  * avoid knowing about these optional states if the kernel driver supports them.
-+ *
-+ * Arcs touching PRE_COPY and PRE_COPY_P2P are removed if support for PRE_COPY
-+ * is not present.
-  */
- enum vfio_device_mig_state {
- 	VFIO_DEVICE_STATE_ERROR = 0,
-@@ -980,8 +1033,57 @@ enum vfio_device_mig_state {
- 	VFIO_DEVICE_STATE_STOP_COPY = 3,
- 	VFIO_DEVICE_STATE_RESUMING = 4,
- 	VFIO_DEVICE_STATE_RUNNING_P2P = 5,
-+	VFIO_DEVICE_STATE_PRE_COPY = 6,
-+	VFIO_DEVICE_STATE_PRE_COPY_P2P = 7,
-+};
-+
-+/**
-+ * VFIO_DEVICE_MIG_PRECOPY - _IO(VFIO_TYPE, VFIO_BASE + 21)
-+ *
-+ * This ioctl is used on the migration data FD in the precopy phase of the
-+ * migration data transfer. It returns an estimate of the current data sizes
-+ * remaining to be transferred. It allows the user to judge when it is
-+ * appropriate to leave PRE_COPY for STOP_COPY.
-+ *
-+ * initial_bytes reflects the estimated remaining size of any initial mandatory
-+ * precopy data transfer. When initial_bytes returns as zero then the initial
-+ * phase of the precopy data is completed. Generally initial_bytes should start
-+ * out as approximately the entire device state.
-+ *
-+ * dirty_bytes reflects an estimate for how much more data needs to be
-+ * transferred to complete the migration. Generally it should start as zero
-+ * and increase as internal state is dirtied.
-+ *
-+ * Drivers should attempt to return estimates so that initial_bytes +
-+ * dirty_bytes matches the amount of data an immediate transition to STOP_COPY
-+ * will require to be streamed.
-+ *
-+ * Drivers have alot of flexibility in when and what they transfer during the
-+ * PRE_COPY phase, and how they report this from VFIO_DEVICE_MIG_PRECOPY.
-+ *
-+ * During pre-copy the migration data FD has a temporary "end of stream" that is
-+ * reached when both initial_bytes and dirty_byte are zero. For instance, this
-+ * may indicate that the device is idle and not currently dirtying any internal
-+ * state. When read() is done on this temporary end of stream the kernel driver
-+ * should return ENOMSG from read(). Userspace can wait for more data (which may
-+ * never come) by using poll.
-+ *
-+ * Once in STOP_COPY the migration data FD has a permanent end of stream
-+ * signaled in the usual way by read() always returning 0 and poll always
-+ * returning readable. ENOMSG may not be returned in STOP_COPY. Support
-+ * for this ioctl is optional.
-+ *
-+ * Return: 0 on success, -1 and errno set on failure.
-+ */
-+struct vfio_device_mig_precopy {
-+	__u32 argsz;
-+	__u32 flags;
-+	__aligned_u64 initial_bytes;
-+	__aligned_u64 dirty_bytes;
- };
- 
-+#define VFIO_DEVICE_MIG_PRECOPY _IO(VFIO_TYPE, VFIO_BASE + 21)
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
+Changes from V5: https://lore.kernel.org/kvm/20211027095658.144468-1-yishaih@nvidia.com/
+vfio:
+- Migration protocol v2:
+  + enum for device state, not bitmap
+  + ioctl to manipulate device_state, not a region
+  + Only STOP_COPY is mandatory, P2P and PRE_COPY are optional, discovered
+    via VFIO_DEVICE_FEATURE
+  + Migration data transfer is done via dedicated FD
+- VFIO core code to implement the migration related ioctls and help
+  drivers implement it correctly
+- VFIO_DEVICE_FEATURE refactor
+- Delete migration protocol, drop patches fixing it
+- Drop "vfio/pci_core: Make the region->release() function optional"
+vfio/mlx5:
+- Switch to use migration v2 protocol, with core helpers
+- Eliminate the region implementation
+
+Changes from V4: https://lore.kernel.org/kvm/20211026090605.91646-1-yishaih@nvidia.com/
+vfio:
+- Add some Reviewed-by.
+- Rename to vfio_pci_core_aer_err_detected() as Alex asked.
+vfio/mlx5:
+- Improve to enter the error state only if unquiesce also fails.
+- Fix some typos.
+- Use the multi-line comment style as in drivers/vfio.
+
+Changes from V3: https://lore.kernel.org/kvm/20211024083019.232813-1-yishaih@nvidia.com/
+vfio/mlx5:
+- Align with mlx5 latest specification to create the MKEY with full read
+  write permissions.
+- Fix unlock ordering in mlx5vf_state_mutex_unlock() to prevent some
+  race.
+
+Changes from V2: https://lore.kernel.org/kvm/20211019105838.227569-1-yishaih@nvidia.com/
+vfio:
+- Put and use the new macro VFIO_DEVICE_STATE_SET_ERROR as Alex asked.
+vfio/mlx5:
+- Improve/fix state checking as was asked by Alex & Jason.
+- Let things be done in a deterministic way upon 'reset_done' following
+  the suggested algorithm by Jason.
+- Align with mlx5 latest specification when calling the SAVE command.
+- Fix some typos.
+vdpa/mlx5:
+- Drop the patch from the series based on the discussion in the mailing
+  list.
+
+Changes from V1: https://lore.kernel.org/kvm/20211013094707.163054-1-yishaih@nvidia.com/
+PCI/IOV:
+- Add actual interface in the subject as was asked by Bjorn and add
+  his Acked-by.
+- Move to check explicitly for !dev->is_virtfn as was asked by Alex.
+vfio:
+- Come with a separate patch for fixing the non-compiled
+  VFIO_DEVICE_STATE_SET_ERROR macro.
+- Expose vfio_pci_aer_err_detected() to be set by drivers on their own
+  pci error handles.
+- Add a macro for VFIO_DEVICE_STATE_ERROR in the uapi header file as was
+  suggested by Alex.
+vfio/mlx5:
+- Improve to use xor as part of checking the 'state' change command as
+  was suggested by Alex.
+- Set state to VFIO_DEVICE_STATE_ERROR when an error occurred instead of
+  VFIO_DEVICE_STATE_INVALID.
+- Improve state checking as was suggested by Jason.
+- Use its own PCI reset_done error handler as was suggested by Jason and
+  fix the locking scheme around the state mutex to work properly.
+
+Changes from V0: https://lore.kernel.org/kvm/cover.1632305919.git.leonro@nvidia.com/
+PCI/IOV:
+- Add an API (i.e. pci_iov_get_pf_drvdata()) that allows SRVIO VF drivers
+  to reach the drvdata of a PF.
+mlx5_core:
+- Add an extra patch to disable SRIOV before PF removal.
+- Adapt to use the above PCI/IOV API as part of mlx5_vf_get_core_dev().
+- Reuse the exported PCI/IOV virtfn index function call (i.e. pci_iov_vf_id().
+vfio:
+- Add support in the pci_core to let a driver be notified when
+ 'reset_done' to let it sets its internal state accordingly.
+- Add some helper stuff for 'invalid' state handling.
+mlx5_vfio_pci:
+- Move to use the 'command mode' instead of the 'state machine'
+ scheme as was discussed in the mailing list.
+- Handle the RESET scenario when called by vfio_pci_core to sets
+ its internal state accordingly.
+- Set initial state as RUNNING.
+- Put the driver files as sub-folder under drivers/vfio/pci named mlx5
+  and update MAINTAINER file as was asked.
+vdpa_mlx5:
+Add a new patch to use mlx5_vf_get_core_dev() to get PF device.
+Jason Gunthorpe (7):
+  PCI/IOV: Add pci_iov_vf_id() to get VF index
+  PCI/IOV: Add pci_iov_get_pf_drvdata() to allow VF reaching the drvdata
+    of a PF
+  vfio: Have the core code decode the VFIO_DEVICE_FEATURE ioctl
+  vfio: Define device migration protocol v2
+  vfio: Extend the device migration protocol with RUNNING_P2P
+  vfio: Remove migration protocol v1 documentation
+  vfio: Extend the device migration protocol with PRE_COPY
+
+Leon Romanovsky (1):
+  net/mlx5: Reuse exported virtfn index function call
+
+Yishai Hadas (7):
+  net/mlx5: Disable SRIOV before PF removal
+  net/mlx5: Expose APIs to get/put the mlx5 core device
+  net/mlx5: Introduce migration bits and structures
+  vfio/mlx5: Expose migration commands over mlx5 device
+  vfio/mlx5: Implement vfio_pci driver for mlx5 devices
+  vfio/pci: Expose vfio_pci_core_aer_err_detected()
+  vfio/mlx5: Use its own PCI reset_done error handler
+
+ MAINTAINERS                                   |   6 +
+ .../net/ethernet/mellanox/mlx5/core/main.c    |  45 ++
+ .../ethernet/mellanox/mlx5/core/mlx5_core.h   |   1 +
+ .../net/ethernet/mellanox/mlx5/core/sriov.c   |  17 +-
+ drivers/pci/iov.c                             |  43 ++
+ drivers/vfio/pci/Kconfig                      |   3 +
+ drivers/vfio/pci/Makefile                     |   2 +
+ drivers/vfio/pci/mlx5/Kconfig                 |  10 +
+ drivers/vfio/pci/mlx5/Makefile                |   4 +
+ drivers/vfio/pci/mlx5/cmd.c                   | 259 +++++++
+ drivers/vfio/pci/mlx5/cmd.h                   |  36 +
+ drivers/vfio/pci/mlx5/main.c                  | 676 ++++++++++++++++++
+ drivers/vfio/pci/vfio_pci.c                   |   1 +
+ drivers/vfio/pci/vfio_pci_core.c              | 101 ++-
+ drivers/vfio/vfio.c                           | 358 +++++++++-
+ include/linux/mlx5/driver.h                   |   3 +
+ include/linux/mlx5/mlx5_ifc.h                 | 147 +++-
+ include/linux/pci.h                           |  15 +-
+ include/linux/vfio.h                          |  50 ++
+ include/linux/vfio_pci_core.h                 |   4 +
+ include/uapi/linux/vfio.h                     | 504 +++++++------
+ 21 files changed, 1994 insertions(+), 291 deletions(-)
+ create mode 100644 drivers/vfio/pci/mlx5/Kconfig
+ create mode 100644 drivers/vfio/pci/mlx5/Makefile
+ create mode 100644 drivers/vfio/pci/mlx5/cmd.c
+ create mode 100644 drivers/vfio/pci/mlx5/cmd.h
+ create mode 100644 drivers/vfio/pci/mlx5/main.c
+
 -- 
 2.18.1
 
