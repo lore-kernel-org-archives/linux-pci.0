@@ -2,140 +2,148 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E38FBC433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 15:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30BE2C4707A
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 16:22:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1385275AbiBGPy3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Feb 2022 10:54:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33248 "EHLO
+        id S232876AbiBGQWK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Feb 2022 11:22:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379106AbiBGPt5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 10:49:57 -0500
-X-Greylist: delayed 302 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 07:49:57 PST
-Received: from so254-9.mailgun.net (so254-9.mailgun.net [198.61.254.9])
-        by lindbergh.monkeyblade.net (Postfix) with UTF8SMTPS id 464AAC0401C1
-        for <linux-pci@vger.kernel.org>; Mon,  7 Feb 2022 07:49:57 -0800 (PST)
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1644248997; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=2yxEWoGWybWm+EWzW1VAE3C5MPy0zhkD2Pst4w6ox5s=;
- b=uUBsj8Buc5knfyRS1SUWucuno9OzjOHhkT43b7hgfbcXc5EvKlzs7hLEIjv76qF4WS0+AcWL
- nxhEp+Kk91EKjV0CtmNTosKI8w9GKQDhLxNppuK/qyNJ+uBJ3UQGdR3AXI/JVrmDSZXFhFHR
- JPFJxQDk6cBg270Me2kmo8dueUs=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyI2YzdiNyIsICJsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 62013e7519d16b66a9ea982f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 07 Feb 2022 15:44:53
- GMT
-Sender: nitirawa=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9918DC43150; Mon,  7 Feb 2022 15:44:53 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        with ESMTP id S1345732AbiBGQJz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 11:09:55 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9EEC0401E3;
+        Mon,  7 Feb 2022 08:09:47 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: nitirawa)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E43E8C43639;
-        Mon,  7 Feb 2022 15:44:49 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 54EABB81620;
+        Mon,  7 Feb 2022 16:09:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B487C36AE2;
+        Mon,  7 Feb 2022 16:09:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644250185;
+        bh=zmd2o9oLA0EJ0hPOoSHeAgUAtJ/i5oTwZaJJrykDlgM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=mJSTsCnbTI3gwg/8BhSVQ+RBGPrG+psB6hlPxH2TkERftMdOHpsCZTo5MNoeifO1L
+         oFrULqWEX0iWf+gGMaZH2QDadFBqmSGfutMMDcVyYKu0uwtxsIRlZPSsWP+XN7t+gA
+         r8OaZctUL0ilvXmdCUeQTDILiTKRgaqk5rtCiY+MEkaT+0HodiWd37fMVWTP+uaeya
+         0zU4tVUBj2JvaEpJfySAVL5/b0dWuwoC3v8xANFI6+v+VCvFYfU5v4dcOruIH8co/X
+         Je4AJeG6Vl3Vyo+7Euuk3LCkuySqicc0lRH4jodrf47WNRi/RLTPmyAnNHDKac1GqM
+         dpmi98M+KgR3A==
+Received: by mail-ed1-f42.google.com with SMTP id f17so14004784edd.2;
+        Mon, 07 Feb 2022 08:09:45 -0800 (PST)
+X-Gm-Message-State: AOAM532O3hG1AOvJ2wvbh2SeBUlFdEsZYiP3JcIBVdw+BfdP1NoWV6yQ
+        ZcWy/S4q7xQoelYZctvy2uOm66fB5C2TE5QfGA==
+X-Google-Smtp-Source: ABdhPJxkzi+j5PDhmc4PGrG364yBx0Lt608JLV09wibWGr9XJBFhwpweKp1UvdU3JzJzVyrWRoTz/EIpL6vQYPBMLKo=
+X-Received: by 2002:a50:e68d:: with SMTP id z13mr160190edm.307.1644250183395;
+ Mon, 07 Feb 2022 08:09:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Mon, 07 Feb 2022 21:14:49 +0530
-From:   nitirawa@codeaurora.org
-To:     Vidya Sagar <vidyas@nvidia.com>, Keith Busch <kbusch@kernel.org>
-Cc:     Keith Busch <kbusch@kernel.org>, rafael.j.wysocki@intel.com,
-        hch@lst.de, bhelgaas@google.com, mmaddireddy@nvidia.com,
-        kthota@nvidia.com, sagar.tv@gmail.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: Query related to shutting down NVMe during system suspend
-In-Reply-To: <cc0b6768-5722-2277-6e51-75baf3311dc5@nvidia.com>
-References: <65b836cd-8d5d-b9c2-eb8f-2ee3ef46112b@nvidia.com>
- <20220201163054.GA2838889@dhcp-10-100-145-180.wdc.com>
- <0bd9fdc1-99d4-1c59-7343-3708b331b2b5@nvidia.com>
- <24710253b2e34dfdd81ebe1f46b84652@codeaurora.org>
- <cc0b6768-5722-2277-6e51-75baf3311dc5@nvidia.com>
-Message-ID: <c2255367927729ee00c42ae4148c1301@codeaurora.org>
-X-Sender: nitirawa@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+References: <20211129173637.303201-1-robh@kernel.org> <Yf2wTLjmcRj+AbDv@xps13.dannf>
+ <CAL_Jsq+4b4Yy8rJGJv9j9j_TCm6mTAkW5fzcDuuW-jOoiZ2GLg@mail.gmail.com> <CALdTtnuK+D7gNbEDgHbrc29pFFCR3XYAHqrK3=X_hQxUx-Seow@mail.gmail.com>
+In-Reply-To: <CALdTtnuK+D7gNbEDgHbrc29pFFCR3XYAHqrK3=X_hQxUx-Seow@mail.gmail.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Mon, 7 Feb 2022 10:09:31 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJUmjG-SiuR9T7f=5nGcSjTLhuF_382EQDf74kcqdAq_w@mail.gmail.com>
+Message-ID: <CAL_JsqJUmjG-SiuR9T7f=5nGcSjTLhuF_382EQDf74kcqdAq_w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: xgene: Fix IB window setup
+To:     dann frazier <dann.frazier@canonical.com>
+Cc:     Toan Le <toan@os.amperecomputing.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Murray <amurray@thegoodpenguin.co.uk>,
+        =?UTF-8?Q?St=C3=A9phane_Graber?= <stgraber@ubuntu.com>,
+        stable <stable@vger.kernel.org>, PCI <linux-pci@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2022-02-07 17:41, Vidya Sagar wrote:
-> On 2/7/2022 4:27 PM, nitirawa@codeaurora.org wrote:
->> External email: Use caution opening links or attachments
->> 
->> 
->> On 2022-02-01 22:28, Vidya Sagar wrote:
->>> Thanks for the super quick reply and I couldn't agree more.
->>> 
->>> On 2/1/2022 10:00 PM, Keith Busch wrote:
->>>> External email: Use caution opening links or attachments
->>>> 
->>>> 
->>>> On Tue, Feb 01, 2022 at 09:52:28PM +0530, Vidya Sagar wrote:
->>>>> Hi Rafael & Christoph,
->>>>> My query is regarding the comment and the code that follows after 
->>>>> it
->>>>> at
->>>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/nvme/host/pci.c?h=v5.17-rc2#n3243 
->>>>> What I understood from it is that, there is an underlying 
->>>>> assumption
->>>>> that the power to the devices is not removed during the suspend 
->>>>> call.
->>>>> In the case of device-tree based platforms like Tegra194, power is
->>>>> indeed removed to the devices during suspend-resume process. Hence,
->>>>> the
->>>>> NVMe devices need to be taken through the shutdown path 
->>>>> irrespective
->>>>> of
->>>>> whether the ASPM states are enabled or not.
->>>>> I would like to hear from you the best method to follow to achieve
->>>>> this.
->>>> 
->>>> Since platform makers can't converge on how to let a driver know 
->>>> what
->>>> it's supposed to do, I suggest we default to the simple shutdown
->>>> suspend
->>>> all the time. We can add a module parameter to let a user request 
->>>> nvme
->>>> power management if they really want it. No matter what we do here,
->>>> someone is going to complain, but at least simple shutdown is 
->>>> safe...
->>>> 
->> 
->> Hi Vidya,
->> 
->> Are you planning to add module parameter based on above discussion. I
->> see similar behaviour even with  qualcomm platform.
->> 
->> [  119.994092] nvme nvme0: I/O 9 QID 0 timeout, reset controller
->> [  120.006612] PM: dpm_run_callback(): pci_pm_resume+0x0/0xe4 returns
->> -16
->> [  120.013502] nvme 0001:01:00.0: PM: pci_pm_resume+0x0/0xe4 returned
->> -16 after 60059958 usecs
->> [  120.022239] nvme 0001:01:00.0: PM: failed to resume async: error 
->> -16
-> Not really.
-> Keith Busch has already pushed a patch to fix it in a different way
-> and issue is resolved (on Tegra platforms) with that patch.
-> https://lore.kernel.org/all/20220201165006.3074615-1-kbusch@kernel.org/
-> is that patch.
-> 
-> Thanks & Regards,
-> Vidya Sagar
->> 
->> Regards,
->> Nitin
->> 
->> 
+On Sat, Feb 5, 2022 at 3:13 PM dann frazier <dann.frazier@canonical.com> wr=
+ote:
+>
+> On Sat, Feb 5, 2022 at 9:05 AM Rob Herring <robh@kernel.org> wrote:
+> >
+> > On Fri, Feb 4, 2022 at 5:01 PM dann frazier <dann.frazier@canonical.com=
+> wrote:
+> > >
+> > > On Mon, Nov 29, 2021 at 11:36:37AM -0600, Rob Herring wrote:
+> > > > Commit 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup")
+> > > > broke PCI support on XGene. The cause is the IB resources are now s=
+orted
+> > > > in address order instead of being in DT dma-ranges order. The resul=
+t is
+> > > > which inbound registers are used for each region are swapped. I don=
+'t
+> > > > know the details about this h/w, but it appears that IB region 0
+> > > > registers can't handle a size greater than 4GB. In any case, limiti=
+ng
+> > > > the size for region 0 is enough to get back to the original assignm=
+ent
+> > > > of dma-ranges to regions.
+> > >
+> > > hey Rob!
+> > >
+> > > I've been seeing a panic on HP Moonshoot m400 cartridges (X-Gene1) -
+> > > only during network installs - that I also bisected down to commit
+> > > 6dce5aa59e0b ("PCI: xgene: Use inbound resources for setup"). I was
+> > > hoping that this patch that fixed the issue on St=C3=A9phane's X-Gene=
+2
+> > > system would also fix my issue, but no luck. In fact, it seems to jus=
+t
+> > > makes it fail differently. Reverting both patches is required to get =
+a
+> > > v5.17-rc kernel to boot.
+> > >
+> > > I've collected the following logs - let me know if anything else woul=
+d
+> > > be useful.
+> > >
+> > > 1) v5.17-rc2+ (unmodified):
+> > >    http://dannf.org/bugs/m400-no-reverts.log
+> > >    Note that the mlx4 driver fails initialization.
+> > >
+> > > 2) v5.17-rc2+, w/o the commit that fixed St=C3=A9phane's system:
+> > >    http://dannf.org/bugs/m400-xgene2-fix-reverted.log
+> > >    Note the mlx4 MSI-X timeout, and later panic.
+> > >
+> > > 3) v5.17-rc2+, w/ both commits reverted (works)
+> > >    http://dannf.org/bugs/m400-both-reverted.log
+> >
+> > The ranges and dma-ranges addresses don't appear to match up with any
+> > upstream dts files. Can you send me the DT?
+>
+> Sure: http://dannf.org/bugs/fdt
 
-Thanks Vidya for pointing out the patch . This patch worked for us as 
-well.
-@keith - Please can we get this merged .
+The first fix certainly is a problem. It's going to need something
+besides size to key off of (originally it was dependent on order of
+dma-ranges entries).
 
-Regards,
-Nitin
+The 2nd issue is the 'dma-ranges' has a second entry that is now ignored:
+
+dma-ranges =3D <0x42000000 0x40 0x00 0x40 0x00 0x40 0x00 0x00>, <0x00
+0x79000000 0x00 0x79000000 0x00 0x800000>;
+
+Based on the flags (3rd addr cell: 0x0), we have an inbound config
+space which the kernel now ignores because inbound config space
+accesses make no sense. But clearly some setup is needed. Upstream, in
+contrast, sets up a memory range that includes this region, so the
+setup does happen:
+
+<0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>
+
+Minimally, I suspect it will work if you change dma-ranges 2nd entry to:
+
+<0x42000000 0x79000000 0x00 0x79000000 0x00 0x800000>
+
+While we shouldn't break existing DTs, the moonshot DT doesn't use
+what's documented upstream. There are multiple differences compared to
+what's documented. Is upstream supposed to support upstream DTs,
+downstream DTs, and ACPI for XGene which is an abandoned platform with
+only a handful of users?
+
+Rob
