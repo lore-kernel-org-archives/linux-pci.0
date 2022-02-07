@@ -2,66 +2,74 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F2DC433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 18:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A914C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Feb 2022 18:39:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230321AbiBGSb4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Feb 2022 13:31:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52672 "EHLO
+        id S234634AbiBGSje (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Feb 2022 13:39:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235959AbiBGSat (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 13:30:49 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BF1CC0401D9;
-        Mon,  7 Feb 2022 10:30:49 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DC2160F62;
-        Mon,  7 Feb 2022 18:30:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC0F2C004E1;
-        Mon,  7 Feb 2022 18:30:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644258648;
-        bh=riWJPhQ/S3PZiHj8yuELdnUzcOi2A/0/xMXt32fuyfU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=bfT6YvD9jl0aO/52ZQpQlDFoHIG9ICGqozhjlUv6K+hT3JK6Sc3B22XwzO2T80AqS
-         yhsCkFdBtgFcMdGGLvFrgYAX0X2hyDK28e2eX2dcaM1Fd4/auuLve9f30A5OyFd6Yn
-         +c0Q6q8XyGnUrxvkwgKZjErBgjLQu/7LPeSzip0QrwkKANYbXfQueFkR2Td3s5ZNT/
-         6hDRiQKX/YGf+jTah0gcIdsOdBcWqzjgcYNrY5TyRF0aCGRtsvG8qjGmUBEPHWsPZV
-         +niPmkNmc1Eliih78yCfwxGdiDO1R/pzipvpcwKKOsJTrYESn8L6nax+e7+lM0J2/t
-         I33AIqRs8zOkQ==
-Date:   Mon, 7 Feb 2022 12:30:46 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com, michals@xilinx.com
-Subject: Re: [PATCH 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root
- Port driver
-Message-ID: <20220207183046.GA408682@bhelgaas>
+        with ESMTP id S229707AbiBGSig (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 13:38:36 -0500
+X-Greylist: delayed 1078 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 10:38:35 PST
+Received: from l2mail1.panix.com (l2mail1.panix.com [166.84.1.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370A6C0401D9;
+        Mon,  7 Feb 2022 10:38:35 -0800 (PST)
+Received: from mailbackend.panix.com (mailbackend.panix.com [166.84.1.89])
+        by l2mail1.panix.com (Postfix) with ESMTPS id 4JsvZt0n2zzDSP;
+        Mon,  7 Feb 2022 13:20:38 -0500 (EST)
+Received: from [192.168.8.112] (unknown [172.58.175.115])
+        by mailbackend.panix.com (Postfix) with ESMTPSA id 4JsvZn4ZQmzxgQ;
+        Mon,  7 Feb 2022 13:20:33 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=panix.com; s=panix;
+        t=1644258036; bh=AweUI9+98BU3L9qNDLySuxNanB+460xiJXBRJN+1gT0=;
+        h=Date:From:Reply-To:To:cc:Subject:In-Reply-To:References;
+        b=e6E4jOsvpnkSO2iEjQFuauRoWTIKpvbyBeKqdpK3sCWwxMLrGzBr5I+DznPgHcSH/
+         F8jUQhGybLW99RtGkXvyqc1wL3QBUVVvL6l1hIP09An9oYIsYtxkGcigx01wUSreWf
+         +SFa4ucDUb7Atts9SbQkLM0MbE833Wv7iaS3bDlM=
+Date:   Mon, 7 Feb 2022 10:20:32 -0800 (PST)
+From:   "Kenneth R. Crudup" <kenny@panix.com>
+Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, hkallweit1@gmail.com,
+        wangxiongfeng2@huawei.com, mika.westerberg@linux.intel.com,
+        kai.heng.feng@canonical.com, chris.packham@alliedtelesis.co.nz,
+        yangyicong@hisilicon.com, treding@nvidia.com, jonathanh@nvidia.com,
+        abhsahu@nvidia.com, sagupta@nvidia.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kthota@nvidia.com,
+        mmaddireddy@nvidia.com, sagar.tv@gmail.com,
+        "Kenneth R. Crudup" <kenny@panix.com>
+Subject: Re: [PATCH V1] PCI/ASPM: Save/restore L1SS Capability for
+ suspend/resume
+In-Reply-To: <20220207163332.GA397884@bhelgaas>
+Message-ID: <79a41832-12e2-2ed-f3af-da3bac90d941@panix.com>
+References: <20220207163332.GA397884@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220207041250.1658-4-bharat.kumar.gogada@xilinx.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In subject, possibly:
 
-  PCI: xilinx-cpm: Add Versal CPM5 Root Port support
+On Mon, 7 Feb 2022, Bjorn Helgaas wrote:
 
-since you're adding support for a *device*, not for a *driver*.
+> I think it's more likely that something changed in BIOS settings or
+> other configuration, which means other people may trip over it even if
+> you don't see it.  Do you remember any BIOS updates, BIOS setup
+> tweaks, hardware changes, kernel parameter changes, etc?
 
-On Mon, Feb 07, 2022 at 09:42:50AM +0530, Bharat Kumar Gogada wrote:
-> Xilinx Versal Premium series has CPM5 block which supports Root port
-> functioning at Gen5 speed.
-> Xilinx Versal CPM5 has few changes with existing CPM block.
-> - CPM5 has dedicated register space for control and status registers.
-> - CPM5 legacy interrupt handling needs additional register bit
->   to enable and handle legacy interrupts.
+I thought about that Saturday morning, and yeah, it's been over a year, and
+Dell has released at least two BIOS updates since then.
 
-s/Root port/Root Port/ to be consistent.
-Add blank line between paragraphs.
+> If the problem really was fixed by some change elsewhere, it *should*
+> still happen on v5.11-rc1.  I think we should verify that and try to
+> figure out what the other change was.
 
-Bjorn
+Yeah, not a bad idea. I'm a little busy now, but I'll cut a kernel at
+4257f7e0, remake, and see what happens. Gimme a day or so.
+
+	-Kenny
+
+-- 
+Kenneth R. Crudup / Sr. SW Engineer, Scott County Consulting, Orange County CA
