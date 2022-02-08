@@ -2,111 +2,91 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5D8C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 07:34:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF72C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 07:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238581AbiBHHd7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 02:33:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59770 "EHLO
+        id S1348423AbiBHHh6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 02:37:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbiBHHd6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 02:33:58 -0500
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3EADC0401EF;
-        Mon,  7 Feb 2022 23:33:57 -0800 (PST)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 33CC91A0D13;
-        Tue,  8 Feb 2022 08:33:56 +0100 (CET)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id EEA131A0CBE;
-        Tue,  8 Feb 2022 08:33:55 +0100 (CET)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id A3C88183AC8A;
-        Tue,  8 Feb 2022 15:33:54 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     shawnguo@kernel.org, l.stach@pengutronix.de
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@pengutronix.de, linux-imx@nxp.com
-Subject: [PATCH] arm64: dts: imx8mq-evk: Add the second pcie port support
-Date:   Tue,  8 Feb 2022 15:02:29 +0800
-Message-Id: <1644303749-4610-1-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S1346472AbiBHHh6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 02:37:58 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96248C0401F4;
+        Mon,  7 Feb 2022 23:37:57 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25AC0615DC;
+        Tue,  8 Feb 2022 07:37:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D15AEC340ED;
+        Tue,  8 Feb 2022 07:37:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1644305876;
+        bh=jCqEF148ccWzh0I4aTqkCNTCIq5H5g9nqJjNydsQbQ8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=uN9p3WazGl53qw4M9VNwJO8ZRkgkySxIicVKaGBLXUeXK86MhKCG6J/ThjV6oubzY
+         R4yk5KKIXmf3ad7kE4UB6L9T+k1HPwQDEOt/xTbWZ4ME/B7p4rq1owyeB7cTAPVn+n
+         8kC3lY7qWJKFK5d991L6XEoK9/nrECqWnAxbyLYU=
+Date:   Tue, 8 Feb 2022 08:37:52 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Neal Liu <neal_liu@aspeedtech.com>
+Cc:     Alan Stern <stern@rowland.harvard.edu>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Tao Ren <rentao.bupt@gmail.com>, BMC-SW@aspeedtech.com
+Subject: Re: [PATCH] usb: ehci: add pci device support for Aspeed platforms
+Message-ID: <YgId0AhvRAmIcEA0@kroah.com>
+References: <20220208062927.3527137-1-neal_liu@aspeedtech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220208062927.3527137-1-neal_liu@aspeedtech.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable the secone PCIe port support on i.MX8MQ EVK board.
+On Tue, Feb 08, 2022 at 02:29:27PM +0800, Neal Liu wrote:
+> Enable Aspeed quirks in commit 7f2d73788d90 ("usb: ehci:
+> handshake CMD_RUN instead of STS_HALT") to support Aspeed
+> ehci-pci device.
+> 
+> Signed-off-by: Neal Liu <neal_liu@aspeedtech.com>
+> ---
+>  drivers/usb/host/ehci-pci.c | 6 ++++++
+>  include/linux/pci_ids.h     | 3 +++
+>  2 files changed, 9 insertions(+)
+> 
+> diff --git a/drivers/usb/host/ehci-pci.c b/drivers/usb/host/ehci-pci.c
+> index e87cf3a00fa4..a91b25d216ae 100644
+> --- a/drivers/usb/host/ehci-pci.c
+> +++ b/drivers/usb/host/ehci-pci.c
+> @@ -222,6 +222,12 @@ static int ehci_pci_setup(struct usb_hcd *hcd)
+>  			ehci->has_synopsys_hc_bug = 1;
+>  		}
+>  		break;
+> +	case PCI_VENDOR_ID_ASPEED:
+> +		if (pdev->device == PCI_DEVICE_ID_ASPEED_EHCI) {
+> +			ehci_info(ehci, "applying Aspeed HC workaround\n");
+> +			ehci->is_aspeed = 1;
+> +		}
+> +		break;
+>  	}
+>  
+>  	/* optional debug port, normally in the first BAR */
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index aad54c666407..410b395fe56c 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -3096,4 +3096,7 @@
+>  
+>  #define PCI_VENDOR_ID_NCUBE		0x10ff
+>  
+> +#define PCI_VENDOR_ID_ASPEED		0x1a03
+> +#define PCI_DEVICE_ID_ASPEED_EHCI	0x2603
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- arch/arm64/boot/dts/freescale/imx8mq-evk.dts | 38 ++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+Please read the top of this file, this does not need to be added here.
 
-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
-index a1b7582f3ecf..06f6e44da4d4 100644
---- a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
-+++ b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
-@@ -27,6 +27,17 @@ pcie0_refclk: pcie0-refclk {
- 		clock-frequency = <100000000>;
- 	};
- 
-+	reg_pcie1: regulator-pcie {
-+		compatible = "regulator-fixed";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_pcie1_reg>;
-+		regulator-name = "MPCIE_3V3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		gpio = <&gpio5 10 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
- 	reg_usdhc2_vmmc: regulator-vsd-3v3 {
- 		pinctrl-names = "default";
- 		pinctrl-0 = <&pinctrl_reg_usdhc2>;
-@@ -327,6 +338,20 @@ &pcie0 {
- 	status = "okay";
- };
- 
-+&pcie1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_pcie1>;
-+	reset-gpio = <&gpio5 12 GPIO_ACTIVE_LOW>;
-+	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
-+		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
-+		 <&pcie0_refclk>;
-+	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
-+	vpcie-supply = <&reg_pcie1>;
-+	vph-supply = <&vgen5_reg>;
-+	status = "okay";
-+};
-+
- &pgc_gpu {
- 	power-supply = <&sw1a_reg>;
- };
-@@ -482,6 +507,19 @@ MX8MQ_IOMUXC_UART4_RXD_GPIO5_IO28		0x16
- 		>;
- 	};
- 
-+	pinctrl_pcie1: pcie1grp {
-+		fsl,pins = <
-+			MX8MQ_IOMUXC_I2C4_SDA_PCIE2_CLKREQ_B		0x76
-+			MX8MQ_IOMUXC_ECSPI2_MISO_GPIO5_IO12		0x16
-+		>;
-+	};
-+
-+	pinctrl_pcie1_reg: pcie1reggrp {
-+		fsl,pins = <
-+			MX8MQ_IOMUXC_ECSPI2_SCLK_GPIO5_IO10		0x16
-+		>;
-+	};
-+
- 	pinctrl_qspi: qspigrp {
- 		fsl,pins = <
- 			MX8MQ_IOMUXC_NAND_ALE_QSPI_A_SCLK	0x82
--- 
-2.25.1
+thanks,
 
+greg k-h
