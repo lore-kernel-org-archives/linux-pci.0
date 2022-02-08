@@ -2,102 +2,71 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D8F7C4167D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BFEC41535
 	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245360AbiBHLbi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60786 "EHLO
+        id S1359507AbiBHLbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 06:31:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356513AbiBHKuY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 05:50:24 -0500
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E1AC6C03FEC0
-        for <linux-pci@vger.kernel.org>; Tue,  8 Feb 2022 02:50:22 -0800 (PST)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5864C11D4;
-        Tue,  8 Feb 2022 02:50:22 -0800 (PST)
-Received: from e123427-lin.arm.com (unknown [10.57.37.38])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3D7873F73B;
-        Tue,  8 Feb 2022 02:50:21 -0800 (PST)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Marc Zyngier <maz@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        pali@kernel.org
-Subject: Re: (subset) [PATCH v2 00/23] PCI: aardvark controller fixes BATCH 4
-Date:   Tue,  8 Feb 2022 10:50:13 +0000
-Message-Id: <164431738306.20265.453911406614125295.b4-ty@arm.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20220110015018.26359-1-kabel@kernel.org>
-References: <20220110015018.26359-1-kabel@kernel.org>
+        with ESMTP id S1356361AbiBHKeX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 05:34:23 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EE1FC03FEC0;
+        Tue,  8 Feb 2022 02:34:22 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 15B7FCE17E4;
+        Tue,  8 Feb 2022 10:34:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F8AAC340EE;
+        Tue,  8 Feb 2022 10:34:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644316459;
+        bh=yieHCbixVdUQUxC/CWP4LS/N805UUg5GNnCTqTxQ/vI=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=eW+G5qznzIan98DKllGDvV6H59u/71I0033VnSYxYCVq8ENrNstGwVS++HNHBiMDE
+         WMFN3SltAXhU0fH2jnrD1Mn0dALuUn+heF4iC4I3W23/7PIsyRXteBYeE+3woxnfLh
+         ZP/eIRCa/HegQQlUkd9iXqmmrx/oVOnERvevm6KmeBtSr//gC+KQwKKlTJTZPEv2Yt
+         BZX77WI/gRS3Ui4ZPAENHX6NoTZeKm9AaP+44fuDAkkyOqzsVebBcIhShdo4lZDqz4
+         8z0QN/VfZwb3iplhAqOdCSM/xVtxq3ocI3xKem6WWK9dHAtnhOMM9Krme/VChAf31M
+         nct6nfEHruDyw==
+Message-ID: <6d10427ef9c40220e7f0d608a25954523c1a77b6.camel@kernel.org>
+Subject: Re: [PATCH v1 3/4] MIPS: bmips: Remove obsolete DMA mapping support
+From:   nicolas saenz julienne <nsaenz@kernel.org>
+To:     Jim Quinlan <jim2101024@gmail.com>, linux-pci@vger.kernel.org,
+        linux-mips@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        open list <linux-kernel@vger.kernel.org>
+Date:   Tue, 08 Feb 2022 11:34:13 +0100
+In-Reply-To: <20211209204726.6676-4-jim2101024@gmail.com>
+References: <20211209204726.6676-1-jim2101024@gmail.com>
+         <20211209204726.6676-4-jim2101024@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.3 (3.42.3-1.fc35) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 10 Jan 2022 02:49:55 +0100, Marek Behún wrote:
-> this is v2 of fourth batch of fixes for the Aardvark PCIe controller
-> driver.
+On Thu, 2021-12-09 at 15:47 -0500, Jim Quinlan wrote:
+> The code in 'arch/mips/bmips/dma.c' performed DMA mapping for inbound
+> regions.  This mapping was and is required for the Broadcom STB PCIe
+> controller HW.  This code is removed as the current 'struct device' has a
+> @dma_range_map field which performs the same functionality by processing
+> the "dma-ranges" DT property.
 > 
-> Stuff is converted to new interrupt APIs and recommendations from Marc.
-> Marc, could you look at these and acknowledge or comment?
+> Subsequently, ARCH_HAS_PHYS_TO_DMA is now unset since the dma_to_phys()
+> and phys_to_dma() functions are removed.
 > 
-> This series mainly fixes and adds support for stuff around interrupts:
-> the most important thing is fixing MSI support.
-> 
-> [...]
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
 
-Applied to pci/aardvark, thanks!
+Reviewed-by: Nicolas Saenz Julienne <nsaenz@kernel.org>
 
-[01/23] PCI: aardvark: Replace custom PCIE_CORE_INT_* macros with PCI_INTERRUPT_*
-        https://git.kernel.org/lpieralisi/pci/c/1d86abf1f8
-[02/23] PCI: aardvark: Fix reading MSI interrupt number
-        https://git.kernel.org/lpieralisi/pci/c/805dfc18dd
-[03/23] PCI: aardvark: Fix support for MSI interrupts
-        https://git.kernel.org/lpieralisi/pci/c/b0b0b8b897
-[04/23] PCI: aardvark: Rewrite IRQ code to chained IRQ handler
-        https://git.kernel.org/lpieralisi/pci/c/1571d67dc1
-[05/23] PCI: aardvark: Check return value of generic_handle_domain_irq() when processing INTx IRQ
-        https://git.kernel.org/lpieralisi/pci/c/51f96e287c
-[06/23] PCI: aardvark: Make MSI irq_chip structures static driver structures
-        https://git.kernel.org/lpieralisi/pci/c/c3cb8e5183
-[07/23] PCI: aardvark: Make msi_domain_info structure a static driver structure
-        https://git.kernel.org/lpieralisi/pci/c/26bcd54e4a
-[08/23] PCI: aardvark: Use dev_fwnode() instead of of_node_to_fwnode(dev->of_node)
-        https://git.kernel.org/lpieralisi/pci/c/222af78532
-[09/23] PCI: aardvark: Refactor unmasking summary MSI interrupt
-        https://git.kernel.org/lpieralisi/pci/c/4689c09163
-[10/23] PCI: aardvark: Add support for masking MSI interrupts
-        https://git.kernel.org/lpieralisi/pci/c/e77d9c9069
-[11/23] PCI: aardvark: Fix setting MSI address
-        https://git.kernel.org/lpieralisi/pci/c/46ad3dc417
-[12/23] PCI: aardvark: Enable MSI-X support
-        https://git.kernel.org/lpieralisi/pci/c/754e449889
-[13/23] PCI: aardvark: Add support for ERR interrupt on emulated bridge
-        https://git.kernel.org/lpieralisi/pci/c/3ebfefa396
-[14/23] PCI: aardvark: Fix reading PCI_EXP_RTSTA_PME bit on emulated bridge
-        https://git.kernel.org/lpieralisi/pci/c/735f5ae49e
-[15/23] PCI: aardvark: Optimize writing PCI_EXP_RTCTL_PMEIE and PCI_EXP_RTSTA_PME on emulated bridge
-        https://git.kernel.org/lpieralisi/pci/c/7122bcb332
-[16/23] PCI: aardvark: Add support for PME interrupts
-        https://git.kernel.org/lpieralisi/pci/c/0fc75d8745
-[17/23] PCI: aardvark: Fix support for PME requester on emulated bridge
-        https://git.kernel.org/lpieralisi/pci/c/273ddd86d6
-[18/23] PCI: aardvark: Use separate INTA interrupt for emulated root bridge
-        https://git.kernel.org/lpieralisi/pci/c/815bc31368
-[19/23] PCI: aardvark: Remove irq_mask_ack callback for INTx interrupts
-        https://git.kernel.org/lpieralisi/pci/c/b08e5b53d1
-[20/23] PCI: aardvark: Don't mask irq when mapping
-        https://git.kernel.org/lpieralisi/pci/c/befa710001
-[21/23] PCI: aardvark: Drop __maybe_unused from advk_pcie_disable_phy()
-        https://git.kernel.org/lpieralisi/pci/c/0c36ab437e
-[22/23] PCI: aardvark: Update comment about link going down after link-up
-        https://git.kernel.org/lpieralisi/pci/c/92f4ffecc4
-
-Thanks,
-Lorenzo
+Regards,
+Nicolas
