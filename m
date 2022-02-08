@@ -2,144 +2,426 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C8CC43217
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26754C3526E
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359686AbiBHLbp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57998 "EHLO
+        id S1359519AbiBHLbl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 06:31:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356400AbiBHKiW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 05:38:22 -0500
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2078.outbound.protection.outlook.com [40.107.244.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4668DC03FEC0;
-        Tue,  8 Feb 2022 02:38:22 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VI1WraiZWwgTFCfNgC1V7eS3ha5ejAaAvfD6WXs4iTxIKQGyxNcRF7TPfGEUBPkFgjrORFp9m2uF0TVLenS4YMHk06a8hooF/CvsQWzjCdsMtt7prJ7AqcWTVLERmhc7sxS5I7OI3u4WMfCZEqghXn0LmkfLuFbAwvV5nqACOp+kf7Nbon9cEKxaWK5wLe5QPwPn9oMMklpsMRyiTLjGfe0ImhnXTgSFftvYjTcTE5g1vfTtVsXlN/bunPj1mO9Y96tG4d8exVMRXEZ1U2aI24hrK5RXgX4tZLHApJOwBwBKm+LKNDz/yaXj2/jifuSACwlhK8fvWaQ+SBazDiNJew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+oMxP3dPxhWKXBV92DaCS7Q1ov2+6rpwKOgu8Pho42E=;
- b=giYZI3yLmVhQRW29FXZP6uLqv7GFzhKZQkuhsrpDGF0h0BZnqqr48bz+uCMTzTSEzPMnTIOIpr/Eu1/XHDbjNIOYY/2GsVFLfxAgHgi1CuyKLi+TWi/HKTxeLg6Xam/Yt287HMLxuexIktvHE/p3Zz9aooakAClAyFyO9umrRM82Agk6h8/xu8aNMRnUxw4nsUzz4gSM8yj9GgQVZ3ZwA7yPNrMjfln3UelB+mxhdkGBvmGTLoVBjFRTmbuMUBizQ+cyRxSI8LJXRmNyHOcFbwqrb0AQZGgHNnvjhoOjnr7eDT88KVJ+5kskGlJXxJ88mS0yTMyPGxd05rq6dSJGAA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+oMxP3dPxhWKXBV92DaCS7Q1ov2+6rpwKOgu8Pho42E=;
- b=FgA82pERrr342TkB0XLgZiqe+CURE++OrfNhF26MQlQIEeUk/YSggKxkutCrjAmRNH0DkHWDP+GHO/r3Af09urmuUWz2VHMoAbfQ/BKW9q1UJv/FQdNc4/lWN5a6P0R3LGhPdHDwzglmDj/QJQq9nvn2Hj6Q6TkzRW6+pRXfSr8=
-Received: from BY5PR02MB6947.namprd02.prod.outlook.com (2603:10b6:a03:23e::12)
- by DM6PR02MB7003.namprd02.prod.outlook.com (2603:10b6:5:255::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.17; Tue, 8 Feb
- 2022 10:38:21 +0000
-Received: from BY5PR02MB6947.namprd02.prod.outlook.com
- ([fe80::259b:b0b6:7574:328f]) by BY5PR02MB6947.namprd02.prod.outlook.com
- ([fe80::259b:b0b6:7574:328f%9]) with mapi id 15.20.4951.019; Tue, 8 Feb 2022
- 10:38:20 +0000
-From:   Bharat Kumar Gogada <bharatku@xilinx.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Michal Simek <michals@xilinx.com>
-Subject: RE: [PATCH 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root
- Port driver
-Thread-Topic: [PATCH 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root
- Port driver
-Thread-Index: AQHYG9kFP8Vxuz1vvUqhZX2L0Vr9iayIafIAgAEOR6A=
-Date:   Tue, 8 Feb 2022 10:38:20 +0000
-Message-ID: <BY5PR02MB6947352C282C1A84650D5B31A52D9@BY5PR02MB6947.namprd02.prod.outlook.com>
-References: <20220207041250.1658-4-bharat.kumar.gogada@xilinx.com>
- <20220207183046.GA408682@bhelgaas>
-In-Reply-To: <20220207183046.GA408682@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=xilinx.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: d1134bff-b8d2-4ff5-0eb6-08d9eaef2040
-x-ms-traffictypediagnostic: DM6PR02MB7003:EE_
-x-microsoft-antispam-prvs: <DM6PR02MB700373EFBEE8ACE6A998A866A52D9@DM6PR02MB7003.namprd02.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3513;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Fp/cJUD8NyamWFwXuNgqZYGnbwB0AQYES9rAOfI9KRxbDQQ8+lVJ/Aar7e/OVGdXNnDdefrB/yxS0c5dzZaOL6Vm1zodTCIDcJSgl+jFCTXZTiwSANo2tAlSSL3awWCpER3RLfw3xwCipXTpIvUE94Qayn1yIzPQRBgvpX75TdZ2al9hqBUsVWKTJhO/Glk8fWNj5/1n7YIE+tmMzhpv36VbZajQVJ9XmI6bhU4UNi2rB/RY3K0NPIVsrJlpccZSA6Nul5WEqGVdQ3bCkwY7QmJM378dd+EZhuf9SWcZKzG5RadRs8hO357FNb5hYZEh61uRA1vVP6hrn6PBUk7nzGtEqoTYOXeRRJoBNYCmmnq/nzqsXMU5bNkCHFuEEJKSnnc3vE1MKOFIRRII4ONFaiYBB+O0870giwJkNGzYDt6jILcPZ2O1efjKORv76X+XUQBTribjxDCUt1juJ9984/x25Jvd49+ehS24yOP505Xv5hju1MMEB+SKPh1/59l71BXarG78YraoaeHVFSJEJvBHeeKcwwyzXuJ/DsRLTNmewtN78vgxUWE7hVPfbRyuBwEyqc1FJlimCPOgyEvevUVGN9mxpuqmhpCiuYj3bDVq2MJ15LlPIc4j0cHVJUEI6lnEvjL1OznQ0+GN7XxPQokiWLomXvHq9+v5VRM3kaKf+OmpgwqG+1V4jaii8HAULT2Beh0W6NiFOpdOR8m3og==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR02MB6947.namprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(316002)(107886003)(4744005)(86362001)(508600001)(122000001)(55016003)(38070700005)(71200400001)(54906003)(38100700002)(6916009)(186003)(26005)(9686003)(2906002)(64756008)(66446008)(66476007)(76116006)(66946007)(66556008)(8936002)(8676002)(7696005)(5660300002)(52536014)(33656002)(83380400001)(6506007)(4326008);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Aw1mFqCclt3m3fD6jhICuwrWBhA1TTG3BwbvkSsOFTU0wYv6+BxiK95KLKpv?=
- =?us-ascii?Q?+djiwQKLlxdG3UulLU+PFKXUME3Mf65z20v1BrNe31Xa3udGflJIetBu/IOQ?=
- =?us-ascii?Q?lh9MD1jTxYJzW0jN5E3xGRwxjCHLFheQ9CPoNydsS99ga50YhPr1lMX6Kqgx?=
- =?us-ascii?Q?y99m2AAxUy9lPWJU2FIr46PVIR2Y2fd5sMmpwzwACbolSj5PtVNeoyqUD1Hh?=
- =?us-ascii?Q?JS/cKU9JE22cQyUhgLHc35J7axN3dsTMtng4mVMsdfSn9w/q1UUbWjQEtMDs?=
- =?us-ascii?Q?W1QaONcp7e3eG+0mELCtg+7h9Ta36g6dyIZIlUjdAOd4FhyCaT3QWp2NC/ge?=
- =?us-ascii?Q?1AOmHjEu25XADyrIeq+bQtzdymikv7s4291leSzvL0Fi8Arcr5eNFkWtP5Z7?=
- =?us-ascii?Q?2ppHJk1HbPb0aQcYg9rGiMpyoNwuM4T4S3VFSvBu0wPk4HVMf6T5CkbjY9xP?=
- =?us-ascii?Q?2J3VaN+1iwNugOwE83daKmN4jI3/I7rPQxqo5nALWh/r2UBfG5g4KQ5FErdC?=
- =?us-ascii?Q?PPDgL3zmrgiT11mDt1UBxKFaJ52XH4EgehboFl7qQBXcZHNnU3RyOO8vcYfd?=
- =?us-ascii?Q?DO1aqE53cQzPue1f310KCuhFt9npjxIR6YlqbQWS1504VWCYL3XTLkih6uJH?=
- =?us-ascii?Q?kQ2IGdRajWNH3w6jli6ZmPn3p8Iq3WqNaLtNXrcC4QRZfxdTrG2Nzt/7Nnaz?=
- =?us-ascii?Q?rsraQGFm4eD+mHIBtrRVDkx3ByFNqMbQd9jP8d5VAnVDsJ+LVQughyVnpfG5?=
- =?us-ascii?Q?1qjvPP+pebi1E0auIgQRiO47xCERyoR+VxDlRuGGFcxM8e2/PNHdfLDWNMcV?=
- =?us-ascii?Q?ywYsYHXsGwZjIivV8IH/n7XH4QYag6rd3Y3Y6Q6plaZUqjTwa2hX27dnWOv+?=
- =?us-ascii?Q?QBWTANPgQBome1fK8nUvSxErNItgbcb+wdYp8hGI1MWCiQDlsnLUmFoXuini?=
- =?us-ascii?Q?z9nq+D/G+ua0O/dhOwpLq2CWbJRpEgsP4ZHr/O2eHj3Y3oCbEE4ws1BAQkbj?=
- =?us-ascii?Q?EyiVCGSeYmOe+bvzmIutxiHqEJh6BePaOrVzrqb8a8vdzT1tiXnNYfw6WDaw?=
- =?us-ascii?Q?1ysVd4hpfLmDVzTuk0xbqCNOhmAaY4IVto5i7wEFCoX1L1RB/fVKNROISyz2?=
- =?us-ascii?Q?ivy0b3APtxbOToeGpcye9hnpK5tZSE69pFtGVoPeUHjKptyRqulibrGStDia?=
- =?us-ascii?Q?DuKGfQjvtZ0j93F2YsDBXIx3HwpvcvI8JWzV/IbtT6sA8qGCa2mxxOMmB53k?=
- =?us-ascii?Q?vA4R4tsvAv5kqf2W16oDKzCwyUwKWaSDXR0I+0S4tFclyH2HThT+pA42tH8t?=
- =?us-ascii?Q?rwnNLsav0PFqxTo4NVJoVLSt6hw/Pd6fvvY67av1z4cljiDDc2WP09XoEiBh?=
- =?us-ascii?Q?Hv48w0YMXdASaTEPZhM+F8Yss4pQWHPFoE1r9LkKYYICTYuDJ8sz1IaQEIbl?=
- =?us-ascii?Q?wzuBjSXOTWLNTihpmYQQ1fydupOj7GkXxNyjMeK72VRUsq3Lv+93GDeJ70d+?=
- =?us-ascii?Q?A2e+IpdwRY5c/NU6mriJtkZZiMyGBbE/Lae/BKNa8Rz2LXW3/bKMhClPoOqv?=
- =?us-ascii?Q?ktNPDK/QVxUUyrRcPxEsDprjstr0qeK2ycFNc1EpwO0vpQGqdjPMBy4FnxzJ?=
- =?us-ascii?Q?ItUWYkeXiZCL28Xnzl+LSes=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S1356857AbiBHLJ6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 06:09:58 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5E06C03FEC0;
+        Tue,  8 Feb 2022 03:09:55 -0800 (PST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4JtKyD6CbzzccFd;
+        Tue,  8 Feb 2022 19:08:52 +0800 (CST)
+Received: from [10.67.102.169] (10.67.102.169) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 8 Feb 2022 19:09:52 +0800
+CC:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
+        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
+        <will@kernel.org>, <mark.rutland@arm.com>,
+        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
+        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
+        <daniel.thompson@linaro.org>, <joro@8bytes.org>,
+        <john.garry@huawei.com>, <shameerali.kolothum.thodi@huawei.com>,
+        <robin.murphy@arm.com>, <peterz@infradead.org>, <mingo@redhat.com>,
+        <acme@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
+        <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>, <prime.zeng@huawei.com>,
+        <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
+        <linuxarm@huawei.com>, <song.bao.hua@hisilicon.com>
+Subject: Re: [PATCH v3 6/8] docs: Add HiSilicon PTT device driver
+ documentation
+To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+        Yicong Yang <yangyicong@hisilicon.com>
+References: <20220124131118.17887-1-yangyicong@hisilicon.com>
+ <20220124131118.17887-7-yangyicong@hisilicon.com>
+ <20220207121232.00000146@Huawei.com>
+From:   Yicong Yang <yangyicong@huawei.com>
+Message-ID: <b523ec74-1369-3973-f8e0-94e2d4f384c0@huawei.com>
+Date:   Tue, 8 Feb 2022 19:09:52 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR02MB6947.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d1134bff-b8d2-4ff5-0eb6-08d9eaef2040
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Feb 2022 10:38:20.7694
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: I4Wmgv/JZd0XhcZZ0o0TM2U/4X1dJ4CFM2CJnCu2+0/jXDZIUy7wjUuPrEkpnt/iRQnSwYWAQfEjkRbBXHFw1g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR02MB7003
+In-Reply-To: <20220207121232.00000146@Huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.67.102.169]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> Subject: Re: [PATCH 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Roo=
-t
-> Port driver
->=20
-> In subject, possibly:
->=20
->   PCI: xilinx-cpm: Add Versal CPM5 Root Port support
->=20
-> since you're adding support for a *device*, not for a *driver*.
->=20
-> On Mon, Feb 07, 2022 at 09:42:50AM +0530, Bharat Kumar Gogada wrote:
-> > Xilinx Versal Premium series has CPM5 block which supports Root port
-> > functioning at Gen5 speed.
-> > Xilinx Versal CPM5 has few changes with existing CPM block.
-> > - CPM5 has dedicated register space for control and status registers.
-> > - CPM5 legacy interrupt handling needs additional register bit
-> >   to enable and handle legacy interrupts.
->=20
-> s/Root port/Root Port/ to be consistent.
-> Add blank line between paragraphs.
->=20
-Thanks Bjorn, will do the changes in next patch.
+On 2022/2/7 20:12, Jonathan Cameron wrote:
+> On Mon, 24 Jan 2022 21:11:16 +0800
+> Yicong Yang <yangyicong@hisilicon.com> wrote:
+> 
+>> Document the introduction and usage of HiSilicon PTT device driver.
+>>
+>> Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+> Nice document.  A few trivial typos inline.
+> I would give a RB except I've suggested you change a part of the
+> sysfs interface which will affect the relevant documentation.
+> 
 
-Regards,
-Bharat
+Thanks. I'll get these fixed and update the documentation with sysfs
+interface updated.
+
+> Thanks,
+> 
+> Jonathan
+> 
+>> ---
+>>  Documentation/trace/hisi-ptt.rst | 304 +++++++++++++++++++++++++++++++
+>>  1 file changed, 304 insertions(+)
+>>  create mode 100644 Documentation/trace/hisi-ptt.rst
+>>
+>> diff --git a/Documentation/trace/hisi-ptt.rst b/Documentation/trace/hisi-ptt.rst
+>> new file mode 100644
+>> index 000000000000..f3269b11a2f6
+>> --- /dev/null
+>> +++ b/Documentation/trace/hisi-ptt.rst
+>> @@ -0,0 +1,304 @@
+>> +.. SPDX-License-Identifier: GPL-2.0
+>> +
+>> +======================================
+>> +HiSilicon PCIe Tune and Trace device
+>> +======================================
+>> +
+>> +Introduction
+>> +============
+>> +
+>> +HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
+>> +integrated Endpoint (RCiEP) device, providing the capability
+>> +to dynamically monitor and tune the PCIe link's events (tune),
+>> +and trace the TLP headers (trace). The two functions are independent,
+>> +but is recommended to use them together to analyze and enhance the
+>> +PCIe link's performance.
+>> +
+>> +On Kunpeng 930 SoC, the PCIe Root Complex is composed of several
+>> +PCIe cores. Each PCIe core includes several Root Ports and a PTT
+>> +RCiEP, like below. The PTT device is capable of tuning and
+>> +tracing the link of the PCIe core.
+> 
+> links
+> 
+>> +::
+>> +          +--------------Core 0-------+
+>> +          |       |       [   PTT   ] |
+>> +          |       |       [Root Port]---[Endpoint]
+>> +          |       |       [Root Port]---[Endpoint]
+>> +          |       |       [Root Port]---[Endpoint]
+>> +    Root Complex  |------Core 1-------+
+>> +          |       |       [   PTT   ] |
+>> +          |       |       [Root Port]---[ Switch ]---[Endpoint]
+>> +          |       |       [Root Port]---[Endpoint] `-[Endpoint]
+>> +          |       |       [Root Port]---[Endpoint]
+>> +          +---------------------------+
+>> +
+>> +The PTT device driver registers PMU device for each PTT device.
+> 
+> registers one PMU device ..
+> 
+>> +The name of each PTT device is composed of 'hisi_ptt' prefix with
+>> +the id of the SICL and the Core where it locates. The Kunpeng 930
+>> +SoC encapsulates multiple CPU dies (SCCL, Super CPU Cluster) and
+>> +IO dies (SICL, Super I/O Cluster), where there's one PCIe Root
+>> +Complex for each SICL.
+>> +::
+>> +    /sys/devices/hisi_ptt<sicl_id>_<core_id>
+>> +
+>> +Tune
+>> +====
+>> +
+>> +PTT tune is designed for monitoring and adjusting PCIe link parameters (events).
+>> +Currently we support events in 4 classes. The scope of the events
+>> +covers the PCIe core to which the PTT device belongs.
+>> +
+>> +Each event is presented as a file under $(PTT PMU dir)/tune, and
+>> +mostly a simple open/read/write/close cycle will be used to tune
+> 
+> drop "mostly" as it doesn't add anything other than potential confusion.
+> 
+>> +the event.
+>> +::
+>> +    $ cd /sys/devices/hisi_ptt<sicl_id>_<core_id>/tune
+>> +    $ ls
+>> +    qos_tx_cpl    qos_tx_np    qos_tx_p
+>> +    tx_path_rx_req_alloc_buf_level
+>> +    tx_path_tx_req_alloc_buf_level
+>> +    $ cat qos_tx_dp
+>> +    1
+>> +    $ echo 2 > qos_tx_dp
+>> +    $ cat qos_tx_dp
+>> +    2
+>> +
+>> +Current value (numerical value) of the event can be simply read
+>> +from the file, and the desired value written to the file to tune.
+>> +
+>> +1. Tx path QoS control
+>> +------------------------
+>> +
+>> +The following files are provided to tune the QoS of the tx path of
+>> +the PCIe core.
+>> +
+>> +- qos_tx_cpl: weight of Tx completion TLPs
+>> +- qos_tx_np: weight of Tx non-posted TLPs
+>> +- qos_tx_p: weight of Tx posted TLPs
+>> +
+>> +The weight influences the proportion of certain packets on the PCIe link.
+>> +For example, for the storage scenario, increase the proportion
+>> +of the completion packets on the link to enhance the performance as
+>> +more completions are consumed.
+>> +
+>> +The available tune data of these events is [0, 1, 2].
+>> +Writing a negative value will return an error, and out of range
+>> +values will be converted to 2. Note that the event value just
+>> +indicates a probable level, but is not precise.
+>> +
+>> +2. Tx path buffer control
+>> +-------------------------
+>> +
+>> +Following files are provided to tune the buffer of tx path of the PCIe core.
+>> +
+>> +- tx_path_rx_req_alloc_buf_level: watermark of Rx requested
+>> +- tx_path_tx_req_alloc_buf_level: watermark of Tx requested
+>> +
+>> +These events influence the watermark of the buffer allocated for each
+>> +type. Rx means the inbound while Tx means outbound. The packets will
+>> +be stored in the buffer first and then posted either when the watermark
+> 
+> Change "posted" to "transmitted" as posted has a special meaning in PCI
+> and I don't think that is what you mean here... (I could be wrong!)
+> 
+>> +reached or when timed out. For a busy direction, you should increase
+>> +the related buffer watermark to avoid frequently posting and thus
+>> +enhance the performance. In most cases just keep the default value.
+>> +
+>> +The available tune data of above events is [0, 1, 2].
+>> +Writing a negative value will return an error, and out of range
+>> +values will be converted to 2. Note that the event value just
+>> +indicates a probable level, but is not precise.
+>> +
+>> +Trace
+>> +=====
+>> +
+>> +PTT trace is designed for dumping the TLP headers to the memory, which
+>> +can be used to analyze the transactions and usage condition of the PCIe
+>> +Link. You can choose to filter the traced headers by either requester ID,
+>> +or those downstream of a set of Root Ports on the same core of the PTT
+>> +device. It's also supported to trace the headers of certain type and of
+>> +certain direction.
+>> +
+>> +You can use the perf command `perf record` to set the parameters, start
+>> +trace and get the data. It's also supported to decode the trace
+>> +data with `perf report`. The control parameters for trace is inputted
+>> +as event code for each events, which will be further illustracted later.
+> 
+> illustrated
+> 
+>> +An example usage is like
+>> +::
+>> +    $ perf record -e hisi_ptt0_2/filter=0x80001,type=1,direction=1,
+>> +      format=1/ -- sleep 5
+>> +
+>> +This will trace the TLP headers downstream root port 0000:00:10.1 (event
+>> +code for event 'filter' is 0x80001) with type of posted TLP requests,
+>> +direction of inbound and traced data format of 8DW.
+>> +
+>> +1. filter
+>> +---------
+>> +
+>> +The TLP headers to trace can be filtered by the Root Ports or the requester
+>> +ID of the endpoints, which are locates on the same core of the PTT device.
+> 
+> located
+> 
+>> +You can set the filter by spedifying the `filter` parameter which is required
+>> +to start the trace. The parameter value is 20 bit. The supported filters and
+>> +related values is outputted through `available_filters` sysfs attribute
+>> +under related PTT PMU directory, classified as Root Ports and Requesters
+>> +respectively.
+>> +::
+>> +    $ cat available_filters
+>> +    #### Root Ports ####
+>> +    0000:00:10.0	0x80001
+>> +    0000:00:11.0	0x80004
+>> +    #### Requesters ####
+>> +    0000:01:00.0	0x00100
+>> +    0000:01:00.1	0x00101
+>> +
+>> +Note that multiple Root Ports can be specified at one time, but only
+>> +one Endpoint function can be specified in one trace. Specifying both
+>> +Root Port and function at the same time is not supported.
+>> +
+>> +If no filter is available, reading the available_filters will get the hint.
+>> +::
+>> +    $ cat available_filters
+>> +    #### No available filter ####
+> 
+> If you take not of my earlier feedback this bit may change slightly.
+>> +
+>> +The available_filters can be dynamically updated, which means you can always
+>> +get correct filter information when hotplug events happen, or when you manually
+>> +remove/rescan the devices.
+>> +
+>> +2. type
+>> +-------
+>> +
+>> +You can trace the TLP headers of certain types by specifying the `type`
+>> +parameter, which is required to start the trace. The parameter value is
+>> +8 bit. Current supported types and related values are shown below:
+>> +
+>> +8'b00000001: posted requests (P)
+>> +8'b00000010: non-posted requests (NP)
+>> +8'b00000100: completions (CPL)
+>> +
+>> +You can specify multiple types when tracing inbound TLP headers, but can only
+>> +specify one when tracing outbound TLP headers.
+>> +
+>> +3. direction
+>> +------------
+>> +
+>> +You can trace the TLP headers from certain direction, which is relative
+>> +to the Root Port or the PCIe core, by specifying the `direction` parameter.
+>> +This is optional and the default parameter is inbound. The parameter value
+>> +is 4 bit. When the desired format is 4DW, directions and related values
+>> +supported are shown below:
+>> +
+>> +4'b0000: inbound TLPs (P, NP, CPL)
+>> +4'b0001: outbound TLPs (P, NP, CPL)
+>> +4'b0010: outbound TLPs (P, NP, CPL) and inbound TLPs (P, NP, CPL B)
+>> +4'b0011: outbound TLPs (P, NP, CPL) and inbound TLPs (CPL A)
+>> +
+>> +When the desired format is 8DW, directions and related values supported are
+>> +shown below:
+>> +
+>> +4'b0000: reserved
+>> +4'b0001: outbound TLPs (P, NP, CPL)
+>> +4'b0010: inbound TLPs (P, NP, CPL B)
+>> +4'b0011: inbound TLPs (CPL A)
+>> +
+>> +Inbound completions are classifed into two types:
+> 
+> classified
+> 
+>> +
+>> +completion A (CPL A): completion of CHI/DMA/Native non-posted requests, except for CPL B
+>> +completion B (CPL B): completion of DMA remote2local and P2P non-posted requests
+>> +
+>> +4. format
+>> +--------------
+>> +
+>> +You can change the format of the traced TLP headers by specifying the
+>> +`format` parameter. This is optional and the default format is 4DW.
+> 
+> As there is a default, there is no need to also say it is optional.
+> `format parameter. The default format is 4DW.
+> 
+>> +The parameter value is 4 bit. Current supported formats and related
+>> +values are shown below:
+>> +
+>> +4'b0000: 4DW length per TLP header
+>> +4'b0001: 8DW length per TLP header
+>> +
+>> +The traced TLP header format is different from the PCIe standard.
+>> +
+>> +When using the 8DW data format, the entire TLP header is logged
+>> +(Header DW0-3 shown below). For example, the TLP header for Memory
+>> +Reads with 64-bit addresses is shown in PCIe r5.0, Figure 2-17;
+>> +the header for Configuration Requests is shown in Figure 2.20, etc.
+>> +
+>> +In addition, 8DW trace buffer entries contain a timestamp and
+>> +possibly a prefix for a PASID TLP prefix (see Figure 6-20, PCIe r5.0).
+>> +Otherwise this field will be all 0.
+>> +
+>> +The bit[31:11] of DW0 is always 0x1fffff, which can be
+>> +used to distinguish the data format. 8DW format is like
+>> +::
+>> +    bits [                 31:11                 ][       10:0       ]
+>> +         |---------------------------------------|-------------------|
+>> +     DW0 [                0x1fffff               ][ Reserved (0x7ff) ]
+>> +     DW1 [                       Prefix                              ]
+>> +     DW2 [                     Header DW0                            ]
+>> +     DW3 [                     Header DW1                            ]
+>> +     DW4 [                     Header DW2                            ]
+>> +     DW5 [                     Header DW3                            ]
+>> +     DW6 [                   Reserved (0x0)                          ]
+>> +     DW7 [                        Time                               ]
+>> +
+>> +When using the 4DW data format, DW0 of the trace buffer entry
+>> +contains selected fields of DW0 of the TLP, together with a
+>> +timestamp.  DW1-DW3 of the trace buffer entry contain DW1-DW3
+>> +directly from the TLP header.
+>> +
+>> +4DW format is like
+>> +::
+>> +    bits [31:30] [ 29:25 ][24][23][22][21][    20:11   ][    10:0    ]
+>> +         |-----|---------|---|---|---|---|-------------|-------------|
+>> +     DW0 [ Fmt ][  Type  ][T9][T8][TH][SO][   Length   ][    Time    ]
+>> +     DW1 [                     Header DW1                            ]
+>> +     DW2 [                     Header DW2                            ]
+>> +     DW3 [                     Header DW3                            ]
+>> +
+>> +5. memory management
+>> +--------------------
+>> +
+>> +The traced TLP headers will be written to the memory allocated
+>> +by the driver. The hardware accepts 4 DMA address with same size,
+>> +and writes the buffer sequentially like below. If DMA addr 3 is
+>> +finished and the trace is still on, it will return to addr 0.
+>> +::
+>> +    +->[DMA addr 0]->[DMA addr 1]->[DMA addr 2]->[DMA addr 3]-+
+>> +    +---------------------------------------------------------+
+>> +
+>> +Driver will allocate each DMA buffer of 4MiB. The finished buffer
+>> +will be copied to the perf AUX buffer allocated by the perf core.
+>> +Once the AUX buffer is full while the trace is still on, driver
+>> +will commit the AUX buffer first and then apply for a new one with
+>> +the same size. The size of AUX buffer is default to 16MiB. User can
+>> +adjust the size by specifying the `-m` parameter of the perf command.
+>> +
+>> +Note that there is a gap between committing the old AUX buffer and
+>> +applying a new one, which means the trace is stopped during the
+>> +moment and TLPs transferred in the moment cannot be traced. To avoid
+>> +this situation, you should begin the trace with large AUX buffer
+>> +enough to avoid this gap.
+>> +
+>> +6. decoding
+>> +-----------
+>> +
+>> +You can decode the traced data with `perf report -D` command (currently
+>> +only support to dump the raw trace data). The traced data will be decoded
+>> +according to the format described previously (take 8DW as an example):
+>> +::
+>> +    [...perf headers and other information]
+>> +    . ... HISI PTT data: size 4194304 bytes
+>> +    .  00000000: 00 00 00 00                                 Prefix
+>> +    .  00000004: 01 00 00 60                                 Header DW0
+>> +    .  00000008: 0f 1e 00 01                                 Header DW1
+>> +    .  0000000c: 04 00 00 00                                 Header DW2
+>> +    .  00000010: 40 00 81 02                                 Header DW3
+>> +    .  00000014: 33 c0 04 00                                 Time
+>> +    .  00000020: 00 00 00 00                                 Prefix
+>> +    .  00000024: 01 00 00 60                                 Header DW0
+>> +    .  00000028: 0f 1e 00 01                                 Header DW1
+>> +    .  0000002c: 04 00 00 00                                 Header DW2
+>> +    .  00000030: 40 00 81 02                                 Header DW3
+>> +    .  00000034: 02 00 00 00                                 Time
+>> +    .  00000040: 00 00 00 00                                 Prefix
+>> +    .  00000044: 01 00 00 60                                 Header DW0
+>> +    .  00000048: 0f 1e 00 01                                 Header DW1
+>> +    .  0000004c: 04 00 00 00                                 Header DW2
+>> +    .  00000050: 40 00 81 02                                 Header DW3
+>> +    [...]
+> 
+> .
+> 
