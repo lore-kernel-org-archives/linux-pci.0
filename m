@@ -2,340 +2,148 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B28BC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90832C4332F
 	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 11:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359789AbiBHLbr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 06:31:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36630 "EHLO
+        id S1376282AbiBHLbt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 06:31:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349560AbiBHLH2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 06:07:28 -0500
+        with ESMTP id S244901AbiBHLVM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 06:21:12 -0500
 Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 093D5C03FEC0;
-        Tue,  8 Feb 2022 03:07:26 -0800 (PST)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4JtKqh3kXGz1FCrv;
-        Tue,  8 Feb 2022 19:03:12 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967B9C03FEC0;
+        Tue,  8 Feb 2022 03:21:10 -0800 (PST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4JtL7X0Ry6z1FD30;
+        Tue,  8 Feb 2022 19:16:56 +0800 (CST)
 Received: from [10.67.102.169] (10.67.102.169) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 8 Feb 2022 19:07:23 +0800
-CC:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
-        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
-        <will@kernel.org>, <mark.rutland@arm.com>,
-        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
-        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
-        <daniel.thompson@linaro.org>, <joro@8bytes.org>,
-        <john.garry@huawei.com>, <shameerali.kolothum.thodi@huawei.com>,
-        <robin.murphy@arm.com>, <peterz@infradead.org>, <mingo@redhat.com>,
-        <acme@kernel.org>, <linux-kernel@vger.kernel.org>,
+ 15.1.2308.21; Tue, 8 Feb 2022 19:21:05 +0800
+CC:     "Zengtao (B)" <prime.zeng@hisilicon.com>,
+        "liuqi (BA)" <liuqi115@huawei.com>,
+        Zhangshaokun <zhangshaokun@hisilicon.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "Song Bao Hua (Barry Song)" <song.bao.hua@hisilicon.com>
+Subject: Re: [PATCH v3 8/8] iommu/arm-smmu-v3: Make default domain type of
+ HiSilicon PTT device to identity
+To:     John Garry <john.garry@huawei.com>,
+        Yicong Yang <yangyicong@hisilicon.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "alexander.shishkin@linux.intel.com" 
+        <alexander.shishkin@linux.intel.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "will@kernel.org" <will@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "mathieu.poirier@linaro.org" <mathieu.poirier@linaro.org>,
+        "suzuki.poulose@arm.com" <suzuki.poulose@arm.com>,
+        "mike.leach@linaro.org" <mike.leach@linaro.org>,
+        "leo.yan@linaro.org" <leo.yan@linaro.org>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        "daniel.thompson@linaro.org" <daniel.thompson@linaro.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "acme@kernel.org" <acme@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
-        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
-        <linux-perf-users@vger.kernel.org>,
-        <iommu@lists.linux-foundation.org>, <prime.zeng@huawei.com>,
-        <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
-        <linuxarm@huawei.com>, <song.bao.hua@hisilicon.com>
-Subject: Re: [PATCH v3 1/8] hwtracing: Add trace function support for
- HiSilicon PCIe Tune and Trace device
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-        Yicong Yang <yangyicong@hisilicon.com>
+        "coresight@lists.linaro.org" <coresight@lists.linaro.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-perf-users@vger.kernel.org" <linux-perf-users@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 References: <20220124131118.17887-1-yangyicong@hisilicon.com>
- <20220124131118.17887-2-yangyicong@hisilicon.com>
- <20220207114223.00001d2a@Huawei.com>
+ <20220124131118.17887-9-yangyicong@hisilicon.com>
+ <4f6f6e0f-4398-3018-cc35-6aa7ea1305fe@huawei.com>
 From:   Yicong Yang <yangyicong@huawei.com>
-Message-ID: <5a095797-0e07-572f-700a-9c29fd5d4a1f@huawei.com>
-Date:   Tue, 8 Feb 2022 19:07:23 +0800
+Message-ID: <ae45a637-2c67-4126-3007-6829320d5659@huawei.com>
+Date:   Tue, 8 Feb 2022 19:21:05 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.5.1
 MIME-Version: 1.0
-In-Reply-To: <20220207114223.00001d2a@Huawei.com>
+In-Reply-To: <4f6f6e0f-4398-3018-cc35-6aa7ea1305fe@huawei.com>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Originating-IP: [10.67.102.169]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  canpemm500009.china.huawei.com (7.192.105.203)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2022/2/7 19:42, Jonathan Cameron wrote:
-> On Mon, 24 Jan 2022 21:11:11 +0800
-> Yicong Yang <yangyicong@hisilicon.com> wrote:
+On 2022/2/8 16:05, John Garry wrote:
+> On 24/01/2022 13:11, Yicong Yang wrote:
+>> The DMA of HiSilicon PTT device can only work with identical
+>> mapping. So add a quirk for the device to force the domain
+>> passthrough.
 > 
->> HiSilicon PCIe tune and trace device(PTT) is a PCIe Root Complex
->> integrated Endpoint(RCiEP) device, providing the capability
->> to dynamically monitor and tune the PCIe traffic, and trace
->> the TLP headers.
->>
->> Add the driver for the device to enable the trace function.
->> This patch adds basic function of trace, including the device's
->> probe and initialization, functions for trace buffer allocation
->> and trace enable/disable, register an interrupt handler to
->> simply response to the DMA events. The user interface of trace
->> will be added in the following patch.
+> This patch should be earlier in the series, before the PTT driver, and the comment on hisi_ptt_check_iommu_mapping() should mention what is going on here.
+> 
+
+ok I'll reorder the serives and modify the comments of hisi_ptt_check_iommu_mapping() like:
+
+/*
+ * The DMA of PTT trace can only use direct mapping, due to some
+ * hardware restriction. Check whether there is an iommu or the
+ * policy of the iommu domain is passthrough, otherwise the trace
+ * cannot work.
+ *
+ * The PTT device is supposed to behind the arm smmu v3, which
+ * should have passthrough the device by a quirk. Otherwise user
+ * should manually set the iommu domain type to identity through
+ * sysfs.
+ */
+
 >>
 >> Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-> Hi Yicong,
-> 
-> I've not been following all the earlier discussion on this driver closely
-> so I may well raise something that has already been addressed. If so
-> just ignore the comment.
-
-Thanks for the comments. It's ok for me to clarify it :).
-Part replies inline and I need to do some test on the others.
-
-> 
-> Thanks,
-> 
-> Jonathan
-> 
 >> ---
->>  drivers/Makefile                 |   1 +
->>  drivers/hwtracing/Kconfig        |   2 +
->>  drivers/hwtracing/ptt/Kconfig    |  11 +
->>  drivers/hwtracing/ptt/Makefile   |   2 +
->>  drivers/hwtracing/ptt/hisi_ptt.c | 398 +++++++++++++++++++++++++++++++
->>  drivers/hwtracing/ptt/hisi_ptt.h | 159 ++++++++++++
->>  6 files changed, 573 insertions(+)
->>  create mode 100644 drivers/hwtracing/ptt/Kconfig
->>  create mode 100644 drivers/hwtracing/ptt/Makefile
->>  create mode 100644 drivers/hwtracing/ptt/hisi_ptt.c
->>  create mode 100644 drivers/hwtracing/ptt/hisi_ptt.h
+>>   drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 16 ++++++++++++++++
+>>   1 file changed, 16 insertions(+)
 >>
-[...]
+>> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+>> index 6dc6d8b6b368..6f67a2b1dd27 100644
+>> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+>> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+>> @@ -2838,6 +2838,21 @@ static int arm_smmu_dev_disable_feature(struct device *dev,
+>>       }
+>>   }
+>>   +#define IS_HISI_PTT_DEVICE(pdev)    ((pdev)->vendor == PCI_VENDOR_ID_HUAWEI && \
+>> +                     (pdev)->device == 0xa12e)
+> 
+> I assume that not all revisions will require this check, right?
+> 
+
+For current revisions it's necessary.
+
 >> +
->> +static int hisi_ptt_alloc_trace_buf(struct hisi_ptt *hisi_ptt)
+>> +static int arm_smmu_def_domain_type(struct device *dev)
 >> +{
->> +	struct hisi_ptt_trace_ctrl *ctrl = &hisi_ptt->trace_ctrl;
->> +	struct device *dev = &hisi_ptt->pdev->dev;
->> +	struct hisi_ptt_dma_buffer *buffer;
->> +	int i, ret;
+>> +    if (dev_is_pci(dev)) {
+>> +        struct pci_dev *pdev = to_pci_dev(dev);
 >> +
->> +	hisi_ptt->trace_ctrl.buf_index = 0;
+>> +        if (IS_HISI_PTT_DEVICE(pdev))
+>> +            return IOMMU_DOMAIN_IDENTITY;
+>> +    }
 >> +
->> +	/* Make sure the trace buffer is empty before allocating */
-> 
-> This comment is misleading as it suggests it not being empty is
-> a bad thing but the code handles it as an acceptable path.
-> Perhaps:
-> 	/*
-> 	 * If the trace buffer has already been allocated, zero the
-> 	 * memory.
-> 	 */
-> 
-
-will make it less misleading. thanks.
-
->> +	if (!list_empty(&ctrl->trace_buf)) {
->> +		list_for_each_entry(buffer, &ctrl->trace_buf, list)
->> +			memset(buffer->addr, 0, buffer->size);
->> +		return 0;
->> +	}
->> +
->> +	for (i = 0; i < HISI_PTT_TRACE_BUF_CNT; ++i) {
->> +		buffer = kzalloc(sizeof(*buffer), GFP_KERNEL);
->> +		if (!buffer) {
->> +			ret = -ENOMEM;
->> +			goto err;
->> +		}
->> +
->> +		buffer->addr = dma_alloc_coherent(dev, ctrl->buffer_size,
->> +						  &buffer->dma, GFP_KERNEL);
->> +		if (!buffer->addr) {
->> +			kfree(buffer);
->> +			ret = -ENOMEM;
->> +			goto err;
->> +		}
->> +
->> +		memset(buffer->addr, 0, buffer->size);
-> See:
-> https://lore.kernel.org/lkml/20190108130701.14161-4-hch@lst.de/
-> dma_alloc_coherent() always zeros the memory for us hence there
-> is no longer a dma_kzalloc_coherent()
-> 
-
-thanks for the information. Then the memset here is redundant and will drop it.
-
->> +
->> +		buffer->index = i;
-> 
-> Carrying an index inside a list which corresponds directly
-> to the position in the list is not particularly nice.
-> Why can't we compute this index on the fly where the list
-> is walked?  Or am I misunderstanding and the order of the buffers
-> is changed in a later patch?
-> 
-
-The index is fixed once allocated and I stored it to avoid later
-computing. But seems it's highly recommended to compute these sort
-of things on the fly when necessary. John recommends the same things
-on some other places so I think I can get these addressed.
-
-> As a side note, is a list actually appropriate when we always
-> have 4 of these buffers?  Feels like an array of buffer
-> structures might be cheaper.
-> 
->> +		buffer->size = ctrl->buffer_size;
->> +		list_add_tail(&buffer->list, &ctrl->trace_buf);
->> +	}
->> +
->> +	return 0;
->> +err:
->> +	hisi_ptt_free_trace_buf(hisi_ptt);
->> +	return ret;
+>> +    return 0;
 >> +}
 >> +
->> +static void hisi_ptt_trace_end(struct hisi_ptt *hisi_ptt)
->> +{
->> +	writel(0, hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +	hisi_ptt->trace_ctrl.status = HISI_PTT_TRACE_STATUS_OFF;
->> +}
->> +
->> +static int hisi_ptt_trace_start(struct hisi_ptt *hisi_ptt)
->> +{
->> +	struct hisi_ptt_trace_ctrl *ctrl = &hisi_ptt->trace_ctrl;
->> +	struct hisi_ptt_dma_buffer *cur;
->> +	u32 val;
->> +
->> +	/* Check device idle before start trace */
->> +	if (hisi_ptt_wait_trace_hw_idle(hisi_ptt)) {
->> +		pci_err(hisi_ptt->pdev, "Failed to start trace, the device is still busy.\n");
->> +		return -EBUSY;
->> +	}
->> +
->> +	/* Reset the DMA before start tracing */
->> +	val = readl(hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +	val |= HISI_PTT_TRACE_CTRL_RST;
->> +	writel(val, hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +
->> +	/*
->> +	 * We'll be in the perf context where preemption is disabled,
->> +	 * so use busy loop here.
->> +	 */
->> +	mdelay(HISI_PTT_RESET_WAIT_MS);
+>>   static struct iommu_ops arm_smmu_ops = {
+>>       .capable        = arm_smmu_capable,
+>>       .domain_alloc        = arm_smmu_domain_alloc,
+>> @@ -2863,6 +2878,7 @@ static struct iommu_ops arm_smmu_ops = {
+>>       .sva_unbind        = arm_smmu_sva_unbind,
+>>       .sva_get_pasid        = arm_smmu_sva_get_pasid,
+>>       .page_response        = arm_smmu_page_response,
+>> +    .def_domain_type    = arm_smmu_def_domain_type,
+>>       .pgsize_bitmap        = -1UL, /* Restricted during device attach */
+>>       .owner            = THIS_MODULE,
+>>   };
 > 
-> Busy look for 1 second?  Ouch.  If we can reduce this in any way
-> that would be great or if there is a means to do it before
-> we disable preemption.
-> 
-
-It's inherited from the previous version that was using msleep() and it's
-somehow unacceptable in an atomic context I think. The reset here is
-going to reset the write pointer of the hardware DMA so we can check the
-whether the pointer before dereset it. I confirmed with our hardware
-teams that it can be reduced to 10us. So I'll poll the write pointer register
-for about 10us before continue here.
-
-thanks for catching this!
-
->> +
->> +	val = readl(hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +	val &= ~HISI_PTT_TRACE_CTRL_RST;
->> +	writel(val, hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +
->> +	/* Clear the interrupt status */
->> +	writel(HISI_PTT_TRACE_INT_STAT_MASK, hisi_ptt->iobase + HISI_PTT_TRACE_INT_STAT);
->> +	writel(0, hisi_ptt->iobase + HISI_PTT_TRACE_INT_MASK);
->> +
->> +	/* Configure the trace DMA buffer */
->> +	list_for_each_entry(cur, &ctrl->trace_buf, list) {
-> 
-> I comment on the use of cur->index above.  Here it would be easy to compute
-> the index as we go for example assuming we never end up with holes
-> in the list.
-> 
-
-ok.
-
->> +		writel(lower_32_bits(cur->dma),
->> +		       hisi_ptt->iobase + HISI_PTT_TRACE_ADDR_BASE_LO_0 +
->> +		       cur->index * HISI_PTT_TRACE_ADDR_STRIDE);
->> +		writel(upper_32_bits(cur->dma),
->> +		       hisi_ptt->iobase + HISI_PTT_TRACE_ADDR_BASE_HI_0 +
->> +		       cur->index * HISI_PTT_TRACE_ADDR_STRIDE);
->> +	}
->> +	writel(ctrl->buffer_size, hisi_ptt->iobase + HISI_PTT_TRACE_ADDR_SIZE);
->> +
->> +	/* Set the trace control register */
->> +	val = FIELD_PREP(HISI_PTT_TRACE_CTRL_TYPE_SEL, ctrl->type);
->> +	val |= FIELD_PREP(HISI_PTT_TRACE_CTRL_RXTX_SEL, ctrl->direction);
->> +	val |= FIELD_PREP(HISI_PTT_TRACE_CTRL_DATA_FORMAT, ctrl->format);
->> +	val |= FIELD_PREP(HISI_PTT_TRACE_CTRL_TARGET_SEL, hisi_ptt->trace_ctrl.filter);
->> +	if (!hisi_ptt->trace_ctrl.is_port)
->> +		val |= HISI_PTT_TRACE_CTRL_FILTER_MODE;
->> +
->> +	/* Start the Trace */
->> +	val |= HISI_PTT_TRACE_CTRL_EN;
->> +	writel(val, hisi_ptt->iobase + HISI_PTT_TRACE_CTRL);
->> +
->> +	ctrl->status = HISI_PTT_TRACE_STATUS_ON;
->> +
->> +	return 0;
->> +}
->> +
-> 
-> ...
-> 
->> +
->> +static void hisi_ptt_init_ctrls(struct hisi_ptt *hisi_ptt)
->> +{
->> +	struct pci_dev *pdev = hisi_ptt->pdev;
->> +	struct pci_bus *bus;
->> +	u32 reg;
->> +
->> +	INIT_LIST_HEAD(&hisi_ptt->port_filters);
->> +	INIT_LIST_HEAD(&hisi_ptt->req_filters);
->> +
->> +	/*
->> +	 * The device range register provides the information about the
->> +	 * root ports which the RCiEP can control and trace. The RCiEP
->> +	 * and the root ports it support are on the same PCIe core, with
->> +	 * same domain number but maybe different bus number. The device
->> +	 * range register will tell us which root ports we can support,
->> +	 * Bit[31:16] indicates the upper BDF numbers of the root port,
->> +	 * while Bit[15:0] indicates the lower.
->> +	 */
->> +	reg = readl(hisi_ptt->iobase + HISI_PTT_DEVICE_RANGE);
->> +	hisi_ptt->upper = reg >> 16;
->> +	hisi_ptt->lower = reg & 0xffff;
-> Trivial:
-> Perhaps worthing define HISI_PTT_DEVICE_RANGE_UPPER_MASK etc adn using
-> FIELD_GET?
-> 
-
-sure.
-
->> +
->> +	reg = readl(hisi_ptt->iobase + HISI_PTT_LOCATION);
->> +	hisi_ptt->core_id = FIELD_GET(HISI_PTT_CORE_ID, reg);
->> +	hisi_ptt->sicl_id = FIELD_GET(HISI_PTT_SICL_ID, reg);
->> +
->> +	bus = pci_find_bus(pci_domain_nr(pdev->bus), PCI_BUS_NUM(hisi_ptt->upper));
->> +	if (bus)
->> +		pci_walk_bus(bus, hisi_ptt_init_filters, hisi_ptt);
->> +
->> +	/* Initialize trace controls */
->> +	INIT_LIST_HEAD(&hisi_ptt->trace_ctrl.trace_buf);
->> +	hisi_ptt->trace_ctrl.buffer_size = HISI_PTT_TRACE_BUF_SIZE;
->> +	hisi_ptt->trace_ctrl.default_cpu = cpumask_first(cpumask_of_node(dev_to_node(&pdev->dev)));
->> +}
->> +
-[...]
->> +
->> +#define HISI_PCIE_CORE_PORT_ID(devfn)	(PCI_FUNC(devfn) << 1)
->> +
->> +enum hisi_ptt_trace_status {
->> +	HISI_PTT_TRACE_STATUS_OFF = 0,
->> +	HISI_PTT_TRACE_STATUS_ON,
->> +};
-> 
-> Why not just use a boolean given we only have off and on states?
-> 
-
-An enum may make the code more readable I think.
-
-Thanks,
-Yicong
-
+> .
