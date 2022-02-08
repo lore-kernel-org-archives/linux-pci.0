@@ -2,101 +2,126 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0136BC433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 02:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77466C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Feb 2022 04:02:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238239AbiBHCOL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Feb 2022 21:14:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52894 "EHLO
+        id S1346617AbiBHECq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Feb 2022 23:02:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230123AbiBHCOK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 21:14:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7925C061355;
-        Mon,  7 Feb 2022 18:14:09 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 50854B80E8C;
-        Tue,  8 Feb 2022 02:14:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02E7DC340ED;
-        Tue,  8 Feb 2022 02:14:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644286447;
-        bh=Fph4PJDbouMfoaJHcmJukTeg2f451EsGTJKeTIiJZTQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=AKqCDZ0ciICkeWLsMS+jxD8yuxNERgXloYkmk70hFc5yTOC+PevPiv64CYSV8qUEt
-         03jcCn4L3b4+oEBOv81T9Q4lwzs1A2L+PK59kxWITXFncUbV3qrTcmDvZPRm79wesT
-         3xJRTK3IzIKA4G8zAd64fdg1a1aSLC9zUWPfJ+4+lydZult1W2+SQlYTbJPSVJxku/
-         4Vk8BWTD1vas64xk1lM7rfpqzJvFeU4kdPo6lHi1qpffOaDyvEadbn4cV/vBV9OPXG
-         m9rXXZwraGKbwuaJLngPJmX9nHA6ch4bgmzXxgvrDoX3uF+X4xVvt5/TQJctzRHplH
-         aAB5RWRiT7mZA==
-Received: by mail-vs1-f54.google.com with SMTP id v6so1821685vsp.11;
-        Mon, 07 Feb 2022 18:14:06 -0800 (PST)
-X-Gm-Message-State: AOAM530RHev1vkmYiPlX7rZGzxjlwFmh9NDtgoxtEyf0ievpu6KMNS09
-        TH98fHIzst6iXfkOl5/bD/HD/q8lQRh6aRkwP6o=
-X-Google-Smtp-Source: ABdhPJxBTS0pV366Usd6d6kkxREmCecGZHF4ioCnF9MTIf24VW5LPFIZRFdfHNpyS5oeM33yCJWt7os6PB7tAr29L1w=
-X-Received: by 2002:a67:fd55:: with SMTP id g21mr720208vsr.53.1644286446000;
- Mon, 07 Feb 2022 18:14:06 -0800 (PST)
-MIME-Version: 1.0
-References: <b0a06a30-f479-df9f-980c-b789f0f26ce9@linux.intel.com> <20220207175909.GA406079@bhelgaas>
-In-Reply-To: <20220207175909.GA406079@bhelgaas>
-From:   Huacai Chen <chenhuacai@kernel.org>
-Date:   Tue, 8 Feb 2022 10:14:08 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H4t96wJZs50qjJVnFSHXv7n9YeaXPaV32AGvO2SASWmYw@mail.gmail.com>
-Message-ID: <CAAhV-H4t96wJZs50qjJVnFSHXv7n9YeaXPaV32AGvO2SASWmYw@mail.gmail.com>
-Subject: Re: [PATCH v8 00/10] vgaarb: Rework default VGA device selection
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        David Airlie <airlied@linux.ie>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Huacai Chen <chenhuacai@loongson.cn>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S234597AbiBHECq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Feb 2022 23:02:46 -0500
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAE8BC0401E8;
+        Mon,  7 Feb 2022 20:02:45 -0800 (PST)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3E1C71A059D;
+        Tue,  8 Feb 2022 04:56:58 +0100 (CET)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 054EE1A0956;
+        Tue,  8 Feb 2022 04:56:58 +0100 (CET)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 6FC9C183AC96;
+        Tue,  8 Feb 2022 11:56:56 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com, broonie@kernel.org,
+        lorenzo.pieralisi@arm.com, jingoohan1@gmail.com, festevam@gmail.com
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de
+Subject: [PATCH v6 2/8] PCI: imx6: Add the error propagation from host_init
+Date:   Tue,  8 Feb 2022 11:25:29 +0800
+Message-Id: <1644290735-3797-3-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1644290735-3797-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1644290735-3797-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Bjorn,
+Since there is error return check of the host_init callback, add error
+check to imx6_pcie_deassert_core_reset() function, and change the
+function type accordingly.
 
-On Tue, Feb 8, 2022 at 1:59 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Tue, Feb 01, 2022 at 04:46:33PM +0100, Maarten Lankhorst wrote:
-> > Op 31-01-2022 om 23:23 schreef Bjorn Helgaas:
-> > > [+to Maarten, Maxime, Thomas; beginning of thread:
-> > > https://lore.kernel.org/r/20220106000658.243509-1-helgaas@kernel.org]
-> > >
-> > > On Wed, Jan 05, 2022 at 06:06:48PM -0600, Bjorn Helgaas wrote:
-> > >> From: Bjorn Helgaas <bhelgaas@google.com>
-> > >>
-> > >> Current default VGA device selection fails in some cases because part of it
-> > >> is done in the vga_arb_device_init() subsys_initcall, and some arches
-> > >> enumerate PCI devices in pcibios_init(), which runs *after* that.
-> > > Where are we at with this series?  Is there anything I can do to move
-> > > it forward?
-> >
-> > I'm afraid that I don't understand the vga arbiter or the vga code
-> > well enough to review.
-> >
-> > Could you perhaps find someone who could review?
-> >
-> > I see Chen wrote some patches and tested, so perhaps they could?
->
-> Huacai, any chance you could review this?  I'm worried that this
-> series isn't going to go anywhere unless we can find somebody to
-> review it.
-I have reviewed and tested the whole series, it looks good to me
-(except the naming which has already changed). But I thought I cannot
-add a "Reviewed-by" because I was originally a co-developer. But if
-necessary,
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
-Reviewed-by: Huacai Chen <chenhuacai@loongson.cn>
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 5582ee1b420a..3ca2eef39617 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -546,24 +546,24 @@ static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
+ 		dev_err(dev, "PCIe PLL lock timeout\n");
+ }
+ 
+-static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
++static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+ 	struct device *dev = pci->dev;
+-	int ret;
++	int ret, err;
+ 
+ 	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
+ 		ret = regulator_enable(imx6_pcie->vpcie);
+ 		if (ret) {
+ 			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+ 				ret);
+-			return;
++			return ret;
+ 		}
+ 	}
+ 
+-	ret = imx6_pcie_clk_enable(imx6_pcie);
+-	if (ret) {
+-		dev_err(dev, "unable to enable pcie clocks\n");
++	err = imx6_pcie_clk_enable(imx6_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable pcie clocks: %d\n", err);
+ 		goto err_clks;
+ 	}
+ 
+@@ -622,7 +622,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 		break;
+ 	}
+ 
+-	return;
++	return 0;
+ 
+ err_clks:
+ 	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
+@@ -631,6 +631,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 			dev_err(dev, "failed to disable vpcie regulator: %d\n",
+ 				ret);
+ 	}
++	return err;
+ }
+ 
+ static void imx6_pcie_configure_type(struct imx6_pcie *imx6_pcie)
+@@ -882,11 +883,18 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
+ static int imx6_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct device *dev = pci->dev;
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
++	int ret;
+ 
+ 	imx6_pcie_assert_core_reset(imx6_pcie);
+ 	imx6_pcie_init_phy(imx6_pcie);
+-	imx6_pcie_deassert_core_reset(imx6_pcie);
++	ret = imx6_pcie_deassert_core_reset(imx6_pcie);
++	if (ret < 0) {
++		dev_err(dev, "pcie host init failed: %d.\n", ret);
++		return ret;
++	}
++
+ 	imx6_setup_phy_mpll(imx6_pcie);
+ 
+ 	return 0;
+-- 
+2.25.1
 
-Huacai
->
-> Bjorn
