@@ -2,81 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 567ACC4332F
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 02:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F49C4167E
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 03:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241759AbiBICkX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 21:40:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33850 "EHLO
+        id S242482AbiBIDCP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 22:02:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244139AbiBICBs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 21:01:48 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13150C06157B;
-        Tue,  8 Feb 2022 18:01:48 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id cf2so2103191edb.9;
-        Tue, 08 Feb 2022 18:01:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=cWnnC6X/3LfUNvFejjOf/o+BhqQPL36rKux7esaUqwU=;
-        b=k3O5GQanRHIEkNhPqjnOuYe6aHao9DnrKOReuSxBQnvFZ+7kJ4ld9HSkvPcFdLwXVo
-         yqyNAC6PYUb5K1s9oF/yXHBqJWt5s8dAv4PwGG7HwiQ3+yU/5z7ctjiKMb+YfWclAgOk
-         wU8hOcidH7oOlj8TmXjkOAkyEVb/QvNxx/Jw4B7hQUhRLGE+Zdm/P04KUdc2WX9GqjAo
-         Qd0fT4gwCm9V3gMCL5qpAJ1+ctAa9xhVf4cIgk2S+6JXY9WgxlVOYPiKbpK8IUfAqJxq
-         JSfnQH9dls1YYKs/Z4yMwuA/NcdqMWfa/RpzfkILKLIjXM1U7nglBYZqBSmNb0XG47bJ
-         YhpQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=cWnnC6X/3LfUNvFejjOf/o+BhqQPL36rKux7esaUqwU=;
-        b=p7aBBjOrrzAFPKHDDtSbHGAbb4gmBD43BPx/twURg24jDZsllQA359XLBZk68RkBKv
-         YV24kzNfX2Tu3peia4DZ50gV9q4NGoxisWSBM2sLJb/ahImRkB+rktG89LDzSoO7fE2d
-         7nn288CGfOFuJGTAjygLmSGdxIhUB7okhSgsBAUO2Ft83yUTo5q/Rxe3kD8p5zrf0yqQ
-         IZLTKaU6rjZw071WdNzxxOzqzh7vX1O91yxKx40wbhoD9ilxsJ1lh3rdWhHkPhEYMtFa
-         HhxS0x1dEAjpl4HMa2JUUUXoYkiFz1QzRB1BGPUkcDmA4+kz2EH2soWo0ajGLKFfBYzN
-         T0zw==
-X-Gm-Message-State: AOAM530Aoi5HctSKIvi5PK7+w6JBjXEFYCx6zFXrS+2cCsNGe07X6Pc8
-        UUsNQgpV37liodgF2vg8hdF9y776V7nNd9S5zbk=
-X-Google-Smtp-Source: ABdhPJwuNUoPvXQy2DbyC89NZT6PfpXs+807StThbTX6vEtShDzyDKiD5rl4tnx5cTsfI98LYMsM7moX2a/KWHAlsZM=
-X-Received: by 2002:a05:6402:440a:: with SMTP id y10mr199806eda.215.1644372106542;
- Tue, 08 Feb 2022 18:01:46 -0800 (PST)
+        with ESMTP id S1346557AbiBICtJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 21:49:09 -0500
+Received: from sender4-pp-o95.zoho.com (sender4-pp-o95.zoho.com [136.143.188.95])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0581EC014CE1;
+        Tue,  8 Feb 2022 18:42:37 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1644374543; cv=none; 
+        d=zohomail.com; s=zohoarc; 
+        b=IiWquf9atqldWhMR+8jZuNoczLaO3Z/HOKg50E3oFHHYaAzJsmHZ061VXWr/9pZDSB3r6O604qV+YKpzjXg+ekzm3MyjuWzB7dFWIwKqZNx0UpIwvlQ4P14HQXnNuSQqk3jEwiLiih1w2DuoPmDA+3eLRz/K4Gaq9+ix1XQPCYY=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+        t=1644374543; h=Content-Type:Content-Transfer-Encoding:Cc:Date:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:To; 
+        bh=Ik7PPsB3ckVMi8MLto9X5w+tlhq8q4mTvX1f+h1UyKw=; 
+        b=INVpAAfxFfKWqCwm93kinD9soyLpClf/xM8mZRD/b1w22UkTPLmPrAY5QUoVJ4YKrMkL27nw5mre8eP9HqfUZX2TQo0HOUcOohW4lkgw4mPv83IpymvOn6Q+z5f5WYWZ9wVgHbyLUdJG+0tRGXPiNCj2HNnY1kF5Ma8rVSLxz5w=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+        dkim=pass  header.i=zohomail.com;
+        spf=pass  smtp.mailfrom=lchen.firstlove@zohomail.com;
+        dmarc=pass header.from=<lchen.firstlove@zohomail.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1644374543;
+        s=zm2020; d=zohomail.com; i=lchen.firstlove@zohomail.com;
+        h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding;
+        bh=Ik7PPsB3ckVMi8MLto9X5w+tlhq8q4mTvX1f+h1UyKw=;
+        b=axlkY8vZH/QnVnV2YoTmxfCuXYu6R1ZdoeT+iiHxVdFBgcZQju/awJQpwnCmDhpE
+        ZkEKT8EbA1QzcZzvF3ecZVMPBL0xHWu9f2myBz1GXTnqv+7Wry5CGlEK6EegJKqg/k4
+        k7WhqrZcWx72ch32nP1XVZ67b3MaQyIpARIeTHiE=
+Received: from mail.zoho.com by mx.zohomail.com
+        with SMTP id 1644374542337509.18593299214297; Tue, 8 Feb 2022 18:42:22 -0800 (PST)
+Received: from  [40.115.208.189] by mail.zoho.com
+        with HTTP;Tue, 8 Feb 2022 18:42:22 -0800 (PST)
+Date:   Tue, 08 Feb 2022 21:42:22 -0500
+From:   Li Chen <lchen.firstlove@zohomail.com>
+To:     "Bjorn Helgaas" <helgaas@kernel.org>
+Cc:     "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        "Kishon Vijay Abraham I" <kishon@ti.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?=22Krzysztof_Wilczy=C5=84ski=22?= <kw@linux.com>,
+        "Arnd Bergmann" <arnd@arndb.de>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        "linux-pci" <linux-pci@vger.kernel.org>,
+        "linux-kernel" <linux-kernel@vger.kernel.org>
+Message-ID: <17edc5c47e6.122924bd015524.7108685407921243810@zohomail.com>
+In-Reply-To: <20220208152106.GA476995@bhelgaas>
+References: <20220208152106.GA476995@bhelgaas>
+Subject: Re: [PATCH V6] misc: pci_endpoint_test: simplify endpoint test read
+ and write operations
 MIME-Version: 1.0
-References: <1644290735-3797-1-git-send-email-hongxing.zhu@nxp.com>
- <1644290735-3797-8-git-send-email-hongxing.zhu@nxp.com> <CAOMZO5ALthc7zZEYZX2YHam2f3C1RmOr4CHLRjHSip7-44tL6Q@mail.gmail.com>
- <AS8PR04MB86768828ED6B984C674CE2298C2E9@AS8PR04MB8676.eurprd04.prod.outlook.com>
-In-Reply-To: <AS8PR04MB86768828ED6B984C674CE2298C2E9@AS8PR04MB8676.eurprd04.prod.outlook.com>
-From:   Fabio Estevam <festevam@gmail.com>
-Date:   Tue, 8 Feb 2022 23:01:36 -0300
-Message-ID: <CAOMZO5CUbY_SyjDpnFd-EPy+K+MYA6nn=hk_XpZnAFdJP53CFQ@mail.gmail.com>
-Subject: Re: [PATCH v6 7/8] PCI: imx6: Disable enabled clocks and regulators
- after link is down
-To:     Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc:     Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Brown <broonie@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        dl-linux-imx <linux-imx@nxp.com>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Sascha Hauer <kernel@pengutronix.de>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Importance: Medium
+User-Agent: Zoho Mail
+X-Mailer: Zoho Mail
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Richard,
+Sent using Zoho Mail
 
-On Tue, Feb 8, 2022 at 10:56 PM Hongxing Zhu <hongxing.zhu@nxp.com> wrote:
+ ---- On Tue, 08 Feb 2022 10:21:06 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote ----
+ > On Mon, Feb 07, 2022 at 11:20:15PM -0500, Li Chen wrote:
+ > >  ---- On Mon, 07 Feb 2022 12:56:13 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote ----
+ > >  > On Mon, Feb 07, 2022 at 04:09:05AM -0500, Li Chen wrote:
+ > >  > > #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+ > >  > > -                     miscdev)
+ > >  > > +                        miscdev)
+ > >  > 
+ > >  > Always indent with tabs when possible:
+ > >  > 
+ > >  >   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst?id=v5.16#n18
+ > >  > 
+ > >  > Hmm, coding-style.rst is unfortunately not very explicit about that.
+ > >  > 
+ > >  > But it's obvious from the existing code in this file that things
+ > >  > should not be indented four spaces, as you did in
+ > >  > pci_endpoint_test_transfer_data().
+ > > 
+ > > So, can I say space is not allowed in indentation? If so, I should
+ > > not use emacs's tabify, because it will not convert 4 space to
+ > > 8-width tab. I'm also not sure is scripts/Lindent or clang-format is
+ > > a good choice here, they do too much changes.
+ > 
+ > I don't know how emacs, Lindent, clang-format, etc work.  I *can* tell
+ > you that in Linux code:
+ > 
+ >   - indents always use tabs (width 8) when possible,
+ > 
+ >   - up to 7 spaces are allowed after a tab when needed to align
+ >     something with the previous line, and
+ > 
+ >   - a tab never directly follows a space.
+ > 
+ > Bjorn
+ > 
 
-> Do you mean that we should ignore the return of dw_pcie_host_init() and
-> finish the _probe without an error return?
+Thanks! I'll remove tabify operation in v7, the original code have no indentation code style issue.
 
-Yes, we should not return an error on probe if the link is down.
-
-Thanks
+Regards,
+Li
