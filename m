@@ -2,173 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CB0CC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 00:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11437C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 02:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231448AbiBIAYG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 19:24:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35648 "EHLO
+        id S241739AbiBICkM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 21:40:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229766AbiBIAYF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 19:24:05 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22CD0C061576
-        for <linux-pci@vger.kernel.org>; Tue,  8 Feb 2022 16:24:04 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id g15-20020a17090a67cf00b001b7d5b6bedaso602551pjm.4
-        for <linux-pci@vger.kernel.org>; Tue, 08 Feb 2022 16:24:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=DYNXR2DtuxF1ISLzpPLoyEyGiOJ7sBlng/Jv7KiUcBE=;
-        b=VxlJfskh25n9CGF6UK57dB54CJXlDoep5C3N0smYrTdby67X/6qk5Sk7HFgMDS+nGY
-         AzoiVQXLD0zX8n/JzPWPnuoJP4lce+qxe7/XN61DoUql4/ek5ls0IMNRKeE94m0bm/gY
-         cfT5FrbMtbIqBaACvO397ODwQRm/U6DIWtJ6dhWxc0WDClqqFyqNLeTFfHsevZWbE5q3
-         cwzPNdId6TH00LMJppPQxBnP9hhTWODlnfeYkG/m3Ojtz4sIieW0oyczghQl9ZkyeB1T
-         cdpt7CxfDkihd9SNrVTXaJx8ESUyXBr7GN+fbte3Yb50ycgG7mu3UVHP/0wuM8FLqbbg
-         LlGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=DYNXR2DtuxF1ISLzpPLoyEyGiOJ7sBlng/Jv7KiUcBE=;
-        b=Ze8rb+295CReqVnDKNdbNV39sZlbt+mTXnGCWZJnywFws89JNKg8nBQKFD4Z2m5cay
-         mefyjLaSSfnogrkqKO9qqFP6rqcOZ/mSncOl3/kn4r7vc0XPoHwxY+eJrPaF+aZfOInG
-         N8pWYpYqCjz/D4imTxt/MA1f9ngcGVP/JaP95FLyoswlnt3BcdYN/P9/lU+9lCB/IHTg
-         TTAzY6f2Fain6Q/DXnG35ijmmlU0hzUhvTmWgKKklidSIzczOFuha+xcA9p8QkrIZqHn
-         r9c4LpXj5HHeazNO/zhzTKHi3Rn9cftUNcnk1TPl39h3WIN3CfUd64gwUZuMA6qGTh6g
-         tAhw==
-X-Gm-Message-State: AOAM532pnaa7AdJbIw4B7eMbt93SmDfG+VSPkDJwAyhEphdtujNcPpx6
-        luwVC33fhY1urLTOPP3p7eNfopPkVxDgTneDHsO1sQ==
-X-Google-Smtp-Source: ABdhPJxzWI7eHHDKAtjNbbB172grlY3cvC/rvaFNoMxSL6UiTPyvmxeEjwk9Pe8+ZkIlAhoSvpkKXJCpcc8WB5HAMV0=
-X-Received: by 2002:a17:90a:5303:: with SMTP id x3mr64365pjh.64.1644366243349;
- Tue, 08 Feb 2022 16:24:03 -0800 (PST)
-MIME-Version: 1.0
-References: <20220202020103.2149130-1-rajatja@google.com>
-In-Reply-To: <20220202020103.2149130-1-rajatja@google.com>
-From:   Rajat Jain <rajatja@google.com>
-Date:   Tue, 8 Feb 2022 16:23:27 -0800
-Message-ID: <CACK8Z6GmC7O3__RKwSEOQQ5Pde6h-LRz_5d+--V=CuB76cpe+w@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: Allow internal devices to be marked as untrusted
-To:     Rob Herring <robh+dt@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Pavel Machek <pavel@denx.de>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S241649AbiBICiO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 21:38:14 -0500
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2160C061355;
+        Tue,  8 Feb 2022 18:38:13 -0800 (PST)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 680191A0FF0;
+        Wed,  9 Feb 2022 03:38:12 +0100 (CET)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2FDD51A0FEB;
+        Wed,  9 Feb 2022 03:38:12 +0100 (CET)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id C9A77183AC99;
+        Wed,  9 Feb 2022 10:38:10 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     bhelgaas@google.com, shawnguo@kernel.org, l.stach@pengutronix.de
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de, linux-imx@nxp.com
+Subject: [PATCH v2] arm64: dts: imx8mq-evk: Add second PCIe port support
+Date:   Wed,  9 Feb 2022 10:06:48 +0800
+Message-Id: <1644372408-5485-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Folks,
+Enable the second PCIe port support on i.MX8MQ EVK board.
 
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ arch/arm64/boot/dts/freescale/imx8mq-evk.dts | 38 ++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-On Tue, Feb 1, 2022 at 6:01 PM Rajat Jain <rajatja@google.com> wrote:
->
-> Today the pci_dev->untrusted is set for any devices sitting downstream
-> an external facing port (determined via "ExternalFacingPort" or the
-> "external-facing" properties).
->
-> However, currently there is no way for internal devices to be marked as
-> untrusted.
->
-> There are use-cases though, where a platform would like to treat an
-> internal device as untrusted (perhaps because it runs untrusted firmware
-> or offers an attack surface by handling untrusted network data etc).
->
-> Introduce a new "UntrustedDevice" property that can be used by the
-> firmware to mark any device as untrusted.
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+index a1b7582f3ecf..06f6e44da4d4 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+@@ -27,6 +27,17 @@ pcie0_refclk: pcie0-refclk {
+ 		clock-frequency = <100000000>;
+ 	};
+ 
++	reg_pcie1: regulator-pcie {
++		compatible = "regulator-fixed";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_pcie1_reg>;
++		regulator-name = "MPCIE_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio5 10 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
+ 	reg_usdhc2_vmmc: regulator-vsd-3v3 {
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&pinctrl_reg_usdhc2>;
+@@ -327,6 +338,20 @@ &pcie0 {
+ 	status = "okay";
+ };
+ 
++&pcie1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie1>;
++	reset-gpio = <&gpio5 12 GPIO_ACTIVE_LOW>;
++	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++		 <&pcie0_refclk>;
++	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
++	vpcie-supply = <&reg_pcie1>;
++	vph-supply = <&vgen5_reg>;
++	status = "okay";
++};
++
+ &pgc_gpu {
+ 	power-supply = <&sw1a_reg>;
+ };
+@@ -482,6 +507,19 @@ MX8MQ_IOMUXC_UART4_RXD_GPIO5_IO28		0x16
+ 		>;
+ 	};
+ 
++	pinctrl_pcie1: pcie1grp {
++		fsl,pins = <
++			MX8MQ_IOMUXC_I2C4_SDA_PCIE2_CLKREQ_B		0x76
++			MX8MQ_IOMUXC_ECSPI2_MISO_GPIO5_IO12		0x16
++		>;
++	};
++
++	pinctrl_pcie1_reg: pcie1reggrp {
++		fsl,pins = <
++			MX8MQ_IOMUXC_ECSPI2_SCLK_GPIO5_IO10		0x16
++		>;
++	};
++
+ 	pinctrl_qspi: qspigrp {
+ 		fsl,pins = <
+ 			MX8MQ_IOMUXC_NAND_ALE_QSPI_A_SCLK	0x82
+-- 
+2.25.1
 
-Just to unite the threads (from
-https://www.spinics.net/lists/linux-pci/msg120221.html). I did reach
-out to Microsoft but they haven't acknowledged my email. I also pinged
-them again yesterday, but I suspect I may not be able to break the
-ice. So this patch may be ready to go in my opinion.
-
-I don't see any outstanding comments on this patch, but please let me
-know if you have any comments.
-
-Thanks & Best Regards,
-
-Rajat
-
-
->
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> ---
-> v2: * Also use the same property for device tree based systems.
->     * Add documentation (next patch)
->
->  drivers/pci/of.c       | 2 ++
->  drivers/pci/pci-acpi.c | 1 +
->  drivers/pci/pci.c      | 9 +++++++++
->  drivers/pci/pci.h      | 2 ++
->  4 files changed, 14 insertions(+)
->
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index cb2e8351c2cc..e8b804664b69 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -24,6 +24,8 @@ void pci_set_of_node(struct pci_dev *dev)
->                                                     dev->devfn);
->         if (dev->dev.of_node)
->                 dev->dev.fwnode = &dev->dev.of_node->fwnode;
-> +
-> +       pci_set_untrusted(dev);
->  }
->
->  void pci_release_of_node(struct pci_dev *dev)
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a42dbf448860..2bffbd5c6114 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -1356,6 +1356,7 @@ void pci_acpi_setup(struct device *dev, struct acpi_device *adev)
->
->         pci_acpi_optimize_delay(pci_dev, adev->handle);
->         pci_acpi_set_external_facing(pci_dev);
-> +       pci_set_untrusted(pci_dev);
->         pci_acpi_add_edr_notifier(pci_dev);
->
->         pci_acpi_add_pm_notifier(adev, pci_dev);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 9ecce435fb3f..41e887c27004 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -6869,3 +6869,12 @@ static int __init pci_realloc_setup_params(void)
->         return 0;
->  }
->  pure_initcall(pci_realloc_setup_params);
-> +
-> +void pci_set_untrusted(struct pci_dev *pdev)
-> +{
-> +       u8 val;
-> +
-> +       if (!device_property_read_u8(&pdev->dev, "UntrustedDevice", &val)
-> +           && val)
-> +               pdev->untrusted = 1;
-> +}
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 3d60cabde1a1..6c273ce5e0ba 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -761,4 +761,6 @@ static inline pci_power_t mid_pci_get_power_state(struct pci_dev *pdev)
->  }
->  #endif
->
-> +void pci_set_untrusted(struct pci_dev *pdev);
-> +
->  #endif /* DRIVERS_PCI_H */
-> --
-> 2.35.0.rc2.247.g8bbb082509-goog
->
