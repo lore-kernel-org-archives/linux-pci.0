@@ -2,148 +2,81 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5346EC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 02:40:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 567ACC4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Feb 2022 02:40:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243214AbiBICkU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Feb 2022 21:40:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42126 "EHLO
+        id S241759AbiBICkX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Feb 2022 21:40:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233796AbiBIChl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 21:37:41 -0500
-Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92866C061355;
-        Tue,  8 Feb 2022 18:37:40 -0800 (PST)
-Received: by mail-il1-x131.google.com with SMTP id z18so606374iln.2;
-        Tue, 08 Feb 2022 18:37:40 -0800 (PST)
+        with ESMTP id S244139AbiBICBs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Feb 2022 21:01:48 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13150C06157B;
+        Tue,  8 Feb 2022 18:01:48 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id cf2so2103191edb.9;
+        Tue, 08 Feb 2022 18:01:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J2A+sjZnS5cRMoX3xrf2NiPs/KWZ3vKvmI0duGN4ktY=;
-        b=S8cMgrKplxI50Aumzypa+57fs1D2jx+SSXm19HgRZ1KkM/J7s5Bit0ZDnxpGQkfnCm
-         kYhc1+m+fPk5w64tsFAJlyRtiOh+6rK6xJjVIkzj2Fg3quIEHYo9nhCHyX6ny7wTlXoA
-         rw6++R8VC+iZXy9c8xTS+BfttUupCo5Tm/0n1/FnsFsMSV48dLxUuse6+unLrf/woFzM
-         I/j7wszoIl0+JhmQzkGjEW9NmiZ1Mj1TzCU16xa1HQfLXkXEmLA4RjnUrMWp8b9oYjLI
-         Tto1xS1Yy9Qyeqa/+vPUi/kIsh+PE7GvUcFecVTc55q/JR3muPZrIp1UH4qZmeV9WGtn
-         yE/Q==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=cWnnC6X/3LfUNvFejjOf/o+BhqQPL36rKux7esaUqwU=;
+        b=k3O5GQanRHIEkNhPqjnOuYe6aHao9DnrKOReuSxBQnvFZ+7kJ4ld9HSkvPcFdLwXVo
+         yqyNAC6PYUb5K1s9oF/yXHBqJWt5s8dAv4PwGG7HwiQ3+yU/5z7ctjiKMb+YfWclAgOk
+         wU8hOcidH7oOlj8TmXjkOAkyEVb/QvNxx/Jw4B7hQUhRLGE+Zdm/P04KUdc2WX9GqjAo
+         Qd0fT4gwCm9V3gMCL5qpAJ1+ctAa9xhVf4cIgk2S+6JXY9WgxlVOYPiKbpK8IUfAqJxq
+         JSfnQH9dls1YYKs/Z4yMwuA/NcdqMWfa/RpzfkILKLIjXM1U7nglBYZqBSmNb0XG47bJ
+         YhpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J2A+sjZnS5cRMoX3xrf2NiPs/KWZ3vKvmI0duGN4ktY=;
-        b=b2r5TZ6pVRShWYdIc0d3NMNm3EH6kTD2FjGrT5CG6sDHfE8I47AnCIVicLC2zw+Ech
-         tW98Eq9DBNye0fKzt+aX+YB3Cye4gS2qlMpg3aTJEjCcpyLxUMFbCSbnVTG6VvBC1J5t
-         w8OtPs93o/GUZKNVIa+3/nRvZybyH+SJGZH5Itg77WKZEm/vHBi9To8/I7n6xOkVUZht
-         vA6dMFb760e+KJ8TxmBL99QkbgWEfWRV4IhSAKhfaQx/ca8EekJCKzExsXBdp0YmH+6G
-         GVUbM9r+Rxt4zNXWvvqw6RpP+fkr1i1ag6wRzf3hD22JwRPOldX+On8TigBAauqC/vvt
-         dG2w==
-X-Gm-Message-State: AOAM533R+BBHY5N88LUy69AGxXwGQcgQx2/EksWPpRc2fM/He8MzEXi3
-        sFQ5wq8x9k2Ou5JuEe0IdGQ=
-X-Google-Smtp-Source: ABdhPJzO/bwJZAuNb/YObVBnUoezD2/wuk46qw3zm3oPQ0zePvcUEqZbtucXf7YxO+GRY3zW3EEJ8Q==
-X-Received: by 2002:a05:6e02:1aa2:: with SMTP id l2mr65090ilv.111.1644374258027;
-        Tue, 08 Feb 2022 18:37:38 -0800 (PST)
-Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
-        by smtp.gmail.com with ESMTPSA id p5sm8957352iof.50.2022.02.08.18.37.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Feb 2022 18:37:37 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailauth.nyi.internal (Postfix) with ESMTP id 1FF9227C0054;
-        Tue,  8 Feb 2022 21:37:35 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Tue, 08 Feb 2022 21:37:36 -0500
-X-ME-Sender: <xms:7ygDYjr7dx3TR8Q-fRFbaegqjzVPWZMZYv2TxueDedGvDmEB85KdNg>
-    <xme:7ygDYtovOoWQe4OCsCAFASQR92NIDYQg-14X3R6QIWN8AMnEXspcO8N2PITUvKA4B
-    -Wa_n7t-oGWnUiTfw>
-X-ME-Received: <xmr:7ygDYgOUHCE7QkWmVsKloXRIP6mF-OlH5D6NKGf2yQjj76ZuwOyFf-gB>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvvddrheekgdegiecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefhvffufffkofgggfestdekredtredttdenucfhrhhomhepuehoqhhunhcuhfgv
-    nhhguceosghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmqeenucggtffrrghtthgvrh
-    hnpeeijefhledvtdegudfhffeugeetveeluefgkeevhfeuudeuudfgveevhfetvdeuvden
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegsohhquh
-    hnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedqudej
-    jeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmhgvrd
-    hnrghmvg
-X-ME-Proxy: <xmx:7ygDYm4jzRc-M5hmb86t7Mbohn9y40_vJq62PExmC7lsAak20b8GkQ>
-    <xmx:7ygDYi6u2LkEKybkab_lWDVOdr1FwqgUmFS-VggvsKwDY_cHGhNmyQ>
-    <xmx:7ygDYugZDsVYd2Y2Qy9EzVc0T99jB1AbgXPICSajc8Ksz0ZHsxl6Qg>
-    <xmx:7ygDYiz5HXC2wyrtVIbrimxH8rIlMSDm28FHsgwvLqgK9gg7YVQAhE4ZOqc>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 8 Feb 2022 21:37:34 -0500 (EST)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Wei Liu <wei.liu@kernel.org>
-Cc:     Sunil Muthuswamy <sunilmut@linux.microsoft.com>,
-        Boqun Feng <boqun.feng@gmail.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [RFC PATCH] PCI: hv: Avoid the retarget interrupt hypercall in irq_unmask() on ARM64
-Date:   Wed,  9 Feb 2022 10:37:20 +0800
-Message-Id: <20220209023722.2866009-1-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=cWnnC6X/3LfUNvFejjOf/o+BhqQPL36rKux7esaUqwU=;
+        b=p7aBBjOrrzAFPKHDDtSbHGAbb4gmBD43BPx/twURg24jDZsllQA359XLBZk68RkBKv
+         YV24kzNfX2Tu3peia4DZ50gV9q4NGoxisWSBM2sLJb/ahImRkB+rktG89LDzSoO7fE2d
+         7nn288CGfOFuJGTAjygLmSGdxIhUB7okhSgsBAUO2Ft83yUTo5q/Rxe3kD8p5zrf0yqQ
+         IZLTKaU6rjZw071WdNzxxOzqzh7vX1O91yxKx40wbhoD9ilxsJ1lh3rdWhHkPhEYMtFa
+         HhxS0x1dEAjpl4HMa2JUUUXoYkiFz1QzRB1BGPUkcDmA4+kz2EH2soWo0ajGLKFfBYzN
+         T0zw==
+X-Gm-Message-State: AOAM530Aoi5HctSKIvi5PK7+w6JBjXEFYCx6zFXrS+2cCsNGe07X6Pc8
+        UUsNQgpV37liodgF2vg8hdF9y776V7nNd9S5zbk=
+X-Google-Smtp-Source: ABdhPJwuNUoPvXQy2DbyC89NZT6PfpXs+807StThbTX6vEtShDzyDKiD5rl4tnx5cTsfI98LYMsM7moX2a/KWHAlsZM=
+X-Received: by 2002:a05:6402:440a:: with SMTP id y10mr199806eda.215.1644372106542;
+ Tue, 08 Feb 2022 18:01:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1644290735-3797-1-git-send-email-hongxing.zhu@nxp.com>
+ <1644290735-3797-8-git-send-email-hongxing.zhu@nxp.com> <CAOMZO5ALthc7zZEYZX2YHam2f3C1RmOr4CHLRjHSip7-44tL6Q@mail.gmail.com>
+ <AS8PR04MB86768828ED6B984C674CE2298C2E9@AS8PR04MB8676.eurprd04.prod.outlook.com>
+In-Reply-To: <AS8PR04MB86768828ED6B984C674CE2298C2E9@AS8PR04MB8676.eurprd04.prod.outlook.com>
+From:   Fabio Estevam <festevam@gmail.com>
+Date:   Tue, 8 Feb 2022 23:01:36 -0300
+Message-ID: <CAOMZO5CUbY_SyjDpnFd-EPy+K+MYA6nn=hk_XpZnAFdJP53CFQ@mail.gmail.com>
+Subject: Re: [PATCH v6 7/8] PCI: imx6: Disable enabled clocks and regulators
+ after link is down
+To:     Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Brown <broonie@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Sascha Hauer <kernel@pengutronix.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On ARM64 Hyper-V guests, SPIs are used for the interrupts of virtual PCI
-devices, and SPIs can be managed directly via GICD registers. Therefore
-the retarget interrupt hypercall is not needed on ARM64.
+Hi Richard,
 
-The retarget interrupt hypercall related code is now put in a helper
-function and only called on x86.
+On Tue, Feb 8, 2022 at 10:56 PM Hongxing Zhu <hongxing.zhu@nxp.com> wrote:
 
-Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
----
- drivers/pci/controller/pci-hyperv.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+> Do you mean that we should ignore the return of dw_pcie_host_init() and
+> finish the _probe without an error return?
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 20ea2ee330b8..80aa33ef5bf0 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1457,7 +1457,7 @@ static void hv_irq_mask(struct irq_data *data)
- }
- 
- /**
-- * hv_irq_unmask() - "Unmask" the IRQ by setting its current
-+ * __hv_irq_unmask() - "Unmask" the IRQ by setting its current
-  * affinity.
-  * @data:	Describes the IRQ
-  *
-@@ -1466,7 +1466,7 @@ static void hv_irq_mask(struct irq_data *data)
-  * is built out of this PCI bus's instance GUID and the function
-  * number of the device.
-  */
--static void hv_irq_unmask(struct irq_data *data)
-+static void __hv_irq_unmask(struct irq_data *data)
- {
- 	struct msi_desc *msi_desc = irq_data_get_msi_desc(data);
- 	struct hv_retarget_device_interrupt *params;
-@@ -1569,6 +1569,13 @@ static void hv_irq_unmask(struct irq_data *data)
- 	if (!hv_result_success(res) && hbus->state != hv_pcibus_removing)
- 		dev_err(&hbus->hdev->device,
- 			"%s() failed: %#llx", __func__, res);
-+}
-+
-+static void hv_irq_unmask(struct irq_data *data)
-+{
-+	/* Only use a hypercall on x86 */
-+	if (IS_ENABLED(CONFIG_X86))
-+		__hv_irq_unmask(data);
- 
- 	if (data->parent_data->chip->irq_unmask)
- 		irq_chip_unmask_parent(data);
--- 
-2.35.1
+Yes, we should not return an error on probe if the link is down.
 
+Thanks
