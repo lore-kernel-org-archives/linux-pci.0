@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2C3C4167B
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Feb 2022 19:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4AF1C4167E
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Feb 2022 19:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352880AbiBKTfP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1352885AbiBKTfP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 11 Feb 2022 14:35:15 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50506 "EHLO
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352829AbiBKTfN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Feb 2022 14:35:13 -0500
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2060.outbound.protection.outlook.com [40.107.93.60])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2143CF2;
-        Fri, 11 Feb 2022 11:35:11 -0800 (PST)
+        with ESMTP id S1352864AbiBKTfO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Feb 2022 14:35:14 -0500
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2082.outbound.protection.outlook.com [40.107.243.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7B71CF6;
+        Fri, 11 Feb 2022 11:35:12 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JJHAp1QTmU0914EHx1wivwcgeL+5tdtaBJmvm4TvOJ9MqdPry1Cbo5tdRbNq/RxSVNYPj5+meRCQ30G3sH3wYdfyNhbzEqD7rFgozxp+KFWEcZQd36k5hY8H2rchuMEIfw/laCuRjxMO3mOzojpxT8exTdod+jMjDgQACaMApEzyvfdtTdYqGXVtDbKkQTFRkKDDRNtv8a2I47a8FWL3VZP+Z+VMa1hPayf7fuUDfY+Vq7z9t/uoG3Ps0KvAsfHGB0xngpWxnGGjOfQa86EHY8/9wnvhotTYcJn/7GjkAOM/wEpnaeHjgXP/9rIAraR0ETb39V9d45eOYdCDLPBXIg==
+ b=oZy8MyFSrkZHOFgRxq0cIWARgggmesxdgc7UR3jVZTYntAg1OmvfhJFIKd8Is06RX7lh5VDAP/Nu3XQPkZSeKW/CVDKkp8P7J/mbTUIugnVuhGvomFLI/JzAMwu8KIQxQt6Pt/QziaJIknlDaTRARbYDBqRPb3sQsnfjJ5sbOuLOrYKEAIWj+XoP3sqXtbW8/V4uY/W8oB73o1mVm3y2VOtuOXwPWeFIqCPSpvFTiQVE6zeBoKqIs1qpItFeJTcPDyDScoaEK/AtMyPuGiNSAunyZQIco+XFlX+D/d62lT9UQnNz88R7UbfmvGjCvdx6pblsXnfLUTJgpMedfHJUeA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vIkldd+mSTMirDIwTkL7+B9408OpGjYa1NXGn5+sAX8=;
- b=FlH1+Q7PtjEPze/EM1cfc8n1SgReT0cKU77cOCD9B372L5P/3ep/pGZUjnByeq6JK/hYFwYN1wSCSYI7RVSEOcX0jIWxYky7bfZLm1B/XDZJXXOcFoK6Jmx5fR1/c0vYhnMLumzJyrGjQgq6wbyVCAOONXnFaHcBCOYObYOhW+uzGQayQ0cDwSThEHaj6sbjo6CUvL3R8jLUTJKV2tmWdkRPDs1srLV0oRJb0Ds7gCHCcrNkeK+IU52FOBMLKoo0G87LBisf0ZytpRgnj9GOkupTXWelO2hAZlowVscpHmMenlwMNCubNq4POc3d0JATJbvQXKZBDVB3VVeZ8xoN7w==
+ bh=j+yYlcNVjrRyhSY8nGocSvKs3OLExLa17+KyA6OwVXE=;
+ b=Au9/ivhg143laH0TyCcBqcTFtFc7oBOzWhEfN42btTVtSlkHzZ7Pyh6vdo8wD23potuVIRrJmrYrQtGHp6P+Pnze/0LX0wAjanex4QiTHjR2OcF/0i43TnK/M1ZegufURRbklaQ5pqXfWdlkhXewJop6825GJdybn6uyBBVtLf+qIsIFdfnlEOVWCghRU1ObFkJ43VI8hayEaxMyjbHRKkG/QGjDo6vBD6Jh/KhX/DgX+/7XdPUn3ejilziqJVw3nT41dNmo0wVjblp6anLMH5jwQf2BmjR5Y8REhdyq/1ddjZaa3q/ZVCwXxQMAO5K3atzZeAz7GtGd3TgYrPWIHA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vIkldd+mSTMirDIwTkL7+B9408OpGjYa1NXGn5+sAX8=;
- b=achVuAZezkGvig3Mi6+2rYdbkQhhkl59dUKW3tY6Uxr6CNoolebvJ8vkJtCTeZbjzDFsnL0fptJJcfsnPR8Pm+degvcqbxV0k50qoUklJLVHNGdFmIU1SYEU2n+FwcCvmLnNKIKtK/oxyDQvT0v2NwWWwCgZkc4+nqEi4pb9PUQ=
+ bh=j+yYlcNVjrRyhSY8nGocSvKs3OLExLa17+KyA6OwVXE=;
+ b=nTSWaxHPNl7qxo6ThxyLTOHcZUtskH6/eUZ78AEeJ3drOkksbkcIpt79KBgm0HJ+ZmOMwRs0vtxm2XwW6cTeykq314UQW+3vVa1zVPXzT1MuxW4ijtmHgWL+ExC8w/QBxHPJhR/Xws2z4MEL8udS2Z5+AmQHvPYuHCam83wnZtw=
 Received: from DS7PR07CA0008.namprd07.prod.outlook.com (2603:10b6:5:3af::21)
- by CH2PR12MB3734.namprd12.prod.outlook.com (2603:10b6:610:2a::31) with
+ by CY4PR1201MB2548.namprd12.prod.outlook.com (2603:10b6:903:d8::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.11; Fri, 11 Feb
- 2022 19:35:09 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4951.16; Fri, 11 Feb
+ 2022 19:35:11 +0000
 Received: from DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:3af:cafe::7b) by DS7PR07CA0008.outlook.office365.com
+ (2603:10b6:5:3af:cafe::ec) by DS7PR07CA0008.outlook.office365.com
  (2603:10b6:5:3af::21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.13 via Frontend
- Transport; Fri, 11 Feb 2022 19:35:09 +0000
+ Transport; Fri, 11 Feb 2022 19:35:10 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  DM6NAM11FT024.mail.protection.outlook.com (10.13.172.159) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4975.11 via Frontend Transport; Fri, 11 Feb 2022 19:35:09 +0000
+ 15.20.4975.11 via Frontend Transport; Fri, 11 Feb 2022 19:35:10 +0000
 Received: from localhost.localdomain (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Fri, 11 Feb
- 2022 13:35:08 -0600
+ 2022 13:35:09 -0600
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
@@ -69,9 +69,9 @@ CC:     Andreas Noever <andreas.noever@gmail.com>,
         "Lukas Wunner" <lukas@wunner.de>, <Alexander.Deucher@amd.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v3 05/12] PCI: Detect root port of internal USB4 devices by `usb4-host-interface`
-Date:   Fri, 11 Feb 2022 13:32:43 -0600
-Message-ID: <20220211193250.1904843-6-mario.limonciello@amd.com>
+Subject: [PATCH v3 07/12] PCI: Set ports for discrete USB4 controllers appropriately
+Date:   Fri, 11 Feb 2022 13:32:45 -0600
+Message-ID: <20220211193250.1904843-8-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220211193250.1904843-1-mario.limonciello@amd.com>
 References: <20220211193250.1904843-1-mario.limonciello@amd.com>
@@ -83,100 +83,113 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e5cd718b-5a36-46f2-6404-08d9ed959d2b
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3734:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR12MB3734C0225710D1D8691FE578E2309@CH2PR12MB3734.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Office365-Filtering-Correlation-Id: 434e9cb5-fad7-4bc9-c74c-08d9ed959e19
+X-MS-TrafficTypeDiagnostic: CY4PR1201MB2548:EE_
+X-Microsoft-Antispam-PRVS: <CY4PR1201MB25487007F73CE19F320B5AB3E2309@CY4PR1201MB2548.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Agiafcea96UVy7gUXN6a8r6jgp4icQQyx6kmdM6mXKf+dyRpVfjZuQ4dZioc0ZkIucoWsRuCs4XSMGyaVBEQ0D3q2Vlt+Vt5gtpOnhFak883MM7YQgG5qVR3z8TAb5RV66UDGTvHJGvSf1rTDaZuNNXoak/NfnBQBh9Xbk40odhS1DUTNG8d2xXI97Q2ohMp77G2ETEkyPsNUJanCv/WHEecEzI7oxxMnajsfzmmmQwQB1L9TqjVUV7sGFVlzyVKAirnure5AOugk1Nf4YjEKJW1YJiq1VubmPxDlp7mIQML5jdxYQtDcmnMMHKKZFF5AxmQ7pjuWyW6cjkF9PdpPFb7CjahF6zu1jpUcGeZDzMt+Au2S2onK89Yrhh3yREvtgfsZtarXCcxOipyhUXBSUS1uuP331COAmPN84SwDRLqK1dTBoNxaurTsu7RJRScJ5m2Rlt3h40JKJYHFPEK2nh66DQ0NVkNTD8IJLQj6p0mTeNk99mqagC1jSaLWFADhSVl+enFewfxJERGp2AgibBUrTnDX3ZUK6KG9dZ3hSRNHiPZ3jZH8Lw4Amdj8BVkzqZt3ysnAvDu8aF2qm3rs5KI1BS/91e6n1yfNtjk+tGWysNYhQu2MgTF5RXg9HrmSR3MoPWQmn/ZGDFzhBsnhWqJpW1msJhCTRfPrzz8WuDr2QSgXZZSC3nbQLgv2spvHubudXz0vgeHfgyZU13Y0qAYdUgGdd18tNYSDMeHrMnsQ4l6cQ9Lpg+wBisv7Yx9tyUD8PnWCZ7xV3AnsSpISTQs++NOr9yKCTP9Ql9Z9q5oAiEVcz0ZGurnUoL4/D2p
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(26005)(186003)(4326008)(336012)(426003)(70586007)(47076005)(8936002)(16526019)(82310400004)(86362001)(2616005)(7416002)(81166007)(2906002)(8676002)(1076003)(70206006)(36860700001)(356005)(5660300002)(110136005)(36756003)(44832011)(40460700003)(6666004)(966005)(508600001)(316002)(54906003)(81973001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: F5O6+QgxGR36QvHLaPGl32x5V8Y/U1B3WT1YxOi7BZAcMYe4vaeY/vvm3PHY295srBCocPGFAm1whwu/Hb7Q3ED17b8G+OlG++0YRY6HmtsedICbsn/116k3zGpJn7LUE2EZnAJDgFO4hmLpZgQ2fpjLvU0Yl0y6Fo1pbD2A9WOtCNWkkdzi1mrZlUQHV9JNVFUzovdcbuMOri3J2KrNOTF5/V3qBB61VxuOnLsoY6b7Y5efFQhM1WDLJAU5S2F9qZS23hT9hX1C/e89Bw09Js4L1rHjXr3A8bEa8ohBu5GnQc3hI2JPwyFaFzmVkvIkSP9rV7uBX+MpCQ6XZdBf+7diFkNcLgushx746Ikh4DDkys/4SZEyJuAqMgRZvHaikKaWI1/pqfYiAxAVNYbD8u7cJxXTsIKMH5Z67J6UMQkcDKdH687eptkhs6reRVm9CDjc/96FsFzOo2a5Xkrd3juJbDCAPSF/o/fJYW3orpqYuqQz2ZwI9XDKV8c5/F23vzZT/e19wkvGF3rCz10apnPsS0AfAP8qVaHvuOeZU0fbrtrmmgQgg8dbjTD1HSj1DWSazCCCcS3trBXZHbbXN7hROsIImmM8oAIJ7EXuNnyg0xMnUI+qcVs6Wu5YyK3GomnRIekuezHTx06IWpfxE/91ZH7TJUz1TU6v/RvdHpR5COWiKAKiupVOw5ureuUTViI263y/2ydmc5v6KHPxT+GHrpfrf2dvWrihoJen7TDIXd3bOyG8UzVopyEIRu+SNsXdgH3O7PlWd8gN0KorYl5LIejA9AjS82+97Vnna8E=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(46966006)(36840700001)(16526019)(336012)(186003)(26005)(1076003)(44832011)(316002)(356005)(2906002)(7416002)(47076005)(81166007)(966005)(2616005)(36860700001)(426003)(86362001)(36756003)(8936002)(70586007)(5660300002)(83380400001)(82310400004)(54906003)(110136005)(4326008)(8676002)(6666004)(508600001)(40460700003)(70206006)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Feb 2022 19:35:09.1318
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Feb 2022 19:35:10.6941
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e5cd718b-5a36-46f2-6404-08d9ed959d2b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 434e9cb5-fad7-4bc9-c74c-08d9ed959e19
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB3734
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR1201MB2548
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The root port used for PCIe tunneling should be marked as removable to
-ensure that the entire chain is marked removable.
+Discrete USB4 controllers won't have ACPI nodes specifying which
+PCIe or XHCI port they are linked with.
 
-This can be done by looking for the device property specified in
-the ACPI tables `usb4-host-interface`.
+In order to set the removable attribute appropriately, use the
+USB4 DVSEC extended capabability set on these root ports to determine
+if they are located on a discrete USB4 controller.
 
 Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Link: https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#mapping-native-protocols-pcie-displayport-tunneled-through-usb4-to-usb4-host-routers
+Link: https://usb.org/sites/default/files/USB4%20Specification%2020211116.zip
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- drivers/pci/pci-acpi.c | 10 ++++++++++
- drivers/pci/pci.h      |  5 +++++
- drivers/pci/probe.c    |  1 +
- 3 files changed, 16 insertions(+)
+ drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
+ include/linux/pci_ids.h |  2 ++
+ 2 files changed, 35 insertions(+)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a42dbf448860..6368e5633b1b 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1391,6 +1391,16 @@ void pci_acpi_cleanup(struct device *dev, struct acpi_device *adev)
- 	}
- }
- 
-+bool pci_acpi_is_usb4(struct pci_dev *dev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
-+
-+	if (!adev)
-+		return false;
-+	return fwnode_property_present(acpi_fwnode_handle(adev),
-+				       "usb4-host-interface");
-+}
-+
- static struct fwnode_handle *(*pci_msi_get_fwnode_cb)(struct device *dev);
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3d60cabde1a1..359607c0542d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -695,6 +695,7 @@ void acpi_pci_refresh_power_state(struct pci_dev *dev);
- int acpi_pci_wakeup(struct pci_dev *dev, bool enable);
- bool acpi_pci_need_resume(struct pci_dev *dev);
- pci_power_t acpi_pci_choose_state(struct pci_dev *pdev);
-+bool pci_acpi_is_usb4(struct pci_dev *dev);
- #else
- static inline int pci_dev_acpi_reset(struct pci_dev *dev, bool probe)
- {
-@@ -734,6 +735,10 @@ static inline pci_power_t acpi_pci_choose_state(struct pci_dev *pdev)
- {
- 	return PCI_POWER_ERROR;
- }
-+static inline bool pci_acpi_is_usb4(struct pci_dev *dev)
-+{
-+	return false;
-+}
- #endif
- 
- #ifdef CONFIG_PCIEASPM
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e41656cdd8f0..2693211d31cf 100644
+index 67ca33188cba..1ed3e24db11e 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1610,6 +1610,7 @@ static void pci_set_removable(struct pci_dev *dev)
- 	 * exposed as "removable" to userspace.
- 	 */
+@@ -25,6 +25,8 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
+ 
++#define PCI_DVSEC_ID_USB4	0x23
++
+ static struct resource busn_resource = {
+ 	.name	= "PCI busn",
+ 	.start	= 0,
+@@ -1590,6 +1592,36 @@ static void set_pcie_untrusted(struct pci_dev *dev)
+ 		dev->untrusted = true;
+ }
+ 
++static bool pci_is_discrete_usb4(struct pci_dev *dev)
++{
++	int dvsec_val = 0, pos;
++	u32 hdr;
++
++	/* USB4 spec says vendors can use either */
++	pos = pci_find_dvsec_capability(dev,
++					PCI_VENDOR_ID_INTEL,
++					PCI_DVSEC_ID_USB4);
++	if (pos) {
++		dvsec_val = 0x06;
++	} else {
++		pos = pci_find_dvsec_capability(dev,
++						PCI_VENDOR_ID_USB_IF,
++						PCI_DVSEC_ID_USB4);
++		if (pos)
++			dvsec_val = 0x01;
++	}
++	if (!dvsec_val)
++		return false;
++
++	pci_read_config_dword(dev, pos + PCI_DVSEC_HEADER2, &hdr);
++	if ((hdr & GENMASK(15, 0)) != dvsec_val)
++		return false;
++	/* this port is used for either NHI/PCIe tunnel/USB tunnel */
++	if (hdr & GENMASK(18, 16))
++		return true;
++	return false;
++}
++
+ static void pci_set_removable(struct pci_dev *dev)
+ {
+ 	struct pci_dev *parent = pci_upstream_bridge(dev);
+@@ -1612,6 +1644,7 @@ static void pci_set_removable(struct pci_dev *dev)
  	if (vsec ||
-+	    pci_acpi_is_usb4(dev) ||
+ 	    dev->class == PCI_CLASS_SERIAL_USB_USB4 ||
+ 	    pci_acpi_is_usb4(dev) ||
++	    pci_is_discrete_usb4(dev) ||
  	    (parent &&
  	    (parent->external_facing || dev_is_removable(&parent->dev))))
  		dev_set_removable(&dev->dev, DEVICE_REMOVABLE);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 61b161d914f0..271326e058b9 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -3097,4 +3097,6 @@
+ 
+ #define PCI_VENDOR_ID_NCUBE		0x10ff
+ 
++#define PCI_VENDOR_ID_USB_IF		0x1EC0
++
+ #endif /* _LINUX_PCI_IDS_H */
 -- 
 2.34.1
 
