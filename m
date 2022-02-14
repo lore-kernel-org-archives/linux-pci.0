@@ -2,200 +2,98 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F27CC43217
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 10:37:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFAD5C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 10:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348400AbiBNKhN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 05:37:13 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:48322 "EHLO
+        id S1349097AbiBNKqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 05:46:48 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349509AbiBNKgf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 05:36:35 -0500
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3B8521808
-        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 02:02:51 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id j4so10120549plj.8
-        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 02:02:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=3FWzPND9WvW0DCoLJOyDC1qp18zJ90FPtYnzhOK7Lxo=;
-        b=KkDqPZYoT1GxMGWLVXlXtePwZUwNphej5qr/aPTYk+3Ur0Yl0owRHR/BjCbIQnXSbV
-         ocDqX6cwHSGvVdaMbe26s7imwgXGNnpOm6D00/7ZV6l3VGycQc+weDvNfsnPF93+OSDu
-         nZWwjjvDVSCzGYbW0VcX6uU0glqmbj5qgV78eAtrAR3XGpc/BgFwjWWvtg5cX73JvYzW
-         8L1GE4GBmGlIJxUevAXtbX8F6/ysrVMd/jMIAdf3JPNmqCpwl0KxL04TOO4c5hD6m06A
-         wXj77yppe99ACupcU9geF6iMo6T4YNGk9lNFbiP61OAg0Fk0CAtfVRrBo0vrrqRqpc41
-         smOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=3FWzPND9WvW0DCoLJOyDC1qp18zJ90FPtYnzhOK7Lxo=;
-        b=rvqNHa9vPcS6HAvTVi1iBuoN0wUKVWsODuQYGp9K89VSkQKIYyzbuJF4CFo9oIFSB6
-         RpCCoflt5kAV2IJ1RnB9dHrGk9pSe2Bcyv3IwVaPNoz57sE8K4J0bZ/Rm3mZ7moYx8cr
-         jH0c+tPHQod/4HAAtG/xWqg8Uy4qW8oSrlRUHVvUd5T5Ksw/cHO/CZlqYH6qUyj4MxMo
-         9sKykeL/JPqgAuRrTY5ZBzXVi06yw5oNZ1fR4WQ81RyVyoD+EtEm4flJ2Bl2ie2Qd9NF
-         W0xiPdZHvoDsPQT1mY9g0hNYi9xTcMFP489FkkU0k4Msl1SiKlfpQhMpE8j0P7L0ghaA
-         ybow==
-X-Gm-Message-State: AOAM533D8tUUYlt1ZipLyK4S2h/QZTjzglDius2o6t2kNc5RIaVFk5vJ
-        7GVTlPVrHd99UipI/4TWJL8Y
-X-Google-Smtp-Source: ABdhPJyJ64qK8l+dVZGI6z1v97NAnYSzBQDf2NqUErR/7NdZCcUOASry2EezNzMjZnYRDuGM6dIBPg==
-X-Received: by 2002:a17:902:e552:: with SMTP id n18mr13557384plf.152.1644832963831;
-        Mon, 14 Feb 2022 02:02:43 -0800 (PST)
-Received: from thinkpad ([157.51.138.108])
-        by smtp.gmail.com with ESMTPSA id kx5sm13370870pjb.16.2022.02.14.02.02.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Feb 2022 02:02:43 -0800 (PST)
-Date:   Mon, 14 Feb 2022 15:32:32 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Prabhakar <prabhakar.csengg@gmail.com>,
-        Biju Das <biju.das.jz@bp.renesas.com>
-Subject: Re: [RFC PATCH 3/5] misc: pci_endpoint_test: Add driver data for
- Renesas RZ/G2{EHMN}
-Message-ID: <20220214100116.GK3494@thinkpad>
-References: <20220126195043.28376-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20220126195043.28376-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        with ESMTP id S1349022AbiBNKpc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 05:45:32 -0500
+Received: from office.oderland.com (office.oderland.com [91.201.60.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F07574DC1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 02:07:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=oderland.se
+        ; s=default; h=Content-Transfer-Encoding:Content-Type:Cc:To:Subject:From:
+        MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=DBcZFOZFOzAo0487ORwdyo67faVNaoS7BuODPg0NpSc=; b=G2iBx9UAIY7r4NBbcXyTDLChbw
+        Zgw1vyY89SDtdMDHqsdCOLiyD0ju+cpr2blUyln1I+Lq8jk+Pugfx0BpX9MHsjvZGwlvDOY8EdrcN
+        jGT5YBha3W4hhznMoEJ4ehSglNSQ0Mbplhw5Ws2ylCjociLp6FRMi3kOkO3pHh8eBlAtoVvEMFKlT
+        pNH6WgHV7uuMd1VUyrROPx8wiCaTbNyzotCCp5sYdwznYq0yp4Q6OceiB1Nb56b5Uk+DtayFC/NpD
+        uSpOYKz3sPZBukIkgAMdmvd7rCyiCiXWueogd/tWwZjkfgr3VCdmLV1E7dsuX3F10b7HqVqhgSNZj
+        uBVcE0Wg==;
+Received: from [193.180.18.160] (port=46784 helo=[10.137.0.14])
+        by office.oderland.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <josef@oderland.se>)
+        id 1nJYGq-00FJ2L-Q4; Mon, 14 Feb 2022 11:07:48 +0100
+Message-ID: <d818f9c9-a432-213e-4152-eaff3b7da52e@oderland.se>
+Date:   Mon, 14 Feb 2022 11:07:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220126195043.28376-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:97.0) Gecko/20100101
+ Thunderbird/97.0
+From:   Josef Johansson <josef@oderland.se>
+Subject: [PATCH v2] PCI/MSI: Correct use of can_mask in msi_add_msi_desc()
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Jason Gunthorpe <jgg@nvidia.com>
+Cc:     xen-devel <xen-devel@lists.xenproject.org>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - office.oderland.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - oderland.se
+X-Get-Message-Sender-Via: office.oderland.com: authenticated_id: josjoh@oderland.se
+X-Authenticated-Sender: office.oderland.com: josjoh@oderland.se
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 26, 2022 at 07:50:41PM +0000, Lad Prabhakar wrote:
-> Add "dmac_data_alignment" member (indicating the alignment requirement
-> for internal DMAC for data transfers) to struct pci_endpoint_test_data
-> and add driver_data to Renesas RZ/G2{EHMN}.
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> ---
->  drivers/misc/pci_endpoint_test.c | 40 ++++++++++++++++++++++++++------
->  1 file changed, 33 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 8f786a225dcf..0a00d45830e9 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -116,6 +116,7 @@ struct pci_endpoint_test {
->  	struct miscdevice miscdev;
->  	enum pci_barno test_reg_bar;
->  	size_t alignment;
-> +	size_t dmac_data_alignment;
+From: Josef Johansson <josef@oderland.se>
 
-Alignment is a generic requirement, so this could be "dma_alignment" or
-"data_alignment". Eventhough the only current user is internal DMA, this can
-also be used by others in the future.
+PCI/MSI: Correct use of can_mask in msi_add_msi_desc()
+    
+Commit 71020a3c0dff4 ("PCI/MSI: Use msi_add_msi_desc()") modifies
+the logic of checking msi_attrib.can_mask, without any reason.
+    
+This commits restores that logic.
 
-Thanks,
-Mani
+Fixes: 71020a3c0dff4 ("PCI/MSI: Use msi_add_msi_desc()")
+Signed-off-by: Josef Johansson <josef@oderland.se>
 
->  	const char *name;
->  };
->  
-> @@ -123,6 +124,7 @@ struct pci_endpoint_test_data {
->  	enum pci_barno test_reg_bar;
->  	size_t alignment;
->  	int irq_type;
-> +	size_t dmac_data_alignment;
->  };
->  
->  static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-> @@ -368,8 +370,11 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test,
->  		goto err;
->  
->  	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
-> -	if (use_dma)
-> +	if (use_dma) {
->  		flags |= FLAG_USE_DMA;
-> +		if (test->dmac_data_alignment)
-> +			size =  ALIGN(size, test->dmac_data_alignment);
-> +	}
->  
->  	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
->  		dev_err(dev, "Invalid IRQ type option\n");
-> @@ -502,8 +507,11 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test,
->  		goto err;
->  
->  	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
-> -	if (use_dma)
-> +	if (use_dma) {
->  		flags |= FLAG_USE_DMA;
-> +		if (test->dmac_data_alignment)
-> +			size =  ALIGN(size, test->dmac_data_alignment);
-> +	}
->  
->  	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
->  		dev_err(dev, "Invalid IRQ type option\n");
-> @@ -600,8 +608,11 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test,
->  		goto err;
->  
->  	use_dma = !!(param.flags & PCITEST_FLAGS_USE_DMA);
-> -	if (use_dma)
-> +	if (use_dma) {
->  		flags |= FLAG_USE_DMA;
-> +		if (test->dmac_data_alignment)
-> +			size =  ALIGN(size, test->dmac_data_alignment);
-> +	}
->  
->  	if (irq_type < IRQ_TYPE_LEGACY || irq_type > IRQ_TYPE_MSIX) {
->  		dev_err(dev, "Invalid IRQ type option\n");
-> @@ -787,6 +798,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
->  		test->test_reg_bar = test_reg_bar;
->  		test->alignment = data->alignment;
->  		irq_type = data->irq_type;
-> +		test->dmac_data_alignment = data->dmac_data_alignment;
->  	}
->  
->  	init_completion(&test->irq_raised);
-> @@ -948,6 +960,12 @@ static const struct pci_endpoint_test_data j721e_data = {
->  	.irq_type = IRQ_TYPE_MSI,
->  };
->  
-> +static const struct pci_endpoint_test_data renesas_rzg2x_data = {
-> +	.test_reg_bar = BAR_0,
-> +	.irq_type = IRQ_TYPE_MSI,
-> +	.dmac_data_alignment = 8,
-> +};
-> +
->  static const struct pci_device_id pci_endpoint_test_tbl[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
->  	  .driver_data = (kernel_ulong_t)&default_data,
-> @@ -965,10 +983,18 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
->  	  .driver_data = (kernel_ulong_t)&am654_data
->  	},
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1),},
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774A1),
-> +	 .driver_data = (kernel_ulong_t)&renesas_rzg2x_data,
-> +	},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),
-> +	 .driver_data = (kernel_ulong_t)&renesas_rzg2x_data,
-> +	},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),
-> +	 .driver_data = (kernel_ulong_t)&renesas_rzg2x_data,
-> +	},
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),
-> +	 .driver_data = (kernel_ulong_t)&renesas_rzg2x_data,
-> +	},
->  	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
->  	  .driver_data = (kernel_ulong_t)&j721e_data,
->  	},
-> -- 
-> 2.25.1
-> 
+---
+v2: Changing subject line to fit earlier commits.
+
+Trying to fix a NULL BUG in the NVMe MSIX implementation I stumbled upon this code,
+which ironically was what my last MSI patch resulted into.
+
+I don't see any reason why this logic was change, and it did not break anything
+correcting the logic.
+
+CC xen-devel since it very much relates to Xen kernel (via pci_msi_ignore_mask).
+---
+
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index c19c7ca58186..146e7b9a01cc 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -526,7 +526,7 @@ static int msix_setup_msi_descs(struct pci_dev *dev, void __iomem *base,
+ 		desc.pci.msi_attrib.can_mask = !pci_msi_ignore_mask &&
+ 					       !desc.pci.msi_attrib.is_virtual;
+ 
+-		if (!desc.pci.msi_attrib.can_mask) {
++		if (desc.pci.msi_attrib.can_mask) {
+ 			addr = pci_msix_desc_addr(&desc);
+ 			desc.pci.msix_ctrl = readl(addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 		}
+
+--
+2.31.1
+
