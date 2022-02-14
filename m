@@ -2,163 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9AD9C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:46:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C116C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 16:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356020AbiBNPql (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 10:46:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40994 "EHLO
+        id S1356121AbiBNQGI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 11:06:08 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356016AbiBNPqk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:46:40 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2063.outbound.protection.outlook.com [40.107.237.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A28E826D;
-        Mon, 14 Feb 2022 07:46:32 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WBUx11nm1limaV6Gigylear8n+1NcR7CQZpQJCri+a93uycig8RHM18RlKYDs7wbCurr6JomAUXjyJhiBUEp/7QBh5EJaY1rDlBXanMD3ujg902O8EJXOidRnQt2Hoszs6YSRFNSXkLVVDjPzZsHJLGLF1pL9ysHIiXV3zMLL+Muv35DuhM9vNw04o4PoXx3rHW0LmrMnPr9IVDxSzfJ/bBWXQ7PBOOA2c+Ny3k65LdQjYAnpbG8bkNbtmwuT1LzW3SSi9B2+NLWvaECSdxPa/pVlA2AO9H1khxYFBijTaDeGRsitL8x/1AEiYLG7oPGZj6vtdYmR9NtM8iGww2YvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2wsG1hr8343sJCB58vClGdnUh/toyAKtwzcI63W5/LM=;
- b=nN2PSia7T+EqLQw0x7QXNgcxTe7APktp/K25gxUrn2GPMirmDbPmOq7zLdwKpYMncQYlAqmlLqJ3q+IE3RY5v4SlmlcqF9RuIbox42o0NjSJymH6RFdbQNRC2yi31+rRwNuUu7gEc/BNlcHwjpjE2Tw4LRdU76e1zB0El7XFfpts3M+wfwY2WlUvrBYOEpa5lyVSgBJ/5hum6fJ8ik0g0vWEAlppypvG5NF+6oypIrWnDzV34Dn4aJgCEJNTXFQqxJ9zFkf2hlxL2646XKIaLmnfVu9ssqzXp9En9DEr13Wwo67g/RBvinY8vKkIfdEHjLUSH/Ab3CIDwXIg+ZCjCA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2wsG1hr8343sJCB58vClGdnUh/toyAKtwzcI63W5/LM=;
- b=LCB5/rG1HRF82NkcPPsmdTlsEtgAVKbBEZCUNbjsdrkEGD0i/JbZ0XpE7wil02qTg30lzqiFFtIRUR2SOnPEqXZA731jrt6vkQ97fkCsD5JDBli0FozSmv57RcMgYta42fxJpeTnVC5Yq1f8WcsFDlJGlgLoq52KRJ1MUsZCr1Ii4gYUMH9u+p9FY//STG0OenjbNx21m7xTmiDNjFmI8OOE1+XDFxf80Er5owFuCiIY3ipiqJT9ee/ITtlnVN+oGgl1vlE6zuF3gXIFy9mXTXggT4lQaDjt6DQYXjFWO1fHRYddlibQtt55nvXPEMiYwGHdxHijqCC0Q3VXvL7Dwg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by DM6PR12MB3770.namprd12.prod.outlook.com (2603:10b6:5:1c4::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.19; Mon, 14 Feb
- 2022 15:46:27 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3%4]) with mapi id 15.20.4975.019; Mon, 14 Feb 2022
- 15:46:27 +0000
-Date:   Mon, 14 Feb 2022 11:46:26 -0400
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Joerg Roedel <joro@8bytes.org>, Stuart Yoder <stuyoder@gmail.com>,
-        rafael@kernel.org, David Airlie <airlied@linux.ie>,
-        linux-pci@vger.kernel.org,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        Will Deacon <will@kernel.org>, Ashok Raj <ashok.raj@intel.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        kvm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Cornelia Huck <cohuck@redhat.com>,
-        linux-kernel@vger.kernel.org, Li Yang <leoyang.li@nxp.com>,
-        iommu@lists.linux-foundation.org,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [PATCH v1 3/8] iommu: Extend iommu_at[de]tach_device() for
- multi-device groups
-Message-ID: <20220214154626.GF4160@nvidia.com>
-References: <20220106022053.2406748-1-baolu.lu@linux.intel.com>
- <20220106022053.2406748-4-baolu.lu@linux.intel.com>
- <Ygo/eCRFnraY01WA@8bytes.org>
- <20220214130313.GV4160@nvidia.com>
- <Ygppub+Wjq6mQEAX@8bytes.org>
- <08e90a61-8491-acf1-ab0f-f93f97366d24@arm.com>
+        with ESMTP id S1356123AbiBNQGI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 11:06:08 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FFAE49F97;
+        Mon, 14 Feb 2022 08:06:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5B37DB811D8;
+        Mon, 14 Feb 2022 16:05:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5B92C340E9;
+        Mon, 14 Feb 2022 16:05:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644854758;
+        bh=n+vq94HfU6rfmXgl/cSDbf4YdmG3NAKMuYXhVK2OHso=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=JKD4aMf6G6NMoMHnydRADTZ/HkASxbT0EbypcNf4tE78AaTO9XPZi1Sjc+OQeBKW3
+         OgmaVhXXlxc7qBNdjvPNYyfThdIW/jqaEqL9zdNOSfChbQpaEi5p6VdSgmrwx55fCn
+         Gr+rpOXXEj0zp23Ho+W7zRiL4rKYMiouqbDoLP+q1/MusNBjbxURdqIRhL/lTyvTJO
+         YCLzytW30se3eOkYbVsvFLWXGMFJHN6m0mlw6tvgbdftqpeKxHqrfr87/Zw/gwAz/4
+         0TZ0D+XxRElfpKUXTCtWSkoiZxIoJlb8jx2oXsJZ6pozBE/djdJ8TDgzSQSWw95JbG
+         03DeTlwo63c2Q==
+Date:   Mon, 14 Feb 2022 10:05:56 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ben Dooks <ben.dooks@codethink.co.uk>
+Cc:     linux-kernel@vger.kernel.org, bhelgaas@google.comv,
+        linux-pci@vger.kernel.org, paul.walmsley@sifive.com,
+        greentime.hu@sifive.com, david.abdurachmanov@gmail.com,
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 1/2] PCI: fu740: fix finding GPIOs
+Message-ID: <20220214160556.GA9253@bhelgaas>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <08e90a61-8491-acf1-ab0f-f93f97366d24@arm.com>
-X-ClientProxiedBy: BL1PR13CA0131.namprd13.prod.outlook.com
- (2603:10b6:208:2bb::16) To MN2PR12MB4192.namprd12.prod.outlook.com
- (2603:10b6:208:1d5::15)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 22f3bb6a-1def-45e7-df32-08d9efd1295d
-X-MS-TrafficTypeDiagnostic: DM6PR12MB3770:EE_
-X-Microsoft-Antispam-PRVS: <DM6PR12MB37703E4CF699666A0E67EF3FC2339@DM6PR12MB3770.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pmTuuhCUeoxmFxNboGN2OxS0CEgCS3WLxp3djChTEtAQ14l0+Hhvx1IztLF4J/OgwZ9q2P06WAJARUjpyugyNw0rcdmwCe7bjgvL0k0OLpmEq4O8J8XaLAAU16FHs/iKhoC8YWyyn7L1t4g3625lXwJ+iWWYmy19Poe7jYi+n7sIbPsqz2FFuKa01qQOaj/RVOZWjFk27LsPCv2dgtOEbrqYZNFLNJ8bfp7v/eLd/W3FEHn5c01R+Yw1+M+4yDLsvIW4iLyLTB40wgOeTEv+61rxENgL32eZnqChsXwOnvSJ8SLZb1S5osn6miorRAinxv26mbllBhP29FSRZsWpIGk+T+fwrx6BhIIgODqOF+7LG0ofLDkByDkqj6pPnJI16842RSY9TkZ3nn8r4zfvKbjBsSmLvrEw9rTRFcV+KVaD/ruotJogPQvZSO0o0YHrEfI6c5J4sPSEJt8hkva2AeOjNdEztLIYn97sQzucUXXYOo9vXR62q6mBRB4O1OmM9t4NKdUvWTPrybsB87BIg1Lb5tNZ5VfixeEDWxuFNwEb57/cbVUFw58oTjLDJMstx7SkrG9IRwDOBhrfHNcrob1ce1QZDAu2ZEcqzD0Q75+ABbWd9Ll140QuVD4L60rI8654Kk7TLon8N0kriXA2Nw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6916009)(54906003)(6506007)(316002)(508600001)(6486002)(86362001)(6512007)(1076003)(5660300002)(26005)(186003)(2906002)(33656002)(2616005)(36756003)(8676002)(4326008)(66476007)(66556008)(66946007)(8936002)(7416002)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?rm3A8/+CCwywTETbcpetS1LxfwHQG9kU7qGb1ZgSuuTD74K8pFUjNa+JrHTi?=
- =?us-ascii?Q?PHWnR0h3AI4D2/8HgIigcEA8YMQFqDW6uQ0yYoPzBQPhvXXy++R7MuPS6dYb?=
- =?us-ascii?Q?5jCV2UohLGmFhgakv9NbWYN/XVMZRZq3W4F71moCrYSPX2JOOebkr1mRfLrd?=
- =?us-ascii?Q?hCex6ySGDOOBkAqgaiASbZkCchsonRiRbCoXQu9R6VMDHYuEXyA6U0YHXoiB?=
- =?us-ascii?Q?8heg1xHiyFN44A8uuONby5YSqOlQKcyCfUkkdvCx8NKELdcICrEE35UdoBgw?=
- =?us-ascii?Q?IYCUHAu+nkPGRHwQoAXj+pmc/5lhSyoae5e6Q2amcOiEP6PTdFV9AB05CpqY?=
- =?us-ascii?Q?66/LwKNyasYIS45E4+R9IywSGwk0IocN/4YqCNcyi8JNTnuXwNE5BOtz6M7x?=
- =?us-ascii?Q?PMFm4gnKjc/o9F3ZEt+AF4/bNWuJntxT6t+0vbDhIa0/I8gRZndaqGvSjkHa?=
- =?us-ascii?Q?KV0sBPl99bYFxVQwEsQaRCH2bBFmWIqp8DpNhbIXtLU9qUNlsJuAu3QgJFGK?=
- =?us-ascii?Q?H0Tc0MC0ZmHzTk1S0Yq1sc2EHJ0e2brh8tEkLQcprqy4qh9AV3jYDsqHO8po?=
- =?us-ascii?Q?9WAjNBP+FvQcOeN/ySfwet57sNUiB8ppNhJ9n+Tm6xb13dWp7yOjtMMx2x41?=
- =?us-ascii?Q?s+1zXLYVaKSQy+8xiGLH5QyF2SvOHRH0jObtZfyF3nxMTL7KfqWrO0ftSBP6?=
- =?us-ascii?Q?5XCNngDHWsos1aKJuzvDEWKqORG2f50tMBEuVvExK8SyvTEnBPZ+to2oGnit?=
- =?us-ascii?Q?A2eST6XNQTljlD01mRZENJHVI8Qv7zxco4QtAFmHdQRZvOK9KEelzte2kmik?=
- =?us-ascii?Q?6HhPeX2e9912L5YOPTfceCpLr/94GkIDa9B6/Xi7Dt6Nb5SeNDlvNFizYZ2L?=
- =?us-ascii?Q?/8EtrG6q9AMk0DN+49DQyuNlWJjGpJNaWvDuhsL3lqTD52mBXUQxkly+d1fY?=
- =?us-ascii?Q?/Af8dYUqA/eLFz5GelxwblWfpjbK3fUuuGH1e2zj2JjsIo05Zlx7n0nFkE2B?=
- =?us-ascii?Q?M2M2x5mHDr0vb1FN6/hUwioeGfPV/cVlXo1MyZJ+Om6lwNcsImoE997PJj38?=
- =?us-ascii?Q?ukcQhg5L6L4RdQKHUQnv7lzqfNgGy2hkoFLIYfDBhsRJzgEYdp9q/nbEdiSz?=
- =?us-ascii?Q?/8j6xEGL1lnqGGYrIwR/Y5C1RxBp7fJNqiVbEdhyooUzT/DJP7LSO0ED0ZFG?=
- =?us-ascii?Q?UwEZ2/EogS953P5B7OBK/Em+EypZbiEYBok2eegPoxfo8KOfTBg8+wWrkynI?=
- =?us-ascii?Q?SEhbkKioM9NIeMf0eeVAjkqveePOP++kGlcF60nrzRjfJj/TLpnsvyKmvNU7?=
- =?us-ascii?Q?LYJ2FR4YhLLaE5oBjuAvoyIco1iJq2agV1UpZz+ZSYHrj6E3G6RlZT4B9wzV?=
- =?us-ascii?Q?H8ON8NlljGibM2SpEOGq2GoO/NVhQkVPRd8Ws9+ra++HTEFePpGuvvG597Rw?=
- =?us-ascii?Q?r4GO3xtWC0hUzTZ00b94fsWrIvS3RK32synSBI33PX2XRjyVZWjej8Xf04Yv?=
- =?us-ascii?Q?e7p8KirtDlRlMNKq5ruZDI/0UwCkUH2UvUa/I3iadg8com7j7Cg8Je5M4CVx?=
- =?us-ascii?Q?5S3MgbZ/4eJ9sRmBkZE=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22f3bb6a-1def-45e7-df32-08d9efd1295d
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2022 15:46:27.2419
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2KIFVwNSONGNkzGqLzumqpOVl9sbJ9gs8IpLjf1TI9By3zan4o7rRMiv+QErA/ND
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3770
+In-Reply-To: <20220214082144.1176084-2-ben.dooks@codethink.co.uk>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 14, 2022 at 03:18:31PM +0000, Robin Murphy wrote:
+[+cc Rob for possible DT/kernel match issue,
+Lorenzo (native host bridge driver maintainer)]
 
-> Arguably, iommu_attach_device() could be renamed something like
-> iommu_attach_group_for_dev(), since that's effectively the semantic that all
-> the existing API users want anyway (even VFIO at the high level - the group
-> is the means for the user to assign their GPU/NIC/whatever device to their
-> process, not the end in itself). That's just a lot more churn.
+s/fix finding/Fix finding/ (in subject)
+Or even better, say something specific about the DT properties in
+question, e.g., look for "reset" instead of "reset-gpios".
 
-Right
- 
-> It's not that callers should be blind to the entire concept of groups
-> altogether - they remain a significant reason why iommu_attach_device()
-> might fail, for one thing - however what callers really shouldn't need to be
-> bothered with is the exact *implementation* of groups. I do actually quite
-> like the idea of refining the group abstraction into isolation groups as a
-> superset of alias groups, but if anything that's a further argument for not
-> having the guts of the current abstraction exposed in places that don't need
-> to care - otherwise that would be liable to be a microcosm of this series in
-> itself: widespread churn vs. "same name, new meaning" compromises.
+On Mon, Feb 14, 2022 at 08:21:43AM +0000, Ben Dooks wrote:
+> The calls to devm_gpiod_get_optional() have the -gpios at the end of
+> the name. This means the pcie driver is not finding the necessary
+> reset or power GPOOs to allow the PCIe devices on the SiFive Unmatched
+> boards.
 
-Exactly, groups should not leak out through the abstraction more than
-necessary. If the caller can't do anything with the group information
-then it shouldn't touch it.
+s/pcie/PCIe/
+s/GPOOs/GPIOs/
+"to allow the PCIe devices ...?"  Something is missing from this
+sentence.  "To allow the devices <to do what>"?  Or maybe the driver
+needs these GPIOs to power up the PCIe devices?
 
-VFIO needs them because its uAPI is tied, but even so we keep talking
-about ways to narrow the amount of group API it consumes.
+I guess the implication is that the code looks for "reset-gpios" and
+"pwren-gpios", but the DT contains "reset" and "pwren"?
 
-We should not set the recommended/good kAPI based on VFIOs uAPI
-design.
+But both Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml
+and arch/riscv/boot/dts/sifive/fu740-c000.dtsi actually do contain
+"reset-gpios" and "pwren-gpios".
 
-Jason
+If we *do* want to change the code, please change the error messages
+to match.
+
+> This has not been a noted bug as the PCIe probe from u-boot has been
+> required to get the PCIe working due to other issues with the system
+> setup. It could have been broken since the driver inclusion, and not
+> been noticed as it is not necessary for the driver to funciton.
+
+s/u-boot/U-Boot/
+s/funciton/function/
+
+Please add a line about what the connection between U-Boot and this
+issue is, e.g., maybe U-Boot powers up the devices, so we wouldn't
+notice the kernel's inability to do so?
+
+> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> ---
+>  drivers/pci/controller/dwc/pcie-fu740.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
+> index 00cde9a248b5..842b7202b96e 100644
+> --- a/drivers/pci/controller/dwc/pcie-fu740.c
+> +++ b/drivers/pci/controller/dwc/pcie-fu740.c
+> @@ -259,11 +259,11 @@ static int fu740_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(afp->mgmt_base);
+>  
+>  	/* Fetch GPIOs */
+> -	afp->reset = devm_gpiod_get_optional(dev, "reset-gpios", GPIOD_OUT_LOW);
+> +	afp->reset = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+>  	if (IS_ERR(afp->reset))
+>  		return dev_err_probe(dev, PTR_ERR(afp->reset), "unable to get reset-gpios\n");
+>  
+> -	afp->pwren = devm_gpiod_get_optional(dev, "pwren-gpios", GPIOD_OUT_LOW);
+> +	afp->pwren = devm_gpiod_get_optional(dev, "pwren", GPIOD_OUT_LOW);
+>  	if (IS_ERR(afp->pwren))
+>  		return dev_err_probe(dev, PTR_ERR(afp->pwren), "unable to get pwren-gpios\n");
+>  
+> -- 
+> 2.34.1
+> 
