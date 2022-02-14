@@ -2,200 +2,93 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E52C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:13:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12EC2C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355669AbiBNPNd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 10:13:33 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41976 "EHLO
+        id S1355709AbiBNPSd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 10:18:33 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344516AbiBNPNc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:13:32 -0500
-Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC3ADD66;
-        Mon, 14 Feb 2022 07:13:22 -0800 (PST)
-Received: from relay8-d.mail.gandi.net (unknown [217.70.183.201])
-        by mslow1.mail.gandi.net (Postfix) with ESMTP id AAB7DCEBE9;
-        Mon, 14 Feb 2022 15:07:22 +0000 (UTC)
-Received: (Authenticated sender: gregory.clement@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id BD7E11BF204;
-        Mon, 14 Feb 2022 15:07:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1644851235;
+        with ESMTP id S1344927AbiBNPSc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:18:32 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 228B547567
+        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 07:18:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644851903;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+ss+CgBMxTZ4PvxtZAL6RbpWF0KZZk0nOt+eGe+JgCI=;
-        b=QJjKYEYMtunNXrNVeX1nAnszUawCIwvP0QelWuJMtgUYwbmAzd5e6Y7ItoC+UoMFJBdLy3
-        3dsgOPnV+icQP45B1XTWyvsK8mnoAnSjCt4Fx2dOJzhh7GsKzjshubCX0w2gcjj/rBdXM5
-        vOuK8D9MypKxKumhDjEp0aiNUqMAS8lnC+xccae6OUWoLuW3k243MVVDeroFF5Swb+iMCN
-        NI7P357xgeaME4gZu05bzdtFa74f1bWBRx/ewm/4V480l8Rzdg6ayVkZPkvJYo3ER/SASm
-        Z2idB5WrS7D2qmR7V2E7D43g1gBulpHI+cwVxCKIHOY8jjZvY8fXog026aDbDA==
-From:   Gregory CLEMENT <gregory.clement@bootlin.com>
-To:     Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IshdftsTmc+LMshqQcqlEumOQktApNkIt4YE3EdRO1A=;
+        b=TF8+zRXIzEuqF7iOMqh6wRItseSxp8PXGfNYeDc6/DEMNtPFw9i3dg2KIeEZPjpVwRvZ8u
+        nsxdGd03agznySB+nzMuxe6Pu2MlkShQ+RpEIGlWLbJ5ju9qZEGDjG6lhQm/LFbdj4e2rk
+        dMWcTkEkBs1kUpeJHHLcvB9h4/h6Ntc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-159-HVLcqTleMpCYtaMTa4B9jQ-1; Mon, 14 Feb 2022 10:18:20 -0500
+X-MC-Unique: HVLcqTleMpCYtaMTa4B9jQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E4104801B0C;
+        Mon, 14 Feb 2022 15:18:17 +0000 (UTC)
+Received: from x1.localdomain.com (unknown [10.39.192.237])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 54DCC2A19C;
+        Mon, 14 Feb 2022 15:18:01 +0000 (UTC)
+From:   Hans de Goede <hdegoede@redhat.com>
+To:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Marek =?utf-8?Q?Beh=C3=BAn?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 11/11] ARM: dts: armada-385.dtsi: Add definitions for
- PCIe legacy INTx interrupts
-In-Reply-To: <20220112151814.24361-12-pali@kernel.org>
-References: <20220105150239.9628-1-pali@kernel.org>
- <20220112151814.24361-1-pali@kernel.org>
- <20220112151814.24361-12-pali@kernel.org>
-Date:   Mon, 14 Feb 2022 16:07:13 +0100
-Message-ID: <87wnhxjxlq.fsf@BL-laptop>
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>,
+        =?UTF-8?q?Benoit=20Gr=C3=A9goire?= <benoitg@coeus.ca>,
+        Hui Wang <hui.wang@canonical.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, x86@kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [RFC 0/2] x86/PCI: Ignore EFI memmap MMIO entries
+Date:   Mon, 14 Feb 2022 16:17:57 +0100
+Message-Id: <20220214151759.98267-1-hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Pali,
+Hi All,
 
-> With this change legacy INTA, INTB, INTC and INTD interrupts are reported
-> separately and not mixed into one Linux virq source anymore.
->
-> Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
-> ---
->  arch/arm/boot/dts/armada-385.dtsi | 52 ++++++++++++++++++++++++++-----
+Here is a new attempt at fixing the issue where on some laptops
+there are EFI memmap MMIO entries covering the entire PCI bridge
+mem window, causing Linux to be unable to find free space to
+assign to unassigned BARs.
 
-Is there any reason for not doing the same change in armada-380.dtsi ?
+This is marked as RFC atm because I'm waiting for feedback from
+testers.
 
-Gr=C3=A9gory
+Regards,
 
->  1 file changed, 44 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/arm/boot/dts/armada-385.dtsi b/arch/arm/boot/dts/armada=
--385.dtsi
-> index f0022d10c715..83392b92dae2 100644
-> --- a/arch/arm/boot/dts/armada-385.dtsi
-> +++ b/arch/arm/boot/dts/armada-385.dtsi
-> @@ -69,16 +69,25 @@
->  				reg =3D <0x0800 0 0 0 0>;
->  				#address-cells =3D <3>;
->  				#size-cells =3D <2>;
-> +				interrupt-names =3D "intx";
-> +				interrupts-extended =3D <&gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
->  				#interrupt-cells =3D <1>;
->  				ranges =3D <0x82000000 0 0 0x82000000 0x1 0 1 0
->  					  0x81000000 0 0 0x81000000 0x1 0 1 0>;
->  				bus-range =3D <0x00 0xff>;
-> -				interrupt-map-mask =3D <0 0 0 0>;
-> -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
-> +				interrupt-map-mask =3D <0 0 0 7>;
-> +				interrupt-map =3D <0 0 0 1 &pcie1_intc 0>,
-> +						<0 0 0 2 &pcie1_intc 1>,
-> +						<0 0 0 3 &pcie1_intc 2>,
-> +						<0 0 0 4 &pcie1_intc 3>;
->  				marvell,pcie-port =3D <0>;
->  				marvell,pcie-lane =3D <0>;
->  				clocks =3D <&gateclk 8>;
->  				status =3D "disabled";
-> +				pcie1_intc: interrupt-controller {
-> +					interrupt-controller;
-> +					#interrupt-cells =3D <1>;
-> +				};
->  			};
->=20=20
->  			/* x1 port */
-> @@ -88,16 +97,25 @@
->  				reg =3D <0x1000 0 0 0 0>;
->  				#address-cells =3D <3>;
->  				#size-cells =3D <2>;
-> +				interrupt-names =3D "intx";
-> +				interrupts-extended =3D <&gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
->  				#interrupt-cells =3D <1>;
->  				ranges =3D <0x82000000 0 0 0x82000000 0x2 0 1 0
->  					  0x81000000 0 0 0x81000000 0x2 0 1 0>;
->  				bus-range =3D <0x00 0xff>;
-> -				interrupt-map-mask =3D <0 0 0 0>;
-> -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
-> +				interrupt-map-mask =3D <0 0 0 7>;
-> +				interrupt-map =3D <0 0 0 1 &pcie2_intc 0>,
-> +						<0 0 0 2 &pcie2_intc 1>,
-> +						<0 0 0 3 &pcie2_intc 2>,
-> +						<0 0 0 4 &pcie2_intc 3>;
->  				marvell,pcie-port =3D <1>;
->  				marvell,pcie-lane =3D <0>;
->  				clocks =3D <&gateclk 5>;
->  				status =3D "disabled";
-> +				pcie2_intc: interrupt-controller {
-> +					interrupt-controller;
-> +					#interrupt-cells =3D <1>;
-> +				};
->  			};
->=20=20
->  			/* x1 port */
-> @@ -107,16 +125,25 @@
->  				reg =3D <0x1800 0 0 0 0>;
->  				#address-cells =3D <3>;
->  				#size-cells =3D <2>;
-> +				interrupt-names =3D "intx";
-> +				interrupts-extended =3D <&gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
->  				#interrupt-cells =3D <1>;
->  				ranges =3D <0x82000000 0 0 0x82000000 0x3 0 1 0
->  					  0x81000000 0 0 0x81000000 0x3 0 1 0>;
->  				bus-range =3D <0x00 0xff>;
-> -				interrupt-map-mask =3D <0 0 0 0>;
-> -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
-> +				interrupt-map-mask =3D <0 0 0 7>;
-> +				interrupt-map =3D <0 0 0 1 &pcie3_intc 0>,
-> +						<0 0 0 2 &pcie3_intc 1>,
-> +						<0 0 0 3 &pcie3_intc 2>,
-> +						<0 0 0 4 &pcie3_intc 3>;
->  				marvell,pcie-port =3D <2>;
->  				marvell,pcie-lane =3D <0>;
->  				clocks =3D <&gateclk 6>;
->  				status =3D "disabled";
-> +				pcie3_intc: interrupt-controller {
-> +					interrupt-controller;
-> +					#interrupt-cells =3D <1>;
-> +				};
->  			};
->=20=20
->  			/*
-> @@ -129,16 +156,25 @@
->  				reg =3D <0x2000 0 0 0 0>;
->  				#address-cells =3D <3>;
->  				#size-cells =3D <2>;
-> +				interrupt-names =3D "intx";
-> +				interrupts-extended =3D <&gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
->  				#interrupt-cells =3D <1>;
->  				ranges =3D <0x82000000 0 0 0x82000000 0x4 0 1 0
->  					  0x81000000 0 0 0x81000000 0x4 0 1 0>;
->  				bus-range =3D <0x00 0xff>;
-> -				interrupt-map-mask =3D <0 0 0 0>;
-> -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
-> +				interrupt-map-mask =3D <0 0 0 7>;
-> +				interrupt-map =3D <0 0 0 1 &pcie4_intc 0>,
-> +						<0 0 0 2 &pcie4_intc 1>,
-> +						<0 0 0 3 &pcie4_intc 2>,
-> +						<0 0 0 4 &pcie4_intc 3>;
->  				marvell,pcie-port =3D <3>;
->  				marvell,pcie-lane =3D <0>;
->  				clocks =3D <&gateclk 7>;
->  				status =3D "disabled";
-> +				pcie4_intc: interrupt-controller {
-> +					interrupt-controller;
-> +					#interrupt-cells =3D <1>;
-> +				};
->  			};
->  		};
->  	};
-> --=20
-> 2.20.1
->
+Hans
 
---=20
-Gregory Clement, Bootlin
-Embedded Linux and Kernel engineering
-http://bootlin.com
+
+Hans de Goede (2):
+  x86/e820: Map EFI_MEMORY_MAPPED_IO to a new E820_TYPE_MMIO type
+  x86/PCI: Ignore EFI memmap MMIO entries
+
+ arch/x86/include/asm/e820/types.h       |  3 +++
+ arch/x86/include/asm/iommu.h            |  3 ++-
+ arch/x86/kernel/e820.c                  |  5 +++++
+ arch/x86/kernel/resource.c              |  4 ++++
+ arch/x86/mm/ioremap.c                   |  1 +
+ arch/x86/pci/mmconfig-shared.c          | 15 +++++++++++----
+ arch/x86/platform/efi/efi.c             |  5 ++++-
+ drivers/firmware/efi/libstub/x86-stub.c |  5 ++++-
+ 8 files changed, 34 insertions(+), 7 deletions(-)
+
+-- 
+2.33.1
+
