@@ -2,228 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE26AC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6399CC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355858AbiBNP0j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 10:26:39 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52124 "EHLO
+        id S238595AbiBNPqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 10:46:40 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355816AbiBNP0h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:26:37 -0500
-X-Greylist: delayed 1151 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 14 Feb 2022 07:26:28 PST
-Received: from relay10.mail.gandi.net (relay10.mail.gandi.net [IPv6:2001:4b98:dc4:8::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F2EC4D;
-        Mon, 14 Feb 2022 07:26:28 -0800 (PST)
-Received: (Authenticated sender: gregory.clement@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 9AC19240014;
-        Mon, 14 Feb 2022 15:26:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1644852386;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=C+Q/XGnHf9irD5sCh0C/7PF0D//d8ipVJPI4owGtOS4=;
-        b=e4q1FrKfMdef6/DF9DT5NRlw6RWKgo4HAS3+DYgKOvaAp/2k9LttFnY3O476KP9nICbJsf
-        mcsRvNsGOc5G34qhOYGJHmkjNGw+8qeucXSGEX6kuQ/o1xmeXt5UsMOxzGuncO/rfcaNBW
-        WU3K6pwllDzR5au65vBHlaKP0yIibkgr3LU2R6StiaceLraEBJTBm8yyX1xhvtL4QAx9sI
-        /j6/70AgLg/j0DodVLyPK0PQUkv/qZALx2NLkZcyZVaQKMbun8CSyfHHnrO4GB5Uw4cDh1
-        2O8qLPYibp9cNZdfhdSuYsbT39yF+r8mmhZCQ+6uVc5D9ZQil8aJOVhQdP1rwA==
-From:   Gregory CLEMENT <gregory.clement@bootlin.com>
-To:     Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>
+        with ESMTP id S1356013AbiBNPqj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:46:39 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A0D726D;
+        Mon, 14 Feb 2022 07:46:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B148C61313;
+        Mon, 14 Feb 2022 15:46:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD385C340EB;
+        Mon, 14 Feb 2022 15:46:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644853590;
+        bh=ypkwro1J7DlbYw5w/3uL9p/1TnF6Qdw1cTOGQOtdg1I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=c0U/vNvgxNlRhTzZnEFFCR9aId6hPQBmgaHLTo+QXeG9M6se3Uo3eBniwaQ5IiqMC
+         TqBW6QLwfKfh9+oZArZB9VUlt39D81a5wwq3y6zev029QTe93ZzrvhGkX7JwrXw5tR
+         1IgBc+cGCNur3T+1wnnfN2wB4ygvoBqDnEZzJnS074vM6NQuYfTsDmSJyJ+8SKm7FN
+         bzVUHj3r7qK3x4Bzp0He4EGuy7mgnIAvs0UD2Z6qxb/+j/X9jDdsL5ztXSSYF8e8GZ
+         5cwlpktvcqcYGIXeW1KR22mhuke38YbW7r+LFhiLgggPbMJ9+vnWMOmJ4zZBp1F5hp
+         AeN0j8m9ygFig==
+Date:   Mon, 14 Feb 2022 09:46:28 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Rob Herring <robh@kernel.org>,
         Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Marek =?utf-8?Q?Beh=C3=BAn?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 11/11] ARM: dts: armada-385.dtsi: Add definitions for
- PCIe legacy INTx interrupts
-In-Reply-To: <20220214150923.a5ttxoh426cfxn4v@pali>
-References: <20220105150239.9628-1-pali@kernel.org>
- <20220112151814.24361-1-pali@kernel.org>
- <20220112151814.24361-12-pali@kernel.org> <87wnhxjxlq.fsf@BL-laptop>
- <20220214150923.a5ttxoh426cfxn4v@pali>
-Date:   Mon, 14 Feb 2022 16:26:24 +0100
-Message-ID: <87tud1jwpr.fsf@BL-laptop>
+        Jan Palus <jpalus@fastmail.com>,
+        Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Thorsten Leemhuis <regressions@leemhuis.info>
+Subject: Re: [PATCH] PCI: mvebu: Fix merge conflicts in commit 91a8d79fc797
+Message-ID: <20220214154628.GA8830@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220214110228.25825-1-pali@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On Mon, Feb 14, 2022 at 12:02:28PM +0100, Pali Rohár wrote:
+> Commit 91a8d79fc797 ("PCI: mvebu: Fix configuring secondary bus of PCIe
+> Root Port via emulated bridge") was incorrectly applied from mailing list
+> patch [1] to the linux git repository [2] probably due to resolving merge
+> conflicts incorrectly. Fix it now.
+> 
+> [1] - https://lore.kernel.org/r/20211125124605.25915-12-pali@kernel.org
+> [2] - https://git.kernel.org/linus/91a8d79fc797
+> 
+> Fixes: 91a8d79fc797 ("PCI: mvebu: Fix configuring secondary bus of PCIe Root Port via emulated bridge")
+> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215540
+> Reported-by: Jan Palus <jpalus@fastmail.com>
+> Signed-off-by: Pali Rohár <pali@kernel.org>
 
-> On Monday 14 February 2022 16:07:13 Gregory CLEMENT wrote:
->> Hello Pali,
->>=20
->> > With this change legacy INTA, INTB, INTC and INTD interrupts are repor=
-ted
->> > separately and not mixed into one Linux virq source anymore.
->> >
->> > Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
->> > ---
->> >  arch/arm/boot/dts/armada-385.dtsi | 52 ++++++++++++++++++++++++++-----
->>=20
->> Is there any reason for not doing the same change in armada-380.dtsi ?
->
-> I do not have A380 HW, so I did this change only for A385 which I have
-> tested.
+Applied to for-linus for v5.17 with the following commit log, thanks!
 
-OK fair enough.
+commit c49ae619905e ("PCI: mvebu: Fix device enumeration regression")
+Author: Pali Rohár <pali@kernel.org>
+Date:   Mon Feb 14 12:02:28 2022 +0100
 
-So you can add my
-Acked-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+    PCI: mvebu: Fix device enumeration regression
 
-Moreover to keep biscetability  this patch should be merged after the
-support in the driver. So the easier is to let merge it through the PCI
-subsystem with the other patches from this series. I do not think there
-will be any other changes in this file so there won't be any merge
-conflicts.
+    Jan reported that on Turris Omnia (Armada 385), no PCIe devices were
+    detected after upgrading from v5.16.1 to v5.16.3 and identified the cause
+    as the backport of 91a8d79fc797 ("PCI: mvebu: Fix configuring secondary bus
+    of PCIe Root Port via emulated bridge"), which appeared in v5.17-rc1.
 
-Thanks,
+    91a8d79fc797 was incorrectly applied from mailing list patch [1] to the
+    linux git repository [2] probably due to resolving merge conflicts
+    incorrectly. Fix it now.
 
-Gr=C3=A9gory
+    [1] https://lore.kernel.org/r/20211125124605.25915-12-pali@kernel.org
+    [2] https://git.kernel.org/linus/91a8d79fc797
 
+    [bhelgaas: commit log]
+    BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=215540
+    Fixes: 91a8d79fc797 ("PCI: mvebu: Fix configuring secondary bus of PCIe Root Port via emulated bridge")
+    Link: https://lore.kernel.org/r/20220214110228.25825-1-pali@kernel.org
+    Link: https://lore.kernel.org/r/20220127234917.GA150851@bhelgaas
+    Reported-by: Jan Palus <jpalus@fastmail.com>
+    Signed-off-by: Pali Rohár <pali@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
->
->> Gr=C3=A9gory
->>=20
->> >  1 file changed, 44 insertions(+), 8 deletions(-)
->> >
->> > diff --git a/arch/arm/boot/dts/armada-385.dtsi b/arch/arm/boot/dts/arm=
-ada-385.dtsi
->> > index f0022d10c715..83392b92dae2 100644
->> > --- a/arch/arm/boot/dts/armada-385.dtsi
->> > +++ b/arch/arm/boot/dts/armada-385.dtsi
->> > @@ -69,16 +69,25 @@
->> >  				reg =3D <0x0800 0 0 0 0>;
->> >  				#address-cells =3D <3>;
->> >  				#size-cells =3D <2>;
->> > +				interrupt-names =3D "intx";
->> > +				interrupts-extended =3D <&gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
->> >  				#interrupt-cells =3D <1>;
->> >  				ranges =3D <0x82000000 0 0 0x82000000 0x1 0 1 0
->> >  					  0x81000000 0 0 0x81000000 0x1 0 1 0>;
->> >  				bus-range =3D <0x00 0xff>;
->> > -				interrupt-map-mask =3D <0 0 0 0>;
->> > -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
->> > +				interrupt-map-mask =3D <0 0 0 7>;
->> > +				interrupt-map =3D <0 0 0 1 &pcie1_intc 0>,
->> > +						<0 0 0 2 &pcie1_intc 1>,
->> > +						<0 0 0 3 &pcie1_intc 2>,
->> > +						<0 0 0 4 &pcie1_intc 3>;
->> >  				marvell,pcie-port =3D <0>;
->> >  				marvell,pcie-lane =3D <0>;
->> >  				clocks =3D <&gateclk 8>;
->> >  				status =3D "disabled";
->> > +				pcie1_intc: interrupt-controller {
->> > +					interrupt-controller;
->> > +					#interrupt-cells =3D <1>;
->> > +				};
->> >  			};
->> >=20=20
->> >  			/* x1 port */
->> > @@ -88,16 +97,25 @@
->> >  				reg =3D <0x1000 0 0 0 0>;
->> >  				#address-cells =3D <3>;
->> >  				#size-cells =3D <2>;
->> > +				interrupt-names =3D "intx";
->> > +				interrupts-extended =3D <&gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
->> >  				#interrupt-cells =3D <1>;
->> >  				ranges =3D <0x82000000 0 0 0x82000000 0x2 0 1 0
->> >  					  0x81000000 0 0 0x81000000 0x2 0 1 0>;
->> >  				bus-range =3D <0x00 0xff>;
->> > -				interrupt-map-mask =3D <0 0 0 0>;
->> > -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
->> > +				interrupt-map-mask =3D <0 0 0 7>;
->> > +				interrupt-map =3D <0 0 0 1 &pcie2_intc 0>,
->> > +						<0 0 0 2 &pcie2_intc 1>,
->> > +						<0 0 0 3 &pcie2_intc 2>,
->> > +						<0 0 0 4 &pcie2_intc 3>;
->> >  				marvell,pcie-port =3D <1>;
->> >  				marvell,pcie-lane =3D <0>;
->> >  				clocks =3D <&gateclk 5>;
->> >  				status =3D "disabled";
->> > +				pcie2_intc: interrupt-controller {
->> > +					interrupt-controller;
->> > +					#interrupt-cells =3D <1>;
->> > +				};
->> >  			};
->> >=20=20
->> >  			/* x1 port */
->> > @@ -107,16 +125,25 @@
->> >  				reg =3D <0x1800 0 0 0 0>;
->> >  				#address-cells =3D <3>;
->> >  				#size-cells =3D <2>;
->> > +				interrupt-names =3D "intx";
->> > +				interrupts-extended =3D <&gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
->> >  				#interrupt-cells =3D <1>;
->> >  				ranges =3D <0x82000000 0 0 0x82000000 0x3 0 1 0
->> >  					  0x81000000 0 0 0x81000000 0x3 0 1 0>;
->> >  				bus-range =3D <0x00 0xff>;
->> > -				interrupt-map-mask =3D <0 0 0 0>;
->> > -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
->> > +				interrupt-map-mask =3D <0 0 0 7>;
->> > +				interrupt-map =3D <0 0 0 1 &pcie3_intc 0>,
->> > +						<0 0 0 2 &pcie3_intc 1>,
->> > +						<0 0 0 3 &pcie3_intc 2>,
->> > +						<0 0 0 4 &pcie3_intc 3>;
->> >  				marvell,pcie-port =3D <2>;
->> >  				marvell,pcie-lane =3D <0>;
->> >  				clocks =3D <&gateclk 6>;
->> >  				status =3D "disabled";
->> > +				pcie3_intc: interrupt-controller {
->> > +					interrupt-controller;
->> > +					#interrupt-cells =3D <1>;
->> > +				};
->> >  			};
->> >=20=20
->> >  			/*
->> > @@ -129,16 +156,25 @@
->> >  				reg =3D <0x2000 0 0 0 0>;
->> >  				#address-cells =3D <3>;
->> >  				#size-cells =3D <2>;
->> > +				interrupt-names =3D "intx";
->> > +				interrupts-extended =3D <&gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
->> >  				#interrupt-cells =3D <1>;
->> >  				ranges =3D <0x82000000 0 0 0x82000000 0x4 0 1 0
->> >  					  0x81000000 0 0 0x81000000 0x4 0 1 0>;
->> >  				bus-range =3D <0x00 0xff>;
->> > -				interrupt-map-mask =3D <0 0 0 0>;
->> > -				interrupt-map =3D <0 0 0 0 &gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
->> > +				interrupt-map-mask =3D <0 0 0 7>;
->> > +				interrupt-map =3D <0 0 0 1 &pcie4_intc 0>,
->> > +						<0 0 0 2 &pcie4_intc 1>,
->> > +						<0 0 0 3 &pcie4_intc 2>,
->> > +						<0 0 0 4 &pcie4_intc 3>;
->> >  				marvell,pcie-port =3D <3>;
->> >  				marvell,pcie-lane =3D <0>;
->> >  				clocks =3D <&gateclk 7>;
->> >  				status =3D "disabled";
->> > +				pcie4_intc: interrupt-controller {
->> > +					interrupt-controller;
->> > +					#interrupt-cells =3D <1>;
->> > +				};
->> >  			};
->> >  		};
->> >  	};
->> > --=20
->> > 2.20.1
->> >
->>=20
->> --=20
->> Gregory Clement, Bootlin
->> Embedded Linux and Kernel engineering
->> http://bootlin.com
-
---=20
-Gregory Clement, Bootlin
-Embedded Linux and Kernel engineering
-http://bootlin.com
+> ---
+>  drivers/pci/controller/pci-mvebu.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index 71258ea3d35f..f8e82c5e2d87 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -1329,7 +1329,8 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  		 * indirectly via kernel emulated PCI bridge driver.
+>  		 */
+>  		mvebu_pcie_setup_hw(port);
+> -		mvebu_pcie_set_local_dev_nr(port, 0);
+> +		mvebu_pcie_set_local_dev_nr(port, 1);
+> +		mvebu_pcie_set_local_bus_nr(port, 0);
+>  	}
+>  
+>  	pcie->nports = i;
+> -- 
+> 2.20.1
+> 
