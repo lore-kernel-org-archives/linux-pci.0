@@ -2,161 +2,206 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9749AC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6406CC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 15:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242927AbiBNPBX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 10:01:23 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:33962 "EHLO
+        id S1355625AbiBNPJi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 10:09:38 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230297AbiBNPBV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:01:21 -0500
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2063.outbound.protection.outlook.com [40.107.243.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD67D50474;
-        Mon, 14 Feb 2022 07:01:02 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eikC8Lzr11mgLFRjJvs47z43NKP4DBb0/EwgMyRT7VxbXtCbfs4+th1CGgQP2WBTw+ISLDlIWJHWiowg6CKF68SIuhwOl30Ba1066/6OJHW5rHy0kVT/JBEPvcrI2FueAmcu1E8ce9azgmcObw2RV4irshcWC+BGEmgEGSARTdt/BUNVy+/Fqk9FvcS1O5FJTgRkfuiUgozLqE4QA/FXKrPuFRYqwRUdT93SDvrCT2VDf+FtPc7n9C74yHBTKZrX15LnHPR1XrHhEO5qxWtoxCizY05tgxkDTmmcNMj/B8WdLbFMzaYJQAixGNth73BZmhtRtwiu68eKTbhvDM5+Og==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qC3eHKd0piFWLH5SnjN5Jv70/GzKNikK2k0qMvQk8Vg=;
- b=EK2RLBXAPWRGFadmGAhU9Erm/ugbbUvqQ+vk8CgyEoaryS4HIfa2Sgd/2AtExy3IdSoLGdQUTPkRpr4sZxz43ynFwRlz1tcqRbtum8GyDrs0NFWT5IcGdeED7PsKfIA0xAsxJWJ6Ax6KpVNk7pMxCpjouJCEne1nxX/hfU3uWXvzlDNGID+Nilb4gc08fquEQQOJJTVdv+P4a6KdqRmjUYF62sRJsn51Hj7x/XTtDHnPFnlTiOmJ+5Fao/q7SyzyPdhlSu5IEspozZMFUlcPpmXd6VrKXN85xUZPWcNHJVFt1N5gPO8cse60Lu1AbiyExhOuRmUBZT70JKnvfMd3Aw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qC3eHKd0piFWLH5SnjN5Jv70/GzKNikK2k0qMvQk8Vg=;
- b=FB+nJLyCmTwj4ycoUUWM0KiMqAfeuzyHiFNO/yWKmZDzg04XndQCROK+m1gRP9YFbtSBcSyuyGhRQSXCfzlrLNEbT9e6mDnEkouNslmW3d+rOkP3XMh8z5b+x4WsQvNB3HbhZ+jtmvoLbBhSWyGEytEgLEG2wQk2m4h/AMKI1y9bm3jHUciHErhrQg/vV21UJ7Leu43lotBk/fGbkVcpweWGNbJ/LHQxKUNEwmdXyPDXZqN3kp6/TTGWsTSsyZiyRKYX+wdTJYKV0WOb8pSOtsrmjKA0GsJMg17FlIC0foTBwp8n1xgcyr01y3+o6uq7HecgoYALQVBynO5dzvCdxg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
- by MWHPR12MB1469.namprd12.prod.outlook.com (2603:10b6:301:10::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.11; Mon, 14 Feb
- 2022 15:01:00 +0000
-Received: from MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3]) by MN2PR12MB4192.namprd12.prod.outlook.com
- ([fe80::e8f4:9793:da37:1bd3%4]) with mapi id 15.20.4975.019; Mon, 14 Feb 2022
- 15:01:00 +0000
-Date:   Mon, 14 Feb 2022 11:00:59 -0400
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Joerg Roedel <joro@8bytes.org>
-Cc:     Lu Baolu <baolu.lu@linux.intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        with ESMTP id S243886AbiBNPJh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 10:09:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92D7249F9D;
+        Mon, 14 Feb 2022 07:09:29 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F0402B810D5;
+        Mon, 14 Feb 2022 15:09:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E123C340EE;
+        Mon, 14 Feb 2022 15:09:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644851366;
+        bh=vWuN80VnIBztWgeDcbeMKNKCUZn+QCttNnaHfSaAfAU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tj18vLnywNyMG997rkbOL01uMlg5EitPEjGNsuHfyXI+RpsMB4hDPeyT9xBRq22ZD
+         Rcmj9as0roKC6x/0an4ackTFBVEBSvJwWC8lmLE5Oz1GX2XsjtJxh2vxUPjog3O4Bt
+         znq6Q/EFfrmCNVeDH5uiVp0Qvcp/O1nPhw5eqSe+1Ys6vnJMKx9DcWC+qGIvJN/0sy
+         O2v3en+YFl8hNyJDkBY44ponNICcWZneLoudOBrLyxeV/NNCqoZx1ezn7YrhCx7Gor
+         Qr+F2HTSEwALSm/Doyf6cvz0aDpg3+LyUi+hwpx7rYKtFMyzpQbia+v8/3CAplRrwl
+         hDnYmwGdSeuFg==
+Received: by pali.im (Postfix)
+        id A4EADCAA; Mon, 14 Feb 2022 16:09:23 +0100 (CET)
+Date:   Mon, 14 Feb 2022 16:09:23 +0100
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Gregory CLEMENT <gregory.clement@bootlin.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>, rafael@kernel.org,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Liu Yi L <yi.l.liu@intel.com>,
-        Jacob jun Pan <jacob.jun.pan@intel.com>,
-        Chaitanya Kulkarni <kch@nvidia.com>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Li Yang <leoyang.li@nxp.com>,
-        Dmitry Osipenko <digetx@gmail.com>,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 5/8] iommu/amd: Use iommu_attach/detach_device()
-Message-ID: <20220214150059.GE4160@nvidia.com>
-References: <20220106022053.2406748-1-baolu.lu@linux.intel.com>
- <20220106022053.2406748-6-baolu.lu@linux.intel.com>
- <20220106143345.GC2328285@nvidia.com>
- <Ygo8iek2CwtPp2hj@8bytes.org>
- <20220214131544.GX4160@nvidia.com>
- <Ygpb6CxmTdUHiN50@8bytes.org>
- <20220214140236.GC929467@nvidia.com>
- <YgplyyjofwlM+1tc@8bytes.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YgplyyjofwlM+1tc@8bytes.org>
-X-ClientProxiedBy: MN2PR01CA0047.prod.exchangelabs.com (2603:10b6:208:23f::16)
- To MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Marek =?utf-8?B?QmVow7pu?= <kabel@kernel.org>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 11/11] ARM: dts: armada-385.dtsi: Add definitions for
+ PCIe legacy INTx interrupts
+Message-ID: <20220214150923.a5ttxoh426cfxn4v@pali>
+References: <20220105150239.9628-1-pali@kernel.org>
+ <20220112151814.24361-1-pali@kernel.org>
+ <20220112151814.24361-12-pali@kernel.org>
+ <87wnhxjxlq.fsf@BL-laptop>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0249d11b-ffd2-419a-ccd4-08d9efcad035
-X-MS-TrafficTypeDiagnostic: MWHPR12MB1469:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR12MB14699AD6AD51316DFD99D9F3C2339@MWHPR12MB1469.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: K1nLQ1th9YRet82/e80peXOxEe+bpTYnoF4YufTjuVmo4mUUzm86ioyR+CNuxRxtJgGcv3neH8o9PdtNbBiusSea1t/FA8GRNmKberBXnN0XvSJqk429xzhB/dAFywYZ158vUROhXXhPzxdSVgzJnhxWMVjlFoRi9ucpPNYsPE2tYvmBAv4O3v7pB4jx5l34MOzy6dMLvlgkoPcfj59PJ4LQjfTDZXO9jJOFhZankLyfrj6ffLoKOzQqW1pgbziWkntq/RUkm/tiyKZt9U4tw9yLO6WAMcttT2KI5RxBBYvuQz7ZZzPUZPoZJlUkY79r68tSJRG+M47kw8wJxu3kQyCAMmsgA/zm7sKsAUsM1i2nM/FM4I5IpLWYCIAz9pIYP0NOmefbJKyKcscPMgFZ/er6iOFLugsjWMCNUJC+uG5fZirFGOO/hil1qq2817yHq9SHSyF6LguGNIhrSlfgpttvcezY5v5mUX3CUvt4+bFoY7F1/ijXq9FshGFu5vWcIAFLv3T5HP2tPFhFS6k2uzzsVg75UKrUrsCz033gPji+BUDTYLJdnVzoeq1FBjR33uWYk5HPLphdDoAGg7WeQCQ/5fgBiuQxvZEm6kBY9Dk8rNYeMCmKpdxVICqVyT85M2/TvXfV4KP8ae1HbtYY1w==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6486002)(54906003)(508600001)(36756003)(7416002)(4744005)(6916009)(316002)(38100700002)(66476007)(66556008)(66946007)(6512007)(33656002)(4326008)(8676002)(186003)(5660300002)(6506007)(8936002)(26005)(2906002)(86362001)(1076003)(2616005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?4Dwxduzh2xBJ9RNpDB5XmtU2Ip+0xn8gDRQJi9GOJD+hqjgH2cne1QQNG7Ww?=
- =?us-ascii?Q?IcbXtOp/Fkj08kUag7oUX4oMRB2tJ8YfHDAbTeeblZOR9XdSr75+Mpy4CQA7?=
- =?us-ascii?Q?e/mwUVR4DHSdktNxQWMloVPhKrtY80hK9EH3XxPaMEU4j+7KPKvci5vz8kmV?=
- =?us-ascii?Q?tSiIqVb7f9acSknmuq10BZNPPZHOplGykKxYtlvyb0bGlZfnrQG4vbFPiiC+?=
- =?us-ascii?Q?1Sgb5YLRSoUQQ9CexWxlwCvQo4YzLQazspG+nDin8MoOWWA5wCQCBdt+i4ZU?=
- =?us-ascii?Q?C4qvnbIrnufSs7H9Ikawm2lJra+GZDZSQB5CO++GBlsSemYNeX7fE95CjDyG?=
- =?us-ascii?Q?ovqPpkhdFNWMGG+ifqj5YTsXs3IeypyAnqasU5k9fBFSFpJ+IJvf01E/Lukr?=
- =?us-ascii?Q?u8Ma+rI/pzd7+c/pU5ehIHjD2P377AjD60X4oJL/+bXQmgvZzF4FafTCjkzZ?=
- =?us-ascii?Q?zZ+FryBTJMJr10WRUOIp57z6i7+Fi7tU+HNNZwbICeQt0qIMHcWJQqXvTIcj?=
- =?us-ascii?Q?43UpluoMLwaKg6IfChZhchpM6cXTQBZxCMkU+TP5ihunWx/hpC70QFaNi7+5?=
- =?us-ascii?Q?gfXPEmb0nS3sukySwR584MbxEAUId4bctliicdak/RypLcZp6U60l7MUWzl+?=
- =?us-ascii?Q?1i7t1+24jjgp8CIwgi8ynwuyTSRBdRy+o8WJwTKXQF+pZHJx6szsZFrarJx/?=
- =?us-ascii?Q?T5KMNtTzHLBxKO3GQ8dsGJmCSAIYnVR9N3tY0m2HrDbDpJjzQ7D7gtc2gHJM?=
- =?us-ascii?Q?6qONJgEGDSKp4xVoBMUEqdIMU27dyxIabykcx9nWcwBL+HKuRpaMGDky9Nqx?=
- =?us-ascii?Q?LTIQBeRVpE22No4wwrrD/Ia+PLH5B93Rm+vmQ/kl6kldAGx5g/EwotY8kqA9?=
- =?us-ascii?Q?h0mvbAqY1NOCh5jZ7abVAsVGmm2bzV5VDGG7r3Cnzit3XJ6J91999Two8QXs?=
- =?us-ascii?Q?3zCrs9b0BpV0NDBVLgQIxvxlzKWQLQCyOTkftonB8enYgBgCxbHDirv8HL+s?=
- =?us-ascii?Q?57WHSMiVl8pIcZtuB4oEk3XNgrYWAA1tJGh7ThMBXvMXXEdGF7d8OYpdQbSs?=
- =?us-ascii?Q?nkFSTUJPImvO9/yV1lbgXz+316eqUU+Bak865nmH2XRJDnXMscezdp3J8NUa?=
- =?us-ascii?Q?yAhtWvFqikMrX3gh2q7kSdMMC+rrxGhWoW9c0xWrecETWUJhXLaxyyB2XBBI?=
- =?us-ascii?Q?08nVlbAIAuxk6/6Uo1Omqjrrqkj7/U2uEcWbCiH3urxtH45w6eGIKyTujLFS?=
- =?us-ascii?Q?gncYH5MtdzHmZQ4+6WV7pJ+WiiNJ28vREz7Hk619Y3o8pN9kdZCTO19bejx4?=
- =?us-ascii?Q?0iVkdQMyPpaSCxQb/+RsLzGVw4k76qZ82uIamheAs/ghFAsTnDfxaQB9U/9M?=
- =?us-ascii?Q?2LotRbKSVgmVbdZq7Nx+p1iFRhwxzu/dCb7h/+GbODUws85GX90RzNJDXWHh?=
- =?us-ascii?Q?D9ZosiK5sqINzl60opjfEvHEGTrdi7FDZATEb/kuwNMMtiwUKITwAGofppPv?=
- =?us-ascii?Q?1vPL6GNEvWRIP17tlFr9TtbFelePaTsDW2qZcdhH20yknuj3jyVgQghdGL3O?=
- =?us-ascii?Q?wLsr+enUy38aFbXfTsc=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0249d11b-ffd2-419a-ccd4-08d9efcad035
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2022 15:01:00.6829
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: duceY3BriB0XQKAOuTDAL0PcO2Cd69aVTrI3Ahpp9Yv8N2IHLIYgjRQ137SWOX+W
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR12MB1469
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87wnhxjxlq.fsf@BL-laptop>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 14, 2022 at 03:23:07PM +0100, Joerg Roedel wrote:
+On Monday 14 February 2022 16:07:13 Gregory CLEMENT wrote:
+> Hello Pali,
+> 
+> > With this change legacy INTA, INTB, INTC and INTD interrupts are reported
+> > separately and not mixed into one Linux virq source anymore.
+> >
+> > Signed-off-by: Pali Rohár <pali@kernel.org>
+> > ---
+> >  arch/arm/boot/dts/armada-385.dtsi | 52 ++++++++++++++++++++++++++-----
+> 
+> Is there any reason for not doing the same change in armada-380.dtsi ?
 
-> Device drivers calling into iommu_attach_device() is seldom a good
-> idea.  In this case the sound device has some generic hardware
-> interface so that an existing sound driver can be re-used. Making this
-> driver call iommu-specific functions for some devices is something hard
-> to justify.
+I do not have A380 HW, so I did this change only for A385 which I have tested.
 
-Er, so this is transparent to the generic sound device? I guess
-something fixed up the dma_api on that device to keep working?
-
-But, then, the requirement is that nobody is using the dma API when we
-make this change?
-
-> With sub-groups on the other hand it would be a no-brainer, because the
-> sound device would be in a separate sub-group. Basically any device in
-> the same group as the GPU would be in a separate sub-group.
-
-I don't think it matters how big/small the group is, only that when we
-change the domain we know everything flowing through the domain is
-still happy.
-
-Jason
+> Grégory
+> 
+> >  1 file changed, 44 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/arch/arm/boot/dts/armada-385.dtsi b/arch/arm/boot/dts/armada-385.dtsi
+> > index f0022d10c715..83392b92dae2 100644
+> > --- a/arch/arm/boot/dts/armada-385.dtsi
+> > +++ b/arch/arm/boot/dts/armada-385.dtsi
+> > @@ -69,16 +69,25 @@
+> >  				reg = <0x0800 0 0 0 0>;
+> >  				#address-cells = <3>;
+> >  				#size-cells = <2>;
+> > +				interrupt-names = "intx";
+> > +				interrupts-extended = <&gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+> >  				#interrupt-cells = <1>;
+> >  				ranges = <0x82000000 0 0 0x82000000 0x1 0 1 0
+> >  					  0x81000000 0 0 0x81000000 0x1 0 1 0>;
+> >  				bus-range = <0x00 0xff>;
+> > -				interrupt-map-mask = <0 0 0 0>;
+> > -				interrupt-map = <0 0 0 0 &gic GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+> > +				interrupt-map-mask = <0 0 0 7>;
+> > +				interrupt-map = <0 0 0 1 &pcie1_intc 0>,
+> > +						<0 0 0 2 &pcie1_intc 1>,
+> > +						<0 0 0 3 &pcie1_intc 2>,
+> > +						<0 0 0 4 &pcie1_intc 3>;
+> >  				marvell,pcie-port = <0>;
+> >  				marvell,pcie-lane = <0>;
+> >  				clocks = <&gateclk 8>;
+> >  				status = "disabled";
+> > +				pcie1_intc: interrupt-controller {
+> > +					interrupt-controller;
+> > +					#interrupt-cells = <1>;
+> > +				};
+> >  			};
+> >  
+> >  			/* x1 port */
+> > @@ -88,16 +97,25 @@
+> >  				reg = <0x1000 0 0 0 0>;
+> >  				#address-cells = <3>;
+> >  				#size-cells = <2>;
+> > +				interrupt-names = "intx";
+> > +				interrupts-extended = <&gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
+> >  				#interrupt-cells = <1>;
+> >  				ranges = <0x82000000 0 0 0x82000000 0x2 0 1 0
+> >  					  0x81000000 0 0 0x81000000 0x2 0 1 0>;
+> >  				bus-range = <0x00 0xff>;
+> > -				interrupt-map-mask = <0 0 0 0>;
+> > -				interrupt-map = <0 0 0 0 &gic GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
+> > +				interrupt-map-mask = <0 0 0 7>;
+> > +				interrupt-map = <0 0 0 1 &pcie2_intc 0>,
+> > +						<0 0 0 2 &pcie2_intc 1>,
+> > +						<0 0 0 3 &pcie2_intc 2>,
+> > +						<0 0 0 4 &pcie2_intc 3>;
+> >  				marvell,pcie-port = <1>;
+> >  				marvell,pcie-lane = <0>;
+> >  				clocks = <&gateclk 5>;
+> >  				status = "disabled";
+> > +				pcie2_intc: interrupt-controller {
+> > +					interrupt-controller;
+> > +					#interrupt-cells = <1>;
+> > +				};
+> >  			};
+> >  
+> >  			/* x1 port */
+> > @@ -107,16 +125,25 @@
+> >  				reg = <0x1800 0 0 0 0>;
+> >  				#address-cells = <3>;
+> >  				#size-cells = <2>;
+> > +				interrupt-names = "intx";
+> > +				interrupts-extended = <&gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+> >  				#interrupt-cells = <1>;
+> >  				ranges = <0x82000000 0 0 0x82000000 0x3 0 1 0
+> >  					  0x81000000 0 0 0x81000000 0x3 0 1 0>;
+> >  				bus-range = <0x00 0xff>;
+> > -				interrupt-map-mask = <0 0 0 0>;
+> > -				interrupt-map = <0 0 0 0 &gic GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>;
+> > +				interrupt-map-mask = <0 0 0 7>;
+> > +				interrupt-map = <0 0 0 1 &pcie3_intc 0>,
+> > +						<0 0 0 2 &pcie3_intc 1>,
+> > +						<0 0 0 3 &pcie3_intc 2>,
+> > +						<0 0 0 4 &pcie3_intc 3>;
+> >  				marvell,pcie-port = <2>;
+> >  				marvell,pcie-lane = <0>;
+> >  				clocks = <&gateclk 6>;
+> >  				status = "disabled";
+> > +				pcie3_intc: interrupt-controller {
+> > +					interrupt-controller;
+> > +					#interrupt-cells = <1>;
+> > +				};
+> >  			};
+> >  
+> >  			/*
+> > @@ -129,16 +156,25 @@
+> >  				reg = <0x2000 0 0 0 0>;
+> >  				#address-cells = <3>;
+> >  				#size-cells = <2>;
+> > +				interrupt-names = "intx";
+> > +				interrupts-extended = <&gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
+> >  				#interrupt-cells = <1>;
+> >  				ranges = <0x82000000 0 0 0x82000000 0x4 0 1 0
+> >  					  0x81000000 0 0 0x81000000 0x4 0 1 0>;
+> >  				bus-range = <0x00 0xff>;
+> > -				interrupt-map-mask = <0 0 0 0>;
+> > -				interrupt-map = <0 0 0 0 &gic GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>;
+> > +				interrupt-map-mask = <0 0 0 7>;
+> > +				interrupt-map = <0 0 0 1 &pcie4_intc 0>,
+> > +						<0 0 0 2 &pcie4_intc 1>,
+> > +						<0 0 0 3 &pcie4_intc 2>,
+> > +						<0 0 0 4 &pcie4_intc 3>;
+> >  				marvell,pcie-port = <3>;
+> >  				marvell,pcie-lane = <0>;
+> >  				clocks = <&gateclk 7>;
+> >  				status = "disabled";
+> > +				pcie4_intc: interrupt-controller {
+> > +					interrupt-controller;
+> > +					#interrupt-cells = <1>;
+> > +				};
+> >  			};
+> >  		};
+> >  	};
+> > -- 
+> > 2.20.1
+> >
+> 
+> -- 
+> Gregory Clement, Bootlin
+> Embedded Linux and Kernel engineering
+> http://bootlin.com
