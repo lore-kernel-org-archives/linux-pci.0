@@ -2,147 +2,149 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1638EC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Feb 2022 21:12:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77FB4C43219
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Feb 2022 00:04:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230324AbiBNVMH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 16:12:07 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44968 "EHLO
+        id S232005AbiBOAE0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 19:04:26 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230260AbiBNVMF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 16:12:05 -0500
-Received: from mail-oo1-xc2b.google.com (mail-oo1-xc2b.google.com [IPv6:2607:f8b0:4864:20::c2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AA3111941D
-        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 13:11:57 -0800 (PST)
-Received: by mail-oo1-xc2b.google.com with SMTP id p190-20020a4a2fc7000000b0031820de484aso20808808oop.9
-        for <linux-pci@vger.kernel.org>; Mon, 14 Feb 2022 13:11:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=LNIIAz3zQQaMmzK3Lz7n5biZPq3E2euYGu1gGCUEiUU=;
-        b=e+9/aIcapobLzUjuzWwCgjtrECD4Nz67ZklJZLlhaJiox8qfEoUy+GU7FMZlc9tQKf
-         70XobxmHxms3p+b3cX1vPLmpMzFtT4TUxGpxDFVgIsD1tIcgAidU7NyTOhAPOvtWOOOL
-         trGD4b8Z6qqdEiHjjhgqr21N2vFoaCE3/fgG4Wh6mNqpZLb+OIGpnaXP37C5FH3V44Nc
-         3SxQUaw7z7VJb3t8wRiidTg9AXs/QyF4FNIIvKuYzseQDibK2D4jwHdkgpSqWN1+UJ6C
-         7PaeNPx+1C6E06lXbGybY0/do0xzLQHhRBwrNTxzgB3KagOb9AUR7u2K0azCw4YX3nvJ
-         hDwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=LNIIAz3zQQaMmzK3Lz7n5biZPq3E2euYGu1gGCUEiUU=;
-        b=VpNrvKgnWEnpcC2dX467RmGxYCo+l6JTCo5BTvmjqqcACzBjrs9IDu3PLHesnTVg5L
-         gBYwizN6xyD2QLv6HN2BjyzBYKziPqJl0nC0GOGi0QMiPEBwRTk60t0trFQkC/4Iaqah
-         euN0fF0rYCPX6wGBOFXZlvbAKk6tsbGZKJ4L52/C1tJMB+/5pBRr9RhKQdiZ40VFI/xj
-         EBJJAU4aFjmjw0soIMBunfpMq4G9aycxUwT0v41EaCw5SCAvIxXvpOlqN7Rfp38aDJx9
-         9Gmg4HpX+I5MjN6bpHzgMNmRMDZSSn7IKVcNguNPm7xSHIVDggE4xIwbvoXthrign5iI
-         8RKg==
-X-Gm-Message-State: AOAM530X4w0+LIcAk2u/JduM4nsrQJKrRcxA1+U3p1hOvWNhbixZI6xq
-        BXuw6fCG9lzehQtvNvtzBFmad9r4VkaWgouht4ilDYL4cUw=
-X-Google-Smtp-Source: ABdhPJxVTF5h08NSNXTHrXWdDbPywfICYCIAA4dvceyfHnC11SOo3zAin7e+e2W6f7vCUWzlvI+mSWTgxqtkOna79vk=
-X-Received: by 2002:a17:90a:e7cb:: with SMTP id kb11mr94342pjb.220.1644866060312;
- Mon, 14 Feb 2022 11:14:20 -0800 (PST)
+        with ESMTP id S230167AbiBOAEZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 19:04:25 -0500
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2056.outbound.protection.outlook.com [40.107.236.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F07A74845;
+        Mon, 14 Feb 2022 16:04:16 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hnjYhfw73lzaTfGyAzDYWYRCOy9vAqgSicOs8FuCddWeT4j5LigGyMcd3owez4i1v6W4OP0A3xKNrBMRWOLvW7ev1KhhKlSMK1/NB3TSsW10aL7yfpPy905uUxLP9Q0TYkhbvUhCAmT2Q5+KTtcu4VWFeuGdzmaGXXn0M2W8d4iWv/jeJ0uGm22stQPGYH3p7aZnzc8KCXbpuDR6G5Dimzazi/X9eQAG6aVbOCDFmb1A3R+1f0eGFLV8HW6NilWdHxroSBpfFpDDwTj/pekcdRXzg5dytARCzOj+pBzTNZ7TXTfQR4AArRheNSeAjbzdYTsgQZhKLM7xkOEF5/sKRA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pUs2DrPQ483G4YzvDc/WjKUI+wmsntMR+fQHTJ74TrY=;
+ b=TUKXfP9ZWsTrR+zhJf1APabnKcDNWgppeClY4qUlCY0+EhOdD+3032sNCoQXpvH9Ul5U1fvk6ieiLjJRBHei/3MIfyDk4jUDf4L4zjQCG6LcutZE2vIf1XPMq4V75KUrV3mcj5S3Z2LFu6bvBbNEQIvPBorzN/atwIeyAmvrUHGhuMIQk1utDhb8lXu+BdfHrkMN+alMHk8Cpt2aPVZKCM+k54Vxuh5fi6JPziI7JFUFA03MNZpMucjnXzv5VeMW9xc+RDGqBhq1pS+jTkoJUYPIkU9xe/6BL6xNrsTrrrFED5EEcKEY/2/L+Y2+n8KJh1aNu/hNHo3ANEgWU7Xb0Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pUs2DrPQ483G4YzvDc/WjKUI+wmsntMR+fQHTJ74TrY=;
+ b=R9MUM+sAz1QrzLRukw4mSzhSi7GizesUH0xi2ZMFMLCqC+J5hQUyBC0eKJE+JfxUwE6wErupX9l/nyFtmbUtym7E630SAQ+d2RakHPdALAPFPPr3OVWHkRVN468GwXBC7i5vDxC+yqyBVQo7yasYVFcSOYmw6/LKEr4EjsiOPLo=
+Received: from MWHPR12CA0028.namprd12.prod.outlook.com (2603:10b6:301:2::14)
+ by DM5PR12MB1882.namprd12.prod.outlook.com (2603:10b6:3:112::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.18; Tue, 15 Feb
+ 2022 00:04:14 +0000
+Received: from CO1NAM11FT015.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:301:2:cafe::a6) by MWHPR12CA0028.outlook.office365.com
+ (2603:10b6:301:2::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.14 via Frontend
+ Transport; Tue, 15 Feb 2022 00:04:14 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT015.mail.protection.outlook.com (10.13.175.130) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4975.11 via Frontend Transport; Tue, 15 Feb 2022 00:04:14 +0000
+Received: from localhost.localdomain (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Mon, 14 Feb
+ 2022 18:04:12 -0600
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        "open list:THUNDERBOLT DRIVER" <linux-usb@vger.kernel.org>,
+        "open list:RADEON and AMDGPU DRM DRIVERS" 
+        <amd-gfx@lists.freedesktop.org>,
+        "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
+        <nouveau@lists.freedesktop.org>
+CC:     Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        "Lukas Wunner" <lukas@wunner.de>, <Alexander.Deucher@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Mario Limonciello <mario.limonciello@amd.com>,
+        "Alex Deucher" <alexander.deucher@amd.com>
+Subject: [PATCH v4 01/10] PCI: Add USB4 class definition
+Date:   Mon, 14 Feb 2022 18:01:51 -0600
+Message-ID: <20220215000200.242799-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220215000200.242799-1-mario.limonciello@amd.com>
+References: <20220215000200.242799-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
-References: <164298430609.3018233.3860765171749496117.stgit@dwillia2-desk3.amr.corp.intel.com>
- <164386092069.765089.14895687988217608642.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20220214174521.00003b84@Huawei.com>
-In-Reply-To: <20220214174521.00003b84@Huawei.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 14 Feb 2022 11:14:13 -0800
-Message-ID: <CAPcyv4g++ishMNkSLYAq3ss_qMXv-gabubVG_q2H9ed+C7KW-A@mail.gmail.com>
-Subject: Re: [PATCH v4 35/40] cxl/core/port: Add endpoint decoders
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     linux-cxl@vger.kernel.org, Ben Widawsky <ben.widawsky@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux NVDIMM <nvdimm@lists.linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8db77d3a-2d37-444b-55c5-08d9f016b39d
+X-MS-TrafficTypeDiagnostic: DM5PR12MB1882:EE_
+X-Microsoft-Antispam-PRVS: <DM5PR12MB18829B386A8AF408F18802AAE2349@DM5PR12MB1882.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3968;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: hnktZX8JBDloQKdr93gMYT5knXVCw7Tx6uquaR9c97yTxph8pwjr7bqyjuzufVJgJbDIGargI7OzPQ7Is7dQvZdAg2EqqJ/gB2IMkxH8XMXPYohg/OInF+JWyETcoNYWPHULpa5a0PlHkoTtvsJNy2E2B1f4Wmhss4uttfa9rLsXd3Gbj5gh21nxj1hLOVAv9O+11KvtFUSP14e1cz2vB7mywZTvxTOr7YmYVhOQPAjrayBqTMOvqpPiHNmHzrYlVYZ+82tkbehC40JNKImLgA/QMGvbl06+GY7h55esP0c1vKvKY/s02YoNKfoQFqz7Jg6kfgj5IFkQeIMC89zxdL4B0RWq/TpgqJpnN/WICZHsZBeCcRSu4QMxAvisjdpDLs6bnP/CCWjS4hBv4zlJ3mcB3oWANUY573ekDjWJKiNq2Um7ZhwaQZmnpDO2uQuAowxvkuE0Xy7Pg2VHDrUuyRW2Ah6zM08LfhoFGAoIB73S/Nl8sjhST1WXYPG7SqSpaXLaLkG5tm/gg4azeL8doS/bFZBTOkAlCQXwmPL5j89laDHaklJDsYu/AecwJ59vg7XDAUgvMzv2CuVXnGouie+XdMeMc0ox/H/QdLP+iY+1nVlTxgLIBsyF0SkJQ/i9qX2jM83d6wkBUh3jWz5cqdA/EJaxAO1IhQRDWM4x7zaZiT1w56X/Vz8w6km5EZxU5JkqIc4YvjuvJQW4MKxZSQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(36756003)(40460700003)(2616005)(1076003)(186003)(2906002)(44832011)(16526019)(26005)(8936002)(5660300002)(7416002)(8676002)(4326008)(81166007)(70586007)(356005)(70206006)(110136005)(316002)(426003)(508600001)(54906003)(47076005)(6666004)(86362001)(36860700001)(82310400004)(336012)(83380400001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2022 00:04:14.1452
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8db77d3a-2d37-444b-55c5-08d9f016b39d
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT015.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR12MB1882
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 14, 2022 at 9:47 AM Jonathan Cameron
-<Jonathan.Cameron@huawei.com> wrote:
->
-> On Wed, 02 Feb 2022 20:02:06 -0800
-> Dan Williams <dan.j.williams@intel.com> wrote:
->
-> > From: Ben Widawsky <ben.widawsky@intel.com>
-> >
-> > Recall that a CXL Port is any object that publishes a CXL HDM Decoder
-> > Capability structure. That is Host Bridge and Switches that have been
-> > enabled so far. Now, add decoder support to the 'endpoint' CXL Ports
-> > registered by the cxl_mem driver. They mostly share the same enumeratio=
-n
-> > as Bridges and Switches, but witout a target list. The target of
-> > endpoint decode is device-internal DPA space, not another downstream
-> > port.
-> >
-> > Signed-off-by: Ben Widawsky <ben.widawsky@intel.com>
-> > Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > [djbw: clarify changelog, hookup enumeration in the port driver]
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->
-> ...
->
-> > index f5e5b4ac8228..990b6670222e 100644
-> > --- a/drivers/cxl/cxl.h
-> > +++ b/drivers/cxl/cxl.h
-> > @@ -346,6 +346,7 @@ struct cxl_decoder *cxl_root_decoder_alloc(struct c=
-xl_port *port,
-> >  struct cxl_decoder *cxl_switch_decoder_alloc(struct cxl_port *port,
-> >                                            unsigned int nr_targets);
-> >  int cxl_decoder_add(struct cxl_decoder *cxld, int *target_map);
-> > +struct cxl_decoder *cxl_endpoint_decoder_alloc(struct cxl_port *port);
-> >  int cxl_decoder_add_locked(struct cxl_decoder *cxld, int *target_map);
-> >  int cxl_decoder_autoremove(struct device *host, struct cxl_decoder *cx=
-ld);
-> >  int cxl_endpoint_autoremove(struct cxl_memdev *cxlmd, struct cxl_port =
-*endpoint);
-> > diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
-> > index 4d4e23b9adff..d420da5fc39c 100644
-> > --- a/drivers/cxl/port.c
-> > +++ b/drivers/cxl/port.c
-> > @@ -40,16 +40,17 @@ static int cxl_port_probe(struct device *dev)
-> >               struct cxl_memdev *cxlmd =3D to_cxl_memdev(port->uport);
-> >
-> >               get_device(&cxlmd->dev);
-> > -             return devm_add_action_or_reset(dev, schedule_detach, cxl=
-md);
-> > +             rc =3D devm_add_action_or_reset(dev, schedule_detach, cxl=
-md);
-> > +             if (rc)
-> > +                     return rc;
-> > +     } else {
-> > +             rc =3D devm_cxl_port_enumerate_dports(port);
-> > +             if (rc < 0)
-> > +                     return rc;
-> > +             if (rc =3D=3D 1)
-> > +                     return devm_cxl_add_passthrough_decoder(port);
->
-> This is just a convenient place to ask a question rather that really bein=
-g
-> connected to this patch.
->
-> 8.2.5.12 in CXL r2.0
->
-> "A CXL Host Bridge is identified as an ACPI device with Host Interface ID=
- (HID) of
-> =E2=80=9CACPI0016=E2=80=9D and is associated with one or more CXL Root po=
-rts. Any CXL 2.0 Host
-> Bridge that is associated with more than one CXL Root Port must contain o=
-ne instance
-> of this capability structure in the CHBCR. This capability structure reso=
-lves the target
-> CXL Root Ports for a given memory address."
->
-> Suggests to me that there may be an HDM decoder in the one port case and =
-it may need
-> programming.
->
-> Hitting this in QEMU but I suspect it'll occur in real systems as well.
+This PCI class definition of the USB4 device is currently located only in
+the thunderbolt driver.
 
-It seems reasonable to wait for a real system like that to arrive. If
-someone is cheap enough to build a one-port host bridge would they
-spend the silicon gates on these unnecessary registers?
+It will be needed by a few other drivers for upcoming changes. Move it into
+the common include file.
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Alex Deucher <alexander.deucher@amd.com>
+Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/thunderbolt/nhi.h | 2 --
+ include/linux/pci_ids.h   | 1 +
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/thunderbolt/nhi.h b/drivers/thunderbolt/nhi.h
+index 69083aab2736..79e980b51f94 100644
+--- a/drivers/thunderbolt/nhi.h
++++ b/drivers/thunderbolt/nhi.h
+@@ -81,6 +81,4 @@ extern const struct tb_nhi_ops icl_nhi_ops;
+ #define PCI_DEVICE_ID_INTEL_TGL_H_NHI0			0x9a1f
+ #define PCI_DEVICE_ID_INTEL_TGL_H_NHI1			0x9a21
+ 
+-#define PCI_CLASS_SERIAL_USB_USB4			0x0c0340
+-
+ #endif
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index aad54c666407..61b161d914f0 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -116,6 +116,7 @@
+ #define PCI_CLASS_SERIAL_USB_OHCI	0x0c0310
+ #define PCI_CLASS_SERIAL_USB_EHCI	0x0c0320
+ #define PCI_CLASS_SERIAL_USB_XHCI	0x0c0330
++#define PCI_CLASS_SERIAL_USB_USB4	0x0c0340
+ #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
+ #define PCI_CLASS_SERIAL_FIBER		0x0c04
+ #define PCI_CLASS_SERIAL_SMBUS		0x0c05
+-- 
+2.34.1
+
