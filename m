@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCB32C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Feb 2022 00:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4800EC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Feb 2022 00:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232346AbiBOAEg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Feb 2022 19:04:36 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54860 "EHLO
+        id S232366AbiBOAEh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Feb 2022 19:04:37 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232358AbiBOAEf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 19:04:35 -0500
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam07on2085.outbound.protection.outlook.com [40.107.95.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB9107921C;
-        Mon, 14 Feb 2022 16:04:23 -0800 (PST)
+        with ESMTP id S232363AbiBOAEg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Feb 2022 19:04:36 -0500
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2088.outbound.protection.outlook.com [40.107.236.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C65627A9BB;
+        Mon, 14 Feb 2022 16:04:25 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jAQTTymP/KarmpHKxOw/sLXh1sALFVbiQBtKd6ug4V3u4OxK2/nFIOd3ZTUQHh6D3uiH6yqfZCDOr/H4rZxWAfpFAwsHQ1RaBLnpPubdS6w9pulauTMcf7ya336W4SysD/jcAa3p9Ng1s3KQrgHdIX9+HvUTjic0mN/K5PlrS1oMp2Xxi6kSeDIGmR7d/grbVjQr0RWxsj+Rgt9iQT28l9P7BYSqP68EkzVX44MuDfIXyv2QAm1dZWs8DFBwegyi0ZcR/ayFPJsMR+154R0PBnbsguDpBYG9W0eiFgvlKMTvuXHjy3JTV9HZ9JgMdpvGnQtS+q2O49EjoCBEG8MqYg==
+ b=QdgdN7h2PgDth7zICPStagOzypgEU5198WUJa8n2PvC353IsVqN4vyUeH3mCHVwomSSnW3upzQQlT8aG88Gq67js+l0r0Pi56/LFVwVUWEcWsKUHhoD1NzL981CnjPgw3+wHjGZcwSH8ZkGxQxIqHt2qIFOzZSzluvn7LM95+goW5nxCm9f97azFo0nDpGBz3QYCShR+YBSMTjFA8+3V6vxJD6/VZW8tvjMSPR149vOjkiH9QmHfIVBC/7RJFLezIP3sYoOh7xa3wTqUIZqkuTqbewHjVlw9/PPT5gyfIerT9M4gH9zqJI8a2pGB/WV0Jdope/R4iXd/U1mjQ3p8lQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7oUyybnOX7Vt79s+4l5CYxIr3J/OX8sZXo1FzadUCHY=;
- b=S5TdssPVBVqgjcE3DNREbYMMWGNgPOwUCoucI9qBhjW92wTuCi73ArMPpe8xbTF4W9DGdgb7REsVxfV21FmHsXGmP7NiuFrip7dGkIqZgSMvf1PgShH9Fulel54FUHjzsp+rwfGK8B0NDtfEPR02Ysv7ZyzILd82xxS6Ds7V0fOHMhjKq2LOVQz1Baoi7wWC6Poz04GMiHrxO1bPZxW1+9o29u9cBJ+h62P8ojlYGzUARC4WbiHtspGweXalPtOneKkAteyzskAhQBYD/j50ANTe/SY7953ttAtT3LTdXb/yaeAjuY34zUqtpF/8F4Sbm3cM5xtTKJwL95yT4EdUgg==
+ bh=4CJsbT/uQNbCLg3zijkw2HtWNygmK8JRosfQfMJvjsA=;
+ b=Im5nUSC8vLb/k4c49Tt1AGH5EXWfZOtNq5NRIiMeZBY00GFpDtniojrDLkRCRgZ8VDdICyPc64cZ4dLZWN5BizNGLwySpyioLgDmtVMjZOwklLci0ELkDG2GFLdqeK1dIm4wlshshUGjNuozHDiOs/EqAlTk4HY/t9hRO6JK7FR6U/z0lgV8EYJ1FXFHpTHhAqIfTXFAEoVijtYSZAYQtT+6xy/86VyiIki11G6r5vRVcZ3VNXXUg2MiToKiMDcod/0eGt59mDjvYUILGwPL0B4FdW+GSgCOZgiTiHxJD7LqjRHNATHLaf3lmhIuSOlz+0/NeXrSLIZIXtUMjWHhPA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7oUyybnOX7Vt79s+4l5CYxIr3J/OX8sZXo1FzadUCHY=;
- b=ouwfa662AlNp8R18fg2OQNb6vBJvk0c59RSFe3rzyyuFxYSxOj6X+QXsBMAu3B6tJo6IDmZO+Dv63HOw0AN55MNYbKSrPTF2oiGbbXGJ1VDjkogPplfYt4Trbnil04hR3VTVJFYDBePXCmpdOC25S7Ptv4wODPVIx04q8V9cZ/8=
-Received: from MWHPR12CA0047.namprd12.prod.outlook.com (2603:10b6:301:2::33)
- by CH2PR12MB3927.namprd12.prod.outlook.com (2603:10b6:610:2d::13) with
+ bh=4CJsbT/uQNbCLg3zijkw2HtWNygmK8JRosfQfMJvjsA=;
+ b=CA+NBKqYgJK9y0zqatUIdnZe/qz9Z4QRyRAxdYqNI171HLqLWmmR156hddnnGlXR9nd0tvvlnAvnBkC027NOLMbgiYXQ+C27DxQYK965fHLB9PmZ5B6DzZqRN+ocMLoMw/01i9VB2MeBmCFe1GOloZlqSF783s3tpS/H0TU+jHY=
+Received: from MWHPR12CA0038.namprd12.prod.outlook.com (2603:10b6:301:2::24)
+ by BN8PR12MB3267.namprd12.prod.outlook.com (2603:10b6:408:9e::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.19; Tue, 15 Feb
- 2022 00:04:21 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.17; Tue, 15 Feb
+ 2022 00:04:24 +0000
 Received: from CO1NAM11FT015.eop-nam11.prod.protection.outlook.com
- (2603:10b6:301:2:cafe::c8) by MWHPR12CA0047.outlook.office365.com
- (2603:10b6:301:2::33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.11 via Frontend
- Transport; Tue, 15 Feb 2022 00:04:21 +0000
+ (2603:10b6:301:2:cafe::16) by MWHPR12CA0038.outlook.office365.com
+ (2603:10b6:301:2::24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.12 via Frontend
+ Transport; Tue, 15 Feb 2022 00:04:23 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  CO1NAM11FT015.mail.protection.outlook.com (10.13.175.130) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.4975.11 via Frontend Transport; Tue, 15 Feb 2022 00:04:20 +0000
+ 15.20.4975.11 via Frontend Transport; Tue, 15 Feb 2022 00:04:23 +0000
 Received: from localhost.localdomain (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Mon, 14 Feb
- 2022 18:04:16 -0600
+ 2022 18:04:18 -0600
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
@@ -69,9 +69,9 @@ CC:     Andreas Noever <andreas.noever@gmail.com>,
         "Lukas Wunner" <lukas@wunner.de>, <Alexander.Deucher@amd.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v4 08/10] drm/nouveau: drop the use of `pci_is_thunderbolt_attached`
-Date:   Mon, 14 Feb 2022 18:01:58 -0600
-Message-ID: <20220215000200.242799-9-mario.limonciello@amd.com>
+Subject: [PATCH v4 10/10] PCI: drop `pci_is_thunderbolt_attached`
+Date:   Mon, 14 Feb 2022 18:02:00 -0600
+Message-ID: <20220215000200.242799-11-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220215000200.242799-1-mario.limonciello@amd.com>
 References: <20220215000200.242799-1-mario.limonciello@amd.com>
@@ -83,25 +83,25 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d19e3263-f4f8-4a3d-cac9-08d9f016b7ac
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3927:EE_
-X-Microsoft-Antispam-PRVS: <CH2PR12MB3927D6FACBCCCFF9E5EA84CCE2349@CH2PR12MB3927.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:883;
+X-MS-Office365-Filtering-Correlation-Id: 826b7417-dd46-4f74-c994-08d9f016b914
+X-MS-TrafficTypeDiagnostic: BN8PR12MB3267:EE_
+X-Microsoft-Antispam-PRVS: <BN8PR12MB32676935BE62DD71FC4A72ECE2349@BN8PR12MB3267.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TLGXfGOFImTbRs+KsvskQ38TamAjxZwB9IySlRQQccvNLpiclyS1o3sYhg8DfrLYo0zePT0/S38k2h++iUl0JU4xeXhZe0uaHLlN9oXtjL4b12Srji28qMbkNZD1ix1Yc9NdUJ8SK0ysXb3CPEQuXBbnOSoiPqlv+ndKUkye47jhOFZQr8Wqw21X7x9gT2zhFVjbNlyFJBvFzlJPpPDvAMEDjEghRO6IEeWfuyfRW4ZQxi9Q8I+niDsg7tjn8fDZW0E/Ny6qGhUpW680EwYokONTY7dfx+L11LXmK0KzZxrnuhgKQJ0IxrX3mTZRaazsYKsOuN5Ub+YC8peiEJjO7pbFUvjEKImU0FKf/abdIVdjWvJm11BLvYvFsHy602hKI5XcWhHPS+ONyx5BirDBSD67s8RTAGgETEzoSmhjftQnjh0YX6wltRaC4QwvGVUe1q+oQaExfHpbdTnyqOPjA2xc8qYKxVCiTenPpR5FlQCqE2QPwzO+uqHAv6tHOLR3kBdFgix/m/92CyZumpSJ78G454OB70V1f5z6+xEB84w7yL7k6t7AeRS5oFhsL/h7r/az2zKJNNkTGRbx9QLC7e8vHAGJNbIMcOp1XvAgZl+pLpjVawXUcE9fFus8TDr/nDP5tmlpOzzlQWYv9thyilUbwD12/GhKj7acn3SolDVjjXpf3j4nUeBMBDCZd+97jrJ6zDCNbrsQdtkH3fFGFxe9mahZ7ZGclDV5n+I01Kw=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(46966006)(36840700001)(40470700004)(36756003)(5660300002)(40460700003)(2616005)(356005)(26005)(1076003)(2906002)(44832011)(186003)(8936002)(16526019)(7416002)(8676002)(4326008)(81166007)(70586007)(70206006)(336012)(508600001)(316002)(54906003)(110136005)(47076005)(6666004)(86362001)(36860700001)(82310400004)(426003)(83380400001)(81973001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 4BU0upFeyyulbVyS1/GE2fwcgOcMTMu6li28j7s3SS5R6feUSq3F2u4pIFnuidmXuA3Kmohq5HzncZswcJ4D9oKh+VHPJSYDVfh0uE2fbzE5vRNtE2gBfDiL6keLyYaHJSwwd5H0d2gXJrCCPLxoU4F2MFePWyaMM0nIg7NFqMU/xL4Z/VodvTo3vhVb+7woLx+WNWb4C9dGp4qco98h+6/2OEjEEZpGJxL7SKf00VHo4IKZWmL16Lo5KMXCjcQlBfDlASBCSASmKF0c2ZJUtcuzCNHVf2PvpJUgunPyzfjCImp9KpEW5/mEH3+huejT8yhjmcq5DYX0Dgyf7GEOUFXmFTyrxqW+DwxXuaLotQoTAfkEmE+tF44UuxjhI8YDGJ7y6WfQkRRK9z3JdoM4ODbBRMeZpYjZRDwoImivOA9cAzR4zPsEG+Wwx4TOGUXKLN5pvnBKZVZ5g4js0KMA55yuBbfA3iUz2XLh0/FvbSsMaUBHiYkBSq00t1qSa2EwAMyayUIHSD06QrDz/ZJ96dqroiDEoR9vMaLX7dnxjL6ftFlMrD4DGEhYu+/umcCoFhJI7SScjnRuNaAw1JEIn4HjbdyqavgUY4UO3Zyvw0v/UPJtEtLTNMbI/4DJrTlrEfyobLaqraix81BTaMowZpMYsobdKm3nMD214WlEp5IHsoepoxjZUH/GBFbHviZ4oLVGoGDjC/tQF8kBfjOscozIVSMRfdSQ9GoKf0Pk7fs=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(40470700004)(46966006)(86362001)(2906002)(8676002)(6666004)(82310400004)(7416002)(5660300002)(8936002)(44832011)(83380400001)(47076005)(40460700003)(54906003)(110136005)(508600001)(36860700001)(356005)(2616005)(81166007)(4326008)(36756003)(316002)(70586007)(70206006)(26005)(1076003)(16526019)(426003)(336012)(186003)(81973001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2022 00:04:20.9731
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Feb 2022 00:04:23.3167
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d19e3263-f4f8-4a3d-cac9-08d9f016b7ac
+X-MS-Exchange-CrossTenant-Network-Message-Id: 826b7417-dd46-4f74-c994-08d9f016b914
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT015.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB3927
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB3267
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -109,36 +109,46 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Currently `pci_is_thunderbolt_attached` is used to indicate a device
 is connected externally.
 
-The PCI core now marks such devices as removable and downstream drivers
-can use this instead.
+As all drivers now look at the removable attribute, drop this function.
 
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- drivers/gpu/drm/nouveau/nouveau_vga.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/pci.h | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
-index 60cd8c0463df..2c8008cb38e0 100644
---- a/drivers/gpu/drm/nouveau/nouveau_vga.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
-@@ -97,7 +97,7 @@ nouveau_vga_init(struct nouveau_drm *drm)
- 	vga_client_register(pdev, nouveau_vga_set_decode);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d9719eb14654..089e7e36a0d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2434,28 +2434,6 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
+ 	return bus->self && bus->self->ari_enabled;
+ }
  
- 	/* don't register Thunderbolt eGPU with vga_switcheroo */
--	if (pci_is_thunderbolt_attached(pdev))
-+	if (dev_is_removable(&pdev->dev))
- 		return;
- 
- 	vga_switcheroo_register_client(pdev, &nouveau_switcheroo_ops, runtime);
-@@ -120,7 +120,7 @@ nouveau_vga_fini(struct nouveau_drm *drm)
- 
- 	vga_client_unregister(pdev);
- 
--	if (pci_is_thunderbolt_attached(pdev))
-+	if (dev_is_removable(&pdev->dev))
- 		return;
- 
- 	vga_switcheroo_unregister_client(pdev);
+-/**
+- * pci_is_thunderbolt_attached - whether device is on a Thunderbolt daisy chain
+- * @pdev: PCI device to check
+- *
+- * Walk upwards from @pdev and check for each encountered bridge if it's part
+- * of a Thunderbolt controller.  Reaching the host bridge means @pdev is not
+- * Thunderbolt-attached.  (But rather soldered to the mainboard usually.)
+- */
+-static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
+-{
+-	struct pci_dev *parent = pdev;
+-
+-	if (dev_is_removable(&pdev->dev))
+-		return true;
+-
+-	while ((parent = pci_upstream_bridge(parent)))
+-		if (dev_is_removable(&parent->dev))
+-			return true;
+-
+-	return false;
+-}
+-
+ #if defined(CONFIG_PCIEPORTBUS) || defined(CONFIG_EEH)
+ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+ #endif
 -- 
 2.34.1
 
