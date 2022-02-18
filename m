@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BD5C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Feb 2022 00:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6023C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Feb 2022 00:58:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230363AbiBRA6V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Feb 2022 19:58:21 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:37282 "EHLO
+        id S230384AbiBRA6f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Feb 2022 19:58:35 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:38064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230366AbiBRA6U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Feb 2022 19:58:20 -0500
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3737EDB6;
-        Thu, 17 Feb 2022 16:58:04 -0800 (PST)
+        with ESMTP id S230366AbiBRA6a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Feb 2022 19:58:30 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8881EAA2E1;
+        Thu, 17 Feb 2022 16:58:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645145884; x=1676681884;
+  t=1645145891; x=1676681891;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UFkwCHuU+IvmeOvWmbsEh9I3bQoOyZXUU1GZhGp2oaY=;
-  b=h0TqKuHHq5RW6Ic9oE7iv1Atzo6lJ67pV5wm47Nc7h3APvPkVbUHGJ8y
-   XqCWEPE4QDtGJL+iOkeMxGM+/074IIIvXEBsWGd7b/FDWJ8QBCIz7fEmo
-   0tWE1ATvJYsQIp23nmaQxCVm1bCmIKcDfDelrf2sgFu6suf5yJSO0VTFP
-   rXbGi05eI/fcZr4C7LPV4ixVFuC9IjC/bEisQXOcmUz/KrilaItRXOsNP
-   jnHR+wEA3b9PCCi6zZJ/QnRLPqHZ37yRoyDnC/Sg56E8E6pbs/yJ2uu8e
-   wDKUWyl+lNnGlYePAVI3VQMRqXTMjymcpoNttT8+IO7wCX2QKqiSkhjsD
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="249851839"
+  bh=Z0gFB9jEANNtxw9swDDrsLlWa/7lPuy8uGiGkZnIqZw=;
+  b=Nq8ht0cy5LwzJ3a81fjy+GAhHSmMj9fkC4XSXr7Szj7Xr2oRKdBI+NBc
+   wUzr52g29GfF8TGRYxejQHXOVapFxqkUj9NYmZJv9sX/T6cUoSlfyIS+S
+   SSYenz51/e87vhk1Dqs98l5dd/+dyVY5GCCHBxik4FlJGemV1ZVbMN1N4
+   u4O0Vojb2a0ZOJ1RtB7rJ7hGFvrX1h9WEArHASzHpHQfYA1UTcC+jPFVo
+   e/uiH++/WvaT/zlUOm5pFFmRx1ibG4L0PMDSSR2CNLHrlFgkwVZzp1Lp6
+   EPzUrtPRpz1h76lsVQ5MntRcvvY182f2pbmLZ/PMENtndZzSyuwEvC0qQ
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="248612918"
 X-IronPort-AV: E=Sophos;i="5.88,377,1635231600"; 
-   d="scan'208";a="249851839"
+   d="scan'208";a="248612918"
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 16:57:02 -0800
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 16:58:00 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,377,1635231600"; 
-   d="scan'208";a="637490632"
+   d="scan'208";a="637491455"
 Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga004.jf.intel.com with ESMTP; 17 Feb 2022 16:56:53 -0800
+  by orsmga004.jf.intel.com with ESMTP; 17 Feb 2022 16:57:52 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joerg Roedel <joro@8bytes.org>,
@@ -65,9 +65,9 @@ Cc:     Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH v6 01/11] iommu: Add dma ownership management interfaces
-Date:   Fri, 18 Feb 2022 08:55:11 +0800
-Message-Id: <20220218005521.172832-2-baolu.lu@linux.intel.com>
+Subject: [PATCH v6 09/11] vfio: Delete the unbound_list
+Date:   Fri, 18 Feb 2022 08:55:19 +0800
+Message-Id: <20220218005521.172832-10-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220218005521.172832-1-baolu.lu@linux.intel.com>
 References: <20220218005521.172832-1-baolu.lu@linux.intel.com>
@@ -77,286 +77,182 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Multiple devices may be placed in the same IOMMU group because they
-cannot be isolated from each other. These devices must either be
-entirely under kernel control or userspace control, never a mixture.
+From: Jason Gunthorpe <jgg@nvidia.com>
 
-This adds dma ownership management in iommu core and exposes several
-interfaces for the device drivers and the device userspace assignment
-framework (i.e. VFIO), so that any conflict between user and kernel
-controlled dma could be detected at the beginning.
+commit 60720a0fc646 ("vfio: Add device tracking during unbind") added the
+unbound list to plug a problem with KVM where KVM_DEV_VFIO_GROUP_DEL
+relied on vfio_group_get_external_user() succeeding to return the
+vfio_group from a group file descriptor. The unbound list allowed
+vfio_group_get_external_user() to continue to succeed in edge cases.
 
-The device driver oriented interfaces are,
+However commit 5d6dee80a1e9 ("vfio: New external user group/file match")
+deleted the call to vfio_group_get_external_user() during
+KVM_DEV_VFIO_GROUP_DEL. Instead vfio_external_group_match_file() is used
+to directly match the file descriptor to the group pointer.
 
-	int iommu_device_use_default_domain(struct device *dev);
-	void iommu_device_unuse_default_domain(struct device *dev);
+This in turn avoids the call down to vfio_dev_viable() during
+KVM_DEV_VFIO_GROUP_DEL and also avoids the trouble the first commit was
+trying to fix.
 
-By calling iommu_device_use_default_domain(), the device driver tells
-the iommu layer that the device dma is handled through the kernel DMA
-APIs. The iommu layer will manage the IOVA and use the default domain
-for DMA address translation.
+There are no other users of vfio_dev_viable() that care about the time
+after vfio_unregister_group_dev() returns, so simply delete the
+unbound_list entirely.
 
-The device user-space assignment framework oriented interfaces are,
-
-	int iommu_group_claim_dma_owner(struct iommu_group *group,
-					void *owner);
-	void iommu_group_release_dma_owner(struct iommu_group *group);
-	bool iommu_group_dma_owner_claimed(struct iommu_group *group);
-
-The device userspace assignment must be disallowed if the DMA owner
-claiming interface returns failure.
-
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
-Signed-off-by: Kevin Tian <kevin.tian@intel.com>
 Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 ---
- include/linux/iommu.h |  31 +++++++++
- drivers/iommu/iommu.c | 158 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 186 insertions(+), 3 deletions(-)
+ drivers/vfio/vfio.c | 74 ++-------------------------------------------
+ 1 file changed, 2 insertions(+), 72 deletions(-)
 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 9208eca4b0d1..77972ef978b5 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -675,6 +675,13 @@ struct iommu_sva *iommu_sva_bind_device(struct device *dev,
- void iommu_sva_unbind_device(struct iommu_sva *handle);
- u32 iommu_sva_get_pasid(struct iommu_sva *handle);
- 
-+int iommu_device_use_default_domain(struct device *dev);
-+void iommu_device_unuse_default_domain(struct device *dev);
-+
-+int iommu_group_claim_dma_owner(struct iommu_group *group, void *owner);
-+void iommu_group_release_dma_owner(struct iommu_group *group);
-+bool iommu_group_dma_owner_claimed(struct iommu_group *group);
-+
- #else /* CONFIG_IOMMU_API */
- 
- struct iommu_ops {};
-@@ -1031,6 +1038,30 @@ static inline struct iommu_fwspec *dev_iommu_fwspec_get(struct device *dev)
- {
- 	return NULL;
- }
-+
-+static inline int iommu_device_use_default_domain(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static inline void iommu_device_unuse_default_domain(struct device *dev)
-+{
-+}
-+
-+static inline int
-+iommu_group_claim_dma_owner(struct iommu_group *group, void *owner)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline void iommu_group_release_dma_owner(struct iommu_group *group)
-+{
-+}
-+
-+static inline bool iommu_group_dma_owner_claimed(struct iommu_group *group)
-+{
-+	return false;
-+}
- #endif /* CONFIG_IOMMU_API */
- 
- /**
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index f2c45b85b9fc..4e2ad7124780 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -48,6 +48,8 @@ struct iommu_group {
- 	struct iommu_domain *default_domain;
- 	struct iommu_domain *domain;
- 	struct list_head entry;
-+	unsigned int owner_cnt;
-+	void *owner;
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 73034446e03f..e0df2bc692b2 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -62,11 +62,6 @@ struct vfio_container {
+ 	bool				noiommu;
  };
  
- struct group_device {
-@@ -294,7 +296,11 @@ int iommu_probe_device(struct device *dev)
- 	mutex_lock(&group->mutex);
- 	iommu_alloc_default_domain(group, dev);
- 
--	if (group->default_domain) {
-+	/*
-+	 * If device joined an existing group which has been claimed, don't
-+	 * attach the default domain.
-+	 */
-+	if (group->default_domain && !group->owner) {
- 		ret = __iommu_attach_device(group->default_domain, dev);
- 		if (ret) {
- 			mutex_unlock(&group->mutex);
-@@ -2109,7 +2115,7 @@ static int __iommu_attach_group(struct iommu_domain *domain,
+-struct vfio_unbound_dev {
+-	struct device			*dev;
+-	struct list_head		unbound_next;
+-};
+-
+ struct vfio_group {
+ 	struct device 			dev;
+ 	struct cdev			cdev;
+@@ -79,8 +74,6 @@ struct vfio_group {
+ 	struct notifier_block		nb;
+ 	struct list_head		vfio_next;
+ 	struct list_head		container_next;
+-	struct list_head		unbound_list;
+-	struct mutex			unbound_lock;
+ 	atomic_t			opened;
+ 	wait_queue_head_t		container_q;
+ 	enum vfio_group_type		type;
+@@ -340,16 +333,8 @@ vfio_group_get_from_iommu(struct iommu_group *iommu_group)
+ static void vfio_group_release(struct device *dev)
  {
- 	int ret;
+ 	struct vfio_group *group = container_of(dev, struct vfio_group, dev);
+-	struct vfio_unbound_dev *unbound, *tmp;
+-
+-	list_for_each_entry_safe(unbound, tmp,
+-				 &group->unbound_list, unbound_next) {
+-		list_del(&unbound->unbound_next);
+-		kfree(unbound);
+-	}
  
--	if (group->default_domain && group->domain != group->default_domain)
-+	if (group->domain && group->domain != group->default_domain)
- 		return -EBUSY;
+ 	mutex_destroy(&group->device_lock);
+-	mutex_destroy(&group->unbound_lock);
+ 	iommu_group_put(group->iommu_group);
+ 	ida_free(&vfio.group_ida, MINOR(group->dev.devt));
+ 	kfree(group);
+@@ -381,8 +366,6 @@ static struct vfio_group *vfio_group_alloc(struct iommu_group *iommu_group,
+ 	refcount_set(&group->users, 1);
+ 	INIT_LIST_HEAD(&group->device_list);
+ 	mutex_init(&group->device_lock);
+-	INIT_LIST_HEAD(&group->unbound_list);
+-	mutex_init(&group->unbound_lock);
+ 	init_waitqueue_head(&group->container_q);
+ 	group->iommu_group = iommu_group;
+ 	/* put in vfio_group_release() */
+@@ -571,19 +554,8 @@ static int vfio_dev_viable(struct device *dev, void *data)
+ 	struct vfio_group *group = data;
+ 	struct vfio_device *device;
+ 	struct device_driver *drv = READ_ONCE(dev->driver);
+-	struct vfio_unbound_dev *unbound;
+-	int ret = -EINVAL;
  
- 	ret = __iommu_group_for_each_dev(group, domain,
-@@ -2146,7 +2152,11 @@ static void __iommu_detach_group(struct iommu_domain *domain,
- {
- 	int ret;
+-	mutex_lock(&group->unbound_lock);
+-	list_for_each_entry(unbound, &group->unbound_list, unbound_next) {
+-		if (dev == unbound->dev) {
+-			ret = 0;
+-			break;
+-		}
+-	}
+-	mutex_unlock(&group->unbound_lock);
+-
+-	if (!ret || !drv || vfio_dev_driver_allowed(dev, drv))
++	if (!drv || vfio_dev_driver_allowed(dev, drv))
+ 		return 0;
  
--	if (!group->default_domain) {
-+	/*
-+	 * If the group has been claimed already, do not re-attach the default
-+	 * domain.
-+	 */
-+	if (!group->default_domain || group->owner) {
- 		__iommu_group_for_each_dev(group, domain,
- 					   iommu_group_do_detach_device);
- 		group->domain = NULL;
-@@ -3095,3 +3105,145 @@ static ssize_t iommu_group_store_type(struct iommu_group *group,
+ 	device = vfio_group_get_device(group, dev);
+@@ -592,7 +564,7 @@ static int vfio_dev_viable(struct device *dev, void *data)
+ 		return 0;
+ 	}
  
- 	return ret;
+-	return ret;
++	return -EINVAL;
  }
-+
-+/**
-+ * iommu_device_use_default_domain() - Device driver wants to handle device
-+ *                                     DMA through the kernel DMA API.
-+ * @dev: The device.
-+ *
-+ * The device driver about to bind @dev wants to do DMA through the kernel
-+ * DMA API. Return 0 if it is allowed, otherwise an error.
-+ */
-+int iommu_device_use_default_domain(struct device *dev)
-+{
-+	struct iommu_group *group = iommu_group_get(dev);
-+	int ret = 0;
-+
-+	if (!group)
-+		return 0;
-+
-+	mutex_lock(&group->mutex);
-+	if (group->owner_cnt) {
-+		if (group->domain != group->default_domain ||
-+		    group->owner) {
-+			ret = -EBUSY;
-+			goto unlock_out;
-+		}
-+	}
-+
-+	group->owner_cnt++;
-+
-+unlock_out:
-+	mutex_unlock(&group->mutex);
-+	iommu_group_put(group);
-+
-+	return ret;
-+}
-+
-+/**
-+ * iommu_device_unuse_default_domain() - Device driver stops handling device
-+ *                                       DMA through the kernel DMA API.
-+ * @dev: The device.
-+ *
-+ * The device driver doesn't want to do DMA through kernel DMA API anymore.
-+ * It must be called after iommu_device_use_default_domain().
-+ */
-+void iommu_device_unuse_default_domain(struct device *dev)
-+{
-+	struct iommu_group *group = iommu_group_get(dev);
-+
-+	if (!group)
-+		return;
-+
-+	mutex_lock(&group->mutex);
-+	if (!WARN_ON(!group->owner_cnt))
-+		group->owner_cnt--;
-+
-+	mutex_unlock(&group->mutex);
-+	iommu_group_put(group);
-+}
-+
-+/**
-+ * iommu_group_claim_dma_owner() - Set DMA ownership of a group
-+ * @group: The group.
-+ * @owner: Caller specified pointer. Used for exclusive ownership.
-+ *
-+ * This is to support backward compatibility for vfio which manages
-+ * the dma ownership in iommu_group level. New invocations on this
-+ * interface should be prohibited.
-+ */
-+int iommu_group_claim_dma_owner(struct iommu_group *group, void *owner)
-+{
-+	int ret = 0;
-+
-+	mutex_lock(&group->mutex);
-+	if (group->owner_cnt) {
-+		if (group->owner != owner) {
-+			ret = -EPERM;
-+			goto unlock_out;
-+		}
-+	} else {
-+		if (group->domain && group->domain != group->default_domain) {
-+			ret = -EBUSY;
-+			goto unlock_out;
-+		}
-+
-+		group->owner = owner;
-+		if (group->domain)
-+			__iommu_detach_group(group->domain, group);
-+	}
-+
-+	group->owner_cnt++;
-+unlock_out:
-+	mutex_unlock(&group->mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iommu_group_claim_dma_owner);
-+
-+/**
-+ * iommu_group_release_dma_owner() - Release DMA ownership of a group
-+ * @group: The group.
-+ *
-+ * Release the DMA ownership claimed by iommu_group_claim_dma_owner().
-+ */
-+void iommu_group_release_dma_owner(struct iommu_group *group)
-+{
-+	mutex_lock(&group->mutex);
-+	if (WARN_ON(!group->owner_cnt || !group->owner))
-+		goto unlock_out;
-+
-+	if (--group->owner_cnt > 0)
-+		goto unlock_out;
-+
-+	/*
-+	 * The UNMANAGED domain should be detached before all USER
-+	 * owners have been released.
-+	 */
-+	if (!WARN_ON(group->domain) && group->default_domain)
-+		__iommu_attach_group(group->default_domain, group);
-+	group->owner = NULL;
-+
-+unlock_out:
-+	mutex_unlock(&group->mutex);
-+}
-+EXPORT_SYMBOL_GPL(iommu_group_release_dma_owner);
-+
-+/**
-+ * iommu_group_dma_owner_claimed() - Query group dma ownership status
-+ * @group: The group.
-+ *
-+ * This provides status query on a given group. It is racey and only for
-+ * non-binding status reporting.
-+ */
-+bool iommu_group_dma_owner_claimed(struct iommu_group *group)
-+{
-+	unsigned int user;
-+
-+	mutex_lock(&group->mutex);
-+	user = group->owner_cnt;
-+	mutex_unlock(&group->mutex);
-+
-+	return user;
-+}
-+EXPORT_SYMBOL_GPL(iommu_group_dma_owner_claimed);
+ 
+ /*
+@@ -634,7 +606,6 @@ static int vfio_iommu_group_notifier(struct notifier_block *nb,
+ {
+ 	struct vfio_group *group = container_of(nb, struct vfio_group, nb);
+ 	struct device *dev = data;
+-	struct vfio_unbound_dev *unbound;
+ 
+ 	switch (action) {
+ 	case IOMMU_GROUP_NOTIFY_ADD_DEVICE:
+@@ -663,28 +634,6 @@ static int vfio_iommu_group_notifier(struct notifier_block *nb,
+ 			__func__, iommu_group_id(group->iommu_group),
+ 			dev->driver->name);
+ 		break;
+-	case IOMMU_GROUP_NOTIFY_UNBOUND_DRIVER:
+-		dev_dbg(dev, "%s: group %d unbound from driver\n", __func__,
+-			iommu_group_id(group->iommu_group));
+-		/*
+-		 * XXX An unbound device in a live group is ok, but we'd
+-		 * really like to avoid the above BUG_ON by preventing other
+-		 * drivers from binding to it.  Once that occurs, we have to
+-		 * stop the system to maintain isolation.  At a minimum, we'd
+-		 * want a toggle to disable driver auto probe for this device.
+-		 */
+-
+-		mutex_lock(&group->unbound_lock);
+-		list_for_each_entry(unbound,
+-				    &group->unbound_list, unbound_next) {
+-			if (dev == unbound->dev) {
+-				list_del(&unbound->unbound_next);
+-				kfree(unbound);
+-				break;
+-			}
+-		}
+-		mutex_unlock(&group->unbound_lock);
+-		break;
+ 	}
+ 	return NOTIFY_OK;
+ }
+@@ -889,29 +838,10 @@ static struct vfio_device *vfio_device_get_from_name(struct vfio_group *group,
+ void vfio_unregister_group_dev(struct vfio_device *device)
+ {
+ 	struct vfio_group *group = device->group;
+-	struct vfio_unbound_dev *unbound;
+ 	unsigned int i = 0;
+ 	bool interrupted = false;
+ 	long rc;
+ 
+-	/*
+-	 * When the device is removed from the group, the group suddenly
+-	 * becomes non-viable; the device has a driver (until the unbind
+-	 * completes), but it's not present in the group.  This is bad news
+-	 * for any external users that need to re-acquire a group reference
+-	 * in order to match and release their existing reference.  To
+-	 * solve this, we track such devices on the unbound_list to bridge
+-	 * the gap until they're fully unbound.
+-	 */
+-	unbound = kzalloc(sizeof(*unbound), GFP_KERNEL);
+-	if (unbound) {
+-		unbound->dev = device->dev;
+-		mutex_lock(&group->unbound_lock);
+-		list_add(&unbound->unbound_next, &group->unbound_list);
+-		mutex_unlock(&group->unbound_lock);
+-	}
+-	WARN_ON(!unbound);
+-
+ 	vfio_device_put(device);
+ 	rc = try_wait_for_completion(&device->comp);
+ 	while (rc <= 0) {
 -- 
 2.25.1
 
