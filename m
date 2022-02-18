@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A95C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Feb 2022 00:58:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7898C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Feb 2022 00:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230366AbiBRA6n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Feb 2022 19:58:43 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:39572 "EHLO
+        id S230468AbiBRA6v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Feb 2022 19:58:51 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:39986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230435AbiBRA6m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Feb 2022 19:58:42 -0500
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F21B33E02;
-        Thu, 17 Feb 2022 16:58:21 -0800 (PST)
+        with ESMTP id S230072AbiBRA6q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Feb 2022 19:58:46 -0500
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 609CED835C;
+        Thu, 17 Feb 2022 16:58:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645145901; x=1676681901;
+  t=1645145907; x=1676681907;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=5wdIObr8WuH+ALl+eS7l5LrC79CgzZrKzlevRIk85ak=;
-  b=DSH26gOdiXGe16QOft9W06KZpYklvCeqymD1+g1FI4KocIKlEdiphuf6
-   939dz5ivtP9S5bo7A8mEREoF4jaiY3iZGFSOFLN7RAUSfjSqu6VL/pp4+
-   QqR1m5aqoQuNQnW0ZhxjNo95+2Db2ktwoIqYTP3HCbeav6Xb6IqkxrU3E
-   HahOKi4BPPQLTz3d+okvdK4tgoYEvy3mVKW5dBiX5xjoBWIibZIgAwccc
-   FULB2e6kv9zpEKqQuPiQVCGZ995cYZNeLe2blgEELff9ofZXeEHal4syQ
-   Z6ztA0a865zdw1x+Hn9DtJTVtnE3lxcT48u8euh90SFthwXW3MEEjd1jz
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="251216951"
+  bh=XVtrp5CXpsHCwBQycR6v9oNHcVdGH3D8kDHPzvy+WZQ=;
+  b=KvbAksedtig64Nm8niY7N59HRx84Y4VCeiBwYaLnRNRqdVD1yknhrZIk
+   lxIhMYl+rhTAEl4AgGVyxhURoDUaW3kJ8Rty0pJkyil5WlsXFNLJr0dS3
+   idbdz4jvu2MLy1/3/U9VR6LsrWwg2ySF6xj8eft/7R+PsZoQ3e4rtVDh+
+   fnt1v4oSHaBIE0GLnM1GP9mdyL5wlz1oGsUmJ+PqWyj1QhGlmOcwE6Uwi
+   zPzLKmH8sTP8+r5ObBWj9swMTVMssHAZN6PSlVc7OGiOBD7xIwd3bpA5z
+   oZzf0hkHo3RzEk77akFGm1EhaM5m4tg8gz4glYLgqJERZRQ9z8kB3TQVA
+   g==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="231001119"
 X-IronPort-AV: E=Sophos;i="5.88,377,1635231600"; 
-   d="scan'208";a="251216951"
+   d="scan'208";a="231001119"
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 16:57:37 -0800
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 16:57:16 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.88,377,1635231600"; 
-   d="scan'208";a="637491190"
+   d="scan'208";a="637490811"
 Received: from allen-box.sh.intel.com ([10.239.159.118])
-  by orsmga004.jf.intel.com with ESMTP; 17 Feb 2022 16:57:30 -0800
+  by orsmga004.jf.intel.com with ESMTP; 17 Feb 2022 16:57:09 -0800
 From:   Lu Baolu <baolu.lu@linux.intel.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Joerg Roedel <joro@8bytes.org>,
@@ -65,9 +65,9 @@ Cc:     Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lu Baolu <baolu.lu@linux.intel.com>
-Subject: [PATCH v6 06/11] PCI: portdrv: Set driver_managed_dma
-Date:   Fri, 18 Feb 2022 08:55:16 +0800
-Message-Id: <20220218005521.172832-7-baolu.lu@linux.intel.com>
+Subject: [PATCH v6 03/11] amba: Stop sharing platform_dma_configure()
+Date:   Fri, 18 Feb 2022 08:55:13 +0800
+Message-Id: <20220218005521.172832-4-baolu.lu@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220218005521.172832-1-baolu.lu@linux.intel.com>
 References: <20220218005521.172832-1-baolu.lu@linux.intel.com>
@@ -77,37 +77,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If a switch lacks ACS P2P Request Redirect, a device below the switch can
-bypass the IOMMU and DMA directly to other devices below the switch, so
-all the downstream devices must be in the same IOMMU group as the switch
-itself.
+Stop sharing platform_dma_configure() helper as they are about to have
+their own bus dma_configure callbacks.
 
-The existing VFIO framework allows the portdrv driver to be bound to the
-bridge while its downstream devices are assigned to user space. The
-pci_dma_configure() marks the IOMMU group as containing only devices
-with kernel drivers that manage DMA. Avoid this default behavior for the
-portdrv driver in order for compatibility with the current VFIO usage.
-
-Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
-Suggested-by: Kevin Tian <kevin.tian@intel.com>
 Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ include/linux/platform_device.h |  2 --
+ drivers/amba/bus.c              | 19 ++++++++++++++++++-
+ drivers/base/platform.c         |  3 +--
+ 3 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 35eca6277a96..6b2adb678c21 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -202,6 +202,8 @@ static struct pci_driver pcie_portdriver = {
+diff --git a/include/linux/platform_device.h b/include/linux/platform_device.h
+index 7c96f169d274..17fde717df68 100644
+--- a/include/linux/platform_device.h
++++ b/include/linux/platform_device.h
+@@ -328,8 +328,6 @@ extern int platform_pm_restore(struct device *dev);
+ #define platform_pm_restore		NULL
+ #endif
  
- 	.err_handler	= &pcie_portdrv_err_handler,
+-extern int platform_dma_configure(struct device *dev);
+-
+ #ifdef CONFIG_PM_SLEEP
+ #define USE_PLATFORM_PM_SLEEP_OPS \
+ 	.suspend = platform_pm_suspend, \
+diff --git a/drivers/amba/bus.c b/drivers/amba/bus.c
+index e1a5eca3ae3c..8392f4aa251b 100644
+--- a/drivers/amba/bus.c
++++ b/drivers/amba/bus.c
+@@ -20,6 +20,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/reset.h>
+ #include <linux/of_irq.h>
++#include <linux/of_device.h>
++#include <linux/acpi.h>
  
-+	.driver_managed_dma = true,
+ #define to_amba_driver(d)	container_of(d, struct amba_driver, drv)
+ 
+@@ -273,6 +275,21 @@ static void amba_shutdown(struct device *dev)
+ 		drv->shutdown(to_amba_device(dev));
+ }
+ 
++static int amba_dma_configure(struct device *dev)
++{
++	enum dev_dma_attr attr;
++	int ret = 0;
 +
- 	.driver.pm	= PCIE_PORTDRV_PM_OPS,
++	if (dev->of_node) {
++		ret = of_dma_configure(dev, dev->of_node, true);
++	} else if (has_acpi_companion(dev)) {
++		attr = acpi_get_dma_attr(to_acpi_device_node(dev->fwnode));
++		ret = acpi_dma_configure(dev, attr);
++	}
++
++	return ret;
++}
++
+ #ifdef CONFIG_PM
+ /*
+  * Hooks to provide runtime PM of the pclk (bus clock).  It is safe to
+@@ -341,7 +358,7 @@ struct bus_type amba_bustype = {
+ 	.probe		= amba_probe,
+ 	.remove		= amba_remove,
+ 	.shutdown	= amba_shutdown,
+-	.dma_configure	= platform_dma_configure,
++	.dma_configure	= amba_dma_configure,
+ 	.pm		= &amba_pm,
  };
+ EXPORT_SYMBOL_GPL(amba_bustype);
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index 6cb04ac48bf0..acbc6eae37b8 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -1454,8 +1454,7 @@ static void platform_shutdown(struct device *_dev)
+ 		drv->shutdown(dev);
+ }
  
+-
+-int platform_dma_configure(struct device *dev)
++static int platform_dma_configure(struct device *dev)
+ {
+ 	enum dev_dma_attr attr;
+ 	int ret = 0;
 -- 
 2.25.1
 
