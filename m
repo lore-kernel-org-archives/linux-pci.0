@@ -2,198 +2,231 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5D70C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 19 Feb 2022 14:30:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A0DC433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Feb 2022 18:59:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238809AbiBSOab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 19 Feb 2022 09:30:31 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:57938 "EHLO
+        id S238731AbiBSS71 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 19 Feb 2022 13:59:27 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238683AbiBSOab (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Feb 2022 09:30:31 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B035C606F8;
-        Sat, 19 Feb 2022 06:30:11 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EBD5B60B12;
-        Sat, 19 Feb 2022 14:30:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2790C004E1;
-        Sat, 19 Feb 2022 14:30:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645281010;
-        bh=1QZrh94O15KQIpRKoAgo4yfgnwnVtT+uyOyqoZ05rc8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Dugsq+id1n5+UDe7D5lP60NMG95d1fKfjDrpX4hL+DZdV7jFpjZ1Qz3MMhiDUtPGZ
-         zbqv62j1120QkeEBDl6Usy8tlI46+ajHe1n8yqgq0849xBb8q4HWiKuVlqR20b0m2n
-         J20JqDQjJsfYvFK/ZPhrFHp0DNhMZK3AXR5a6eTB7OdAckRKMgKDUFtLE9B/fQDRTc
-         RDXdmJiyZKv800cDhyYXo/yXrt8+KTGHJ07DspQzPVqttw2ua2yfnWIyaiH7wR35IA
-         f7EyI0aJaU22m2g3fcVqXCtrv24m+r9s4HgbNwsk4rhU/sO/GVXsRZtdqn93kjbztO
-         dMVBxNpTef9DA==
-Received: by pali.im (Postfix)
-        id 05BFC2B70; Sat, 19 Feb 2022 15:30:06 +0100 (CET)
-Date:   Sat, 19 Feb 2022 15:30:06 +0100
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Russell King <linux@armlinux.org.uk>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] ARM: Marvell: Update PCIe fixup
-Message-ID: <20220219143006.bsr6wdagf5ytynxu@pali>
-References: <20211101150405.14618-1-pali@kernel.org>
- <20211102171259.9590-1-pali@kernel.org>
+        with ESMTP id S229437AbiBSS70 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Feb 2022 13:59:26 -0500
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9A5B59A53;
+        Sat, 19 Feb 2022 10:59:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1645297146; x=1676833146;
+  h=message-id:subject:from:reply-to:to:cc:date:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=YjcmreUpCIrBCYdc1cFbN9dGuwQFr7PWHG7P8Kh35AU=;
+  b=mxYwLOvVLbye2UJZxyeA0uzPeDhAvaxPjDXmvFS/d3tS+n5Ma4Oi8Vhq
+   BM601u6AUCVDJCSFvqehXGTujNgXQP+lLoVvf8oGxBAuhoFos5DXQZ0zJ
+   QvWh5Y/bRAA2CIMaWf3kpiLC7WZ2nAKl9DdG4UioFD62u7QeAw8PgvCAC
+   Yt3vWaVnZKxdKT4NWoND+6a1WgngogzRwl/xtYpKWl0tahbdgXwTMFMl8
+   6rGNQBnPUvfSx/OBNWc1eWXRHcl7WOb61lhverkEwLe0eNnxc842zqg4J
+   W9xTVOUocbq9RyKKu+gXdQGTKLEn+OwxjSyaidzFelCela0uZtMLzZZTP
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10263"; a="251501265"
+X-IronPort-AV: E=Sophos;i="5.88,381,1635231600"; 
+   d="scan'208";a="251501265"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2022 10:59:06 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,381,1635231600"; 
+   d="scan'208";a="531330912"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga007.jf.intel.com with ESMTP; 19 Feb 2022 10:59:06 -0800
+Received: from kpavlasx-mobl2.amr.corp.intel.com (kpavlasx-mobl2.amr.corp.intel.com [10.209.114.238])
+        by linux.intel.com (Postfix) with ESMTP id D74A3580975;
+        Sat, 19 Feb 2022 10:59:05 -0800 (PST)
+Message-ID: <f5318c1171c5733388c9b455f2058f9aed127b8b.camel@linux.intel.com>
+Subject: Re: [PATCH V5 3/3] PCI: vmd: Configure PCIe ASPM and LTR
+From:   "David E. Box" <david.e.box@linux.intel.com>
+Reply-To: david.e.box@linux.intel.com
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>,
+        nirmal.patel@linux.intel.com, lorenzo.pieralisi@arm.com,
+        hch@infradead.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, michael.a.bottini@linux.intel.com,
+        rafael@kernel.org, me@adhityamohan.in
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Sat, 19 Feb 2022 10:59:05 -0800
+In-Reply-To: <1a163e75-f620-dfe7-01b1-5356fe767b2d@linux.dev>
+References: <20220218045056.333799-1-david.e.box@linux.intel.com>
+         <20220218045056.333799-4-david.e.box@linux.intel.com>
+         <1a163e75-f620-dfe7-01b1-5356fe767b2d@linux.dev>
+Organization: David E. Box
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20211102171259.9590-1-pali@kernel.org>
-User-Agent: NeoMutt/20180716
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PING, Gente reminder for patch 1/2.
+Hi,
 
-On Tuesday 02 November 2021 18:12:58 Pali Rohár wrote:
-> - The code relies on rc_pci_fixup being called, which only happens
->   when CONFIG_PCI_QUIRKS is enabled, so add that to Kconfig. Omitting
->   this causes a booting failure with a non-obvious cause.
-> - Update rc_pci_fixup to set the class properly, copying the
->   more modern style from other places
-> - Correct the rc_pci_fixup comment
+On Fri, 2022-02-18 at 14:30 -0700, Jonathan Derrick wrote:
 > 
-> This patch just re-applies commit 1dc831bf53fd ("ARM: Kirkwood: Update
-> PCI-E fixup") for all other Marvell ARM platforms which have same buggy
-> PCIe controller and do not use pci-mvebu.c controller driver yet.
+> On 2/17/2022 9:50 PM, David E. Box wrote:
+> > Currently, PCIe ports reserved for VMD use are not visible to BIOS
+> > and
+> > therefore not configured to enable PCIE ASPM. Additionally, PCIE
+> > LTR
+> > values may be left unset since BIOS will set a default maximum LTR
+> > value
+> > on endpoints to ensure that misconfigured devices don't block SoC
+> > power
+> > management. Lack of this programming results in high power
+> > consumption
+> > on laptops as reported in bugzilla [1].  For currently affected
+> > products, use pci_enable_default_link_state to set the allowed link
+> > states for devices on the root ports. Also set the LTR value to the
+> > maximum value needed for the SoC. Per the VMD hardware team future
+> > products using VMD will enable BIOS configuration of these
+> > capabilities.
+> Will the refreshes of the affected CPU be supported in BIOS or this
+> workaround?
+
+I'll have to check with the hardware/BIOS team. Still because it is
+BIOS this should check for signs that it hasn't already configured ASPM
+before modifying anything. I'll make this change.
+
+David
+
 > 
-> Long-term goal for these Marvell ARM platforms should be conversion to
-> pci-mvebu.c controller driver and removal of these fixups in arch code.
-> 
-> Signed-off-by: Pali Rohár <pali@kernel.org>
-> Cc: Jason Gunthorpe <jgg@nvidia.com>
-> Cc: stable@vger.kernel.org
-> 
-> ---
-> Changes in v2:
-> * Move MIPS change into separate patch
-> * Add information that this patch is for platforms which do not use pci-mvebu.c
-> ---
->  arch/arm/Kconfig              |  1 +
->  arch/arm/mach-dove/pcie.c     | 11 ++++++++---
->  arch/arm/mach-mv78xx0/pcie.c  | 11 ++++++++---
->  arch/arm/mach-orion5x/Kconfig |  1 +
->  arch/arm/mach-orion5x/pci.c   | 12 +++++++++---
->  5 files changed, 27 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index fc196421b2ce..9f157e973555 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -400,6 +400,7 @@ config ARCH_DOVE
->  	select GENERIC_IRQ_MULTI_HANDLER
->  	select GPIOLIB
->  	select HAVE_PCI
-> +	select PCI_QUIRKS if PCI
->  	select MVEBU_MBUS
->  	select PINCTRL
->  	select PINCTRL_DOVE
-> diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
-> index ee91ac6b5ebf..ecf057a0f5ba 100644
-> --- a/arch/arm/mach-dove/pcie.c
-> +++ b/arch/arm/mach-dove/pcie.c
-> @@ -135,14 +135,19 @@ static struct pci_ops pcie_ops = {
->  	.write = pcie_wr_conf,
->  };
->  
-> +/*
-> + * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
-> + * is operating as a root complex this needs to be switched to
-> + * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
-> + * the device. Decoding setup is handled by the orion code.
-> + */
->  static void rc_pci_fixup(struct pci_dev *dev)
->  {
-> -	/*
-> -	 * Prevent enumeration of root complex.
-> -	 */
->  	if (dev->bus->parent == NULL && dev->devfn == 0) {
->  		int i;
->  
-> +		dev->class &= 0xff;
-> +		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
->  		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->  			dev->resource[i].start = 0;
->  			dev->resource[i].end   = 0;
-> diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
-> index 636d84b40466..9362b5fc116f 100644
-> --- a/arch/arm/mach-mv78xx0/pcie.c
-> +++ b/arch/arm/mach-mv78xx0/pcie.c
-> @@ -177,14 +177,19 @@ static struct pci_ops pcie_ops = {
->  	.write = pcie_wr_conf,
->  };
->  
-> +/*
-> + * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
-> + * is operating as a root complex this needs to be switched to
-> + * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
-> + * the device. Decoding setup is handled by the orion code.
-> + */
->  static void rc_pci_fixup(struct pci_dev *dev)
->  {
-> -	/*
-> -	 * Prevent enumeration of root complex.
-> -	 */
->  	if (dev->bus->parent == NULL && dev->devfn == 0) {
->  		int i;
->  
-> +		dev->class &= 0xff;
-> +		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
->  		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->  			dev->resource[i].start = 0;
->  			dev->resource[i].end   = 0;
-> diff --git a/arch/arm/mach-orion5x/Kconfig b/arch/arm/mach-orion5x/Kconfig
-> index e94a61901ffd..7189a5b1ec46 100644
-> --- a/arch/arm/mach-orion5x/Kconfig
-> +++ b/arch/arm/mach-orion5x/Kconfig
-> @@ -6,6 +6,7 @@ menuconfig ARCH_ORION5X
->  	select GPIOLIB
->  	select MVEBU_MBUS
->  	select FORCE_PCI
-> +	select PCI_QUIRKS
->  	select PHYLIB if NETDEVICES
->  	select PLAT_ORION_LEGACY
->  	help
-> diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-> index 76951bfbacf5..5145fe89702e 100644
-> --- a/arch/arm/mach-orion5x/pci.c
-> +++ b/arch/arm/mach-orion5x/pci.c
-> @@ -509,14 +509,20 @@ static int __init pci_setup(struct pci_sys_data *sys)
->  /*****************************************************************************
->   * General PCIe + PCI
->   ****************************************************************************/
-> +
-> +/*
-> + * The root complex has a hardwired class of PCI_CLASS_MEMORY_OTHER, when it
-> + * is operating as a root complex this needs to be switched to
-> + * PCI_CLASS_BRIDGE_HOST or Linux will errantly try to process the BAR's on
-> + * the device. Decoding setup is handled by the orion code.
-> + */
->  static void rc_pci_fixup(struct pci_dev *dev)
->  {
-> -	/*
-> -	 * Prevent enumeration of root complex.
-> -	 */
->  	if (dev->bus->parent == NULL && dev->devfn == 0) {
->  		int i;
->  
-> +		dev->class &= 0xff;
-> +		dev->class |= PCI_CLASS_BRIDGE_HOST << 8;
->  		for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->  			dev->resource[i].start = 0;
->  			dev->resource[i].end   = 0;
-> -- 
-> 2.20.1
-> 
+> > This solution is a workaround for current products that mainly
+> > targets
+> > laptops. Support is not provided if a switch is used nor for
+> > hotplug.
+> > 
+> > [1] https://bugzilla.kernel.org/show_bug.cgi?id=213717
+> > 
+> > Signed-off-by: Michael Bottini <michael.a.bottini@linux.intel.com>
+> > Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+> > ---
+> > V5
+> >   - Provide the LTR value as driver data.
+> >   - Use DWORD for the config space write to avoid PCI WORD access
+> > bug.
+> >   - Set ASPM links firsts, enabling all link states, before setting
+> > a
+> >     default LTR if the capability is present
+> >   - Add kernel message that VMD is setting the device LTR.
+> > V4
+> >   - Refactor vmd_enable_apsm() to exit early, making the lines
+> > shorter
+> >     and more readable. Suggested by Christoph.
+> > V3
+> >   - No changes
+> > V2
+> >   - Use return status to print pci_info message if ASPM cannot be
+> > enabled.
+> >   - Add missing static declaration, caught by lkp@intel.com
+> > 
+> >   drivers/pci/controller/vmd.c | 48
+> > +++++++++++++++++++++++++++++++++++-
+> >   1 file changed, 47 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/controller/vmd.c
+> > b/drivers/pci/controller/vmd.c
+> > index a582c351b461..eac379c80cd7 100644
+> > --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c
+> > @@ -67,10 +67,19 @@ enum vmd_features {
+> >   	 * interrupt handling.
+> >   	 */
+> >   	VMD_FEAT_CAN_BYPASS_MSI_REMAP		= (1 << 4),
+> > +
+> > +	/*
+> > +	 * Enable ASPM on the PCIE root ports and set the default LTR
+> > of the
+> > +	 * storage devices on platforms where these values are not
+> > configured by
+> > +	 * BIOS. This is needed for laptops, which require these
+> > settings for
+> > +	 * proper power management of the SoC.
+> > +	 */
+> > +	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
+> >   };
+> >   
+> >   struct vmd_device_data {
+> >   	enum vmd_features features;
+> > +	u16 ltr;
+> >   };
+> >   
+> >   static DEFINE_IDA(vmd_instance_ida);
+> > @@ -714,6 +723,38 @@ static void vmd_copy_host_bridge_flags(struct
+> > pci_host_bridge *root_bridge,
+> >   	vmd_bridge->native_dpc = root_bridge->native_dpc;
+> >   }
+> >   
+> > +/*
+> > + * Enable ASPM and LTR settings on devices that aren't configured
+> > by BIOS.
+> > + */
+> > +static int vmd_pm_enable_quirk(struct pci_dev *pdev, void
+> > *userdata)
+> > +{
+> > +	struct vmd_device_data *info = userdata;
+> > +	u32 ltr_reg;
+> > +	int pos;
+> > +
+> > +	if (!(info->features & VMD_FEAT_BIOS_PM_QUIRK))
+> > +		return 0;
+> > +
+> > +	pci_enable_default_link_state(pdev, PCIE_LINK_STATE_ALL);
+> > +
+> > +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
+> > +	if (!pos)
+> > +		return 0;
+> > +
+> > +	/*
+> > +	 * If the LTR capability is present, set the default values to
+> > the
+> > +	 * maximum required by the platform to allow the deepest power
+> > +	 * management savings. Write this as a single DWORD where the
+> > lower word
+> > +	 * is the max snoop latency and the upper word is the max non-
+> > snoop
+> > +	 * latency.
+> > +	 */
+> > +	pci_info(pdev, "VMD: Setting a default LTR\n");
+> > +	ltr_reg = (info->ltr << 16) | info->ltr;
+> > +	pci_write_config_dword(pdev, pos + PCI_LTR_MAX_SNOOP_LAT,
+> > ltr_reg);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >   static int vmd_enable_domain(struct vmd_dev *vmd, struct
+> > vmd_device_data *info)
+> >   {
+> >   	struct pci_sysdata *sd = &vmd->sysdata;
+> > @@ -867,6 +908,8 @@ static int vmd_enable_domain(struct vmd_dev
+> > *vmd, struct vmd_device_data *info)
+> >   		pci_reset_bus(child->self);
+> >   	pci_assign_unassigned_bus_resources(vmd->bus);
+> >   
+> > +	pci_walk_bus(vmd->bus, vmd_pm_enable_quirk, info);
+> > +
+> >   	/*
+> >   	 * VMD root buses are virtual and don't return true on
+> > pci_is_pcie()
+> >   	 * and will fail pcie_bus_configure_settings() early. It can
+> > instead be
+> > @@ -1012,7 +1055,10 @@ static const struct vmd_device_data
+> > vmd_28c0_data = {
+> >   static const struct vmd_device_data vmd_467f_data = {
+> >   	.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+> >   		    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+> > -		    VMD_FEAT_OFFSET_FIRST_VECTOR,
+> > +		    VMD_FEAT_OFFSET_FIRST_VECTOR |
+> > +		    VMD_FEAT_BIOS_PM_QUIRK,
+> > +	/* 3145728 ns (LatencyScale of 1048576 ns with a LatencyValue
+> > of 3) */
+> > +	.ltr = 0x1003,
+> >   };
+> >   
+> >   static const struct pci_device_id vmd_ids[] = {
+
