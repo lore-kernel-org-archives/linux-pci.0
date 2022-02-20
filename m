@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CB9C433F5
-	for <linux-pci@archiver.kernel.org>; Sun, 20 Feb 2022 19:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D42C433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 20 Feb 2022 19:34:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244633AbiBTTeV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 20 Feb 2022 14:34:21 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43222 "EHLO
+        id S244630AbiBTTeY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 20 Feb 2022 14:34:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234790AbiBTTeU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Feb 2022 14:34:20 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE0C84506A
-        for <linux-pci@vger.kernel.org>; Sun, 20 Feb 2022 11:33:58 -0800 (PST)
+        with ESMTP id S244638AbiBTTeX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Feb 2022 14:34:23 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E18244507B
+        for <linux-pci@vger.kernel.org>; Sun, 20 Feb 2022 11:34:01 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6935DB80DB6
-        for <linux-pci@vger.kernel.org>; Sun, 20 Feb 2022 19:33:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 275CFC340F0;
-        Sun, 20 Feb 2022 19:33:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7DF0F60EEA
+        for <linux-pci@vger.kernel.org>; Sun, 20 Feb 2022 19:34:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 044FDC340F0;
+        Sun, 20 Feb 2022 19:33:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645385636;
-        bh=PP7Ql8/VpGtPQcfuYduzBLTZ6cm6JTEe+hO4/pxzghk=;
+        s=k20201202; t=1645385640;
+        bh=x6E3D82tqL8Ev1zPGRI/lFqMDrlznXp6H35OeL2E27Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nC0QNVX4tEKKwAFRtbXCCRNiYnrfDi0VrFF3YtWSqolLV1VSp8QoKoPa4jy9y49Am
-         0uzTyvjgdLOArfJUlDQijNn5WYoTg0qLE4jsanlJ41toX2GD43pyZhf9RoC/py4ar4
-         SnZgeyk2KgnOGxf7HzGDpBr+Va6iyxs0zQCeJLVvevIUW/6cfsfncBzKhUcTI7WcW1
-         ucH0f/W4tlto5D9kylm+nELLveJVhBBGjGQHuZIfyaTK3Pj1amy+fmPPMtvuCuWO6s
-         ek4hQB+5+YMt567IgV9AmrKiryibbxuMlUBE+t+FYt92l39R22ieaqE7viajZDH+sf
-         ZJ7itjbZfc/mg==
+        b=U8UDTcco8ZCyUNIJx27v+4gXNzR74zpi5CpSw1tPEF9t5MojKTsX3fRoRABWpYh14
+         73gRtBxWnU+YMiTCaA0NhoPlAV7hoGRA6FxZdISIoAhA68uhqq6iP/Vpge2/OIcglM
+         WZvMpPmkdX6Ko5e5RgpC+tJ7ipXT2vOBj44UOswTe3NliAvtScdxODG85l+3/Y7FRl
+         U6IWtk+Iqz8W3J3kMww9rgmHuvLpmUtDKkUT31hxQMuWhFXc89cMscp0oYYm4H4P2m
+         KoMzYOg//qMBih/JpL3uavsBtw64tr82TywEf0hRGE8zThbrxfUP8E/qGBRGwt69Zq
+         ah/pz/jk1rq2Q==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <helgaas@kernel.org>
@@ -38,11 +38,10 @@ Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Marc Zyngier <maz@kernel.org>, pali@kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Gregory CLEMENT <gregory.clement@bootlin.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH 02/18] PCI: pci-bridge-emul: Add support for PCIe extended capabilities
-Date:   Sun, 20 Feb 2022 20:33:30 +0100
-Message-Id: <20220220193346.23789-3-kabel@kernel.org>
+Subject: [PATCH 04/18] PCI: Add PCI_EXP_SLTCAP_*_SHIFT macros
+Date:   Sun, 20 Feb 2022 20:33:32 +0100
+Message-Id: <20220220193346.23789-5-kabel@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220220193346.23789-1-kabel@kernel.org>
 References: <20220220193346.23789-1-kabel@kernel.org>
@@ -53,175 +52,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Russell King <rmk+kernel@armlinux.org.uk>
+From: Pali Rohár <pali@kernel.org>
 
-Add support for PCIe extended capabilities, which we just redirect to the
-emulating driver.
+These macros allows to easily compose and extract Slot Power Limit and
+Physical Slot Number values from Slot Capability Register.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-[pali: Fix writing new value with W1C bits]
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/pci-bridge-emul.c | 77 +++++++++++++++++++++++------------
- drivers/pci/pci-bridge-emul.h | 15 +++++++
- 2 files changed, 67 insertions(+), 25 deletions(-)
+ include/uapi/linux/pci_regs.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index a956408834d6..c4b9837006ff 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -437,10 +437,16 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else {
--		/* Beyond our PCIe space */
-+	} else if (reg < PCI_CFG_SPACE_SIZE) {
-+		/* Rest of PCI space not implemented */
- 		*value = 0;
- 		return PCIBIOS_SUCCESSFUL;
-+	} else {
-+		/* PCIe extended capability space */
-+		reg -= PCI_CFG_SPACE_SIZE;
-+		read_op = bridge->ops->read_ext;
-+		cfgspace = NULL;
-+		behavior = NULL;
- 	}
- 
- 	if (read_op)
-@@ -448,15 +454,20 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 	else
- 		ret = PCI_BRIDGE_EMUL_NOT_HANDLED;
- 
--	if (ret == PCI_BRIDGE_EMUL_NOT_HANDLED)
--		*value = le32_to_cpu(cfgspace[reg / 4]);
-+	if (ret == PCI_BRIDGE_EMUL_NOT_HANDLED) {
-+		if (cfgspace)
-+			*value = le32_to_cpu(cfgspace[reg / 4]);
-+		else
-+			*value = 0;
-+	}
- 
- 	/*
- 	 * Make sure we never return any reserved bit with a value
- 	 * different from 0.
- 	 */
--	*value &= behavior[reg / 4].ro | behavior[reg / 4].rw |
--		  behavior[reg / 4].w1c;
-+	if (behavior)
-+		*value &= behavior[reg / 4].ro | behavior[reg / 4].rw |
-+			  behavior[reg / 4].w1c;
- 
- 	if (size == 1)
- 		*value = (*value >> (8 * (where & 3))) & 0xff;
-@@ -502,8 +513,15 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 		write_op = bridge->ops->write_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else {
-+	} else if (reg < PCI_CFG_SPACE_SIZE) {
-+		/* Rest of PCI space not implemented */
- 		return PCIBIOS_SUCCESSFUL;
-+	} else {
-+		/* PCIe extended capability space */
-+		reg -= PCI_CFG_SPACE_SIZE;
-+		write_op = bridge->ops->write_ext;
-+		cfgspace = NULL;
-+		behavior = NULL;
- 	}
- 
- 	shift = (where & 0x3) * 8;
-@@ -517,29 +535,38 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
--	/* Keep all bits, except the RW bits */
--	new = old & (~mask | ~behavior[reg / 4].rw);
-+	if (behavior) {
-+		/* Keep all bits, except the RW bits */
-+		new = old & (~mask | ~behavior[reg / 4].rw);
- 
--	/* Update the value of the RW bits */
--	new |= (value << shift) & (behavior[reg / 4].rw & mask);
-+		/* Update the value of the RW bits */
-+		new |= (value << shift) & (behavior[reg / 4].rw & mask);
- 
--	/* Clear the W1C bits */
--	new &= ~((value << shift) & (behavior[reg / 4].w1c & mask));
-+		/* Clear the W1C bits */
-+		new &= ~((value << shift) & (behavior[reg / 4].w1c & mask));
-+	} else {
-+		new = old & ~mask;
-+		new |= (value << shift) & mask;
-+	}
- 
--	/* Save the new value with the cleared W1C bits into the cfgspace */
--	cfgspace[reg / 4] = cpu_to_le32(new);
-+	if (cfgspace) {
-+		/* Save the new value with the cleared W1C bits into the cfgspace */
-+		cfgspace[reg / 4] = cpu_to_le32(new);
-+	}
- 
--	/*
--	 * Clear the W1C bits not specified by the write mask, so that the
--	 * write_op() does not clear them.
--	 */
--	new &= ~(behavior[reg / 4].w1c & ~mask);
-+	if (behavior) {
-+		/*
-+		 * Clear the W1C bits not specified by the write mask, so that the
-+		 * write_op() does not clear them.
-+		 */
-+		new &= ~(behavior[reg / 4].w1c & ~mask);
- 
--	/*
--	 * Set the W1C bits specified by the write mask, so that write_op()
--	 * knows about that they are to be cleared.
--	 */
--	new |= (value << shift) & (behavior[reg / 4].w1c & mask);
-+		/*
-+		 * Set the W1C bits specified by the write mask, so that write_op()
-+		 * knows about that they are to be cleared.
-+		 */
-+		new |= (value << shift) & (behavior[reg / 4].w1c & mask);
-+	}
- 
- 	if (write_op)
- 		write_op(bridge, reg, old, new, mask);
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index 4953274cac18..6b5f75b2ad02 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -90,6 +90,14 @@ struct pci_bridge_emul_ops {
- 	 */
- 	pci_bridge_emul_read_status_t (*read_pcie)(struct pci_bridge_emul *bridge,
- 						   int reg, u32 *value);
-+
-+	/*
-+	 * Same as ->read_base(), except it is for reading from the
-+	 * PCIe extended capability configuration space.
-+	 */
-+	pci_bridge_emul_read_status_t (*read_ext)(struct pci_bridge_emul *bridge,
-+						  int reg, u32 *value);
-+
- 	/*
- 	 * Called when writing to the regular PCI bridge configuration
- 	 * space. old is the current value, new is the new value being
-@@ -105,6 +113,13 @@ struct pci_bridge_emul_ops {
- 	 */
- 	void (*write_pcie)(struct pci_bridge_emul *bridge, int reg,
- 			   u32 old, u32 new, u32 mask);
-+
-+	/*
-+	 * Same as ->write_base(), except it is for writing from the
-+	 * PCIe extended capability configuration space.
-+	 */
-+	void (*write_ext)(struct pci_bridge_emul *bridge, int reg,
-+			  u32 old, u32 new, u32 mask);
- };
- 
- struct pci_bridge_reg_behavior;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index bee1a9ed6e66..d825e17e448c 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -591,10 +591,13 @@
+ #define  PCI_EXP_SLTCAP_HPS	0x00000020 /* Hot-Plug Surprise */
+ #define  PCI_EXP_SLTCAP_HPC	0x00000040 /* Hot-Plug Capable */
+ #define  PCI_EXP_SLTCAP_SPLV	0x00007f80 /* Slot Power Limit Value */
++#define  PCI_EXP_SLTCAP_SPLV_SHIFT	7  /* Slot Power Limit Value shift */
+ #define  PCI_EXP_SLTCAP_SPLS	0x00018000 /* Slot Power Limit Scale */
++#define  PCI_EXP_SLTCAP_SPLS_SHIFT	15 /* Slot Power Limit Scale shift */
+ #define  PCI_EXP_SLTCAP_EIP	0x00020000 /* Electromechanical Interlock Present */
+ #define  PCI_EXP_SLTCAP_NCCS	0x00040000 /* No Command Completed Support */
+ #define  PCI_EXP_SLTCAP_PSN	0xfff80000 /* Physical Slot Number */
++#define  PCI_EXP_SLTCAP_PSN_SHIFT	19 /* Physical Slot Number shift */
+ #define PCI_EXP_SLTCTL		0x18	/* Slot Control */
+ #define  PCI_EXP_SLTCTL_ABPE	0x0001	/* Attention Button Pressed Enable */
+ #define  PCI_EXP_SLTCTL_PFDE	0x0002	/* Power Fault Detected Enable */
 -- 
 2.34.1
 
