@@ -2,328 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36B39C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 13:26:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A82C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 18:04:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359028AbiBUN1B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Feb 2022 08:27:01 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:35392 "EHLO
+        id S231288AbiBUSFM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Feb 2022 13:05:12 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359071AbiBUN1A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 08:27:00 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B78925598;
-        Mon, 21 Feb 2022 05:26:35 -0800 (PST)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4K2NK81nbWz8wtB;
-        Mon, 21 Feb 2022 21:23:08 +0800 (CST)
-Received: from [10.67.102.169] (10.67.102.169) by
- canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 21 Feb 2022 21:26:32 +0800
-CC:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
-        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
-        <will@kernel.org>, <mark.rutland@arm.com>,
-        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
-        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
-        <daniel.thompson@linaro.org>, <joro@8bytes.org>,
-        <john.garry@huawei.com>, <shameerali.kolothum.thodi@huawei.com>,
-        <robin.murphy@arm.com>, <peterz@infradead.org>, <mingo@redhat.com>,
-        <acme@kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
-        <linux-perf-users@vger.kernel.org>,
-        <iommu@lists.linux-foundation.org>, <prime.zeng@huawei.com>,
-        <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
-        <linuxarm@huawei.com>, <song.bao.hua@hisilicon.com>
-Subject: Re: [PATCH v4 3/8] hisi_ptt: Register PMU device for PTT trace
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-        Yicong Yang <yangyicong@hisilicon.com>
-References: <20220221084307.33712-1-yangyicong@hisilicon.com>
- <20220221084307.33712-4-yangyicong@hisilicon.com>
- <20220221114428.000062cd@Huawei.com>
-From:   Yicong Yang <yangyicong@huawei.com>
-Message-ID: <b8e2ef7e-8a24-e2aa-bd60-0989202c865d@huawei.com>
-Date:   Mon, 21 Feb 2022 21:26:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+        with ESMTP id S232463AbiBUSEY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 13:04:24 -0500
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71D071AD90;
+        Mon, 21 Feb 2022 09:56:03 -0800 (PST)
+Received: by mail-wr1-f53.google.com with SMTP id d27so28483240wrb.5;
+        Mon, 21 Feb 2022 09:56:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=FQ/Oyj3CQfmniV07x3o++/fZN+iiONMTqxiWxhJRUlY=;
+        b=IaeQ3I2f6ayb3wpZCA4cKOoVf/SepEdNbhwAXPV23UjaibSB9oUR47V4Lekl+g3G0S
+         LaOiWiQLmD/hMKwb19+0IENZXqkkeBMUFmfN66PE7vkpwak5ryQEXgzuyym/b5u/47O0
+         AkXEx3HY4KgDv0inu88D68NNoj2ag9vRwKG+PsIjSgLjPSexGxAmmYNdxoWqU4J/Zgv1
+         Q16XWGyeI42WIxFOt2fRBjQSYti3ZqZenvhIW/fDE+arwIBQePPAAv/1nrMST7L+f+Yx
+         h1eRjhjXocerZqjz05hOE5ZNnRHAt96BT+Omv9no/rrfl/Q/MWV26+mLMTx3cSgNV2YG
+         1J+Q==
+X-Gm-Message-State: AOAM530ufGRl7J9qPKqmj7EUBPJu0wfgfd8DQhizr03IVaf7kivWPaWI
+        BqmDKOwPPpsOz2vK/yCZNoE=
+X-Google-Smtp-Source: ABdhPJxP5lu5chi+n8ksMNCmt7siV/ZlHwzfFSI60qorTjR4H+rzP++PgZMJY8qoNLyww1EqY9tqwQ==
+X-Received: by 2002:a5d:4d0d:0:b0:1e7:a9e7:ad31 with SMTP id z13-20020a5d4d0d000000b001e7a9e7ad31mr16266827wrt.281.1645466161856;
+        Mon, 21 Feb 2022 09:56:01 -0800 (PST)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id d2sm22558483wro.49.2022.02.21.09.56.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Feb 2022 09:56:01 -0800 (PST)
+Date:   Mon, 21 Feb 2022 17:56:00 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
+Cc:     Boqun Feng <boqun.feng@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        Sunil Muthuswamy <sunilmut@linux.microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH v2] PCI: hv: Avoid the retarget interrupt hypercall
+ in irq_unmask() on ARM64
+Message-ID: <20220221175600.gxbphsnbytgytcpz@liuwe-devbox-debian-v2>
+References: <20220217034525.1687678-1-boqun.feng@gmail.com>
+ <MWHPR21MB1593A265118977A57FF3B329D7369@MWHPR21MB1593.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20220221114428.000062cd@Huawei.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.102.169]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500009.china.huawei.com (7.192.105.203)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MWHPR21MB1593A265118977A57FF3B329D7369@MWHPR21MB1593.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2022/2/21 19:44, Jonathan Cameron wrote:
-> On Mon, 21 Feb 2022 16:43:02 +0800
-> Yicong Yang <yangyicong@hisilicon.com> wrote:
+On Thu, Feb 17, 2022 at 04:31:06PM +0000, Michael Kelley (LINUX) wrote:
+> From: Boqun Feng <boqun.feng@gmail.com> Sent: Wednesday, February 16, 2022 7:45 PM
+> > 
+> > On ARM64 Hyper-V guests, SPIs are used for the interrupts of virtual PCI
+> > devices, and SPIs can be managed directly via GICD registers. Therefore
+> > the retarget interrupt hypercall is not needed on ARM64.
+> > 
+> > An arch-specific interface hv_arch_irq_unmask() is introduced to handle
+> > the architecture level differences on this. For x86, the behavior
+> > remains unchanged, while for ARM64 no hypercall is invoked when
+> > unmasking an irq for virtual PCI devices.
+> > 
+> > Signed-off-by: Boqun Feng <boqun.feng@gmail.com>
+> > ---
+> > v1 -> v2:
+> > 
+> > *	Introduce arch-specific interface hv_arch_irq_unmask() as
+> > 	suggested by Bjorn
+> > 
+> >  drivers/pci/controller/pci-hyperv.c | 233 +++++++++++++++-------------
+> >  1 file changed, 122 insertions(+), 111 deletions(-)
 > 
->> Register PMU device of PTT trace, then users can use
->> trace through perf command. The driver makes use of perf
->> AUX trace and support following events to configure the
->> trace:
->>
->> - filter: select Root port or Endpoint to trace
->> - type: select the type of traced TLP headers
->> - direction: select the direction of traced TLP headers
->> - format: select the data format of the traced TLP headers
->>
->> This patch adds the PMU driver part of PTT trace. The perf
->> command support of PTT trace is added in the following
->> patch.
->>
->> Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-> 
-> A few minor comments inline.
-> 
+> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
 
-Thanks for the comments!
-
-> Thanks,
-> 
-> Jonathan
-> 
->> +static int hisi_ptt_trace_init_filter(struct hisi_ptt *hisi_ptt, u64 config)
->> +{
->> +	unsigned long val, port_mask = hisi_ptt->port_mask;
->> +	struct hisi_ptt_filter_desc *filter;
->> +	int ret = -EINVAL;
->> +
->> +	hisi_ptt->trace_ctrl.is_port = FIELD_GET(HISI_PTT_PMU_FILTER_IS_PORT, config);
->> +	val = FIELD_GET(HISI_PTT_PMU_FILTER_VAL_MASK, config);
->> +
->> +	/*
->> +	 * Port filters are defined as bit mask. For port filters, check
->> +	 * the bits in the @val are within the range of hisi_ptt->port_mask
->> +	 * and whether it's empty or not, otherwise user has specified
->> +	 * some unsupported root ports.
->> +	 *
->> +	 * For Requester ID filters, walk the available filter list to see
->> +	 * whether we have one matched.
->> +	 */
->> +	if (!hisi_ptt->trace_ctrl.is_port) {
->> +		list_for_each_entry(filter, &hisi_ptt->req_filters, list)
->> +			if (val == hisi_ptt_get_filter_val(filter->pdev)) {
->> +				ret = 0;
->> +				break;
->> +			}
->> +	} else if (bitmap_subset(&val, &port_mask, BITS_PER_LONG)) {
->> +		ret = 0;
->> +	}
->> +
->> +	if (ret)
->> +		return ret;
->> +
->> +	hisi_ptt->trace_ctrl.filter = val;
->> +	return 0;
->> +}
->> +
->> +static int hisi_ptt_pmu_event_init(struct perf_event *event)
->> +{
->> +	struct hisi_ptt *hisi_ptt = to_hisi_ptt(event->pmu);
->> +	struct hisi_ptt_trace_ctrl *ctrl = &hisi_ptt->trace_ctrl;
->> +	int ret;
->> +	u32 val;
->> +
->> +	if (event->attr.type != hisi_ptt->hisi_ptt_pmu.type)
->> +		return -ENOENT;
->> +
->> +	mutex_lock(&hisi_ptt->mutex);
->> +
->> +	ret = hisi_ptt_trace_init_filter(hisi_ptt, event->attr.config);
->> +	if (ret < 0)
->> +		goto out;
->> +
->> +	val = FIELD_GET(HISI_PTT_PMU_DIRECTION_MASK, event->attr.config);
->> +	ret = hisi_ptt_trace_valid_config_onehot(val, hisi_ptt_trace_available_direction,
->> +						 ARRAY_SIZE(hisi_ptt_trace_available_direction));
->> +	if (ret < 0)
->> +		goto out;
->> +	ctrl->direction = val;
->> +
->> +	val = FIELD_GET(HISI_PTT_PMU_TYPE_MASK, event->attr.config);
->> +
-> 
-> For consistency, no blank line here.
-> 
-
-will drop it.
-
->> +	ret = hisi_ptt_trace_valid_config(val, hisi_ptt_trace_available_type,
->> +					  ARRAY_SIZE(hisi_ptt_trace_available_type));
->> +	if (ret < 0)
->> +		goto out;
->> +	ctrl->type = val;
->> +
->> +	val = FIELD_GET(HISI_PTT_PMU_FORMAT_MASK, event->attr.config);
->> +	ret = hisi_ptt_trace_valid_config_onehot(val, hisi_ptt_trace_availble_format,
->> +						 ARRAY_SIZE(hisi_ptt_trace_availble_format));
->> +	if (ret < 0)
->> +		goto out;
->> +	ctrl->format = val;
->> +
->> +out:
->> +	mutex_unlock(&hisi_ptt->mutex);
->> +	return ret;
->> +}
-> 
-> ...
-> 
->> +
->> +static void hisi_ptt_pmu_start(struct perf_event *event, int flags)
->> +{
->> +	struct hisi_ptt *hisi_ptt = to_hisi_ptt(event->pmu);
->> +	struct perf_output_handle *handle = &hisi_ptt->trace_ctrl.handle;
->> +	struct hw_perf_event *hwc = &event->hw;
->> +	struct hisi_ptt_pmu_buf *buf;
->> +	int cpu = event->cpu;
->> +	int ret;
->> +
->> +	hwc->state = 0;
->> +	mutex_lock(&hisi_ptt->mutex);
->> +	if (hisi_ptt->trace_ctrl.status == HISI_PTT_TRACE_STATUS_ON) {
->> +		pci_dbg(hisi_ptt->pdev, "trace has already started\n");
->> +		goto stop;
-> 
-> If it is already started setting the state to STOPPED without doing anything
-> to change the hardware state doesn't feel right.
-
-I think it won't happen as we follow the order to stop the hardware and then
-set the HISI_PTT_TRACE_STATUS_OFF flags.
-
-But it makes me read start/stop process again and I find that I should set the
-HISI_PTT_TRACE_STATUS_ON first before I start the hardware. Now it maybe problematic.
-
-> I'm assuming we only get here as a result of a bug, so perhaps its fine
-> to do this.
-> 
->> +	}
->> +
->> +	if (cpu == -1)
->> +		cpu = hisi_ptt->trace_ctrl.default_cpu;
->> +
->> +	/*
->> +	 * Handle the interrupt on the same cpu which starts the trace to avoid
->> +	 * context mismatch. Otherwise we'll trigger the WARN from the perf
->> +	 * core in event_function_local().
->> +	 */
->> +	WARN_ON(irq_set_affinity(pci_irq_vector(hisi_ptt->pdev, HISI_PTT_TRACE_DMA_IRQ),
->> +				 cpumask_of(cpu)));
->> +
->> +	ret = hisi_ptt_alloc_trace_buf(hisi_ptt);
->> +	if (ret) {
->> +		pci_dbg(hisi_ptt->pdev, "alloc trace buf failed, ret = %d\n", ret);
->> +		goto stop;
->> +	}
->> +
->> +	buf = perf_aux_output_begin(handle, event);
->> +	if (!buf) {
->> +		pci_dbg(hisi_ptt->pdev, "aux output begin failed\n");
->> +		goto stop;
->> +	}
->> +
->> +	buf->pos = handle->head % buf->length;
->> +
->> +	ret = hisi_ptt_trace_start(hisi_ptt);
->> +	if (ret) {
->> +		pci_dbg(hisi_ptt->pdev, "trace start failed, ret = %d\n", ret);
->> +		perf_aux_output_end(handle, 0);
->> +		goto stop;
->> +	}
->> +
->> +	mutex_unlock(&hisi_ptt->mutex);
->> +	return;
->> +stop:
->> +	event->hw.state |= PERF_HES_STOPPED;
->> +	mutex_unlock(&hisi_ptt->mutex);
->> +}
->> +
-> 
-> ...
-> 
->> +static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
->> +{
->> +	u16 core_id, sicl_id;
->> +	char *pmu_name;
->> +	int ret;
->> +	u32 reg;
->> +
->> +	hisi_ptt->hisi_ptt_pmu = (struct pmu) {
->> +		.module		= THIS_MODULE,
->> +		.capabilities	= PERF_PMU_CAP_EXCLUSIVE | PERF_PMU_CAP_ITRACE,
->> +		.task_ctx_nr	= perf_sw_context,
->> +		.attr_groups	= hisi_ptt_pmu_groups,
->> +		.event_init	= hisi_ptt_pmu_event_init,
->> +		.setup_aux	= hisi_ptt_pmu_setup_aux,
->> +		.free_aux	= hisi_ptt_pmu_free_aux,
->> +		.start		= hisi_ptt_pmu_start,
->> +		.stop		= hisi_ptt_pmu_stop,
->> +		.add		= hisi_ptt_pmu_add,
->> +		.del		= hisi_ptt_pmu_del,
->> +	};
->> +
->> +	reg = readl(hisi_ptt->iobase + HISI_PTT_LOCATION);
->> +	core_id = FIELD_GET(HISI_PTT_CORE_ID, reg);
->> +	sicl_id = FIELD_GET(HISI_PTT_SICL_ID, reg);
->> +
->> +	pmu_name = devm_kasprintf(&hisi_ptt->pdev->dev, GFP_KERNEL, "hisi_ptt%u_%u",
->> +				  sicl_id, core_id);
->> +	if (!pmu_name)
->> +		return -ENOMEM;
->> +
->> +	ret = perf_pmu_register(&hisi_ptt->hisi_ptt_pmu, pmu_name, -1);
->> +	if (ret)
->> +		return ret;
->> +
->> +	return devm_add_action_or_reset(&hisi_ptt->pdev->dev,
->> +					hisi_ptt_unregister_pmu,
->> +					&hisi_ptt->hisi_ptt_pmu);
-> 
-> This result in the cleanup of the driver being slightly out of order wrt to
-> the setup as we have the filters cleared after this (in remove())
-> Ideally the remove() ordering should be the precise reverse of the
-> probe() order except where it is necessary to deviate from that and
-> in those deviations I'd expect to see a comment saying why.
-> 
-> So either clear up the filters using a devm_add_action_or_reset()
-> or do a manual unregister of the pmu in remove. I prefer the
-> devm_add_action_or_reset for hisi_ptt_release_filters() option.
-> 
-> There may well not be a race here, but it is always good to avoid
-> reviewers having to think about whether there might be one!
-> 
-> Note that other reviewers may have different views on this however
-> so perhaps go with what they say as this subsystem isn't my area
-> of expertise!
-> 
-
-I'd like to think a bit more time about the orders here before reply. :)
+I expect this to go through the PCI tree. Let me know if I should pick
+this up.
 
 Thanks,
-Yicong
-
->> +}
->> +
->>  /*
->>   * The DMA of PTT trace can only use direct mapping, due to some
->>   * hardware restriction. Check whether there is an IOMMU or the
->> @@ -337,6 +826,12 @@ static int hisi_ptt_probe(struct pci_dev *pdev,
->>  
->>  	hisi_ptt_init_ctrls(hisi_ptt);
->>  
->> +	ret = hisi_ptt_register_pmu(hisi_ptt);
->> +	if (ret) {
->> +		pci_err(pdev, "failed to register pmu device, ret = %d", ret);
->> +		return ret;
->> +	}
->> +
->>  	return 0;
->>  }
->>  
-> .
-> 
+Wei.
