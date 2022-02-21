@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 710D8C4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 08:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D77EC4167B
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 08:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344279AbiBUIoo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Feb 2022 03:44:44 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34354 "EHLO
+        id S1344319AbiBUIor (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Feb 2022 03:44:47 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344168AbiBUIom (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 03:44:42 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D589A12AE7;
-        Mon, 21 Feb 2022 00:44:18 -0800 (PST)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4K2G621hC9zcft4;
-        Mon, 21 Feb 2022 16:43:06 +0800 (CST)
+        with ESMTP id S1344253AbiBUIon (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 03:44:43 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 197AC13D70;
+        Mon, 21 Feb 2022 00:44:20 -0800 (PST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4K2G2F6Sb0zbbZs;
+        Mon, 21 Feb 2022 16:39:49 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Mon, 21 Feb 2022 16:44:16 +0800
+ 15.1.2308.21; Mon, 21 Feb 2022 16:44:17 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
         <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
@@ -39,10 +39,12 @@ To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
 CC:     <prime.zeng@huawei.com>, <liuqi115@huawei.com>,
         <zhangshaokun@hisilicon.com>, <linuxarm@huawei.com>,
         <yangyicong@hisilicon.com>, <song.bao.hua@hisilicon.com>
-Subject: [PATCH v4 0/8] Add support for HiSilicon PCIe Tune and Trace device
-Date:   Mon, 21 Feb 2022 16:42:59 +0800
-Message-ID: <20220221084307.33712-1-yangyicong@hisilicon.com>
+Subject: [PATCH v4 5/8] hisi_ptt: Add tune function support for HiSilicon PCIe Tune and Trace device
+Date:   Mon, 21 Feb 2022 16:43:04 +0800
+Message-ID: <20220221084307.33712-6-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220221084307.33712-1-yangyicong@hisilicon.com>
+References: <20220221084307.33712-1-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -54,114 +56,232 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
-integrated Endpoint (RCiEP) device, providing the capability
-to dynamically monitor and tune the PCIe traffic (tune),
-and trace the TLP headers (trace).
+Add tune function for the HiSilicon Tune and Trace device. The interface
+of tune is exposed through sysfs attributes of PTT PMU device.
 
-PTT tune is designed for monitoring and adjusting PCIe link parameters.
-We provide several parameters of the PCIe link. Through the driver,
-user can adjust the value of certain parameter to affect the PCIe link
-for the purpose of enhancing the performance in certian situation.
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/hwtracing/ptt/hisi_ptt.c | 154 +++++++++++++++++++++++++++++++
+ drivers/hwtracing/ptt/hisi_ptt.h |  19 ++++
+ 2 files changed, 173 insertions(+)
 
-PTT trace is designed for dumping the TLP headers to the memory, which
-can be used to analyze the transactions and usage condition of the PCIe
-Link. Users can choose filters to trace headers, by either requester
-ID, or those downstream of a set of Root Ports on the same core of the
-PTT device. It's also supported to trace the headers of certain type and
-of certain direction.
-
-The driver registers a PMU device for each PTT device. The trace can
-be used through `perf record` and the traced headers can be decoded
-by `perf report`. The perf command support for the device is also
-added in this patchset. The tune can be used through the sysfs
-attributes of related PMU device. See the documentation for the
-detailed usage.
-
-Change since v3:
-Address the comments from Jonathan and John, thanks.
-- drop members in the common struct which can be get on the fly
-- reduce buffer struct and organize the buffers with array instead of list
-- reduce the DMA reset wait time to avoid long time busy loop
-- split the available_filters sysfs attribute into two files, for root port
-  and requester respectively. Update the documentation accordingly
-- make IOMMU mapping check earlier in probe to avoid race condition. Also
-  make IOMMU quirk patch prior to driver in the series
-- Cleanups and typos fixes from John and Jonathan
-Link: https://lore.kernel.org/linux-pci/20220124131118.17887-1-yangyicong@hisilicon.com/
-
-Change since v2:
-- address the comments from Mathieu, thanks.
-  - rename the directory to ptt to match the function of the device
-  - spinoff the declarations to a separate header
-  - split the trace function to several patches
-  - some other comments.
-- make default smmu domain type of PTT device to identity
-  Drop the RMR as it's not recommended and use an iommu_def_domain_type
-  quirk to passthrough the device DMA as suggested by Robin. 
-Link: https://lore.kernel.org/linux-pci/20211116090625.53702-1-yangyicong@hisilicon.com/
-
-Change since v1:
-- switch the user interface of trace to perf from debugfs
-- switch the user interface of tune to sysfs from debugfs
-- add perf tool support to start trace and decode the trace data
-- address the comments of documentation from Bjorn
-- add RMR[1] support of the device as trace works in RMR mode or
-  direct DMA mode. RMR support is achieved by common APIs rather
-  than the APIs implemented in [1].
-Link: https://lore.kernel.org/lkml/1618654631-42454-1-git-send-email-yangyicong@hisilicon.com/
-
-[1] https://lore.kernel.org/linux-acpi/20210805080724.480-1-shameerali.kolothum.thodi@huawei.com/
-
-Qi Liu (1):
-  perf tool: Add support for HiSilicon PCIe Tune and Trace device driver
-
-Yicong Yang (7):
-  iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to
-    identity
-  hwtracing: Add trace function support for HiSilicon PCIe Tune and
-    Trace device
-  hisi_ptt: Register PMU device for PTT trace
-  hisi_ptt: Add support for dynamically updating the filter list
-  hisi_ptt: Add tune function support for HiSilicon PCIe Tune and Trace
-    device
-  docs: Add HiSilicon PTT device driver documentation
-  MAINTAINERS: Add maintainer for HiSilicon PTT driver
-
- Documentation/trace/hisi-ptt.rst              |  303 +++++
- MAINTAINERS                                   |    7 +
- drivers/Makefile                              |    1 +
- drivers/hwtracing/Kconfig                     |    2 +
- drivers/hwtracing/ptt/Kconfig                 |   11 +
- drivers/hwtracing/ptt/Makefile                |    2 +
- drivers/hwtracing/ptt/hisi_ptt.c              | 1133 +++++++++++++++++
- drivers/hwtracing/ptt/hisi_ptt.h              |  224 ++++
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   |   16 +
- tools/perf/arch/arm/util/auxtrace.c           |   56 +-
- tools/perf/arch/arm/util/pmu.c                |    3 +
- tools/perf/arch/arm64/util/Build              |    2 +-
- tools/perf/arch/arm64/util/hisi_ptt.c         |  195 +++
- tools/perf/util/Build                         |    2 +
- tools/perf/util/auxtrace.c                    |    4 +
- tools/perf/util/auxtrace.h                    |    1 +
- tools/perf/util/hisi-ptt-decoder/Build        |    1 +
- .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   |  170 +++
- .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.h   |   28 +
- tools/perf/util/hisi_ptt.c                    |  218 ++++
- tools/perf/util/hisi_ptt.h                    |   28 +
- 21 files changed, 2403 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/trace/hisi-ptt.rst
- create mode 100644 drivers/hwtracing/ptt/Kconfig
- create mode 100644 drivers/hwtracing/ptt/Makefile
- create mode 100644 drivers/hwtracing/ptt/hisi_ptt.c
- create mode 100644 drivers/hwtracing/ptt/hisi_ptt.h
- create mode 100644 tools/perf/arch/arm64/util/hisi_ptt.c
- create mode 100644 tools/perf/util/hisi-ptt-decoder/Build
- create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
- create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.h
- create mode 100644 tools/perf/util/hisi_ptt.c
- create mode 100644 tools/perf/util/hisi_ptt.h
-
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
+index 50193a331faa..4aafaf6f752f 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.c
++++ b/drivers/hwtracing/ptt/hisi_ptt.c
+@@ -21,6 +21,159 @@
+ 
+ #include "hisi_ptt.h"
+ 
++static int hisi_ptt_wait_tuning_finish(struct hisi_ptt *hisi_ptt)
++{
++	u32 val;
++
++	return readl_poll_timeout(hisi_ptt->iobase + HISI_PTT_TUNING_INT_STAT,
++				  val, !(val & HISI_PTT_TUNING_INT_STAT_MASK),
++				  HISI_PTT_WAIT_POLL_INTERVAL_US,
++				  HISI_PTT_WAIT_TIMEOUT_US);
++}
++
++static int hisi_ptt_tune_data_get(struct hisi_ptt *hisi_ptt,
++				  u32 event, u16 *data)
++{
++	u32 reg;
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
++	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
++			  event);
++	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++
++	/* Write all 1 to indicates it's the read process */
++	writel(~0UL, hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++
++	if (hisi_ptt_wait_tuning_finish(hisi_ptt))
++		return -ETIMEDOUT;
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++	reg &= HISI_PTT_TUNING_DATA_VAL_MASK;
++	*data = FIELD_GET(HISI_PTT_TUNING_DATA_VAL_MASK, reg);
++
++	return 0;
++}
++
++static int hisi_ptt_tune_data_set(struct hisi_ptt *hisi_ptt,
++				  u32 event, u16 data)
++{
++	u32 reg;
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
++	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
++			  event);
++	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++
++	writel(FIELD_PREP(HISI_PTT_TUNING_DATA_VAL_MASK, data),
++	       hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++
++	if (hisi_ptt_wait_tuning_finish(hisi_ptt))
++		return -ETIMEDOUT;
++
++	return 0;
++}
++
++static ssize_t hisi_ptt_tune_attr_show(struct device *dev,
++				       struct device_attribute *attr,
++				       char *buf)
++{
++	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
++	struct dev_ext_attribute *ext_attr;
++	struct hisi_ptt_tune_desc *desc;
++	int ret;
++	u16 val;
++
++	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
++	desc = ext_attr->var;
++
++	if (!mutex_trylock(&hisi_ptt->mutex))
++		return -EBUSY;
++
++	ret = hisi_ptt_tune_data_get(hisi_ptt, desc->event_code, &val);
++
++	mutex_unlock(&hisi_ptt->mutex);
++	return ret ? ret : sysfs_emit(buf, "%u\n", val);
++}
++
++static ssize_t hisi_ptt_tune_attr_store(struct device *dev,
++					struct device_attribute *attr,
++					const char *buf, size_t count)
++{
++	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
++	struct dev_ext_attribute *ext_attr;
++	struct hisi_ptt_tune_desc *desc;
++	int ret;
++	u16 val;
++
++	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
++	desc = ext_attr->var;
++
++	if (kstrtou16(buf, 10, &val))
++		return -EINVAL;
++
++	if (!mutex_trylock(&hisi_ptt->mutex))
++		return -EBUSY;
++
++	ret = hisi_ptt_tune_data_set(hisi_ptt, desc->event_code, val);
++
++	mutex_unlock(&hisi_ptt->mutex);
++	return ret ? ret : count;
++}
++
++#define HISI_PTT_TUNE_ATTR(_name, _val, _show, _store)			\
++	static struct hisi_ptt_tune_desc _name##_desc = {		\
++		.name = #_name,						\
++		.event_code = _val,					\
++	};								\
++	static struct dev_ext_attribute hisi_ptt_##_name##_attr = {	\
++		.attr	= __ATTR(_name, 0600, _show, _store),		\
++		.var	= &_name##_desc,				\
++	}
++
++#define HISI_PTT_TUNE_ATTR_COMMON(_name, _val)		\
++	HISI_PTT_TUNE_ATTR(_name, _val,			\
++			   hisi_ptt_tune_attr_show,	\
++			   hisi_ptt_tune_attr_store)
++
++/*
++ * The value of the tuning event are composed of two parts: main event code in bit[0,15] and
++ * subevent code in bit[16,23]. For example, qox_tx_cpl is a subevent of 'Tx path QoS control'
++ * which for tuning the weight of Tx completion TLPs. See hisi_ptt.rst documentation for
++ * more information.
++ */
++#define HISI_PTT_TUNE_QOS_TX_CPL				(0x4 | (3 << 16))
++#define HISI_PTT_TUNE_QOS_TX_NP					(0x4 | (4 << 16))
++#define HISI_PTT_TUNE_QOS_TX_P					(0x4 | (5 << 16))
++#define HISI_PTT_TUNE_TX_PATH_IOB_RX_REQ_ALLOC_BUF_LEVEL	(0x5 | (6 << 16))
++#define HISI_PTT_TUNE_TX_PATH_TX_REQ_ALLOC_BUF_LEVEL		(0x5 | (7 << 16))
++
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_cpl,
++			  HISI_PTT_TUNE_QOS_TX_CPL);
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_np,
++			  HISI_PTT_TUNE_QOS_TX_NP);
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_p,
++			  HISI_PTT_TUNE_QOS_TX_P);
++HISI_PTT_TUNE_ATTR_COMMON(tx_path_iob_rx_req_alloc_buf_level,
++			  HISI_PTT_TUNE_TX_PATH_IOB_RX_REQ_ALLOC_BUF_LEVEL);
++HISI_PTT_TUNE_ATTR_COMMON(tx_path_tx_req_alloc_buf_level,
++			  HISI_PTT_TUNE_TX_PATH_TX_REQ_ALLOC_BUF_LEVEL);
++
++static struct attribute *hisi_ptt_tune_attrs[] = {
++	&hisi_ptt_qos_tx_cpl_attr.attr.attr,
++	&hisi_ptt_qos_tx_np_attr.attr.attr,
++	&hisi_ptt_qos_tx_p_attr.attr.attr,
++	&hisi_ptt_tx_path_iob_rx_req_alloc_buf_level_attr.attr.attr,
++	&hisi_ptt_tx_path_tx_req_alloc_buf_level_attr.attr.attr,
++	NULL,
++};
++
++static struct attribute_group hisi_ptt_tune_group = {
++	.attrs	= hisi_ptt_tune_attrs,
++	.name	= "tune",
++};
++
+ static u16 hisi_ptt_get_filter_val(struct pci_dev *pdev)
+ {
+ 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+@@ -521,6 +674,7 @@ static struct attribute_group hisi_ptt_pmu_filter_group = {
+ static const struct attribute_group *hisi_ptt_pmu_groups[] = {
+ 	&hisi_ptt_pmu_format_group,
+ 	&hisi_ptt_pmu_filter_group,
++	&hisi_ptt_tune_group,
+ 	NULL
+ };
+ 
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
+index b8f2d520443c..70b662393af9 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.h
++++ b/drivers/hwtracing/ptt/hisi_ptt.h
+@@ -25,6 +25,11 @@
+ /*
+  * The definition of the device registers and register fields.
+  */
++#define HISI_PTT_TUNING_CTRL		0x0000
++#define   HISI_PTT_TUNING_CTRL_CODE	GENMASK(15, 0)
++#define   HISI_PTT_TUNING_CTRL_SUB	GENMASK(23, 16)
++#define HISI_PTT_TUNING_DATA		0x0004
++#define   HISI_PTT_TUNING_DATA_VAL_MASK	GENMASK(15, 0)
+ #define HISI_PTT_TRACE_ADDR_SIZE	0x0800
+ #define HISI_PTT_TRACE_ADDR_BASE_LO_0	0x0810
+ #define HISI_PTT_TRACE_ADDR_BASE_HI_0	0x0814
+@@ -40,6 +45,8 @@
+ #define HISI_PTT_TRACE_INT_STAT		0x0890
+ #define   HISI_PTT_TRACE_INT_STAT_MASK	GENMASK(3, 0)
+ #define HISI_PTT_TRACE_INT_MASK		0x0894
++#define HISI_PTT_TUNING_INT_STAT	0x0898
++#define   HISI_PTT_TUNING_INT_STAT_MASK	BIT(0)
+ #define HISI_PTT_TRACE_WR_STS		0x08a0
+ #define   HISI_PTT_TRACE_WR_STS_WRITE	GENMASK(27, 0)
+ #define   HISI_PTT_TRACE_WR_STS_BUFFER	GENMASK(29, 28)
+@@ -78,6 +85,18 @@ enum hisi_ptt_trace_status {
+ 	HISI_PTT_TRACE_STATUS_ON,
+ };
+ 
++/**
++ * struct hisi_ptt_tune_desc - describe tune event for PTT tune
++ * @hisi_ptt:   PTT device this tune event belongs to
++ * @name:       name of this event
++ * @event_code: code of the event
++ */
++struct hisi_ptt_tune_desc {
++	struct hisi_ptt *hisi_ptt;
++	const char *name;
++	u32 event_code;
++};
++
+ /**
+  * struct hisi_ptt_dma_buffer - describe a single trace buffer of PTT trace.
+  *                              The detail of the data format is described
 -- 
 2.24.0
 
