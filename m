@@ -2,68 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E65A0C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 08:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C8DC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Feb 2022 08:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229844AbiBUIcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Feb 2022 03:32:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:46916 "EHLO
+        id S1344176AbiBUIom (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Feb 2022 03:44:42 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343665AbiBUIcU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 03:32:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C94E726E2;
-        Mon, 21 Feb 2022 00:31:56 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6457F610A0;
-        Mon, 21 Feb 2022 08:31:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2433EC340E9;
-        Mon, 21 Feb 2022 08:31:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645432315;
-        bh=1OUb5ueXqaPD8ToS2GOvrc3KNL1RMvWCGpfF22Z4Nak=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Z70eQxS4jkkXz5A6TA6vpAMMDkIxUQrOvESJvOwB6r3yshPsawn6kz4Q53hGjlu81
-         iZ1hZjpRtjibX8zmXDT5cSoaqdRC6TRSxSyUu7EoMf4OAhdPxdlNSLcZbnkNKKlueS
-         C67osf2oL0WHFplDQ/qML8l44F0S+Rq466R/V4ddjDkkdW9VXzva5EnSaSyHba7xc/
-         rgrU1CKNTXy2oOe6V/fqPGeIQ8h9bHrL2piFRAUhHuy+rILEPnEQFS3HjUQGi6JxZh
-         vToZMpq+9QIPHmIdrwRDmkMxmsUgbRn5wWiWuAZYZibov+IwaZ4nyE7p4vL6wwG+sK
-         KpRnLtwJGvgCg==
-Date:   Mon, 21 Feb 2022 16:31:49 +0800
-From:   Shawn Guo <shawnguo@kernel.org>
-To:     Richard Zhu <hongxing.zhu@nxp.com>
-Cc:     l.stach@pengutronix.de, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@pengutronix.de, linux-imx@nxp.com
-Subject: Re: [PATCH v4 1/2] ARM: dts: imx6qp-sabresd: Enable PCIe support
-Message-ID: <20220221083149.GS2249@dragon>
-References: <1645425237-4071-1-git-send-email-hongxing.zhu@nxp.com>
+        with ESMTP id S237755AbiBUIom (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Feb 2022 03:44:42 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AA8113D0D;
+        Mon, 21 Feb 2022 00:44:19 -0800 (PST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4K2G5R0X6Sz9shK;
+        Mon, 21 Feb 2022 16:42:35 +0800 (CST)
+Received: from localhost.localdomain (10.67.164.66) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Mon, 21 Feb 2022 16:44:16 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
+        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
+        <will@kernel.org>, <mark.rutland@arm.com>,
+        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
+        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
+        <jonathan.cameron@huawei.com>, <daniel.thompson@linaro.org>,
+        <joro@8bytes.org>, <john.garry@huawei.com>,
+        <shameerali.kolothum.thodi@huawei.com>, <robin.murphy@arm.com>,
+        <peterz@infradead.org>, <mingo@redhat.com>, <acme@kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
+        <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>
+CC:     <prime.zeng@huawei.com>, <liuqi115@huawei.com>,
+        <zhangshaokun@hisilicon.com>, <linuxarm@huawei.com>,
+        <yangyicong@hisilicon.com>, <song.bao.hua@hisilicon.com>
+Subject: [PATCH v4 1/8] iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to identity
+Date:   Mon, 21 Feb 2022 16:43:00 +0800
+Message-ID: <20220221084307.33712-2-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220221084307.33712-1-yangyicong@hisilicon.com>
+References: <20220221084307.33712-1-yangyicong@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1645425237-4071-1-git-send-email-hongxing.zhu@nxp.com>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.67.164.66]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 21, 2022 at 02:33:56PM +0800, Richard Zhu wrote:
-> In the i.MX6QP sabresd board(sch-28857) design, one external oscillator
-> is powered up by vgen3 and used as the PCIe reference clock source by
-> the endpoint device.
-> 
-> If RC uses this oscillator as reference clock too, PLL6(ENET PLL) would
-> has to be in bypass mode, and ENET clocks would be messed up.
-> 
-> To keep things simple, let RC use the internal PLL as reference clock
-> and set vgen3 always on to enable the external oscillator for endpoint
-> device on i.MX6QP sabresd board.
-> 
-> NOTE: This reference clock setup is used to pass the GEN2 TX compliance
-> tests, and isn't recommended as a setup in the end-user design.
-> 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+The DMA of HiSilicon PTT device can only work with identical
+mapping. So add a quirk for the device to force the domain
+passthrough.
 
-Applied, thanks!
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index 6dc6d8b6b368..6f67a2b1dd27 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -2838,6 +2838,21 @@ static int arm_smmu_dev_disable_feature(struct device *dev,
+ 	}
+ }
+ 
++#define IS_HISI_PTT_DEVICE(pdev)	((pdev)->vendor == PCI_VENDOR_ID_HUAWEI && \
++					 (pdev)->device == 0xa12e)
++
++static int arm_smmu_def_domain_type(struct device *dev)
++{
++	if (dev_is_pci(dev)) {
++		struct pci_dev *pdev = to_pci_dev(dev);
++
++		if (IS_HISI_PTT_DEVICE(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++	}
++
++	return 0;
++}
++
+ static struct iommu_ops arm_smmu_ops = {
+ 	.capable		= arm_smmu_capable,
+ 	.domain_alloc		= arm_smmu_domain_alloc,
+@@ -2863,6 +2878,7 @@ static struct iommu_ops arm_smmu_ops = {
+ 	.sva_unbind		= arm_smmu_sva_unbind,
+ 	.sva_get_pasid		= arm_smmu_sva_get_pasid,
+ 	.page_response		= arm_smmu_page_response,
++	.def_domain_type	= arm_smmu_def_domain_type,
+ 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
+ 	.owner			= THIS_MODULE,
+ };
+-- 
+2.24.0
+
