@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3013DC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 16:32:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49491C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 16:32:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234030AbiBVQco (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Feb 2022 11:32:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39472 "EHLO
+        id S233859AbiBVQdB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Feb 2022 11:33:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233875AbiBVQco (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 11:32:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3E5D9E579;
-        Tue, 22 Feb 2022 08:32:18 -0800 (PST)
+        with ESMTP id S234062AbiBVQcr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 11:32:47 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E94FC6E8E7;
+        Tue, 22 Feb 2022 08:32:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E81D60AC8;
-        Tue, 22 Feb 2022 16:32:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABD11C340F1;
-        Tue, 22 Feb 2022 16:32:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C4EF260AFD;
+        Tue, 22 Feb 2022 16:32:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13904C340E8;
+        Tue, 22 Feb 2022 16:32:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645547537;
-        bh=dtnf8XsUhj4Osmhrrm08Dt6iD1UNUzpBusiWKcRHhvA=;
+        s=k20201202; t=1645547541;
+        bh=X1NkggDZMaHHEK/ibc1MqFK+Ef81w3jOaBfki258e5Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vEY/kpjg0E4Hq00234nIc8iFGAC/iyc2cKcjgfwQQR9v41uOWNe8Z4fN2PTDX6iB6
-         1xp3N5hQeAy+O9K7/ZjL2GCfKcdz7tD+b2/P7VChgwyc9tOTuBrmAedxJ+oQmgakc5
-         oIBi9VZot/i8MYlEkmDufao1aAXlOkZ0mcC8fUt9S2dDo8d2EG8IA8LCB+xbcvD9iJ
-         fAokzLkDEIB9nzeTNFDdkyRc7bvWM6yj7GmkBvP60Po5+j/WgIVDTpAgTJ/UknqWrE
-         dxLXEc412YAvJvPdDMvJsjlzYlWbBJglETDTMYyc52mVr6E++ZGWluolk8bB+fB5Sp
-         b9L9K5htmnmrQ==
+        b=JhhNpdV7ASN4Ad65L5LNmqytTZGEPdaHaHxNKInh1dr7E308XT5lfFLnNa1vmD2vf
+         p6MClteatvt73MlM72iHdchLE/yUvn4OuDWLaWe/RYWQ6v8JGIRoUyhPW81dBUiJ/M
+         xDdFpTFbL2XsFFx3PhmiMtQ+3DIsrPmVkSks0EQwHNwEgxXwFYe+epUmHntGiw0SSj
+         YYs4hhFskTk94R2alrrs0g5dMKkQY2ZYiMhmwxqjnqD3E/gDo2NfR9kJSMT/WzkRnd
+         tIe+xw+sawsuf9sZBvnpEIHSYTTEDX72ZxF/dqGAH45qSnuCeRbT9pDyfc8tZR7YoA
+         FChsc8vh+WsWQ==
 Received: by pali.im (Postfix)
-        id 635AAFDB; Tue, 22 Feb 2022 17:32:17 +0100 (CET)
+        id BEEC5FDB; Tue, 22 Feb 2022 17:32:20 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -44,9 +44,9 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Gregory Clement <gregory.clement@bootlin.com>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 3/6] dt-bindings: Add 'slot-power-limit-milliwatt' PCIe port property
-Date:   Tue, 22 Feb 2022 17:31:55 +0100
-Message-Id: <20220222163158.1666-4-pali@kernel.org>
+Subject: [PATCH 6/6] ARM: dts: turris-omnia: Set PCIe slot-power-limit-milliwatt properties
+Date:   Tue, 22 Feb 2022 17:31:58 +0100
+Message-Id: <20220222163158.1666-7-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220222163158.1666-1-pali@kernel.org>
 References: <20220222163158.1666-1-pali@kernel.org>
@@ -57,44 +57,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This property specifies slot power limit in mW unit. It is a form-factor
-and board specific value and must be initialized by hardware.
-
-Some PCIe controllers delegate this work to software to allow hardware
-flexibility and therefore this property basically specifies what should
-host bridge program into PCIe Slot Capabilities registers.
-
-The property needs to be specified in mW unit instead of the special format
-defined by Slot Capabilities (which encodes scaling factor or different
-unit). Host drivers should convert the value from mW to needed format.
+All 3 miniPCIe slots in Turris Omnia are designed for 10 W.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Marek Behún <kabel@kernel.org>
-
 ---
-This change was already accepted into dt-schema repo by Rob Herring:
-https://github.com/devicetree-org/dt-schema/pull/66
----
- Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/arm/boot/dts/armada-385-turris-omnia.dts | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 6a8f2874a24d..b0cc133ed00d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -32,6 +32,12 @@ driver implementation may support the following properties:
-    root port to downstream device and host bridge drivers can do programming
-    which depends on CLKREQ signal existence. For example, programming root port
-    not to advertise ASPM L1 Sub-States support if there is no CLKREQ signal.
-+- slot-power-limit-milliwatt:
-+   If present, this property specifies slot power limit in milliwatts. Host
-+   drivers can parse this property and use it for programming Root Port or host
-+   bridge, or for composing and sending PCIe Set_Slot_Power_Limit messages
-+   through the Root Port or host bridge when transitioning PCIe link from a
-+   non-DL_Up Status to a DL_Up Status.
+diff --git a/arch/arm/boot/dts/armada-385-turris-omnia.dts b/arch/arm/boot/dts/armada-385-turris-omnia.dts
+index 5bd6a66d2c2b..f240018148f6 100644
+--- a/arch/arm/boot/dts/armada-385-turris-omnia.dts
++++ b/arch/arm/boot/dts/armada-385-turris-omnia.dts
+@@ -71,16 +71,19 @@
+ 			pcie@1,0 {
+ 				/* Port 0, Lane 0 */
+ 				status = "okay";
++				slot-power-limit-milliwatt = <10000>;
+ 			};
  
- PCI-PCI Bridge properties
- -------------------------
+ 			pcie@2,0 {
+ 				/* Port 1, Lane 0 */
+ 				status = "okay";
++				slot-power-limit-milliwatt = <10000>;
+ 			};
+ 
+ 			pcie@3,0 {
+ 				/* Port 2, Lane 0 */
+ 				status = "okay";
++				slot-power-limit-milliwatt = <10000>;
+ 			};
+ 		};
+ 	};
 -- 
 2.20.1
 
