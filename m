@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E13CC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 15:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B8FFC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 15:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233701AbiBVPwK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Feb 2022 10:52:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42292 "EHLO
+        id S233702AbiBVPwM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Feb 2022 10:52:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233687AbiBVPwG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 10:52:06 -0500
+        with ESMTP id S233707AbiBVPwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 10:52:10 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C53221811;
-        Tue, 22 Feb 2022 07:51:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7618B31519;
+        Tue, 22 Feb 2022 07:51:44 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2C01AB81B21;
-        Tue, 22 Feb 2022 15:51:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 958F6C340F3;
-        Tue, 22 Feb 2022 15:51:36 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 01A2CB81B21;
+        Tue, 22 Feb 2022 15:51:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B8EAC340E8;
+        Tue, 22 Feb 2022 15:51:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645545097;
-        bh=QFbjO2qhP748Q8TOCG1/1nLBQE3SEdhrPT1mzvVvksM=;
+        s=k20201202; t=1645545101;
+        bh=jhAZQpK2Xkwl6Uuj8dhwCmycOi92amDCrJPKvBaGcNs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=j+ekY5hd9/kIZQ/t7QqC6DqdSHqYihFsrKb2ybN9eHRjVBcCpzLgpPAo4QuPfiGDU
-         /3r2muKIq13ITtY758zuIqHuCZfjCTJl7ffOwWznkjvyOEg+RkfGWPw89USGp9YuQA
-         y4Ej0inSxez5lKODwCIdfD86VWWR2rPJ1Sj2tksHyC+UepWl7vHTjdfFB0+vjGtViF
-         B6B8a2XLSLyhDH5kOlgRXGYejZcWtluFGkOR3jI6Okl9AcHW5f4neMAMFv6aLC+4pf
-         TsJaog53dyEaDfncEd+gachzTKk3UDTY9T+e8ZD8q4zWNDsLpwSFtxhPxAtzKrnGfJ
-         5AY9Bij87IyOg==
+        b=IoIZBfB5KLbLmsyYgiWz81LP8qMF+ORSPtjBSduqUTzqTMhOdhudBvmFhgEMh7w08
+         gvY0uRXQz/GEItuc7Ej2Db2kLslKNy+aB5DoAFelMUek74n0JnQFbYBoim5MzboWNR
+         8m+EGYhUnrqEHS6qZRISW0rOHnGA2hvjDGAMur4RQ3ckrDqvot3EwiWeiukNFDUKmt
+         E/7b4Nbltzei9ChKTUmkwvbslTRvxundb3gb2z4gYLkG4Ek4mdDfrIQRHIF9zM0JMZ
+         ZJd1Qgml5JtSBgNIIjWOeb+zrddcFiGlD8/oRGwWSWNHzemt5kBfU78v7tGeO9HTGH
+         64muZZjkdd6YQ==
 Received: by pali.im (Postfix)
-        id 474EFFDB; Tue, 22 Feb 2022 16:51:36 +0100 (CET)
+        id 1FDAEFDB; Tue, 22 Feb 2022 16:51:41 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,9 +43,9 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 03/12] PCI: pci-bridge-emul: Add support for PCI Bridge Subsystem Vendor ID capability
-Date:   Tue, 22 Feb 2022 16:50:21 +0100
-Message-Id: <20220222155030.988-4-pali@kernel.org>
+Subject: [PATCH v4 07/12] PCI: mvebu: Add support for Advanced Error Reporting registers on emulated bridge
+Date:   Tue, 22 Feb 2022 16:50:25 +0100
+Message-Id: <20220222155030.988-8-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220222155030.988-1-pali@kernel.org>
 References: <20220222155030.988-1-pali@kernel.org>
@@ -56,163 +56,119 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is read-only capability in PCI config space. Put it between base PCI
-capability and base PCI Express capability.
+AER registers start at mvebu offset 0x0100. Registers PCI_ERR_ROOT_COMMAND,
+PCI_ERR_ROOT_STATUS and PCI_ERR_ROOT_ERR_SRC are not supported on pre-XP
+hardware and returns zeros.
 
-Driver just have to specify subsystem_vendor_id and subsystem_id fields in
-emulated bridge structure and pci-bridge-emul takes care of correctly
-compose PCI Bridge Subsystem Vendor ID capability.
+Note that AER interrupt is not supported yet as mvebu emulated bridge does
+not implement interrupts support at all yet.
+
+Also remove custom macro PCIE_HEADER_LOG_4_OFF as it is unused and
+correctly this register should be referenced via standard macros with
+offset, e.g. as: PCIE_CAP_PCIERR_OFF + PCI_ERR_HEADER_LOG + 4.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/pci-bridge-emul.c | 69 +++++++++++++++++++++++++----------
- drivers/pci/pci-bridge-emul.h |  2 +
- 2 files changed, 51 insertions(+), 20 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 67 +++++++++++++++++++++++++++++-
+ 1 file changed, 66 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index c4b9837006ff..a5b662cc89d0 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -21,8 +21,11 @@
- #include "pci-bridge-emul.h"
- 
- #define PCI_BRIDGE_CONF_END	PCI_STD_HEADER_SIZEOF
-+#define PCI_CAP_SSID_SIZEOF	(PCI_SSVID_DEVICE_ID + 2)
-+#define PCI_CAP_SSID_START	PCI_BRIDGE_CONF_END
-+#define PCI_CAP_SSID_END	(PCI_CAP_SSID_START + PCI_CAP_SSID_SIZEOF)
- #define PCI_CAP_PCIE_SIZEOF	(PCI_EXP_SLTSTA2 + 2)
--#define PCI_CAP_PCIE_START	PCI_BRIDGE_CONF_END
-+#define PCI_CAP_PCIE_START	PCI_CAP_SSID_END
- #define PCI_CAP_PCIE_END	(PCI_CAP_PCIE_START + PCI_CAP_PCIE_SIZEOF)
- 
- /**
-@@ -315,6 +318,25 @@ struct pci_bridge_reg_behavior pcie_cap_regs_behavior[PCI_CAP_PCIE_SIZEOF / 4] =
- 	},
- };
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 566d8382afe6..1cf5c02499cd 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -34,7 +34,7 @@
+ #define PCIE_BAR_HI_OFF(n)	(0x0014 + ((n) << 3))
+ #define PCIE_SSDEV_ID_OFF	0x002c
+ #define PCIE_CAP_PCIEXP		0x0060
+-#define PCIE_HEADER_LOG_4_OFF	0x0128
++#define PCIE_CAP_PCIERR_OFF	0x0100
+ #define PCIE_BAR_CTRL_OFF(n)	(0x1804 + (((n) - 1) * 4))
+ #define PCIE_WIN04_CTRL_OFF(n)	(0x1820 + ((n) << 4))
+ #define PCIE_WIN04_BASE_OFF(n)	(0x1824 + ((n) << 4))
+@@ -603,6 +603,37 @@ mvebu_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+ 	return PCI_BRIDGE_EMUL_HANDLED;
+ }
  
 +static pci_bridge_emul_read_status_t
-+pci_bridge_emul_read_ssid(struct pci_bridge_emul *bridge, int reg, u32 *value)
++mvebu_pci_bridge_emul_ext_conf_read(struct pci_bridge_emul *bridge,
++				    int reg, u32 *value)
 +{
-+	switch (reg) {
-+	case PCI_CAP_LIST_ID:
-+		*value = PCI_CAP_ID_SSVID |
-+			(bridge->has_pcie ? (PCI_CAP_PCIE_START << 8) : 0);
-+		return PCI_BRIDGE_EMUL_HANDLED;
++	struct mvebu_pcie_port *port = bridge->data;
 +
-+	case PCI_SSVID_VENDOR_ID:
-+		*value = bridge->subsystem_vendor_id |
-+			(bridge->subsystem_id << 16);
-+		return PCI_BRIDGE_EMUL_HANDLED;
++	switch (reg) {
++	case 0:
++	case PCI_ERR_UNCOR_STATUS:
++	case PCI_ERR_UNCOR_MASK:
++	case PCI_ERR_UNCOR_SEVER:
++	case PCI_ERR_COR_STATUS:
++	case PCI_ERR_COR_MASK:
++	case PCI_ERR_CAP:
++	case PCI_ERR_HEADER_LOG+0:
++	case PCI_ERR_HEADER_LOG+4:
++	case PCI_ERR_HEADER_LOG+8:
++	case PCI_ERR_HEADER_LOG+12:
++	case PCI_ERR_ROOT_COMMAND:
++	case PCI_ERR_ROOT_STATUS:
++	case PCI_ERR_ROOT_ERR_SRC:
++		*value = mvebu_readl(port, PCIE_CAP_PCIERR_OFF + reg);
++		break;
 +
 +	default:
 +		return PCI_BRIDGE_EMUL_NOT_HANDLED;
 +	}
++
++	return PCI_BRIDGE_EMUL_HANDLED;
 +}
 +
- /*
-  * Initialize a pci_bridge_emul structure to represent a fake PCI
-  * bridge configuration space. The caller needs to have initialized
-@@ -341,9 +363,17 @@ int pci_bridge_emul_init(struct pci_bridge_emul *bridge,
- 	if (!bridge->pci_regs_behavior)
- 		return -ENOMEM;
- 
--	if (bridge->has_pcie) {
-+	if (bridge->subsystem_vendor_id)
-+		bridge->conf.capabilities_pointer = PCI_CAP_SSID_START;
-+	else if (bridge->has_pcie)
- 		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
-+	else
-+		bridge->conf.capabilities_pointer = 0;
-+
-+	if (bridge->conf.capabilities_pointer)
- 		bridge->conf.status |= cpu_to_le16(PCI_STATUS_CAP_LIST);
-+
-+	if (bridge->has_pcie) {
- 		bridge->pcie_conf.cap_id = PCI_CAP_ID_EXP;
- 		bridge->pcie_conf.cap |= cpu_to_le16(PCI_EXP_TYPE_ROOT_PORT << 4);
- 		bridge->pcie_cap_regs_behavior =
-@@ -427,26 +457,28 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 		read_op = bridge->ops->read_base;
- 		cfgspace = (__le32 *) &bridge->conf;
- 		behavior = bridge->pci_regs_behavior;
--	} else if (!bridge->has_pcie) {
--		/* PCIe space is not implemented, and no PCI capabilities */
--		*value = 0;
--		return PCIBIOS_SUCCESSFUL;
--	} else if (reg < PCI_CAP_PCIE_END) {
-+	} else if (reg >= PCI_CAP_SSID_START && reg < PCI_CAP_SSID_END && bridge->subsystem_vendor_id) {
-+		/* Emulated PCI Bridge Subsystem Vendor ID capability */
-+		reg -= PCI_CAP_SSID_START;
-+		read_op = pci_bridge_emul_read_ssid;
-+		cfgspace = NULL;
-+		behavior = NULL;
-+	} else if (reg >= PCI_CAP_PCIE_START && reg < PCI_CAP_PCIE_END && bridge->has_pcie) {
- 		/* Our emulated PCIe capability */
- 		reg -= PCI_CAP_PCIE_START;
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else if (reg < PCI_CFG_SPACE_SIZE) {
--		/* Rest of PCI space not implemented */
--		*value = 0;
--		return PCIBIOS_SUCCESSFUL;
--	} else {
-+	} else if (reg >= PCI_CFG_SPACE_SIZE && bridge->has_pcie) {
- 		/* PCIe extended capability space */
- 		reg -= PCI_CFG_SPACE_SIZE;
- 		read_op = bridge->ops->read_ext;
- 		cfgspace = NULL;
- 		behavior = NULL;
-+	} else {
-+		/* Not implemented */
-+		*value = 0;
-+		return PCIBIOS_SUCCESSFUL;
+ static void
+ mvebu_pci_bridge_emul_base_conf_write(struct pci_bridge_emul *bridge,
+ 				      int reg, u32 old, u32 new, u32 mask)
+@@ -715,11 +746,45 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
  	}
+ }
  
- 	if (read_op)
-@@ -504,24 +536,21 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 		write_op = bridge->ops->write_base;
- 		cfgspace = (__le32 *) &bridge->conf;
- 		behavior = bridge->pci_regs_behavior;
--	} else if (!bridge->has_pcie) {
--		/* PCIe space is not implemented, and no PCI capabilities */
--		return PCIBIOS_SUCCESSFUL;
--	} else if (reg < PCI_CAP_PCIE_END) {
-+	} else if (reg >= PCI_CAP_PCIE_START && reg < PCI_CAP_PCIE_END && bridge->has_pcie) {
- 		/* Our emulated PCIe capability */
- 		reg -= PCI_CAP_PCIE_START;
- 		write_op = bridge->ops->write_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
--	} else if (reg < PCI_CFG_SPACE_SIZE) {
--		/* Rest of PCI space not implemented */
--		return PCIBIOS_SUCCESSFUL;
--	} else {
-+	} else if (reg >= PCI_CFG_SPACE_SIZE && bridge->has_pcie) {
- 		/* PCIe extended capability space */
- 		reg -= PCI_CFG_SPACE_SIZE;
- 		write_op = bridge->ops->write_ext;
- 		cfgspace = NULL;
- 		behavior = NULL;
-+	} else {
-+		/* Not implemented */
-+		return PCIBIOS_SUCCESSFUL;
- 	}
- 
- 	shift = (where & 0x3) * 8;
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index 6b5f75b2ad02..71392b67471d 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -132,6 +132,8 @@ struct pci_bridge_emul {
- 	struct pci_bridge_reg_behavior *pcie_cap_regs_behavior;
- 	void *data;
- 	bool has_pcie;
-+	u16 subsystem_vendor_id;
-+	u16 subsystem_id;
++static void
++mvebu_pci_bridge_emul_ext_conf_write(struct pci_bridge_emul *bridge,
++				     int reg, u32 old, u32 new, u32 mask)
++{
++	struct mvebu_pcie_port *port = bridge->data;
++
++	switch (reg) {
++	/* These are W1C registers, so clear other bits */
++	case PCI_ERR_UNCOR_STATUS:
++	case PCI_ERR_COR_STATUS:
++	case PCI_ERR_ROOT_STATUS:
++		new &= mask;
++		fallthrough;
++
++	case PCI_ERR_UNCOR_MASK:
++	case PCI_ERR_UNCOR_SEVER:
++	case PCI_ERR_COR_MASK:
++	case PCI_ERR_CAP:
++	case PCI_ERR_HEADER_LOG+0:
++	case PCI_ERR_HEADER_LOG+4:
++	case PCI_ERR_HEADER_LOG+8:
++	case PCI_ERR_HEADER_LOG+12:
++	case PCI_ERR_ROOT_COMMAND:
++	case PCI_ERR_ROOT_ERR_SRC:
++		mvebu_writel(port, new, PCIE_CAP_PCIERR_OFF + reg);
++		break;
++
++	default:
++		break;
++	}
++}
++
+ static const struct pci_bridge_emul_ops mvebu_pci_bridge_emul_ops = {
+ 	.read_base = mvebu_pci_bridge_emul_base_conf_read,
+ 	.write_base = mvebu_pci_bridge_emul_base_conf_write,
+ 	.read_pcie = mvebu_pci_bridge_emul_pcie_conf_read,
+ 	.write_pcie = mvebu_pci_bridge_emul_pcie_conf_write,
++	.read_ext = mvebu_pci_bridge_emul_ext_conf_read,
++	.write_ext = mvebu_pci_bridge_emul_ext_conf_write,
  };
  
- enum {
+ /*
 -- 
 2.20.1
 
