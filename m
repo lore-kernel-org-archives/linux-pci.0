@@ -2,241 +2,154 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D20C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 16:33:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A90AC433FE
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 16:49:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234203AbiBVQdv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Feb 2022 11:33:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39782 "EHLO
+        id S233421AbiBVQtp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Feb 2022 11:49:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234065AbiBVQcr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 11:32:47 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B96DBB091;
-        Tue, 22 Feb 2022 08:32:21 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S234309AbiBVQto (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 11:49:44 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5145616A5AB
+        for <linux-pci@vger.kernel.org>; Tue, 22 Feb 2022 08:49:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645548556;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Vz9nNDvyvDMTdhA9MOOdkPb7DZP5KSBUZs6KelrdH10=;
+        b=XVpQFOJ0IEHE9zZ0tSap//WmJJ6XYy4p0IfKo1BdxtwLC9PEd9vHVBahoRuRTZJ8KPODmp
+        UAzv0ueaLgzz6hj4ej4mMXSnmbuT2SVvbeu7+RnVYbLgQeErsdrDXfLpPsfreWPiPoGhlm
+        aAGtBuRlAfvHD5JkPV06TTWP5EhRINI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-176-p5Vh5Qc4PXe_azqchgwlnw-1; Tue, 22 Feb 2022 11:49:13 -0500
+X-MC-Unique: p5Vh5Qc4PXe_azqchgwlnw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E90A360AC8;
-        Tue, 22 Feb 2022 16:32:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F382EC340EB;
-        Tue, 22 Feb 2022 16:32:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645547540;
-        bh=8/bdC9IksqEvPqTzZhPSiT319NiwbJYyn6PKo0ZgPJ0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uYkxD0gbGh/IEja4Sz1GZLSbOoiKicNK6plE4O0wpzcKRLjV894SQOPmN8jQn4v6f
-         cgi+r/Zh2VOygyZPVj5WvBfsYYd/fHO8qQskCUNq37ADEqu6IXavTPenSqvHM3kKk3
-         9YsX4iS+CJOlYPrqDfNwD5T4gg6RrhF/BsVC36DK0LtQn34w7Lcd+BuH6e8S7HvkWj
-         oSjMx77titZx+lgFwXO0uUfIUfWRqyFb501QVz0xgHnEasrhwvPZkxlOkRAfi6z2I4
-         1a5f6z4qpl4ej6oL1PyH/mYr5aOWJh+Pq94sXNPslZWJmHzIgHFEz0Tvg+Ec6Je+Sm
-         34VhHjoqqrSww==
-Received: by pali.im (Postfix)
-        id ABB3FFDB; Tue, 22 Feb 2022 17:32:19 +0100 (CET)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Gregory Clement <gregory.clement@bootlin.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 5/6] PCI: mvebu: Add support for sending Set_Slot_Power_Limit message
-Date:   Tue, 22 Feb 2022 17:31:57 +0100
-Message-Id: <20220222163158.1666-6-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220222163158.1666-1-pali@kernel.org>
-References: <20220222163158.1666-1-pali@kernel.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 335201091DA0;
+        Tue, 22 Feb 2022 16:49:11 +0000 (UTC)
+Received: from localhost (unknown [10.39.193.178])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0408F837A9;
+        Tue, 22 Feb 2022 16:48:58 +0000 (UTC)
+From:   Cornelia Huck <cohuck@redhat.com>
+To:     Yishai Hadas <yishaih@nvidia.com>, alex.williamson@redhat.com,
+        bhelgaas@google.com, jgg@nvidia.com, saeedm@nvidia.com
+Cc:     linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, kuba@kernel.org, leonro@nvidia.com,
+        kwankhede@nvidia.com, mgurtovoy@nvidia.com, yishaih@nvidia.com,
+        maorg@nvidia.com, ashok.raj@intel.com, kevin.tian@intel.com,
+        shameerali.kolothum.thodi@huawei.com
+Subject: Re: [PATCH V8 mlx5-next 08/15] vfio: Have the core code decode the
+ VFIO_DEVICE_FEATURE ioctl
+In-Reply-To: <20220220095716.153757-9-yishaih@nvidia.com>
+Organization: Red Hat GmbH
+References: <20220220095716.153757-1-yishaih@nvidia.com>
+ <20220220095716.153757-9-yishaih@nvidia.com>
+User-Agent: Notmuch/0.34 (https://notmuchmail.org)
+Date:   Tue, 22 Feb 2022 17:48:57 +0100
+Message-ID: <87o82y7sp2.fsf@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This PCIe message is sent automatically by mvebu HW when link changes
-status from down to up.
+On Sun, Feb 20 2022, Yishai Hadas <yishaih@nvidia.com> wrote:
 
-Slot power limit is read from DT property 'slot-power-limit-milliwatt' and
-set to mvebu HW. When this DT property is not specified then driver treat
-it as "Slot Capabilities register has not yet been initialized".
+> From: Jason Gunthorpe <jgg@nvidia.com>
+>
+> Invoke a new device op 'device_feature' to handle just the data array
+> portion of the command. This lifts the ioctl validation to the core code
+> and makes it simpler for either the core code, or layered drivers, to
+> implement their own feature values.
+>
+> Provide vfio_check_feature() to consolidate checking the flags/etc against
+> what the driver supports.
+>
+> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
+> Tested-by: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+> Signed-off-by: Yishai Hadas <yishaih@nvidia.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c      |  1 +
+>  drivers/vfio/pci/vfio_pci_core.c | 94 +++++++++++++-------------------
+>  drivers/vfio/vfio.c              | 46 ++++++++++++++--
+>  include/linux/vfio.h             | 32 +++++++++++
+>  include/linux/vfio_pci_core.h    |  2 +
+>  5 files changed, 114 insertions(+), 61 deletions(-)
+>
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- drivers/pci/controller/pci-mvebu.c | 85 ++++++++++++++++++++++++++++--
- 1 file changed, 80 insertions(+), 5 deletions(-)
+(...)
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index a75d2b9196f9..c786feec4d17 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -66,6 +66,12 @@
- #define  PCIE_STAT_BUS                  0xff00
- #define  PCIE_STAT_DEV                  0x1f0000
- #define  PCIE_STAT_LINK_DOWN		BIT(0)
-+#define PCIE_SSPL_OFF		0x1a0c
-+#define  PCIE_SSPL_VALUE_SHIFT		0
-+#define  PCIE_SSPL_VALUE_MASK		GENMASK(7, 0)
-+#define  PCIE_SSPL_SCALE_SHIFT		8
-+#define  PCIE_SSPL_SCALE_MASK		GENMASK(9, 8)
-+#define  PCIE_SSPL_ENABLE		BIT(16)
- #define PCIE_RC_RTSTA		0x1a14
- #define PCIE_DEBUG_CTRL         0x1a60
- #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
-@@ -111,6 +117,8 @@ struct mvebu_pcie_port {
- 	struct mvebu_pcie_window iowin;
- 	u32 saved_pcie_stat;
- 	struct resource regs;
-+	u8 slot_power_limit_value;
-+	u8 slot_power_limit_scale;
- 	struct irq_domain *intx_irq_domain;
- 	raw_spinlock_t irq_lock;
- 	int intx_irq;
-@@ -239,7 +247,7 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
- 
- static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
- {
--	u32 ctrl, lnkcap, cmd, dev_rev, unmask;
-+	u32 ctrl, lnkcap, cmd, dev_rev, unmask, sspl;
- 
- 	/* Setup PCIe controller to Root Complex mode. */
- 	ctrl = mvebu_readl(port, PCIE_CTRL_OFF);
-@@ -292,6 +300,20 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
- 	/* Point PCIe unit MBUS decode windows to DRAM space. */
- 	mvebu_pcie_setup_wins(port);
- 
-+	/*
-+	 * Program Root Complex to automatically sends Set Slot Power Limit
-+	 * PCIe Message when changing status from Dl-Down to Dl-Up and valid
-+	 * slot power limit was specified.
-+	 */
-+	sspl = mvebu_readl(port, PCIE_SSPL_OFF);
-+	sspl &= ~(PCIE_SSPL_VALUE_MASK | PCIE_SSPL_SCALE_MASK | PCIE_SSPL_ENABLE);
-+	if (port->slot_power_limit_value && port->slot_power_limit_scale) {
-+		sspl |= port->slot_power_limit_value << PCIE_SSPL_VALUE_SHIFT;
-+		sspl |= port->slot_power_limit_scale << PCIE_SSPL_SCALE_SHIFT;
-+		sspl |= PCIE_SSPL_ENABLE;
-+	}
-+	mvebu_writel(port, sspl, PCIE_SSPL_OFF);
-+
- 	/* Mask all interrupt sources. */
- 	mvebu_writel(port, ~PCIE_INT_ALL_MASK, PCIE_INT_UNMASK_OFF);
- 
-@@ -628,9 +650,16 @@ mvebu_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
- 			  (PCI_EXP_LNKSTA_DLLLA << 16) : 0);
- 		break;
- 
--	case PCI_EXP_SLTCTL:
--		*value = PCI_EXP_SLTSTA_PDS << 16;
-+	case PCI_EXP_SLTCTL: {
-+		u16 slotsta = le16_to_cpu(bridge->pcie_conf.slotsta);
-+		u32 val = 0;
-+		if (!(mvebu_readl(port, PCIE_SSPL_OFF) & PCIE_SSPL_ENABLE))
-+			val |= PCI_EXP_SLTCTL_ASPL_DISABLE;
-+		/* PCI_EXP_SLTCTL is 32-bit and contains also slot status bits */
-+		val |= slotsta << 16;
-+		*value = val;
- 		break;
-+	}
- 
- 	case PCI_EXP_RTSTA:
- 		*value = mvebu_readl(port, PCIE_RC_RTSTA);
-@@ -774,6 +803,19 @@ mvebu_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 		mvebu_writel(port, new, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
- 		break;
- 
-+	case PCI_EXP_SLTCTL:
-+		if ((mask & PCI_EXP_SLTCTL_ASPL_DISABLE) &&
-+		    port->slot_power_limit_value &&
-+		    port->slot_power_limit_scale) {
-+			u32 sspl = mvebu_readl(port, PCIE_SSPL_OFF);
-+			if (new & PCI_EXP_SLTCTL_ASPL_DISABLE)
-+				sspl &= ~PCIE_SSPL_ENABLE;
-+			else
-+				sspl |= PCIE_SSPL_ENABLE;
-+			mvebu_writel(port, sspl, PCIE_SSPL_OFF);
-+		}
-+		break;
-+
- 	case PCI_EXP_RTSTA:
- 		/*
- 		 * PME Status bit in Root Status Register (PCIE_RC_RTSTA)
-@@ -868,8 +910,26 @@ static int mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
- 	/*
- 	 * Older mvebu hardware provides PCIe Capability structure only in
- 	 * version 1. New hardware provides it in version 2.
-+	 * Enable slot support which is emulated.
- 	 */
--	bridge->pcie_conf.cap = cpu_to_le16(pcie_cap_ver);
-+	bridge->pcie_conf.cap = cpu_to_le16(pcie_cap_ver | PCI_EXP_FLAGS_SLOT);
-+
-+	/*
-+	 * Set Presence Detect State bit permanently as there is no support for
-+	 * unplugging PCIe card from the slot. Assume that PCIe card is always
-+	 * connected in slot.
-+	 *
-+	 * Set physical slot number to port+1 as mvebu ports are indexed from
-+	 * zero and zero value is reserved for ports within the same silicon
-+	 * as Root Port which is not mvebu case.
-+	 *
-+	 * Also set correct slot power limit.
-+	 */
-+	bridge->pcie_conf.slotcap = cpu_to_le32(
-+		(port->slot_power_limit_value << PCI_EXP_SLTCAP_SPLV_SHIFT) |
-+		(port->slot_power_limit_scale << PCI_EXP_SLTCAP_SPLS_SHIFT) |
-+		((port->port+1) << PCI_EXP_SLTCAP_PSN_SHIFT));
-+	bridge->pcie_conf.slotsta = cpu_to_le16(PCI_EXP_SLTSTA_PDS);
- 
- 	bridge->subsystem_vendor_id = ssdev_id & 0xffff;
- 	bridge->subsystem_id = ssdev_id >> 16;
-@@ -1191,6 +1251,7 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- {
- 	struct device *dev = &pcie->pdev->dev;
- 	enum of_gpio_flags flags;
-+	u32 slot_power_limit;
- 	int reset_gpio, ret;
- 	u32 num_lanes;
- 
-@@ -1291,6 +1352,15 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 		port->reset_gpio = gpio_to_desc(reset_gpio);
- 	}
- 
-+	slot_power_limit = of_pci_get_slot_power_limit(child,
-+				&port->slot_power_limit_value,
-+				&port->slot_power_limit_scale);
-+	if (slot_power_limit)
-+		dev_info(dev, "%s: Slot power limit %u.%uW\n",
-+			 port->name,
-+			 slot_power_limit / 1000,
-+			 (slot_power_limit / 100) % 10);
-+
- 	port->clk = of_clk_get_by_name(child, NULL);
- 	if (IS_ERR(port->clk)) {
- 		dev_err(dev, "%s: cannot get clock\n", port->name);
-@@ -1587,7 +1657,7 @@ static int mvebu_pcie_remove(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie = platform_get_drvdata(pdev);
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
--	u32 cmd;
-+	u32 cmd, sspl;
- 	int i;
- 
- 	/* Remove PCI bus with all devices. */
-@@ -1624,6 +1694,11 @@ static int mvebu_pcie_remove(struct platform_device *pdev)
- 		/* Free config space for emulated root bridge. */
- 		pci_bridge_emul_cleanup(&port->bridge);
- 
-+		/* Disable sending Set Slot Power Limit PCIe Message. */
-+		sspl = mvebu_readl(port, PCIE_SSPL_OFF);
-+		sspl &= ~(PCIE_SSPL_VALUE_MASK | PCIE_SSPL_SCALE_MASK | PCIE_SSPL_ENABLE);
-+		mvebu_writel(port, sspl, PCIE_SSPL_OFF);
-+
- 		/* Disable and clear BARs and windows. */
- 		mvebu_pcie_disable_wins(port);
- 
--- 
-2.20.1
+> +static int vfio_ioctl_device_feature(struct vfio_device *device,
+> +				     struct vfio_device_feature __user *arg)
+> +{
+> +	size_t minsz = offsetofend(struct vfio_device_feature, flags);
+> +	struct vfio_device_feature feature;
+> +
+> +	if (copy_from_user(&feature, arg, minsz))
+> +		return -EFAULT;
+> +
+> +	if (feature.argsz < minsz)
+> +		return -EINVAL;
+> +
+> +	/* Check unknown flags */
+> +	if (feature.flags &
+> +	    ~(VFIO_DEVICE_FEATURE_MASK | VFIO_DEVICE_FEATURE_SET |
+> +	      VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_PROBE))
+> +		return -EINVAL;
+> +
+> +	/* GET & SET are mutually exclusive except with PROBE */
+> +	if (!(feature.flags & VFIO_DEVICE_FEATURE_PROBE) &&
+> +	    (feature.flags & VFIO_DEVICE_FEATURE_SET) &&
+> +	    (feature.flags & VFIO_DEVICE_FEATURE_GET))
+> +		return -EINVAL;
+> +
+> +	switch (feature.flags & VFIO_DEVICE_FEATURE_MASK) {
+> +	default:
+> +		if (unlikely(!device->ops->device_feature))
+> +			return -EINVAL;
+> +		return device->ops->device_feature(device, feature.flags,
+> +						   arg->data,
+> +						   feature.argsz - minsz);
+> +	}
+> +}
+> +
+>  static long vfio_device_fops_unl_ioctl(struct file *filep,
+>  				       unsigned int cmd, unsigned long arg)
+>  {
+>  	struct vfio_device *device = filep->private_data;
+>  
+> -	if (unlikely(!device->ops->ioctl))
+> -		return -EINVAL;
+> -
+> -	return device->ops->ioctl(device, cmd, arg);
+> +	switch (cmd) {
+> +	case VFIO_DEVICE_FEATURE:
+> +		return vfio_ioctl_device_feature(device, (void __user *)arg);
+> +	default:
+> +		if (unlikely(!device->ops->ioctl))
+> +			return -EINVAL;
+> +		return device->ops->ioctl(device, cmd, arg);
+> +	}
+>  }
+
+One not-that-obvious change this is making is how VFIO_DEVICE_* ioctls
+are processed. With this patch, VFIO_DEVICE_FEATURE is handled a bit
+differently to other ioctl commands that are passed directly to the
+device; here we have the common handling first, then control is passed
+to the device. When I read in Documentation/driver-api/vfio.rst
+
+"The ioctl interface provides a direct pass through for VFIO_DEVICE_*
+ioctls."
+
+I would not really expect that behaviour. No objection to introducing
+it, but I think that needs a note in the doc, as you only see that if
+you actually read the implementation (and not just the header and the
+docs).
 
