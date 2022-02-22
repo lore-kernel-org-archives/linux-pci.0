@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD009C433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 15:51:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8216EC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Feb 2022 15:51:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233717AbiBVPwO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Feb 2022 10:52:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42770 "EHLO
+        id S233725AbiBVPwP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Feb 2022 10:52:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233697AbiBVPwK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 10:52:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09ECA2AE17;
-        Tue, 22 Feb 2022 07:51:43 -0800 (PST)
+        with ESMTP id S233710AbiBVPwM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Feb 2022 10:52:12 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 980B226556;
+        Tue, 22 Feb 2022 07:51:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B02DEB81B37;
-        Tue, 22 Feb 2022 15:51:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 392CBC340EB;
-        Tue, 22 Feb 2022 15:51:40 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 44FEBB81B34;
+        Tue, 22 Feb 2022 15:51:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D692C340EB;
+        Tue, 22 Feb 2022 15:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645545100;
-        bh=bs4sKA1maaqaqniK3RdXMmapJ3D0NuaCLXrdJTmaiaI=;
+        s=k20201202; t=1645545103;
+        bh=ibc5rga4Qgkj4YzNPZsYsQvQMb2RWiIyhTS6gczaEvg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=slrw8s8pkXgN++rHQZQWx6+CqEAGEu28keg9VijmEnZFPz1fcma0IoQtSNvNU1UZk
-         9EQNEXXRswvbSn4L4geX0zHP4OKcEdi8RUWoUBt/M2VqltCEqF4O3lRBEXzJqyp03h
-         zMrbORmdjV6bULaY2OueKCXBpgUBWZ/hJYpTRJIwTlfseXXFuesQXoyUF58U/jkHMF
-         aXDBbMLLtjxwXD7jAuvDDE27qwz7e3jE/e1H+INoAfeQhiFynN2FEZsBosy18fq8iQ
-         sF1ZZGgbgwNP9gh0lJsCZHEwOjBtL8zs/GMJJodzej39QshkQqRGVqFbLuw/fbQny2
-         pfkGnJhdHYw9w==
+        b=Q/EXd14UCZu7M1pOcQqTFUWdMU8L2a++W225JKEb8mQQ1vfiasJXmUGYGLF/e9A1N
+         P1cb8aLWwWG55PCY24FMTS6ngbzEFcQ4u+1FZe6t6jWSxLYX2t33ubaQdnlckHHznr
+         4bMeZxS1moIrbxgzC4p4flWZ403jubNwHdUeo/EbkzGChYi8fntM1TTmCup1oQH8jl
+         p0TQ6B3mxvygQeCnbwu8XOXH0me7DPWziftIz2OfLmevmLglpktKAjx1AwGpT/L6kT
+         GUZnrgGjLoO9k9UM7E9DfFfzWmNwurVTdrRPxEbE0UwZsCJWvqtznCTY8/6VnwcRb9
+         J5A7kn98v4VRg==
 Received: by pali.im (Postfix)
-        id E30E0FDB; Tue, 22 Feb 2022 16:51:39 +0100 (CET)
+        id 52AAEFDB; Tue, 22 Feb 2022 16:51:42 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,9 +43,9 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 06/12] PCI: mvebu: Add support for PCI Bridge Subsystem Vendor ID on emulated bridge
-Date:   Tue, 22 Feb 2022 16:50:24 +0100
-Message-Id: <20220222155030.988-7-pali@kernel.org>
+Subject: [PATCH v4 08/12] PCI: mvebu: Use child_ops API
+Date:   Tue, 22 Feb 2022 16:50:26 +0100
+Message-Id: <20220222155030.988-9-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220222155030.988-1-pali@kernel.org>
 References: <20220222155030.988-1-pali@kernel.org>
@@ -56,47 +56,159 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Register with Subsystem Device/Vendor ID is at offset 0x2c. Export is via
-emulated bridge.
+Split struct pci_ops between ops and child_ops. Member ops is used for
+accessing PCIe Root Ports via pci-bridge-emul.c driver and child_ops for
+accessing real PCIe cards.
 
-After this change Subsystem ID is visible in lspci output at line:
-
-  Capabilities: [40] Subsystem
+There is no need to mix these two struct pci_ops into one as PCI core code
+already provides separate callbacks via bridge->ops and bridge->child_ops.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/pci/controller/pci-mvebu.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/pci-mvebu.c | 77 ++++++++++++++++--------------
+ 1 file changed, 40 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index d0a75c3b78c3..566d8382afe6 100644
+index 1cf5c02499cd..1ae7718a2e3e 100644
 --- a/drivers/pci/controller/pci-mvebu.c
 +++ b/drivers/pci/controller/pci-mvebu.c
-@@ -32,6 +32,7 @@
- #define PCIE_DEV_REV_OFF	0x0008
- #define PCIE_BAR_LO_OFF(n)	(0x0010 + ((n) << 3))
- #define PCIE_BAR_HI_OFF(n)	(0x0014 + ((n) << 3))
-+#define PCIE_SSDEV_ID_OFF	0x002c
- #define PCIE_CAP_PCIEXP		0x0060
- #define PCIE_HEADER_LOG_4_OFF	0x0128
- #define PCIE_BAR_CTRL_OFF(n)	(0x1804 + (((n) - 1) * 4))
-@@ -731,6 +732,7 @@ static int mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
- 	struct pci_bridge_emul *bridge = &port->bridge;
- 	u32 dev_id = mvebu_readl(port, PCIE_DEV_ID_OFF);
- 	u32 dev_rev = mvebu_readl(port, PCIE_DEV_REV_OFF);
-+	u32 ssdev_id = mvebu_readl(port, PCIE_SSDEV_ID_OFF);
- 	u32 pcie_cap = mvebu_readl(port, PCIE_CAP_PCIEXP);
- 	u8 pcie_cap_ver = ((pcie_cap >> 16) & PCI_EXP_FLAGS_VERS);
+@@ -294,11 +294,25 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+ 	mvebu_writel(port, mask, PCIE_MASK_OFF);
+ }
  
-@@ -752,6 +754,8 @@ static int mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
- 	 */
- 	bridge->pcie_conf.cap = cpu_to_le16(pcie_cap_ver);
+-static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+-				 struct pci_bus *bus,
+-				 u32 devfn, int where, int size, u32 *val)
++static struct mvebu_pcie_port *mvebu_pcie_find_port(struct mvebu_pcie *pcie,
++						    struct pci_bus *bus,
++						    int devfn);
++
++static int mvebu_pcie_child_rd_conf(struct pci_bus *bus, u32 devfn, int where,
++				    int size, u32 *val)
+ {
+-	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
++	struct mvebu_pcie *pcie = bus->sysdata;
++	struct mvebu_pcie_port *port;
++	void __iomem *conf_data;
++
++	port = mvebu_pcie_find_port(pcie, bus, devfn);
++	if (!port)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (!mvebu_pcie_link_up(port))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	conf_data = port->base + PCIE_CONF_DATA_OFF;
  
-+	bridge->subsystem_vendor_id = ssdev_id & 0xffff;
-+	bridge->subsystem_id = ssdev_id >> 16;
- 	bridge->has_pcie = true;
- 	bridge->data = port;
- 	bridge->ops = &mvebu_pci_bridge_emul_ops;
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+@@ -314,18 +328,27 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+ 		*val = readl_relaxed(conf_data);
+ 		break;
+ 	default:
+-		*val = 0xffffffff;
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
+-				 struct pci_bus *bus,
+-				 u32 devfn, int where, int size, u32 val)
++static int mvebu_pcie_child_wr_conf(struct pci_bus *bus, u32 devfn,
++				    int where, int size, u32 val)
+ {
+-	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
++	struct mvebu_pcie *pcie = bus->sysdata;
++	struct mvebu_pcie_port *port;
++	void __iomem *conf_data;
++
++	port = mvebu_pcie_find_port(pcie, bus, devfn);
++	if (!port)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	if (!mvebu_pcie_link_up(port))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	conf_data = port->base + PCIE_CONF_DATA_OFF;
+ 
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+@@ -347,6 +370,11 @@ static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
++static struct pci_ops mvebu_pcie_child_ops = {
++	.read = mvebu_pcie_child_rd_conf,
++	.write = mvebu_pcie_child_wr_conf,
++};
++
+ /*
+  * Remove windows, starting from the largest ones to the smallest
+  * ones.
+@@ -862,25 +890,12 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ {
+ 	struct mvebu_pcie *pcie = bus->sysdata;
+ 	struct mvebu_pcie_port *port;
+-	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+ 	if (!port)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	/* Access the emulated PCI-to-PCI bridge */
+-	if (bus->number == 0)
+-		return pci_bridge_emul_conf_write(&port->bridge, where,
+-						  size, val);
+-
+-	if (!mvebu_pcie_link_up(port))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	/* Access the real PCIe interface */
+-	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+-				    where, size, val);
+-
+-	return ret;
++	return pci_bridge_emul_conf_write(&port->bridge, where, size, val);
+ }
+ 
+ /* PCI configuration space read function */
+@@ -889,25 +904,12 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ {
+ 	struct mvebu_pcie *pcie = bus->sysdata;
+ 	struct mvebu_pcie_port *port;
+-	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+ 	if (!port)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	/* Access the emulated PCI-to-PCI bridge */
+-	if (bus->number == 0)
+-		return pci_bridge_emul_conf_read(&port->bridge, where,
+-						 size, val);
+-
+-	if (!mvebu_pcie_link_up(port))
+-		return PCIBIOS_DEVICE_NOT_FOUND;
+-
+-	/* Access the real PCIe interface */
+-	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+-				    where, size, val);
+-
+-	return ret;
++	return pci_bridge_emul_conf_read(&port->bridge, where, size, val);
+ }
+ 
+ static struct pci_ops mvebu_pcie_ops = {
+@@ -1416,6 +1418,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 
+ 	bridge->sysdata = pcie;
+ 	bridge->ops = &mvebu_pcie_ops;
++	bridge->child_ops = &mvebu_pcie_child_ops;
+ 	bridge->align_resource = mvebu_pcie_align_resource;
+ 	bridge->map_irq = mvebu_pcie_map_irq;
+ 
 -- 
 2.20.1
 
