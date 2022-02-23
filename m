@@ -2,85 +2,75 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 653C8C433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Feb 2022 10:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BAC3C433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Feb 2022 10:57:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236287AbiBWKj7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Feb 2022 05:39:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51636 "EHLO
+        id S235839AbiBWK6Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Feb 2022 05:58:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231518AbiBWKj7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Feb 2022 05:39:59 -0500
-X-Greylist: delayed 513 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 23 Feb 2022 02:39:31 PST
-Received: from extserv.mm-sol.com (ns.mm-sol.com [37.157.136.199])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D4DE2981F;
-        Wed, 23 Feb 2022 02:39:31 -0800 (PST)
-Received: from [192.168.1.9] (hst-221-41.medicom.bg [84.238.221.41])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: svarbanov@mm-sol.com)
-        by extserv.mm-sol.com (Postfix) with ESMTPSA id 97409D266;
-        Wed, 23 Feb 2022 12:30:54 +0200 (EET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
-        t=1645612254; bh=ajxAmhJ/kg+ZW0t22kOED7gRVLvKb3z8gDoN8cYcEQQ=;
-        h=Date:Subject:To:Cc:From:From;
-        b=QPZtU3pdaZvbL/HcGGdgNWKrtT1f5AWuiuW5mSbxsbV31xvQd7cTT41yWWUytymlT
-         X+GB0OBwK3WM660G1eVrWxRFwyKQ32w5XXCjJMIQtVnjvby2XDX6HuKeR7lvXzCARh
-         UFi1K6SJS/HObOZPhyuXaOwglQwk0kYpqY0advgQ/29TNzZWWPIKGsuyUq2QUUhToQ
-         3JbM2QJ3salFHproQeSYqy6DsDnVDVPhPP2Mbj1cBgKjLWKUXrjtcNUziS/J8FDAEM
-         hx2s3EsFaqhyNPALiKThUaibh9IUe22Ij8V7fPoI7wqtFHF/eHQWbbsM3ScpxUK+MI
-         3KHb/GnqU6ywg==
-Message-ID: <b713b30c-5941-06d7-bb96-fddcaaec2a8f@mm-sol.com>
-Date:   Wed, 23 Feb 2022 12:30:51 +0200
+        with ESMTP id S235828AbiBWK6P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Feb 2022 05:58:15 -0500
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B54386E4F7;
+        Wed, 23 Feb 2022 02:57:48 -0800 (PST)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7DD59106F;
+        Wed, 23 Feb 2022 02:57:48 -0800 (PST)
+Received: from e123427-lin.arm.com (unknown [10.57.38.78])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8E89D3F70D;
+        Wed, 23 Feb 2022 02:57:46 -0800 (PST)
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-phy@lists.infradead.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v6 0/4] qcom: add support for PCIe on SM8450 platform
+Date:   Wed, 23 Feb 2022 10:57:40 +0000
+Message-Id: <164561384675.19157.1017695661693402855.b4-ty@arm.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220223101435.447839-1-dmitry.baryshkov@linaro.org>
+References: <20220223101435.447839-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] PCI: qcom: Add support for handling MSIs from 8 endpoints
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com
-Cc:     bjorn.andersson@linaro.org, robh@kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20211214101319.25258-1-manivannan.sadhasivam@linaro.org>
-From:   Stanimir Varbanov <svarbanov@mm-sol.com>
-In-Reply-To: <20211214101319.25258-1-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 12/14/21 12:13, Manivannan Sadhasivam wrote:
-> The DWC controller used in the Qcom Platforms are capable of addressing the
-> MSIs generated from 8 different endpoints each with 32 vectors (256 in
-> total). Currently the driver is using the default value of addressing the
-> MSIs from 1 endpoint only. Extend it by passing the MAX_MSI_IRQS to the
-> num_vectors field of pcie_port structure.
+On Wed, 23 Feb 2022 13:14:31 +0300, Dmitry Baryshkov wrote:
+> There are two different PCIe controllers and PHYs on SM8450, one having
+> one lane and another with two lanes. Add support for both PCIe
+> controllers
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
->  1 file changed, 1 insertion(+)
-
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-
+> Changes since v5:
+>  - Rebase on 5.17-rc1
+>  - Drop external dependencies. The pipe_clk rework takes too much time
+>    to be reviewed. SM8450 works with the current pipe_clk multiplexing
+>    code. Fixing pipe_clk will be handled separately.
+>  - Drop interconnect support. It will be handled separately for all
+>    generations requiring interconnect usage.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 1c3d1116bb60..8a4c08d815a5 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1550,6 +1550,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  	pci->dev = dev;
->  	pci->ops = &dw_pcie_ops;
->  	pp = &pci->pp;
-> +	pp->num_vectors = MAX_MSI_IRQS;
->  
->  	pcie->pci = pci;
->  
+> [...]
 
--- 
-regards,
-Stan
+Applied to pci/qcom, thanks!
+
+[1/4] dt-bindings: pci: qcom: Document PCIe bindings for SM8450
+      https://git.kernel.org/lpieralisi/pci/c/dddb4efa51
+[2/4] PCI: qcom: Remove redundancy between qcom_pcie and qcom_pcie_cfg
+      https://git.kernel.org/lpieralisi/pci/c/f94c35e024
+[3/4] PCI: qcom: Add ddrss_sf_tbu flag
+      https://git.kernel.org/lpieralisi/pci/c/0614f98bbb
+[4/4] PCI: qcom: Add SM8450 PCIe support
+      https://git.kernel.org/lpieralisi/pci/c/1c5aa03726
+
+Thanks,
+Lorenzo
