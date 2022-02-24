@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C62EC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 21:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63D5FC4321E
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 21:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231430AbiBXVv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Feb 2022 16:51:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35404 "EHLO
+        id S234568AbiBXVwB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Feb 2022 16:52:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231298AbiBXVv6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 16:51:58 -0500
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam07on2075.outbound.protection.outlook.com [40.107.95.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21DA122A2AE;
-        Thu, 24 Feb 2022 13:51:27 -0800 (PST)
+        with ESMTP id S231298AbiBXVwA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 16:52:00 -0500
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2083.outbound.protection.outlook.com [40.107.93.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9DAF22B961;
+        Thu, 24 Feb 2022 13:51:28 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KGd4v1xA5cAtf4yHlT6yZf1jiKZOwrryHN9W27dWo1P+fQ8q/4gG8qUizvJePf2VA7NEYKDDGooCYsvs5sB2eOHK/nGxTQMS9JHNg+lo6YIXnkhQNtxX9s+ymXsDUYDmwDVwtGlRYcHA8tIIhTqxXmzRDKmxNdUocX/HbvoDHN4J1NknqRfCtNFtgAO1keYb6D2qQqo+nZ0mT02lKXC1ctk7DO1FlhR1cORkUOz5GqnAjhsHOWzXJNrsQljRmdh1DA2K0BYnexiFKU9qxaxZGVQyDQ5z2PcG+qupwXLfCaW6aiz30p+EmsWoclu0KacHMYzn3rkE9tL7GcqnKOa4cQ==
+ b=TbBidN1/1OkQb4XaNf/LGJSIhIyxCa9+zGm5rblSp9zhQDqupUi1ti2NNhecNKiM51EnSEeJ1uXjQ2ESO4UvUiAUQQd+2MNrIIyxXyBG3SEb7W0Ub3L8l3XABzJBw5cOMgOANNFaDIHTbbOGM+8U5S/JAW7WXbY4VKf3vEo33TiDZab1vMuVrH3AWY7J9MNcb6GkbiwcLJpLxLhB3lbvwJ18ekrRgRgzKdpvLKoFCO2YW76eA0gE2Z7SzloDDluoqaQXYL2OCn2bB45LoU3wvAHo3IhXjG5fy246G+bmcFyX7Ng95U17sSY9YKmGX0ZU8HM8gkCObIdE1TlGFqM3sA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nVPlYNG6piZmMsY8iC7zTDshd96rfyvJ89O18cYprFQ=;
- b=PnEDrF42gu8ss2u+jA8rIhgjhuyyGh0d7LcXBLseVf1Huju61Nb1l1DAJCTiIN4zAswXxpmZrCYi7VmToE+M5KWlW+EkW+7n2Bx5DTVif2Xb6M0SjTE5Spgugws7yUCqcpGN0NG9vlzpKN5F8yPLpk1dUAufSmk+C9hbt8EyPYg4ba2W80gxfhw8/SdW/GPCAtkwN8WXvHiznUL90EpgNTmisSe5jQv9e9w9mOq69a2ej1wt1OLgT8bBdl98wgEN4rHEha2TBouCe6B25/xwEidVnLZSgrAuLsOdSFxdd8CjO6IYxKPOZo4aFjX4KeKfaI0PV7j34y0DeIRek64gEg==
+ bh=W9WE35USorxap3FdmWnWUu6pfMAtj2Qyj+KBaDMdU8w=;
+ b=SsuIXKU8Pf0CQKbFZqQwuzl4C3Me95LawM6YaKk6ikhbua4P1g5o6xahjU/QIkj70MR9pGY4AcJTOp53HMq69lgXMiz6OnweN0gx+mO9uECVWPYazBRRMN4Um13S+iApq5TY+saw4Ohfx7Q0cVd4FDMP2XrjmbpqCZ1kpmF5m6ZgwWVd+x2eBejZm/Sd7Y0msA8tIDYwOetWqhRnf6B4ibUlmVtN3PFzI/jW9pzwgNMvl4kousGBVzGGLhRedLQUou4UgUwRTiU34ZWXKz642MmArm6X9gdPYlVlJtBm7h9Nolj5m5bb8kjs7KkjnqzII2KgY0YaKFH8fKLGcOyELQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nVPlYNG6piZmMsY8iC7zTDshd96rfyvJ89O18cYprFQ=;
- b=DPLwvdB+UODrQBHVdNxQq5Ey8bIFnQXBiDWbk9HwSZzusgABqL85Xf2x8uqcqLNYVU8O4luplYMJv9GJxsNcUAGkxgJuDbI2WHqu9haJNrBS2wH00YpE+obfxo87xZSYbSmVlayp7ng9T/mYB2KURgyp7hOeBEsEs4a8Ko8SHUQ=
-Received: from MW4PR04CA0179.namprd04.prod.outlook.com (2603:10b6:303:85::34)
- by MN2PR12MB4640.namprd12.prod.outlook.com (2603:10b6:208:38::29) with
+ bh=W9WE35USorxap3FdmWnWUu6pfMAtj2Qyj+KBaDMdU8w=;
+ b=m3VHthYPb5O3A5GeYP99tuYDVXN49lcAUFYueAxxvRkz+L0bVkmrL1AAMfriSOeaCAIfcxlnnwddHd1Hy2lH6UB1yPs9adgRZJOI0hf2cjmkxRg2rS38ozteivDrxoI7VD9ViMUzDy79zEAJVIDur0fw7YbyKdA/EwOXQKYCZQU=
+Received: from MW4PR04CA0176.namprd04.prod.outlook.com (2603:10b6:303:85::31)
+ by BN8PR12MB4594.namprd12.prod.outlook.com (2603:10b6:408:a2::30) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.22; Thu, 24 Feb
- 2022 21:51:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.21; Thu, 24 Feb
+ 2022 21:51:26 +0000
 Received: from CO1NAM11FT037.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:85:cafe::78) by MW4PR04CA0179.outlook.office365.com
- (2603:10b6:303:85::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.23 via Frontend
- Transport; Thu, 24 Feb 2022 21:51:24 +0000
+ (2603:10b6:303:85:cafe::f7) by MW4PR04CA0176.outlook.office365.com
+ (2603:10b6:303:85::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.24 via Frontend
+ Transport; Thu, 24 Feb 2022 21:51:26 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  CO1NAM11FT037.mail.protection.outlook.com (10.13.174.91) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5017.22 via Frontend Transport; Thu, 24 Feb 2022 21:51:23 +0000
+ 15.20.5017.22 via Frontend Transport; Thu, 24 Feb 2022 21:51:26 +0000
 Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Thu, 24 Feb
- 2022 15:51:21 -0600
+ 2022 15:51:24 -0600
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Andreas Noever <andreas.noever@gmail.com>,
@@ -70,10 +70,12 @@ CC:     Michael Jamet <michael.jamet@intel.com>,
         Yehezkel Bernat <YehezkelShB@gmail.com>,
         Lukas Wunner <lukas@wunner.de>, <Alexander.Deucher@amd.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v5 0/7] Overhaul `is_thunderbolt`
-Date:   Thu, 24 Feb 2022 15:51:09 -0600
-Message-ID: <20220224215116.7138-1-mario.limonciello@amd.com>
+Subject: [PATCH v5 2/7] PCI: Move check for old Apple Thunderbolt controllers into a quirk
+Date:   Thu, 24 Feb 2022 15:51:11 -0600
+Message-ID: <20220224215116.7138-3-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220224215116.7138-1-mario.limonciello@amd.com>
+References: <20220224215116.7138-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -82,107 +84,161 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 40131935-5b6e-44e3-d439-08d9f7dfcd27
-X-MS-TrafficTypeDiagnostic: MN2PR12MB4640:EE_
-X-Microsoft-Antispam-PRVS: <MN2PR12MB4640C3711820F21147800908E23D9@MN2PR12MB4640.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 52fb2aea-6dca-4379-bce7-08d9f7dfce9b
+X-MS-TrafficTypeDiagnostic: BN8PR12MB4594:EE_
+X-Microsoft-Antispam-PRVS: <BN8PR12MB4594C920668624E664EF6667E23D9@BN8PR12MB4594.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 03bi4AqP/2PRhu4IpWctKwcN2LzStj11TEEVHsSSjgPOmIE/xutWdNKYOHOh8+gko1qVZeaaCXNZdk/a1R2TfubxomZML3ug7E9KmtVO6E054KCNhzUI1EQ3gZwaO8StNFzKg2x11PjSAa+zIRJLlDzRsxSpWpMYZrqb5xONuarQelM4z/sinJ0Mro+q9lDVDQpDPr1RSfX2N+YSS61newRw6cYH5f4TuFRAr0pvVSC50TRz6TLdKZE/aIUiFsHp8Oiz5A+9ce93XCgiakMECq0kxX8lOkztgl2jnz+ct8rx1cP0v8Rc3FCuWT44Wg6vp0PqN2vpcVbdfVAD6Vn7PbXve1BDob0zQxTyETIrozzcBsuftek/gMpPgQjGVW9Wteh3G0yFFgnXWyKYCJMA0CzGHGB9eCYW1wb+UQx6trwZ/xucm0dB4PrlBK3lWjdphD06O4Bt+fnHZDT7zTM1qMigfDM50M3WR9/MRKQ5MjMdcJhkwsf6+NJOxQyJwaewSgu9vD+yoLkMgtyB63AXTIKUqbpRpvbb9v7u885Jfpnrj2eoY7ATuFh/M0IdF91R0dCnT0JN95bl8Mrhtil8q4l+DJu3vxZ3mAs1yzBk3yD7bu8nHbNAKjUDzww68QF4+dxWL/eqVBBIuRRW4bs8xUjms3VJQuhI8wN9YXzUOVPn+LdlmU9X4WkAidqf3NIguFBujHt1Q00M9/p/Q9nNNr2+7bOqRUYxelea6T4Zquc=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(82310400004)(8936002)(86362001)(70586007)(7416002)(81166007)(2906002)(70206006)(508600001)(356005)(44832011)(40460700003)(36860700001)(4326008)(316002)(110136005)(5660300002)(54906003)(83380400001)(8676002)(47076005)(6666004)(7696005)(26005)(1076003)(2616005)(426003)(336012)(16526019)(36756003)(186003)(81973001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: dtRQPdH7DoOP5lJDF3HqmNJUMZIwvdbsEOPuxbmDx0r5hXRCc5jEOcCYK5oBjeZ/m1kfraSb3wITNBRRB3q3fHndQ+xhGaoXLMWtkQc4Pqr5QTulOFw+0ZOExO1XT2SZLdDvcs9pPKILRuh8ZUGOwrVPA0EE83HPtf0KdckotEcoqPi/9XrhIi4f5hd26nVJCVZT12M63M67ckzNy+7Qyt9DPJpJk8gCNjRmvJ93tMQq/i0ChurmXtNJfbFJj6TAz7xmOB3kjHlOtUX5KPF6tdFWgx5P3I2Yq9S+ABeHqMVAU7qMBWa4M11kKBK2tI0cLL2lBr6ShjZsOWq5818gtEaqltxRC6IOsMUjrlEjg1tf/UDIwKPWdQx+XwP4luQo65PdNZvIOXfhxgDgso1uhSMmDkg0GOKnLs3EOsRogtHfIpLcZrvcj196a4uUq3wispZD1h4I2g050hA9sPdlvoSLvj2uFZVy4eMKrwNXeuRmDQYRdRG7ym68gMfGMg93nqU/ryy747yoghTVd4ZaqKBoy4wwPVQS2znjRUXT98rzHNE1TatySGKoe6d2jM4kuAC+tGhHlaqkUXowtFJJ22pNG5eAeRmJQiHPxHPV+CGLLegG/DO6w6ED5P5mu6Dxx8/cmJgbQK40+RmT/k3h5S5Rdv7RT86KoGfztggfwewNDH8exI+xcH3IFGxoy2Xvx5JT+QpTFW8T5ykDwFdlfKUjyKPuHXxUq4CxpvReQwpo417AOCno+l2qc+ZZQbQr
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(47660400002)(40470700004)(36840700001)(46966006)(4326008)(110136005)(83380400001)(8676002)(316002)(336012)(40460700003)(426003)(36756003)(47076005)(19627235002)(54906003)(36860700001)(186003)(86362001)(26005)(7696005)(2906002)(81166007)(5660300002)(508600001)(8936002)(45080400002)(7416002)(70586007)(6666004)(1076003)(82310400004)(44832011)(356005)(2616005)(16526019)(70206006)(46800400005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2022 21:51:23.9468
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2022 21:51:26.3841
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40131935-5b6e-44e3-d439-08d9f7dfcd27
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52fb2aea-6dca-4379-bce7-08d9f7dfce9b
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT037.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4640
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB4594
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Various drivers in the kernel use `is_thunderbolt` or
-`pci_is_thunderbolt_attached` to designate behaving differently
-from a device that is internally in the machine. This currently works
-by an attribute in PCI core "is_thunderbolt" which makes those drivers
-only apply differences when Intel Thunderbolt controllers are encountered.
+`pci_bridge_d3_possible` currently checks explicitly for a Thunderbolt
+controller to indicate that D3 is possible.
 
-In each of these drivers' cases the code should apply whether it's another
-vendor's USB4 controller or an Intel USB4/TBT3 controller.
+This is used solely for older Apple systems, due to a variety of factors:
+* Apple used SW connection manager from the beginning, other manufacturers
+  used a FW connection manager (ICM)
+* Apple supported D3 initially, other manfuacturers didn't introduced this
+  until the `HotplugSupportInD3` _DSD was introduced in ~2015.
 
-As such, overhaul the use of "is_thunderbolt" in the PCI core to instead rally
-around the device core "external" attribute. This means dropping the extra PCI
-core attribute and the extra function designation to indicate thunderbolt attached.
+Apple has stopped creating new machines with Intel Thunderbolt controllers,
+and all other manufacturers now support D3 via `HotPlugSupportInD3` so
+this should be a fixed list.
 
-Changes from v4->v5:
-- Drop USB4 related patches.  Thoes may come at a later time if they're proven to be needed.
-  At least in the integrated case vendors should be setting the _DSD to indicate the port is
-  externally facing.
-  For the discrete case we may bring it back later.
+Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/pci/pci.c    | 17 +++++++----
+ drivers/pci/quirks.c | 67 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 79 insertions(+), 5 deletions(-)
 
-Changes from v3->v4:
-- Add tags from last review where applicable
-- Update titles of different patches
-- Add more comments and commit messages to various patches to address
-  comments raised in review
-- Re-order the patch series, moving more contentious patches later
-- Drop patch marking NHI removable
-- Drop patch changing gmux on it's own, roll into patch to drop
-  `is_thunderbolt`
-- Modify patch to mark integrated USB4 tunnel PCIe root ports as
-  "external" instead of removable.
-- Modify patch to mark discrete USB4 tunnel root ports as "external"
-  instead of removable.
-- Fix bit mask error in discrete USB4 tunnel patch
-- Fix USB IF vendor designation location in pci_ids.h
-
-Changes from v2->v3:
-- Add various tags for patches that haven't changed from v2->v3
-- Add new patches for Mika's suggestions:
-  * Moving Apple Thunderbolt D3 declaration into quirks
-  * Detect PCIe root port used for PCIe tunneling on integrated
-    controllers using `usb4-host-interface`
-  * Detect PCIe root port used for PCIe tunneling on discrete
-    controllers using the USB4 DVSEC specification
-
-Changes from v1->v2:
-- Add Alex's tag to first patch
-- Move lack of command completion into a quirk (Lukas)
-- Drop `is_thunderbolt` attribute and `pci_is_thunderbolt_attached` and
-  use device core removable attribute instead
-- Adjust all consumers of old attribute to use removable
-
-Note: this spans USB/DRM/platform-x86/PCI trees.
-As a majority of the changes are in PCI, it should probably come through
-that tree if possible.
-
-
-Mario Limonciello (7):
-  PCI: Move `is_thunderbolt` check for lack of command completed to a
-    quirk
-  PCI: Move check for old Apple Thunderbolt controllers into a quirk
-  PCI: Drop the `is_thunderbolt` attribute from PCI core
-  drm/amd: drop the use of `pci_is_thunderbolt_attached`
-  drm/nouveau: drop the use of `pci_is_thunderbolt_attached`
-  drm/radeon: drop the use of `pci_is_thunderbolt_attached`
-  PCI: drop `pci_is_thunderbolt_attached`
-
- drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c |  2 +-
- drivers/gpu/drm/amd/amdgpu/nbio_v2_3.c  |  2 +-
- drivers/gpu/drm/nouveau/nouveau_vga.c   |  4 +-
- drivers/gpu/drm/radeon/radeon_device.c  |  4 +-
- drivers/gpu/drm/radeon/radeon_kms.c     |  2 +-
- drivers/pci/hotplug/pciehp_hpc.c        |  6 +-
- drivers/pci/pci.c                       | 17 +++--
- drivers/pci/probe.c                     |  2 +-
- drivers/pci/quirks.c                    | 84 +++++++++++++++++++++++++
- drivers/platform/x86/apple-gmux.c       |  2 +-
- include/linux/pci.h                     | 25 +-------
- 11 files changed, 108 insertions(+), 42 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9ecce435fb3f..01557c950c9f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1064,7 +1064,18 @@ static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
+ 	if (pci_use_mid_pm())
+ 		return false;
+ 
+-	return acpi_pci_bridge_d3(dev);
++	if (acpi_pci_bridge_d3(dev))
++		return true;
++
++	/*
++	 * This is for Apple machines via a quirk
++	 * Non-Apple machines will use the ACPI property with the same name
++	 * from `acpi_pci_bridge_d3` to indciate support.
++	 */
++	if (device_property_read_bool(&dev->dev, "HotPlugSupportInD3"))
++		return true;
++
++	return false;
+ }
+ 
+ /**
+@@ -2954,10 +2965,6 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (pci_bridge_d3_force)
+ 			return true;
+ 
+-		/* Even the oldest 2010 Thunderbolt controller supports D3. */
+-		if (bridge->is_thunderbolt)
+-			return true;
+-
+ 		/* Platform might know better if the bridge supports D3 */
+ 		if (platform_pci_bridge_d3(bridge))
+ 			return true;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ceeca7d8dd90..f74f50ea0695 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3756,6 +3756,73 @@ DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
+ 			       quirk_apple_poweroff_thunderbolt);
+ #endif
+ 
++/*
++ * The first machines supporting Intel Thunderbolt were released by Apple, and
++ * supported a software based connection manager including D3 support, as far
++ * back as 2010. These machines don't have ACPI companions to declare D3
++ * support.
++ *
++ * Other manufacturers introduced Thunderbolt shortly after but notably did not
++ * support:
++ * - Software based connection manager
++ * - Runtime power management
++ * Power management was handled via the BIOS when nothing was plugged in.
++ * Runtime D3 was later introduced in ~2015 and Microsoft declared when the
++ * `HotPlugSupportInD3` _DSD was present that they would support D3.
++ *
++ * This list is expected to be complete and not grow in the future as Apple
++ * has stopped producing new x86 models with Intel Thunderbolt controllers.
++ */
++static void quirk_apple_d3_thunderbolt(struct pci_dev *dev)
++{
++	struct property_entry properties[] = {
++		PROPERTY_ENTRY_BOOL("HotPlugSupportInD3"),
++		{},
++	};
++
++	if (!x86_apple_machine)
++		return;
++
++	if (device_create_managed_software_node(&dev->dev, properties, NULL))
++		pci_warn(dev, "could not add HotPlugSupportInD3 property");
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EAGLE_RIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_PEAK,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI,
++			quirk_apple_d3_thunderbolt);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE,
++			quirk_apple_d3_thunderbolt);
++
+ /*
+  * Following are device-specific reset methods which can be used to
+  * reset a single function if other methods (e.g. FLR, PM D0->D3) are
 -- 
 2.34.1
 
