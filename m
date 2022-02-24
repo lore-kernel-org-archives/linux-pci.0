@@ -2,157 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 456A6C4167B
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 21:51:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D5AC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 22:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235104AbiBXVwK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Feb 2022 16:52:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35742 "EHLO
+        id S235521AbiBXWsd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Feb 2022 17:48:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234987AbiBXVwH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 16:52:07 -0500
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2047.outbound.protection.outlook.com [40.107.236.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0969211C2F;
-        Thu, 24 Feb 2022 13:51:36 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OK4pNmLU8xlq3XpRRHVa83FoKbPLITsTve3kbBdjSBUQnW0Gq4x+/4wR6+3WxqL97dniMvleHikcc4w56eaGUYdKhEKZLvuc0pnFeXj61ae8vJ3kw2Zi6f3r0/vst7hb0hroNZWQDy1VBEUB9DQOSkaPaEy8gpQWV/SFAomdJavTpSi/l2wgZa6RhrqTE5PjQsyZADOLB953D7wPGZCopXKQE2UXResCJHIqiT8XoKqLGHP+ycEY1sHUN73V3Qw5R2fEl9euxWXDNQSiy8mO9Lz1t42gtURY1b+/d/beBoF7W9LzS0zyGHiqAO9TxI+TZv6+IjYKyzFpnN6BJZh9NA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=neyootgBRunSQAJPnXb1dPCfoyhMOxPxpCnyWraQL7E=;
- b=ao3t+18q3Seaqi85VO2OCTQ82gyVgcHpKOWB5eBRnmvs/5/a0dZdczxNcm2x8a3WATBa8XklaGjleRoOnhl3/E6DBUIdC+fI8ZvTU71c7fkuvxbTv82mig+udE6mFSUvtNaZTzXayZzRTUt7pEFdnHl4jdunoBDXkWmJpVC0aOciJBFbDWfvv4NVpgg/nuLYL/oq5lHgoDG6P4Dodxc1PVDXa/X9f2PKxqVCd4DLrXl6zedtcHFP6M37ltMbKcCu71TPhirYObzjMc7EfdrD4psyPsSLZcvD7FIxpsPbGQNbZS3VOsShB7wsqWVL9Cqr9W2Tl21++7eaw3YQM1jioQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=neyootgBRunSQAJPnXb1dPCfoyhMOxPxpCnyWraQL7E=;
- b=u9WGQ1dZ6H8jO4/tvnMx5hmiuIbxbyZ4AblqGr/MZomAFWZToMw0KJ3/DHV/71SydavqY9QteVUOeHMjBbU7CSn6Jpt3wC0W3dMMyVwxjSP4CTmA0jV2k8NsY7FWbrgey+c0Ka8gbzmFSNuXneRJf65dpqo/7hULCJW8zOXoePI=
-Received: from MWHPR14CA0010.namprd14.prod.outlook.com (2603:10b6:300:ae::20)
- by BYAPR12MB2806.namprd12.prod.outlook.com (2603:10b6:a03:70::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.22; Thu, 24 Feb
- 2022 21:51:33 +0000
-Received: from CO1NAM11FT031.eop-nam11.prod.protection.outlook.com
- (2603:10b6:300:ae:cafe::16) by MWHPR14CA0010.outlook.office365.com
- (2603:10b6:300:ae::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.23 via Frontend
- Transport; Thu, 24 Feb 2022 21:51:33 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT031.mail.protection.outlook.com (10.13.174.118) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5017.22 via Frontend Transport; Thu, 24 Feb 2022 21:51:32 +0000
-Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Thu, 24 Feb
- 2022 15:51:28 -0600
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:THUNDERBOLT DRIVER" <linux-usb@vger.kernel.org>,
-        "open list:RADEON and AMDGPU DRM DRIVERS" 
-        <amd-gfx@lists.freedesktop.org>,
-        "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
-        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
-        <nouveau@lists.freedesktop.org>,
-        "open list:X86 PLATFORM DRIVERS" 
-        <platform-driver-x86@vger.kernel.org>
-CC:     Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>, <Alexander.Deucher@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v5 6/7] drm/radeon: drop the use of `pci_is_thunderbolt_attached`
-Date:   Thu, 24 Feb 2022 15:51:15 -0600
-Message-ID: <20220224215116.7138-7-mario.limonciello@amd.com>
+        with ESMTP id S235738AbiBXWsa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 17:48:30 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02C85B8B69;
+        Thu, 24 Feb 2022 14:48:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9415F61B8A;
+        Thu, 24 Feb 2022 22:47:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B05EAC340E9;
+        Thu, 24 Feb 2022 22:47:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645742879;
+        bh=7GVjZdt8jWnoINbadQgUAxYf5QWMGlUdkV2jOsP6HN4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=J3uHZvyyd0e8lJq53oQvw1sHr6upV9/XivUeSEVIkBjDPzDN/imiJfEz3/5PdpqbX
+         nzmw7DsxUeyHyVWf2OkQMcNLJRrotyHoFlKpzyv3nZ/zx0nsvFc/tR4Ylm8WdGqEyR
+         u6ztZO7HYMU3dw905FdN1cfM+BxuyHMyTgZn04bAXm1V8Ob+mXd5t35BjcL8wRW3qY
+         0AwpZWYaRHH208L3DGYwk9IJ/hQpJs5ks3KDvofMwsqlPcVvzuGZKJL6VCo+ZPDKsI
+         idAY/AzV7nDP3hvXKuya9hYhCqgtE7oQ+dUJRrLh6O5cnyKcguA2HRtCawvGKikH7m
+         4en7+JBFp4hag==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>
+Cc:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Huacai Chen <chenhuacai@loongson.cn>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v9 00/11] vgaarb: Rework default VGA device selection
+Date:   Thu, 24 Feb 2022 16:47:42 -0600
+Message-Id: <20220224224753.297579-1-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220224215116.7138-1-mario.limonciello@amd.com>
-References: <20220224215116.7138-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: baeaf2d3-bb47-4151-548e-08d9f7dfd27e
-X-MS-TrafficTypeDiagnostic: BYAPR12MB2806:EE_
-X-Microsoft-Antispam-PRVS: <BYAPR12MB2806C72D064B0832911D27F3E23D9@BYAPR12MB2806.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ytElrkUYemFdosgRe9RAyd9IPlzZ3dHPoqWQZyuy2cr2qvcZNl4NvpYZzYFPAHn6wF5QZTbNcLei443UA1WLHyZSaYuXwrJ60ukIZRnm0qU52l2eliK1MhT/PqdhqgXC1R1nE9ZBLWb0UfGbNRgkacwlhGO8A4huZRp//IXrEz+/w3xp3/zHEfILBl9L++Xkq+18irNZslsFGHS/EkagpwelLpVtZw8XycTtDB25kAQy56BwSoKfyee/T38BHO90Ge7Vus2hc+0IqSnm5gpn9M89vcgBVgXflI6GNcW4bolNDJmyZa2nCR3Nm7EAJSemHyS6BAEZxvutLu8Dr3cGAoXm6lPyqs0T/5VAcaYYx/xrXnmrW7vucFa5Rgf971j27zGA5HCjV+sZayk5SUXGzaf7c8o2VAQjQDEo32rf37jjotiFX8VEKu3zIdJbb3FuSd0rpXsOoHaWlRUBu275k2fEkcn4zWiGhlADNi2g6vfn//5AfCNu5N4kdRyPUE5RaD7jyW7VLpqhK3eHIhC1FFNY135DblPSNeV/oHp0ldG0dxfTLEtqBViIxi6LsPbKQiraESGODYNrmYqQi18l8VjHnztzVupy9iP3/Br/kNZC7FWPOV9nf/HLkxieU8VzvhwlKv9RnGBYoqSh01eIrZvfYrFeO3bKfcEMWGPWGQmMI6oHmeoUqf8RFmJJMdx4Ivd1J9Qrdy0y/PWR5vO2idmD4fZ5+lWt5plXwiu60X8=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(47076005)(316002)(426003)(1076003)(16526019)(186003)(336012)(82310400004)(36860700001)(508600001)(110136005)(2616005)(86362001)(70206006)(83380400001)(36756003)(44832011)(7416002)(4326008)(26005)(7696005)(8676002)(8936002)(5660300002)(2906002)(356005)(70586007)(54906003)(40460700003)(6666004)(81166007)(81973001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2022 21:51:32.9023
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: baeaf2d3-bb47-4151-548e-08d9f7dfd27e
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT031.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB2806
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently `pci_is_thunderbolt_attached` is used to indicate a device
-is connected externally.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-The PCI core now marks such devices as removable and downstream drivers
-can use this instead.
+Current default VGA device selection fails in some cases because part of it
+is done in the vga_arb_device_init() subsys_initcall, and some arches
+enumerate PCI devices in pcibios_init(), which runs *after* that.
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/gpu/drm/radeon/radeon_device.c | 4 ++--
- drivers/gpu/drm/radeon/radeon_kms.c    | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+The big change from the v8 posting is that this moves vgaarb.c from
+drivers/gpu/vga to drivers/pci because it really has nothing to do with
+GPUs or DRM.
 
-diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
-index 4f0fbf667431..5117fce23b3f 100644
---- a/drivers/gpu/drm/radeon/radeon_device.c
-+++ b/drivers/gpu/drm/radeon/radeon_device.c
-@@ -1439,7 +1439,7 @@ int radeon_device_init(struct radeon_device *rdev,
- 
- 	if (rdev->flags & RADEON_IS_PX)
- 		runtime = true;
--	if (!pci_is_thunderbolt_attached(rdev->pdev))
-+	if (!dev_is_removable(&rdev->pdev->dev))
- 		vga_switcheroo_register_client(rdev->pdev,
- 					       &radeon_switcheroo_ops, runtime);
- 	if (runtime)
-@@ -1527,7 +1527,7 @@ void radeon_device_fini(struct radeon_device *rdev)
- 	/* evict vram memory */
- 	radeon_bo_evict_vram(rdev);
- 	radeon_fini(rdev);
--	if (!pci_is_thunderbolt_attached(rdev->pdev))
-+	if (!dev_is_removable(&rdev->pdev->dev))
- 		vga_switcheroo_unregister_client(rdev->pdev);
- 	if (rdev->flags & RADEON_IS_PX)
- 		vga_switcheroo_fini_domain_pm_ops(rdev->dev);
-diff --git a/drivers/gpu/drm/radeon/radeon_kms.c b/drivers/gpu/drm/radeon/radeon_kms.c
-index 11ad210919c8..e01ee7a5cf5d 100644
---- a/drivers/gpu/drm/radeon/radeon_kms.c
-+++ b/drivers/gpu/drm/radeon/radeon_kms.c
-@@ -139,7 +139,7 @@ int radeon_driver_load_kms(struct drm_device *dev, unsigned long flags)
- 	if ((radeon_runtime_pm != 0) &&
- 	    radeon_has_atpx() &&
- 	    ((flags & RADEON_IS_IGP) == 0) &&
--	    !pci_is_thunderbolt_attached(pdev))
-+	    !dev_is_removable(&pdev->dev))
- 		flags |= RADEON_IS_PX;
- 
- 	/* radeon_device_init should report only fatal error
+For example:
+
+  - On BMC system, the AST2500 bridge [1a03:1150] does not implement
+    PCI_BRIDGE_CTL_VGA.  This is perfectly legal but means the legacy VGA
+    resources won't reach downstream devices unless they're included in the
+    usual bridge windows.
+
+  - vga_arb_select_default_device() will set a device below such a bridge
+    as the default VGA device as long as it has PCI_COMMAND_IO and
+    PCI_COMMAND_MEMORY enabled.
+
+  - vga_arbiter_add_pci_device() is called for every VGA device, either at
+    boot-time or at hot-add time, and it will also set the device as the
+    default VGA device, but ONLY if all bridges leading to it implement
+    PCI_BRIDGE_CTL_VGA.
+
+  - This difference between vga_arb_select_default_device() and
+    vga_arbiter_add_pci_device() means that a device below an AST2500 or
+    similar bridge can only be set as the default if it is enumerated
+    before vga_arb_device_init().
+
+  - On ACPI-based systems, PCI devices are enumerated by acpi_init(), which
+    runs before vga_arb_device_init().
+
+  - On non-ACPI systems, like on MIPS system, they are enumerated by
+    pcibios_init(), which typically runs *after* vga_arb_device_init().
+
+This series consolidates all the default VGA device selection in
+vga_arbiter_add_pci_device(), which is always called after enumerating a
+PCI device.
+
+Almost all the work here is Huacai's.  I restructured it a little bit and
+added a few trivial patches on top.
+
+Bjorn
+
+Version history:
+V0 original implementation as final quirk to set default device.
+https://lore.kernel.org/r/20210514080025.1828197-6-chenhuacai@loongson.cn
+
+V1 rework vgaarb to do all default device selection in
+vga_arbiter_add_pci_device().
+https://lore.kernel.org/r/20210705100503.1120643-1-chenhuacai@loongson.cn
+
+V2 move arbiter to PCI subsystem, fix nits.
+https://lore.kernel.org/r/20210722212920.347118-1-helgaas@kernel.org
+
+V3 rewrite the commit log of the last patch (which is also summarized
+by Bjorn).
+https://lore.kernel.org/r/20210820100832.663931-1-chenhuacai@loongson.cn
+
+V4 split the last patch to two steps.
+https://lore.kernel.org/r/20210827083129.2781420-1-chenhuacai@loongson.cn
+
+V5 split Patch-9 again and sort the patches.
+https://lore.kernel.org/r/20210911093056.1555274-1-chenhuacai@loongson.cn
+
+V6 split Patch-5 again and sort the patches again.
+https://lore.kernel.org/r/20210916082941.3421838-1-chenhuacai@loongson.cn
+
+V7 stop moving vgaarb to drivers/pci because of ordering issues with
+misc_init().
+https://lore.kernel.org/r/20211015061512.2941859-1-chenhuacai@loongson.cn
+https://lore.kernel.org/r/CAAhV-H7FhAjM-Ha42Z1dLrE4PvC9frfyeU27KHWcyWKkMftEsA@mail.gmail.com
+
+V8 expand commit logs, rework boot VGA device selection
+https://lore.kernel.org/r/20220106000658.243509-1-helgaas@kernel.org
+
+V9 (this posting) move to drivers/pci, resolve initcall ordering, rename
+vga_is_framebuffer_device() to vga_is_firmware_default()
+
+Bjorn Helgaas (5):
+  PCI/VGA: Move vgaarb to drivers/pci
+  PCI/VGA: Factor out vga_select_framebuffer_device()
+  PCI/VGA: Remove empty vga_arb_device_card_gone()
+  PCI/VGA: Use unsigned format string to print lock counts
+  PCI/VGA: Replace full MIT license text with SPDX identifier
+
+Huacai Chen (6):
+  PCI/VGA: Move vga_arb_integrated_gpu() earlier in file
+  PCI/VGA: Factor out default VGA device selection
+  PCI/VGA: Move firmware default device detection to ADD_DEVICE path
+  PCI/VGA: Move non-legacy VGA detection to ADD_DEVICE path
+  PCI/VGA: Move disabled VGA device detection to ADD_DEVICE path
+  PCI/VGA: Log bridge control messages when adding devices
+
+ drivers/gpu/vga/Kconfig           |  19 --
+ drivers/gpu/vga/Makefile          |   1 -
+ drivers/pci/Kconfig               |  19 ++
+ drivers/pci/Makefile              |   1 +
+ drivers/{gpu/vga => pci}/vgaarb.c | 313 +++++++++++++++---------------
+ 5 files changed, 175 insertions(+), 178 deletions(-)
+ rename drivers/{gpu/vga => pci}/vgaarb.c (90%)
+
 -- 
-2.34.1
+2.25.1
 
