@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A643C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 22:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92080C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 22:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235776AbiBXWtH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Feb 2022 17:49:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33080 "EHLO
+        id S235806AbiBXWtX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Feb 2022 17:49:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235790AbiBXWtB (ORCPT
+        with ESMTP id S235840AbiBXWtB (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 17:49:01 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA59817EDA1;
-        Thu, 24 Feb 2022 14:48:24 -0800 (PST)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B08417AEC1;
+        Thu, 24 Feb 2022 14:48:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7E3A3B829E1;
-        Thu, 24 Feb 2022 22:48:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE201C340E9;
-        Thu, 24 Feb 2022 22:48:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ADACA61B71;
+        Thu, 24 Feb 2022 22:48:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4585C340E9;
+        Thu, 24 Feb 2022 22:48:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1645742902;
-        bh=WsI9+ns+zf8pTfM0e7lrNva8Pq9/6NNaMQeyS3JWV+g=;
+        s=k20201202; t=1645742906;
+        bh=etvCtvE2dnjsW/1pUOALGGQFm8wZpzxHqa4i0OnZD/8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tB6DjIkg9nTU06U1CNJlwuCgn8MbPHm5TKYehHIyvS30JyOorKIuL3lSGCs5/TuNj
-         p28f3AJAgMmgd6EIMkjzwZt22R/vk6Nq6kMIAcAX1bxQVyCct/A4aGjwW5aIad8+Uf
-         mtd8/ny9wkBWJj00Uuwi5QtmEvZGJ5UPqY8o+NlQd/HJ/7bzHm6td8tfj4DUsFnASk
-         16pjFntgiOxQ/e4EN0mO3Q5rHkhBQ4g+uDUKKwTB5+uBCJYZja6B/wAMgeWFP0pKyo
-         BpN8DbxSuAchs8Qj/D0oo8kXRcCHhTArD9hi1AFBRl9VLw6XsfetikVrkApHRbufj5
-         06cVMoAAij2Wg==
+        b=qG8arAVauhLUN8nQ/us0Pyix+gd92fczmJNQst8Zazyc6hCEIrf97GkcJvnkC/iJq
+         Fuo+okUAxXh4Y+Dnrn11JQWARsV75ZcWRdq09Q+LcAxjpZCAGbjwoWryhzYzNKGqpo
+         IIqnXUcqe4RzHnhTOw3V/lMoY9PTpRLUClW9yW53+2A9iWmXk9L2kZbJMCjzeh38pS
+         3L+ljK5xy9dVYqUKG5RJtrqNWem4weHzyZChAdQxXX+BLNjEi5rSgeeeS1bCgrEnXF
+         6MdOHZpG4WVVAlcc4DcQ1T0dFQTZW5ClRlB/wUBFpG/C+s6kYaC24ehAjjD/HyjgiV
+         owuQrHWvnbVXw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
         Maxime Ripard <mripard@kernel.org>,
@@ -39,10 +39,11 @@ Cc:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
         Xuefeng Li <lixuefeng@loongson.cn>,
         Huacai Chen <chenhuacai@loongson.cn>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org
-Subject: [PATCH v9 09/11] PCI/VGA: Log bridge control messages when adding devices
-Date:   Thu, 24 Feb 2022 16:47:51 -0600
-Message-Id: <20220224224753.297579-10-helgaas@kernel.org>
+        dri-devel@lists.freedesktop.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v9 11/11] PCI/VGA: Replace full MIT license text with SPDX identifier
+Date:   Thu, 24 Feb 2022 16:47:53 -0600
+Message-Id: <20220224224753.297579-12-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220224224753.297579-1-helgaas@kernel.org>
 References: <20220224224753.297579-1-helgaas@kernel.org>
@@ -52,76 +53,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Huacai Chen <chenhuacai@loongson.cn>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Previously vga_arb_device_init() iterated through all VGA devices and
-indicated whether legacy VGA routing to each could be controlled by an
-upstream bridge.
+Per Documentation/process/license-rules.rst, the SPDX MIT identifier is
+equivalent to including the entire MIT license text from
+LICENSES/preferred/MIT.
 
-But we determine that information in vga_arbiter_add_pci_device(), which we
-call for every device, so we can log it there without iterating through the
-VGA devices again.
+Replace the MIT license text with the equivalent SPDX identifier.
 
-Note that we call vga_arbiter_check_bridge_sharing() before adding the
-device to vga_list, so we have to handle the very first device separately.
-
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/vgaarb.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/pci/vgaarb.c | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 
 diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 582f0054b71a..7b1bfdea9d10 100644
+index d6e77c6a9a1a..f80b6ec88dc3 100644
 --- a/drivers/pci/vgaarb.c
 +++ b/drivers/pci/vgaarb.c
-@@ -719,8 +719,10 @@ static void vga_arbiter_check_bridge_sharing(struct vga_device *vgadev)
- 
- 	vgadev->bridge_has_one_vga = true;
- 
--	if (list_empty(&vga_list))
-+	if (list_empty(&vga_list)) {
-+		vgaarb_info(&vgadev->pdev->dev, "bridge control possible\n");
- 		return;
-+	}
- 
- 	/* okay iterate the new devices bridge hierarachy */
- 	new_bus = vgadev->pdev->bus;
-@@ -759,6 +761,11 @@ static void vga_arbiter_check_bridge_sharing(struct vga_device *vgadev)
- 		}
- 		new_bus = new_bus->parent;
- 	}
-+
-+	if (vgadev->bridge_has_one_vga)
-+		vgaarb_info(&vgadev->pdev->dev, "bridge control possible\n");
-+	else
-+		vgaarb_info(&vgadev->pdev->dev, "no bridge control possible\n");
- }
- 
+@@ -1,32 +1,11 @@
++// SPDX-License-Identifier: MIT
  /*
-@@ -1557,7 +1564,6 @@ static int __init vga_arb_device_init(void)
- {
- 	int rc;
- 	struct pci_dev *pdev;
--	struct vga_device *vgadev;
+  * vgaarb.c: Implements the VGA arbitration. For details refer to
+  * Documentation/gpu/vgaarbiter.rst
+  *
+- *
+  * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+  * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+  * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a
+- * copy of this software and associated documentation files (the "Software"),
+- * to deal in the Software without restriction, including without limitation
+- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+- * and/or sell copies of the Software, and to permit persons to whom the
+- * Software is furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice (including the next
+- * paragraph) shall be included in all copies or substantial portions of the
+- * Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+- * DEALINGS
+- * IN THE SOFTWARE.
+- *
+  */
  
- 	rc = misc_register(&vga_arb_device);
- 	if (rc < 0)
-@@ -1573,15 +1579,6 @@ static int __init vga_arb_device_init(void)
- 			       PCI_ANY_ID, pdev)) != NULL)
- 		vga_arbiter_add_pci_device(pdev);
- 
--	list_for_each_entry(vgadev, &vga_list, list) {
--		struct device *dev = &vgadev->pdev->dev;
--
--		if (vgadev->bridge_has_one_vga)
--			vgaarb_info(dev, "bridge control possible\n");
--		else
--			vgaarb_info(dev, "no bridge control possible\n");
--	}
--
- 	pr_info("loaded\n");
- 	return rc;
- }
+ #define pr_fmt(fmt) "vgaarb: " fmt
 -- 
 2.25.1
 
