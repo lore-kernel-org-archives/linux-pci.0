@@ -2,61 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD7D7C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 15:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC3FC433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Feb 2022 15:17:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235717AbiBXPGV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Feb 2022 10:06:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33314 "EHLO
+        id S233983AbiBXPR7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Feb 2022 10:17:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235719AbiBXPGT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 10:06:19 -0500
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3047A194164;
-        Thu, 24 Feb 2022 07:05:50 -0800 (PST)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E753EED1;
-        Thu, 24 Feb 2022 07:05:49 -0800 (PST)
-Received: from e123427-lin.arm.com (unknown [10.57.39.248])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 553923F66F;
-        Thu, 24 Feb 2022 07:05:46 -0800 (PST)
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        alex@ghiti.fr
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        catalin.marinas@arm.com, Toan Le <toan@os.amperecomputing.com>,
-        linux-mm@kvack.org, akpm@linux-foundation.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        will@kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7 05/14] sizes.h: Add SZ_1T macro
-Date:   Thu, 24 Feb 2022 15:05:39 +0000
-Message-Id: <164571512667.19192.1380245684595719481.b4-ty@arm.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <575cb7164cf124c75df7cb9242ea7374733942bf.1642752946.git.christophe.leroy@csgroup.eu>
-References: <cover.1642752946.git.christophe.leroy@csgroup.eu> <575cb7164cf124c75df7cb9242ea7374733942bf.1642752946.git.christophe.leroy@csgroup.eu>
+        with ESMTP id S235924AbiBXPRx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 10:17:53 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57841CF3A4
+        for <linux-pci@vger.kernel.org>; Thu, 24 Feb 2022 07:17:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E7A4D60EAA
+        for <linux-pci@vger.kernel.org>; Thu, 24 Feb 2022 15:17:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E11F8C340EC;
+        Thu, 24 Feb 2022 15:17:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645715842;
+        bh=w6A0U9Uhn4+JdPjAJvGRWzWyHpMuNYJAcNXTqv1RpnE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=D09ac/tosSnGDopFS9Edb8PNDaMMUpFvuuta+tLxwmCWTOumSHj0wSBXk55jZ6TpM
+         Xor5YC/mTY+rM6lt+nBxCvvjwmeYn7S8TUzSTkrxNEQYwqcngicbKlWvR83WN71UnS
+         8qXr+mbNcn40lVtbPQZoMDa55FFSIjw9m4yy3RrQfLJ+FZh9BIF+veXTtvdcY2QFat
+         Qa1oMD1oggkIrv6TF21FwNV4UsQnm2RhdS+jdY6cbqJHGlf6mtqer8p9FyGUxyLerC
+         r55ohhInEWt71Pq6kntBZ4R0UlKGZ3qp0aoNHJ0rB71EYr6lCCncn9jeK19GsysYjK
+         7wjyQVqCEQ9HA==
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     pali@kernel.org, linux-pci@vger.kernel.org,
+        Vinod Koul <vkoul@kernel.org>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH phy v4 5/5] Revert "PCI: aardvark: Fix initialization with old Marvell's Arm Trusted Firmware"
+Date:   Thu, 24 Feb 2022 16:17:18 +0100
+Message-Id: <20220224151718.7679-1-kabel@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 21 Jan 2022 08:42:21 +0000, Christophe Leroy wrote:
-> Today drivers/pci/controller/pci-xgene.c defines SZ_1T
-> 
-> Move it into linux/sizes.h so that it can be re-used elsewhere.
-> 
-> 
+From: Pali Rohár <pali@kernel.org>
 
-Applied to pci/misc, thanks!
+This reverts commit b0c6ae0f8948a2be6bf4e8b4bbab9ca1343289b6.
 
-[05/14] sizes.h: Add SZ_1T macro
-        https://git.kernel.org/lpieralisi/pci/c/0cc62aed37
+Armada 3720 phy driver (phy-mvebu-a3700-comphy.c) does not return
+-EOPNOTSUPP from phy_power_on() callback anymore.
 
-Thanks,
-Lorenzo
+So remove dead code which handles -EOPNOTSUPP return value.
+
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Signed-off-by: Marek Behún <kabel@kernel.org>
+Acked-by: Miquel Raynal <miquel.raynal@bootlin.com>
+---
+Dear Lorenzo,
+
+could you please give your Ack for this, so that Vinod can apply it
+with the rest of the comphy series?
+The series can be found at
+  https://lore.kernel.org/linux-phy/20220203214444.1508-1-kabel@kernel.org/
+
+Marek
+---
+ drivers/pci/controller/pci-aardvark.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index 4f5b44827d21..6bae688852a5 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -1482,9 +1482,7 @@ static int advk_pcie_enable_phy(struct advk_pcie *pcie)
+ 	}
+ 
+ 	ret = phy_power_on(pcie->phy);
+-	if (ret == -EOPNOTSUPP) {
+-		dev_warn(&pcie->pdev->dev, "PHY unsupported by firmware\n");
+-	} else if (ret) {
++	if (ret) {
+ 		phy_exit(pcie->phy);
+ 		return ret;
+ 	}
+-- 
+2.34.1
+
