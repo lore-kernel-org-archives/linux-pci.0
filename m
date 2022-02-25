@@ -2,86 +2,166 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD93C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Feb 2022 02:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA02C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Feb 2022 03:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236871AbiBYC7i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Feb 2022 21:59:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45690 "EHLO
+        id S237144AbiBYDx2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Feb 2022 22:53:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236498AbiBYC7h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 21:59:37 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19D711EC255
-        for <linux-pci@vger.kernel.org>; Thu, 24 Feb 2022 18:59:07 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id bd1so3590994plb.13
-        for <linux-pci@vger.kernel.org>; Thu, 24 Feb 2022 18:59:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fungible.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=R9dcpe70j9Trk9rKuKWmAu1MvnVHF87exvDoWtSGUqM=;
-        b=KQoLjAf8JH3bVzNJAVgTc6i2EqQqA8oE3gAxLFZVdbVRq8STVIeVGh0qXCEms3U4Iy
-         +OgCxWBwRwQ3BO+oCBOtpIlECk7zQQcKxX0EqjtFtVIZxOyNpbhelmm3k/dRtmkBEEkN
-         J9DOZGM/9nQGk/SEbciSrOJxzriGAIFHlcpOI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=R9dcpe70j9Trk9rKuKWmAu1MvnVHF87exvDoWtSGUqM=;
-        b=Y77ciQrlAkC/JeqEdMkiUUS+DRzCQL+geMrRx4fzDBjC3PfPWQGO4hbiZvKKN0bQkr
-         SnDRSCETf4pLIEauNSQX+18CH76QlQZoqw8oo+UwIMISpC5h1TMV+DgYNeubpNntpTzr
-         wlDWXxtKH027LBukATaZxnJFV62QDbOk8mntfzIjeAFslLMTYXuQDPSEenfF7WN1cIBl
-         M7rv6g1oZQeYYik5h4mLgdCgGUn1/gzYogW8aUGzPJJqx2yo628qAdoM3cnJGHLO025T
-         HJoML6rUDy4eqlOG6Ym15oWSdpgrhPP3VbJEC+n9P18onecRE5KL0pBWZ9cyTElhO2/q
-         MVgw==
-X-Gm-Message-State: AOAM532NWGRDaf6hiD9sedAk+tImInrtLsY95CpVdga7n6eHtajMZAWw
-        tJQbQPZZQT6NiC1gtoFzeLRrBA==
-X-Google-Smtp-Source: ABdhPJxQZhDsbRkEFSGIqh9jmp4oIZe/o9KQ4KxxA/u7dmgTljFQcTdyChCC+P0s5+WS95oLB+oCxA==
-X-Received: by 2002:a17:90a:800b:b0:1bc:1954:9640 with SMTP id b11-20020a17090a800b00b001bc19549640mr1094593pjn.89.1645757946660;
-        Thu, 24 Feb 2022 18:59:06 -0800 (PST)
-Received: from cab09-qa-09.fungible.local ([12.190.10.11])
-        by smtp.gmail.com with ESMTPSA id q93-20020a17090a4fe600b001b9ba2a1dc3sm7397526pjh.25.2022.02.24.18.59.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Feb 2022 18:59:06 -0800 (PST)
-From:   Dimitris Michailidis <d.michailidis@fungible.com>
-X-Google-Original-From: Dimitris Michailidis <dmichail@fungible.com>
-To:     davem@davemloft.net, kuba@kernel.org, netdev@vger.kernel.org,
-        andrew@lunn.ch, d.michailidis@fungible.com
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH net-next v8 1/8] PCI: Add Fungible Vendor ID to pci_ids.h
-Date:   Thu, 24 Feb 2022 18:58:55 -0800
-Message-Id: <20220225025902.40167-2-dmichail@fungible.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220225025902.40167-1-dmichail@fungible.com>
-References: <20220225025902.40167-1-dmichail@fungible.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S231544AbiBYDx2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Feb 2022 22:53:28 -0500
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A717187BB9;
+        Thu, 24 Feb 2022 19:52:56 -0800 (PST)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 4D00F1A06C2;
+        Fri, 25 Feb 2022 04:52:55 +0100 (CET)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id E090D1A0003;
+        Fri, 25 Feb 2022 04:52:54 +0100 (CET)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 4F68C183AD07;
+        Fri, 25 Feb 2022 11:52:53 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com, broonie@kernel.org,
+        lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
+        festevam@gmail.com, francesco.dolcini@toradex.com
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de, linux-imx@nxp.com
+Subject: [PATCH v8 1/8] PCI: imx6: Encapsulate the clock enable into one standalone function
+Date:   Fri, 25 Feb 2022 11:44:20 +0800
+Message-Id: <1645760667-10510-2-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1645760667-10510-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1645760667-10510-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Dimitris Michailidis <dmichail@fungible.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+No function changes, just encapsulate the i.MX PCIe clocks enable
+operations into one standalone function
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index aad54c666407..c7e6f2043c7d 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2561,6 +2561,8 @@
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 79 ++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 5fd33e4536af..5582ee1b420a 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -481,38 +481,16 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 	return ret;
+ }
  
- #define PCI_VENDOR_ID_HYGON		0x1d94
+-static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
+-{
+-	u32 val;
+-	struct device *dev = imx6_pcie->pci->dev;
+-
+-	if (regmap_read_poll_timeout(imx6_pcie->iomuxc_gpr,
+-				     IOMUXC_GPR22, val,
+-				     val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED,
+-				     PHY_PLL_LOCK_WAIT_USLEEP_MAX,
+-				     PHY_PLL_LOCK_WAIT_TIMEOUT))
+-		dev_err(dev, "PCIe PLL lock timeout\n");
+-}
+-
+-static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
++static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
  
-+#define PCI_VENDOR_ID_FUNGIBLE		0x1dad
+-	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
+-		ret = regulator_enable(imx6_pcie->vpcie);
+-		if (ret) {
+-			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+-				ret);
+-			return;
+-		}
+-	}
+-
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+ 	if (ret) {
+ 		dev_err(dev, "unable to enable pcie_phy clock\n");
+-		goto err_pcie_phy;
++		return ret;
+ 	}
+ 
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_bus);
+@@ -543,6 +521,51 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	}
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
++	return 0;
 +
- #define PCI_VENDOR_ID_HXT		0x1dbf
++err_ref_clk:
++	clk_disable_unprepare(imx6_pcie->pcie);
++err_pcie:
++	clk_disable_unprepare(imx6_pcie->pcie_bus);
++err_pcie_bus:
++	clk_disable_unprepare(imx6_pcie->pcie_phy);
++
++	return ret;
++}
++
++static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
++{
++	u32 val;
++	struct device *dev = imx6_pcie->pci->dev;
++
++	if (regmap_read_poll_timeout(imx6_pcie->iomuxc_gpr,
++				     IOMUXC_GPR22, val,
++				     val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED,
++				     PHY_PLL_LOCK_WAIT_USLEEP_MAX,
++				     PHY_PLL_LOCK_WAIT_TIMEOUT))
++		dev_err(dev, "PCIe PLL lock timeout\n");
++}
++
++static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
++{
++	struct dw_pcie *pci = imx6_pcie->pci;
++	struct device *dev = pci->dev;
++	int ret;
++
++	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
++		ret = regulator_enable(imx6_pcie->vpcie);
++		if (ret) {
++			dev_err(dev, "failed to enable vpcie regulator: %d\n",
++				ret);
++			return;
++		}
++	}
++
++	ret = imx6_pcie_clk_enable(imx6_pcie);
++	if (ret) {
++		dev_err(dev, "unable to enable pcie clocks\n");
++		goto err_clks;
++	}
  
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+@@ -601,13 +624,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 
+ 	return;
+ 
+-err_ref_clk:
+-	clk_disable_unprepare(imx6_pcie->pcie);
+-err_pcie:
+-	clk_disable_unprepare(imx6_pcie->pcie_bus);
+-err_pcie_bus:
+-	clk_disable_unprepare(imx6_pcie->pcie_phy);
+-err_pcie_phy:
++err_clks:
+ 	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
+ 		ret = regulator_disable(imx6_pcie->vpcie);
+ 		if (ret)
 -- 
 2.25.1
 
