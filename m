@@ -2,74 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D817CC433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Feb 2022 19:44:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F948C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Feb 2022 22:15:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235208AbiBYTop (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Feb 2022 14:44:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52544 "EHLO
+        id S236899AbiBYWQB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Feb 2022 17:16:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232313AbiBYToi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Feb 2022 14:44:38 -0500
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A08951A3600;
-        Fri, 25 Feb 2022 11:44:05 -0800 (PST)
-Received: by mail-oo1-f46.google.com with SMTP id s203-20020a4a3bd4000000b003191c2dcbe8so7724558oos.9;
-        Fri, 25 Feb 2022 11:44:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=tW4zPiKBcV7dGZmtEMwIis6F1TyhWjq1DmblCZrI9K8=;
-        b=I3pTVYhCUx9PMm9HO5o5oWnZD0jMjnvOTZKNb4az7euweT5POwcDgltqvpXKv1KDQk
-         Ug022ztb5mIb5SQRsARwHQ1WMFtozJ6OtvPKS9rCSm8uwLe9GydJpXGTmMFKg8nxutoI
-         p5TRr+ApthKWgAAsiOhY+MtY6NlAukQdHYnVeMeAdjkwEo04PmRdLGGf5jdZKs7a+kYh
-         +rtAeVkEJVuJPUaZdRkBcTYhsiKI1WK6RUUOOMHVMKk+4GnAY9QNRmQp9/3JKaPTGA0s
-         H9NxEfnuDMPb8ZoSgLo4jN0/P2vbk3dIKSFO1v8t8aoSpUi2j5LVuEQvKjs2PNVOn3uq
-         S3UQ==
-X-Gm-Message-State: AOAM532iLvE82TsLdglAEusTUVZt9u0j57wS1YGd8ovMMrrjkXCoaVEY
-        CzHR8bs5du4BSsmn5mj+dg==
-X-Google-Smtp-Source: ABdhPJyrGxDdbmb/ikGgs7yq1wNO0QvuE+0EGbX09kP8eiqL24MZFxcrlDZeb3RdyrTjLul91B9b1A==
-X-Received: by 2002:a05:6870:128c:b0:ce:c0c9:5ba with SMTP id 12-20020a056870128c00b000cec0c905bamr2174582oal.12.1645818244950;
-        Fri, 25 Feb 2022 11:44:04 -0800 (PST)
-Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
-        by smtp.gmail.com with ESMTPSA id j23-20020a056830241700b005af4acc68a5sm1532276ots.29.2022.02.25.11.44.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Feb 2022 11:44:04 -0800 (PST)
-Received: (nullmailer pid 1313718 invoked by uid 1000);
-        Fri, 25 Feb 2022 19:44:03 -0000
-Date:   Fri, 25 Feb 2022 13:44:03 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Bhupesh Sharma <bhupesh.sharma@linaro.org>
-Cc:     lorenzo.pieralisi@arm.com, bjorn.andersson@linaro.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, bhupesh.linux@gmail.com,
-        bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, agross@kernel.org, svarbanov@mm-sol.com
-Subject: Re: [PATCH 2/6] dt-bindings: phy: qcom,qmp: Add SM8150 PCIe PHY
- bindings
-Message-ID: <Yhkxg1wjduMX22Mo@robh.at.kernel.org>
-References: <20220223192946.473172-1-bhupesh.sharma@linaro.org>
- <20220223192946.473172-3-bhupesh.sharma@linaro.org>
+        with ESMTP id S236549AbiBYWQA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Feb 2022 17:16:00 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1448718F21E;
+        Fri, 25 Feb 2022 14:15:28 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 685C2CE27EC;
+        Fri, 25 Feb 2022 22:15:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A876FC340E7;
+        Fri, 25 Feb 2022 22:15:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645827324;
+        bh=tk3VRDpANFYB8NRJhQeUoW4hJrY3AMcDY0PFavgHSlM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=GcEMYWBJDy+GrVvgWXw9G6tgkduT4RiIH8V+ghG8kiqsvZ4gRRBqx9oRhgORLK9JL
+         UwD+8MuHddaL4r6piLp1I5iDQF8pmPhxfeFFkFMnVPgrq3IvLr4y4ViLUyuwvvx/79
+         eJopq66hUBHEs8nno/mlqTNJZ1TlXD/iMbmN2e5MxkW4NmOkU0x5RmtmWrUARpbrv2
+         CZbBV9jFd5gIaIhIGmgdII9kByJyeiYCGkBwfremIbecTfz5TBlngGjl4/k91/ExzL
+         2DY4rluykLyO6tF0BGSdMisRk2jDyc2UhEljCtOJg4AaVCCBYdAeVyeBm/Rvt14M56
+         lJACkQE/x0ASg==
+Date:   Fri, 25 Feb 2022 16:15:23 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>
+Cc:     David Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Huacai Chen <chenhuacai@loongson.cn>
+Subject: Re: [PATCH v9 00/11] vgaarb: Rework default VGA device selection
+Message-ID: <20220225221523.GA385757@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220223192946.473172-3-bhupesh.sharma@linaro.org>
+In-Reply-To: <20220224224753.297579-1-helgaas@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 24 Feb 2022 00:59:42 +0530, Bhupesh Sharma wrote:
-> Add the following two PCIe PHYs found on SM8150, to the QMP binding:
+On Thu, Feb 24, 2022 at 04:47:42PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> QMP GEN3x1 PHY - 1 lane
-> QMP GEN3x2 PHY - 2 lanes
+> Current default VGA device selection fails in some cases because part of it
+> is done in the vga_arb_device_init() subsys_initcall, and some arches
+> enumerate PCI devices in pcibios_init(), which runs *after* that.
 > 
-> Cc: Rob Herring <robh@kernel.org>
-> Signed-off-by: Bhupesh Sharma <bhupesh.sharma@linaro.org>
-> ---
->  Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+> The big change from the v8 posting is that this moves vgaarb.c from
+> drivers/gpu/vga to drivers/pci because it really has nothing to do with
+> GPUs or DRM.
 
-Acked-by: Rob Herring <robh@kernel.org>
+I provisionally applied this to pci/vga and put it into -next just
+to get a little runtime on it.
+
+But I'd prefer not to unilaterally yank this out of drivers/gpu
+without a consensus from the GPU folks that this is the right thing to
+do.
+
+Any thoughts?  If it seems OK to you, I think patch 1/11 (the move
+itself) is all you would need to look at, although of course I would
+still be grateful for any review and feedback on the rest.
+
+After it's in drivers/pci, all the blame for any issues would come my
+way.
+
+Bjorn
