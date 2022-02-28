@@ -2,198 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A24C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 18:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0445DC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 19:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240456AbiB1Snk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Feb 2022 13:43:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44532 "EHLO
+        id S229688AbiB1TzC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Feb 2022 14:55:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241004AbiB1Sm6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 13:42:58 -0500
-X-Greylist: delayed 1800 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Feb 2022 10:39:26 PST
-Received: from imap2.colo.codethink.co.uk (imap2.colo.codethink.co.uk [78.40.148.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7082731917;
-        Mon, 28 Feb 2022 10:39:26 -0800 (PST)
-Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.21])
-        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
-        id 1nOjeo-0003hq-Jq; Mon, 28 Feb 2022 17:17:58 +0000
-Message-ID: <467c5472-25fd-2611-4bb8-d70d6b60b299@codethink.co.uk>
-Date:   Mon, 28 Feb 2022 17:45:49 +0000
+        with ESMTP id S229614AbiB1TzC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 14:55:02 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EF6B2AD8;
+        Mon, 28 Feb 2022 11:54:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 9C2BCCE1850;
+        Mon, 28 Feb 2022 19:54:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CAD7C340F1;
+        Mon, 28 Feb 2022 19:54:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1646078059;
+        bh=ONxRshZXU9sTf+2igTSe3xpdN1ybB8ozak/Pf50aaAw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=FQdVqA8T/y015/V6feFrGYtnl9N3bso2NN5eZ+xCOfi7Adw4x0bBZLjivwfnQ+Hnj
+         XBKOAdDLk6HXa3gmIN+uyEXJ+PyCDCBcPc4eDzgQUVTcZMsFZiGH3EaE/y9r2Eghhn
+         PdNvBu2OiFERxMOjWVBnhgney/Wk3CrpR8P6MqNG/YtyOoevR6JE5V4eaTwd/X2/Y6
+         Q813ZsuDZSZxkXD3VFLyqpsRh54rXV5y3kFSAbiUyTHmXRkJprv4A6LDBPxTuhwQm7
+         1bOzd9JpS/g7xCmxQfZH9v/ZcfHUgwJ6ExQWA0SwndMqlfAxAEsIUt5U0B7v0xOSY8
+         GTD/XZl2dRNAQ==
+Date:   Mon, 28 Feb 2022 13:54:18 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Lu Baolu <baolu.lu@linux.intel.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, kvm@vger.kernel.org,
+        rafael@kernel.org, David Airlie <airlied@linux.ie>,
+        linux-pci@vger.kernel.org,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Dmitry Osipenko <digetx@gmail.com>,
+        Will Deacon <will@kernel.org>,
+        Stuart Yoder <stuyoder@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        linux-kernel@vger.kernel.org, Li Yang <leoyang.li@nxp.com>,
+        iommu@lists.linux-foundation.org,
+        Jacob jun Pan <jacob.jun.pan@intel.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH v7 05/11] PCI: pci_stub: Set driver_managed_dma
+Message-ID: <20220228195418.GA515725@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCHv4 2/2] PCI: fu740: Force gen1 for initial device probe
-Content-Language: en-GB
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     paul.walmsley@sifive.com, greentime.hu@sifive.com,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org
-References: <20220223205141.GA149346@bhelgaas>
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Organization: Codethink Limited.
-In-Reply-To: <20220223205141.GA149346@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220228005056.599595-6-baolu.lu@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23/02/2022 20:51, Bjorn Helgaas wrote:
-> On Mon, Feb 21, 2022 at 09:03:47PM +0000, Ben Dooks wrote:
->> The fu740 PCIe core does not probe any devices on the SiFive Unmatched
->> board without this fix from U-Boot (or having U-Boot explicitly start
->> the PCIe via either boot-script or user command).
->>
->> The fix claims to set the link-speed to gen1 to get the probe
->> to work. As this is a copy from U-Boot, the code is assumed to be
->> correct and does fix the issue on the Unmatched. The code is at:
+On Mon, Feb 28, 2022 at 08:50:50AM +0800, Lu Baolu wrote:
+> The current VFIO implementation allows pci-stub driver to be bound to
+> a PCI device with other devices in the same IOMMU group being assigned
+> to userspace. The pci-stub driver has no dependencies on DMA or the
+> IOVA mapping of the device, but it does prevent the user from having
+> direct access to the device, which is useful in some circumstances.
 > 
-> Maybe something like:
+> The pci_dma_configure() marks the iommu_group as containing only devices
+> with kernel drivers that manage DMA. For compatibility with the VFIO
+> usage, avoid this default behavior for the pci_stub. This allows the
+> pci_stub still able to be used by the admin to block driver binding after
+> applying the DMA ownership to VFIO.
 > 
->    Limit the link to Gen1 speed.
+> Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
+> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/pci-stub.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> since "the fix claims" and "the code is assumed" is sort of
-> weasel-worded.
+> diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
+> index e408099fea52..d1f4c1ce7bd1 100644
+> --- a/drivers/pci/pci-stub.c
+> +++ b/drivers/pci/pci-stub.c
+> @@ -36,6 +36,7 @@ static struct pci_driver stub_driver = {
+>  	.name		= "pci-stub",
+>  	.id_table	= NULL,	/* only dynamic id's */
+>  	.probe		= pci_stub_probe,
+> +	.driver_managed_dma = true,
+>  };
+>  
+>  static int __init pci_stub_init(void)
+> -- 
+> 2.25.1
 > 
-> The subject says "for initial device probe," but if you change
-> PCI_EXP_LNKCAP, I assume that limits the link speed forever, even
-> after a retrain?
-
-Yes, thought I had checked this but having just gone back and booted
-things again, the following is observed:
-
-- U-Boot "pci enum" and then unpatched kernel -> link 8GT/s
-- U-Boot "pci enum" and patched kernel -> link 2.5GT/s
-- U-Boot no pci and patched kernel > link 2.5 GT/s
-
-Clearly there needs to be some fix for this, either have two rounds
-of soft-reset on the first probe, or if the device does probe at a
-degraded link, do something about it.
-
-I am not clear what the correct fix for this is.
-
-1) Detect no U-Boot initialisation and force a two stage probe
-2) If no devices on initial probe, go around and do #1
-3) Always do a two stage reset
-4) Something else.
-
-Do any other systems see this issue?
-
-I assume we need to go back and re-do this. At least this is a 100%
-reliable repeat on the Unmatched board in our test rack.
-
->> https://source.denx.de/u-boot/u-boot/-/blob/master/drivers/pci/pcie_dw_sifive.c#L271
-> 
-> Maybe use this so the link doesn't become stale when more things are
-> added to pcie_dw_sifive.c:
-> 
->   https://source.denx.de/u-boot/u-boot/-/blob/master/drivers/pci/pcie_dw_sifive.c?id=v2022.01#L271
-
-Thanks, useful to know.
-
->> The code has been this way since the driver was commited in:
->> https://source.denx.de/u-boot/u-boot/-/commit/416395c772018c6bf52aad36aca163115001793f
-> 
-> s/commited/committed/
-
-Oops,
-
-> 
->> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
->> ---
->>   drivers/pci/controller/dwc/pcie-fu740.c | 19 +++++++++++++++++++
->>   1 file changed, 19 insertions(+)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
->> index 842b7202b96e..19501ec8c487 100644
->> --- a/drivers/pci/controller/dwc/pcie-fu740.c
->> +++ b/drivers/pci/controller/dwc/pcie-fu740.c
->> @@ -177,11 +177,30 @@ static void fu740_pcie_init_phy(struct fu740_pcie *afp)
->>   	fu740_phyregwrite(1, PCIEX8MGMT_PHY_LANE3_BASE, PCIEX8MGMT_PHY_INIT_VAL, afp);
->>   }
->>   
->> +/* This is copied from u-boot. Force system to gen1 otherwise nothing probes
->> + * as found on the SiFive Unmatched board.
->> + */
-> 
-> s/u-boot/U-Boot/
-> 
-> Use usual multi-line comment style.
-
-Ok.
-
-> 
->> +static void fu740_pcie_force_gen1(struct dw_pcie *dw, struct fu740_pcie *afp )
->> +{
->> +	unsigned val;
-> 
-> u32, since that's what dw_pcie_readl_dbi() returns and
-> dw_pcie_writel_dbi() expects.
-> 
->> +
->> +	dw_pcie_dbi_ro_wr_en(dw);
->> +
->> +	val = dw_pcie_readl_dbi(dw, 0x70 + PCI_EXP_LNKCAP);
-> 
-> I assume 0x70 is the offset of the PCIe Capability.  There should be a
-> #define for that.
-
-Will fix.
-
->> +	pr_info("%s: link-cap was %08x\n", __func__, val);
-> 
->    dev_info(pci->dev, "...");
-> 
->> +	dw_pcie_writel_dbi(dw, 0x70 + PCI_EXP_LNKCAP, val | 0xf);
-> 
-> I don't understand this.  Per PCIe r6.0, sec 7.5.3.6, 1111b is a
-> reserved encoding for the low four bits of PCI_EXP_LNKCAP.
-> 
-> If you want PCI_EXP_LNKCAP to advertise only 2.5 GT/s, the low four
-> bits should be 0001b to indicate Supported Link Speeds Vector field
-> bit 0, which is defined as 2.5 GT/s.
-
-Yeah, this does not make sense now. I sort of assumed it was W1C
-type thing (write-1-clear). I'm just wondering if this is now some
-sort of undefined behaviour or they originally meant to clear out
-some bits only... It does work, just shows the following from lspci;
-
-  LnkCap: Port #0, Speed unknown, Width x8, ASPM L0s L1, Exit Latency 
-L0s <4us, L1 <4us
-          ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
-  LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
-         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-   LnkSta: Speed 2.5GT/s (downgraded), Width x8 (ok)
-         TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-
-
->> +	dw_pcie_dbi_ro_wr_dis(dw);
->> +}
->> +
->>   static int fu740_pcie_start_link(struct dw_pcie *pci)
->>   {
->>   	struct device *dev = pci->dev;
->>   	struct fu740_pcie *afp = dev_get_drvdata(dev);
->>   
->> +	/* Force PCIe gen1 otherwise Unmatched board does not probe */
->> +	fu740_pcie_force_gen1(pci, afp);
-> 
-> I guess the "Unmatched" board is the only thing we need to care about
-> here?  Are there or will there be other boards that don't need this?
-> 
->>   	/* Enable LTSSM */
->>   	writel_relaxed(0x1, afp->mgmt_base + PCIEX8MGMT_APP_LTSSM_ENABLE);
->>   	return 0;
->> -- 
->> 2.34.1
->>
-> 
-
-
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
-
-https://www.codethink.co.uk/privacy.html
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
