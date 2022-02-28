@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C089C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 22:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4FA2C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 22:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231348AbiB1WHP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Feb 2022 17:07:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59378 "EHLO
+        id S229889AbiB1WHT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Feb 2022 17:07:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231392AbiB1WHE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 17:07:04 -0500
+        with ESMTP id S231310AbiB1WHO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 17:07:14 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7F5AD131956
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:21 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E7C25C4E39
+        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646085980;
+        s=mimecast20190719; t=1646085994;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6g76Q1f7wfMD5s0Iq9NnNAaHx7TEHAaZl0n65azkoF4=;
-        b=hGPIKQdiAJyEKaay8eOW4IXBTEuoiYkRPq0hEk9YOrlTz2PeuMIam7bSyaOeLxeFdyntha
-        0VVgkL/n9yBxm9xk2irKq47LQmiDMKyqRaSc3nl+AI2Y5gI4Z5geuPQQVRpR1pOGTvBLyV
-        5bpotWMxNlQvVChVfVyo1qpTtlYM+4g=
-Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
- [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=1LW+d0gtxqXAjakKIGWcmifEtiCoe2QekVg+4keAltg=;
+        b=ZQcDhle+kSZWyEdihfyKJCikmiCc1QREqsbFhf3Zh7JYqjNREv58TZ+ymnwvTuyzVHNYkP
+        jagKGEnBXbOyiH9uOKxftWyZr6gCclWsa2NeEbh2zoPuOjO2/5N4HbhmhuyjsCKoYmPsXx
+        TIB3oJwVZ+u2/ReGsFud8TSawgUN0g8=
+Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com
+ [209.85.210.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-608-Uuf61oDxOaulofd98Jp1Uw-1; Mon, 28 Feb 2022 17:06:19 -0500
-X-MC-Unique: Uuf61oDxOaulofd98Jp1Uw-1
-Received: by mail-oo1-f72.google.com with SMTP id k10-20020a4ad98a000000b003185c75574dso9376356oou.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:19 -0800 (PST)
+ us-mta-44-W7_9Jwk2Or2vFx3lruVGUg-1; Mon, 28 Feb 2022 17:06:32 -0500
+X-MC-Unique: W7_9Jwk2Or2vFx3lruVGUg-1
+Received: by mail-ot1-f69.google.com with SMTP id c11-20020a056830348b00b005af30a0cee8so9963797otu.4
+        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:32 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6g76Q1f7wfMD5s0Iq9NnNAaHx7TEHAaZl0n65azkoF4=;
-        b=NL8S8SNUcKlAp9/K3udJr5923arkBlQC6xWtXWXnAX1zsBxYszuzzhBtss9fLVekwz
-         PaWQAuHzfuRs9YSyMigyKxKXE0+p9EghIvLhzUlr5Vq6gaL+NxdHDEqq5392xnGuzjAj
-         t3tJyvHTAhrcoVF4oIWwXgPPVb59w7YUqVx6rmaSY6P+VmYLyCd8m/THnpCDvkgDorCp
-         RXEIAO4ubjJbCGY34vZN+Cq4TUG6JEJuYX3K4lJeV5RmA2aolj96MF12ELNQvjE/jGVb
-         Rf3BD3CSI8OlfuF/cPdIVQQVkBv0QvSCEvxalUdOD6FLekFyg0BxGjW9EEsW6a6hj3xx
-         DFRg==
-X-Gm-Message-State: AOAM533EiZvSVG6vIoAeZQH/Ofrzy09vLDZArQTHHzfG75leLkA1+1Pd
-        jjHah88jsZudxFfpUELSnjbhTK/GdnU2C/3LgbFhHemooelZS2Aw3+/i3L9HA9QBKPdC0iqSKOT
-        BkCXkmbZRmW6DwXBUKiHQ
-X-Received: by 2002:a05:6808:1a28:b0:2d7:3c61:e0d6 with SMTP id bk40-20020a0568081a2800b002d73c61e0d6mr12441296oib.32.1646085978575;
-        Mon, 28 Feb 2022 14:06:18 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyqktaI7nRschXFm6WIqpt/NJToJOLyZXiuWVFpjpKCqY9bZVPBmjxyvo/DJelsgeXDszQizg==
-X-Received: by 2002:a05:6808:1a28:b0:2d7:3c61:e0d6 with SMTP id bk40-20020a0568081a2800b002d73c61e0d6mr12441258oib.32.1646085978346;
-        Mon, 28 Feb 2022 14:06:18 -0800 (PST)
+        bh=1LW+d0gtxqXAjakKIGWcmifEtiCoe2QekVg+4keAltg=;
+        b=KnHTxk/+vzkWBnAmR2GySY5AQ1MITnuSg+Yh3VjFtwnna4fM1WDGD7YnahRMT0WX/f
+         UjLHdgtdOjR5oVjy4kxsu6DubMy7p+SE3tfCN+9uiLKOGMlnEzUX5einZ8Dte7RMWac9
+         M/1RmcJZ6UjYFLqWL2dyADkFPIYmCGV4MOsyViZ03I4eb2C3h+QWW3WOP698un2zyar/
+         zKR/N4KDGQHY95m/Bl2fOiSoNRJggcITGfiGSMgMI6AGktJnKpLTu6WCiqBUDU2pgtWL
+         xjIp5qgIUnPqcVvsVVD9/fFbT0g64y2vii5s2CQpwAmqYK5HAcWh80kNcfNq2E2HvnC5
+         p9pQ==
+X-Gm-Message-State: AOAM531h2QSGYAZbswr/RiGOPAWGChcWs/hHrCi79Bhy6OsT5jWGBieo
+        QAK9+kHjTPg5Had1riV5yzRo1yMMpStoQfidRfVIKr4zC6Xdi0RYMJxqsAtNZ4+6TyT/nGUnrOh
+        +jVwB7fotitOdELrckUVG
+X-Received: by 2002:a05:6830:314d:b0:5af:fecc:538e with SMTP id c13-20020a056830314d00b005affecc538emr5635069ots.348.1646085991360;
+        Mon, 28 Feb 2022 14:06:31 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzFW1+83X6LvIg8c4ECGOmnmvfHMjqxq9s+M0gGRNVNvZ2qLWJBsQ0hgIVPGZj3LChgbRzMPQ==
+X-Received: by 2002:a05:6830:314d:b0:5af:fecc:538e with SMTP id c13-20020a056830314d00b005affecc538emr5635030ots.348.1646085990790;
+        Mon, 28 Feb 2022 14:06:30 -0800 (PST)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id y2-20020a056808130200b002d542a72882sm7034767oiv.3.2022.02.28.14.06.16
+        by smtp.gmail.com with ESMTPSA id bd14-20020a056808220e00b002d53f900b9csm7017463oib.30.2022.02.28.14.06.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Feb 2022 14:06:17 -0800 (PST)
-Date:   Mon, 28 Feb 2022 15:06:15 -0700
+        Mon, 28 Feb 2022 14:06:30 -0800 (PST)
+Date:   Mon, 28 Feb 2022 15:06:28 -0700
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Lu Baolu <baolu.lu@linux.intel.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -82,11 +82,11 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Dmitry Osipenko <digetx@gmail.com>,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 07/11] vfio: Set DMA ownership for VFIO devices
-Message-ID: <20220228150615.7026b3ae.alex.williamson@redhat.com>
-In-Reply-To: <20220228005056.599595-8-baolu.lu@linux.intel.com>
+Subject: Re: [PATCH v7 09/11] vfio: Delete the unbound_list
+Message-ID: <20220228150628.2c0077f4.alex.williamson@redhat.com>
+In-Reply-To: <20220228005056.599595-10-baolu.lu@linux.intel.com>
 References: <20220228005056.599595-1-baolu.lu@linux.intel.com>
-        <20220228005056.599595-8-baolu.lu@linux.intel.com>
+        <20220228005056.599595-10-baolu.lu@linux.intel.com>
 X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -95,46 +95,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 28 Feb 2022 08:50:52 +0800
+On Mon, 28 Feb 2022 08:50:54 +0800
 Lu Baolu <baolu.lu@linux.intel.com> wrote:
 
-> Claim group dma ownership when an IOMMU group is set to a container,
-> and release the dma ownership once the iommu group is unset from the
-> container.
+> From: Jason Gunthorpe <jgg@nvidia.com>
 > 
-> This change disallows some unsafe bridge drivers to bind to non-ACS
-> bridges while devices under them are assigned to user space. This is an
-> intentional enhancement and possibly breaks some existing
-> configurations. The recommendation to such an affected user would be
-> that the previously allowed host bridge driver was unsafe for this use
-> case and to continue to enable assignment of devices within that group,
-> the driver should be unbound from the bridge device or replaced with the
-> pci-stub driver.
+> commit 60720a0fc646 ("vfio: Add device tracking during unbind") added the
+> unbound list to plug a problem with KVM where KVM_DEV_VFIO_GROUP_DEL
+> relied on vfio_group_get_external_user() succeeding to return the
+> vfio_group from a group file descriptor. The unbound list allowed
+> vfio_group_get_external_user() to continue to succeed in edge cases.
 > 
-> For any bridge driver, we consider it unsafe if it satisfies any of the
-> following conditions:
+> However commit 5d6dee80a1e9 ("vfio: New external user group/file match")
+> deleted the call to vfio_group_get_external_user() during
+> KVM_DEV_VFIO_GROUP_DEL. Instead vfio_external_group_match_file() is used
+> to directly match the file descriptor to the group pointer.
 > 
->   1) The bridge driver uses DMA. Calling pci_set_master() or calling any
->      kernel DMA API (dma_map_*() and etc.) is an indicate that the
->      driver is doing DMA.
+> This in turn avoids the call down to vfio_dev_viable() during
+> KVM_DEV_VFIO_GROUP_DEL and also avoids the trouble the first commit was
+> trying to fix.
 > 
->   2) If the bridge driver uses MMIO, it should be tolerant to hostile
->      userspace also touching the same MMIO registers via P2P DMA
->      attacks.
+> There are no other users of vfio_dev_viable() that care about the time
+> after vfio_unregister_group_dev() returns, so simply delete the
+> unbound_list entirely.
 > 
-> If the bridge driver turns out to be a safe one, it could be used as
-> before by setting the driver's .driver_managed_dma field, just like what
-> we have done in the pcieport driver.
-> 
+> Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+> Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 > Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 > ---
->  drivers/vfio/fsl-mc/vfio_fsl_mc.c     |  1 +
->  drivers/vfio/pci/vfio_pci.c           |  1 +
->  drivers/vfio/platform/vfio_amba.c     |  1 +
->  drivers/vfio/platform/vfio_platform.c |  1 +
->  drivers/vfio/vfio.c                   | 10 +++++++++-
->  5 files changed, 13 insertions(+), 1 deletion(-)
+>  drivers/vfio/vfio.c | 74 ++-------------------------------------------
+>  1 file changed, 2 insertions(+), 72 deletions(-)
 
 Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
