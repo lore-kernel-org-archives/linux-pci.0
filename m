@@ -2,99 +2,198 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8440C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 18:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A24C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 18:43:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240796AbiB1Sci (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Feb 2022 13:32:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56236 "EHLO
+        id S240456AbiB1Snk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Feb 2022 13:43:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240651AbiB1Scd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 13:32:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 237E6F4D08
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 10:15:31 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C8DA86090A
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 18:15:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0307BC340E7;
-        Mon, 28 Feb 2022 18:15:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646072130;
-        bh=SuKPO0M/231Zpn2uVrhtFu6sK1UCV0OmbB0lcNUO4Mk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=qbi3qGCsxCOv1M6mQsp9/kAZzxftrGrHfA7CVF5Y/O3WPI6LfI/BUox86sUhXUu5K
-         DHtfjNymN2HBnjCNDG9C6SJw/FjbyPnLYbRCLxGWukV7Orcp3m6xyR+q3M+3cmwGYR
-         MVGBBWDRN9/bIxdCBDr82dvV+zLNRnmnprmht79siueRbqRa6rCPSrCfNFer4dy2Ib
-         qii80NhAMAtU8Ia+U/CMCvzp89Jg5JeFiXOqZfZTW+hmgBSxdhj2/M/niHAMYLifUc
-         8tB4BQiogP8/9xXUJceaOGEUN8kg81Z5cVcck0tjZVSxJSIcU7HC6aDki+Tq4f75Yz
-         z1y8Ao1kUhWsA==
-Date:   Mon, 28 Feb 2022 12:15:28 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     Zhihao Wang <wangzhihao9@hotmail.com>
-Subject: Re: [Bug 215644] New: "PCIe Bus Error: severity=Corrected, type=Data
- Link Layer" flood
-Message-ID: <20220228181528.GA509767@bhelgaas>
+        with ESMTP id S241004AbiB1Sm6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 13:42:58 -0500
+X-Greylist: delayed 1800 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Feb 2022 10:39:26 PST
+Received: from imap2.colo.codethink.co.uk (imap2.colo.codethink.co.uk [78.40.148.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7082731917;
+        Mon, 28 Feb 2022 10:39:26 -0800 (PST)
+Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.21])
+        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1nOjeo-0003hq-Jq; Mon, 28 Feb 2022 17:17:58 +0000
+Message-ID: <467c5472-25fd-2611-4bb8-d70d6b60b299@codethink.co.uk>
+Date:   Mon, 28 Feb 2022 17:45:49 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-215644-41252@https.bugzilla.kernel.org/>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCHv4 2/2] PCI: fu740: Force gen1 for initial device probe
+Content-Language: en-GB
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     paul.walmsley@sifive.com, greentime.hu@sifive.com,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org
+References: <20220223205141.GA149346@bhelgaas>
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+Organization: Codethink Limited.
+In-Reply-To: <20220223205141.GA149346@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Feb 27, 2022 at 02:34:29AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=215644
+On 23/02/2022 20:51, Bjorn Helgaas wrote:
+> On Mon, Feb 21, 2022 at 09:03:47PM +0000, Ben Dooks wrote:
+>> The fu740 PCIe core does not probe any devices on the SiFive Unmatched
+>> board without this fix from U-Boot (or having U-Boot explicitly start
+>> the PCIe via either boot-script or user command).
+>>
+>> The fix claims to set the link-speed to gen1 to get the probe
+>> to work. As this is a copy from U-Boot, the code is assumed to be
+>> correct and does fix the issue on the Unmatched. The code is at:
 > 
->             Bug ID: 215644
->            Summary: "PCIe Bus Error: severity=Corrected, type=Data Link
->                     Layer" flood
->            Product: Drivers
->     Kernel Version: 5.13.0-30-generic(Ubuntu 20.04 LTS)
->           Hardware: Intel
->           Priority: P1
->           Reporter: wangzhihao9@hotmail.com
->         Regression: No
+> Maybe something like:
 > 
-> [36418.907739] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver ID)
-> [36418.907759] pcieport 0000:00:1c.4:   device [8086:02bc] error status/mask=00000080/00002000
-> [36418.907779] pcieport 0000:00:1c.4:    [ 7] BadDLLP
-> [36422.383718] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
-> [36422.383758] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Transmitter ID)
-> [36422.383770] pcieport 0000:00:1c.4:   device [8086:02bc] error status/mask=00001000/00002000
-> [36422.383785] pcieport 0000:00:1c.4:    [12] Timeout
-> [36423.383999] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
-> [36423.384044] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Transmitter ID)
-> [36423.384057] pcieport 0000:00:1c.4:   device [8086:02bc] error status/mask=00001000/00002000
-> [36423.384073] pcieport 0000:00:1c.4:    [12] Timeout
-> [36423.384099] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
-> [36423.384137] pcieport 0000:00:1c.4: AER: can't find device of ID00e4
-> [36423.384145] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
-> [36423.384167] pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Transmitter ID)
-> [36423.384177] pcieport 0000:00:1c.4:   device [8086:02bc] error status/mask=00001000/00002000
-> [36423.384188] pcieport 0000:00:1c.4:    [12] Timeout
-> [36423.384218] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
-> [36423.384244] pcieport 0000:00:1c.4: AER: can't find device of ID00e4
-> [36425.385279] pcieport 0000:00:1c.4: AER: Corrected error received: 0000:00:1c.4
+>    Limit the link to Gen1 speed.
 > 
-> The Device is 00:1c.0 PCI bridge: Intel Corporation Device 02b8 (rev f0)
->               -- 02:00.0 3D controller: NVIDIA Corporation GP108M [GeForce MX250] (rev a1)
+> since "the fix claims" and "the code is assumed" is sort of
+> weasel-worded.
 > 
-> It happens just after I open the ASPM of the video card to make CPU to achieve
-> the Package pc8 state for Power Saving. Normally only pc2.
-> 
-> Hewlett Packard disabled the ASPM of Video Card in the BIOS defaultly.
+> The subject says "for initial device probe," but if you change
+> PCI_EXP_LNKCAP, I assume that limits the link speed forever, even
+> after a retrain?
 
-Thanks for the report!  I'm ccing it to the linux-pci since the
-Bugzilla doesn't get much visibility.
+Yes, thought I had checked this but having just gone back and booted
+things again, the following is observed:
 
-How do you enable ASPM?
+- U-Boot "pci enum" and then unpatched kernel -> link 8GT/s
+- U-Boot "pci enum" and patched kernel -> link 2.5GT/s
+- U-Boot no pci and patched kernel > link 2.5 GT/s
 
-Please collect the complete dmesg log and "sudo lspci -vv" output
-(before enabling ASPM, and also after if possible) and attach them to
-the bugzilla.
+Clearly there needs to be some fix for this, either have two rounds
+of soft-reset on the first probe, or if the device does probe at a
+degraded link, do something about it.
 
-Bjorn
+I am not clear what the correct fix for this is.
+
+1) Detect no U-Boot initialisation and force a two stage probe
+2) If no devices on initial probe, go around and do #1
+3) Always do a two stage reset
+4) Something else.
+
+Do any other systems see this issue?
+
+I assume we need to go back and re-do this. At least this is a 100%
+reliable repeat on the Unmatched board in our test rack.
+
+>> https://source.denx.de/u-boot/u-boot/-/blob/master/drivers/pci/pcie_dw_sifive.c#L271
+> 
+> Maybe use this so the link doesn't become stale when more things are
+> added to pcie_dw_sifive.c:
+> 
+>   https://source.denx.de/u-boot/u-boot/-/blob/master/drivers/pci/pcie_dw_sifive.c?id=v2022.01#L271
+
+Thanks, useful to know.
+
+>> The code has been this way since the driver was commited in:
+>> https://source.denx.de/u-boot/u-boot/-/commit/416395c772018c6bf52aad36aca163115001793f
+> 
+> s/commited/committed/
+
+Oops,
+
+> 
+>> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+>> ---
+>>   drivers/pci/controller/dwc/pcie-fu740.c | 19 +++++++++++++++++++
+>>   1 file changed, 19 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
+>> index 842b7202b96e..19501ec8c487 100644
+>> --- a/drivers/pci/controller/dwc/pcie-fu740.c
+>> +++ b/drivers/pci/controller/dwc/pcie-fu740.c
+>> @@ -177,11 +177,30 @@ static void fu740_pcie_init_phy(struct fu740_pcie *afp)
+>>   	fu740_phyregwrite(1, PCIEX8MGMT_PHY_LANE3_BASE, PCIEX8MGMT_PHY_INIT_VAL, afp);
+>>   }
+>>   
+>> +/* This is copied from u-boot. Force system to gen1 otherwise nothing probes
+>> + * as found on the SiFive Unmatched board.
+>> + */
+> 
+> s/u-boot/U-Boot/
+> 
+> Use usual multi-line comment style.
+
+Ok.
+
+> 
+>> +static void fu740_pcie_force_gen1(struct dw_pcie *dw, struct fu740_pcie *afp )
+>> +{
+>> +	unsigned val;
+> 
+> u32, since that's what dw_pcie_readl_dbi() returns and
+> dw_pcie_writel_dbi() expects.
+> 
+>> +
+>> +	dw_pcie_dbi_ro_wr_en(dw);
+>> +
+>> +	val = dw_pcie_readl_dbi(dw, 0x70 + PCI_EXP_LNKCAP);
+> 
+> I assume 0x70 is the offset of the PCIe Capability.  There should be a
+> #define for that.
+
+Will fix.
+
+>> +	pr_info("%s: link-cap was %08x\n", __func__, val);
+> 
+>    dev_info(pci->dev, "...");
+> 
+>> +	dw_pcie_writel_dbi(dw, 0x70 + PCI_EXP_LNKCAP, val | 0xf);
+> 
+> I don't understand this.  Per PCIe r6.0, sec 7.5.3.6, 1111b is a
+> reserved encoding for the low four bits of PCI_EXP_LNKCAP.
+> 
+> If you want PCI_EXP_LNKCAP to advertise only 2.5 GT/s, the low four
+> bits should be 0001b to indicate Supported Link Speeds Vector field
+> bit 0, which is defined as 2.5 GT/s.
+
+Yeah, this does not make sense now. I sort of assumed it was W1C
+type thing (write-1-clear). I'm just wondering if this is now some
+sort of undefined behaviour or they originally meant to clear out
+some bits only... It does work, just shows the following from lspci;
+
+  LnkCap: Port #0, Speed unknown, Width x8, ASPM L0s L1, Exit Latency 
+L0s <4us, L1 <4us
+          ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
+  LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+   LnkSta: Speed 2.5GT/s (downgraded), Width x8 (ok)
+         TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+
+
+>> +	dw_pcie_dbi_ro_wr_dis(dw);
+>> +}
+>> +
+>>   static int fu740_pcie_start_link(struct dw_pcie *pci)
+>>   {
+>>   	struct device *dev = pci->dev;
+>>   	struct fu740_pcie *afp = dev_get_drvdata(dev);
+>>   
+>> +	/* Force PCIe gen1 otherwise Unmatched board does not probe */
+>> +	fu740_pcie_force_gen1(pci, afp);
+> 
+> I guess the "Unmatched" board is the only thing we need to care about
+> here?  Are there or will there be other boards that don't need this?
+> 
+>>   	/* Enable LTSSM */
+>>   	writel_relaxed(0x1, afp->mgmt_base + PCIEX8MGMT_APP_LTSSM_ENABLE);
+>>   	return 0;
+>> -- 
+>> 2.34.1
+>>
+> 
+
+
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
+
+https://www.codethink.co.uk/privacy.html
