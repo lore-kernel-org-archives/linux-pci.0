@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E779FC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 22:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10192C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Feb 2022 22:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbiB1WHV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Feb 2022 17:07:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59176 "EHLO
+        id S231307AbiB1WHX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Feb 2022 17:07:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231314AbiB1WHH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 17:07:07 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B2E014CCAB
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:27 -0800 (PST)
+        with ESMTP id S231329AbiB1WHS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Feb 2022 17:07:18 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EFE1CC4E0C
+        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646085986;
+        s=mimecast20190719; t=1646085998;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kSd2olf1jnjo/HsSgbCsJs5j16VEb70bfQ7PmeMY2VY=;
-        b=X/fORx8DSqlRSB8Kj0AT7WQ4mIydJNZ8yGnDnfTiiCILfmMY4YTVyQqc/KTWk20cu3Lp05
-        gcqNApxHkHOb0nBVBbdJ+TvApXevCtXuBdMuenLi0tThipEY1iZnmcHFajZ9sr/zCf9ctf
-        7lkPLi5sMG4Gt3kdeSixnT7ksu0Yj5E=
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com
- [209.85.167.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=d94j7lxxX5y02+A6WG5OxYm+EuL2bPwYE+feweTMi6I=;
+        b=J0ohMJ9U4ZN2kRr3Weze39lKaA2qodgnMc2U8kKg2jj2hagwo7Z89eTVrnJTmbp9kN8iQp
+        h6WAvdENA2NstwlRqY7ftZc5uM+XFeiHJEt+qmcrDz8x3bA8qd0uSU9A6L6rBA9ZutRL1g
+        jHofp/lyat83++zOLirrqDWEJrhor9o=
+Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
+ [209.85.210.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-554-IpVh4rgKOMutsfWkFekeDg-1; Mon, 28 Feb 2022 17:06:25 -0500
-X-MC-Unique: IpVh4rgKOMutsfWkFekeDg-1
-Received: by mail-oi1-f197.google.com with SMTP id s22-20020a056808209600b002d4d6c58670so6269543oiw.18
-        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:25 -0800 (PST)
+ us-mta-607-GqBc5b2POfSxUFbczmrbGw-1; Mon, 28 Feb 2022 17:06:36 -0500
+X-MC-Unique: GqBc5b2POfSxUFbczmrbGw-1
+Received: by mail-ot1-f70.google.com with SMTP id q2-20020a9d5782000000b005ad0c39a8b5so9959180oth.2
+        for <linux-pci@vger.kernel.org>; Mon, 28 Feb 2022 14:06:36 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=kSd2olf1jnjo/HsSgbCsJs5j16VEb70bfQ7PmeMY2VY=;
-        b=RYkl4ekjECLHTs3LXGVjL6W+ZxoO7VZpF5T3JZNxANSFJmkMAX0XnTdoU6YMW/00yf
-         qrondCMASV01/8WoX0oLb8QvLV2lOzInIYlZCJt22j+HWumSJe6oowcDUdkn1kitmxQk
-         K85w6CtcwWHZ/V143f41K0wAu/kWyAsPJHIUP+Lk3HlvNeq37y/hq8FWFdPfNOdjVNt/
-         NbMiG/k83bAtfz8tj/OTbF67xkLiOYgG0UcMy1c6fbfBAxUnjEabizOgfxqJCb7x5JXx
-         yzaN01jQ1AgXPiei7vYyla27K7AHBiYutWaJaZRazOsISZvq54D8PbkCFUbXMURnTpFd
-         Exqw==
-X-Gm-Message-State: AOAM531BiFN9eoF0vT+h8ZDEC/EdoHNgZogBgIhwGZizew5WBimn2OSm
-        AACAYzhYK3HawCTY6kvg8Zvnto9eYuT+bZ4ojOwR34qo3CnlSj3hb6olAQ6wiQOxr3whagb/Evw
-        SsFLWslVam1StrSqRwV9Z
-X-Received: by 2002:a05:6808:1148:b0:2d5:2333:bbb1 with SMTP id u8-20020a056808114800b002d52333bbb1mr10736877oiu.130.1646085984696;
-        Mon, 28 Feb 2022 14:06:24 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyXyd5cLZVXv21R215ahGVE59QoOxgoKUS9B2IAT3b2Nrgqe4ENaiagVjBUsTuHIIBNYSayzQ==
-X-Received: by 2002:a05:6808:1148:b0:2d5:2333:bbb1 with SMTP id u8-20020a056808114800b002d52333bbb1mr10736822oiu.130.1646085984239;
-        Mon, 28 Feb 2022 14:06:24 -0800 (PST)
+        bh=d94j7lxxX5y02+A6WG5OxYm+EuL2bPwYE+feweTMi6I=;
+        b=Yd7hxYZrD5HZUbKCOJ0aKap9vmNnfY0RbIoaWuaBXQtF4C5F7KaHzYaXOGibF7FV0e
+         0iFHgqbGePjctJg35YLonoTwXZkJWa6Zlvc3qVgJMV5tmJo2oQ9giGHXjvSE3QyDpH48
+         pCjLlFrYB/nKZZlW+vdhAxddK5YB4J8xiFjNW49TWJzH17nI+IV1kXzkq3tC1tS3zg8/
+         LQ1foX+X9Q0mhLxhaeZufG9016kCslZPKDF+lU6IxJa+36DTJMdL2Uq+eZsBz+DX9RYJ
+         NE4gBeIwvkfafm1c/N5FCFrhMJVDggDdgSET+2QjeNXkkylhdXtjbVgtjuXYCm7/DzyF
+         zdXQ==
+X-Gm-Message-State: AOAM531VbmAVJ2zgA0UfoR3RdiPNMgVpBeOkUc0uN1RUYNxIs7vH0MEP
+        sV1etl+8hSJlqWAHNbMOSVoCZQJEl/LgFGJ64V6qXyQXSe5SezaE1OZHv3ltSXdvSpjR5SLtAzw
+        tU4lbSMpPVFUPzDA8jj1y
+X-Received: by 2002:a05:6808:1586:b0:2d5:1211:5785 with SMTP id t6-20020a056808158600b002d512115785mr10690613oiw.0.1646085995965;
+        Mon, 28 Feb 2022 14:06:35 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwLGQUBEm26I4XhzS9O0hC1lMHUwWYT/sXCYb5vTAfKM0mj7adVygonLblatFgJDlUF3+gebg==
+X-Received: by 2002:a05:6808:1586:b0:2d5:1211:5785 with SMTP id t6-20020a056808158600b002d512115785mr10690580oiw.0.1646085995791;
+        Mon, 28 Feb 2022 14:06:35 -0800 (PST)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id i47-20020a9d172f000000b005aed7ea7b44sm5393010ota.73.2022.02.28.14.06.22
+        by smtp.gmail.com with ESMTPSA id m21-20020a056820051500b0031d0841b87esm5371712ooj.34.2022.02.28.14.06.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Feb 2022 14:06:23 -0800 (PST)
-Date:   Mon, 28 Feb 2022 15:06:21 -0700
+        Mon, 28 Feb 2022 14:06:35 -0800 (PST)
+Date:   Mon, 28 Feb 2022 15:06:33 -0700
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Lu Baolu <baolu.lu@linux.intel.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -82,11 +82,11 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Dmitry Osipenko <digetx@gmail.com>,
         iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 08/11] vfio: Remove use of vfio_group_viable()
-Message-ID: <20220228150621.5984595b.alex.williamson@redhat.com>
-In-Reply-To: <20220228005056.599595-9-baolu.lu@linux.intel.com>
+Subject: Re: [PATCH v7 10/11] vfio: Remove iommu group notifier
+Message-ID: <20220228150633.3438200c.alex.williamson@redhat.com>
+In-Reply-To: <20220228005056.599595-11-baolu.lu@linux.intel.com>
 References: <20220228005056.599595-1-baolu.lu@linux.intel.com>
-        <20220228005056.599595-9-baolu.lu@linux.intel.com>
+        <20220228005056.599595-11-baolu.lu@linux.intel.com>
 X-Mailer: Claws Mail 3.18.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -95,23 +95,19 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 28 Feb 2022 08:50:53 +0800
+On Mon, 28 Feb 2022 08:50:55 +0800
 Lu Baolu <baolu.lu@linux.intel.com> wrote:
 
-> As DMA ownership is claimed for the iommu group when a VFIO group is
-> added to a VFIO container, the VFIO group viability is guaranteed as long
-> as group->container_users > 0. Remove those unnecessary group viability
-> checks which are only hit when group->container_users is not zero.
-> 
-> The only remaining reference is in GROUP_GET_STATUS, which could be called
-> at any time when group fd is valid. Here we just replace the
-> vfio_group_viable() by directly calling IOMMU core to get viability status.
+> The iommu core and driver core have been enhanced to avoid unsafe driver
+> binding to a live group after iommu_group_set_dma_owner(PRIVATE_USER)
+> has been called. There's no need to register iommu group notifier. This
+> removes the iommu group notifer which contains BUG_ON() and WARN().
 > 
 > Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 > Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 > ---
->  drivers/vfio/vfio.c | 18 ++++++------------
->  1 file changed, 6 insertions(+), 12 deletions(-)
+>  drivers/vfio/vfio.c | 147 --------------------------------------------
+>  1 file changed, 147 deletions(-)
 
 Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
