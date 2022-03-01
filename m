@@ -2,355 +2,282 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A85DC433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Mar 2022 11:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E4DAC433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Mar 2022 12:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234665AbiCAMAe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Mar 2022 07:00:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39768 "EHLO
+        id S234703AbiCAMc2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Mar 2022 07:32:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234657AbiCAMAb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Mar 2022 07:00:31 -0500
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F022251D
-        for <linux-pci@vger.kernel.org>; Tue,  1 Mar 2022 03:59:48 -0800 (PST)
-Received: by mail-lf1-x132.google.com with SMTP id f37so26399398lfv.8
-        for <linux-pci@vger.kernel.org>; Tue, 01 Mar 2022 03:59:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Si9aW8LCRt5/GwrO2//8BMDIlBc8iSDjacAKlZRx+TQ=;
-        b=s1igJK3l+Va0dZp8E9uNa6ojypPkViWmCK7B6e/ivbYdOTCg3Pxemn0dYyX08MJlg6
-         DO9kJrrltWp20LX/G/XNek5ZFAjnNCnnV45kbAZAdl0tBFVBTDMH69/LJK7lU1lOoIUB
-         R79279OBeExrxDiEvz/UrEhsjPY5bb6YYIT4lqpfa+Mlba84ZzFQmu5fOChpZIVlXFzd
-         lj/c5T3G09z+n3AhJ1/d+vPfdsJOeKJW/Or03SiGSvo+dVU9LpPAJKlvqxjZSl+DaSvr
-         qhnAILKJPfrCyYjZvNCpiGTiMwF51AEgxsHIjIFHG2z4yrqCAE2AQ9tXEV3i55/lMHtw
-         qB5Q==
+        with ESMTP id S233394AbiCAMc1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Mar 2022 07:32:27 -0500
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AB739681F;
+        Tue,  1 Mar 2022 04:31:46 -0800 (PST)
+Received: by mail-yb1-f171.google.com with SMTP id w16so960975ybi.12;
+        Tue, 01 Mar 2022 04:31:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=Si9aW8LCRt5/GwrO2//8BMDIlBc8iSDjacAKlZRx+TQ=;
-        b=xdsxzd0RjPvs9xMpfJjdnNrcZCGfOw6VFaaVm3j6JR8QoVVGvehqWarTQvK4sZNlfI
-         qaxbX1aQq8bhpqn4Iu/FcIWwnVgF0f/RAirOm4ZCK787rp/SlsWWAKrUYsECJyY5qLP2
-         zlIG9b89YgPSIMDb0Q2GkvaXsOUXJuVIMqXkGiG48ucwYw6jyFOApPJf7WiKiSFZEfu4
-         J3Gt0lA3FXJidEeH3mJWkHCQyHiV551Z1lEYiIeE8A4h6LfHUIj4Sca/tCaHoBibZq/J
-         iVD1mnbM/bxej6YmorGeQMVe1wFIFr64EJBHK3hv8ui4A4DpWTxHjbmDWZ1DiZlvsc5v
-         f8oA==
-X-Gm-Message-State: AOAM532xp3mmdPttvkjDmXSZni+5gizCxT1GT2fH4fRWjdq0BdVvsdaf
-        2boEh5AARC6ZpGTQfT5WHi+BZA==
-X-Google-Smtp-Source: ABdhPJzpYUIzhepTGM8F34Cw9Ax1tyYQ6Gh+ZuCx4zapfvFyQ2yyS8kip73EUxgDfz3vgszQd5WPxw==
-X-Received: by 2002:a05:6512:202c:b0:443:3ce0:22a with SMTP id s12-20020a056512202c00b004433ce0022amr15627934lfs.74.1646135986201;
-        Tue, 01 Mar 2022 03:59:46 -0800 (PST)
-Received: from [192.168.1.211] ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id t12-20020ac2548c000000b004435947cf11sm1453672lfk.201.2022.03.01.03.59.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Mar 2022 03:59:45 -0800 (PST)
-Message-ID: <ce32cafe-8dd9-526d-5413-ad81df7b78eb@linaro.org>
-Date:   Tue, 1 Mar 2022 14:59:45 +0300
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qaTIMLNruS+dxEOAlL7KpOrpDbigzmi7+nOXqPGN0d0=;
+        b=UPHqb0ULs8BIO+yirWkjDRNjNBw6lVXlw7cUEdXIfSUMXz7cSBM9n8BzSf3WZK1RbC
+         DOGJEazQ5E/COcdPVDlPk0XOIgQ4TJSereVH2FLEskLa8c/kyayrVnzsqfge6U2STRKY
+         h5qvI0RlKzMm7m2inNAdA1lbs9HBlLWtaZ+HQRNrAFjUmr+qtVLGerQN/GacbuQedxO5
+         N7YnvZVW9i/RR/qVU1ZyNHCR4iFTsIOcAFt8BtNHaALoRCe3+APedW+GcvFrUgSTBDZU
+         DhJvOMepppRLjQbey0rZxpZ5j4SfiRvW0mrkmzZtN7n94ljvgaQpxbNMvI6MDlqr3sVT
+         mK9w==
+X-Gm-Message-State: AOAM531y/6AJoo9EVHd72uDRdmycPTQDiatR+fEJLOsTftgNB+4xbIuB
+        KaJ0bnEuRy2lk6F5+xDIHuYRhVpKsgeUtlSH6u8zRFrJ
+X-Google-Smtp-Source: ABdhPJypqno3PJ6US5bKKCGYfosOnQ1nI12x3AAT2mS3PXz99WpzKQsvGxwjyUCb1OOYQ/A2xL7JBZZ4SfAPU7o9oro=
+X-Received: by 2002:a25:fe10:0:b0:625:262f:e792 with SMTP id
+ k16-20020a25fe10000000b00625262fe792mr21733061ybe.365.1646137905624; Tue, 01
+ Mar 2022 04:31:45 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v2 6/7] arm64: dts: qcom: sm8150: Add pcie nodes for
- SM8150
-Content-Language: en-GB
-To:     Bhupesh Sharma <bhupesh.sharma@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Cc:     bhupesh.linux@gmail.com, lorenzo.pieralisi@arm.com,
-        agross@kernel.org, bjorn.andersson@linaro.org,
-        svarbanov@mm-sol.com, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, robh+dt@kernel.org, sboyd@kernel.org,
-        mturquette@baylibre.com, linux-clk@vger.kernel.org
-References: <20220301072511.117818-1-bhupesh.sharma@linaro.org>
- <20220301072511.117818-7-bhupesh.sharma@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20220301072511.117818-7-bhupesh.sharma@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20220228105259.230903-1-hdegoede@redhat.com> <20220228105259.230903-2-hdegoede@redhat.com>
+In-Reply-To: <20220228105259.230903-2-hdegoede@redhat.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 1 Mar 2022 13:31:34 +0100
+Message-ID: <CAJZ5v0idYTBJV_NikVpF6hF6GOdWDjP3OUny4PqK7YD9t4MOqQ@mail.gmail.com>
+Subject: Re: [PATCH v2] x86/PCI: Disable exclusion of E820 reserved addressed
+ in some cases
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Myron Stowe <myron.stowe@redhat.com>,
+        Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>,
+        =?UTF-8?Q?Benoit_Gr=C3=A9goire?= <benoitg@coeus.ca>,
+        Hui Wang <hui.wang@canonical.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "the arch/x86 maintainers" <x86@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 01/03/2022 10:25, Bhupesh Sharma wrote:
-> Add nodes for the two PCIe controllers founds on the
-> SM8150 SoC.
-> 
-> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Signed-off-by: Bhupesh Sharma <bhupesh.sharma@linaro.org>
+On Mon, Feb 28, 2022 at 11:55 AM Hans de Goede <hdegoede@redhat.com> wrote:
+>
+> Some fw has a bug where the PCI bridge window returned by the ACPI
+> resources partly overlaps with some other address range, causing issues.
+> To workaround this Linux excludes E820 reserved addresses when allocating
+> addresses from the PCI bridge window. 2 known examples of such fw bugs are:
+>
+> 1. The returned window contains addresses which map to system RAM,
+> see commit 4dc2287c1805 ("x86: avoid E820 regions when allocating
+> address space").
+>
+> 2. The Lenovo X1 carbon gen 2 BIOS has an overlap between an EFI/E820
+> reserved range and the ACPI provided PCI bridge window:
+>  efi: mem46: [MMIO] range=[0x00000000dfa00000-0x00000000dfa0ffff] (0MB)
+>  BIOS-e820: [mem 0x00000000dceff000-0x00000000dfa0ffff] reserved
+>  pci_bus 0000:00: root bus resource [mem 0xdfa00000-0xfebfffff window]
+> If Linux assigns the overlapping 0xdfa00000-0xdfa0ffff range to a PCI BAR
+> then the system fails to resume after a suspend.
+>
+> Recently (2019) some systems have shown-up with EFI memmap MMIO entries
+> covering the entire ACPI provided PCI bridge window. These memmap entries
+> get converted into e820_table entries, causing all attempts to assign
+> memory to PCI BARs which have not been setup by the BIOS to fail.
+> For example see these dmesg snippets from a Lenovo IdeaPad 3 15IIL 81WE:
+>  efi: mem63: [MMIO] range=[0x0000000065400000-0x00000000cfffffff] (1708MB)
+>  BIOS-e820: [mem 0x000000004bc50000-0x00000000cfffffff] reserved
+>  pci_bus 0000:00: root bus resource [mem 0x65400000-0xbfffffff window]
+>  pci 0000:00:15.0: BAR 0: no space for [mem size 0x00001000 64bit]
+>  pci 0000:00:15.0: BAR 0: failed to assign [mem size 0x00001000 64bit]
+>
+> To fix this, check if the ACPI provided PCI bridge window is fully
+> contained within in EFI memmap MMIO region and in that case disable
+> the "exclude E820 reserved addresses" workaround, fixing the problem
+> of not being able to find free space for unassigned BARs.
+>
+> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=206459
+> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1868899
+> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1871793
+> BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=2029207
+> BugLink: https://bugs.launchpad.net/bugs/1878279
+> BugLink: https://bugs.launchpad.net/bugs/1931715
+> BugLink: https://bugs.launchpad.net/bugs/1932069
+> BugLink: https://bugs.launchpad.net/bugs/1921649
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 > ---
->   arch/arm64/boot/dts/qcom/sm8150.dtsi | 243 +++++++++++++++++++++++++++
->   1 file changed, 243 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-> index 6012322a5984..b97f04ec9c6b 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-> @@ -1626,6 +1626,203 @@ system-cache-controller@9200000 {
->   			interrupts = <GIC_SPI 582 IRQ_TYPE_LEVEL_HIGH>;
->   		};
->   
-> +		pcie0: pci@1c00000 {
-> +			compatible = "qcom,pcie-sm8150", "snps,dw-pcie";
-> +			reg = <0 0x01c00000 0 0x3000>,
-> +			      <0 0x60000000 0 0xf1d>,
-> +			      <0 0x60000f20 0 0xa8>,
-> +			      <0 0x60001000 0 0x1000>,
-> +			      <0 0x60100000 0 0x100000>;
-> +			reg-names = "parf", "dbi", "elbi", "atu", "config";
-> +			device_type = "pci";
-> +			linux,pci-domain = <0>;
-> +			bus-range = <0x00 0xff>;
-> +			num-lanes = <1>;
-> +
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +
-> +			ranges = <0x01000000 0x0 0x60200000 0 0x60200000 0x0 0x100000>,
-> +				 <0x02000000 0x0 0x60300000 0 0x60300000 0x0 0x3d00000>;
-> +
-> +			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
-> +			interrupt-names = "msi";
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0x7>;
-> +			interrupt-map = <0 0 0 1 &intc 0 149 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +					<0 0 0 2 &intc 0 150 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +					<0 0 0 3 &intc 0 151 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +					<0 0 0 4 &intc 0 152 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> +
-> +			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
-> +				 <&gcc GCC_PCIE_0_AUX_CLK>,
-> +				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-> +				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-> +				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-> +				 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_TBU_CLK>;
-> +			clock-names = "pipe",
-> +				      "aux",
-> +				      "cfg",
-> +				      "bus_master",
-> +				      "bus_slave",
-> +				      "slave_q2a",
-> +				      "tbu";
-> +
-> +			iommus = <&apps_smmu 0x1d80 0x7f>;
-> +			iommu-map = <0x0   &apps_smmu 0x1d80 0x1>,
-> +				    <0x100 &apps_smmu 0x1d81 0x1>;
-> +
-> +			resets = <&gcc GCC_PCIE_0_BCR>;
-> +			reset-names = "pci";
-> +
-> +			power-domains = <&gcc PCIE_0_GDSC>;
-> +
-> +			phys = <&pcie0_lane>;
-> +			phy-names = "pciephy";
-> +
-> +			perst-gpio = <&tlmm 35 GPIO_ACTIVE_HIGH>;
-> +			enable-gpio = <&tlmm 37 GPIO_ACTIVE_HIGH>;
-> +
-> +			pinctrl-names = "default";
-> +			pinctrl-0 = <&pcie0_default_state>;
-> +
-> +			status = "disabled";
-> +		};
-> +
-> +		pcie0_phy: phy@1c06000 {
-> +			compatible = "qcom,sm8150-qmp-gen3x1-pcie-phy";
-> +			reg = <0 0x01c06000 0 0x1c0>;
-> +			#address-cells = <2>;
-> +			#size-cells = <2>;
-> +			ranges;
-> +			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
-> +				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-> +				 <&gcc GCC_PCIE0_PHY_REFGEN_CLK>;
-> +			clock-names = "aux", "cfg_ahb", "refgen";
-> +
-> +			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-> +			reset-names = "phy";
-> +
-> +			assigned-clocks = <&gcc GCC_PCIE0_PHY_REFGEN_CLK>;
-> +			assigned-clock-rates = <100000000>;
-> +
-> +			status = "disabled";
-> +
-> +			pcie0_lane: phy@1c06200 {
-> +				reg = <0 0x1c06200 0 0x170>, /* tx */
-> +				      <0 0x1c06400 0 0x200>, /* rx */
-> +				      <0 0x1c06800 0 0x1f0>, /* pcs */
-> +				      <0 0x1c06c00 0 0xf4>; /* "pcs_lane" same as pcs_misc? */
-> +				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
-> +				clock-names = "pipe0";
-> +
-> +				#phy-cells = <0>;
-> +				clock-output-names = "pcie_0_pipe_clk";
-> +			};
-> +		};
-> +
-> +		pcie1: pci@1c08000 {
-> +			compatible = "qcom,pcie-sm8150", "snps,dw-pcie";
-> +			reg = <0 0x01c08000 0 0x3000>,
-> +			      <0 0x40000000 0 0xf1d>,
-> +			      <0 0x40000f20 0 0xa8>,
-> +			      <0 0x40001000 0 0x1000>,
-> +			      <0 0x40100000 0 0x100000>;
-> +			reg-names = "parf", "dbi", "elbi", "atu", "config";
-> +			device_type = "pci";
-> +			linux,pci-domain = <1>;
-> +			bus-range = <0x00 0xff>;
-> +			num-lanes = <2>;
-> +
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +
-> +			ranges = <0x01000000 0x0 0x40200000 0x0 0x40200000 0x0 0x100000>,
-> +				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-> +
-> +			interrupts = <GIC_SPI 306 IRQ_TYPE_EDGE_RISING>;
+> Changes in v2:
+> - Add a couple of missing includes to arch/x86/include/asm/pci_x86.h
+>   to fix i386 build errors Reported-by: kernel test robot <lkp@intel.com>
+> - Do not call resource_is_efi_mmio_region() on resource-list entries which
+>   have just been destroyed because they match resource_is_pcicfg_ioport()
+>   Reported-by: kernel test robot <oliver.sang@intel.com>
+> - Add (res->flags & IORESOURCE_MEM) check to resource_is_efi_mmio_region()
 
-This should be 307
+Applied (subject fixed up), thanks!
 
-> +			interrupt-names = "msi";
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0x7>;
-> +			interrupt-map = <0 0 0 1 &intc 0 434 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +					<0 0 0 2 &intc 0 435 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +					<0 0 0 3 &intc 0 438 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +					<0 0 0 4 &intc 0 439 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+> ---
+>  arch/x86/include/asm/pci_x86.h | 10 +++++
+>  arch/x86/kernel/resource.c     |  4 ++
+>  arch/x86/pci/acpi.c            | 68 +++++++++++++++++++++++++++++++++-
+>  3 files changed, 81 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+> index 490411dba438..4ce61ab01a4f 100644
+> --- a/arch/x86/include/asm/pci_x86.h
+> +++ b/arch/x86/include/asm/pci_x86.h
+> @@ -5,7 +5,9 @@
+>   *     (c) 1999 Martin Mares <mj@ucw.cz>
+>   */
+>
+> +#include <linux/init.h>
+>  #include <linux/ioport.h>
+> +#include <linux/spinlock.h>
+>
+>  #undef DEBUG
+>
+> @@ -64,6 +66,8 @@ void pcibios_scan_specific_bus(int busn);
+>
+>  /* pci-irq.c */
+>
+> +struct pci_dev;
 > +
-> +			clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
-> +				 <&gcc GCC_PCIE_1_AUX_CLK>,
-> +				 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-> +				 <&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-> +				 <&gcc GCC_PCIE_1_SLV_AXI_CLK>,
-> +				 <&gcc GCC_PCIE_1_SLV_Q2A_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_TBU_CLK>;
-> +			clock-names = "pipe",
-> +				      "aux",
-> +				      "cfg",
-> +				      "bus_master",
-> +				      "bus_slave",
-> +				      "slave_q2a",
-> +				      "tbu";
+>  struct irq_info {
+>         u8 bus, devfn;                  /* Bus, device and function */
+>         struct {
+> @@ -232,3 +236,9 @@ static inline void mmio_config_writel(void __iomem *pos, u32 val)
+>  # define x86_default_pci_init_irq      NULL
+>  # define x86_default_pci_fixup_irqs    NULL
+>  #endif
 > +
-> +			assigned-clocks = <&gcc GCC_PCIE_1_AUX_CLK>;
-> +			assigned-clock-rates = <19200000>;
+> +#if defined CONFIG_PCI && defined CONFIG_ACPI
+> +extern bool pci_use_e820;
+> +#else
+> +#define pci_use_e820 true
+> +#endif
+> diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
+> index 9b9fb7882c20..e8dc9bc327bd 100644
+> --- a/arch/x86/kernel/resource.c
+> +++ b/arch/x86/kernel/resource.c
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  #include <linux/ioport.h>
+>  #include <asm/e820/api.h>
+> +#include <asm/pci_x86.h>
+>
+>  static void resource_clip(struct resource *res, resource_size_t start,
+>                           resource_size_t end)
+> @@ -28,6 +29,9 @@ static void remove_e820_regions(struct resource *avail)
+>         int i;
+>         struct e820_entry *entry;
+>
+> +       if (!pci_use_e820)
+> +               return;
 > +
-> +			iommus = <&apps_smmu 0x1e00 0x7f>;
-> +			iommu-map = <0x0   &apps_smmu 0x1e00 0x1>,
-> +				    <0x100 &apps_smmu 0x1e01 0x1>;
+>         for (i = 0; i < e820_table->nr_entries; i++) {
+>                 entry = &e820_table->entries[i];
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 052f1d78a562..fce05e03ba9e 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -1,4 +1,5 @@
+>  // SPDX-License-Identifier: GPL-2.0
+> +#include <linux/efi.h>
+>  #include <linux/pci.h>
+>  #include <linux/acpi.h>
+>  #include <linux/init.h>
+> @@ -21,6 +22,7 @@ struct pci_root_info {
+>
+>  static bool pci_use_crs = true;
+>  static bool pci_ignore_seg;
+> +bool pci_use_e820 = true;
+>
+>  static int __init set_use_crs(const struct dmi_system_id *id)
+>  {
+> @@ -291,6 +293,63 @@ static bool resource_is_pcicfg_ioport(struct resource *res)
+>                 res->start == 0xCF8 && res->end == 0xCFF;
+>  }
+>
+> +/*
+> + * Some fw has a bug where the PCI bridge window returned by the ACPI resources
+> + * partly overlaps with some other address range, causing issues. To workaround
+> + * this Linux excludes E820 reserved addresses when allocating addresses from
+> + * the PCI bridge window. 2 known examples of such firmware bugs are:
+> + *
+> + * 1. The returned window contains addresses which map to system RAM, see
+> + * commit 4dc2287c1805 ("x86: avoid E820 regions when allocating address space").
+> + *
+> + * 2. The Lenovo X1 carbon gen 2 BIOS has an overlap between an EFI/E820
+> + * reserved range and the ACPI provided PCI bridge window:
+> + *  efi: mem46: [MMIO] range=[0x00000000dfa00000-0x00000000dfa0ffff] (0MB)
+> + *  BIOS-e820: [mem 0x00000000dceff000-0x00000000dfa0ffff] reserved
+> + *  pci_bus 0000:00: root bus resource [mem 0xdfa00000-0xfebfffff window]
+> + * If Linux assigns the overlapping 0xdfa00000-0xdfa0ffff range to a PCI BAR
+> + * then the system fails to resume after a suspend.
+> + *
+> + * Recently (2019) some systems have shown-up with EFI memmap MMIO entries
+> + * covering the entire ACPI provided PCI bridge window. These memmap entries
+> + * get converted into e820_table entries, causing all attempts to assign
+> + * memory to PCI BARs which have not been setup by the BIOS to fail.
+> + * For example see these dmesg snippets from a Lenovo IdeaPad 3 15IIL 81WE:
+> + *  efi: mem63: [MMIO] range=[0x0000000065400000-0x00000000cfffffff] (1708MB)
+> + *  BIOS-e820: [mem 0x000000004bc50000-0x00000000cfffffff] reserved
+> + *  pci_bus 0000:00: root bus resource [mem 0x65400000-0xbfffffff window]
+> + *  pci 0000:00:15.0: BAR 0: no space for [mem size 0x00001000 64bit]
+> + *  pci 0000:00:15.0: BAR 0: failed to assign [mem size 0x00001000 64bit]
+> + *
+> + * To code below checks if the ACPI provided PCI bridge window is fully
+> + * contained within in EFI memmap MMIO region and in that case disables
+> + * the "exclude E820 reserved addresses" workaround to avoid this issue.
+> + */
+> +static bool resource_is_efi_mmio_region(const struct resource *res)
+> +{
+> +       unsigned long long start, end;
+> +       efi_memory_desc_t *md;
 > +
-> +			resets = <&gcc GCC_PCIE_1_BCR>;
-> +			reset-names = "pci";
+> +       if (!(res->flags & IORESOURCE_MEM))
+> +               return false;
 > +
-> +			power-domains = <&gcc PCIE_1_GDSC>;
+> +       if (!efi_enabled(EFI_MEMMAP))
+> +               return false;
 > +
-> +			phys = <&pcie1_lane>;
-> +			phy-names = "pciephy";
+> +       for_each_efi_memory_desc(md) {
+> +               if (md->type != EFI_MEMORY_MAPPED_IO)
+> +                       continue;
 > +
-> +			perst-gpio = <&tlmm 102 GPIO_ACTIVE_HIGH>;
-> +			enable-gpio = <&tlmm 104 GPIO_ACTIVE_HIGH>;
+> +               start = md->phys_addr;
+> +               end = start + (md->num_pages << EFI_PAGE_SHIFT) - 1;
 > +
-> +			pinctrl-names = "default";
-> +			pinctrl-0 = <&pcie1_default_state>;
+> +               if (res->start >= start && res->end <= end)
+> +                       return true;
+> +       }
 > +
-> +			status = "disabled";
-> +		};
+> +       return false;
+> +}
 > +
-> +		pcie1_phy: phy@1c0e000 {
-> +			compatible = "qcom,sm8150-qmp-gen3x2-pcie-phy";
-> +			reg = <0 0x01c0e000 0 0x1c0>;
-> +			#address-cells = <2>;
-> +			#size-cells = <2>;
-> +			ranges;
-> +			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
-> +				 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-> +				 <&gcc GCC_PCIE1_PHY_REFGEN_CLK>;
-> +			clock-names = "aux", "cfg_ahb", "refgen";
-> +
-> +			resets = <&gcc GCC_PCIE_1_PHY_BCR>;
-> +			reset-names = "phy";
-> +
-> +			assigned-clocks = <&gcc GCC_PCIE1_PHY_REFGEN_CLK>;
-> +			assigned-clock-rates = <100000000>;
-> +
-> +			status = "disabled";
-> +
-> +			pcie1_lane: phy@1c0e200 {
-> +				reg = <0 0x1c0e200 0 0x170>, /* tx0 */
-> +				      <0 0x1c0e400 0 0x200>, /* rx0 */
-> +				      <0 0x1c0ea00 0 0x1f0>, /* pcs */
-> +				      <0 0x1c0e600 0 0x170>, /* tx1 */
-> +				      <0 0x1c0e800 0 0x200>, /* rx1 */
-> +				      <0 0x1c0ee00 0 0xf4>; /* "pcs_com" same as pcs_misc? */
-> +				clocks = <&gcc GCC_PCIE_1_PIPE_CLK>;
-> +				clock-names = "pipe0";
-> +
-> +				#phy-cells = <0>;
-> +				clock-output-names = "pcie_1_pipe_clk";
-> +			};
-> +		};
-> +
->   		ufs_mem_hc: ufshc@1d84000 {
->   			compatible = "qcom,sm8150-ufshc", "qcom,ufshc",
->   				     "jedec,ufs-2.0";
-> @@ -2327,6 +2524,52 @@ qup_spi19_default: qup-spi19-default {
->   				drive-strength = <6>;
->   				bias-disable;
->   			};
-> +
-> +			pcie0_default_state: pcie0-default {
-> +				perst {
-> +					pins = "gpio35";
-> +					function = "gpio";
-> +					drive-strength = <2>;
-> +					bias-pull-down;
-> +				};
-> +
-> +				clkreq {
-> +					pins = "gpio36";
-> +					function = "pci_e0";
-> +					drive-strength = <2>;
-> +					bias-pull-up;
-> +				};
-> +
-> +				wake {
-> +					pins = "gpio37";
-> +					function = "gpio";
-> +					drive-strength = <2>;
-> +					bias-pull-up;
-> +				};
-> +			};
-> +
-> +			pcie1_default_state: pcie1-default {
-> +				perst {
-> +					pins = "gpio102";
-> +					function = "gpio";
-> +					drive-strength = <2>;
-> +					bias-pull-down;
-> +				};
-> +
-> +				clkreq {
-> +					pins = "gpio103";
-> +					function = "pci_e1";
-> +					drive-strength = <2>;
-> +					bias-pull-up;
-> +				};
-> +
-> +				wake {
-> +					pins = "gpio104";
-> +					function = "gpio";
-> +					drive-strength = <2>;
-> +					bias-pull-up;
-> +				};
-> +			};
->   		};
->   
->   		remoteproc_mpss: remoteproc@4080000 {
-
-
--- 
-With best wishes
-Dmitry
+>  static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+>  {
+>         struct acpi_device *device = ci->bridge;
+> @@ -300,9 +359,16 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+>
+>         status = acpi_pci_probe_root_resources(ci);
+>         if (pci_use_crs) {
+> -               resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
+> +               resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
+>                         if (resource_is_pcicfg_ioport(entry->res))
+>                                 resource_list_destroy_entry(entry);
+> +                       else if (resource_is_efi_mmio_region(entry->res)) {
+> +                               dev_info(&device->dev,
+> +                                       "host bridge window %pR is marked by EFI as MMIO\n",
+> +                                       entry->res);
+> +                               pci_use_e820 = false;
+> +                       }
+> +               }
+>                 return status;
+>         }
+>
+> --
+> 2.35.1
+>
