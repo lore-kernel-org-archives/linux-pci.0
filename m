@@ -2,193 +2,104 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 297ADC433F5
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Mar 2022 15:47:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FF62C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Mar 2022 16:07:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235735AbiCBPr7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Mar 2022 10:47:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49122 "EHLO
+        id S240024AbiCBQIc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Mar 2022 11:08:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237482AbiCBPr5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 10:47:57 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14A6C3C26
-        for <linux-pci@vger.kernel.org>; Wed,  2 Mar 2022 07:47:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646236033; x=1677772033;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=bL6CyHyoaphBg+Mz7dCnZA4kWSMUHU5NE7J3IwUInxE=;
-  b=OdCTiJa+qp65TJgy2YMyAj3SWDKtga6ppxxTsy8Die3zcqsJk58PAt5x
-   wvgTVH6K39fvhdE4gb9U13kovT874bqbrlS6lS1FsiZWckC11Hb+2B/KI
-   i1aBQNWVzV3Pa3WICPjVNJm1VEkGYqPVwcbU+8ZTZ6I9kOZDYK+/DfS3x
-   HjrmNWkXQutaB3Jzuw98ZjkJtQ6VtGecb8DuYF8qZ7LAnrWQ0nExpLDq7
-   JLOKUHhV5sG6Zh+MEyGbWQrahqX77NdfXmdfggsG23mcdcj9d4s+w9z76
-   3gfhju5tEkjbSyqslyC3/B4ZWVU6kfFieuMIbubmXl8283E48B9G+tQXw
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10274"; a="236940674"
-X-IronPort-AV: E=Sophos;i="5.90,149,1643702400"; 
-   d="scan'208";a="236940674"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 07:47:13 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,149,1643702400"; 
-   d="scan'208";a="545536565"
-Received: from lkp-server02.sh.intel.com (HELO e9605edfa585) ([10.239.97.151])
-  by fmsmga007.fm.intel.com with ESMTP; 02 Mar 2022 07:47:11 -0800
-Received: from kbuild by e9605edfa585 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nPRC3-0001Wh-2Y; Wed, 02 Mar 2022 15:47:11 +0000
-Date:   Wed, 02 Mar 2022 23:46:25 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:next] BUILD SUCCESS
- b3c57902bef6a4da58cb0465e858f797a5885c1a
-Message-ID: <621f9151.+XtQXnCLGPzJus1+%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S240278AbiCBQI2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 11:08:28 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7601E32057
+        for <linux-pci@vger.kernel.org>; Wed,  2 Mar 2022 08:07:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646237262;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kijBMrzxo7OdLpiSqnAt9AQTzfbPdM8vboePrFXlyXA=;
+        b=DxhwmfhD12a1Gz3qg5Sk/OV8D0gY/kO6d0KWFE7OSqDfh8sCcRbz6d/+XbOap8kKbHlfct
+        mcIDTlg+HZSHApNsyExzJollxA2ydKR3xHP2DoDqLXsyclgQS2UWlL81+5g/RZDUbvE9qc
+        kY1dBndbL+CnXzdsXP3BnRGlWTy/Tpo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-639-uU2zv3bJOMWGdofAbFUdcQ-1; Wed, 02 Mar 2022 11:07:37 -0500
+X-MC-Unique: uU2zv3bJOMWGdofAbFUdcQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 438A2801AFE;
+        Wed,  2 Mar 2022 16:07:35 +0000 (UTC)
+Received: from localhost (unknown [10.39.194.94])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D504A83C1D;
+        Wed,  2 Mar 2022 16:07:23 +0000 (UTC)
+From:   Cornelia Huck <cohuck@redhat.com>
+To:     Alex Williamson <alex.williamson@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Yishai Hadas <yishaih@nvidia.com>, bhelgaas@google.com,
+        saeedm@nvidia.com, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+        netdev@vger.kernel.org, kuba@kernel.org, leonro@nvidia.com,
+        kwankhede@nvidia.com, mgurtovoy@nvidia.com, maorg@nvidia.com,
+        ashok.raj@intel.com, kevin.tian@intel.com,
+        shameerali.kolothum.thodi@huawei.com
+Subject: Re: [PATCH V9 mlx5-next 09/15] vfio: Define device migration
+ protocol v2
+In-Reply-To: <20220302083440.539a1f33.alex.williamson@redhat.com>
+Organization: Red Hat GmbH
+References: <20220224142024.147653-1-yishaih@nvidia.com>
+ <20220224142024.147653-10-yishaih@nvidia.com> <87tucgiouf.fsf@redhat.com>
+ <20220302142732.GK219866@nvidia.com>
+ <20220302083440.539a1f33.alex.williamson@redhat.com>
+User-Agent: Notmuch/0.34 (https://notmuchmail.org)
+Date:   Wed, 02 Mar 2022 17:07:21 +0100
+Message-ID: <87mti8ibie.fsf@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-branch HEAD: b3c57902bef6a4da58cb0465e858f797a5885c1a  Merge branch 'remotes/lorenzo/pci/uniphier'
+On Wed, Mar 02 2022, Alex Williamson <alex.williamson@redhat.com> wrote:
 
-elapsed time: 720m
+> On Wed, 2 Mar 2022 10:27:32 -0400
+> Jason Gunthorpe <jgg@nvidia.com> wrote:
+>
+>> On Wed, Mar 02, 2022 at 12:19:20PM +0100, Cornelia Huck wrote:
+>> > > +/*
+>> > > + * vfio_mig_get_next_state - Compute the next step in the FSM
+>> > > + * @cur_fsm - The current state the device is in
+>> > > + * @new_fsm - The target state to reach
+>> > > + * @next_fsm - Pointer to the next step to get to new_fsm
+>> > > + *
+>> > > + * Return 0 upon success, otherwise -errno
+>> > > + * Upon success the next step in the state progression between cur_fsm and
+>> > > + * new_fsm will be set in next_fsm.  
+>> > 
+>> > What about non-success? Can the caller make any assumption about
+>> > next_fsm in that case? Because...  
+>> 
+>> I checked both mlx5 and acc, both properly ignore the next_fsm value
+>> on error. This oddness aros when Alex asked to return an errno instead
+>> of the state value.
+>
+> Right, my assertion was that only the driver itself should be able to
+> transition to the ERROR state.  vfio_mig_get_next_state() should never
+> advise the driver to go to the error state, it can only report that a
+> transition is invalid.  The driver may stay in the current state if an
+> error occurs here, which is why we added the ability to get the device
+> state.  Thanks,
+>
+> Alex
 
-configs tested: 119
-configs skipped: 3
+So, should the function then write anything to next_fsm if it returns
+-errno? (Maybe I'm misunderstanding.) Or should the caller always expect
+that something may be written to new_fsm, and simply only look at it if
+the function returns success?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+(I think that the code as-is is likely ok, I just want to make sure I'm
+not missing something. Apologies if that seems nitpicky.)
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                          randconfig-c001
-mips                 randconfig-c004-20220302
-arm                           corgi_defconfig
-parisc                generic-64bit_defconfig
-powerpc64                        alldefconfig
-arm                        multi_v7_defconfig
-sh                           se7705_defconfig
-sh                          r7780mp_defconfig
-sh                           sh2007_defconfig
-m68k                        mvme16x_defconfig
-sh                              ul2_defconfig
-sh                            migor_defconfig
-microblaze                          defconfig
-mips                         bigsur_defconfig
-arm                         vf610m4_defconfig
-h8300                               defconfig
-m68k                          atari_defconfig
-sh                   secureedge5410_defconfig
-arm                          iop32x_defconfig
-arc                     nsimosci_hs_defconfig
-xtensa                  nommu_kc705_defconfig
-powerpc                      mgcoge_defconfig
-powerpc                     taishan_defconfig
-sparc64                          alldefconfig
-arm                        shmobile_defconfig
-sh                               j2_defconfig
-powerpc                   currituck_defconfig
-ia64                            zx1_defconfig
-mips                      maltasmvp_defconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                     pq2fads_defconfig
-sh                          sdk7786_defconfig
-parisc64                         alldefconfig
-powerpc                   motionpro_defconfig
-arm                            qcom_defconfig
-ia64                             alldefconfig
-arm                        oxnas_v6_defconfig
-m68k                        stmark2_defconfig
-m68k                        m5307c3_defconfig
-arc                      axs103_smp_defconfig
-mips                     loongson1b_defconfig
-arm                  randconfig-c002-20220302
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nds32                             allnoconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                                  kexec
-
-clang tested configs:
-arm                     davinci_all_defconfig
-arm                       netwinder_defconfig
-arm                        neponset_defconfig
-arm                      pxa255-idp_defconfig
-arm                        mvebu_v5_defconfig
-arm                         lpc32xx_defconfig
-mips                     cu1830-neo_defconfig
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a011
-i386                          randconfig-a013
-i386                          randconfig-a015
-hexagon              randconfig-r045-20220302
-hexagon              randconfig-r041-20220302
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
