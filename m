@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43449C433F5
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Mar 2022 14:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45115C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Mar 2022 14:57:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233816AbiCBO6e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Mar 2022 09:58:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32858 "EHLO
+        id S243322AbiCBO6i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Mar 2022 09:58:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237870AbiCBO6d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 09:58:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0062AC5C;
-        Wed,  2 Mar 2022 06:57:50 -0800 (PST)
+        with ESMTP id S237870AbiCBO6h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 09:58:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A31A344FA;
+        Wed,  2 Mar 2022 06:57:53 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8ACF161681;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 19E33B81FFC;
+        Wed,  2 Mar 2022 14:57:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CD77C340F1;
         Wed,  2 Mar 2022 14:57:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CABA7C004E1;
-        Wed,  2 Mar 2022 14:57:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1646233070;
-        bh=HJ9UOZ8Pda2J5esQVLz0rDdDpMg6S97CEjZqU1QUEgg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=JDFNBYKm5iyiz514HuoZO8pnX5BtyJdM4oKs88W7tr/Ouxqnx2+s3tUCfp9pyekig
-         UVlEDj67L5MtnhLnVL55rJArrulfZNrpryXR7NFxhzGFCfSgqh84euSnRao1f2mo/5
-         gVhDDHsUH91OnVc2j931CSRbzs6ecVrNQxlnXzJxv2AvEj6+u6CFmJUr2cvGSXWl+6
-         uJ0yI9sECkULgPdK9SuMbJxEFH9ye1hEsXc+TuaMyVKFEYrJW25INCCwvnbRfLg+OM
-         g/lp20w2jr+QNfrCekejtWyhr2t1ieMtGv/Yq/8oTJbReXPcFG4sY/uU0h/ioJnge3
-         odEUKzT3DyHRw==
+        bh=ppfP2G32Iq7vZfJjkXBIQFtPt8UJHuV5l9zUh3VfH+I=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qXmloFawc6UYgjfoUI9IkbEVV1zYVb7XxCsqtjBGAfXf/e/qZx7GAeewnvllF1c/U
+         qXQNVx5lVSo7fOlN0dMvYSNvL46L0+7IATpgQooJR6a3qOj+jiNx2cIsBYkagI+xjH
+         U0ZDfvZXCa4yEbGJUCPy4L9JNQXLM5yl4pb09q0d24yO4Y+WqkWhUda86rGZPSiWkj
+         3ztH8FtVULu2yGsjGaBJIEzTzRANL8xKi8iqAW9z5GlNIrmSHnrdv+xDKi7s6Aog9+
+         BZaFkUwHxkiD9UZ/9tMnXJS975m7KXxlhAkUarU6U31s3cwG8ZKwy+qqEcFPRsJtmz
+         kssd1ZLVbEYYg==
 Received: by pali.im (Postfix)
-        id EE8DB677; Wed,  2 Mar 2022 15:57:46 +0100 (CET)
+        id 1855C990; Wed,  2 Mar 2022 15:57:50 +0100 (CET)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,10 +43,12 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/4] PCI: mvebu: Slot support
-Date:   Wed,  2 Mar 2022 15:57:29 +0100
-Message-Id: <20220302145733.12606-1-pali@kernel.org>
+Subject: [PATCH v2 3/4] PCI: Add function for parsing 'slot-power-limit-milliwatt' DT property
+Date:   Wed,  2 Mar 2022 15:57:32 +0100
+Message-Id: <20220302145733.12606-4-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220302145733.12606-1-pali@kernel.org>
+References: <20220302145733.12606-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -54,35 +56,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series add slot support to pci-mvebu.c driver.
+Add function of_pci_get_slot_power_limit(), which parses the
+'slot-power-limit-milliwatt' DT property, returning the value in
+milliwatts and in format ready for the PCIe Slot Capabilities Register.
 
-It is based on branch pci/mvebu of git repository:
-https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git
-
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Signed-off-by: Marek Behún <kabel@kernel.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
 Changes in v2:
-* Dropped patch with PCI_EXP_SLTCAP_*_SHIFT macros as it is not needed anymore
-* Dropped patch "ARM: dts: turris-omnia: Set PCIe slot-power-limit-milliwatt properties" which was applied
 * Added support for PCIe 6.0 slot power limit encodings
 * Round down slot power limit value
-* Fix handling of slot power limit with scale x1.0 (0x00 value)
-* Use FIELD_PREP instead of _SHIFT macros
-* Changed commit message to Bjorn's suggestion
-* Changed comments in the code to match PCIe spec
-* Preserve user settings of PCI_EXP_SLTCTL_ASPL_DISABLE bit
+---
+ drivers/pci/of.c  | 64 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h | 15 +++++++++++
+ 2 files changed, 79 insertions(+)
 
-Pali Rohár (4):
-  PCI: Add PCI_EXP_SLTCTL_ASPL_DISABLE macro
-  dt-bindings: Add 'slot-power-limit-milliwatt' PCIe port property
-  PCI: Add function for parsing 'slot-power-limit-milliwatt' DT property
-  PCI: mvebu: Add support for sending Set_Slot_Power_Limit message
-
- Documentation/devicetree/bindings/pci/pci.txt |  6 ++
- drivers/pci/controller/pci-mvebu.c            | 96 ++++++++++++++++++-
- drivers/pci/of.c                              | 64 +++++++++++++
- drivers/pci/pci.h                             | 15 +++
- include/uapi/linux/pci_regs.h                 |  1 +
- 5 files changed, 177 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index cb2e8351c2cc..549a404bd536 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -633,3 +633,67 @@ int of_pci_get_max_link_speed(struct device_node *node)
+ 	return max_link_speed;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
++
++/**
++ * of_pci_get_slot_power_limit - Parses the "slot-power-limit-milliwatt"
++ *				 property.
++ *
++ * @node: device tree node with the slot power limit information
++ * @slot_power_limit_value: pointer where the value should be stored in PCIe
++ *			    Slot Capabilities Register format
++ * @slot_power_limit_scale: pointer where the scale should be stored in PCIe
++ *			    Slot Capabilities Register format
++ *
++ * Returns the slot power limit in milliwatts and if @slot_power_limit_value
++ * and @slot_power_limit_scale pointers are non-NULL, fills in the value and
++ * scale in format used by PCIe Slot Capabilities Register.
++ *
++ * If the property is not found or is invalid, returns 0.
++ */
++u32 of_pci_get_slot_power_limit(struct device_node *node,
++				u8 *slot_power_limit_value,
++				u8 *slot_power_limit_scale)
++{
++	u32 slot_power_limit_mw;
++	u8 value, scale;
++
++	if (of_property_read_u32(node, "slot-power-limit-milliwatt",
++				 &slot_power_limit_mw))
++		slot_power_limit_mw = 0;
++
++	/* Calculate Slot Power Limit Value and Slot Power Limit Scale */
++	if (slot_power_limit_mw == 0) {
++		value = 0x00;
++		scale = 0;
++	} else if (slot_power_limit_mw <= 255) {
++		value = slot_power_limit_mw;
++		scale = 3;
++	} else if (slot_power_limit_mw <= 255*10) {
++		value = slot_power_limit_mw / 10;
++		scale = 2;
++	} else if (slot_power_limit_mw <= 255*100) {
++		value = slot_power_limit_mw / 100;
++		scale = 1;
++	} else if (slot_power_limit_mw <= 239*1000) {
++		value = slot_power_limit_mw / 1000;
++		scale = 0;
++	} else if (slot_power_limit_mw <= 250*1000) {
++		value = 0xF0;
++		scale = 0;
++	} else if (slot_power_limit_mw <= 600*1000) {
++		value = 0xF0 + (slot_power_limit_mw / 1000 - 250) / 25;
++		scale = 0;
++	} else {
++		value = 0xFF;
++		scale = 0;
++	}
++
++	if (slot_power_limit_value)
++		*slot_power_limit_value = value;
++
++	if (slot_power_limit_scale)
++		*slot_power_limit_scale = scale;
++
++	return slot_power_limit_mw;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_slot_power_limit);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3d60cabde1a1..e10cdec6c56e 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -627,6 +627,9 @@ struct device_node;
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
+ int of_pci_get_max_link_speed(struct device_node *node);
++u32 of_pci_get_slot_power_limit(struct device_node *node,
++				u8 *slot_power_limit_value,
++				u8 *slot_power_limit_scale);
+ void pci_set_of_node(struct pci_dev *dev);
+ void pci_release_of_node(struct pci_dev *dev);
+ void pci_set_bus_of_node(struct pci_bus *bus);
+@@ -653,6 +656,18 @@ of_pci_get_max_link_speed(struct device_node *node)
+ 	return -EINVAL;
+ }
+ 
++static inline u32
++of_pci_get_slot_power_limit(struct device_node *node,
++			    u8 *slot_power_limit_value,
++			    u8 *slot_power_limit_scale)
++{
++	if (slot_power_limit_value)
++		*slot_power_limit_value = 0;
++	if (slot_power_limit_scale)
++		*slot_power_limit_scale = 0;
++	return 0;
++}
++
+ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
 -- 
 2.20.1
 
