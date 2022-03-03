@@ -2,229 +2,241 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA794C433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 09:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFB1C433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 09:42:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231627AbiCCJ04 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Mar 2022 04:26:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49712 "EHLO
+        id S230078AbiCCJnC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Mar 2022 04:43:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231529AbiCCJ04 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2022 04:26:56 -0500
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam07on2070.outbound.protection.outlook.com [40.107.95.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 606B81768CD;
-        Thu,  3 Mar 2022 01:26:09 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WGhDT+MU6nBV23GfbnnNL6EVBXF934aPZ4pdA2IBmS/OxgAOeC8ZcBfvfnI4uezaDZG0UoVNyDLODfBcBxmq1FGILnYLRvA8fjW/Llf9tZEWtZrNJp7Svw64VW2KlGZlaMgx4JljjIezTbv46WteZ6PClTermyESKAV6H8ApycaKTKAeDo/YWUXefOl03BzNg34wGz5ImhEHukvGLQgNySDfzX2A35Rj9SJihGhYpGU9vX+QyCKhrY65X2/zoaSYaK6038NwitE1GBJBMQrT+hIjKp/d4t4vV0ofvgcLrgxHWPZgn6V6H8loZXuUhqgYLs7KtMYyMUaoHIEqfCWIUA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4J1lLUGI4p+AaItNgXjRHKWjul3kFgSsN5pNNjVmno4=;
- b=UrAGL2ST9Qyjtu2CWUBZkwU2d3temNW37J8JR9FfGEdad57D3DtQxcmYAGB3SaRZaEMg1sEAepfah8mpVxBLEe/k/8cxUQYGsVsemdQSXRLfTgn84Q2vrio69Wk12BAPvHUSwEUqlwj5AEuBxEUTjm2p65WxydL+BgIk3yQ5nnvDzrb2iXCY0ReZqPbiWwomWXcle5WPFBwzAmhtYk5skdYexd0ptwRWfZDCxszqoQLLUAiFl0Ukhlfw323u3p/Ti112Oq8s992/xkOZzKBp68Tvs4Jc5A9pluR11lT8tfZac1oR3guwtBOFnzRqpsFzgTswAo16BG8N6alOjVNEIA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=xilinx.com; dmarc=pass action=none header.from=xilinx.com;
- dkim=pass header.d=xilinx.com; arc=none
+        with ESMTP id S232075AbiCCJmz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2022 04:42:55 -0500
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EFA4177D21
+        for <linux-pci@vger.kernel.org>; Thu,  3 Mar 2022 01:42:10 -0800 (PST)
+Received: by mail-pg1-x533.google.com with SMTP id o8so4037300pgf.9
+        for <linux-pci@vger.kernel.org>; Thu, 03 Mar 2022 01:42:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4J1lLUGI4p+AaItNgXjRHKWjul3kFgSsN5pNNjVmno4=;
- b=mrF8/L/TIjhHEI60VE3ca8iRF2BozxatuIroOP/gMk8ckAZlmF1YE26Qjq2Khu+XJi1BOTcSnGeEB+oTWknVi3YYLxSkGV9e3RYbmGnqy4vtGi/3a4LH5rKyU0GADlB7H/Yck0CDttRA9hW4CeFDuXt3sJYu4VLEBxNGp95T6fA=
-Received: from BY5PR02MB6947.namprd02.prod.outlook.com (2603:10b6:a03:23e::12)
- by BY5PR02MB6948.namprd02.prod.outlook.com (2603:10b6:a03:23f::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.14; Thu, 3 Mar
- 2022 09:26:07 +0000
-Received: from BY5PR02MB6947.namprd02.prod.outlook.com
- ([fe80::5898:b7fa:9930:10a0]) by BY5PR02MB6947.namprd02.prod.outlook.com
- ([fe80::5898:b7fa:9930:10a0%7]) with mapi id 15.20.5038.014; Thu, 3 Mar 2022
- 09:25:49 +0000
-From:   Bharat Kumar Gogada <bharatku@xilinx.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Michal Simek <michals@xilinx.com>
-Subject: RE: [PATCH v2 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root
- Port
-Thread-Topic: [PATCH v2 2/2] PCI: xilinx-cpm: Add support for Versal CPM5 Root
- Port
-Thread-Index: AQHYImoMDICxsHV+4UiuebIA65FIP6ysUPIAgAEkiuA=
-Date:   Thu, 3 Mar 2022 09:25:49 +0000
-Message-ID: <BY5PR02MB6947106331FBE73A7B04434DA5049@BY5PR02MB6947.namprd02.prod.outlook.com>
-References: <20220215124606.28627-1-bharat.kumar.gogada@xilinx.com>
- <20220215124606.28627-3-bharat.kumar.gogada@xilinx.com>
- <Yh+OUvLi56/H4l2z@lpieralisi>
-In-Reply-To: <Yh+OUvLi56/H4l2z@lpieralisi>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=xilinx.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: aacc9e0e-6b9d-4a7a-13d1-08d9fcf7ce0c
-x-ms-traffictypediagnostic: BY5PR02MB6948:EE_
-x-microsoft-antispam-prvs: <BY5PR02MB6948A057B8AC1893A7F85FCDA5049@BY5PR02MB6948.namprd02.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 0InvXFHHsRBiwJxynztUtjQeeMbT7/Yztzet7yWHuD+uXnzuzS+1D5NBQI68m5aC89YP4/4YOcDDmVAsadeCI82MfETMOIcyD/148qf3bQsDgVNb28CrOJhiX8J+SuiYVc85lFFdymDCJpb7KWpnHLkth2T64/M1EdBH3q+ZQsIrMF2L0ihWtYwQv2+74cSowlMwmpsBPGTS7O4xpEepjxRkpaxg54T6ZXmGsPVpHrDGdUB56A9+PzsCFxerxLC7zEXI23cSafnQBtk21KkbnzD2YKeT/eY8yZ5F5wBn9nWLngX9jVXUrwHVMOEoFR8ins9ymqoOBUQ3I4TmZbEFC0g788+2yqwftsa0GUl4kyQ7Iq7SUuuVMNFaeSEGG37lNZ5k6s83tFl84mduq1746+3NtdzkqAqJYHpc6Zy8YLh9F9TSI/mPA5x1S1y7K8wgIRdETO9X8cVSyq9deqhlR7dwG3hKk9k8XRDLPSsIWV9qHOmXyFBjuw3TndKyvmPUUjXmVEh/lYyG+BsvyvEHhbdX4v8RWqNLnMZgiwIoSCLmlMcRoNpm3EafAo5C/MsRig1j5vNOAAb+3LdO6E2Bjp6EOeYtCkn4b2adSrm5/ISWZuLwi9NCfOoJyKq52ZcI18gNNsTuORRD/e+n9IkbkEZ/R38U9nD0AiS6QG9UbLevMPCeGPvQkgKZaw4r4sh43PtHQ0LoBM9pKt0cqvRGpw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR02MB6947.namprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(7696005)(6506007)(55016003)(66476007)(122000001)(64756008)(66446008)(66556008)(83380400001)(76116006)(316002)(9686003)(66946007)(54906003)(8676002)(4326008)(508600001)(86362001)(6916009)(52536014)(26005)(38070700005)(107886003)(186003)(8936002)(5660300002)(33656002)(38100700002)(2906002)(71200400001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?aTa+947eIHN8XHjJwnLm17MvpKzDJ0M6/I1mZDAnVrLxsxyTmOZPncbKHUx4?=
- =?us-ascii?Q?AXcqoWPO1jHLQn8EIvFaUzDeZQbHKQ+Wa2m6Csw7myJEfQFK2k64VJd1BRrT?=
- =?us-ascii?Q?bUamKHOTPEb7KJTMKblJ9zYu0UpsnlflpyxN5kAMm26uVkuaI4qVolz3S0+f?=
- =?us-ascii?Q?64h7KMOt6fDK1x/NdHJEbPgqo8IQrQETP0uQOv9nXpso1ul8VtUYTvQ/B0Ym?=
- =?us-ascii?Q?Zge5EbqG8C0Re6AFzR0oG0izTn99+JC3Pi77Ub79zR41GS3T8jjQJNfElhZf?=
- =?us-ascii?Q?RvazhPpmo64OIFzfyRwIofRZu6zFpLToc31hXQ1QZymDhzcdxjC4xnmkL4zT?=
- =?us-ascii?Q?04I7j5AKR5hl/9+Q1tvB30I1IVLk1jOt0vcZk98JbfwBa7zPVDIsbhrLD9AI?=
- =?us-ascii?Q?IYg3j4MdNsXPqBFZbPdV0UboHq6uQgujn3WZBpGFSio/447EBEikkloR6VH2?=
- =?us-ascii?Q?jBQ8sXZ8EDtdACArl9G14Kj5xZwhP94GpO2lmgJesJe4z78lJZKflfIU3Qrq?=
- =?us-ascii?Q?0jNAxDZxeTNufA1/6gQ3/wbV4aAebNsOQkW5Z85r7m695T+/gEt6MlovA049?=
- =?us-ascii?Q?nDsmGNY8CBDqIAZC2pyBsg+tNA5raMpYr4+s3Tf4jodxfVlEHHOcnbslwdmi?=
- =?us-ascii?Q?KifPMZ160uoyqKlDBbyzw7he1yq7ErIBsZ2ZBsoPM/SA2YEMhZaA/ntnwiHW?=
- =?us-ascii?Q?uB/KhlWE5gLK1dzG3nc3mg2cgh9O+aNQ0v3VzYsHCOh+Oek+ckXe9DA7+XZn?=
- =?us-ascii?Q?wLDLUktXY+7ZvJwxOmBddQgGhKOrfF0Bj1aw8P9Uu37DDYgYGJEG4Ctb2cgU?=
- =?us-ascii?Q?wr0uwculKSUVKZhmphC18Qn5b7i//2GHbuXmDmETeE+JNMg1BszFG3hlco0Q?=
- =?us-ascii?Q?SKVuKokhRDO5jc6gnGcD9mxMbHD/1kek/zE+/F6aJ1Un7O3/HqH9ARvSq1TE?=
- =?us-ascii?Q?DcGfrL3yPtcmuaS9VSZoJEU0yPW252VXSUIrCR546DAAyZ6snX7mzTuTCb0W?=
- =?us-ascii?Q?uvgHbhPpiGtwpiRw5igIeVa9/iSSBq3jq4ivWScyWDyKUG7UjMdMQ0avyxrm?=
- =?us-ascii?Q?K289jVgoppKZF25GmD6SvWWjIreGhN4tVn8RkGk58O5KgxYvEPlUCekUKQTC?=
- =?us-ascii?Q?kg8tLYpQwmTJwrami7czSw3euhQkspeyygBbdZaURjjPJqNt1N8JX0VarT8C?=
- =?us-ascii?Q?tZRR/efGArU4oSZVJrYtCPef1NyYqFftMK3KJrT/mjg/iqEYQe0nLodGRGD8?=
- =?us-ascii?Q?rP2pusKN1mNkqHFhL8Am8d1AkV+fUzkSafrAHjFFzUMPMYcI8iX+I54/wo4o?=
- =?us-ascii?Q?XYRyUoPmtUi9zEb93m7NMqYJaEFfc7NRw+InkLs/cXz9cYX1Mua6tPQawcgP?=
- =?us-ascii?Q?00Ryv4X6MC1klMJDeu8eOSV2I3bj0o94JlboNl9DnnRS+L/qNslIxknc8j8j?=
- =?us-ascii?Q?LKjGBQw49EfjtHLdZEhULr37vMpL+NRPuorFCnhvRIKSOEwbW8y0pcEqfTbM?=
- =?us-ascii?Q?jEvlM63QVoLdZHqCWUsw/CfC9JyxmLMkhMNE2njNN3E7PxAC3kk1v+IdaOVd?=
- =?us-ascii?Q?2FFTP/WBEkkLZWGTlNKN6UJqo//g3omAnaHHm5n1XDTz7aNxcbn6vxHCMDaQ?=
- =?us-ascii?Q?KTIsqURpmgrkAC18ndB+LxE=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=jFAtq+k5RhuCwjL3RHgwUp9mZpXZphx7ltJz88tnoU8=;
+        b=serKmkufRJlH3LtR3ZBOSJKKLWvicVpVwsCoLP+tYoeRBXrpmhxIJFLn/RVxpuASsD
+         RAK9uzlr8gcJREOYaP1gV1WvnDg8c8OQQoLfFiGT2029dBqVI8reyaxdW+X8f6uNCvIK
+         L0xJw/EUEt/tf2o3bm/izA8f4OGf7ByrriqMoC5J68KxHwY+3BwryEJdB5kxX051X5nu
+         fKxRXcywhljyv32tCVMy9+qRxtHEn9t9KCbg2S7pBylOgTv2Lmhc+/g3V81inSsCnny1
+         aw1IRTVF94/m4sri4CPrZ98YhL/W0ykWYy9X1o99fZJ9AmLUTggH7YOaoJn/r352BoT7
+         7E6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=jFAtq+k5RhuCwjL3RHgwUp9mZpXZphx7ltJz88tnoU8=;
+        b=yDWvukuipwER9Gw7IFb4ATi2Wqj8DMeDpQDb698HgitTS8BbdUaBhaq5UrrgUj5ddo
+         zyx84B1VpOr7h36hdZPyddcH3fjKMWrWsXbbLzg6YS0Axfq4JGu3mjcgzbakJZxj/vCO
+         Mn7OuWOjp/RgLvwxDwtXtGJcWK7ZuZ1L/PcCY/WTfiWRLB/ixcnT1rn0RLH0atFWzvYZ
+         9Iqo8COKo3g6YYTEQy6fp3SSeYs/z3uFYqU7vzyC9womgbdiOtqv0UtlN+D9DJShefv6
+         G8Lo3yOUrTV91kx/kEXhKrmjHxigm0QfiX/cBGRg00uPImXnCqdDYuqat8PR3tJ/7kfZ
+         Yneg==
+X-Gm-Message-State: AOAM530hnAAZlGTUOOLTfq5wzvZnQV8WUrg+o/9zbhSNDRYc2o2oZiV6
+        EuMsjDAN1hV17nfkCuJQ21Cw
+X-Google-Smtp-Source: ABdhPJw4c/pxQHU8hTYB7OKoS6iA8g2gtLTj83vSF5NKJbUjLtBLb9FjNVZYmKI3fUotKOIkhSdkRg==
+X-Received: by 2002:a63:8f18:0:b0:372:eacf:e8da with SMTP id n24-20020a638f18000000b00372eacfe8damr29257241pgd.362.1646300529434;
+        Thu, 03 Mar 2022 01:42:09 -0800 (PST)
+Received: from workstation ([117.207.24.195])
+        by smtp.gmail.com with ESMTPSA id z14-20020aa7888e000000b004e5c2c0b9dcsm2004969pfe.30.2022.03.03.01.42.05
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 03 Mar 2022 01:42:09 -0800 (PST)
+Date:   Thu, 3 Mar 2022 15:12:04 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Frank Li <Frank.Li@nxp.com>
+Cc:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, linux-imx@nxp.com,
+        linux-pci@vger.kernel.org, lznuaa@gmail.com, vkoul@kernel.org,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, shawnguo@kernel.org
+Subject: Re: [PATCH 1/5] dmaengine: dw-edma: fix dw_edma_probe() can't be
+ call globally
+Message-ID: <20220303094204.GH12451@workstation>
+References: <20220302032646.3793-1-Frank.Li@nxp.com>
 MIME-Version: 1.0
-X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR02MB6947.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aacc9e0e-6b9d-4a7a-13d1-08d9fcf7ce0c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2022 09:25:49.2562
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: NOqDiiGLnZK5/XpO1bAmsAAUoW2tMTLpRYExjcYUcUv+BKHbBkg02xsoZ0ECl6nB6Bj1clsE6z6IuECK1hfX6A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR02MB6948
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220302032646.3793-1-Frank.Li@nxp.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> On Tue, Feb 15, 2022 at 06:16:06PM +0530, Bharat Kumar Gogada wrote:
-> > Xilinx Versal Premium series has CPM5 block which supports Root Port
-> > functioning at Gen5 speed.
-> >
-> > Xilinx Versal CPM5 has few changes with existing CPM block.
-> > - CPM5 has dedicated register space for control and status registers.
-> > - CPM5 legacy interrupt handling needs additional register bit
-> >   to enable and handle legacy interrupts.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> > ---
-> >  drivers/pci/controller/pcie-xilinx-cpm.c | 33
-> > +++++++++++++++++++++++-
-> >  1 file changed, 32 insertions(+), 1 deletion(-)
->=20
-> Only a couple of very minor suggestions below.
->=20
-> > diff --git a/drivers/pci/controller/pcie-xilinx-cpm.c
-> > b/drivers/pci/controller/pcie-xilinx-cpm.c
-> > index c7cd44ed4dfc..eb69f494571a 100644
-> > --- a/drivers/pci/controller/pcie-xilinx-cpm.c
-> > +++ b/drivers/pci/controller/pcie-xilinx-cpm.c
-> > @@ -35,6 +35,10 @@
-> >  #define XILINX_CPM_PCIE_MISC_IR_ENABLE	0x00000348
-> >  #define XILINX_CPM_PCIE_MISC_IR_LOCAL	BIT(1)
-> >
-> > +#define XILINX_CPM_PCIE_IR_STATUS       0x000002A0
-> > +#define XILINX_CPM_PCIE_IR_ENABLE       0x000002A8
-> > +#define XILINX_CPM_PCIE_IR_LOCAL        BIT(0)
-> > +
-> >  /* Interrupt registers definitions */
-> >  #define XILINX_CPM_PCIE_INTR_LINK_DOWN		0
-> >  #define XILINX_CPM_PCIE_INTR_HOT_RESET		3
-> > @@ -109,6 +113,7 @@
-> >   * @intx_irq: legacy interrupt number
-> >   * @irq: Error interrupt number
-> >   * @lock: lock protecting shared register access
-> > + * @is_cpm5: value to check cpm version
-> >   */
-> >  struct xilinx_cpm_pcie {
-> >  	struct device			*dev;
-> > @@ -120,6 +125,7 @@ struct xilinx_cpm_pcie {
-> >  	int				intx_irq;
-> >  	int				irq;
-> >  	raw_spinlock_t			lock;
-> > +	bool                            is_cpm5;
-> >  };
-> >
-> >  static u32 pcie_read(struct xilinx_cpm_pcie *port, u32 reg) @@ -285,6
-> > +291,14 @@ static void xilinx_cpm_pcie_event_flow(struct irq_desc *desc=
-)
-> >  		generic_handle_domain_irq(port->cpm_domain, i);
-> >  	pcie_write(port, val, XILINX_CPM_PCIE_REG_IDR);
-> >
-> > +	if (port->is_cpm5) {
-> > +		val =3D readl_relaxed(port->cpm_base +
-> XILINX_CPM_PCIE_IR_STATUS);
-> > +		if (val)
-> > +			writel_relaxed(val,
-> > +				       port->cpm_base +
-> > +				       XILINX_CPM_PCIE_IR_STATUS);
-> > +	}
-> > +
-> >  	/*
-> >  	 * XILINX_CPM_PCIE_MISC_IR_STATUS register is mapped to
-> >  	 * CPM SLCR block.
-> > @@ -484,6 +498,12 @@ static void xilinx_cpm_pcie_init_port(struct
-> xilinx_cpm_pcie *port)
-> >  	 */
-> >  	writel(XILINX_CPM_PCIE_MISC_IR_LOCAL,
-> >  	       port->cpm_base + XILINX_CPM_PCIE_MISC_IR_ENABLE);
-> > +
-> > +	if (port->is_cpm5) {
-> > +		writel(XILINX_CPM_PCIE_IR_LOCAL,
-> > +		       port->cpm_base + XILINX_CPM_PCIE_IR_ENABLE);
-> > +	}
-> > +
-> >  	/* Enable the Bridge enable bit */
-> >  	pcie_write(port, pcie_read(port, XILINX_CPM_PCIE_REG_RPSC) |
-> >  		   XILINX_CPM_PCIE_REG_RPSC_BEN,
-> > @@ -504,6 +524,9 @@ static int xilinx_cpm_pcie_parse_dt(struct
-> xilinx_cpm_pcie *port,
-> >  	struct platform_device *pdev =3D to_platform_device(dev);
-> >  	struct resource *res;
-> >
-> > +	if (of_device_is_compatible(dev->of_node, "xlnx,versal-cpm5-host-
-> 1.00"))
-> > +		port->is_cpm5 =3D true;
->=20
-> port->is_cpm5 =3D of_device_is_compatible(dev->of_node,
-> 					"xlnx,versal-cpm5-host-1.00");
->=20
-> ?
->=20
-> > +		port->is_cpm5 =3D true;
-> > +
-> >  	port->cpm_base =3D devm_platform_ioremap_resource_byname(pdev,
-> >  							       "cpm_slcr");
-> >  	if (IS_ERR(port->cpm_base))
-> > @@ -518,7 +541,14 @@ static int xilinx_cpm_pcie_parse_dt(struct
-> xilinx_cpm_pcie *port,
-> >  	if (IS_ERR(port->cfg))
-> >  		return PTR_ERR(port->cfg);
-> >
-> > -	port->reg_base =3D port->cfg->win;
-> > +	if (!port->is_cpm5) {
->=20
-> Nit: I'd keep the check as above for consistency but it is not really
-> important:
-Thanks Lorenzo, will fix these in next patch.
+On Tue, Mar 01, 2022 at 09:26:42PM -0600, Frank Li wrote:
+> API dw_edma_probe(struct dw_edma_chip *chip) defined at include/linux/dma,
+> but struct dw_edma_chip have a hidden internal struct dw_edma *dw,
+> supposed dw should be allocated in API dw_edma_probe().
+> 
+> 	@dw: struct dw_edma that is filed by dw_edma_probe()
+> 
+> but dw need allocate and fill chip related information  before call dw_edma_probe()
+> in current code. See ref
+> 	drivers/dma/dw-edma/dw-edma-pci.c
+> 
+> Move chip related information from dw-edma-core.h to edma.h
+> allocate memory inside dw_edma_probe()
+
+Commit message could be reworded a bit:
+
+"struct dw_edma_chip" contains an internal structure "struct dw_edma" that is
+used by the eDMA core internally. This structure should not be touched
+by the eDMA controller drivers themselves. But currently, the eDMA
+controller drivers like "dw-edma-pci" allocates and populates this
+internal structure then passes it on to eDMA core. The eDMA core further
+populates the structure and uses it. This is wrong!
+
+Hence, move all the "struct dw_edma" specifics from controller drivers
+to the eDMA core.
+
+> 
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  drivers/dma/dw-edma/dw-edma-core.c       | 31 ++++++++++++---
+>  drivers/dma/dw-edma/dw-edma-core.h       | 28 +++-----------
+>  drivers/dma/dw-edma/dw-edma-v0-core.c    |  2 +-
+>  drivers/dma/dw-edma/dw-edma-v0-debugfs.c |  2 +-
+>  include/linux/dma/edma.h                 | 48 +++++++++++++++++++++++-
+>  5 files changed, 78 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index 53289927dd0d6..029085c035067 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -905,19 +905,32 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+>  	if (!dev)
+>  		return -EINVAL;
+>  
+> -	dw = chip->dw;
+> -	if (!dw || !dw->irq || !dw->ops || !dw->ops->irq_vector)
+> +	dw = devm_kzalloc(dev, sizeof(*dw), GFP_KERNEL);
+> +	if (!dw)
+> +		return -ENOMEM;
+> +
+> +	chip->dw = dw;
+> +
+> +	if (!chip->nr_irqs || !chip->ops)
+>  		return -EINVAL;
+>  
+>  	raw_spin_lock_init(&dw->lock);
+>  
+> -	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt,
+> +	dw->rg_region = &chip->rg_region;
+> +	dw->ll_region_wr = chip->ll_region_wr;
+> +	dw->ll_region_rd = chip->ll_region_rd;
+> +	dw->dt_region_wr = chip->dt_region_wr;
+> +	dw->dt_region_rd = chip->dt_region_rd;
+> +
+> +	dw->mf = chip->mf;
+> +
+
+The eDMA core should be able to reuse the existing fields from "dw_edma_chip".
+I don't think the duplication is needed here.
+
+> +	dw->wr_ch_cnt = min_t(u16, chip->wr_ch_cnt,
+>  			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
+
+Eventhough this is an old code, I don't get the logic. Can the controller driver
+pass channel count that is beyond the range hardware actually supports?
+
+I think we should let the eDMA core to read the registers and populate
+these fields instead of relying on the controller drivers.
+
+> -	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
+> +	dw->wr_ch_cnt = min_t(u16, chip->wr_ch_cnt, EDMA_MAX_WR_CH);
+>  
+> -	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt,
+> +	dw->rd_ch_cnt = min_t(u16, chip->rd_ch_cnt,
+>  			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
+> -	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
+> +	dw->rd_ch_cnt = min_t(u16, chip->rd_ch_cnt, EDMA_MAX_RD_CH);
+>  
+>  	if (!dw->wr_ch_cnt && !dw->rd_ch_cnt)
+>  		return -EINVAL;
+> @@ -936,6 +949,12 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+>  	/* Disable eDMA, only to establish the ideal initial conditions */
+>  	dw_edma_v0_core_off(dw);
+>  
+> +	dw->nr_irqs = chip->nr_irqs;
+> +	dw->ops = chip->ops;
+> +	dw->irq = devm_kcalloc(dev, dw->nr_irqs, sizeof(*dw->irq), GFP_KERNEL);
+> +	if (!dw->irq)
+> +		return -ENOMEM;
+> +
+>  	/* Request IRQs */
+>  	err = dw_edma_irq_request(chip, &wr_alloc, &rd_alloc);
+>  	if (err)
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+> index 60316d408c3e0..8ca195814a878 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.h
+> +++ b/drivers/dma/dw-edma/dw-edma-core.h
+> @@ -15,20 +15,12 @@
+>  #include "../virt-dma.h"
+>  
+>  #define EDMA_LL_SZ					24
+> -#define EDMA_MAX_WR_CH					8
+> -#define EDMA_MAX_RD_CH					8
+>  
+>  enum dw_edma_dir {
+>  	EDMA_DIR_WRITE = 0,
+>  	EDMA_DIR_READ
+>  };
+>  
+> -enum dw_edma_map_format {
+> -	EDMA_MF_EDMA_LEGACY = 0x0,
+> -	EDMA_MF_EDMA_UNROLL = 0x1,
+> -	EDMA_MF_HDMA_COMPAT = 0x5
+> -};
+> -
+>  enum dw_edma_request {
+>  	EDMA_REQ_NONE = 0,
+>  	EDMA_REQ_STOP,
+> @@ -57,12 +49,6 @@ struct dw_edma_burst {
+>  	u32				sz;
+>  };
+>  
+> -struct dw_edma_region {
+> -	phys_addr_t			paddr;
+> -	void				__iomem *vaddr;
+> -	size_t				sz;
+> -};
+> -
+>  struct dw_edma_chunk {
+>  	struct list_head		list;
+>  	struct dw_edma_chan		*chan;
+> @@ -109,10 +95,6 @@ struct dw_edma_irq {
+>  	struct dw_edma			*dw;
+>  };
+>  
+> -struct dw_edma_core_ops {
+> -	int	(*irq_vector)(struct device *dev, unsigned int nr);
+> -};
+> -
+>  struct dw_edma {
+>  	char				name[20];
+>  
+> @@ -122,11 +104,11 @@ struct dw_edma {
+>  	struct dma_device		rd_edma;
+>  	u16				rd_ch_cnt;
+>  
+> -	struct dw_edma_region		rg_region;	/* Registers */
+> -	struct dw_edma_region		ll_region_wr[EDMA_MAX_WR_CH];
+> -	struct dw_edma_region		ll_region_rd[EDMA_MAX_RD_CH];
+> -	struct dw_edma_region		dt_region_wr[EDMA_MAX_WR_CH];
+> -	struct dw_edma_region		dt_region_rd[EDMA_MAX_RD_CH];
+> +	struct dw_edma_region		*rg_region;	/* Registers */
+> +	struct dw_edma_region		*ll_region_wr;
+> +	struct dw_edma_region		*ll_region_rd;
+> +	struct dw_edma_region		*dt_region_wr;
+> +	struct dw_edma_region		*dt_region_rd;
+>  
+
+As I said above, can we just reuse the existing fields from "dw_edma_chip"?
+
+Thanks,
+Mani
