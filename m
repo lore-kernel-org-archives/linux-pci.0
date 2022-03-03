@@ -2,184 +2,188 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024CEC433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 00:15:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3DBDC433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 00:22:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230166AbiCCAQO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Mar 2022 19:16:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49386 "EHLO
+        id S230271AbiCCAXE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Mar 2022 19:23:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230119AbiCCAQN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 19:16:13 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED4D1275CD
-        for <linux-pci@vger.kernel.org>; Wed,  2 Mar 2022 16:15:28 -0800 (PST)
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20220302225640epoutp02462da57d46567b995bc5e91a591c5f8a~YsmKf9rw-1310613106epoutp02P
-        for <linux-pci@vger.kernel.org>; Wed,  2 Mar 2022 22:56:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20220302225640epoutp02462da57d46567b995bc5e91a591c5f8a~YsmKf9rw-1310613106epoutp02P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1646261800;
-        bh=3iWbbqBJOFzWAOvgnsU3hKkcSQAKwiWkLuhIlSq681Y=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=uwRvZyP+4WCCQvaNmDPiejEK48NkRC4SHMONuIGqi1NoWEgdUtzlfq9+QY8xI5R7M
-         9+xI4/K/hoHMeL35g7raF9T0/qlYRSWYOOE0VhQ+LAYXpYo9WAvtZQNH5cEsFZhad/
-         8Dtp32qiEU50+zaZ1sAJXBcQqxJQcEOnsga1Qh1k=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20220302225639epcas1p2a85a59e0acf2beadd05e27743e5cb7c9~YsmJ3g_AJ2430124301epcas1p2h;
-        Wed,  2 Mar 2022 22:56:39 +0000 (GMT)
-Received: from epsmges1p3.samsung.com (unknown [182.195.38.241]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4K88ck1y66z4x9Px; Wed,  2 Mar
-        2022 22:56:38 +0000 (GMT)
-Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
-        epsmges1p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FC.E4.09592.626FF126; Thu,  3 Mar 2022 07:56:38 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20220302225637epcas1p11a0d9f404de6dc2701121ffbc7d412e4~YsmIDhjBt1098510985epcas1p1b;
-        Wed,  2 Mar 2022 22:56:37 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220302225637epsmtrp2e5254885b64a554a7d19bc991a04ece6~YsmICsmnX0052300523epsmtrp2Q;
-        Wed,  2 Mar 2022 22:56:37 +0000 (GMT)
-X-AuditID: b6c32a37-2a5ff70000002578-00-621ff626ad30
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        6A.74.29871.526FF126; Thu,  3 Mar 2022 07:56:37 +0900 (KST)
-Received: from yj84jang02 (unknown [10.88.97.211]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20220302225637epsmtip1abad9f4216e10a5d6043de269b6cd3e7~YsmHzktTf0949609496epsmtip1D;
-        Wed,  2 Mar 2022 22:56:37 +0000 (GMT)
-From:   =?utf-8?B?7J6l7JiB7KeEL1RWIFMvVyBMYWIoVkQpL1N0YWZmIEVuZ2luZWU=?=
-         =?utf-8?B?ci/sgrzshLHsoITsnpA=?= <yj84.jang@samsung.com>
-To:     "'Bjorn Helgaas'" <helgaas@kernel.org>,
-        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>
-Cc:     "'Rafael J. Wysocki'" <rafael@kernel.org>,
-        "'Pavel Machek'" <pavel@ucw.cz>,
-        "'Len Brown'" <len.brown@intel.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        <linux-pm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-usb@vger.kernel.org>, <js07.lee@samsung.com>
-In-Reply-To: <20220302201600.GA746065@bhelgaas>
-Subject: RE: [PATCH] PM: Add device name to suspend_report_result()
-Date:   Thu, 3 Mar 2022 07:56:37 +0900
-Message-ID: <044701d82e88$c5edb6f0$51c924d0$@samsung.com>
+        with ESMTP id S230388AbiCCAWx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 19:22:53 -0500
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam07on2082.outbound.protection.outlook.com [40.107.95.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 204931029EF;
+        Wed,  2 Mar 2022 16:21:46 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hZyNOnct/VF/oB+D6Tl0DZPPRkdRa/ok9leqHishEd8oWzfedo8pTtCQ1KuotmZi824d+dszoV+zq67AYJddoKhjJs6yvcT3q/sTNesllL3os4LJJbGQk1dpjefQyr35YR1+ywfqKoJvA/IsxkJY5S6yLd/4oyjRhfiUjmKkgHVu7ZgtTjxjzFckLPbujHQ+r6OL4hBau0/R8t4nweqp04Z8dsMyngy/La4zAoxYs+XGdBabnz6HVwSJn4nLC4c5xtDzpFT+D3FnGhayoPYY3KPrvLRmYbumvyziH1hjO5Ji2+J72GPbKbTk/UDn7BHgyWL8HqX5CVzL5IifAzKN2A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=YqaQITaTVdcnjb1jq3P8vdhtiJhahcMtBaR3iEavRV8=;
+ b=LPf2+bL7H1+7vdd1vvzeLSICYSONUFLSCJUU+a18EVSpr6luEWh3hADBqWRVmocUNBgXplP353PZLq5j+XpHreGFcuaUmsPj/5pc8BDM9ExtpKjHYOdMbEX++Js5XXP5G5DUzyohqa1YygbrEGg1i5mzqn4i4n9PaCh5IYECq00tFs0MueleKhZcTS2cJoszCYWXh/6b89JKGBcKeTHrfTfcgAnXK/dex2zzbjuc4SRCDg6iW16I5EhMozR1sHJMlj64lqIh6dS82DhJGUmILNQMdHYSqA4FhbOoVj8LnXBlUi85pFyfkAwBzH1FQMbNAx47pTQbmsb3K8IxMgbgtQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YqaQITaTVdcnjb1jq3P8vdhtiJhahcMtBaR3iEavRV8=;
+ b=c40/VJQlWn0uumPyHRt/OWfYVPIfDPgHZoQN4kjqwMrvHI4eo4ouWi2mkj37E5KXRdAk5T7WaSOT0bR6+VqoUBWfE26NkLdLNJUQSM4qt63uk3Qk3tSX1Hsq7asMAA5KEd2NmGAWP9QWAlLiXw12Cntc/yJlCqMILI4OK3+pK4vcZ26XQSEOkggafDgNWjhCd3Bsis3A8f2ObHKP3uIsDgyAzOd1DcBdc9FoslRsZvkEnRQ5innRVEaWeSuX9lNSoy1PmxAgGsvQv/pqDS/WAKjNDHXpqa+jO/NgAo1iLJKBj3GXzO26VvcQahm6mExb7LVBZgjrxj1sOxulwqiPdg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+ by BN8PR12MB3298.namprd12.prod.outlook.com (2603:10b6:408:69::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.26; Thu, 3 Mar
+ 2022 00:21:44 +0000
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::51a0:4aee:2b4c:ca28]) by MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::51a0:4aee:2b4c:ca28%4]) with mapi id 15.20.5038.015; Thu, 3 Mar 2022
+ 00:21:43 +0000
+Date:   Wed, 2 Mar 2022 20:21:42 -0400
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+Cc:     kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
+        alex.williamson@redhat.com, cohuck@redhat.com,
+        mgurtovoy@nvidia.com, yishaih@nvidia.com, linuxarm@huawei.com,
+        liulongfang@huawei.com, prime.zeng@hisilicon.com,
+        jonathan.cameron@huawei.com, wangzhou1@hisilicon.com
+Subject: Re: [PATCH v7 09/10] hisi_acc_vfio_pci: Add support for VFIO live
+ migration
+Message-ID: <20220303002142.GE1026713@nvidia.com>
+References: <20220302172903.1995-1-shameerali.kolothum.thodi@huawei.com>
+ <20220302172903.1995-10-shameerali.kolothum.thodi@huawei.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220302172903.1995-10-shameerali.kolothum.thodi@huawei.com>
+X-ClientProxiedBy: YT1PR01CA0118.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:2c::27) To MN2PR12MB4192.namprd12.prod.outlook.com
+ (2603:10b6:208:1d5::15)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEynvdJh8FuJQ7CWAlJZtNNGRQBBQHeIvO4rejfgPA=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrOJsWRmVeSWpSXmKPExsWy7bCmga7aN/kkg8OLOCyWNGVYNC9ez2bx
-        6sxaNotHN3+zWsyaspfJYvm+fkaLy7vmsFmcnXeczeJz7xFGi0XLWpkt7p46ymYx98tUZgce
-        jwWbSj0W73nJ5LFpVSebx/65a9g9+rasYvRYsfo7u8fnTXIB7FHZNhmpiSmpRQqpecn5KZl5
-        6bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+AbpumTlAdyoplCXmlAKFAhKLi5X07WyK8ktL
-        UhUy8otLbJVSC1JyCswK9IoTc4tL89L18lJLrAwNDIxMgQoTsjMmNneyFRxSrXg3cy5TA+N6
-        lS5GTg4JAROJd00vmbsYuTiEBHYwShyfupgVJCEk8IlR4s4fa4jEN0aJ+St2ssF0nH/znQmi
-        aC+jxI9bTBBFzxkl3r2ewgiSYBNoZJT4810BxBYRSJRYO7+ZBaSIWeASk8T1S1vAijgF9CXO
-        n+0AmyQs4Cyxd98RFhCbRUBF4sDVM8wgNq+ApcTiNSfZIWxBiZMzn4DVMAtoSyxb+JoZ4iIF
-        iZ9Pl7FCLLOSaFnSB1UjIjG7sw2q5giHxMZzYRC2i0TPwrusELawxKvjW9ghbCmJz+/2Qn2Z
-        LjHx8VuoeIHE38dLoOYYS7x7uxbI5gCarymxfpc+RFhRYufvuYwQa/kk3n3tYQUpkRDgleho
-        E4IoUZZ4fH411HRJifW/9zNNYFSaheSxWUgem4XkgVkIyxYwsqxiFEstKM5NTy02LDCGx3Vy
-        fu4mRnAK1jLfwTjt7Qe9Q4xMHIyHGCU4mJVEeMWt5ZOEeFMSK6tSi/Lji0pzUosPMZoCg3oi
-        s5Rocj4wC+SVxBuaWBqYmBmZWBhbGpspifOumnY6UUggPbEkNTs1tSC1CKaPiYNTqoHpunid
-        Q/RF7nWGV99tnsnyTfbFPf80zu8CC7cySl039FwoPa/9wDXBd11ZBf6+Z3f2ZvHo7G/w3Kln
-        MO9F/S5XaZOCVZZW/N8ZH69LCM8/97fBsPQgf0KWaPCZk3JL/Lz3ap7RYJ+yil3tS2SNzP3Y
-        F5rLt3GvWrHrrnxD1sYSv0wP2ReqDs+XJR40YjlpfuLlJt2ujRt4nkWl9Hg6HL1RvvZ1XdI1
-        Jo0jk76VLZ70TW+n5k6BdwJuAR8mZ31V00jbfyp9iahyZLTq9qN/8+VlHc6I39l/kOPutpmB
-        +mmVGRLG1zZI+DbM/HwjvHjLiZWH7A6VT2zizVy0q7r2ivIrXrkPapO5jP+eFL2b6y+txFKc
-        kWioxVxUnAgAG6TXeEoEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCIsWRmVeSWpSXmKPExsWy7bCSnK7qN/kkg28PdCyWNGVYNC9ez2bx
-        6sxaNotHN3+zWsyaspfJYvm+fkaLy7vmsFmcnXeczeJz7xFGi0XLWpkt7p46ymYx98tUZgce
-        jwWbSj0W73nJ5LFpVSebx/65a9g9+rasYvRYsfo7u8fnTXIB7FFcNimpOZllqUX6dglcGSv2
-        32EsWCBV0fxrE1sD40zRLkZODgkBE4nzb74zdTFycQgJ7GaUeD7lNyNEQlLi66fPbF2MHEC2
-        sMThw8UQNU8ZJTbNu8cMUsMm0Mgo8ee7AogtIpAo0ft1BguIzSxwi0ni7yFniIYGRolVRzeA
-        JTgF9CXOn+1gArGFBZwl9u47AhZnEVCROHD1DNhQXgFLicVrTrJD2IISJ2c+gRqqLfH05lM4
-        e9nC18wQhypI/Hy6jBXiCCuJliV9UDUiErM725gnMArPQjJqFpJRs5CMmoWkZQEjyypGydSC
-        4tz03GLDAsO81HK94sTc4tK8dL3k/NxNjOCI1NLcwbh91Qe9Q4xMHIyHGCU4mJVEeMWt5ZOE
-        eFMSK6tSi/Lji0pzUosPMUpzsCiJ817oOhkvJJCeWJKanZpakFoEk2Xi4JRqYNoV9uXFt/Uy
-        RUovPXVa5Hyip3hEeO3teT/JKa7xmpKy5nLrIKEf9qZ81idKYm/dND7y8zvTphKPG7Nj425m
-        8E+5sdaoN/NS0fyvqT+nff1k3HKhwnP1tve7zefZOO3e7yXsqKK4ou05y+wda6P65Eyr3uvO
-        SRR0lT8s67luXSXjje2687ftF5zR8LJme7f+se5H/6aLR06xM4ot8mIp+lfxRnuXwR6Jxztb
-        fD/UXLho/6rpXeVB7Z9zwo48Snjv3dfp+1/pyQfj0kwldsfABxOce26kHf69SPbxWSUjL9tr
-        Xlm7Xh34zXVr7f7sB11n9d8lcGrOOTFn2TtbL9UVOVyrO2vMczgY+5eYcAQ92qbEUpyRaKjF
-        XFScCADf4E/lNwMAAA==
-X-CMS-MailID: 20220302225637epcas1p11a0d9f404de6dc2701121ffbc7d412e4
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220302201609epcas1p4d2c0b15e8915f359e6744e21c27022a0
-References: <CGME20220302201609epcas1p4d2c0b15e8915f359e6744e21c27022a0@epcas1p4.samsung.com>
-        <20220302201600.GA746065@bhelgaas>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 335b7694-9ced-47f5-5d49-08d9fcabcbc3
+X-MS-TrafficTypeDiagnostic: BN8PR12MB3298:EE_
+X-Microsoft-Antispam-PRVS: <BN8PR12MB3298E3C909430EA893F6B86BC2049@BN8PR12MB3298.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rzXKSHUhrGre1qfqXopXAUukX22rGRP59Eaf7iI7J2ndr/DvFmruK7Dvz5yHdRzgRjju0ZRFYqXxQkTYdwFG45cv3IM9F1Ys4RaYhkIkSSS/VtXpsMriIJzXZRSbvPgQuVSMGe/UXlj+6B19JPABVV+Q+JSohxUKLJ2efoFxyrAmZRwexTBj9KQ4RSG4iEK75X6CYUhXLo7PZjzYEcq+jUMB5+/Qbzn4X04P1bUW8gsqgRz0mmDiR5uAXT/5N72piLPlvyKTqDtUWC9n68kMTgmTBY+2IwmNTHefkFrUxyU0XYJaYG/jgPFa1qiZDkGtLMY58kPY9ED6xeElRF+J91+me1qLpC5YhWbE4haK2YELjEXR+X0QbLZgQzHAmSkVIu234kgv0RlmD/XmR6AAsInywJ3Sr9yDELSTjF5l0yR3z6+sU6srtCZ00d7Z5qA4deSAPlvWX8U8jHqMNlQ/hS02ysFT30iHHprwaQ1ifMDt66ZAxUZXX7GxrZHYosgzcspEol5gBc87/Vt4PbKp/e8oe+eff7kJZ2GvHTnxzxRiEdh+SyrXd/3FgMpvHfPMbwgSWeWpIOyYtN/DpExlzBH/L6XM9FKJDyGwxBJvxuZvEQV85HJfmZE19+QYKZ1zM+RmYON7/hAmXQLkGtKHlw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(7416002)(1076003)(316002)(8936002)(26005)(6916009)(186003)(38100700002)(5660300002)(508600001)(6486002)(86362001)(6512007)(6506007)(66946007)(4326008)(66476007)(2616005)(8676002)(66556008)(36756003)(83380400001)(2906002)(33656002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ER2Olk9VQ509wkG5ixhjMTRsVJfh7y94XuOz3yhlbnH1P9QerY3Nz/rUIeoi?=
+ =?us-ascii?Q?SJzRZ7Uw9V/wjbo7dQiptY4xqR5Kvvdy3t9RCxsxQ6xZrxmCfgclFSf38FC9?=
+ =?us-ascii?Q?R8Hs6HCeZbg/cnEflMv4DW9VP4VbzQSY+4XU4vtgNRncN4Ku/plH+Jd9Zldn?=
+ =?us-ascii?Q?FfFlxpcexzLkyhMN4eQtm4MNosHIahEJNAdapicu2Jj35uLoE1IHzsD2xzGb?=
+ =?us-ascii?Q?r2dcQo8yDlOvNdNiVN9RmriColCwQBKbU55TrY4YG3V3WtLa13lncvrcN8Cc?=
+ =?us-ascii?Q?uIbXHBmJ7SkgLqONKhlqSejNnDnekg2uMD0HEfauq9x5th4Trt8cF7giA+YI?=
+ =?us-ascii?Q?5inKrMAU6BPEk0ddGcEANMaRY9ojpTXqcYRe0uUUC2p+peseM7JEVB+2QS9E?=
+ =?us-ascii?Q?+CimGl5oLVTTxGHCJ66WPJatWiUNtIPnAVYtc3QGLYsWfS+pdG8FYkRjNMCZ?=
+ =?us-ascii?Q?35sPwgJYOUgDku3xkkm/1zr3MlXp34Jqw9rO7P2TOrYI+YJIF67Nca+U910C?=
+ =?us-ascii?Q?IobiCWwjTa0AB6QZHIdNdyeYoEfm/H1huEOgQdQgm0r1Xu9vkrYHh1rMCYuN?=
+ =?us-ascii?Q?DEmLtVEv9TiBDc3bl7bANutC30UmDCghNm85R/yHysAvH8BHhDd4FXRn3G/h?=
+ =?us-ascii?Q?nAIfhYkSIBC62/55JlSbnH17id1CAf+NEjoRaiE1D6LAmtUR6m0Haap5KJSi?=
+ =?us-ascii?Q?1PfjqfuDkJof/JA8kYKzGhoOcGn5Yvv2d9P9ZGwRSdX0kso9TMEwm54Z5Trc?=
+ =?us-ascii?Q?f0T0J/qVmZ34uX5l37u7lltJfReE09HpBqRNTy5l0Hid2D+JM1+CKzsVTcWu?=
+ =?us-ascii?Q?jZw1+aufgILWVxCCOnDGSlbqphMJeQ5pSyzqj75y3i+VJWXGRa+oZh/wyr51?=
+ =?us-ascii?Q?dXQAjpap48t2jqwl7vvE6NtTnT/ZKw08ZmOEP/gzFUY3vggbhdQ/iYXa3lJz?=
+ =?us-ascii?Q?jDxhj3pxEyzynZJBRVdtiu/kS3I333vNcaBbUPJ0Oh09bWYlAuSx6aYOwXlW?=
+ =?us-ascii?Q?cQodMrUR7Urab4fESV3OI9OgWh4rvKYrzY4tX60rNZ7sCvDGfLEytyEhUzlZ?=
+ =?us-ascii?Q?wVIW3+FMTxS0KBVWk6E80CHpdpCo0Dxbd5kO2/dK4cnNAAnEbt1DSSqHBCSF?=
+ =?us-ascii?Q?8VnS7WwsJPhIZp+sLoGSS7M6AwFQ9kyk392PXSQJOiH7HahtVvn2HKjctWQt?=
+ =?us-ascii?Q?OXLy58vvKRg84d5qIlwKMh/IVHcnHmD9D0dEESvJ/Af6au9abARVhv40jlc1?=
+ =?us-ascii?Q?3xV7ReVSBQxpjdvElAAluL68QYonM2FThvVzBYVw5ciou9H/If4siBkilbWw?=
+ =?us-ascii?Q?LflFl01KM5qBcD8rlDmn7K0AKB9ASo6NhQMxf49tbipL9P9ogJ9kFM8gR+Rs?=
+ =?us-ascii?Q?tkDI0sTRTsjLzRAcisVAAlxdFbEHEvkFJfVmCVwmX3du1wTqWhBLvfyTRzC0?=
+ =?us-ascii?Q?or3eKaSvmJtJOs/Pto67wcgeH0s5UYOX+0s+knIawRYLk344XUsO4lEOwlid?=
+ =?us-ascii?Q?+xgjI9nIT8gZ16oc1nj8iwfLk6XQYXIua4JZlwBCVcx9UHsHhF411maiMEKG?=
+ =?us-ascii?Q?5OpQuAOoTJDhetcNed8=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 335b7694-9ced-47f5-5d49-08d9fcabcbc3
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2022 00:21:43.8732
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DWg6taomUxjq4OrA5V5befOCZRvaCHMeSfyDUoumgShs3ST3mN1+FhpRIKVf10l5
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB3298
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> -----Original Message-----
-> From: Bjorn Helgaas <helgaas=40kernel.org>
-> Sent: Thursday, March 3, 2022 5:16 AM
-> To: 'Greg Kroah-Hartman' <gregkh=40linuxfoundation.org>
-> Cc: =EF=BF=BD=E5=BF=B5=EF=BF=BD=EF=BF=BD/TV=20S/W=20Lab(VD)/Staff=20Engin=
-eer/=EF=BF=BD=EF=BC=BA=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=20<yj84.jang=40s=
-amsung.com>;=0D=0A>=20'Rafael=20J.=20Wysocki'=20<rafael=40kernel.org>;=20'P=
-avel=20Machek'=20<pavel=40ucw.cz>;=0D=0A>=20'Len=20Brown'=20<len.brown=40in=
-tel.com>;=20'Bjorn=20Helgaas'=20<bhelgaas=40google.com>;=0D=0A>=20linux-pm=
-=40vger.kernel.org;=20linux-kernel=40vger.kernel.org;=20linux-=0D=0A>=20pci=
-=40vger.kernel.org;=20linux-acpi=40vger.kernel.org;=20linux-usb=40vger.kern=
-el.org;=0D=0A>=20js07.lee=40samsung.com=0D=0A>=20Subject:=20Re:=20=5BPATCH=
-=5D=20PM:=20Add=20device=20name=20to=20suspend_report_result()=0D=0A>=20=0D=
-=0A>=20On=20Wed,=20Mar=2002,=202022=20at=2003:52:51PM=20+0100,=20'Greg=20Kr=
-oah-Hartman'=20wrote:=0D=0A>=20>=20On=20Wed,=20Mar=2002,=202022=20at=2008:0=
-0:14PM=20+0900,=20=20=E5=BF=B5=20=20/TV=20S/W=20Lab(VD)/Staff=0D=0A>=20Engi=
-neer/=20=EF=BC=BA=20=20=20=20=20wrote:=0D=0A>=20>=20>=20>=20-----Original=
-=20Message-----=0D=0A>=20>=20>=20>=20From:=20Greg=20Kroah-Hartman=20<gregkh=
-=40linuxfoundation.org>=0D=0A>=20>=20>=20>=20Sent:=20Wednesday,=20March=202=
-,=202022=204:58=20PM=0D=0A>=20>=20>=20>=20To:=20Youngjin=20Jang=20<yj84.jan=
-g=40samsung.com>=0D=0A>=20>=20>=20>=20Cc:=20Rafael=20J.=20Wysocki=20<rafael=
-=40kernel.org>;=20Pavel=20Machek=0D=0A>=20>=20>=20>=20<pavel=40ucw.cz>;=20L=
-en=20Brown=20<len.brown=40intel.com>;=20Bjorn=20Helgaas=0D=0A>=20>=20>=20>=
-=20<bhelgaas=40google.com>;=20linux-pm=40vger.kernel.org;=0D=0A>=20>=20>=20=
->=20linux-kernel=40vger.kernel.org;=20linux-=20pci=40vger.kernel.org;=0D=0A=
->=20>=20>=20>=20linux-acpi=40vger.kernel.org;=20linux-=0D=0A>=20>=20>=20usb=
-=40vger.kernel.org;=0D=0A>=20>=20>=20>=20js07.lee=40samsung.com=0D=0A>=20>=
-=20>=20>=20Subject:=20Re:=20=5BPATCH=5D=20PM:=20Add=20device=20name=20to=0D=
-=0A>=20>=20>=20>=20suspend_report_result()=0D=0A>=20>=20>=20>=0D=0A>=20>=20=
->=20>=20On=20Wed,=20Mar=2002,=202022=20at=2003:49:17PM=20+0900,=20Youngjin=
-=20Jang=20wrote:=0D=0A>=20>=20>=20>=20>=20From:=20=22yj84.jang=22=20<yj84.j=
-ang=40samsung.com>=0D=0A>=20>=20>=20>=20>=0D=0A>=20>=20>=20>=20>=20currentl=
-y,=20suspend_report_result()=20prints=20only=20function=0D=0A>=20informatio=
-n.=0D=0A>=20>=20>=20>=20>=20If=20any=20driver=20uses=20common=20pm=20functi=
-on,=20nobody=20knows=20who=20called=0D=0A>=20>=20>=20>=20>=20failed=20funct=
-ion=20exactly.=0D=0A>=20>=20>=20>=20>=0D=0A>=20>=20>=20>=20>=20So,=20device=
-=20information=20is=20needed=20to=20recognize=20specific=20wrong=0D=0A>=20d=
-river.=0D=0A>=20>=20>=20>=20>=0D=0A>=20>=20>=20>=20>=20e.g.)=0D=0A>=20>=20>=
-=20>=20>=20PM:=20dpm_run_callback():=20pm_generic_suspend+0x0/0x48=20return=
-s=200=0D=0A>=20>=20>=20>=20>=20PM:=20dpm_run_callback():=20platform_pm_susp=
-end+0x0/0x68=20returns=200=0D=0A>=20>=20>=20>=20>=20after=20patch,=0D=0A>=
-=20>=20>=20>=20>=20PM:=20dpm_run_callback():=20pm_generic_suspend+0x0/0x48=
-=20(amba)=0D=0A>=20>=20>=20>=20>=20returns=200=0D=0A>=20>=20>=20>=20>=20PM:=
-=20dpm_run_callback():=20platform_pm_suspend+0x0/0x68=20(armv7-pmu)=0D=0A>=
-=20>=20>=20>=20>=20returns=200=0D=0A>=20=0D=0A>=20>=20>=20>=20>=20-=09=09pr=
-_err(=22%s():=20%pS=20returns=20%d=5Cn=22,=20function,=20fn,=20ret);=0D=0A>=
-=20>=20>=20>=20>=20+=09=09pr_err(=22%s():=20%pS=20(%s)=20returns=20%d=5Cn=
-=22,=20function,=20fn,=0D=0A>=20>=20>=20>=20>=20+dev_driver_string(dev),=20=
-ret);=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20>=20If=20you=20have=20a=20struct=
-=20device,=20please=20use=20dev_err().=0D=0A>=20>=20>=0D=0A>=20>=20>=20I=20=
-think=20dev_err()=20is=20nice=20option,=20but=20we=20can=20see=20a=20minor=
-=20issue.=0D=0A>=20>=20>=20Prefix=20log=20=22PM:=20=22=20would=20be=20lost,=
-=20If=20I=20use=20dev_err()=20in=20this=20context.=0D=0A>=20>=20>=20As=20yo=
-u=20know,=20all=20logs=20in=20power=20management=20include=20=22PM=20:=22=
-=20prefix.=0D=0A>=20>=0D=0A>=20>=20Why=20does=20that=20matter?=20=20Fix=20t=
-hem=20all=20to=20use=20the=20struct=20device=20pointer=0D=0A>=20>=20and=20t=
-hen=20they=20will=20be=20properly=20unified=20with=20the=20rest=20of=20the=
-=20kernel=20log=0D=0A>=20>=20infrastructure.=0D=0A>=20=0D=0A>=20You=20can=
-=20=23define=20dev_fmt=20if=20you=20need=20a=20prefix.=0D=0A=0D=0AI=20teste=
-d=20dev_fmt=20before,=20but=20I=20feel=20that=20not=20a=20good=20solution.=
-=0D=0ABecause=20the=20readability=20is=20not=20so=20great=20than=20I=20expe=
-cted.=0D=0AI=20didn't=20want=20to=20break=20the=20PM=20logging=20rules.=0D=
-=0A=0D=0AAnyway,=20I=20got=20you=20guys=20opinion.=0D=0ALet=20me=20try=20se=
-cond=20patch=20with=20dev_err().=0D=0A=0D=0A
+On Wed, Mar 02, 2022 at 05:29:02PM +0000, Shameer Kolothum wrote:
+> +static long hisi_acc_vf_save_unl_ioctl(struct file *filp,
+> +				       unsigned int cmd, unsigned long arg)
+> +{
+> +	struct hisi_acc_vf_migration_file *migf = filp->private_data;
+> +	struct hisi_acc_vf_core_device *hisi_acc_vdev = container_of(migf,
+> +			struct hisi_acc_vf_core_device, saving_migf);
+> +	loff_t *pos = &filp->f_pos;
+> +	struct vfio_precopy_info info;
+> +	unsigned long minsz;
+> +	int ret;
+> +
+> +	if (cmd != VFIO_MIG_GET_PRECOPY_INFO)
+> +		return -ENOTTY;
+> +
+> +	minsz = offsetofend(struct vfio_precopy_info, dirty_bytes);
+> +
+> +	if (copy_from_user(&info, (void __user *)arg, minsz))
+> +		return -EFAULT;
+> +	if (info.argsz < minsz)
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&hisi_acc_vdev->state_mutex);
+> +	if (hisi_acc_vdev->mig_state != VFIO_DEVICE_STATE_PRE_COPY) {
+> +		mutex_unlock(&hisi_acc_vdev->state_mutex);
+> +		return -EINVAL;
+> +	}
+
+IMHO it is easier just to check the total_length and not grab this
+other lock
+
+> +struct acc_vf_data {
+> +#define QM_MATCH_SIZE 32L
+
+This should be
+
+#define QM_MATCH_SIZE offsetofend(struct acc_vf_data, qm_rsv_state)
+
+> +	/* QM match information */
+
+You should probably put an 8 byte random magic number here just to
+make the compatibility more unique.
+
+> +	u32 qp_num;
+> +	u32 dev_id;
+> +	u32 que_iso_cfg;
+> +	u32 qp_base;
+> +	/* QM reserved match information */
+> +	u32 qm_rsv_state[4];
+> +
+> +	/* QM RW regs */
+> +	u32 aeq_int_mask;
+> +	u32 eq_int_mask;
+> +	u32 ifc_int_source;
+> +	u32 ifc_int_mask;
+> +	u32 ifc_int_set;
+> +	u32 page_size;
+> +
+> +	/* QM_EQC_DW has 7 regs */
+> +	u32 qm_eqc_dw[7];
+> +
+> +	/* QM_AEQC_DW has 7 regs */
+> +	u32 qm_aeqc_dw[7];
+> +
+> +	/* QM reserved 5 regs */
+> +	u32 qm_rsv_regs[5];
+> +
+> +	/* qm memory init information */
+> +	u64 eqe_dma;
+
+Am I counting wrong or is there a padding before this? 7+7+5 is not a multiple
+of 2. Be explicit about padding in a structure like this.
+
+Jason
