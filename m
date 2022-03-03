@@ -2,275 +2,166 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F84C4332F
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Mar 2022 21:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D481C433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 00:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243550AbiCBVfS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Mar 2022 16:35:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39420 "EHLO
+        id S229962AbiCCAGT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Mar 2022 19:06:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235450AbiCBVfS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 16:35:18 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 862C44B40A;
-        Wed,  2 Mar 2022 13:34:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646256873; x=1677792873;
-  h=message-id:subject:from:reply-to:to:cc:date:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=uWKYkYNGFSCvs2AqC67ATOJPnSIh5p27qIVXXMKxU9c=;
-  b=JxTbtMansGqXBMg4AgKW+r6qOB/3Pa/+15UmDCY6T0D0xYqxq3UPdEKO
-   VsPAYgxA6xW0zbG9i6iG7B2/AHC8wBAmRDooAUsss4wAUeL6ry/GEO4BB
-   RSG0vWs/0Pj7meTf0cMUZjVXwstFYrcqfVIU0dpTWmveO+2JbLNEQ2cBt
-   UNFVGbmpjk8BNpZ6sE4SPl0JarcsRxHZcPA4ykk2I4BkVoofGGITM40De
-   kFIBbCc94rsTcFVOSCZYY2itHlRcQ48na5b7eUE2KefV/BECORCsyFAJh
-   wUxpjuog4JrUaeyH3tbVWwu9zBv+vwZFGEfTKNbz81ZOJAHRBUDX9CdmW
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10274"; a="253239205"
-X-IronPort-AV: E=Sophos;i="5.90,150,1643702400"; 
-   d="scan'208";a="253239205"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 13:34:32 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,150,1643702400"; 
-   d="scan'208";a="639932610"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga002.fm.intel.com with ESMTP; 02 Mar 2022 13:34:32 -0800
-Received: from jvillanu-mobl1.amr.corp.intel.com (unknown [10.209.29.178])
-        by linux.intel.com (Postfix) with ESMTP id CBE5A580BA0;
-        Wed,  2 Mar 2022 13:34:31 -0800 (PST)
-Message-ID: <3eca2aac539cb14ac5e515ad29c513c457419954.camel@linux.intel.com>
-Subject: Re: [RFC PATCH 2/4] spdm: Introduce a library for DMTF SPDM
-From:   "David E. Box" <david.e.box@linux.intel.com>
-Reply-To: david.e.box@linux.intel.com
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Cc:     "Williams, Dan J" <dan.j.williams@intel.com>,
-        "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "open list:KEYS-TRUSTED" <keyrings@vger.kernel.org>,
-        Chris Browy <cbrowy@avery-design.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        Jeremy Kerr <jk@codeconstruct.com.au>
-Date:   Wed, 02 Mar 2022 13:34:31 -0800
-In-Reply-To: <20220301095937.00002c5e@Huawei.com>
-References: <20210804161839.3492053-1-Jonathan.Cameron@huawei.com>
-         <20210804161839.3492053-3-Jonathan.Cameron@huawei.com>
-         <CAPcyv4iiZMd6GmyRG+SMcYF_5JEqj8zrti_gjffTvOE27srbUw@mail.gmail.com>
-         <MW3PR11MB452200EBA0E813A1A4E8D8C4A1019@MW3PR11MB4522.namprd11.prod.outlook.com>
-         <20220301095937.00002c5e@Huawei.com>
-Organization: David E. Box
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        with ESMTP id S229945AbiCCAGS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2022 19:06:18 -0500
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (mail-bn8nam08on2068.outbound.protection.outlook.com [40.107.100.68])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0179D1FCC3;
+        Wed,  2 Mar 2022 16:05:33 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=eGdc+KwxNrp0u/c0L36sHGogoY7qa12+QDwnHxT8seYwVYKXTWe2g9xfykc4iaCDW3fjdiPC0vDGs3cq7TVX4U3r9J583sxk8aMAG5gWNwOraqajPrXhGbfy3V7umkvUen9eHE0dEVMbVS6Ef6ocXVPIxyPxCduVlIcLkrdgYWmxjU0X5X6PUYwlHIVPg3+f2Ss5Q6VMKmUF+D2Os7qhEUEh0nLSf+GvnUa55Q9saURKAC1FTeArCJumE2qQ3QOgqy0fV+oLkMwtjG70mf8GiSRFXAt+KpyHnHRxOLjAudbpvS6mt5nCyGfPnU3b4LNqhht3pVIGl9A3Wzty6hmVuw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3pOTCSv/0xG+8W9WNzd09eHKXeYodm0lVdd0OdR1enA=;
+ b=ecc8VTj9H5+7lWU6ARXgK9cOa/Ozf1d+msEyMMKHO6KCAz9FIrtyefyCVUcpVIFCkpNYtoqLop0QXTXIxZapzI8K4BMYaCKS58JIfbjOl+RU4uQRwdDJ51jEnvrOgPDnAC20mFqfDXqS40MnRZaR+k6/tbIXzv3K3240qw6Jttn7pFmjkZ/qYz9yF1ImHHykW99kFjDgbK5AYPjcl4+LZuygpbPQiwZrKyCnV9N1UwC0M/3xenEL1OWTbBfLOT75adKM4xo6i59fcnimIN5+qnh5YijmX8gGv5lOCT2GvpPKI+aBLRDe/MUvKX+biAAy451XVyFFmkm1C7aN1qMAZA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3pOTCSv/0xG+8W9WNzd09eHKXeYodm0lVdd0OdR1enA=;
+ b=JWHi/NV5N0jZwKpYNBcT1QaT/nvSYvGl8BNs7nRlxOVF4giLDLg7kiszFi1Y6EtTD1RA5Mbnk4XHPFm1gfgXgdjrW5y5EejHYNG5piQZLrg6AI6nh2J0UM2COakVmjgslOblVvKSHVY0JIFwazsyOPsgqR9/3pEpv0WnYMHulSbHjfSMZMbK3MbVJMa4r5guzHBZnTUnX+WrlPCGalxr7iz5jFHRf3R3PS8oXSjsTdiUAfdCsybu/ZguX0ckZk3fStuexkp3CxUn4kMtmCgypjcuZGryIf0uAb4DdzBzfW/ZrKny8g7wDWzhuWIxIuxWKekE1eY49Nf0nz7vgwvpAA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com (2603:10b6:208:1d5::15)
+ by BL1PR12MB5801.namprd12.prod.outlook.com (2603:10b6:208:391::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.14; Thu, 3 Mar
+ 2022 00:05:31 +0000
+Received: from MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::51a0:4aee:2b4c:ca28]) by MN2PR12MB4192.namprd12.prod.outlook.com
+ ([fe80::51a0:4aee:2b4c:ca28%4]) with mapi id 15.20.5038.015; Thu, 3 Mar 2022
+ 00:05:30 +0000
+Date:   Wed, 2 Mar 2022 20:05:28 -0400
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Alex Williamson <alex.williamson@redhat.com>
+Cc:     Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+        kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
+        cohuck@redhat.com, mgurtovoy@nvidia.com, yishaih@nvidia.com,
+        linuxarm@huawei.com, liulongfang@huawei.com,
+        prime.zeng@hisilicon.com, jonathan.cameron@huawei.com,
+        wangzhou1@hisilicon.com
+Subject: Re: [PATCH v7 07/10] vfio: Extend the device migration protocol with
+ PRE_COPY
+Message-ID: <20220303000528.GW219866@nvidia.com>
+References: <20220302172903.1995-1-shameerali.kolothum.thodi@huawei.com>
+ <20220302172903.1995-8-shameerali.kolothum.thodi@huawei.com>
+ <20220302133159.3c803f56.alex.williamson@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220302133159.3c803f56.alex.williamson@redhat.com>
+X-ClientProxiedBy: YT1PR01CA0147.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:2f::26) To MN2PR12MB4192.namprd12.prod.outlook.com
+ (2603:10b6:208:1d5::15)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d53a402d-d301-41ef-5813-08d9fca9879d
+X-MS-TrafficTypeDiagnostic: BL1PR12MB5801:EE_
+X-Microsoft-Antispam-PRVS: <BL1PR12MB580119F331AB6DA10928E726C2049@BL1PR12MB5801.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zYI4JKQGeFVQM/GT53uVuOsWfIQYVeJzmdR9r4Dggdg16MJWYz70ZHEjpTZj/hC5cE3kNdfEp3KY7+St7RW2nFsRD5XFHXYGHJsO+Cg/tb961PFJRukw86D/x40HJkh6xHOdJH4pB54wUy4i06npteU2SxUe4Y5PIJaPA/098wuzhOdnvI3CESDa+wNlXX2viGTIO096XzFuraXqiVkBKe6BT0Llp1q79qrEVhpXFTUI07TDB5m2oWDMZ3CGv4ttB7p78bwrICjSwkAlkMRNgUi3kMelJIcMhFlOuor12Df9xKN8q9DQ81z6ANPXh8sCTsSfCwhUCWl3EVIlqLyRy9qx+Jg9md52l/ga/Dc4NRpn8Sbm+qvw8+cswfYqPKYUJTWA7kJmmsJ+2kE13N5pDPg+VioQy8lU2B07eLWsgfpTvnSytXCDlmjdZEuXv+0lhKAAheS2cFYS2ZQ84xV3k7rZxHTi25RzaqXN/o0F3cNLkWLLwAmKC6A7Hr0p5mkOzZBUb5AJhJEcnuyqKA7XR/5EVYBhL6pLkkMp5hIc61AGJSRO9EogbabetK1LlqdAK3lSjBWtWvIs7Y7c9tLQJXRm8+TvPFd51haiASFI8fTgvH0XjMjtH66AUwiWKs8ileZVRjYNDIdKlgUzIhgRdPrq7BtTNP/Do2TI6oRF/rPKivVU8+Nry4Kp9SexU9klfq7CKjYfCqkegD9DHR99bA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB4192.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(26005)(186003)(2616005)(36756003)(8936002)(6512007)(1076003)(316002)(66556008)(8676002)(6506007)(2906002)(66946007)(7416002)(5660300002)(66476007)(4326008)(508600001)(38100700002)(86362001)(33656002)(6916009)(83380400001)(6486002)(27376004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hAG2fBVcMfHYDlEC6p7YnJlG358hTwN9UE3dkPDgUn4eYNSEQ+JuYFGJsONL?=
+ =?us-ascii?Q?fn1DVvZNa/T7L7xDpKFboyWvMkBPCTudUZDfOBW6+css84GQAwYJg75xsxfF?=
+ =?us-ascii?Q?1D9I74qIUTqRoDLJvS3+tf3Q9ZUM3KBLIB06U3IZgTSIUIyNwOs+9ve9qQ/G?=
+ =?us-ascii?Q?SseroG2J+aldjkjrDb1baXcm9NgevjgUoQDZXow3zh9S0UljjTILugQWwotL?=
+ =?us-ascii?Q?WZgALtF7xjF2oW3YehkfMq5eJ409iYfJKSrIdcFvzmklbXh46TJHrUYbARjz?=
+ =?us-ascii?Q?xtsPPFka4MO/PIPitN0QE4k9kjGLV77GfC3HK87soMdHL18vMt1pCvENQs59?=
+ =?us-ascii?Q?boDebIIsSBpSRk08gq7I+y7LWzKK5+WNsxTanKV8OcUxwiD/l4cpwjBhaOfX?=
+ =?us-ascii?Q?THosKA+7Zmw2Cb6XWju8SgK1U/1PTj/OfjeyLVzWWCbs6YPWdbODVM6H2RCv?=
+ =?us-ascii?Q?KXrQF2fZmEOi2EaVOEYrwzTOYUY0JRTTa/t1xobWWo6y1I+lWZZCLqi869I8?=
+ =?us-ascii?Q?UTxCqV4MmwuIlYm9EutG1WPZglHTgyoUbqOGitw8miy/JYS58hz1iazgiUog?=
+ =?us-ascii?Q?PwoqGqDs5+jpAPT4FtJ8CsD2ybij44MaP77KG2sY1PDKdVhuYZntkfyIcnrJ?=
+ =?us-ascii?Q?XNqBkK71GA00u94ipf6m+qzXPMUwPQ11w+7m3yeX2B5TarWt8lbGB/9qg87E?=
+ =?us-ascii?Q?DBz+vAIYFtp2ASuXvvxihTUY91UJgWoKH9Ydy+TIDRslZYzPVVfMwVkvXD7k?=
+ =?us-ascii?Q?5K/bySYFlWYuBqP7BJT+YznyRHu0PvBValyS9CK/N8LdTqHGOWBZKIlcMzhn?=
+ =?us-ascii?Q?fSoTJKJTE7+mNX+f5pdOQpQs4jD2A+olhadvIlS7bFaJpK6CwdwMcZGTMeXA?=
+ =?us-ascii?Q?SZayUmbDqBq2yoSK3oD3t1RJZGuFC80VMAZVIQ8yW/flT0AupDAtgUXeMoO0?=
+ =?us-ascii?Q?rUmKs4on83mB1ZdqeF7HltocwakbSxXH0VXhuqXG6bA+IeJczxMmxSMrRsac?=
+ =?us-ascii?Q?Oc0KisByYGa77GVQaV+BhAiNd1mmz/il2ppBqDjZH+emc4tbtFaFpm5U+QOz?=
+ =?us-ascii?Q?0cSQBgLz4eT+2OIc60Q+sOWydAVEYnDhDJ0TjLqUk9IJQ0BzqrBRxp6njUT1?=
+ =?us-ascii?Q?QQIjZzF9nXbW3Nx3avNfAgdXuU/tDsAazJtWKcWOnG6n50yHkTRc7Z4jaInF?=
+ =?us-ascii?Q?Z1BkFRagozIlX26VfGGS931dSP6EUi2o+iFBpEyijf/F3uU52xfU7yjgmsh7?=
+ =?us-ascii?Q?eQC3xmr+Gt/txGvyfU1mGn1cqaxlBOvRv1z4DTGZ3XgaJfSbTMddJm+RQKr/?=
+ =?us-ascii?Q?F6sgD7/uAVFsZOTwkeyVcUZ4wDkTJS80+iufyE3Kz9A2TjW6zAdjqXGrOwXT?=
+ =?us-ascii?Q?q0mvM/iSHMCgbd14JR7KIXZ/KCnmukcHmCg/t5iKQjyV6BFc2U40j93JgrIS?=
+ =?us-ascii?Q?+AgUcBXfcielXRHe/29fvs6h+BdekJh3UYMV9glxJU5h1fqAEv2B/QHwGH6W?=
+ =?us-ascii?Q?okkUlDTY1Vy3TirRFo4ay3T+4c1XiFD5KE3QWpHaNNyvJPaoyuDG1aFevQZK?=
+ =?us-ascii?Q?qPltSDlrWeZCvS5Kikw=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d53a402d-d301-41ef-5813-08d9fca9879d
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR12MB4192.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2022 00:05:30.7667
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BP1kRU+X3GRxNUFstlNxvZC0D9FftqmeRPVhzl9B/73awvSnMo/2vcaaO95YvVsJ
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5801
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2022-03-01 at 09:59 +0000, Jonathan Cameron wrote:
-> On Mon, 28 Feb 2022 18:13:27 +0000
-> "Box, David E" <david.e.box@intel.com> wrote:
+On Wed, Mar 02, 2022 at 01:31:59PM -0700, Alex Williamson wrote:
+> > + * initial_bytes reflects the estimated remaining size of any initial mandatory
+> > + * precopy data transfer. When initial_bytes returns as zero then the initial
+> > + * phase of the precopy data is completed. Generally initial_bytes should start
+> > + * out as approximately the entire device state.
 > 
-> > Hi Jonathan,
-> > 
-> > I'd like to test this patch with a custom transport but there's a
-> > reference to spdm.h that isn't here. Also, have you looked at
-> > measurement support yet? Thanks.
-> > 
-> 
-> Hi David,
-> 
-> I messed this up.
-> 
-> Some discussion of this took place on the linaro open discussions
-> list
-> and I posted a version there to enable some testing which has the
-> missing file.
-> Note I only did minimal testing against that tree and have had one
-> verbal report
-> of a minor bug (without details...)
-> 
-> https://op-lists.linaro.org/archives/list/linaro-open-discussions@op-lists.linaro.org/thread/5QU65B6Q74B3B4ESR7W5HER5HQ6WF4EQ/
-> 
-> It's rather dated now so I'll do a rebase and post this hopefully
-> later
-> this week given you are interested.
-> Note I haven't done any work on this for some time...
-> 
-> Curious though - what transport are people looking at?
-> I was planning to do MCTP over VDM at somepoint, but are we talking
-> something truely custom?  If so any plans to upstream as
-> I'd love a second transport to prove out the layering?
+> What is "mandatory" intended to mean here?  The user isn't required to
+> collect any data from the device in the PRE_COPY states.
 
-Thanks for the link. Definitely interested so please do cc me on future
-patches. I'm particularly interested in the SPDM library since I'm
-looking at this for use with a device specific transport. I'll let you
-know if/when there's something to upstream. Thanks.
+If the data is split into initial,dirty,trailer then mandatory means
+that first chunk.
 
-David
+> "The vfio_precopy_info data structure returned by this ioctl provides
+>  estimates of data available from the device during the PRE_COPY states.
+>  This estimate is split into two categories, initial_bytes and
+>  dirty_bytes.
+> 
+>  The initial_bytes field indicates the amount of static data available
+>  from the device.  This field should have a non-zero initial value and
+>  decrease as migration data is read from the device.
 
-> 
-> 
-> Thanks,
-> 
-> Jonathan
-> 
-> 
-> 
-> > David
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: Dan Williams <dan.j.williams@intel.com>
-> > > Sent: Friday, February 18, 2022 2:06 PM
-> > > To: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > > Cc: linux-cxl@vger.kernel.org; Linux PCI <
-> > > linux-pci@vger.kernel.org>;
-> > > open list:KEYS-TRUSTED <keyrings@vger.kernel.org>; Chris Browy
-> > > <cbrowy@avery-design.com>; Linuxarm <linuxarm@huawei.com>;
-> > > Lorenzo
-> > > Pieralisi <lorenzo.pieralisi@arm.com>; Bjorn Helgaas
-> > > <bjorn@helgaas.com>; Jeremy Kerr <jk@codeconstruct.com.au>; Box,
-> > > David
-> > > E <david.e.box@intel.com>
-> > > Subject: Re: [RFC PATCH 2/4] spdm: Introduce a library for DMTF
-> > > SPDM
-> > > 
-> > > On Wed, Aug 4, 2021 at 9:23 AM Jonathan Cameron
-> > > <Jonathan.Cameron@huawei.com> wrote:  
-> > > > The Security Protocol and Data Model (SPDM) defines messages,
-> > > > data
-> > > > objects and sequences for performing message exchanges
-> > > > between  
-> > > devices  
-> > > > over various transports and physical media.
-> > > > 
-> > > > As the kernel supports several possible transports (mctp, PCI
-> > > > DOE)
-> > > > introduce a library than can in turn be used with all those  
-> > > transports.  
-> > > > There are a large number of open questions around how we do
-> > > > this that
-> > > > need to be resolved. These include:
-> > > > *  Key chain management
-> > > >    - Current approach is to use a keychain provide as part of
-> > > > per  
-> > > transport  
-> > > >      initialization for the root certificates which are assumed
-> > > > to be
-> > > >      loaded into that keychain, perhaps in an initrd script.
-> > > >    - Each SPDM instance then has its own keychain to manage its
-> > > >      certificates. It may make sense to drop this, but that
-> > > > looks  
-> > > like it  
-> > > >      will make a lot of the standard infrastructure harder to
-> > > > use.
-> > > >  *  ECC algorithms needing ASN1 encoded signatures.  I'm
-> > > > struggling  
-> > > to find  
-> > > >     any specification that actual 'requires' that choice vs raw
-> > > > data,  
-> > > so my  
-> > > >     guess is that this is a question of existing usecases (x509
-> > > > certs  
-> > > seem  
-> > > >     to use this form, but CHALLENGE_AUTH SPDM seems to use raw
-> > > > data).
-> > > >     I'm not sure whether we are better off just encoding the  
-> > > signature in  
-> > > >     ASN1 as currently done in this series, or if it is worth
-> > > > a  
-> > > tweaking  
-> > > >     things in the crypto layers.
-> > > >  *  Lots of options in actual implementation to look at.
-> > > > 
-> > > > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > > > ---
-> > > >  lib/Kconfig  |    3 +
-> > > >  lib/Makefile |    2 +
-> > > >  lib/spdm.c   | 1196  
-> > > ++++++++++++++++++++++++++++++++++++++++++++++++++  
-> > > >  3 files changed, 1201 insertions(+)
-> > > > 
-> > > > diff --git a/lib/Kconfig b/lib/Kconfig index
-> > > > ac3b30697b2b..0aa2fef6a592 100644
-> > > > --- a/lib/Kconfig
-> > > > +++ b/lib/Kconfig
-> > > > @@ -704,3 +704,6 @@ config PLDMFW
-> > > > 
-> > > >  config ASN1_ENCODER
-> > > >         tristate
-> > > > +
-> > > > +config SPDM
-> > > > +       tristate
-> > > > diff --git a/lib/Makefile b/lib/Makefile index
-> > > > 2cc359ec1fdd..566166d6936e 100644
-> > > > --- a/lib/Makefile
-> > > > +++ b/lib/Makefile
-> > > > @@ -282,6 +282,8 @@ obj-$(CONFIG_PERCPU_TEST) += percpu_test.o
-> > > >  obj-$(CONFIG_ASN1) += asn1_decoder.o
-> > > >  obj-$(CONFIG_ASN1_ENCODER) += asn1_encoder.o
-> > > > 
-> > > > +obj-$(CONFIG_SPDM) += spdm.o
-> > > > +
-> > > >  obj-$(CONFIG_FONT_SUPPORT) += fonts/
-> > > > 
-> > > >  hostprogs      := gen_crc32table
-> > > > diff --git a/lib/spdm.c b/lib/spdm.c
-> > > > new file mode 100644
-> > > > index 000000000000..3ce2341647f8
-> > > > --- /dev/null
-> > > > +++ b/lib/spdm.c
-> > > > @@ -0,0 +1,1196 @@
-> > > > +// SPDX-License-Identifier: GPL-2.0
-> > > > +/*
-> > > > + * DMTF Security Protocol and Data Model
-> > > > + *
-> > > > + * Copyright (C) 2021 Huawei
-> > > > + *     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-> > > > + */
-> > > > +
-> > > > +#include <linux/asn1_encoder.h>
-> > > > +#include <linux/asn1_ber_bytecode.h>
-> > > > +#include <linux/bitfield.h>
-> > > > +#include <linux/cred.h>
-> > > > +#include <linux/dev_printk.h>
-> > > > +#include <linux/digsig.h>
-> > > > +#include <linux/idr.h>
-> > > > +#include <linux/key.h>
-> > > > +#include <linux/module.h>
-> > > > +#include <linux/random.h>
-> > > > +#include <linux/spdm.h>
-> > > > +
-> > > > +#include <crypto/akcipher.h>
-> > > > +#include <crypto/hash.h>
-> > > > +#include <crypto/public_key.h>
-> > > > +#include <keys/asymmetric-type.h>
-> > > > +#include <keys/user-type.h>
-> > > > +#include <asm/unaligned.h>
-> > > > +
-> > > > +/*
-> > > > + * Todo
-> > > > + * - Secure channel setup.
-> > > > + * - Multiple slot support.
-> > > > + * - Measurement support (over secure channel or within  
-> > > CHALLENGE_AUTH.  
-> > > > + * - Support more core algorithms (not CMA does not require
-> > > > them,  
-> > > but may use  
-> > > > + *   them if present.
-> > > > + * - Extended algorithm, support.
-> > > > + */
-> > > > +/*
-> > > > + * Discussions points
-> > > > + * 1. Worth adding an SPDM layer around a transport layer?  
-> > > 
-> > > I came here to say yes to this question. I am seeing interest in
-> > > SPDM
-> > > outside of a DOE transport.
-> > > 
-> > > Hope to find my way back to testing these bits out soon...  
+static isn't great either, how about just say 'minimum data available'
 
+>  Userspace may use the combination of these fields to estimate the
+>  potential data size available during the PRE_COPY phases, as well as
+>  trends relative to the rate the device is dirtying it's internal
+>  state, but these fields are not required to have any bearing relative
+>  to the data size available during the STOP_COPY phase."
+
+That last is too strong. I would just drop starting at but.
+
+The message to communicate is the device should allow dirty_bytes to
+reach 0 during the PRE_COPY phases if everything is is idle. Which
+tells alot about how to calculate it.
+
+It is all better otherwise
+
+> > + * Drivers should attempt to return estimates so that initial_bytes +
+> > + * dirty_bytes matches the amount of data an immediate transition to STOP_COPY
+> > + * will require to be streamed.
+>
+> I think previous discussions have proven this false, we expect trailing
+> data that is only available in STOP_COPY, we cannot bound the size of
+> that data, and dirty_bytes is not intended to expose data that cannot
+> be retrieved during the PRE_COPY phases.  Thanks,
+
+It was written assuming the stop_copy trailer is small.
+
+Thanks,
+Jason
