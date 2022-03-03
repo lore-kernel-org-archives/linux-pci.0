@@ -2,318 +2,255 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA7CC433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 09:43:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A88C433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Mar 2022 09:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231881AbiCCJoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Mar 2022 04:44:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42744 "EHLO
+        id S230288AbiCCJ5X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Mar 2022 04:57:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229867AbiCCJoY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2022 04:44:24 -0500
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF140172889
-        for <linux-pci@vger.kernel.org>; Thu,  3 Mar 2022 01:43:38 -0800 (PST)
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20220303094336epoutp044527e68367f2da3f4d57e0b49b7f77a0~Y1bAiWCCv0468804688epoutp04c
-        for <linux-pci@vger.kernel.org>; Thu,  3 Mar 2022 09:43:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20220303094336epoutp044527e68367f2da3f4d57e0b49b7f77a0~Y1bAiWCCv0468804688epoutp04c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1646300616;
-        bh=JGt2SUFXN47lwLD6/OHx/URaET0Jb/5ljVf5ZET/LrU=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=awxpXq59SJiHvSLQdwKJ1TPT1BuLWGyVp+GRhxCkctHzWUKZpyezBX8hHN22q8rTv
-         OpZteJesIaym3T5WOdADApJX4b7iuHP7FjLhOhuAYOBq22FMQEgunAclp7pB815Ouv
-         J/RoD7a3i3ZcrOAzLfE44MViBph4f9blFyIc15l0=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20220303094335epcas1p2305ca1dc3507e47c1035e838144dc1b1~Y1bAFFo3q2074320743epcas1p2B;
-        Thu,  3 Mar 2022 09:43:35 +0000 (GMT)
-Received: from epsmges1p1.samsung.com (unknown [182.195.36.224]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4K8QzB3GqZz4x9Q5; Thu,  3 Mar
-        2022 09:43:34 +0000 (GMT)
-Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
-        epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        61.3A.64085.6CD80226; Thu,  3 Mar 2022 18:43:34 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20220303094334epcas1p256f56793abe1984803caf11ef76bfc0f~Y1a_cf1e81681416814epcas1p2J;
-        Thu,  3 Mar 2022 09:43:34 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20220303094334epsmtrp23ace0099c009a1b00d372eee173dce0f~Y1a_bhwdQ1563115631epsmtrp2_;
-        Thu,  3 Mar 2022 09:43:34 +0000 (GMT)
-X-AuditID: b6c32a35-9c3ff7000000fa55-e3-62208dc63715
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        29.C3.29871.5CD80226; Thu,  3 Mar 2022 18:43:33 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.88.97.211]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20220303094333epsmtip253dde6a648aadc01426a5f5bdf5d9f17~Y1a_QUQHN0753207532epsmtip2Y;
-        Thu,  3 Mar 2022 09:43:33 +0000 (GMT)
-From:   Youngjin Jang <yj84.jang@samsung.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-usb@vger.kernel.org
-Cc:     "Youngjin Jang" <yj84.jang@samsung.com>, js07.lee@samsung.com
-Subject: [PATCH v2] PM: Add device name to suspend_report_result()
-Date:   Thu,  3 Mar 2022 18:39:07 +0900
-Message-Id: <20220303093907.515129-1-yj84.jang@samsung.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231133AbiCCJ5W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2022 04:57:22 -0500
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E4861795C4
+        for <linux-pci@vger.kernel.org>; Thu,  3 Mar 2022 01:56:37 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id q11so4048049pln.11
+        for <linux-pci@vger.kernel.org>; Thu, 03 Mar 2022 01:56:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=8+uTGAxBMqaR2e+Zjz32fiIik0yDOurUH3U6HILNBiA=;
+        b=hHhuyI8L6RiT1o3HUkMD6udSd0Yp+G2hoCl5li2KBGUIfsIzIO+RR82xQ0JK/RKTRa
+         ilpWbIe0W8U7RPMRuSvilJQHb161ZHsrhGtTMViFi1j6lAeS27a8q5vkkK7iSD0G4KCI
+         heKxU10KBT4aF9LPYUN2JravAG/W260JD3ToFrpo2hfdcqaUO30cReP9QbsuyCzT0WeE
+         gAcGD+VUuMmqwUsjep8WksLM61gQ52bDIj27I0DO5+kHBqMmk9PmnRV3JqOleGa05CkU
+         eVZFPyMkocgimTZHfHOlqLDCOZU6644enBxXBMKHfFzMhl3mjDP8k1Hw7i0/3RzC2k0v
+         wijA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=8+uTGAxBMqaR2e+Zjz32fiIik0yDOurUH3U6HILNBiA=;
+        b=HoFkmoWVuMk6Ziia61J9FlT/enf1qg7qWTnIbSfOB/RhmKm/e2c93xXw/0GfxKQeBA
+         Ez3Dxet7W0x+QtLmob9f7qkgXAFwgPFKL0La8L/HG9wo/gckRATSR/0tUSeCahjCmfH/
+         iprDLHCIb70N2AETMTU+z+rlJX8Jmyubcmw1FgpKDemL8NKhs4QWeCRgWXKEk0TubIz1
+         LUZDRmZORBqZX8ssqH4DsaZfFP1n9iHYByUmI+pN1tF2q6H0juJlnJWQADnHmCTw9+FR
+         Bc9CHFN9Zw1hTFpQVHnvHUM41J60Nh/YusBzYVYtWESKFfoSded6WRBmzEJdhwED6aIy
+         m+Eg==
+X-Gm-Message-State: AOAM530v7vF1af+XJVn5e8pSOIFsR4TTZ7NOPqtWBRFfUAnbdIHlG83B
+        XPENY/9oKlM+oEf56ARMRcV5
+X-Google-Smtp-Source: ABdhPJw8XPsOH/9J/I6RfPwgv7CXYE/5sDDROoEFhPMK+K+i2xo3kh/E5byKnycITwFjZGT/AzZW0g==
+X-Received: by 2002:a17:902:d705:b0:14e:e5a2:1b34 with SMTP id w5-20020a170902d70500b0014ee5a21b34mr34621377ply.88.1646301396659;
+        Thu, 03 Mar 2022 01:56:36 -0800 (PST)
+Received: from workstation ([117.207.24.195])
+        by smtp.gmail.com with ESMTPSA id mi9-20020a17090b4b4900b001bc8dd413fesm1706504pjb.19.2022.03.03.01.56.33
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 03 Mar 2022 01:56:36 -0800 (PST)
+Date:   Thu, 3 Mar 2022 15:26:31 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Frank Li <Frank.Li@nxp.com>
+Cc:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, linux-imx@nxp.com,
+        linux-pci@vger.kernel.org, lznuaa@gmail.com, vkoul@kernel.org,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, shawnguo@kernel.org
+Subject: Re: [PATCH 2/5] dmaengine: dw-edma-pcie: don't touch internal struct
+ dw_edma
+Message-ID: <20220303095631.GI12451@workstation>
+References: <20220302032646.3793-1-Frank.Li@nxp.com>
+ <20220302032646.3793-2-Frank.Li@nxp.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrAJsWRmVeSWpSXmKPExsWy7bCmge6xXoUkg90LRCyWNGVYNC9ez2bx
-        6OZvVotZU/YyWSzf189ocXnXHDaLs/OOs1l87j3CaLFoWSuzxd1TR9ks5n6ZymzRdWgxqwOP
-        x4JNpR6L97xk8ti0qpPNY//cNewefVtWMXqsWP2d3ePzJrkA9qhsm4zUxJTUIoXUvOT8lMy8
-        dFsl7+B453hTMwNDXUNLC3MlhbzE3FRbJRefAF23zBygO5UUyhJzSoFCAYnFxUr6djZF+aUl
-        qQoZ+cUltkqpBSk5BWYFesWJucWleel6eaklVoYGBkamQIUJ2Rk39l9hKnhjUdG4TbWBcbF+
-        FyMnh4SAicTXI4eYQGwhgR2MEldvS3UxcgHZnxglNp/Zww7hfGOU+L6qnx2m49vHp1CJvYwS
-        azbfYYFr2bf1MNgsNgFtiVVb5oFViQhcZpJ4+30CM0iCWcBR4sPBPawgtrCAk8T0vdvBxrII
-        qEr0vDoCFucVsJY4sf8bE8Q6eYmZl76zQ8QFJU7OfMICMUdeonnrbGaQBRICrRwSl7duhbrP
-        RWL57kWsELawxKvjW6DiUhKf3+1lg7DTJSY+fgsVL5D4+3gJM4RtLPHu7VogmwNogabE+l3Q
-        QFKU2Pl7LiPEXj6Jd197WEFKJAR4JTrahCBKlCUen18NNV1SYv3v/VDne0hsW7KLGRK+sRIX
-        fjUxTmCUn4Xkm1lIvpmFsHgBI/MqRrHUguLc9NRiwwJDeKQm5+duYgQnVS3THYwT337QO8TI
-        xMF4iFGCg1lJhNdSUyFJiDclsbIqtSg/vqg0J7X4EKMpMHwnMkuJJucD03peSbyhiaWBiZmR
-        iYWxpbGZkjjvqmmnE4UE0hNLUrNTUwtSi2D6mDg4pRqYDlzL3OO89Lri/Kt8gjzbpZp8p/Oc
-        LT/6f3K1x+/+5N5LqnXPNdwdv+69uiUsWKdbequrak7qox1FJq0TZhsYzLj374JMzt3w6ZX8
-        Nnv7QxauWd5856CTIbfvL5X4iY+T+yvPzg0+yv3jXM22n0o/I2w+efd03Eif+fCwQ1G3l7JO
-        79dkl50X9wv9nVdk56cqpW++Sk3ykt6ML0ny/N2t0y79iRTJ/t58wJHzZHLg50VmTlP/rJfd
-        U8ZX5Hs+3WLxq5W8ytEHl3O/DpzS9oZ11pS4yw0Nz67c4mv7dPaGdtwc3VT+0wevFq69VcSw
-        rig9sOjRZ7tdm7xfl8yqU/3x3Kvz+I/nGSlfVKWmFvruVmIpzkg01GIuKk4EAA4AizQzBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrPLMWRmVeSWpSXmKPExsWy7bCSvO7RXoUkg8PbLC2WNGVYNC9ez2bx
-        6OZvVotZU/YyWSzf189ocXnXHDaLs/OOs1l87j3CaLFoWSuzxd1TR9ks5n6ZymzRdWgxqwOP
-        x4JNpR6L97xk8ti0qpPNY//cNewefVtWMXqsWP2d3ePzJrkA9igum5TUnMyy1CJ9uwSujBv7
-        rzAVvLGoaNym2sC4WL+LkZNDQsBE4tvHp+xdjFwcQgK7GSWmzvrBCJGQlPj66TNbFyMHkC0s
-        cfhwMUTNB0aJh9s+sIDUsAloS6zaMg+sWUTgNpNEz4NvTCAJZgFniXU7FoEVCQs4SUzfu50d
-        xGYRUJXoeXWEFcTmFbCWOLEfol5CQF5i5qXv7BBxQYmTM5+wQMyRl2jeOpt5AiPfLCSpWUhS
-        CxiZVjFKphYU56bnFhsWGOallusVJ+YWl+al6yXn525iBIe5luYOxu2rPugdYmTiYDzEKMHB
-        rCTCa6mpkCTEm5JYWZValB9fVJqTWnyIUZqDRUmc90LXyXghgfTEktTs1NSC1CKYLBMHp1QD
-        09WDYWrHVoZuNd2/43vN66++PHsea+wX+MyUEnRd6uPK4uOsl38+fqXV1z1/vuy7ksh7lVWd
-        y2ZWpoR9mmnhFBc/OenAoxkyJqxaF64HPe1aYZdkyct6qfJg6bTIPf9rfz42WffxqKpK/Foe
-        BTFNs/syWy+d2Xzu2AvDa9m/tlwO+8pxaf7x5m7W3km7DsfrvCjrXnVtYemlE02iXO9LJIOv
-        fJ23SCv55Ibaex7SikmRRp4Xo1J1quUPRMr3MDxbPK9xS4HHfOYVM1aH5fgZbNh2X0NW/d1n
-        Lyelv5M7My4efvl+Rl2V946pV+btfjA3bxu7u1ZE997qzVydDw2TZV7E6t/hSazJ8baf+9dy
-        Wr4SS3FGoqEWc1FxIgBM58VS4gIAAA==
-X-CMS-MailID: 20220303094334epcas1p256f56793abe1984803caf11ef76bfc0f
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20220303094334epcas1p256f56793abe1984803caf11ef76bfc0f
-References: <CGME20220303094334epcas1p256f56793abe1984803caf11ef76bfc0f@epcas1p2.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220302032646.3793-2-Frank.Li@nxp.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: "Youngjin Jang" <yj84.jang@samsung.com>
+On Tue, Mar 01, 2022 at 09:26:43PM -0600, Frank Li wrote:
+> dw_edma_probe() defined at include/linux/dma/edma.h
+> 
+> 	@dw: struct dw_edma that is filed by dw_edma_probe()
+> 
+> dw_edma_pcie_probe() shouldn't access dw_edma, only filed
+> struct dw_edma_chip before call dw_edma_probe()
+> 
+> change all dw(struct dw_edma*)  to chip(struct dw_edma_chip*)
+> 
 
-currently, suspend_report_result() prints only function information.
-If any driver uses common pm function, nobody knows who called
-failed function exactly.
+"struct dw_edma" is an internal structure of the eDMA core. This should not be
+used by the eDMA controllers like "dw-edma-pcie" for passing the controller
+specific information to the core.
 
-So, device is needed to recognize specific wrong driver.
+Instead, use the fields local to the "struct dw_edma_chip" for passing the
+controller specific info to the core.
 
-e.g.)
-PM: dpm_run_callback(): pm_generic_suspend+0x0/0x48 returns 0
-PM: dpm_run_callback(): platform_pm_suspend+0x0/0x68 returns 0
-after patch,
-amba 1740000.etm: dpm_run_callback(): pm_generic_suspend+0x0/0x48
-returns 0
-armv7-pmu soc:pmu: dpm_run_callback(): platform_pm_suspend+0x0/0x68
-returns 0
+Thanks,
+Mani
 
-Signed-off-by: Youngjin Jang <yj84.jang@samsung.com>
----
-Changes since v1:
- - Use dev_err() to print out device name
- - Use real name on email sender
- 
- drivers/base/power/main.c  | 10 +++++-----
- drivers/pci/pci-driver.c   | 14 +++++++-------
- drivers/pnp/driver.c       |  2 +-
- drivers/usb/core/hcd-pci.c |  4 ++--
- include/linux/pm.h         |  8 ++++----
- 5 files changed, 19 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-index 04ea92cbd9cf..41e17b8c2c20 100644
---- a/drivers/base/power/main.c
-+++ b/drivers/base/power/main.c
-@@ -485,7 +485,7 @@ static int dpm_run_callback(pm_callback_t cb, struct device *dev,
- 	trace_device_pm_callback_start(dev, info, state.event);
- 	error = cb(dev);
- 	trace_device_pm_callback_end(dev, error);
--	suspend_report_result(cb, error);
-+	suspend_report_result(dev, cb, error);
- 
- 	initcall_debug_report(dev, calltime, cb, error);
- 
-@@ -1568,7 +1568,7 @@ static int legacy_suspend(struct device *dev, pm_message_t state,
- 	trace_device_pm_callback_start(dev, info, state.event);
- 	error = cb(dev, state);
- 	trace_device_pm_callback_end(dev, error);
--	suspend_report_result(cb, error);
-+	suspend_report_result(dev, cb, error);
- 
- 	initcall_debug_report(dev, calltime, cb, error);
- 
-@@ -1855,7 +1855,7 @@ static int device_prepare(struct device *dev, pm_message_t state)
- 	device_unlock(dev);
- 
- 	if (ret < 0) {
--		suspend_report_result(callback, ret);
-+		suspend_report_result(dev, callback, ret);
- 		pm_runtime_put(dev);
- 		return ret;
- 	}
-@@ -1960,10 +1960,10 @@ int dpm_suspend_start(pm_message_t state)
- }
- EXPORT_SYMBOL_GPL(dpm_suspend_start);
- 
--void __suspend_report_result(const char *function, void *fn, int ret)
-+void __suspend_report_result(const char *function, struct device *dev, void *fn, int ret)
- {
- 	if (ret)
--		pr_err("%s(): %pS returns %d\n", function, fn, ret);
-+		dev_err(dev, "%s(): %pS returns %d\n", function, fn, ret);
- }
- EXPORT_SYMBOL_GPL(__suspend_report_result);
- 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 588588cfda48..415f7664b010 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -596,7 +596,7 @@ static int pci_legacy_suspend(struct device *dev, pm_message_t state)
- 		int error;
- 
- 		error = drv->suspend(pci_dev, state);
--		suspend_report_result(drv->suspend, error);
-+		suspend_report_result(dev, drv->suspend, error);
- 		if (error)
- 			return error;
- 
-@@ -775,7 +775,7 @@ static int pci_pm_suspend(struct device *dev)
- 		int error;
- 
- 		error = pm->suspend(dev);
--		suspend_report_result(pm->suspend, error);
-+		suspend_report_result(dev, pm->suspend, error);
- 		if (error)
- 			return error;
- 
-@@ -821,7 +821,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 		int error;
- 
- 		error = pm->suspend_noirq(dev);
--		suspend_report_result(pm->suspend_noirq, error);
-+		suspend_report_result(dev, pm->suspend_noirq, error);
- 		if (error)
- 			return error;
- 
-@@ -1010,7 +1010,7 @@ static int pci_pm_freeze(struct device *dev)
- 		int error;
- 
- 		error = pm->freeze(dev);
--		suspend_report_result(pm->freeze, error);
-+		suspend_report_result(dev, pm->freeze, error);
- 		if (error)
- 			return error;
- 	}
-@@ -1030,7 +1030,7 @@ static int pci_pm_freeze_noirq(struct device *dev)
- 		int error;
- 
- 		error = pm->freeze_noirq(dev);
--		suspend_report_result(pm->freeze_noirq, error);
-+		suspend_report_result(dev, pm->freeze_noirq, error);
- 		if (error)
- 			return error;
- 	}
-@@ -1116,7 +1116,7 @@ static int pci_pm_poweroff(struct device *dev)
- 		int error;
- 
- 		error = pm->poweroff(dev);
--		suspend_report_result(pm->poweroff, error);
-+		suspend_report_result(dev, pm->poweroff, error);
- 		if (error)
- 			return error;
- 	}
-@@ -1154,7 +1154,7 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- 		int error;
- 
- 		error = pm->poweroff_noirq(dev);
--		suspend_report_result(pm->poweroff_noirq, error);
-+		suspend_report_result(dev, pm->poweroff_noirq, error);
- 		if (error)
- 			return error;
- 	}
-diff --git a/drivers/pnp/driver.c b/drivers/pnp/driver.c
-index cc6757dfa3f1..c02e7bf643a6 100644
---- a/drivers/pnp/driver.c
-+++ b/drivers/pnp/driver.c
-@@ -171,7 +171,7 @@ static int __pnp_bus_suspend(struct device *dev, pm_message_t state)
- 
- 	if (pnp_drv->driver.pm && pnp_drv->driver.pm->suspend) {
- 		error = pnp_drv->driver.pm->suspend(dev);
--		suspend_report_result(pnp_drv->driver.pm->suspend, error);
-+		suspend_report_result(dev, pnp_drv->driver.pm->suspend, error);
- 		if (error)
- 			return error;
- 	}
-diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-index d630cccd2e6e..dd44e37a454a 100644
---- a/drivers/usb/core/hcd-pci.c
-+++ b/drivers/usb/core/hcd-pci.c
-@@ -446,7 +446,7 @@ static int suspend_common(struct device *dev, bool do_wakeup)
- 				HCD_WAKEUP_PENDING(hcd->shared_hcd))
- 			return -EBUSY;
- 		retval = hcd->driver->pci_suspend(hcd, do_wakeup);
--		suspend_report_result(hcd->driver->pci_suspend, retval);
-+		suspend_report_result(dev, hcd->driver->pci_suspend, retval);
- 
- 		/* Check again in case wakeup raced with pci_suspend */
- 		if ((retval == 0 && do_wakeup && HCD_WAKEUP_PENDING(hcd)) ||
-@@ -556,7 +556,7 @@ static int hcd_pci_suspend_noirq(struct device *dev)
- 		dev_dbg(dev, "--> PCI %s\n",
- 				pci_power_name(pci_dev->current_state));
- 	} else {
--		suspend_report_result(pci_prepare_to_sleep, retval);
-+		suspend_report_result(dev, pci_prepare_to_sleep, retval);
- 		return retval;
- 	}
- 
-diff --git a/include/linux/pm.h b/include/linux/pm.h
-index e1e9402180b9..cdccbb9cef2c 100644
---- a/include/linux/pm.h
-+++ b/include/linux/pm.h
-@@ -745,11 +745,11 @@ extern int dpm_suspend_late(pm_message_t state);
- extern int dpm_suspend(pm_message_t state);
- extern int dpm_prepare(pm_message_t state);
- 
--extern void __suspend_report_result(const char *function, void *fn, int ret);
-+extern void __suspend_report_result(const char *function, struct device *dev, void *fn, int ret);
- 
--#define suspend_report_result(fn, ret)					\
-+#define suspend_report_result(dev, fn, ret)				\
- 	do {								\
--		__suspend_report_result(__func__, fn, ret);		\
-+		__suspend_report_result(__func__, dev, fn, ret);	\
- 	} while (0)
- 
- extern int device_pm_wait_for_dev(struct device *sub, struct device *dev);
-@@ -789,7 +789,7 @@ static inline int dpm_suspend_start(pm_message_t state)
- 	return 0;
- }
- 
--#define suspend_report_result(fn, ret)		do {} while (0)
-+#define suspend_report_result(dev, fn, ret)	do {} while (0)
- 
- static inline int device_pm_wait_for_dev(struct device *a, struct device *b)
- {
--- 
-2.25.1
-
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  drivers/dma/dw-edma/dw-edma-pcie.c | 83 +++++++++++++-----------------
+>  1 file changed, 36 insertions(+), 47 deletions(-)
+> 
+> diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+> index 44f6e09bdb531..2262b1c196978 100644
+> --- a/drivers/dma/dw-edma/dw-edma-pcie.c
+> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+> @@ -148,7 +148,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	struct dw_edma_pcie_data vsec_data;
+>  	struct device *dev = &pdev->dev;
+>  	struct dw_edma_chip *chip;
+> -	struct dw_edma *dw;
+>  	int err, nr_irqs;
+>  	int i, mask;
+>  
+> @@ -214,10 +213,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	if (!chip)
+>  		return -ENOMEM;
+>  
+> -	dw = devm_kzalloc(dev, sizeof(*dw), GFP_KERNEL);
+> -	if (!dw)
+> -		return -ENOMEM;
+> -
+>  	/* IRQs allocation */
+>  	nr_irqs = pci_alloc_irq_vectors(pdev, 1, vsec_data.irqs,
+>  					PCI_IRQ_MSI | PCI_IRQ_MSIX);
+> @@ -228,29 +223,27 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	/* Data structure initialization */
+> -	chip->dw = dw;
+>  	chip->dev = dev;
+>  	chip->id = pdev->devfn;
+> -	chip->irq = pdev->irq;
+>  
+> -	dw->mf = vsec_data.mf;
+> -	dw->nr_irqs = nr_irqs;
+> -	dw->ops = &dw_edma_pcie_core_ops;
+> -	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
+> -	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
+> +	chip->mf = vsec_data.mf;
+> +	chip->nr_irqs = nr_irqs;
+> +	chip->ops = &dw_edma_pcie_core_ops;
+> +	chip->wr_ch_cnt = vsec_data.wr_ch_cnt;
+> +	chip->rd_ch_cnt = vsec_data.rd_ch_cnt;
+>  
+> -	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
+> -	if (!dw->rg_region.vaddr)
+> +	chip->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
+> +	if (!chip->rg_region.vaddr)
+>  		return -ENOMEM;
+>  
+> -	dw->rg_region.vaddr += vsec_data.rg.off;
+> -	dw->rg_region.paddr = pdev->resource[vsec_data.rg.bar].start;
+> -	dw->rg_region.paddr += vsec_data.rg.off;
+> -	dw->rg_region.sz = vsec_data.rg.sz;
+> +	chip->rg_region.vaddr += vsec_data.rg.off;
+> +	chip->rg_region.paddr = pdev->resource[vsec_data.rg.bar].start;
+> +	chip->rg_region.paddr += vsec_data.rg.off;
+> +	chip->rg_region.sz = vsec_data.rg.sz;
+>  
+> -	for (i = 0; i < dw->wr_ch_cnt; i++) {
+> -		struct dw_edma_region *ll_region = &dw->ll_region_wr[i];
+> -		struct dw_edma_region *dt_region = &dw->dt_region_wr[i];
+> +	for (i = 0; i < chip->wr_ch_cnt; i++) {
+> +		struct dw_edma_region *ll_region = &chip->ll_region_wr[i];
+> +		struct dw_edma_region *dt_region = &chip->dt_region_wr[i];
+>  		struct dw_edma_block *ll_block = &vsec_data.ll_wr[i];
+>  		struct dw_edma_block *dt_block = &vsec_data.dt_wr[i];
+>  
+> @@ -273,9 +266,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  		dt_region->sz = dt_block->sz;
+>  	}
+>  
+> -	for (i = 0; i < dw->rd_ch_cnt; i++) {
+> -		struct dw_edma_region *ll_region = &dw->ll_region_rd[i];
+> -		struct dw_edma_region *dt_region = &dw->dt_region_rd[i];
+> +	for (i = 0; i < chip->rd_ch_cnt; i++) {
+> +		struct dw_edma_region *ll_region = &chip->ll_region_rd[i];
+> +		struct dw_edma_region *dt_region = &chip->dt_region_rd[i];
+>  		struct dw_edma_block *ll_block = &vsec_data.ll_rd[i];
+>  		struct dw_edma_block *dt_block = &vsec_data.dt_rd[i];
+>  
+> @@ -299,45 +292,45 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	/* Debug info */
+> -	if (dw->mf == EDMA_MF_EDMA_LEGACY)
+> -		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", dw->mf);
+> -	else if (dw->mf == EDMA_MF_EDMA_UNROLL)
+> -		pci_dbg(pdev, "Version:\teDMA Unroll (0x%x)\n", dw->mf);
+> -	else if (dw->mf == EDMA_MF_HDMA_COMPAT)
+> -		pci_dbg(pdev, "Version:\tHDMA Compatible (0x%x)\n", dw->mf);
+> +	if (chip->mf == EDMA_MF_EDMA_LEGACY)
+> +		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", chip->mf);
+> +	else if (chip->mf == EDMA_MF_EDMA_UNROLL)
+> +		pci_dbg(pdev, "Version:\teDMA Unroll (0x%x)\n", chip->mf);
+> +	else if (chip->mf == EDMA_MF_HDMA_COMPAT)
+> +		pci_dbg(pdev, "Version:\tHDMA Compatible (0x%x)\n", chip->mf);
+>  	else
+> -		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
+> +		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", chip->mf);
+>  
+>  	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+>  		vsec_data.rg.bar, vsec_data.rg.off, vsec_data.rg.sz,
+> -		dw->rg_region.vaddr, &dw->rg_region.paddr);
+> +		chip->rg_region.vaddr, &chip->rg_region.paddr);
+>  
+>  
+> -	for (i = 0; i < dw->wr_ch_cnt; i++) {
+> +	for (i = 0; i < chip->wr_ch_cnt; i++) {
+>  		pci_dbg(pdev, "L. List:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+>  			i, vsec_data.ll_wr[i].bar,
+> -			vsec_data.ll_wr[i].off, dw->ll_region_wr[i].sz,
+> -			dw->ll_region_wr[i].vaddr, &dw->ll_region_wr[i].paddr);
+> +			vsec_data.ll_wr[i].off, chip->ll_region_wr[i].sz,
+> +			chip->ll_region_wr[i].vaddr, &chip->ll_region_wr[i].paddr);
+>  
+>  		pci_dbg(pdev, "Data:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+>  			i, vsec_data.dt_wr[i].bar,
+> -			vsec_data.dt_wr[i].off, dw->dt_region_wr[i].sz,
+> -			dw->dt_region_wr[i].vaddr, &dw->dt_region_wr[i].paddr);
+> +			vsec_data.dt_wr[i].off, chip->dt_region_wr[i].sz,
+> +			chip->dt_region_wr[i].vaddr, &chip->dt_region_wr[i].paddr);
+>  	}
+>  
+> -	for (i = 0; i < dw->rd_ch_cnt; i++) {
+> +	for (i = 0; i < chip->rd_ch_cnt; i++) {
+>  		pci_dbg(pdev, "L. List:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+>  			i, vsec_data.ll_rd[i].bar,
+> -			vsec_data.ll_rd[i].off, dw->ll_region_rd[i].sz,
+> -			dw->ll_region_rd[i].vaddr, &dw->ll_region_rd[i].paddr);
+> +			vsec_data.ll_rd[i].off, chip->ll_region_rd[i].sz,
+> +			chip->ll_region_rd[i].vaddr, &chip->ll_region_rd[i].paddr);
+>  
+>  		pci_dbg(pdev, "Data:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+>  			i, vsec_data.dt_rd[i].bar,
+> -			vsec_data.dt_rd[i].off, dw->dt_region_rd[i].sz,
+> -			dw->dt_region_rd[i].vaddr, &dw->dt_region_rd[i].paddr);
+> +			vsec_data.dt_rd[i].off, chip->dt_region_rd[i].sz,
+> +			chip->dt_region_rd[i].vaddr, &chip->dt_region_rd[i].paddr);
+>  	}
+>  
+> -	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
+> +	pci_dbg(pdev, "Nr. IRQs:\t%u\n", chip->nr_irqs);
+>  
+>  	/* Validating if PCI interrupts were enabled */
+>  	if (!pci_dev_msi_enabled(pdev)) {
+> @@ -345,10 +338,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>  		return -EPERM;
+>  	}
+>  
+> -	dw->irq = devm_kcalloc(dev, nr_irqs, sizeof(*dw->irq), GFP_KERNEL);
+> -	if (!dw->irq)
+> -		return -ENOMEM;
+> -
+>  	/* Starting eDMA driver */
+>  	err = dw_edma_probe(chip);
+>  	if (err) {
+> -- 
+> 2.24.0.rc1
+> 
