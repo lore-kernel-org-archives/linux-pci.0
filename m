@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E78C4321E
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Mar 2022 06:38:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 573FFC433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Mar 2022 06:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235667AbiCGGjT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Mar 2022 01:39:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34294 "EHLO
+        id S235657AbiCGGjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Mar 2022 01:39:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235636AbiCGGjS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2022 01:39:18 -0500
+        with ESMTP id S235632AbiCGGjT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2022 01:39:19 -0500
 Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E573220DD;
-        Sun,  6 Mar 2022 22:38:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01E5822BDB;
+        Sun,  6 Mar 2022 22:38:22 -0800 (PST)
 Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 123C22020E0;
-        Mon,  7 Mar 2022 07:38:19 +0100 (CET)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 9C7D32017F9;
+        Mon,  7 Mar 2022 07:38:21 +0100 (CET)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id C69322020EA;
-        Mon,  7 Mar 2022 07:38:18 +0100 (CET)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 153842020DF;
+        Mon,  7 Mar 2022 07:38:21 +0100 (CET)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id ED218183AD67;
-        Mon,  7 Mar 2022 14:38:16 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 3C4EF183AC96;
+        Mon,  7 Mar 2022 14:38:19 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     p.zabel@pengutronix.de, l.stach@pengutronix.de,
         bhelgaas@google.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
@@ -31,9 +31,9 @@ Cc:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         kernel@pengutronix.de, linux-imx@nxp.com,
         Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v1 5/7] arm64: dts: imx8mp: add the iMX8MP PCIe support
-Date:   Mon,  7 Mar 2022 14:29:14 +0800
-Message-Id: <1646634556-23779-6-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v1 7/7] PCI: imx6: Add the iMX8MP PCIe support
+Date:   Mon,  7 Mar 2022 14:29:16 +0800
+Message-Id: <1646634556-23779-8-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1646634556-23779-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1646634556-23779-1-git-send-email-hongxing.zhu@nxp.com>
@@ -46,87 +46,130 @@ Add the i.MX8MP PCIe support.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
- arch/arm64/boot/dts/freescale/imx8mp.dtsi | 46 ++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/freescale/imx8mp.dtsi b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
-index b40a5646f205..e7b3d8029e34 100644
---- a/arch/arm64/boot/dts/freescale/imx8mp.dtsi
-+++ b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
-@@ -5,6 +5,7 @@
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index bb662f90d4f3..4d34f0c88550 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -51,6 +51,7 @@ enum imx6_pcie_variants {
+ 	IMX7D,
+ 	IMX8MQ,
+ 	IMX8MM,
++	IMX8MP,
+ };
  
- #include <dt-bindings/clock/imx8mp-clock.h>
- #include <dt-bindings/power/imx8mp-power.h>
-+#include <dt-bindings/reset/imx8mp-reset.h>
- #include <dt-bindings/gpio/gpio.h>
- #include <dt-bindings/input/input.h>
- #include <dt-bindings/interrupt-controller/arm-gic.h>
-@@ -375,7 +376,8 @@ iomuxc: pinctrl@30330000 {
- 			};
+ #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
+@@ -379,6 +380,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 		reset_control_assert(imx6_pcie->pciephy_reset);
+ 		fallthrough;
+ 	case IMX8MM:
++	case IMX8MP:
+ 		reset_control_assert(imx6_pcie->apps_reset);
+ 		break;
+ 	case IMX6SX:
+@@ -407,7 +409,8 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
+ {
+ 	WARN_ON(imx6_pcie->drvdata->variant != IMX8MQ &&
+-		imx6_pcie->drvdata->variant != IMX8MM);
++		imx6_pcie->drvdata->variant != IMX8MM &&
++		imx6_pcie->drvdata->variant != IMX8MP);
+ 	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
+ }
  
- 			gpr: iomuxc-gpr@30340000 {
--				compatible = "fsl,imx8mp-iomuxc-gpr", "syscon";
-+				compatible = "fsl,imx8mp-iomuxc-gpr",
-+					     "fsl,imx6q-iomuxc-gpr", "syscon";
- 				reg = <0x30340000 0x10000>;
- 			};
+@@ -448,6 +451,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 		break;
+ 	case IMX8MM:
+ 	case IMX8MQ:
++	case IMX8MP:
+ 		ret = clk_prepare_enable(imx6_pcie->pcie_aux);
+ 		if (ret) {
+ 			dev_err(dev, "unable to enable pcie_aux clock\n");
+@@ -503,6 +507,7 @@ static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
  
-@@ -965,6 +967,17 @@ aips4: bus@32c00000 {
- 			#size-cells = <1>;
- 			ranges;
+ 	switch (imx6_pcie->drvdata->variant) {
+ 	case IMX8MM:
++	case IMX8MP:
+ 		if (phy_power_on(imx6_pcie->phy))
+ 			dev_err(dev, "unable to power on PHY\n");
+ 		break;
+@@ -603,6 +608,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 		reset_control_deassert(imx6_pcie->pciephy_reset);
+ 		break;
+ 	case IMX8MM:
++	case IMX8MP:
+ 		if (phy_init(imx6_pcie->phy))
+ 			dev_err(dev, "waiting for phy ready timeout!\n");
+ 		break;
+@@ -678,6 +684,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ {
+ 	switch (imx6_pcie->drvdata->variant) {
+ 	case IMX8MM:
++	case IMX8MP:
+ 		/*
+ 		 * The PHY initialization had been done in the PHY
+ 		 * driver, break here directly.
+@@ -823,6 +830,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
+ 	case IMX7D:
+ 	case IMX8MQ:
+ 	case IMX8MM:
++	case IMX8MP:
+ 		reset_control_deassert(imx6_pcie->apps_reset);
+ 		break;
+ 	}
+@@ -938,6 +946,7 @@ static void imx6_pcie_host_exit(struct pcie_port *pp)
+ 		imx6_pcie_clk_disable(imx6_pcie);
+ 		switch (imx6_pcie->drvdata->variant) {
+ 		case IMX8MM:
++		case IMX8MP:
+ 			if (phy_power_off(imx6_pcie->phy))
+ 				dev_err(dev, "unable to power off phy\n");
+ 			phy_exit(imx6_pcie->phy);
+@@ -972,6 +981,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
+ 		break;
+ 	case IMX7D:
+ 	case IMX8MM:
++	case IMX8MP:
+ 		reset_control_assert(imx6_pcie->apps_reset);
+ 		break;
+ 	default:
+@@ -1028,6 +1038,7 @@ static int imx6_pcie_suspend_noirq(struct device *dev)
+ 	imx6_pcie_clk_disable(imx6_pcie);
+ 	switch (imx6_pcie->drvdata->variant) {
+ 	case IMX8MM:
++	case IMX8MP:
+ 		if (phy_power_off(imx6_pcie->phy))
+ 			dev_err(dev, "unable to power off PHY\n");
+ 		phy_exit(imx6_pcie->phy);
+@@ -1177,6 +1188,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 		}
+ 		break;
+ 	case IMX8MM:
++	case IMX8MP:
+ 		imx6_pcie->pcie_aux = devm_clk_get(dev, "pcie_aux");
+ 		if (IS_ERR(imx6_pcie->pcie_aux))
+ 			return dev_err_probe(dev, PTR_ERR(imx6_pcie->pcie_aux),
+@@ -1327,6 +1339,10 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+ 		.variant = IMX8MM,
+ 		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 	},
++	[IMX8MP] = {
++		.variant = IMX8MP,
++		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
++	},
+ };
  
-+			pcie_phy: pcie-phy@32f00000 {
-+				compatible = "fsl,imx8mp-pcie-phy";
-+				reg = <0x32f00000 0x10000>;
-+				resets = <&src IMX8MP_RESET_PCIEPHY>,
-+					 <&src IMX8MP_RESET_PCIEPHY_PERST>;
-+				reset-names = "pciephy", "perst";
-+				power-domains = <&hsio_blk_ctrl IMX8MP_HSIOBLK_PD_PCIE_PHY>;
-+				#phy-cells = <0>;
-+				status = "disabled";
-+			};
-+	
- 			hsio_blk_ctrl: blk-ctrl@32f10000 {
- 				compatible = "fsl,imx8mp-hsio-blk-ctrl", "syscon";
- 				reg = <0x32f10000 0x24>;
-@@ -980,6 +993,37 @@ hsio_blk_ctrl: blk-ctrl@32f10000 {
- 			};
- 		};
+ static const struct of_device_id imx6_pcie_of_match[] = {
+@@ -1336,6 +1352,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
+ 	{ .compatible = "fsl,imx8mq-pcie", .data = &drvdata[IMX8MQ], },
+ 	{ .compatible = "fsl,imx8mm-pcie", .data = &drvdata[IMX8MM], },
++	{ .compatible = "fsl,imx8mp-pcie", .data = &drvdata[IMX8MP], },
+ 	{},
+ };
  
-+		pcie: pcie@33800000 {
-+			compatible = "fsl,imx8mp-pcie";
-+			reg = <0x33800000 0x400000>, <0x1ff00000 0x80000>;
-+			reg-names = "dbi", "config";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			bus-range = <0x00 0xff>;
-+			ranges =  <0x81000000 0 0x00000000 0x1ff80000 0 0x00010000 /* downstream I/O 64KB */
-+				   0x82000000 0 0x18000000 0x18000000 0 0x07f00000>; /* non-prefetchable memory */
-+			num-lanes = <1>;
-+			num-viewport = <4>;
-+			interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gic GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gic GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gic GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
-+			fsl,max-link-speed = <3>;
-+			linux,pci-domain = <0>;
-+			power-domains = <&hsio_blk_ctrl IMX8MP_HSIOBLK_PD_PCIE>;
-+			resets = <&src IMX8MP_RESET_PCIE_CTRL_APPS_EN>,
-+				 <&src IMX8MP_RESET_PCIE_CTRL_APPS_TURNOFF>;
-+			reset-names = "apps", "turnoff";
-+			phys = <&pcie_phy>;
-+			phy-names = "pcie-phy";
-+			status = "disabled";
-+		};
-+
- 		gpu3d: gpu@38000000 {
- 			compatible = "vivante,gc";
- 			reg = <0x38000000 0x8000>;
 -- 
 2.25.1
 
