@@ -2,55 +2,102 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA34C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Mar 2022 08:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42722C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Mar 2022 08:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345123AbiCHItv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Mar 2022 03:49:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33744 "EHLO
+        id S1345147AbiCHIvj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Mar 2022 03:51:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345120AbiCHItv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2022 03:49:51 -0500
-Received: from mail.olerise.pl (mail.olerise.pl [46.183.184.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E4FC37A35
-        for <linux-pci@vger.kernel.org>; Tue,  8 Mar 2022 00:48:55 -0800 (PST)
-Received: by mail.olerise.pl (Postfix, from userid 1001)
-        id 42C2A443E8; Tue,  8 Mar 2022 09:46:25 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=olerise.pl; s=mail;
-        t=1646729225; bh=ZNYiuZLXlxCdAPtstEG/gwJieB5RBwA/cHj1SZ3Mpl0=;
-        h=Date:From:To:Subject:From;
-        b=pxfu5aYAyAKUUdemT8yjY/bhLzazpDOAy08htuHVR0+dndQZTBqvz0u/AevYZuMIN
-         7OANF1QNLcFUAbny8NNdU1yltxT4Not9BoEfAA8YONOLP63WgRvseeS342JvxDga3A
-         Ws2Qs3lrTcWFFZ7B5cBhuAo7VvedmkYzVfvz2d9cYKf/tpsgvW5Tm6KAYMoO5gaaUL
-         aLNRKjK3eqeiY7YtbYjjBQOGbah4FRZ9h3MCnnJOnEvgThRCxv0OrS6cCbJHbwT+lq
-         CFCWifDKYVTSn5+LGcCGH0rEUadwl06NW81sHyiDNHYlHdvJOXYw1STlFRdTaKlIV+
-         rsyD4d9a4129w==
-Received: by mail.olerise.pl for <linux-pci@vger.kernel.org>; Tue,  8 Mar 2022 08:45:41 GMT
-Message-ID: <20220308084500-0.1.26.mtik.0.jc91cebfrl@olerise.pl>
-Date:   Tue,  8 Mar 2022 08:45:41 GMT
-From:   =?UTF-8?Q? "Miko=C5=82aj_Rudzik" ?= <mikolaj.rudzik@olerise.pl>
-To:     <linux-pci@vger.kernel.org>
-Subject: =?UTF-8?Q?Nap=C5=82yw_Klient=C3=B3w_ze_strony?=
-X-Mailer: mail.olerise.pl
+        with ESMTP id S238210AbiCHIvi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2022 03:51:38 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A886E3FDBB;
+        Tue,  8 Mar 2022 00:50:41 -0800 (PST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KCTWd0Hz5zBrjL;
+        Tue,  8 Mar 2022 16:48:45 +0800 (CST)
+Received: from localhost.localdomain (10.67.164.66) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 8 Mar 2022 16:50:39 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
+        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
+        <will@kernel.org>, <mark.rutland@arm.com>,
+        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
+        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
+        <jonathan.cameron@huawei.com>, <daniel.thompson@linaro.org>,
+        <joro@8bytes.org>, <john.garry@huawei.com>,
+        <shameerali.kolothum.thodi@huawei.com>, <robin.murphy@arm.com>,
+        <peterz@infradead.org>, <mingo@redhat.com>, <acme@kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
+        <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>
+CC:     <prime.zeng@huawei.com>, <liuqi115@huawei.com>,
+        <zhangshaokun@hisilicon.com>, <linuxarm@huawei.com>,
+        <yangyicong@hisilicon.com>, <song.bao.hua@hisilicon.com>
+Subject: [PATCH v5 1/8] iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to identity
+Date:   Tue, 8 Mar 2022 16:49:23 +0800
+Message-ID: <20220308084930.5142-2-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220308084930.5142-1-yangyicong@hisilicon.com>
+References: <20220308084930.5142-1-yangyicong@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.67.164.66]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dzie=C5=84 dobry,
+The DMA of HiSilicon PTT device can only work with identical mapping.
+So add a quirk for the device to force the domain passthrough.
 
-chcia=C5=82bym poinformowa=C4=87 Pa=C5=84stwa o mo=C5=BCliwo=C5=9Bci pozy=
-skania nowych zlece=C5=84 ze strony www.
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Widzimy zainteresowanie potencjalnych Klient=C3=B3w Pa=C5=84stwa firm=C4=85=
-, dlatego ch=C4=99tnie pomo=C5=BCemy Pa=C5=84stwu dotrze=C4=87 z ofert=C4=
-=85 do wi=C4=99kszego grona odbiorc=C3=B3w poprzez efektywne metody pozyc=
-jonowania strony w Google.
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index 6dc6d8b6b368..6f67a2b1dd27 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -2838,6 +2838,21 @@ static int arm_smmu_dev_disable_feature(struct device *dev,
+ 	}
+ }
+ 
++#define IS_HISI_PTT_DEVICE(pdev)	((pdev)->vendor == PCI_VENDOR_ID_HUAWEI && \
++					 (pdev)->device == 0xa12e)
++
++static int arm_smmu_def_domain_type(struct device *dev)
++{
++	if (dev_is_pci(dev)) {
++		struct pci_dev *pdev = to_pci_dev(dev);
++
++		if (IS_HISI_PTT_DEVICE(pdev))
++			return IOMMU_DOMAIN_IDENTITY;
++	}
++
++	return 0;
++}
++
+ static struct iommu_ops arm_smmu_ops = {
+ 	.capable		= arm_smmu_capable,
+ 	.domain_alloc		= arm_smmu_domain_alloc,
+@@ -2863,6 +2878,7 @@ static struct iommu_ops arm_smmu_ops = {
+ 	.sva_unbind		= arm_smmu_sva_unbind,
+ 	.sva_get_pasid		= arm_smmu_sva_get_pasid,
+ 	.page_response		= arm_smmu_page_response,
++	.def_domain_type	= arm_smmu_def_domain_type,
+ 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
+ 	.owner			= THIS_MODULE,
+ };
+-- 
+2.24.0
 
-Czy m=C3=B3g=C5=82bym liczy=C4=87 na kontakt zwrotny?
-
-
-Pozdrawiam
-Miko=C5=82aj Rudzik
