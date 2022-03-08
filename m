@@ -2,160 +2,137 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E3CFC433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Mar 2022 08:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC9D2C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Mar 2022 09:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238608AbiCHIxa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Mar 2022 03:53:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41484 "EHLO
+        id S1345126AbiCHJqb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Mar 2022 04:46:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242666AbiCHIx3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2022 03:53:29 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B6BADF9E;
-        Tue,  8 Mar 2022 00:52:33 -0800 (PST)
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KCTZJ5hGSz6F93y;
-        Tue,  8 Mar 2022 16:51:04 +0800 (CST)
-Received: from lhreml715-chm.china.huawei.com (10.201.108.66) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 8 Mar 2022 09:52:31 +0100
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- lhreml715-chm.china.huawei.com (10.201.108.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.21; Tue, 8 Mar 2022 08:52:30 +0000
-Received: from lhreml710-chm.china.huawei.com ([169.254.81.184]) by
- lhreml710-chm.china.huawei.com ([169.254.81.184]) with mapi id
- 15.01.2308.021; Tue, 8 Mar 2022 08:52:30 +0000
-From:   Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To:     "Tian, Kevin" <kevin.tian@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "jgg@nvidia.com" <jgg@nvidia.com>,
-        "cohuck@redhat.com" <cohuck@redhat.com>,
-        "mgurtovoy@nvidia.com" <mgurtovoy@nvidia.com>,
-        "yishaih@nvidia.com" <yishaih@nvidia.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        liulongfang <liulongfang@huawei.com>,
-        "Zengtao (B)" <prime.zeng@hisilicon.com>,
-        "Jonathan Cameron" <jonathan.cameron@huawei.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: RE: [PATCH v8 8/9] hisi_acc_vfio_pci: Add support for VFIO live
- migration
-Thread-Topic: [PATCH v8 8/9] hisi_acc_vfio_pci: Add support for VFIO live
- migration
-Thread-Index: AQHYL1LUtVDDY2S/e06nk5NDxfriXKy1IT6AgAASKKA=
-Date:   Tue, 8 Mar 2022 08:52:30 +0000
-Message-ID: <50b0d11d57d3488da809f318576466cd@huawei.com>
-References: <20220303230131.2103-1-shameerali.kolothum.thodi@huawei.com>
- <20220303230131.2103-9-shameerali.kolothum.thodi@huawei.com>
- <BN9PR11MB527661103A2CFE13E4F3EC528C099@BN9PR11MB5276.namprd11.prod.outlook.com>
-In-Reply-To: <BN9PR11MB527661103A2CFE13E4F3EC528C099@BN9PR11MB5276.namprd11.prod.outlook.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.47.27.151]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S236177AbiCHJq3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2022 04:46:29 -0500
+Received: from imap2.colo.codethink.co.uk (imap2.colo.codethink.co.uk [78.40.148.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B72BC3E5C9;
+        Tue,  8 Mar 2022 01:45:32 -0800 (PST)
+Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.21])
+        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1nRVyL-0005VG-99; Tue, 08 Mar 2022 09:17:37 +0000
+Message-ID: <10794ea9-95ff-2cde-5851-b757a73b00ee@codethink.co.uk>
+Date:   Tue, 8 Mar 2022 09:45:36 +0000
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [RFC] PCI: fu740: Force Gen1 to fix initial device probing on
+ some boards
+Content-Language: en-GB
+To:     helgaas@kernel.org, linux-pci@vger.kernel.org
+Cc:     paul.walmsley@sifive.com, greentime.hu@sifive.com,
+        lorenzo.pieralisi@arm.com, robh@kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20220228232206.2928784-1-ben.dooks@codethink.co.uk>
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+Organization: Codethink Limited.
+In-Reply-To: <20220228232206.2928784-1-ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVGlhbiwgS2V2aW4gW21h
-aWx0bzprZXZpbi50aWFuQGludGVsLmNvbV0NCj4gU2VudDogMDggTWFyY2ggMjAyMiAwNzo0Mg0K
-PiBUbzogU2hhbWVlcmFsaSBLb2xvdGh1bSBUaG9kaSA8c2hhbWVlcmFsaS5rb2xvdGh1bS50aG9k
-aUBodWF3ZWkuY29tPjsNCj4ga3ZtQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIu
-a2VybmVsLm9yZzsNCj4gbGludXgtY3J5cHRvQHZnZXIua2VybmVsLm9yZw0KPiBDYzogbGludXgt
-cGNpQHZnZXIua2VybmVsLm9yZzsgYWxleC53aWxsaWFtc29uQHJlZGhhdC5jb207IGpnZ0Budmlk
-aWEuY29tOw0KPiBjb2h1Y2tAcmVkaGF0LmNvbTsgbWd1cnRvdm95QG52aWRpYS5jb207IHlpc2hh
-aWhAbnZpZGlhLmNvbTsgTGludXhhcm0NCj4gPGxpbnV4YXJtQGh1YXdlaS5jb20+OyBsaXVsb25n
-ZmFuZyA8bGl1bG9uZ2ZhbmdAaHVhd2VpLmNvbT47IFplbmd0YW8gKEIpDQo+IDxwcmltZS56ZW5n
-QGhpc2lsaWNvbi5jb20+OyBKb25hdGhhbiBDYW1lcm9uDQo+IDxqb25hdGhhbi5jYW1lcm9uQGh1
-YXdlaS5jb20+OyBXYW5nemhvdSAoQikgPHdhbmd6aG91MUBoaXNpbGljb24uY29tPg0KPiBTdWJq
-ZWN0OiBSRTogW1BBVENIIHY4IDgvOV0gaGlzaV9hY2NfdmZpb19wY2k6IEFkZCBzdXBwb3J0IGZv
-ciBWRklPIGxpdmUNCj4gbWlncmF0aW9uDQo+IA0KPiA+IEZyb206IFNoYW1lZXIgS29sb3RodW0g
-PHNoYW1lZXJhbGkua29sb3RodW0udGhvZGlAaHVhd2VpLmNvbT4NCj4gPiBTZW50OiBGcmlkYXks
-IE1hcmNoIDQsIDIwMjIgNzowMiBBTQ0KPiA+ICsvKg0KPiA+ICsgKiBFYWNoIHN0YXRlIFJlZyBp
-cyBjaGVja2VkIDEwMCB0aW1lcywNCj4gPiArICogd2l0aCBhIGRlbGF5IG9mIDEwMCBtaWNyb3Nl
-Y29uZHMgYWZ0ZXIgZWFjaCBjaGVjayAgKi8gc3RhdGljIHUzMg0KPiA+ICthY2NfY2hlY2tfcmVn
-X3N0YXRlKHN0cnVjdCBoaXNpX3FtICpxbSwgdTMyIHJlZ3MpDQo+IA0KPiBxbV9jaGVja19yZWdf
-c3RhdGUoKSBnaXZlbiB0aGUgMXN0IGFyZ3VtZW50IGlzIHFtDQo+IA0KPiA+ICsvKiBDaGVjayB0
-aGUgUEYncyBSQVMgc3RhdGUgYW5kIEZ1bmN0aW9uIElOVCBzdGF0ZSAqLyBzdGF0aWMgaW50DQo+
-ID4gK3FtX2NoZWNrX2ludF9zdGF0ZShzdHJ1Y3QgaGlzaV9hY2NfdmZfY29yZV9kZXZpY2UgKmhp
-c2lfYWNjX3ZkZXYpDQo+IA0KPiB0aGVuIHRoaXMgc2hvdWxkIGJlIGFjY19jaGVja19pbnRfc3Rh
-dGUoKSBnaXZlbiB0aGUgaW5wdXQgaXMgYW4gYWNjIGRldmljZT8NCj4gDQo+IGFueXdheSBwbGVh
-c2UgaGF2ZSBhIGNvbnNpc3RlbnQgbmFtaW5nIGNvbnZlbnRpb24gaGVyZS4NCj4gDQo+ID4gK3N0
-YXRpYyBpbnQgcW1fcmVhZF9yZWcoc3RydWN0IGhpc2lfcW0gKnFtLCB1MzIgcmVnX2FkZHIsDQo+
-ID4gKwkJICAgICAgIHUzMiAqZGF0YSwgdTggbnVtcykNCj4gDQo+IHFtX3JlYWRfcmVncygpIHRv
-IHJlZmxlY3QgdGhhdCBtdWx0aXBsZSByZWdpc3RlcnMgYXJlIHByb2Nlc3NlZC4NCj4gDQo+ID4g
-Kw0KPiA+ICtzdGF0aWMgaW50IHFtX3dyaXRlX3JlZyhzdHJ1Y3QgaGlzaV9xbSAqcW0sIHUzMiBy
-ZWcsDQo+ID4gKwkJCXUzMiAqZGF0YSwgdTggbnVtcykNCj4gDQo+IHFtX3dyaXRlX3JlZ3MoKQ0K
-PiANCj4gPiArDQo+ID4gK3N0YXRpYyBpbnQgcW1fcndfcmVnc19yZWFkKHN0cnVjdCBoaXNpX3Ft
-ICpxbSwgc3RydWN0IGFjY192Zl9kYXRhDQo+ID4gKyp2Zl9kYXRhKQ0KPiANCj4gcW1fbG9hZF9y
-ZWdzKCkuIEl0J3MgY29uZnVzaW5nIHRvIGhhdmUgYm90aCAncncnIGFuZCAncmVhZCcuDQo+IA0K
-PiA+ICsNCj4gPiArc3RhdGljIGludCBxbV9yd19yZWdzX3dyaXRlKHN0cnVjdCBoaXNpX3FtICpx
-bSwgc3RydWN0IGFjY192Zl9kYXRhDQo+ID4gKnZmX2RhdGEpDQo+IA0KPiBxbV9zYXZlX3JlZ3Mo
-KQ0KDQpSaWdodC4gSSBhbSBPayB3aXRoIHRoZSBhYm92ZSBzdWdnZXN0aW9ucy4NCg0KPiANCj4g
-PiArc3RhdGljIGludCBoaXNpX2FjY192Zl9xbV9pbml0KHN0cnVjdCBoaXNpX2FjY192Zl9jb3Jl
-X2RldmljZQ0KPiA+ICsqaGlzaV9hY2NfdmRldikgew0KPiA+ICsJc3RydWN0IHZmaW9fcGNpX2Nv
-cmVfZGV2aWNlICp2ZGV2ID0gJmhpc2lfYWNjX3ZkZXYtPmNvcmVfZGV2aWNlOw0KPiA+ICsJc3Ry
-dWN0IGhpc2lfcW0gKnZmX3FtID0gJmhpc2lfYWNjX3ZkZXYtPnZmX3FtOw0KPiA+ICsJc3RydWN0
-IHBjaV9kZXYgKnZmX2RldiA9IHZkZXYtPnBkZXY7DQo+ID4gKw0KPiA+ICsJLyoNCj4gPiArCSAq
-IEFDQyBWRiBkZXYgQkFSMiByZWdpb24gY29uc2lzdHMgb2YgYm90aCBmdW5jdGlvbmFsIHJlZ2lz
-dGVyIHNwYWNlDQo+ID4gKwkgKiBhbmQgbWlncmF0aW9uIGNvbnRyb2wgcmVnaXN0ZXIgc3BhY2Uu
-IEZvciBtaWdyYXRpb24gdG8gd29yaywgd2UNCj4gPiArCSAqIG5lZWQgYWNjZXNzIHRvIGJvdGgu
-IEhlbmNlLCB3ZSBtYXAgdGhlIGVudGlyZSBCQVIyIHJlZ2lvbiBoZXJlLg0KPiA+ICsJICogQnV0
-IGZyb20gYSBzZWN1cml0eSBwb2ludCBvZiB2aWV3LCB3ZSByZXN0cmljdCBhY2Nlc3MgdG8gdGhl
-DQo+ID4gKwkgKiBtaWdyYXRpb24gY29udHJvbCBzcGFjZSBmcm9tIEd1ZXN0KFBsZWFzZSBzZWUN
-Cj4gPiBtbWFwL2lvY3RsL3JlYWQvd3JpdGUNCj4gPiArCSAqIG92ZXJyaWRlIGZ1bmN0aW9ucyku
-DQo+IA0KPiAoUGxlYXNlIHNlZSBoaXNpX2FjY192ZmlvX3BjaV9taWdybl9vcHMpDQo+IA0KPiA+
-ICsJICoNCj4gPiArCSAqIEFsc28gdGhlIEhpU2lsaWNvbiBBQ0MgVkYgZGV2aWNlcyBzdXBwb3J0
-ZWQgYnkgdGhpcyBkcml2ZXIgb24NCj4gPiArCSAqIEhpU2lsaWNvbiBoYXJkd2FyZSBwbGF0Zm9y
-bXMgYXJlIGludGVncmF0ZWQgZW5kIHBvaW50IGRldmljZXMNCj4gPiArCSAqIGFuZCBoYXMgbm8g
-Y2FwYWJpbGl0eSB0byBwZXJmb3JtIFBDSWUgUDJQLg0KPiANCj4gQWNjb3JkaW5nIHRvIHY1IGRp
-c2N1c3Npb24gSSB0aGluayBpdCBpcyB0aGUgcGxhdGZvcm0gd2hpY2ggbGFja3Mgb2YgdGhlIFAy
-UA0KPiBjYXBhYmlsaXR5IGluc3RlYWQgb2YgdGhlIGRldmljZS4gQ3VycmVudCB3cml0aW5nIGlz
-IHJlYWQgdG8gdGhlIGxhdHRlci4NCj4gDQo+IGJldHRlciBjbGFyaWZ5IGl0IGFjY3VyYXRlbHku
-IPCfmIoNCg0KVGhhdOKAmXMgcmlnaHQuIEl0IGlzIHRoZSBwbGF0Zm9ybS4NCg0KPiANCj4gPiAg
-c3RhdGljIGludCBoaXNpX2FjY192ZmlvX3BjaV9wcm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwg
-Y29uc3Qgc3RydWN0DQo+ID4gcGNpX2RldmljZV9pZCAqaWQpICB7DQo+ID4gLQlzdHJ1Y3QgdmZp
-b19wY2lfY29yZV9kZXZpY2UgKnZkZXY7DQo+ID4gKwlzdHJ1Y3QgaGlzaV9hY2NfdmZfY29yZV9k
-ZXZpY2UgKmhpc2lfYWNjX3ZkZXY7DQo+ID4gKwlzdHJ1Y3QgaGlzaV9xbSAqcGZfcW07DQo+ID4g
-IAlpbnQgcmV0Ow0KPiA+DQo+ID4gLQl2ZGV2ID0ga3phbGxvYyhzaXplb2YoKnZkZXYpLCBHRlBf
-S0VSTkVMKTsNCj4gPiAtCWlmICghdmRldikNCj4gPiArCWhpc2lfYWNjX3ZkZXYgPSBremFsbG9j
-KHNpemVvZigqaGlzaV9hY2NfdmRldiksIEdGUF9LRVJORUwpOw0KPiA+ICsJaWYgKCFoaXNpX2Fj
-Y192ZGV2KQ0KPiA+ICAJCXJldHVybiAtRU5PTUVNOw0KPiA+DQo+ID4gLQl2ZmlvX3BjaV9jb3Jl
-X2luaXRfZGV2aWNlKHZkZXYsIHBkZXYsICZoaXNpX2FjY192ZmlvX3BjaV9vcHMpOw0KPiA+ICsJ
-cGZfcW0gPSBoaXNpX2FjY19nZXRfcGZfcW0ocGRldik7DQo+ID4gKwlpZiAocGZfcW0gJiYgcGZf
-cW0tPnZlciA+PSBRTV9IV19WMykgew0KPiA+ICsJCXJldCA9IGhpc2lfYWNjX3ZmaW9fcGNpX21p
-Z3JuX2luaXQoaGlzaV9hY2NfdmRldiwgcGRldiwNCj4gPiBwZl9xbSk7DQo+ID4gKwkJaWYgKCFy
-ZXQpIHsNCj4gPiArCQkJdmZpb19wY2lfY29yZV9pbml0X2RldmljZSgmaGlzaV9hY2NfdmRldi0N
-Cj4gPiA+Y29yZV9kZXZpY2UsIHBkZXYsDQo+ID4gKw0KPiA+ICZoaXNpX2FjY192ZmlvX3BjaV9t
-aWdybl9vcHMpOw0KPiA+ICsJCX0gZWxzZSB7DQo+ID4gKwkJCXBjaV93YXJuKHBkZXYsICJtaWdy
-YXRpb24gc3VwcG9ydCBmYWlsZWQsIGNvbnRpbnVlDQo+ID4gd2l0aCBnZW5lcmljIGludGVyZmFj
-ZVxuIik7DQo+ID4gKwkJCXZmaW9fcGNpX2NvcmVfaW5pdF9kZXZpY2UoJmhpc2lfYWNjX3ZkZXYt
-DQo+ID4gPmNvcmVfZGV2aWNlLCBwZGV2LA0KPiA+ICsJCQkJCQkgICZoaXNpX2FjY192ZmlvX3Bj
-aV9vcHMpOw0KPiA+ICsJCX0NCj4gDQo+IFRoaXMgbG9naWMgbG9va3Mgd2VpcmQuIEVhcmxpZXIg
-eW91IHN0YXRlIHRoYXQgdGhlIG1pZ3JhdGlvbiBjb250cm9sIHJlZ2lvbiBtdXN0DQo+IGJlIGhp
-ZGRlbiBmcm9tIHRoZSB1c2Vyc3BhY2UgYXMgYSBzZWN1cml0eSByZXF1aXJlbWVudCwgYnV0IGFi
-b3ZlIGxvZ2ljIHJlYWRzDQo+IGxpa2UgaWYgdGhlIGRyaXZlciBmYWlscyB0byBpbml0aWFsaXpl
-IG1pZ3JhdGlvbiBzdXBwb3J0IHRoZW4gd2UganVzdCBmYWxsIGJhY2sgdG8gdGhlDQo+IGRlZmF1
-bHQgb3BzIHdoaWNoIGdyYW50cyB0aGUgdXNlciB0aGUgZnVsbCBhY2Nlc3MgdG8gdGhlIGVudGly
-ZSBNTUlPIGJhci4NCg0KQXMgSSBleHBsYWluZWQgcHJldmlvdXNseSB0aGUgcmlzayBvZiBleHBv
-c2luZyBtaWdyYXRpb24gQkFSIGlzIG9ubHkgbGltaXRlZCB0byBtaWdyYXRpb24NCnVzZSBjYXNl
-LiBTbyBpZiBmb3Igc29tZSByZWFzb24gd2UgY2FuJ3QgZ2V0IHRoZSBtaWdyYXRpb24gd29ya2lu
-Zywgd2UgZGVmYXVsdCB0byB0aGUNCmdlbmVyaWMgdmZpby1wY2kgbGlrZSBiZWhhdmlvci4NCiAN
-Cj4gDQo+ID4gKwl9IGVsc2Ugew0KPiA+ICsJCXZmaW9fcGNpX2NvcmVfaW5pdF9kZXZpY2UoJmhp
-c2lfYWNjX3ZkZXYtPmNvcmVfZGV2aWNlLCBwZGV2LA0KPiA+ICsJCQkJCSAgJmhpc2lfYWNjX3Zm
-aW9fcGNpX29wcyk7DQo+ID4gKwl9DQo+IA0KPiBJZiB0aGUgaGFyZHdhcmUgaXRzZWxmIGRvZXNu
-J3Qgc3VwcG9ydCB0aGUgbWlncmF0aW9uIGNhcGFiaWxpdHksIGNhbiB3ZSBqdXN0DQo+IG1vdmUg
-aXQgb3V0IG9mIHRoZSBpZCB0YWJsZSBhbmQgbGV0IHZmaW8tcGNpIHRvIGRyaXZlIGl0Pw0KPiAN
-CiBCdXQgdGhlIGFib3ZlIGlzIGp1c3QgbGlrZSB2ZmlvLXBjaSBkcml2aW5nIGl0LCByaWdodD8N
-Cg0KVGhhbmtzLA0KU2hhbWVlcg0K
+On 28/02/2022 23:22, Ben Dooks wrote:
+> The fu740 PCIe core does not probe any devices on the SiFive Unmatched
+> board without this fix (or having U-Boot explicitly start the PCIe via
+> either boot-script or user command). The fix is to start the link at
+> Gen1 speeds and once the link is up then change the speed back.
+> 
+> The U-Boot driver claims to set the link-speed to Gen1 to get the probe
+> to work (and U-Boot does print link up at Gen1) in the following code:
+> https://source.denx.de/u-boot/u-boot/-/blob/master/drivers/pci/pcie_dw_sifive.c?id=v2022.01#L271
+> 
+> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> --
+> Note, this patch has had significant re-work since the previous 4
+> sets, including trying to fix style, message, reliance on the U-Boot
+> fix and the comments about usage of LINK_CAP and reserved fields.
+
+The internal feedback is this version is passing on our CI.
+
+If there are no comments on this soon, I will post this as either the
+v5 of the original or as a new patch.
+
+> ---
+>   drivers/pci/controller/dwc/pcie-fu740.c | 51 ++++++++++++++++++++++++-
+>   1 file changed, 50 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
+> index 842b7202b96e..16ad52f53490 100644
+> --- a/drivers/pci/controller/dwc/pcie-fu740.c
+> +++ b/drivers/pci/controller/dwc/pcie-fu740.c
+> @@ -181,10 +181,59 @@ static int fu740_pcie_start_link(struct dw_pcie *pci)
+>   {
+>   	struct device *dev = pci->dev;
+>   	struct fu740_pcie *afp = dev_get_drvdata(dev);
+> +	u8 cap_exp = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	int ret;
+> +	u32 orig, tmp;
+> +
+> +	/*
+> +	 * Force Gen1 when starting link, due to some devices not
+> +	 * probing at higher speeds. This happens with the PCIe switch
+> +	 * on the Unmatched board. The fix in U-Boot is to force Gen1
+> +	 * and hope later resets will clear this capaility.
+> +	 */
+> +
+> +	dev_dbg(dev, "cap_exp at %x\n", cap_exp);
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +
+> +	tmp = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_LNKCAP);
+> +	orig = tmp & PCI_EXP_LNKCAP_SLS;
+> +	tmp &= ~PCI_EXP_LNKCAP_SLS;
+> +	tmp |= PCI_EXP_LNKCAP_SLS_2_5GB;
+> +	dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCAP, tmp);
+>   
+>   	/* Enable LTSSM */
+>   	writel_relaxed(0x1, afp->mgmt_base + PCIEX8MGMT_APP_LTSSM_ENABLE);
+> -	return 0;
+> +
+> +	ret = dw_pcie_wait_for_link(pci);
+> +	if (ret) {
+> +		dev_err(dev, "error: link did not start\n");
+> +		goto err;
+> +	}
+> +
+> +	tmp = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_LNKCAP);
+> +	if ((tmp & PCI_EXP_LNKCAP_SLS) != orig) {
+> +		dev_dbg(dev, "changing speed back to original\n");
+> +
+> +		tmp &= ~PCI_EXP_LNKCAP_SLS;
+> +		tmp |= orig;
+> +		dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCAP, tmp);
+> +
+> +		tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+> +		tmp |= PORT_LOGIC_SPEED_CHANGE;
+> +		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+> +
+> +		ret = dw_pcie_wait_for_link(pci);
+> +		if (ret) {
+> +			dev_err(dev, "error: link did not start at new speed\n");
+> +			goto err;
+> +		}
+> +	}
+> +
+> +	ret = 0;
+> +err:
+> +	// todo - if we do have an unliekly error, what do we do here?
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +	return ret;
+>   }
+>   
+>   static int fu740_pcie_host_init(struct pcie_port *pp)
+
+
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
+
+https://www.codethink.co.uk/privacy.html
