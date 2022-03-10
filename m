@@ -2,119 +2,107 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D428C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Mar 2022 19:27:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3016C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Mar 2022 19:35:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239085AbiCJT2K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Mar 2022 14:28:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34054 "EHLO
+        id S241360AbiCJTgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Mar 2022 14:36:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241699AbiCJT2I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2022 14:28:08 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E01E914F28A;
-        Thu, 10 Mar 2022 11:27:06 -0800 (PST)
+        with ESMTP id S231897AbiCJTgE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2022 14:36:04 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA5F8155C00;
+        Thu, 10 Mar 2022 11:35:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 888ED60A0F;
-        Thu, 10 Mar 2022 19:27:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1532C340E8;
-        Thu, 10 Mar 2022 19:27:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4EFB3611B9;
+        Thu, 10 Mar 2022 19:35:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28613C340E8;
+        Thu, 10 Mar 2022 19:35:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1646940426;
-        bh=cq4m75PSl/PZoVhBD9Cn+gsQ1zqz5E2ip47wizl6wRY=;
+        s=k20201202; t=1646940902;
+        bh=RL5pztp2gZRHUHbTqmyhvO+U8YHRPoTBR9IFLcYrtXk=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=pFPQS8/vCCA3HW9ICoay5pubWy9elfiojpUvxzNbNGnsiuV6/XPsctQtHADD0HRQr
-         hKx2Bq0XQWvkCl3u/v+HwWYSovPzktVSfuv37iw+CgIFeFyp6zD6cHVm4GAscLCex2
-         Wc1ALmOBGu4ukTOeZ+RQz6IRmDLeAES7U7W9WjPdcQ06OsZcXPz5HZRnSV9h1eWS7B
-         qidphy2Z6mtcu+Oq67tFeQCk4cK8tG7OG+w4NRiMmEVcAgeTY5r60sLAVxyd9gneR6
-         ckVz0nx4JsafMYEzb1aiVg1GcK0ffNVNLHvLAkT86MlgrmguK15bHASXFEJMAZA8Na
-         G8Jacj/v9ZKCA==
-Date:   Thu, 10 Mar 2022 13:27:04 -0600
+        b=uN0K75A8Ja2VXwbtF5rG0Dle9yTeH3e3vO0oQyZm4SGluKtUUaGMqenMCmCCEtzdH
+         MZ2etMieW1A5TDtEWuYZghJepB9u7himDtCzQ/ouUeS/cyJ9AtesQoTMet99LuxIiR
+         2xjcek279pVMOH0mB5QIwihQDHDOO0W73+50utARWtHl7VVyMJUiO548IsQjdaokYR
+         fMgPr8zeNtsvl9SQD1o0Aot+wQOKoxFDUDqs0/h8D8vRU9eSqoD3IPu8EUI/BZbvtp
+         N97pyRJNPPMAIrOkkd+UKYZdZEaBkoA3wvfbln4BAeppUjL/tPHtKPRzZBgHCUfxpI
+         QPirlhCjNJ2Fg==
+Date:   Thu, 10 Mar 2022 13:34:58 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Lizhi Hou <lizhi.hou@xilinx.com>
 Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         robh@kernel.org, yilun.xu@intel.com, maxz@xilinx.com,
         sonal.santan@xilinx.com, yliu@xilinx.com, michal.simek@xilinx.com,
         stefanos@xilinx.com, trix@redhat.com, mdf@kernel.org,
-        dwmw2@infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V1 RESEND 0/4] Infrastructure to define apertures in a
- PCIe device with a flattened device tree
-Message-ID: <20220310192704.GA168467@bhelgaas>
+        dwmw2@infradead.org, linux-kernel@vger.kernel.org,
+        Max Zhen <max.zhen@xilinx.com>
+Subject: Re: [PATCH V1 RESEND 1/4] pci: add interface to create pci-ep device
+ tree node
+Message-ID: <20220310193458.GA167650@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220305052304.726050-1-lizhi.hou@xilinx.com>
+In-Reply-To: <20220305052304.726050-2-lizhi.hou@xilinx.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 04, 2022 at 09:23:00PM -0800, Lizhi Hou wrote:
-> Hello,
+Run "git log --oneline drivers/pci/of.c" and follow the convention,
+e.g., something like:
 
-Why is this a resend?  I see
-https://lore.kernel.org/r/20220305051105.725838-1-lizhi.hou@xilinx.com,
-which looks like it was posted just a few minutes before this.  I
-assume this "RESEND" is identical?
+  PCI: Add DT Endpoint description interfaces
 
-> This V1 of patch series is to provide the required pci OF interfaces for
-> the PCIe device which uses flattened device tree to describe apertures in
-> its PCIe BARs. e.g, Xilinx Alveo PCIe accelerator. This requires a base
-> device tree which contains nodes for PCIe devices. A PCIe device driver
-> can then overlay a flattened device tree on the PCIe device tree node.
-> There are two separate parts for this to work. First, not all system has
-> a base device tree created by default. Thus, a patch to create an empty
-> device tree root node has been submitted.
->   https://lore.kernel.org/lkml/20220216050056.311496-1-lizhi.hou@xilinx.com/
-> Second, PCIe is self discoverable bus and there might not be a device tree
-> node created for PCIe device. This patch provides a new interface to create
-> a ‘pci-ep-bus’ node under the base device tree root node. PCIe device
-> driver may call this interface in its probe routine to create device tree
-> node, then overlays its device tree to the node.
-> For the overlayed device tree nodes, each node presents a hardware aperture
-> implemented in its PCIe BARs. The aperture register address consists of BAR
-> index and offset. It uses the following encoding:
->   0xIooooooo 0xoooooooo
-> Where:
->   I = BAR index
->   ooooooo oooooooo = BAR offset
-> The ‘pci-ep-bus’ node been created is compatible with ‘simple-bus’ and
-> contains ‘ranges’ property for translating aperture address to CPU address.
-> The last patch enhances of_overlay_fdt_apply(). The ‘pci-ep-bus’ device
-> node is created dynamically. The flattened device tree may not specify an
-> fixed target overlay path in front. Instead, a relative path to the
-> ‘pci-ep-bus’ node is specified in the flattened tree. Thus, a new
-> parameter is added to point the target base node which is ‘pci-ep-bus’
-> node in this case. Then the entire overlay target path is target base node
-> path plus the relative path specified in the flattened device tree.
+On Fri, Mar 04, 2022 at 09:23:01PM -0800, Lizhi Hou wrote:
+> This patch enables PCIe device to uses flattened device tree to describe
+> apertures in its PCIe BARs. The aperture address consists of PCIe BAR index
+> and offset.
+> 
+> For this kind of device, the driver probe routine calls the new added
+> interface to create a device tree node. This device tree node is attached
+> under system device tree root. Then the driver may load the flatten device
+> tree overlay and attach it under this node. And the node also contains
+> 'ranges' property which is used to translate aperture address(BAR index
+> and offset) to CPU address.
 
-s/pci/PCI/ (capitalize acronyms above, also in other subjects, commit
-logs, and code comments)
+In the commit log, please say *what* this patch does and why we need
+it.  The current text talks about how some interface might be used,
+but doesn't specifically say what interface that is or that this patch
+adds it.
 
-s/PCIe/PCI/ (in most cases, the above is not PCIe-specific)
+It should also have a specific pointer to the relevant DT binding.
 
-Please add blank lines between paragraphs to make this easier to read.
+> Signed-off-by: Sonal Santan <sonal.santan@xilinx.com>
+> Signed-off-by: Max Zhen <max.zhen@xilinx.com>
+> Signed-off-by: Lizhi Hou <lizhi.hou@xilinx.com>
+> ---
+>  drivers/pci/of.c       | 180 +++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |  15 ++++
+>  2 files changed, 195 insertions(+)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index cb2e8351c2cc..198f08351070 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -605,6 +605,186 @@ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
+>  	return pci_parse_request_of_pci_ranges(dev, bridge);
+>  }
+>  
+> +#if IS_ENABLED(CONFIG_OF_DYNAMIC)
+> +
+> +static void devm_of_pci_destroy_bus_endpoint(struct device *dev, void *res)
+> +{
+> +	struct device_node *node = res;
+> +
+> +	of_detach_node(node);
+> +}
+> +
+> +static int of_ep_add_property(struct device *dev, struct property **proplist, const char *name,
 
-The above tells *what* this series does, but not *why* we need it.
-
-Apparently you want to describe PCI BARs in DT.  Normally the PCI core
-discovers devices and BARs using the PCI enumeration process (read
-config space looking for a Device ID, read standard BAR locations
-(unimplemented BARs are hardwired to zero)).  Obviously you know all
-of this.  What we need here (and in the commit log for the relevant
-patch) is some explanation about why this standard process doesn't
-work and you need to do something via DT.
-
-I'm guessing this is for the case where Linux is running *on* the
-endpoint, so instead of enumerating devices from the perspective of a
-PCI host controller, it's on the "other" side of the device, e.g., as
-described in Documentation/PCI/endpoint/pci-endpoint.rst
-
-So the commit log should mention that and explain why we need this new
-DT support.  The endpoint support has been around for a while, so this
-should explain what's different about Xilinx Alveo and why it needs
-this new stuff.
+Please rewrap code and comments to fit in 80 columns like the rest of
+the file.  There's a lot more below that I snipped out.
 
 Bjorn
