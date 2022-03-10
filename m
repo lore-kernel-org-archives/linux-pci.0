@@ -2,247 +2,322 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E287C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Mar 2022 19:38:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 790FAC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Mar 2022 19:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230206AbiCJTjH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Mar 2022 14:39:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52438 "EHLO
+        id S234482AbiCJTmZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Mar 2022 14:42:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230192AbiCJTjH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2022 14:39:07 -0500
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5AADEAC95;
-        Thu, 10 Mar 2022 11:38:04 -0800 (PST)
-Received: by mail-lf1-x12b.google.com with SMTP id w12so11231463lfr.9;
-        Thu, 10 Mar 2022 11:38:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=+q4NFh8M5rLEUTlZmWX48wHpQfLJseJX3YD02j5qCHU=;
-        b=euWE92alhBYNO7kBWzGAnu+lB9PODOQuTmYc6mw6mlEjRDisHwrTyV0E7YPno+A/ub
-         sLISMWuDgj0vLLacOa553fgqiV7Dcw3nUArKBzNppoB2GmRjZmL5sFxBbKYXBF4XUG2w
-         kxZFaAptt5dXJp4M5O+GOaOng6+dv3mpb/xUTBPaw4xAArRH6k9iKPicTleZZBJVHqCr
-         iay9maq/ElQenZtz+TcPklDT3T6zA1njb2UoPTX1GW13LHHiewTA/ybStjeYxL34XyQO
-         SSOf1yho/+iFyeDlncroenl31irFzyAgoHs3WI71nz2U0uEB2wgpGV9ntgb1GTT1Q6dA
-         IQiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=+q4NFh8M5rLEUTlZmWX48wHpQfLJseJX3YD02j5qCHU=;
-        b=LNu+A04Cvv17aLDKzryJrBW1KHJg+F2HsZSw1URc6ogax8I44YrMSSj6jrdtoJ3kjd
-         HVXP5YCECUuTwwxFKptJGrZDVcRIsdorH8MSF6G1NK04N9lVEVzomaKvONrkzJsAx+hO
-         mJ2Qfck1j2DlBH6rH5WjdM2yRopxE5Ezg+EzC66gquh0cwcBNKYi6LT/nH62oey0lr35
-         hHuEyTuCxca09OcM5ND6FgEuYdzD4h1VvGOaP6YjBe7KnkS1QtG0P1Gqpm35ze4o+Dp0
-         67VKqgFle6fdXI9Os2LrSVwIWyrE3BRw3fiLnKFv7Cvy8StljdTShTmkqG/seHFUOdBb
-         BfSg==
-X-Gm-Message-State: AOAM531qJ66MG3QenjnHy6QmSAk6VTLUfsKB07N+X1okyUZNPvGCqgTQ
-        ZUsu0Eo4iaueJN+0zijglKg=
-X-Google-Smtp-Source: ABdhPJwX6eXbihwbHBV7T1Q14omlXCOSeA00i5JdcWTKcn3/pRXf7ZCyNsSncayef7jL2/P+Ccd5jQ==
-X-Received: by 2002:ac2:46c1:0:b0:445:c00a:bdd2 with SMTP id p1-20020ac246c1000000b00445c00abdd2mr3821092lfo.429.1646941082264;
-        Thu, 10 Mar 2022 11:38:02 -0800 (PST)
-Received: from mobilestation ([95.79.188.22])
-        by smtp.gmail.com with ESMTPSA id y16-20020a2e9d50000000b00247b105c11dsm1251276ljj.34.2022.03.10.11.38.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Mar 2022 11:38:01 -0800 (PST)
-Date:   Thu, 10 Mar 2022 22:37:59 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Zhi Li <lznuaa@gmail.com>
-Cc:     Frank Li <Frank.Li@nxp.com>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        dl-linux-imx <linux-imx@nxp.com>, linux-pci@vger.kernel.org,
-        dmaengine@vger.kernel.org, vkoul@kernel.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: Re: [PATCH v4 5/8] dmaengine: dw-edma: Fix programming the source &
- dest addresses for ep
-Message-ID: <20220310193759.lkwqz5avlvznn5w3@mobilestation>
-References: <20220309211204.26050-1-Frank.Li@nxp.com>
- <20220309211204.26050-6-Frank.Li@nxp.com>
- <20220310163123.h2zqdx5tkn2czmbm@mobilestation>
- <CAHrpEqSrdEegSAKw42T8qsN_BC24LS7r5a_+jKa3ZvGu5w9W1g@mail.gmail.com>
+        with ESMTP id S233230AbiCJTmY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2022 14:42:24 -0500
+X-Greylist: delayed 398 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 10 Mar 2022 11:41:22 PST
+Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBDA4188A0C
+        for <linux-pci@vger.kernel.org>; Thu, 10 Mar 2022 11:41:22 -0800 (PST)
+Received: (wp-smtpd smtp.tlen.pl 1020 invoked from network); 10 Mar 2022 20:34:39 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=1024a;
+          t=1646940879; bh=KwMNW8ZZRm1bCxcewtu3qgqq9p7UkivlaK57PWEd+VI=;
+          h=From:To:Cc:Subject;
+          b=t7iQGjweFAFWzLObngYK05fl5xaHmC2DwsEpO48JX6uFDAA1Pir4tDBTv59+ls9ca
+           w3Lg2TG4DSM7adH81pfd4xNkRLK8S9KplbisYgSxAa54SFymkEyIVUKXeHVdfj5hOC
+           BGFSSUxM2bmGSCB1cbev8vbWmj/UimYtOagvTapI=
+Received: from aafb37.neoplus.adsl.tpnet.pl (HELO localhost.localdomain) (mat.jonczyk@o2.pl@[83.4.131.37])
+          (envelope-sender <mat.jonczyk@o2.pl>)
+          by smtp.tlen.pl (WP-SMTPD) with SMTP
+          for <linux-kernel@vger.kernel.org>; 10 Mar 2022 20:34:39 +0100
+From:   =?UTF-8?q?Mateusz=20Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     =?UTF-8?q?Mateusz=20Jo=C5=84czyk?= <mat.jonczyk@o2.pl>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        "Ira W . Snyder" <ira.snyder@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] x86/pci: drop ServerWorks / Broadcom CNB20LE PCI host bridge driver
+Date:   Thu, 10 Mar 2022 20:34:19 +0100
+Message-Id: <20220310193419.457395-1-mat.jonczyk@o2.pl>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHrpEqSrdEegSAKw42T8qsN_BC24LS7r5a_+jKa3ZvGu5w9W1g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-WP-MailID: 2263c2956a1c45f2a759a573378416d0
+X-WP-AV: skaner antywirusowy Poczty o2
+X-WP-SPAM: NO 0000001 [geLs]                               
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 10, 2022 at 10:50:14AM -0600, Zhi Li wrote:
-> On Thu, Mar 10, 2022 at 10:32 AM Serge Semin <fancer.lancer@gmail.com> wrote:
-> >
-> > On Wed, Mar 09, 2022 at 03:12:01PM -0600, Frank Li wrote:
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > >
-> > > When eDMA is controlled by the Endpoint (EP), the current logic incorrectly
-> > > programs the source and destination addresses for read and write. Since the
-> > > Root complex and Endpoint uses the opposite channels for read/write, fix the
-> > > issue by finding out the read operation first and program the eDMA accordingly.
-> > >
-> > > Cc: stable@vger.kernel.org
-> > > Fixes: bd96f1b2f43a ("dmaengine: dw-edma: support local dma device transfer semantics")
-> > > Fixes: e63d79d1ffcd ("dmaengine: Add Synopsys eDMA IP core driver")
-> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > > Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> > > ---
-> > > No change between v1 to v4
-> > >
-> > >  drivers/dma/dw-edma/dw-edma-core.c | 32 +++++++++++++++++++++++++++++-
-> > >  1 file changed, 31 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> > > index 66dc650577919..507f08db1aad3 100644
-> > > --- a/drivers/dma/dw-edma/dw-edma-core.c
-> > > +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> > > @@ -334,6 +334,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
-> > >       struct dw_edma_chunk *chunk;
-> > >       struct dw_edma_burst *burst;
-> > >       struct dw_edma_desc *desc;
-> > > +     bool read = false;
-> > >       u32 cnt = 0;
-> > >       int i;
-> > >
-> > > @@ -424,7 +425,36 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
-> > >               chunk->ll_region.sz += burst->sz;
-> > >               desc->alloc_sz += burst->sz;
-> > >
-> > > -             if (chan->dir == EDMA_DIR_WRITE) {
-> > > +             /****************************************************************
-> > > +              *
-> >
-> > > +              *        Root Complex                           Endpoint
-> > > +              * +-----------------------+             +----------------------+
-> > > +              * |                       |    TX CH    |                      |
-> > > +              * |                       |             |                      |
-> > > +              * |      DEV_TO_MEM       <-------------+     MEM_TO_DEV       |
-> > > +              * |                       |             |                      |
-> > > +              * |                       |             |                      |
-> > > +              * |      MEM_TO_DEV       +------------->     DEV_TO_MEM       |
-> > > +              * |                       |             |                      |
-> > > +              * |                       |    RX CH    |                      |
-> > > +              * +-----------------------+             +----------------------+
-> > > +              *
-> > > +              * If eDMA is controlled by the Root complex, TX channel
-> > > +              * (EDMA_DIR_WRITE) is used for memory read (DEV_TO_MEM) and RX
-> > > +              * channel (EDMA_DIR_READ) is used for memory write (MEM_TO_DEV).
-> > > +              *
-> > > +              * If eDMA is controlled by the endpoint, RX channel
-> > > +              * (EDMA_DIR_READ) is used for memory read (DEV_TO_MEM) and TX
-> > > +              * channel (EDMA_DIR_WRITE) is used for memory write (MEM_TO_DEV).
-> >
-> > Either I have some wrong notion about this issue, or something wrong
-> > with the explanation above and with this fix below.
-> >
-> > From my understanding of the possible DW eDMA IP-core setups the
-> > scatch above and the text below it are incorrect. Here is the way the
-> > DW eDMA can be used:
-> > 1) Embedded into the DW PCIe Host/EP controller. In this case
-> > CPU/Application Memory is the memory of the CPU attached to the
-> > host/EP controller, while the remote (link partner) memory is the PCIe
-> > bus memory. In this case MEM_TO_DEV operation is supposed to be
-> > performed by the Tx/Write channels, while the DEV_TO_MEM operation -
-> > by the Rx/Read channels.
-> >
-> > Note it's applicable for both Host and End-point case, when Linux is
-> > running on the CPU-side of the eDMA controller. So if it's DW PCIe
-> > end-point, then MEM_TO_DEV means copying data from the local CPU
-> > memory into the remote memory. In general the remote memory can be
-> > either some PCIe device on the bus or the Root Complex' CPU memory,
-> > each of which is some remote device anyway from the Local CPU
-> > perspective.
-> >
-> > 2) Embedded into the PCIe EP. This case is implemented in the
-> > drivers/dma/dw-edma/dw-edma-pcie.c driver. AFAICS from the commits log
-> > and from the driver code, that device is a Synopsys PCIe EndPoint IP
-> > prototype kit. It is a normal PCIe peripheral device with eDMA
-> > embedded, which CPU/Application interface is connected to some
-> > embedded SRAM while remote (link partner) interface is directed
-> > towards the PCIe bus. At the same time the device is setup and handled
-> > by the code running on a CPU connected to the PCIe Host controller.  I
-> > think that in order to preserve the normal DMA operations semantics we
-> > still need to consider the MEM_TO_DEV/DEV_TO_MEM operations from the
-> > host CPU perspective, since that's the side the DMA controller is
-> > supposed to be setup from.  In this MEM_TO_DEV is supposed to be used
-> > to copy data from the host CPU memory into the remote device memory.
-> > It means to allocate Rx/Read channel on the eDMA controller, so one
-> > would be read data from the Local CPU memory and copied it to the PCIe
-> > device SRAM. The logic of the DEV_TO_MEM direction would be just
-> > flipped. The eDMA PCIe device shall use Tx/Write channel to copy data
-> > from it's SRAM into the Host CPU memory.
-> >
-> > Please note as I understand the case 2) describes the Synopsys PCIe
-> > EndPoint IP prototype kit, which is based on some FPGA code. It's just
-> > a test setup with no real application, while the case 1) is a real setup
-> > available on our SoC and I guess on yours.
-> 
+The ServerWorks / Broadcom CNB20LE chipset was probably designed
+for Intel Pentium III processors only. The dedicated driver for it
+(implemented in arch/x86/pci/broadcom_bus.c) reads PCI windows
+from this chipset, which is (if I understand correctly) needed mostly
+for PCI hotplug and "option ROM mapping" [2]. This driver was written
+without access to the documentation of CNB20LE and caused problems on
+some servers, so it was soon disabled for all systems with ACPI enabled.
+It appears that most systems with CNB20LE support ACPI and it is not
+known whether the driver works correctly on most of those that don't.
 
-> I think yes. But Remote EP also is a one kind of usage module. Just no one
-> writes an EP functional driver for it yet.  Even pci-epf-test was just
-> a test function.
-> I previously sent vNTB patches to implement a virtual network between
-> RC and EP,
-> you can look if you have interest.
+On such old platforms, PCI hotplug is typically not used and
+"reliability" (i.e. that the system boots at all) is more important.
+So, delete this driver as it can cause more harm then good and there is
+little benefit in keeping it in the kernel.
 
-AFAIU the remote EP case is the same as 1) anyway. The remote EP is
-handled by its own CPU, which sets up the DW PCIe EP controller
-together with eDMA synthesized into the CPU' SoC. Am I right? While
-the case 2) doesn't have any CPU attached on the PCIe EP. It's just an
-FPGA with PCIe interface and eDMA IP-core installed. In that case all
-the setups are performed by the PCIe Host CPU. That's the root problem
-that causes having all the DEV_TO_MEM/MEM_TO_DEV complications.
+Details:
 
-So to speak I would suggest for at least to have the scatch fixed in
-accordance with the logic explained in my message.
+I was unable to find a description of this chipset. However, it was
+almost exclusively used with the Pentium III processor (this CPU model
+was used in all references to it that I examined where the CPU model
+was provided: dmesgs in [1] and [2]; [3] page 2; [4]-[7]).
 
-> 
-> >
-> > So what I suggest in the framework of this patch is just to implement
-> > the case 1) only. While the case 2) as it's an artificial one can be
-> > manually handled by the DMA client drivers. BTW There aren't ones available
-> > in the kernel anyway. The only exception is an old-time attempt to get
-> > an eDMA IP test-driver mainlined into the kernel:
-> > https://patchwork.kernel.org/project/linux-pci/patch/cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com/
-> > But it was long time ago. So it's unlikely to be accepted at all.
-> >
-> > What do you think?
-> >
-> > -Sergey
-> >
-> > > +              *
-> > > +              ****************************************************************/
-> > > +
-> >
-> > > +             if ((dir == DMA_DEV_TO_MEM && chan->dir == EDMA_DIR_READ) ||
-> > > +                 (dir == DMA_DEV_TO_MEM && chan->dir == EDMA_DIR_WRITE))
-> > > +                     read = true;
-> >
+The CNB20LE driver was added to the kernel in 2010 (many years after
+the introduction of Pentium III) in Linux 2.6.35 in
+commit 3f6ea84a3035 ("PCI: read memory ranges out of Broadcom CNB20LE host bridge")
+Soon, it caused problems on some Compaq Proliant DL320 servers [2] and
+it was decided to disable the driver on all systems with ACPI enabled.
+This went in
+commit 30e664afb5cb ("x86/PCI: don't use native Broadcom CNB20LE driver when ACPI is available")
 
-> > Seeing the driver support only two directions DMA_DEV_TO_MEM/DMA_DEV_TO_MEM
-> > and EDMA_DIR_READ/EDMA_DIR_WRITE, this conditional statement seems
-> > redundant.
+However, most of these systems mentioned (all except for [3], where it is not
+known and [7]) support ACPI. I think that dmesg from the original system
+on which the driver was developed can be found in [7]. It is possible
+that CNB30LE used the same PCI ID and was also detected by this driver
+[7], but it probably also was used with Pentium III.
 
-Am I getting a response on this comment? In accordance with that
-conditional statement having dir == DMA_DEV_TO_MEM means performing
-read operation. If dir equals DMA_MEM_TO_DEV then a write operation
-will be performed. The code path doesn't depend on the chan->dir
-value.
+[1] Jim Studt, Re: Problem with ServerWorks CNB20LE and lost interrupts
+Linux Kernel Mailing List, https://lkml.org/lkml/2002/1/11/111
 
--Sergey
+[2] RedHat Bug 665109 - e100 problems on old Compaq Proliant DL320
+https://bugzilla.redhat.com/show_bug.cgi?id=665109
 
-> >
-> > > +
-> > > +             /* Program the source and destination addresses for DMA read/write */
-> > > +             if (read) {
-> > >                       burst->sar = src_addr;
-> > >                       if (xfer->type == EDMA_XFER_CYCLIC) {
-> > >                               burst->dar = xfer->xfer.cyclic.paddr;
-> > > --
-> > > 2.24.0.rc1
-> > >
+[3] R. Hughes-Jones, S. Dallison, G. Fairey, Performance Measurements on
+Gigabit Ethernet NICs and Server Quality Motherboards,
+http://datatag.web.cern.ch/papers/pfldnet2003-rhj.doc
+
+[4] "Hardware for Linux",
+Probe #d6b5151873 of Intel STL2-bd A28808-302 Desktop Computer (STL2)
+https://linux-hardware.org/?probe=d6b5151873
+
+[5] "Hardware for Linux", Probe #0b5d843f10 of Compaq ProLiant DL380
+https://linux-hardware.org/?probe=0b5d843f10
+
+[6] Ubuntu Forums, Dell Poweredge 2400 - Adaptec SCSI Bus AIC-7880
+https://ubuntuforums.org/showthread.php?t=1689552
+
+[7] Ira W. Snyder, "BISECTED: 2.6.35 (and -git) fail to boot: APIC problems"
+https://lkml.org/lkml/2010/8/13/220
+
+Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: x86@kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ira W. Snyder <ira.snyder@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+
+---
+
+Hello,
+
+When trying to document CONFIG_PCI_CNB20LE_QUIRK for Kconfig I realised
+that this driver probably may be removed from the kernel.
+
+I am not sure what exactly the drawbacks of missing PCI bus window
+information for this chipset are. In [2] there is a comment by Mr Bjorn
+Helgaas:
+        I think the possibilities are:
+        [...]
+        2) Ignore _CRS and make broadcom_bus.c do nothing.  This gets us
+        back to the working situation of F13 [Fedora 13].  Since we
+        don't have any host bridge information, things like PCI hotplug
+        and option ROM mapping may not work, but that's the way it's
+        always been on these boxes.
+
+I understand how host bridge windows are required for PCI hotplug, but I
+don't know why they may be necessary for option ROM mapping.
+
+Greetings,
+Mateusz
+---
+ arch/x86/Kconfig            |  13 -----
+ arch/x86/pci/Makefile       |   1 -
+ arch/x86/pci/broadcom_bus.c | 112 ------------------------------------
+ arch/x86/pci/bus_numa.c     |   2 +-
+ 4 files changed, 1 insertion(+), 127 deletions(-)
+ delete mode 100644 arch/x86/pci/broadcom_bus.c
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 9f5bd41bf660..577a588fe1ae 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2656,19 +2656,6 @@ config MMCONF_FAM10H
+ 	def_bool y
+ 	depends on X86_64 && PCI_MMCONFIG && ACPI
+ 
+-config PCI_CNB20LE_QUIRK
+-	bool "Read CNB20LE Host Bridge Windows" if EXPERT
+-	depends on PCI
+-	help
+-	  Read the PCI windows out of the CNB20LE host bridge. This allows
+-	  PCI hotplug to work on systems with the CNB20LE chipset which do
+-	  not have ACPI.
+-
+-	  There's no public spec for this chipset, and this functionality
+-	  is known to be incomplete.
+-
+-	  You should say N unless you know you need this.
+-
+ config ISA_BUS
+ 	bool "ISA bus support on modern systems" if EXPERT
+ 	help
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 48bcada5cabe..ca343d8c7964 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -22,6 +22,5 @@ obj-y				+= common.o early.o
+ obj-y				+= bus_numa.o
+ 
+ obj-$(CONFIG_AMD_NB)		+= amd_bus.o
+-obj-$(CONFIG_PCI_CNB20LE_QUIRK)	+= broadcom_bus.o
+ 
+ ccflags-$(CONFIG_PCI_DEBUG)	+= -DDEBUG
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+deleted file mode 100644
+index 2db73613cada..000000000000
+--- a/arch/x86/pci/broadcom_bus.c
++++ /dev/null
+@@ -1,112 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Read address ranges from a Broadcom CNB20LE Host Bridge
+- *
+- * Copyright (c) 2010 Ira W. Snyder <iws@ovro.caltech.edu>
+- */
+-
+-#include <linux/acpi.h>
+-#include <linux/delay.h>
+-#include <linux/dmi.h>
+-#include <linux/pci.h>
+-#include <linux/init.h>
+-#include <asm/pci_x86.h>
+-#include <asm/pci-direct.h>
+-
+-#include "bus_numa.h"
+-
+-static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
+-{
+-	struct pci_root_info *info;
+-	struct pci_root_res *root_res;
+-	struct resource res;
+-	u16 word1, word2;
+-	u8 fbus, lbus;
+-
+-	/* read the PCI bus numbers */
+-	fbus = read_pci_config_byte(bus, slot, func, 0x44);
+-	lbus = read_pci_config_byte(bus, slot, func, 0x45);
+-	info = alloc_pci_root_info(fbus, lbus, 0, 0);
+-
+-	/*
+-	 * Add the legacy IDE ports on bus 0
+-	 *
+-	 * These do not exist anywhere in the bridge registers, AFAICT. I do
+-	 * not have the datasheet, so this is the best I can do.
+-	 */
+-	if (fbus == 0) {
+-		update_res(info, 0x01f0, 0x01f7, IORESOURCE_IO, 0);
+-		update_res(info, 0x03f6, 0x03f6, IORESOURCE_IO, 0);
+-		update_res(info, 0x0170, 0x0177, IORESOURCE_IO, 0);
+-		update_res(info, 0x0376, 0x0376, IORESOURCE_IO, 0);
+-		update_res(info, 0xffa0, 0xffaf, IORESOURCE_IO, 0);
+-	}
+-
+-	/* read the non-prefetchable memory window */
+-	word1 = read_pci_config_16(bus, slot, func, 0xc0);
+-	word2 = read_pci_config_16(bus, slot, func, 0xc2);
+-	if (word1 != word2) {
+-		res.start = ((resource_size_t) word1 << 16) | 0x0000;
+-		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
+-		res.flags = IORESOURCE_MEM;
+-		update_res(info, res.start, res.end, res.flags, 0);
+-	}
+-
+-	/* read the prefetchable memory window */
+-	word1 = read_pci_config_16(bus, slot, func, 0xc4);
+-	word2 = read_pci_config_16(bus, slot, func, 0xc6);
+-	if (word1 != word2) {
+-		res.start = ((resource_size_t) word1 << 16) | 0x0000;
+-		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
+-		res.flags = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		update_res(info, res.start, res.end, res.flags, 0);
+-	}
+-
+-	/* read the IO port window */
+-	word1 = read_pci_config_16(bus, slot, func, 0xd0);
+-	word2 = read_pci_config_16(bus, slot, func, 0xd2);
+-	if (word1 != word2) {
+-		res.start = word1;
+-		res.end   = word2;
+-		res.flags = IORESOURCE_IO;
+-		update_res(info, res.start, res.end, res.flags, 0);
+-	}
+-
+-	/* print information about this host bridge */
+-	res.start = fbus;
+-	res.end   = lbus;
+-	res.flags = IORESOURCE_BUS;
+-	printk(KERN_INFO "CNB20LE PCI Host Bridge (domain 0000 %pR)\n", &res);
+-
+-	list_for_each_entry(root_res, &info->resources, list)
+-		printk(KERN_INFO "host bridge window %pR\n", &root_res->res);
+-}
+-
+-static int __init broadcom_postcore_init(void)
+-{
+-	u8 bus = 0, slot = 0;
+-	u32 id;
+-	u16 vendor, device;
+-
+-#ifdef CONFIG_ACPI
+-	/*
+-	 * We should get host bridge information from ACPI unless the BIOS
+-	 * doesn't support it.
+-	 */
+-	if (!acpi_disabled && acpi_os_get_root_pointer())
+-		return 0;
+-#endif
+-
+-	id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+-	vendor = id & 0xffff;
+-	device = (id >> 16) & 0xffff;
+-
+-	if (vendor == PCI_VENDOR_ID_SERVERWORKS &&
+-	    device == PCI_DEVICE_ID_SERVERWORKS_LE) {
+-		cnb20le_res(bus, slot, 0);
+-		cnb20le_res(bus, slot, 1);
+-	}
+-	return 0;
+-}
+-
+-postcore_initcall(broadcom_postcore_init);
+diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
+index 2752c02e3f0e..b4f5e668812e 100644
+--- a/arch/x86/pci/bus_numa.c
++++ b/arch/x86/pci/bus_numa.c
+@@ -59,7 +59,7 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources)
+ default_resources:
+ 	/*
+ 	 * We don't have any host bridge aperture information from the
+-	 * "native host bridge drivers," e.g., amd_bus or broadcom_bus,
++	 * "native host bridge drivers", e.g. amd_bus,
+ 	 * so fall back to the defaults historically used by pci_create_bus().
+ 	 */
+ 	printk(KERN_DEBUG "PCI: root bus %02x: using default resources\n", bus);
+
+base-commit: ffb217a13a2eaf6d5bd974fc83036a53ca69f1e2
+-- 
+2.25.1
+
