@@ -2,36 +2,39 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E83C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Mar 2022 23:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D9AC433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Mar 2022 23:56:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229641AbiCKXwV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Mar 2022 18:52:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
+        id S229573AbiCKX5J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Mar 2022 18:57:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiCKXwV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2022 18:52:21 -0500
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 576421F65E6;
-        Fri, 11 Mar 2022 15:51:17 -0800 (PST)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 146A01A125E;
-        Sat, 12 Mar 2022 00:51:16 +0100 (CET)
+        with ESMTP id S229458AbiCKX5I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2022 18:57:08 -0500
+X-Greylist: delayed 378 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 11 Mar 2022 15:56:04 PST
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABC6FE406;
+        Fri, 11 Mar 2022 15:56:04 -0800 (PST)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id B2F07201315;
+        Sat, 12 Mar 2022 00:49:45 +0100 (CET)
 Received: from smtp.na-rdc02.nxp.com (usphx01srsp001v.us-phx01.nxp.com [134.27.49.11])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C85B41A00A6;
-        Sat, 12 Mar 2022 00:51:15 +0100 (CET)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 77DFA201323;
+        Sat, 12 Mar 2022 00:49:45 +0100 (CET)
 Received: from right.am.freescale.net (right.am.freescale.net [10.81.116.142])
-        by usphx01srsp001v.us-phx01.nxp.com (Postfix) with ESMTP id 93F764028F;
-        Fri, 11 Mar 2022 16:51:14 -0700 (MST)
+        by usphx01srsp001v.us-phx01.nxp.com (Postfix) with ESMTP id 5A42840577;
+        Fri, 11 Mar 2022 16:49:44 -0700 (MST)
 From:   Li Yang <leoyang.li@nxp.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Rob Herring <robh@kernel.org>,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Li Yang <leoyang.li@nxp.com>
-Subject: [PATCH] dt-bindings: pci: layerscape-pci: Add lx2160a rev2 PCIe RC compatible string
-Date:   Fri, 11 Mar 2022 17:51:06 -0600
-Message-Id: <20220311235106.8756-1-leoyang.li@nxp.com>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 2/4] dt-bindings: pci: layerscape-pci: Update the description of SCFG property
+Date:   Fri, 11 Mar 2022 17:49:36 -0600
+Message-Id: <20220311234938.8706-3-leoyang.li@nxp.com>
 X-Mailer: git-send-email 2.25.1.377.g2d2118b
+In-Reply-To: <20220311234938.8706-1-leoyang.li@nxp.com>
+References: <20220311234938.8706-1-leoyang.li@nxp.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Virus-Scanned: ClamAV using ClamSMTP
@@ -39,27 +42,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-lx2160a rev2 SoC uses a different pcie controller from rev1.  Add a new
-compatible string "fsl,lx2160ar2-pcie" which is also compatible with
-"fsl,ls2088a-pcie".
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Signed-off-by: Li Yang <leoyang.li@nxp.com>
+Update the description of the second entry of 'fsl,pcie-scfg' property,
+as the LS1043A PCIe controller also has some control registers in SCFG
+block, while it has 3 controllers.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/layerscape-pci.txt | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/devicetree/bindings/pci/layerscape-pci.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index ee8a4791a78b..43c3c8792cb2 100644
+index 215d2ee65c83..f1115fcd8088 100644
 --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
 +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -22,6 +22,7 @@ Required properties:
-         "fsl,ls1043a-pcie"
-         "fsl,ls1012a-pcie"
-         "fsl,ls1028a-pcie"
-+	"fsl,lx2160ar2-pcie", "fsl,ls2088a-pcie"
-   EP mode:
- 	"fsl,ls1028a-pcie-ep", "fsl,ls-pcie-ep"
- 	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
+@@ -34,7 +34,7 @@ Required properties:
+   "intr": The interrupt that is asserted for controller interrupts
+ - fsl,pcie-scfg: Must include two entries.
+   The first entry must be a link to the SCFG device node
+-  The second entry must be '0' or '1' based on physical PCIe controller index.
++  The second entry is the physical PCIe controller index starting from '0'.
+   This is used to get SCFG PEXN registers
+ - dma-coherent: Indicates that the hardware IP block can ensure the coherency
+   of the data transferred from/to the IP block. This can avoid the software
 -- 
 2.25.1
 
