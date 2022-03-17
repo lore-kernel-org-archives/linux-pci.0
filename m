@@ -2,271 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB08C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Mar 2022 15:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40167C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Mar 2022 16:13:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235678AbiCQPST (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Mar 2022 11:18:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42660 "EHLO
+        id S236398AbiCQQOl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Mar 2022 12:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235663AbiCQPSS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2022 11:18:18 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFF7D205979;
-        Thu, 17 Mar 2022 08:16:59 -0700 (PDT)
-Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KK9gB3Rysz67Y0C;
-        Thu, 17 Mar 2022 23:15:02 +0800 (CST)
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 17 Mar 2022 16:16:58 +0100
-Received: from localhost (10.47.67.100) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Thu, 17 Mar
- 2022 15:16:57 +0000
-Date:   Thu, 17 Mar 2022 15:16:55 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-CC:     <linux-cxl@vger.kernel.org>, <ben.widawsky@intel.com>,
-        <vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
-        <ira.weiny@intel.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 8/8] cxl/pci: Add (hopeful) error handling support
-Message-ID: <20220317151655.0000015e@Huawei.com>
-In-Reply-To: <164740406489.3912056.8334546166826246693.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <164740402242.3912056.8303625392871313860.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <164740406489.3912056.8334546166826246693.stgit@dwillia2-desk3.amr.corp.intel.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+        with ESMTP id S233044AbiCQQOk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2022 12:14:40 -0400
+Received: from na01-obe.outbound.protection.outlook.com (mail-eus2azon11020021.outbound.protection.outlook.com [52.101.56.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F41D167F4;
+        Thu, 17 Mar 2022 09:13:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BjkmuHUA8rhKyqCndwbvCHE7bhFcDpxoTe4XApiK+CHxBAfn5SNoUjQnCn1gcP6oMEvPdn88OLdNG55UB1McOWP9k1kLL3M8K47Y+/DK861KesaoN3mvDythmgu3cp8LsSdos1otUoYKnFB7ZdX8lfPcplNS7yjhaZk7KJnI00f+gXksk6uFJc7fGkauUjjcGY/m8dNZPGTsiyhMYyQXd0gYY4x1SvtP5rk6IbR3UUJSgSaUNnFOq+SgVzHFAUBVgHpCHEnj3mSYeJz+0s8o8BK64CqJbBZ+Qy+SSlvNZvSiOAvp8tTXfv0wVXibb3bX9i/auUm3gmpGiUhHK6NO9A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fANw3N96wb/SEz2HYRPFH4oNYkebZSLj6chgN0ZIU84=;
+ b=JEKxydoVBhbsk07j+z1HjdK+hv3H25po61mKDmWefjvRPODqOxwd0e1UoXKrgrPpSBbxxZMVF5PTgyXASJW9zBfxhJvNtBFwK1J+id6Eay1kln0+pQYG7YjhCCko99tw0kzhX77bM2UxLhTSWfELRm3kaxfzxZVGxZJ27zzBWOmHKtnA9yl2EX3SKew8/uR3kEncJ09WxxJjotuFADWHYYvEcdjLDqNj22yeFTBGGvo34KddVvYKDd9PuqcCc7yxCKonQuZo+MfKkX8LXW/EBjx3WXskDR+uzQLnuoyJLa9U5bM/Dms7AeaDzK94XB6WXF2TsFlxndD2WC7CczzIYw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fANw3N96wb/SEz2HYRPFH4oNYkebZSLj6chgN0ZIU84=;
+ b=Cj4NzznzV4wQ9PdTJDlDkNKJ8NzeGPWaYbN2kL7ia3ZLbqdX/ZRyIqyugM73xMtM/NkyW9/9NClcI6rjVZIVbUjwNrEAIHGrBOH8k2sQExqUTD8zbKqUpUJos1ab+UPEJdbBwIsqm8mSXbb36/BYSCyY2ia7qQjgnlUiLqxiMYE=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+Received: from DM6PR21MB1514.namprd21.prod.outlook.com (2603:10b6:5:22d::11)
+ by BL0PR2101MB0995.namprd21.prod.outlook.com (2603:10b6:207:36::29) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5081.15; Thu, 17 Mar
+ 2022 16:13:20 +0000
+Received: from DM6PR21MB1514.namprd21.prod.outlook.com
+ ([fe80::8c81:f644:fc1c:1357]) by DM6PR21MB1514.namprd21.prod.outlook.com
+ ([fe80::8c81:f644:fc1c:1357%4]) with mapi id 15.20.5102.007; Thu, 17 Mar 2022
+ 16:13:20 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     sthemmin@microsoft.com, kys@microsoft.com, haiyangz@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, rafael@kernel.org,
+        lenb@kernel.org, lorenzo.pieralisi@arm.com, robh@kernel.org,
+        kw@linux.com, bhelgass@google.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc:     mikelley@microsoft.com
+Subject: [PATCH 1/4] ACPI: scan: Export acpi_get_dma_attr()
+Date:   Thu, 17 Mar 2022 09:12:40 -0700
+Message-Id: <1647533563-2170-2-git-send-email-mikelley@microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1647533563-2170-1-git-send-email-mikelley@microsoft.com>
+References: <1647533563-2170-1-git-send-email-mikelley@microsoft.com>
+Content-Type: text/plain
+X-ClientProxiedBy: MW3PR06CA0007.namprd06.prod.outlook.com
+ (2603:10b6:303:2a::12) To DM6PR21MB1514.namprd21.prod.outlook.com
+ (2603:10b6:5:22d::11)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.67.100]
-X-ClientProxiedBy: lhreml735-chm.china.huawei.com (10.201.108.86) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 5c4a72cf-95d6-45fe-0749-08da08310da9
+X-MS-TrafficTypeDiagnostic: BL0PR2101MB0995:EE_
+X-MS-Exchange-AtpMessageProperties: SA|SL
+X-Microsoft-Antispam-PRVS: <BL0PR2101MB09959DB73944BEC866C7E90CD7129@BL0PR2101MB0995.namprd21.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: YiP+Rr8tt0Rf1WyyjlpF5bj0HsFxvDzokvhvuX8g43Iz6SPSgqSigWvb3zWgS3sBJDK2haWZMETorFL5k4wLPrn7PKvrJlpin7CEXzw7c2F/neT/oOk/PAlB/DIzQXYD4c2x56ICiIFA4ld/fymwYcLInjryoWzpAJwnbZEs13KdpGSyknEGbkvPQJGALp8w1ICrsxdIpCGLiyOvfilQJDxQ+BDeHm3C8A8S8nzVdA30jsufl3MTGxlVp73/DMqofVQWJBxl/9s8MvN/LM7Z+Zp5dD0GKNLwmD82C8MInKllsqxFvz3x6IAwyvFL8EMGsYu8sjfn8wUN4dNmvtwWICOu90KJG6nIl2D24JBfxdDySEHkO87z8bKOaObMOWb7UlGjB8TXHU7Nu+RLJBA/s78OKPscXCVUJjhvScq/xeGrH1YhrwmbFkMlK8QxW+oPSXTRamHewdeh8YqK5Q9Mk77/Nw6bsd5dHO6srKQeTF26yzSk/RwuPe/D6+8BRLUC5Rjh51zElNV9M3MfUnFcH9yibKq+1x+R2QapMhymEAfmYPHAM2k5IZOnMT7zqg0OpPwDeQD6ATxPvI7QoyOUw4UdQ2z9NzJqWZSSbNL7bt3VJaM4+F+vurkQY0I/0+9pOm8WaOndl2Xv43lJCwBR4jTcgHu+ybaKmtQK6Pzo1x+tDSG8CnR3hu/Wqtl8QkprtI8EeNUGaD9ilKjhOJCgWhfOV8zknFfPAkVRRaQWmSgKG+IceQCQgteewlZqQtqDHmfAVd3W+13FxXF2ppEvCg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1514.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(451199009)(186003)(26005)(4326008)(8676002)(2616005)(8936002)(66946007)(66476007)(66556008)(107886003)(38100700002)(38350700002)(316002)(36756003)(10290500003)(4744005)(6486002)(86362001)(5660300002)(921005)(6512007)(82960400001)(7416002)(82950400001)(6506007)(2906002)(508600001)(6666004)(52116002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?g/Nf1JDFHyzLc4yhaPYLvZUnuYhjAClA/WFwf8cqgaWqk2FaTh8EEYByjuIa?=
+ =?us-ascii?Q?4NJVO+Xnkr2e3GJAly6Oy43FtSchnjVIag8lkbA5FkII5uobmPM0Mt3cE5pR?=
+ =?us-ascii?Q?EyY/9YuWDW22q7iCAlMcGlRcWC1NGcET5WB623a1Q3Z23C6APlhQ8Q4V/ojK?=
+ =?us-ascii?Q?9KdXosdbux9M2UP8q9wIwn0Jo8fygE93ruixYopO8VvMb7HK2DBJYGgE1tWQ?=
+ =?us-ascii?Q?BZJcY/BAw+JuTc5o/eXt6TMJnJzv2HdkQdJcBHU/5oCHjto6se2txJzRDalE?=
+ =?us-ascii?Q?HabxsVDHS3KCJzdRRhVk3npF9z1jxsjikNmu8EvnH8UyWfYnfzFruLaHS4v2?=
+ =?us-ascii?Q?kRqP8jO3+dgEq/XnITlTWnYckSM1ZGTlhrb6BG7WuXk4M8baeQeEQ8OpfD9G?=
+ =?us-ascii?Q?xhVzLFISzawiKx8CdGz2o7nIGci3fz7qzQ4Jvv79dU4D7zBlbQ0ftonPWWPY?=
+ =?us-ascii?Q?LxdxxM9ND0xYGXXDVNfYHi1b6Gh318RDvrakDDTR1mgME69A4PZJbzOiE2Sb?=
+ =?us-ascii?Q?gcS0lL+/JQxmzlOcD+TZW8TxM1O+/Sk8c4h+03RnbHqr7/LFUxSUP1V5gqMt?=
+ =?us-ascii?Q?5zuRiiV2HSD7GQHqf+2HoiuoryhNTBqVOhUaYPMmspmEhMbsf7KaHEyb7H7Z?=
+ =?us-ascii?Q?Lh4P7kB4JW8Eg2pb81//pwz0Eg/V8mzXH+NNwagxmrAa8FrkT90fzQHXoCa2?=
+ =?us-ascii?Q?X7t+fAXUqNXzOKtJyhFwtAXCmdWhLTq3qDuMX/J42c9GqkB/+yB2a8NGo3PQ?=
+ =?us-ascii?Q?6i6htzdaYbpaE4TvJ95WZnYSg6yeeBBt2hdkAhCsG/nByAM1YIHFIejpysql?=
+ =?us-ascii?Q?Hley9Q0r+XLO4UTK8IQPP/SUgRPXEfvM0XcfIrlGpgD0pS6UXaK00+iUVH8M?=
+ =?us-ascii?Q?6a9wumbBrSaWlgElgD/KmX9W/pdmjT8X/7T82qyBMEZ9oB90Tqjb3YJKQFDP?=
+ =?us-ascii?Q?evbVu/Z8LoStCLyUpkhDg3EsNa9MSZFcRy6pHOtoZlSDAxIDKysRcy5iohKR?=
+ =?us-ascii?Q?4bU6KFE8tQufJfhKOLoOhXn9qWKMFsO0roNBOctoZ/XRWdk75Dqk+bAWXdX1?=
+ =?us-ascii?Q?+gR66ys/TrYLxERhtS0R3N4bsUH4+lf5h5wAMHXlJoWbQ25OqCPPxvOlUHXl?=
+ =?us-ascii?Q?XWLjddetuS3c3fRLtTo8BI+sdtED8pbm7veAnkizO5LwXZk3LLT06eCeDq6T?=
+ =?us-ascii?Q?HsYEpotO0LsR+wcSvtAnQBBxieKHZqdGDNWNTCOuP7hsyJR8eLGEtL+y4gFo?=
+ =?us-ascii?Q?4ZcGr6KyaIv6hK1Ma6mfjiK5HDHZ2g2/LWmIWCBXBX9A+lFP3iK6f1ZGEYRi?=
+ =?us-ascii?Q?FzlG57B6Xx3Oy4EOqOPmRuniC6D0+6Nmwgf1ZUcnTElne7ZoU/fWjkLa5XbP?=
+ =?us-ascii?Q?DJ05gz+FFDNvzC1FKxNaTRMPrbeYSWVYvRKxHYjqJPYXxIDz+V+GD15jOKcx?=
+ =?us-ascii?Q?RH3PNjhxf6Ziuo4d18sxwUdMMrsYbyzllShfqV3K6Ve4Fk71WVczmg=3D=3D?=
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c4a72cf-95d6-45fe-0749-08da08310da9
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1514.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2022 16:13:20.3247
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: jSOWCiZtIB2q0qPNK00ZSp+LgtlZeAKmba7e5kMzxwZfyLMKMophg2weFRZzJ+rmyskbepiHW3dA7F/bM0EW/A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR2101MB0995
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 15 Mar 2022 21:14:24 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+Export acpi_get_dma_attr() so that it can be used by the Hyper-V
+VMbus driver, which may be built as a module. The related function
+acpi_dma_configure_id() is already exported.
 
-> Add nominal error handling that tears down CXL.mem in response to error
-> notifications that imply a device reset. Given some CXL.mem may be
-> operating as System RAM, there is a high likelihood that these error
-> events are fatal. However, if the system survives the notification the
-> expectation is that the driver behavior is equivalent to a hot-unplug
-> and re-plug of an endpoint.
-> 
-> Note that this does not change the mask values from the default. That
-> awaits CXL _OSC support to determine whether platform firmware is in
-> control of the mask registers.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+---
+ drivers/acpi/scan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I'm far from an expert in PCI error handling...  I've asked one of our RAS
-folk to take a quick look so he may well reply as well.
-
-With that in mind...
-
-> ---
->  drivers/cxl/core/memdev.c |    1 
->  drivers/cxl/cxlmem.h      |    2 +
->  drivers/cxl/pci.c         |  109 +++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 112 insertions(+)
-> 
-> diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
-> index 1f76b28f9826..223d512790e1 100644
-> --- a/drivers/cxl/core/memdev.c
-> +++ b/drivers/cxl/core/memdev.c
-> @@ -341,6 +341,7 @@ struct cxl_memdev *devm_cxl_add_memdev(struct cxl_dev_state *cxlds)
->  	 * needed as this is ordered with cdev_add() publishing the device.
->  	 */
->  	cxlmd->cxlds = cxlds;
-> +	cxlds->cxlmd = cxlmd;
->  
->  	cdev = &cxlmd->cdev;
->  	rc = cdev_device_add(cdev, dev);
-> diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-> index 5d33ce24fe09..f58e16951414 100644
-> --- a/drivers/cxl/cxlmem.h
-> +++ b/drivers/cxl/cxlmem.h
-> @@ -117,6 +117,7 @@ struct cxl_endpoint_dvsec_info {
->   * Currently only memory devices are represented.
->   *
->   * @dev: The device associated with this CXL state
-> + * @cxlmd: The device representing the CXL.mem capabilities of @dev
->   * @regs: Parsed register blocks
->   * @cxl_dvsec: Offset to the PCIe device DVSEC
->   * @payload_size: Size of space for payload
-> @@ -148,6 +149,7 @@ struct cxl_endpoint_dvsec_info {
->   */
->  struct cxl_dev_state {
->  	struct device *dev;
-> +	struct cxl_memdev *cxlmd;
-
-This is only used I think to access the cxlmd->dev. Perhaps better to pass
-the dev and avoid having a reference to the memdev in here?
-
->  
->  	struct cxl_regs regs;
->  	int cxl_dvsec;
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index bde8929450f0..823cbfa093fa 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -8,6 +8,7 @@
->  #include <linux/mutex.h>
->  #include <linux/list.h>
->  #include <linux/pci.h>
-> +#include <linux/aer.h>
->  #include <linux/io.h>
->  #include "cxlmem.h"
->  #include "cxlpci.h"
-> @@ -533,6 +534,11 @@ static void cxl_dvsec_ranges(struct cxl_dev_state *cxlds)
->  	info->ranges = __cxl_dvsec_ranges(cxlds, info);
->  }
->  
-> +static void disable_aer(void *pdev)
-> +{
-> +	pci_disable_pcie_error_reporting(pdev);
-> +}
-> +
->  static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  {
->  	struct cxl_register_map map;
-> @@ -554,6 +560,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	cxlds = cxl_dev_state_create(&pdev->dev);
->  	if (IS_ERR(cxlds))
->  		return PTR_ERR(cxlds);
-> +	pci_set_drvdata(pdev, cxlds);
->  
->  	cxlds->serial = pci_get_dsn(pdev);
->  	cxlds->cxl_dvsec = pci_find_dvsec_capability(
-> @@ -610,6 +617,14 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	if (IS_ERR(cxlmd))
->  		return PTR_ERR(cxlmd);
->  
-> +	if (cxlds->regs.ras) {
-> +		pci_enable_pcie_error_reporting(pdev);
-> +		rc = devm_add_action_or_reset(&pdev->dev, disable_aer, pdev);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +	pci_save_state(pdev);
-> +
->  	if (range_len(&cxlds->pmem_range) && IS_ENABLED(CONFIG_CXL_PMEM))
->  		rc = devm_cxl_add_nvdimm(&pdev->dev, cxlmd);
->  
-> @@ -623,10 +638,104 @@ static const struct pci_device_id cxl_mem_pci_tbl[] = {
->  };
->  MODULE_DEVICE_TABLE(pci, cxl_mem_pci_tbl);
->  
-> +/*
-> + * Log the state of the RAS status registers and prepare them to log the
-> + * next error status.
-> + */
-> +static void cxl_report_and_clear(struct cxl_dev_state *cxlds)
-> +{
-> +	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> +	struct device *dev = &cxlmd->dev;
-> +	void __iomem *addr;
-> +	u32 status;
-> +
-> +	if (!cxlds->regs.ras)
-> +		return;
-> +
-> +	addr = cxlds->regs.ras + CXL_RAS_UNCORRECTABLE_STATUS_OFFSET;
-> +	status = readl(addr);
-> +	if (status & CXL_RAS_UNCORRECTABLE_STATUS_MASK) {
-> +		dev_warn(cxlds->dev, "%s: uncorrectable status: %#08x\n",
-> +			 dev_name(dev), status);
-> +		writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
-> +	}
-> +
-> +	addr = cxlds->regs.ras + CXL_RAS_CORRECTABLE_STATUS_OFFSET;
-> +	status = readl(addr);
-> +	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
-> +		dev_warn(cxlds->dev, "%s: correctable status: %#08x\n",
-> +			 dev_name(dev), status);
-> +		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
-> +	}
-> +}
-> +
-> +static pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-> +					   pci_channel_state_t state)
-> +{
-> +	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> +	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> +	struct device *dev = &cxlmd->dev;
-
-Perhaps a more informative name than dev given we have several devs
-involved here?
-
-> +
-> +	/*
-> +	 * A frozen channel indicates an impending reset which is fatal to
-> +	 * CXL.mem operation, and will likely crash the system. On the off
-> +	 * chance the situation is recoverable dump the status of the RAS
-> +	 * capability registers and bounce the active state of the memdev.
-> +	 */
-> +	cxl_report_and_clear(cxlds);
-> +
-> +	switch (state) {
-> +	case pci_channel_io_normal:
-> +		return PCI_ERS_RESULT_CAN_RECOVER;
-> +	case pci_channel_io_frozen:
-> +		dev_warn(&pdev->dev,
-> +			 "%s: frozen state error detected, disable CXL.mem\n",
-> +			 dev_name(dev));
-> +		device_release_driver(dev);
-> +		return PCI_ERS_RESULT_NEED_RESET;
-> +	case pci_channel_io_perm_failure:
-> +		dev_warn(&pdev->dev,
-> +			 "failure state error detected, request disconnect\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-> +	return PCI_ERS_RESULT_NEED_RESET;
-> +}
-> +
-> +static pci_ers_result_t cxl_slot_reset(struct pci_dev *pdev)
-> +{
-> +	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> +	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> +	struct device *dev = &cxlmd->dev;
-> +
-> +	dev_info(&pdev->dev, "%s: restart CXL.mem after slot reset\n",
-> +		 dev_name(dev));
-> +	pci_restore_state(pdev);
-> +	if (device_attach(dev) <= 0)
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +}
-> +
-> +static void cxl_error_resume(struct pci_dev *pdev)
-> +{
-> +	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> +	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> +	struct device *dev = &cxlmd->dev;
-> +
-> +	dev_info(&pdev->dev, "%s: error resume %s\n", dev_name(dev),
-> +		 dev->driver ? "successful" : "failed");
-> +}
-> +
-> +static const struct pci_error_handlers cxl_error_handlers = {
-> +	.error_detected	= cxl_error_detected,
-> +	.slot_reset	= cxl_slot_reset,
-> +	.resume		= cxl_error_resume,
-> +};
-> +
->  static struct pci_driver cxl_pci_driver = {
->  	.name			= KBUILD_MODNAME,
->  	.id_table		= cxl_mem_pci_tbl,
->  	.probe			= cxl_pci_probe,
-> +	.err_handler		= &cxl_error_handlers,
->  	.driver	= {
->  		.probe_type	= PROBE_PREFER_ASYNCHRONOUS,
->  	},
-> 
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1331756..9f3c88f 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1489,6 +1489,7 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ 	else
+ 		return DEV_DMA_NON_COHERENT;
+ }
++EXPORT_SYMBOL_GPL(acpi_get_dma_attr);
+ 
+ /**
+  * acpi_dma_get_range() - Get device DMA parameters.
+-- 
+1.8.3.1
 
