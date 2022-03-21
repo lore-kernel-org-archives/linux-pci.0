@@ -2,46 +2,47 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E186EC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Mar 2022 16:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC88EC433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Mar 2022 16:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233067AbiCUQUF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Mar 2022 12:20:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46354 "EHLO
+        id S1346096AbiCUQcT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Mar 2022 12:32:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351003AbiCUQT7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Mar 2022 12:19:59 -0400
-X-Greylist: delayed 1945 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 21 Mar 2022 09:18:32 PDT
+        with ESMTP id S1351252AbiCUQby (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Mar 2022 12:31:54 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAE363F898
-        for <linux-pci@vger.kernel.org>; Mon, 21 Mar 2022 09:18:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD6B251590;
+        Mon, 21 Mar 2022 09:30:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
         MIME-Version:Date:Message-ID:content-disposition;
-        bh=0uN8O5/IyHHZMoLNzIJxeGa6UW5nG/jE1qpz2EKQBMo=; b=TJsD0mSm7pqbbOGonKHQ25ghIt
-        L4AOP+BjjmPPvRfcUXvWkahX8KDVKVCu90x9/mPhWN1xpiGAhP6UQl614j4o0zwnj36lUV5rKD/ZY
-        FhUIriS3KZ04u+U1pj7Ktba04xBEVTKhKJm1lffBe3cfCiw67XXkvFLuHjBgzyq2pc77gJy8HXI//
-        rXANn3gwlTuRIPfb/NfmYps3umMc5ndUBLntEcC6bCVp4s3Ed7aIeuWeO6fyl4mxfhNLk/6tPFHht
-        wE3PHrYDhNKrdQ3t9T/i/9gnCcbWeFEgsDJFoO6+zT2Ue+jgko9WhqUXoWlzrtY3kjoCW6IdAY7Ue
-        gLJaXKLA==;
+        bh=s3lcHJdrwD/PP8Ft4hyr0+q/Au2xCLskRoPRksjWMDg=; b=UwUD9IU51AOICt2I/+sVTjvxII
+        wZYBfeMssjoQe2T0qlG1+L0eYZ4LbVhcubFCRO/2OS6wOLtS9+XiopbD1EkH+toG9GKQoClCJUVBv
+        IXGJGpStTl5+srDQmYp1xbkjL/b8dXXVh3kbHOW/QgabccEOt3Q/SGd3CbmUdfTlPH7Cc9yKpvFJm
+        XnNtNmvFPHvcnaLjr27SJuHOEcXm/aLsMTjQzMLS13rRqckIbHhKxCJ9met+H609042RTJShHnwRq
+        WDfUEL7aLMgguvqD6o9STcOThPCqp5XPPdV+nNmO8bywSRkP+xXRIhBZG4mhAEBPQRE/5mi0B8P3A
+        jpCtmouQ==;
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
         by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.94.2)
         (envelope-from <logang@deltatee.com>)
-        id 1nWKEP-005XdR-FC; Mon, 21 Mar 2022 09:46:05 -0600
-Message-ID: <981016a7-f994-f0dd-422e-66ac909371c7@deltatee.com>
-Date:   Mon, 21 Mar 2022 09:46:04 -0600
+        id 1nWKvE-005YHB-DD; Mon, 21 Mar 2022 10:30:20 -0600
+Message-ID: <026bf48f-caf1-2d1e-b4de-553a6625a51b@deltatee.com>
+Date:   Mon, 21 Mar 2022 10:30:19 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.2
 Content-Language: en-CA
-To:     Shlomo Pongratz <shlomopongratz@gmail.com>,
-        linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, andrew.maier@eideticom.com,
-        bhelgaas@google.com, Shlomo Pongratz <shlomop@pliops.com>
+To:     Shlomo Pongratz <shlomopongratz@gmail.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andrew.maier@eideticom.com, bhelgaas@google.com,
+        Shlomo Pongratz <shlomop@pliops.com>
 References: <20220321143120.12191-1-shlomop@pliops.com>
+ <981016a7-f994-f0dd-422e-66ac909371c7@deltatee.com>
+ <302CF9D7-ACBD-49D6-AE56-4830B746CE1F@gmail.com>
 From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20220321143120.12191-1-shlomop@pliops.com>
+In-Reply-To: <302CF9D7-ACBD-49D6-AE56-4830B746CE1F@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
@@ -56,71 +57,51 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 2022-03-21 08:31, Shlomo Pongratz wrote:
-> On commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to the whitelist")
-> Andrew Maier added the Sky Lake-E additional devices
-> 2031, 2032 and 2033 root ports to the already existing 2030 device.
-> Note that the Intel devices 2030, 2031, 2032 and 2033 are ports A, B, C and D.
-> Consider on a bus X only port C is connected downstream so in the PCI scan only
-> device 8086:2032 on 0000:X:02.0 will be found as bridges that have no children are ignored.
-> As a result the routine pci_host_bridge_dev will return NULL for devices under slot C.
-> In the proposed patch port field is added to the whitelist which is 0 for 2030, 1 for 2031,
-> 2 for 2032 3 for 2033 and 0 for all other devices.
-
-The patch looks largely ok, but I'm not sure I follow this description.
-
-It sounds like in practice the host bridges B, C and D are not addressed
-at function 0 as was assumed. But what does it mean that only C is
-connected downstream? How can a bridge not be connected downstream?
-
-
-> Signed-off-by: Shlomo Pongratz <shlomop@pliops.com>
-> ---
->  drivers/pci/p2pdma.c | 35 +++++++++++++++++++++++++----------
->  1 file changed, 25 insertions(+), 10 deletions(-)
+On 2022-03-21 10:21, Shlomo Pongratz wrote:
+> See inline
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 1015274bd2fe..86f6594a0b8a 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -305,22 +305,23 @@ static bool cpu_supports_p2pdma(void)
->  static const struct pci_p2pdma_whitelist_entry {
->  	unsigned short vendor;
->  	unsigned short device;
-> +	unsigned short port;
->  	enum {
->  		REQ_SAME_HOST_BRIDGE	= 1 << 0,
->  	} flags;
+> Shlomo.
+> 
+>> On 21 Mar 2022, at 17:46, Logan Gunthorpe <logang@deltatee.com
+>> <mailto:logang@deltatee.com>> wrote:
+>>
+>>
+>>
+>> On 2022-03-21 08:31, Shlomo Pongratz wrote:
+>>> On commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports
+>>> B, C, D to the whitelist")
+>>> Andrew Maier added the Sky Lake-E additional devices
+>>> 2031, 2032 and 2033 root ports to the already existing 2030 device.
+>>> Note that the Intel devices 2030, 2031, 2032 and 2033 are ports A, B,
+>>> C and D.
+>>> Consider on a bus X only port C is connected downstream so in the PCI
+>>> scan only
+>>> device 8086:2032 on 0000:X:02.0 will be found as bridges that have no
+>>> children are ignored.
+>>> As a result the routine pci_host_bridge_dev will return NULL for
+>>> devices under slot C.
+>>> In the proposed patch port field is added to the whitelist which is 0
+>>> for 2030, 1 for 2031,
+>>> 2 for 2032 3 for 2033 and 0 for all other devices.
+>>
+>> The patch looks largely ok, but I'm not sure I follow this description.
+>>
+>> It sounds like in practice the host bridges B, C and D are not addressed
+>> at function 0 as was assumed. But what does it mean that only C is
+>> connected downstream? How can a bridge not be connected downstream?
+>>
+> Maybe it is wrong usage of words.
+> I mean three are no devices behind port A and B, it is possible if there
+> if one has empty PCI slots.
+> I my case I had only on NVMe SSD connected to port C.
 
-If port is placed after flags then we only need to add the port for the
-three devices that care about it. Designated initializers will set it to
-0 if it is omitted.
+If a bridge has no devices behind it, it's not ever going to get into
+the p2pdma code; so I'm not sure how that's relevant. And just because
+one user doesn't have any device behind a bridge, doesn't mean that all
+users have no devices under that bridge.
 
->  } pci_p2pdma_whitelist[] = {
->  	/* Intel Xeon E5/Core i7 */
-> -	{PCI_VENDOR_ID_INTEL,	0x3c00, REQ_SAME_HOST_BRIDGE},
-> -	{PCI_VENDOR_ID_INTEL,	0x3c01, REQ_SAME_HOST_BRIDGE},
-> +	{PCI_VENDOR_ID_INTEL,	0x3c00, 0, REQ_SAME_HOST_BRIDGE},
-> +	{PCI_VENDOR_ID_INTEL,	0x3c01, 0, REQ_SAME_HOST_BRIDGE},
->  	/* Intel Xeon E7 v3/Xeon E5 v3/Core i7 */
-> -	{PCI_VENDOR_ID_INTEL,	0x2f00, REQ_SAME_HOST_BRIDGE},
-> -	{PCI_VENDOR_ID_INTEL,	0x2f01, REQ_SAME_HOST_BRIDGE},
-> +	{PCI_VENDOR_ID_INTEL,	0x2f00, 0, REQ_SAME_HOST_BRIDGE},
-> +	{PCI_VENDOR_ID_INTEL,	0x2f01, 0, REQ_SAME_HOST_BRIDGE},
->  	/* Intel SkyLake-E */
-> -	{PCI_VENDOR_ID_INTEL,	0x2030, 0},
-> -	{PCI_VENDOR_ID_INTEL,	0x2031, 0},
-> -	{PCI_VENDOR_ID_INTEL,	0x2032, 0},
-> -	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
-> -	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
-> +	{PCI_VENDOR_ID_INTEL,	0x2030, 0, 0},
-> +	{PCI_VENDOR_ID_INTEL,	0x2031, 1, 0},
-> +	{PCI_VENDOR_ID_INTEL,	0x2032, 2, 0},
-> +	{PCI_VENDOR_ID_INTEL,	0x2033, 3, 0},
-> +	{PCI_VENDOR_ID_INTEL,	0x2020, 0, 0},
->  	{}
->  };
->  
->
+Sounds like the commit description and comments just neeed to change to
+note that the function of each of the bridge is not always zero, as
+originally assumed.
 
 Logan
