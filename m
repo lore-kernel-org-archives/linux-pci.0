@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E553DC433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Mar 2022 08:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1EECC433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Mar 2022 08:50:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242971AbiCWIvy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Mar 2022 04:51:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38454 "EHLO
+        id S240660AbiCWIv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Mar 2022 04:51:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242974AbiCWIvs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2022 04:51:48 -0400
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 127E275622
-        for <linux-pci@vger.kernel.org>; Wed, 23 Mar 2022 01:50:16 -0700 (PDT)
-Received: by mail-lj1-x230.google.com with SMTP id s25so893791lji.5
-        for <linux-pci@vger.kernel.org>; Wed, 23 Mar 2022 01:50:15 -0700 (PDT)
+        with ESMTP id S242949AbiCWIvr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2022 04:51:47 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3AD17523A
+        for <linux-pci@vger.kernel.org>; Wed, 23 Mar 2022 01:50:13 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id c15so878422ljr.9
+        for <linux-pci@vger.kernel.org>; Wed, 23 Mar 2022 01:50:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=7AIHmdlMdzmULilg6qWLqJ5/9CAU4VNtUbygox8IGUI=;
-        b=XNyUyEwMUh62jEe0Pn/MWDdtye+jGSz3CouiHuVJzS+nEOLdXWh3b25XaMuknEpzSz
-         72k8mvxHUOD4U2i8CoQOGrMU4FshojddsEDRe6ggJ/2HmumYhon3FKIcOhy//Fk7IIq5
-         B5u3tsukxVdjJ19SS2zRP6P8AcVGq9hhZ/RIN6ioPnVKLM9fIX/LXNeix8/WZVcSzZxV
-         Ep3rEUi2TaxO7Zez3fxRXLZ8dNdAts5OaXLS8ich5Slp4e1MywrU7Ff3FOeHntCWDJtq
-         RXewW5//WDPWm0hfnht7gP/H564oOP2rfc0w6tFtjpfH95QeSYWATkmbyPP8v5Kqg/u8
-         Ohbg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/s85OGqNXpkecnGselKWsKN2lTwYoyTplSl6MyjZK1Y=;
+        b=Rv1EUItMANZppwyCr9Jl2CMrJmPC0C5EQ/mwQX4i9HwrH9gjUugekbESDuDoXXXdgw
+         lM4vHt+/zzY8T2DfU/eSP+6kb9qV0uaH+EqQUO9cOmOKL+QM6DZza6yPtk4boMJYGQ4b
+         pXscXdP/SF7CNI3VDCX5COa+YoOaf831fzok1D0fxUV7kL9vcX/kw89M4QtEQG/AjLPF
+         FfSYO0Yui+BSak0K4c7d47o/QDMjToQYt12Kf6S80nk3KJnXWyPmfuobJTvUW7dBbNL3
+         0XPmFCmoM/tY2EGrzUd8z6Dlz6lMl9nyDUl+w9ixuBz2mbFa2Xilg9gClILyCRkvFPMP
+         a2qQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=7AIHmdlMdzmULilg6qWLqJ5/9CAU4VNtUbygox8IGUI=;
-        b=3FVVO0h4Dvam4JmKktLGIh5J6B8RAiNRprCNqcDJpUBRhsVPbIop49KmvQgwWWGfaL
-         BDg/qpJfKNy8da8aA3X8WlvB36M6KdoxQrX1l5qr63qYMfL0hnMlQCyHDXUshfwDZNp5
-         eHjeZiGUghkrgopEbih1P7ZnuhMmlk+kTi4DiD1tp8Y0OZRNXmuw7DaEO9v+1FJFgJAN
-         dlnDbKDa1t9pPvXkyeKD5mZN0XNDogEYWbp9a3WRwExF0ng0PhypbZygMz9QsnEVa+pb
-         ZJEgDO3igYtzl8dbzzrual8pewLCmQO0WH1f7cEhVwTZ/bxFmcCTFlL+5TFk96MMiDxO
-         rTFw==
-X-Gm-Message-State: AOAM531Z076i7K5d5Fn8EFaLG/hvfeU22MjRhi1gLoUWIEGcPc6BYxvP
-        CkHv+Zp60bRMrWhNG9UwPAqMEA==
-X-Google-Smtp-Source: ABdhPJxn7ck6/VN+5W2bmvjXzEoUox1WI0toEkIsA/0PcbdXUp41W6ysCi31A3OmtH8w+9/mk1ie9Q==
-X-Received: by 2002:a2e:a266:0:b0:249:8463:7d71 with SMTP id k6-20020a2ea266000000b0024984637d71mr10118413ljm.107.1648025414338;
-        Wed, 23 Mar 2022 01:50:14 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/s85OGqNXpkecnGselKWsKN2lTwYoyTplSl6MyjZK1Y=;
+        b=vszvRR7Tzu7lUz+as/yNpa1wPGZg3Ri778I7AKUkMeZlQwYMJfE9FkT2s5M+xj4jYl
+         foE19Nve+QGqBcVQEeBgBvdU3LDF6Go4Fw5bqSrth3Etd0kw6oyqmZWaZfmsEpIQdViv
+         4t4L66LORZwu7gO2nd8d+E73IFju/zoHn0l+UDi8asr83WmraQcODoGtz+eKs8MqxA9h
+         nN6XYnnx4740CbH07Y1G2nglistGOmoamjMP9LxEg0Mw14j45htUjSxbKqfDVmOqOuEV
+         n8BN8bkQTM+DAIVontnl5ujC0s0ijowbOqhf533nmqq2BrcVaVOF959mjS3dju0q+Hkt
+         F/ow==
+X-Gm-Message-State: AOAM531XA5TnYrMWVg/AKByOrpiEHOjotFKk29kBDJlLRi7+dAFocVc5
+        0Ryrq1hLwE2njrrETSmDk+DooA==
+X-Google-Smtp-Source: ABdhPJzZBjgziwAktuqj5IF3PvEcgzoqe5VUzz07rF9U+wnxqiPYUwlXvbKIw1wNahdhKbyS4/fXIQ==
+X-Received: by 2002:a05:651c:506:b0:22d:b44b:113e with SMTP id o6-20020a05651c050600b0022db44b113emr22374179ljp.32.1648025411971;
+        Wed, 23 Mar 2022 01:50:11 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id c40-20020a05651223a800b0044a1edf823dsm1376140lfv.150.2022.03.23.01.50.13
+        by smtp.gmail.com with ESMTPSA id c40-20020a05651223a800b0044a1edf823dsm1376140lfv.150.2022.03.23.01.50.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Mar 2022 01:50:13 -0700 (PDT)
+        Wed, 23 Mar 2022 01:50:11 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -59,64 +59,47 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     Prasad Malisetty <quic_pmaliset@quicinc.com>,
         linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v1 3/5] clk: qcom: gcc-sc7280: use new clk_regmap_mux_safe_ops for PCIe pipe clocks
-Date:   Wed, 23 Mar 2022 11:50:08 +0300
-Message-Id: <20220323085010.1753493-4-dmitry.baryshkov@linaro.org>
+Subject: [PATCH v1 0/5] PCI: qcom: rework pipe_clk/pipe_clk_src handling
+Date:   Wed, 23 Mar 2022 11:50:05 +0300
+Message-Id: <20220323085010.1753493-1-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220323085010.1753493-1-dmitry.baryshkov@linaro.org>
-References: <20220323085010.1753493-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use newly defined clk_regmap_mux_safe_ops for PCIe pipe clocks to let
-the clock framework automatically park the clock when the clock is
-switched off and restore the parent when the clock is switched on.
+PCIe pipe clk (and some other clocks) must be parked to the "safe"
+source (bi_tcxo) when corresponding GDSC is turned off and on again.
+Currently this is handcoded in the PCIe driver by reparenting the
+gcc_pipe_N_clk_src clock.
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/clk/qcom/gcc-sc7280.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Instead of doing it manually, follow the approach used by
+clk_rcg2_shared_ops and implement this parking in the enable() and
+disable() clock operations for respective pipe clocks.
 
-diff --git a/drivers/clk/qcom/gcc-sc7280.c b/drivers/clk/qcom/gcc-sc7280.c
-index 423627d49719..dafbbc8f3bf4 100644
---- a/drivers/clk/qcom/gcc-sc7280.c
-+++ b/drivers/clk/qcom/gcc-sc7280.c
-@@ -373,13 +373,14 @@ static struct clk_regmap_mux gcc_pcie_0_pipe_clk_src = {
- 	.reg = 0x6b054,
- 	.shift = 0,
- 	.width = 2,
-+	.safe_src_parent = P_BI_TCXO,
- 	.parent_map = gcc_parent_map_6,
- 	.clkr = {
- 		.hw.init = &(struct clk_init_data){
- 			.name = "gcc_pcie_0_pipe_clk_src",
- 			.parent_data = gcc_parent_data_6,
- 			.num_parents = ARRAY_SIZE(gcc_parent_data_6),
--			.ops = &clk_regmap_mux_closest_ops,
-+			.ops = &clk_regmap_mux_safe_ops,
- 		},
- 	},
- };
-@@ -388,13 +389,14 @@ static struct clk_regmap_mux gcc_pcie_1_pipe_clk_src = {
- 	.reg = 0x8d054,
- 	.shift = 0,
- 	.width = 2,
-+	.safe_src_parent = P_BI_TCXO,
- 	.parent_map = gcc_parent_map_7,
- 	.clkr = {
- 		.hw.init = &(struct clk_init_data){
- 			.name = "gcc_pcie_1_pipe_clk_src",
- 			.parent_data = gcc_parent_data_7,
- 			.num_parents = ARRAY_SIZE(gcc_parent_data_7),
--			.ops = &clk_regmap_mux_closest_ops,
-+			.ops = &clk_regmap_mux_safe_ops,
- 		},
- 	},
- };
+Changes since RFC:
+ - Rework clk-regmap-mux fields. Specify safe parent as P_* value rather
+   than specifying the register value directly
+ - Expand commit message to the first patch to specially mention that
+   it is required only on newer generations of Qualcomm chipsets.
+
+Dmitry Baryshkov (5):
+  clk: qcom: regmap-mux: add pipe clk implementation
+  clk: qcom: gcc-sm8450: use new clk_regmap_mux_safe_ops for PCIe pipe
+    clocks
+  clk: qcom: gcc-sc7280: use new clk_regmap_mux_safe_ops for PCIe pipe
+    clocks
+  PCI: qcom: Remove unnecessary pipe_clk handling
+  PCI: qcom: Drop manual pipe_clk_src handling
+
+ drivers/clk/qcom/clk-regmap-mux.c      | 78 +++++++++++++++++++++++
+ drivers/clk/qcom/clk-regmap-mux.h      |  3 +
+ drivers/clk/qcom/gcc-sc7280.c          |  6 +-
+ drivers/clk/qcom/gcc-sm8450.c          |  6 +-
+ drivers/pci/controller/dwc/pcie-qcom.c | 87 +-------------------------
+ 5 files changed, 92 insertions(+), 88 deletions(-)
+
 -- 
 2.35.1
 
