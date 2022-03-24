@@ -2,38 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35253C43217
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F4F7C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242827AbiC1QqN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Mar 2022 12:46:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45152 "EHLO
+        id S243277AbiC1QqO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Mar 2022 12:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242855AbiC1QqD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:46:03 -0400
+        with ESMTP id S242935AbiC1QqE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:46:04 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F44921E2D;
-        Mon, 28 Mar 2022 09:44:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 76B17222A1;
+        Mon, 28 Mar 2022 09:44:17 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 583BA1E495A;
-        Thu, 24 Mar 2022 04:48:53 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 583BA1E495A
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 8C8691E493D;
+        Thu, 24 Mar 2022 04:48:40 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 8C8691E493D
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648086533;
-        bh=iq392ifBKJNeXd07OpQlSazUKapg75sZrK0PlOvjOHo=;
+        d=baikalelectronics.ru; s=mail; t=1648086520;
+        bh=AYgCGlj6XCp3KD2/KUlHJg+55HiFo50ys5cdSY8nwOc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=QmjmIg4dvnszJpqrvsQpKe9XCdhnitbukZUqOSIt212Mwr/eZ5j7q3ZQL+7Dhu7nW
-         v1s3M6sGrv+7HO47I0Lv8Nx/zpk+XlFBZ5s2wZwbJe9czZuy27jLhxVhz8Icz+YkIl
-         VcRvVrp2mJmyZob0iP3ncz8G2sSj7HhKmLivI7pc=
+        b=Gdpk4DVTE1MY+dgZ0kGVMp67RyX8d1SyCg2QO2NJHj25IYEGxOxb8VC4cSyQcFRx4
+         sxb20q0ugu4aEjTmpg69ImHd3ruWyaaxda/H8iMTCWfSg/qZlBV6hI7F5qPAIl5pvM
+         TH40nEUw788A0bI+6t728iRMW+6lqKWGI7yOKtds=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:53 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:40 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>,
         Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Vladimir Murzin <vladimir.murzin@arm.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -42,10 +46,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH 21/25] dmaengine: dw-edma: Drop DT-region allocation
-Date:   Thu, 24 Mar 2022 04:48:32 +0300
-Message-ID: <20220324014836.19149-22-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+Subject: [PATCH 03/25] dma-direct: take dma-ranges/offsets into account in resource mapping
+Date:   Thu, 24 Mar 2022 04:48:14 +0300
+Message-ID: <20220324014836.19149-4-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,68 +60,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no point in allocating an additional memory for the data target
-regions passed then to the client drivers. Just use the already available
-structures defined in the dw_edma_chip instance.
+A basic device-specific linear memory mapping was introduced back in
+commit ("dma: Take into account dma_pfn_offset") as a single-valued offset
+preserved in the device.dma_pfn_offset field, which was initialized for
+instance by means of the "dma-ranges" DT property. Afterwards the
+functionality was extended to support more than one device-specific region
+defined in the device.dma_range_map list of maps. But all of these
+improvements concerned a single pointer, page or sg DMA-mapping methods,
+while the system resource mapping function turned to miss the
+corresponding modification. Thus the dma_direct_map_resource() method now
+just casts the CPU physical address to the device DMA address with no
+dma-ranges-based mapping taking into account, which is obviously wrong.
+Let's fix it by using the phys_to_dma_direct() method to get the
+device-specific bus address from the passed memory resource for the case
+of the directly mapped DMA.
 
-Note these regions are unused in normal circumstances since they are
-specific to the case of eDMA being embedded into the DW PCIe End-point and
-having it's CSRs accessible over a End-point' BAR. This case is only known
-to be implemented as a part of the Synopsys PCIe EndPoint IP prototype
-kit.
-
+Fixes: 25f1e1887088 ("dma: Take into account dma_pfn_offset")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
+ kernel/dma/direct.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index bc530f0a2468..dbe1119fd1d2 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -744,7 +744,6 @@ static void dw_edma_free_chan_resources(struct dma_chan *dchan)
- static int dw_edma_channel_setup(struct dw_edma_chip *chip, u32 wr_alloc,
- 				 u32 rd_alloc)
+diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
+index 50f48e9e4598..9ce8192b29ab 100644
+--- a/kernel/dma/direct.c
++++ b/kernel/dma/direct.c
+@@ -497,7 +497,7 @@ int dma_direct_map_sg(struct device *dev, struct scatterlist *sgl, int nents,
+ dma_addr_t dma_direct_map_resource(struct device *dev, phys_addr_t paddr,
+ 		size_t size, enum dma_data_direction dir, unsigned long attrs)
  {
--	struct dw_edma_region *dt_region;
- 	struct device *dev = chip->dev;
- 	struct dw_edma *dw = chip->dw;
- 	struct dw_edma_chan *chan;
-@@ -761,12 +760,6 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, u32 wr_alloc,
- 	for (i = 0; i < ch_cnt; i++) {
- 		chan = &dw->chan[i];
+-	dma_addr_t dma_addr = paddr;
++	dma_addr_t dma_addr = phys_to_dma_direct(dev, paddr);
  
--		dt_region = devm_kzalloc(dev, sizeof(*dt_region), GFP_KERNEL);
--		if (!dt_region)
--			return -ENOMEM;
--
--		chan->vc.chan.private = dt_region;
--
- 		chan->dw = dw;
- 
- 		if (i < dw->wr_ch_cnt) {
-@@ -814,17 +807,11 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, u32 wr_alloc,
- 			 chan->msi.data);
- 
- 		chan->vc.desc_free = vchan_free_desc;
--		vchan_init(&chan->vc, dma);
-+		chan->vc.chan.private = chan->dir == EDMA_DIR_WRITE ?
-+					&dw->chip->dt_region_wr[chan->id] :
-+					&dw->chip->dt_region_rd[chan->id];
- 
--		if (chan->dir == EDMA_DIR_WRITE) {
--			dt_region->paddr = chip->dt_region_wr[chan->id].paddr;
--			dt_region->vaddr = chip->dt_region_wr[chan->id].vaddr;
--			dt_region->sz = chip->dt_region_wr[chan->id].sz;
--		} else {
--			dt_region->paddr = chip->dt_region_rd[chan->id].paddr;
--			dt_region->vaddr = chip->dt_region_rd[chan->id].vaddr;
--			dt_region->sz = chip->dt_region_rd[chan->id].sz;
--		}
-+		vchan_init(&chan->vc, dma);
- 
- 		dw_edma_v0_core_device_config(chan);
- 	}
+ 	if (unlikely(!dma_capable(dev, dma_addr, size, false))) {
+ 		dev_err_once(dev,
 -- 
 2.35.1
 
