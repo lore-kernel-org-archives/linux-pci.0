@@ -2,95 +2,86 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61C34C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:23:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0823C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242075AbiC1QZf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Mar 2022 12:25:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40586 "EHLO
+        id S242756AbiC1QqC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Mar 2022 12:46:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242077AbiC1QZe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:25:34 -0400
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FBF522BDD;
-        Mon, 28 Mar 2022 09:23:54 -0700 (PDT)
-Received: by mail-oi1-f176.google.com with SMTP id e189so16122386oia.8;
-        Mon, 28 Mar 2022 09:23:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=U9oG+yUHi85HjMlVTLwN9ypplBDcaxhapIf5JTbt5ls=;
-        b=enPdR7E7FmA9o9XHV7/pbYhYBoczd6p7WFVrcH0NqUqXN4bV+oT3r6G9kohoOvWNYv
-         ve6JZgxhwHFkle6RJfunz5yv9fRI08OGBMAAa78LlD45a2B2TexB33eDsJyalYSqtffL
-         Hp1h/Y7A2wQ3xQ5qQj7g0ewuQhd4VOpSLaC3PQT1+b4aQCfwmEvjxttZZoFUjXAkdfWk
-         Q8LbaK2u6r/fouXUFz7ZLYqeTDFmVUSj4UQknpCMe14dYlG1k2LST0zEIW5bA2OQb/7p
-         JwwnKw1GbxNhmpXnGPNKgXDslX98bV6VXDOGp43Eg6wlxnMMRs/VJRpIBcY8Q1zRbJoX
-         xbLQ==
-X-Gm-Message-State: AOAM5321Fe7SD7rOQUWtOL2AuFq6mpisyq2XSOScySW4UQRyWisatTl7
-        huCB3ON1iqytxsF9pwaGqA==
-X-Google-Smtp-Source: ABdhPJyppQiP1Xz7up2rltmPfDf+oxHhUQbblcJindIMn7cEwKElDaZkb8FxN4R3FwcCV6grec3FYQ==
-X-Received: by 2002:a05:6808:1508:b0:2ec:f48e:df65 with SMTP id u8-20020a056808150800b002ecf48edf65mr12450066oiw.125.1648484633346;
-        Mon, 28 Mar 2022 09:23:53 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id bg39-20020a056820082700b00324c8eba341sm5889944oob.18.2022.03.28.09.23.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Mar 2022 09:23:52 -0700 (PDT)
-Received: (nullmailer pid 2500181 invoked by uid 1000);
-        Mon, 28 Mar 2022 16:23:51 -0000
-Date:   Mon, 28 Mar 2022 11:23:51 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc:     linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        with ESMTP id S242645AbiC1Qpw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:45:52 -0400
+X-Greylist: delayed 4199 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Mar 2022 09:44:08 PDT
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 61D8A205CB;
+        Mon, 28 Mar 2022 09:44:07 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 324381E493E;
+        Thu, 24 Mar 2022 04:48:41 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 324381E493E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baikalelectronics.ru; s=mail; t=1648086521;
+        bh=45B91bTRPDAiVVFXTWFyOKTO4rQMMJ7SJOEIZd4mBWc=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=dVfKrMhpppasdM6ZNQchY65q3OjcV7bv4h6qHkClv1TE0UUtDK5Dsl0/17AKVVv74
+         EtW5Jl1AEs39t5gyGJzX8mqREeaGK3RMsA3uH2es9XaedS2ywgZyIFYCc7t9ZgxxGt
+         hfDk87OB95UkS1yUXErO5TXCgfF9uFFyz19zEb8E=
+Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:41 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>
-Subject: Re: [PATCH] dt-bindings: PCI: uniphier: Convert uniphier-pcie.txt to
- json-schema
-Message-ID: <YkHhF7dF9SYS2qTx@robh.at.kernel.org>
-References: <1648433498-23450-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1648471865.799906.2153573.nullmailer@robh.at.kernel.org>
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH 04/25] dmaengine: Fix dma_slave_config.dst_addr description
+Date:   Thu, 24 Mar 2022 04:48:15 +0300
+Message-ID: <20220324014836.19149-5-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1648471865.799906.2153573.nullmailer@robh.at.kernel.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 28, 2022 at 07:51:05AM -0500, Rob Herring wrote:
-> On Mon, 28 Mar 2022 11:11:38 +0900, Kunihiko Hayashi wrote:
-> > Convert the file into a JSON description at the yaml format.
-> > 
-> > Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> > ---
-> >  .../bindings/pci/socionext,uniphier-pcie.yaml | 100 ++++++++++++++++++
-> >  .../devicetree/bindings/pci/uniphier-pcie.txt |  82 --------------
-> >  MAINTAINERS                                   |   2 +-
-> >  3 files changed, 101 insertions(+), 83 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/socionext,uniphier-pcie.yaml
-> >  delete mode 100644 Documentation/devicetree/bindings/pci/uniphier-pcie.txt
-> > 
-> 
-> Running 'make dtbs_check' with the schema in this patch gives the
-> following warnings. Consider if they are expected or the schema is
-> incorrect. These may not be new warnings.
-> 
-> Note that it is not yet a requirement to have 0 warnings for dtbs_check.
-> This will change in the future.
-> 
-> Full log is available here: https://patchwork.ozlabs.org/patch/1609988
-> 
-> 
-> pcie@66000000: compatible: ['socionext,uniphier-pcie', 'snps,dw-pcie'] is too long
-> 	arch/arm64/boot/dts/socionext/uniphier-ld20-akebi96.dt.yaml
-> 	arch/arm64/boot/dts/socionext/uniphier-ld20-global.dt.yaml
-> 	arch/arm64/boot/dts/socionext/uniphier-ld20-ref.dt.yaml
-> 	arch/arm64/boot/dts/socionext/uniphier-pxs3-ref.dt.yaml
+Most likely due to a copy-paste mistake the dst_addr member of the
+dma_slave_config structure has been marked as ignored if the !source!
+address belong to the memory. That is relevant to the src_addr field of
+the structure while the dst_addr field as containing a destination device
+address is supposed to be ignored if the destination is the CPU memory.
+Let's fix the field description accordingly.
 
-Ignore this if your intent is to fix these by dropping 'snps,dw-pcie'. I 
-think that is the right thing to do. 'snps,dw-pcie' is not too 
-meaningful.
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+---
+ include/linux/dmaengine.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Rob
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index 842d4f7ca752..f204ea16ac1c 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -395,7 +395,7 @@ enum dma_slave_buswidth {
+  * should be read (RX), if the source is memory this argument is
+  * ignored.
+  * @dst_addr: this is the physical address where DMA slave data
+- * should be written (TX), if the source is memory this argument
++ * should be written (TX), if the destination is memory this argument
+  * is ignored.
+  * @src_addr_width: this is the width in bytes of the source (RX)
+  * register where DMA data shall be read. If the source
+-- 
+2.35.1
+
