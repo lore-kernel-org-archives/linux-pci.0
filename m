@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AD3C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9888EC35274
 	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:44:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242988AbiC1QqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S242930AbiC1QqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 28 Mar 2022 12:46:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45222 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242857AbiC1QqD (ORCPT
+        with ESMTP id S242900AbiC1QqD (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:46:03 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F60821E2E;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 23BE5220D8;
         Mon, 28 Mar 2022 09:44:16 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id CD1311E495F;
-        Thu, 24 Mar 2022 04:48:55 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru CD1311E495F
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 80EAE1E4948;
+        Thu, 24 Mar 2022 04:48:45 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 80EAE1E4948
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648086535;
-        bh=5JPForGhV2V31tLsfIwP1/NlSFrmm3Bd9JfGRQxegGU=;
+        d=baikalelectronics.ru; s=mail; t=1648086525;
+        bh=3nPjOLjzGYkPTmC45vtG0SxOCnuiuHJKeB2jpwkXC+g=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=jkcksY3ycZa8ZXlHgE2JDvJWMAJ3jRRZow1FiPP8NRoNPTnxFUoKsL7OE0pSwjQdd
-         /FajhnkDKloH97IMUBEiOG02Guc0Ybyg3wilurvNe0WEwAQ3Uq5kzVniu59IHUWsV3
-         TjYmxgPRKP/UTurAk9ZEHdZyNMsKftKhE7t/IzLU=
+        b=rxyCCYq4auhTUcAFE7H/PSIUGJcHizoO/iZhOL5ZLgbHIn3csEt70ME+7gmjyMmdH
+         JT1rA4yp19llwItStSCp8HaeHNOL2zCSljGMgMv+WxprkLX7GttyTCtgVimmbPGqf3
+         0r49hSlKfhU0+GaTQXTv+mphv8CMwer50WaKKEdY=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:55 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:45 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>,
@@ -42,10 +42,11 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH 24/25] dmaengine: dw-edma: Skip cleanup procedure if no private data found
-Date:   Thu, 24 Mar 2022 04:48:35 +0300
-Message-ID: <20220324014836.19149-25-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH 10/25] dmaengine: dw-edma: Add PCIe bus address getter to the remote EP glue-driver
+Date:   Thu, 24 Mar 2022 04:48:21 +0300
+Message-ID: <20220324014836.19149-11-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,32 +57,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DW eDMA driver private data is preserved in the passed DW eDMA chip info
-structure. If either probe procedure failed or for some reason the passed
-info object doesn't have private data pointer initialized we need to halt
-the DMA device cleanup procedure in order to prevent possible system
-crashes.
+In general the Synopsys PCIe EndPoint IP prototype kit can be attached to
+a PCIe bus with any PCIe Host controller including to the one with
+distinctive from CPU address space. Due to that we need to make sure that
+the source and destination addresses of the DMA-slave devices are properly
+converted to the PCIe bus address space, otherwise the DMA transaction
+will not only work as expected, but may cause the memory corruption with
+subsequent system crash. Let's do that by introducing a new
+dw_edma_pcie_address() method defined in the dw-edma-pcie.c, which will
+perform the denoted translation by using the pcibios_resource_to_bus()
+method.
 
+Fixes: 41aaff2a2ac0 ("dmaengine: Add Synopsys eDMA IP PCIe glue-logic")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
----
- drivers/dma/dw-edma/dw-edma-core.c | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index ca5cd7c99571..b932682a8ba8 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -1030,6 +1030,10 @@ int dw_edma_remove(struct dw_edma_chip *chip)
- 	struct dw_edma *dw = chip->dw;
- 	int i;
+---
+
+Note this patch depends on the patch "dmaengine: dw-edma: Add CPU to PCIe
+bus address translation" from this series.
+---
+ drivers/dma/dw-edma/dw-edma-pcie.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index 04c95cba1244..f530bacfd716 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -95,8 +95,23 @@ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
+ 	return pci_irq_vector(to_pci_dev(dev), nr);
+ }
  
-+	/* Skip removal if no private data found */
-+	if (!dw)
-+		return -ENODEV;
++static u64 dw_edma_pcie_address(struct device *dev, phys_addr_t cpu_addr)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pci_bus_region region;
++	struct resource res = {
++		.flags = IORESOURCE_MEM,
++		.start = cpu_addr,
++		.end = cpu_addr,
++	};
 +
- 	/* Disable eDMA */
- 	dw_edma_v0_core_off(dw);
++	pcibios_resource_to_bus(pdev->bus, &region, &res);
++	return region.start;
++}
++
+ static const struct dw_edma_core_ops dw_edma_pcie_core_ops = {
+ 	.irq_vector = dw_edma_pcie_irq_vector,
++	.pci_address = dw_edma_pcie_address,
+ };
  
+ static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
 -- 
 2.35.1
 
