@@ -2,38 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B16C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:09:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AF6C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:09:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244303AbiC1PK6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:10:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54416 "EHLO
+        id S244307AbiC1PK7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:10:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244282AbiC1PKw (ORCPT
+        with ESMTP id S244267AbiC1PKw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:10:52 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A12AB5D678;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 286A860059;
         Mon, 28 Mar 2022 08:09:11 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id CBA6F1D5AA4;
-        Thu, 24 Mar 2022 04:25:28 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru CBA6F1D5AA4
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 091931D5AAD;
+        Thu, 24 Mar 2022 04:25:31 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 091931D5AAD
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648085128;
-        bh=IbIaYTvWDrKAUBeB4maQw5G0xL0EbHFE7cErJ4OZffw=;
+        d=baikalelectronics.ru; s=mail; t=1648085131;
+        bh=/pmSa6p89b+y0Zt8s4AIVX7x1O20XeRaL2qXz17cs9Y=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Kj3XWlAjDtwI1H7wfY5SLU0FfgYrkPz2fK/hU9LL6CDMyD9Qhis900nu//yxc4rxm
-         WfSLS7bJ3moqeA9mMcMGw7gJo2X6rul0kW5tO5vq91/ENFjW7RWyqEQTf80x5rWHiJ
-         1J3y8e/7dIi65F0viTmyB71tC/qHck0CagV/Odxk=
+        b=nkSr7gpRLdabzL7liqv3yiwPt4dJl6lCPeo+PzYo/f1/iBizehxror0BCtI8EOQwZ
+         3mXWZkRU+aUgIfZ9aPvNKVVTClxBUYKeNtK1WjOll3kUT8RNfLmDcm18GKzecZHbhY
+         ojGJ9A2BXuINjiXp+ICfJwdrT9/u1VHVepdP+6FA=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:25:28 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:25:30 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Shradha Todi <shradha.t@samsung.com>,
+        Pankaj Dubey <pankaj.dubey@samsung.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -41,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 02/12] PCI: dwc: Don't use generic IO-ops for DBI-space access
-Date:   Thu, 24 Mar 2022 04:25:13 +0300
-Message-ID: <20220324012524.16784-3-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 05/12] PCI: dwc: Set INCREASE_REGION_SIZE flag based on limit address
+Date:   Thu, 24 Mar 2022 04:25:16 +0300
+Message-ID: <20220324012524.16784-6-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,91 +56,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit c2b0c098fbd1 ("PCI: dwc: Use generic config accessors") replaced
-the locally defined DW PCIe host controller config-space accessors with
-the generic methods pci_generic_config_read() and
-pci_generic_config_write(). It was intended that the corresponding
-bus-mapping callback returned a correct virtual address of the passed PCI
-config-space register. The problem of the proposed solution was that it
-didn't take into account the way the host config-space is accessed on the
-DW PCIe. Depending on the DW PCIe IP-core synthesize parameters different
-interfaces can be used to access the host and peripheral config/memory
-spaces. The former one can be accessed via the DBI interface, while the
-later ones is reached via the AHB/AXI application bus. In case if the DW
-PCIe controller is configured to have a dedicated DBI interface, the way
-it is mapped into the IO-memory turns to be platform-specific. For such
-setups the DWC PCIe driver provides a set of the callbacks
-dw_pcie_ops.{read_dbi,write_dbi} so the platforms glue-drivers would be
-able to take into account the DBI bus IO peculiarities. Since
-commit c2b0c098fbd1 ("PCI: dwc: Use generic config accessors") these
-methods haven't been utilized during the generic host initialization
-performed by the PCIe subsystem code.
+It was wrong to use the region size parameter in order to determine
+whether the INCREASE_REGION_SIZE flag needs to be set for the outbound
+iATU entry because in general there are cases when combining a region base
+address and size together produces the out of bounds upper range limit
+while upper_32_bits(size) still returns zero. So having a region size
+within the permitted values doesn't mean the region limit address will fit
+to the corresponding CSR. Here is the way iATU calculates the in- and
+outbound untranslated regions if the INCREASE_REGION_SIZE flag is cleared
+[1]:
 
-I don't really know how come there have been no problems spotted for the
-Histb/Exynos/Kirin PCIe controllers so far, but in our case with dword
-aligned IO requirement the generic config-space accessors can't be
-utilized for the host config-space. Thus in order to make sure the host
-config-space is properly accessed via the DBI bus let's get back the
-dw_pcie_rd_own_conf() and dw_pcie_wr_own_conf() methods. They are going to
-be just wrappers around the already defined
-dw_pcie_read_dbi()/dw_pcie_write_dbi() functions with proper arguments
-conversion. These methods perform the platform-specific config-space IO if
-the DBI accessors are specified, otherwise they call normal MMIO
-operations.
+  Start address:                     End address:
+63              31              0   63              31              0
++---------------+---------------+   +---------------+---------------+
+|               |         |  0s |   |               |         |  Fs |
++---------------+---------------+   +---------------+---------------+
+   upper base   |   lower base       !upper! base   | limit address
+     address          address           address
 
-Fixes: c2b0c098fbd1 ("PCI: dwc: Use generic config accessors")
+So the region start address is determined by the iATU lower and upper base
+address registers, while the region upper boundary is calculated based on
+the 32-bits limit address register and the upper part of the base address.
+In accordance with that logic for instance the range
+0xf0000000 @ 0x20000000 does have the size smaller than 4GB, but the
+actual limit address turns to be invalid forming the untranslated address
+map as [0xf0000000; 0x0000FFFF], which isn't what the original range was.
+In order to fix that we need to check whether the size being added to the
+lower part of the base address causes the 4GB range overflow. If it does
+then we need to set the INCREASE_REGION_SIZE flag thus activating the
+extended limit address by means of an additional iATU CSR (upper limit
+address register) [2]:
+
+  Start address:                     End address:
+63              31              0   63      x       31              0
++---------------+---------------+   +---------------+---------------+
+|               |         |  0s |   |       |       |         |  Fs |
++---------------+---------------+   +---------------+---------------+
+  upper base   |   lower base         upper | upper | limit address
+    address          address          base  | limit |
+                                     address|address|
+
+Otherwise there is enough room in the 32-bits wide limit address register,
+and the flag can be left unset.
+
+Note the case when the size-based flag setting approach is correct implies
+requiring to have the size-aligned base addresses only. But that
+restriction isn't relevant to the PCIe ranges accepted by the kernel.
+There is also no point in implementing it either seeing the problem can be
+easily fixed by checking the whole limit address instead of the region
+size.
+
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    v5.40a, March 2019, fig.3-36, p.175
+[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    v5.40a, March 2019, fig.3-37, p.176
+
+Fixes: 5b4cf0f65324 ("PCI: dwc: Add upper limit address for outbound iATU")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 34 +++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index a03619a30c20..f89e6552139b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -528,10 +528,40 @@ void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
- }
- EXPORT_SYMBOL_GPL(dw_pcie_own_conf_map_bus);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 7dc8c360a0d4..d737af058903 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -287,8 +287,8 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
+ 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
+ 				 upper_32_bits(pci_addr));
+ 	val = type | PCIE_ATU_FUNC_NUM(func_no);
+-	val = upper_32_bits(size - 1) ?
+-		val | PCIE_ATU_INCREASE_REGION_SIZE : val;
++	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr))
++		val |= PCIE_ATU_INCREASE_REGION_SIZE;
+ 	if (pci->version == 0x490A)
+ 		val = dw_pcie_enable_ecrc(val);
+ 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
+@@ -315,6 +315,7 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 					u64 pci_addr, u64 size)
+ {
+ 	u32 retries, val;
++	u64 limit_addr;
  
-+static int dw_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
-+			       int where, int size, u32 *val)
-+{
-+	struct pcie_port *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+
-+	if (PCI_SLOT(devfn) > 0) {
-+		*val = ~0U;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	*val = dw_pcie_read_dbi(pci, where, size);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int dw_pcie_wr_own_conf(struct pci_bus *bus, unsigned int devfn,
-+			       int where, int size, u32 val)
-+{
-+	struct pcie_port *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+
-+	if (PCI_SLOT(devfn) > 0)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	dw_pcie_write_dbi(pci, where, size, val);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static struct pci_ops dw_pcie_ops = {
- 	.map_bus = dw_pcie_own_conf_map_bus,
--	.read = pci_generic_config_read,
--	.write = pci_generic_config_write,
-+	.read = dw_pcie_rd_own_conf,
-+	.write = dw_pcie_wr_own_conf,
- };
+ 	if (pci->ops && pci->ops->cpu_addr_fixup)
+ 		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+@@ -325,6 +326,8 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 		return;
+ 	}
  
- void dw_pcie_setup_rc(struct pcie_port *pp)
++	limit_addr = cpu_addr + size - 1;
++
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT,
+ 			   PCIE_ATU_REGION_OUTBOUND | index);
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_BASE,
+@@ -332,17 +335,18 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_BASE,
+ 			   upper_32_bits(cpu_addr));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
+-			   lower_32_bits(cpu_addr + size - 1));
++			   lower_32_bits(limit_addr));
+ 	if (pci->version >= 0x460A)
+ 		dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_LIMIT,
+-				   upper_32_bits(cpu_addr + size - 1));
++				   upper_32_bits(limit_addr));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
+ 			   lower_32_bits(pci_addr));
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
+ 			   upper_32_bits(pci_addr));
+ 	val = type | PCIE_ATU_FUNC_NUM(func_no);
+-	val = ((upper_32_bits(size - 1)) && (pci->version >= 0x460A)) ?
+-		val | PCIE_ATU_INCREASE_REGION_SIZE : val;
++	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
++	    pci->version >= 0x460A)
++		val |= PCIE_ATU_INCREASE_REGION_SIZE;
+ 	if (pci->version == 0x490A)
+ 		val = dw_pcie_enable_ecrc(val);
+ 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
 -- 
 2.35.1
 
