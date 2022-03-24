@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A34EC433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC14C43217
 	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 16:44:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238954AbiC1QqT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S243477AbiC1QqT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 28 Mar 2022 12:46:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45202 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242812AbiC1QqC (ORCPT
+        with ESMTP id S242764AbiC1QqC (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 12:46:02 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 584F321E1F;
-        Mon, 28 Mar 2022 09:44:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A524E21E06;
+        Mon, 28 Mar 2022 09:44:15 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 29F111E494E;
-        Thu, 24 Mar 2022 04:48:48 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 29F111E494E
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 0D8591E4957;
+        Thu, 24 Mar 2022 04:48:52 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 0D8591E4957
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648086528;
-        bh=yRKAu/9goZY2CuhAhPZ9QnZ4PkDsLD/RYGgM0Q+DtC8=;
+        d=baikalelectronics.ru; s=mail; t=1648086532;
+        bh=6r8gaQsOYq/p4RX7+mLlgeUaSGu+wrHHd6FACxtxVx4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=OvWOsR1RUWgtRc8GB5l1e+0O5kf1YTiVi1ymudckOkbaXZecCtUTJ3fsm2PXMcAge
-         MwagEtmmLp96mECBvdSOviNSTGOnGu6PQv/G60JSqJdsDlXtQ/weYTOM5pWlC8T3ni
-         McTGo6DAMKkz3xu2YCvTxPPJOLo6ixI9pV+tFdP0=
+        b=baS8gS76iAlILpvT5olXT8ykmqBOamm4ZjLq1TSMgcAqYxgSX82luvDPyZ91MN7gn
+         uqX+PS84so5Bk7Ix79JAMIwOVB7WkXtXVkM/phh5vjHmxrSk0ejqs4c0pFruT8xLQb
+         tki+Xst7GsH9ZR8DlwZTMX4m8oOsQKAXHTE11UU8=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:47 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:48:51 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>,
@@ -43,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 14/25] dmaengine: dw-edma: Add dw_edma prefix to the DebugFS nodes descriptor
-Date:   Thu, 24 Mar 2022 04:48:25 +0300
-Message-ID: <20220324014836.19149-15-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 19/25] dmaengine: dw-edma: Use DMA-engine device DebugFS subdirectory
+Date:   Thu, 24 Mar 2022 04:48:30 +0300
+Message-ID: <20220324014836.19149-20-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,102 +56,130 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The rest of the locally defined and used methods and structures have
-dw_edma prefix in their names. It's right in accordance with the kernel
-coding style to follow the locally defined rule of naming. Let's add that
-prefix to the debugfs_entries structure too especially seeing it's name
-may be confusing as if that structure belongs to the global DebugFS space.
+Since all DW eDMA read and write channels are now installed in a framework
+of a single DMA-engine device, we can freely move all the DW eDMA-specific
+DebugFS nodes into a ready-to-use DMA-engine DebugFS subdirectory. It's
+created during the DMA-device registration and can be found in the
+dma_device.dbg_dev_root field.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c       |  3 ---
+ drivers/dma/dw-edma/dw-edma-core.h       |  3 ---
+ drivers/dma/dw-edma/dw-edma-v0-core.c    |  5 -----
+ drivers/dma/dw-edma/dw-edma-v0-core.h    |  1 -
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 18 ++++--------------
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  5 -----
+ 6 files changed, 4 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index a391e44da039..bc530f0a2468 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -1045,9 +1045,6 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+ 		list_del(&chan->vc.chan.device_node);
+ 	}
+ 
+-	/* Turn debugfs off */
+-	dw_edma_v0_core_debugfs_off(chip);
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(dw_edma_remove);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index ec9f84a857d1..980adb079182 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -110,9 +110,6 @@ struct dw_edma {
+ 	raw_spinlock_t			lock;		/* Only for legacy */
+ 
+ 	struct dw_edma_chip             *chip;
+-#ifdef CONFIG_DEBUG_FS
+-	struct dentry			*debugfs;
+-#endif /* CONFIG_DEBUG_FS */
+ };
+ 
+ struct dw_edma_sg {
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+index 013d9a9cb991..6b303d5a6b2a 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+@@ -511,8 +511,3 @@ void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip)
+ {
+ 	dw_edma_v0_debugfs_on(chip);
+ }
+-
+-void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip)
+-{
+-	dw_edma_v0_debugfs_off(chip);
+-}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
+index 2afa626b8300..43e01844375a 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
+@@ -23,6 +23,5 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
+ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
+ /* eDMA debug fs callbacks */
+ void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip);
+-void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip);
+ 
+ #endif /* _DW_EDMA_V0_CORE_H */
 diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index 808eed212be8..afd519d9568b 100644
+index 353269a3680b..319a3c790dc4 100644
 --- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
 +++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -46,7 +46,7 @@ static struct {
- 	void					__iomem *end;
- } lim[2][EDMA_V0_MAX_NR_CH];
+@@ -268,7 +268,7 @@ static void dw_edma_debugfs_regs(struct dw_edma *dw)
+ 	struct dentry *regs_dir;
+ 	int nr_entries;
  
--struct debugfs_entries {
-+struct dw_edma_debugfs_entry {
- 	const char				*name;
- 	void __iomem				*reg;
- };
-@@ -94,7 +94,7 @@ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
- }
- DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_edma_debugfs_u32_get, NULL, "0x%08llx\n");
- 
--static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
-+static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry entries[],
- 				       int nr_entries, struct dentry *dir)
- {
- 	int i;
-@@ -108,8 +108,7 @@ static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
- static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
- 				    struct dentry *dir)
- {
--	int nr_entries;
--	const struct debugfs_entries debugfs_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_regs[] = {
- 		REGISTER(ch_control1),
- 		REGISTER(ch_control2),
- 		REGISTER(transfer_size),
-@@ -120,6 +119,7 @@ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
- 		REGISTER(llp.lsb),
- 		REGISTER(llp.msb),
- 	};
-+	int nr_entries;
+-	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
++	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->dma.dbg_dev_root);
  
  	nr_entries = ARRAY_SIZE(debugfs_regs);
- 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, dir);
-@@ -127,7 +127,7 @@ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
+ 	dw_edma_debugfs_create_x32(dw, debugfs_regs, nr_entries, regs_dir);
+@@ -284,19 +284,9 @@ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
+ 	if (!debugfs_initialized())
+ 		return;
  
- static void dw_edma_debugfs_regs_wr(struct dentry *dir)
- {
--	const struct debugfs_entries debugfs_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_regs[] = {
- 		/* eDMA global registers */
- 		WR_REGISTER(engine_en),
- 		WR_REGISTER(doorbell),
-@@ -148,7 +148,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
- 		WR_REGISTER(ch67_imwr_data),
- 		WR_REGISTER(linked_list_err_en),
- 	};
--	const struct debugfs_entries debugfs_unroll_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_unroll_regs[] = {
- 		/* eDMA channel context grouping */
- 		WR_REGISTER_UNROLL(engine_chgroup),
- 		WR_REGISTER_UNROLL(engine_hshake_cnt.lsb),
-@@ -191,7 +191,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+-	dw->debugfs = debugfs_create_dir(dw->name, NULL);
+-
+-	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
+-	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
+-	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
++	debugfs_create_u32("mf", 0444, dw->dma.dbg_dev_root, &dw->chip->mf);
++	debugfs_create_u16("wr_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->wr_ch_cnt);
++	debugfs_create_u16("rd_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->rd_ch_cnt);
  
- static void dw_edma_debugfs_regs_rd(struct dentry *dir)
- {
--	const struct debugfs_entries debugfs_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_regs[] = {
- 		/* eDMA global registers */
- 		RD_REGISTER(engine_en),
- 		RD_REGISTER(doorbell),
-@@ -213,7 +213,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
- 		RD_REGISTER(ch45_imwr_data),
- 		RD_REGISTER(ch67_imwr_data),
- 	};
--	const struct debugfs_entries debugfs_unroll_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_unroll_regs[] = {
- 		/* eDMA channel context grouping */
- 		RD_REGISTER_UNROLL(engine_chgroup),
- 		RD_REGISTER_UNROLL(engine_hshake_cnt.lsb),
-@@ -256,7 +256,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	dw_edma_debugfs_regs(dw);
+ }
+-
+-void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
+-{
+-	struct dw_edma *dw = chip->dw;
+-
+-	debugfs_remove_recursive(dw->debugfs);
+-	dw->debugfs = NULL;
+-}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+index d0ff25a9ea5c..eb11802c2b76 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+@@ -13,15 +13,10 @@
  
- static void dw_edma_debugfs_regs(void)
+ #ifdef CONFIG_DEBUG_FS
+ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip);
+-void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip);
+ #else
+ static inline void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
  {
--	const struct debugfs_entries debugfs_regs[] = {
-+	const struct dw_edma_debugfs_entry debugfs_regs[] = {
- 		REGISTER(ctrl_data_arb_prior),
- 		REGISTER(ctrl),
- 	};
+ }
+-
+-static inline void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
+-{
+-}
+ #endif /* CONFIG_DEBUG_FS */
+ 
+ #endif /* _DW_EDMA_V0_DEBUG_FS_H */
 -- 
 2.35.1
 
