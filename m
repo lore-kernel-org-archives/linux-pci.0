@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E28C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E25C433F5
 	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:24:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237471AbiC1P0L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:26:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45328 "EHLO
+        id S237419AbiC1P0J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:26:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237134AbiC1PZ4 (ORCPT
+        with ESMTP id S237117AbiC1PZ4 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:25:56 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 465D321E3E;
-        Mon, 28 Mar 2022 08:24:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9775022292;
+        Mon, 28 Mar 2022 08:24:12 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 1A53A1E492B;
-        Thu, 24 Mar 2022 04:37:58 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 1A53A1E492B
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 939141E492E;
+        Thu, 24 Mar 2022 04:38:00 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 939141E492E
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648085878;
-        bh=pcwhlvPohQh7Qat7puGKhGpj8aOlAc8s7r4TSh7jh6g=;
+        d=baikalelectronics.ru; s=mail; t=1648085880;
+        bh=wAaAg+6hqTSQ8r3XLn10uvT2kCn+m7caW29p6koiMuQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Qofvpoaczg/USv9QkltORohpkUn73JYO/HXrOJPCpThzlqVbvehD9Y3KWq+fex9Ru
-         IUq4uG3a1xrtPc6jrY/ePmo3e78fHi7vKzRWrrE8Q1n6d/cIvA8+wSdnA4hwKI2zMA
-         4if/dyDmHxVnC5WVhzlQ4/OjeL2tWKaJclRw1sWQ=
+        b=hxl05juv+i8muXCWg119p9XKWnfLEuF6HwYxCd32AtRHD2Jh8PAMVJfjrPgCjfyNi
+         y60AkxJTDmmG1pncAk1YN1ZpaXMSaw8sX7Nbd2ni0T5vdIIFRYOC/KR17K7bjwO6RL
+         MCGkIXLU+wMTqZB1mQZ5QJpc32Ei7M46z2iTMq+k=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:37:57 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:38:00 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -42,9 +42,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Rob Herring <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 12/16] PCI: dwc: Verify in/out regions against iATU constraints
-Date:   Thu, 24 Mar 2022 04:37:30 +0300
-Message-ID: <20220324013734.18234-13-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 15/16] PCI: dwc: Introduce generic platform clocks and resets sets
+Date:   Thu, 24 Mar 2022 04:37:33 +0300
+Message-ID: <20220324013734.18234-16-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -55,147 +55,172 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since the DWC PCIe driver private data now contains the iATU inbound and
-outbound regions constraints info like alignment, minimum and maximum
-limits, we can use them to make the in- and outbound iATU regions setup
-methods more strict to the ranges a callee tries to specify.  That will
-give us the safer dw_pcie_prog_outbound_atu(),
-dw_pcie_prog_ep_outbound_atu() and dw_pcie_prog_inbound_atu() functions.
+Currently almost each platform driver uses its own resets and clocks
+naming in order to get the corresponding descriptors. It makes the code
+harder to maintain and comprehend especially seeing the DWC PCIe core main
+resets and clocks signals set hasn't changed much for about at least one
+major IP-core release. So in order to organize things around these signals
+we suggest to create a generic interface for them in accordance with the
+naming introduced in the DWC PCIe IP-core reference manual:
 
-First of all let's update the outbound ATU entries setup methods to
-returning the operation status. The methods will fail either in case if
-the range is failed to be activated or the passed region doesn't fulfill
-iATU constraints. Secondly the passed to the
-dw_pcie_prog_{ep_}outbound_atu() methods region-related parameters are
-verified against the detected iATU regions constraints. In particular the
-region limit address must not overflow the lower/upper limit CSR RW-fields
-otherwise the specified range will be just silently clamped. That
-verification will also protect the code from having u64 type overflow.
-Secondly let's make sure base address (CPU-address), target address
-(PCI-address) and size are properly aligned. Unaligned ranges will be
-silently aligned down (addresses) and up (limit) on writing the values to
-the corresponding registers, which in it turn may lead to unpredictable
-results like ranges virtual overlap. Finally the CPU-address alignment
-needs to be verified in the dw_pcie_prog_inbound_atu() method too as the
-DWC PCIe RC/EP registers manual demands seeing the lower bits of the in-
-and outbound iATU base address are always zeros.
+Clocks:
+- DBI - data bus interface clock (on some DWC PCIe platforms it's
+  referred as "pclk", "pcie", "sys", "ahb", "cfg", "iface", "gio", "reg",
+  "pcie_apb_sys");
+- MSTR - AXI-bus master interface clock (some DWC PCIe glue drivers refer
+  to this clock as "port", "bus", "pcie_bus",
+  "bus_master/master_bus/axi_m", "pcie_aclk");
+- SLV - AXI-bus slave interface clock (also called as "port", "bus",
+  "pcie_bus", "bus_slave/slave_bus/axi_s", "pcie_aclk",
+  "pcie_inbound_axi");
+- PIPE - Core-PCS PIPE interface clock coming from external PHY (it's
+  normally named by the platform drivers as just "pipe")
+- CORE - primary clock of the controller (none of the platform drivers
+  declare such a clock but in accordance with the ref. manual the devices
+  may have it separately specified);
+- AUX - Auxiliary PMC domain clock (it is named by some platforms as
+  "pcie_aux" and just "aux")
+- REF - Generic reference clock (it is a generic clock source, which can
+  be used as a signal source for multiple interfaces, some platforms call
+  it as "ref", "general", "pcie_phy", "pcie_phy_ref").
+
+Application resets:
+- DBI - Data-bus interface reset (it's CSR interface clock and is normally
+  called as "apb" though technically it's not APB but DWC PCIe-specific
+  interface);
+  apb, sys,
+- MSTR -AXI-bus master reset (some platforms call it as "port", "apps",
+  "bus", "axi_m");
+- SLV - ABI-bus slave reset (some platforms call it as "port", "apps",
+  "bus", "axi_s").
+
+Core resets:
+- NON_STICKY - Non-sticky CSR flags reset;
+- STICKY - sticky CSR flags reset;
+- PIPE - PIPE-interface (Core-PCS) logic reset (some platforms call it
+  just "pipe");
+- CORE - controller primary reset (resets everything except PMC module,
+  some platforms refer to this signal as "soft", "pci");
+- PHY - PCS/PHY block reset (strictly speaking it is normally connected to
+  the out of the external block, but the reference manual says it must be
+  available for the PMC working correctly, some existing platforms call it
+  as "pciephy", "phy", "link");
+- HOT - PMC hot reset signal (also called as sleep");
+- PWR - cold reset signal (can be referred as "pwr", "turnoff").
+
+As you can see each platform uses it's own naming for basically the same
+set of the signals. In the framework of this commit we suggest to add a
+set of the clocks and signals identifiers and corresponding names for each
+denoted entity. The platforms will be able to use them to define local
+mapping tables between the generic identifiers and the available set of
+the clocks and resets. The tables can be then utilized to create the
+corresponding bulk-arrays, which in its turn can be passed to the
+clock/reset-bulk API methods to easily get/enable/disable/put,
+get/reset/assert/deassert/put all the handlers at once or, if it's
+required, manipulate with the handlers individually.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 39 +++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.h | 10 ++---
- 2 files changed, 30 insertions(+), 19 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.h | 79 ++++++++++++++++++++
+ 1 file changed, 79 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index c218b1fe4dad..2a7f23a2045c 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -8,6 +8,7 @@
-  * Author: Jingoo Han <jg1.han@samsung.com>
-  */
- 
-+#include <linux/align.h>
- #include <linux/bitops.h>
- #include <linux/delay.h>
- #include <linux/of.h>
-@@ -311,9 +312,9 @@ static inline u32 dw_pcie_enable_ecrc(u32 val)
- 	return val | PCIE_ATU_TD;
- }
- 
--static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
--					int index, int type, u64 cpu_addr,
--					u64 pci_addr, u64 size)
-+static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
-+				       int index, int type, u64 cpu_addr,
-+				       u64 pci_addr, u64 size)
- {
- 	u32 retries, val;
- 	u64 limit_addr;
-@@ -323,6 +324,13 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 
- 	limit_addr = cpu_addr + size - 1;
- 
-+	if ((limit_addr & ~pci->region_limit) != (cpu_addr & ~pci->region_limit) ||
-+	    !IS_ALIGNED(cpu_addr, pci->region_align) ||
-+	    !IS_ALIGNED(pci_addr, pci->region_align) ||
-+	    !IS_ALIGNED(size, pci->region_align) || !size) {
-+		return -EINVAL;
-+	}
-+
- 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_LOWER_BASE,
- 			      lower_32_bits(cpu_addr));
- 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_UPPER_BASE,
-@@ -356,27 +364,29 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
- 		val = dw_pcie_readl_atu_ob(pci, index, PCIE_ATU_REGION_CTRL2);
- 		if (val & PCIE_ATU_ENABLE)
--			return;
-+			return 0;
- 
- 		mdelay(LINK_WAIT_IATU);
- 	}
- 
- 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
-+
-+	return -ETIMEDOUT;
- }
- 
--void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
--			       u64 cpu_addr, u64 pci_addr, u64 size)
-+int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
-+			      u64 cpu_addr, u64 pci_addr, u64 size)
- {
--	__dw_pcie_prog_outbound_atu(pci, 0, index, type,
--				    cpu_addr, pci_addr, size);
-+	return __dw_pcie_prog_outbound_atu(pci, 0, index, type,
-+					   cpu_addr, pci_addr, size);
- }
- 
--void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				  int type, u64 cpu_addr, u64 pci_addr,
--				  u64 size)
-+int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
-+				 int type, u64 cpu_addr, u64 pci_addr,
-+				 u64 size)
- {
--	__dw_pcie_prog_outbound_atu(pci, func_no, index, type,
--				    cpu_addr, pci_addr, size);
-+	return __dw_pcie_prog_outbound_atu(pci, func_no, index, type,
-+					   cpu_addr, pci_addr, size);
- }
- 
- static inline u32 dw_pcie_readl_atu_ib(struct dw_pcie *pci, u32 region, u32 reg)
-@@ -395,6 +405,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
- {
- 	u32 retries, val;
- 
-+	if (!IS_ALIGNED(cpu_addr, pci->region_align))
-+		return -EINVAL;
-+
- 	dw_pcie_writel_atu_ib(pci, index, PCIE_ATU_LOWER_TARGET,
- 			      lower_32_bits(cpu_addr));
- 	dw_pcie_writel_atu_ib(pci, index, PCIE_ATU_UPPER_TARGET,
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 8b601a6a6090..bcda63393390 100644
+index ade854217332..11c52d2eaf79 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -304,12 +304,10 @@ void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
- int dw_pcie_link_up(struct dw_pcie *pci);
- void dw_pcie_upconfig_setup(struct dw_pcie *pci);
- int dw_pcie_wait_for_link(struct dw_pcie *pci);
--void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
--			       int type, u64 cpu_addr, u64 pci_addr,
--			       u64 size);
--void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				  int type, u64 cpu_addr, u64 pci_addr,
--				  u64 size);
-+int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
-+			      u64 cpu_addr, u64 pci_addr, u64 size);
-+int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
-+				 int type, u64 cpu_addr, u64 pci_addr, u64 size);
- int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
- 			     int type, u64 cpu_addr, u8 bar);
- void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
+@@ -182,6 +182,35 @@ enum dw_pcie_device_mode {
+ 	DW_PCIE_RC_TYPE,
+ };
+ 
++enum dw_pcie_clk {
++	DW_PCIE_DBI_CLK,
++	DW_PCIE_MSTR_CLK,
++	DW_PCIE_SLV_CLK,
++	DW_PCIE_PIPE_CLK,
++	DW_PCIE_CORE_CLK,
++	DW_PCIE_AUX_CLK,
++	DW_PCIE_REF_CLK,
++	DW_PCIE_NUM_CLKS
++};
++
++enum dw_pcie_app_rst {
++	DW_PCIE_DBI_RST,
++	DW_PCIE_MSTR_RST,
++	DW_PCIE_SLV_RST,
++	DW_PCIE_NUM_APP_RSTS
++};
++
++enum dw_pcie_core_rst {
++	DW_PCIE_NON_STICKY_RST,
++	DW_PCIE_STICKY_RST,
++	DW_PCIE_CORE_RST,
++	DW_PCIE_PIPE_RST,
++	DW_PCIE_PHY_RST,
++	DW_PCIE_HOT_RST,
++	DW_PCIE_PWR_RST,
++	DW_PCIE_NUM_CORE_RSTS
++};
++
+ struct dw_pcie_host_ops {
+ 	int (*host_init)(struct pcie_port *pp);
+ 	void (*host_deinit)(struct pcie_port *pp);
+@@ -373,6 +402,56 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+ 	dw_pcie_writel_dbi(pci, reg, val);
+ }
+ 
++static inline const char *dw_pcie_clk_name(enum dw_pcie_clk id)
++{
++	static const char *names[DW_PCIE_NUM_CLKS] = {
++		[DW_PCIE_DBI_CLK] = "dbi",
++		[DW_PCIE_MSTR_CLK] = "mstr",
++		[DW_PCIE_SLV_CLK] = "slv",
++		[DW_PCIE_PIPE_CLK] = "pipe",
++		[DW_PCIE_CORE_CLK] = "core",
++		[DW_PCIE_AUX_CLK] = "aux",
++		[DW_PCIE_REF_CLK] = "ref",
++	};
++
++	if (id >= DW_PCIE_NUM_CLKS)
++		return NULL;
++
++	return names[id];
++}
++
++static inline const char *dw_pcie_app_rst_name(enum dw_pcie_app_rst id)
++{
++	static const char *names[DW_PCIE_NUM_APP_RSTS] = {
++		[DW_PCIE_DBI_RST] = "dbi",
++		[DW_PCIE_MSTR_RST] = "mstr",
++		[DW_PCIE_SLV_RST] = "slv",
++	};
++
++	if (id >= DW_PCIE_NUM_APP_RSTS)
++		return NULL;
++
++	return names[id];
++}
++
++static inline const char *dw_pcie_core_rst_name(enum dw_pcie_core_rst id)
++{
++	static const char *names[DW_PCIE_NUM_CORE_RSTS] = {
++		[DW_PCIE_NON_STICKY_RST] = "non-sticky",
++		[DW_PCIE_STICKY_RST] = "sticky",
++		[DW_PCIE_CORE_RST] = "core",
++		[DW_PCIE_PIPE_RST] = "pipe",
++		[DW_PCIE_PHY_RST] = "phy",
++		[DW_PCIE_HOT_RST] = "hot",
++		[DW_PCIE_PWR_RST] = "pwr",
++	};
++
++	if (id >= DW_PCIE_NUM_CORE_RSTS)
++		return NULL;
++
++	return names[id];
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ int dw_pcie_setup_rc(struct pcie_port *pp);
 -- 
 2.35.1
 
