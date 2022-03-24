@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A354FC433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52A0DC4321E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:09:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244271AbiC1PK4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S239813AbiC1PK4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 28 Mar 2022 11:10:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54236 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244275AbiC1PKv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:10:51 -0400
+        with ESMTP id S244276AbiC1PKw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:10:52 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 283615FF30;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2806B53A46;
         Mon, 28 Mar 2022 08:09:11 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 932E01D5AB0;
-        Thu, 24 Mar 2022 04:25:32 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 932E01D5AB0
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 240DE1E28FF;
+        Thu, 24 Mar 2022 04:25:28 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 240DE1E28FF
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648085132;
-        bh=Dbgc6/dIoGYhBdhIbPzmzSMnuOn91k3d9y6pTYpNWJk=;
+        d=baikalelectronics.ru; s=mail; t=1648085128;
+        bh=kfxQKEOlP4ohIS01o1tX7PouvvGd/yuJ1ukMhFjn3Qs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=oSHtuRxHXPHxaJYdDuGrLKof+OUuE1wf4y2oQ6le7umJJbexr9KnaM2H2OBo8EFVF
-         4I18HyCI27utupWHbZr74kpLeGNjWZirXOsYNzXHZ9lVncnTJezlSh32FFbUidrwRf
-         A+wtAaKv3qcIP2tz+dIZ0z8rAhbi+6vFGPuo5eBY=
+        b=Hyo9TubO9jqw3+G+0DYfNyYe5dSrqKR9rJkj8Es47o1CslyJCLOpoU003UJIjkYal
+         /5szf0zP6Za3YC6xG8Unv7GvUyUrQQzKkUhhqmZS9vDbFutFcjjWUeK9ODlCTUtSBW
+         ybh7vQ37yG8axglT5Y/pnIJBiQwQKhCKe5kwHK2A=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:25:32 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:25:27 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -41,9 +41,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 07/12] PCI: dwc: Add trailing new-line literals to the log messages
-Date:   Thu, 24 Mar 2022 04:25:18 +0300
-Message-ID: <20220324012524.16784-8-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 01/12] PCI: dwc: Stop link in the host init error and de-initialization
+Date:   Thu, 24 Mar 2022 04:25:12 +0300
+Message-ID: <20220324012524.16784-2-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,45 +54,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are two places in the DW PCIe controller driver, which omit the
-trailing newlines in the log info and warn messages. Not having them there
-will cause leaving the messages in the printk ring buffer until a next
-'\n'-terminated message is printed (it will consequently cause the buffer
-flush). As it isn't what the corresponding code implies let's add the
-new-line characters in the messages.
+It's logically correct to undo everything what was done in case of an
+error is discovered or in the corresponding cleanup counterpart. Otherwise
+the host controller will be left in an undetermined state. Seeing the link
+is set up in the Host-initialization method it will be right to
+de-activate it there in the cleanup-on-error block and stop the link in
+the antagonistic routine - dw_pcie_host_deinit(). The link de-activation
+is a platform-specific thing and is supposed to be implemented in the
+framework of the dw_pcie_ops.stop_link() operation.
 
+Fixes: 886a9c134755 ("PCI: dwc: Move link handling into common code")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.c      | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index a048d88e0c30..8364ea234e88 100644
+index f4755f3a03be..a03619a30c20 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -657,7 +657,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		}
+@@ -414,8 +414,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	bridge->sysdata = pp;
  
- 		if (pci->num_ob_windows <= atu_idx)
--			dev_warn(pci->dev, "Resources exceed number of ATU entries (%d)",
-+			dev_warn(pci->dev, "Resources exceed number of ATU entries (%d)\n",
- 				 pci->num_ob_windows);
- 	}
+ 	ret = pci_host_probe(bridge);
+-	if (!ret)
+-		return 0;
++	if (ret)
++		goto err_stop_link;
++
++	return 0;
++
++err_stop_link:
++	if (pci->ops && pci->ops->stop_link)
++		pci->ops->stop_link(pci);
  
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 9f4d2b44612b..3bd1cfd12148 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -706,7 +706,7 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
- 	dev_info(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
- 		"enabled" : "disabled");
+ err_free_msi:
+ 	if (pp->has_msi_ctrl)
+@@ -426,8 +432,14 @@ EXPORT_SYMBOL_GPL(dw_pcie_host_init);
  
--	dev_info(pci->dev, "Detected iATU regions: %u outbound, %u inbound",
-+	dev_info(pci->dev, "Detected iATU regions: %u outbound, %u inbound\n",
- 		 pci->num_ob_windows, pci->num_ib_windows);
+ void dw_pcie_host_deinit(struct pcie_port *pp)
+ {
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++
+ 	pci_stop_root_bus(pp->bridge->bus);
+ 	pci_remove_root_bus(pp->bridge->bus);
++
++	if (pci->ops && pci->ops->stop_link)
++		pci->ops->stop_link(pci);
++
+ 	if (pp->has_msi_ctrl)
+ 		dw_pcie_free_msi(pp);
  }
- 
 -- 
 2.35.1
 
