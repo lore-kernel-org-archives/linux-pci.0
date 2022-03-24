@@ -2,242 +2,156 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0827C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C35BCC41535
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Mar 2022 15:24:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236649AbiC1PZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:25:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44822 "EHLO
+        id S236949AbiC1PZz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:25:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235831AbiC1PZv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:25:51 -0400
+        with ESMTP id S236621AbiC1PZw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2022 11:25:52 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B1EFB20F43;
-        Mon, 28 Mar 2022 08:24:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 70F821FA55;
+        Mon, 28 Mar 2022 08:24:11 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 74BB41E4922;
-        Thu, 24 Mar 2022 04:37:51 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 74BB41E4922
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 4FFBD39CB77;
+        Thu, 24 Mar 2022 04:37:47 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 4FFBD39CB77
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648085871;
-        bh=tJpnuJm4c0TW37HoGssMgug6vK/irHkBZYOfQQxofNM=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=CBNoqDaTnF8d4W4kvIUVX8JOxrjV7ffItSdIQyQNInKaSSptanC+JQZ4+JFn6JvPZ
-         LsUcXpXLBLjC5ejkvfZlhcsl7UUYoxk5B2uPVeQAP6gHarWqMPL1QL8OcbAvK6oQwX
-         OnTgcHC90AcRL74Fcb/yOuO7DEtEVRtnM3tro788=
+        d=baikalelectronics.ru; s=mail; t=1648085867;
+        bh=npWKFXQ+aTKYA0rxtP23gRryMV+pcKHHgb+hcyLfZ4w=;
+        h=From:To:CC:Subject:Date:From;
+        b=kOf+tkySlXIFnWE76NhNYeGggWB3++KRdK2KZy+slEWPKWi9SZKWX39a35HdvMqF9
+         e1AkiR+80qSZjwU2nZemuN1dGr04jfson8tNH/QLd4ID/OAnegtkUZrYbd8uXUJlJP
+         ZB0xMu0xMqWO2BqfPW4odfNykdGAxyneUJJypUys=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:37:51 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 04:37:47 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rahul Tanwar <rtanwar@maxlinear.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>
+        Bjorn Helgaas <bhelgaas@google.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Rob Herring <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>
-Subject: [PATCH 04/16] PCI: dwc: Convert to using native IP-core versions representation
-Date:   Thu, 24 Mar 2022 04:37:22 +0300
-Message-ID: <20220324013734.18234-5-Sergey.Semin@baikalelectronics.ru>
-In-Reply-To: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
-References: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH 00/16] PCI: dwc: Add dma-ranges/YAML-schema/Baikal-T1 support
+Date:   Thu, 24 Mar 2022 04:37:18 +0300
+Message-ID: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since DWC PCIe v4.70a the controller version can be read from the
-PORT_LOGIC.PCIE_VERSION_OFF register. Version is represented in the FourCC
-format [1]. It's standard versioning approach for the Synopsys DWC
-IP-cores. Moreover some of the DWC kernel drivers already make use of it
-to fixup version-dependent functionality (See DWC USB3, Stmicro STMMAC or
-recent DW SPI driver). In order to preserve the standard version
-representation and prevent the data conversion back and forth, we suggest
-to preserve the native version representation in the DWC PCIe driver too
-in the same way as it has already been done in the rest of the DWC
-drivers. IP-core version reading from the CSR will be introduced in the
-next commit together with a simple macro-based API to use it.
+This patchset is a third one in the series created in the framework of
+my Baikal-T1 PCIe/eDMA-related work:
 
-[1] https://en.wikipedia.org/wiki/FourCC
+[1: In-progress] clk: Baikal-T1 DDR/PCIe resets and some xGMAC fixes
+Link: --submitted--
+[2: In-progress] PCI: dwc: Various fixes and cleanups
+Link: --submitted--
+[3: In-progress] PCI: dwc: Add dma-ranges/YAML-schema/Baikal-T1 support
+Link: --you are looking at it--
+[4: Stalling]    dmaengine: dw-edma: Add RP/EP local DMA controllers support
+Link: --being submitted afterwards--
+
+Note it is very recommended to merge the patchsets in the same order as
+they are listed in the set above in order to have them applied smoothly.
+Nothing prevents them from being reviewed synchronously though.
+
+This series is about adding new features to the DW PCIe Host/End-point
+driver. First of all we start from splitting up the DT-bindings into
+common properties schema and generic DW PCIe bindings definition. It's
+done to support the generic DW PCIe Host/End-point available platforms
+with adding a common YAML-schema to be reused by the platform-specific DW
+PCIe bindings. @Rob could you please take a look at that patch? I've got a
+problem with dt_bindings_check-ing the schema which is likely caused by
+the dt-schema parser misbehaviour. After that we suggest to add a more
+verbose link-up log message. Really printing link generation and width
+would be much more informative than just "link up". Then a series of
+IP-core version-related patches go, like using a native FourCC version
+representation, adding the IP-core auto-detection, adding better
+structured IP-core version/type interface. After that the
+platform-specific host de-initialization method is introduced. A series of
+iATU optimizations, cleanups and new features goes afterwards. In
+particular we suggest to drop some redundant enumerations, add iATU
+regions size detection procedure and then use the regions parameters to
+verify the requested by the platform iATU ranges/dma-ranges settings.
+After that the dma-ranges property support is added for the DW PCIe Host
+controllers. Then a structured set of the DW PCIe RP/EP specific clocks
+and resets names/IDs is introduced so to be re-used by the generic and new
+platforms. Note it is fully coherent with the DW PCIe controller manuals
+(see the patch log for details). Also note the patch doesn't affect the
+already available DW PCIe platform-specific code since it would be too
+risky for my to do the corresponding conversion, but the maintainers are
+welcome to do that. Finally at the series closure we introduce the
+Baikal-T1 PCIe interface support, which uses all the recently added
+features including the set of the generic clocks and resets names.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
----
- drivers/pci/controller/dwc/pci-keystone.c    | 12 ++++++------
- drivers/pci/controller/dwc/pcie-designware.c |  8 ++++----
- drivers/pci/controller/dwc/pcie-designware.h | 10 +++++++++-
- drivers/pci/controller/dwc/pcie-intel-gw.c   |  4 ++--
- drivers/pci/controller/dwc/pcie-tegra194.c   |  2 +-
- 5 files changed, 22 insertions(+), 14 deletions(-)
+Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: "Krzysztof Wilczyński" <kw@linux.com>
+Cc: Frank Li <Frank.Li@nxp.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 1c2ee4e13f1c..ec65355dd29b 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -109,7 +109,7 @@ struct ks_pcie_of_data {
- 	enum dw_pcie_device_mode mode;
- 	const struct dw_pcie_host_ops *host_ops;
- 	const struct dw_pcie_ep_ops *ep_ops;
--	unsigned int version;
-+	u32 version;
- };
- 
- struct keystone_pcie {
-@@ -1069,19 +1069,19 @@ static int ks_pcie_am654_set_mode(struct device *dev,
- 
- static const struct ks_pcie_of_data ks_pcie_rc_of_data = {
- 	.host_ops = &ks_pcie_host_ops,
--	.version = 0x365A,
-+	.version = DW_PCIE_VER_365A,
- };
- 
- static const struct ks_pcie_of_data ks_pcie_am654_rc_of_data = {
- 	.host_ops = &ks_pcie_am654_host_ops,
- 	.mode = DW_PCIE_RC_TYPE,
--	.version = 0x490A,
-+	.version = DW_PCIE_VER_490A,
- };
- 
- static const struct ks_pcie_of_data ks_pcie_am654_ep_of_data = {
- 	.ep_ops = &ks_pcie_am654_ep_ops,
- 	.mode = DW_PCIE_EP_TYPE,
--	.version = 0x490A,
-+	.version = DW_PCIE_VER_490A,
- };
- 
- static const struct of_device_id ks_pcie_of_match[] = {
-@@ -1114,12 +1114,12 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	struct device_link **link;
- 	struct gpio_desc *gpiod;
- 	struct resource *res;
--	unsigned int version;
- 	void __iomem *base;
- 	u32 num_viewport;
- 	struct phy **phy;
- 	u32 num_lanes;
- 	char name[10];
-+	u32 version;
- 	int ret;
- 	int irq;
- 	int i;
-@@ -1233,7 +1233,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
- 
--	if (pci->version >= 0x480A)
-+	if (pci->version >= DW_PCIE_VER_480A)
- 		ret = ks_pcie_am654_set_mode(dev, mode);
- 	else
- 		ret = ks_pcie_set_mode(dev);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index f1693e25afcb..c21373c6cb51 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -289,7 +289,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, u8 func_no,
- 	val = type | PCIE_ATU_FUNC_NUM(func_no);
- 	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr))
- 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
--	if (pci->version == 0x490A)
-+	if (pci->version == DW_PCIE_VER_490A)
- 		val = dw_pcie_enable_ecrc(val);
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, val);
- 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
-@@ -336,7 +336,7 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 			   upper_32_bits(cpu_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
- 			   lower_32_bits(limit_addr));
--	if (pci->version >= 0x460A)
-+	if (pci->version >= DW_PCIE_VER_460A)
- 		dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_LIMIT,
- 				   upper_32_bits(limit_addr));
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
-@@ -345,9 +345,9 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- 			   upper_32_bits(pci_addr));
- 	val = type | PCIE_ATU_FUNC_NUM(func_no);
- 	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
--	    pci->version >= 0x460A)
-+	    pci->version >= DW_PCIE_VER_460A)
- 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
--	if (pci->version == 0x490A)
-+	if (pci->version == DW_PCIE_VER_490A)
- 		val = dw_pcie_enable_ecrc(val);
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, val);
- 	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 7d6e9b7576be..5be43c662176 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -20,6 +20,14 @@
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
- 
-+/* DWC PCIe IP-core versions (native support since v4.70a) */
-+#define DW_PCIE_VER_365A		0x3336352a
-+#define DW_PCIE_VER_460A		0x3436302a
-+#define DW_PCIE_VER_470A		0x3437302a
-+#define DW_PCIE_VER_480A		0x3438302a
-+#define DW_PCIE_VER_490A		0x3439302a
-+#define DW_PCIE_VER_520A		0x3532302a
-+
- /* Parameters for the waiting for link up routine */
- #define LINK_WAIT_MAX_RETRIES		10
- #define LINK_WAIT_USLEEP_MIN		90000
-@@ -269,7 +277,7 @@ struct dw_pcie {
- 	struct pcie_port	pp;
- 	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
--	unsigned int		version;
-+	u32			version;
- 	int			num_lanes;
- 	int			link_gen;
- 	u8			n_fts[2];
-diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
-index 5ba144924ff8..786af2ba379f 100644
---- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-+++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-@@ -59,7 +59,7 @@
- #define RESET_INTERVAL_MS		100
- 
- struct intel_pcie_soc {
--	unsigned int	pcie_ver;
-+	u32	pcie_ver;
- };
- 
- struct intel_pcie {
-@@ -395,7 +395,7 @@ static const struct dw_pcie_host_ops intel_pcie_dw_ops = {
- };
- 
- static const struct intel_pcie_soc pcie_data = {
--	.pcie_ver =		0x520A,
-+	.pcie_ver =		DW_PCIE_VER_520A,
- };
- 
- static int intel_pcie_probe(struct platform_device *pdev)
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index b1b5f836a806..6f1330ed63e5 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -1981,7 +1981,7 @@ static int tegra194_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &tegra_dw_pcie_ops;
- 	pci->n_fts[0] = N_FTS_VAL;
- 	pci->n_fts[1] = FTS_VAL;
--	pci->version = 0x490A;
-+	pci->version = DW_PCIE_VER_490A;
- 
- 	pp = &pci->pp;
- 	pp->num_vectors = MAX_MSI_IRQS;
+Serge Semin (16):
+  dt-bindings: PCI: dwc: Define generic and native DT bindings
+  dt-bindings: PCI: dwc: Add Baikal-T1 PCIe Root Port bindings
+  PCI: dwc: Add more verbose link-up message
+  PCI: dwc: Convert to using native IP-core versions representation
+  PCI: dwc: Add IP-core version detection procedure
+  PCI: dwc: Introduce Synopsys IP-core versions/types interface
+  PCI: dwc: Add host de-initialization callback
+  PCI: dwc: Drop inbound iATU types enumeration - dw_pcie_as_type
+  PCI: dwc: Simplify in/outbound iATU setup methods
+  PCI: dwc: Drop iATU regions enumeration - dw_pcie_region_type
+  PCI: dwc: Add iATU regions size detection procedure
+  PCI: dwc: Verify in/out regions against iATU constraints
+  PCI: dwc: Check iATU in/outbound ranges setup methods status
+  PCI: dwc: Introduce dma-ranges property support for RC-host
+  PCI: dwc: Introduce generic platform clocks and resets sets
+  PCI: dwc: Add Baikal-T1 PCIe controller support
+
+ .../bindings/pci/baikal,bt1-pcie.yaml         | 148 ++++
+ .../bindings/pci/fsl,imx6q-pcie.yaml          |   5 +-
+ .../bindings/pci/hisilicon,kirin-pcie.yaml    |   4 +-
+ .../bindings/pci/sifive,fu740-pcie.yaml       |   4 +-
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 298 ++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         | 143 ++--
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml | 189 ++++--
+ .../bindings/pci/toshiba,visconti-pcie.yaml   |   2 +-
+ drivers/pci/controller/dwc/Kconfig            |   9 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pci-keystone.c     |  12 +-
+ drivers/pci/controller/dwc/pcie-bt1.c         | 638 ++++++++++++++++++
+ .../pci/controller/dwc/pcie-designware-ep.c   |  36 +-
+ .../pci/controller/dwc/pcie-designware-host.c | 198 ++++--
+ drivers/pci/controller/dwc/pcie-designware.c  | 465 ++++++-------
+ drivers/pci/controller/dwc/pcie-designware.h  | 200 ++++--
+ drivers/pci/controller/dwc/pcie-intel-gw.c    |  10 +-
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   2 +-
+ 18 files changed, 1857 insertions(+), 507 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-bt1.c
+
 -- 
 2.35.1
 
