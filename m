@@ -2,126 +2,264 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7005C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Mar 2022 16:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F6FBC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Mar 2022 16:34:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351681AbiCXQ16 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Mar 2022 12:27:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55222 "EHLO
+        id S240424AbiCXQg3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Mar 2022 12:36:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351713AbiCXQ14 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Mar 2022 12:27:56 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CEB1A9969
-        for <linux-pci@vger.kernel.org>; Thu, 24 Mar 2022 09:26:24 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id l4-20020a17090a49c400b001c6840df4a3so5635989pjm.0
-        for <linux-pci@vger.kernel.org>; Thu, 24 Mar 2022 09:26:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=THlTesE5pnJpMjgygbUl5LvnGMnA21m3pPkRkHRIyLs=;
-        b=IB+BHZIabwf6cwu99RiBIESNeVrQdigxyZj7FnvzFEelnrKivuY1eQozI/teZjHXxk
-         3gzsLmXLIJWkwY03X+CFKCSiu/xWTQ2ns7bZO0itYin1uBnKBCuF2G4MFYo8l8+G1L/e
-         eGB8PIFaOuS46/fBGonjRor5Ecggcqp17Z2Bdb+rsbYsG+SJFu030EVYC3nUR6TkxlzL
-         i73ou/EAldHzqgJ6i9zEP+Qc4aeWndHXF/zR5ojE2NS4iRLpCE88Jvsz9a0BAYDTRNwb
-         7nR6KRy2iqwEYi9dajwepE6TqDtM8vdLexOzu5v2MK4FnqAbdWV5zLtbShIIJKUy1m/W
-         cQgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=THlTesE5pnJpMjgygbUl5LvnGMnA21m3pPkRkHRIyLs=;
-        b=1S+JO+PuzhbBikX5teFz9+Pa7YoUNP09a5rvOicdvx+anM08NBS+OXr94KuwIBGDuW
-         GROr3vc6dRbac/QjzSzTQ0uDq9mFU6M1i98GETpdjRnC8ocW4S3gorlj/xvQqOEwy7WZ
-         S2jYr8Ta58MRa9ehQaDCrOlRwj+Dxi15SKmVjonucuH6ogeY0Te6n7kT1kssTnJry3mt
-         49j82OsmrWOZXYJigIlK3Vyd6p5LTMBT0tZokOIDKIYSVe87xf1fLUXSJi1JYE0nMzYN
-         VsJzw07rSiV/mdSy0FKZAOCaT34+dK391NW9cVpPo/CCe5Abo8B+7vybul5ALoIwrFQA
-         tE+g==
-X-Gm-Message-State: AOAM531hjXouk7F2W2IqEp6ou+ztDAiv7BA60gaQ6SneyrbZNy8lTgSx
-        geEPShfdKaFa7Pq7nchpQgAg
-X-Google-Smtp-Source: ABdhPJyMtDwnipX5epw4YkS4utzdjUYPA/D8b775r+Ka5whUHULFYlklYKHj6Vj7ltUs18/KLnuSsg==
-X-Received: by 2002:a17:902:f643:b0:14d:7b8f:14b3 with SMTP id m3-20020a170902f64300b0014d7b8f14b3mr6815131plg.19.1648139183818;
-        Thu, 24 Mar 2022 09:26:23 -0700 (PDT)
-Received: from thinkpad ([27.111.75.5])
-        by smtp.gmail.com with ESMTPSA id i2-20020a17090ac40200b001bd0e552d27sm3356986pjt.11.2022.03.24.09.26.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Mar 2022 09:26:23 -0700 (PDT)
-Date:   Thu, 24 Mar 2022 21:56:18 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Frank Li <Frank.Li@nxp.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 06/25] dmaengine: dw-edma: Fix missing src/dst address of
- the interleaved xfers
-Message-ID: <20220324162618.GP2854@thinkpad>
-References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
- <20220324014836.19149-7-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S229817AbiCXQg2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Mar 2022 12:36:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 848621E3C2;
+        Thu, 24 Mar 2022 09:34:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1DDEC61908;
+        Thu, 24 Mar 2022 16:34:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3427CC340EC;
+        Thu, 24 Mar 2022 16:34:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648139694;
+        bh=MwEBxoUcJHEj1ejih7Nggyyx2DlbRXKacpB98IMsXOQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=EBjCKI68pOLx3BBQiIMJUxZRZ7EJp3Vj7FNlqkeXk48bJcjs1J8TeLGch6QN1C2cs
+         UliuGNpqu52rjYiQMEHIwcOZTJ5YxqCKvB9afH3oZKhjcEfcoA2AXufkvTzLsEOWvr
+         z6z0AuOXdK4FIQgtrqIEAXnArlLqjzHuQ+JDxAQHjLnDHtWsGPdETM07iWsGfosWoe
+         jZdkWUoDr1N7ybxApsl2wsT4mYFM4X+19M1v6W3f1dvPRxTOWXIn+8IdK1sN6w6keK
+         c2+Q+/K+FXAeRHPdyPyViUnmf2Rq34gdib3yGtNE3k6ItnXlaDPlOK/+gCbpa96qvJ
+         YBSNR44BwEAeg==
+Date:   Thu, 24 Mar 2022 11:34:52 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        "Mehta, Sanju" <Sanju.Mehta@amd.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v4] PCI / ACPI: Assume `HotPlugSupportInD3` only if
+ device can wake from D3
+Message-ID: <20220324163452.GA1449620@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220324014836.19149-7-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <BL1PR12MB51575C7E6979A60E2637CC82E2189@BL1PR12MB5157.namprd12.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 04:48:17AM +0300, Serge Semin wrote:
-> The interleaved DMA transfers support was added in the commit 85e7518f42c8
-> ("dmaengine: dw-edma: Add device_prep_interleave_dma() support"). It
-> seems like the support was broken from the very beginning. Depending on
-> the selected channel either source or destination address are left
-> uninitialized which was obviously wrong. I don't really know how come the
-> original modification was working for the commit author. Anyway let's fix
-> it by initializing the destination address of the eDMA burst descriptors
-> for the DEV_TO_MEM interleaved operations and by initializing the source
-> address of the eDMA burst descriptors for the MEM_TO_DEV interleaved
-> operations.
-> 
-> Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+[+cc Mika, "HotPlugSupportInD3" scope question below]
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-Thanks,
-Mani
-
-> ---
->  drivers/dma/dw-edma/dw-edma-core.c | 4 ++++
->  1 file changed, 4 insertions(+)
+On Wed, Mar 23, 2022 at 09:51:18PM +0000, Limonciello, Mario wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas <helgaas@kernel.org>
+> > Sent: Wednesday, March 23, 2022 16:43
+> > To: Limonciello, Mario <Mario.Limonciello@amd.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>; open list:PCI SUBSYSTEM <linux-
+> > pci@vger.kernel.org>; Linux PM <linux-pm@vger.kernel.org>; Mehta, Sanju
+> > <Sanju.Mehta@amd.com>; Rafael J. Wysocki <rafael@kernel.org>
+> > Subject: Re: [PATCH v4] PCI / ACPI: Assume `HotPlugSupportInD3` only if device
+> > can wake from D3
+> > 
+> > On Wed, Mar 23, 2022 at 09:26:15PM +0000, Limonciello, Mario wrote:
+> > > [Public]
+> > >
+> > > >
+> > > > On Wed, Mar 23, 2022 at 11:01:05AM -0500, Mario Limonciello wrote:
+> > > > > On 3/15/22 11:36, Rafael J. Wysocki wrote:
+> > > > > > On Tue, Mar 15, 2022 at 5:35 PM Rafael J. Wysocki <rafael@kernel.org>
+> > > > wrote:
+> > > > > > >
+> > > > > > > On Tue, Mar 15, 2022 at 4:33 PM Mario Limonciello
+> > > > > > > <mario.limonciello@amd.com> wrote:
+> > > > > > > >
+> > > > > > > > According to the Microsoft spec the _DSD `HotPlugSupportInD3` is
+> > > > > > > > indicates the ability for a bridge to be able to wakeup from D3:
+> > > > > > > >
+> > > > > > > >    This ACPI object [HotPlugSupportInD3] enables the operating
+> > system
+> > > > > > > >    to identify and power manage PCIe Root Ports that are capable of
+> > > > > > > >    handling hot plug events while in D3 state.
+> > > > > > > >
+> > > > > > > > This however is static information in the ACPI table at BIOS
+> > compilation
+> > > > > > > > time and on some platforms it's possible to configure the firmware at
+> > > > boot
+> > > > > > > > up such that _S0W returns "0" indicating the inability to wake up the
+> > > > > > > > device from D3 as explained in the ACPI specification:
+> > > > > > > >
+> > > > > > > >    7.3.20 _S0W (S0 Device Wake State)
+> > > > > > > >
+> > > > > > > >    This object evaluates to an integer that conveys to OSPM the
+> > deepest
+> > > > > > > >    D-state supported by this device in the S0 system sleeping state
+> > > > > > > >    where the device can wake itself.
+> > > > > > > >
+> > > > > > > > This mismatch may lead to being unable to enumerate devices behind
+> > the
+> > > > > > > > hotplug bridge when a device is plugged in. To remedy these
+> > situations
+> > > > > > > > that `HotPlugSupportInD3` is specified by _S0W returns 0, explicitly
+> > > > > > > > check that the ACPI companion has returned _S0W greater than or
+> > equal
+> > > > > > > > to 3 and the device has a GPE allowing the device to generate wakeup
+> > > > > > > > signals handled by the platform in `acpi_pci_bridge_d3`.
+> > > > > > > >
+> > > > > > > > Windows 10 and Windows 11 both will prevent the bridge from going
+> > in
+> > > > D3
+> > > > > > > > when the firmware is configured this way and this changes aligns the
+> > > > > > > > handling of the situation to be the same.
+> > > > > > > >
+> > > > > > > > Link:
+> > > >
+> > https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fuefi.org
+> > %2F&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7C095e9cb1cb3
+> > 34458a08d08da0d1610bf%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0
+> > %7C637836685684066439%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAw
+> > MDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata
+> > =aAj91EajV77J7GjWEGGhAYLAb9Al2TMsH1baasdVdyI%3D&amp;reserved=0
+> > > >
+> > %2Fhtmlspecs%2FACPI_Spec_6_4_html%2F07_Power_and_Performance_Mgmt
+> > > > %2Fdevice-power-management-objects.html%3Fhighlight%3Ds0w%23s0w-
+> > s0-
+> > > > device-wake-
+> > > >
+> > state&amp;data=04%7C01%7Cmario.limonciello%40amd.com%7C1f96c7aa37a
+> > > >
+> > c47640d6208da0d0efd67%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0
+> > > >
+> > %7C637836655281536690%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAw
+> > > >
+> > MDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata
+> > > >
+> > =Cw1OTYiX9BD3gh8eN3Zyz6%2FK8YFgqbn6bgi9%2FjNsnrM%3D&amp;reserved
+> > > > =0
+> > > > > > > > Link:
+> > > >
+> > https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fdocs.mi
+> > %2F&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7C095e9cb1cb3
+> > 34458a08d08da0d1610bf%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0
+> > %7C637836685684066439%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAw
+> > MDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata
+> > =v8YYoxTCp1drb7ZxgbDkrgA2Nc3TxbENLBfPxbo1CTI%3D&amp;reserved=0
+> > > > crosoft.com%2Fen-us%2Fwindows-hardware%2Fdrivers%2Fpci%2Fdsd-for-
+> > pcie-
+> > > > root-ports%23identifying-pcie-root-ports-supporting-hot-plug-in-
+> > > >
+> > d3&amp;data=04%7C01%7Cmario.limonciello%40amd.com%7C1f96c7aa37ac4
+> > > >
+> > 7640d6208da0d0efd67%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%
+> > > >
+> > 7C637836655281536690%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwM
+> > > >
+> > DAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=
+> > > >
+> > UkB5lmz1QBUzWVM6%2BuNzJsleP%2Fi%2BDCJJuSgINiNbymo%3D&amp;reserv
+> > > > ed=0
+> > > > > > > > Fixes: 26ad34d510a87 ("PCI / ACPI: Whitelist D3 for more PCIe
+> > hotplug
+> > > > ports")
+> > > > > > > > Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> > > > > > >
+> > > > > > > No more comments from me:
+> > > > > > >
+> > > > > > > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > >
+> > > > > > Or please let me know if I should pick it up.
+> > > > >
+> > > > > Bjorn,
+> > > > >
+> > > > > Friendly reminder on this one.
+> > > >
+> > > > Thanks; we're in the middle of the merge window now, so I'll
+> > > > wait till that's over unless this is an emergency.
+> > >
+> > > Actually it's a pretty important problem.  We waffled on the
+> > > nuts and bolts of this commit during the 5.17 RC's, but I didn't
+> > > think we would make it out to the merge window before it got
+> > > picked.  I guess I should have spoke up on the urgency earlier.
+> > >
+> > > > IIUC the bug this fixes is that "when a bridge is in D3cold,
+> > > > we don't notice when a device is hot-added below it," right?
+> > > > So we need to avoid putting the bridge in D3cold?
+> > >
+> > > When the ASL has been configured this way (to return 0 for _S0W)
+> > > the lower level hardware implementation will lead to hotplugged
+> > > devices not being detected.  Without this commit the hardware
+> > > will expect to be in D0, but the kernel will select D3hot.  So
+> > > yes; the outcome is that hotplugged PCIe devices don't work.
+> > >
+> > > > Is there a typical scenario where this bites users?  I don't
+> > > > think we ever saw an actual problem report?
+> > >
+> > > This is the common way that these systems are being shipped.  I
+> > > have plenty of private reports related to this, but nothing
+> > > public to link to.
+> > 
+> > I still have no clue how many people this affects, what kernel
+> > versions, etc.  If there are no public reports, it suggests that
+> > it doesn't affect distro kernels or production machines yet.
+> > 
+> > Can we at least list some common scenarios?  E.g., it affects
+> > kernels after commit X, or it affects machines with CPUs newer
+> > than Y, or it affects a certain kind of tunneling, etc?  Distros
+> > need this information so they can figure whether and how far to
+> > backport things like this.
 > 
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-> index 519d4b3c9fa0..2010d7f8191f 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
-> @@ -456,6 +456,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
->  				 * and destination addresses are increased
->  				 * by the same portion (data length)
->  				 */
-> +			} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-> +				burst->dar = dst_addr;
->  			}
->  		} else {
->  			burst->dar = dst_addr;
-> @@ -471,6 +473,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
->  				 * and destination addresses are increased
->  				 * by the same portion (data length)
->  				 */
-> +			}  else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-> +				burst->sar = src_addr;
->  			}
->  		}
->  
-> -- 
-> 2.35.1
+> It's going to affect any retail machine with the SOC we refer to in
+> the kernel as "Yellow Carp".  This is one of the first non-Intel
+> USB4 hosts and will be using the USB4 SW CM in the kernel.
 > 
+> Without this change, effectively PCIe tunneling will not work when
+> any downstream PCIe device is hotplugged.  In the right
+> circumstances it might work if it's coldbooted (if the paths
+> selected by the pre-boot firmware connection manager are identical
+> to that selected by SW CM).
+
+Thanks a lot for this context!  As far as I can tell from grubbing
+through the git history, there are no PCI, USB4, or Thunderbolt
+changes related to Yellow Carp, so I assume this has to do with Yellow
+Carp firmware doing things differently than previous platforms.
+
+Previously, if a Root Port implemented the HotPlugSupportInD3
+property, we assumed that the Root Port and any downstream bridges
+could handle hot-plug events while in D3hot.
+
+I guess the difference here is that on Yellow Carp firmware, even if
+there is a HotPlugSupportInD3 property on the Root Port, the Root Port
+cannot handle hot-plug events in D3hot UNLESS there is also an _S0W
+method AND that _S0W says the Root Port can wakeup from D3hot or
+D3cold, right?
+
+I have some heartburn about this that's only partly related to this
+patch.  The Microsoft doc clearly says "HotPlugSupportInD3" must be
+implemented on Root Ports and its presence tells us that the *Root
+Port* can handle hot-plug events while in D3.
+
+But acpi_pci_bridge_d3() looks up the Root Port at the top of the
+hierarchy and assume that its "HotPlugSupportInD3" applies to any
+switch ports that may be below that Root Port (added by 26ad34d510a8
+("PCI / ACPI: Whitelist D3 for more PCIe hotplug ports") [1]).
+
+That seems wrong to me.  How can the platform firmware know how
+downstream switches behave?
+
+I have the same question about this patch because it looks for _S0W on
+the Root Port, even if acpi_pci_bridge_d3() was called for some switch
+port below the root.
+
+> Yellow carp isn't supported in the kernel until 5.14, so should this
+> be backported it shouldn't need to go any further than 5.14.
+> (Realistically though no distro should be on 5.14, they should have
+> gone to the 5.15 LTS).  
+
+The question of moving from v5.14 to v5.15 is outside the scope of
+this patch.  I think we just have to mention Yellow Carp and the way
+its firmware differs from previous practice, and distros can make
+their own decisions.
+
+[1] https://git.kernel.org/linus/26ad34d510a8
