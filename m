@@ -2,137 +2,216 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71670C43217
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Mar 2022 13:16:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A39A7C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Mar 2022 13:56:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352038AbiCYNSL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Mar 2022 09:18:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36676 "EHLO
+        id S1357963AbiCYN5j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Mar 2022 09:57:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354948AbiCYNSH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Mar 2022 09:18:07 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0603CBD2FB;
-        Fri, 25 Mar 2022 06:16:32 -0700 (PDT)
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 22PCgnMY007647;
-        Fri, 25 Mar 2022 13:16:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding; s=pp1;
- bh=8ZcdLk5T0IWhIrLNnnTj9Y2OwBlFiYs41brrdkBEdko=;
- b=sQK209c74tV48cciEReXvyEgGELSrQ7twjHiPG4qZVia/Zx1+849xmUHOvqVrswGfNQF
- I28adDPiaO663ZJ8VfDchCZQE5VHiOUH633dinsuCGxnz1ILWer/U2QoyQbAFFwYk1HY
- Ktp+PGd1187wx6e+kevSgmOAgQVwmDUVYZmFIW+z7kH1uO2Yys4nqCytRcjrkGLd8Q81
- C12I/B5MIL3hAvNpILnO9ITnM9zofjeoQgN2yhlfOjUJ30xth9JwGfutsdBAF4Vnw4dH
- KCUwru062QPuM9wmpIizD/ExKftRvR6vGfev2FMu5VqES6HYNxObcQYVznFxlQ/3txyY wA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3f0prmx4tp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 25 Mar 2022 13:16:29 +0000
-Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 22PCiJsn013398;
-        Fri, 25 Mar 2022 13:16:29 GMT
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3f0prmx4t8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 25 Mar 2022 13:16:29 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 22PDBSNR019024;
-        Fri, 25 Mar 2022 13:16:27 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma05fra.de.ibm.com with ESMTP id 3ew6t9kb85-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 25 Mar 2022 13:16:27 +0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 22PDGOaR43254168
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Mar 2022 13:16:24 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E360D5204F;
-        Fri, 25 Mar 2022 13:16:23 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id ABF555204E;
-        Fri, 25 Mar 2022 13:16:23 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Pierre Morel <pmorel@linux.ibm.com>
-Cc:     linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI: Extend isolated function probing to s390
-Date:   Fri, 25 Mar 2022 14:16:22 +0100
-Message-Id: <20220325131623.4183566-1-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.32.0
+        with ESMTP id S1353781AbiCYN5j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Mar 2022 09:57:39 -0400
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0271D0802;
+        Fri, 25 Mar 2022 06:56:04 -0700 (PDT)
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-2e6650cde1bso83446087b3.12;
+        Fri, 25 Mar 2022 06:56:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=PF/pvAnVHQBRQISxJmprBIcsYSMudqcYszk7AML3ZLI=;
+        b=n8P/51BFnSNUSXgqowieTJVp4/XIW8bumvMMfbfv8KZebQ20pgc0cZsSAfZu5doU7q
+         JImrweZiT9UxwX37iwfQH3IS9ha0NCfp6+4IHyjrQd2AjB3XfqWig1IDI3atRDThRKYZ
+         5rIV3NWPYjlQ1t3RXqyrZm9G0ijRCEN6yYabhd+zEkSLo2F5IstsOutYZ1AgiXNOgxdx
+         Nqpq7RE5nT6rnr9BjM/H+bx0BjPyOO9O6ZYXUXUkkDyj11ufE2RCmRHULNvfH5k/Zg0i
+         xtKHFVSBFrHHNLCbniV/RBlLJooqLBN46gmr4StBL3hHjJUab3um6LdIMUpPGu6CdSxC
+         Donw==
+X-Gm-Message-State: AOAM533BAaelakkgpqBk8SeLUKRFw+ji0swBSH0GQU8Jp/2hqyB9p62C
+        AvhGGz2EqmUwG3N25euk8Vg9WyT/1I/+XMyD99c=
+X-Google-Smtp-Source: ABdhPJxFqAA6th2WKP6PEpU7wg4CeoG0BN+7K2HIHAa01clp5Tgl1g0JaiMPCHnRM4MuRR/JMWRN7yPvHIyWJlRP/MQ=
+X-Received: by 2002:a81:6887:0:b0:2e6:126d:3102 with SMTP id
+ d129-20020a816887000000b002e6126d3102mr10778712ywc.7.1648216562463; Fri, 25
+ Mar 2022 06:56:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: wc8UpLAc3XFaj7s2qD1nz5xypP3dTRhl
-X-Proofpoint-GUID: W6ad6mpEwRUVKfnD-cWRmTp8kHxL2tLV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.850,Hydra:6.0.425,FMLib:17.11.64.514
- definitions=2022-03-25_02,2022-03-24_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- bulkscore=0 malwarescore=0 spamscore=0 adultscore=0 suspectscore=0
- mlxlogscore=847 clxscore=1011 phishscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2203250073
+References: <CAJZ5v0hVFkKXTJcrFqRR4FoK5v_k3zCacKPmurWm=sozt7GPiQ@mail.gmail.com>
+ <20220324185237.GA1466503@bhelgaas> <CAJZ5v0j6xSBgZCWPAbVEK4X0Q8saJe+5xnKcgugA2i2Y5gm3Dw@mail.gmail.com>
+ <BL1PR12MB51578C9CFF18412814C0E94DE2199@BL1PR12MB5157.namprd12.prod.outlook.com>
+In-Reply-To: <BL1PR12MB51578C9CFF18412814C0E94DE2199@BL1PR12MB5157.namprd12.prod.outlook.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 25 Mar 2022 14:55:49 +0100
+Message-ID: <CAJZ5v0jQ0WuDPzm1TJ8DOvMm6Daw-F2Q1ZQVRmwMRgqn1D5THA@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI / ACPI: Assume `HotPlugSupportInD3` only if device
+ can wake from D3
+To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        "Mehta, Sanju" <Sanju.Mehta@amd.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Like the jailhouse hypervisor s390's PCI architecture allows passing
-isolated PCI functions to an OS instance. As of now this is was not
-utilized even with multi-function support as the s390 PCI code makes
-sure that only virtual PCI busses including a function with devfn 0 are
-presented to the PCI subsystem. A subsequent change will remove this
-restriction.
+On Fri, Mar 25, 2022 at 12:13 AM Limonciello, Mario
+<Mario.Limonciello@amd.com> wrote:
+>
+> [Public]
+>
+>
+>
+> > -----Original Message-----
+> > From: Rafael J. Wysocki <rafael@kernel.org>
+> > Sent: Thursday, March 24, 2022 14:10
+> > To: Bjorn Helgaas <helgaas@kernel.org>
+> > Cc: Rafael J. Wysocki <rafael@kernel.org>; Limonciello, Mario
+> > <Mario.Limonciello@amd.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> > open list:PCI SUBSYSTEM <linux-pci@vger.kernel.org>; Linux PM <linux-
+> > pm@vger.kernel.org>; Mehta, Sanju <Sanju.Mehta@amd.com>; Mika
+> > Westerberg <mika.westerberg@linux.intel.com>
+> > Subject: Re: [PATCH v4] PCI / ACPI: Assume `HotPlugSupportInD3` only if
+> > device can wake from D3
+> >
+> > On Thu, Mar 24, 2022 at 7:52 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >
+> > > On Thu, Mar 24, 2022 at 07:31:56PM +0100, Rafael J. Wysocki wrote:
+> > > > On Thu, Mar 24, 2022 at 6:15 PM Limonciello, Mario
+> > > > <Mario.Limonciello@amd.com> wrote:
+> > > > > > -----Original Message-----
+> > > > > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > > > > Sent: Thursday, March 24, 2022 11:35
+> > > > > > To: Limonciello, Mario <Mario.Limonciello@amd.com>
+> > > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>; open list:PCI SUBSYSTEM
+> > <linux-
+> > > > > > pci@vger.kernel.org>; Linux PM <linux-pm@vger.kernel.org>;
+> > Mehta, Sanju
+> > > > > > <Sanju.Mehta@amd.com>; Rafael J. Wysocki <rafael@kernel.org>;
+> > Mika
+> > > > > > Westerberg <mika.westerberg@linux.intel.com>
+> > > > > > Subject: Re: [PATCH v4] PCI / ACPI: Assume `HotPlugSupportInD3`
+> > only if
+> > > > > > device can wake from D3
+> > > > > >
+> > > > > > [+cc Mika, "HotPlugSupportInD3" scope question below]
+> > > > >
+> > > > > FYI - Mika had approved some earlier versions of this, so I expect
+> > conceptual
+> > > > > Alignment at least with the latest one.
+> > > > >
+> > > > > <snip>
+> > > > >
+> > > > > > > > Can we at least list some common scenarios?  E.g., it affects
+> > > > > > > > kernels after commit X, or it affects machines with CPUs newer
+> > > > > > > > than Y, or it affects a certain kind of tunneling, etc?  Distros
+> > > > > > > > need this information so they can figure whether and how far to
+> > > > > > > > backport things like this.
+> > > > > > >
+> > > > > > > It's going to affect any retail machine with the SOC we refer to in
+> > > > > > > the kernel as "Yellow Carp".  This is one of the first non-Intel
+> > > > > > > USB4 hosts and will be using the USB4 SW CM in the kernel.
+> > > > > > >
+> > > > > > > Without this change, effectively PCIe tunneling will not work when
+> > > > > > > any downstream PCIe device is hotplugged.  In the right
+> > > > > > > circumstances it might work if it's coldbooted (if the paths
+> > > > > > > selected by the pre-boot firmware connection manager are
+> > identical
+> > > > > > > to that selected by SW CM).
+> > > > > >
+> > > > > > Thanks a lot for this context!  As far as I can tell from grubbing
+> > > > > > through the git history, there are no PCI, USB4, or Thunderbolt
+> > > > > > changes related to Yellow Carp, so I assume this has to do with Yellow
+> > > > > > Carp firmware doing things differently than previous platforms.
+> > > > >
+> > > > > There have been a variety of Thunderbolt/USB4 changes as a result of
+> > > > > Yellow Carp development and findings, but they have not been quirks;
+> > > > > they have been done as generic changes that still make sense for all
+> > > > > USB4 devices.
+> > > > >
+> > > > > Sanju (on CC) has submitted a majority of these, so if you want to see
+> > > > > a sense of what these are you can look for his commits in
+> > drivers/thunderbolt.
+> > > > >
+> > > > > > Previously, if a Root Port implemented the HotPlugSupportInD3
+> > > > > > property, we assumed that the Root Port and any downstream
+> > bridges
+> > > > > > could handle hot-plug events while in D3hot.
+> > > > > >
+> > > > > > I guess the difference here is that on Yellow Carp firmware, even if
+> > > > > > there is a HotPlugSupportInD3 property on the Root Port, the Root
+> > Port
+> > > > > > cannot handle hot-plug events in D3hot UNLESS there is also an _S0W
+> > > > > > method AND that _S0W says the Root Port can wakeup from D3hot or
+> > > > > > D3cold, right?
+> > > > >
+> > > > > Yes, correct!
+> > > > >
+> > > > > > I have some heartburn about this that's only partly related to this
+> > > > > > patch.  The Microsoft doc clearly says "HotPlugSupportInD3" must be
+> > > > > > implemented on Root Ports and its presence tells us that the *Root
+> > > > > > Port* can handle hot-plug events while in D3.
+> > > > > >
+> > > > > > But acpi_pci_bridge_d3() looks up the Root Port at the top of the
+> > > > > > hierarchy and assume that its "HotPlugSupportInD3" applies to any
+> > > > > > switch ports that may be below that Root Port (added by
+> > 26ad34d510a8
+> > > > > > ("PCI / ACPI: Whitelist D3 for more PCIe hotplug ports") [1]).
+> > > >
+> > > > Not really.
+> > > >
+> > > > "HotPlugSupportInD3" applies to the root port only and the platform
+> > > > firmware may not know about any ports below it.
+> > > >
+> > > > However, the presence of "HotPlugSupportInD3" is used as an indicator
+> > > > that the entire hierarchy is "D3cold-aware", so to speak.
+> > > > Essentially, this boils down to the "Is the hardware modern enough?"
+> > > > consideration and the answer is assumed to be "yes" if the property in
+> > > > question is present for the root port.
+> > >
+> > > Seems weird to me since we're talking about a hot-plug Root Port and
+> > > anything at all could be plugged into it.  We're basically saying that
+> > > we can assume a property of an arbitrary downstream device based on
+> > > something we know about the upstream device.  I'm still not
+> > > comfortable with that.
+> > >
+> > > At a minimum we should add a comment about this assumption.  The
+> > > existing "... we know the hierarchy behind it supports D3 just fine"
+> > > seems a little too strong.
+> > >
+> > > > But if "HotPlugSupportInD3" is not consistent with the other pieces of
+> > > > information regarding the root port available from the firmware (_PRW
+> > > > and _S0W in this particular case), the presence of it is questionable
+> > > > in the first place, so IMO the approach here makes sense.
+> > >
+> > > This part seems reasonable to me, as long as we have good confidence
+> > > that requiring "HotPlugSupportInD3" + _PRW + _S0W where we used to
+> > > require only "HotPlugSupportInD3" is unlikely to break anything.
+> > >
+> > > I can't judge that, but I assume you know that we don't use the
+> > > acpi_pci_bridge_d3() result unless _PRW and _S0W exist, so I'll take
+> > > your word for it :)
+> >
+> > Actually, that is an extremely good point I didn't think about.
+> >
+> > Thinking about it now, one thing is missing: a check if _S0W is
+> > present, because the lack of it means "any power state should be
+> > fine".
+> >
+> > With this check in place we would only avoid taking
+> > "HotPlugSupportInD3" into account if it were not consistent with the
+> > other settings and if that didn't work, we would end up in the quirks
+> > territory this way or another.
+>
+> In that case something like this instead?
 
-Allow probing such functions by replacing the existing check for
-jailhouse_paravirt() with a new hypervisor_isolated_pci_functions()
-helper.
+Works for me.
 
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/pci/probe.c        | 4 ++--
- include/linux/hypervisor.h | 9 +++++++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 17a969942d37..e8fd89a1f984 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2869,11 +2869,11 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- 		nr_devs = pci_scan_slot(bus, devfn);
- 
- 		/*
--		 * The Jailhouse hypervisor may pass individual functions of a
-+		 * Some hypervisors may pass individual functions of a
- 		 * multi-function device to a guest without passing function 0.
- 		 * Look for them as well.
- 		 */
--		if (jailhouse_paravirt() && nr_devs == 0) {
-+		if (hypervisor_isolated_pci_functions() && nr_devs == 0) {
- 			for (fn = 1; fn < 8; fn++) {
- 				dev = pci_scan_single_device(bus, devfn + fn);
- 				if (dev)
-diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
-index fc08b433c856..52abd459f9a3 100644
---- a/include/linux/hypervisor.h
-+++ b/include/linux/hypervisor.h
-@@ -32,4 +32,13 @@ static inline bool jailhouse_paravirt(void)
- 
- #endif /* !CONFIG_X86 */
- 
-+static inline bool hypervisor_isolated_pci_functions(void)
-+{
-+	if (IS_ENABLED(CONFIG_S390))
-+		return true;
-+	else
-+		return jailhouse_paravirt();
-+}
-+
-+
- #endif /* __LINUX_HYPEVISOR_H */
--- 
-2.32.0
-
+> +       if (!adev->wakeup.flags.valid)
+> +               return false;
+> +
+> +       if (ACPI_SUCCESS(acpi_evaluate_integer(adev->handle, "_S0W", NULL, &ret)))
+> +               return ret >= ACPI_STATE_D3_HOT;
+> +
+> +       return true;
