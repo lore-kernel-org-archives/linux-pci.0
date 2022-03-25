@@ -2,146 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A7BC4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Mar 2022 19:39:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99884C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Mar 2022 19:44:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230457AbiCYTkc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Mar 2022 15:40:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44420 "EHLO
+        id S231643AbiCYTpr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Mar 2022 15:45:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233350AbiCYTjw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Mar 2022 15:39:52 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5509E1546A5
-        for <linux-pci@vger.kernel.org>; Fri, 25 Mar 2022 12:12:20 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id h8-20020a25e208000000b00628c0565607so6807581ybe.0
-        for <linux-pci@vger.kernel.org>; Fri, 25 Mar 2022 12:12:20 -0700 (PDT)
+        with ESMTP id S231551AbiCYTpP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Mar 2022 15:45:15 -0400
+Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1BB35F1A5
+        for <linux-pci@vger.kernel.org>; Fri, 25 Mar 2022 12:15:53 -0700 (PDT)
+Received: by mail-io1-xd30.google.com with SMTP id 9so6853020iou.5
+        for <linux-pci@vger.kernel.org>; Fri, 25 Mar 2022 12:15:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=woMjFLNUegNjbJ51x62lvW6UbmQA+Ba7zyUjvkY6YYA=;
-        b=pPUMCEvf8BZ62Y/c+W1qNInLop6JGyWd784jOQMkj1CbDHqg6py/a0QUTHIl90KdK9
-         w8p+a0V9OwXTGRp2ndKsQIWc5a+N8W0cnnGZFdPvIxrlF1S6agDjEDnrq+kop7VArS9W
-         RbYNWRUOGzcuxrBV4L2CC5m9He2upt/Ljn2rs9gmG3kXrsXyBQMYXRw3Gbsg1t4Arnqw
-         Vz5BauwAV3zM0pm0GHPutIyIuVDPFsGPQzM4SkLsQISvm66TNi9ybfRXySbc8zm/ozK8
-         dVwdJktR7GmW3rsxUBUyM3bSBrBGyKaXWu9kydtN+Kk/btVZUC8+M9kY4J9l0j+/DcQR
-         l9Qg==
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kZES9xIl6k9PvYS5MDCMcxY5BJubJIUmZOtDfDfAejs=;
+        b=G+VoHJsNN0ri/JzciH09IIMeE8UG5JI8cQ0Bi+n1qzT1U7e2FvdiZW70FLIX5LIbWI
+         svKvAmULBod057SqPwM+zCt9dYAp0E7Nh0JdjhTVG9zloKwBg15BPF4N174Yjl2eHqiU
+         Eja1GhgO6IYA3dYuZDm+hULboBb7ImzDwWP6ibLR81BotK0HFhHcQr7eqjGNAn/6QD8N
+         cf3yzF+3aj0A8W19SK7cffVZxlCEmuIOwoRdtYQx1DJA7VekL91I6RjMb0Ay0tlkCc4q
+         TOsdigNz7PpG5hQeE8+H3j5DcskDvPL6O6GKWgx8Ks4UFW60VUyt5A1nr+QDjQ5DAiRd
+         1Ocg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=woMjFLNUegNjbJ51x62lvW6UbmQA+Ba7zyUjvkY6YYA=;
-        b=bsprFepp01fowvXqGyBOZ+ex0KySQ6VhygmA7xjY+e3oGG1KbkkEvT/khL0pNz/KBP
-         bWgeJcwmISBYsbavBlQsmyRDihmMHKpIdup0pHbqIUGm3R6axnEpIFIGEmGDW3aM9lsq
-         70MKaIC1AizvhBFuvptIGulJePmETfZYDZdos8IYu+Z+q889Co+Cr7ZXycYj+vK5AHMo
-         3GphxBooUUV0wxJsumtsFm674gzUgIH8Hky/4LUhuJeR4NFIKp5LQujHin8OhfGA7aDN
-         yduTzf4luvLHCKvbCQDdjctJbYiaHCTnoGTRAcaP5j789D1n4naBdLFMEC81rXc3Wfis
-         8aPw==
-X-Gm-Message-State: AOAM531Wi/Iauj5ldwyxLEcY0thKjcudQGc/MOptFq22EggGTqFTtmVM
-        g5W6Fqu6zM9rx/qu1YrYyps8WpvWQfY0
-X-Google-Smtp-Source: ABdhPJyRS7LP7fvCaSt0TldDrztqH9QfayLTVY7BMeLHgtTzqTb9UkZpPGUKvtovyGUbBIdo731RsDJISrP1
-X-Received: from rajat2.mtv.corp.google.com ([2620:15c:202:201:4cfc:6eaf:38d8:46d6])
- (user=rajatja job=sendgmr) by 2002:a81:94d:0:b0:2e5:b91a:195b with SMTP id
- 74-20020a81094d000000b002e5b91a195bmr12106133ywj.44.1648233973993; Fri, 25
- Mar 2022 11:46:13 -0700 (PDT)
-Date:   Fri, 25 Mar 2022 11:46:08 -0700
-Message-Id: <20220325184609.4059963-1-rajatja@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.35.1.1021.g381101b075-goog
-Subject: [PATCH v5 1/2] PCI: ACPI: Support Microsoft's "DmaProperty"
-From:   Rajat Jain <rajatja@google.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=kZES9xIl6k9PvYS5MDCMcxY5BJubJIUmZOtDfDfAejs=;
+        b=2/nieQS5iCNXhW4uL2dSvrwL3QxJwtvCF+TNhbw5xJ6F+zoPZWaktZiAOK57WySNhD
+         wgdQ1PbIs+ACwVqBO9kVDNf2MN23E/at8sRus1BVuWTsZNyYqOmAeJWVmHWpBu/AqcSQ
+         pQV48jGaE/BXHMrDu/3RzxXnpytd530g9LL18x9sdtdMJXHXawxdjNHn7skC/avdaen7
+         vg8ZoW9hmFYAO+ZZtADTZT0k+ddUBPY+JVf2b+xfl7cyZJYjCtwd88zOOnM+VNJROAlb
+         5k37RvfpUdZepLuJZZqaUbPSt7hqpbROwuUZL85R+AGPUdnVKM5/LpVcKHTM4PMrAoEl
+         rckQ==
+X-Gm-Message-State: AOAM531/5RikcrSxxNW2KdQ6VITrBYSkUmhLvBE7yqQJQOm6LPcHR5j7
+        vmh8a4Z3d3yuPILNKrz+3Dp6tnZEiB48
+X-Google-Smtp-Source: ABdhPJxHEq9AiqyZOMWbqRFWmAZeorLFYNmf9U/rZ0ZkWmXSwUxDnbhzMAiXTxAo6JhPvOvZ4DYL7w==
+X-Received: by 2002:a63:77ca:0:b0:386:25a5:5ed with SMTP id s193-20020a6377ca000000b0038625a505edmr649866pgc.30.1648231848826;
+        Fri, 25 Mar 2022 11:10:48 -0700 (PDT)
+Received: from thinkpad ([117.193.209.11])
+        by smtp.gmail.com with ESMTPSA id b16-20020a056a000cd000b004fadb6f0290sm7420435pfv.11.2022.03.25.11.10.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Mar 2022 11:10:48 -0700 (PDT)
+Date:   Fri, 25 Mar 2022 23:40:42 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Pavel Machek <pavel@denx.de>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        iommu@lists.linux-foundation.org
-Cc:     Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        Frank Li <Frank.Li@nxp.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 23/25] dmaengine: dw-edma: Bypass dma-ranges mapping for
+ the local setup
+Message-ID: <20220325181042.GA12218@thinkpad>
+References: <20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru>
+ <20220324014836.19149-24-Sergey.Semin@baikalelectronics.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220324014836.19149-24-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The "DmaProperty" is supported and documented by Microsoft here:
-https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports
-They use this property for DMA protection:
-https://docs.microsoft.com/en-us/windows/security/information-protection/kernel-dma-protection-for-thunderbolt
+On Thu, Mar 24, 2022 at 04:48:34AM +0300, Serge Semin wrote:
+> DW eDMA doesn't perform any translation of the traffic generated on the
+> CPU/Application side. It just generates read/write AXI-bus requests with
+> the specified addresses. But in case if the dma-ranges DT-property is
+> specified for a platform device node, Linux will use it to map the CPU
+> memory regions into the DMAable bus ranges. This isn't what we want for
+> the eDMA embedded into the locally accessed DW PCIe Root Port and
+> End-point. In order to work that around let's set the chan_dma_dev flag
+> for each DW eDMA channel thus forcing the client drivers to getting a
+> custom dma-ranges-less parental device for the mappings.
+> 
+> Note it will only work for the client drivers using the
+> dmaengine_get_dma_device() method to get the parental DMA device.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> ---
+>  drivers/dma/dw-edma/dw-edma-core.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index 72a51970bfba..ca5cd7c99571 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -716,6 +716,21 @@ static int dw_edma_alloc_chan_resources(struct dma_chan *dchan)
+>  	if (chan->status != EDMA_ST_IDLE)
+>  		return -EBUSY;
+>  
+> +	/* Bypass the dma-ranges based memory regions mapping since the
+> +	 * inbound iATU only affects the traffic incoming from the
+> +	 * PCIe bus.
+> +	 */
 
-Support the "DmaProperty" with the same semantics. This is useful for
-internal PCI devices that do not hang off a PCIe rootport, but offer
-an attack surface for DMA attacks (e.g. internal network devices).
+Bypass the dma-ranges based memory regions mapping since eDMA doesn't do any
+address translation for the CPU address?
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
-v5: * Reorder the patches in the series
-v4: * Add the GUID. 
-    * Update the comment and commitlog.
-v3: * Use Microsoft's documented property "DmaProperty"
-    * Resctrict to ACPI only
+Other than this,
 
- drivers/acpi/property.c |  3 +++
- drivers/pci/pci-acpi.c  | 16 ++++++++++++++++
- 2 files changed, 19 insertions(+)
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
-index d0986bda2964..20603cacc28d 100644
---- a/drivers/acpi/property.c
-+++ b/drivers/acpi/property.c
-@@ -48,6 +48,9 @@ static const guid_t prp_guids[] = {
- 	/* Storage device needs D3 GUID: 5025030f-842f-4ab4-a561-99a5189762d0 */
- 	GUID_INIT(0x5025030f, 0x842f, 0x4ab4,
- 		  0xa5, 0x61, 0x99, 0xa5, 0x18, 0x97, 0x62, 0xd0),
-+	/* DmaProperty for PCI devices GUID: 70d24161-6dd5-4c9e-8070-705531292865 */
-+	GUID_INIT(0x70d24161, 0x6dd5, 0x4c9e,
-+		  0x80, 0x70, 0x70, 0x55, 0x31, 0x29, 0x28, 0x65),
- };
- 
- /* ACPI _DSD data subnodes GUID: dbb8e3e6-5886-4ba6-8795-1319f52a966b */
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 1f15ab7eabf8..378e05096c52 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1350,12 +1350,28 @@ static void pci_acpi_set_external_facing(struct pci_dev *dev)
- 		dev->external_facing = 1;
- }
- 
-+static void pci_acpi_check_for_dma_protection(struct pci_dev *dev)
-+{
-+	u8 val;
-+
-+	/*
-+	 * Property also used by Microsoft Windows for same purpose,
-+	 * (to implement DMA protection from a device, using the IOMMU).
-+	 */
-+	if (device_property_read_u8(&dev->dev, "DmaProperty", &val))
-+		return;
-+
-+	if (val)
-+		dev->untrusted = 1;
-+}
-+
- void pci_acpi_setup(struct device *dev, struct acpi_device *adev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 
- 	pci_acpi_optimize_delay(pci_dev, adev->handle);
- 	pci_acpi_set_external_facing(pci_dev);
-+	pci_acpi_check_for_dma_protection(pci_dev);
- 	pci_acpi_add_edr_notifier(pci_dev);
- 
- 	pci_acpi_add_pm_notifier(adev, pci_dev);
--- 
-2.35.1.1021.g381101b075-goog
+Thanks,
+Mani
 
+> +	if (chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> +		dchan->dev->chan_dma_dev = true;
+> +
+> +		dchan->dev->device.dma_coherent = chan->dw->chip->dev->dma_coherent;
+> +		dma_coerce_mask_and_coherent(&dchan->dev->device,
+> +					     dma_get_mask(chan->dw->chip->dev));
+> +		dchan->dev->device.dma_parms = chan->dw->chip->dev->dma_parms;
+> +	} else {
+> +		dchan->dev->chan_dma_dev = false;
+> +	}
+> +
+>  	pm_runtime_get(chan->dw->chip->dev);
+>  
+>  	return 0;
+> -- 
+> 2.35.1
+> 
