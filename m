@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AEFC4167B
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574BBC4167D
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234164AbiCZRKl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 26 Mar 2022 13:10:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49690 "EHLO
+        id S234258AbiCZRKn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Mar 2022 13:10:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231444AbiCZRKd (ORCPT
+        with ESMTP id S233000AbiCZRKd (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Mar 2022 13:10:33 -0400
 Received: from stuerz.xyz (stuerz.xyz [IPv6:2001:19f0:5:15da:5400:3ff:fecc:7379])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD9E134B8C;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADAF634BA0;
         Sat, 26 Mar 2022 10:08:33 -0700 (PDT)
 Received: by stuerz.xyz (Postfix, from userid 114)
-        id 4334DFBAD9; Sat, 26 Mar 2022 16:59:42 +0000 (UTC)
+        id 9D973FBBC6; Sat, 26 Mar 2022 17:00:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648313984; bh=ZCCwstaS3e/RzElmSk6N8DZfvChsgUHfiTuyAGHFjIM=;
+        t=1648314024; bh=gqt1+kI42FGInscQtbmdIv8LY19kdHpeRO5nUSHeT20=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RPrzs+/yoGLnF5i8FE3eP1X0LDAI6HjUCl2gNtzUox5BXq2E1eLaG0a2oQDUzahaT
-         0gGMlEffJt46pJtPLai9sWEfLeEJc0ZkiLQjl90z5wXqO39WLPgg9P+0nGqQNlR+VE
-         nN7gNlVMnnHiadIwoB2jopKAwOZtVz0o85E4m/s4GSh1J5gAC64U4qmHByU3ZdIsMl
-         IQbRWXqcM6M7A5NNiREXc9fr7WuFT0PCxZW7As8ThOCY/cbVQwoBBfePDkYKijEZRF
-         iwxxu2W006Baw3aUGRDQonw5DwZWwCTof+YKKK+wmLsQVqfDYizYB9X3tcxZjF3fCS
-         k/mkV/dFzcSbw==
+        b=yTXX8Igb67dmxs2rI659X8bFPAsNUwM4FYdfBfqYco2pov/ruj2kzZjHBlDxNkm4O
+         YrS0PiktRz+Kr7/aFJY64IZPdRchAc2MJNAASFeANAOToGtmTs60gRB0CWYatC4Yz3
+         1ZJDCGLTP8XgRa8IefeCRaT1qjpCVz5BAAoKiFJF7ShxdKbQMTIX0RodhnN2J11VGs
+         k+N760Wph8Ptz1J0J5ixbFLngT+HQI2/cTFotHxVMERaU8M2LJcQTJ7SxTbMfx5rcP
+         YZNQ2bgzHE4XMRQDQRyA9OuyThOohBO9PlEEpixa0+Wbjl+hLiIIhKEEvfsw9ED24f
+         glh+IX8phWjZw==
 Received: from benni-fedora.. (unknown [IPv6:2a02:8109:a100:1a48:ff0:ef2f:d4da:17d8])
-        by stuerz.xyz (Postfix) with ESMTPSA id 2881DFB7D1;
-        Sat, 26 Mar 2022 16:59:34 +0000 (UTC)
+        by stuerz.xyz (Postfix) with ESMTPSA id A8729FB7D3;
+        Sat, 26 Mar 2022 17:00:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648313980; bh=ZCCwstaS3e/RzElmSk6N8DZfvChsgUHfiTuyAGHFjIM=;
+        t=1648314020; bh=gqt1+kI42FGInscQtbmdIv8LY19kdHpeRO5nUSHeT20=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xIsbMOdfU0Q/V/noYBJTvzmENKQwr3xdCDopx+KQ13tTLqAWk3SM6OL4hiv3VVsu4
-         LZ2+4qV891SizwSAbA9RFdif7Xad8663beBH5K2j13NhHE07xQeDfsOgSqxr/C+za+
-         MSb5j7oij2Jd7DfXjOZjPMiCw0Ou7lQ4TQyPva2bjbz9+bFlJyFVO1bNqQWmVvfeza
-         iheYS8PB8/Na2CaDqA8T7AYheNWnter0biMGLVSYWwaNejld2sHcJuTOq8NLUVbkAH
-         b42QbHz9DPMRS79rba+4qCccBHmJTdFEI0D+LYmCJFkFlO8Nbwc3qJr+SwfiHZOfvp
-         PvjA7XiPr1hCQ==
+        b=cAGmc7q/v70fp/d8OErxnqAUtLx7NZZMJRTXOS0xd3wx/9j3/80aOVZpisTnSXgpD
+         prCgpdgT77LpFvxgJNlKEBWLSBjZ4kxEnRiiQ8dYJXZz/rVa+mwrDqlAxyVCXFhHlW
+         pIK2SHvu+HJwUEPSNGCBAg9W2pTt/tLFKw/zKUqmtezySp/jWWzvO2dxfFwiuWRJ/2
+         xpQDsn76lN3Gog+YDVovDRsTD/FUOFZK+XpCqNI1kFh28CwW7J2ObwhgE7g2W94Ieh
+         euilI5YMx4HWkP8cW5lsUQrviC9YxhnjqgNxitvFz2aa9gpm6UrKMQ8V/jtHu5kgQn
+         iXGM/MCmHVf9Q==
 From:   =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
 To:     andrew@lunn.ch
 Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
@@ -65,9 +65,9 @@ Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
         wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
-Subject: [PATCH 03/22] ia64: Replace comments with C99 initializers
-Date:   Sat, 26 Mar 2022 17:58:50 +0100
-Message-Id: <20220326165909.506926-3-benni@stuerz.xyz>
+Subject: [PATCH 09/22] gpio-winbond: Use C99 initializers
+Date:   Sat, 26 Mar 2022 17:58:56 +0100
+Message-Id: <20220326165909.506926-9-benni@stuerz.xyz>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220326165909.506926-1-benni@stuerz.xyz>
 References: <20220326165909.506926-1-benni@stuerz.xyz>
@@ -83,84 +83,67 @@ initializers because the kernel supports them now.
 
 Signed-off-by: Benjamin Stürz <benni@stuerz.xyz>
 ---
- arch/ia64/kernel/kprobes.c | 64 +++++++++++++++++++-------------------
- 1 file changed, 32 insertions(+), 32 deletions(-)
+ drivers/gpio/gpio-winbond.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/arch/ia64/kernel/kprobes.c b/arch/ia64/kernel/kprobes.c
-index 1a7bab1c5d7c..2d6a9388201e 100644
---- a/arch/ia64/kernel/kprobes.c
-+++ b/arch/ia64/kernel/kprobes.c
-@@ -29,38 +29,38 @@ struct kretprobe_blackpoint kretprobe_blacklist[] = {{NULL, NULL}};
- 
- enum instruction_type {A, I, M, F, B, L, X, u};
- static enum instruction_type bundle_encoding[32][3] = {
--  { M, I, I },				/* 00 */
--  { M, I, I },				/* 01 */
--  { M, I, I },				/* 02 */
--  { M, I, I },				/* 03 */
--  { M, L, X },				/* 04 */
--  { M, L, X },				/* 05 */
--  { u, u, u },  			/* 06 */
--  { u, u, u },  			/* 07 */
--  { M, M, I },				/* 08 */
--  { M, M, I },				/* 09 */
--  { M, M, I },				/* 0A */
--  { M, M, I },				/* 0B */
--  { M, F, I },				/* 0C */
--  { M, F, I },				/* 0D */
--  { M, M, F },				/* 0E */
--  { M, M, F },				/* 0F */
--  { M, I, B },				/* 10 */
--  { M, I, B },				/* 11 */
--  { M, B, B },				/* 12 */
--  { M, B, B },				/* 13 */
--  { u, u, u },  			/* 14 */
--  { u, u, u },  			/* 15 */
--  { B, B, B },				/* 16 */
--  { B, B, B },				/* 17 */
--  { M, M, B },				/* 18 */
--  { M, M, B },				/* 19 */
--  { u, u, u },  			/* 1A */
--  { u, u, u },  			/* 1B */
--  { M, F, B },				/* 1C */
--  { M, F, B },				/* 1D */
--  { u, u, u },  			/* 1E */
--  { u, u, u },  			/* 1F */
-+	[0x00] = { M, I, I },
-+	[0x01] = { M, I, I },
-+	[0x02] = { M, I, I },
-+	[0x03] = { M, I, I },
-+	[0x04] = { M, L, X },
-+	[0x05] = { M, L, X },
-+	[0x06] = { u, u, u },
-+	[0x07] = { u, u, u },
-+	[0x08] = { M, M, I },
-+	[0x09] = { M, M, I },
-+	[0x0A] = { M, M, I },
-+	[0x0B] = { M, M, I },
-+	[0x0C] = { M, F, I },
-+	[0x0D] = { M, F, I },
-+	[0x0E] = { M, M, F },
-+	[0x0F] = { M, M, F },
-+	[0x10] = { M, I, B },
-+	[0x11] = { M, I, B },
-+	[0x12] = { M, B, B },
-+	[0x13] = { M, B, B },
-+	[0x14] = { u, u, u },
-+	[0x15] = { u, u, u },
-+	[0x16] = { B, B, B },
-+	[0x17] = { B, B, B },
-+	[0x18] = { M, M, B },
-+	[0x19] = { M, M, B },
-+	[0x1A] = { u, u, u },
-+	[0x1B] = { u, u, u },
-+	[0x1C] = { M, F, B },
-+	[0x1D] = { M, F, B },
-+	[0x1E] = { u, u, u },
-+	[0x1F] = { u, u, u },
+diff --git a/drivers/gpio/gpio-winbond.c b/drivers/gpio/gpio-winbond.c
+index 7f8f5b02e31d..0b637fdb407c 100644
+--- a/drivers/gpio/gpio-winbond.c
++++ b/drivers/gpio/gpio-winbond.c
+@@ -249,7 +249,7 @@ struct winbond_gpio_info {
  };
  
- /* Insert a long branch code */
+ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+-	{ /* 0 */
++	[0] = {
+ 		.dev = WB_SIO_DEV_GPIO12,
+ 		.enablereg = WB_SIO_GPIO12_REG_ENABLE,
+ 		.enablebit = WB_SIO_GPIO12_ENABLE_1,
+@@ -266,7 +266,7 @@ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+ 			.warnonly = true
+ 		}
+ 	},
+-	{ /* 1 */
++	[1] = {
+ 		.dev = WB_SIO_DEV_GPIO12,
+ 		.enablereg = WB_SIO_GPIO12_REG_ENABLE,
+ 		.enablebit = WB_SIO_GPIO12_ENABLE_2,
+@@ -277,7 +277,7 @@ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+ 		.datareg = WB_SIO_GPIO12_REG_DATA2
+ 		/* special conflict handling so doesn't use conflict data */
+ 	},
+-	{ /* 2 */
++	[2] = {
+ 		.dev = WB_SIO_DEV_GPIO34,
+ 		.enablereg = WB_SIO_GPIO34_REG_ENABLE,
+ 		.enablebit = WB_SIO_GPIO34_ENABLE_3,
+@@ -294,7 +294,7 @@ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+ 			.warnonly = true
+ 		}
+ 	},
+-	{ /* 3 */
++	[3] = {
+ 		.dev = WB_SIO_DEV_GPIO34,
+ 		.enablereg = WB_SIO_GPIO34_REG_ENABLE,
+ 		.enablebit = WB_SIO_GPIO34_ENABLE_4,
+@@ -311,7 +311,7 @@ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+ 			.warnonly = true
+ 		}
+ 	},
+-	{ /* 4 */
++	[4] = {
+ 		.dev = WB_SIO_DEV_WDGPIO56,
+ 		.enablereg = WB_SIO_WDGPIO56_REG_ENABLE,
+ 		.enablebit = WB_SIO_WDGPIO56_ENABLE_5,
+@@ -328,7 +328,7 @@ static const struct winbond_gpio_info winbond_gpio_infos[6] = {
+ 			.warnonly = true
+ 		}
+ 	},
+-	{ /* 5 */
++	[5] = {
+ 		.dev = WB_SIO_DEV_WDGPIO56,
+ 		.enablereg = WB_SIO_WDGPIO56_REG_ENABLE,
+ 		.enablebit = WB_SIO_WDGPIO56_ENABLE_6,
 -- 
 2.35.1
 
