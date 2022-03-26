@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EDFC433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:03:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AEFC4167B
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234277AbiCZRFC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 26 Mar 2022 13:05:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46148 "EHLO
+        id S234164AbiCZRKl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Mar 2022 13:10:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234187AbiCZRDw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Mar 2022 13:03:52 -0400
-Received: from stuerz.xyz (unknown [45.77.206.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE27218114C;
-        Sat, 26 Mar 2022 10:01:50 -0700 (PDT)
+        with ESMTP id S231444AbiCZRKd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Mar 2022 13:10:33 -0400
+Received: from stuerz.xyz (stuerz.xyz [IPv6:2001:19f0:5:15da:5400:3ff:fecc:7379])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD9E134B8C;
+        Sat, 26 Mar 2022 10:08:33 -0700 (PDT)
 Received: by stuerz.xyz (Postfix, from userid 114)
-        id C8712FBC43; Sat, 26 Mar 2022 17:01:48 +0000 (UTC)
+        id 4334DFBAD9; Sat, 26 Mar 2022 16:59:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314109; bh=zpxJ79zszsKX8TM//ybBnHh4vZKZRo3BO9XqXVgJ4hc=;
+        t=1648313984; bh=ZCCwstaS3e/RzElmSk6N8DZfvChsgUHfiTuyAGHFjIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HsVTDpQf8DGOqsdDGkFbM6cftL9a2IWd7w3yL5twO0Xea/Sq+VbjpjORVDuNbuyTA
-         wnv4Y8XfCeTMAnd1InbytVShx+wlT6sQvWDD7UXf78NAl0w8cmGhE7RXMYpKooangs
-         08FqJo+Fse3SDFJCtsipm31nEhBWKHIIhemjbcPo6sRWWLcbGNGindBThcwNG6L4er
-         2mEPoVgp+YfBXlSrM3Y4uNgv0+/y1DKKkh5bFlhFz+f1v9cxDEBuS7AzE/LfqecXV/
-         zCpCKem0vgoGTyFbtDK7XmiO46rYbUofHiz7wSmN0BMUrfwKIJQBJ1JXsiso8cclFQ
-         AJ1jli2/Cvhyw==
+        b=RPrzs+/yoGLnF5i8FE3eP1X0LDAI6HjUCl2gNtzUox5BXq2E1eLaG0a2oQDUzahaT
+         0gGMlEffJt46pJtPLai9sWEfLeEJc0ZkiLQjl90z5wXqO39WLPgg9P+0nGqQNlR+VE
+         nN7gNlVMnnHiadIwoB2jopKAwOZtVz0o85E4m/s4GSh1J5gAC64U4qmHByU3ZdIsMl
+         IQbRWXqcM6M7A5NNiREXc9fr7WuFT0PCxZW7As8ThOCY/cbVQwoBBfePDkYKijEZRF
+         iwxxu2W006Baw3aUGRDQonw5DwZWwCTof+YKKK+wmLsQVqfDYizYB9X3tcxZjF3fCS
+         k/mkV/dFzcSbw==
 Received: from benni-fedora.. (unknown [IPv6:2a02:8109:a100:1a48:ff0:ef2f:d4da:17d8])
-        by stuerz.xyz (Postfix) with ESMTPSA id BF429FBC00;
-        Sat, 26 Mar 2022 17:01:39 +0000 (UTC)
+        by stuerz.xyz (Postfix) with ESMTPSA id 2881DFB7D1;
+        Sat, 26 Mar 2022 16:59:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648314106; bh=zpxJ79zszsKX8TM//ybBnHh4vZKZRo3BO9XqXVgJ4hc=;
+        t=1648313980; bh=ZCCwstaS3e/RzElmSk6N8DZfvChsgUHfiTuyAGHFjIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QFzkX74QwvGJRSAH8nyF07v7tuFcsGUKMAzRbKS3uDpNx91ZpOF5dGe9b+4Bv85yo
-         70jPo5unJpPvS56P8dHLYofQ7y1rDtfgtZk8+TlkYDhfPm9XnE8iB2A8u4L2yM46Fd
-         669OAbDndeFdLy+diF2W2mrLDGyPQUmL0lWs464/oQs9O/bUjXXd/lCo7nLW7pDa79
-         4NOUamqZwEO0a2FO04rW5OgmGgUIdWccKwRJAyvTdnyleVgq8z7hZ9I8rAN6WqHyUw
-         F/tYZ46CRFeXYIzLANoC69PP10fAQQ3dtVOQ2BejnXMk7j3InWh1EUHil7rYDCGUY/
-         fkwZDJ4hUFfnw==
+        b=xIsbMOdfU0Q/V/noYBJTvzmENKQwr3xdCDopx+KQ13tTLqAWk3SM6OL4hiv3VVsu4
+         LZ2+4qV891SizwSAbA9RFdif7Xad8663beBH5K2j13NhHE07xQeDfsOgSqxr/C+za+
+         MSb5j7oij2Jd7DfXjOZjPMiCw0Ou7lQ4TQyPva2bjbz9+bFlJyFVO1bNqQWmVvfeza
+         iheYS8PB8/Na2CaDqA8T7AYheNWnter0biMGLVSYWwaNejld2sHcJuTOq8NLUVbkAH
+         b42QbHz9DPMRS79rba+4qCccBHmJTdFEI0D+LYmCJFkFlO8Nbwc3qJr+SwfiHZOfvp
+         PvjA7XiPr1hCQ==
 From:   =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
 To:     andrew@lunn.ch
 Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
@@ -65,9 +65,9 @@ Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
         wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
-Subject: [PATCH 22/22] pci: Replace comments with C99 initializers
-Date:   Sat, 26 Mar 2022 17:59:09 +0100
-Message-Id: <20220326165909.506926-22-benni@stuerz.xyz>
+Subject: [PATCH 03/22] ia64: Replace comments with C99 initializers
+Date:   Sat, 26 Mar 2022 17:58:50 +0100
+Message-Id: <20220326165909.506926-3-benni@stuerz.xyz>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220326165909.506926-1-benni@stuerz.xyz>
 References: <20220326165909.506926-1-benni@stuerz.xyz>
@@ -83,147 +83,84 @@ initializers because the kernel supports them now.
 
 Signed-off-by: Benjamin Stürz <benni@stuerz.xyz>
 ---
- drivers/pci/probe.c | 116 ++++++++++++++++++++++----------------------
- 1 file changed, 58 insertions(+), 58 deletions(-)
+ arch/ia64/kernel/kprobes.c | 64 +++++++++++++++++++-------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 17a969942d37..3de27b0765c8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -653,42 +653,42 @@ EXPORT_SYMBOL(pci_free_host_bridge);
-
- /* Indexed by PCI_X_SSTATUS_FREQ (secondary bus mode and frequency) */
- static const unsigned char pcix_bus_speed[] = {
--	PCI_SPEED_UNKNOWN,		/* 0 */
--	PCI_SPEED_66MHz_PCIX,		/* 1 */
--	PCI_SPEED_100MHz_PCIX,		/* 2 */
--	PCI_SPEED_133MHz_PCIX,		/* 3 */
--	PCI_SPEED_UNKNOWN,		/* 4 */
--	PCI_SPEED_66MHz_PCIX_ECC,	/* 5 */
--	PCI_SPEED_100MHz_PCIX_ECC,	/* 6 */
--	PCI_SPEED_133MHz_PCIX_ECC,	/* 7 */
--	PCI_SPEED_UNKNOWN,		/* 8 */
--	PCI_SPEED_66MHz_PCIX_266,	/* 9 */
--	PCI_SPEED_100MHz_PCIX_266,	/* A */
--	PCI_SPEED_133MHz_PCIX_266,	/* B */
--	PCI_SPEED_UNKNOWN,		/* C */
--	PCI_SPEED_66MHz_PCIX_533,	/* D */
--	PCI_SPEED_100MHz_PCIX_533,	/* E */
--	PCI_SPEED_133MHz_PCIX_533	/* F */
-+	[0x0] = PCI_SPEED_UNKNOWN,
-+	[0x1] = PCI_SPEED_66MHz_PCIX,
-+	[0x2] = PCI_SPEED_100MHz_PCIX,
-+	[0x3] = PCI_SPEED_133MHz_PCIX,
-+	[0x4] = PCI_SPEED_UNKNOWN,
-+	[0x5] = PCI_SPEED_66MHz_PCIX_ECC,
-+	[0x6] = PCI_SPEED_100MHz_PCIX_ECC,
-+	[0x7] = PCI_SPEED_133MHz_PCIX_ECC,
-+	[0x8] = PCI_SPEED_UNKNOWN,
-+	[0x9] = PCI_SPEED_66MHz_PCIX_266,
-+	[0xA] = PCI_SPEED_100MHz_PCIX_266,
-+	[0xB] = PCI_SPEED_133MHz_PCIX_266,
-+	[0xC] = PCI_SPEED_UNKNOWN,
-+	[0xD] = PCI_SPEED_66MHz_PCIX_533,
-+	[0xE] = PCI_SPEED_100MHz_PCIX_533,
-+	[0xF] = PCI_SPEED_133MHz_PCIX_533
+diff --git a/arch/ia64/kernel/kprobes.c b/arch/ia64/kernel/kprobes.c
+index 1a7bab1c5d7c..2d6a9388201e 100644
+--- a/arch/ia64/kernel/kprobes.c
++++ b/arch/ia64/kernel/kprobes.c
+@@ -29,38 +29,38 @@ struct kretprobe_blackpoint kretprobe_blacklist[] = {{NULL, NULL}};
+ 
+ enum instruction_type {A, I, M, F, B, L, X, u};
+ static enum instruction_type bundle_encoding[32][3] = {
+-  { M, I, I },				/* 00 */
+-  { M, I, I },				/* 01 */
+-  { M, I, I },				/* 02 */
+-  { M, I, I },				/* 03 */
+-  { M, L, X },				/* 04 */
+-  { M, L, X },				/* 05 */
+-  { u, u, u },  			/* 06 */
+-  { u, u, u },  			/* 07 */
+-  { M, M, I },				/* 08 */
+-  { M, M, I },				/* 09 */
+-  { M, M, I },				/* 0A */
+-  { M, M, I },				/* 0B */
+-  { M, F, I },				/* 0C */
+-  { M, F, I },				/* 0D */
+-  { M, M, F },				/* 0E */
+-  { M, M, F },				/* 0F */
+-  { M, I, B },				/* 10 */
+-  { M, I, B },				/* 11 */
+-  { M, B, B },				/* 12 */
+-  { M, B, B },				/* 13 */
+-  { u, u, u },  			/* 14 */
+-  { u, u, u },  			/* 15 */
+-  { B, B, B },				/* 16 */
+-  { B, B, B },				/* 17 */
+-  { M, M, B },				/* 18 */
+-  { M, M, B },				/* 19 */
+-  { u, u, u },  			/* 1A */
+-  { u, u, u },  			/* 1B */
+-  { M, F, B },				/* 1C */
+-  { M, F, B },				/* 1D */
+-  { u, u, u },  			/* 1E */
+-  { u, u, u },  			/* 1F */
++	[0x00] = { M, I, I },
++	[0x01] = { M, I, I },
++	[0x02] = { M, I, I },
++	[0x03] = { M, I, I },
++	[0x04] = { M, L, X },
++	[0x05] = { M, L, X },
++	[0x06] = { u, u, u },
++	[0x07] = { u, u, u },
++	[0x08] = { M, M, I },
++	[0x09] = { M, M, I },
++	[0x0A] = { M, M, I },
++	[0x0B] = { M, M, I },
++	[0x0C] = { M, F, I },
++	[0x0D] = { M, F, I },
++	[0x0E] = { M, M, F },
++	[0x0F] = { M, M, F },
++	[0x10] = { M, I, B },
++	[0x11] = { M, I, B },
++	[0x12] = { M, B, B },
++	[0x13] = { M, B, B },
++	[0x14] = { u, u, u },
++	[0x15] = { u, u, u },
++	[0x16] = { B, B, B },
++	[0x17] = { B, B, B },
++	[0x18] = { M, M, B },
++	[0x19] = { M, M, B },
++	[0x1A] = { u, u, u },
++	[0x1B] = { u, u, u },
++	[0x1C] = { M, F, B },
++	[0x1D] = { M, F, B },
++	[0x1E] = { u, u, u },
++	[0x1F] = { u, u, u },
  };
-
- /* Indexed by PCI_EXP_LNKCAP_SLS, PCI_EXP_LNKSTA_CLS */
- const unsigned char pcie_link_speed[] = {
--	PCI_SPEED_UNKNOWN,		/* 0 */
--	PCIE_SPEED_2_5GT,		/* 1 */
--	PCIE_SPEED_5_0GT,		/* 2 */
--	PCIE_SPEED_8_0GT,		/* 3 */
--	PCIE_SPEED_16_0GT,		/* 4 */
--	PCIE_SPEED_32_0GT,		/* 5 */
--	PCIE_SPEED_64_0GT,		/* 6 */
--	PCI_SPEED_UNKNOWN,		/* 7 */
--	PCI_SPEED_UNKNOWN,		/* 8 */
--	PCI_SPEED_UNKNOWN,		/* 9 */
--	PCI_SPEED_UNKNOWN,		/* A */
--	PCI_SPEED_UNKNOWN,		/* B */
--	PCI_SPEED_UNKNOWN,		/* C */
--	PCI_SPEED_UNKNOWN,		/* D */
--	PCI_SPEED_UNKNOWN,		/* E */
--	PCI_SPEED_UNKNOWN		/* F */
-+	[0x0] = PCI_SPEED_UNKNOWN,
-+	[0x1] = PCIE_SPEED_2_5GT,
-+	[0x2] = PCIE_SPEED_5_0GT,
-+	[0x3] = PCIE_SPEED_8_0GT,
-+	[0x4] = PCIE_SPEED_16_0GT,
-+	[0x5] = PCIE_SPEED_32_0GT,
-+	[0x6] = PCIE_SPEED_64_0GT,
-+	[0x7] = PCI_SPEED_UNKNOWN,
-+	[0x8] = PCI_SPEED_UNKNOWN,
-+	[0x9] = PCI_SPEED_UNKNOWN,
-+	[0xA] = PCI_SPEED_UNKNOWN,
-+	[0xB] = PCI_SPEED_UNKNOWN,
-+	[0xC] = PCI_SPEED_UNKNOWN,
-+	[0xD] = PCI_SPEED_UNKNOWN,
-+	[0xE] = PCI_SPEED_UNKNOWN,
-+	[0xF] = PCI_SPEED_UNKNOWN
- };
- EXPORT_SYMBOL_GPL(pcie_link_speed);
-
-@@ -696,32 +696,32 @@ const char *pci_speed_string(enum pci_bus_speed speed)
- {
- 	/* Indexed by the pci_bus_speed enum */
- 	static const char *speed_strings[] = {
--	    "33 MHz PCI",		/* 0x00 */
--	    "66 MHz PCI",		/* 0x01 */
--	    "66 MHz PCI-X",		/* 0x02 */
--	    "100 MHz PCI-X",		/* 0x03 */
--	    "133 MHz PCI-X",		/* 0x04 */
--	    NULL,			/* 0x05 */
--	    NULL,			/* 0x06 */
--	    NULL,			/* 0x07 */
--	    NULL,			/* 0x08 */
--	    "66 MHz PCI-X 266",		/* 0x09 */
--	    "100 MHz PCI-X 266",	/* 0x0a */
--	    "133 MHz PCI-X 266",	/* 0x0b */
--	    "Unknown AGP",		/* 0x0c */
--	    "1x AGP",			/* 0x0d */
--	    "2x AGP",			/* 0x0e */
--	    "4x AGP",			/* 0x0f */
--	    "8x AGP",			/* 0x10 */
--	    "66 MHz PCI-X 533",		/* 0x11 */
--	    "100 MHz PCI-X 533",	/* 0x12 */
--	    "133 MHz PCI-X 533",	/* 0x13 */
--	    "2.5 GT/s PCIe",		/* 0x14 */
--	    "5.0 GT/s PCIe",		/* 0x15 */
--	    "8.0 GT/s PCIe",		/* 0x16 */
--	    "16.0 GT/s PCIe",		/* 0x17 */
--	    "32.0 GT/s PCIe",		/* 0x18 */
--	    "64.0 GT/s PCIe",		/* 0x19 */
-+		[0x00] = "33 MHz PCI",
-+		[0x01] = "66 MHz PCI",
-+		[0x02] = "66 MHz PCI-X",
-+		[0x03] = "100 MHz PCI-X",
-+		[0x04] = "133 MHz PCI-X",
-+		[0x05] = NULL,
-+		[0x06] = NULL,
-+		[0x07] = NULL,
-+		[0x08] = NULL,
-+		[0x09] = "66 MHz PCI-X 266",
-+		[0x0a] = "100 MHz PCI-X 266",
-+		[0x0b] = "133 MHz PCI-X 266",
-+		[0x0c] = "Unknown AGP",
-+		[0x0d] = "1x AGP",
-+		[0x0e] = "2x AGP",
-+		[0x0f] = "4x AGP",
-+		[0x10] = "8x AGP",
-+		[0x11] = "66 MHz PCI-X 533",
-+		[0x12] = "100 MHz PCI-X 533",
-+		[0x13] = "133 MHz PCI-X 533",
-+		[0x14] = "2.5 GT/s PCIe",
-+		[0x15] = "5.0 GT/s PCIe",
-+		[0x16] = "8.0 GT/s PCIe",
-+		[0x17] = "16.0 GT/s PCIe",
-+		[0x18] = "32.0 GT/s PCIe",
-+		[0x19] = "64.0 GT/s PCIe",
- 	};
-
- 	if (speed < ARRAY_SIZE(speed_strings))
---
+ 
+ /* Insert a long branch code */
+-- 
 2.35.1
 
