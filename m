@@ -2,41 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06058C433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E52C43217
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Mar 2022 17:09:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234287AbiCZRKp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 26 Mar 2022 13:10:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49692 "EHLO
+        id S234187AbiCZRKl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Mar 2022 13:10:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232932AbiCZRKd (ORCPT
+        with ESMTP id S233183AbiCZRKd (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Mar 2022 13:10:33 -0400
 Received: from stuerz.xyz (unknown [45.77.206.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADA4734B96;
-        Sat, 26 Mar 2022 10:08:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADC3834BB2;
+        Sat, 26 Mar 2022 10:08:34 -0700 (PDT)
 Received: by stuerz.xyz (Postfix, from userid 114)
-        id 15FDCFB7E4; Sat, 26 Mar 2022 16:59:29 +0000 (UTC)
+        id 1BDFDFB7F0; Sat, 26 Mar 2022 17:00:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648313971; bh=h8kNuGjX/tVaFYP7mTBrGXI49VfH81tUX/xpUFBsyPo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=quzw4Veqn1t75q8i+SwY92Od0H4kbj+Jplj+Hrb9t/pLmlKsT6TJwKYv9o17XTzCA
-         3n4+kjK3LG/omELSm+sodJ7uUl4FaExNJQFo4XQbw2amIsW408Doe+3AErNNJZpImZ
-         lx7AVbydSYoFr2bJYXUKmyssrinBABDWXfDrQufUX+8e9VArBlaTIJ/bN2K5xyVq+w
-         0p7uHbBGHtyMHQgqTwLQnNn16UdQEjGi85LRaznlxiosXx3mrR8DCIsPHQcZtPldiM
-         dmTbc/27NaJUevsVWuBjG4Qlevt2k5gOfZ0u7u+jCoIZM3SSZM+fmuEdmLFHsnsnPg
-         mGpj42WHbwZ4g==
+        t=1648314011; bh=l2IWPCqMKAH1wZwiF0dTGCOb58JalsVJpSOVxVm/2R4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=gSyHP6UPnBkUn1Chdy/s4X9uHp781E+8d6F5cRNIsxBl9MYj3z0/VWq/LLj8uvhP6
+         G9BpWOZQp8ADyNQweuoAmwt4sIVZDPSixyqGflK99Mgmawkh3LHevbSJKqHDEP/EbA
+         RAvRDg7+aqFjdEuSShb5aq799ptd3pR1EcvVIIyc0pkJy0XUJiraUa0jyeI3d9rkH0
+         If3fQ4h62IO+SCqhV4hBA6To4f4P/bcAw1KS9JqFzHkHIG8TOyc+SzIcXS/Gn17lLJ
+         y/AI3WEnypyXGrYcZrek9bsMo05m7xqXupQY6mo2AsiuvcdWUcmzHOXSKOWfCvtZ4s
+         WRaak/odSHv3A==
 Received: from benni-fedora.. (unknown [IPv6:2a02:8109:a100:1a48:ff0:ef2f:d4da:17d8])
-        by stuerz.xyz (Postfix) with ESMTPSA id 06801FB7CA;
-        Sat, 26 Mar 2022 16:59:20 +0000 (UTC)
+        by stuerz.xyz (Postfix) with ESMTPSA id 8A2E4FB7F0;
+        Sat, 26 Mar 2022 17:00:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=stuerz.xyz; s=mail;
-        t=1648313967; bh=h8kNuGjX/tVaFYP7mTBrGXI49VfH81tUX/xpUFBsyPo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=vaoJWTFzm8MRCBX+7S85u4Wohc5rAbjDG2T7E8DUltJLkf/krkoSBna4S3pqS99En
-         P3y6O3CiGyfogbGETepdGKzgpDN0QtHf35//97zogTn2Hce6o6WZ17BRWG3tApzQGf
-         aNIkiZhaEmddVF8juLhl42fQ5bbgbuzhcq0ukey1NN8t0guq0sCG3i6sPdM3bYC1U6
-         aU6BRZFuKP75AmwaGReNRozzsPCzJxq44tCraR+Ll6KCKwir1BEUti16KlHrTphFJy
-         +nuQ/wPjFpAX6QV3asHxC7dOJgBXo+wgnEZXWOiibQ9bZKvgZVBmA4ga1hsVtcewJL
-         xOc6w0OY3ukmA==
+        t=1648314006; bh=l2IWPCqMKAH1wZwiF0dTGCOb58JalsVJpSOVxVm/2R4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=AlPQwI4EjIDelvb9sF4uDVI7otwpQbfj6RKPYToutjnNxpt0yUwy6L1o6fhnNHML9
+         IjOis25yddnKqT80p+JWkf7ie89Xz7ikPFa9eBWuVuoF28nvHT1nR0QaA8QlkLcfNz
+         F++j1fFs+aEl1i2sLaj1VYlzUHQmtbV9jYG+n2TIzspceQ9ZiRO/3Me6/w9bom7+gQ
+         57DAah7Nc1+01euyOmq0lMuDaWE6c/rM7RVHF+4v9hyADnsn7DtPxXibgKxlwELAkJ
+         UBq3OD6Znyd/f15ARdsj2BbQPazIQ/WzcxiztoaGbrmnub0K3If1/KcHDORBXtoROm
+         Vx8E2Z8ecrAMw==
 From:   =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
 To:     andrew@lunn.ch
 Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
@@ -65,10 +65,12 @@ Cc:     sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
         wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Benjamin=20St=C3=BCrz?= <benni@stuerz.xyz>
-Subject: [PATCH 01/22] orion5x: Replace comments with C99 initializers
-Date:   Sat, 26 Mar 2022 17:58:48 +0100
-Message-Id: <20220326165909.506926-1-benni@stuerz.xyz>
+Subject: [PATCH 07/22] cm4000: Replace comments with C99 initializers
+Date:   Sat, 26 Mar 2022 17:58:54 +0100
+Message-Id: <20220326165909.506926-7-benni@stuerz.xyz>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220326165909.506926-1-benni@stuerz.xyz>
+References: <20220326165909.506926-1-benni@stuerz.xyz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -81,26 +83,44 @@ initializers because the kernel supports them now.
 
 Signed-off-by: Benjamin Stürz <benni@stuerz.xyz>
 ---
- arch/arm/mach-orion5x/dns323-setup.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/char/pcmcia/cm4000_cs.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/arch/arm/mach-orion5x/dns323-setup.c b/arch/arm/mach-orion5x/dns323-setup.c
-index 87cb47220e82..d762248c6512 100644
---- a/arch/arm/mach-orion5x/dns323-setup.c
-+++ b/arch/arm/mach-orion5x/dns323-setup.c
-@@ -61,9 +61,9 @@
- 
- /* Exposed to userspace, do not change */
- enum {
--	DNS323_REV_A1,	/* 0 */
--	DNS323_REV_B1,	/* 1 */
--	DNS323_REV_C1,	/* 2 */
-+	DNS323_REV_A1 = 0,
-+	DNS323_REV_B1 = 1,
-+	DNS323_REV_C1 = 2,
+diff --git a/drivers/char/pcmcia/cm4000_cs.c b/drivers/char/pcmcia/cm4000_cs.c
+index adaec8fd4b16..8082025ab5b7 100644
+--- a/drivers/char/pcmcia/cm4000_cs.c
++++ b/drivers/char/pcmcia/cm4000_cs.c
+@@ -153,18 +153,18 @@ static struct class *cmm_class;
+  * violates process/coding-style.rst.  However, I don't really think wrapping it around will
+  * make it any clearer to read -HW */
+ static unsigned char fi_di_table[10][14] = {
+-/*FI     00   01   02   03   04   05   06   07   08   09   10   11   12   13 */
+-/*DI */
+-/* 0 */ {0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11},
+-/* 1 */ {0x01,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x91,0x11,0x11,0x11,0x11},
+-/* 2 */ {0x02,0x12,0x22,0x32,0x11,0x11,0x11,0x11,0x11,0x92,0xA2,0xB2,0x11,0x11},
+-/* 3 */ {0x03,0x13,0x23,0x33,0x43,0x53,0x63,0x11,0x11,0x93,0xA3,0xB3,0xC3,0xD3},
+-/* 4 */ {0x04,0x14,0x24,0x34,0x44,0x54,0x64,0x11,0x11,0x94,0xA4,0xB4,0xC4,0xD4},
+-/* 5 */ {0x00,0x15,0x25,0x35,0x45,0x55,0x65,0x11,0x11,0x95,0xA5,0xB5,0xC5,0xD5},
+-/* 6 */ {0x06,0x16,0x26,0x36,0x46,0x56,0x66,0x11,0x11,0x96,0xA6,0xB6,0xC6,0xD6},
+-/* 7 */ {0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11},
+-/* 8 */ {0x08,0x11,0x28,0x38,0x48,0x58,0x68,0x11,0x11,0x98,0xA8,0xB8,0xC8,0xD8},
+-/* 9 */ {0x09,0x19,0x29,0x39,0x49,0x59,0x69,0x11,0x11,0x99,0xA9,0xB9,0xC9,0xD9}
++/*  FI     00   01   02   03   04   05   06   07   08   09   10   11   12   13 */
++/*  DI */
++	[0] = {0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11},
++	[1] = {0x01,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x91,0x11,0x11,0x11,0x11},
++	[2] = {0x02,0x12,0x22,0x32,0x11,0x11,0x11,0x11,0x11,0x92,0xA2,0xB2,0x11,0x11},
++	[3] = {0x03,0x13,0x23,0x33,0x43,0x53,0x63,0x11,0x11,0x93,0xA3,0xB3,0xC3,0xD3},
++	[4] = {0x04,0x14,0x24,0x34,0x44,0x54,0x64,0x11,0x11,0x94,0xA4,0xB4,0xC4,0xD4},
++	[5] = {0x00,0x15,0x25,0x35,0x45,0x55,0x65,0x11,0x11,0x95,0xA5,0xB5,0xC5,0xD5},
++	[6] = {0x06,0x16,0x26,0x36,0x46,0x56,0x66,0x11,0x11,0x96,0xA6,0xB6,0xC6,0xD6},
++	[7] = {0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11},
++	[8] = {0x08,0x11,0x28,0x38,0x48,0x58,0x68,0x11,0x11,0x98,0xA8,0xB8,0xC8,0xD8},
++	[9] = {0x09,0x19,0x29,0x39,0x49,0x59,0x69,0x11,0x11,0x99,0xA9,0xB9,0xC9,0xD9}
  };
  
- 
+ #ifndef CM4000_DEBUG
 -- 
 2.35.1
 
