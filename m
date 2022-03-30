@@ -2,126 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7BBFC433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 14:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C9F7C433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 14:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346596AbiC3OKS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Mar 2022 10:10:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36842 "EHLO
+        id S1347058AbiC3Op0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Mar 2022 10:45:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344087AbiC3OKS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 10:10:18 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E69E7197FAE;
-        Wed, 30 Mar 2022 07:08:31 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id b19so29445448wrh.11;
-        Wed, 30 Mar 2022 07:08:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qMb8I9yb8zXna+ph82rtTSaTfX9Wmxw5201Wn2H77RE=;
-        b=j2XmH+NydNmOeH96zyWRc8tcCxM54QYx85qeir6RyQS/AJ9/ROnsaB/AjQKjZd8lfA
-         x4ggAK3oLlX38GeDfLZR+ovA6iyoYHN3NOm7aWgoERCEoAbG1fx1jfV/yVt7fDEoJKPI
-         mciVIjPyTcyrxV5kV+EBxIEIpnlb02WGlr7KgDf8thIx/xDM+sfe7dkQyaSZrqSJ3Lcu
-         SKUZmc6/Q2iOHo030H5/bUKxsjjZYRp4JuKHQC+4lZJ+Jd6Y9+UqV3QC1fbuDOfldgi4
-         yRhP4w8q6GXtTOu+1iA/vQJLpNfyd4bFf28j8NfM3HaJYnNrT3UzBPurd2TwK0f5URKp
-         /pyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=qMb8I9yb8zXna+ph82rtTSaTfX9Wmxw5201Wn2H77RE=;
-        b=Ki1SrBlrUFAGwrL22N4J7mHNzOVkQhKnE5nka+0DcQYYpDCVWyBn1rarWihOXV1PLp
-         rr3SwcfWN+Whi3sIspEOscMigmet+DyqXURM7oVtKcto5/9OfEQKSSStAnD/48tXLX/6
-         HgyqdUczkOV49FHycwFLD4t6++SiVzDVHQW0hrRm1srTtgmPASrmjwIkmDir9vMi/cmf
-         PXzQ9FnNe3cBGY2MQcl0sCg5RCbab6TlRUzDLYo/2z20lw/3eMsNsqJYOZd8HozjqrHp
-         KeY7BiTkptL+f9Skh2dX7lNq3wS24ge2uj2jNrQLhJHeErMO0fNigqht7ZoRW9XCRA5x
-         QyKQ==
-X-Gm-Message-State: AOAM532wzX487ixF6iTUE4hxSRD8gyOUhz1SasKra1vufk0Fx99CHLQk
-        UmgoLxTpVTmcSLsjR5R+QCyY/sHMjMNHZg==
-X-Google-Smtp-Source: ABdhPJzxinf0tXRpnGQ8FeOLnI56RGRfyhOPiP5IL4JxY0Sj2ZHKcj3xgYZqU0qf+zxt28BK3bt6Pg==
-X-Received: by 2002:a5d:59a3:0:b0:203:d9fa:6968 with SMTP id p3-20020a5d59a3000000b00203d9fa6968mr36695096wrr.585.1648649309992;
-        Wed, 30 Mar 2022 07:08:29 -0700 (PDT)
-Received: from Dev-shlomop.pliops.ent (bzq-219-32-62.isdn.bezeqint.net. [62.219.32.62])
-        by smtp.googlemail.com with ESMTPSA id 14-20020a056000154e00b00203f8adde0csm22272782wry.32.2022.03.30.07.08.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Mar 2022 07:08:29 -0700 (PDT)
-From:   Shlomo Pongratz <shlomopongratz@gmail.com>
-X-Google-Original-From: Shlomo Pongratz <shlomop@pliops.com>
-To:     linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, andrew.maier@eideticom.com,
-        logang@deltatee.com, bhelgaas@google.com, jgg@nvidia.com,
-        helgaas@kernel.org, Shlomo Pongratz <shlomop@pliops.com>
-Subject: [PATCH V4 1/1] Intel Sky Lake-E host root ports check.
-Date:   Wed, 30 Mar 2022 17:08:23 +0300
-Message-Id: <20220330140823.28826-2-shlomop@pliops.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220330140823.28826-1-shlomop@pliops.com>
-References: <20220330140823.28826-1-shlomop@pliops.com>
+        with ESMTP id S239909AbiC3OpZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 10:45:25 -0400
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 00A385BD14;
+        Wed, 30 Mar 2022 07:43:34 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 17BC816AA;
+        Wed, 30 Mar 2022 17:43:37 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 17BC816AA
+Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 30 Mar 2022 17:43:32 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        <linux-clk@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-mips@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 2/4] clk: baikal-t1: Define shared xGMAC ref/ptp clocks parent
+Date:   Wed, 30 Mar 2022 17:43:18 +0300
+Message-ID: <20220330144320.27039-3-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220330144320.27039-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220330144320.27039-1-Sergey.Semin@baikalelectronics.ru>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to
-the whitelist")
-Andrew Maier added the Sky Lake-E additional devices
-2031, 2032 and 2033 root ports to the already existing 2030 device.
+Baikal-T1 CCU reference manual says that both xGMAC reference and xGMAC
+PTP clocks are generated by two different wrappers with the same constant
+divider thus each producing a 156.25 MHz signal. But for some reason both
+of these clock sources are gated by a single switch-flag in the CCU
+registers space - CCU_SYS_XGMAC_BASE.BIT(0). In order to make the clocks
+handled independently we need to define a shared parental gate so the base
+clock signal would be switched off only if both of the child-clocks are
+disabled.
 
-The Intel devices 2030, 2031, 2032 and 2033 which are root ports A, B, C and D,
-respectively and if all exist they will occupy slots 0 till 3 in that order.
-
-The original code handled only the case where the devices in the whiltlist are
-host bridges and assumed that they will be found on slot 0.
-
-This assumption doesn't hold for root ports so an explicit test was added to
-cover this case.
-
-Signed-off-by: Shlomo Pongratz <shlomop@pliops.com>
+Fixes: 353afa3a8d2e ("clk: Add Baikal-T1 CCU Dividers driver")
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/pci/p2pdma.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/clk/baikal-t1/ccu-div.c     | 1 +
+ drivers/clk/baikal-t1/ccu-div.h     | 6 ++++++
+ drivers/clk/baikal-t1/clk-ccu-div.c | 8 +++++---
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 30b1df3c9d2f..107905dfa229 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -327,15 +327,18 @@ static const struct pci_p2pdma_whitelist_entry {
+diff --git a/drivers/clk/baikal-t1/ccu-div.c b/drivers/clk/baikal-t1/ccu-div.c
+index 4062092d67f9..bbfa3526ee10 100644
+--- a/drivers/clk/baikal-t1/ccu-div.c
++++ b/drivers/clk/baikal-t1/ccu-div.c
+@@ -579,6 +579,7 @@ struct ccu_div *ccu_div_hw_register(const struct ccu_div_init_data *div_init)
+ 		goto err_free_div;
+ 	}
+ 	parent_data.fw_name = div_init->parent_name;
++	parent_data.name = div_init->parent_name;
+ 	hw_init.parent_data = &parent_data;
+ 	hw_init.num_parents = 1;
  
- /*
-  * This lookup function tries to find the PCI device corresponding to a given
-- * host bridge.
-+ * host bridge or a root port.
-  *
-  * It assumes the host bridge device is the first PCI device in the
-- * bus->devices list and that the devfn is 00.0. These assumptions should hold
-- * for all the devices in the whitelist above.
-+ * bus->devices list and that the devfn is 00.0. The first assumption should
-+ * hold for all the devices in the whitelist above, however the second one
-+ * doesn't always holds for root ports, for example Intel SkyLake-E devices
-+ * 2030, 2031, 2032 and 2033 which are root ports (A, B, C and D respectively).
-+ * So being a root port is checked explicitly.
-  *
-- * This function is equivalent to pci_get_slot(host->bus, 0), however it does
-- * not take the pci_bus_sem lock seeing __host_bridge_whitelist() must not
-- * sleep.
-+ * This function is equivalent to pci_get_slot(host->bus, 0) (except for
-+ * the root port test), however it does not take the pci_bus_sem lock seeing
-+ * __host_bridge_whitelist() must not sleep.
-  *
-  * For this to be safe, the caller should hold a reference to a device on the
-  * bridge, which should ensure the host_bridge device will not be freed
-@@ -350,7 +353,10 @@ static struct pci_dev *pci_host_bridge_dev(struct pci_host_bridge *host)
+diff --git a/drivers/clk/baikal-t1/ccu-div.h b/drivers/clk/baikal-t1/ccu-div.h
+index 795665caefbd..81fc26be6e75 100644
+--- a/drivers/clk/baikal-t1/ccu-div.h
++++ b/drivers/clk/baikal-t1/ccu-div.h
+@@ -13,6 +13,12 @@
+ #include <linux/bits.h>
+ #include <linux/of.h>
  
- 	if (!root)
- 		return NULL;
--	if (root->devfn != PCI_DEVFN(0, 0))
++/*
++ * CCU Divider private clock IDs
++ * @CCU_SYS_INT_CLK: Internal CCU system clock
++ */
++#define CCU_SYS_INT_CLK		-1
 +
-+	/* Is it a host bridge or a root port? */
-+	if (root->devfn != PCI_DEVFN(0, 0) &&
-+		pci_pcie_type(root) != PCI_EXP_TYPE_ROOT_PORT)
- 		return NULL;
- 
- 	return root;
+ /*
+  * CCU Divider private flags
+  * @CCU_DIV_SKIP_ONE: Due to some reason divider can't be set to 1.
+diff --git a/drivers/clk/baikal-t1/clk-ccu-div.c b/drivers/clk/baikal-t1/clk-ccu-div.c
+index ea77eec40ddd..e544129a7543 100644
+--- a/drivers/clk/baikal-t1/clk-ccu-div.c
++++ b/drivers/clk/baikal-t1/clk-ccu-div.c
+@@ -204,10 +204,12 @@ static const struct ccu_div_info sys_info[] = {
+ 			  "eth_clk", CCU_SYS_GMAC1_BASE, 5),
+ 	CCU_DIV_FIXED_INFO(CCU_SYS_GMAC1_PTP_CLK, "sys_gmac1_ptp_clk",
+ 			   "eth_clk", 10),
+-	CCU_DIV_GATE_INFO(CCU_SYS_XGMAC_REF_CLK, "sys_xgmac_ref_clk",
+-			  "eth_clk", CCU_SYS_XGMAC_BASE, 8),
++	CCU_DIV_GATE_INFO(CCU_SYS_INT_CLK, "sys_xgmac_clk",
++			  "eth_clk", CCU_SYS_XGMAC_BASE, 1),
++	CCU_DIV_FIXED_INFO(CCU_SYS_XGMAC_REF_CLK, "sys_xgmac_ref_clk",
++			   "sys_xgmac_clk", 8),
+ 	CCU_DIV_FIXED_INFO(CCU_SYS_XGMAC_PTP_CLK, "sys_xgmac_ptp_clk",
+-			   "eth_clk", 8),
++			   "sys_xgmac_clk", 8),
+ 	CCU_DIV_GATE_INFO(CCU_SYS_USB_CLK, "sys_usb_clk",
+ 			  "eth_clk", CCU_SYS_USB_BASE, 10),
+ 	CCU_DIV_VAR_INFO(CCU_SYS_PVT_CLK, "sys_pvt_clk",
 -- 
-2.17.1
+2.35.1
 
