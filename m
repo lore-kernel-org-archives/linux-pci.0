@@ -2,80 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 634E4C433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 18:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 588C0C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 19:11:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349895AbiC3SZG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Mar 2022 14:25:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38006 "EHLO
+        id S1350625AbiC3TMm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Mar 2022 15:12:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350650AbiC3SXX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 14:23:23 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E73241324
-        for <linux-pci@vger.kernel.org>; Wed, 30 Mar 2022 11:20:53 -0700 (PDT)
+        with ESMTP id S1350567AbiC3TMc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 15:12:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F09BA33EB5;
+        Wed, 30 Mar 2022 12:10:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 40A74B81D51
-        for <linux-pci@vger.kernel.org>; Wed, 30 Mar 2022 18:20:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91956C340F0;
-        Wed, 30 Mar 2022 18:20:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8F8DD61382;
+        Wed, 30 Mar 2022 19:10:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5A1AC340EC;
+        Wed, 30 Mar 2022 19:10:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648664451;
-        bh=51VHQiL7gyxW17tPC+dmqwWwi6f/KewxGXRjWEhwkZU=;
+        s=k20201202; t=1648667420;
+        bh=Bd5+M5VE8rRc0rP6ib+x8ifz4fFdKR2N/GFKCemE0wg=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Huq/NMtyJC01DsVshC+QMLCeyDBM2uWAOU4+VSe+lz26bbk7QEXCYK8edvGriivyD
-         HbpLltlCTVxxAiLDce4LIiqGxI3b3X+W5b7gQeIo+oXYngkEyxSeO540SdbS4Z5m/k
-         yJyUoxN8U8AylnpE42POooygvjrWkEI0YbqHuBjptwWAsddtZhksu/YkoOoGlOAhxX
-         czTmY35xbSSon/nCu33fbCPsIFvX1or/FJUfDrPXUT6ejMsJn7WeMO7T0ybdUx0oX6
-         zjPRDN2EPv5nndF08A4px4RDIY8L995EvetD2lB2YZQ1msd4PB+cMCsyuJ7rNeVzu1
-         jBzyC7ehzGCLQ==
-Date:   Wed, 30 Mar 2022 13:20:48 -0500
+        b=C3KMnOikqv1wcAcW5I1otZz0XYVl5QKrPmo8+DHJvrqgMgQ/iaxOiDIbQQx28K/m/
+         qK6yU594heIvLs2Q5i6yxe7kFwKScfDvs3H+jCQprM6tO/OSuIKtNW1cnjxZ0+sPmE
+         0VGNvAWxSGQr5aAoWLP4hZH+TLebHIXEu6B6nOmXE3Hg7mzXfR+Hq0jI+brUzIb8OH
+         1WTwhxKswpv5mMEKr/BILx9k4x17MK8NOs++6eT3ldzDXYTy1s5w6lyhjGHOX8rpvD
+         3qZ07JMWKAu/sjux2lp/nNFphtTkn1Lf52LnyyJUIpkLcQJsKNz/Ngr6XtJA8YwTVR
+         9f/uAEuvaE1KQ==
+Date:   Wed, 30 Mar 2022 14:10:17 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Patel, Nirmal" <nirmal.patel@linux.intel.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Jon Derrick <jonathan.derrick@linux.dev>
-Subject: Re: [PATCH v2 1/2] PCI: vmd: Assign VMD IRQ domain before enumeration
-Message-ID: <20220330182048.GA1697467@bhelgaas>
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     Shlomo Pongratz <shlomopongratz@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andrew.maier@eideticom.com, logang@deltatee.com,
+        bhelgaas@google.com, Shlomo Pongratz <shlomop@pliops.com>
+Subject: Re: [PATCH V4 1/1] Intel Sky Lake-E host root ports check.
+Message-ID: <20220330191017.GA1700536@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <28c964fc-6392-c42a-fd85-7238da07ecfc@linux.intel.com>
+In-Reply-To: <20220330153720.GF1716663@nvidia.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 11:06:43AM -0700, Patel, Nirmal wrote:
-> On 3/30/2022 10:54 AM, Bjorn Helgaas wrote:
-> ...
-
-> > This claims to be a v2, but I missed the v1, and the lore archives [1]
-> > seem incomplete.  Maybe the v1 (and maybe the cover letter?) were HTML
-> > or got lost for some other reason?
-> >
-> > Bjorn
-> >
-> > [1] https://lore.kernel.org/all/?q=f%3Anirmal.patel
+On Wed, Mar 30, 2022 at 12:37:20PM -0300, Jason Gunthorpe wrote:
+> On Wed, Mar 30, 2022 at 05:08:23PM +0300, Shlomo Pongratz wrote:
+> > @@ -350,7 +353,10 @@ static struct pci_dev *pci_host_bridge_dev(struct pci_host_bridge *host)
+> >  
+> >  	if (!root)
+> >  		return NULL;
+> > -	if (root->devfn != PCI_DEVFN(0, 0))
+> > +
+> > +	/* Is it a host bridge or a root port? */
 > 
-> Initially I created one patch [1] and I was advised to create two separate patches.
+> This is a better comment:
 > 
-> [1] https://lore.kernel.org/all/358b0673-f90f-78ca-be66-51d5f76cc42b@linux.intel.com/
+> /* host bridges must have a 0 devfn, but some of the entries in the
+>   whilelist are root ports that can have any devfn */
 
-The point is that
-https://lore.kernel.org/all/358b0673-f90f-78ca-be66-51d5f76cc42b@linux.intel.com/
-is a reply to something that didn't make it into the archives.
+Is this something in the spec or is it just common practice?  The PCIe
+spec says very little about "host bridges" and I don't remember
+anything about them having to be devfn 0 or even that they have to be
+materialized as PCI devices.
 
-It says:
-
-  In-Reply-To: <20220223075245.17744-1-nirmal.patel@linux.intel.com>
-
-but 20220223075245.17744-1-nirmal.patel@linux.intel.com is unknown to
-lore.
-
-You can't fix this now; I'm just pointing it out in case there's some
-problem with the way you're sending patches.
-
-Bjorn
+> > +	if (root->devfn != PCI_DEVFN(0, 0) &&
+> > +		pci_pcie_type(root) != PCI_EXP_TYPE_ROOT_PORT)
+> >  		return NULL;
+> 
+> Indentation is wrong
+> 
+> Jason
