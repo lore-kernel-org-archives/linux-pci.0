@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7286BC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F20C4167E
 	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 23:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351951AbiCaABX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Mar 2022 20:01:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56410 "EHLO
+        id S1351965AbiCaABY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Mar 2022 20:01:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351926AbiCaABR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 20:01:17 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43C396620C;
-        Wed, 30 Mar 2022 16:59:30 -0700 (PDT)
+        with ESMTP id S1351941AbiCaABW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 20:01:22 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A047865810;
+        Wed, 30 Mar 2022 16:59:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648684770; x=1680220770;
+  t=1648684773; x=1680220773;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UoHCR5fwRhG3qYCbTHrjpwBA/tAoJc+8meQHMnK+rLk=;
-  b=dhiAB0yizV1OEPD0KaZLvsM1m4FsAV3T7QCIJ6zWQlVe4DNKl7veuWCC
-   XOBlPWak7kPRfykSHVQbnTJ9GTGYBHm/Hj04MhVFvxxopRLOnjDXOYDE5
-   Egfw8MpXQFZ3EsrZkor0l9QbLGlZm4eZBZLk5vAHWQrW10q3ys3fMtB+t
-   vP9UlTMaNp64ip2mHKcaurJr2QRqJITdfXOTrfzMpSjKWgHyfEHUDsct9
-   +zRxzK4dDRkrF/0LXOUZSI8wLDv18ZEvtZX9iuBo3H1I4M839EKKvs0bR
-   l3f46I0OM7pq/FAAhW4O37+kORtEpVKJvKX7FZAqCNJ9BVPP4wtHrAGWW
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10302"; a="241825503"
+  bh=e3VfFz++MQ57r3VMx1Qll9FF7SCTUqFcUJ7v5m5VFpA=;
+  b=C9W4B6O+GT1TRGfhxXDmz9LY/T7SXlEdVbaM4Il6KVLq+I/ttWXQh9lA
+   fHoCT+quaE7dXZBsH7A0uEITzaZz38M0AsR143rACVrkLa+iXa98LOuZN
+   mD2iYHl1OsyrecJkufWtdJxtvH3VVpUnLOCydt+CTYcBdUjbiZcSBhXXT
+   vXeXXMvKYE9QAkgrgkRrWvHNoAc8diGNXWVrOe204lM3NK1XDC6GwKhsf
+   EJRXdOPypyeqpN9AwvnmgkOObmXZ2TXEus/OAtmbZQ8iAYdvDFbsRpeLp
+   QftvLsG5TSQ9JXq5K8lk9pUQ5Bndk9kSpJ8IKoAv5X3UKFGbHRVa5tgZw
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10302"; a="259386306"
 X-IronPort-AV: E=Sophos;i="5.90,223,1643702400"; 
-   d="scan'208";a="241825503"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:29 -0700
+   d="scan'208";a="259386306"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:33 -0700
 X-IronPort-AV: E=Sophos;i="5.90,223,1643702400"; 
-   d="scan'208";a="605727027"
+   d="scan'208";a="565929808"
 Received: from npeper-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.16.15])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:29 -0700
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:32 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc:     Alison Schofield <alison.schofield@intel.com>,
         Ben Widawsky <ben.widawsky@intel.com>,
         linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH V7 06/10] cxl/pci: Find the DOE mailbox which supports CDAT
-Date:   Wed, 30 Mar 2022 16:59:16 -0700
-Message-Id: <20220330235920.2800929-7-ira.weiny@intel.com>
+Subject: [PATCH V7 10/10] cxl/port: Parse out DSMAS data from CDAT table
+Date:   Wed, 30 Mar 2022 16:59:20 -0700
+Message-Id: <20220330235920.2800929-11-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220330235920.2800929-1-ira.weiny@intel.com>
 References: <20220330235920.2800929-1-ira.weiny@intel.com>
@@ -60,146 +60,180 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Each CXL device may have multiple DOE mailbox capabilities and each
-mailbox may support multiple protocols.
+CXL Ports with memory devices attached need the information from the
+Device Scoped Memory Affinity Structure (DSMAS).  This information is
+contained within the CDAT table buffer which is previously read and
+cached in the device state.
 
-Search the DOE auxiliary devices for one which supports the CDAT
-protocol.  Cache that device to be used for future queries.
+If CDAT data is available, parse and cache DSMAS data from the table.
+Store this data in unmarshaled struct dsmas data structures for ease of
+use.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
 Changes from V6
-	Adjust for aux devices being a CXL only concept
-	Update commit msg.
-	Ensure devices iterated by auxiliary_find_device() are checked
-		to be DOE devices prior to checking for the CDAT
-		protocol
-	From Ben
-		Ensure reference from auxiliary_find_device() is dropped
----
- drivers/cxl/cxl.h    |  2 ++
- drivers/cxl/cxlmem.h |  2 ++
- drivers/cxl/pci.c    | 68 +++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 71 insertions(+), 1 deletion(-)
+	Move to port.c
+	It is not an error if no DSMAS data is found
 
+Changes from V5
+	Fix up sparse warnings
+	Split out cdat_hdr_valid()
+	Update cdat_hdr_valid()
+		Remove revision and cs field parsing
+			There is no point in these
+		Add seq check and debug print.
+	From Jonathan
+		Add spaces around '+' and '/'
+		use devm_krealloc() for dmas_ary
+---
+ drivers/cxl/cdat.h | 17 ++++++++++++
+ drivers/cxl/cxl.h  |  6 +++++
+ drivers/cxl/port.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+)
+
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
+index a7725d26f2d2..66706b238bc9 100644
+--- a/drivers/cxl/cdat.h
++++ b/drivers/cxl/cdat.h
+@@ -83,6 +83,23 @@
+ #define CDAT_SSLBIS_ENTRY_PORT_Y(entry, i) (((entry)[4 + (i) * 2] & 0xffff0000) >> 16)
+ #define CDAT_SSLBIS_ENTRY_LAT_OR_BW(entry, i) ((entry)[4 + (i) * 2 + 1] & 0x0000ffff)
+ 
++/**
++ * struct cxl_dsmas - host unmarshaled version of DSMAS data
++ *
++ * As defined in the Coherent Device Attribute Table (CDAT) specification this
++ * represents a single DSMAS entry in that table.
++ *
++ * @dpa_base: The lowest Device Physical Address associated with this DSMAD
++ * @length: Length in bytes of this DSMAD
++ * @non_volatile: If set, the memory region represents Non-Volatile memory
++ */
++struct cxl_dsmas {
++	u64 dpa_base;
++	u64 length;
++	/* Flags */
++	u8 non_volatile:1;
++};
++
+ /**
+  * struct cxl_cdat - CXL CDAT data
+  *
 diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index 70a12bfd71b5..80f462509b13 100644
+index 80f462509b13..bd719da602ce 100644
 --- a/drivers/cxl/cxl.h
 +++ b/drivers/cxl/cxl.h
-@@ -153,6 +153,8 @@ static inline bool cxl_is_interleave_granularity_valid(int ig)
- #define CXLDEV_MBOX_BG_CMD_STATUS_OFFSET 0x18
- #define CXLDEV_MBOX_PAYLOAD_OFFSET 0x20
+@@ -9,6 +9,8 @@
+ #include <linux/bitops.h>
+ #include <linux/io.h>
  
-+#define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
++#include "cdat.h"
 +
- /*
-  * Using struct_group() allows for per register-block-type helper routines,
-  * without requiring block-type agnostic code to include the prefix.
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index d5c9a273d07d..33bf9ffd1323 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -119,6 +119,7 @@ struct cxl_endpoint_dvsec_info {
-  * Currently only memory devices are represented.
+ /**
+  * DOC: cxl objects
   *
-  * @dev: The device associated with this CXL state
-+ * @cdat_doe: Auxiliary DOE device capabile of reading CDAT
-  * @regs: Parsed register blocks
-  * @cxl_dvsec: Offset to the PCIe device DVSEC
-  * @payload_size: Size of space for payload
-@@ -151,6 +152,7 @@ struct cxl_endpoint_dvsec_info {
- struct cxl_dev_state {
- 	struct device *dev;
+@@ -343,6 +345,8 @@ struct cxl_nvdimm {
+  * @component_reg_phys: component register capability base address (optional)
+  * @dead: last ep has been removed, force port re-creation
+  * @depth: How deep this port is relative to the root. depth 0 is the root.
++ * @dsmas_ary: Array of DSMAS entries as parsed from the CDAT table
++ * @nr_dsmas: Number of entries in dsmas_ary
+  */
+ struct cxl_port {
+ 	struct device dev;
+@@ -354,6 +358,8 @@ struct cxl_port {
+ 	resource_size_t component_reg_phys;
+ 	bool dead;
+ 	unsigned int depth;
++	struct cxl_dsmas *dsmas_ary;
++	int nr_dsmas;
+ };
  
-+	struct cxl_doe_dev *cdat_doe;
- 	struct cxl_regs regs;
- 	int cxl_dvsec;
- 
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index bc94811a8395..84ecb05b592f 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -687,12 +687,78 @@ int cxl_pci_create_doe_devices(struct pci_dev *pdev)
+ /**
+diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
+index f3c11a780bed..67abb2104e09 100644
+--- a/drivers/cxl/port.c
++++ b/drivers/cxl/port.c
+@@ -73,6 +73,70 @@ static int set_decoders(struct device *dev, void *data)
  	return 0;
  }
  
-+bool cxl_doe_dev_supports_prot(struct cxl_doe_dev *doe_dev, u16 vid, u16 pid)
++static void parse_dsmas(struct cxl_port *port, struct cxl_dev_state *cxlds)
 +{
-+	struct cxl_doe_drv_state *doe_ds;
-+	bool ret;
++	struct device *dev = &port->dev;
++	struct cxl_dsmas *dsmas_ary = NULL;
++	u32 *data = cxlds->cdat.table;
++	int bytes_left = cxlds->cdat.length;
++	int nr_dsmas = 0;
 +
-+	doe_ds = cxl_pci_doe_get_drv(doe_dev);
-+	if (!doe_ds) {
-+		cxl_pci_doe_put_drv(doe_dev);
-+		return false;
++	if (!data) {
++		dev_info(dev, "No CDAT data available for DSMAS\n");
++		return;
 +	}
-+	ret = pci_doe_supports_prot(doe_ds->doe_mb, vid, pid);
-+	cxl_pci_doe_put_drv(doe_dev);
-+	return ret;
++
++	/* Skip header */
++	data += CDAT_HEADER_LENGTH_DW;
++	bytes_left -= CDAT_HEADER_LENGTH_BYTES;
++
++	while (bytes_left > 0) {
++		u32 *cur_rec = data;
++		u8 type = FIELD_GET(CDAT_STRUCTURE_DW0_TYPE, cur_rec[0]);
++		u16 length = FIELD_GET(CDAT_STRUCTURE_DW0_LENGTH, cur_rec[0]);
++
++		if (type == CDAT_STRUCTURE_DW0_TYPE_DSMAS) {
++			struct cxl_dsmas *new_ary;
++			u8 flags;
++
++			new_ary = devm_krealloc(dev, dsmas_ary,
++					   sizeof(*dsmas_ary) * (nr_dsmas + 1),
++					   GFP_KERNEL);
++			if (!new_ary) {
++				dev_err(dev,
++					"Failed to allocate memory for DSMAS data (nr_dsmas %d)\n",
++					nr_dsmas);
++				return;
++			}
++			dsmas_ary = new_ary;
++
++			flags = FIELD_GET(CDAT_DSMAS_DW1_FLAGS, cur_rec[1]);
++
++			dsmas_ary[nr_dsmas].dpa_base = CDAT_DSMAS_DPA_OFFSET(cur_rec);
++			dsmas_ary[nr_dsmas].length = CDAT_DSMAS_DPA_LEN(cur_rec);
++			dsmas_ary[nr_dsmas].non_volatile = CDAT_DSMAS_NON_VOLATILE(flags);
++
++			dev_dbg(dev, "DSMAS %d: %llx:%llx %s\n",
++				nr_dsmas,
++				dsmas_ary[nr_dsmas].dpa_base,
++				dsmas_ary[nr_dsmas].dpa_base +
++					dsmas_ary[nr_dsmas].length,
++				(dsmas_ary[nr_dsmas].non_volatile ?
++					"Persistent" : "Volatile")
++				);
++
++			nr_dsmas++;
++		}
++
++		data += (length / sizeof(u32));
++		bytes_left -= length;
++	}
++
++	dev_dbg(dev, "Found %d DSMAS entries\n", nr_dsmas);
++	port->dsmas_ary = dsmas_ary;
++	port->nr_dsmas = nr_dsmas;
 +}
 +
-+static int cxl_match_cdat_doe_device(struct device *dev, const void *data)
-+{
-+	const struct cxl_dev_state *cxlds = data;
-+	struct auxiliary_device *adev = to_auxiliary_dev(dev);
-+	struct cxl_doe_dev *doe_dev;
-+
-+	/* Ensure this is a DOE device */
-+	if (strcmp(DOE_DEV_NAME, adev->name))
-+		return 0;
-+
-+	/* Determine if this auxiliary device belongs to the cxlds */
-+	if (cxlds->dev != dev->parent)
-+		return 0;
-+
-+	doe_dev = container_of(adev, struct cxl_doe_dev, adev);
-+
-+	/* If it is one of ours check for the CDAT protocol */
-+	if (!cxl_doe_dev_supports_prot(doe_dev, PCI_DVSEC_VENDOR_ID_CXL,
-+				   CXL_DOE_PROTOCOL_TABLE_ACCESS))
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static void drop_cdat_doe_ref(void *data)
-+{
-+	struct cxl_doe_dev *cdat_doe = data;
-+
-+	put_device(&cdat_doe->adev.dev);
-+}
-+
- static int cxl_setup_doe_devices(struct cxl_dev_state *cxlds)
+ static int cxl_port_probe(struct device *dev)
  {
- 	struct device *dev = cxlds->dev;
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct auxiliary_device *adev;
-+	int rc;
-+
-+	rc = cxl_pci_create_doe_devices(pdev);
-+	if (rc)
-+		return rc;
- 
--	return cxl_pci_create_doe_devices(pdev);
-+	adev = auxiliary_find_device(NULL, cxlds, &cxl_match_cdat_doe_device);
-+
-+	if (adev) {
-+		struct cxl_doe_dev *doe_dev = container_of(adev,
-+							   struct cxl_doe_dev,
-+							   adev);
-+
-+		/* auxiliary_find_device() takes the reference */
-+		rc = devm_add_action_or_reset(dev, drop_cdat_doe_ref, doe_dev);
-+		if (rc)
-+			return rc;
-+		cxlds->cdat_doe = doe_dev;
-+	}
-+
-+	return 0;
- }
- 
- static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct cxl_port *port = to_cxl_port(dev);
+@@ -87,6 +151,7 @@ static int cxl_port_probe(struct device *dev)
+ 		rc = devm_add_action_or_reset(dev, schedule_detach, cxlmd);
+ 		if (rc)
+ 			return rc;
++		parse_dsmas(port, cxlmd->cxlds);
+ 	} else {
+ 		rc = devm_cxl_port_enumerate_dports(port);
+ 		if (rc < 0)
 -- 
 2.35.1
 
