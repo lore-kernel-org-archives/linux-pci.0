@@ -2,160 +2,107 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19AF1C3527D
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Mar 2022 23:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E491C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Mar 2022 01:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351943AbiCaABZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Mar 2022 20:01:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56514 "EHLO
+        id S1351946AbiCaBdd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Mar 2022 21:33:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351933AbiCaABS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 20:01:18 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4822665497;
-        Wed, 30 Mar 2022 16:59:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648684772; x=1680220772;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=3aXhpLXCvCCvNR3pAgcULgqkJ5JSx3pe9KBXPA5ttYQ=;
-  b=fc1VGWIF3Cd9js/7ddjiJUyXypvCggIQevUvhTuyrud77G6mcC1euHpj
-   8lsDS8GeiFG/8RPrHNK98+xk67g5lvwprjsvyiEcyfGPdhxJ2heuI33V3
-   Wxd8dm+be8+xkB5KHEGtvwxEJOQ7d5JGtmBWABCOOm5mkS7TcnmG4Sj6w
-   GVZEpW0JUyH+qiw0cIqZuxmRPCw7H4qI77RhR8mroyR3wX7ND6MUn1QXm
-   Mkshp4wKuzb5lvNH5jXNd65qTVAq3OZ06PQkQzsYoBaOctqeaZqIOB+0O
-   7STTKtcmrB9ZA2qbSU18MnODAR2sxpEx44Kgsuyn4hYaLym7mSCPKSRDC
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10302"; a="258504755"
-X-IronPort-AV: E=Sophos;i="5.90,223,1643702400"; 
-   d="scan'208";a="258504755"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:32 -0700
-X-IronPort-AV: E=Sophos;i="5.90,223,1643702400"; 
-   d="scan'208";a="788192195"
-Received: from npeper-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.16.15])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Mar 2022 16:59:31 -0700
-From:   ira.weiny@intel.com
-To:     Dan Williams <dan.j.williams@intel.com>,
+        with ESMTP id S230103AbiCaBdd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2022 21:33:33 -0400
+Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08D5148396
+        for <linux-pci@vger.kernel.org>; Wed, 30 Mar 2022 18:31:46 -0700 (PDT)
+Received: by mail-oi1-x231.google.com with SMTP id t21so19030017oie.11
+        for <linux-pci@vger.kernel.org>; Wed, 30 Mar 2022 18:31:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DaR3MwFp8bDqlwUMKw41JbUHj/I2OKstsngLkvC3fEU=;
+        b=nR6ntNCh4/YAwUbhK2XuUXTQBF8F95GEVdVCBAlu5e1/zu2pXuFPiAqknf9j2X+mEC
+         bciAcM17DbdUEAaR7zc27qebz+a2Z+EqjWa3xdxOmC9FV6cT+kZdibU0Cb57JJnIU3nA
+         VTyTMjKlyMao2lNKvTAOCui00LY5xZir/rtz+ys1eu9u1rlWbjjo/Dlc1Cn3YTcQbnOX
+         Pw64KTGFflLTOr/K+l091WVuxEhmvUw/JvX/0JRkcOur/nrPUZQ4nuNCfxR17oefO9QF
+         8QJHV7ZkyvcSOH6EzB5303y85qkSb0h4RFW20PbIZoiqt4y/YFIpEjNnexkpomXhu5F5
+         PiuQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DaR3MwFp8bDqlwUMKw41JbUHj/I2OKstsngLkvC3fEU=;
+        b=4knri0e9lolcpJFE6c0zZcvPCMHmRO3XqFOp9v20/v33Y/Kpe2ATRFjiSzjXAYfY+8
+         TD8MC/EtpXKNbYSU9vl0LhrM9lRYcs4iSIP+QLjIffIEwNQzeH+8Qjn7ObI9Lej+h/9m
+         Ed9CjYQRUJX4VwRMO9Q8G43zpRqI9lRXuxEBuhGyJ8mJkIzryCypfo5CULn94h19jO9k
+         bcsuJgETpYhtdW0qQgjW9Qg1fgYudLb5A3icUhqikpmoE/Y5oG4U3wPMOLocsyDbwavg
+         reIUb/IJ2hARJI1K3c4uMNmuCPq4uEEsxEwwZ8K6o7+yPbQyfY/g/arDFP5zozJmPt5F
+         m56A==
+X-Gm-Message-State: AOAM531/tHuDTuae9dwwva6Ge0qslNXx09rTn0npQhtxM8gVd3/oYZWw
+        Uhf1qQeKP99lLVHKVlJ1ecmsFNmTaXwUbg==
+X-Google-Smtp-Source: ABdhPJwVKqtA54H4KDUa2wyQrVcmg6t+fr5bx1rXVdpddFUtYpR1NCwlFGbWwE7ZhZum3rbVXvEEOg==
+X-Received: by 2002:aca:30c7:0:b0:2ef:8a54:c3c5 with SMTP id w190-20020aca30c7000000b002ef8a54c3c5mr1706517oiw.56.1648690305328;
+        Wed, 30 Mar 2022 18:31:45 -0700 (PDT)
+Received: from ripper.. ([2600:1700:a0:3dc8:205:1bff:fec0:b9b3])
+        by smtp.gmail.com with ESMTPSA id b188-20020aca34c5000000b002da579c994dsm11213153oia.31.2022.03.30.18.31.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Mar 2022 18:31:44 -0700 (PDT)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH V7 08/10] cxl/cdat: Introduce cxl_cdat_valid()
-Date:   Wed, 30 Mar 2022 16:59:18 -0700
-Message-Id: <20220330235920.2800929-9-ira.weiny@intel.com>
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: qcom: Remove ddrss_sf_tbu clock from sc8180x
+Date:   Wed, 30 Mar 2022 18:34:15 -0700
+Message-Id: <20220331013415.592748-1-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220330235920.2800929-1-ira.weiny@intel.com>
-References: <20220330235920.2800929-1-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+The Qualcomm SC8180X platform was piggy backing on the SM8250
+qcom_pcie_cfg, but the platform doesn't have the ddrss_sf_tbu clock, so
+it now fails to probe due to the missing clock.
 
-The CDAT data is protected by a checksum and should be the proper
-length.
+Give SC8180X its own qcom_pcie_cfg, without the ddrss_sf_tbu flag set.
 
-Introduce cxl_cdat_valid() to validate the data.  While at it check and
-store the sequence number.
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
+Fixes: 0614f98bbb9f ("PCI: qcom: Add ddrss_sf_tbu flag")
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
-Changes from V6
-	Change name to cxl_cdat_valid() as this validates all the CDAT
-		data not just the header
-	Add error and debug prints
+ drivers/pci/controller/dwc/pcie-qcom.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Changes from V5
-	New patch, split out
-	Update cdat_hdr_valid()
-		Remove revision and cs field parsing
-			There is no point in these
-		Add seq check and debug print.
----
- drivers/cxl/cdat.h |  2 ++
- drivers/cxl/pci.c  | 36 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
-
-diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
-index 4722b6bbbaf0..a7725d26f2d2 100644
---- a/drivers/cxl/cdat.h
-+++ b/drivers/cxl/cdat.h
-@@ -88,10 +88,12 @@
-  *
-  * @table: cache of CDAT table
-  * @length: length of cached CDAT table
-+ * @seq: Last read Sequence number of the CDAT table
-  */
- struct cxl_cdat {
- 	void *table;
- 	size_t length;
-+	u32 seq;
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 6ab90891801d..816028c0f6ed 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1550,6 +1550,11 @@ static const struct qcom_pcie_cfg sc7280_cfg = {
+ 	.pipe_clk_need_muxing = true,
  };
  
- #endif /* !__CXL_CDAT_H__ */
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index a1d500381438..ddd6b705fd67 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -762,6 +762,40 @@ static int cxl_setup_doe_devices(struct cxl_dev_state *cxlds)
- 	return 0;
- }
- 
-+static bool cxl_cdat_valid(struct device *dev, struct cxl_cdat *cdat)
-+{
-+	u32 *table = cdat->table;
-+	u8 *data8 = cdat->table;
-+	u32 length, seq;
-+	u8 check;
-+	int i;
++static const struct qcom_pcie_cfg sc8180x_cfg = {
++	.ops = &ops_1_9_0,
++	.has_tbu_clk = true,
++};
 +
-+	length = FIELD_GET(CDAT_HEADER_DW0_LENGTH, table[0]);
-+	if ((length < CDAT_HEADER_LENGTH_BYTES) || (length > cdat->length)) {
-+		dev_err(dev, "Invalid length %u (%lu-%lu)\n", length,
-+			CDAT_HEADER_LENGTH_BYTES, cdat->length);
-+		return false;
-+	}
-+
-+	for (check = 0, i = 0; i < length; i++)
-+		check += data8[i];
-+
-+	dev_dbg(dev, "CDAT length %u CS %u\n", length, check);
-+	if (check != 0) {
-+		dev_err(dev, "Invalid checksum %u\n", check);
-+		return false;
-+	}
-+
-+	seq = FIELD_GET(CDAT_HEADER_DW3_SEQUENCE, table[3]);
-+	/* Store the sequence for now. */
-+	if (cdat->seq != seq) {
-+		dev_info(dev, "CDAT seq change %x -> %x\n", cdat->seq, seq);
-+		cdat->seq = seq;
-+	}
-+
-+	return true;
-+}
-+
- #define CDAT_DOE_REQ(entry_handle)					\
- 	(FIELD_PREP(CXL_DOE_TABLE_ACCESS_REQ_CODE,			\
- 		    CXL_DOE_TABLE_ACCESS_REQ_CODE_READ) |		\
-@@ -873,6 +907,8 @@ static int cxl_cdat_read_table(struct cxl_dev_state *cxlds,
- 
- release_driver:
- 	cxl_pci_doe_put_drv(doe_dev);
-+	if (!rc && !cxl_cdat_valid(cxlds->dev, cdat))
-+		return -EIO;
- 	return rc;
- }
- 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = qcom_pcie_link_up,
+ 	.start_link = qcom_pcie_start_link,
+@@ -1656,7 +1661,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &ipq4019_cfg },
+ 	{ .compatible = "qcom,pcie-sdm845", .data = &sdm845_cfg },
+ 	{ .compatible = "qcom,pcie-sm8250", .data = &sm8250_cfg },
+-	{ .compatible = "qcom,pcie-sc8180x", .data = &sm8250_cfg },
++	{ .compatible = "qcom,pcie-sc8180x", .data = &sc8180x_cfg },
+ 	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &sm8450_pcie0_cfg },
+ 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &sm8450_pcie1_cfg },
+ 	{ .compatible = "qcom,pcie-sc7280", .data = &sc7280_cfg },
 -- 
 2.35.1
 
