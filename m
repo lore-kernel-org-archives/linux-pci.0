@@ -2,80 +2,93 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83315C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Mar 2022 14:31:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA764C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Mar 2022 15:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235214AbiCaOdF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Mar 2022 10:33:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51300 "EHLO
+        id S232629AbiCaPUb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Mar 2022 11:20:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237694AbiCaOc7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2022 10:32:59 -0400
+        with ESMTP id S238156AbiCaPUb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2022 11:20:31 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22FE01DE6F4;
-        Thu, 31 Mar 2022 07:31:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C15951700BF
+        for <linux-pci@vger.kernel.org>; Thu, 31 Mar 2022 08:18:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 708ACB8213B;
-        Thu, 31 Mar 2022 14:31:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F523C340ED;
-        Thu, 31 Mar 2022 14:31:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 79FD1B82146
+        for <linux-pci@vger.kernel.org>; Thu, 31 Mar 2022 15:18:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3348C340ED;
+        Thu, 31 Mar 2022 15:18:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648737063;
-        bh=SNXLMin1yPeR9fXtTHf11aJlFW1shy9T5oOySNUqpRo=;
+        s=k20201202; t=1648739921;
+        bh=PYLr8qp1wJdfbq/pUxCn3mH3CnhVoPA5ejUvs1YCAHo=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=a0bOq58j3m4sHXGsLJmOPypzaAgKs84C42qg4qA36vdMaWONZibKL1en9U1/x9KlD
-         iMK05xfh1Z23snWcdLcA2CE5Ovh2dJuRkdUOZjRoQryGbkrJqgid/mjAXbn9nb++TM
-         n5f1OXbK41b+d1FrJbPuMjoU9O2fjvJkQihkQaQ6WEwPWjyZ3fk4hV9dFcUICEoED7
-         yR/R5heDVsInICR6Acx9IfZJONGWhv06Zvy3PSXIBEhVGmxideMm20oW7nhFdL3oHN
-         FlwjltplWRc35ISFSoK/zcTq6oPyTSoZasgyxBzu01u4w2h2Vk72YkVMb/ALzfGiPX
-         ONuN3aumuqDoA==
-Date:   Thu, 31 Mar 2022 09:31:01 -0500
+        b=fN/vtJs2b9t0UNVL6YzKV2euqkJvjqW+OBhiClwnZELD9dX+COXQXCClME1KYS51y
+         nCD/3Wjy/XzAa2ve2OiuY41qwQpoX5Bkjx+fCBOIYBGSaqlGut9TQBbC1eejErXvV/
+         558LdtXPz3rOYokA0UcKRN0mN4NcB26meZDcLwd6K1nJzrW5/YBYVLayWSjMRKUQFA
+         X5Hkd93CxNOLapyKEjVxJfLEZeQ3qXUj6L9YOFqz2JYDHKKSM+0/mj3uQvvSG83Rhf
+         HADT+3iId28TgUMeblgjdGF6iQPBwbkAEATd4+C8anVhGz648OowJazVyLGm1eXa0S
+         Wh2V2Z8+DUPrg==
+Date:   Thu, 31 Mar 2022 10:18:39 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Shlomo Pongratz <shlomopongratz@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andrew.maier@eideticom.com, logang@deltatee.com,
-        bhelgaas@google.com, jgg@nvidia.com,
-        Shlomo Pongratz <shlomop@pliops.com>
-Subject: Re: [PATCH V5 1/1] Intel Sky Lake-E host root ports check.
-Message-ID: <20220331143101.GA4846@bhelgaas>
+To:     Nathan Chancellor <nathan@kernel.org>
+Cc:     kernel test robot <lkp@intel.com>,
+        YueHaibing <yuehaibing@huawei.com>, kbuild-all@lists.01.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [helgaas-pci:for-linus 4/4]
+ drivers/pci/controller/pci-hyperv.c:1486:9: error: implicit declaration of
+ function 'hv_set_msi_entry_from_desc'
+Message-ID: <20220331151839.GA10149@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220331073539.14499-2-shlomop@pliops.com>
+In-Reply-To: <YkTeyaGRutWCrZoE@thelio-3990X>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 31, 2022 at 10:35:39AM +0300, Shlomo Pongratz wrote:
-> In commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to
-> the whitelist")
-> Andrew Maier added the Sky Lake-E additional devices
-> 2031, 2032 and 2033 root ports to the already existing 2030 device.
+On Wed, Mar 30, 2022 at 03:50:49PM -0700, Nathan Chancellor wrote:
+> On Thu, Mar 31, 2022 at 06:43:32AM +0800, kernel test robot wrote:
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git for-linus
+> > head:   18146f25ac6695ce2ed09503de46dafd2b1f36a6
+> > commit: 18146f25ac6695ce2ed09503de46dafd2b1f36a6 [4/4] PCI: hv: Remove unused hv_set_msi_entry_from_desc()
+> > config: arm64-allyesconfig (https://download.01.org/0day-ci/archive/20220331/202203310629.C8KmndLW-lkp@intel.com/config)
+> > compiler: aarch64-linux-gcc (GCC) 11.2.0
+> > reproduce (this is a W=1 build):
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?id=18146f25ac6695ce2ed09503de46dafd2b1f36a6
+> >         git remote add helgaas-pci https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> >         git fetch --no-tags helgaas-pci for-linus
+> >         git checkout 18146f25ac6695ce2ed09503de46dafd2b1f36a6
+> >         # save the config file to linux build tree
+> >         mkdir build_dir
+> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=arm64 SHELL=/bin/bash
+> > 
+> > If you fix the issue, kindly add following tag as appropriate
+> > Reported-by: kernel test robot <lkp@intel.com>
+> > 
+> > All errors (new ones prefixed by >>):
+> > 
+> >    drivers/pci/controller/pci-hyperv.c: In function 'hv_irq_unmask':
+> > >> drivers/pci/controller/pci-hyperv.c:1486:9: error: implicit declaration of function 'hv_set_msi_entry_from_desc' [-Werror=implicit-function-declaration]
+> >     1486 |         hv_set_msi_entry_from_desc(&params->int_entry.msi_entry, msi_desc);
+> >          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+> >    cc1: some warnings being treated as errors
 > 
-> The Intel devices 2030, 2031, 2032 and 2033 which are root ports A, B, C and D,
-> respectively and if all exist they will occupy slots 0 till 3 in that order.
-
-Please make this a sentence.
-
-> The original code handled only the case where the devices in the whitelist are
-> host bridges and assumed that they will be found on slot 0.
+> 18146f25ac66 ("PCI: hv: Remove unused hv_set_msi_entry_from_desc()")
+> does not have d06957d7a692 ("PCI: hv: Avoid the retarget interrupt
+> hypercall in irq_unmask() on ARM64") as a parent, since it is only in
+> mainline with no tag, whereas 18146f25ac66 is based on v5.17-rc7, which
+> does not have the problem that 18146f25ac66 addresses.
 > 
-> This assumption doesn't hold for root ports so an explicit test was added to
-> cover this case.
+> I think that rebasing the pending fixes on the 5.18 PCI changes would
+> properly resolve this.
 
-Please update the subject line to match the style of previous ones.
-
-Please wrap the commit log to fit in 80 columns (including the 4
-spaces added by "git log") like previous commits.
-
-Please figure out whether you want "Sky Lake-E" or "SkyLake-E" and use
-it consistently in commit log and code comments.  It seems to be
-"Skylake" on intel.com, so I suggest using that.
-
-Please use imperative mood, e.g., instead of "an explicit test was
-added ...," write "add a test to cover this case."  Do the same in
-code comments.
-
-Bjorn
+Yep, sorry, I blew it.  I rebased my for-linus branch to 148a65047695
+("Merge tag 'pci-v5.18-changes' of
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci"), which
+does have d06957d7a692, and added this fix (PCI: hv: Remove unused
+hv_set_msi_entry_from_desc()).
