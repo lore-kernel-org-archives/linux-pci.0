@@ -2,126 +2,142 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D53C433FE
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 16:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43EB6C433F5
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 16:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236007AbiDAQaO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Apr 2022 12:30:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34194 "EHLO
+        id S1349565AbiDAQhO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Apr 2022 12:37:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348714AbiDAQ2A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 12:28:00 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEE1B22513;
-        Fri,  1 Apr 2022 09:00:46 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id yy13so6836121ejb.2;
-        Fri, 01 Apr 2022 09:00:46 -0700 (PDT)
+        with ESMTP id S244385AbiDAQhD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 12:37:03 -0400
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F9856C1D;
+        Fri,  1 Apr 2022 09:12:03 -0700 (PDT)
+Received: by mail-wm1-x330.google.com with SMTP id v64-20020a1cac43000000b0038cfd1b3a6dso3795143wme.5;
+        Fri, 01 Apr 2022 09:12:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=9jHgBZFPUit49TSD+W0vcWqdUpO3LWDl0zvqR1OYTQU=;
-        b=BsOyCfH9ORI2nZzbH2g35bwoxed+qvcrU4SidE+0rO+cW4Q2BiKEdUfs1IOK65bqQJ
-         kmBeDHc1KB2uUHHtgRmqtotncTR3ZXPqkihXVwYZna8VX0gsPmFgakoNB1nAjXZq5W/4
-         pIf5ucClXaSqWIZUNRBZ7EEUm5ZwArgN4Cun0Z0lkiDUmxEWsOFIegHUCP0IKu/6fNDI
-         wiypDEWT0b+cGAUjXeD/zbLlw5jnPl86pgSD4bcbF6x/8sakRcLTQQhTy2EGQiW3rTVV
-         0ky9PxC4fjOmxjMdLz1ytCREtWe2yJf5t7EJCP+WvJbwwdKDVUR9ssFocXMD3yaI4vAy
-         PcRA==
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=MiR5EPOKkLhhEObk+YmsUARSnRu9/gwuzLaNmeH+HbE=;
+        b=PC1r74zw0BaM045emgzXvZ34kFbAVR0vYhGnDMBlSxTxsbRp0q7AJpcgfDz8gomnJA
+         56KqY8Qbll1p/J1/OnxHqA0oe0xMxZhdbPJNVWmWI9HVs4gzE3mhGTC9NGw4eEMIcLx2
+         WdvLf+ZxlcusfDT4AZlJGYcyLS8RUPafiVxnk5LBvYjxlIcV1y7vfy3xCxMxtyvsFonu
+         IAdgll79N6pGq8Lih8WdCocdG8jxqFkxGRq6sS7W8xK/kaagd9IsNBJOoRySkwmrIFkA
+         1cdvbDBanw9xnSxEbNt4YAJ56XweOQnYTWeYL/095b0fq4cXvd/3ARqAcDKNYEBwxHAy
+         544A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=9jHgBZFPUit49TSD+W0vcWqdUpO3LWDl0zvqR1OYTQU=;
-        b=KKzlvucaLBC8ZGXlEfJfCkLh3zio02Gwq3Ba46Cz1r81ZE/DnxCejBW9MH8HxnapOM
-         zpUj4X+d24NBdHpewncrAqgJk0YW454bF/75PYRZQK615fq9AjJT5lD31H/+qklxysR6
-         H/klzghEJMoOr7M0BsbIrt8UxIz9mDEnNwSgk8soN3GRSlKkHo8THp0q7GtbbK2WJuyZ
-         GWsri8a9xJzOyvpOg3NgT8rXTcoJnYYTKavgWhVteyBo91OOWwtEE0hl2BmIjgDV83Ir
-         EkWCZkixPSKs4Yris9Gn/wM+2mfuFqQysedpPGK099xrc2quMqV9ySPLXGTz+bTBsCJ0
-         5l/A==
-X-Gm-Message-State: AOAM532rK9OontEJHvg/LKcIJBb3yP98G/AJ0MjY+nqEaTG9vJflSZQA
-        QB4S4VoOF+hhcp97Ne+jn+Y=
-X-Google-Smtp-Source: ABdhPJxwTLUF5gE9o2QdBV/5AMlb7dmQqN2evGxOiB/eEU3n8mrZHqeb4+4NLQr/Tt3aBF5S/5txwQ==
-X-Received: by 2002:a17:907:7ea5:b0:6e1:13c3:e35f with SMTP id qb37-20020a1709077ea500b006e113c3e35fmr409386ejc.99.1648828845097;
-        Fri, 01 Apr 2022 09:00:45 -0700 (PDT)
-Received: from anparri (host-82-59-4-232.retail.telecomitalia.it. [82.59.4.232])
-        by smtp.gmail.com with ESMTPSA id ds5-20020a170907724500b006df8f39dadesm1162174ejc.218.2022.04.01.09.00.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Apr 2022 09:00:44 -0700 (PDT)
-Date:   Fri, 1 Apr 2022 18:00:36 +0200
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-Cc:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Wei Hu <weh@microsoft.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Wilczynski <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH 2/4] PCI: hv: Use vmbus_requestor to generate
- transaction IDs for VMbus hardening
-Message-ID: <20220401160036.GA437893@anparri>
-References: <20220328144244.100228-1-parri.andrea@gmail.com>
- <20220328144244.100228-3-parri.andrea@gmail.com>
- <PH0PR21MB3025A45FCFD77242EB9EAB27D7E19@PH0PR21MB3025.namprd21.prod.outlook.com>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=MiR5EPOKkLhhEObk+YmsUARSnRu9/gwuzLaNmeH+HbE=;
+        b=d/3pJ3/eT4Z57OpVNzw/sR/odq0PoNUlXRrs8GwlW5QVxZiXpP+W0azMJ7ehje5Be6
+         QO7DzxbtUrqSONirKQwd/QwCj9+uqqJrnhV0QYGaKnG/Kd8P+H3KosM591vTBdbTeSu5
+         ZMRyLl1qJhDrOEnbhoQQhbaArWE1/UVlqCdoh2WJJRXDqybbDeHT0VsvnR/5CXhp1X4w
+         2YxoJMPini6n5Ao8NfyKGb5pjXLpQl/cHftF0xpBP982o6Hf0P1KPCy/mrE4+uwFDToy
+         zFtX5/Ag5mMZfhqjXbaO2vPH2XNks2/eOV+s9pHXhQk8Fj1pm5NdV3sAhGkc/Qgp4cDB
+         HzoA==
+X-Gm-Message-State: AOAM533N63JEk8R9cUAJEthTAlLKDOmUW1Fyu8/d/hV9OlFJijtR3n20
+        +TsvlHEcpt5MdM+iz3SRqlE=
+X-Google-Smtp-Source: ABdhPJyFiyZhDPEC+rND9soHKz13sCFb9qDf8Mc2AIa/JTh7yxH0ggHH+x0G0Crv+QULy1frYEgG+w==
+X-Received: by 2002:a1c:4e19:0:b0:38c:88b8:c1ef with SMTP id g25-20020a1c4e19000000b0038c88b8c1efmr9458436wmh.133.1648829521497;
+        Fri, 01 Apr 2022 09:12:01 -0700 (PDT)
+Received: from [192.168.1.208] ([87.68.193.190])
+        by smtp.gmail.com with ESMTPSA id e12-20020a5d6d0c000000b001a65e479d20sm3023375wrq.83.2022.04.01.09.11.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 01 Apr 2022 09:12:00 -0700 (PDT)
+Message-ID: <707a6991-ba4a-1224-8fb2-ea2d11963bdf@gmail.com>
+Date:   Fri, 1 Apr 2022 19:11:57 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <PH0PR21MB3025A45FCFD77242EB9EAB27D7E19@PH0PR21MB3025.namprd21.prod.outlook.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH V5 1/1] Intel Sky Lake-E host root ports check.
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        andrew.maier@eideticom.com, logang@deltatee.com,
+        bhelgaas@google.com, jgg@nvidia.com,
+        Shlomo Pongratz <shlomop@pliops.com>
+References: <20220331143101.GA4846@bhelgaas>
+From:   Shlomo Pongratz <shlomopongratz@gmail.com>
+In-Reply-To: <20220331143101.GA4846@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> > @@ -91,6 +91,9 @@ static enum pci_protocol_version_t pci_protocol_versions[] = {
-> >  /* space for 32bit serial number as string */
-> >  #define SLOT_NAME_SIZE 11
-> > 
-> > +/* Size of requestor for VMbus */
-> > +#define HV_PCI_RQSTOR_SIZE 64
-> 
-> Might include a comment about how this value was derived.  I *think*
-> it is an arbitrary value based on the assumption that having more than
-> one request outstanding is rare, and so 64 should be extremely generous
-> in ensuring that we don't ever run out.
+On 31/03/2022 17:31, Bjorn Helgaas wrote:
+> On Thu, Mar 31, 2022 at 10:35:39AM +0300, Shlomo Pongratz wrote:
+>> In commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to
+>> the whitelist")
+>> Andrew Maier added the Sky Lake-E additional devices
+>> 2031, 2032 and 2033 root ports to the already existing 2030 device.
+>>
+>> The Intel devices 2030, 2031, 2032 and 2033 which are root ports A, B, C and D,
+>> respectively and if all exist they will occupy slots 0 till 3 in that order.
+> Please make this a sentence.
+>
+>> The original code handled only the case where the devices in the whitelist are
+>> host bridges and assumed that they will be found on slot 0.
+>>
+>> This assumption doesn't hold for root ports so an explicit test was added to
+>> cover this case.
+> Please update the subject line to match the style of previous ones.
+>
+> Please wrap the commit log to fit in 80 columns (including the 4
+> spaces added by "git log") like previous commits.
+>
+> Please figure out whether you want "Sky Lake-E" or "SkyLake-E" and use
+> it consistently in commit log and code comments.  It seems to be
+> "Skylake" on intel.com, so I suggest using that.
+I think that you are right and Skylake is indeed a better name,
+but since Andrew Maier in his original patch used Sky Lake-E it is
+better to stick with it. (SkyLake-E will be removed).
+>
+> Please use imperative mood, e.g., instead of "an explicit test was
+> added ...," write "add a test to cover this case."  Do the same in
+> code comments.
+>
+> Bjorn
+Shlomo
+------------------------------------------------------------------------
+*From:* Bjorn Helgaas [mailto:helgaas@kernel.org]
+*Sent:* Thursday, March 31, 2022, 5:31 PM
+*To:* Shlomo Pongratz
+*Cc:* linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+andrew.maier@eideticom.com, logang@deltatee.com, bhelgaas@google.com, 
+jgg@nvidia.com, Shlomo Pongratz
+*Subject:* [PATCH V5 1/1] Intel Sky Lake-E host root ports check.
 
-Right, I've added a comment to that effect.
-
-
-> > @@ -2696,8 +2699,9 @@ static void hv_pci_onchannelcallback(void *context)
-> >  	const int packet_size = 0x100;
-> >  	int ret;
-> >  	struct hv_pcibus_device *hbus = context;
-> > +	struct vmbus_channel *chan = hbus->hdev->channel;
-> 
-> Having gotten the channel as a local variable, could also use the local as
-> the first argument to vmbus_recvpacket_raw().
-
-Applied.
-
-
-> > @@ -2743,11 +2747,13 @@ static void hv_pci_onchannelcallback(void *context)
-> >  		switch (desc->type) {
-> >  		case VM_PKT_COMP:
-> > 
-> > -			/*
-> > -			 * The host is trusted, and thus it's safe to interpret
-> > -			 * this transaction ID as a pointer.
-> > -			 */
-> > -			comp_packet = (struct pci_packet *)req_id;
-> > +			req_addr = chan->request_addr_callback(chan, req_id);
-> > +			if (req_addr == VMBUS_RQST_ERROR) {
-> > +				dev_warn_ratelimited(&hbus->hdev->device,
-> > +						     "Invalid request ID\n");
-> 
-> Could you include the req_id value in the error message that is output?  I
-> was recently debugging a problem in the storvsc driver where having that
-> value would have been handy.
-
-Sure.
-
-Thanks,
-  Andrea
+> On Thu, Mar 31, 2022 at 10:35:39AM +0300, Shlomo Pongratz wrote:
+>> In commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C, D to
+>> the whitelist")
+>> Andrew Maier added the Sky Lake-E additional devices
+>> 2031, 2032 and 2033 root ports to the already existing 2030 device.
+>>
+>> The Intel devices 2030, 2031, 2032 and 2033 which are root ports A, B, C and D,
+>> respectively and if all exist they will occupy slots 0 till 3 in that order.
+> Please make this a sentence.
+>
+>> The original code handled only the case where the devices in the whitelist are
+>> host bridges and assumed that they will be found on slot 0.
+>>
+>> This assumption doesn't hold for root ports so an explicit test was added to
+>> cover this case.
+> Please update the subject line to match the style of previous ones.
+>
+> Please wrap the commit log to fit in 80 columns (including the 4
+> spaces added by "git log") like previous commits.
+>
+> Please figure out whether you want "Sky Lake-E" or "SkyLake-E" and use
+> it consistently in commit log and code comments.  It seems to be
+> "Skylake" on intel.com, so I suggest using that.
+>
+> Please use imperative mood, e.g., instead of "an explicit test was
+> added ...," write "add a test to cover this case."  Do the same in
+> code comments.
+>
+> Bjorn
