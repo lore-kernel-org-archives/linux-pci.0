@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CC8C433EF
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 14:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F23C4321E
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 14:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348466AbiDAO4j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Apr 2022 10:56:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60144 "EHLO
+        id S1348580AbiDAO4k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Apr 2022 10:56:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351397AbiDAOsw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 10:48:52 -0400
+        with ESMTP id S1351727AbiDAOtb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 10:49:31 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9250B28CA84;
-        Fri,  1 Apr 2022 07:39:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63D62AD5C3;
+        Fri,  1 Apr 2022 07:40:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6C726B82502;
-        Fri,  1 Apr 2022 14:39:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05585C36AE5;
-        Fri,  1 Apr 2022 14:39:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 164A6B824D5;
+        Fri,  1 Apr 2022 14:39:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E3E8C2BBE4;
+        Fri,  1 Apr 2022 14:39:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648823962;
-        bh=DvDLWLpok6lt21vdRgj5cJUWQCTHAuI/pyMdviZ0r0o=;
+        s=k20201202; t=1648823976;
+        bh=JhlCK4E1mu3yOPgCJV7utZ0/yQ80NcX7V3ZlF9qox6o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NDOYuSi+NJ3Ml5K0CNhU4gSxOcGKO4g7ruokNgmumuAO4S4BpErkVl5fGWAVMuP9F
-         YmmxIQZWCqqFEdjainYigisuZgtuU9rxhf+QhPHDIsc45Q4SdMSG8hX6jpeD3SDDsC
-         cMQBxvXoQXkndfeu3kbdoz8i7mm7O/h9acQ7uJNlTCO9ucIg1N3WMCWNUH+UNAv2O6
-         XI8s6nzfTUubTLbysY+Si8+653nGwvwBMwL7iAo1mA0ad0KzS+fqvQW5HsT6PBjJmE
-         0hnpMyi1P4qCDGltgX7A3Ax3ETXOKaUpgzn0a6FK3jtBaekYNZ2VwODdtmmIAco8i6
-         CKDM9jEp6U6aQ==
+        b=o7kjlmBRO7kIOhMZyJKOnT6iNyvIOxOdCR7LOytDZF2pTA1ajN/TjAjdMtIn+jEeR
+         /foES2A1oWVgpm5GkRxJ0MxR6/4xVWTjaENWJbs4ROjnbf1Bix2woiBzqLVEDKlvMZ
+         0uxRWalKz2nW6K+OcWFZb/miagX3YVxEv3aM7oCA+cm/95gsCTLFYymhYlrR1hJQcT
+         QqASMh9omjYjzTLDVkPdh/Ihy9gEUQUethmXTOmglSyDeRIzncKGbPSfgoXHFjhok4
+         oO5sQbKmx69PQ7pBRwSCBc6rbkKQwyMAd/enJSBH/DYUDKR0dC3Cl5Lf8wgIBTdChr
+         Sg4kRPF5ZFemg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, thomas.petazzoni@bootlin.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.15 32/98] PCI: aardvark: Fix support for MSI interrupts
-Date:   Fri,  1 Apr 2022 10:36:36 -0400
-Message-Id: <20220401143742.1952163-32-sashal@kernel.org>
+Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, lukas@wunner.de,
+        zhangliguang@linux.alibaba.com, ameynarkhede03@gmail.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com,
+        naveennaidu479@gmail.com, mani@kernel.org, hdegoede@redhat.com,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 37/98] PCI: pciehp: Add Qualcomm quirk for Command Completed erratum
+Date:   Fri,  1 Apr 2022 10:36:41 -0400
+Message-Id: <20220401143742.1952163-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220401143742.1952163-1-sashal@kernel.org>
 References: <20220401143742.1952163-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -54,79 +54,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Pali Rohár <pali@kernel.org>
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-[ Upstream commit b0b0b8b897f8e12b2368e868bd7cdc5742d5c5a9 ]
+[ Upstream commit 9f72d4757cbe4d1ed669192f6d23817c9e437c4b ]
 
-Aardvark hardware supports Multi-MSI and MSI_FLAG_MULTI_PCI_MSI is already
-set for the MSI chip. But when allocating MSI interrupt numbers for
-Multi-MSI, the numbers need to be properly aligned, otherwise endpoint
-devices send MSI interrupt with incorrect numbers.
+The Qualcomm PCI bridge device (Device ID 0x0110) found in chipsets such as
+SM8450 does not set the Command Completed bit unless writes to the Slot
+Command register change "Control" bits.
 
-Fix this issue by using function bitmap_find_free_region() instead of
-bitmap_find_next_zero_area().
+This results in timeouts like below:
 
-To ensure that aligned MSI interrupt numbers are used by endpoint devices,
-we cannot use Linux virtual irq numbers (as they are random and not
-properly aligned). Instead we need to use the aligned hwirq numbers.
+  pcieport 0001:00:00.0: pciehp: Timeout on hotplug command 0x03c0 (issued 2020 msec ago)
 
-This change fixes receiving MSI interrupts on Armada 3720 boards and
-allows using NVMe disks which use Multi-MSI feature with 3 interrupts.
+Add the device to the Command Completed quirk to mark commands "completed"
+immediately unless they change the "Control" bits.
 
-Without this NVMe disks freeze booting as linux nvme-core.c is waiting
-60s for an interrupt.
-
-Link: https://lore.kernel.org/r/20220110015018.26359-4-kabel@kernel.org
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Marek Behún <kabel@kernel.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Link: https://lore.kernel.org/r/20220210145003.135907-1-manivannan.sadhasivam@linaro.org
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index b2217e2b3efd..e97fd1cb00fc 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1177,7 +1177,7 @@ static void advk_msi_irq_compose_msi_msg(struct irq_data *data,
- 
- 	msg->address_lo = lower_32_bits(msi_msg);
- 	msg->address_hi = upper_32_bits(msi_msg);
--	msg->data = data->irq;
-+	msg->data = data->hwirq;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index b0692f33b03a..2fb044bfaebe 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -1058,6 +1058,8 @@ static void quirk_cmd_compl(struct pci_dev *pdev)
  }
- 
- static int advk_msi_set_affinity(struct irq_data *irq_data,
-@@ -1194,15 +1194,11 @@ static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
- 	int hwirq, i;
- 
- 	mutex_lock(&pcie->msi_used_lock);
--	hwirq = bitmap_find_next_zero_area(pcie->msi_used, MSI_IRQ_NUM,
--					   0, nr_irqs, 0);
--	if (hwirq >= MSI_IRQ_NUM) {
--		mutex_unlock(&pcie->msi_used_lock);
--		return -ENOSPC;
--	}
--
--	bitmap_set(pcie->msi_used, hwirq, nr_irqs);
-+	hwirq = bitmap_find_free_region(pcie->msi_used, MSI_IRQ_NUM,
-+					order_base_2(nr_irqs));
- 	mutex_unlock(&pcie->msi_used_lock);
-+	if (hwirq < 0)
-+		return -ENOSPC;
- 
- 	for (i = 0; i < nr_irqs; i++)
- 		irq_domain_set_info(domain, virq + i, hwirq + i,
-@@ -1220,7 +1216,7 @@ static void advk_msi_irq_domain_free(struct irq_domain *domain,
- 	struct advk_pcie *pcie = domain->host_data;
- 
- 	mutex_lock(&pcie->msi_used_lock);
--	bitmap_clear(pcie->msi_used, d->hwirq, nr_irqs);
-+	bitmap_release_region(pcie->msi_used, d->hwirq, order_base_2(nr_irqs));
- 	mutex_unlock(&pcie->msi_used_lock);
- }
- 
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+ 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0110,
++			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0400,
+ 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0401,
 -- 
 2.34.1
 
