@@ -2,49 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23161C433F5
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3CF4C433EF
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Apr 2022 15:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345008AbiDAPre (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Apr 2022 11:47:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54408 "EHLO
+        id S1347761AbiDAPri (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Apr 2022 11:47:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350274AbiDAO7a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 10:59:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C528653A65;
-        Fri,  1 Apr 2022 07:46:47 -0700 (PDT)
+        with ESMTP id S1350552AbiDAPAJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2022 11:00:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E8A01042AD;
+        Fri,  1 Apr 2022 07:47:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4C109B824AF;
-        Fri,  1 Apr 2022 14:46:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C26FAC34111;
-        Fri,  1 Apr 2022 14:46:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 09BE160AC9;
+        Fri,  1 Apr 2022 14:47:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DD81C2BBE4;
+        Fri,  1 Apr 2022 14:47:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648824405;
-        bh=5n6gkPn4odniDxxdbPfsYkqV0k8lz58Vff0Ug6fRgoU=;
+        s=k20201202; t=1648824476;
+        bh=SU+qxcxXDq9kx8IcFAfdB8DDqxttK1H73mnNgUGzO2Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F8TCqa000dcZJPKP6mQ0eBoZPR0+MCPgrDnRm+LF1RTiUCCfyV4kASs20gBG0VFkS
-         307Cwa2IPjX+EA/PZROwkRe5UDABBGVD7FAJPoJlJogeO9KZZDxDUNWBHd2AnGNg8q
-         sS2jvbUyzh4A+QY2fSV1K2YIpd1wWoRqOR3psQMv63+7L2OmXLdWlCjDqRCLZvNTqM
-         vi6HMLT88SlZtwYH2Mg5dJurVl/bH9L71HnPxOBY3YGCXv48Y4SnxaWo/lDlQeLOCt
-         x/M4A/PxGDqPC/2ml/lkvs6kFbyRBAhlpkehbDvnYLJg6lmL51BEWMQKGKLzbPdm1n
-         O7goG6oj1jM1A==
+        b=PXFNspKwhv6wvhNYYmE/RkPkaa831+9gZHv40Dj3uu0TLphZTMerJoJX6CtqdjoH+
+         xQwr6YBkGHvfJxgFGKY2WcQ0W/5+kljBuJVTU9qOqNNkstBwGzhS01+gcmhICZf4Cw
+         q9p6w+yhv9+y87WmFCqSfkN9MhQGTJ4USKxeV5AQD7g3OsEzk77r/ncmStDdQ/GCwV
+         yqOieyAMGSndcFXP/vEF4mKxO4pmiSpkc6Mo6sp8tdyKq9NjzCFspM5lopTkWBsPPD
+         Opgrbmaw1onXzjkOw9VELpPrAgC5zqreA2CXbEwFdT/h9t7slwA1gsZddYCl5rEqqK
+         1PEV3jOorRm2Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, thomas.petazzoni@bootlin.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 10/29] PCI: aardvark: Fix support for MSI interrupts
-Date:   Fri,  1 Apr 2022 10:45:53 -0400
-Message-Id: <20220401144612.1955177-10-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 08/22] PCI: aardvark: Fix support for MSI interrupts
+Date:   Fri,  1 Apr 2022 10:47:15 -0400
+Message-Id: <20220401144729.1955554-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220401144612.1955177-1-sashal@kernel.org>
-References: <20220401144612.1955177-1-sashal@kernel.org>
+In-Reply-To: <20220401144729.1955554-1-sashal@kernel.org>
+References: <20220401144729.1955554-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -82,14 +81,14 @@ Signed-off-by: Marek Behún <kabel@kernel.org>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 16 ++++++----------
+ drivers/pci/host/pci-aardvark.c | 16 ++++++----------
  1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index e6d60fa2217d..db778a25bae3 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -833,7 +833,7 @@ static void advk_msi_irq_compose_msi_msg(struct irq_data *data,
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 9ae544e113dc..124fd7cb5da5 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -834,7 +834,7 @@ static void advk_msi_irq_compose_msi_msg(struct irq_data *data,
  
  	msg->address_lo = lower_32_bits(msi_msg);
  	msg->address_hi = upper_32_bits(msi_msg);
@@ -98,7 +97,7 @@ index e6d60fa2217d..db778a25bae3 100644
  }
  
  static int advk_msi_set_affinity(struct irq_data *irq_data,
-@@ -850,15 +850,11 @@ static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
+@@ -851,15 +851,11 @@ static int advk_msi_irq_domain_alloc(struct irq_domain *domain,
  	int hwirq, i;
  
  	mutex_lock(&pcie->msi_used_lock);
@@ -118,7 +117,7 @@ index e6d60fa2217d..db778a25bae3 100644
  
  	for (i = 0; i < nr_irqs; i++)
  		irq_domain_set_info(domain, virq + i, hwirq + i,
-@@ -876,7 +872,7 @@ static void advk_msi_irq_domain_free(struct irq_domain *domain,
+@@ -877,7 +873,7 @@ static void advk_msi_irq_domain_free(struct irq_domain *domain,
  	struct advk_pcie *pcie = domain->host_data;
  
  	mutex_lock(&pcie->msi_used_lock);
