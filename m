@@ -2,178 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4307C4332F
-	for <linux-pci@archiver.kernel.org>; Sun,  3 Apr 2022 07:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF4A1C433EF
+	for <linux-pci@archiver.kernel.org>; Sun,  3 Apr 2022 10:20:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350814AbiDCH1V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 3 Apr 2022 03:27:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45670 "EHLO
+        id S1346172AbiDCKWJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 3 Apr 2022 06:22:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355029AbiDCH1T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Apr 2022 03:27:19 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20EB531DCC
-        for <linux-pci@vger.kernel.org>; Sun,  3 Apr 2022 00:25:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648970726; x=1680506726;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=YQbsQ1BJ3OuegT7c+HRGImamaRg9IjOJQfLwcZErIcs=;
-  b=eN8crKNKH/BK5C6l1kyDVNKm7kct/rHsqF6Un+zwkBo8Ta5Qim7Ywbyv
-   g0IhSDQGRPOPF4VpKLCl/cofy/+aT7vWkhg7qc373tIXDoC2Nblvc8nll
-   p6vlfebAxghQeMnTXyrFryVvmvx1TIX1M63LxX1w76Y8uv9Ysr+Z0BYCs
-   YnrgtKfK6mThGbJpW8fnlQThFQA+h/iL1CTw6Vw4TSpwoAX4Ky4mqPy+G
-   boUGyqn/BDxDATglgWyUxPxxaH8ZSRgWySsM0ptFXaMlkXgZz26s0obWM
-   h1iue/Au9PXWKRu8XqDPnBpNlYCtAti+Mrq20h6O/r/Ja1vJwDGYwr3AT
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10305"; a="240950467"
-X-IronPort-AV: E=Sophos;i="5.90,231,1643702400"; 
-   d="scan'208";a="240950467"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2022 00:25:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,231,1643702400"; 
-   d="scan'208";a="523243734"
-Received: from lkp-server02.sh.intel.com (HELO a44fdfb70b94) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 03 Apr 2022 00:25:24 -0700
-Received: from kbuild by a44fdfb70b94 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1naubz-0000nb-9Q;
-        Sun, 03 Apr 2022 07:25:23 +0000
-Date:   Sun, 03 Apr 2022 15:25:12 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:next] BUILD SUCCESS
- 8357c31f8a9ba6c1ba22e5315817a344bbe89274
-Message-ID: <62494bd8.1c6zGU2IcMOab/uk%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S231140AbiDCKWI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Apr 2022 06:22:08 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268032ED6B;
+        Sun,  3 Apr 2022 03:20:15 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id h16so4228764wmd.0;
+        Sun, 03 Apr 2022 03:20:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=062yGinyulA5bgMq3Js/9yqeNFliRt521zdOAHdLn54=;
+        b=ezYnk1OCyJwqt8+rupsB4FHu0mUqGmRL0mWbtzbCb5S4Cy6ftYmQBUqx26P+rHkGhf
+         5SeUjcj7+nFQJj7aIcFWEpfOyjeSV0oOjNnHSyFSGowRDU6XTjWR1eBF35uiDD6QAMZr
+         xnLp9Ak82Ji66RtHVu0p0AHXedaDwCUSExJjYAPLAY4ZbHCVaVzLXkKLp8FYTjZDKbF7
+         UgaRW9741asYS8GjtJnqkCyeLPtqL984AeK177yABEhYruEVHyM6C99woo+VPwWKmih1
+         KY5hD2uq7qqIiCFMnZW9SMk5JHP+jxf6xnQT0O2lNWeU26z601x05PdDwsaGX74iplht
+         VTOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=062yGinyulA5bgMq3Js/9yqeNFliRt521zdOAHdLn54=;
+        b=qgOvOKFDvzO+ma3G+kiGduQaKyu3OogPREDOy5Wi7ukxuzxAr/t5lJ1fCuKzxI9lCx
+         9VFCL34Vb2IWss2zm2Bnd8HKT7KJQ8ZTHCh/oyEEhpn9yLnYz91Fpk5ei2v8mhQuvozJ
+         h51ookCCI8CUxDff5CXtzBRFj0HhXindCV3wshr4cPuh/qejzEwlsmP9owoMcC9pXL7r
+         uqF/tc4tDKSIrJKTIkg/ZBELuhiXfLW3M/BI9RZ2NmM0c5iSmiCKEVYnS13YW8tpV5L1
+         Mh65FfeQG6mJgivBI9jm3shRgBRP1v03IwI/nG22v2GnOQ0mq0NQteLljkLiJzz0Dl2p
+         u/Tw==
+X-Gm-Message-State: AOAM531nQEJSq0h2MD5k/2vYBH1xdeYmBZ4Obyn6DkdXAQWMParv1Izi
+        C5NaSQQaLuXPM0ys0qbHWBtBGvMEgrI=
+X-Google-Smtp-Source: ABdhPJzaNU3EkfG0guva/YQ3Cm9BKpjetMEEPga+GubdutstjeNX2+pnIw+RBvHg0Zr7RDr5RpzqGw==
+X-Received: by 2002:a7b:c195:0:b0:38c:ea91:c0b3 with SMTP id y21-20020a7bc195000000b0038cea91c0b3mr15149400wmi.38.1648981213224;
+        Sun, 03 Apr 2022 03:20:13 -0700 (PDT)
+Received: from Dev-shlomop.pliops.ent (bzq-219-32-62.isdn.bezeqint.net. [62.219.32.62])
+        by smtp.googlemail.com with ESMTPSA id k23-20020a7bc417000000b0038ccada7566sm13639895wmi.11.2022.04.03.03.20.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Apr 2022 03:20:12 -0700 (PDT)
+From:   Shlomo Pongratz <shlomopongratz@gmail.com>
+X-Google-Original-From: Shlomo Pongratz <shlomop@pliops.com>
+To:     linux-pci@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, andrew.maier@eideticom.com,
+        logang@deltatee.com, bhelgaas@google.com, jgg@nvidia.com,
+        helgaas@kernel.org, Shlomo Pongratz <shlomop@pliops.com>
+Subject: [PATCH V6 0/1] Intel Sky Lake-E host root ports check.
+Date:   Sun,  3 Apr 2022 13:20:07 +0300
+Message-Id: <20220403102008.7122-1-shlomop@pliops.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-branch HEAD: 8357c31f8a9ba6c1ba22e5315817a344bbe89274  Merge branch 'pci/resource'
+Changes in v6:
 
-elapsed time: 721m
+Address Bjorn Helgaas comments, e.g. commit line length and using both
+"Sky Lake-E" and "SkyLake-E" in comments.
+The comments in the code now use Skylake.
+However the patch subject still refers to "Sky Lake-E" since
+Andrew Maier's original patch used that name.
 
-configs tested: 100
-configs skipped: 3
+Changes in v5:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Address Logan Gunthorpe, Jason Gunthorpe and Bjorn Helgaas comments.
+Fix indentation.
+Update comments.
 
-gcc tested configs:
-arm64                               defconfig
-arm64                            allyesconfig
-arm                              allmodconfig
-arm                                 defconfig
-arm                              allyesconfig
-i386                          randconfig-c001
-m68k                       m5208evb_defconfig
-arm                        cerfcube_defconfig
-mips                 decstation_r4k_defconfig
-sh                           se7619_defconfig
-h8300                     edosk2674_defconfig
-arm                        spear6xx_defconfig
-xtensa                  nommu_kc705_defconfig
-sh                           se7712_defconfig
-arm                        clps711x_defconfig
-arc                        vdk_hs38_defconfig
-sh                   sh7724_generic_defconfig
-sh                   rts7751r2dplus_defconfig
-mips                           xway_defconfig
-m68k                            mac_defconfig
-mips                            gpr_defconfig
-sh                               j2_defconfig
-i386                                defconfig
-sh                           se7705_defconfig
-sparc64                          alldefconfig
-alpha                               defconfig
-arm                          badge4_defconfig
-x86_64                        randconfig-c001
-arm                  randconfig-c002-20220403
-ia64                             allmodconfig
-ia64                             allyesconfig
-ia64                                defconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-csky                                defconfig
-nios2                            allyesconfig
-alpha                            allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-h8300                            allyesconfig
-xtensa                           allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-s390                                defconfig
-s390                             allmodconfig
-parisc                              defconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-s390                             allyesconfig
-sparc                               defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
-x86_64                        randconfig-a011
-x86_64                        randconfig-a013
-x86_64                        randconfig-a015
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-riscv                               defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                    nommu_k210_defconfig
-riscv                             allnoconfig
-riscv                            allmodconfig
-riscv                            allyesconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                         rhel-8.3-kunit
-x86_64                               rhel-8.3
+Changes in v4:
 
-clang tested configs:
-x86_64                        randconfig-c007
-i386                          randconfig-c001
-powerpc              randconfig-c003-20220403
-riscv                randconfig-c006-20220403
-mips                 randconfig-c004-20220403
-arm                  randconfig-c002-20220403
-x86_64                           allyesconfig
-arm                             mxs_defconfig
-powerpc                     pseries_defconfig
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
-hexagon              randconfig-r045-20220403
-riscv                randconfig-r042-20220403
-hexagon              randconfig-r041-20220403
+Address Bjorn Helgaas and Jason Gunthorpe comments.
+Replace the implementation of pci_is_root_port with a simple check
+pci_pcie_type(root) != PCI_EXP_TYPE_ROOT_PORT and remove the added
+IS_ROOT_PORT flag.
+Update patch text.
+
+Changes in v3:
+
+Use Jason Gunthorpe suggestion, that is add a flag 'IS_ROOT_PORT'
+instead of 'port' and then just ignore the slot number entirely for root
+ports.
+
+Changes in v2:
+
+Change comment and description based on Logan Gunthorpe comments.
+
+v1:
+
+In commit 7b94b53db34f ("PCI/P2PDMA: Add Intel Sky Lake-E Root Ports B, C,
+D to the whitelist")
+Andrew Maier added the Sky Lake-E additional devices
+2031, 2032 and 2033 root ports to the already existing 2030 device.
+
+The Intel devices 2030, 2031, 2032 and 2033 which are root ports A, B, C
+and D, respectively and if all exist they will occupy slots 0 till 3 in
+that order.
+
+The original code handled only the case where the devices in the whitelist
+are  host bridges and assumed that they will be found on slot 0.
+
+Since this assumption doesn't hold for root ports, add a test to cover this
+case.
+
+Shlomo Pongratz (1):
+  Intel Sky Lake-E host root ports check.
+
+ drivers/pci/p2pdma.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.17.1
+
