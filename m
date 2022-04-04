@@ -2,106 +2,68 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECAE4C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A78BFC3527D
 	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 21:27:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380172AbiDDV3U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:29:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42330 "EHLO
+        id S1380466AbiDDV3O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Apr 2022 17:29:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379962AbiDDS1F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 14:27:05 -0400
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB53113F48;
-        Mon,  4 Apr 2022 11:25:08 -0700 (PDT)
-Received: by mail-yb1-f180.google.com with SMTP id y38so19170728ybi.8;
-        Mon, 04 Apr 2022 11:25:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=bCV4HtxKKrFtYUzA08GGtmyQuDrR4SCJ17M7Fnxmr34=;
-        b=r3yPEzKhRac9iqyCIM8yg2iRAQmLrVVpU76b6aeqk2sl9JP/JaTv5gMhqiqBATKUlL
-         1lx6TJhRXKRFKuNcseFsIMdWIRFLbqII+4nMqSA4xoCp6cFdUvv/65BSe6OjD0QluhkU
-         lvpU1R+1PVlbM1LgOArpnn1Le4PvBNMZ0wOUly/1XVRdw+z5qVXoO6t+8SD4mZhmkXZK
-         lZiduZENQyxvhyio30T71th5sDUhzn62NOZ3lAiGeE+cnIKZ2yOQy2yWymZnxRXQ4W3P
-         P2Q8cfLHqYaM/WAByB9VAYrjJf+xw5vqzPbexcCoZ0xlnGIEeEzPddcklxd2MO66DfXW
-         JWDg==
-X-Gm-Message-State: AOAM532ywzZkKlVZ+XOcu6IcZJTAN8Xm+eBQFLBrFPURvxW450m/f8ft
-        oyxIuZWYdfh5BpoEotgDhFnLpxjLjy/qjbGClyw=
-X-Google-Smtp-Source: ABdhPJyZrHKGdImhZK9li020wFi6mVFXiU0hAl7RxyBC2L67Wz55stGtbnyQdQUfeGvM+JTuLG3HrRleXe/zWArnIiw=
-X-Received: by 2002:a05:6902:1544:b0:63d:d3a7:8cc4 with SMTP id
- r4-20020a056902154400b0063dd3a78cc4mr1059291ybu.622.1649096708257; Mon, 04
- Apr 2022 11:25:08 -0700 (PDT)
+        with ESMTP id S1380368AbiDDTuT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 15:50:19 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [46.235.227.227])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D44730F6A
+        for <linux-pci@vger.kernel.org>; Mon,  4 Apr 2022 12:48:21 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: gtucker)
+        with ESMTPSA id 246001F43BF6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1649101700;
+        bh=daPzz5ykE2J9Xwa1bkkezG/6izbYPno5w+c0Kcjkp2w=;
+        h=Date:Subject:From:To:Cc:Reply-To:References:In-Reply-To:From;
+        b=e9r6rANqSb5rqAzq9JeevE5FKfPDRNWCGFlAARCTNlPn8KJw++hYLWauIa9GcQ6yj
+         2Kgqy41Mum7vy3FttQS6taKXED7bgItVmVR6e42f8PGc75D+DS78x9JBedCHk0nZQU
+         bfGNQcIeQb5O5BX6MHNx4t1d1pdLLeGv+Uvra0Ycm2fkz011JVFgfdeMd4HkLN8pMJ
+         02/FMX8z0BCxrsFEkFFbMt7XPhiW61NL9nf6kQE0HhdG1NS8NVh581rkvKd+jYobCu
+         5kK7/ftqSskq1bJ8FCzZ7fEM7QaGdGDCMm6ookaIGobFhw2oAxP1V8be6JClmVSZyW
+         CHOy6R+/v4NLQ==
+Message-ID: <73a7cc3c-9d51-3e44-a4e4-cd116ffccc92@collabora.com>
+Date:   Mon, 4 Apr 2022 20:48:17 +0100
 MIME-Version: 1.0
-References: <164894751774.951952.9428402449668442020.stgit@dwillia2-desk3.amr.corp.intel.com>
- <CAJZ5v0hGVN_=3iU8OLpHY3Ak35T5+JcBM-qs8SbojKrpd0VXsA@mail.gmail.com> <CAPcyv4hCseKbr_XXyeOACYmm0defeSet0LX3YWLKGRnCMS=MFQ@mail.gmail.com>
-In-Reply-To: <CAPcyv4hCseKbr_XXyeOACYmm0defeSet0LX3YWLKGRnCMS=MFQ@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 4 Apr 2022 20:24:57 +0200
-Message-ID: <CAJZ5v0gT=aAR=aW0-kkDWv2TotmL_EW4JVPqoh9oKwxtOyZr-A@mail.gmail.com>
-Subject: Re: [PATCH] cxl/mem: Disable suspend
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>, linux-cxl@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: next/master bisection: baseline.login on asus-C523NA-A20057-coral
+Content-Language: en-US
+From:   Guillaume Tucker <guillaume.tucker@collabora.com>
+To:     Hans de Goede <hdegoede@redhat.com>,
+        Mark Brown <broonie@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org,
+        "kernelci@groups.io" <kernelci@groups.io>,
+        "kernelci-results@groups.io" <kernelci-results@groups.io>
+Reply-To: kernelci@groups.io, guillaume.tucker@collabora.com
+References: <623c13ec.1c69fb81.8cbdb.5a7a@mx.google.com>
+ <Yjyv03JsetIsTJxN@sirena.org.uk>
+ <4e9fca2f-0af1-3684-6c97-4c35befd5019@redhat.com>
+ <Yjzua8Wye/3DHBKx@sirena.org.uk>
+ <f8e96f8a-c19c-6acd-2f54-688924f491e8@redhat.com>
+ <28699579-8384-ff3b-5662-fb56d8ced766@collabora.com>
+ <16E2C910B4947F17.5433@groups.io>
+In-Reply-To: <16E2C910B4947F17.5433@groups.io>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 4, 2022 at 8:16 PM Dan Williams <dan.j.williams@intel.com> wrote:
->
-> On Mon, Apr 4, 2022 at 9:00 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> >
-> > On Sun, Apr 3, 2022 at 2:58 AM Dan Williams <dan.j.williams@intel.com> wrote:
-> > >
-> > > The CXL specification claims S3 support at a hardware level, but at a
-> > > system software level there are some missing pieces. Section 9.4 rightly
-> > > claims that "CXL mem adapters may need aux power to retain memory
-> > > context across S3", but there is no enumeration mechanism for the OS to
-> > > determine if a given adapter has that support. Moreover the save state
-> > > and resume image for the system may inadvertantly end up in a CXL device
-> > > that needs to be restored before the save state is recoverable. I.e. a
-> > > circular dependency that is not resolvable without a third party
-> > > save-area.
-> > >
-> > > Arrange for the cxl_mem driver to fail S3 attempts. This still nominaly
-> > > allows for suspend, but requires unbinding all CXL memory devices before
-> > > the suspend to ensure the typical DRAM flow is taken. The cxl_mem unbind
-> > > flow is intended to also tear down all CXL memory regions associated
-> > > with a given cxl_memdev.
-> > >
-> > > It is reasonable to assume that any device participating in a System RAM
-> > > range published in the EFI memory map is covered by aux power and
-> > > save-area outside the device itself. So this restriction can be
-> > > minimized in the future once pre-existing region enumeration support
-> > > arrives, and perhaps a spec update to clarify if the EFI memory is
-> > > sufficent for determining the range of devices managed by
-> > > platform-firmware for S3 support.
-> > >
-> > > Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> > > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> >
-> > A few thoughts:
-> >
-> > 1. I don't think it is necessary to fail suspend-to-idle too (which
-> > the driver will do after the patch AFAICS).
->
-> Ah true, I missed that this would also disable suspend to idle.
->
-> > 2. Should hibernation fail too?  From the description above it looks
-> > like that should be the case.
->
-> Yes, any CXL address range that was provisioned by the OS would need
-> some off-device save area for the device-state which seems difficult
-> to support in the general case.
+On 04/04/2022 20:44, Guillaume Tucker wrote:
+> Well the issue seems to have been fixed on mainline
 
-So it should cause errors to be returned from the hibernation path
-too, ideally before the freezing of tasks.
+Sorry, I meant linux-next.  It is also booting on mainline but I
+don't think the regression ever went further than linux-next:
 
-> > 3. If "deep"suspend is going to fail every time, it may be better to
-> > prevent "deep" from being written to /sys/power/mem_sleep instead of
-> > failing suspend in progress, especially after freezing user space.
->
-> Yeah, that sounds much better, let me explore that option.
+  https://linux.kernelci.org/test/plan/id/6246654e60a1cb470cae0680/
+
+Guillaume
