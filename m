@@ -2,88 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C88C433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 14:49:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF0AC433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 15:25:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347083AbiDDOvq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Apr 2022 10:51:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45008 "EHLO
+        id S1377227AbiDDP1N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Apr 2022 11:27:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378340AbiDDOvX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 10:51:23 -0400
-Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [46.235.227.227])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 711C01FCD0;
-        Mon,  4 Apr 2022 07:49:05 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: kholk11)
-        with ESMTPSA id 2DE141F44AAF
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1649083743;
-        bh=gqGXxJTgo2QFByPlVeChgiuVrlRNuS1ZqugUAimLnDE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jcyi3ieeRTjx/TdSizLK3y7evsfkq7a7xC3FvBhuFTx2x+b7kVS446Fprm0R/mAoU
-         zN37Pr2DLQw/YLDqdp9zQuPItVJVXNxLiK+OGeN5zw9sRSww8pSiL6pk6AnoA/2TtS
-         XwBlOD8E0NmBHlUnZn2djZfHFu1cywvz+AG0uDauu0yd5Ov+qp04WUiGYdvdPUB3+e
-         5B/EtU1UW1YPHhIbN11kRC1gJp4gWaoIbL5weuuwD1wGsePQNMkrzpRh26+Vvo8V6y
-         6NXbUfvLmlVI6uGudg7raD0STAbijI4jgg2oAwomRywa3sXrYub1barMRAAot6jNN+
-         sgAzvMHjOiU8Q==
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-To:     ryder.lee@mediatek.com
-Cc:     jianjun.wang@mediatek.com, lorenzo.pieralisi@arm.com,
-        robh@kernel.org, kw@linux.com, bhelgaas@google.com,
-        p.zabel@pengutronix.de, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        kernel@collabora.com, nfraprado@collabora.com,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-Subject: [PATCH] PCI: mediatek-gen3: Assert resets to ensure expected init state
-Date:   Mon,  4 Apr 2022 16:48:58 +0200
-Message-Id: <20220404144858.92390-1-angelogioacchino.delregno@collabora.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S241874AbiDDP1M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 11:27:12 -0400
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8602E193EA;
+        Mon,  4 Apr 2022 08:25:15 -0700 (PDT)
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
+ id 3daf4d00b9762f0a; Mon, 4 Apr 2022 17:25:13 +0200
+Received: from kreacher.localnet (unknown [213.134.181.62])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 241B166BCD2;
+        Mon,  4 Apr 2022 17:25:13 +0200 (CEST)
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Linux ACPI <linux-acpi@vger.kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v1 3/3] PCI: ACPI: PM: Power up devices in D3cold before scanning them
+Date:   Mon, 04 Apr 2022 17:25:04 +0200
+Message-ID: <5729439.MhkbZ0Pkbq@kreacher>
+In-Reply-To: <21439956.EfDdHjke4D@kreacher>
+References: <21439956.EfDdHjke4D@kreacher>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 213.134.181.62
+X-CLIENT-HOSTNAME: 213.134.181.62
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudejvddgkedvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepvddufedrudefgedrudekuddriedvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddufedrudefgedrudekuddriedvpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeeipdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
+ phhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhm
+X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The controller may have been left out of reset by the bootloader,
-in which case, before the powerup sequence, the controller will be
-found preconfigured with values that were set before booting the
-kernel: this produces a controller failure, with the result of
-a failure during the mtk_pcie_startup_port() sequence as the PCIe
-link never gets up.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-To ensure that we get a clean start in an expected state, assert
-both the PHY and MAC resets before executing the controller
-power-up sequence.
+The initial configuration of ACPI power resources on some systems
+implies that some PCI devices on them are initially in D3cold.
 
-Fixes: d3bf75b579b9 ("PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192")
-Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+In some cases, especially for PCIe Root Ports, this is a "logical"
+D3cold, meaning that the configuration space of the device is
+accessible, but some of its functionality may be missing, but it
+very well may be real D3cold, in which case the device will not
+be accessible at all.  However, the PCI bus type driver will need
+to access its configuration space in order to enumerate it.
+
+To prevent possible device enumeration failures that may ensue as
+a result of ACPI power resources being initially in the "off"
+state, power up all children of the host bridge ACPI device object
+that hold valid _ADR objects (which indicates that they will be
+enumerated by the PCI bus type driver) and do that to all children
+of the ACPI device objects corresponding to PCI bridges (including
+PCIe ports).
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/controller/pcie-mediatek-gen3.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/acpi/pci_root.c |    2 ++
+ drivers/pci/pci-acpi.c  |    3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index f7048ea4c020..dccdfce12b1c 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -838,6 +838,14 @@ static int mtk_pcie_setup(struct mtk_gen3_pcie *pcie)
- 	if (err)
- 		return err;
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -927,6 +927,8 @@ struct pci_bus *acpi_pci_root_create(str
+ 		host_bridge->preserve_config = 1;
+ 	ACPI_FREE(obj);
  
-+	/*
-+	 * The controller may have been left out of reset by the bootloader
-+	 * so make sure that we get a clean start by asserting resets here.
-+	 */
-+	reset_control_assert(pcie->phy_reset);
-+	reset_control_assert(pcie->mac_reset);
-+	usleep_range(10, 20);
++	acpi_dev_power_up_children_with_adr(device);
 +
- 	/* Don't touch the hardware registers before power up */
- 	err = mtk_pcie_power_up(pcie);
- 	if (err)
--- 
-2.35.1
+ 	pci_scan_child_bus(bus);
+ 	pci_set_host_bridge_release(host_bridge, acpi_pci_root_release_info,
+ 				    info);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -1374,6 +1374,9 @@ void pci_acpi_setup(struct device *dev,
+ 
+ 	acpi_pci_wakeup(pci_dev, false);
+ 	acpi_device_power_add_dependent(adev, dev);
++
++	if (pci_is_bridge(pci_dev))
++		acpi_dev_power_up_children_with_adr(adev);
+ }
+ 
+ void pci_acpi_cleanup(struct device *dev, struct acpi_device *adev)
+
+
 
