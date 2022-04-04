@@ -2,158 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B3FC4332F
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 15:59:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C75CBC4707E
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 21:27:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378806AbiDDQBs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Apr 2022 12:01:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33960 "EHLO
+        id S1379544AbiDDV3K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Apr 2022 17:29:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242759AbiDDQBs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 12:01:48 -0400
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E649D245A5;
-        Mon,  4 Apr 2022 08:59:51 -0700 (PDT)
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-2e5e31c34bfso104471147b3.10;
-        Mon, 04 Apr 2022 08:59:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=w7ocDMuZoyG16WXF5ipj2JQf4AK4I9deIE3Jm5Bs/xc=;
-        b=P/Df+aT0y9hrhXdfv/bPeNgjQqqF6kfMvONu6fRJcBsUA1hRxsve/fckaqkFgBO+vY
-         aucQLxNq0AI3yryHtViHsHggd+95t46c4n1r1MtOmI9sD6NS/kdAHRKmaQ46PKLQ9KoL
-         dtKxJY8xlKyHnEikzXgYwigBw5yCbPGoKoWjZCL/yNGVf4+Qkge3Z4pFvEAj7aTICltn
-         eVs81PTD3UQwJdW57puke/E9qOqHrTQHYxZ0HTxCLbkRy2zKSAYi+brgC0EQiV+h1t11
-         G/H9E83nzLCpxiBkAGNZ4dGkvN6lemN/E/hX8/ilrqMNApAuk3wMi6+5oEXF7HSX+N0J
-         QhwA==
-X-Gm-Message-State: AOAM5327IJT3oa7H8AtR1/w2mr7bXHw4qwdg55vOZswvldOgKD87ldE+
-        Q68khFnlXamNCzIcZOoAtjuXwBUec8nJdwqxCwabO+7E
-X-Google-Smtp-Source: ABdhPJyM8jOQfNwC1LsuoX5wt2+Tez+WgTblGOwGdMIPsSlhv9ZXF+HmUFRB3Pb+p33UR5vpweNUm7aYvABMhBWTvO0=
-X-Received: by 2002:a81:36cf:0:b0:2e5:2597:a026 with SMTP id
- d198-20020a8136cf000000b002e52597a026mr567162ywa.301.1649087991154; Mon, 04
- Apr 2022 08:59:51 -0700 (PDT)
+        with ESMTP id S1380360AbiDDTqm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 15:46:42 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [46.235.227.227])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8107F30F6A
+        for <linux-pci@vger.kernel.org>; Mon,  4 Apr 2022 12:44:45 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: gtucker)
+        with ESMTPSA id B97391F43BF6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1649101484;
+        bh=AetZO14xbcwjN7p2Q/tZR+lMGaIRX4VombXbjpftqPo=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=MGC+2yHksxo5ptY8I7dVON2PF0/XiL3nKTT7/vTzVJ62401X3ZPgJ53+n59uOX4nd
+         EiCvATZyO2cNCj42poEmnhwVJPwILBOvoSVfMXMRj5g/JaeCtDSGcWCTt6Y+ZrOzJf
+         mwxNPh0iTPUH9LdnNsJmxC8fR8BRnQ69BdS0JVgN9bIH7tHVg5sG80cs2QuM2ZQ7xs
+         gwFdiOTYnHp8fS/ityq1nwP3S5Zf9Th8odhMSYfGKiRfZF5bwD88NK33npLm/Vgs5G
+         4EJ7Aemiki4F/NTjpzykMuNrR8TqZonQCbXu2wIOK1gzOWuEOWex9M1TwLnjzcQzrE
+         mg6tcv0TisQiQ==
+Message-ID: <28ee7ff8-5b21-9154-74e9-efd59da4a498@collabora.com>
+Date:   Mon, 4 Apr 2022 20:44:41 +0100
 MIME-Version: 1.0
-References: <164894751774.951952.9428402449668442020.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <164894751774.951952.9428402449668442020.stgit@dwillia2-desk3.amr.corp.intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 4 Apr 2022 17:59:40 +0200
-Message-ID: <CAJZ5v0hGVN_=3iU8OLpHY3Ak35T5+JcBM-qs8SbojKrpd0VXsA@mail.gmail.com>
-Subject: Re: [PATCH] cxl/mem: Disable suspend
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     linux-cxl@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.1
+Subject: Re: next/master bisection: baseline.login on asus-C523NA-A20057-coral
+Content-Language: en-US
+From:   Guillaume Tucker <guillaume.tucker@collabora.com>
+To:     Hans de Goede <hdegoede@redhat.com>,
+        Mark Brown <broonie@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org,
+        "kernelci@groups.io" <kernelci@groups.io>,
+        "kernelci-results@groups.io" <kernelci-results@groups.io>
+References: <623c13ec.1c69fb81.8cbdb.5a7a@mx.google.com>
+ <Yjyv03JsetIsTJxN@sirena.org.uk>
+ <4e9fca2f-0af1-3684-6c97-4c35befd5019@redhat.com>
+ <Yjzua8Wye/3DHBKx@sirena.org.uk>
+ <f8e96f8a-c19c-6acd-2f54-688924f491e8@redhat.com>
+ <28699579-8384-ff3b-5662-fb56d8ced766@collabora.com>
+In-Reply-To: <28699579-8384-ff3b-5662-fb56d8ced766@collabora.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Apr 3, 2022 at 2:58 AM Dan Williams <dan.j.williams@intel.com> wrote:
->
-> The CXL specification claims S3 support at a hardware level, but at a
-> system software level there are some missing pieces. Section 9.4 rightly
-> claims that "CXL mem adapters may need aux power to retain memory
-> context across S3", but there is no enumeration mechanism for the OS to
-> determine if a given adapter has that support. Moreover the save state
-> and resume image for the system may inadvertantly end up in a CXL device
-> that needs to be restored before the save state is recoverable. I.e. a
-> circular dependency that is not resolvable without a third party
-> save-area.
->
-> Arrange for the cxl_mem driver to fail S3 attempts. This still nominaly
-> allows for suspend, but requires unbinding all CXL memory devices before
-> the suspend to ensure the typical DRAM flow is taken. The cxl_mem unbind
-> flow is intended to also tear down all CXL memory regions associated
-> with a given cxl_memdev.
->
-> It is reasonable to assume that any device participating in a System RAM
-> range published in the EFI memory map is covered by aux power and
-> save-area outside the device itself. So this restriction can be
-> minimized in the future once pre-existing region enumeration support
-> arrives, and perhaps a spec update to clarify if the EFI memory is
-> sufficent for determining the range of devices managed by
-> platform-firmware for S3 support.
->
-> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
++kernelci
 
-A few thoughts:
+On 29/03/2022 19:44, Guillaume Tucker wrote:
+> On 28/03/2022 13:54, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 3/24/22 23:19, Mark Brown wrote:
+>>> On Thu, Mar 24, 2022 at 09:34:30PM +0100, Hans de Goede wrote:
+>>>
+>>>> Mark, if one of use writes a test patch, can you get that Asus machine to boot a
+>>>> kernel build from next + the test patch ?
+>>>
+>>> I can't directly unfortunately as the board is in Collabora's lab but
+>>> Guillaume (who's already CCed) ought to be able to, and I can generally
+>>> prod and try to get that done.
+>>
+>> Ok, Guillaume, can you try a kernel with commit 5949965ec9340cfc0e65f7d8a576b660b26e2535
+>> ("x86/PCI: Preserve host bridge windows completely covered by E820") + the 
+>> attached patch added on top a try on the asus-C523NA-A20057-coral machine please
+>> and see if that makes it boot again ?
+> 
+> Sorry I've been busy with a conference.  Sure, will put that
+> through KernelCI tomorrow and let you know the outcome.
 
-1. I don't think it is necessary to fail suspend-to-idle too (which
-the driver will do after the patch AFAICS).
-2. Should hibernation fail too?  From the description above it looks
-like that should be the case.
-3. If "deep"suspend is going to fail every time, it may be better to
-prevent "deep" from being written to /sys/power/mem_sleep instead of
-failing suspend in progress, especially after freezing user space.
+Well the issue seems to have been fixed on mainline, unless it's
+intermittent.  In any case, next-20220404 is booting fine:
 
-> ---
->  drivers/cxl/core/memdev.c |    1 -
->  drivers/cxl/mem.c         |   26 ++++++++++++++++++++++++++
->  2 files changed, 26 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
-> index 1f76b28f9826..efe4d2e9bfef 100644
-> --- a/drivers/cxl/core/memdev.c
-> +++ b/drivers/cxl/core/memdev.c
-> @@ -251,7 +251,6 @@ static struct cxl_memdev *cxl_memdev_alloc(struct cxl_dev_state *cxlds,
->         dev->bus = &cxl_bus_type;
->         dev->devt = MKDEV(cxl_mem_major, cxlmd->id);
->         dev->type = &cxl_memdev_type;
-> -       device_set_pm_not_required(dev);
->         INIT_WORK(&cxlmd->detach_work, detach_memdev);
->
->         cdev = &cxlmd->cdev;
-> diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
-> index 49a4b1c47299..0660bb1488cb 100644
-> --- a/drivers/cxl/mem.c
-> +++ b/drivers/cxl/mem.c
-> @@ -3,6 +3,7 @@
->  #include <linux/device.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> +#include <linux/pm.h>
->
->  #include "cxlmem.h"
->  #include "cxlpci.h"
-> @@ -210,10 +211,35 @@ static int cxl_mem_probe(struct device *dev)
->         return rc;
->  }
->
-> +static int cxl_mem_suspend(struct device *dev)
-> +{
-> +       /*
-> +        * The kernel may be operating out of CXL memory on this device,
-> +        * there is no spec defined way to determine whether this device
-> +        * preserves contents over suspend, and there is no simple way
-> +        * to arrange for the suspend image to avoid CXL memory which
-> +        * would setup a circular dependency between PCI resume and save
-> +        * state restoration.
-> +        */
-> +       dev_err(dev, "CXL memory suspend not supported\n");
-> +       return -EBUSY;
-> +}
-> +
-> +static int cxl_mem_resume(struct device *dev)
-> +{
-> +       /* nothing to do since suspend is prevented */
-> +       return 0;
-> +}
+  https://linux.kernelci.org/test/plan/id/624aed811a5acd09adae071e/
 
-This is not needed AFAICS.
+Last time it was seen to fail was next-20220330:
 
-> +
-> +static DEFINE_SIMPLE_DEV_PM_OPS(cxl_pm_ops, cxl_mem_suspend, cxl_mem_resume);
-> +
->  static struct cxl_driver cxl_mem_driver = {
->         .name = "cxl_mem",
->         .probe = cxl_mem_probe,
->         .id = CXL_DEVICE_MEMORY_EXPANDER,
-> +       .drv = {
-> +               .pm = &cxl_pm_ops,
-> +       },
->  };
->
->  module_cxl_driver(cxl_mem_driver);
->
+  https://linux.kernelci.org/test/plan/id/62442f68e30d6f89a4ae06b7/
+
+
+Ironically, the KernelCI staging linux-next job with the patches
+mentioned in your previous email applied is now failing:
+
+  https://staging.kernelci.org/test/plan/id/624b2d3b923f532dc305f4c7/
+
+The kernel branch being used is:
+
+  https://github.com/kernelci/linux/commits/staging-next
+
+
+I haven't checked the logs or investigated any further, this is
+just a quick summary based on the boot test results.
+
+Please let us know if we should drop these patches or try
+anything else.  I'll be on holiday for the rest of the week but
+others can pick things up if needed.
+
+Thanks,
+Guillaume
