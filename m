@@ -2,95 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B93D6C4167B
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 15:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC440C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Apr 2022 15:42:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378557AbiDDP1U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Apr 2022 11:27:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44348 "EHLO
+        id S1378362AbiDDPof (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Apr 2022 11:44:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241874AbiDDP1P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 11:27:15 -0400
+        with ESMTP id S1347003AbiDDPoe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2022 11:44:34 -0400
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01AA2193EA;
-        Mon,  4 Apr 2022 08:25:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0831393F5;
+        Mon,  4 Apr 2022 08:42:37 -0700 (PDT)
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id 901cfd5021346696; Mon, 4 Apr 2022 17:25:17 +0200
+ id 663112fc46d070d8; Mon, 4 Apr 2022 17:42:36 +0200
 Received: from kreacher.localnet (unknown [213.134.181.62])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 74C6266BCD2;
-        Mon,  4 Apr 2022 17:25:16 +0200 (CEST)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 3F1BC66BCD3;
+        Mon,  4 Apr 2022 17:42:35 +0200 (CEST)
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux ACPI <linux-acpi@vger.kernel.org>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
+To:     Linux PCI <linux-pci@vger.kernel.org>
+Cc:     Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v1 1/3] ACPI: bus: Introduce acpi_dev_for_each_child()
-Date:   Mon, 04 Apr 2022 17:21:50 +0200
-Message-ID: <3679769.kQq0lBPeGt@kreacher>
-In-Reply-To: <21439956.EfDdHjke4D@kreacher>
-References: <21439956.EfDdHjke4D@kreacher>
+Subject: [PATCH v1 2/2] PCI: PM: Resume bus after putting the bridge into D0 entirely
+Date:   Mon, 04 Apr 2022 17:42:27 +0200
+Message-ID: <1807986.atdPhlSkOF@kreacher>
+In-Reply-To: <4198163.ejJDZkT8p0@kreacher>
+References: <4198163.ejJDZkT8p0@kreacher>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 213.134.181.62
 X-CLIENT-HOSTNAME: 213.134.181.62
 X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudejvddgkeefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepvddufedrudefgedrudekuddriedvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddufedrudefgedrudekuddriedvpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeeipdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgt
- phhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhm
-X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudejvddgkeejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepvddufedrudefgedrudekuddriedvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddufedrudefgedrudekuddriedvpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeehpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhk
+ rgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhm
+X-DCC--Metrics: v370.home.net.pl 1024; Body=5 Fuz1=5 Fuz2=5
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Introduce a wrapper around device_for_each_child() to iterate over
-the children of a given ACPI device object.
+It is rather counter-intuitive to attempt to resume devices on a bus
+segment before completing a transition of their parent bridge into
+D0, so do that when the transition is complete.
 
-This function will be used in subsequent change sets.
+This matters especially when the transition in question is not
+successful, in which case it doesn't make sense to even try to
+resume the child devices at all.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/acpi/bus.c      |    6 ++++++
- include/acpi/acpi_bus.h |    2 ++
- 2 files changed, 8 insertions(+)
+ drivers/pci/pci.c |   21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-Index: linux-pm/drivers/acpi/bus.c
+Index: linux-pm/drivers/pci/pci.c
 ===================================================================
---- linux-pm.orig/drivers/acpi/bus.c
-+++ linux-pm/drivers/acpi/bus.c
-@@ -1070,6 +1070,12 @@ int acpi_bus_for_each_dev(int (*fn)(stru
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1310,15 +1310,24 @@ static int pci_dev_wait(struct pci_dev *
+ int pci_power_up(struct pci_dev *dev)
+ {
+ 	pci_power_t old_state = dev->current_state;
++	int ret;
+ 
+ 	pci_platform_power_transition(dev, PCI_D0);
++	/*
++	 * For transitions from D3hot or deeper (including unknown), force
++	 * PCI_PM_CTRL register write, D3*->D0 transition delay and BARS
++	 * restoration.
++	 */
++	if (old_state >= PCI_D3hot)
++		dev->current_state = PCI_D3hot;
+ 
++	ret = pci_raw_set_power_state(dev, PCI_D0);
+ 	/*
+ 	 * Mandatory power management transition delays are handled in
+ 	 * pci_pm_resume_noirq() and pci_pm_runtime_resume() of the
+ 	 * corresponding bridge.
+ 	 */
+-	if (dev->runtime_d3cold) {
++	if (!ret && dev->runtime_d3cold) {
+ 		/*
+ 		 * When powering on a bridge from D3cold, the whole hierarchy
+ 		 * may be powered on into D0uninitialized state, resume them to
+@@ -1327,15 +1336,7 @@ int pci_power_up(struct pci_dev *dev)
+ 		pci_resume_bus(dev->subordinate);
+ 	}
+ 
+-	/*
+-	 * For transitions from D3hot or deeper and initial power-up, force
+-	 * PCI_PM_CTRL register write, D3*->D0 transition delay and BARS
+-	 * restoration.
+-	 */
+-	if (old_state >= PCI_D3hot)
+-		dev->current_state = PCI_D3hot;
+-
+-	return pci_raw_set_power_state(dev, PCI_D0);
++	return ret;
  }
- EXPORT_SYMBOL_GPL(acpi_bus_for_each_dev);
  
-+int acpi_dev_for_each_child(struct acpi_device *adev,
-+			    int (*fn)(struct device *, void *), void *data)
-+{
-+	return device_for_each_child(&adev->dev, data, fn);
-+}
-+
- /* --------------------------------------------------------------------------
-                              Initialization/Cleanup
-    -------------------------------------------------------------------------- */
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -481,6 +481,8 @@ void acpi_initialize_hp_context(struct a
- extern struct bus_type acpi_bus_type;
- 
- int acpi_bus_for_each_dev(int (*fn)(struct device *, void *), void *data);
-+int acpi_dev_for_each_child(struct acpi_device *adev,
-+			    int (*fn)(struct device *, void *), void *data);
- 
- /*
-  * Events
+ /**
 
 
 
