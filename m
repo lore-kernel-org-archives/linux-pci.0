@@ -2,97 +2,153 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCC2C3527B
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC9FC433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230468AbiDEU4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:56:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38254 "EHLO
+        id S232171AbiDEU6f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:58:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457655AbiDEQ0q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:26:46 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CF667C166
-        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 09:24:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649175887; x=1680711887;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1lT1ORduTl6wuyJso2/+MycwhVPSszvccKAqxCLmaKA=;
-  b=EKhPDvKSZT7Sx5Ysmf0SLufYBQux87LpMX4WzBTleoSNdr9H07sDyM7h
-   0IQF4S2x7SY3V9BIIqflv0HArsWjFqcsRUexg41vwJd9GIlpmwEbg4/bQ
-   TTpKidzQFInrkdsuuIepA1qlM9jy5xOnDJ6VVEpeQevGhDCge7QZPkOTb
-   /KaSRt7WRfVDT14gLNx5fTAEVeI0QfY1eDXhcwlEBm3RL4qszEg005//1
-   DUEhE9LDyMn6Yp7M/XKzavessWGc7D5eHneq2Bgeqd+WSiGE5qzKxhjVI
-   AA4/yqKimtgrx7qXuKq5179WP4gUUgITCi89ADSa6sHG52bbFSRuQArg5
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10308"; a="258378361"
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="258378361"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:24:46 -0700
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="569964880"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.162])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:24:44 -0700
-Received: by lahna (sSMTP sendmail emulation); Tue, 05 Apr 2022 19:24:41 +0300
-Date:   Tue, 5 Apr 2022 19:24:41 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
- unlimited
-Message-ID: <YkxtSRQxfWzxuCU5@lahna>
-References: <20220405093810.76613-1-mika.westerberg@linux.intel.com>
- <20220405160151.GA68831@bhelgaas>
+        with ESMTP id S1457249AbiDEQC7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:02:59 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DB71401D
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 08:35:39 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id f18so10306577edc.5
+        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2022 08:35:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=RAVH8ALFlz9wuASO9LQb9RbtPlxb1j2B9jBGCAw1Kh8=;
+        b=lkYAUUyQ5VX2KSG0erjEIfRcCavrJv3RISfj99CHUKLjZ9iBVnE0S1s/PsU8q6boQr
+         pO87Dskn8e+PKHSEhzMHFEwskQRIHgoDNnXeS9Pn9DuRBkzlKHvUem0Sd94K830oxqzX
+         Gp0MZzYJxADrwS8kzFR8SeOLw0yI4pns5nZ+PtZAPg3mzxPdlraHGS0+h6jK/YkpYDXr
+         5HgYd3yn5pK/z/32wL7OIcA19KzkDMvc6yLKE03cQpGajv2aRHO/RTjIGpZrjUca8f7V
+         Qi2TGcKqiYaXydZrmB9LkWAjMNTcVIYeOFW5pL176IBC/MEjlpBPh7x0jLr9LoZIuA3g
+         7ZAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=RAVH8ALFlz9wuASO9LQb9RbtPlxb1j2B9jBGCAw1Kh8=;
+        b=IJ13JGyCJR+n1s7bpGQ470vhcww/C534VG+yuzWFR72PeIyVTaWogfD6Z45PZjR7aA
+         HX6sso6dgL+crSW6oX+CxjUTELwp7Kcq/TyO/nawUqAbzQV93zSgCU4c8eKW8X77J5k4
+         7lMlxKMPRXJB7M0N0iLInMnpEN2gyrC7VXhjtRi+wguGyklDMiXl8aPhwuhg1HmDS1Vl
+         iUriIfmAoINaSH/K+3BKFTRlXnf8OMniB/FAPNwJM/64fdRSqI9ahvEAaYKNkFSxd5OX
+         kexFgJMQwM+8yigbCtbs1sG/RXbbHEPYn9FS1PN5EiOBvzfw051dBtoOwioMxKzh7Ipr
+         iZFg==
+X-Gm-Message-State: AOAM532h1fg7qIDG2J/OBmCstf7yPOIrwWoKTT2CxA4wdPrXDR6u6yrZ
+        UviZh33KMUayy9m5wPN4fJR1U0lFPUz3DgePd4sngo/7udw=
+X-Google-Smtp-Source: ABdhPJzY4ISRGvJq1+mZ/kkgkoVf02i6GFXOU56VOhR/2Jf5hjCn6S3XU76jWLv1KVMWjvoV0VbCQA/PE3kN4gW+4pw=
+X-Received: by 2002:aa7:d758:0:b0:41c:dc93:4d81 with SMTP id
+ a24-20020aa7d758000000b0041cdc934d81mr4164613eds.15.1649172937536; Tue, 05
+ Apr 2022 08:35:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220405160151.GA68831@bhelgaas>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+References: <20220222162355.32369-1-Frank.Li@nxp.com> <fa2ab3cf-1508-bbeb-47af-8b2d47904b20@ti.com>
+In-Reply-To: <fa2ab3cf-1508-bbeb-47af-8b2d47904b20@ti.com>
+From:   Zhi Li <lznuaa@gmail.com>
+Date:   Tue, 5 Apr 2022 10:35:25 -0500
+Message-ID: <CAHrpEqT2zwWiiiTUDAu9JNPXmzP1zELF7YDERWjdOohGMFRBnA@mail.gmail.com>
+Subject: Re: [PATCH V2 0/4] NTB function for PCIe RC to EP connection
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Frank Li <Frank.Li@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>,
+        lorenzo.pieralisi@arm.com, kw@linux.com,
+        Jingoo Han <jingoohan1@gmail.com>,
+        gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
-
-On Tue, Apr 05, 2022 at 11:01:51AM -0500, Bjorn Helgaas wrote:
-> On Tue, Apr 05, 2022 at 12:38:10PM +0300, Mika Westerberg wrote:
-> > Intel DG2 discrete graphics PCIe endpoints hard-code their acceptable L1
-> > ASPM latency to be < 1us even though the hardware actually supports
-> > higher latencies (> 64 us) just fine. In order to allow the links to go
-> > into L1 and save power, quirk the acceptable L1 ASPM latency for these
-> > endpoints to be unlimited.
-> 
-> Is there a plan to fix this in future DG2 hardware/firmware?
-> Obviously the point of Dev Cap is to make the device self-describing
-> so we can avoid updates like this every time new hardware comes out.
-
-Yes, I think that's the plan.
-
-> > Note this does not have any effect unless the user requested the kernel
-> > to enable ASPM in the first place (by default we don't enable it). 
-> 
-> I think this depends on the platform and kernel config, doesn't it?
-> If CONFIG_PCIEASPM_POWERSAVE=y or CONFIG_PCIEASPM_POWER_SUPERSAVE=y
-> I suspect we would enable ASPM L1 even without the parameters below.
-> 
-> > This is done with "pcie_aspm=force pcie_aspm.policy=powersupsersave"
-> > command line parameters.
-> 
-> s/powersupsersave/powersupersave/
-> 
-> This should affect "powersave" as well as "powersupersave", right?
-> Both enable L1.  "powersupersave" enables the L1 substates.
-> 
-> We *should* be able to enable/disable ASPM L1 using the sysfs "l1_aspm
-> file, too.
-
-Indeed you are right. I think we can drop that paragraph completely from
-the commit log. Do you want me to send v2 with that corrected or you
-will do that while applying?
-
-Thanks!
+T24gVHVlLCBBcHIgNSwgMjAyMiBhdCA1OjM0IEFNIEtpc2hvbiBWaWpheSBBYnJhaGFtIEkgPGtp
+c2hvbkB0aS5jb20+IHdyb3RlOg0KPg0KPiBIaSBGcmFuayBMaSwNCj4NCj4gT24gMjIvMDIvMjIg
+OTo1MyBwbSwgRnJhbmsgTGkgd3JvdGU6DQo+ID4gVGhpcyBpbXBsZW1lbnQgTlRCIGZ1bmN0aW9u
+IGZvciBQQ0llIEVQIHRvIFJDIGNvbm5lY3Rpb25zLg0KPiA+IFRoZSBleGlzdGVkIG50YiBlcGYg
+bmVlZCB0d28gUENJIEVQcyBhbmQgdHdvIFBDSSBIb3N0Lg0KPg0KPiBBcyBJIGhhZCBlYXJsaWVy
+IG1lbnRpb25lZCBpbiBbMV0sIElNSE8gaWRlYWwgc29sdXRpb24gd291bGQgYmUgYnVpbGQgb24g
+dmlydGlvDQo+IGxheWVyIGluc3RlYWQgb2YgdHJ5aW5nIHRvIGJ1aWxkIG9uIE5UQiBsYXllciAo
+d2hpY2ggaXMgc3BlY2lmaWMgdG8gUkM8LT5SQw0KPiBjb21tdW5pY2F0aW9uKS4NCj4NCj4gQXJl
+IHRoZXJlIGFueSBzcGVjaWZpYyByZWFzb25zIGZvciBub3QgdGFraW5nIHRoYXQgcGF0aD8NCg0K
+MS4gRVAgc2lkZSB3b3JrIGFzIHZIT1NUIG1vZGUuICB2SG9zdCBzdXBwb3NlIGFjY2VzcyBhbGwg
+bWVtb3J5IG9mIHZpcnR1YWwgaW8uDQpCdXQgdGhlcmUgYXJlIG9ubHkgbWFwIHdpbmRvd3Mgb24g
+dGhlIEVQIHNpZGUgdG8gYWNjZXNzIFJDIHNpZGUNCm1lbW9yeS4gWW91IGhhdmUgdG8gbW92ZQ0K
+bWFwIHdpbmRvd3MgZm9yIGVhY2ggYWNjZXNzLiAgSXQgaXMgcXVpdGUgbG93IGVmZmljaWVuY3ku
+DQoNCjIuIFNvIGZhciBhcyBJIGtub3csIHZpcnRpbyBpcyBzdGlsbCBub3QgRE1BIHlldC4gIENQ
+VSBhY2Nlc3MgUENJDQpjYW4ndCBnZW5lcmF0ZSBsb25nZXIgUENJIFRMUCwNClNvIHRoZSBzcGVl
+ZCBpcyBxdWl0ZSBzbG93LiAgTlRCIGFscmVhZHkgaGFzIERNQSBzdXBwb3J0LiAgSWYgeW91IHVz
+ZQ0Kc3lzdGVtIGxldmVsIERNQSwNCm5vIGNoYW5nZSBpcyBuZWVkZWQgYXQgTlRCIGxldmVsLiAg
+SWYgd2Ugd2FudCB0byB1c2UgYSBQQ0kgY29udHJvbGxlcg0KZW1iZWRkZWQgRE1BLCAgc29tZSBz
+bWFsbA0KY2hhbmdlcyBuZWVkIGlmIGJhc2VkIG9uIG15IG90aGVyIERlc2lnbndhcmUgUENJIGVE
+TUEgcGF0Y2hlcywgd2hpY2gNCmFyZSB1bmRlciByZXZpZXcuDQoNCjMuIEFsbCB0aGUgbWFqb3Ig
+ZGF0YSB0cmFuc2ZlciBvZiBOVEIgaXMgdXNpbmcgd3JpdGUuICBCZWNhdXNlIFRMUA0Kd3JpdGUg
+bmVlZG4ndCB3YWl0IGZvciBjb21wbGV0ZSwgIHdyaXRlDQpwZXJmb3JtYW5jZSBpcyBiZXR0ZXIg
+dGhhbiByZWFkaW5nLiAgT24gb3VyIHBsYXRmb3JtLCAgd3JpdGUNCnBlcmZvcm1hbmNlIGlzIGFi
+b3V0IDEwJSBiZXR0ZXIgdGhhbiAgcmVhZC4NCg0KRnJhbmsNCg0KPg0KPiBUaGFua3MsDQo+IEtp
+c2hvbg0KPg0KPiBbMV0gLT4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvci80NTk3NDVkMS05ZmU3
+LWU3OTItMzUzMi0zM2VlOTU1MmJjNGRAdGkuY29tDQo+ID4NCj4gPiBUaGlzIGp1c3QgbmVlZCBF
+UCB0byBSQyBjb25uZWN0aW9ucy4NCj4gPg0KPiA+ICAgICDilIzilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilJAgICAgICAgICDilIzilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJANCj4gPiAgICAg4pSCICAgICAgICAgICAg
+4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIOKUgg0K
+PiA+ICAgICDilJzilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKQgICAgICAg
+ICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSkDQo+ID4gICAgIOKUgiBOVEIgICAgICAgIOKUgiAgICAgICAgIOKU
+giAgICAgICAgICAgICAgICAgICAgICDilIIgTlRCICAgICAgICAgIOKUgg0KPiA+ICAgICDilIIg
+TmV0RGV2ICAgICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCIE5ldERl
+diAgICAgICDilIINCj4gPiAgICAg4pSc4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSkICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgIOKUnOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpA0KPiA+ICAgICDilIIgTlRCICAgICAgICDi
+lIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCIE5UQiAgICAgICAgICDilIIN
+Cj4gPiAgICAg4pSCIFRyYW5zZmVyICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAg
+ICAgIOKUgiBUcmFuc2ZlciAgICAg4pSCDQo+ID4gICAgIOKUnOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgICAgIOKUgiAgICAgICAgICAgICAgICAgICAgICDilJzi
+lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKQNCj4gPiAgICAg4pSC
+ICAgICAgICAgICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgIOKUgiAgICAg
+ICAgICAgICAg4pSCDQo+ID4gICAgIOKUgiAgUENJIE5UQiAgIOKUgiAgICAgICAgIOKUgiAgICAg
+ICAgICAgICAgICAgICAgICDilIIgICAgICAgICAgICAgIOKUgg0KPiA+ICAgICDilIIgICAgRVBG
+ICAgICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCICAgICAgICAgICAg
+ICDilIINCj4gPiAgICAg4pSCICAgRHJpdmVyICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAg
+ICAgICAgICAgIOKUgiBQQ0kgVmlydHVhbCAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKU
+giAgICAgICAgIOKUnOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUkCAgICAgIOKUgiBOVEIgRHJpdmVyICAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKU
+giAgICAgICAgIOKUgiBQQ0kgRVAgTlRCICAgIOKUguKXhOKUgOKUgOKUgOKUgOKWuuKUgiAgICAg
+ICAgICAgICAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKUgiAgICAgICAgIOKUgiAgRk4g
+RHJpdmVyICAgIOKUgiAgICAgIOKUgiAgICAgICAgICAgICAg4pSCDQo+ID4gICAgIOKUnOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgICAgIOKUnOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgIOKUnOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpA0KPiA+ICAgICDilIIgICAgICAgICAg
+ICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICDilIIgICAgICDilIIgICAgICAgICAgICAg
+IOKUgg0KPiA+ICAgICDilIIgIFBDSSBCVVMgICDilIIg4peE4pSA4pSA4pSA4pSA4pSA4pa6IOKU
+giAgUENJIEVQIEJVUyAgIOKUgiAgICAgIOKUgiAgVmlydHVhbCBQQ0kg4pSCDQo+ID4gICAgIOKU
+giAgICAgICAgICAgIOKUgiAgUENJICAgIOKUgiAgICAgICAgICAgICAgIOKUgiAgICAgIOKUgiAg
+ICAgQlVTICAgICAg4pSCDQo+ID4gICAgIOKUlOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUmCAgICAgICAgIOKUlOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUtOKUgOKUgOKUgOKUgOKUgOKUgOKUtOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUmA0KPiA+ICAgICAgICAgUENJIFJDICAgICAgICAgICAgICAg
+ICAgICAgICAgUENJIEVQDQo+ID4NCj4gPg0KPiA+DQo+ID4gRnJhbmsgTGkgKDQpOg0KPiA+ICAg
+UENJOiBkZXNpZ253YXJlLWVwOiBBbGxvdyBwY2lfZXBjX3NldF9iYXIoKSB1cGRhdGUgaW5ib3Vu
+ZCBtYXAgYWRkcmVzcw0KPiA+ICAgTlRCOiBlcGY6IEFsbG93IG1vcmUgZmxleGliaWxpdHkgaW4g
+dGhlIG1lbW9yeSBCQVIgbWFwIG1ldGhvZA0KPiA+ICAgUENJOiBlbmRwb2ludDogU3VwcG9ydCBO
+VEIgdHJhbnNmZXIgYmV0d2VlbiBSQyBhbmQgRVANCj4gPiAgIERvY3VtZW50YXRpb246IFBDSTog
+QWRkIHNwZWNpZmljYXRpb24gZm9yIHRoZSBQQ0kgdk5UQiBmdW5jdGlvbiBkZXZpY2UNCj4gPg0K
+PiA+ICBEb2N1bWVudGF0aW9uL1BDSS9lbmRwb2ludC9pbmRleC5yc3QgICAgICAgICAgfCAgICAy
+ICsNCj4gPiAgLi4uL1BDSS9lbmRwb2ludC9wY2ktdm50Yi1mdW5jdGlvbi5yc3QgICAgICAgIHwg
+IDEyNiArKw0KPiA+ICBEb2N1bWVudGF0aW9uL1BDSS9lbmRwb2ludC9wY2ktdm50Yi1ob3d0by5y
+c3QgfCAgMTY3ICsrDQo+ID4gIGRyaXZlcnMvbnRiL2h3L2VwZi9udGJfaHdfZXBmLmMgICAgICAg
+ICAgICAgICB8ICAgNDggKy0NCj4gPiAgLi4uL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2ln
+bndhcmUtZXAuYyAgIHwgICAxMCArLQ0KPiA+ICBkcml2ZXJzL3BjaS9lbmRwb2ludC9mdW5jdGlv
+bnMvS2NvbmZpZyAgICAgICAgfCAgIDExICsNCj4gPiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvZnVu
+Y3Rpb25zL01ha2VmaWxlICAgICAgIHwgICAgMSArDQo+ID4gIGRyaXZlcnMvcGNpL2VuZHBvaW50
+L2Z1bmN0aW9ucy9wY2ktZXBmLXZudGIuYyB8IDE0MjQgKysrKysrKysrKysrKysrKysNCj4gPiAg
+OCBmaWxlcyBjaGFuZ2VkLCAxNzc1IGluc2VydGlvbnMoKyksIDE0IGRlbGV0aW9ucygtKQ0KPiA+
+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9QQ0kvZW5kcG9pbnQvcGNpLXZudGIt
+ZnVuY3Rpb24ucnN0DQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL1BDSS9l
+bmRwb2ludC9wY2ktdm50Yi1ob3d0by5yc3QNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZl
+cnMvcGNpL2VuZHBvaW50L2Z1bmN0aW9ucy9wY2ktZXBmLXZudGIuYw0KPiA+DQo=
