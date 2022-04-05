@@ -2,100 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1C7C433FE
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 14:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCC2C3527B
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:56:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235369AbiDEOqf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 10:46:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55920 "EHLO
+        id S230468AbiDEU4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:56:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349825AbiDENGH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 09:06:07 -0400
-Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8800175625;
-        Tue,  5 Apr 2022 05:07:16 -0700 (PDT)
-Received: by mail-yb1-f171.google.com with SMTP id g9so22971564ybf.1;
-        Tue, 05 Apr 2022 05:07:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=knCnV41xjhnnJ0VL0WEqN+kHikKWH8noX35ww6a147E=;
-        b=O7lckBcjELkuaLNv/vx9Zk/dwxb9uNuvdTAK9RfD2UeFpLI+xa1ocEs2O+vfLgUcsy
-         E6lMViABScXgrmVNn0UwQsQhGsBMZjx2E+J1SF4r6LWvm47xalDPaI0XJ2x+wI7/O4VW
-         hLWnU8IchmREOD59IjWNEVY3v3AhTniApfIMW+33/WKIqoHL00Cc5FpHrYpe82q0Sw5f
-         yYlqC0H9t+ZUIzWY9yhWmmJlA9jlW+JvfvfUm1iPBPJBlGqg44x1XmHa5Mx2jl+5l5Nx
-         YtKYSoqyZDYZ+I2EUT8bGKLtTFar7nvRsKdGKsStiFkHJo53hRUX/Zyy2PYRi16wMF4W
-         oWMw==
-X-Gm-Message-State: AOAM531oN2BMuSlLOg4c+fubzN47QHtqt6CXO/IXNgKM6WoRUnL+NEHf
-        dOMvpaK3MYr/99JV7bZnf1StMsg1GNX/S5tJN+ueJseC
-X-Google-Smtp-Source: ABdhPJzm72VVZWMJatZlptDAM3D3/uPEoLzUPr4PBmAZeVrej6UKEUv7t6NBnltKTsOgvbQB0rfxyKF5TOgeLVOvss8=
-X-Received: by 2002:a25:cc08:0:b0:63d:2c6d:162 with SMTP id
- l8-20020a25cc08000000b0063d2c6d0162mr2240396ybf.137.1649160435809; Tue, 05
- Apr 2022 05:07:15 -0700 (PDT)
+        with ESMTP id S1457655AbiDEQ0q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:26:46 -0400
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CF667C166
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 09:24:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649175887; x=1680711887;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1lT1ORduTl6wuyJso2/+MycwhVPSszvccKAqxCLmaKA=;
+  b=EKhPDvKSZT7Sx5Ysmf0SLufYBQux87LpMX4WzBTleoSNdr9H07sDyM7h
+   0IQF4S2x7SY3V9BIIqflv0HArsWjFqcsRUexg41vwJd9GIlpmwEbg4/bQ
+   TTpKidzQFInrkdsuuIepA1qlM9jy5xOnDJ6VVEpeQevGhDCge7QZPkOTb
+   /KaSRt7WRfVDT14gLNx5fTAEVeI0QfY1eDXhcwlEBm3RL4qszEg005//1
+   DUEhE9LDyMn6Yp7M/XKzavessWGc7D5eHneq2Bgeqd+WSiGE5qzKxhjVI
+   AA4/yqKimtgrx7qXuKq5179WP4gUUgITCi89ADSa6sHG52bbFSRuQArg5
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10308"; a="258378361"
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="258378361"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:24:46 -0700
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="569964880"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.162])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:24:44 -0700
+Received: by lahna (sSMTP sendmail emulation); Tue, 05 Apr 2022 19:24:41 +0300
+Date:   Tue, 5 Apr 2022 19:24:41 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
+ unlimited
+Message-ID: <YkxtSRQxfWzxuCU5@lahna>
+References: <20220405093810.76613-1-mika.westerberg@linux.intel.com>
+ <20220405160151.GA68831@bhelgaas>
 MIME-Version: 1.0
-References: <21439956.EfDdHjke4D@kreacher> <YkwQAKcFU4CzYX5E@lahna>
-In-Reply-To: <YkwQAKcFU4CzYX5E@lahna>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 5 Apr 2022 14:07:03 +0200
-Message-ID: <CAJZ5v0ja5OKUh004wEMhrgVtk-yp_Dzvmk33xNhabjDqzV0JsQ@mail.gmail.com>
-Subject: Re: [PATCH v1 0/3] ACPI: PCI: PM: Power up PCI devices with ACPI
- companions upfront
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220405160151.GA68831@bhelgaas>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 5, 2022 at 1:45 PM Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
->
-> Hi Rafael,
->
-> On Mon, Apr 04, 2022 at 05:20:30PM +0200, Rafael J. Wysocki wrote:
-> > Hi All,
-> >
-> > There are cases in which the power state of a PCI device depends on an ACPI
-> > power resource (or more of them) in such a way that when the given power
-> > resource is in the "off" state, the PCI device depending on it is in D3cold.
-> >
-> > On some systems, the initial state of these power resources is "off", so the
-> > kernel should not access the config space of PCI devices depending on them,
-> > until the power resources in question are turned "on", but currently that is
-> > not respected during PCI device enumeration.  Namely, the PCI device
-> > enumeration code walks the entire bus and enumerates all of the devices it
-> > can find, including the ones whose initial power state in principle depends on
-> > the ACPI power resources in the "off" state.
->
-> I guess these devices do not have _PRE() method either.
+Hi Bjorn,
 
-Personally, I haven't seen any ACPI tables containing any _PRE yet.
+On Tue, Apr 05, 2022 at 11:01:51AM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 05, 2022 at 12:38:10PM +0300, Mika Westerberg wrote:
+> > Intel DG2 discrete graphics PCIe endpoints hard-code their acceptable L1
+> > ASPM latency to be < 1us even though the hardware actually supports
+> > higher latencies (> 64 us) just fine. In order to allow the links to go
+> > into L1 and save power, quirk the acceptable L1 ASPM latency for these
+> > endpoints to be unlimited.
+> 
+> Is there a plan to fix this in future DG2 hardware/firmware?
+> Obviously the point of Dev Cap is to make the device self-describing
+> so we can avoid updates like this every time new hardware comes out.
 
-> > Apparently, most of the time, the config space of such devices is accessible
-> > regardless of the state of the ACPI power resource associated with the PCI
-> > device, so the device enumeration is successful, but there are two potential
-> > issues related to this behavior.  First off, even if the given PCI device
-> > is accessible when the ACPI power resource depended on by it is "off",
-> > changing its configuration may confuse the platform firmware and lead to
-> > problems when the ACPI power resource in question is turned "on".  Second,
-> > the PCI device may not be actually accessible at all when the ACPI power
-> > resource depended on by it is "off", in which case it won't be found during
-> > the PCI enumeration of devices.
-> >
-> > This patch series addresses that problem by turning "on" all ACPI power
-> > resources depended on by PCI devices before attempting to access the config
-> > space of those devices for the first time.
->
-> Makes sense.
->
-> For the series,
->
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Yes, I think that's the plan.
+
+> > Note this does not have any effect unless the user requested the kernel
+> > to enable ASPM in the first place (by default we don't enable it). 
+> 
+> I think this depends on the platform and kernel config, doesn't it?
+> If CONFIG_PCIEASPM_POWERSAVE=y or CONFIG_PCIEASPM_POWER_SUPERSAVE=y
+> I suspect we would enable ASPM L1 even without the parameters below.
+> 
+> > This is done with "pcie_aspm=force pcie_aspm.policy=powersupsersave"
+> > command line parameters.
+> 
+> s/powersupsersave/powersupersave/
+> 
+> This should affect "powersave" as well as "powersupersave", right?
+> Both enable L1.  "powersupersave" enables the L1 substates.
+> 
+> We *should* be able to enable/disable ASPM L1 using the sysfs "l1_aspm
+> file, too.
+
+Indeed you are right. I think we can drop that paragraph completely from
+the commit log. Do you want me to send v2 with that corrected or you
+will do that while applying?
 
 Thanks!
