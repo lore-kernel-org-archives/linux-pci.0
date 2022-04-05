@@ -2,89 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DC2C4167D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 11:08:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE720C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 12:42:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240037AbiDELJF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 07:09:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58512 "EHLO
+        id S236675AbiDEMoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 08:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352509AbiDEKEk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 06:04:40 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F9CFBABBC;
-        Tue,  5 Apr 2022 02:53:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649152401; x=1680688401;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=VDvK04o8caLp/soQY/A5TNib+Od/eTs0oaHnfnSXUpM=;
-  b=FrsnyGkAIkTD0AcRxqYLFSi5XIyq4VA/CIf89Obgl//h2vsoLi/xhh2g
-   SAgjvBUlouH1ZvsXf8HNqP7Uzgcb0TcMjODl/6MFr+ZOZirLvrqhzZ0ar
-   20qo7NfGr24hf5YnYTyXGnT2C/eD/wkIFEz2lHuxBq9NoKdFzd9yOvNY9
-   KN51ujmKxnh1b/63bCh4mtorwdWaj4D58EQa3gvF90FaMds+Fcd6UQQae
-   aci5/ocdnsn+Zh4pHTGKHj0eUFwK21+8BVdNbbhk0SpLk220FZr/8X9/X
-   /w/P42AcL1Wa8wh4JI2/Kcd75w75diqetS21XAAoBrFLvM7efYeT2wDg5
+        with ESMTP id S1381994AbiDEMAS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 08:00:18 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099093BFBD
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 04:18:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1649157507; x=1680693507;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=cEEPsMWRHOEMrXyWAhOg965q8qtp7y7IkVxjJ5SnLeI=;
+  b=IT4FWw0EKawJz8X8ALMcXF7TZIhu+e+P281vP0NsrnxW8eRhGu9KTsNr
+   Govz0/EDjWaTxfL+gWejjrwcSD/C5s1U8YPS9hf/CA5q9+dmWictb2be2
+   2QwS+0kImJzESXoSHgdsHCRAUwJzQt4eg4jKKIN67eXHYaVtPOZgQJhGH
+   9/xhxZuhGuRHpIVhyJA74MHo4AyNS0jE6rjiehSWBuv9ZGbq1UVUOonjF
+   IE76524k8HjN1TlEl0ILFwJDDASqpOjsH3trzXFrP2YmViAeDiHsB5ZXP
+   Iwqjfjc8sA1LL+CIq9Th/frZfqhlvLTYt8EqHYt/phaA+vHyaI/l3rrJ1
    Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10307"; a="323883734"
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="323883734"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 02:53:21 -0700
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="505219314"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.162])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 02:53:18 -0700
-Received: by lahna (sSMTP sendmail emulation); Tue, 05 Apr 2022 12:53:16 +0300
-Date:   Tue, 5 Apr 2022 12:53:16 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v1 1/2] PCI: PM: Avoid leaving devices in
- D0-uninitialized in pci_power_up()
-Message-ID: <YkwRjI0KvpmiJjvK@lahna>
-References: <4198163.ejJDZkT8p0@kreacher>
- <3623886.MHq7AAxBmi@kreacher>
+X-IronPort-AV: E=Sophos;i="5.90,236,1643698800"; 
+   d="scan'208";a="154420982"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Apr 2022 04:18:26 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Tue, 5 Apr 2022 04:18:01 -0700
+Received: from daire-X570.school.villiers.net (10.10.115.15) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server id
+ 15.1.2375.17 via Frontend Transport; Tue, 5 Apr 2022 04:17:59 -0700
+From:   <daire.mcnamara@microchip.com>
+To:     <helgaas@kernel.org>
+CC:     <bhelgaas@google.com>, <conor.dooley@microchip.com>,
+        <cyril.jean@microchip.com>, <maz@kernel.org>,
+        <daire.mcnamara@microchip.com>, <david.abdurachmanov@gmail.com>,
+        <linux-pci@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <robh@kernel.org>
+Subject: [RESEND PATCH v1 1/1] PCI: microchip: Fix potential race in interrupt handling
+Date:   Tue, 5 Apr 2022 12:17:51 +0100
+Message-ID: <20220405111751.166427-1-daire.mcnamara@microchip.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3623886.MHq7AAxBmi@kreacher>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 04, 2022 at 05:41:13PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> In theory, pci_power_up() may leave a device in D0-uninitialized
-> during a transition from D3cold to D0.
-> 
-> Say, a PCIe device depending on some ACPI power resources is put into
-> D3cold, so the power resources in question are all turned off.  Then,
-> pci_power_up() is called to put it into D0.
-> 
-> It first calls pci_platform_power_transition() which invokes
-> platform_pci_set_power_state() to turn on the ACPI power resources
-> depended on by the device and, if that is successful, it calls
-> pci_update_current_state() to update the current_state field of
-> the PCI device object.  If the device's configuration space is
-> accessible at this point, which is the case if
-> platform_pci_set_power_state() leaves it in D0-uninitialized (and
-> there's nothing to prevent it from doing so), current_state will be
-> set to PCI_D0 and the pci_raw_set_power_state() called subsequently
-> will notice that the device is in D0 already and do nothing.
-> However, that is not correct, because it may be still necessary to
-> restore the device's BARs at this point.
-> 
-> To address this issue, set current_state temporarily to PCI_D3hot
-> in the cases in which pci_raw_set_power_state() may need to do more
-> than just changing the power state of the device.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Daire McNamara <daire.mcnamara@microchip.com>
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Clear MSI bit in ISTATUS register after reading it before
+handling individual MSI bits
+
+This fixes a potential race condition pointed out by Bjorn Helgaas:
+https://lore.kernel.org/linux-pci/20220127202000.GA126335@bhelgaas/
+
+Fixes: 6f15a9c9f941 ("PCI: microchip: Add Microchip PolarFire PCIe controller driver")
+Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+---
+Adding linux-pci mailing list
+ drivers/pci/controller/pcie-microchip-host.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
+index 29d8e81e4181..da8e3fdc97b3 100644
+--- a/drivers/pci/controller/pcie-microchip-host.c
++++ b/drivers/pci/controller/pcie-microchip-host.c
+@@ -416,6 +416,7 @@ static void mc_handle_msi(struct irq_desc *desc)
+ 
+ 	status = readl_relaxed(bridge_base_addr + ISTATUS_LOCAL);
+ 	if (status & PM_MSI_INT_MSI_MASK) {
++		writel_relaxed(status & PM_MSI_INT_MSI_MASK, bridge_base_addr + ISTATUS_LOCAL);
+ 		status = readl_relaxed(bridge_base_addr + ISTATUS_MSI);
+ 		for_each_set_bit(bit, &status, msi->num_vectors) {
+ 			ret = generic_handle_domain_irq(msi->dev_domain, bit);
+@@ -432,13 +433,8 @@ static void mc_msi_bottom_irq_ack(struct irq_data *data)
+ 	void __iomem *bridge_base_addr =
+ 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
+ 	u32 bitpos = data->hwirq;
+-	unsigned long status;
+ 
+ 	writel_relaxed(BIT(bitpos), bridge_base_addr + ISTATUS_MSI);
+-	status = readl_relaxed(bridge_base_addr + ISTATUS_MSI);
+-	if (!status)
+-		writel_relaxed(BIT(PM_MSI_INT_MSI_SHIFT),
+-			       bridge_base_addr + ISTATUS_LOCAL);
+ }
+ 
+ static void mc_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+-- 
+2.25.1
+
