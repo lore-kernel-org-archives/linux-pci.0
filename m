@@ -2,140 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 198F3C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C52C433FE
 	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233306AbiDEU6w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:58:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39158 "EHLO
+        id S237897AbiDEU7G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:59:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457624AbiDEQTd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:19:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F66E193D3;
-        Tue,  5 Apr 2022 09:17:34 -0700 (PDT)
+        with ESMTP id S1457526AbiDEQDw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:03:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8941BCA
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 09:01:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D8244B80E0B;
-        Tue,  5 Apr 2022 16:17:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F12D0C385A4;
-        Tue,  5 Apr 2022 16:17:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19D196181A
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 16:01:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BE24C385A1;
+        Tue,  5 Apr 2022 16:01:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649175451;
-        bh=9i+q2ZN9TmxfoI0nuVfh6ATI7dSt6NeIA1KoAxqH9Wo=;
+        s=k20201202; t=1649174513;
+        bh=GE5uRBmpLRJMOqnbsnsU204Id1cXY6Y5vbAmBZ31xUg=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=d9bKmV/0IMeeXRcs+lJgcy2FAU7lLCVkihgX4OgOBMkO1BYdDu8qxnUx2/rqg7UyV
-         DzDTTlCGsm+r8VfiUlQkuC+3f3h6koQ2HES1mTi9Q2now2v+7ba3/ryJgnWGydGAmV
-         uifbtzr2x1eCuFnu+B0llXSSt6zyAwaXYioJ58oNh0uEp01YDQs/9HLXhdbJ46n/LC
-         EMF8fRU7e8J/LFe++amL1j9hkDYSZ8hBWivyrqg8UyGXzu7q/I1r2+SfJ7k9vXv4pl
-         yRa6lxE7a2Dru+ZbrOLiv++PMJfDzhFEsrlGh7dWEDnp4DPIpUjAhXyMVe6QwAcqfh
-         CyBn92r+JO3Bg==
-Date:   Tue, 5 Apr 2022 11:17:29 -0500
+        b=gYgDOD4ff0bPHyV22dHzf28Ez8dpgKrdtIUPGiMyr/HANIPPBLmIPDk+0T9ga9F9p
+         Hq4rnP2YSINFzFoljvefZ0VMRVAIgzlD1JdA26VAON9ndkk7c7Lgj5aEPMU1YwPoo9
+         pePIWxuGTCsgEaeK/Yw03eMeHszXlKqP1KNmMLVDt8tbGrE2rdyLL2CH3xaTJBDITQ
+         /bl5qKto59e6RF3t02wLG/3cHEvN8ViBQ2NXtb4mQsEYlt/hncfBbvragCcr0cndVZ
+         XzxiiUnZo5S6v8mHiE+tTAvjqFrl07MkSSrR7Q1fi4EcJ8l5Rg8PG77cmPo00D+mw1
+         8k4+C36YOnYJQ==
+Date:   Tue, 5 Apr 2022 11:01:51 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Christophe Leroy <christophe.leroy@csgroup.eu>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: hotplug: Prepare cleanup of powerpc's asm/prom.h
-Message-ID: <20220405161729.GA71083@bhelgaas>
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
+ unlimited
+Message-ID: <20220405160151.GA68831@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <79201f5fae8d003164ac36ed3be7789db1bc5ab4.1648833421.git.christophe.leroy@csgroup.eu>
+In-Reply-To: <20220405093810.76613-1-mika.westerberg@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Apr 02, 2022 at 12:11:56PM +0200, Christophe Leroy wrote:
-> powerpc's asm/prom.h brings some headers that it doesn't
-> need itself.
-> 
-> In order to clean it up, first add missing headers in
-> users of asm/prom.h
-> 
-> Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
+On Tue, Apr 05, 2022 at 12:38:10PM +0300, Mika Westerberg wrote:
+> Intel DG2 discrete graphics PCIe endpoints hard-code their acceptable L1
+> ASPM latency to be < 1us even though the hardware actually supports
+> higher latencies (> 64 us) just fine. In order to allow the links to go
+> into L1 and save power, quirk the acceptable L1 ASPM latency for these
+> endpoints to be unlimited.
 
-I tidied the subject line to match previous history and applied to
-pci/hotplug for v5.19, thanks!
+Is there a plan to fix this in future DG2 hardware/firmware?
+Obviously the point of Dev Cap is to make the device self-describing
+so we can avoid updates like this every time new hardware comes out.
 
+> Note this does not have any effect unless the user requested the kernel
+> to enable ASPM in the first place (by default we don't enable it). 
+
+I think this depends on the platform and kernel config, doesn't it?
+If CONFIG_PCIEASPM_POWERSAVE=y or CONFIG_PCIEASPM_POWER_SUPERSAVE=y
+I suspect we would enable ASPM L1 even without the parameters below.
+
+> This is done with "pcie_aspm=force pcie_aspm.policy=powersupsersave"
+> command line parameters.
+
+s/powersupsersave/powersupersave/
+
+This should affect "powersave" as well as "powersupersave", right?
+Both enable L1.  "powersupersave" enables the L1 substates.
+
+We *should* be able to enable/disable ASPM L1 using the sysfs "l1_aspm
+file, too.
+
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > ---
->  drivers/pci/hotplug/pnv_php.c       | 1 +
->  drivers/pci/hotplug/rpadlpar_core.c | 1 +
->  drivers/pci/hotplug/rpaphp_core.c   | 2 ++
->  drivers/pci/hotplug/rpaphp_pci.c    | 1 +
->  drivers/pci/hotplug/rpaphp_slot.c   | 1 +
->  5 files changed, 6 insertions(+)
+>  drivers/pci/quirks.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 44 insertions(+)
 > 
-> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-> index f4c2e6e01be0..881d420637bf 100644
-> --- a/drivers/pci/hotplug/pnv_php.c
-> +++ b/drivers/pci/hotplug/pnv_php.c
-> @@ -9,6 +9,7 @@
->  #include <linux/module.h>
->  #include <linux/pci.h>
->  #include <linux/pci_hotplug.h>
-> +#include <linux/of_fdt.h>
->  
->  #include <asm/opal.h>
->  #include <asm/pnv-pci.h>
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index e6991ff67526..980bb3afd092 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -15,6 +15,7 @@
->  
->  #include <linux/init.h>
->  #include <linux/module.h>
-> +#include <linux/of.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
->  #include <linux/vmalloc.h>
-> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-> index 9887c9de08c3..491986197c47 100644
-> --- a/drivers/pci/hotplug/rpaphp_core.c
-> +++ b/drivers/pci/hotplug/rpaphp_core.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/moduleparam.h>
-> +#include <linux/of.h>
->  #include <linux/pci.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/smp.h>
-> @@ -20,6 +21,7 @@
->  #include <asm/eeh.h>       /* for eeh_add_device() */
->  #include <asm/rtas.h>		/* rtas_call */
->  #include <asm/pci-bridge.h>	/* for pci_controller */
-> +#include <asm/prom.h>
->  #include "../pci.h"		/* for pci_add_new_bus */
->  				/* and pci_do_scan_bus */
->  #include "rpaphp.h"
-> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-> index c380bdacd146..630f77057c23 100644
-> --- a/drivers/pci/hotplug/rpaphp_pci.c
-> +++ b/drivers/pci/hotplug/rpaphp_pci.c
-> @@ -8,6 +8,7 @@
->   * Send feedback to <lxie@us.ibm.com>
->   *
->   */
-> +#include <linux/of.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
->  
-> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
-> index 93b4a945c55d..779eab12e981 100644
-> --- a/drivers/pci/hotplug/rpaphp_slot.c
-> +++ b/drivers/pci/hotplug/rpaphp_slot.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/sysfs.h>
-> +#include <linux/of.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
->  #include <linux/slab.h>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index da829274fc66..e97b5daa00eb 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5895,3 +5895,47 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1533, rom_bar_overlap_defect);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1536, rom_bar_overlap_defect);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1537, rom_bar_overlap_defect);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1538, rom_bar_overlap_defect);
+> +
+> +#ifdef CONFIG_PCIEASPM
+> +/*
+> + * Intel DG2 graphics card has hard-coded acceptable L1 latency that is
+> + * too low which prevents ASPM to be enabled. It does support ASPM L1
+> + * and tolerates higher latencies so quirk it to be unlimited.
+> + */
+> +static void quirk_aspm_accepted_l1_latency(struct pci_dev *dev)
+> +{
+> +	if ((dev->devcap & PCI_EXP_DEVCAP_L1) >> 9 < 7) {
+> +		u32 devcap = dev->devcap;
+> +
+> +		dev->devcap |= 7 << 9;
+> +		pci_info(dev, "quirking devcap for L1 accepted latency 0x%08x -> 0x%08x\n",
+> +			 devcap, dev->devcap);
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f80, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f81, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f82, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f83, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f84, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f85, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f86, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f87, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f88, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5690, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5691, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5692, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5693, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5694, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5695, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a0, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a1, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a2, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a3, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a4, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a5, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a6, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b0, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, quirk_aspm_accepted_l1_latency);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, quirk_aspm_accepted_l1_latency);
+> +#endif
 > -- 
 > 2.35.1
 > 
