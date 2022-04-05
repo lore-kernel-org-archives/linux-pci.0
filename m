@@ -2,122 +2,179 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2512EC433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3820BC3527D
 	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 21:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242572AbiDEVAO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 17:00:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53862 "EHLO
+        id S242781AbiDEVAV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 17:00:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457547AbiDEQKH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:10:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9F6025CD;
-        Tue,  5 Apr 2022 09:08:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4A1B0B81B13;
-        Tue,  5 Apr 2022 16:08:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9524EC385A0;
-        Tue,  5 Apr 2022 16:08:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649174881;
-        bh=AoQfSTw72a5g3VVtNzddJxgTV8CHG8MijsAxNddLzcM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Rvy2MyaS/ZPWOuRNjBC+N85V1Wd9YOS+7DkIESmc76SW7ds7bScLypq4XmbROFeFV
-         Vt0Kf7sBAH7ncizQ+q+wMrJEE4IGtZpMl7cDoStPiigR+qwKiRs9D9wJ0u9tAF0zRd
-         S755OJbnfXqP2UCubJlvAGKCKmCCiJ+DVrhFHejYnVl0Ej+uaVfUwZ/L8XhgycgKyO
-         EpRB5HzyFqO6SDVDvDleSt6EOGt24w908Wkh2kBH6OfgZyCIhRvd04A/iwEH4LxVNn
-         8Nkbz4cLxpKqOdQKnCN0tiRQHnwBgmsByBnIolMol/U5hXodx06K2wGpP8CiZ2fQbd
-         rzXojXTMhQ/Tw==
-Date:   Tue, 5 Apr 2022 11:08:00 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Prasad Malisetty <quic_pmaliset@quicinc.com>
-Cc:     agross@kernel.org, bjorn.andersson@linaro.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        rajatja@google.com, refactormyself@gmail.com,
-        quic_vbadigan@quicinc.com, quic_ramkri@quicinc.com,
-        manivannan.sadhasivam@linaro.org, swboyd@chromium.org
-Subject: Re: [PATCH v2] [RFC PATCH] PCI: Update LTR threshold based on LTRME
- bit
-Message-ID: <20220405160800.GA69953@bhelgaas>
+        with ESMTP id S1457652AbiDEQZy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:25:54 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6941955758
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 09:23:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649175836; x=1680711836;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=VIIL95YZv6RsZLI0HeLhDGD9sJSPe2rvrM4tcLhpqnM=;
+  b=C1zD9HRz96za+SJoXg22L0ILpy4/MCpYqFRc0B8xJ5UIADm+HGbIZwTm
+   RXVDAHNu/vRl2OPQ3ZPHNS/h7bq1hF86XUrpJJiNcj4vPIkgPVSc6ki/+
+   ujyfoLlblmBEbsPWvsYVeYMBt2xwkdp93jtaYCD0ldgNlylc3cmSLp0NQ
+   iEmDwOJxeuZAfVRJgimJnoFMlXApU1A/IZTz3hyLvGBiZKLkMxdkYcJcn
+   PgI1oIH1SaN8DBDCtFl50D7263ktq4gGUSKryk98PwKZXX5ITG+GMj65Q
+   X2CjOaz2i/VqhWlWot0DxkDTUuxMfD587RmlD0RC0fwXsw9ttkrDWzfpC
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10308"; a="260970162"
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="260970162"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:23:55 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
+   d="scan'208";a="569964529"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by orsmga008.jf.intel.com with ESMTP; 05 Apr 2022 09:23:55 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.27; Tue, 5 Apr 2022 09:23:54 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.27; Tue, 5 Apr 2022 09:23:54 -0700
+Received: from fmsmsx610.amr.corp.intel.com ([10.18.126.90]) by
+ fmsmsx610.amr.corp.intel.com ([10.18.126.90]) with mapi id 15.01.2308.027;
+ Tue, 5 Apr 2022 09:23:54 -0700
+From:   "Vivi, Rodrigo" <rodrigo.vivi@intel.com>
+To:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
+ unlimited
+Thread-Topic: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
+ unlimited
+Thread-Index: AQHYSNDQWg3XdsSM/UK8Ii3alDU2Fqzh8KOAgAAGJwA=
+Date:   Tue, 5 Apr 2022 16:23:54 +0000
+Message-ID: <ef9a1811a8c6d102dd39f2e7111b9df13d354db3.camel@intel.com>
+References: <20220405160151.GA68831@bhelgaas>
+In-Reply-To: <20220405160151.GA68831@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.40.4 (3.40.4-3.fc34) 
+x-originating-ip: [10.1.200.100]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <58ACD115E33110408354EA2230CDC82C@intel.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1646679549-12494-1-git-send-email-quic_pmaliset@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Mar 08, 2022 at 12:29:09AM +0530, Prasad Malisetty wrote:
-> Update LTR threshold scale and value based on LTRME (Latency
-> Tolenrance Reporting Mechanism) from device capabilities.
-
-s/Tolenrance/Tolerance/
-
-I'm not familiar with "LTRME" and it doesn't appear in the PCI spec.
-Please use the PCIe terminology whenever possible.
-
-> In ASPM driver, LTR threshold scale and value is updating
-> based on tcommon_mode and t_poweron values. In kioxia NVMe,
-> L1.2 is failing due to LTR threshold scale and value is
-> greater values than max snoop/non snoop value.
-> 
-> In general, updated LTR threshold scale and value should be
-> less than max snoop/non snoop value to enter the device
-> into L1.2 state.
-
-This affects all PCIe devices, so please include the PCIe spec
-citation that leads to this change.
-
-Please wrap the commit log to fill 75 columns.
-
-Thanks a lot for looking at this!  L1.2 and LTR is real problem area,
-and it would be great if we could get it all sorted out.
-
-> Signed-off-by: Prasad Malisetty <quic_pmaliset@quicinc.com>
-> 
-> ---
-> Changes since v1:
-> 	- Added missing variable declaration in v1 patch.
-> ---
->  drivers/pci/pcie/aspm.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index a96b742..a67746c 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -463,6 +463,7 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->  	u32 val1, val2, scale1, scale2;
->  	u32 t_common_mode, t_power_on, l1_2_threshold, scale, value;
->  	u32 ctl1 = 0, ctl2 = 0;
-> +	u32 cap;
->  	u32 pctl1, pctl2, cctl1, cctl2;
->  	u32 pl1_2_enables, cl1_2_enables;
->  
-> @@ -499,9 +500,14 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->  	 * Table 5-11.  T(POWER_OFF) is at most 2us and T(L1.2) is at
->  	 * least 4us.
->  	 */
-> -	l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
-> -	encode_l12_threshold(l1_2_threshold, &scale, &value);
-> -	ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
-> +	pcie_capability_read_dword(child, PCI_EXP_DEVCAP2, &cap);
-> +	if (!(cap & PCI_EXP_DEVCAP2_LTR)) {
-> +		l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
-> +		encode_l12_threshold(l1_2_threshold, &scale, &value);
-> +		ctl1 |= scale << 29 | value << 16;
-> +	}
-> +
-> +	ctl1 |= t_common_mode;
->  
->  	/* Some broken devices only support dword access to L1 SS */
->  	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1, &pctl1);
-> -- 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member 
-> of Code Aurora Forum, hosted by The Linux Foundation
-> 
+T24gVHVlLCAyMDIyLTA0LTA1IGF0IDExOjAxIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBPbiBUdWUsIEFwciAwNSwgMjAyMiBhdCAxMjozODoxMFBNICswMzAwLCBNaWthIFdlc3RlcmJl
+cmcgd3JvdGU6DQo+ID4gSW50ZWwgREcyIGRpc2NyZXRlIGdyYXBoaWNzIFBDSWUgZW5kcG9pbnRz
+IGhhcmQtY29kZSB0aGVpcg0KPiA+IGFjY2VwdGFibGUgTDENCj4gPiBBU1BNIGxhdGVuY3kgdG8g
+YmUgPCAxdXMgZXZlbiB0aG91Z2ggdGhlIGhhcmR3YXJlIGFjdHVhbGx5IHN1cHBvcnRzDQo+ID4g
+aGlnaGVyIGxhdGVuY2llcyAoPiA2NCB1cykganVzdCBmaW5lLiBJbiBvcmRlciB0byBhbGxvdyB0
+aGUgbGlua3MNCj4gPiB0byBnbw0KPiA+IGludG8gTDEgYW5kIHNhdmUgcG93ZXIsIHF1aXJrIHRo
+ZSBhY2NlcHRhYmxlIEwxIEFTUE0gbGF0ZW5jeSBmb3INCj4gPiB0aGVzZQ0KPiA+IGVuZHBvaW50
+cyB0byBiZSB1bmxpbWl0ZWQuDQo+IA0KPiBJcyB0aGVyZSBhIHBsYW4gdG8gZml4IHRoaXMgaW4g
+ZnV0dXJlIERHMiBoYXJkd2FyZS9maXJtd2FyZT8NCj4gT2J2aW91c2x5IHRoZSBwb2ludCBvZiBE
+ZXYgQ2FwIGlzIHRvIG1ha2UgdGhlIGRldmljZSBzZWxmLWRlc2NyaWJpbmcNCj4gc28gd2UgY2Fu
+IGF2b2lkIHVwZGF0ZXMgbGlrZSB0aGlzIGV2ZXJ5IHRpbWUgbmV3IGhhcmR3YXJlIGNvbWVzIG91
+dC4NCg0KVW5mb3J0dW5hdGVseSBubyBmaXggcG9zc2libGUgaW4gREcyIGh3IChwY2kgaWQgbGlz
+dCBiZWxvdyksIGJ1dCBpdA0Kd2lsbCBiZSBmaXhlZCBmb3Igb3RoZXIgcGxhdGZvcm1zIGNvbWlu
+ZyBhZnRlciB0aG9zZS4NCg0KPiANCj4gPiBOb3RlIHRoaXMgZG9lcyBub3QgaGF2ZSBhbnkgZWZm
+ZWN0IHVubGVzcyB0aGUgdXNlciByZXF1ZXN0ZWQgdGhlDQo+ID4ga2VybmVsDQo+ID4gdG8gZW5h
+YmxlIEFTUE0gaW4gdGhlIGZpcnN0IHBsYWNlIChieSBkZWZhdWx0IHdlIGRvbid0IGVuYWJsZSBp
+dCkuIA0KPiANCj4gSSB0aGluayB0aGlzIGRlcGVuZHMgb24gdGhlIHBsYXRmb3JtIGFuZCBrZXJu
+ZWwgY29uZmlnLCBkb2Vzbid0IGl0Pw0KPiBJZiBDT05GSUdfUENJRUFTUE1fUE9XRVJTQVZFPXkg
+b3IgQ09ORklHX1BDSUVBU1BNX1BPV0VSX1NVUEVSU0FWRT15DQo+IEkgc3VzcGVjdCB3ZSB3b3Vs
+ZCBlbmFibGUgQVNQTSBMMSBldmVuIHdpdGhvdXQgdGhlIHBhcmFtZXRlcnMgYmVsb3cuDQo+IA0K
+PiA+IFRoaXMgaXMgZG9uZSB3aXRoICJwY2llX2FzcG09Zm9yY2UNCj4gPiBwY2llX2FzcG0ucG9s
+aWN5PXBvd2Vyc3Vwc2Vyc2F2ZSINCj4gPiBjb21tYW5kIGxpbmUgcGFyYW1ldGVycy4NCj4gDQo+
+IHMvcG93ZXJzdXBzZXJzYXZlL3Bvd2Vyc3VwZXJzYXZlLw0KPiANCj4gVGhpcyBzaG91bGQgYWZm
+ZWN0ICJwb3dlcnNhdmUiIGFzIHdlbGwgYXMgInBvd2Vyc3VwZXJzYXZlIiwgcmlnaHQ/DQo+IEJv
+dGggZW5hYmxlIEwxLsKgICJwb3dlcnN1cGVyc2F2ZSIgZW5hYmxlcyB0aGUgTDEgc3Vic3RhdGVz
+Lg0KPiANCj4gV2UgKnNob3VsZCogYmUgYWJsZSB0byBlbmFibGUvZGlzYWJsZSBBU1BNIEwxIHVz
+aW5nIHRoZSBzeXNmcw0KPiAibDFfYXNwbQ0KPiBmaWxlLCB0b28uDQo+IA0KPiA+IFNpZ25lZC1v
+ZmYtYnk6IE1pa2EgV2VzdGVyYmVyZyA8bWlrYS53ZXN0ZXJiZXJnQGxpbnV4LmludGVsLmNvbT4N
+Cj4gPiAtLS0NCj4gPiDCoGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgNDQNCj4gPiArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+IMKgMSBmaWxlIGNoYW5nZWQs
+IDQ0IGluc2VydGlvbnMoKykNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVp
+cmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+IGluZGV4IGRhODI5Mjc0ZmM2Ni4uZTk3
+YjVkYWEwMGViIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQo+ID4gKysr
+IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiBAQCAtNTg5NSwzICs1ODk1LDQ3IEBAIERFQ0xB
+UkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsDQo+ID4gMHgxNTMzLCByb21f
+YmFyX292ZXJsYXBfZGVmZWN0KTsNCj4gPiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9W
+RU5ET1JfSURfSU5URUwsIDB4MTUzNiwNCj4gPiByb21fYmFyX292ZXJsYXBfZGVmZWN0KTsNCj4g
+PiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MTUzNywN
+Cj4gPiByb21fYmFyX292ZXJsYXBfZGVmZWN0KTsNCj4gPiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VB
+UkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MTUzOCwNCj4gPiByb21fYmFyX292ZXJsYXBfZGVm
+ZWN0KTsNCj4gPiArDQo+ID4gKyNpZmRlZiBDT05GSUdfUENJRUFTUE0NCj4gPiArLyoNCj4gPiAr
+ICogSW50ZWwgREcyIGdyYXBoaWNzIGNhcmQgaGFzIGhhcmQtY29kZWQgYWNjZXB0YWJsZSBMMSBs
+YXRlbmN5DQo+ID4gdGhhdCBpcw0KPiA+ICsgKiB0b28gbG93IHdoaWNoIHByZXZlbnRzIEFTUE0g
+dG8gYmUgZW5hYmxlZC4gSXQgZG9lcyBzdXBwb3J0IEFTUE0NCj4gPiBMMQ0KPiA+ICsgKiBhbmQg
+dG9sZXJhdGVzIGhpZ2hlciBsYXRlbmNpZXMgc28gcXVpcmsgaXQgdG8gYmUgdW5saW1pdGVkLg0K
+PiA+ICsgKi8NCj4gPiArc3RhdGljIHZvaWQgcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5
+KHN0cnVjdCBwY2lfZGV2ICpkZXYpDQo+ID4gK3sNCj4gPiArwqDCoMKgwqDCoMKgwqBpZiAoKGRl
+di0+ZGV2Y2FwICYgUENJX0VYUF9ERVZDQVBfTDEpID4+IDkgPCA3KSB7DQo+ID4gK8KgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHUzMiBkZXZjYXAgPSBkZXYtPmRldmNhcDsNCj4gPiArDQo+
+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldi0+ZGV2Y2FwIHw9IDcgPDwgOTsN
+Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcGNpX2luZm8oZGV2LCAicXVpcmtp
+bmcgZGV2Y2FwIGZvciBMMSBhY2NlcHRlZA0KPiA+IGxhdGVuY3kgMHglMDh4IC0+IDB4JTA4eFxu
+IiwNCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBk
+ZXZjYXAsIGRldi0+ZGV2Y2FwKTsNCj4gPiArwqDCoMKgwqDCoMKgwqB9DQo+ID4gK30NCj4gPiAr
+REVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NGY4MCwNCj4g
+PiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhV
+UF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0ZjgxLA0KPiA+IHF1aXJrX2FzcG1fYWNj
+ZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVO
+RE9SX0lEX0lOVEVMLCAweDRmODIsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5
+KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4
+NGY4MywNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJF
+X1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0Zjg0LA0KPiA+IHF1aXJr
+X2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURF
+UihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDRmODUsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9s
+MV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURf
+SU5URUwsIDB4NGY4NiwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+
+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0Zjg3LA0K
+PiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJ
+WFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDRmODgsDQo+ID4gcXVpcmtfYXNwbV9h
+Y2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9W
+RU5ET1JfSURfSU5URUwsIDB4NTY5MCwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVu
+Y3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwg
+MHg1NjkxLA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xB
+UkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDU2OTIsDQo+ID4gcXVp
+cmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVB
+REVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTY5MywNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVk
+X2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9J
+RF9JTlRFTCwgMHg1Njk0LA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+
+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDU2OTUs
+DQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lf
+RklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZhMCwNCj4gPiBxdWlya19hc3Bt
+X2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJ
+X1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmExLA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0
+ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVM
+LCAweDU2YTIsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVD
+TEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZhMywNCj4gPiBx
+dWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9I
+RUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmE0LA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0
+ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9S
+X0lEX0lOVEVMLCAweDU2YTUsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsN
+Cj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZh
+NiwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BD
+SV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmIwLA0KPiA+IHF1aXJrX2Fz
+cG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQ
+Q0lfVkVORE9SX0lEX0lOVEVMLCAweDU2YjEsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9s
+YXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5U
+RUwsIDB4NTZjMCwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtE
+RUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmMxLA0KPiA+
+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gKyNlbmRpZg0KPiA+IC0tIA0K
+PiA+IDIuMzUuMQ0KPiA+IA0KDQo=
