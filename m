@@ -2,153 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC9FC433FE
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2480FC43219
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232171AbiDEU6f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:58:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44400 "EHLO
+        id S237237AbiDEU6y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:58:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457249AbiDEQC7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:02:59 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DB71401D
-        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 08:35:39 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id f18so10306577edc.5
-        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2022 08:35:39 -0700 (PDT)
+        with ESMTP id S1573370AbiDES7U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 14:59:20 -0400
+Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE4C4CD33E
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 11:57:19 -0700 (PDT)
+Received: by mail-oi1-x22a.google.com with SMTP id t21so28943oie.11
+        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2022 11:57:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=RAVH8ALFlz9wuASO9LQb9RbtPlxb1j2B9jBGCAw1Kh8=;
-        b=lkYAUUyQ5VX2KSG0erjEIfRcCavrJv3RISfj99CHUKLjZ9iBVnE0S1s/PsU8q6boQr
-         pO87Dskn8e+PKHSEhzMHFEwskQRIHgoDNnXeS9Pn9DuRBkzlKHvUem0Sd94K830oxqzX
-         Gp0MZzYJxADrwS8kzFR8SeOLw0yI4pns5nZ+PtZAPg3mzxPdlraHGS0+h6jK/YkpYDXr
-         5HgYd3yn5pK/z/32wL7OIcA19KzkDMvc6yLKE03cQpGajv2aRHO/RTjIGpZrjUca8f7V
-         Qi2TGcKqiYaXydZrmB9LkWAjMNTcVIYeOFW5pL176IBC/MEjlpBPh7x0jLr9LoZIuA3g
-         7ZAw==
+        d=chromium.org; s=google;
+        h=mime-version:in-reply-to:references:from:user-agent:date:message-id
+         :subject:to:cc:content-transfer-encoding;
+        bh=Eg+uJvzARiyK+y5kdwfhnsez9dPo6iD29SbfPJ5zFbo=;
+        b=SOQSZKy52LDl9ojVoe9ifg4gZDbfedX3HkeMtnOMdhgKQ+qR+r52Y+dGcz4uJd5Bob
+         kv/cVP780ma8L1IWC4Xds1yYirTqiu52lXC03y3odfB52De0YP3povQqDRNnsie5Tbh+
+         8gR0b7LCVS0p02zuIW9kppHpg2JdutvLf5iDg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=RAVH8ALFlz9wuASO9LQb9RbtPlxb1j2B9jBGCAw1Kh8=;
-        b=IJ13JGyCJR+n1s7bpGQ470vhcww/C534VG+yuzWFR72PeIyVTaWogfD6Z45PZjR7aA
-         HX6sso6dgL+crSW6oX+CxjUTELwp7Kcq/TyO/nawUqAbzQV93zSgCU4c8eKW8X77J5k4
-         7lMlxKMPRXJB7M0N0iLInMnpEN2gyrC7VXhjtRi+wguGyklDMiXl8aPhwuhg1HmDS1Vl
-         iUriIfmAoINaSH/K+3BKFTRlXnf8OMniB/FAPNwJM/64fdRSqI9ahvEAaYKNkFSxd5OX
-         kexFgJMQwM+8yigbCtbs1sG/RXbbHEPYn9FS1PN5EiOBvzfw051dBtoOwioMxKzh7Ipr
-         iZFg==
-X-Gm-Message-State: AOAM532h1fg7qIDG2J/OBmCstf7yPOIrwWoKTT2CxA4wdPrXDR6u6yrZ
-        UviZh33KMUayy9m5wPN4fJR1U0lFPUz3DgePd4sngo/7udw=
-X-Google-Smtp-Source: ABdhPJzY4ISRGvJq1+mZ/kkgkoVf02i6GFXOU56VOhR/2Jf5hjCn6S3XU76jWLv1KVMWjvoV0VbCQA/PE3kN4gW+4pw=
-X-Received: by 2002:aa7:d758:0:b0:41c:dc93:4d81 with SMTP id
- a24-20020aa7d758000000b0041cdc934d81mr4164613eds.15.1649172937536; Tue, 05
- Apr 2022 08:35:37 -0700 (PDT)
+        h=x-gm-message-state:mime-version:in-reply-to:references:from
+         :user-agent:date:message-id:subject:to:cc:content-transfer-encoding;
+        bh=Eg+uJvzARiyK+y5kdwfhnsez9dPo6iD29SbfPJ5zFbo=;
+        b=npfrQHdjgA/ay4Fe3/iVsW08YY7ETbAtJppvYmdFOu8wvrZ67xuZoXGUlrLsySG9kQ
+         6je2hmrSueQDbbM1VOrIcSjkfUzAwp0jSS0Dqr8RFVBohSNrbVE6Cw7NAiEi12L4gicH
+         jQHluYiQulBlKFUVp9K4Brsk6IdTPoqjTXNuwP0BUBlRrDcHYxVEx6196V32TZXcHfR5
+         542CZ/pzYrlZ+dY3mjqd6EOM32rf2RwGDldPWNDFjmnXHiJCN8F/f8R8e04rZAcrGPRU
+         s1Zk876zsxkM1uuFvQ7fP0wiBh42kceFbxrB5aWmh90lcbnpP81gT9DUn89XpHY5sEEX
+         schA==
+X-Gm-Message-State: AOAM530CqXjM4i8I5XvGqz8Cweg8wZppKA8a5O5CmQmpke/0l4MQLnDy
+        iGB9tuJSOY49vq/J39sb0NqPm8+0xEQk/3Ko6MAhLQ==
+X-Google-Smtp-Source: ABdhPJxqFrAK9XKNfLSTAKp/DpPKoy3w3eYu+cvQpWHQQxYLJz3gqwv6wMtk9iToYxT4AHG9aUy+iRPRwFP3QOpCpz8=
+X-Received: by 2002:aca:bd41:0:b0:2ec:ff42:814f with SMTP id
+ n62-20020acabd41000000b002ecff42814fmr2062655oif.63.1649185039185; Tue, 05
+ Apr 2022 11:57:19 -0700 (PDT)
+Received: from 753933720722 named unknown by gmailapi.google.com with
+ HTTPREST; Tue, 5 Apr 2022 13:57:18 -0500
 MIME-Version: 1.0
-References: <20220222162355.32369-1-Frank.Li@nxp.com> <fa2ab3cf-1508-bbeb-47af-8b2d47904b20@ti.com>
-In-Reply-To: <fa2ab3cf-1508-bbeb-47af-8b2d47904b20@ti.com>
-From:   Zhi Li <lznuaa@gmail.com>
-Date:   Tue, 5 Apr 2022 10:35:25 -0500
-Message-ID: <CAHrpEqT2zwWiiiTUDAu9JNPXmzP1zELF7YDERWjdOohGMFRBnA@mail.gmail.com>
-Subject: Re: [PATCH V2 0/4] NTB function for PCIe RC to EP connection
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Frank Li <Frank.Li@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>,
-        lorenzo.pieralisi@arm.com, kw@linux.com,
-        Jingoo Han <jingoohan1@gmail.com>,
-        gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org
+In-Reply-To: <CO1PR02MB853729533D004EB671B273BAE9E49@CO1PR02MB8537.namprd02.prod.outlook.com>
+References: <1646679549-12494-1-git-send-email-quic_pmaliset@quicinc.com>
+ <CAE-0n51HZKXCtrzf3_5wnoCZfhRoq8AqmUwsdk31iaiteVRDYg@mail.gmail.com> <CO1PR02MB853729533D004EB671B273BAE9E49@CO1PR02MB8537.namprd02.prod.outlook.com>
+From:   Stephen Boyd <swboyd@chromium.org>
+User-Agent: alot/0.10
+Date:   Tue, 5 Apr 2022 13:57:18 -0500
+Message-ID: <CAE-0n51oA99uOu4S3Sywx7FpK1SJKACgX27UN9z2kKP8UfwGOw@mail.gmail.com>
+Subject: RE: [PATCH v2] [RFC PATCH] PCI: Update LTR threshold based on LTRME bit
+To:     Prasad Malisetty <quic_pmaliset@quicinc.com>,
+        Prasad Malisetty <pmaliset@qti.qualcomm.com>,
+        agross@kernel.org, bhelgaas@google.com, bjorn.andersson@linaro.org,
+        kw@linux.com, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, rajatja@google.com,
+        refactormyself@gmail.com, robh@kernel.org
+Cc:     Veerabhadrarao Badiganti <quic_vbadigan@quicinc.com>,
+        Rama Krishna <quic_ramkri@quicinc.com>,
+        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVHVlLCBBcHIgNSwgMjAyMiBhdCA1OjM0IEFNIEtpc2hvbiBWaWpheSBBYnJhaGFtIEkgPGtp
-c2hvbkB0aS5jb20+IHdyb3RlOg0KPg0KPiBIaSBGcmFuayBMaSwNCj4NCj4gT24gMjIvMDIvMjIg
-OTo1MyBwbSwgRnJhbmsgTGkgd3JvdGU6DQo+ID4gVGhpcyBpbXBsZW1lbnQgTlRCIGZ1bmN0aW9u
-IGZvciBQQ0llIEVQIHRvIFJDIGNvbm5lY3Rpb25zLg0KPiA+IFRoZSBleGlzdGVkIG50YiBlcGYg
-bmVlZCB0d28gUENJIEVQcyBhbmQgdHdvIFBDSSBIb3N0Lg0KPg0KPiBBcyBJIGhhZCBlYXJsaWVy
-IG1lbnRpb25lZCBpbiBbMV0sIElNSE8gaWRlYWwgc29sdXRpb24gd291bGQgYmUgYnVpbGQgb24g
-dmlydGlvDQo+IGxheWVyIGluc3RlYWQgb2YgdHJ5aW5nIHRvIGJ1aWxkIG9uIE5UQiBsYXllciAo
-d2hpY2ggaXMgc3BlY2lmaWMgdG8gUkM8LT5SQw0KPiBjb21tdW5pY2F0aW9uKS4NCj4NCj4gQXJl
-IHRoZXJlIGFueSBzcGVjaWZpYyByZWFzb25zIGZvciBub3QgdGFraW5nIHRoYXQgcGF0aD8NCg0K
-MS4gRVAgc2lkZSB3b3JrIGFzIHZIT1NUIG1vZGUuICB2SG9zdCBzdXBwb3NlIGFjY2VzcyBhbGwg
-bWVtb3J5IG9mIHZpcnR1YWwgaW8uDQpCdXQgdGhlcmUgYXJlIG9ubHkgbWFwIHdpbmRvd3Mgb24g
-dGhlIEVQIHNpZGUgdG8gYWNjZXNzIFJDIHNpZGUNCm1lbW9yeS4gWW91IGhhdmUgdG8gbW92ZQ0K
-bWFwIHdpbmRvd3MgZm9yIGVhY2ggYWNjZXNzLiAgSXQgaXMgcXVpdGUgbG93IGVmZmljaWVuY3ku
-DQoNCjIuIFNvIGZhciBhcyBJIGtub3csIHZpcnRpbyBpcyBzdGlsbCBub3QgRE1BIHlldC4gIENQ
-VSBhY2Nlc3MgUENJDQpjYW4ndCBnZW5lcmF0ZSBsb25nZXIgUENJIFRMUCwNClNvIHRoZSBzcGVl
-ZCBpcyBxdWl0ZSBzbG93LiAgTlRCIGFscmVhZHkgaGFzIERNQSBzdXBwb3J0LiAgSWYgeW91IHVz
-ZQ0Kc3lzdGVtIGxldmVsIERNQSwNCm5vIGNoYW5nZSBpcyBuZWVkZWQgYXQgTlRCIGxldmVsLiAg
-SWYgd2Ugd2FudCB0byB1c2UgYSBQQ0kgY29udHJvbGxlcg0KZW1iZWRkZWQgRE1BLCAgc29tZSBz
-bWFsbA0KY2hhbmdlcyBuZWVkIGlmIGJhc2VkIG9uIG15IG90aGVyIERlc2lnbndhcmUgUENJIGVE
-TUEgcGF0Y2hlcywgd2hpY2gNCmFyZSB1bmRlciByZXZpZXcuDQoNCjMuIEFsbCB0aGUgbWFqb3Ig
-ZGF0YSB0cmFuc2ZlciBvZiBOVEIgaXMgdXNpbmcgd3JpdGUuICBCZWNhdXNlIFRMUA0Kd3JpdGUg
-bmVlZG4ndCB3YWl0IGZvciBjb21wbGV0ZSwgIHdyaXRlDQpwZXJmb3JtYW5jZSBpcyBiZXR0ZXIg
-dGhhbiByZWFkaW5nLiAgT24gb3VyIHBsYXRmb3JtLCAgd3JpdGUNCnBlcmZvcm1hbmNlIGlzIGFi
-b3V0IDEwJSBiZXR0ZXIgdGhhbiAgcmVhZC4NCg0KRnJhbmsNCg0KPg0KPiBUaGFua3MsDQo+IEtp
-c2hvbg0KPg0KPiBbMV0gLT4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvci80NTk3NDVkMS05ZmU3
-LWU3OTItMzUzMi0zM2VlOTU1MmJjNGRAdGkuY29tDQo+ID4NCj4gPiBUaGlzIGp1c3QgbmVlZCBF
-UCB0byBSQyBjb25uZWN0aW9ucy4NCj4gPg0KPiA+ICAgICDilIzilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilJAgICAgICAgICDilIzilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilJANCj4gPiAgICAg4pSCICAgICAgICAgICAg
-4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIOKUgg0K
-PiA+ICAgICDilJzilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKQgICAgICAg
-ICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSM4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSA4pSA4pSA4pSA4pSkDQo+ID4gICAgIOKUgiBOVEIgICAgICAgIOKUgiAgICAgICAgIOKU
-giAgICAgICAgICAgICAgICAgICAgICDilIIgTlRCICAgICAgICAgIOKUgg0KPiA+ICAgICDilIIg
-TmV0RGV2ICAgICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCIE5ldERl
-diAgICAgICDilIINCj4gPiAgICAg4pSc4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
-4pSA4pSkICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgIOKUnOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpA0KPiA+ICAgICDilIIgTlRCICAgICAgICDi
-lIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCIE5UQiAgICAgICAgICDilIIN
-Cj4gPiAgICAg4pSCIFRyYW5zZmVyICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAg
-ICAgIOKUgiBUcmFuc2ZlciAgICAg4pSCDQo+ID4gICAgIOKUnOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgICAgIOKUgiAgICAgICAgICAgICAgICAgICAgICDilJzi
-lIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilKQNCj4gPiAgICAg4pSC
-ICAgICAgICAgICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAgICAgICAgICAgIOKUgiAgICAg
-ICAgICAgICAg4pSCDQo+ID4gICAgIOKUgiAgUENJIE5UQiAgIOKUgiAgICAgICAgIOKUgiAgICAg
-ICAgICAgICAgICAgICAgICDilIIgICAgICAgICAgICAgIOKUgg0KPiA+ICAgICDilIIgICAgRVBG
-ICAgICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICAgICAgICAg4pSCICAgICAgICAgICAg
-ICDilIINCj4gPiAgICAg4pSCICAgRHJpdmVyICAg4pSCICAgICAgICAg4pSCICAgICAgICAgICAg
-ICAgICAgICAgIOKUgiBQQ0kgVmlydHVhbCAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKU
-giAgICAgICAgIOKUnOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUkCAgICAgIOKUgiBOVEIgRHJpdmVyICAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKU
-giAgICAgICAgIOKUgiBQQ0kgRVAgTlRCICAgIOKUguKXhOKUgOKUgOKUgOKUgOKWuuKUgiAgICAg
-ICAgICAgICAg4pSCDQo+ID4gICAgIOKUgiAgICAgICAgICAgIOKUgiAgICAgICAgIOKUgiAgRk4g
-RHJpdmVyICAgIOKUgiAgICAgIOKUgiAgICAgICAgICAgICAg4pSCDQo+ID4gICAgIOKUnOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgICAgIOKUnOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpCAgICAgIOKUnOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUpA0KPiA+ICAgICDilIIgICAgICAgICAg
-ICDilIIgICAgICAgICDilIIgICAgICAgICAgICAgICDilIIgICAgICDilIIgICAgICAgICAgICAg
-IOKUgg0KPiA+ICAgICDilIIgIFBDSSBCVVMgICDilIIg4peE4pSA4pSA4pSA4pSA4pSA4pa6IOKU
-giAgUENJIEVQIEJVUyAgIOKUgiAgICAgIOKUgiAgVmlydHVhbCBQQ0kg4pSCDQo+ID4gICAgIOKU
-giAgICAgICAgICAgIOKUgiAgUENJICAgIOKUgiAgICAgICAgICAgICAgIOKUgiAgICAgIOKUgiAg
-ICAgQlVTICAgICAg4pSCDQo+ID4gICAgIOKUlOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUmCAgICAgICAgIOKUlOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUtOKUgOKUgOKUgOKUgOKUgOKUgOKUtOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
-gOKUgOKUgOKUgOKUgOKUgOKUgOKUmA0KPiA+ICAgICAgICAgUENJIFJDICAgICAgICAgICAgICAg
-ICAgICAgICAgUENJIEVQDQo+ID4NCj4gPg0KPiA+DQo+ID4gRnJhbmsgTGkgKDQpOg0KPiA+ICAg
-UENJOiBkZXNpZ253YXJlLWVwOiBBbGxvdyBwY2lfZXBjX3NldF9iYXIoKSB1cGRhdGUgaW5ib3Vu
-ZCBtYXAgYWRkcmVzcw0KPiA+ICAgTlRCOiBlcGY6IEFsbG93IG1vcmUgZmxleGliaWxpdHkgaW4g
-dGhlIG1lbW9yeSBCQVIgbWFwIG1ldGhvZA0KPiA+ICAgUENJOiBlbmRwb2ludDogU3VwcG9ydCBO
-VEIgdHJhbnNmZXIgYmV0d2VlbiBSQyBhbmQgRVANCj4gPiAgIERvY3VtZW50YXRpb246IFBDSTog
-QWRkIHNwZWNpZmljYXRpb24gZm9yIHRoZSBQQ0kgdk5UQiBmdW5jdGlvbiBkZXZpY2UNCj4gPg0K
-PiA+ICBEb2N1bWVudGF0aW9uL1BDSS9lbmRwb2ludC9pbmRleC5yc3QgICAgICAgICAgfCAgICAy
-ICsNCj4gPiAgLi4uL1BDSS9lbmRwb2ludC9wY2ktdm50Yi1mdW5jdGlvbi5yc3QgICAgICAgIHwg
-IDEyNiArKw0KPiA+ICBEb2N1bWVudGF0aW9uL1BDSS9lbmRwb2ludC9wY2ktdm50Yi1ob3d0by5y
-c3QgfCAgMTY3ICsrDQo+ID4gIGRyaXZlcnMvbnRiL2h3L2VwZi9udGJfaHdfZXBmLmMgICAgICAg
-ICAgICAgICB8ICAgNDggKy0NCj4gPiAgLi4uL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLWRlc2ln
-bndhcmUtZXAuYyAgIHwgICAxMCArLQ0KPiA+ICBkcml2ZXJzL3BjaS9lbmRwb2ludC9mdW5jdGlv
-bnMvS2NvbmZpZyAgICAgICAgfCAgIDExICsNCj4gPiAgZHJpdmVycy9wY2kvZW5kcG9pbnQvZnVu
-Y3Rpb25zL01ha2VmaWxlICAgICAgIHwgICAgMSArDQo+ID4gIGRyaXZlcnMvcGNpL2VuZHBvaW50
-L2Z1bmN0aW9ucy9wY2ktZXBmLXZudGIuYyB8IDE0MjQgKysrKysrKysrKysrKysrKysNCj4gPiAg
-OCBmaWxlcyBjaGFuZ2VkLCAxNzc1IGluc2VydGlvbnMoKyksIDE0IGRlbGV0aW9ucygtKQ0KPiA+
-ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9QQ0kvZW5kcG9pbnQvcGNpLXZudGIt
-ZnVuY3Rpb24ucnN0DQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL1BDSS9l
-bmRwb2ludC9wY2ktdm50Yi1ob3d0by5yc3QNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZl
-cnMvcGNpL2VuZHBvaW50L2Z1bmN0aW9ucy9wY2ktZXBmLXZudGIuYw0KPiA+DQo=
+Quoting Prasad Malisetty (Temp) (2022-04-04 23:24:39)
+> > From: Stephen Boyd <swboyd@chromium.org>
+> > Quoting Prasad Malisetty (2022-03-07 10:59:09)
+> > > Update LTR threshold scale and value based on LTRME (Latency
+> > > Tolenrance Reporting Mechanism) from device capabilities.
+> > >
+> > > In ASPM driver, LTR threshold scale and value is updating based on
+> > > tcommon_mode and t_poweron values. In kioxia NVMe,
+> > > L1.2 is failing due to LTR threshold scale and value is greater value=
+s
+> > > than max snoop/non snoop value.
+> > >
+> > > In general, updated LTR threshold scale and value should be less than
+> > > max snoop/non snoop value to enter the device into L1.2 state.
+> > >
+> > > Signed-off-by: Prasad Malisetty <quic_pmaliset@quicinc.com>
+> > >
+> >
+> > Any Fixes tag?
+> No, we don=E2=80=99t have any fixes tag as this is new issue identified i=
+n kioxia NVMe only as of now.
+
+Just because you found it now doesn't mean it hasn't been broken for
+some time. Can you look through the history and figure out when it
+didn't work and use that commit for the fixes tag?
