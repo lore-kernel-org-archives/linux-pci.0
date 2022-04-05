@@ -2,245 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0D95C4332F
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 198F3C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 20:57:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232913AbiDEU6m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:58:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46066 "EHLO
+        id S233306AbiDEU6w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:58:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457862AbiDEQwx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:52:53 -0400
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3BE5326E6;
-        Tue,  5 Apr 2022 09:50:52 -0700 (PDT)
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id b583b31e156ca061; Tue, 5 Apr 2022 18:50:50 +0200
-Received: from kreacher.localnet (unknown [213.134.181.136])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S1457624AbiDEQTd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:19:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F66E193D3;
+        Tue,  5 Apr 2022 09:17:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 81B8F66BCB7;
-        Tue,  5 Apr 2022 18:50:49 +0200 (CEST)
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Abhishek Sahu <abhsahu@nvidia.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PCI: Fix the ACPI power state during runtime resume
-Date:   Tue, 05 Apr 2022 18:50:48 +0200
-Message-ID: <2632919.mvXUDI8C0e@kreacher>
-In-Reply-To: <469a9db5-9868-cb17-dd5c-96ef29193fda@nvidia.com>
-References: <20220204233219.GA228585@bhelgaas> <8f89131c-41a2-02e4-1427-8a5b1704e0ea@nvidia.com> <469a9db5-9868-cb17-dd5c-96ef29193fda@nvidia.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id D8244B80E0B;
+        Tue,  5 Apr 2022 16:17:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F12D0C385A4;
+        Tue,  5 Apr 2022 16:17:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649175451;
+        bh=9i+q2ZN9TmxfoI0nuVfh6ATI7dSt6NeIA1KoAxqH9Wo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=d9bKmV/0IMeeXRcs+lJgcy2FAU7lLCVkihgX4OgOBMkO1BYdDu8qxnUx2/rqg7UyV
+         DzDTTlCGsm+r8VfiUlQkuC+3f3h6koQ2HES1mTi9Q2now2v+7ba3/ryJgnWGydGAmV
+         uifbtzr2x1eCuFnu+B0llXSSt6zyAwaXYioJ58oNh0uEp01YDQs/9HLXhdbJ46n/LC
+         EMF8fRU7e8J/LFe++amL1j9hkDYSZ8hBWivyrqg8UyGXzu7q/I1r2+SfJ7k9vXv4pl
+         yRa6lxE7a2Dru+ZbrOLiv++PMJfDzhFEsrlGh7dWEDnp4DPIpUjAhXyMVe6QwAcqfh
+         CyBn92r+JO3Bg==
+Date:   Tue, 5 Apr 2022 11:17:29 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: hotplug: Prepare cleanup of powerpc's asm/prom.h
+Message-ID: <20220405161729.GA71083@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 213.134.181.136
-X-CLIENT-HOSTNAME: 213.134.181.136
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudejgedguddtudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepteeggfelteegudehueegieekveduleeuledvueefjeefffegfeejudfgteefhefhnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepvddufedrudefgedrudekuddrudefieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvudefrddufeegrddukedurddufeeipdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeejpdhrtghpthhtoheprggshhhsrghhuhesnhhvihguihgrrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghp
- thhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=7 Fuz1=7 Fuz2=7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <79201f5fae8d003164ac36ed3be7789db1bc5ab4.1648833421.git.christophe.leroy@csgroup.eu>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday, April 5, 2022 6:36:34 PM CEST Abhishek Sahu wrote:
-> On 2/8/2022 4:00 PM, Abhishek Sahu wrote:
-> > On 2/8/2022 12:28 AM, Rafael J. Wysocki wrote:
-> >> On Saturday, February 5, 2022 12:32:19 AM CET Bjorn Helgaas wrote:
-> >>> [+cc Rafael, hoping for your review :)
-> >>
-> >> +Mika
-> >>
-> >>> Wonder if we should add something like this to MAINTAINERS so you get
-> >>> cc'd on power-related things:
-> >>>
-> >>> diff --git a/MAINTAINERS b/MAINTAINERS
-> >>> index ea3e6c914384..3d9a211cad5d 100644
-> >>> --- a/MAINTAINERS
-> >>> +++ b/MAINTAINERS
-> >>> @@ -15422,6 +15422,7 @@ F:    include/linux/pm.h
-> >>>  F:   include/linux/pm_*
-> >>>  F:   include/linux/powercap.h
-> >>>  F:   kernel/configs/nopm.config
-> >>> +K:   pci_[a-z_]*power[a-z_]*\(
-> >>
-> >> It seems so, but generally PM patches should be CCed to linux-pm anyway.
-> >>
-> >>>
-> >>>  DYNAMIC THERMAL POWER MANAGEMENT (DTPM)
-> >>>  M:   Daniel Lezcano <daniel.lezcano@kernel.org>
-> >>> ]
-> >>>
-> >>> On Mon, Jan 24, 2022 at 05:51:07PM +0530, Abhishek Sahu wrote:
-> >>>> Consider the following sequence during PCI device runtime
-> >>>> suspend/resume:
-> >>>>
-> >>>> 1. PCI device goes into runtime suspended state. The PCI state
-> >>>>    will be changed to PCI_D0 and then pci_platform_power_transition()
-> >>>>    will be called which changes the ACPI state to ACPI_STATE_D3_HOT.
-> >>
-> >> You mean PCI_D3hot I suppose?
-> >>
-> > 
-> >  Yes. It should be PCI_D3hot here. 
-> > 
-> >>>> 2. Parent bridge goes into runtime suspended state. If parent
-> >>>>    bridge supports D3cold, then it will change the power state of all its
-> >>>>    children to D3cold state and the power will be removed.
-> >>>>
-> >>>> 3. During wake-up time, the bridge will be runtime resumed first
-> >>>>    and pci_power_up() will be called for the bridge. Now, the power
-> >>>>    supply will be resumed.
-> >>>>
-> >>>> 4. pci_resume_bus() will be called which will internally invoke
-> >>>>    pci_restore_standard_config(). pci_update_current_state()
-> >>>>    will read PCI_PM_CTRL register and the current_state will be
-> >>>>    updated to D0.
-> >>>>
-> >>>> In the above process, at step 4, the ACPI device state will still be
-> >>>> ACPI_STATE_D3_HOT since pci_platform_power_transition() is not being
-> >>>> invoked.
-> >>
-> >> I'm not quite following.
-> >>
-> >> I'm assuming that this description applies to the endpoint device that was
-> >> previously put into D3_hot.
-> >>
-> > 
-> >  Yes. This is applicable for endpoint devices which was previously put
-> >  into D3hot.
-> > 
-> >> Since its current state is D3_hot, it is not D0 (in particular) and the
-> >> pci_set_power_state() in pci_restore_standard_config() should put int into
-> >> D0 proper, including the platform firmware part.
-> >>
-> > 
-> >  The pci_restore_standard_config() for endpoint devices are being called
-> >  internally during wake-up of upstream bridge. 
-> > 
-> >  pci_power_up(struct pci_dev *dev)
-> >  {
-> >       ...
-> >       if (dev->runtime_d3cold) {
-> >         /*
-> >          * When powering on a bridge from D3cold, the whole hierarchy
-> >          * may be powered on into D0uninitialized state, resume them to
-> >          * give them a chance to suspend again
-> >          */
-> >         pci_resume_bus(dev->subordinate);
-> >     }
-> >     ...
-> >  }
-> > 
-> >  For the upstream bridge, the above code will trigger the wake-up of
-> >  endpoint devices and then following code will be executed for the
-> >  endpoint devices:
-> > 
-> >  pci_update_current_state(struct pci_dev *dev, pci_power_t state)
-> >  {
-> >     if (platform_pci_get_power_state(dev) == PCI_D3cold ||
-> >         !pci_device_is_present(dev)) {
-> >         dev->current_state = PCI_D3cold;
-> >     } else if (dev->pm_cap) {
-> >         u16 pmcsr;
-> > 
-> >         pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-> >         dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
-> >     } else {
-> >         dev->current_state = state;
-> >     }
-> >  }
-> > 
-> >  In the above code, the current_state will be set to D0 for the
-> >  endpoint devices since it will go into second block where
-> >  it will read the PM_CTRL register.
-> >  
-> >>>> We need call the pci_platform_power_transition() with state
-> >>>> D0 to change the ACPI state to ACPI_STATE_D0.
-> >>>>
-> >>>> This patch calls pci_power_up() if current power state is D0 inside
-> >>>> pci_restore_standard_config(). This pci_power_up() will change the
-> >>>> ACPI state to ACPI_STATE_D0.
-> >>>>
-> >>>> Following are the steps to confirm:
-> >>>>
-> >>>> Enable the debug prints in acpi_pci_set_power_state()
-> >>>>
-> >>>> 0000:01:00.0 is PCI device and 0000:00:01.0 is parent bridge device
-> >>>>
-> >>>> Before:
-> >>>>
-> >>>> 0000:01:00.0: power state changed by ACPI to D3hot
-> >>>> 0000:00:01.0: power state changed by ACPI to D3cold
-> >>>> 0000:00:01.0: power state changed by ACPI to D0
-> >>>>
-> >>>> After:
-> >>>>
-> >>>> 0000:01:00.0: power state changed by ACPI to D3hot
-> >>>> 0000:00:01.0: power state changed by ACPI to D3cold
-> >>>> 0000:00:01.0: power state changed by ACPI to D0
-> >>>> 0000:01:00.0: power state changed by ACPI to D0
-> >>>>
-> >>>> So with this patch, the PCI device ACPI state is also being
-> >>>> changed to D0.
-> >>>>
-> >>>> Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
-> >>>> ---
-> >>>>  drivers/pci/pci-driver.c | 14 +++++++++++---
-> >>>>  1 file changed, 11 insertions(+), 3 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >>>> index 588588cfda48..64e0cca12f16 100644
-> >>>> --- a/drivers/pci/pci-driver.c
-> >>>> +++ b/drivers/pci/pci-driver.c
-> >>>> @@ -521,14 +521,22 @@ static void pci_device_shutdown(struct device *dev)
-> >>>>   */
-> >>>>  static int pci_restore_standard_config(struct pci_dev *pci_dev)
-> >>>>  {
-> >>>> +   int error = 0;
-> >>>>     pci_update_current_state(pci_dev, PCI_UNKNOWN);
-> >>>>
-> >>>>     if (pci_dev->current_state != PCI_D0) {
-> >>>> -           int error = pci_set_power_state(pci_dev, PCI_D0);
-> >>>> -           if (error)
-> >>>> -                   return error;
-> >>>> +           error = pci_set_power_state(pci_dev, PCI_D0);
-> >>>> +   } else {
-> >>>> +           /*
-> >>>> +            * The platform power state can still be non-D0, so this is
-> >>>> +            * required to change the platform power state to D0.
-> >>>> +            */
-> >>
-> >> This really isn't expected to happen.
-> >>
-> >> If the device's power state has been changed to D3hot by ACPI, it is not in D0.
-> >>
-> >> It looks like the state tracking is not working here.
-> >>
-> > 
-> >  The state setting to D0 is happening due to the current logic present in
-> >  pci_update_current_state(). If we can fix the logic in
-> >  pci_update_current_state() to detect this condition and return state D3hot,
-> >  then it should also fix the issue. 
-> > 
-> >  Thanks,
-> >  Abhishek
-> > 
+On Sat, Apr 02, 2022 at 12:11:56PM +0200, Christophe Leroy wrote:
+> powerpc's asm/prom.h brings some headers that it doesn't
+> need itself.
 > 
->  Hi Rafael/Mika,
+> In order to clean it up, first add missing headers in
+> users of asm/prom.h
 > 
->  Could you please help regarding the correct way to fix this issue.
->  I can update the patch accordingly.
+> Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
 
-I think you can try one of the patches posted recently:
+I tidied the subject line to match previous history and applied to
+pci/hotplug for v5.19, thanks!
 
-https://patchwork.kernel.org/project/linux-pm/patch/3623886.MHq7AAxBmi@kreacher/
-
-Thanks!
-
-
-
+> ---
+>  drivers/pci/hotplug/pnv_php.c       | 1 +
+>  drivers/pci/hotplug/rpadlpar_core.c | 1 +
+>  drivers/pci/hotplug/rpaphp_core.c   | 2 ++
+>  drivers/pci/hotplug/rpaphp_pci.c    | 1 +
+>  drivers/pci/hotplug/rpaphp_slot.c   | 1 +
+>  5 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+> index f4c2e6e01be0..881d420637bf 100644
+> --- a/drivers/pci/hotplug/pnv_php.c
+> +++ b/drivers/pci/hotplug/pnv_php.c
+> @@ -9,6 +9,7 @@
+>  #include <linux/module.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci_hotplug.h>
+> +#include <linux/of_fdt.h>
+>  
+>  #include <asm/opal.h>
+>  #include <asm/pnv-pci.h>
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> index e6991ff67526..980bb3afd092 100644
+> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> @@ -15,6 +15,7 @@
+>  
+>  #include <linux/init.h>
+>  #include <linux/module.h>
+> +#include <linux/of.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+>  #include <linux/vmalloc.h>
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> index 9887c9de08c3..491986197c47 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/moduleparam.h>
+> +#include <linux/of.h>
+>  #include <linux/pci.h>
+>  #include <linux/pci_hotplug.h>
+>  #include <linux/smp.h>
+> @@ -20,6 +21,7 @@
+>  #include <asm/eeh.h>       /* for eeh_add_device() */
+>  #include <asm/rtas.h>		/* rtas_call */
+>  #include <asm/pci-bridge.h>	/* for pci_controller */
+> +#include <asm/prom.h>
+>  #include "../pci.h"		/* for pci_add_new_bus */
+>  				/* and pci_do_scan_bus */
+>  #include "rpaphp.h"
+> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+> index c380bdacd146..630f77057c23 100644
+> --- a/drivers/pci/hotplug/rpaphp_pci.c
+> +++ b/drivers/pci/hotplug/rpaphp_pci.c
+> @@ -8,6 +8,7 @@
+>   * Send feedback to <lxie@us.ibm.com>
+>   *
+>   */
+> +#include <linux/of.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+>  
+> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+> index 93b4a945c55d..779eab12e981 100644
+> --- a/drivers/pci/hotplug/rpaphp_slot.c
+> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/sysfs.h>
+> +#include <linux/of.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+>  #include <linux/slab.h>
+> -- 
+> 2.35.1
+> 
