@@ -2,143 +2,216 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 036B8C35273
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F8EC3527B
 	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 21:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240904AbiDEU7z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:59:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57580 "EHLO
+        id S242412AbiDEVAF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 17:00:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350084AbiDEPLq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 11:11:46 -0400
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E17B107A93;
-        Tue,  5 Apr 2022 06:25:30 -0700 (PDT)
-Received: by mail-yb1-f180.google.com with SMTP id w134so15468852ybe.10;
-        Tue, 05 Apr 2022 06:25:30 -0700 (PDT)
+        with ESMTP id S1573178AbiDESJJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 14:09:09 -0400
+Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CEB21FA44
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 11:07:09 -0700 (PDT)
+Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-de3eda6b5dso286290fac.0
+        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2022 11:07:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=p23li6dT00AJl3hRn5GLCpGGZV7Mde/F/ZC6fP/JEqE=;
+        b=BADiZnSp78f9ZfxjlasetO+C2Swva/fEryHvZCHweafMOdoIX0m57hfulFwzprUsBB
+         5NO3j0ERJTi0OIIihE8sjSrXI/ueYUhpzuyzUvDnj/rraSlSTYcBjV3vc+GP9NtnhzkI
+         VM96wegARllDkf3644nEdixuvBQTRlgo0J5z3sG6cbiClK2MFU5FQEMNxQ3kr0ozGy8b
+         H0v0wy7xBeY27WgEwcBToKdEfjz5/a8PRSTPfNS/C9WTKMFTLaYVjUzE1+aWoW7GlT8m
+         l9irSkp9XsXAqCpbUokn14g9EtjANf+Eja8ATrFsehV0xTGHq1NWrkarTq4fmuMSRcMt
+         X6iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=E5Al4J7VCG/P8LTv1wy0Uzk4KB0CIZvLVMNw+72bmlY=;
-        b=pi+F9TIqKCEsUNjCb9dXoXQQNWKsRRxNdv5tIwo+338XztSKFJIYmHZkceBh6r31HM
-         zOTEafVXA117xUkDIWXQSCqSwY7HnBzPCE7H7i85C/kKEg+7wdLDKD+j9xsWQF98VQrl
-         5Kjz/7MYovpuUNj8n9fKK9hYnLmdWvAoDaDhCquMQvMxs13dSczKF+xMgB739HndQrSS
-         Rp/JRdwBjIGx6li46fitUbQLTiDJJbqjnIXi4rtPfui9XBxI2FZBy2MpNhHlQkWzydG4
-         qBUwmqE/gZejHwC62QLm5ZSfAa8sCHXWIfpuGriNwHcsb6EFjqr9zJy5unCcyAqHpyjW
-         vTog==
-X-Gm-Message-State: AOAM5334oGiOzG8pbMFgDpKN4hv9B9HGkKRbYFupf1gXc4FXR09Cc7DL
-        VxPINjrv6k3JFzyzhFHueIjR5jZUD+v7hpIxDsk=
-X-Google-Smtp-Source: ABdhPJzvtUL+VkrikhhCBPKyLKqDEV2E5D8I7wR0e3nEvz40gGldfHk2pv2u3E/1r3WC/KqC7zaSc0uRoPXPW/UhUpc=
-X-Received: by 2002:a05:6902:1544:b0:63d:d3a7:8cc4 with SMTP id
- r4-20020a056902154400b0063dd3a78cc4mr2582151ybu.622.1649165129602; Tue, 05
- Apr 2022 06:25:29 -0700 (PDT)
+        bh=p23li6dT00AJl3hRn5GLCpGGZV7Mde/F/ZC6fP/JEqE=;
+        b=Kq0RIHGdiha/H/noX/QjKfO64f63K/Lvf1Wh0Tr8XzGZwB3Ct5pf3iwZBEfsFvzAXM
+         Y1+d/OaGS8M7dIogyAHhQ5KI4yzxVzfQk5+TdjhMZ1n9EvRoEbby5gQD+bjDNDsPv/jv
+         Ff1egocbrLfJnSZ12jJjPMD6Lyd1MWUSUX+Qr+QpfhwFdAY4hX7APYRUopZvcwWVMKvJ
+         kkL80GQxrp09D7PLe8U/s1wJO8H7+negd9ZRPYu5pTvQRm/omYZ65sftacr6abvECAG0
+         DY2WdWQDO8Lq+qg6VKRVPECEF72kxpsfsGusd80MnpD0PS2i6Dpmd3VdC95503ei2wgP
+         VY3A==
+X-Gm-Message-State: AOAM531rtxCXTmIgwVGVAO78QmMxQV8oB35KyyqoGEuJuanyzajZQ8jI
+        1OvNloCnroo2hFLesVZ5WJEWz7WwjlznS5IJM7eusNk4ssyf6g==
+X-Google-Smtp-Source: ABdhPJwYioIcf3roWcw+7eBY8YdFqDjjHYzBDCjQs9Td/wpB5Go+w8ufPzRoqDbMsrdiR1b646s6qcFXd+sb+pgP2sE=
+X-Received: by 2002:a05:6870:1709:b0:e1:ea02:2001 with SMTP id
+ h9-20020a056870170900b000e1ea022001mr2164491oae.241.1649182028168; Tue, 05
+ Apr 2022 11:07:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220325184609.4059963-1-rajatja@google.com>
-In-Reply-To: <20220325184609.4059963-1-rajatja@google.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 5 Apr 2022 15:25:17 +0200
-Message-ID: <CAJZ5v0jQW3NcbtBWxUW8RQ-eCB3M6wdqztDmPr4q5+=FYmfJHw@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] PCI: ACPI: Support Microsoft's "DmaProperty"
-To:     Rajat Jain <rajatja@google.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
+References: <CAE=gft4a-QL82iFJE_xRQ3JrMmz-KZKWREtz=MghhjFbJeK=8A@mail.gmail.com>
+ <87a6cz39qd.ffs@tglx>
+In-Reply-To: <87a6cz39qd.ffs@tglx>
+From:   Evan Green <evgreen@google.com>
+Date:   Tue, 5 Apr 2022 11:06:31 -0700
+Message-ID: <CAE=gft521_W6uaCBovjr5RJ-RV3vVE2Ex0OV91FxpnuXThYHLA@mail.gmail.com>
+Subject: Re: Lost MSIs during hibernate
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Rajat Jain <rajatja@chromium.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Pavel Machek <pavel@denx.de>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 25, 2022 at 7:46 PM Rajat Jain <rajatja@google.com> wrote:
+On Tue, Apr 5, 2022 at 7:06 AM Thomas Gleixner <tglx@linutronix.de> wrote:
 >
-> The "DmaProperty" is supported and documented by Microsoft here:
-> https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports
-> They use this property for DMA protection:
-> https://docs.microsoft.com/en-us/windows/security/information-protection/kernel-dma-protection-for-thunderbolt
+> Evan!
 >
-> Support the "DmaProperty" with the same semantics. This is useful for
-> internal PCI devices that do not hang off a PCIe rootport, but offer
-> an attack surface for DMA attacks (e.g. internal network devices).
+> On Mon, Apr 04 2022 at 12:11, Evan Green wrote:
+> > To my surprise, I'm back with another MSI problem, and hoping to get
+> > some advice on how to approach fixing it.
 >
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Why am I not surprised?
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+I swear I don't intersect with this stuff that often. Maybe the
+reality is I always intersect with this stuff, it just usually works
+perfectly :)
 
-> ---
-> v5: * Reorder the patches in the series
-> v4: * Add the GUID.
->     * Update the comment and commitlog.
-> v3: * Use Microsoft's documented property "DmaProperty"
->     * Resctrict to ACPI only
 >
->  drivers/acpi/property.c |  3 +++
->  drivers/pci/pci-acpi.c  | 16 ++++++++++++++++
->  2 files changed, 19 insertions(+)
+> > What worries me is those IRQ "no longer affine" messages, as well as
+> > my "EVAN don't touch hw" prints, indicating that requests to change
+> > the MSI are being dropped. These ignored requests are coming in when
+> > we try to migrate all IRQs off of the non-boot CPU, and they get
+> > ignored because all devices are "frozen" at this point, and presumably
+> > not in D0.
 >
-> diff --git a/drivers/acpi/property.c b/drivers/acpi/property.c
-> index d0986bda2964..20603cacc28d 100644
-> --- a/drivers/acpi/property.c
-> +++ b/drivers/acpi/property.c
-> @@ -48,6 +48,9 @@ static const guid_t prp_guids[] = {
->         /* Storage device needs D3 GUID: 5025030f-842f-4ab4-a561-99a5189762d0 */
->         GUID_INIT(0x5025030f, 0x842f, 0x4ab4,
->                   0xa5, 0x61, 0x99, 0xa5, 0x18, 0x97, 0x62, 0xd0),
-> +       /* DmaProperty for PCI devices GUID: 70d24161-6dd5-4c9e-8070-705531292865 */
-> +       GUID_INIT(0x70d24161, 0x6dd5, 0x4c9e,
-> +                 0x80, 0x70, 0x70, 0x55, 0x31, 0x29, 0x28, 0x65),
->  };
+> They are disabled at that point.
 >
->  /* ACPI _DSD data subnodes GUID: dbb8e3e6-5886-4ba6-8795-1319f52a966b */
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 1f15ab7eabf8..378e05096c52 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -1350,12 +1350,28 @@ static void pci_acpi_set_external_facing(struct pci_dev *dev)
->                 dev->external_facing = 1;
->  }
+> > To further try and prove that theory, I wrote a script to do the
+> > hibernate prepare image step in a loop, but messed with XHCI's IRQ
+> > affinity beforehand. If I move the IRQ to core 0, so far I have never
+> > seen a hang. But if I move it to another core, I can usually get a
+> > hang in the first attempt. I also very occasionally see wifi splats
+> > when trying this, and those "no longer affine" prints are all the wifi
+> > queue IRQs. So I think a wifi packet coming in at the wrong time can
+> > do the same thing.
+> >
+> > I wanted to see what thoughts you might have on this. Should I try to
+> > make a patch that moves all IRQs to CPU 0 *before* the devices all
+> > freeze? Sounds a little unpleasant. Or should PCI be doing something
+> > different to avoid this combination of "you're not allowed to modify
+> > my MSIs, but I might still generate interrupts that must not be lost"?
 >
-> +static void pci_acpi_check_for_dma_protection(struct pci_dev *dev)
-> +{
-> +       u8 val;
-> +
-> +       /*
-> +        * Property also used by Microsoft Windows for same purpose,
-> +        * (to implement DMA protection from a device, using the IOMMU).
-> +        */
-> +       if (device_property_read_u8(&dev->dev, "DmaProperty", &val))
-> +               return;
-> +
-> +       if (val)
-> +               dev->untrusted = 1;
-> +}
-> +
->  void pci_acpi_setup(struct device *dev, struct acpi_device *adev)
->  {
->         struct pci_dev *pci_dev = to_pci_dev(dev);
+> PCI cannot do much here and moving interrupts around is papering over
+> the underlying problem.
 >
->         pci_acpi_optimize_delay(pci_dev, adev->handle);
->         pci_acpi_set_external_facing(pci_dev);
-> +       pci_acpi_check_for_dma_protection(pci_dev);
->         pci_acpi_add_edr_notifier(pci_dev);
+> xhci_hcd 0000:00:0d.0: EVAN Write MSI 0 fee1e000 4023
 >
->         pci_acpi_add_pm_notifier(adev, pci_dev);
-> --
-> 2.35.1.1021.g381101b075-goog
+>   This sets up the interrupt when the driver is loaded
+>
+> xhci_hcd 0000:00:14.0: EVAN Write MSI 0 fee01000 4024
+>
+>   Ditto
+>
+> xhci_hcd 0000:00:0d.0: calling pci_pm_freeze+0x0/0xad @ 423, parent: pci0000:00
+> xhci_hcd 0000:00:14.0: calling pci_pm_freeze+0x0/0xad @ 4644, parent: pci0000:00
+> xhci_hcd 0000:00:14.0: pci_pm_freeze+0x0/0xad returned 0 after 0 usecs
+> xhci_hcd 0000:00:0d.0: EVAN Write MSI 0 fee1e000 4023
+> xhci_hcd 0000:00:0d.0: pci_pm_freeze+0x0/0xad returned 0 after 196000 usecs
+>
+> Those freeze() calls end up in xhci_suspend(), which tears down the XHCI
+> and ensures that no interrupts are on flight.
+
+Your hint here about xhci_suspend() was helpful. It turns out this is
+not called in the freeze path, usb_hcd_pci_pm_ops just calls
+check_root_hub_suspended(). The documentation in devices.rst is pretty
+clear about this:
+
+```
+The ``->freeze`` methods should quiesce the device so that it doesn't
+generate IRQs or DMA
+```
+
+So I think you're right that the PM layer is doing everything right
+(though with a bit of a footgun that if you mess up and generate an
+interrupt after freeze it may just be gone forever), and usb core is
+at fault here. I've been testing with this patch (mangled in email),
+and so far the issue seems to be gone:
+
+@@ -614,10 +622,10 @@ const struct dev_pm_ops usb_hcd_pci_pm_ops = {
+        .suspend_noirq  = hcd_pci_suspend_noirq,
+        .resume_noirq   = hcd_pci_resume_noirq,
+        .resume         = hcd_pci_resume,
+-       .freeze         = check_root_hub_suspended,
+-       .freeze_noirq   = check_root_hub_suspended,
+-       .thaw_noirq     = NULL,
+-       .thaw           = NULL,
++       .freeze         = hcd_pci_suspend,
++       .freeze_noirq   = hcd_pci_suspend_noirq,
++       .thaw_noirq     = hcd_pci_resume_noirq,
++       .thaw           = hcd_pci_resume,
+        .poweroff       = hcd_pci_suspend,
+        .poweroff_noirq = hcd_pci_suspend_noirq,
+        .restore_noirq  = hcd_pci_resume_noirq,
+
+
+As an aside, one might wonder "why don't we see this everywhere
+then?". I think that's because Intel missed a patch enabling runtime
+pm on one of these XHCI controllers (8086:51ed). See the quirks below,
+that missing 2 on 00:14.0 is XHCI_DEFAULT_PM_RUNTIME_ALLOW:
+# dmesg | grep quirks
+[    2.804073] xhci_hcd 0000:00:0d.0: hcc params 0x20007fc1 hci
+version 0x120 quirks 0x0000000200009810
+[    3.108045] xhci_hcd 0000:00:14.0: hcc params 0x20007fc1 hci
+version 0x120 quirks 0x0000000000009810
+
+If the XHCI controller were usually in runtime suspend when freeze()
+got called, it would be fully quiesced and would not lose its
+interrupt. I had noticed this earlier, and it did reduce the repro
+rate, but did not reduce it to zero. Now it makes sense why.
+
+I think I have enough info to go make a USB patch now. Thank you for you help!
+-Evan
+
+>
+> xhci_hcd 0000:00:0d.0: calling pci_pm_freeze_noirq+0x0/0xb2 @ 4645, parent: pci0000:00
+> xhci_hcd 0000:00:0d.0: pci_pm_freeze_noirq+0x0/0xb2 returned 0 after 30 usecs
+> xhci_hcd 0000:00:14.0: calling pci_pm_freeze_noirq+0x0/0xb2 @ 4644, parent: pci0000:00
+> xhci_hcd 0000:00:14.0: pci_pm_freeze_noirq+0x0/0xb2 returned 0 after 3118 usecs
+>
+>    Now the devices are disabled and not accessible
+>
+> xhci_hcd 0000:00:14.0: EVAN Don't touch hw 0 fee00000 4024
+> xhci_hcd 0000:00:0d.0: EVAN Don't touch hw 0 fee1e000 4045
+> xhci_hcd 0000:00:0d.0: EVAN Don't touch hw 0 fee00000 4045
+> xhci_hcd 0000:00:14.0: calling pci_pm_thaw_noirq+0x0/0x70 @ 9, parent: pci0000:00
+> xhci_hcd 0000:00:14.0: EVAN Write MSI 0 fee00000 4024
+>
+>    This is the early restore _before_ the XHCI resume code is called
+>    This interrupt is targeted at CPU0 (it's the one which could not be
+>    written above).
+>
+> xhci_hcd 0000:00:14.0: pci_pm_thaw_noirq+0x0/0x70 returned 0 after 5272 usecs
+> xhci_hcd 0000:00:0d.0: calling pci_pm_thaw_noirq+0x0/0x70 @ 1123, parent: pci0000:00
+> xhci_hcd 0000:00:0d.0: EVAN Write MSI 0 fee00000 4045
+>
+>    Ditto
+>
+> xhci_hcd 0000:00:0d.0: pci_pm_thaw_noirq+0x0/0x70 returned 0 after 623 usecs
+> xhci_hcd 0000:00:14.0: calling pci_pm_thaw+0x0/0x7c @ 3856, parent: pci0000:00
+> xhci_hcd 0000:00:14.0: pci_pm_thaw+0x0/0x7c returned 0 after 0 usecs
+> xhci_hcd 0000:00:0d.0: calling pci_pm_thaw+0x0/0x7c @ 4664, parent: pci0000:00
+> xhci_hcd 0000:00:0d.0: pci_pm_thaw+0x0/0x7c returned 0 after 0 usecs
+>
+> That means the suspend/resume logic is doing the right thing.
+>
+> How the XHCI ends up being confused here is a mystery. Cc'ed a few more folks.
+>
+> Thanks,
+>
+>         tglx
+>
 >
