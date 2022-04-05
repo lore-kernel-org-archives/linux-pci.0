@@ -2,188 +2,252 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4B7C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E92DC433F5
 	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 21:03:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229534AbiDEU7L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 16:59:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40962 "EHLO
+        id S232221AbiDEU7R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Apr 2022 16:59:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346686AbiDEUWH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 16:22:07 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36CB5B6D24;
-        Tue,  5 Apr 2022 13:07:54 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 235J403T000752;
-        Tue, 5 Apr 2022 20:06:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=tpyGPUaQuiPurYeYs3+V7jjavwWbv5TwRE7ClxjB0Ic=;
- b=iRbvgUVVCKoA47KcSmFzqbMjBt0jgctio9aCZaWNRqj3MbmCjumA6oJsNlbn+8WGNBPq
- u1E7eEbzu6NEbg+ZnHtRCsCiDY1sVHD1OrCDyl0N220iZLPiwpn2mIQeibs1IjXdrzRm
- H8XdWxCk6NcTE7ku3FdVu6fyYlU1Cp3gNIEqa8Ckj7VxjQHzicobz1AZl/DuS/XqxvVh
- dfTlHj6nsp8zjWHj3PnfhX8WVq6pix0/hEU6BskaOEZmM2AkvbDMOOiTM0RE9qu7Qjrj
- TciysJOUYRJvsglnO0bOyVzUDjuSABxT8JRnqsj3V2XzOk/X4yVDDD6xPmdgBTzFHhwC Pg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3f6e3sq1q3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Apr 2022 20:06:58 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 235K6n1g024375;
-        Tue, 5 Apr 2022 20:06:57 GMT
-Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2043.outbound.protection.outlook.com [104.47.56.43])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3f6cx3wnmt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Apr 2022 20:06:57 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EOKcn2DSgTC3axuoc+TpJfL6SESnqYVZ6yvwucBeIEwBDB9axAIOowFbrquNE95zsSxCNF2rEakEfgPe0VvueHifW8L+N2wgGvxkZHUik1LPQTgQdHRqRHaEmhsDHkqySVEp0/1YFyudrbAqHQOQOL+SagE8EejdzSwkRq/+fxxdVtHtA16n20C0Dcze0TlunSMMhzKUm6d3Yl/3WP9IMMgaIqmiadBj9mz2jbMcsM/j2mQJ9T6B7Wzb2k1CtbxcSYv1aBz5WFd9qoTetQp5UrlBFSt3j8NcFbv7F/Ll0j5ryKB61vcy7+g99CRivzruXOEIWZw/KnxD+YiTx95tXQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tpyGPUaQuiPurYeYs3+V7jjavwWbv5TwRE7ClxjB0Ic=;
- b=jAQjplybF0o1/1+o+tI2OxakyvTgrkNh64/hC7MVv9LK62nkbsFWKad8kxSwHECXWtEhGgrqJlM11Ai2qjsrOpfSTEGDeS9aB0CPj+cFIVaRI8vXka1LMX+Bbl3Wojaxk2vEkiPZfY+BfmlnIVEdfoybzTTtepq6VpAn9jpncyJKkZ+r/PvuNY5AUbl4nBg28p4fGrtUgv1X2N6jcIBkHzuy8iw9GG44h8HBrdNZbb31/QDtLl1dYeqTQlg4dgmloMTOlgvoSeVn6puHv9AVmYB7wWqEQ+TWhmjts/3AlXWf4cS1qxkS1rb6WqqqJeyz2UvdGKVQs4zBARTaG4YQ6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tpyGPUaQuiPurYeYs3+V7jjavwWbv5TwRE7ClxjB0Ic=;
- b=m2Ae0RZwdw09NXr4y61452WcWEz6z9VXX45yPvQ/fBrjRBZnGaGBMBMjqX8E6WTj7Ose/Hk98No5Y4cI3BZTZWYGW1QvJxBe8CyxazKbqwAfh/Vy0MFTLEd6ygriKt3lYRqfuwbTmtBAmDiEokpZF3t4dvghWLS5JYK7dRUShyQ=
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com (2603:10b6:208:321::10)
- by CY4PR10MB1944.namprd10.prod.outlook.com (2603:10b6:903:124::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Tue, 5 Apr
- 2022 20:06:53 +0000
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::4455:2c02:503:a182]) by BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::4455:2c02:503:a182%9]) with mapi id 15.20.5123.031; Tue, 5 Apr 2022
- 20:06:53 +0000
-Message-ID: <48526600-081d-7be1-88cc-cf47cdb0253b@oracle.com>
-Date:   Tue, 5 Apr 2022 16:06:47 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: cleanup swiotlb initialization v8
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org
-Cc:     x86@kernel.org, Anshuman Khandual <anshuman.khandual@arm.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Juergen Gross <jgross@suse.com>,
-        Joerg Roedel <joro@8bytes.org>,
+        with ESMTP id S1382107AbiDEPO2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 11:14:28 -0400
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B081700BE;
+        Tue,  5 Apr 2022 06:26:15 -0700 (PDT)
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-2e5e9025c20so135503637b3.7;
+        Tue, 05 Apr 2022 06:26:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5bma3Hv9/Du0X4/97+r/i96qcpXIT9vsWsP+NmZQEhc=;
+        b=Vl4ngRqcIeckA/jKuKB4ELhRPTohkhg1Wqw0NA5NEXPIN81N78SpyBvYEtGcDGO/yj
+         fHwy8V4//fTFc1pnlG+xf2tsbQQya205qkpRU3j2uzJ5oxizPaVI+8mkcS5C/RQ3h8xE
+         sRhWmiHrMiHPG0PiMypbe4mrarR24sjBwetednlAJ9au+MQyRawPrbulFdXDd7Fw9TL+
+         UvZw0tsi2g0b+sef2fagOeD1ivYsAWj4RO5WBgTapngrnL88e+UMLGEFWPl3jWTo2q+N
+         8AcVXOyPgDBJsWTRaDgOdj4rvGWiAXVvu42r2AOyzggO0WBsK87unrPD1uAa0zFHVxUz
+         ozDQ==
+X-Gm-Message-State: AOAM530pzAdLWJ7ZQT4ykfJBCEAhhMe/HMePa2yhBoy0sEm7Ksvcy3XF
+        7lbsbDJ4Sxlx9Pswf+SZd7yWkcM+D+JGhfWzPhA=
+X-Google-Smtp-Source: ABdhPJwSoRVMoL8d5NZt/uFMN/p5bnGsKoxUE2f3GX9NbHU0ViSKhN6b3N2cxmhRKLuKcvzdrUX4TUIagp1Us0uHFq8=
+X-Received: by 2002:a81:1549:0:b0:2eb:3dc7:bd16 with SMTP id
+ 70-20020a811549000000b002eb3dc7bd16mr2689122ywv.7.1649165174251; Tue, 05 Apr
+ 2022 06:26:14 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220325184609.4059963-1-rajatja@google.com> <20220325184609.4059963-2-rajatja@google.com>
+In-Reply-To: <20220325184609.4059963-2-rajatja@google.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 5 Apr 2022 15:26:03 +0200
+Message-ID: <CAJZ5v0hH-Xujak9jGLOvxnLVHXCms8SU-2qJnzPXpAGK4FBxqA@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] PCI: Rename pci_dev->untrusted to pci_dev->untrusted_dma
+To:     Rajat Jain <rajatja@google.com>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rajat Jain <rajatxjain@gmail.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Jesse Barnes <jsbarnes@google.com>,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Pavel Machek <pavel@denx.de>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
         David Woodhouse <dwmw2@infradead.org>,
         Lu Baolu <baolu.lu@linux.intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        linux-arm-kernel@lists.infradead.org,
-        xen-devel@lists.xenproject.org, linux-ia64@vger.kernel.org,
-        linux-mips@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, tboot-devel@lists.sourceforge.net,
-        linux-pci@vger.kernel.org
-References: <20220404050559.132378-1-hch@lst.de>
-From:   Boris Ostrovsky <boris.ostrovsky@oracle.com>
-In-Reply-To: <20220404050559.132378-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN4PR0501CA0075.namprd05.prod.outlook.com
- (2603:10b6:803:22::13) To BLAPR10MB5009.namprd10.prod.outlook.com
- (2603:10b6:208:321::10)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cfb65ae6-d4eb-4655-1deb-08da173fd3bc
-X-MS-TrafficTypeDiagnostic: CY4PR10MB1944:EE_
-X-Microsoft-Antispam-PRVS: <CY4PR10MB194415E6E4B957CD648A672B8AE49@CY4PR10MB1944.namprd10.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7+cpxbKZpHbCxNRNzdJZae/a2lC3ai+FqpOulMGFxU1EzjvUzyvmqerEFUbIRLzu/ARdOf7KnROHcTQtoSquZoxrF3pQ/Vykrk3R9gtZIqQXS/FwrmmbSl/Tsh0ZrxT4Gv+YqO/3XGpKOT9tZk4v6xAdINo0/e6EFnDv1JQYnZp8ESTEFG+8vtsGP8tDxp7y5LowKbBtDFojW0VWx6EgII82Uc0EXJfaY8bE/iwOFzOcLnX3YDHPj7er1vAGMz3cO7wHKL0t4jzuA+t392Fr9oFQSnjAkuj2fRkImXIXPQN5MPAFTk1/PDYfxFGK596VvnjYDaubPcjOjBI/DkCjx+8jPXXmrp0ZhtR5EXfhgNLG7jWZ5ZqBoEv45nC8qqsPkw0hbssk9Qz1X4KJHqmhZpiYQn5HtYQkQuhw1FL16ah0rgfakc1BNxkK0uCapTNlPGR5t+ffEkvEkVAShjFjx2zdKPiCAmDwjlu91Z3F99q/9zWDgsfTNYGPlzOjCJ+iuHUcbCKLwZX2RUpQ4hkBgz7moEvBAslzE5IMabuYd67me/jAq8lz5KHRuDMkNeiOwaoAfajkJ7jWrS96K45HZpByyNYBaz6F/oh1rPYvyJc/1vSiTzbPUUrfq/DHId9R+Lqfbhz91Oz6nJi7ZJ89MPT2LjPwbXbmfpUK16n/n8DJm0jMXyl9kKOuCCk2Qz33rodEKN//4kZ3OQmrV9XFHDeQXQE1GoOtVFfLhsaLCj80DyjRRaL3MSnbcL3+nmIlvhFvQWeZTROZdcO3C6R+682s4xsFhCv54BIPay55iw4Fex/Al1KLdcZBeYYOYgPADG6savMQAla1Gi687kB9Zg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5009.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(2906002)(38100700002)(54906003)(6486002)(31686004)(966005)(8676002)(5660300002)(6512007)(6506007)(44832011)(31696002)(316002)(4744005)(7416002)(8936002)(86362001)(4326008)(66476007)(66946007)(66556008)(36756003)(508600001)(6666004)(186003)(26005)(2616005)(53546011)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Yncrb3FyUWVnNU4xdDJFU1YyU1hJT1VzZ2xwUWhVRjhETG4rUU1CMnpXaVpm?=
- =?utf-8?B?QkQzOWthYnFyVUtIb3BmRVM0UnFhSmQyTUxyMGkvYXhyTFBwSVZKaTIvSkZD?=
- =?utf-8?B?VjNsenE3WVBhVHZuSGdGV3VlcGdjUjdFYkRTb1dnQkFOR2kzTjVaKzVmc2hs?=
- =?utf-8?B?TjFHdGUyZkVKMkVXVTZKN2VkRWJia0wrK0hwUFNpaFVydGt4eHJLcHg5Q3h3?=
- =?utf-8?B?OXZqaE1wMUExZXN1NEdzTElWZFNNM2lsL1RIODdtaWNHSGhQKzAxdjR2Umpw?=
- =?utf-8?B?UVVRbzQ3dlpEWVExSjRTTjE0LzZ5eUJqU3daMThUT1ZiK2JQcEVLODlkVUxv?=
- =?utf-8?B?em13Mmd1TXVBYzdsWG1pN2lUU05CcldBWm5oUS9PaFRrNXVBckJBWTNIV093?=
- =?utf-8?B?M205eDhxMm90ZUpUV2tsRmxERitVcnRoS2dUN1hEYU1ZZ2o1bUNhSWgvbGoz?=
- =?utf-8?B?c1JhaWtwZFlIaE5UbjNQQmxZZUZSNDRYZ0xOVG9LWjkwVHBxT2lEOXRENDJJ?=
- =?utf-8?B?aTdxNDBKNWgxQzVkYmhTMTVEYU40VlNUQU4rd1V1ckRldWFjQnhMcENVVk42?=
- =?utf-8?B?d2lsaG1SUlFnQmNRTjEwMFZsMmovQTBFKy9zdFFFNmN4amJjcGIzR2NLc2tv?=
- =?utf-8?B?V3lHbEppL0Z0eGZ1d1Q5bmtIcTVieE5oQWZ5Nm5vUUZjTElXYStwMlBSbCtZ?=
- =?utf-8?B?QkFqYTM4bzJjd1VqWjEwclhQdXEzRytwZmRBcnNPUUJMdy9IZmtlMEU2Y1RB?=
- =?utf-8?B?NmRZSHlPUlRTaXh1WXA2S0l0ay8raHVVNjBDb1dPZjh3NGVpSXVvRmQ1elZM?=
- =?utf-8?B?ZmY4WDJIQ0lyS3I1TFNkT3BpcWo4MmZKUFZPMWJOV01Gd0Q1TEJySUJXSmsy?=
- =?utf-8?B?aTZIVXBvZ2hDbkc3bmtzUUhBM2hZbXhOcm5DOHUvTWkwaUo1WmRjVWJ0UkJI?=
- =?utf-8?B?ZFZnak8weGNXcFhvVG0vS2hFQmFRM2VQRDAxcXc1Ym51Y3hmTUJyaG1ReHF5?=
- =?utf-8?B?SGhhcHBDdHF4VERacDVjdSt0NEZwN1F1S0VBNGk2VmpIc0JDMFBMd3o5Vm4r?=
- =?utf-8?B?dnBKK1U4K0pEQ280QnRrM084dDZ0NDFLMWFQTTY3M0Zpd2QyR285dnZ2NUpC?=
- =?utf-8?B?RFVIa2RNMmgzcjBteFYxY25qREtGbDd2NXZ0OFRBWlpyUm1sOTJjYWQ3d0tH?=
- =?utf-8?B?WHJmVTB2SG1oS1B3c3p5L0tKVnZqVFJjL1B0N1VnbFlDcEhlb2NJMmx5dHdD?=
- =?utf-8?B?QkNmQjNrRm15cWh5azV1VXhvN0ZPWC8rZlpQSUttclArN0FMcUFXVWQvZTVx?=
- =?utf-8?B?NmtSUmM4Q2RrMFo4SEdkZWhTbGp0N1Q3WFdmS0pLMTNXTVdsMWNsUUg2YmVH?=
- =?utf-8?B?UHVTZWFzYnZBTVgrS1BFd0wzenhqVG9TSVpFUXc4ZUwyK2Z4eHdDemZwaXZB?=
- =?utf-8?B?RXkyN1F3QXV6bjVPZUZqNkMra1JrK2cxaTZ3OEhNTks2dWhleVJTSTBnMkw3?=
- =?utf-8?B?K0laVEFvVVZ1VjhJQWtUcC9iRWcxUWhMR0YzR3dRYjNnVzMvam9tRzk5RGIz?=
- =?utf-8?B?NS9IVldSWjRBUUp1ZGtrN3ZneDduV1VkVEJ1aVFLMkNNOE5qNTJqNHhjbDlW?=
- =?utf-8?B?ZmVKWUxObE8vNzdseGM3a1QyOVB6bDYrUkcvSjRRaTcwVFdacGxzRDNWalZM?=
- =?utf-8?B?b3M5Q2RWQ2FJU2xuaDE1R1FIK05idGx0RXNiMUtvYkpiQy80RVRQWTY0c1Fo?=
- =?utf-8?B?RnJlbURFRWU5M081aGt3VGZrcWJ5cHRiOUgvMlhockN3eWhZaEZ6ZlZvMnJK?=
- =?utf-8?B?L0ttaW5IUnhjc0JWbXZqc1BPbTZQRHY3cWg1V2ZUakxJcWl5dW80R0FuMWtK?=
- =?utf-8?B?UUx5MEJSMnhuTjlQVEdUejh3Ukx2NEtud0o4QkZsNDRJMTN4R3gxMDZlNWpZ?=
- =?utf-8?B?dnczWGZ1SDlJK0xJUWxLVURQeVRTeDlkSW1yRzRkUlRmZDZxbGJ0bnhPRHN1?=
- =?utf-8?B?VTJMdTVWUjVkNStYdzBwMU82ZzVTc29TK0V6MitDVnZhdDBrOHZNSURwM0ZD?=
- =?utf-8?B?dFg3cVNHUWtVTmhwek1zb05aSmZKb0htczlvanFwanozRk93b2hGaHNWOSs4?=
- =?utf-8?B?NXBpOGw2SzZZdE02RFN0dW5GdDBrTzQ1REtZL2JpMEQvcTlvem9jbEtSU3l1?=
- =?utf-8?B?RUhTRjc5WnZZcmdnVFRuK1ppQUFuN3hLTnd2em00Sm0ydjVRQklqSkFmTWlF?=
- =?utf-8?B?T2pNeExvRHhJUEhrc2tVbUNhWjJISGYyTTVCbTlMUXZjdWVoN2MxNFZwcVRj?=
- =?utf-8?B?eWZZZksySEgzeXdLRDNyZTNxazlWQjdwZHp6b3FZZ2FNajQ0U24xM2tGbzBm?=
- =?utf-8?Q?F5vfS0BXsu13G3CI=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cfb65ae6-d4eb-4655-1deb-08da173fd3bc
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5009.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Apr 2022 20:06:53.1401
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 26PS2iFudTEwClAtcgKRg5KleMgRBZRcEFhH7JvxTxGfOrIXMFGLIhWKpq6YDwAbTDAeX00qe5O1YrWF9VGHWpvJK8W2USnVBlTcNmvQORQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR10MB1944
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.850
- definitions=2022-04-05_06:2022-04-04,2022-04-05 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 adultscore=0 phishscore=0 mlxscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2204050113
-X-Proofpoint-ORIG-GUID: GaJrNkL8mc8evtqJEYSbwuP_D3hzpQ0B
-X-Proofpoint-GUID: GaJrNkL8mc8evtqJEYSbwuP_D3hzpQ0B
+        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-On 4/4/22 1:05 AM, Christoph Hellwig wrote:
-> Hi all,
+On Fri, Mar 25, 2022 at 7:46 PM Rajat Jain <rajatja@google.com> wrote:
 >
-> this series tries to clean up the swiotlb initialization, including
-> that of swiotlb-xen.  To get there is also removes the x86 iommu table
-> infrastructure that massively obsfucates the initialization path.
+> Rename the field to make it more clear, that the device can execute DMA
+> attacks on the system, and thus the system may need protection from
+> such attacks from this device.
 >
-> Git tree:
+> No functional change intended.
 >
->      git://git.infradead.org/users/hch/misc.git swiotlb-init-cleanup
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+> ---
+> v5: Use "untrusted_dma" as property name, based on feedback.
+>     Reorder the patches in the series.
+> v4: Initial version, created based on comments on other patch
 >
-> Gitweb:
+>  drivers/iommu/dma-iommu.c   | 6 +++---
+>  drivers/iommu/intel/iommu.c | 2 +-
+>  drivers/iommu/iommu.c       | 2 +-
+>  drivers/pci/ats.c           | 2 +-
+>  drivers/pci/pci-acpi.c      | 2 +-
+>  drivers/pci/pci.c           | 2 +-
+>  drivers/pci/probe.c         | 8 ++++----
+>  drivers/pci/quirks.c        | 2 +-
+>  include/linux/pci.h         | 5 +++--
+>  9 files changed, 16 insertions(+), 15 deletions(-)
 >
->      http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/swiotlb-init-cleanup
-
-
-
-
-Tested-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-
-
+> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+> index d85d54f2b549..7cbe300fe907 100644
+> --- a/drivers/iommu/dma-iommu.c
+> +++ b/drivers/iommu/dma-iommu.c
+> @@ -497,14 +497,14 @@ static int iova_reserve_iommu_regions(struct device *dev,
+>         return ret;
+>  }
+>
+> -static bool dev_is_untrusted(struct device *dev)
+> +static bool dev_has_untrusted_dma(struct device *dev)
+>  {
+> -       return dev_is_pci(dev) && to_pci_dev(dev)->untrusted;
+> +       return dev_is_pci(dev) && to_pci_dev(dev)->untrusted_dma;
+>  }
+>
+>  static bool dev_use_swiotlb(struct device *dev)
+>  {
+> -       return IS_ENABLED(CONFIG_SWIOTLB) && dev_is_untrusted(dev);
+> +       return IS_ENABLED(CONFIG_SWIOTLB) && dev_has_untrusted_dma(dev);
+>  }
+>
+>  /**
+> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+> index 92fea3fbbb11..9246b7c9ab46 100644
+> --- a/drivers/iommu/intel/iommu.c
+> +++ b/drivers/iommu/intel/iommu.c
+> @@ -5570,7 +5570,7 @@ intel_iommu_enable_nesting(struct iommu_domain *domain)
+>   */
+>  static bool risky_device(struct pci_dev *pdev)
+>  {
+> -       if (pdev->untrusted) {
+> +       if (pdev->untrusted_dma) {
+>                 pci_info(pdev,
+>                          "Skipping IOMMU quirk for dev [%04X:%04X] on untrusted PCI link\n",
+>                          pdev->vendor, pdev->device);
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index 8b86406b7162..79fb66af2e68 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -1522,7 +1522,7 @@ static int iommu_get_def_domain_type(struct device *dev)
+>  {
+>         const struct iommu_ops *ops = dev->bus->iommu_ops;
+>
+> -       if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted)
+> +       if (dev_is_pci(dev) && to_pci_dev(dev)->untrusted_dma)
+>                 return IOMMU_DOMAIN_DMA;
+>
+>         if (ops->def_domain_type)
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index c967ad6e2626..477c16ba9341 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -42,7 +42,7 @@ bool pci_ats_supported(struct pci_dev *dev)
+>         if (!dev->ats_cap)
+>                 return false;
+>
+> -       return (dev->untrusted == 0);
+> +       return (dev->untrusted_dma == 0);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_ats_supported);
+>
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 378e05096c52..1d5a284c3661 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -1362,7 +1362,7 @@ static void pci_acpi_check_for_dma_protection(struct pci_dev *dev)
+>                 return;
+>
+>         if (val)
+> -               dev->untrusted = 1;
+> +               dev->untrusted_dma = 1;
+>  }
+>
+>  void pci_acpi_setup(struct device *dev, struct acpi_device *adev)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 9ecce435fb3f..1fb0eb8646c8 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -958,7 +958,7 @@ static void pci_std_enable_acs(struct pci_dev *dev)
+>         ctrl |= (cap & PCI_ACS_UF);
+>
+>         /* Enable Translation Blocking for external devices and noats */
+> -       if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
+> +       if (pci_ats_disabled() || dev->external_facing || dev->untrusted_dma)
+>                 ctrl |= (cap & PCI_ACS_TB);
+>
+>         pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 17a969942d37..d2a9b26fcede 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1587,7 +1587,7 @@ static void set_pcie_thunderbolt(struct pci_dev *dev)
+>                 dev->is_thunderbolt = 1;
+>  }
+>
+> -static void set_pcie_untrusted(struct pci_dev *dev)
+> +static void pci_set_untrusted_dma(struct pci_dev *dev)
+>  {
+>         struct pci_dev *parent;
+>
+> @@ -1596,8 +1596,8 @@ static void set_pcie_untrusted(struct pci_dev *dev)
+>          * untrusted as well.
+>          */
+>         parent = pci_upstream_bridge(dev);
+> -       if (parent && (parent->untrusted || parent->external_facing))
+> -               dev->untrusted = true;
+> +       if (parent && (parent->untrusted_dma || parent->external_facing))
+> +               dev->untrusted_dma = true;
+>  }
+>
+>  static void pci_set_removable(struct pci_dev *dev)
+> @@ -1862,7 +1862,7 @@ int pci_setup_device(struct pci_dev *dev)
+>         /* Need to have dev->cfg_size ready */
+>         set_pcie_thunderbolt(dev);
+>
+> -       set_pcie_untrusted(dev);
+> +       pci_set_untrusted_dma(dev);
+>
+>         /* "Unknown power state" */
+>         dev->current_state = PCI_UNKNOWN;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 5f46fed01e6c..7ca3c2cdfb20 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5134,7 +5134,7 @@ static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
+>         ctrl |= (cap & PCI_ACS_CR);
+>         ctrl |= (cap & PCI_ACS_UF);
+>
+> -       if (pci_ats_disabled() || dev->external_facing || dev->untrusted)
+> +       if (pci_ats_disabled() || dev->external_facing || dev->untrusted_dma)
+>                 ctrl |= (cap & PCI_ACS_TB);
+>
+>         pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 678fecdf6b81..b7c5fede0b93 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -444,13 +444,14 @@ struct pci_dev {
+>         unsigned int    shpc_managed:1;         /* SHPC owned by shpchp */
+>         unsigned int    is_thunderbolt:1;       /* Thunderbolt controller */
+>         /*
+> -        * Devices marked being untrusted are the ones that can potentially
+> +        * Devices marked with untrusted_dma are the ones that can potentially
+>          * execute DMA attacks and similar. They are typically connected
+>          * through external ports such as Thunderbolt but not limited to
+>          * that. When an IOMMU is enabled they should be getting full
+>          * mappings to make sure they cannot access arbitrary memory.
+>          */
+> -       unsigned int    untrusted:1;
+> +       unsigned int    untrusted_dma:1;
+> +
+>         /*
+>          * Info from the platform, e.g., ACPI or device tree, may mark a
+>          * device as "external-facing".  An external-facing device is
+> --
+> 2.35.1.1021.g381101b075-goog
+>
